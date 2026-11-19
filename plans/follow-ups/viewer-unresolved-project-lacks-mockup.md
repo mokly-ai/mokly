@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 12J of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/mockups/src/entries/product/viewer/standalone/`, `docs/mockups/src/screens/product/viewer/stage.tsx`, `apps/app/src/viewer/stage-view.tsx:178-191`, `apps/app/src/screens/app/project-route.tsx:83-103` and `docs/mockups/src/_tests_/app-parity-allowances.ts:95-99`.
+- **Location:** `docs/mockups/src/entries/product/viewer/standalone/`, `docs/mockups/src/screens/product/viewer/stage.tsx`, `apps/app/src/viewer/stage-view.tsx:179-192`, `apps/app/src/screens/app/project-route.tsx:83-103` and `docs/mockups/src/_tests_/app-parity-allowances.ts:95-99`.
 - **Reason:** The recommended drawing adds a new mockup page, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The stage still renders "This project couldn’t load" for an entry error, no drawing covers it, and the allowance is still there.
 - **Category:** Mockup.
@@ -12,7 +12,7 @@
   - **Parity suite:** The mockup tests in `docs/mockups/src/_tests_/app-parity.test.ts`, which compare the drawn labels and state titles with the app's.
   - **Allowance:** One entry in `docs/mockups/src/_tests_/app-parity-allowances.ts` that lets one known difference pass until a follow-up item removes it.
   - **Stage:** The main area of the viewer, where the published catalogue or a state card shows.
-- **Background:** The viewer stage resolves the address to a publication. Sometimes the address names no publication and the entry cannot resolve. The project is known, but a read of its history or its reference rows fails. Then the running stage shows an error titled "This project couldn’t load", with a retry. `apps/app/src/viewer/stage-view.tsx:178-191` writes it. When the address names a publication, the title is "This publication couldn’t load". Every viewer mockup page draws a resolved project. Earlier parity corrections, Milestone 12E round 2, found the gap.
+- **Background:** The viewer stage resolves the address to a publication. Sometimes the address names no publication and the entry cannot resolve. The project is known, but a read of its history or its reference rows fails. Then the running stage shows an error titled "This project couldn’t load", with a retry. `apps/app/src/viewer/stage-view.tsx:179-192` writes it. When the address names a publication, the title is "This publication couldn’t load". Every viewer mockup page draws a resolved project. Earlier parity corrections, Milestone 12E round 2, found the gap.
 - **Problem:** No mockup page draws the stage when its entry fails to resolve. The product announces the state, and no reviewer sees it.
 - **Impact if no action:** Nobody reviews the design of that state. The parity suite keeps one allowance for it in `allowedStates`.
 - **Root question:** How does the catalogue show the stage when its entry fails to resolve and the address names no publication?

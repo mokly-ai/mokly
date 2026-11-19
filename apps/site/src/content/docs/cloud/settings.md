@@ -6,7 +6,7 @@ order: 7
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/settings-dialog.md, protocol/settings-dialog-github.md, protocol/product-navigation.md, protocol/product-accounts-and-roles.md, protocol/viewer-builds.md -->
+<!-- Source: mokly-cloud protocol/cloud/settings-dialog.md, protocol/cloud/settings-dialog-github.md, protocol/cloud/product-navigation.md, protocol/cloud/product-accounts-and-roles.md, protocol/cloud/viewer-builds.md -->
 
 ## Settings open over the page
 

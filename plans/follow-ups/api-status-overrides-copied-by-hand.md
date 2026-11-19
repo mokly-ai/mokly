@@ -16,7 +16,7 @@
 - **Background:**
   - The code of each API error reason normally fixes its HTTP status.
   - Three upload reasons are exceptions: `upload-unsupported-version` answers 426, `upload-timeout` answers 408 and `upload-expired` answers 410.
-  - `docs/protocol/cloud/rest-api.md:96`, `:107`, `:111` and `:122-125` record these statuses.
+  - `docs/protocol/cloud/rest-api.md:97`, `:108`, `:112` and `:123-126` record these statuses.
   - The status override holds the three statuses as a `match` on three `UploadError` variants.
   - The envelope description repeats the statuses in prose.
   - Two tests repeat the three reason and status pairs in their own `match`, at `error_tests.rs:42-44` and `severity_tests.rs:18-20`.

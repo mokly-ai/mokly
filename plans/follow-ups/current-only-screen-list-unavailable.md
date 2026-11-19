@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F7 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/viewer/service.rs:93-106` and `:143-156`, `crates/mkc-api/src/viewer/share_validation.rs:17-24`, `docs/protocol/cloud/viewer-read-model.md:191-204`, `docs/protocol/cloud/rest-api-surface.md:36-38` and `docs/ops/deploy.md:762-767`.
+- **Location:** `crates/mkc-api/src/viewer/service.rs:93-106` and `:143-156`, `crates/mkc-api/src/viewer/share_validation.rs:17-24`, `docs/protocol/cloud/viewer-read-model.md:191-204`, `docs/protocol/cloud/rest-api-surface.md:37-39` and `docs/ops/deploy.md:762-767`.
 - **Reason:** The adoption is a Large API change that replaces the documented 503 requirement, so it needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. `listScreens` and screen-specific Share still return `operation-unavailable` without a comparison. The pinned v5 catalogue already carries screens with paths, titles and views.
 - **Category:** Product bug.

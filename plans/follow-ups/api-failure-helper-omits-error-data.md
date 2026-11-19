@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the outside-the-scope note of the Milestone 6 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/_tests_/harness.ts:538-553`.
+- **Location:** `apps/app/src/_tests_/api-responses.ts:7-28`.
 - **Reason:** The helper predates the merge of PR #64 into PR #69, so that review left it for a separate branch. The review-fix rule leaves its category to the user.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. `apiFailure` still accepts any reason and writes no `data` field. The generated contract requires `data` for `version-conflict`, `duplicate-project` and `plan-required`.
 - **Category:** Test.

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-31, from the privacy-retention alignment plan check and post-push review finding 1.
-- **Location:** `docs/ops/environment.md:153-155`; `apps/site/src/content/legal/privacy.md:184-185`; `crates/mkc-publications/src/garbage_collection.rs:98-110`.
+- **Location:** `docs/ops/environment.md:153-155`; `apps/site/src/content/legal/privacy.md:186-187`; `crates/mkc-publications/src/garbage_collection.rs:98-110`.
 - **Reason:** The user deferred this work to a follow-up on 2026-11-02. It does not block the current PR.
 - **Decision:** The user approved deferral, without selecting an implementation option. Keep D as the recommendation for future work.
 

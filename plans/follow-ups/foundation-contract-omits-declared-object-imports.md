@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from review 4 finding 3 of [PR #54](https://github.com/mokly-ai/mokly-cloud/pull/54), which the deleted `plans/foundation-terraform-from-ci.md` kept open, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/cloud/foundation-promotion.md:136-160`, `infra/terraform/README.md:343-348`, `docs/ops/secrets.md:523-531` and `docs/ops/foundation.md:173-174`.
+- **Location:** `docs/protocol/cloud/foundation-promotion.md:136-160`, `infra/terraform/README.md:351-356`, `docs/ops/secrets.md:523-531` and `docs/ops/foundation.md:173-174`.
 - **Reason:** The recommended option adds a rule to a protocol doc, and the user has not answered it since PR #54 merged on 2026-10-23.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The contract still gives only the timing before the merge, and two runbooks still call the bootstrap the next foundation apply.
 - **Category:** Docs or spec (estimate).
@@ -17,7 +17,7 @@
   - The operator path allows "imports of existing objects into the foundation state, directly before the merge of the change that declares them". The user chose that timing on 2026-10-21.
   - The decision text beside it rejects Terraform `import` blocks in the change, because imports are rare and each import is coordinated with its merge.
   - A review of PR #54 then added a second timing to two runbooks. An object that `main` already declares is imported "before the next foundation apply, which today is the foundation bootstrap".
-  - `infra/terraform/README.md:346-348` and `docs/ops/secrets.md:526-528` state that second timing. Step 1 of the bootstrap in `docs/ops/foundation.md:173-174` used it.
+  - `infra/terraform/README.md:354-356` and `docs/ops/secrets.md:526-528` state that second timing. Step 1 of the bootstrap in `docs/ops/foundation.md:173-174` used it.
   - The bootstrap ran on 2026-10-23. Its record says that no object needed an import.
 - **Problem:** The contract omits the second timing. A reader cannot tell from the contract whether an import of an object that `main` already declares is allowed, or when. The runbooks still name the bootstrap as the next foundation apply, but the next apply is now the next Foundation run.
 - **Impact if no action:** The contract and the runbooks disagree on which imports an operator may run. An operator who reads the runbooks can wait for a bootstrap that already happened.

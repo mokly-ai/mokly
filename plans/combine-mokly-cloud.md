@@ -321,7 +321,7 @@ Depends on: 2
 
 Depends on: 2
 
-- [ ] Fix every moved path and every link to `mokly-ai/mokly-cloud` in the
+- [x] Fix every moved path and every link to `mokly-ai/mokly-cloud` in the
       docs, the READMEs, the follow-up items, and the scripts.
 - [x] Merge the cloud plans and follow-up items into `plans/`. Rewrite each
       item whose subject the replaced ways remove.
@@ -338,7 +338,7 @@ Depends on: 2
 - [x] Extend `tests/markdown_links.test.ts` to every Markdown file that the
       old cloud check read, such as the legal pages of `apps/site`, with
       the root-route rule for site links.
-- [ ] Run `npm test -- tests/markdown_links.test.ts`, `npm run format:check`,
+- [x] Run `npm test -- tests/markdown_links.test.ts`, `npm run format:check`,
       `npm run lint`, and `cargo xtask source-file-length-lint`.
 
 ## Milestone 6: One xtask and one gate

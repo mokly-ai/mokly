@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 4 of the Milestone 26 review TODO in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/cloud/viewer-builds.md:15-19` and `:210-220`, `docs/protocol/cloud/viewer.md:87-94`, `apps/app/src/screens/viewer/viewer-build.ts:26-38` and `apps/app/src/viewer/stage-view-decision.ts:94-101`.
+- **Location:** `docs/protocol/cloud/viewer-builds.md:15-19` and `:210-220`, `docs/protocol/cloud/viewer.md:87-94`, `apps/app/src/screens/viewer/viewer-build.ts:26-38` and `apps/app/src/viewer/stage-view-decision.ts:95-102`.
 - **Reason:** PR #45 merged with this requirement choice open, and no user answer is recorded.
 - **Checked:** 2026-10-31, at commit `f568853e`. Rule 7 now names the ordinary reviewer cards. The remaining protocol and app disagreement still needs a user decision.
 - **Category:** Docs or spec.
@@ -13,7 +13,7 @@
 - **Background:** The viewer stage draws a card for a reference without a ready publication. Stage rule 7 of `docs/protocol/cloud/viewer-builds.md` says which card each reader sees. The review of 2026-10-20 found that the rule leaves out some readers. The list below gives the current state.
   - Rule 7 now names the branch and pull request reviewer cards of a build-capable project.
   - `viewer-build.ts:26-38` gives no member access to public readers and to direct-grant reviewers with neither a capability nor workspace membership. `viewer-builds.md:15-19` names these readers.
-  - On a build-capable project, the app gives these readers the pull request waiting card, or the branch setup or reader card, at `stage-view-decision.ts:94-101`.
+  - On a build-capable project, the app gives these readers the pull request waiting card, or the branch setup or reader card, at `stage-view-decision.ts:95-102`.
   - `docs/protocol/cloud/viewer.md:87-94` says that the waiting card shows only when the project cannot build. The app's fallback for these readers is wider.
 - **Problem:** For a reader without member access on a build-capable project, rule 7 does not say which card the stage shows. `viewer.md` also limits the waiting card to projects that cannot build.
 - **Impact if no action:** A reviewer cannot tell whether the stage is right for those readers, and a later change can alter their card without notice.

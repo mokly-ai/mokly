@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from task M2c of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `docs/mockups/src/screens/product/settings/workspace-pane.tsx:45-59` (the `state === "error"` branch) and `apps/app/src/settings/panes/workspace-pane.tsx:80-85` (the `PaneResource` of the Projects section).
+- **Location:** `docs/mockups/src/screens/product/settings/workspace-pane.tsx:46-60` (the `state === "error"` branch) and `apps/app/src/settings/panes/workspace-pane.tsx:81-86` (the `PaneResource` of the Projects section).
 - **Reason:** The drawing and the app disagree on where one failure sits, and only the user decides which side of a mockup and product difference is right.
 - **Category:** Mockup.
 
@@ -19,6 +19,6 @@
   - **B.** Make the whole pane wait for the projects read, including the name field and the facts, so that the failure can replace the pane. The app then wraps the whole pane in the projects read. Effort: Medium.
 - **Left out:** Change nothing. The spec then keeps two regions for one read.
 - **Wider fix:** None. The **Wait** composition already states the rule.
-- **Previous examples:** The GitHub accounts fact of the same pane already fails in its own line with "Couldn’t load" and a quiet **Try again** (`apps/app/src/settings/panes/workspace-github.tsx:45-57`).
+- **Previous examples:** The GitHub accounts fact of the same pane already fails in its own line with "Couldn’t load" and a quiet **Try again** (`apps/app/src/settings/panes/workspace-github.tsx:56-68`).
 - **Recommendation:** A. The name and the facts come from the settings scope, not from the projects read, and the app already places the failure in the section.
 - **Action:** ask the user, because option A decides which side of a mockup and product difference is right, and no recorded decision covers it.

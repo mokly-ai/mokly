@@ -19,10 +19,20 @@
   - Confirm that Re-run delivers the check again, and record a failure check.
   - Record the observations in `docs/ops/publish-smoke.md`.
   - If a production project and a live check already exist, record their dated evidence instead.
+  - Then move the places below from the old repository name `mokly-ai/mokly-cloud` to `mokly-ai/mokly`, with their tests. A design call of 2026-11-19 keeps the old name there until this repository has its production project.
+    - `crates/mkc-api/src/preview_seed/identity.rs:23`, the repository of the sample project that the preview seed creates. Its tests are `crates/mkc-api/src/preview_seed/_tests_/service/fixtures.rs`, `crates/mkc-api/tests/preview_seed/evidence.rs`, `frozen.rs` and `state.rs`, and `infra/tests/preview_seed_job_support.py:41`.
+    - `docs/protocol/cloud/preview-seed.md:90` and `:212`, which state the seed repository and the address of its sample project.
+    - `infra/scripts/preview-comment.py:112`, the sample project link of the preview comment.
+    - `scripts/cloud/publication_smoke_cli.py:59`, the `--repository` that the publication smoke publishes with. Its tests are `scripts/cloud/_tests_/publication_smoke_cli_tests.py` and `publication_smoke_fixture_tests.py`.
+    - `scripts/cloud/publication_smoke_support.py:78` and `scripts/cloud/smoke_preview_plan.py:18`, which look up the repository in the GitHub installation of the workspace.
+    - `scripts/cloud/smoke_viewer_reads.py:85` and `:101`, the pull request address that the viewer read smoke expects.
+    - `infra/scripts/catalogue_recording_cases.py:43`, the `--repository` of the catalogue capture recording, which `infra/tests/fixtures/README.md:73` describes.
+    - `docs/ops/github-app-smoke.md:135`, the repositories that step 4 of the GitHub App smoke expects under the `mokly-ai` account.
+    - The dogfood commands in `docs/ops/mokly-release-cutover.md:45` and `:57`, `docs/ops/publish-smoke.md:92` and `docs/development/cloud.md:188`, which create, publish or capture the project of the old repository.
   - The effort covers the proof only. Grade a new workflow change separately.
 - **Impact if no action:** The team does not use its own product on its own changes, and the live check stays unproven.
 - **Needs:** Production access, a project token, and the GitHub App on this repository, `mokly-ai/mokly`.
-- **Done when:** Each pull request of this repository gets a live `Mokly` check, and the runbook records the observations.
+- **Done when:** Each pull request of this repository gets a live `Mokly` check, the runbook records the observations, and the places that the task lists name `mokly-ai/mokly`.
 - **Related:** The list below gives the links.
   - `plans/follow-ups/cloud-builds-never-ran-live.md` can publish the catalogue without a CI token.
   - `plans/follow-ups/github-app-live-smoke-not-recorded.md`, same live proof. That walk leaves the live Changes check to this task.

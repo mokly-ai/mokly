@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`, outside its scope.
-- **Location:** `docs/mockups/src/screens/product/settings/surface.tsx:138-140` and `docs/mockups/src/_tests_/responsive.spec.ts:65-74`.
+- **Location:** `docs/mockups/src/screens/product/settings/surface.tsx:140-142` and `docs/mockups/src/_tests_/responsive.spec.ts:65-74`.
 - **Reason:** The link predates that branch, which may fix only the layers beneath an open layer, and the fix needs the user's choice.
 - **Checked:** 2026-11-03, on the working tree of the branch above, after `LayerBeneath` landed.
 - **Category:** Mockup.
@@ -18,7 +18,7 @@
   - With a confirmation modal open, `LayerBeneath` covers the frame, and the modal sits in `main` beside it. The skip link stays outside both, so a keyboard reader can focus it. Its target, `main`, holds the modal.
   - The link skips nothing. On desktop the backdrop before `main` draws no control, and on mobile the link sits directly before `main`.
   - The helper's first comment said that focus stays in the modal. The branch narrowed that comment to the covered frame on 2026-11-03. It changed no focus behavior.
-  - `docs/protocol/cloud/product-navigation.md:210` and `docs/protocol/cloud/web-app.md:146` say that every product screen owns one `main` landmark, one `h1` and a skip link.
+  - `docs/protocol/cloud/product-navigation.md:216` and `docs/protocol/cloud/web-app.md:146` say that every product screen owns one `main` landmark, one `h1` and a skip link.
   - `docs/protocol/cloud/viewer-chrome.md:196-198` says that the viewer overlay screens carry no skip link, because everything before the panel is the inert backdrop.
   - `docs/protocol/cloud/web-product-shell.md:148-151` says that the live stage keeps its cloud skip link only while no panel or settings overlay is open.
   - No protocol says whether a settings mockup keeps its skip link while a modal is open.
@@ -38,4 +38,4 @@
 - **Related:**
   - `plans/follow-ups/settings-policy-skips-inert-layers.md`: its option E waits for this answer, because E fails on every desktop settings page while this link sits outside the dialog.
 - **Recommendation:** A. It keeps focus inside the open modal, as the live app and the viewer overlay screens do, and it extends an exemption that the sweep already makes for the same reason. C matches the live app on desktop too.
-- **Action:** ask the user, because A loosens the link check of the responsive sweep and adds a mockup rule. The screen rule of `docs/protocol/cloud/product-navigation.md:210` keeps a skip link on every product screen, and only the viewer overlay screens have a written exception.
+- **Action:** ask the user, because A loosens the link check of the responsive sweep and adds a mockup rule. The screen rule of `docs/protocol/cloud/product-navigation.md:216` keeps a skip link on every product screen, and only the viewer overlay screens have a written exception.

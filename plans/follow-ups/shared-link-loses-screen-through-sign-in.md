@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Common. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the signed-out return defect that Milestone 8 of the deleted `plans/mokly-dependencies-upgrade.md` recorded for a separate plan, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/app/sign-in.tsx:11-19`, `apps/app/app/sign-up.tsx:11-19`, `apps/app/app/auth/email.tsx:11-21`, `apps/app/src/screens/account/entry-screen.tsx:54-74` and `:101-105`, `apps/app/src/navigation/address.ts:84-107` and `apps/app/src/navigation/return-to.ts:92-104`.
+- **Location:** `apps/app/app/sign-in.tsx:11-19`, `apps/app/app/sign-up.tsx:11-19`, `apps/app/app/auth/email.tsx:11-21`, `apps/app/src/screens/account/entry-screen.tsx:57-77` and `:70-73`, `apps/app/src/navigation/address.ts:84-107` and `apps/app/src/navigation/return-to.ts:92-104`.
 - **Reason:** The pull request with the fix, PR #37, closed unmerged on 2026-10-30, and no recorded decision says whether its fix lands.
 - **Checked:** 2026-10-31, at commit `f568853e`. Partly confirmed. The sign-in and sign-up switch link still drops `returnTo`. The automatic return defect is not verified. The entry routes read the live address, not a one-time copy.
 - **Category:** Product bug.
@@ -13,7 +13,7 @@
   - **Session guard:** The app code that sends a signed-out reader to Sign in with the current address as `returnTo`.
 - **Background:** A signed-out reader opens a shared link to one screen of a publication. The session guard sends them to Sign in with the right `returnTo`. The dependency upgrade proof of 2026-10-09 found that the email request then sends `/dashboard`. The callback then opens onboarding, not the shared screen. The defect existed on `main` before that upgrade. The proof signed the reader in first, so it did not fix the defect.
 - **Problem:** The list below separates the confirmed gap from the unverified defect.
-  - The switch link between Sign in and Sign up at `entry-screen.tsx:101-105` uses `text.switchTo` without `returnTo`. A reader who follows it loses the shared destination. A code read shows this gap.
+  - The switch link between Sign in and Sign up at `entry-screen.tsx:70-73` uses `text.switchTo` without `returnTo`. A reader who follows it loses the shared destination. A code read shows this gap.
   - The source explained the 2026-10-09 result as a one-time address read. That explanation is wrong at commit `f568853e`.
   - Sign in, Sign up and the email resend route read the live address through `useAddressSearch` on each render. `useAddress` subscribes to history changes.
   - The email, resend and GitHub actions take `returnTo` through their current dependencies. Nobody reproduced the automatic return defect at this commit.

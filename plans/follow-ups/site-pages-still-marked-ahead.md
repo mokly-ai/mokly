@@ -3,14 +3,14 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from the post-merge tasks of the deleted plans `public-site.md`, `mokly-cloud-initial-scope.md` and `billing.md`, on the branch `calummoore/plans-skill-update`. On 2026-11-01 the merge of `main` into `calummoore/maseru` merged the duplicate item `billing-pages-go-live-check.md` into it.
-- **Location:** `apps/site/src/content/docs/cloud/overview.md`, `connect-a-repository.md`, `branches-and-pull-requests.md`, `builds.md`, `sharing-and-access.md`, `workspaces-and-roles.md`, `settings.md` and `plans-and-billing.md` in the same folder, `docs/protocol/cloud/site.md:189-206` and `docs/ops/deploy.md:383-384`.
+- **Location:** `apps/site/src/content/docs/cloud/overview.md`, `connect-a-repository.md`, `branches-and-pull-requests.md`, `builds.md`, `sharing-and-access.md`, `workspaces-and-roles.md`, `settings.md` and `plans-and-billing.md` in the same folder, `docs/protocol/cloud/site.md:177-187` and `docs/ops/deploy.md:383-384`.
 - **Reason:** The alignment pass compares the site with the deployed product, so it waits until the product ships.
 - **Checked:** 2026-10-31, at commit `f568853e`. Not verified. All eight cloud pages still carry `status: "ahead"`, and no dated alignment result was found. The marker alone does not prove that the deployed docs are wrong.
 
 - **Terms:**
   - **Ahead page:** A site docs page with `status: "ahead"` in its frontmatter, written before the behaviour that it describes shipped.
   - **Go-live alignment pass:** The comparison of every ahead page with the deployed product before the production domain goes live.
-- **Background:** `docs/protocol/cloud/site.md:189-206` defines the rule. A page keeps the status until its routes, fields, labels and behaviour match the shipped product. On 2026-10-30, eight cloud pages carry `status: "ahead"`: `overview.md`, `connect-a-repository.md`, `branches-and-pull-requests.md`, `builds.md`, `sharing-and-access.md`, `workspaces-and-roles.md`, `settings.md` and `plans-and-billing.md`. The legal pages carry the company's real text. The operator reported in PR #82 that production billing went live on 2026-10-30. `docs/ops/production.md:100-106` records only an older rollout and a sign-in smoke.
+- **Background:** `docs/protocol/cloud/site.md:177-187` defines the rule. A page keeps the status until its routes, fields, labels and behaviour match the shipped product. On 2026-10-30, eight cloud pages carry `status: "ahead"`: `overview.md`, `connect-a-repository.md`, `branches-and-pull-requests.md`, `builds.md`, `sharing-and-access.md`, `workspaces-and-roles.md`, `settings.md` and `plans-and-billing.md`. The legal pages carry the company's real text. The operator reported in PR #82 that production billing went live on 2026-10-30. `docs/ops/production.md:100-106` records only an older rollout and a sign-in smoke.
 - **Task:** Run the go-live alignment pass.
   - Compare each ahead page with the deployed product, and remove or reword the text that did not ship.
   - Drop `status: "ahead"` from each page that now matches.

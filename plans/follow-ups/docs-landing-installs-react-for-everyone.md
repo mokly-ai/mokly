@@ -28,6 +28,6 @@
 - **Left out:** Keeping the command, because it fails the goal. A site test that compares the copy with the guide, because it tests package documentation.
 - **Wider fix:** C, because it removes the site's copy of the install steps.
 - **Previous examples:** Commit `7e35a06a` removed another package-dependent claim from the site's own pages.
-- **Related:** The Mokly Cloud drawing of the Install guide page, `docs/mockups/src/screens/design/site/docs_screen.tsx:43`, draws the same combined command, and `docs/mockups/src/_tests_/design-site-content.test.ts:149` pins it. That page renders the base command first, as `apps/site/tests/browser/docs.spec.ts:155` checks. Every option redraws it.
+- **Related:** The Mokly Cloud drawing of the Install guide page, `docs/mockups/src/screens/design/site/docs_screen.tsx:43`, draws the same combined command, and `docs/mockups/src/_tests_/design-site-content.test.ts:131` pins it. That page renders the base command first, as `apps/site/tests/browser/docs.spec.ts:156` checks. Every option redraws it.
 - **Recommendation:** C. It leaves no site copy of the install steps, so the landing cannot disagree with the Install page after a later change of the guide. If the user does not approve the removal, B is the next best.
 - **Action:** ask the user, because C removes content that is on `origin/main`.

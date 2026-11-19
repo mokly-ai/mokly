@@ -6,7 +6,7 @@ order: 2
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/product-navigation.md, protocol/product-accounts-and-roles.md, protocol/cloud-builds.md -->
+<!-- Source: mokly-cloud protocol/cloud/product-navigation.md, protocol/cloud/product-accounts-and-roles.md, protocol/cloud/cloud-builds.md -->
 
 ## Sign in
 

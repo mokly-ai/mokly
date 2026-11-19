@@ -222,9 +222,9 @@ dir="$(mktemp -d)"
 for id in mkc-desktop-developer-id-p12 mkc-desktop-developer-id-p12-password mkc-desktop-notary-api-key; do
   gcloud secrets versions access latest --secret="$id" --project=mokly-508518 --out-file="$dir/$id"
 done
-base64 < "$dir/mkc-desktop-developer-id-p12" | gh secret set CSC_LINK --repo mokly-ai/mokly-cloud
-gh secret set CSC_KEY_PASSWORD --repo mokly-ai/mokly-cloud < "$dir/mkc-desktop-developer-id-p12-password"
-gh secret set APPLE_API_KEY --repo mokly-ai/mokly-cloud < "$dir/mkc-desktop-notary-api-key"
+base64 < "$dir/mkc-desktop-developer-id-p12" | gh secret set CSC_LINK --repo mokly-ai/mokly
+gh secret set CSC_KEY_PASSWORD --repo mokly-ai/mokly < "$dir/mkc-desktop-developer-id-p12-password"
+gh secret set APPLE_API_KEY --repo mokly-ai/mokly < "$dir/mkc-desktop-notary-api-key"
 rm -rf "$dir"
 ```
 

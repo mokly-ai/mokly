@@ -3,13 +3,13 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from the first unchecked post-merge task of the deleted `plans/workspaces.md` and the second post-merge task of the deleted `plans/readable-addresses.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/ops/github-app-smoke.md:52-57` and the GitHub App registrations of `main-preview` and production.
+- **Location:** `docs/ops/github-app-smoke.md:53-58` and the GitHub App registrations of `main-preview` and production.
 - **Reason:** The registrations live on GitHub, outside the repository, so only an operator can change and confirm them.
 - **Checked:** 2026-10-31, at commit `f568853e`. The audit could not verify the live settings. The repository documents only the target settings, and nobody read either registration.
 
 - **Terms:**
   - **Redirect on update:** A GitHub App setting that sends the user back to the setup URL after they change an installation's repositories.
-- **Background:** The registration table at `docs/ops/github-app-smoke.md:52-57` gives the target settings.
+- **Background:** The registration table at `docs/ops/github-app-smoke.md:53-58` gives the target settings.
   - Callback URL: `<app-origin>/auth/github/callback`.
   - Setup URL: `<app-origin>/auth/github/install`.
   - Redirect on update: enabled, to `<app-origin>/auth/github/install`.

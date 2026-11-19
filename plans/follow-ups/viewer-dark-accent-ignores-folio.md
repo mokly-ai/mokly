@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-02, from item 15 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The mockup work item `conductor/mokly-rust-core-upgrade-m2-b-mockups` found it on 2026-11-01.
-- **Location:** the package theme `packages/ui/src/theme/theme.css:43`, `:135` and `:186`, the package rule `docs/protocol/mokly-viewer-appearance.md:176-178`, the test "every viewer screen keeps the chrome over one stage" in `docs/mockups/src/_tests_/viewer.spec.ts:54`, with its package accent count at `:84-108`, and the cloud's mapping in `docs/mockups/styles/product/viewer.css:28-30`, which the app serves as `apps/app/public/folio/product/viewer.css:28-30`.
+- **Location:** the package theme `packages/ui/src/theme/theme.css:43`, `:135` and `:186`, the package rule `docs/protocol/mokly-viewer-appearance.md:176-178`, the test "every viewer screen keeps the chrome over one stage" in `docs/mockups/src/_tests_/viewer.spec.ts:54`, with its package accent count at `:85-109`, and the cloud's mapping in `docs/mockups/styles/product/viewer.css:28-30`, which the app serves as `apps/app/public/folio/product/viewer.css:28-30`.
 - **Reason:** On 2026-11-03 the user chose A. The rest of the fix is a change to the published `@mokly/ui` package, outside the scope of the change that found it.
 - **Category:** Product bug.
 

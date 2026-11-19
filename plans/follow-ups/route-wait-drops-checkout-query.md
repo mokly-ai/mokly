@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from the fix of review finding 83 on `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `apps/app/src/settings/route-wait.tsx:73` (a press on another rail entry while the wide durable route waits).
+- **Location:** `apps/app/src/settings/route-wait.tsx:74` (a press on another rail entry while the wide durable route waits).
 - **Reason:** Normal use does not meet it: the reader must press another pane during the short wait of a Checkout return, and the webhook must arrive after they open Billing.
 - **Category:** Product bug.
 

@@ -170,7 +170,7 @@ not credentials or live resource evidence.
 ## Foundation Wait Fixtures
 
 The `foundation-gate/` files were recorded on 2026-10-21 with GitHub CLI
-2.100.0 against real runs of this repository:
+2.100.0 against real runs of the old cloud repository:
 `gh run list --repo mokly-ai/mokly-cloud --workflow <file> --commit <SHA> --json
 attempt,conclusion,createdAt,databaseId,event,headBranch,headSha,number,status,url`,
 with `--branch main` for the `main` runs. The Foundation workflow had no runs

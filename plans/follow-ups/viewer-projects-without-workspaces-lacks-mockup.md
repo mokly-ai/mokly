@@ -19,7 +19,7 @@
 - **Options:**
   - **A.** Remove the state from the app, for example by sending such a reader to `/new`. It changes product behaviour that no requirement asks to change. Effort: Medium.
   - **B.** Draw the panel with no workspace at all, then remove the allowance. Effort: Large.
-    - Add the state as a new variant of `product/viewer/projects`, in both viewports and both color schemes. The entry has three variants, so a fourth fits the limit of `docs/protocol/cloud/mockups.md:144`.
+    - Add the state as a new variant of `product/viewer/projects`, in both viewports and both color schemes. The entry has three variants, so a fourth fits the limit of `docs/protocol/cloud/mockups.md:157`.
     - Remove the `allowedStates` entry for `viewer/panels/projects.tsx`, title "No workspaces yet", from `docs/mockups/src/_tests_/app-parity-allowances.ts:85-89`.
     - The suite fails with "the catalogue caught up; drop the allowlist line" until the entry goes.
 - **Left out:** Keep the allowance without a drawing. The suite rule keeps an allowance only while an item removes it.

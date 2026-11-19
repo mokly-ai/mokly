@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-04, from the options check of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/screens/account/create-workspace-screen.tsx:109-125`, `apps/app/src/screens/account/project-address.tsx:58-74`, `docs/mockups/src/screens/product/account/create-workspace-screen.tsx:101-108` and `docs/mockups/src/screens/product/account/choose-repository-screen.tsx:102-109`.
+- **Location:** `apps/app/src/screens/account/create-workspace-screen.tsx:110-126`, `apps/app/src/screens/account/project-address.tsx:58-74`, `docs/mockups/src/screens/product/account/create-workspace-screen.tsx:102-109` and `docs/mockups/src/screens/product/account/choose-repository-screen.tsx:104-111`.
 - **Reason:** The change that found it fixes loading states only, and this is the error state of a read, which its requirement draws as a state card.
 - **Category:** Product bug.
 
@@ -20,6 +20,6 @@
   - **C.** Show the failure as the slug field's own error text, with **Try again** beside the field. A field error then means two things: a refused slug and a failed read. Effort: Small.
 - **Left out:** Hide the failure. It breaks the requirement that the form says the address couldn’t load.
 - **Wider fix:** None. The rule that a wait draws its loaded layout covers waits only, and each error state is its own layout.
-- **Previous examples:** `apps/app/src/settings/panes/workspace-github.tsx:45-57`, the GitHub accounts fact's failed read.
+- **Previous examples:** `apps/app/src/settings/panes/workspace-github.tsx:56-68`, the GitHub accounts fact's failed read.
 - **Recommendation:** B. It keeps the address line's place and reuses the failure form that the GitHub accounts fact already has.
 - **Action:** ask the user, because B changes the drawing and the protocol text of the suggestion failure, and no recorded decision covers that change.

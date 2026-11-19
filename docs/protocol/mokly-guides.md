@@ -29,8 +29,8 @@ Sections appear in this order:
 | 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.                             |
 | 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.                          |
 
-The cloud repository may add its own `cloud`, `reference`, and `review`
-sections. They are not valid section values in this repository's guides.
+The cloud site under `apps/site` may add `cloud`, `reference`, and `review`
+sections. They are not valid section values in the `@mokly/mokly` guides.
 
 ## Frontmatter
 

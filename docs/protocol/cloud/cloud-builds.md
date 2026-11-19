@@ -221,7 +221,8 @@ Postgres regressions hold expired build A's row while another replica starts
 queued build C beside a second live build. A's old owner then attempts to
 renew. Renewal fails and at most two leases remain live. Tests also cover the
 exact expiry boundary. The
-[lock-order overlap and parent deletion tests](./persistence-boundaries.md)
+[lock-order overlap tests](./persistence-publication-storage.md#build-and-publication-lock-order)
+and the [parent deletion tests](./persistence-boundaries.md#table-ownership)
 cover the full completion path and published builds.
 
 One App browser test follows a build that the real API runs. The API runs

@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`. It keeps option B of `settings-modal-leaves-dialog-focusable.md`, which that branch fixed with option C and deleted.
-- **Location:** `docs/mockups/src/_tests_/settings-document-policy.ts:30-42`, `docs/protocol/cloud/settings-mockups.md:46-50` and `docs/protocol/cloud/settings-dialog.md:24-32`. The disk test runs the policy at `docs/mockups/src/_tests_/disk.spec.ts:189-190`.
+- **Location:** `docs/mockups/src/_tests_/settings-document-policy.ts:30-42`, `docs/protocol/cloud/settings-mockups.md:46-50` and `docs/protocol/cloud/settings-dialog.md:24-32`. The disk test runs the policy at `docs/mockups/src/_tests_/disk.spec.ts:166-167`.
 - **Reason:** Each option changes a check or a protocol statement, which the user reserves, and the approved settings fix does not depend on it.
 - **Checked:** 2026-11-03, on the completed helper and policy port. The settings policy still checks only `aria-hidden` on the page backdrop. The direct frame-focus regression passed 10 of 10 runs in both viewports.
 - **Category:** Test.

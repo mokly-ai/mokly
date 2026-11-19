@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the post-merge notes of the deleted `plans/pr-preview-environments.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `.github/workflows/preview.yml:2-10`, `infra/scripts/preview-event.py:17-25`, `infra/scripts/preview-destroy.sh` and `docs/ops/preview.md:243-245`.
+- **Location:** `.github/workflows/preview.yml:2-13`, `infra/scripts/preview-event.py:17-25`, `infra/scripts/preview-destroy.sh` and `docs/ops/preview.md:243-245`.
 - **Reason:** The plan left the cleanup job as an idea to consider, and no requirement asks for it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The preview workflow runs only on pull request events and has no schedule, as the runbook documents.
 - **Category:** Process.

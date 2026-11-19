@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F1 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `rules/typescript/write-failure-through-the-fragment.yml:20-43` and `:47-127`, `rules/_tests_/write-failure-through-the-fragment-test.yml:24-43` and `apps/app/src/components/write-failure.tsx:22-37`.
+- **Location:** `rules/typescript/write-failure-through-the-fragment.yml:20-43` and `:47-127`, `rules/_tests_/write-failure-through-the-fragment-test.yml:24-43` and `apps/app/src/components/write-failure.tsx:23-38`.
 - **Reason:** The fix replaces a lint rule with a stricter import rule, and that change needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The rule still matches literal JSX shapes, and its fixtures still omit the spread and computed `className` forms. No current bypass is known.
 - **Category:** Repository rule.

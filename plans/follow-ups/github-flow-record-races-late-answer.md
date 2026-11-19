@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from finding 42 of the round 1 review of `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `apps/app/src/navigation/github-flow.ts` (`storeGitHubFlow`), `apps/app/src/navigation/leave-page.ts:61`, and the six GitHub callers that store a flow and then leave: `screens/account/entry-screen.tsx:156`, `install-screen.tsx`, `connect-screen.tsx`, `github-install-screen.tsx`, `settings/panes/account-pane.tsx` and `settings/panes/github-pane.tsx`.
+- **Location:** `apps/app/src/navigation/github-flow.ts` (`storeGitHubFlow`), `apps/app/src/navigation/leave-page.ts:61`, and the six GitHub callers that store a flow and then leave: `screens/account/entry-screen.tsx:161`, `install-screen.tsx`, `connect-screen.tsx`, `github-install-screen.tsx`, `settings/panes/account-pane.tsx` and `settings/panes/github-pane.tsx`.
 - **Reason:** The race needs an unusual order of answers, and the shared fix reaches every GitHub writer.
 - **Category:** Product bug.
 
@@ -16,7 +16,7 @@
 - **Root question:** How does a newer GitHub trip survive an older request's late answer?
 - **Options:**
   - **A.** Check that the screen is still shown before each caller stores its record, and add the answer-order regression case. Effort: Small.
-  - **B.** One shared operation takes the purpose and the answer, and stores the record and leaves in one step while the screen is shown; no screen calls `storeGitHubFlow` itself, and the install landing uses it too. Replace the wait at `apps/app/src/_tests_/write-in-progress.spec.ts:158`, which expects the abandoned record. Effort: Medium.
+  - **B.** One shared operation takes the purpose and the answer, and stores the record and leaves in one step while the screen is shown; no screen calls `storeGitHubFlow` itself, and the install landing uses it too. Replace the wait at `apps/app/src/_tests_/write-in-progress.spec.ts:153`, which expects the abandoned record. Effort: Medium.
   - **C.** Make the flow store refuse the answer of an older start: each caller takes a start number before its request, like the session generation of commit `cb282fac`. Effort: Small.
   - **D.** Abort each GitHub start request when its screen unmounts. Effort: Medium.
 - **Left out:** Remove an abandoned record afterwards. It can also erase the newer record.

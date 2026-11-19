@@ -20,8 +20,6 @@ and the composition roots are in the
     business logic.
   - `-store-interface`: the store traits a `-store-pg` crate implements.
   - No suffix: a service, client, or domain crate.
-  - The two email crates, `mkc-email-interface` and `mkc-email-postmark`, are the
-    exceptions to the prefix.
 
 ## Crates
 

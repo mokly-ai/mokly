@@ -6,7 +6,7 @@ order: 5
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/viewer.md, protocol/product-navigation.md, protocol/product-accounts-and-roles.md -->
+<!-- Source: mokly-cloud protocol/cloud/viewer.md, protocol/cloud/product-navigation.md, protocol/cloud/product-accounts-and-roles.md -->
 
 ## Share pins what you are reading
 

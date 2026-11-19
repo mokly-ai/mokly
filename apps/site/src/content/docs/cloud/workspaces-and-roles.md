@@ -6,7 +6,7 @@ order: 6
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/product-navigation.md, protocol/product-accounts-and-roles.md -->
+<!-- Source: mokly-cloud protocol/cloud/product-navigation.md, protocol/cloud/product-accounts-and-roles.md -->
 
 ## Roles in a workspace
 

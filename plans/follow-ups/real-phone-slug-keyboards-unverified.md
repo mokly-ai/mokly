@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from finding 4 of the review of `calummoore/plans-skill-update` and the readable-addresses operator task of 2026-09-23.
-- **Location:** `apps/app/src/screens/account/create-workspace-screen.tsx:97`, `apps/app/src/screens/account/project-address.tsx:40`, `apps/app/src/settings/panes/slug-editor.tsx:103` and `apps/app/src/_tests_/identifier-field-support.ts`.
+- **Location:** `apps/app/src/screens/account/create-workspace-screen.tsx:33`, `apps/app/src/screens/account/project-address.tsx:22`, `apps/app/src/settings/panes/slug-editor.tsx:105` and `apps/app/src/_tests_/identifier-field-support.ts`.
 - **Reason:** The check needs real phones and a reachable app, which the cloud workspace's browser tests do not provide.
 - **Checked:** 2026-10-31, at commit `f568853e`. Not verified. The attribute tests still pass through Chromium only, and no dated device result was found. No phone keyboard defect is known.
 

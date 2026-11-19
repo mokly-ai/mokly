@@ -6,7 +6,7 @@ order: 2
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/approvals.md -->
+<!-- Source: mokly-cloud protocol/cloud/approvals.md -->
 
 ## Approving a publication
 

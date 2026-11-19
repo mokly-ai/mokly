@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 6D finding 3 and final review finding 2 of the Milestone 7 review TODO in the deleted `plans/desktop-app-shell.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/mockups/src/screens/product/viewer/unpublished-stage.tsx:17-32`, `docs/mockups/src/screens/product/viewer/switcher-screen.tsx:19-32`, `docs/mockups/src/screens/product/viewer/share-screen.tsx:150-162`, `docs/mockups/src/screens/product/page-parts.tsx:13-76` and `docs/protocol/cloud/product-mockups-viewer.md:61-62`.
+- **Location:** `docs/mockups/src/screens/product/viewer/unpublished-stage.tsx:18-33`, `docs/mockups/src/screens/product/viewer/switcher-screen.tsx:20-33`, `docs/mockups/src/screens/product/viewer/share-screen.tsx:152-164`, `docs/mockups/src/screens/product/page-parts.tsx:15-78` and `docs/protocol/cloud/product-mockups-viewer.md:61-62`.
 - **Reason:** The fix removes link targets that exist on `origin/main`, and that removal needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The three actions still draw the external glyph and still link inside the catalogue.
 - **Category:** Mockup.

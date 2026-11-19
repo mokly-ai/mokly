@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the follow-up that a review of [PR #54](https://github.com/mokly-ai/mokly-cloud/pull/54) proposed for review 3 finding 3, which the deleted `plans/foundation-terraform-from-ci.md` kept open, on the branch `calummoore/plans-skill-update`.
-- **Location:** `infra/scripts/terraform-root.sh:14-16`, `infra/scripts/terraform-foundation.sh:5-7`, `infra/scripts/terraform-environment.sh:5`, `docs/ops/foundation.md:116-142`, `docs/ops/build-template.md:124-139`, `docs/ops/secrets.md:521-551` and `infra/terraform/README.md:84-93`.
+- **Location:** `infra/scripts/terraform-root.sh:14-16`, `infra/scripts/terraform-foundation.sh:5-7`, `infra/scripts/terraform-environment.sh:5`, `docs/ops/foundation.md:116-142`, `docs/ops/build-template.md:124-139`, `docs/ops/secrets.md:521-546` and `infra/terraform/README.md:84-93`.
 - **Reason:** The review proposed it as a wider fix, and the user has not chosen it since PR #54 merged on 2026-10-23.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The wrapper still accepts only `plan`, `check` and `apply`, and the runbooks still repeat the import setup. The old wrong-token defect is fixed.
 - **Category:** Code structure (estimate).
@@ -15,7 +15,7 @@
 - **Background:**
   - The shared root wrapper accepts only `plan`, `check` and `apply`, at `terraform-root.sh:16`. It initializes the backend with the prefix of the root and reads the right Cloudflare token from Secret Manager.
   - Imports run outside the wrapper. `docs/ops/foundation.md:116-142` exports the `TF_VAR_*` inputs, runs `terraform init` with the backend prefix, and reads the read-only plan token for a Cloudflare import.
-  - `docs/ops/build-template.md:124-139`, `docs/ops/secrets.md:521-551` and `infra/terraform/README.md:84-93` give more hand-written import commands.
+  - `docs/ops/build-template.md:124-139`, `docs/ops/secrets.md:521-546` and `infra/terraform/README.md:84-93` give more hand-written import commands.
   - A review of PR #54 found a defect in the token that the hand-written import step read. PR #54 fixed the runbook, so the step now reads the read-only plan token, and only for a Cloudflare import.
 - **Problem:** Each import runs outside the wrapper, with a backend, input and token setup that only runbook text gives. A runbook copy can drift from the wrapper, as that review showed.
 - **Impact if no action:** A drifted copy can import into the wrong state prefix, or read a token with more access than an import needs. Each new import procedure adds another copy.

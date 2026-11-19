@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Rare. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F3 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `infra/terraform/foundation/main.tf:89-98`, `docs/ops/environment.md:110-111` and `docs/ops/deploy.md:243-245`.
+- **Location:** `infra/terraform/foundation/main.tf:94-103`, `docs/ops/environment.md:110-111` and `docs/ops/deploy.md:243-245`.
 - **Reason:** The source left a choice between two designs, and no user decision picks one.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. Terraform manages only the SSL setting of the app/API zone, and the runbooks keep the Browser Integrity Check as a documented dashboard setting.
 - **Category:** Process.

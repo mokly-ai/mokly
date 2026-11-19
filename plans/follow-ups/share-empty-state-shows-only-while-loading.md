@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the closed [PR #63](https://github.com/mokly-ai/mokly-cloud/pull/63), review finding 3. The closed PR #39 left the same question open as finding F7.
-- **Location:** `docs/protocol/cloud/viewer-chrome.md:79-83`, `apps/app/src/viewer/selection.ts:41-56` and `:134-138`, and `apps/app/src/viewer/panels/share.tsx:148` and `:246-247`.
+- **Location:** `docs/protocol/cloud/viewer-chrome.md:79-83`, `apps/app/src/viewer/selection.ts:42-57` and `:135-139`, and `apps/app/src/viewer/panels/share.tsx:149` and `:246-247`.
 - **Reason:** Each option changes a protocol requirement or removes product code, so the user decides.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The route correction still closes Share once no publication resolves, and the contract still promises the empty body.
 - **Category:** Docs or spec.

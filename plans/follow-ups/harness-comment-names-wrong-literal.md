@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77), review finding 5.
-- **Location:** `apps/app/src/_tests_/harness.ts:30`.
+- **Location:** `apps/app/src/_tests_/harness.ts:18`.
 - **Reason:** Code structure findings wait for the user under the review-fix rule.
 - **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. Line 30 still reads "the Milestone 1 review found an `Workspace`". The problem is in a comment only, not in runtime behaviour.
 - **Category:** Code structure.

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 81 of the round 1 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/viewer/build-request.ts:26` (`send`).
+- **Location:** `apps/app/src/viewer/build-request.ts:27` (`send`).
 - **Reason:** The file is unchanged since `origin/main`, so the fix belongs to a separate branch.
 - **Category:** Product bug.
 

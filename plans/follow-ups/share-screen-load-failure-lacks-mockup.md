@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 12J of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/mockups/src/entries/product/viewer/share.mockup.tsx:34-82`, `docs/mockups/src/screens/product/viewer/share-screen.tsx:92-158`, `apps/app/src/viewer/panels/share.tsx:43-47` and `:250-271`, and `docs/mockups/src/_tests_/app-parity-allowances.ts:90-94`.
+- **Location:** `docs/mockups/src/entries/product/viewer/share.mockup.tsx:34-82`, `docs/mockups/src/screens/product/viewer/share-screen.tsx:94-160`, `apps/app/src/viewer/panels/share.tsx:44-48` and `:250-271`, and `docs/mockups/src/_tests_/app-parity-allowances.ts:90-94`.
 - **Reason:** The recommended drawing adds a new mockup page, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still shows the screen list failure beside the link, and no drawing covers it. The allowance is still there.
 - **Category:** Mockup.
@@ -12,7 +12,7 @@
   - **Parity suite:** The mockup tests in `docs/mockups/src/_tests_/app-parity.test.ts`, which compare the drawn labels and state titles with the app's.
   - **Allowance:** One entry in `docs/mockups/src/_tests_/app-parity-allowances.ts` that lets one known difference pass until a follow-up item removes it.
   - **Share panel:** The viewer panel that makes a link to the publication or to one of its screens.
-- **Background:** The Share panel reads the list of screens with its own read, beside the read of the link. So the screen list can fail on its own. Then the running panel shows "Screens couldn’t load" and one Try again in place of the screen choice. The link above it stays. `apps/app/src/viewer/panels/share.tsx:43-47` writes that failure. The mockup `product/viewer/share` has the variants `empty`, `loading`, `error` and `catalogue`. `docs/protocol/cloud/mockups.md:144` allows at most four variants for a screen, so the entry is full. Earlier parity work, Milestone 12E, found the gap.
+- **Background:** The Share panel reads the list of screens with its own read, beside the read of the link. So the screen list can fail on its own. Then the running panel shows "Screens couldn’t load" and one Try again in place of the screen choice. The link above it stays. `apps/app/src/viewer/panels/share.tsx:44-48` writes that failure. The mockup `product/viewer/share` has the variants `empty`, `loading`, `error` and `catalogue`. `docs/protocol/cloud/mockups.md:157` allows at most four variants for a screen, so the entry is full. Earlier parity work, Milestone 12E, found the gap.
 - **Problem:** No mockup page draws the screen list failing while the link stays. The product announces the state, and no reviewer sees it.
 - **Impact if no action:** Nobody reviews the design of that state. The parity suite keeps one allowance for it in `allowedStates`.
 - **Root question:** How does the catalogue show the Share panel when only its screen list fails to load?

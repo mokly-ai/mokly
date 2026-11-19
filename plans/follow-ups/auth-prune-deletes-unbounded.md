@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from Milestone F8 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-auth/src/prune.rs:70-79`, `crates/mkc-store-pg/src/magic_link.rs:45-50`, `crates/mkc-store-pg/src/session.rs:49-63`, `crates/mkc-store-pg/src/rate_limit.rs:39-44` and `infra/helm/mokly-cloud/templates/maintenance.yaml:18-20`.
+- **Location:** `crates/mkc-auth/src/prune.rs:72-82`, `crates/mkc-store-pg/src/magic_link.rs:45-50`, `crates/mkc-store-pg/src/session.rs:49-63`, `crates/mkc-store-pg/src/rate_limit.rs:39-44` and `infra/helm/mokly-cloud/templates/maintenance.yaml:18-20`.
 - **Reason:** The user accepted the finding without applying it, and it was carried into the backlog on 2026-09-20.
 - **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. `AuthPruner::prune` still runs the three deletes with no row limit in one transaction. No load test has measured a deadline overrun.
 - **Category:** Performance.

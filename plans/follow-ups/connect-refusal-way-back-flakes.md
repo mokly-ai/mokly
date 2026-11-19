@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-04, from the complete gate of branch `conductor/follow-ups-mockup-overlay-focus` on 2026-11-03, an unrelated flaky test.
-- **Location:** `apps/app/src/_tests_/connect.spec.ts:139-164`, `apps/app/src/screens/account/github-callback-screen.tsx:34` and `:66`, `apps/app/src/screens/app/workspace-route.tsx:38-40`, and `apps/app/src/screens/account/install-screen.tsx:201-205`.
+- **Location:** `apps/app/src/_tests_/connect.spec.ts:133-158`, `apps/app/src/screens/account/github-callback-screen.tsx:37` and `:67`, `apps/app/src/screens/app/workspace-route.tsx:38-40`, and `apps/app/src/screens/account/install-screen.tsx:246-250`.
 - **Reason:** The branch that met the flake changes no app code and no app test, and the flaky-test rule fixes an unrelated flaky test in its own branch.
 - **Checked:** The gate ran on 2026-11-03, on a mockup-only branch based on `main` at commit `50283907`. The test failed once and passed on its configured retry. On 2026-11-04, after `main` at commit `08b3a98b` merged, the test and its wait at line 163 were unchanged. Nobody ran a controlled reproduction.
 - **Category:** Test.
@@ -16,9 +16,9 @@
   - The test `an account another workspace holds is refused with the way back` signs in and creates the project "Holder Org", which installs the recorded account for real. It then creates a second workspace, "Asker Org".
   - It opens `/install?workspaceId=<Asker Org>&installationId=1`, continues on GitHub and waits for `/auth/github/callback`. The refusal heading, the alert line and the one `details` element all pass.
   - At line 162 it clicks **Back to install**. At line 163 it waits with `page.waitForURL((url) => url.pathname === "/install")`.
-  - For an install attempt, **Back to install** leads to the bare path `/install`, at `github-callback-screen.tsx:34` and `:66`. That path names no workspace.
+  - For an install attempt, **Back to install** leads to the bare path `/install`, at `github-callback-screen.tsx:37` and `:67`. That path names no workspace.
   - A bare `/install` loads the first workspace of the reader's list, at `workspace-route.tsx:38-40`.
-  - `InstallScreen` hands a workspace whose GitHub account is connected on to its repository step through `router.replace`, at `install-screen.tsx:201-205`. Holder Org's account is connected.
+  - `InstallScreen` hands a workspace whose GitHub account is connected on to its repository step through `router.replace`, at `install-screen.tsx:246-250`. Holder Org's account is connected.
   - The app Playwright configuration retries a failed test once. In the gate, the app stage passed after 29.7 minutes: 371 tests passed, and one test was flaky.
 - **Failure:** The desktop project failed at `connect.spec.ts:163:14`, the wait after **Back to install**, with this text:
 

@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the follow-up for finding 10 and an outside-the-scope note of the Milestone 5 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/data/workspaces.ts:17-22`, `apps/app/src/data/workspaces.ts:29-39`, `apps/app/src/data/workspaces.ts:101-110`, `apps/app/src/data/projects.ts:16-25`, `apps/app/src/data/projects.ts:122-131` and `apps/app/src/data/publications.ts:86-96`.
+- **Location:** `apps/app/src/data/workspaces.ts:18-23`, `apps/app/src/data/workspaces.ts:30-40`, `apps/app/src/data/workspaces.ts:102-111`, `apps/app/src/data/projects.ts:16-25`, `apps/app/src/data/projects.ts:122-131` and `apps/app/src/data/publications.ts:86-96`.
 - **Reason:** The wider fix is Large, and a Large fix needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The bug is still open. The four reads still return the first page's items only. `listEveryWorkspace` stops after 20 pages and drops the `truncated` flag.
 - **Category:** Product bug.

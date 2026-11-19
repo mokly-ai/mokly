@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 82 of the round 1 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/settings/layer-screen.tsx:174`.
+- **Location:** `apps/app/src/settings/layer-screen.tsx:175`.
 - **Reason:** The lines are the same on `origin/main`, so the fix belongs to a separate branch.
 - **Checked:** 2026-11-06, after the fix of review finding 82: on a wide surface, a failed session read on a durable settings route still draws nothing, the same as on `origin/main`.
 - **Category:** Product bug.

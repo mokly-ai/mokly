@@ -18,17 +18,17 @@
     as an exact development pin "for preview deployment, the Cloudflare
     local static-host checks", the cloud site, and the cloud origin router.
   - The preview workflow runs `wrangler pages deploy`, at
-    `.github/workflows/preview.yml:64` and `:127`.
+    `.github/workflows/preview.yml:74` and `:144`.
   - No test or script runs `wrangler` or Miniflare to check a static host.
   - On 2026-11-17 Mokly Cloud moved into this repository. The root
-    `package.json:120` now pins `wrangler` 4.164.0, and
+    `package.json:121` now pins `wrangler` 4.164.0, and
     `apps/site/package.json:53` and `apps/worker/package.json:18` pin the
     same version.
   - The cloud uses Wrangler for more than previews.
     `infra/scripts/deploy-origin-router.sh:16` deploys the origin router
     with `wrangler deploy`. The site deploy runs
     `wrangler pages deploy dist`, as
-    `apps/site/tests/site_workflows.test.ts:147` checks. The
+    `apps/site/tests/site_workflows.test.ts:154` checks. The
     origin router tests run in the local Workers runtime through
     `@cloudflare/vitest-plugin`, in `apps/worker/vitest.config.ts:1-8`. None
     of these checks a static host.

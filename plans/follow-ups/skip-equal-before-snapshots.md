@@ -5,12 +5,12 @@
 - **Added:** 2026-11-01, from the closed "dedup 4" workspace, and its
   unmerged plan at commit `181e44f2` on branch
   `conductor/dedup-4-skip-equal-before-snapshots`.
-- **Location:** `crates/mokly-static/src/comparison_files.rs:31`,
-  `crates/mokly-compare/src/comparison_consumer.rs:50`,
+- **Location:** `crates/mokly-static/src/comparison_files.rs:32`,
+  `crates/mokly-compare/src/comparison_consumer.rs:54`,
   `crates/mokly-compare/src/projection_detail.rs:13`,
   `crates/mokly-server/src/comparison_capture.rs:33`,
   `crates/mokly-model/src/detail_validation.rs:17`, and
-  `docs/protocol/mokly-changes-serving.md:46`.
+  `docs/protocol/mokly-changes-serving.md:48`.
 - **Reason:** The user has not answered the open decisions of the plan,
   and the plan starts no milestone before the answers.
 
@@ -28,9 +28,9 @@
   - **Entry detail:** the JSON file for each entry under
     `mokly-viewer/entries/` that the viewer reads.
 - **Background:**
-  - `side` in `crates/mokly-static/src/comparison_files.rs:31` copies
+  - `side` in `crates/mokly-static/src/comparison_files.rs:32` copies
     every document, generated resource, and public file to each side.
-    `docs/protocol/mokly-changes-serving.md:46` requires the snapshots of
+    `docs/protocol/mokly-changes-serving.md:48` requires the snapshots of
     both sides.
   - On 2026-11-01, `main` at `c553bd6f` built `examples/basic` with the
     base equal to `HEAD`. Each side held 631 files, and all 631 pairs were
@@ -60,7 +60,7 @@
     `crates/mokly-graph/tests/url_tests.rs:63` tests. The frame requests the
     embedded document on the before side, and the viewer cannot redirect
     that request. The closure walk skips such a document, at
-    `crates/mokly-graph/src/closure.rs:115`.
+    `crates/mokly-graph/src/closure.rs:117`.
   - Equal HTML does not mean that no change shows. A stylesheet-only change
     and an Unmodified view that uses a changed component still show the old
     styles in the before pane. The browser comparison fixture had 16
@@ -73,9 +73,9 @@
     commit `908484d2`. Its receiver now reads Changes from the index. The
     deleted item
     [`cloud-without-review-json.md`](https://github.com/mokly-ai/mokly/blob/be242a628db21c24212b105c5a1f7277de2e8a29/plans/follow-ups/cloud-without-review-json.md?plain=1)
-    tracked that Cloud work. This item records no later check of the
-    receiver rule of decision 2. Check that rule in Mokly Cloud before you
-    answer decision 2.
+    tracked that Cloud work. Decision 2 below records the check of the
+    receiver rule on 2026-11-17, after Mokly Cloud moved into this
+    repository.
 - **Problem:** A build with Changes writes a second copy of each unchanged
   view document.
 - **Impact if no action:** Each output carries about 12 MB of copies in the

@@ -15,7 +15,7 @@
   - The origin router proxies product paths to the environment's app workload.
   - The review of 2026-09-22 found different answers for failed origin fetches. Provisioned labels propagate a Worker error, while disposable labels get the router's 404. The code still makes `br-main` provisioned.
   - Commit `2fe70139` later added the branch-origin requirement below. The review recorded its recommendation, but no user chose it.
-  - The tests at `apps/worker/tests/routing.test.ts:138-150` cover unresolved origins for `pr-84` and `br-feature`, not `br-main`.
+  - The tests at `apps/worker/tests/routing.test.ts:139-151` cover unresolved origins for `pr-84` and `br-feature`, not `br-main`.
   - Nobody has seen a deployed origin outage from this.
 - **Problem:** `origin-router.md:74-75` requires a no-store router 404 when a valid branch label has no internal origin record. That includes `br-main`, whose failed fetch the code rethrows instead. `apps/worker/README.md:31-33` also promises a router 404 for an unresolved branch origin. Documenting the observed split would change this requirement. The provisioned set also depends on the literal `main`.
 - **Impact if no action:** The router and its branch-origin requirement remain inconsistent. A later worker could mistake the old recommendation for an approved policy change.

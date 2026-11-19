@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-05, from Milestone 6 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/viewer/reference-redirect.ts`, `apps/app/src/screens/app/viewer-route.tsx` and the publication route under `apps/app/app/[workspace]/[project]/publications/`.
+- **Location:** `apps/app/src/screens/viewer/reference-redirect.ts`, `apps/app/src/screens/app/viewer-route.tsx` and the publication route under `apps/app/app/[workspace]/[project]/publications/`.
 - **Reason:** The double read comes from how the alias redirect mounts the publication's route, which the loading-states change did not change.
 - **Category:** Product bug.
 

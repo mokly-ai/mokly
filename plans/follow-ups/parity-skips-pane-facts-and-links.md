@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 13N of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/mockups/src/_tests_/app-parity-reads.ts:37-45`, `docs/mockups/src/_tests_/control-labels.ts:6-22` and `docs/mockups/src/_tests_/app-parity-allowances.ts`.
+- **Location:** `docs/mockups/src/_tests_/app-parity-reads.ts:39-47`, `docs/mockups/src/_tests_/control-labels.ts:6-22` and `docs/mockups/src/_tests_/app-parity-allowances.ts`.
 - **Reason:** The fix widens a check, which is stricter validation, and it needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. `drawnLabels` still reads control labels, pending labels and state titles only. No new validation is approved.
 - **Category:** Test.

@@ -5,11 +5,11 @@
 - **Added:** 2026-11-01, from decision 2 of the closed "Index and Ownership
   File Sizes" workspace, the proposed fifth decision and an outside-scope
   note of the closed "dedup 4" workspace, all of 2026-10-27.
-- **Location:** `crates/mokly-static/src/comparison_files.rs:31`,
-  `crates/mokly-static/src/comparison_output.rs:22`,
-  `crates/mokly-compare/src/projection_index.rs:53`,
-  `docs/protocol/mokly-changes-serving.md:46`, and
-  `docs/protocol/mokly-export-delivery.md:168`.
+- **Location:** `crates/mokly-static/src/comparison_files.rs:32`,
+  `crates/mokly-static/src/comparison_output.rs:24`,
+  `crates/mokly-compare/src/projection_index.rs:51`,
+  `docs/protocol/mokly-changes-serving.md:48`, and
+  `docs/protocol/mokly-export-delivery.md:169`.
 - **Reason:** The fix changes the snapshot rule of two protocol pages, and
   the user has not chosen an option.
 
@@ -25,7 +25,7 @@
   - **Ownership marker:** the file `.mokly-export-artifact`, which lists
     every output file with its path, SHA-256 digest, and size.
 - **Background:**
-  - `side` in `crates/mokly-static/src/comparison_files.rs:31` writes every
+  - `side` in `crates/mokly-static/src/comparison_files.rs:32` writes every
     document, generated resource, and public file to both sides. The
     protocol pages above require the snapshots of both sides.
   - The viewer fetches a snapshot only for an eligible view and for the
@@ -81,7 +81,7 @@
     Effort: Large (estimate).
 - **Left out:** Decide eligibility in the viewer only. The writer already
   computes `eligible` for each view, in
-  `crates/mokly-compare/src/projection_index.rs:53`.
+  `crates/mokly-compare/src/projection_index.rs:51`.
 - **Wider fix:** C. Then the generation holds only files that a reader
   can open.
 - **Previous examples:** PR #220 stopped `build` from rendering the head

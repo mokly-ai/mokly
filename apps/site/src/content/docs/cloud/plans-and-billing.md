@@ -6,7 +6,7 @@ order: 8
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/billing.md, protocol/billing-subscriptions.md, protocol/billing-plan-gates.md -->
+<!-- Source: mokly-cloud protocol/cloud/billing.md, protocol/cloud/billing-subscriptions.md, protocol/cloud/billing-plan-gates.md -->
 
 ## Every workspace is on a plan
 

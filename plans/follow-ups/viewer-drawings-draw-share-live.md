@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from task M2f of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `docs/mockups/src/screens/product/viewer/bar.tsx:96` (the fallback bar's Share), against `apps/app/src/screens/viewer/slots.tsx:255` and `docs/protocol/cloud/viewer-build-navigation.md:21`.
+- **Location:** `docs/mockups/src/screens/product/viewer/bar.tsx:98` (the fallback bar's Share), against `apps/app/src/screens/viewer/slots.tsx:255` and `docs/protocol/cloud/viewer-build-navigation.md:21`.
 - **Reason:** It changes every viewer drawing that has nothing to share, and the difference is older than the change that found it.
 - **Category:** Mockup.
 

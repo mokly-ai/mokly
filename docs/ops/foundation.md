@@ -253,7 +253,7 @@ merges. Use the operator identity and the inputs in the
    gcloud config set auth/impersonate_service_account "$account"
    GITHUB_ACTIONS=true GITHUB_EVENT_NAME=workflow_dispatch \
      GITHUB_REF=refs/heads/main \
-     GITHUB_WORKFLOW_REF=mokly-ai/mokly-cloud/.github/workflows/foundation.yml@refs/heads/main \
+     GITHUB_WORKFLOW_REF=mokly-ai/mokly/.github/workflows/foundation.yml@refs/heads/main \
      bash infra/scripts/terraform-foundation.sh apply
    ```
 

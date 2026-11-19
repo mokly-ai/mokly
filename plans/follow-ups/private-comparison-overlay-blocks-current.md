@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-02, from Decision 11 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01. An options check added options D, E and F. The app work item added the clipped-card fact on 2026-11-02.
-- **Location:** `apps/app/src/viewer/published.web.tsx:13-22`, the mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:220`, `docs/protocol/cloud/viewer.md`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md`.
+- **Location:** `apps/app/src/viewer/published.web.tsx:14-23`, the mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:221`, `docs/protocol/cloud/viewer.md`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md`.
 - **Reason:** On 2026-11-02 the user deferred the choice, and with it the private-comparison part of Decision 5.
 - **Category:** Product bug.
 

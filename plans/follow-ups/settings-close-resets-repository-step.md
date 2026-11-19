@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77), found while fixing review finding 7.
-- **Location:** `apps/app/src/settings/dialog-host.tsx:103-129`, `apps/app/src/navigation/address.ts:278-282`, `apps/app/src/screens/account/choose-repository-screen.tsx:60-77` and `apps/app/src/data/use-resource.ts:44-50` and `:104-146`.
+- **Location:** `apps/app/src/settings/dialog-host.tsx:104-130`, `apps/app/src/navigation/address.ts:278-282`, `apps/app/src/screens/account/choose-repository-screen.tsx:61-78` and `apps/app/src/data/use-resource.ts:45-51` and `:105-147`.
 - **Reason:** The fix changes how the settings dialog closes or where the repository step keeps its answers, which is outside review finding 7.
 - **Checked:** 2026-10-31, at commit `f568853e`. Not verified. The dialog still closes through `history.back()`, and the step still keeps its answers in component state. No browser walk ran at this commit.
 - **Category:** Product bug.

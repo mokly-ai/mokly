@@ -177,7 +177,7 @@ too, so a second declaration there would draw the same composition twice.
 `src/_tests_/app-parity.ts` compares them, tying the drawings to the running
 product. `app-parity-reads.ts` reads both sides, `app-parity-owners.ts` checks
 that the owner table stays true, and `app-parity-sentences.ts` checks the
-sentences that `app-owners.ts` names. Every
+sentences that `app-sentences.ts` names. Every
 action label, segmented option and state title a screen draws must be a string
 literal in the application source declared for that screen — checked against
 that source with its comments stripped, and only while that file still writes
@@ -190,7 +190,7 @@ announces that no screen drawing from that file shows is a divergence too, so a
 product that grows a state cannot stay invisible. `app-state-titles.ts` reads
 those titles from `StateMessage`, `PaneError`, `PaneResource` and `StageError`,
 so a section heading or a dialog's own name never enters the comparison.
-`app-owners.ts` also names exact sentences no label carries, such as a Billing
+`app-sentences.ts` names exact sentences no label carries, such as a Billing
 page with no control or a GitHub installation landing's heading, which the
 drawing and the owning source must both say, and sentences a redraw removed,
 which both must leave out. The

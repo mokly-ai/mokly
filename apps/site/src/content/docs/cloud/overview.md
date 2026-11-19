@@ -6,7 +6,7 @@ order: 1
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud product-direction.md, protocol/product-navigation.md, protocol/cloud-builds.md -->
+<!-- Source: mokly-cloud product-direction.md, protocol/cloud/product-navigation.md, protocol/cloud/cloud-builds.md -->
 
 ## A catalogue for every branch
 

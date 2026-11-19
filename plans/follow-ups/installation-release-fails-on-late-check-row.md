@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-02, from CI run 41370073016 of the branch `calummoore/ci-pipeline-duration`, an unrelated flaky test.
-- **Location:** `apps/app/src/_tests_/database-fixture.ts:11-17`, `:70-88` and `:100-110`, `apps/app/src/_tests_/harness.ts:233-239`, `crates/mkc-publications/src/check_provider.rs:120-133`, `crates/mkc-publications/src/check_worker.rs:42-60`, `crates/mkc-api/src/check_runtime.rs:62-77`, and `crates/mkc-db/migrations/202609161530_github_app/up.sql:18` and `:99`.
+- **Location:** `apps/app/src/_tests_/database-fixture.ts:11-17`, `:70-88` and `:100-110`, `apps/app/src/_tests_/github-installation.ts:87-93`, `crates/mkc-publications/src/check_provider.rs:120-133`, `crates/mkc-publications/src/check_worker.rs:42-60`, `crates/mkc-api/src/check_runtime.rs:62-77`, and `crates/mkc-db/migrations/202609161530_github_app/up.sql:18` and `:99`.
 - **Reason:** The branch that met the flake changes neither the test, the release helper nor the check writer, and the flaky-test rule fixes an unrelated flaky test in its own branch.
 - **Checked:** 2026-11-02, at commit `07febda2`. These files are the same as on `main` at `10834d30`. The release still runs its deletes in one `psql -c` call, the check delivery still records each check row in its own transaction, and the foreign key still has no delete action. Nobody ran a controlled reproduction.
 - **Category:** Test.
@@ -14,7 +14,7 @@
   - **Release:** `releaseRecordedGitHub` in `apps/app/src/_tests_/database-fixture.ts`. It deletes the recorded installation and what it holds, so that the next walk can install it again.
   - **Check delivery:** The background loop of the API that runs the check batches every five seconds. A publication batch claims pending rows of `publication_events`, creates the check on GitHub, and then records it as a row of `github_check_runs`.
 - **Background:** The list below gives facts from the code.
-  - `installApp` at `harness.ts:233-239` calls the release first. `installThroughApi` at `harness.ts:252` does the same, and `onboarding.spec.ts`, `connect.spec.ts` and `settings/github-accounts.spec.ts` call it directly five times.
+  - `installApp` at `github-installation.ts:87-93` calls the release first. `installThroughApi` at `github-installation.ts:106` does the same, and `onboarding.spec.ts`, `connect.spec.ts` and `settings/github-accounts.spec.ts` call it directly five times.
   - The release sends one `psql -c` call through `sql` at `database-fixture.ts:11-17`. From `forgetInstallation`, it deletes in this order: the check rows of the installation's repositories, their builds, their project links, the organization integrations, and the installations. It then deletes the user integrations and the GitHub identity of the recorded person.
   - The installation delete cascades to its repositories, because `github_repositories.installation_id` has `ON DELETE CASCADE` at `up.sql:18`. `github_check_runs.repository_id` references `github_repositories` with no delete action, at `up.sql:99`. So the cascade fails while any check row still names the repository.
   - The psql documentation says that a `-c` string with several statements runs as one transaction. With the default isolation of Postgres, each statement sees the rows that other transactions committed before it started.
@@ -46,7 +46,7 @@
 
 To reproduce and prove the fix:
 
-- Run `viewer-mobile.spec.ts:198` and then `:219` in order on the `mobile` project with `--retries=0` and `--repeat-each=20`. Record the pass count under `.context/`.
+- Run `viewer-handoff-mobile.spec.ts:42` and then `:63` in order on the `mobile` project with `--retries=0` and `--repeat-each=20`. Record the pass count under `.context/`.
 - Force the order at the database, with no sleep. In the suite's database schema, open a transaction that inserts a check row for the recorded repository, and leave it open. Run the release. It waits at the installation delete. Commit the held insert. The release should then fail with the same error.
 - Then show which background writer commits such a row during a natural run, for example from the API log of the two tests in order.
 - After the fix, run the same tests 10 times with `--retries=0`, and record the pass counts before and after under `.context/`. Do not commit a temporary hold or a test of the release.

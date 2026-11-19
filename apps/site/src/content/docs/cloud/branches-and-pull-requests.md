@@ -6,7 +6,7 @@ order: 4
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/product-navigation.md, protocol/viewer.md, protocol/viewer-builds.md -->
+<!-- Source: mokly-cloud protocol/cloud/product-navigation.md, protocol/cloud/viewer.md, protocol/cloud/viewer-builds.md -->
 
 ## Publications do not change
 

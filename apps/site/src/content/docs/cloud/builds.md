@@ -6,7 +6,7 @@ order: 3
 status: "ahead"
 ---
 
-<!-- Source: mokly-cloud protocol/cloud-builds.md, protocol/cloud-build-runner.md, protocol/viewer-builds.md, protocol/billing.md -->
+<!-- Source: mokly-cloud protocol/cloud/cloud-builds.md, protocol/cloud/cloud-build-runner.md, protocol/cloud/viewer-builds.md, protocol/cloud/billing.md -->
 
 ## Publishing without CI
 

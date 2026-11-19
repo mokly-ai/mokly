@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 42 of the round 1 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/settings/write.ts:201` (`run` calls `done`), with callers such as `apps/app/src/screens/account/entry-screen.tsx:141` and `create-workspace-screen.tsx:128`.
+- **Location:** `apps/app/src/settings/write.ts:201` (`run` calls `done`), with callers such as `apps/app/src/screens/account/entry-screen.tsx:146` and `create-workspace-screen.tsx:128`.
 - **Reason:** The same call exists on `origin/main`, so the fix belongs to a separate branch.
 - **Category:** Product bug.
 

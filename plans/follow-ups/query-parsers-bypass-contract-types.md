@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the unchecked post-merge task of the deleted `plans/openapi-from-rust.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/pagination.rs:14-36`, `crates/mkc-api/src/endpoints.rs:209-220`, `crates/mkc-api/src/viewer/input.rs:39-92` and `crates/mkc-api/src/contract/parameters.rs:33-53`.
+- **Location:** `crates/mkc-api/src/pagination.rs:14-36`, `crates/mkc-api/src/endpoints.rs:213-224`, `crates/mkc-api/src/viewer/input.rs:39-92` and `crates/mkc-api/src/contract/parameters.rs:33-53`.
 - **Reason:** The OpenAPI change of PR #49 recorded it as post-merge work, so it merged on 2026-10-20 without it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. `Pagination`, the slug suggestion parser and the viewer `Query` still parse by hand, beside the dead-code `Cursor` and `Limit` types. No actual query mismatch is known.
 - **Category:** Code structure.

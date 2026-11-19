@@ -26,7 +26,7 @@
     - The suite runs as four App shard jobs. Each job has its own runner, Postgres and API, and builds the web app. Shard 1 also runs the app logic tests. Each job runs one test at a time.
   - On 2026-11-02, the four shards held 98, 94, 99 and 80 of the 371 tests, and each test was in exactly one shard. In local runs, shard 1 passed its 98 browser tests in 5.0 minutes, and shard 4 passed its 80 in 4.4 minutes.
   - On 2026-11-17, local runs of the four `cloud-app` shards in this repository passed 109, 101, 106 and 97 browser tests, 413 in total. Shard 1 also passed 368 logic tests and 5 script tests. Each run on a warm host took, with setup and its web build: 15m 01s, 6m 10s, 11m 42s and 5m 59s. Two native builds ran beside shard 1. These are local runs, not CI runs.
-  - Two tests keep their second sign-in, because it is the behaviour under test: `settings-address-handoff.spec.ts:180` and `:281` under `apps/app/src/_tests_/`. They still wait about one minute each, in one shard.
+  - Two tests keep their second sign-in, because it is the behaviour under test: `settings-address-handoff.spec.ts:42` and `:143` under `apps/app/src/_tests_/`. They still wait about one minute each, in one shard.
   - The estimates before the shard change:
     - Each App shard job takes about 10 minutes. Each job has about 3 to 4 minutes of fixed work: setup, the web build and the API start.
     - CI takes about 11 to 12 minutes, and Workspace checks set the total.

@@ -10,7 +10,7 @@
 
 - **Terms:**
   - **Predecessor:** The old seat price that a catalogue sync replaces. The sync first repairs its seat metadata, then creates the replacement, which takes over the lookup key.
-  - **Stripe double:** The local HTTP server that the command tests of the old cloud `xtask` used in place of Stripe. It recorded each request. It is not in this repository.
+  - **Stripe double:** The local HTTP server that the command tests of the old cloud `xtask` used in place of Stripe. It recorded each request. It is now in `crates/mkc-billing-stripe/tests/cli/stripe_catalogue_double/`.
   - **Ordered mock clause:** A `next_call` clause of the `unimock` mocks in the unit tests. The mock expects such calls in the order of the clauses.
 - **Background:**
   - `reconcile_price` in `crates/mkc-billing-stripe/src/bin/stripe-catalogue/stripe_catalogue/apply.rs` repairs a drifted predecessor before it creates the replacement price. The order matters: the repair must succeed before the lookup key moves.
