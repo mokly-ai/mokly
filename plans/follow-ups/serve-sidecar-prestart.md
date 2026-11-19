@@ -59,6 +59,11 @@
   targeted usable startup of large React catalogues. It closed on 2026-11-01,
   when large React startup measured about 3.7 s, cold and warm. This item
   concerns the first background renders after readiness.
+  [serve-head-generation-preload.md](./serve-head-generation-preload.md)
+  records two measured attempts of 2026-11-19 to prepare a new head
+  generation on idle sidecars before the renders of an edit. A replay as in
+  option B costs CPU in the core window, and an evaluated replay held two
+  generations on each process. Use those measurements before option B.
 - **Recommendation:** C. Pool-level acquisition removes the wait on a starting
   sidecar for every request while keeping on-demand startup. The record first
   recommended B.
