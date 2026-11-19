@@ -30,6 +30,10 @@ The performance orchestrator added these calls on 2026-11-19 after the initial e
 
 Step 2 is [PR #355](https://github.com/mokly-ai/mokly/pull/355), branch `calummoore/mokly-first-changes-2-byte-equal-fast-10j4`. The start commit is `c2fe4bf2a4043e315eb888b86542cb44ec93cce0`. Earlier performance evidence used `6ae96ed08`.
 
+The three head-generation tests reproduced stale CSS on 2026-11-19. Each returned the `.before` selector after resolution selected the file with the `.after` selector. The defect is High. The performance orchestrator chose a separate correctness pull request into `main`, ahead of the speed stack. Its branch is `calummoore/mokly-stylesheet-resolution-evidence`, from current `origin/main`, without PR #355 or the base lookup. This workspace implements and pushes that fix. The orchestrator then creates the workspace that owns its review, complete gate, pull request, and CI. The fix commit records the exact failures. It gets no follow-up item.
+
+After that push, merge the fix branch into this branch. The performance orchestrator will give the final stack order with PR #355. Report capture cost from `css.bundle` spans on `examples/basic` and both large fixtures. Report a cost above about five percent. Correct output comes before the speed work.
+
 ## Contract owners
 
 - [Base preparation](../docs/protocol/mokly-base-preparation.md).
@@ -97,17 +101,27 @@ Depends on: none
 
 - [x] Complete the history and evidence investigation. Stop if the task's safety condition holds.
 - [x] Run the fresh read-only options check over this plan's calls. Merge its result before the plan commit.
-- [ ] Delegate internal documentation to the `docs implementor`. Explain store ownership, eligibility, validation, and base-only writes in the render README and relevant code comments.
-- [ ] Confirm that the protocol already owns every required freshness and isolation rule. Change no protocol requirement.
+- [x] Delegate internal documentation to the `docs implementor`. Explain store ownership, eligibility, validation, and base-only writes in the render README.
+- [x] Confirm that the protocol already owns every required freshness and isolation rule. Change no protocol requirement.
 
-## Milestone 2: Bounded record lookup and differential coverage
+## Milestone 2: Separate correctness prerequisite
 
 Depends on: 1
 
+- [x] Reproduce stale head reuse for package `style`, package `exports`, and an earlier extension candidate. Send the assertion failures before fixing the code.
+- [ ] Delegate per-root evidence capture to the `non-ui implementor` in its separate worktree. Include the PostCSS shared resolver when its effort fits Medium. Branch: `calummoore/mokly-stylesheet-resolution-evidence`.
+- [ ] Turn the three regressions green. Run targeted tests and the repository check on the fix branch.
+- [ ] Measure initial `css.bundle` count and time before and after on the example and both large fixtures. Report a cost above about five percent.
+- [ ] Commit and push the fix branch. Send its SHA, changed paths, exact High defect record, checks, and cost to the performance orchestrator.
+- [ ] Merge the fix into this branch with the `git-merge` skill. Keep its complete gate, review, pull request, and CI with the orchestrator's new workspace.
+
+## Milestone 3: Bounded record lookup and differential coverage
+
+Depends on: 2
+
 - [ ] Delegate code and tests to the `non-ui implementor`.
 - [ ] Add the new-behaviour test first. Save an assertion failure from the existing implementation.
-- [ ] Reproduce stale head reuse after a package entry changes or an earlier candidate appears. Send the assertion failure before fixing it.
-- [ ] Retain and validate every resolution read and candidate, including absence. Keep this extension Medium or smaller.
+- [ ] Confirm that the prerequisite fix retains and validates every resolution read and candidate, including absence.
 - [ ] Add read-only head lookup through the existing validation and replay path. Keep base miss insertion and rejection in the base store.
 - [ ] Preserve resolution evidence or reject a record whose resolution inputs cannot be proved.
 - [ ] Keep root-dependent PostCSS records isolated unless the existing evidence proves equal effective inputs.
@@ -116,12 +130,13 @@ Depends on: 1
 - [ ] Add a red-first base case for a symbolic link in a path part. Prove one cache hit through the real historical tree.
 - [ ] Check read-only head behaviour, base-store bounds, evidence replay, misses, and the unchanged timing spans.
 - [ ] Check all delegated changes against these TODOs and the 300-line Rust cap.
+- [ ] Update relevant code comments. Align the README with the prerequisite fix and remove its pending status after implementation.
 
 Evidence: `.context/shared-base-stylesheets/evidence/` holds test commands, the red proof, timing costs, and repeated-run results.
 
-## Milestone 3: Performance, output, and memory proof
+## Milestone 4: Performance, output, and memory proof
 
-Depends on: 2
+Depends on: 3
 
 - [ ] Build release binaries from the last merged `main` and this branch in separate checkouts and target directories. Build Cargo serially with incremental and dev debug disabled.
 - [ ] Check strict `examples/basic` output and large HTML and React fixture output from `scripts/large/` for exact byte equality.
@@ -135,9 +150,9 @@ Evidence: `.context/shared-base-stylesheets/evidence/` holds the raw runs, byte 
 
 The earlier 0.25-second base stylesheet figure comes from Mokly Cloud, which has no PostCSS. `examples/basic` runs its roots through Tailwind PostCSS. Its base records keep their physical key and are expected to miss.
 
-## Milestone 4: Checks, review, and pull request
+## Milestone 5: Checks, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 2, 3, 4
 
 - [ ] Smoke-test the strict example through Serve. Save any browser screenshot under `.context/`.
 - [ ] Run targeted tests and each new asynchronous test ten times. Record test costs and assertion-failure proofs.

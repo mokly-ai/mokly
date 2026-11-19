@@ -1,5 +1,9 @@
 # mokly-render
 
+Status: Base runtimes do not read head stylesheet records yet. Each
+stylesheet record key still holds the physical source root and lacks part of
+the resolver settings.
+
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -148,6 +152,32 @@ when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
+A stylesheet record key holds the configuration input, the resolved modules,
+and the module resolution settings. It also holds the complete CSS resolver
+settings: the configuration directory, aliases, dependency aliases,
+conditions, main fields, logical dependency roots, and extensions. A PostCSS
+record comes from a configuration with a PostCSS module. Its key also holds
+the physical source root of its side, so only a preparation on that root can
+reuse it. A plain CSS record comes from a configuration without a PostCSS
+module. Its key omits that root only when its stamp proves each read,
+candidate probe, and absence that selected its inputs. The stamp names these
+inputs by logical path.
+
+`Runtime::for_base` gives each base runtime its own stylesheet store and a
+weak read-only reference to the head store. A base lookup checks its
+attempt-local store, the shared store of the base runtime, and then the head
+store. The base keeps no index of head records. A head record passes the
+same validation in the base side tree. Its observations then replay into the
+base tree like any base witness. A hit shares the storage of the head
+record. Each base store that keeps the record charges it under its own
+bound. The base never writes, evicts, or rejects a head record. Its misses
+and rejections stay in its own stores. When the head store is gone, the base
+finds no head candidate. A base never reuses a head PostCSS record, because
+the source roots differ. It keeps its own PostCSS contexts, processes, and
+bundle states. A hit makes no `css.bundle` span. Each real bundle keeps its
+span. A failed head candidate gives the miss reason `stamp-mismatch`. A miss
+without a candidate keeps its existing reason.
+
 `BaseSide` takes the shared source lease and the complete dependency selection
 from `mokly-compare`. The base source reader holds the same lease. Bundle
 requests use that extraction, its selected dependencies,
@@ -253,7 +283,9 @@ view after the edit and counts real process starts and hello calls.
   after the first published state. `Runtime::with_serve_edit_plans` gives
   the head runtime of Serve its plan record owner. A base runtime never gets
   one. `Runtime::for_base` builds the runtime of one base preparation, which
-  shares the services and the style memo of the head runtime.
+  shares the services and the style memo of the head runtime. It starts its
+  own stores and keeps a weak read-only reference to the head stylesheet
+  store.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
@@ -295,10 +327,14 @@ view after the edit and counts real process starts and hello calls.
   props, controls, owners, and source coordinates into catalogue records.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
+- [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler
+  of one side and the key of its records, and lists the stylesheet roots of a
+  module graph.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
-  attempt-local store and the shared store, and times each real bundle as
-  `css.bundle` with its miss reason.
+  attempt-local store, the shared store of its runtime, and, in a base
+  runtime, the head store. It times each real bundle as `css.bundle` with its
+  miss reason.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
@@ -311,5 +347,7 @@ view after the edit and counts real process starts and hello calls.
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
+- [Stylesheet dependency retention](../../docs/protocol/mokly-imported-styles-postcss.md#dependency-retention).
+- [Timing records](../../docs/protocol/mokly-timings.md#core-spans).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).
