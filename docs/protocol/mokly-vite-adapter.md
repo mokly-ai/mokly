@@ -45,6 +45,12 @@ selected installation, as React does under the
 `@mokly/mokly` declares an optional peer dependency on `vite` that names the
 supported range. CI tests that range.
 
+When the side cannot load `vite`, `bundle` fails with `bundle-failed`, and its
+message names `vite`, as for a missing
+[`@storybook/react`](./mokly-sidecar.md#storybook). Decision: a missing `vite`
+fails the bundle. A warning and an esbuild compile were rejected, because the
+output could then differ from the project's build with no clear failure.
+
 After `vite` loads, a failure to load the setup or to run Vite fails `bundle`
 with `bundle-failed`. Its message names the installed Vite version and the
 tested range. Decision: Mokly adds no version check. A version check was

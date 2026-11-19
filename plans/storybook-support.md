@@ -1147,9 +1147,11 @@ The project's Vite setup compiles JavaScript, as decision 16 says.
 - [ ] Add the optional `vite` peer dependency, and update its check in
       `scripts/release/manifest.mjs`, `docs/protocol/mokly-package.md`, and
       `docs/protocol/npm-release.md`.
-- [ ] Add the rule of the answer to decision 22 to
-      `docs/protocol/mokly-vite-adapter.md`, and the rule of the answer to
-      track D decision 4.
+- [x] Add the rule of the answer to decision 22 to
+      `docs/protocol/mokly-vite-adapter.md`. Branch:
+      `conductor/storybook-support-d-vite-adapter`.
+- [ ] Apply the answer to track D decision 4 to the configuration check and
+      to `docs/protocol/mokly-vite-adapter.md`.
 - [ ] Name the `vite` setting in the `bundle` row of
       `docs/protocol/mokly-sidecar.md`, which is at its 250-line cap, and
       scope the esbuild "metafile" sentence of
