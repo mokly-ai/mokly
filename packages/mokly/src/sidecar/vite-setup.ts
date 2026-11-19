@@ -3,32 +3,19 @@ import path from "node:path";
 import type { Plugin, UserConfig } from "vite";
 
 import { fileDigest } from "./file-digests.js";
+import type { ModulePaths } from "./module-paths.js";
 import { directoryFiles } from "./resolution-inputs.js";
+import { loadViteConfig, viteConfigFiles } from "./vite-config.js";
 import type { loadVite } from "./vite-peers.js";
-
-const configFiles = ["js", "mjs", "ts", "cjs", "mts", "cts"].map(
-  (extension) => `vite.config.${extension}`,
-);
 
 /** App config loading uses Vite's runner loader, which writes no config bundle. */
 export async function viteSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
   plugin: Plugin,
+  paths: ModulePaths,
 ) {
-  const loaded = await vite.loadConfigFromFile(
-    {
-      command: "serve",
-      mode: "development",
-      isSsrBuild: false,
-      isPreview: false,
-    },
-    undefined,
-    directory,
-    "silent",
-    undefined,
-    "runner",
-  );
+  const loaded = await loadViteConfig(vite, directory, paths);
   const config = loaded?.config ?? {};
   const server = await vite.createServer({
     ...config,
@@ -48,7 +35,7 @@ export async function viteSetup(
   });
   const envDirectory = server.config.envDir;
   const files = [
-    ...configFiles.map((file) => path.join(directory, file)),
+    ...viteConfigFiles.map((file) => path.join(directory, file)),
     ...(loaded?.dependencies ?? []),
     ...(envDirectory === false
       ? []

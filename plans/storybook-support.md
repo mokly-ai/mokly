@@ -1165,10 +1165,11 @@ The project's Vite setup compiles JavaScript, as decision 16 says.
 
 Depends on: 14
 
-- [ ] Compile the base side with the base commit's Vite setup in its
-      extraction, with the selected installation.
-- [ ] Invalidate changed modules from Mokly's watcher in Serve.
-- [ ] Test Changes between two commits of a Vite fixture, and a Serve edit.
+- [x] Compile the base side with the base commit's Vite setup in its
+      extraction, with the selected installation. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Invalidate changed modules from Mokly's watcher in Serve. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test Changes between two commits of a Vite fixture, and a Serve edit.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Apply the answers to track D decisions 2 and 3.
 - [ ] Add the Vite inputs to the table of `docs/protocol/mokly-watch.md`, and
       the adapter to the early extraction lease of

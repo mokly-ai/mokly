@@ -12,9 +12,16 @@ import type { Bundled } from "./bundle.js";
 import { bundleResult, restore } from "./compiled.js";
 import { ModulePaths } from "./module-paths.js";
 import { viteFailure } from "./vite-errors.js";
+import { viteExternalResolver } from "./vite-external.js";
 import { createViteFetch } from "./vite-fetch.js";
 import { viteGraph, walkVite } from "./vite-graph.js";
 import { verifyViteInputs } from "./vite-inputs.js";
+import {
+  changedViteInputs,
+  invalidateViteModules,
+  snapshotViteInputs,
+} from "./vite-invalidation.js";
+import type { ViteSnapshot } from "./vite-invalidation.js";
 import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
 import { moklyVitePlugin } from "./vite-plugin.js";
@@ -29,6 +36,8 @@ interface Setup {
   files: string[];
   key: string;
   stamp: string;
+  snapshot?: ViteSnapshot;
+  styles: ViteStyles;
 }
 
 /** One app server belongs to this process and root; recipes outlive that server. */
@@ -41,7 +50,14 @@ export class ViteCompiler {
     compile: typeof build,
     capture: BundleCapture,
   ): Promise<Bundled> {
-    const paths = await ModulePaths.create(params);
+    const paths = await ModulePaths.create({
+      ...params,
+      moduleResolution: {
+        ...params.moduleResolution,
+        aliases: {},
+        resolveExtensions: [],
+      },
+    });
     params = { ...params, sourceRoot: paths.sourceRoot };
     let version: string | undefined;
     try {
@@ -58,6 +74,7 @@ export class ViteCompiler {
           files: new Map(),
           cssModules: new Set(),
           styles: new ViteStyles(),
+          external: async () => undefined,
         };
         this.input = input;
         const directory = path.resolve(
@@ -68,35 +85,50 @@ export class ViteCompiler {
           paths.sourceRoot,
           directory,
           paths.dependencyRoots,
+          paths.dependencyRoot,
+          paths.repositoryRoots,
           Object.entries(require.snapshot()).sort(([a], [b]) =>
             a < b ? -1 : a > b ? 1 : 0,
           ),
         ]);
+        const changed = await changedViteInputs(this.setup?.snapshot);
         if (
           this.setup &&
           (this.setup.key !== key ||
+            changed.metadata ||
             this.setup.stamp !==
               (await setupStamp(this.setup.files, directory)))
         )
           await this.dispose();
         if (!this.setup) {
+          input.styles = new ViteStyles();
           const setup = await viteSetup(
             vite.api,
             directory,
             moklyVitePlugin(() => this.input!),
+            paths,
           );
           this.setup = {
             ...setup,
             key,
             stamp: await setupStamp(setup.files, directory),
+            styles: input.styles,
           };
         }
+        input.styles = this.setup.styles;
+        input.external = viteExternalResolver(
+          vite.api,
+          this.setup.server,
+          paths,
+        );
+        invalidateViteModules(this.setup.server, this.setup.snapshot, changed);
         const imports = new Map<string, string[]>();
         const fetch = createViteFetch(
           this.setup.server,
           input,
           imports,
           version,
+          this.setup.snapshot?.files,
         );
         const { recipe, children } = await walkVite(
           viteUrl(viteEntry),
@@ -111,6 +143,7 @@ export class ViteCompiler {
         )
           throw new Error("Vite setup changed during compilation");
         const metadata = await viteMetadata(input, this.setup.files);
+        this.setup.snapshot = await snapshotViteInputs(input, metadata);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
           code: "",
@@ -154,6 +187,7 @@ export class ViteCompiler {
         return { generation, result: bundleResult(generation) };
       });
     } catch (error) {
+      await this.dispose();
       throw viteFailure(
         error,
         paths,
