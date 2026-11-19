@@ -7,6 +7,7 @@ use serde_json::Value;
 
 use crate::config::invalid_path_text;
 use crate::config_inputs::ProjectedInput;
+use crate::config_paths::confined_to_repository;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::{CatalogueError, Result};
@@ -37,7 +38,7 @@ pub(crate) fn validate(
         return Err(path_error(value));
     }
     let path = config.local_path(value);
-    if !path.starts_with(&config.repo_root) {
+    if !confined_to_repository(&config.repo_root, &[&path]) {
         return Err(path_error(value));
     }
     if !matches!(
@@ -50,7 +51,7 @@ pub(crate) fn validate(
         Ok(Some(node)) => node,
         _ => return Err(file_error(value)),
     };
-    if !node.identity.starts_with(&config.repo_root) {
+    if !confined_to_repository(&config.repo_root, &[&node.identity]) {
         return Err(path_error(value));
     }
     if node.kind != FileKind::File {
