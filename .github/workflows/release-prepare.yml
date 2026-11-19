@@ -5,9 +5,6 @@ on:
       publish_ref:
         required: true
         type: string
-      verification:
-        required: true
-        type: string
       artifact_run_id:
         required: true
         type: string
@@ -32,7 +29,6 @@ jobs:
       node_version: ${{ steps.node-version.outputs.value }}
     env:
       PUBLISH_REF: ${{ inputs.publish_ref }}
-      RELEASE_VERIFICATION: ${{ inputs.verification }}
       CARGO_BUILD_JOBS: 4
       CARGO_PROFILE_DEV_DEBUG: 0
       CARGO_INCREMENTAL: 0
@@ -82,22 +78,22 @@ jobs:
         id: evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/release/evidence.mjs
-      - name: Set up Bun for complete verification
-        if: steps.evidence.outputs.mode != 'evidence' && hashFiles('.bun-version') != ''
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version-file: .bun-version
-          no-cache: true
-      - name: Install Chromium for verification and smoke
+          RELEASE_VERIFICATION: evidence
+        run: |
+          node scripts/release/evidence.mjs
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const record = JSON.parse(fs.readFileSync('.context/release-evidence/record.json', 'utf8'));
+          if (record.outcome !== 'applicable') {
+            const reason = record.outcome === 'absent'
+              ? `CI evidence is absent: ${record.reason}. Re-run CI on release commit ${record.taggedCommit}. Retry the release after CI passes.`
+              : record.reason;
+            process.stderr.write(`${reason}\n`);
+            process.exitCode = 1;
+          }
+          JS
+      - name: Install Chromium for packed viewer smoke
         run: npx playwright install --with-deps chromium
-      # A manual retry dispatches from main, whose head can be newer than the
-      # checked-out tag; the suite runners require GITHUB_SHA to match HEAD.
-      - name: Run complete verification
-        env:
-          PLAYWRIGHT_CHANNEL: chromium
-        if: steps.evidence.outputs.mode != 'evidence'
-        run: GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict
       - name: Download native release archives
         if: steps.publish_artifacts.outputs.artifact_run_id == ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

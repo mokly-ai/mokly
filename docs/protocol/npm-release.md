@@ -163,9 +163,8 @@ maintainer setup, and the evidence each release keeps.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository gate. Release verification uses
-`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, Bun,
-and Rust commands from the workspace root and include:
+`cargo xtask check` is the complete repository gate. It orchestrates npm, Node,
+Bun, and Rust commands from the workspace root and includes:
 
 - every check of the
   [repository suite list](./ci-verification-repository.md#repository-boundary),
@@ -186,15 +185,10 @@ Tests that mutate files use isolated temporary directories and clean up child
 processes, including sidecars. The suite and shard commands, their complete
 command mapping, and the fail-closed inventory evidence are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards
-are partial checks; the unqualified command is the complete release gate. The
-release workflow's `complete` verification mode always runs the local gate. It
-runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote executor
-under the [remote verification contract](./remote-verification.md). Its default
-`evidence` mode may instead consume a validated aggregate that proves the same
-tree under the
-[release verification evidence contract](./npm-release-evidence.md). That
-contract also says when preparation sets up the pinned Bun before a complete
-gate.
+are partial checks; the unqualified command is the complete repository gate.
+Release preparation requires a validated CI aggregate for the exact tagged
+tree under the [release verification evidence contract](./npm-release-evidence.md).
+It never runs the repository gate on the release runner.
 
 ## Continuous Integration
 

@@ -190,6 +190,11 @@ aggregate defined in
 [CI verification](./ci-verification.md#verification-boundary), provides
 complete verification.
 
+Release preparation accepts only applicable CI evidence for the exact tagged
+tree under the [release evidence contract](./npm-release-evidence.md).
+It never runs the complete gate on the release runner. If evidence is absent,
+re-run CI on the release commit and retry the release after CI passes.
+
 ## Locked Cargo Dependencies
 
 `cargo xtask check` uses the locked dependency graph: the exact Rust

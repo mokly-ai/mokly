@@ -19,7 +19,7 @@ The daily scheduled workflow audits `main` strictly and maintains the
 fixes, pinned-parent overrides, and reviewed exceptions land there.
 
 Release preparation runs the strict live audit under the
-[release evidence contract](./npm-release-evidence.md#verification-modes) and
+[release evidence contract](./npm-release-evidence.md#verification-requirement) and
 never reuses an earlier audit as time-sensitive security evidence. The other
 CI jobs start without waiting for the CI repository job's audit, and
 `Required CI` fails unless it passes. An audit gate before those jobs was
