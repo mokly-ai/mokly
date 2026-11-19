@@ -2,7 +2,7 @@
 
 These scripts run local services and test the API with real processes,
 Postgres and local file storage. They use the workspace Mokly package, and the
-published-CLI smoke installs the published release of its version.
+published-CLI smoke installs `@mokly/mokly@latest` in its own npm prefix.
 The publication boundary uses envelope 3, ownership marker 3 and index 9.
 
 Run the publication integration and its Python tests from the repository root:
@@ -25,8 +25,9 @@ format dependency.
   It also converts test uploads to current-only indexes and envelopes.
 - `publication_smoke_fixture.py` strictly validates two source-only revisions
   of the [frozen fixture](./fixtures/publication-smoke-v0.19/README.md).
-- `publication_smoke_cli.py` publishes with the published release of the
-  workspace version,
+- `publication_smoke_consumer.py` installs npm `latest`, rejects linked or
+  escaped package paths, and records the installed version.
+- `publication_smoke_cli.py` publishes with that installation's executable,
   compares every served file with a strict build of the same checkout and
   base, checks replay, and compares the real dirty refusal with its recording.
 - `build_upload_fixture.py` adapts the released contract export for build

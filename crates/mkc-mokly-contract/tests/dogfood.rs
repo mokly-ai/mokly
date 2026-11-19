@@ -1,4 +1,4 @@
-//! Real published-package artifact acceptance, independent of producer internals.
+//! Workspace artifact acceptance, independent of producer internals.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -45,7 +45,6 @@ fn accepts_the_released_plan_and_its_complete_export() {
     let bundle = validator
         .validate(&mut fs::File::open(fixtures.join("plan.tar.gz")).unwrap())
         .unwrap();
-    assert_eq!(bundle.manifest().mokly_version, "0.19.0");
     let index = bundle.index();
     assert_eq!(index.current_screens().len(), 2);
     assert_eq!(

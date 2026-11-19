@@ -23,15 +23,15 @@ try {
 }
 const { fixtureRuntime, checkoutSources, commit, encode, json } =
   await import("./mokly-fixture-runtime.mjs");
-const { captureArtifacts, sha256 } =
-  await import("./mokly-fixture-artifacts.mjs");
+const { captureArtifacts } = await import("./mokly-fixture-artifacts.mjs");
+const { FIXTURE_VERSION, sha256 } =
+  await import("./mokly-fixture-normalize.mjs");
 const { captureCliErrors } = await import("./mokly-cli-errors.mjs");
 const require = createRequire(join(root, "package.json"));
 const tar = require("tar");
 const destination = join(root, "crates/mkc-mokly-contract/fixtures");
 const packageRoot = join(root, "packages/mokly");
 const workspacePackage = await json(join(packageRoot, "package.json"));
-const viewer = await json(join(root, "packages/viewer/package.json"));
 const temporary = await mkdtemp(join(tmpdir(), "mkc-mokly-fixtures-"));
 
 async function generate(moves, runtime) {
@@ -84,7 +84,12 @@ async function generate(moves, runtime) {
     }
   }
   commit(checkout, runtime, "comparison");
-  const generated = await captureArtifacts(tar, runtime, checkout);
+  const generated = await captureArtifacts(
+    tar,
+    runtime,
+    checkout,
+    workspacePackage.version,
+  );
   const files = moves
     ? new Map(
         [...generated].map(([name, bytes]) => [
@@ -106,18 +111,13 @@ async function generate(moves, runtime) {
     }
     files.set(
       "cli-errors.json",
-      await captureCliErrors(
-        root,
-        temporary,
-        runtime,
-        workspacePackage.version,
-      ),
+      await captureCliErrors(root, temporary, runtime, FIXTURE_VERSION),
     );
   }
-  const metadata = { moklyVersion: workspacePackage.version };
+  const metadata = { moklyVersion: FIXTURE_VERSION };
   if (moves)
     Object.assign(metadata, {
-      viewerVersion: viewer.version,
+      viewerVersion: FIXTURE_VERSION,
       corpusSha256: sha256(
         await readFile(join(destination, "index-v9-cases.json")),
       ),
@@ -149,6 +149,11 @@ const authored = new Set([
 
 try {
   const runtime = await fixtureRuntime(root, temporary);
+  assert.equal(
+    runtime.run(runtime.cli, ["--version"], root),
+    workspacePackage.version,
+    "Built Mokly version differs from the workspace",
+  );
   const files = new Map([
     ...(await generate(false, runtime)),
     ...(await generate(true, runtime)),

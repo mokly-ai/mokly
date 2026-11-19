@@ -7,7 +7,23 @@ use mkc_build_interface::request::{BuildRequest, Comparison};
 use crate::command::{Command, REPO, args, directories, directory};
 use crate::process::ProcessDriver;
 use crate::session::{probe, require};
-use crate::versions::{CLOUD_MOKLY_VERSION, supported};
+use crate::versions::supported;
+
+/// Build the npm fallback command for the newest published CLI.
+pub(crate) fn fallback_cli() -> Command {
+    Command::new(
+        "npm",
+        args(&[
+            "exec",
+            "--yes",
+            "--package=@mokly/mokly@latest",
+            "--",
+            "mokly",
+            "publish",
+        ]),
+        REPO,
+    )
+}
 
 #[async_trait]
 pub(crate) trait Publish: Send + Sync {
@@ -48,18 +64,7 @@ impl Publish for Publisher<'_> {
         }
         let mut command = match local {
             Some(cli) => Command::new(&cli, args(&["publish"]), REPO),
-            None => Command::new(
-                "npm",
-                args(&[
-                    "exec",
-                    "--yes",
-                    &format!("--package=@mokly/mokly@{CLOUD_MOKLY_VERSION}"),
-                    "--",
-                    "mokly",
-                    "publish",
-                ]),
-                REPO,
-            ),
+            None => fallback_cli(),
         };
         command.args.extend(args(&[
             "--config",

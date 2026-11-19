@@ -47,8 +47,8 @@ def _git(root, *arguments):
     return subprocess.check_output(["git", *arguments], cwd=root, env=environment, stderr=subprocess.PIPE)
 
 
-def _link_dependencies(root, checkout):
-    (checkout / "node_modules").symlink_to(root / "node_modules", target_is_directory=True)
+def _link_dependencies(cli, checkout):
+    (checkout / "node_modules").symlink_to(cli.installation / "node_modules", target_is_directory=True)
 
 
 def _change_fixture(checkout):
@@ -66,11 +66,11 @@ def _commit_fixture(checkout, message):
          "commit", "--quiet", "-m", message)
 
 
-def _build_fixture(checkout, destination=None, base=None):
+def _build_fixture(checkout, cli, destination=None, base=None):
     """Validate before each commit, or build the expected same-checkout export."""
     destination = destination or checkout / ".context/validation"
     destination.parent.mkdir(parents=True, exist_ok=True)
-    command = [str(checkout / "node_modules/.bin/mokly"), "build", "--strict",
+    command = [str(cli.executable), "build", "--strict",
                "--config", "mokly.config.json", "--out", str(destination)]
     command.extend(["--base", base] if base else ["--no-changes"])
     result = subprocess.run(command, cwd=checkout, env=fixture_environment(checkout.parent),
@@ -85,7 +85,7 @@ def _require_clean_checkout(checkout):
         raise AssertionError("Published CLI fixture checkout must be clean")
 
 
-def _prepare_isolated_checkout(root, workspace):
+def _prepare_isolated_checkout(root, workspace, cli):
     workspace.mkdir(parents=True, exist_ok=True)
     checkout = workspace / "checkout"
     fixture = root / PUBLISHED_CLI_FIXTURE
@@ -96,12 +96,12 @@ def _prepare_isolated_checkout(root, workspace):
     _git(checkout, "init", "--quiet", "--initial-branch=fixture")
     remote = _git(root, "remote", "get-url", "origin").decode().strip()
     _git(checkout, "remote", "add", "origin", remote)
-    _link_dependencies(root, checkout)
-    _build_fixture(checkout)
+    _link_dependencies(cli, checkout)
+    _build_fixture(checkout, cli)
     _commit_fixture(checkout, "fixture baseline")
     _git(checkout, "update-ref", "refs/remotes/origin/main", "HEAD")
     _change_fixture(checkout)
-    _build_fixture(checkout)
+    _build_fixture(checkout, cli)
     _commit_fixture(checkout, "fixture comparison")
     _require_clean_checkout(checkout)
     return checkout

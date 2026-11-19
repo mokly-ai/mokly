@@ -55,12 +55,48 @@ fn missing_fixture_dependencies_explain_how_to_install_them() {
 }
 
 #[test]
+fn fixture_generation_rejects_a_stale_workspace_cli_before_normalizing_versions() {
+    let factory: &dyn FixtureFactory = &TemporaryFixtures;
+    let fixture = factory.create();
+    prepare(fixture.as_ref());
+    fs::remove_file(fixture.root().join("packages")).unwrap();
+    fixture.copy("packages/mokly/package.json");
+    fixture.link(
+        "packages/mokly/bin",
+        &repository().join("packages/mokly/bin"),
+    );
+    let path = "packages/mokly/package.json";
+    let mut package: Value =
+        serde_json::from_slice(&fs::read(fixture.root().join(path)).unwrap()).unwrap();
+    package["version"] = json!("99.0.0");
+    fixture.write(path, &serde_json::to_string(&package).unwrap());
+    failure(
+        fixture.run("node", &["xtask/scripts/mokly-fixtures.mjs"]),
+        "Mokly version differs from the workspace",
+    );
+}
+
+#[test]
 fn fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_files() {
     let factory: &dyn FixtureFactory = &TemporaryFixtures;
     let fixture = factory.create();
     prepare(fixture.as_ref());
     let generator = "xtask/scripts/mokly-fixtures.mjs";
     success(fixture.run("node", &[generator]));
+    for name in [
+        "mokly-upload.json",
+        "moves-mokly-upload.json",
+        "cli-errors.json",
+        "checksums.json",
+        "moves-checksums.json",
+    ] {
+        let path = fixture
+            .root()
+            .join("crates/mkc-mokly-contract/fixtures")
+            .join(name);
+        let value: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(value["moklyVersion"], "0.0.0", "{name}");
+    }
     success(fixture.run("node", &[generator, "--check"]));
     fixture.write(
         "docs/mockups/src/entries/unrelated.mockup.tsx",
@@ -208,6 +244,7 @@ fn prepare(fixture: &dyn Fixture) {
     fixture.copy("xtask/scripts/mokly-fixture-runtime.mjs");
     fixture.copy("xtask/scripts/mokly-fixture-upload.mjs");
     fixture.copy("xtask/scripts/mokly-fixture-artifacts.mjs");
+    fixture.copy("xtask/scripts/mokly-fixture-normalize.mjs");
     fixture.write("package.json", "{\"private\":true,\"type\":\"module\"}\n");
     copy_sources(fixture, "crates/mkc-mokly-contract/fixtures/src");
     copy_sources(fixture, "crates/mkc-mokly-contract/fixtures/moves/src");

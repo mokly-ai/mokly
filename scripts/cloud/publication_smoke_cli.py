@@ -10,16 +10,12 @@ from publication_smoke_fixture import (
     _build_fixture, _prepare_isolated_checkout, _require_clean_checkout,
     cli_result, fixture_environment, require_dependencies,
 )
+from publication_smoke_consumer import install_published_cli
 from publication_exchange import INDEX
 from publication_smoke_support import project_and_token
 
 
 CAPTURE_FIXTURES = Path("infra/tests/fixtures/catalogue-capture")
-
-
-def _published_cli(root):
-    package = json.loads((root / "node_modules/@mokly/mokly/package.json").read_bytes())
-    return "@mokly/mokly@" + package["version"]
 
 
 def _recorded_refusal(root, category):
@@ -54,8 +50,8 @@ def _recorded_untracked_path(root):
     return path
 
 
-def _publish_command(published_cli):
-    return ["npx", "--yes", published_cli, "publish", "--strict", "--config",
+def _publish_command(executable):
+    return [str(executable), "publish", "--strict", "--config",
             "mokly.config.json", "--base", "HEAD~1", "--repository", "github.com/mokly-ai/mokly-cloud"]
 
 
@@ -116,18 +112,18 @@ def _served_build(api, catalogue, owner, project, publication, destination):
 def cli_smoke(api, catalogue, owner):
     root = Path(__file__).resolve().parents[2]
     require_dependencies(root)
-    published_cli = _published_cli(root)
     temporary_root = root / ".context"
     temporary_root.mkdir(parents=True, exist_ok=True)
     workspace, project, token = project_and_token(api, owner, "Published CLI")
     try:
         with tempfile.TemporaryDirectory(prefix="publication-smoke-", dir=temporary_root) as scratch:
-            checkout = _prepare_isolated_checkout(root, Path(scratch))
-            destination = _build_fixture(checkout, checkout / ".context/export", "HEAD~1")
+            published_cli = install_published_cli(Path(scratch))
+            checkout = _prepare_isolated_checkout(root, Path(scratch), published_cli)
+            destination = _build_fixture(checkout, published_cli, checkout / ".context/export", "HEAD~1")
             index = json.loads((destination / INDEX).read_bytes())
             _require_changed_index(index)
             env = dict(fixture_environment(Path(scratch)), MOKLY_ENDPOINT=api.url + "/v1/projects/" + project["id"] + "/publications", MOKLY_TOKEN=token["secret"])
-            command = _publish_command(published_cli)
+            command = _publish_command(published_cli.executable)
             output = subprocess.run(command, cwd=checkout, env=env, capture_output=True, text=True, timeout=480)
             assert output.returncode == 0, cli_result(output)
             assert "Published Mokly catalogue." in output.stdout, cli_result(output)
@@ -135,7 +131,7 @@ def cli_smoke(api, catalogue, owner):
             publication_id = api.sql("SELECT id FROM publications WHERE project_id='" + project["id"] + "' AND state='ready'")
             assert publication_id, cli_result(output)
             manifest = _stored_envelope(api, project, publication_id)
-            assert manifest["moklyVersion"] == published_cli.rsplit("@", 1)[1], cli_result(output)
+            assert manifest["moklyVersion"] == published_cli.version, cli_result(output)
             assert manifest["schemaVersion"] == 3, cli_result(output)
             assert "comparisonPath" not in manifest, cli_result(output)
             assert manifest["baseRef"] == "HEAD~1" and manifest["baseSha"] == index["baseCommit"], cli_result(output)

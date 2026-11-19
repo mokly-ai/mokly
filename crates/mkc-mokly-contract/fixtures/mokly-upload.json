@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "moklyVersion": "0.19.0",
+  "moklyVersion": "0.0.0",
   "repository": {
     "host": "github.com",
     "owner": "mokly-ai",

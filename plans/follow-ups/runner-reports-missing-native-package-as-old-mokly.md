@@ -22,7 +22,7 @@
 - **Options:**
   - **A.** Keep one cause, and change its copy to name both an old version and a broken install. Effort: Small.
   - **B.** Add a stored cause for a CLI that cannot start, chosen when the probe prints `[mokly/cli-invalid]`, with its own copy. It needs a migration of the build cause constraint, an API value and an app message. Effort: Medium.
-  - **C.** Fall back to the cloud's fallback CLI when the repository's CLI cannot start. That is the published `@mokly/mokly` at `CLOUD_MOKLY_VERSION`, in `crates/mkc-build-sandbox/src/versions.rs:6`, which the runner uses when a repository has no installed CLI. It hides the broken install and publishes with a version that the repository did not choose. Effort: Medium.
+  - **C.** Fall back to the cloud's fallback CLI when the repository's CLI cannot start. That is the newest npm release, `@mokly/mokly@latest`, which the runner uses when a repository has no installed CLI. It hides the broken install and publishes with a version that the repository did not choose. Effort: Medium.
 - **Left out:** Parse the free text after `[mokly/cli-invalid]` to give one message per cause. The text is not a documented interface, so a release can change it.
 - **Wider fix:** B, because a typed cause keeps each failure apart for every reader of the build record.
 - **Previous examples:** None found.

@@ -1,8 +1,6 @@
 //! Both harnesses check the same corpus bytes before reading Changes counts.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
-use std::path::Path;
 
 use serde::Deserialize;
 
@@ -15,20 +13,8 @@ use super::corpus::model::{Corpus, Rejection};
 use super::corpus::render::document;
 
 #[derive(Deserialize)]
-struct Package {
-    version: String,
-}
-
-#[derive(Deserialize)]
 struct Checksums {
     files: BTreeMap<String, String>,
-}
-
-fn installed_version(name: &str) -> String {
-    let path =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("../../packages/{name}/package.json"));
-    let package: Package = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
-    package.version
 }
 
 #[test]
@@ -36,8 +22,6 @@ fn every_shared_index_case_has_the_documented_counts_or_rejection() {
     let corpus: Corpus =
         serde_json::from_slice(include_bytes!("../../fixtures/index-v9-cases.json")).unwrap();
     assert_eq!(corpus.schema_version, 1);
-    assert_eq!(corpus.mokly_version, installed_version("mokly"));
-    assert_eq!(corpus.viewer_version, installed_version("viewer"));
     let mut names = BTreeSet::new();
     let mut accepted = 0;
     let mut refused = 0;

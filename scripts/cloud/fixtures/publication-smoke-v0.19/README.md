@@ -1,12 +1,13 @@
 # Mokly 0.19 Publication Smoke Fixture
 
 This frozen source catalogue belongs to the live publication smoke for the
-published `@mokly/mokly@0.19.0` CLI. Its authored heading is `Ready to review`.
+newest published `@mokly/mokly@latest` CLI. Its authored heading is `Ready to review`.
 It uses one `defineScreen` export with a shared render and JSON configuration.
 
 The smoke copies the source into an independent temporary Git repository.
-It links the installed npm workspace packages. It validates each revision with
-`node_modules/.bin/mokly build --strict --no-changes --config mokly.config.json --out .context/validation`
+It links dependencies from one isolated npm installation with its own prefix.
+It validates each revision with that installation's executable and
+`build --strict --no-changes --config mokly.config.json --out .context/validation`
 before committing source. It changes the heading to `Ready to publish` for the
 second revision. Neither commit contains generated output or dependency links.
 
@@ -36,6 +37,6 @@ MKC_TEST_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/mkc_test \
 
 The real dirty-checkout refusal must match its recording and create no upload
 attempt. The comparison accepts only npm notice or warning lines before the
-exact recorded stderr. The installed package supplies the publish version.
+exact recorded stderr. The installed package supplies the publish version, which the smoke records.
 [Capture recordings](../../../../infra/tests/fixtures/README.md#catalogue-capture-fixtures)
 use this fixture through `infra/scripts/record-catalogue-capture.py`.

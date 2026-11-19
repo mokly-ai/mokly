@@ -32,51 +32,37 @@ pub(super) fn e2b_node(dockerfile: &str, nvmrc: &str) -> Vec<Violation> {
 pub(super) fn mokly(package: &str, source: &str) -> Result<Vec<Violation>> {
     let pin: PackagePin = serde_json::from_str(package).context("parse cloud CLI package pin")?;
     let path = "crates/mkc-build-sandbox/src/versions.rs";
+    let name = "MIN_MOKLY_VERSION";
+    let values: Vec<_> = source
+        .split("pub const ")
+        .skip(1)
+        .filter_map(|part| {
+            let (declaration, value) = part.split_once('=')?;
+            if declaration.split_once(':')?.0.trim() != name {
+                return None;
+            }
+            value
+                .split_once(';')?
+                .0
+                .trim()
+                .strip_prefix('"')?
+                .strip_suffix('"')
+        })
+        .collect();
+    if values.len() != 1 {
+        return Ok(vec![Violation::MissingPin(name.into())]);
+    }
+    let Ok(minimum) = Version::parse(values[0]) else {
+        return Ok(compare(path, name, "exact SemVer", values[0]));
+    };
     let mut violations = Vec::new();
-    let mut constants = Vec::new();
-    for name in ["CLOUD_MOKLY_VERSION", "MIN_MOKLY_VERSION"] {
-        let values: Vec<_> = source
-            .split("pub const ")
-            .skip(1)
-            .filter_map(|part| {
-                let (declaration, value) = part.split_once('=')?;
-                if declaration.split_once(':')?.0.trim() != name {
-                    return None;
-                }
-                value
-                    .split_once(';')?
-                    .0
-                    .trim()
-                    .strip_prefix('"')?
-                    .strip_suffix('"')
-            })
-            .collect();
-        if values.len() != 1 {
-            violations.push(Violation::MissingPin(name.into()));
-            continue;
-        }
-        match Version::parse(values[0]) {
-            Ok(version) => constants.push(version),
-            Err(_) => violations.extend(compare(path, name, "exact SemVer", values[0])),
-        }
-    }
-    if constants.len() != 2 {
-        return Ok(violations);
-    }
-    let cloud = &constants[0];
-    let minimum = &constants[1];
-    violations.extend(compare(
-        "packages/mokly/package.json",
-        "version",
-        &cloud.to_string(),
-        &pin.version,
-    ));
-    if cloud.cmp_precedence(minimum).is_lt() {
+    let version = Version::parse(&pin.version).context("parse workspace CLI version")?;
+    if version.cmp_precedence(&minimum).is_lt() {
         violations.extend(compare(
-            path,
-            "CLOUD_MOKLY_VERSION",
+            "packages/mokly/package.json",
+            "version",
             &format!(">= {minimum}"),
-            &cloud.to_string(),
+            &pin.version,
         ));
     }
     Ok(violations)

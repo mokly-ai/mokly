@@ -6,7 +6,7 @@ use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use crate::command::REPO;
 
 use super::fixtures::request;
-use super::script::{Call, checkout, fallback, local_test, locks};
+use super::script::{Call, checkout, fallback, fallback_for, local_test, locks};
 use super::support::Harness;
 
 #[tokio::test]
@@ -108,25 +108,7 @@ async fn nearest_tracked_lockfile_wins_and_stops_cli_search_at_install_directory
         ),
         local_test("/workspace/repo/docs/catalogue"),
         local_test("/workspace/repo/docs"),
-        Call::new(
-            BuildStep::Publish,
-            "npm",
-            &[
-                "exec",
-                "--yes",
-                "--package=@mokly/mokly@0.19.0",
-                "--",
-                "mokly",
-                "publish",
-                "--config",
-                "docs/catalogue/mokly.config.json",
-                "--repository",
-                "github.com/owner/repo",
-                "--no-changes",
-            ],
-            REPO,
-        )
-        .publishing(),
+        fallback_for(request.config_path.as_str(), None),
     ]);
     assert!(matches!(
         Harness::new(request, calls).run().await,

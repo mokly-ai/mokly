@@ -14,7 +14,7 @@ use crate::policy::environment::{OutputMock, ReadMock};
 use super::ToolchainCheck;
 
 const DOCKERFILE: &str = "FROM e2bdev/base:2026@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nARG NODE_VERSION=24.21.0\n";
-const VERSIONS: &str = "pub const CLOUD_MOKLY_VERSION: &str = \"0.19.0\";\npub const MIN_MOKLY_VERSION: &str = \"0.18.0\";\n";
+const VERSIONS: &str = "pub const MIN_MOKLY_VERSION: &str = \"0.18.0\";\n";
 const SENTENCE: &str =
     "unsupported-mokly-version: Update `@mokly/mokly` to 0.18.0 or later to publish.\n";
 
@@ -71,15 +71,15 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
         ),
         (".nvmrc", "24.0.0\n".into(), "version", "24.21.0"),
         (
-            "crates/mkc-build-sandbox/src/versions.rs",
-            VERSIONS.replace("0.19.0", "0.0.0"),
+            "packages/mokly/package.json",
+            r#"{"version":"0.0.0"}"#.into(),
             "version",
-            "0.0.0",
+            ">= 0.18.0",
         ),
         (
             "crates/mkc-build-sandbox/src/versions.rs",
             VERSIONS.replace("0.18.0", "1.0.0"),
-            "CLOUD_MOKLY_VERSION",
+            "version",
             ">= 1.0.0",
         ),
         (

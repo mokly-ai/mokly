@@ -6,9 +6,9 @@ needed. The process smoke creates a unique Postgres schema, uses temporary
 storage and API-created projects/tokens, then drops the schema after its child
 processes exit.
 
-The published-CLI path runs the published release of the workspace
-`@mokly/mokly` version against the frozen v0.19 fixture on a clean committed
-checkout.
+The published-CLI path installs `@mokly/mokly@latest` from npm in an isolated
+prefix. It records that version and runs its executable against the frozen
+v0.19 source fixture on a clean committed checkout.
 Neither path turns a current-only upload into an
 available `listScreens` or screen-specific Share API response; those paths
 remain `operation-unavailable` under the comparison-only API projection
@@ -87,19 +87,22 @@ It publishes through the
    a clean checkout before running the published CLI twice.
 
    ```sh
-   npx --yes @mokly/mokly@0.19.0 publish --strict \
+   "$SMOKE_CONSUMER/node_modules/@mokly/mokly/bin/mokly.mjs" publish --strict \
      --config mokly.config.json --base HEAD~1 \
      --repository github.com/mokly-ai/mokly-cloud
    ```
 
-   The smoke takes that version from the installed `@mokly/mokly` package.
+   `SMOKE_CONSUMER` is the smoke's isolated installation prefix. Every build,
+   publish, and recording command uses its one executable. The smoke rejects
+   linked packages, linked executables, and paths outside that installation.
+   It records the version from the installed package.
    `MOKLY_ENDPOINT` is the exact local
    `/v1/projects/<project-id>/publications` URL on the API's
    `MKC_API_ORIGIN`; `MOKLY_TOKEN` is a real project token passed only through
    the subprocess environment. The smoke reserves the API's loopback port
    before starting it so the plan's blob and completion URLs share the
-   endpoint's origin, as the CLI requires. The npm workspace installation is
-   linked into the checkout; the fixture imports no private npm workspace package.
+   endpoint's origin, as the CLI requires. The isolated installation supplies
+   the checkout's dependencies. The fixture imports no private npm workspace package.
    `publish` has no `--out`: it builds in a private directory outside the
    checkout and removes that directory after success. The smoke
    creates `.context` itself, because `build` output must stay inside the

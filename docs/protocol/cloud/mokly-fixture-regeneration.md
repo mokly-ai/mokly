@@ -28,9 +28,8 @@ stays small while it holds the viewer shell bundle and its font.
 The live smoke uses a separate producer-owned 0.19 fixture under
 `scripts/cloud/fixtures/`, whose checked-in catalogue is source only.
 It must not consume the product catalogue or the contract fixture. The live
-smoke and the deployed proof run the published release of the workspace
-`@mokly/mokly` version. A change of that version requires a deliberate fixture
-and runbook update. See [Publish smoke](../../ops/publish-smoke.md).
+smoke and the deployed proof use the newest npm release, `@mokly/mokly@latest`.
+They record the installed version. See [Publish smoke](../../ops/publish-smoke.md).
 
 ## Reproducible Output
 
@@ -60,10 +59,11 @@ request. The Plan's marker declares the files of the complete
 export with the same digests and sizes, plus the envelope.
 
 The CLI has no option that fixes the envelope's client time. The generator
-therefore sets `exportedAt` to `2000-01-01T00:00:00.000Z` and updates the
-digest of the envelope's marker entry to match. The envelope and
-the marker differ from the producer's bytes only in `exportedAt` and in that
-digest. The two archives use portable USTAR/PAX headers,
+therefore sets `exportedAt` to `2000-01-01T00:00:00.000Z`.
+Each captured `moklyVersion` must first equal the workspace version.
+The fixtures then use the fixed SemVer placeholder `0.0.0` instead of a release
+number. The envelope's marker digest and size must match the normalized bytes.
+No other producer content changes. The two archives use portable USTAR/PAX headers,
 uid/gid 0, mode 0644 and epoch times, gzipped with no filename and a
 deterministic header time. The complete export holds every file that the
 Plan's marker declares plus the marker, in UTF-16 path order.
@@ -71,12 +71,12 @@ The plan holds exactly the envelope, the marker and the index, in the CLI's
 Plan order. The pinned npm `tar` package packs them; the
 generator imports no Mokly packer.
 
-The checksum record names the release and lists each fixture's SHA-256,
+The checksum record uses the same placeholder and lists each fixture's SHA-256,
 ordered by UTF-16 code units without locale collation. JSON copies preserve
 producer bytes. Prettier excludes golden JSON, while frozen source stays
 format-checked. Archive and JSON bytes, comparison identity and package
 assets are part of the drift comparison; it never hides a difference by
-normalizing producer output. Check mode also runs the Rust consumer against
+normalizing content beyond the client time and release attribution. Check mode also runs the Rust consumer against
 the regenerated artifacts and the published ownership and plan-response
 cases, and a modified unrelated mockup or config must leave check mode clean.
 Published ownership cases cover shape only; the cloud owns the cases for its
@@ -103,9 +103,9 @@ corpus, both real producer indexes and the published
 `readCatalogueIndex` of `@mokly/viewer`. The rule for the two
 readers is in
 [Publication index](./publication-review.md#reader-conformance-and-cloud-checks).
-Both package versions must equal the corpus versions, so a version change
-requires a deliberate corpus update, and the moves checksum record includes the corpus
-SHA-256, so a corpus edit requires regeneration. Regeneration and drift cover
+The corpus carries no Mokly or viewer release number. A release alone changes
+no fixture. The moves checksum record includes the corpus SHA-256, so a corpus
+edit requires regeneration. Regeneration and drift cover
 every generated file; the corpus, its Node check, the README and the frozen
 source trees are the only authored inputs, and any other file under the
 fixture directory is an error.
@@ -113,7 +113,7 @@ fixture directory is an error.
 ## CLI Failure Codes
 
 `cli-errors.json` is a committed golden file in the original
-`checksums.json` inventory. It records `moklyVersion` and ordered `scenarios`
+`checksums.json` inventory. It records the placeholder `moklyVersion` and ordered `scenarios`
 rows with `scenario`, observed `code`
 and `exitCode`. It covers the codes in the runner's
 [typed mapping](./cloud-build-runner.md#cli-failure-codes), through the public

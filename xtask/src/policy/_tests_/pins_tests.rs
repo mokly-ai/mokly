@@ -83,32 +83,31 @@ fn fixture_packer_must_match_the_documented_pin() {
 }
 
 #[test]
-fn cloud_cli_must_match_the_package_and_meet_the_floor() {
+fn workspace_cli_meets_the_floor_without_a_fallback_pin() {
     let package =
         r#"{"engines":{"node":">=24.21.0 <25"},"packageManager":"npm@11.11.0","version":"0.13.0"}"#;
-    let source = "pub const CLOUD_MOKLY_VERSION: &str = \"0.13.0\";\npub const MIN_MOKLY_VERSION: &str = \"0.13.0\";\n";
+    let source = "pub const MIN_MOKLY_VERSION: &str = \"0.13.0\";\n";
     assert!(mokly(package, source).unwrap().is_empty());
-    assert_eq!(
+    assert!(
         mokly(&package.replace("0.13.0", "0.14.0"), source)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        mokly(&package.replace("0.13.0", "0.12.0"), source)
             .unwrap()
             .len(),
         1
     );
-    assert_eq!(
-        mokly(package, &source.replacen("0.13.0", "0.12.0", 1))
-            .unwrap()
-            .len(),
-        2
-    );
     for source in [
-        source.replace("CLOUD_MOKLY_VERSION", "WRONG"),
+        source.replace("MIN_MOKLY_VERSION", "WRONG"),
         source.replace("0.13.0", "invalid"),
         format!("{source}{source}"),
     ] {
         assert!(!mokly(package, &source).unwrap().is_empty());
     }
     assert!(
-        !mokly(package, &source.replacen("0.13.0", "0.13.0-alpha.1", 1))
+        !mokly(&package.replace("0.13.0", "0.13.0-alpha.1"), source)
             .unwrap()
             .is_empty()
     );

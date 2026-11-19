@@ -24,9 +24,9 @@ Command display quotes only empty values or values with characters outside
 Git reads its installation token from a workload-owned 0600 file. Only
 publish receives the upload token. The runner follows the contract's fetch
 ladder and lockfile order. An installed CLI must report a SemVer at or above
-`MIN_MOKLY_VERSION` (0.18.0). Without a local CLI it runs `CLOUD_MOKLY_VERSION`
-(0.19.0) through `npm exec`. This release emits upload envelope 3,
-ownership marker 3 and catalogue index 9 that the receiver accepts.
+`MIN_MOKLY_VERSION` (0.18.0). Without a local CLI it runs the newest npm release,
+`@mokly/mokly@latest`, through `npm exec`. The receiver accepts upload envelope
+3, ownership marker 3 and catalogue index 9.
 The runner creates no worktree files before install. Its credential file stays
 under `/home/user`. The configuration path ends in `.json`, such as
 `mokly.config.json`. The CLI builds in a private directory outside the

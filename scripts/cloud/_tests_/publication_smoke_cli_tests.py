@@ -1,10 +1,8 @@
 """Installed version, recorded refusals and actionable smoke prerequisites."""
 
-import json
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -17,18 +15,11 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class SmokePrerequisites(unittest.TestCase):
-    def test_version_comes_from_installed_package_metadata(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            package = root / "node_modules/@mokly/mokly/package.json"
-            package.parent.mkdir(parents=True)
-            package.write_text(json.dumps({"version": "9.8.7"}))
-            self.assertEqual(smoke_cli._published_cli(root), "@mokly/mokly@9.8.7")
-
     def test_published_cli_receives_canonical_repository_identity(self):
-        command = smoke_cli._publish_command("@mokly/mokly@9.8.7")
+        executable = Path("/isolated/consumer/node_modules/@mokly/mokly/bin/mokly.mjs")
+        command = smoke_cli._publish_command(executable)
         self.assertEqual(command[command.index("--repository") + 1], "github.com/mokly-ai/mokly-cloud")
-        self.assertIn("@mokly/mokly@9.8.7", command)
+        self.assertEqual(command[:2], [str(executable), "publish"])
         self.assertIn("--strict", command)
         self.assertEqual(command[command.index("--base") + 1], "HEAD~1")
         self.assertEqual(command[command.index("--config") + 1], "mokly.config.json")
@@ -49,9 +40,7 @@ class SmokePrerequisites(unittest.TestCase):
                 smoke_cli.cli_smoke(Mock(), Mock(), Mock())
 
     def test_temporary_directory_creates_workspace_context(self):
-        with patch("publication_smoke_fixture.Path.is_file", return_value=True), patch(
-            "publication_smoke_cli._published_cli", return_value="@mokly/mokly@9.8.7"
-        ), patch("publication_smoke_cli.Path.mkdir") as mkdir, patch(
+        with patch("publication_smoke_fixture.Path.is_file", return_value=True), patch("publication_smoke_cli.Path.mkdir") as mkdir, patch(
             "publication_smoke_cli.project_and_token", return_value=({"id": "org", "name": "test"}, {}, {})
         ), patch("publication_smoke_cli.tempfile.TemporaryDirectory", side_effect=RuntimeError("temporary directory reached")) as temporary:
             with self.assertRaisesRegex(RuntimeError, "temporary directory reached"):

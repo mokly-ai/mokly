@@ -132,8 +132,9 @@ The Testbox keeps the separate Mokly Node installation for report commands.
 
 `toolchain-pins` reads the cloud toolchain protocol and compares installed
 versions. It checks that the root Node range includes the cloud Node pin.
-It compares `CLOUD_MOKLY_VERSION` with the version in
-`packages/mokly/package.json`. It also checks image pins and the documented
+It checks that the workspace CLI meets `MIN_MOKLY_VERSION`. Published CLI
+consumers use npm `latest`. Contract fixtures use fixed placeholder versions.
+It also checks image pins and the documented
 minimum-version messages. `migration-immutability` validates SQL pairs and
 checksums against the append-only migration lock on `origin/main`.
 `whitespace` rejects trailing spaces, missing final newlines, and final blank

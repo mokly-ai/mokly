@@ -51,8 +51,9 @@ Plan to a loopback receiver. The receiver checks the test bearer and refuses
 that one request with 426. No external service receives an upload.
 
 The Plan marker must declare the build's entire inventory unchanged, plus
-`mokly-upload.json`. Only the envelope's `exportedAt` and its marker digest
-change. The generator replaces those bytes in place. It preserves all other
+`mokly-upload.json`. The generator verifies the captured workspace version.
+It replaces the client time and release number with fixed values, then updates
+the envelope's marker digest and size. It preserves all other
 producer JSON bytes. CLI processes use private cache and temporary directories.
 The generator checks the printed locations and removes retained publish builds.
 It removes its whole temporary root on exit.
@@ -63,20 +64,20 @@ It removes its whole temporary root on exit.
 | -------------------------- | ---------------------------------------------------------------------------------- |
 | `dogfood.tar.gz`           | Complete export, including the captured envelope and marker, in UTF-16 path order. |
 | `plan.tar.gz`              | Exactly the envelope, marker, and index, in the CLI's Plan order.                  |
-| `mokly-upload.json`        | Captured upload envelope 3, with the fixed client time.                            |
+| `mokly-upload.json`        | Captured upload envelope 3, with fixed client time and placeholder version.        |
 | `inventory.json`           | Captured ownership marker 3, with the envelope digest updated.                     |
 | `index-v9.json`            | The captured Plan's index 9, with its producer bytes unchanged.                    |
 | `export-ownership-v3.json` | Published ownership compatibility cases.                                           |
 | `upload-plan-v1.json`      | Published upload exchange cases.                                                   |
 | `catalogue-v9.json`        | Published catalogue index, copied without changes.                                 |
 | `cli-errors.json`          | Observed failure codes and exit statuses from the real CLI.                        |
-| `checksums.json`           | CLI version and SHA-256 of each original golden file.                              |
+| `checksums.json`           | Placeholder CLI version and SHA-256 of each original golden file.                  |
 | `moves-export.tar.gz`      | Complete moves export.                                                             |
 | `moves-plan.tar.gz`        | Moves Plan archive.                                                                |
 | `moves-mokly-upload.json`  | Moves envelope 3.                                                                  |
 | `moves-inventory.json`     | Moves ownership marker 3.                                                          |
 | `moves-index-v9.json`      | Moves producer index 9.                                                            |
-| `moves-checksums.json`     | Moves digests, both package versions, and the corpus SHA-256.                      |
+| `moves-checksums.json`     | Moves digests, placeholder package versions, and the corpus SHA-256.               |
 
 The pinned npm `tar` writes portable USTAR/PAX archives with epoch times and
 mode 0644. Each complete export stays below 640 KiB. The generator refuses
@@ -86,8 +87,8 @@ modules are authored inputs.
 ## Index Changes-Count Corpus
 
 `index-v9-cases.json` is an authored, language-neutral schema-1 corpus. It has
-`moklyVersion`, `viewerVersion`, one `baseDocument`, and `cases`. Both installed
-versions must match the corpus. A corpus edit requires fixture regeneration.
+one `baseDocument` and `cases`, with no package release numbers.
+A corpus edit requires fixture regeneration.
 
 Each case has a unique `name` and one input form:
 
@@ -122,7 +123,7 @@ check mode. It reports the case name for a hash, count, or viewer mismatch.
 
 ## CLI Failure Codes
 
-`cli-errors.json` records `moklyVersion` and ordered rows with `scenario`,
+`cli-errors.json` records placeholder `moklyVersion: "0.0.0"` and ordered rows with `scenario`,
 observed `code`, and observed `exitCode`. The private checkout probes:
 
 - `uncommitted-file`: `git-uncommitted`, with no upload request.

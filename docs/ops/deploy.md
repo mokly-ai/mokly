@@ -734,7 +734,7 @@ After rollout smoke succeeds:
    fixtures or seed migrations to manufacture product data.
 3. In a clean fixture repository with committed authored source and a
    `mokly.config.json` configuration, use the **published** package
-   `@mokly/mokly@0.19.0`. Set `PROJECT_ID` to the real
+   `@mokly/mokly@latest` in a separate installation prefix. Set `PROJECT_ID` to the real
    project UUID and `MKC_API_ORIGIN` to the deployed API origin. The CLI sends
    its token only to blob and completion URLs on that same origin, so the
    endpoint must use exactly the API workload's `MKC_API_ORIGIN`.
@@ -751,14 +751,19 @@ After rollout smoke succeeds:
 export MOKLY_ENDPOINT="${MKC_API_ORIGIN:?}/v1/projects/${PROJECT_ID:?}/publications"
 export MOKLY_TOKEN="$(gcloud secrets versions access latest \
   --secret=mkc-main-preview-publish-smoke-token --project=mokly-508518)"
-npx --yes --package=@mokly/mokly@0.19.0 mokly publish --strict \
+PUBLISH_CONSUMER="$(mktemp -d)"
+npm install --prefix "$PUBLISH_CONSUMER" --workspaces=false --no-audit --no-fund @mokly/mokly@latest
+"$PUBLISH_CONSUMER/node_modules/@mokly/mokly/bin/mokly.mjs" --version
+"$PUBLISH_CONSUMER/node_modules/@mokly/mokly/bin/mokly.mjs" publish --strict \
   --config mokly.config.json --base main
 unset MOKLY_TOKEN
+rm -r -- "${PUBLISH_CONSUMER:?}"
+unset PUBLISH_CONSUMER
 ```
 
-This deployed proof uses the published release of the workspace
-`@mokly/mokly` version, the same version as the automated published-CLI smoke,
-which does not replace this deployed proof. Both use the strict 0.19.0 command.
+This deployed proof and the automated smoke each resolve the newest npm release
+when they run. Record the installed version with each result.
+The automated smoke does not replace this deployed proof.
 A current-only publication is viewable from its
 catalogue, while the cloud API
 continues to return `operation-unavailable` for current-screen listing and

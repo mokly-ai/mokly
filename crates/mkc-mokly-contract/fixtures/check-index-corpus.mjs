@@ -2,7 +2,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { readCatalogueIndex } from "@mokly/viewer";
@@ -13,22 +12,6 @@ const { caseDocument } = await import(
 );
 const corpus = JSON.parse(await readFile(corpusPath, "utf8"));
 assert.equal(corpus.schemaVersion, 1);
-for (const [name, field] of [
-  ["mokly", "moklyVersion"],
-  ["viewer", "viewerVersion"],
-]) {
-  const installed = JSON.parse(
-    await readFile(
-      join(process.cwd(), `node_modules/@mokly/${name}/package.json`),
-      "utf8",
-    ),
-  );
-  assert.equal(
-    corpus[field],
-    installed.version,
-    `Update the corpus for @mokly/${name}@${installed.version}`,
-  );
-}
 
 /** @param {import('@mokly/viewer').CatalogueReadModel} index */
 function changesCounts(index) {

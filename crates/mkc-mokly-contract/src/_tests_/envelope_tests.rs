@@ -132,5 +132,4 @@ fn the_released_plan_archive_validates_through_the_real_reader() {
         )))
         .unwrap();
     assert!(bundle.index().comparison_generation().is_some());
-    assert_eq!(bundle.manifest().mokly_version, "0.19.0");
 }

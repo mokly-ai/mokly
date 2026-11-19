@@ -4,16 +4,30 @@ use mkc_build_interface::input::Branch;
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_build_interface::request::Comparison;
 
-use crate::command::REPO;
+use crate::command::{REPO, args};
 
 use super::fixtures::{SHA, request};
-use super::script::{Call, checkout, checkout_end, fallback, local_test, locks};
+use super::script::{Call, checkout, checkout_end, fallback, fallback_for, local_test, locks};
 use super::support::Harness;
 
 #[tokio::test]
-async fn current_only_runs_exact_commands_and_step_notifications() {
+async fn current_only_uses_latest_cli_and_exact_commands_and_step_notifications() {
     let mut calls = checkout();
-    calls.extend([locks(), local_test(REPO), fallback()]);
+    let mut publish = fallback();
+    publish.args = args(&[
+        "exec",
+        "--yes",
+        "--package=@mokly/mokly@latest",
+        "--",
+        "mokly",
+        "publish",
+        "--config",
+        "mokly.config.json",
+        "--repository",
+        "github.com/owner/repo",
+        "--no-changes",
+    ]);
+    calls.extend([locks(), local_test(REPO), publish]);
     let harness = Harness::new(request(), calls);
     assert!(matches!(harness.run().await, BuildOutcome::Completed));
     assert_eq!(
@@ -97,26 +111,7 @@ async fn comparison_uses_the_full_fetch_ladder_only_when_needed() {
             checkout_end(),
             locks(),
             local_test(REPO),
-            Call::new(
-                BuildStep::Publish,
-                "npm",
-                &[
-                    "exec",
-                    "--yes",
-                    "--package=@mokly/mokly@0.19.0",
-                    "--",
-                    "mokly",
-                    "publish",
-                    "--config",
-                    "mokly.config.json",
-                    "--repository",
-                    "github.com/owner/repo",
-                    "--base",
-                    "origin/main",
-                ],
-                REPO,
-            )
-            .publishing(),
+            fallback_for(request.config_path.as_str(), Some("origin/main")),
         ]);
         assert!(matches!(
             Harness::new(request, calls).run().await,

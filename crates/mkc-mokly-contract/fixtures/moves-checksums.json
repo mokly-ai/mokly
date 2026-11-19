@@ -1,12 +1,12 @@
 {
-  "moklyVersion": "0.19.0",
-  "viewerVersion": "0.19.0",
-  "corpusSha256": "65a1e6723971505c7abdc5068a5c3f0ae155c638e3a7762228c4f209b2c565a9",
+  "moklyVersion": "0.0.0",
+  "viewerVersion": "0.0.0",
+  "corpusSha256": "5419535ec0ee56c28f046ba6389221911eed42b003a3f96227001040fcddd2b1",
   "files": {
-    "moves-export.tar.gz": "d47b107d58cff289a9d83c5f82ab14fe341cbe5a448386964db48c3f26506059",
+    "moves-export.tar.gz": "df49460bf8d9c07f80ff2d7f224b2e73404844b6c8d4ed896d86f21e7a366a6c",
     "moves-index-v9.json": "8eb52d18a726ee71af7bcff6b8cb185691d352d74fa082bdd986f0f841821fb4",
-    "moves-inventory.json": "72110b8118fb6fe4e3386bb4cf63a8ec9c455a6b6a8fcd24180234f847ae52f0",
-    "moves-mokly-upload.json": "ab4bc480c69e1ca000e3b4a1f64d34df3881cbf1ef6bbf950b4523793d626ce4",
-    "moves-plan.tar.gz": "951fe52a05f2b435132163b7cfd22c7e59a40c97ddbc36f8fb86792c013fae50"
+    "moves-inventory.json": "f8897cb77037a60cc69a52fc5da3696e5979edb84577926fc8d17cb999790f2a",
+    "moves-mokly-upload.json": "4c2d4c10dc645bcb69ae895fba64e6d5e515ebfc457a344b4563cc965a0806ab",
+    "moves-plan.tar.gz": "476fbbe6c381d7dfa41f43dbaa4cb3fbd2d963c077592f72f4f75b20d157ea2a"
   }
 }

@@ -7,8 +7,6 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Corpus {
     pub(crate) schema_version: u64,
-    pub(crate) mokly_version: String,
-    pub(crate) viewer_version: String,
     pub(crate) base_document: Value,
     pub(crate) cases: Vec<Case>,
 }

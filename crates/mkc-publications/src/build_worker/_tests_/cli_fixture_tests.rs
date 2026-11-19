@@ -1,4 +1,4 @@
-//! Every worker-mapped CLI code must occur in pinned public CLI evidence.
+//! Every worker-mapped CLI code must occur in workspace CLI evidence.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -25,14 +25,12 @@ struct Scenario {
 }
 
 #[test]
-fn pinned_cli_evidence_covers_every_worker_mapped_code_and_result() {
+fn workspace_cli_evidence_covers_every_worker_mapped_code_and_result() {
     let fixture: Fixture = serde_json::from_str(include_str!(
         "../../../../mkc-mokly-contract/fixtures/cli-errors.json"
     ))
     .unwrap();
-    let package: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../packages/mokly/package.json")).unwrap();
-    assert_eq!(fixture.mokly_version, package["version"]);
+    assert_eq!(fixture.mokly_version, "0.0.0");
     assert_eq!(fixture.scenarios.len(), 2);
     let at = "2026-10-12T00:00:00Z".parse().unwrap();
     for typed in [

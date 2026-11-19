@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-record the real pinned CLI's capture outcomes without changing stream bytes."""
+"""Re-record the newest npm CLI's capture outcomes without changing stream bytes."""
 
 import argparse
 from pathlib import Path
@@ -8,10 +8,11 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "scripts/cloud"))
 from catalogue_recording_cases import record_cases, record_timing
 from catalogue_recording_streams import recording_matches
 from publication_smoke_fixture import _prepare_isolated_checkout, require_dependencies
+from publication_smoke_consumer import install_published_cli
 
 
 RECORDINGS = ROOT / "infra/tests/fixtures/catalogue-capture"
@@ -19,14 +20,15 @@ RECORDINGS = ROOT / "infra/tests/fixtures/catalogue-capture"
 
 def captured_files(workspace):
     require_dependencies(ROOT)
-    checkout = _prepare_isolated_checkout(ROOT, workspace)
+    cli = install_published_cli(workspace)
+    checkout = _prepare_isolated_checkout(ROOT, workspace, cli)
     streams = {}
-    for category, result in record_cases(checkout, workspace).items():
+    for category, result in record_cases(checkout, workspace, cli).items():
         prefix = "mokly-publish-" + category
         streams[prefix + ".exit.txt"] = f"{result.returncode}\n".encode()
         streams[prefix + ".stdout.txt"] = result.stdout
         streams[prefix + ".stderr.txt"] = result.stderr
-    streams["mokly-publish-timings.stderr.txt"] = record_timing(checkout, workspace)
+    streams["mokly-publish-timings.stderr.txt"] = record_timing(checkout, workspace, cli)
     return streams
 
 

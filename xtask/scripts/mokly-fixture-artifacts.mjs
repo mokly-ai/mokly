@@ -1,9 +1,9 @@
 // Preserve producer bytes, freeze the client time, and pack golden archives.
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { freezeEnvelope, sha256 } from "./mokly-fixture-normalize.mjs";
 import { json } from "./mokly-fixture-runtime.mjs";
 import {
   failureCode,
@@ -11,8 +11,6 @@ import {
   testToken,
 } from "./mokly-fixture-upload.mjs";
 
-export const sha256 = (bytes) =>
-  createHash("sha256").update(bytes).digest("hex");
 const markerPath = ".mokly-export-artifact";
 const envelopePath = "mokly-upload.json";
 const indexPath = "mokly-viewer/index.json";
@@ -38,53 +36,6 @@ async function readPlan(tar, body) {
   });
   assert.deepEqual([...files.keys()], planOrder, "Producer Plan order differs");
   return files;
-}
-
-function freezeTime(files) {
-  const envelope = files.get(envelopePath);
-  const marker = files.get(markerPath);
-  const manifest = JSON.parse(envelope.toString("utf8"));
-  const inventory = JSON.parse(marker.toString("utf8"));
-  const declared = inventory.files.filter(({ path }) => path === envelopePath);
-  assert.equal(declared.length, 1);
-  assert.equal(declared[0].sha256, sha256(envelope));
-  assert.equal(declared[0].size, envelope.length);
-  assert.equal(manifest.schemaVersion, 3);
-  const pattern =
-    /("exportedAt"\s*:\s*")\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z(")/g;
-  const original = envelope.toString("utf8");
-  assert.equal(
-    [...original.matchAll(pattern)].length,
-    1,
-    "Unexpected exportedAt shape",
-  );
-  const fixed = Buffer.from(
-    original.replace(
-      pattern,
-      (_, before, after) => `${before}2000-01-01T00:00:00.000Z${after}`,
-    ),
-  );
-  assert.equal(fixed.length, envelope.length);
-  const digestPattern = new RegExp(
-    `("path"\\s*:\\s*"mokly-upload\\.json"\\s*,\\s*"sha256"\\s*:\\s*")${declared[0].sha256}("\\s*,\\s*"size"\\s*:\\s*${envelope.length}\\s*})`,
-    "g",
-  );
-  const markerText = marker.toString("utf8");
-  assert.equal(
-    [...markerText.matchAll(digestPattern)].length,
-    1,
-    "Unexpected envelope marker entry shape",
-  );
-  files.set(envelopePath, fixed);
-  files.set(
-    markerPath,
-    Buffer.from(
-      markerText.replace(
-        digestPattern,
-        (_, before, after) => `${before}${sha256(fixed)}${after}`,
-      ),
-    ),
-  );
 }
 
 async function exportPaths(directory, prefix = "") {
@@ -158,7 +109,12 @@ async function pack(tar, cwd, file, paths) {
   return readFile(file);
 }
 
-export async function captureArtifacts(tar, runtime, checkout) {
+export async function captureArtifacts(
+  tar,
+  runtime,
+  checkout,
+  workspaceVersion,
+) {
   const exported = join(checkout, ".context/export");
   runtime.run(
     runtime.cli,
@@ -180,7 +136,7 @@ export async function captureArtifacts(tar, runtime, checkout) {
   } finally {
     await receiver.close();
   }
-  freezeTime(plan);
+  freezeEnvelope(plan, workspaceVersion);
   const inventory = await verifyExport(exported, plan);
   const manifest = JSON.parse(plan.get(envelopePath).toString("utf8"));
   const index = JSON.parse(plan.get(indexPath).toString("utf8"));

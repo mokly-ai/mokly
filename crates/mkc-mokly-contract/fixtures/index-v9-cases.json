@@ -1,7 +1,5 @@
 {
   "schemaVersion": 1,
-  "moklyVersion": "0.19.0",
-  "viewerVersion": "0.19.0",
   "baseDocument": {
     "base": "main",
     "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",

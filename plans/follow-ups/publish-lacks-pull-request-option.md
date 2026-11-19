@@ -15,7 +15,7 @@
   - The CLI reads a pull request number only from GitHub Actions variables. A cloud build runs outside GitHub Actions, so its envelope has no number.
   - Decision 6 of the cloud builds work therefore takes the number from the build record and emulates no Actions variable.
   - On 2026-11-17 the CLI of this repository still has no pull request option: the `Publish` options in `crates/mokly-cli/src/grammar.rs:106-130` are the endpoint, the token, the repository, the upload concurrency, `--strict` and `--no-changes`.
-  - The runner runs the repository's own installed CLI when its version is at least `MIN_MOKLY_VERSION`, 0.18.0, in `crates/mkc-build-sandbox/src/versions.rs:8`. Without an installed CLI, it runs the published `@mokly/mokly` at `CLOUD_MOKLY_VERSION`, in `crates/mkc-build-sandbox/src/publish.rs:49-62`.
+  - The runner runs the repository's own installed CLI when its version is at least `MIN_MOKLY_VERSION`, 0.18.0, in `crates/mkc-build-sandbox/src/versions.rs`. Without an installed CLI, it runs the newest npm release, `@mokly/mokly@latest`.
   - So a new CLI option reaches every cloud build only when the minimum supported version has it. Until then, the override must stay for older CLIs.
   - Mokly Cloud now lives in this repository. The CLI option and the runner change can land in one change, with no proposal to another repository.
 - **Problem:** The cloud keeps a special rule for the pull request number of cloud builds, because the CLI cannot send the number outside GitHub Actions.

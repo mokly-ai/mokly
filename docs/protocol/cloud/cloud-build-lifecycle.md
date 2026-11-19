@@ -54,7 +54,7 @@ consumer's to fix; `deadline` and `idle` end `timed-out`; `plan-required` ends
 `failed` and is the workspace's plan; `infrastructure` and
 `repository-unavailable` end `failed` and are Mokly's. `uncommitted-changes`
 ends `failed` and is the consumer's to fix. No `stale-generated-output` cause
-exists, because the pinned CLI has no `build-stale` code. A
+exists, because the CLI has no `build-stale` code. A
 failure's `step` is `checkout`, `install` or `publish`, or null when no step
 was running.
 

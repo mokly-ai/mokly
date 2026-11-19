@@ -62,12 +62,12 @@ The worker matches typed variants, never strings:
 | Any other code    | `Unrecognized`   | `failed`, `exit`                |
 | No code           | `None`           | `failed`, `exit`                |
 
-The pinned CLI has no `build-stale` code. The runner gives that
+The CLI has no `build-stale` code. The runner gives that
 code no typed value, so it is `Unrecognized` like any other unknown code, and
 no build records a `stale-generated-output` cause.
 
 The [CLI-code fixture](./mokly-fixture-regeneration.md#cli-failure-codes)
-captures the two named codes from the pinned public CLI. A contract test fails
+captures the two named codes from the workspace CLI. A contract test fails
 if any mapped code is absent, and fixture drift catches a renamed code before
 a package upgrade can silently change the result.
 
@@ -82,7 +82,7 @@ write creates a new 0600 file rather than preserving a pre-existing mode.
 digest, so a new tag cannot change a template release's base.
 Its Node release is the repository's pin in
 `.nvmrc`, which `toolchain-pins` compares with the template definition, so the
-template satisfies the pinned CLI's engines. The pinned CLI is a native binary
+template satisfies the CLI's engines. The CLI is a native binary
 with no musl build and no JavaScript fallback. The template
 therefore runs Linux x64 with glibc 2.28 or newer, and the candidate assertion
 checks that floor. `docs/ops/build-template.md`
@@ -136,7 +136,7 @@ Yarn runs `corepack yarn --version`, then `corepack yarn install
 --frozen-lockfile --non-interactive` when the major version is 1 and
 `corepack yarn install --immutable` otherwise; npm runs `npm ci --no-audit
 --no-fund`. Lifecycle scripts run: they are the consumer's build.
-No install command omits optional dependencies. The pinned CLI's native binary
+No install command omits optional dependencies. The CLI's native binary
 is an optional dependency of `@mokly/mokly`, so an install that omits optional
 dependencies leaves a local CLI without its binary. That CLI fails its version
 probe, and the run ends as `UnsupportedMoklyVersion`.
@@ -151,17 +151,16 @@ nonzero exit, output that is not a SemVer, or a version below
 `MIN_MOKLY_VERSION` is 0.18.0, the first release that writes upload envelope 3
 with catalogue index 9, the only versions the receiver accepts.
 Otherwise it runs `<that path> publish --config
-<config_path> --repository github.com/<owner>/<name> <mode>`. When no candidate has a CLI, the cloud pin runs:
-`npm exec --yes --package=@mokly/mokly@<pin> -- mokly publish` with the same
+<config_path> --repository github.com/<owner>/<name> <mode>`. When no candidate has a CLI, the runner uses the newest npm release:
+`npm exec --yes --package=@mokly/mokly@latest -- mokly publish` with the same
 arguments. `--config` names the project's JSON configuration file.
 `<mode>` is `--no-changes` or `--base origin/B`. The environment
 adds `MOKLY_ENDPOINT` (the upload endpoint) and `MOKLY_TOKEN` (the upload
 token). The runner never runs bare `npx mokly`, which can resolve the
-unregistered unscoped `mokly` name. `<pin>` is the constant
-`CLOUD_MOKLY_VERSION` in `mkc-build-sandbox`, which `cargo xtask
-toolchain-pins` compares with the workspace `@mokly/mokly` version in
-`packages/mokly/package.json` and which is never below
-`MIN_MOKLY_VERSION`. The fallback is 0.19.0 and the minimum is 0.18.0. The
+unregistered unscoped `mokly` name. A fixed release pin and the workspace CLI
+were rejected for this fallback. It must use the newest published release.
+Accepted risk: if npm publishes a release whose cloud deploy fails, the
+fallback CLI can be newer than the running cloud until the next deploy. The
 [build toolchain checks](./repository-layout.md#build-toolchain-checks) also
 validate the version in the failure sentence.
 In CI mode the CLI keeps the counted result line, such as
@@ -183,7 +182,7 @@ so it counts against the attempt deadline. A base whose sources
 fail the CLI's current validation makes Changes unavailable, and the CLI then
 uploads the current catalogue without a comparison.
 
-**Clean checkout.** The pinned CLI checks HEAD and Git status before its build
+**Clean checkout.** The CLI checks HEAD and Git status before its build
 and again before Plan. The runner adds no files to the
 checked-out worktree. Git setup writes Git metadata only; the credential file
 is at C, outside R. The CLI builds in a private directory outside R and keeps

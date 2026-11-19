@@ -1,9 +1,10 @@
-//! Exact process scripts independent of the implementation's argument builders.
+//! Exact process scripts with the product's published CLI command builder.
 
 use mkc_build_interface::outcome::BuildStep;
 use sandbox_interface::{Error, ProcessEventStream, ProcessStreamEvent, ProcessStreamOutcome};
 
 use crate::command::{REPO, args};
+use crate::publish::fallback_cli;
 
 use super::fixtures::SHA;
 
@@ -149,25 +150,24 @@ pub(super) fn local_test(parent: &str) -> Call {
     .exit(1)
 }
 pub(super) fn fallback() -> Call {
-    Call::new(
-        BuildStep::Publish,
-        "npm",
-        &[
-            "exec",
-            "--yes",
-            "--package=@mokly/mokly@0.19.0",
-            "--",
-            "mokly",
-            "publish",
-            "--config",
-            "mokly.config.json",
-            "--repository",
-            "github.com/owner/repo",
-            "--no-changes",
-        ],
-        REPO,
-    )
-    .publishing()
+    fallback_for("mokly.config.json", None)
+}
+
+pub(super) fn fallback_for(config: &str, base: Option<&str>) -> Call {
+    let command = fallback_cli();
+    let mut call = Call::new(BuildStep::Publish, &command.program, &[], REPO).publishing();
+    call.args = command.args;
+    call.args.extend(args(&[
+        "--config",
+        config,
+        "--repository",
+        "github.com/owner/repo",
+    ]));
+    call.args.extend(match base {
+        Some(base) => args(&["--base", base]),
+        None => args(&["--no-changes"]),
+    });
+    call
 }
 pub(super) fn complete() -> Vec<Call> {
     let mut calls = checkout();

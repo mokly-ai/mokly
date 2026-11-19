@@ -50,7 +50,7 @@ while `cancelBuild` would cancel the build and the caller may cancel it.
 
 The [lifecycle's typed causes](./cloud-builds.md#build-record) add
 `uncommitted-changes` to `failure.cause`, OpenAPI and the generated client.
-No `stale-generated-output` cause exists, because the pinned CLI has no
+No `stale-generated-output` cause exists, because the CLI has no
 stale-output failure.
 
 `BuildSummary` on reference rows is `{id, state, createdAt, headSha}`.

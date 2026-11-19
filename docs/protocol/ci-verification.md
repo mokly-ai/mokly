@@ -2,7 +2,7 @@
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete repository and release gate. The local
+`cargo xtask check` is the complete repository gate. The local
 executor runs the local suites sequentially in one checkout. Native runs only
 when selected. The local gate starts with the live workspace dependency audit.
 [Baseline auditing](./dependency-audit-baseline.md#xtask-and-ci-selection)
@@ -130,8 +130,8 @@ runs all logic and browser tests. An inherited app shard cannot restrict an
 unsharded run.
 
 The fixtures suite compares bytes from the workspace Mokly build;
-`cargo xtask mokly-fixtures` regenerates them. The toolchain check compares
-`CLOUD_MOKLY_VERSION` with `packages/mokly/package.json`.
+`cargo xtask mokly-fixtures` regenerates them. Fixed placeholder versions keep
+release numbers out of fixture drift. Published CLI consumers use npm `latest`.
 
 ## Deterministic Test Repository Inputs
 
@@ -241,9 +241,9 @@ within that event's runtime profile; individual reports are partial evidence.
 Release publication accepts only the dual-runtime Release Please profile, then
 applies the additional tree, live Node test inventory, and live Playwright
 inventory checks in the [release evidence contract](./npm-release-evidence.md).
-The ordinary five-report profile cannot skip the complete publish gate. Reports
-are kept for 14 days, which bounds their release reuse; missing or expired
-evidence falls back to the complete gate.
+The ordinary five-report profile cannot authorize publication. Reports stay
+available for 14 days. Missing or expired evidence stops release preparation.
+Re-run qualifying CI on the release commit, then retry the release.
 
 The cache and audit continuation is
 [Dependency Cache And Security](./ci-verification-security.md).

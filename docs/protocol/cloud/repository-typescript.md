@@ -40,12 +40,12 @@ formatting, lint and import rules.
   [viewer contract](./viewer.md#private-artifact-limit) records the viewer's
   private-artifact limit.
 - A cloud build of a repository that installs no Mokly package runs the
-  published release of the workspace `@mokly/mokly` version.
+  newest npm release, `@mokly/mokly@latest`.
   [Cloud build runner](./cloud-build-runner.md) defines that fallback and the
   runner's minimum supported version. The receiver accepts only upload
   envelope 3, ownership marker 3 and catalogue index 9. The
-  [verification guide](../../../xtask/README.md) documents the constants and
-  their toolchain check.
+  [verification guide](../../../xtask/README.md) documents the minimum-version
+  toolchain check.
 - The shared controls use `@firna/ui` 4.0.0, the one `@firna/ui` version of
   the repository. Its peers and the React runtime install once, as
   [Shared controls](./shared-controls.md#dependencies) requires. React pins
