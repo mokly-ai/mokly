@@ -2,11 +2,15 @@
 
 use std::fs;
 
+use super::plan_capture::InitialCapture;
 use super::plan_support::Fixture;
 use super::support::{link_directory, unlink_directory, workspace};
 
 #[test]
 fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes() {
+    let target = workspace().join("target");
+    fs::create_dir_all(&target).unwrap();
+    let directory = tempfile::tempdir_in(target).unwrap();
     for name in [
         "content",
         "existing import",
@@ -18,7 +22,7 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
         "paths",
         "link",
     ] {
-        let mut fixture = Fixture::new();
+        let mut fixture = Fixture::in_parent(directory.path());
         match name {
             "existing import" => fixture.write("existing.ts", "export const extra=1;"),
             "index priority" => {
@@ -52,6 +56,17 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
             _ => {}
         }
         fixture.prepare();
+        assert_eq!(
+            fixture.initial_capture(),
+            Some(InitialCapture {
+                complete: true,
+                durable: true,
+                uncaptured: None,
+                plan: true,
+                toolchain: true,
+            }),
+            "initial capture {name}"
+        );
         assert_eq!(fixture.attempts(), 2, "initial {name}");
         fixture.edit();
         let expected = match name {
@@ -112,7 +127,12 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
         };
         assert_eq!(fixture.prepare(), expected, "modules {name}");
         let direct = name == "content" || name == "existing import";
-        assert_eq!(fixture.sent_plan(), direct, "plan {name}");
+        assert_eq!(
+            fixture.sent_plan(),
+            direct,
+            "plan {name}, initial capture: {:?}",
+            fixture.initial_capture()
+        );
         assert_eq!(
             fixture.attempts(),
             if direct { 3 } else { 4 },

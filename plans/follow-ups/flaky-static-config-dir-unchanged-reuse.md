@@ -72,7 +72,7 @@
     builds and the same reuse assertion, at its line 55. But it creates its
     fixture and its cache under a private folder in the repository's
     `.context` folder, at its lines 12 to 16.
-  - The failure:
+  - The first failure:
     - On 2026-11-19 the complete gate `cargo xtask check` ran on Linux x86_64
       with 4 CPUs and Node 24.22.1. It ended at about 15:49 UTC. Its tree had
       staged changes only to `tests/helpers/plan_capture.ts` and
@@ -109,8 +109,8 @@
     - The failure printed no evidence flags, no bundle cache outcome, and no
       standard error of the builds.
     - The absolute paths test passed in the same Node step.
-  - The rerun: right after the gate, with no source or build change, one
-    isolated run passed:
+  - The rerun of the first failure: right after the gate, with no source or
+    build change, one isolated run passed:
     `node --import tsx --test tests/static_config_dir.test.ts`. It reported 1
     passed and 0 failed, skipped, or cancelled. The test took 3361 ms, and the
     run took 3633 ms. Nobody made a second targeted rerun.
@@ -118,8 +118,58 @@
     Node runs, each with 3130 tests and two files at once. They were 3
     baseline runs, 10 validation runs of the branch's test changes, and the
     Node step of the first complete gate of the same branch. That gate failed
-    on a separate Markdown link test, which the branch then corrected.
-  - Suspected source: unknown. Nobody reproduced or traced this failure. The
+    on a separate Markdown link test, which the branch then corrected. Later,
+    the third complete gate of the same branch passed. Its Node step passed
+    all 3130 tests, this test included.
+  - The second failure, in CI:
+    - On 2026-11-19, attempt 1 of CI run 44578048802 ran for the pull request
+      of the same branch, at commit `b87d5f46e`. The parent of that commit is
+      `origin/main` at `6ae96ed08`. Like the tree of the first failure, the
+      commit changes only `tests/helpers/plan_capture.ts`,
+      `tests/sidecar_saved_plan.test.ts`, and follow-up items.
+    - The job `Viewer (Node 22.15.0)` ran on a GitHub-hosted `ubuntu-24.04`
+      runner. Its step `Run viewer verification` ran
+      `cargo xtask check --suite viewer`. That suite ran the same Node step,
+      `npm run test:viewer:prepared`, with two test files at once.
+    - In that Node step, another test file made a folder under `/tmp` with
+      `os.tmpdir()`. So `os.tmpdir()` was `/tmp` there too.
+    - The Node step ran from about 17:33 to 17:44 UTC. It reported
+      `tests 3130, passed 3129, failed 1, skipped 0, cancelled 0` after 637 s.
+    - The failure text is below. In the log, lines that another test file
+      printed at the same time fall between its lines. The text leaves them
+      out. It also leaves out two stack frames inside Node, as the text of the
+      first failure does.
+
+      ```text
+      ✖ strict builds replace cached HTML after an earlier configDir paths target appears
+      Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+      1 !== 0
+
+      Caused by:
+      AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+      1 !== 0
+
+          at TestContext.<anonymous> (/home/runner/work/mokly/mokly/tests/static_config_dir.test.ts:57:10)
+      ```
+
+    - The assertion at line 57 failed again, after lines 53, 54, and 56
+      passed. So the second build again gave equal HTML, but it compiled once.
+      The failure again printed no evidence flags, no bundle cache outcome,
+      and no standard error of the builds.
+    - The absolute paths test passed in the same Node step. Each other
+      verification job of the run passed. The summary job `Required CI`
+      failed only because the Viewer job failed.
+    - This failure came from another machine and another Node version than
+      the first failure.
+  - The rerun of the second failure: attempt 2 of the same run reran the
+    failed jobs, with `gh run rerun 44578048802 --failed`. It ran the same
+    commit. Its Node step passed this test and reported
+    `tests 3130, passed 3130, failed 0, skipped 0, cancelled 0` after 495 s.
+    The run ended with the conclusion `success`. It was the only rerun of
+    this failure.
+  - Suspected source: unknown. Nobody reproduced or traced either failure. The
     candidates come from code reading only:
     - Shared `/tmp` churn. Another test file changes `/tmp` during or just
       before the capture of the first build. The `/tmp` witness is then not
@@ -128,14 +178,15 @@
     - The first build keeps the compilation, but the second build does not
       load it, for a reason that the test does not print.
     - The evidence of the first build is not complete, for another reason.
-- **Problem:** The test failed once in a complete gate. Its second, unchanged
-  strict build compiled again instead of reusing the bundle cache. An
-  unchanged isolated rerun passed, and the failure does not show why the cache
-  was not used.
-- **Impact if no action:** The complete gate can fail at random on an
-  unchanged test, and each failure costs a gate rerun. The Node step alone
-  takes about 8 minutes. If the source is in product code, a real strict build
-  can also compile again without need.
+- **Problem:** The test failed once in a local complete gate and once in CI.
+  Each time, its second, unchanged strict build compiled again instead of
+  reusing the bundle cache. After each failure, one unchanged rerun passed.
+  Neither failure shows why the cache was not used.
+- **Impact if no action:** The complete gate and CI can fail at random on an
+  unchanged test, and each failure costs a rerun. The Node step alone takes
+  about 5 to 8 minutes on the gate machine and about 8 to 11 minutes in CI. If
+  the source is in product code, a real strict build can also compile again
+  without need.
 - **Root question:** How does the strict build reuse test prove cache reuse on
   every run, also while other test files run beside it?
 - **Options:**
@@ -157,8 +208,9 @@
     - Record the first rejected witness, its path, and whether it was not
       mature or had changed.
     - Run the test file alone in a loop too, for comparison.
-    - Cost: machine time and an unknown number of runs. The observed rate was
-      1 failure in 15 full Node runs. Effort: Medium.
+    - Cost: machine time and an unknown number of runs. On the gate machine,
+      the observed rate was 1 failure in 16 full Node runs. CI also failed
+      once, as the background says. Effort: Medium.
   - **D.** After B or C names the cause, make the test deterministic for that
     cause. Keep every assertion. For shared `/tmp` churn, give the fixture and
     the cache a parent folder that no other test changes during a capture. A
@@ -183,7 +235,7 @@
 - **Wider fix:** None yet, because the defect class is unknown until a trace
   names the cause.
 - **Previous examples:**
-  - [flaky-serve-plan-existing-import.md](./flaky-serve-plan-existing-import.md)
+  - [flaky-serve-plan-existing-import.md](https://github.com/mokly-ai/mokly/blob/b87d5f46ed4e4255312d2733b98eb1412d3428d5/plans/follow-ups/flaky-serve-plan-existing-import.md)
     records a Rust Serve plan test that lost its saved plan once in a complete
     gate. Its suspected source is also shared folder churn, and nobody traced
     it.
@@ -203,9 +255,11 @@
     from a normal full Node run, with no controlled churn and no recorded
     flags.
 - **Related:**
-  - [flaky-serve-plan-existing-import.md](./flaky-serve-plan-existing-import.md):
-    it has the same suspected class. A trace or a fix of either item can
-    inform the other. Each item can merge alone.
+  - [ancestor-churn-disables-durable-capture.md](./ancestor-churn-disables-durable-capture.md):
+    it investigates the ancestor witness rule in real use. The suspected
+    `/tmp` churn source of this item would be one case of that rule. A trace
+    of this item can give it evidence, and a changed witness rule can change
+    this test. Each item can merge alone.
 - **Recommendation:** C. It names the cause under the conditions of the
   failure before any change, as the testing rules require, and it changes
   nothing in the repository. B is the next step when C cannot reproduce the
