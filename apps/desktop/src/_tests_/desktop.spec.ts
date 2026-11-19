@@ -10,12 +10,17 @@ import {
   seedFlow,
   storedFlow,
 } from "../../../app/src/_tests_/auth-callbacks";
+import {
+  freshVerifier,
+  keepVerifier,
+  keptVerifier,
+} from "../../../app/src/_tests_/desktop-sign-in";
 import { freshEmail, ready } from "../../../app/src/_tests_/harness";
 import { apiOrigin, appOrigin } from "../../../app/src/_tests_/origins";
-import { mailedLink } from "../../../app/src/_tests_/sign-in-links";
 import { DESKTOP_ORIGIN } from "../origin.js";
 
 import { expectShareClipboard } from "./clipboard";
+import { browserGrant, launchHandoff, startSignIn } from "./desktop-sign-in";
 import {
   captureOpener,
   deliverHandoff,
@@ -37,38 +42,39 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
   try {
     electron = await launch(profile);
     let page = await electron.firstWindow();
-    await expect(page.getByTestId("email-entry")).toBeVisible();
-    await page.goto(DESKTOP_ORIGIN + "/sign-up");
+    await expect(
+      page.getByRole("button", { name: "Continue in browser" }),
+    ).toBeVisible();
+    await page.goto(DESKTOP_ORIGIN + "/sign-up?returnTo=%2Fnew");
+    const { connect, verifier } = await startSignIn(electron, page);
     const email = freshEmail("electron");
-    await page.getByLabel("Email").fill(email);
-    const sent = page.waitForResponse(apiOrigin + "/v1/auth/magic-links");
-    await page.getByTestId("email-entry").click();
-    const requested = await sent;
-    expect(requested.status()).toBe(202);
+    const grant = await browserGrant(browser, email, connect);
+    const exchanged = page.waitForResponse(
+      (response) =>
+        response.url() === apiOrigin + "/v1/auth/desktop/callback" &&
+        response.request().method() === "POST",
+    );
+    await launchHandoff(
+      electron,
+      profile,
+      `mokly://auth/desktop/callback#grant=${grant}`,
+    );
+    const requested = await exchanged;
+    expect(requested.status()).toBe(200);
     expect((await requested.request().allHeaders()).origin).toBe(
       DESKTOP_ORIGIN,
     );
     expect(requested.headers()["access-control-allow-origin"]).toBe(
       DESKTOP_ORIGIN,
     );
-    const link = await mailedLink(email);
-    expect(new URL(link).search).toBe("?client=desktop");
-    await browser.goto(link);
-    await expect(
-      browser.getByRole("button", { name: "Open Mokly" }),
-    ).toBeVisible();
-    await screenshot(browser, "browser-handoff");
-    const token = new URLSearchParams(new URL(link).hash.slice(1)).get(
-      "token",
-    )!;
-    await electron.close();
-    electron = undefined;
-    electron = await launch(
-      profile,
-      `mokly://auth/email/callback#token=${token}`,
-    );
-    page = await electron.firstWindow();
     await page.waitForURL(DESKTOP_ORIGIN + "/new");
+    expect(await keptVerifier(page)).toBeNull();
+    const history = await electron.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]
+        .webContents.navigationHistory.getAllEntries()
+        .map((entry) => new URL(entry.url).pathname),
+    );
+    expect(history).not.toContain("/auth/desktop/callback");
     await ready(page);
     expect(await signedInEmail(page, apiOrigin)).toBe(email);
     const cookies = await electron.context().cookies(apiOrigin);
@@ -89,67 +95,50 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
     await page.waitForURL(DESKTOP_ORIGIN + "/new");
 
     const recoveryEmail = freshEmail("electron-recovery");
-    await page.evaluate(
-      async ({ origin, email }) => {
-        const response = await fetch(origin + "/v1/auth/magic-links", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        if (response.status !== 202)
-          throw new Error(`link issue failed: ${response.status}`);
-      },
-      { origin: apiOrigin, email: recoveryEmail },
+    await keepVerifier(page, verifier);
+    const refused = page.waitForResponse(
+      (response) =>
+        response.url() === apiOrigin + "/v1/auth/desktop/callback" &&
+        response.request().method() === "POST",
     );
-    const recoveryLink = await mailedLink(recoveryEmail);
     await deliverHandoff(
       electron,
-      `mokly://auth/email/callback#token=${token}`,
+      `mokly://auth/desktop/callback#grant=${grant}`,
     );
+    const rejection = await refused;
+    expect(rejection.status()).toBe(400);
+    expect(await rejection.json()).toMatchObject({
+      error: { reason: "desktop-grant-invalid" },
+    });
     await expect(
       page.getByRole("heading", {
-        name: "This link has already been used",
+        name: "This sign-in has expired",
         exact: true,
       }),
     ).toBeVisible();
-    expect(page.url()).toBe(DESKTOP_ORIGIN + "/auth/email/callback");
+    expect(page.url()).toBe(DESKTOP_ORIGIN + "/auth/desktop/callback");
     await page.evaluate(() => {
       Object.assign(globalThis, { desktopHandoffDocument: true });
     });
+    // The failed landing consumes its verifier. Arrange the next sign-in without leaving it.
+    const recovery = freshVerifier();
+    await keepVerifier(page, recovery.verifier);
+    const recoveryConnect = new URL(connect);
+    recoveryConnect.searchParams.set("challenge", recovery.challenge);
+    const recoveryGrant = await browserGrant(
+      browser,
+      recoveryEmail,
+      recoveryConnect,
+    );
     await deliverHandoff(
       electron,
-      "mokly://auth/email/callback" + new URL(recoveryLink).hash,
+      `mokly://auth/desktop/callback#grant=${recoveryGrant}`,
     );
     await page.waitForURL(DESKTOP_ORIGIN + "/new");
     expect(await signedInEmail(page, apiOrigin)).toBe(recoveryEmail);
     expect(
       await page.evaluate(() => "desktopHandoffDocument" in globalThis),
     ).toBe(false);
-
-    // The in-shell landing ignores the browser-only handoff query.
-    const secondEmail = freshEmail("electron-query");
-    await page.evaluate(
-      async ({ origin, email }) => {
-        const response = await fetch(origin + "/v1/auth/magic-links", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        if (response.status !== 202)
-          throw new Error(`link issue failed: ${response.status}`);
-      },
-      { origin: apiOrigin, email: secondEmail },
-    );
-    const queryLink = await mailedLink(secondEmail);
-    await page.goto(
-      DESKTOP_ORIGIN +
-        "/auth/email/callback?client=desktop" +
-        new URL(queryLink).hash,
-    );
-    await page.waitForURL(DESKTOP_ORIGIN + "/new");
-    expect(await signedInEmail(page, apiOrigin)).toBe(secondEmail);
 
     const projectPath = await viewerProof(page);
     await expectShareClipboard(electron, page);
@@ -160,13 +149,18 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
     await screenshot(page, "share-address");
     await follow(page, appOrigin + "/docs/publish");
     await follow(page, "https://example.com/review", true);
+    await follow(page, "https://github.com/login");
     await expect
       .poll(() => opened(electron!))
-      .toEqual([appOrigin + "/docs/publish", "https://example.com/review"]);
+      .toEqual([
+        appOrigin + "/docs/publish",
+        "https://example.com/review",
+        "https://github.com/login",
+      ]);
     expect(await electron.windows()).toHaveLength(1);
 
     await seedFlow(page, flowKeys.signIn);
-    let exchanged = false;
+    let providerExchanged = false;
     let hostedRequests = 0;
     await page.route(appOrigin + "/auth/github/callback**", (route) => {
       hostedRequests++;
@@ -179,7 +173,7 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
         codeVerifier,
       });
       expect(new URL(page.url()).search).toBe("");
-      exchanged = true;
+      providerExchanged = true;
       return route.fulfill({
         status: 503,
         contentType: "application/json",
@@ -193,7 +187,7 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
         }),
       });
     });
-    await page.route("https://github.com/desktop-test", (route) =>
+    await page.route("https://checkout.stripe.com/desktop-test", (route) =>
       route.fulfill({
         status: 302,
         headers: {
@@ -201,11 +195,11 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
         },
       }),
     );
-    await follow(page, "https://github.com/desktop-test");
+    await follow(page, "https://checkout.stripe.com/desktop-test");
     await expect(
       page.getByRole("heading", { name: "GitHub sign-in opens soon" }),
     ).toBeVisible();
-    expect(exchanged).toBe(true);
+    expect(providerExchanged).toBe(true);
     expect(hostedRequests).toBe(0);
     expect(page.url()).toBe(DESKTOP_ORIGIN + "/auth/github/callback");
     expect(await storedFlow(page, flowKeys.signIn)).toBeNull();

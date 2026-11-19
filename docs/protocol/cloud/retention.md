@@ -150,7 +150,7 @@ unreferenced incarnation, the provider's seven-day soft-delete window and
 noncurrent-version lifecycle still apply. Publication and build checks run in
 API workers as [Changes check](./changes-check.md) defines. Authentication,
 build and GitHub record pruning use separate scheduled commands; see
-[Persistence](./persistence-boundaries.md).
+[Authentication retention](./persistence-transactions.md#authentication-retention).
 
 ## Verification
 

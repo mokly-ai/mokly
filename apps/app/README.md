@@ -11,8 +11,9 @@ under [Related Docs](#related-docs).
 
 ## Responsibilities
 
-- Account entry, the magic-link, preview and GitHub landings, invitation
-  acceptance and onboarding, as the only full pages outside the viewer.
+- Account entry, the magic-link, preview, desktop and GitHub landings, the
+  page that signs the desktop app in from the browser, invitation acceptance
+  and onboarding, as the only full pages outside the viewer.
 - The viewer route: resolving a readable address to one publication or build,
   mounting the workspace `@mokly/viewer`, composing the cloud chrome into its
   slots, and drawing and following cloud builds in its stage.
@@ -50,12 +51,17 @@ is [Product navigation](../../docs/protocol/cloud/product-navigation.md).
 Sign-in is one magic-link process for new and returning readers; GitHub
 sign-in, connection and App installation each land on their own route. A
 credential leaves the address before the router records it, and an accepted
-`returnTo` destination survives email and GitHub sign-in byte for byte or
-becomes `/dashboard`. An email link the desktop app requested carries
-`?client=desktop`: outside the app, its landing holds the token in memory and
-offers **Open Mokly**, which opens `mokly://auth/email/callback#token=…` in
-this tab, and **Continue in browser**, which exchanges the token here with the
-ordinary landing's outcomes; inside the app the query is ignored. An invitation link carries its route through sign-in,
+`returnTo` destination survives email, GitHub and desktop grant sign-in byte
+for byte or becomes `/dashboard`. Inside the desktop shell, sign in and sign
+up open the browser instead: the entry keeps a verifier in its tab and opens
+`/connect/desktop` for the verifier's challenge, that page names the
+browser's account and after **Open Mokly** hands the app a one-use grant
+through `mokly://auth/desktop/callback`, and `/auth/desktop/callback` in the
+window exchanges the grant with the verifier. In the shell the GitHub actions
+open their own routes on the web, and the window reads the session and the
+open screen's GitHub accounts again when it gets focus back. The rules are
+[Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md) and
+[web setup](../../docs/protocol/cloud/desktop-app.md#web-setup). An invitation link carries its route through sign-in,
 accepts with the invited account's session, and distinguishes an acceptance
 that succeeded from a workspace read that failed afterwards. After
 acceptance succeeds, the invitation screen keeps that success while it opens
@@ -173,17 +179,21 @@ It builds the web app before the shard runs.
   registry and its two URL forms, the viewer selection and address grammar,
   and the contracts this package shares with the repository: the reason union
   and the parsed data reasons against the OpenAPI document, the icon
-  vocabulary against the catalogue's, the desktop origin and link form against
-  the shared fixture and `mkc_domain`, one import group per module, the
-  no-shared-selector rule between `public/app.css` and the catalogue
-  stylesheets, and every `symbol()` a listed protocol doc names.
+  vocabulary against the catalogue's, the desktop origin against the shared
+  fixture and the grant's scheme address against the desktop shell's own
+  check, one import group per module, the no-shared-selector rule between
+  `public/app.css` and the catalogue stylesheets, and every `symbol()` a
+  listed protocol doc names. The screens that only the desktop shell draws are
+  rendered in Node, because no browser test can load the shell's origin.
 - The browser suite is `src/_tests_/**/*.spec.ts`: Playwright in real Chromium
   against the exported build, the real API with `MKC_MAILER=log`, the real
   catalogue server, one fresh blob directory and one isolated Postgres schema
   per run, a loopback Stripe double and the recorded GitHub. The API and the catalogue server it
-  starts admit the desktop origin (`MKC_DESKTOP_CLIENT=true`), so the desktop
-  handoff cases request a link and exchange its token from
-  `mokly-app://desktop` as the shell does. Only an unconfigured, unreachable
+  starts admit the desktop origin (`MKC_DESKTOP_CLIENT=true`), as the desktop
+  shell's Electron test, which reuses this harness, needs. Only the shell
+  draws the window's entry, so the desktop sign-in specs keep a verifier in
+  the tab themselves, request the grant on the connect page and exchange it on
+  the landing from the app origin. Only an unconfigured, unreachable
   local Postgres may skip, and it says so; a port already held by another
   server fails the run. Every test signs in for itself and waits out the API's
   own `Retry-After` when the magic-link admission window closes. Playwright
@@ -365,7 +375,7 @@ published catalogue. The spec routes no build operation.
 ### Key Code
 
 - `index.ts` — the entry, which takes an authentication landing's provider input off the address before `expo-router/entry` loads.
-- `app.json` — the Expo configuration: the single-page web output, the disabled route sitemap and the `mokly` scheme that the desktop sign-in handoff opens.
+- `app.json` — the Expo configuration: the single-page web output, the disabled route sitemap and the `mokly` scheme through which the connect page hands the desktop app its grant.
 - `app/` — the root-relative route tree: static account, callback and UUID resolver routes beside `[workspace]`, which holds the `-` sentinel for workspace actions and `[project]`.
 - `app/_layout.tsx` — the document frame that mounts the theme, the toasts, the session, resource invalidation, the drafts, the catalogue source and the settings dialog host around every route.
 - `app/+not-found.tsx` — the unmatched-route owner, which renders the recovery screen with one `/dashboard` action and reads no product data.
@@ -382,14 +392,16 @@ published catalogue. The spec routes no build operation.
 - `src/api/error-data.ts` — `ApiErrorData`, the generated type of each reason's `data`, keyed by reason, and `parseErrorData`, one parser per reason that keeps `data` only when it has that type, so a cause this build does not know is dropped, never assumed.
 - `src/api/reasons.ts` — the reason union the UI branches on, checked against the OpenAPI inventory.
 - `src/api/form-error.ts` — the copy and the owning field for each catalogued reason, the `build-ineligible` sentence for each typed `cause`, and `nonRetryable`, the refusals whose control keeps its resting label.
-- `src/session/context.tsx` — the session state and its CSRF token, `adopt` for a landing's exchanged session and `reload` for a retry; every write carries a generation so a stale start-up read cannot sign a reader back out.
-- `src/session/guard.tsx` — `RequireSession`, which sends a signed-out reader to sign-in with the current address as `returnTo`, drawing the sign-in screen's wait while it does, and draws the waiting layout that its caller must pass while the session read runs.
+- `src/session/context.tsx` — the session state and its CSRF token, `adopt` for a landing's exchanged session and `reload` for a retry; every write carries a generation so a stale start-up read cannot sign a reader back out. In the desktop shell it reads the session again whenever the window gets focus, and `refresh.ts` decides what that quiet read changes.
+- `src/session/guard.tsx` — `RequireSession`, which sends a signed-out reader to sign-in with the current address as `returnTo`, drawing the sign-in screen's wait while it does, which in the desktop shell is the window's entry, and draws the waiting layout that its caller must pass while the session read runs.
 - `src/navigation/return-to.ts` — `validateReturnTo`, the one validator of a return destination, tested against the shared Rust fixture.
 - `src/navigation/callback-input.ts` — captures a landing's provider input before the router starts, and replaces a stateless installation return with the connect situation; `provider-query.ts` parses exactly one value, `installation-id.ts` reads an installation id from an address, and `github-flow.ts` owns the tab-scoped GitHub flow keys.
 - `src/navigation/paths.ts` — every workspace, project, publication, reference and settings path, built from slugs; `canonical.ts` replaces a retired slug and keeps the tail and query.
 - `src/navigation/destinations.ts` — the terminal destination of `/dashboard` and of a workspace, and where a signed-out reader is sent; `last-opened.ts` keeps the reader's last project on the device.
 - `src/navigation/address.ts` — `writeAddress`, the query-only push or replace that never routes, the wrapped history operations, and the address hooks every surface reads.
-- `src/navigation/desktop-shell.ts` — `isDesktopShell()`, which recognizes the desktop shell by the page's `mokly-app:` protocol, and the handoff's `mokly://` scheme address. A logic test pins its desktop origin literal to the shared fixture.
+- `src/navigation/desktop-shell.ts` — `isDesktopShell()`, which recognizes the desktop shell by the page's `mokly-app:` protocol. A logic test pins its desktop origin literal to the shared fixture.
+- `src/navigation/desktop-sign-in.ts` — the window's verifier, its S256 challenge and its tab storage, the connect page's address and challenge, the grant's `mokly://` scheme address and when a held grant is handed over again.
+- `src/navigation/web-setup.ts` and `src/navigation/shell-focus.ts` — `openOnWeb`, which opens an application route on the public app origin as a popup that the shell sends to the system browser, and the shell's window focus, on which screens read again what the web may have changed.
 - `src/navigation/follow.ts` — `follow()`, how an `Action` follows its `href`: an application route goes to the router, any other address opens in this tab, and one that would run in the page, such as `javascript:`, is never followed.
 - `src/navigation/leave-page.ts` — `useLeavePage`, how a screen hands the tab to GitHub or Stripe at the end of a write: only while that screen is still shown, called off with `window.stop()` when the screen goes before the next page loads, and with a hook for the page coming back from the back-forward cache. `useWrite` and the GitHub install landing leave through it.
 - `src/settings/panes.ts` — the pane registry and `availablePanes`, which requires the reader's role so Billing is never left visible to a member.
@@ -417,7 +429,7 @@ published catalogue. The spec routes no build operation.
 - `src/components/icons.tsx` — `icons` and `Icon`, the product chrome's glyph vocabulary, the same map the catalogue draws from `docs/mockups/src/screens/product/icons.tsx`.
 - `src/components/write-failure.tsx` — the registered write-failure fragment, the only place a cause and a reference are assembled. It is one element at rest, refused and while a retry works, so the control inside it keeps its node and the reader's focus; at rest it draws no box.
 - `src/components/plan-consequence.tsx` — the role rule for a refused plan gate: an owner opens Billing and everyone else asks an owner.
-- `src/screens/account/` — sign in, sign up, the magic link, the callback landings with `callback-handoff.tsx`, the desktop sign-in handoff, invitation acceptance and the three setup steps. The install and repository steps each draw only the reader's own situation and hand the other one on: `install-screen.tsx` draws the reader's role and replaces a reader whose workspace is connected with the repository step, and `choose-repository-screen.tsx` sends every other installation state back to the install step. `connect-screen.tsx` is the connect situation, `cli-form-screen.tsx` the CLI form, `repository-choices.ts` and `repository-field.tsx` the grouped select and the manage link's destination, `project-address.tsx` the slug and address both project forms share, and `project-name.ts` the display name both derive from the repository, cut to the API's display name limit. Each setup step and the finished project export their wait beside the screen, `CreateWorkspaceWait`, `InstallWait`, `ConnectWait`, `ChooseRepositoryWait`, `CliFormWait` and `ProjectCreatedWait`: the screen's own layout component with its parts in waiting form, which the session read, the route's read and the screen's own reads draw. `install-suspension.tsx` is the install step's suspension fact, `repository-form.tsx` the repository step's panel and form, `repository-project.ts` the project that step creates, and `cli-form-layout.tsx` the CLI form's panel and form.
+- `src/screens/account/` — sign in, sign up, the magic link, the callback landings, the desktop app's entry (`desktop-entry-screen.tsx`, with `DesktopSignInWait`, its wait), the browser page that signs it in (`connect-desktop-screen.tsx`, which draws its confirmation while the session read runs) and its landing (`desktop-callback-screen.tsx`), invitation acceptance and the three setup steps. The install and repository steps each draw only the reader's own situation and hand the other one on: `install-screen.tsx` draws the reader's role and replaces a reader whose workspace is connected with the repository step, and `choose-repository-screen.tsx` sends every other installation state back to the install step. `connect-screen.tsx` is the connect situation, `cli-form-screen.tsx` the CLI form, `repository-choices.ts` and `repository-field.tsx` the grouped select and the manage link's destination, `project-address.tsx` the slug and address both project forms share, and `project-name.ts` the display name both derive from the repository, cut to the API's display name limit. Each setup step and the finished project export their wait beside the screen, `CreateWorkspaceWait`, `InstallWait`, `ConnectWait`, `ChooseRepositoryWait`, `CliFormWait` and `ProjectCreatedWait`: the screen's own layout component with its parts in waiting form, which the session read, the route's read and the screen's own reads draw. `install-suspension.tsx` is the install step's suspension fact, `repository-form.tsx` the repository step's panel and form, `repository-project.ts` the project that step creates, and `cli-form-layout.tsx` the CLI form's panel and form.
 - `src/screens/app/` — the resolver routes: `/dashboard`, a workspace, a UUID permalink, project setup and the not-found screen. `resolver-wait.tsx` is the resolvers' one wait, and `workspace-route.tsx` and `project-route.tsx` require the waiting layout of their destination, which `viewer-route.tsx` gives as the cloud frame.
 - `src/screens/viewer/viewer-screen.tsx` — the viewer route; `address-state.ts` reads the selection, `viewer-catalogue.ts` pairs the access exchange with the catalogue source, `reference-redirect.ts` replaces a resolved alias with its publication's address, `slots.tsx` composes the six controls into two slots, with the reference trigger as its placeholder until the address or a read names the reference, `more-menu.tsx` draws the rows of More from the bar's placement, `carriers.ts` holds the slot refs and finds the control that carries an overlay's action now, `panel-host.tsx` draws the one open panel, and `body.tsx` is `ViewerMain`, the main landmark and its skip link, and `ViewerBody`, which keeps the stage mounted under an overlay. `frame-wait.tsx` is `ViewerFrameWait`, the cloud frame while the route reads the session or the project: one waiting region whose heading names the read for screen readers, over the bar's controls in their waiting forms and the stage's waiting card. It measures its own width as the viewer does, so its bar waits in the composition that the loaded bar draws.
 - `src/viewer/host.ts` — `ViewerHostProps` and `ViewerSelection`, the controlled contract around `@mokly/viewer`.
@@ -446,6 +458,7 @@ published catalogue. The spec routes no build operation.
 - `src/viewer/workspace-role.ts` — the one workspace-role rule that the empty stage's plan card and a build card's plan refusal both read: nothing owner-specific while the read runs, `not-found` as not an owner, and any other failure as the workspace's own Try again.
 - `src/viewer/panels/` — the projects, switcher, history and share overlays. While its read runs, each panel draws its own groups with one placeholder row in each list, from the same group component as the loaded panel: `ref-group.tsx` is the switcher's group, and `share-link.tsx` the share panel's link, who can open it and Copy link.
 - `src/_tests_/harness.ts` — the browser fixture: sign-in through the real magic link, the admission check and the shared page actions; `sign-in-links.ts` waits out the API's link admission window and reads the mailed link, `database-fixture.ts` writes provider observations and moves the recorded installation between the states GitHub alone puts it in — suspended, removed, or handed on to the next account — `members.ts` adds a second person through the API and returns that person's saved session, which `switchSession` restores without a second sign-in, `setup-walks.ts` holds the onboarding walks the connect, role, CLI form and two-account specs share, and `publish.ts` publishes the pinned fixture for the repository the project was created for. `writes.ts` holds `pressWrite`, which presses a write control and waits for the write's ok answer before a test reads stored state. The browser defers every read of a page whose navigation is pending, so a spec that checks a write that leaves the page answers the trip with 204 No Content, which keeps the page as it was while it left; `write-in-progress.spec.ts` does this. `setup-walks.ts` also holds `expectCompletedSteps`, which waits for the setup strip and its credited steps.
+- `src/_tests_/desktop-sign-in.ts` — the desktop sign-in specs' support: a verifier and its challenge, the connect page's grant requests, scheme navigations, controls and confirmation, and the verifier a window keeps. `server-render.ts` renders a screen in Node for a logic test, with `press-doubles.ts` and `resource-doubles.ts` in place of the package Button, Expo Router and the resource hook, so the test can answer the screen's reads and take its presses.
 - `src/_tests_/stripe-double.ts` — serves the loopback Stripe provider for browser tests. `stripe-state.ts` owns its objects, and `stripe-routes.ts` answers HTTP requests. `billing.ts` reports status changes while the real seat worker owns subscription items.
 - `src/_tests_/build-api.spec.ts` — the one spec that follows a real build. `replaceApi` in `api-server.ts` swaps the ordinary API for the `fake-build-api` example and back, with the run's settings that `api-environment.ts` saved.
 - `src/_tests_/settings/undoable-writes.ts` and `src/_tests_/settings/refusals.ts` — every undoable write and every refusable control, asserted from one table each; `busy-writes.ts` gives each write's working word and the operation a screen reader hears, which `writes.spec.ts` reads while each write is held.
@@ -465,7 +478,7 @@ published catalogue. The spec routes no build operation.
 - [Viewer](../../docs/protocol/cloud/viewer.md), [Viewer host](../../docs/protocol/cloud/viewer-host.md), [Viewer chrome](../../docs/protocol/cloud/viewer-chrome.md), [Viewer address state](../../docs/protocol/cloud/viewer-address-state.md), [Viewer catalogue](../../docs/protocol/cloud/viewer-catalogue.md) and [Viewer read model](../../docs/protocol/cloud/viewer-read-model.md).
 - [Viewer builds](../../docs/protocol/cloud/viewer-builds.md), [Viewer build navigation](../../docs/protocol/cloud/viewer-build-navigation.md), [Cloud builds](../../docs/protocol/cloud/cloud-builds.md) and [Cloud build API](../../docs/protocol/cloud/cloud-build-api.md).
 - [Authentication callbacks](../../docs/protocol/cloud/auth-callbacks.md), [Authentication and sessions](../../docs/protocol/cloud/auth-sessions.md) and [GitHub sign-in](../../docs/protocol/cloud/github-sign-in.md).
-- [Desktop application](../../docs/protocol/cloud/desktop-app.md) and the [desktop shell](../desktop/README.md), which serves this export from its own origin.
+- [Desktop application](../../docs/protocol/cloud/desktop-app.md), [Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md) and the [desktop shell](../desktop/README.md), which serves this export from its own origin.
 - [Billing](../../docs/protocol/cloud/billing.md), [plan gates](../../docs/protocol/cloud/billing-plan-gates.md) and [subscriptions](../../docs/protocol/cloud/billing-subscriptions.md).
 - [Shared controls](../../docs/protocol/cloud/shared-controls.md), [Design tokens](../../docs/protocol/cloud/design-tokens.md), [Design token colors](../../docs/protocol/cloud/design-tokens-color.md), [Folio chrome](../../docs/protocol/cloud/folio-chrome.md), [Folio viewer compositions](../../docs/protocol/cloud/folio-viewer.md), [Folio chrome: account entry](../../docs/protocol/cloud/folio-chrome-account.md) and [Product copy](../../docs/protocol/cloud/product-copy.md).
 - [REST API](../../docs/protocol/cloud/rest-api.md), [REST API surface](../../docs/protocol/cloud/rest-api-surface.md) and [Marketing site](../../docs/protocol/cloud/marketing-site.md).

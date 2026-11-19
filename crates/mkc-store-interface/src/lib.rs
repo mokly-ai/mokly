@@ -17,6 +17,7 @@ pub mod build_grant;
 pub mod build_history;
 pub mod build_log;
 pub mod build_state;
+pub mod desktop_grant;
 pub mod error;
 pub mod grant;
 pub mod integration;

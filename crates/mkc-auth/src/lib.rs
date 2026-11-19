@@ -2,6 +2,8 @@
 
 #![warn(unreachable_pub)]
 
+mod desktop_grant;
+mod desktop_grant_policy;
 pub mod error;
 mod links;
 mod preview;

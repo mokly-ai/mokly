@@ -38,6 +38,13 @@ export const workspaceOwners = {
     region: "pane",
     files: ["settings/panes/account-pane.tsx"],
   },
+  // The pane in the desktop app's window keeps every label the pane writes;
+  // only where Connect GitHub leads and its glyph change, and nothing on the
+  // page has failed or been refused.
+  "product/settings/account/desktop": {
+    region: "pane",
+    files: ["settings/panes/account-pane.tsx"],
+  },
   "product/settings/workspace": {
     region: "pane",
     files: [
@@ -137,6 +144,12 @@ export const workspaceOwners = {
     files: ["settings/panes/github-pane.tsx"],
   },
   "product/settings/github/menu": {
+    region: "pane",
+    files: ["settings/panes/github-pane.tsx"],
+  },
+  // The pane in the desktop app's window, whose Add GitHub account opens the
+  // web: the pane writes every label on it.
+  "product/settings/github/desktop": {
     region: "pane",
     files: ["settings/panes/github-pane.tsx"],
   },

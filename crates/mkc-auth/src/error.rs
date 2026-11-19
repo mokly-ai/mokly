@@ -23,6 +23,9 @@ pub enum Error {
     /// Magic-link credential is malformed or unknown.
     #[error("[mkc-auth/error] invalid link")]
     InvalidLink,
+    /// Desktop grant, challenge or verifier is invalid, expired or consumed.
+    #[error("[mkc-auth/error] invalid desktop grant")]
+    InvalidDesktopGrant,
     /// Preview sign-in is absent from this deployment.
     #[error("[mkc-auth/error] preview sign-in unavailable")]
     PreviewSignInUnavailable,

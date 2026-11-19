@@ -1,4 +1,4 @@
-"""Real API origin admission, email links and session-cookie lifecycle."""
+"""Real API origin admission, desktop grant rejection and session-cookie lifecycle."""
 
 import json
 from pathlib import Path
@@ -46,8 +46,7 @@ def lifecycle(api, origin, preview_secret):
                           expected=202, extra={"Origin": origin})
     cors(headers, origin, True)
     link = api.event("recipient", email)["link"]
-    landing = "/auth/email/callback" + ("?client=desktop" if origin == DESKTOP else "")
-    assert link.startswith(api.origin + landing + "#token="), link
+    assert link.startswith(api.origin + "/auth/email/callback#token="), link
     token = link.split("#token=")[1]
     result, headers = api.call("POST", "/v1/auth/callback", {"token": token},
                               extra={"Origin": origin})
@@ -89,6 +88,13 @@ def smoke(executable, enabled):
                                      "MKC_PREVIEW_SIGN_IN_SECRET": secret,
                                      "MKC_PREVIEW_SIGN_IN_EMAIL": "desktop-preview@example.com"})
     try:
+        if enabled:
+            error, headers = api.call("POST", "/v1/auth/desktop/callback",
+                                      {"grant": "invalid", "verifier": "a" * 64},
+                                      expected=400, extra={"Origin": DESKTOP})
+            assert error["error"]["reason"] == "desktop-grant-invalid"
+            cors(headers, DESKTOP, True)
+            assert headers.get("Set-Cookie") is None
         for origin in [api.origin, DESKTOP, THIRD, "null", None]:
             admitted = origin == api.origin or enabled and origin == DESKTOP
             for method, path, expected in [("OPTIONS", "/v1/session", 200),
@@ -102,13 +108,14 @@ def smoke(executable, enabled):
             if not admitted:
                 for path, body in [("/v1/auth/magic-links", {"email": "refused@example.com"}),
                                    ("/v1/auth/callback", {"token": "a" * 64}),
+                                   ("/v1/auth/desktop/callback", {"grant": "invalid", "verifier": "a" * 64}),
                                    ("/v1/auth/preview", {"secret": secret})]:
                     error, headers = api.call("POST", path, body, expected=403, extra={"Origin": origin})
                     assert error["error"]["reason"] == "csrf-rejected"
                     assert headers.get("Set-Cookie") is None
             else:
                 lifecycle(api, origin, secret)
-        print(f"PASS desktop API flag={enabled}: exact CORS, refused origins, email link, magic/preview cookies, cross-origin rotation and sign-out")
+        print(f"PASS desktop API flag={enabled}: exact CORS, refused origins, ordinary email link, invalid desktop grant, magic/preview cookies, cross-origin rotation and sign-out")
     finally:
         api.close()
 

@@ -3,6 +3,8 @@ import type { Viewport } from "@mokly/mokly";
 import { workspace } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
+import type { Host } from "../host";
+import { setupGlyph } from "../host";
 import { Action, BackLink, ExternalLink, Facts, Pending } from "../page-parts";
 import { ControlPlaceholder, TextBar } from "../placeholders";
 
@@ -81,9 +83,17 @@ function Suspension({ link }: { link: LinkRead }) {
  * The step's one control and its way back. While the workspace read runs, the
  * reader's role decides whether the control is there at all, so it is a
  * placeholder in its own box. While its write runs it stays, busy, until the
- * page leaves for GitHub, and Back stays beside it.
+ * page leaves for GitHub, and Back stays beside it. In the desktop app's
+ * window, Install on GitHub opens this step on the web, so it carries the
+ * external glyph.
  */
-function InstallAction({ write }: { write: "rest" | "running" | "waiting" }) {
+function InstallAction({
+  write,
+  host,
+}: {
+  write: "rest" | "running" | "waiting";
+  host: Host;
+}) {
   return (
     <>
       <div className="fo-account-actions">
@@ -100,9 +110,13 @@ function InstallAction({ write }: { write: "rest" | "running" | "waiting" }) {
         ) : (
           <Action
             label="Install on GitHub"
-            to="product/account/choose-repository"
+            to={
+              host === "window"
+                ? "product/account/install-app"
+                : "product/account/choose-repository"
+            }
             tone="primary"
-            icon="github"
+            icon={setupGlyph(host, "github")}
             block
           />
         )}
@@ -121,16 +135,25 @@ function InstallAction({ write }: { write: "rest" | "running" | "waiting" }) {
  * clears, so it draws the fact and its link above the same action. While the
  * workspace is read, the step draws the owner's and the admin's form, because
  * the person who creates a workspace owns it, and names the read in the line
- * under the title.
+ * under the title. In the desktop app's window, Install on GitHub opens this
+ * step on the web, where the reader installs the App from the browser.
  */
-function InstallAppPage({ situation }: { situation: Situation }) {
+function InstallAppPage({
+  situation,
+  host = "browser",
+}: {
+  situation: Situation;
+  host?: Host;
+}) {
   const id =
-    situation === "default" ||
-    situation === "empty" ||
-    situation === "loading" ||
-    situation === "error"
-      ? stateScreenPath("product/account/install-app", situation)
-      : situationPaths[situation];
+    host === "window"
+      ? "product/account/install-app/desktop"
+      : situation === "default" ||
+          situation === "empty" ||
+          situation === "loading" ||
+          situation === "error"
+        ? stateScreenPath("product/account/install-app", situation)
+        : situationPaths[situation];
   if (situation === "loading")
     return (
       <AccountShell
@@ -142,7 +165,7 @@ function InstallAppPage({ situation }: { situation: Situation }) {
         detail={(name) => name}
         below={<PublishWithCli waiting />}
       >
-        <InstallAction write="waiting" />
+        <InstallAction write="waiting" host={host} />
       </AccountShell>
     );
   const link: LinkRead | undefined =
@@ -173,7 +196,10 @@ function InstallAppPage({ situation }: { situation: Situation }) {
       ) : (
         link && <Suspension link={link} />
       )}
-      <InstallAction write={situation === "installing" ? "running" : "rest"} />
+      <InstallAction
+        write={situation === "installing" ? "running" : "rest"}
+        host={host}
+      />
     </AccountShell>
   );
 }
@@ -205,6 +231,11 @@ export function InstallAppSuspendedLoadingScreen(_props: {
   viewport: Viewport;
 }) {
   return <InstallAppPage situation="suspended-loading" />;
+}
+
+/** The step in the desktop app's window: Install on GitHub opens it on the web. */
+export function InstallAppDesktopScreen(_props: { viewport: Viewport }) {
+  return <InstallAppPage situation="default" host="window" />;
 }
 
 /** The suspension when its link could not be read, with the way to read it. */

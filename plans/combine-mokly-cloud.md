@@ -262,12 +262,14 @@ Depends on: 2
 Cloud `main` moved past the snapshot after the freeze. Each later cloud
 commit moves to the combined paths, so that no merged cloud change is lost.
 
-- [ ] Port cloud commit `767be7b2`, PR #136: the neutral Graphite tokens of
-      dark Folio.
-- [ ] Port cloud commit `55972c86`, PR #132: desktop sign-in through the
+- [x] Port cloud commit `767be7b2`, PR #136: the neutral Graphite tokens of
+      dark Folio. Branch: `conductor/combine-mokly-cloud-port-cloud-commits`.
+- [x] Port cloud commit `55972c86`, PR #132: desktop sign-in through the
       browser, with the `desktop_grants` migration and its lock entry.
-- [ ] Before the pull request merges, confirm that cloud `main` has no commit
+      Branch: `conductor/combine-mokly-cloud-port-cloud-commits`.
+- [x] Before the pull request merges, confirm that cloud `main` has no commit
       after the last ported commit. Port each new commit in the same way.
+      Branch: `conductor/combine-mokly-cloud-port-cloud-commits`.
 
 ## Milestone 3: One Cargo workspace
 

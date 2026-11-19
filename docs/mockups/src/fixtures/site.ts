@@ -32,5 +32,5 @@ export const siteStage = {
    * How many entries and folders sit directly in each folder the depicted
    * tree opens. A policy test reads them back from the catalogue manifest.
    */
-  folders: { account: 9, design: 23, product: 4 },
+  folders: { account: 10, design: 23, product: 4 },
 } as const;

@@ -91,6 +91,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/desktop/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Authorize a desktop window from the current browser session. */
+        post: operations["issueDesktopGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/desktop/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Consume a desktop grant and issue a session with the inherited deadline. */
+        post: operations["exchangeDesktopGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/account": {
         parameters: {
             query?: never;
@@ -1262,6 +1296,30 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        /** @description One-use credential paired with the verifier kept by the desktop window. */
+        DesktopGrantCallback: {
+            /** @description One-use grant delivered through the desktop scheme. */
+            grant: string;
+            /** @description Window-held verifier whose text produces the stored S256 challenge. */
+            verifier: string;
+        };
+        /** @description Browser authorization of a desktop verifier and application destination. */
+        DesktopGrantRequest: {
+            /** @description Base64url S256 challenge of the desktop window's 64-hex verifier. */
+            challenge: string;
+            /** @description Application destination, normalized to `/dashboard` when rejected or absent. */
+            returnTo?: string;
+        };
+        /** @description Browser-only grant response, returned once without a session cookie. */
+        DesktopGrantResult: {
+            /** @description Plaintext one-use credential whose digest is stored by the service. */
+            grant: string;
+            /**
+             * Format: date-time
+             * @description Exclusive deadline, capped by the issuing session's absolute deadline.
+             */
+            expiresAt: string;
+        };
         /** @description Project already using the requested repository/config identity. */
         DuplicateProject: {
             /**
@@ -1373,7 +1431,7 @@ export interface components {
                  * @description Stable reason from this schema's x-reasons inventory and rest-api.md.
                  * @enum {string}
                  */
-                reason: "already-member" | "builds-unavailable" | "csrf-rejected" | "github-auth-invalid" | "github-email-unverified" | "github-identity-conflict" | "github-installation-conflict" | "head-changed" | "internal-error" | "invalid-anchor" | "invitation-expired" | "last-owner" | "magic-link-expired" | "magic-link-invalid" | "magic-link-used" | "method-not-allowed" | "migrations-pending" | "not-found" | "operation-unavailable" | "payload-too-large" | "permission-denied" | "rate-limited" | "review-closed" | "session-expired" | "subscription-active" | "token-revoked" | "unauthenticated" | "unavailable" | "upload-blob-mismatch" | "upload-expired" | "upload-failed" | "upload-forbidden" | "upload-incomplete" | "upload-invalid-bundle" | "upload-plan-required" | "upload-timeout" | "upload-too-large" | "upload-unauthorized" | "upload-unavailable" | "upload-unknown-blob" | "upload-unsupported-version" | "validation-failed" | "webhook-signature-invalid";
+                reason: "already-member" | "builds-unavailable" | "csrf-rejected" | "desktop-grant-invalid" | "github-auth-invalid" | "github-email-unverified" | "github-identity-conflict" | "github-installation-conflict" | "head-changed" | "internal-error" | "invalid-anchor" | "invitation-expired" | "last-owner" | "magic-link-expired" | "magic-link-invalid" | "magic-link-used" | "method-not-allowed" | "migrations-pending" | "not-found" | "operation-unavailable" | "payload-too-large" | "permission-denied" | "rate-limited" | "review-closed" | "session-expired" | "subscription-active" | "token-revoked" | "unauthenticated" | "unavailable" | "upload-blob-mismatch" | "upload-expired" | "upload-failed" | "upload-forbidden" | "upload-incomplete" | "upload-invalid-bundle" | "upload-plan-required" | "upload-timeout" | "upload-too-large" | "upload-unauthorized" | "upload-unavailable" | "upload-unknown-blob" | "upload-unsupported-version" | "validation-failed" | "webhook-signature-invalid";
                 message: string;
                 /** @description Incoming x-request-id text, otherwise a generated UUID. */
                 request_id: string;
@@ -2130,7 +2188,7 @@ export interface components {
     parameters: never;
     requestBodies: never;
     headers: {
-        /** @description Secure HttpOnly mkc_session cookie with Path=/ and no Domain attribute. SameSite follows the current request's Origin on every exchange, rotation and clearing response. The public app origin receives SameSite=Lax; mokly-app://desktop receives SameSite=None when MKC_DESKTOP_CLIENT is true. Issuance uses Max-Age=2592000; sign-out clears the cookie with Max-Age=0 and the same Origin rule. See docs/protocol/cloud/auth-sessions.md#sessions. */
+        /** @description Secure HttpOnly mkc_session cookie with Path=/ and no Domain attribute. SameSite follows the current request's Origin on every exchange, rotation and clearing response. The public app origin receives SameSite=Lax; mokly-app://desktop receives SameSite=None when MKC_DESKTOP_CLIENT is true. Ordinary issuance uses Max-Age=2592000; desktop grant exchange and rotation use the time remaining until the inherited absolute deadline. Sign-out clears the cookie with Max-Age=0 and the same Origin rule. See docs/protocol/cloud/auth-sessions.md#sessions. */
         SessionCookie: string;
     };
     pathItems: never;
@@ -2380,6 +2438,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionIssued"];
+                };
+            };
+            "4XX": components["responses"]["ErrorResponse"];
+            "5XX": components["responses"]["ErrorResponse"];
+        };
+    };
+    issueDesktopGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session-bound anti-CSRF token for browser mutations. */
+                "X-CSRF-Token": string;
+                /**
+                 * @description Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;
+                 *     required on browser mutations including public authentication. Missing or other origins are refused.
+                 */
+                Origin: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesktopGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description One-use grant, expiring at the earlier of five minutes and the issuing session's absolute deadline. */
+            201: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DesktopGrantResult"];
+                };
+            };
+            /** @description Persistent peer admission limit reached. */
+            429: {
+                headers: {
+                    /** @description Seconds until another attempt can be admitted. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            "4XX": components["responses"]["ErrorResponse"];
+            "5XX": components["responses"]["ErrorResponse"];
+        };
+    };
+    exchangeDesktopGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;
+                 *     required on browser mutations including public authentication. Missing or other origins are refused.
+                 */
+                Origin: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesktopGrantCallback"];
+            };
+        };
+        responses: {
+            /** @description Session and stored destination. Max-Age is the time remaining until the issuing session's absolute deadline. */
+            200: {
+                headers: {
+                    /** @description no-store */
+                    "Cache-Control"?: string;
+                    "Set-Cookie": components["headers"]["SessionCookie"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionIssued"];
+                };
+            };
+            /** @description Persistent peer admission limit reached. */
+            429: {
+                headers: {
+                    /** @description Seconds until another attempt can be admitted. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
             "4XX": components["responses"]["ErrorResponse"];

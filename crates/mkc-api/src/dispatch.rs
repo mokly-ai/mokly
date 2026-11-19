@@ -73,6 +73,9 @@ impl Dispatcher for ApiDispatcher {
         if !request.operation.implemented() {
             return Err(ApiError::OperationUnavailable);
         }
+        if request.operation.desktop_grant() {
+            return self.dispatch_desktop_grant(request);
+        }
         if let DispatchTarget::GitHub(github) = self.dispatch_target(request.operation)? {
             return self.dispatch_github(request, github);
         }
@@ -266,6 +269,7 @@ impl ApiDispatcher {
             Endpoint::SendMagicLink(_)
             | Endpoint::VerifyMagicLink(_)
             | Endpoint::VerifyPreviewSignIn(_)
+            | Endpoint::DesktopGrant
             | Endpoint::GitHub
             | Endpoint::Billing => Err(ApiError::OperationUnavailable),
         }
@@ -290,7 +294,3 @@ pub(crate) fn cookie(credential: &str, max_age: i64, client: ClientOrigin) -> St
 #[cfg(test)]
 #[path = "_tests_/dispatch_tests.rs"]
 mod tests;
-
-#[cfg(test)]
-#[path = "_tests_/cookie_tests.rs"]
-mod cookie_tests;

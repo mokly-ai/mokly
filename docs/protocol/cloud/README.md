@@ -70,7 +70,8 @@ Change a doc only when a requirement or a decision changes.
   command, deployment, credential, failure and operator contracts.
 - [Billing workers](./billing-workers.md) — Stripe webhooks, retries, seat
   reconciliation and the workers' use of verified prices.
-- [Authentication and sessions](./auth-sessions.md) — links, cookies, rotation and CSRF.
+- [Authentication and sessions](./auth-sessions.md) — links, desktop grants,
+  cookies, rotation and CSRF.
 - [Authentication callbacks](./auth-callbacks.md) — provider-scoped browser
   landings, tab state, cleanup, recovery and resume behavior.
 - [Email](./email.md) — the sign-in and invitation messages: typed content,
@@ -87,10 +88,12 @@ Change a doc only when a requirement or a decision changes.
   rules, limits, pagination, versions and the error envelope, and
   [trusted proxies](./rest-proxies.md) the verified client-IP selection and
   hop configuration.
-- [Persistence boundaries](./persistence-boundaries.md) — table ownership,
-  atomic work, migration lifecycle, and authentication and GitHub record
-  retention, and [publication storage](./persistence-publication-storage.md)
-  the publication transaction boundary, the lock orders and object prefixes.
+- [Persistence boundaries](./persistence-boundaries.md) — table ownership;
+  [transactions, migrations and retention](./persistence-transactions.md)
+  owns atomic work, the migration lifecycle and the retention of
+  authentication and GitHub records, and
+  [publication storage](./persistence-publication-storage.md) the
+  publication transaction boundary, the lock orders and object prefixes.
 - [Product copy](./product-copy.md) — user-facing text rules for the product,
   marketing site, and mockups.
 - [Mockup catalogue](./mockups.md) — public package boundary, registration,
@@ -146,10 +149,12 @@ Change a doc only when a requirement or a decision changes.
 - [Desktop distribution and verification](./desktop-distribution.md) — packaging,
   updates and the Electron smoke contract.
 - [Desktop application](./desktop-app.md) — the Electron shell: the bundled
-  export and its origin, API and catalogue admission, navigation, the scheme
-  sign-in handoff, distribution, updates and the deferred local mode;
-  [bundle and origin](./desktop-bundle.md) owns the privileged scheme, the
-  desktop origin, the renderer settings and the window lifecycle.
+  export and its origin, API and catalogue admission, navigation, browser
+  sign-in and its scheme handoff, web setup, distribution, updates and the
+  deferred local mode; [bundle and origin](./desktop-bundle.md) owns the
+  privileged scheme, the desktop origin, the renderer settings and the window
+  lifecycle, and [sign-in](./desktop-sign-in.md) owns the window's entry
+  screen and the browser page that issues a desktop grant.
 - [Settings dialog](./settings-dialog.md) — settings panes over the working page, URL grammar, mobile routes;
   [states](./settings-dialog-states.md) owns pane loading, writes, failures and address editing;
   [GitHub accounts](./settings-dialog-github.md) owns the workspace account pane.
@@ -167,7 +172,8 @@ Change a doc only when a requirement or a decision changes.
 - [Screen comments](./screen-comments.md) — review-phase draft: anchors, lifecycle, permissions and GitHub sync.
 - [Approvals](./approvals.md) — review-phase draft: identity, staleness, optional gate and audit.
 - [Product mockups](./product-mockups.md) — complete screen/state inventory and journeys.
-- Product inventories: [account](./product-mockups-account.md),
+- Product inventories: [account](./product-mockups-account.md) with its
+  [desktop app](./product-mockups-account-desktop.md) drawings,
   [settings](./product-mockups-settings.md) and [viewer](./product-mockups-viewer.md)
   with its [builds](./product-mockups-viewer-builds.md).
 - [Product API](../../api/README.md) — the OpenAPI document generated from the

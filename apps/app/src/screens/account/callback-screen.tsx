@@ -10,18 +10,13 @@ import { ErrorDetails } from "../../components/error-details";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { StatePlaceholder } from "../../components/placeholders";
 import { verifyMagicLink, verifyPreviewSignIn } from "../../data/auth";
-import { currentSearch, replaceAddress } from "../../navigation/address";
+import { replaceAddress } from "../../navigation/address";
 import { takeCallbackInput } from "../../navigation/callback-input";
-import {
-  desktopHandoffAddress,
-  offersDesktopHandoff,
-} from "../../navigation/desktop-shell";
 import { one } from "../../navigation/provider-query";
 import { validateReturnTo } from "../../navigation/return-to";
 import { useSession } from "../../session/context";
 
 import { AccountShell } from "./account-shell";
-import { CallbackHandoff } from "./callback-handoff";
 
 type LinkLanding = "email" | "preview";
 
@@ -92,19 +87,12 @@ function CallbackRecovery({
   );
 }
 
-/**
- * Exchange an email or preview fragment credential through one landing. An
- * email link the desktop app requested is first offered back to the app when
- * this page is not the app, and is exchanged only if the reader continues here.
- */
+/** Exchange an email or preview fragment credential through one landing. */
 export function CallbackScreen({ landing }: { landing: LinkLanding }) {
   const router = useRouter();
   const { adopt } = useSession();
   const [error, setError] = useState<ApiError | undefined>();
   const [missing, setMissing] = useState(false);
-  // The scheme address that hands the held token to the desktop app, while
-  // the landing offers that handoff instead of exchanging the token.
-  const [handoff, setHandoff] = useState<string | undefined>();
   const credential = useRef<string | undefined>(undefined);
   const retryAt = useRef(0);
   const running = useRef(false);
@@ -158,10 +146,6 @@ export function CallbackScreen({ landing }: { landing: LinkLanding }) {
       return;
     }
     credential.current = value;
-    if (landing === "email" && offersDesktopHandoff(currentSearch())) {
-      setHandoff(desktopHandoffAddress(value));
-      return;
-    }
     void submit(value);
   }, [landing, submit]);
 
@@ -173,14 +157,6 @@ export function CallbackScreen({ landing }: { landing: LinkLanding }) {
     const value = credential.current;
     if (value) void submit(value);
   };
-  const continueInBrowser = () => {
-    setHandoff(undefined);
-    retry();
-  };
-
-  if (handoff !== undefined) {
-    return <CallbackHandoff address={handoff} onContinue={continueInBrowser} />;
-  }
 
   return (
     <AccountShell

@@ -58,6 +58,9 @@ migrated database:
 cargo run -p mkc-api -- migrate
 cargo install diesel_cli --no-default-features --features postgres
 DATABASE_URL=postgres://postgres:postgres@localhost/mkc_test scripts/cloud/db-schema.sh
+DATABASE_URL=postgres://postgres:postgres@localhost/mkc_test \
+  diesel print-schema --config-file /dev/null --with-docs --only-tables desktop_grants \
+  | sed '1s@^// @//! @' > crates/mkc-db/src/schema/desktop_grant.rs
 cargo xtask migration-immutability
 ```
 
@@ -90,6 +93,8 @@ the existing rows are preserved.
 - [migrations/](./migrations/) — one `<YYYYMMDDHHMM>_<description>` directory per migration with `up.sql` and `down.sql`; [migration-lock.txt](./migration-lock.txt) records their hashes.
 - [migration.rs](./src/migration.rs) — `MigrationRunner`, which applies the embedded migrations under a Postgres advisory lock so concurrent starts serialize, and `MigrationStatus`, the readiness reader on its own one-connection pool.
 - [schema/mod.rs](./src/schema/mod.rs) — the generated Diesel schema and the column reference for every table; `scripts/cloud/db-schema.sh` regenerates it with `diesel print-schema` into the fifteen table groups of the root `diesel.toml`, each file below the line cap.
+- [desktop grant schema](./src/schema/desktop_grant.rs) — the independent `desktop_grants` group, generated with the separate `diesel print-schema` command above.
+- [migrations/202611061200_desktop_grants](./migrations/202611061200_desktop_grants/) — desktop sign-in digests, verifier challenges, destinations, inherited session deadlines and retained consumption times, with expiry and user indexes and a reversing table drop.
 - [build schema](./src/schema/build.rs) and [build output schema](./src/schema/build_output.rs) — `builds`, and the `build_upload_grants`, `build_log_chunks` and `build_checks` rows that cascade with their build.
 - [publication schema](./src/schema/publication.rs), [publication event schema](./src/schema/publication_events.rs) and [screen selection schema](./src/schema/publication_screens.rs) — `publications`, `publication_files`, `blobs`, `publication_events`, `catalogue_grants`, `publication_branch_aliases` and `publication_screen_views`; expiry keeps the publication row and `publication_events` and deletes the files, grants and screen views that reference the publication.
 - [slug schema](./src/schema/slug.rs) — the workspace and project slug claim registries.
@@ -109,6 +114,7 @@ the existing rows are preserved.
 ### Related Docs
 
 - [Persistence boundaries](../../docs/protocol/cloud/persistence-boundaries.md)
+- [Persistence transactions, migrations and retention](../../docs/protocol/cloud/persistence-transactions.md)
 - [Repository Rust workspace](../../docs/protocol/cloud/repository-rust-workspace.md#dependencies-and-migrations) — the migration lock.
 - [Platform model](../../docs/protocol/cloud/platform-model.md)
 - [Authentication](../../docs/protocol/cloud/auth-sessions.md)

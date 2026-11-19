@@ -40,7 +40,7 @@ historical slug claims, reporting whether the requested spelling is retired;
 claim-existence reads support suggestions without exposing the owner, and the
 platform still authorizes every resolved UUID. `Organizations::seat_counts`
 counts distinct billable users by their strongest role. The authentication
-traits (`MagicLinks`, `Sessions`, `RateLimits`) hold the one-use link digests,
+traits (`MagicLinks`, `DesktopGrants`, `Sessions`, `RateLimits`) hold the one-use link and desktop grant digests,
 the sessions and the admission windows; `Sessions::touch` is the activity
 update that runs through `Store::autocommit`.
 
@@ -171,6 +171,8 @@ trait query-only: policy, hashing, clocks and provider calls stay in the
 service.
 
 ### Key Code
+
+- [desktop_grant.rs](./src/desktop_grant.rs) — `DesktopGrant` and `DesktopGrants`, the create, locking read, conditional consumption and pruning boundary for desktop sign-in; the auth service checks the challenge while the row stays locked.
 
 - [store.rs](./src/store.rs) — `Store`, the three execution modes: `transaction` (serializable, retried up to eight attempts), `read` (READ COMMITTED, read-only) and `autocommit` (one statement, no retry); `Queries`, the union of every query trait a callback receives; `Decision::Rollback`, the policy rejection that commits nothing without a store error.
 - [error.rs](./src/error.rs) — `Error::Internal`, which keeps the source chain of a database, pool or decoding failure, and `SlugTaken`, the one handled write conflict.

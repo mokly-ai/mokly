@@ -45,7 +45,7 @@ const owners = {
  * `product/account/callback`; each page named here answers for itself.
  */
 const separateCallbacks = [
-  "product/account/callback/desktop",
+  "product/account/callback/desktop-expired",
   "product/account/callback/install-requested",
   "product/account/callback/install-conflict",
   "product/account/callback/install-denied",
@@ -68,11 +68,12 @@ export type ScreenId =
   | "product/account/callback"
   | (typeof separateCallbacks)[number];
 
-/** The screen one callback landing page answers to. */
+/** The screen one callback landing page, or one of its variants, answers to. */
 function callbackScreen(page: string): ScreenId {
   return (
-    separateCallbacks.find((screen) => screen === page) ??
-    "product/account/callback"
+    separateCallbacks.find(
+      (screen) => page === screen || page.startsWith(screen + "/"),
+    ) ?? "product/account/callback"
   );
 }
 

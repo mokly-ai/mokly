@@ -29,6 +29,7 @@ impl From<error::Error> for ApiError {
             error::Error::SessionExpired => Self::SessionExpired,
             error::Error::CsrfFailed => Self::CsrfRejected,
             error::Error::InvalidLink => Self::MagicLinkInvalid,
+            error::Error::InvalidDesktopGrant => Self::DesktopGrantInvalid,
             error::Error::PreviewSignInUnavailable => Self::OperationUnavailable,
             error::Error::LinkExpired => Self::MagicLinkExpired,
             error::Error::LinkUsed => Self::MagicLinkUsed,

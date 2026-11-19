@@ -6,12 +6,12 @@ import { DESKTOP_ORIGIN } from "../origin.js";
 
 import { deferred, lifecycleFixture, settled } from "./lifecycle-fixture.js";
 
-const address = `mokly://auth/email/callback#token=${"a".repeat(64)}`;
-const callback =
-  DESKTOP_ORIGIN + "/auth/email/callback#token=" + "a".repeat(64);
 const dashboard = DESKTOP_ORIGIN + "/dashboard";
 
-test("a handoff can replace the initial dashboard without quitting the app", async () => {
+const address = `mokly://auth/desktop/callback#grant=${"a".repeat(64)}`;
+const callback = `${DESKTOP_ORIGIN}/auth/desktop/callback#grant=${"a".repeat(64)}`;
+
+test(`desktop: a handoff can replace the initial dashboard without quitting the app`, async () => {
   const fixture = lifecycleFixture();
   const initial = deferred();
   fixture.decorate((window) => {
@@ -32,6 +32,80 @@ test("a handoff can replace the initial dashboard without quitting the app", asy
     callback,
   ]);
   assert.equal(fixture.quits(), 0);
+});
+
+test(`desktop: startup and second-instance handoffs load only their callback`, async () => {
+  const fixture = lifecycleFixture();
+  startDesktop(fixture.dependencies);
+  fixture.app.emit("open-url", { preventDefault: () => {} }, address);
+  fixture.ready.resolve();
+  await settled();
+  assert.deepEqual(fixture.windows[0].urls, ["about:blank", callback]);
+  fixture.windows[0].webContents.emit("did-navigate", {}, callback);
+  fixture.windows[0].webContents.emit("did-navigate", {}, dashboard);
+  fixture.windows[0].close();
+  const next = address.replace(/a{64}/, "b".repeat(64));
+  fixture.app.emit("second-instance", {}, ["binary", next]);
+  await settled();
+  assert.deepEqual(fixture.windows[1].urls, [
+    "about:blank",
+    callback.replace(/a{64}/, "b".repeat(64)),
+  ]);
+});
+
+test(`desktop: OS reopen and child-frame events cannot interrupt an active handoff`, async () => {
+  const fixture = lifecycleFixture();
+  startDesktop(fixture.dependencies);
+  fixture.ready.resolve();
+  await settled();
+  fixture.app.emit("open-url", { preventDefault: () => {} }, address);
+  fixture.app.emit("activate");
+  fixture.app.emit("second-instance", {}, [address]);
+  const next = address.replace(/a{64}/, "c".repeat(64));
+  fixture.windows[0].webContents.emit(
+    "did-navigate-in-page",
+    {},
+    "https://catalogue.example/other",
+    false,
+  );
+  fixture.app.emit("second-instance", {}, [next]);
+  await settled();
+  assert.deepEqual(fixture.windows[0].urls, [
+    dashboard,
+    "about:blank",
+    callback,
+  ]);
+  assert.equal(fixture.quits(), 0);
+});
+
+test(`desktop: one pending handoff blocks another grant until navigation leaves its landing`, async () => {
+  const fixture = lifecycleFixture();
+  fixture.dependencies.arguments = [address];
+  startDesktop(fixture.dependencies);
+  fixture.ready.resolve();
+  await settled();
+  const window = fixture.windows[0];
+  const next = address.replace(/a{64}/, "b".repeat(64));
+  fixture.app.emit("second-instance", {}, [next]);
+  assert.deepEqual(window.urls, ["about:blank", callback]);
+  window.webContents.emit("did-navigate", {}, callback);
+  window.webContents.emit(
+    "did-navigate-in-page",
+    {},
+    callback.split("#")[0],
+    true,
+  );
+  fixture.app.emit("second-instance", {}, [next]);
+  assert.deepEqual(window.urls, ["about:blank", callback]);
+  window.webContents.emit("did-navigate-in-page", {}, dashboard, true);
+  fixture.app.emit("second-instance", {}, [next]);
+  await settled();
+  assert.deepEqual(window.urls, [
+    "about:blank",
+    callback,
+    "about:blank",
+    callback.replace(/a{64}/, "b".repeat(64)),
+  ]);
 });
 
 for (const event of ["activate", "second-instance"]) {
@@ -57,25 +131,6 @@ for (const event of ["activate", "second-instance"]) {
   });
 }
 
-test("startup and second-instance handoffs load only their callback", async () => {
-  const fixture = lifecycleFixture();
-  startDesktop(fixture.dependencies);
-  fixture.app.emit("open-url", { preventDefault: () => {} }, address);
-  fixture.ready.resolve();
-  await settled();
-  assert.deepEqual(fixture.windows[0].urls, ["about:blank", callback]);
-  fixture.windows[0].webContents.emit("did-navigate", {}, callback);
-  fixture.windows[0].webContents.emit("did-navigate", {}, dashboard);
-  fixture.windows[0].close();
-  const next = address.replace(/a{64}/, "b".repeat(64));
-  fixture.app.emit("second-instance", {}, ["binary", next]);
-  await settled();
-  assert.deepEqual(fixture.windows[1].urls, [
-    "about:blank",
-    callback.replace(/a{64}/, "b".repeat(64)),
-  ]);
-});
-
 test("initialization failures stay fatal and stop before creating a window", async () => {
   const fixture = lifecycleFixture();
   fixture.prepare(() => {
@@ -87,29 +142,4 @@ test("initialization failures stay fatal and stop before creating a window", asy
   assert.equal(fixture.quits(), 1);
   assert.equal(fixture.windows.length, 0);
   assert.equal(fixture.errors.length, 1);
-});
-
-test("OS reopen and child-frame events cannot interrupt an active handoff", async () => {
-  const fixture = lifecycleFixture();
-  startDesktop(fixture.dependencies);
-  fixture.ready.resolve();
-  await settled();
-  fixture.app.emit("open-url", { preventDefault: () => {} }, address);
-  fixture.app.emit("activate");
-  fixture.app.emit("second-instance", {}, [address]);
-  const next = address.replace(/a{64}/, "c".repeat(64));
-  fixture.windows[0].webContents.emit(
-    "did-navigate-in-page",
-    {},
-    "https://catalogue.example/other",
-    false,
-  );
-  fixture.app.emit("second-instance", {}, [next]);
-  await settled();
-  assert.deepEqual(fixture.windows[0].urls, [
-    dashboard,
-    "about:blank",
-    callback,
-  ]);
-  assert.equal(fixture.quits(), 0);
 });

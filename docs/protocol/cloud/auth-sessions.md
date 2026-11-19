@@ -2,7 +2,8 @@
 
 Email sign-in and sign-up share one flow. [GitHub sign-in](./github-sign-in.md)
 links by verified primary email and uses the same session policy. Previews add
-one [shared sign-in link](#preview-sign-in). The
+one [shared sign-in link](#preview-sign-in). The desktop app signs in with a
+[desktop grant](#desktop-grants) from a browser session. The
 [API document](../../api/openapi.json) owns transport shapes.
 
 ## Magic Links
@@ -25,14 +26,10 @@ Rate keys are hashed; counters are
 updated atomically in the same transaction as link creation. Failed delivery
 does not refund admission, and retry is available after the reported delay.
 
-The email URL is `<app-origin>/auth/email/callback#token=<secret>`. A link
-requested with the desktop Origin of
-[Desktop application](./desktop-app.md#api-and-catalogue-admission) is
-`<app-origin>/auth/email/callback?client=desktop#token=<secret>`: the query
-carries only `client`, and the mail copy does not change. The landing outside
-the shell offers the handoff instead of exchanging the token on arrival. Its
-fragment keeps the credential out of HTTP access logs and referrers. The
-application removes it from the address before its router starts, and the
+The email URL is `<app-origin>/auth/email/callback#token=<secret>` for every
+admitted Origin. Its fragment keeps the credential out of HTTP access logs and
+referrers. The application removes it from the address before its router
+starts, and the
 provider-scoped landing exchanges it using `POST /v1/auth/callback`, as defined in
 [Authentication callbacks](./auth-callbacks.md).
 The exchange requires an admitted Origin; GET never consumes a
@@ -93,18 +90,71 @@ the capability. The secret stays valid until its namespace is deleted and
 leaves no expiry, consumption or replay records; its sessions follow the
 ordinary lifetimes.
 
+## Desktop Grants
+
+A desktop grant signs the [desktop app](./desktop-app.md#sign-in) in to the
+account of a browser session. [Desktop sign-in](./desktop-sign-in.md) defines
+the page that requests it, and
+[Authentication callbacks](./auth-callbacks.md#desktop-callback) the landing
+that exchanges it.
+
+The app holds a verifier of 32 cryptographically random bytes as 64 lowercase
+hex digits. Its challenge is the S256 challenge: the base64url encoding,
+without padding, of the SHA-256 digest of the verifier's text, 43 characters.
+
+`POST /v1/auth/desktop/grants` accepts `challenge` and optional `returnTo`. It
+requires the session, its CSRF token and an admitted Origin. A challenge that
+is not 43 base64url characters returns `desktop-grant-invalid`. The grant is
+32 cryptographically random bytes encoded as 64 lowercase hex digits. The API
+stores only its SHA-256 digest, with the challenge, the issuing user, the
+issuing session's absolute deadline and the normalized `returnTo`. A grant is
+single use. It expires five minutes after issue, or at that deadline when it
+is earlier. The response carries the grant and its expiry under
+`Cache-Control: no-store` and sets no cookie.
+
+`POST /v1/auth/desktop/callback` accepts `grant` and `verifier` and requires an
+admitted Origin; like the magic-link exchange, it cannot require a session
+CSRF token. One transaction consumes the grant only when it is unexpired,
+unused and bound to the challenge of `verifier`. The same transaction revokes
+a supplied existing session and issues a session for the grant's user.
+Every other input returns `desktop-grant-invalid`: a malformed grant or
+verifier, an unknown, expired or used grant, or a verifier that does not
+match. One reason covers every invalid input, as `github-auth-invalid` does,
+because the app recovers from each in the same way. Concurrent exchanges of
+one grant yield one session. A program that receives a grant without its
+verifier cannot exchange it.
+
+The new session keeps the absolute deadline of the session that issued the
+grant, and its cookie's `Max-Age` is the time left until that deadline. A
+grant therefore never extends the 30-day limit from authentication. A fresh
+30 days for each grant was rejected, because a session could then renew itself
+through grants without end. The response sets the cookie by the
+[session rule](#sessions), with `SameSite` from the request's Origin, and
+returns the ordinary `SessionIssued` object with the stored `returnTo` and
+`Cache-Control: no-store`.
+
+Each endpoint admits at most 20 attempts per selected peer IP per 60 seconds
+in a persistent fixed window. A rejected admission returns 429 `rate-limited`
+with a positive `Retry-After` in seconds. An attempt consumes admission once
+it passes the session, Origin, CSRF and body-shape checks that its endpoint
+makes. The authentication pruning job removes grants on the magic-link
+retention, `MKC_AUTH_LINK_RETENTION_SECONDS`: seven days after expiry by
+default, used grants included.
+
 ## Sessions
 
 The response sets `mkc_session=<random secret>; Path=/; Secure; HttpOnly;
 SameSite=Lax; Max-Age=2592000`. There is no Domain attribute. An exchange
 whose Origin is the desktop origin receives `SameSite=None` in place of `Lax`
 with every other attribute unchanged, because the desktop page is cross-site
-to the API. All magic-link, preview and GitHub exchanges, rotation with
-`POST /v1/session`, and clearing with `DELETE /v1/session` select `SameSite`
-from that request's Origin. The credential
+to the API. All desktop grant, magic-link, preview and GitHub exchanges,
+rotation with `POST /v1/session`, and clearing with `DELETE /v1/session` select
+`SameSite` from that request's Origin. The credential
 has 256 random bits; only its SHA-256 digest is stored. Cookies stay Secure
 in development too.
-The absolute lifetime is 30 days; idle lifetime is seven days. Successful
+The absolute lifetime is 30 days; idle lifetime is seven days. A session from
+a [desktop grant](#desktop-grants) keeps the absolute deadline of the session
+that issued the grant. Successful
 authentication writes nothing unless the session's last recorded activity is
 older than five minutes; then it records the new activity. Idle expiry is the
 last recorded activity plus seven days; five-minute activity granularity is
@@ -117,8 +167,8 @@ token. Its response and every auth/token response use `Cache-Control: no-store`.
 `POST /v1/session` rotates the credential and CSRF token, preserving the
 absolute deadline, invalidating the old credential atomically. Rotation selects
 `SameSite` from that request's Origin, exactly as the exchanges do. A successful
-magic-link, preview or GitHub exchange also revokes a supplied existing
-session before issue.
+desktop grant, magic-link, preview or GitHub exchange also revokes a supplied
+existing session before issue.
 `DELETE /v1/session` revokes it and clears the cookie using the same attributes.
 Invalid credentials never create a replacement session.
 
@@ -135,9 +185,9 @@ the supported methods and CSRF/content-type headers. Never reflect arbitrary
 origins. Bearer project-token publishing uses a separate
 transport and cannot authenticate account or workspace routes.
 
-`mkc_domain::client_origins::AdmittedOrigins` owns that exact set for both
-servers. `MKC_DESKTOP_CLIENT` accepts only `true` or `false`; absence means
-`false`, and any other value stops startup with a typed configuration error.
+The API and the catalogue server share that exact set. `MKC_DESKTOP_CLIENT`
+accepts only `true` or `false`; absence means `false`, and any other value
+stops startup with a typed configuration error.
 
 `returnTo` follows [Navigation](./product-navigation.md). The domain validator
 receives the string after JSON has decoded the request body; canonical input is
@@ -154,8 +204,9 @@ and credential query keys (`token`, `secret`, `code`, `session`) after strict
 form decoding of each key. Query values are not decoded or serialized for
 storage, so accepted query text survives the issue and exchange round trip
 byte for byte. Invalid, absent or rejected values become `/dashboard`. The
-normalized destination is stored with the magic link or GitHub flow and
-returned by the exchange; no caller-supplied callback redirect overrides it.
+normalized destination is stored with the magic link, desktop grant or GitHub
+flow and returned by the exchange; no caller-supplied callback redirect
+overrides it.
 API authorization still applies after navigation. The site and app share one
 public origin in production; main-preview uses a separate app host. The API
 has its own configured origin.
@@ -165,7 +216,8 @@ has its own configured origin.
 Publishing secrets are `mkc_` plus 64 random lowercase hex digits. The visible
 prefix is `mkc_` plus its first eight hex digits. Hash the entire secret using
 SHA-256; random 256-bit credentials do not need a password stretching scheme.
-The same rationale applies to magic links and sessions. Human passwords are
+The same rationale applies to magic links, desktop grants and sessions. Human
+passwords are
 not accepted. Hashes never appear in resource DTOs; production diagnostics
 never log credentials, cookies, CSRF tokens or email bodies.
 

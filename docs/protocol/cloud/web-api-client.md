@@ -17,24 +17,26 @@ development so the `SameSite=Lax` cookie travels with the app's own requests.
 
 Sign-in is one process for new and returning readers.
 `POST /v1/auth/magic-links` sends the link; the mail carries `#token=` in the
-fragment. Inside the desktop shell, which `src/navigation/desktop-shell.ts`
-detects by the page's own `mokly-app:` location protocol, the request carries
-the desktop Origin, so the API issues the link whose hosted landing offers
-the handoff of [Desktop application](./desktop-app.md#sign-in-handoff)
-instead of exchanging the token on arrival. The token leaves the address
-before the app's router records it, and `/auth/email/callback` exchanges it
-through `POST /v1/auth/callback` before resuming; a credential never stays in
-the address. A preview's shared link carries `#secret=` instead, removed the
-same way and exchanged by `/auth/preview/callback` through
-`POST /v1/auth/preview`. `returnTo` is validated exactly as
+fragment. The token leaves the address before the app's router records it,
+and `/auth/email/callback` exchanges it through `POST /v1/auth/callback`
+before resuming; a credential never stays in the address. A preview's shared
+link carries `#secret=` instead, removed the same way and exchanged by
+`/auth/preview/callback` through `POST /v1/auth/preview`. Inside the desktop
+shell, which the app recognizes by the page's own `mokly-app:` location
+protocol, account entry signs in through the browser instead, and
+`/auth/desktop/callback` exchanges the returned grant through
+`POST /v1/auth/desktop/callback`, as [Desktop sign-in](./desktop-sign-in.md)
+defines. `returnTo` is validated exactly as
 [Navigation](./product-navigation.md#routes-and-entry) requires: an accepted
-destination keeps its path and query bytes and their order through email and
-GitHub sign-in, and an absent or rejected value becomes `/dashboard`.
+destination keeps its path and query bytes and their order through email,
+GitHub and desktop grant sign-in, and an absent or rejected value becomes
+`/dashboard`.
 
 A session state is `loading`, `signed-in`, `signed-out` or `error`. Only
 `unauthenticated` and `session-expired` sign the reader out; any other failure
 stays an error state with a retry, because a flaky network must not lose their
-place. A start-up read that lands after a magic-link exchange has adopted a
+place. In the desktop app, a session read on window focus that fails for any
+other reason keeps the current state, for the same reason. A start-up read that lands after a sign-in exchange has adopted a
 session never sends the reader who just signed in back to the entry screen.
 
 GitHub starts keep state and the PKCE verifier in tab-scoped session storage,
@@ -91,4 +93,7 @@ provider-backed repository selection are registered operations. The screens
 call them for real and render the documented recovery when a provider
 operation is unavailable: email sign-in beside GitHub sign-in, and on the
 install and repository steps the refusal itself with Try again, because a
-project is a repository the App can read and there is no path around it.
+project is a repository the App can read and there is no path around it. In
+the desktop shell, GitHub sign-in happens on the browser page of
+[Desktop sign-in](./desktop-sign-in.md), and connection and installation open
+on the web, as [web setup](./desktop-app.md#web-setup) defines.

@@ -16,6 +16,7 @@ mod build_grant;
 mod build_grant_locks;
 mod build_log;
 pub mod connection;
+mod desktop_grant;
 mod github_check;
 mod github_check_claim;
 mod github_delivery;

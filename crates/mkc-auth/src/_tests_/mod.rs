@@ -3,7 +3,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 mod credential_failure_tests;
-mod desktop_link_tests;
+mod desktop_grant_failure_tests;
+mod desktop_grant_tests;
 mod failure_fixture;
 mod link_failure_tests;
 mod links_tests;

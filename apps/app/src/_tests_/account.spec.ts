@@ -1,12 +1,5 @@
 import { projectPathFor } from "./addresses";
-import {
-  expect,
-  freshEmail,
-  navigateMagicLink,
-  open,
-  signIn,
-  test,
-} from "./harness";
+import { expect, freshEmail, open, signIn, test } from "./harness";
 import { createProject } from "./project-setup";
 import { recordedFrames, recordFrames } from "./screen-frames";
 
@@ -47,45 +40,6 @@ test("a new account signs up through a one-use email link", async ({
   await expect(identity.locator("span").last()).toHaveText(email);
   await expect(identity).not.toHaveAttribute("title");
   expect(page.url()).not.toContain("token=");
-});
-
-test("a used link says so and offers another one", async ({ page }) => {
-  const email = freshEmail("used");
-  await signIn(page, email);
-  await page.waitForURL((url) => url.pathname === "/new");
-  const { magicLinkFor } = await import("./api-server");
-  await navigateMagicLink(page, magicLinkFor(email) as string);
-  await expect(
-    page.getByRole("heading", { level: 1, name: /already been used/ }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Back to sign in" }),
-  ).toBeVisible();
-});
-
-test("a duplicate email token is refused and removed from the URL", async ({
-  page,
-}) => {
-  let requests = 0;
-  await page.route("**/v1/auth/callback", (route) => {
-    requests += 1;
-    return route.abort();
-  });
-  const first = "a".repeat(64);
-  const second = "b".repeat(64);
-  await page.goto(
-    `/auth/email/callback?source=test#token=${first}&token=${second}`,
-  );
-
-  await expect(
-    page.getByRole("button", { name: "Back to sign in" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { level: 1, name: "This link isn’t valid" }),
-  ).toBeVisible();
-  expect(new URL(page.url()).search).toBe("?source=test");
-  expect(new URL(page.url()).hash).toBe("");
-  expect(requests).toBe(0);
 });
 
 test("a private deep link returns to itself after signing in", async ({

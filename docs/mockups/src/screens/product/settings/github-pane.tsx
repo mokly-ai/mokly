@@ -6,9 +6,10 @@ import { MenuSheet } from "../../../components/responsive-menu";
 import { githubAccounts } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import type { Host } from "../host";
 import { Action, Pending, StateMessage } from "../page-parts";
 
-import { accountMenu, ConnectedAccounts } from "./github-accounts";
+import { accountMenu, addAccount, ConnectedAccounts } from "./github-accounts";
 import type { Reader } from "./github-accounts";
 import { SettingsSurface } from "./surface";
 
@@ -17,7 +18,8 @@ import { SettingsSurface } from "./surface";
  * that adds another. Adding leaves for GitHub and returns here, and removing
  * is asked in a modal over the row it concerns, so the list keeps its place.
  * On mobile a row's open menu is a sheet over the whole layer, so it takes the
- * same modal slot.
+ * same modal slot. In the desktop app's window, adding opens this pane on the
+ * web instead, where the reader adds the account from the browser.
  */
 export function GitHubPane({
   state,
@@ -28,6 +30,7 @@ export function GitHubPane({
   adding = false,
   modal,
   screen,
+  host = "browser",
 }: {
   state: ScreenState;
   viewport: Viewport;
@@ -40,6 +43,7 @@ export function GitHubPane({
   adding?: boolean;
   modal?: ReactNode;
   screen?: string;
+  host?: Host;
 }) {
   const administers = reader === "administrator";
   const opened = menuOpen ? githubAccounts[0] : undefined;
@@ -87,7 +91,7 @@ export function GitHubPane({
                 label="Add GitHub account"
                 tone="primary"
                 size="md"
-                icon="start"
+                {...addAccount(host)}
               />
             ) : undefined
           }
@@ -98,6 +102,7 @@ export function GitHubPane({
           suspended={suspended}
           opened={opened}
           adding={adding}
+          host={host}
         />
       )}
     </SettingsSurface>
@@ -188,6 +193,25 @@ export function SettingsGitHubAddingScreen({
       state="default"
       adding
       screen="product/settings/github/adding"
+    />
+  );
+}
+
+/**
+ * The pane in the desktop app's window: Add GitHub account keeps its label
+ * and opens this pane on the web.
+ */
+export function SettingsGitHubDesktopScreen({
+  viewport,
+}: {
+  viewport: Viewport;
+}) {
+  return (
+    <GitHubPane
+      viewport={viewport}
+      state="default"
+      host="window"
+      screen="product/settings/github/desktop"
     />
   );
 }

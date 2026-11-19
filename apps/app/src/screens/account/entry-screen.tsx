@@ -9,31 +9,33 @@ import { Field } from "../../components/field";
 import { formFailure } from "../../components/form-failure";
 import { Pending } from "../../components/page-parts";
 import { sendMagicLink, startGitHubSignIn } from "../../data/auth";
+import { isDesktopShell } from "../../navigation/desktop-shell";
 import { storeGitHubFlow } from "../../navigation/github-flow";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
 
 import { AccountShell } from "./account-shell";
 import type { ShellWait } from "./account-shell";
+import { DesktopEntryScreen, DesktopSignInWait } from "./desktop-entry-screen";
+import { entryCopy } from "./entry-copy";
+import type { EntryMode } from "./entry-copy";
 
-/** The two logged-out entry screens; every difference between them lives here. */
-export type EntryMode = "sign-in" | "sign-up";
-
-const copy = {
-  "sign-in": {
-    title: "Sign in to Mokly",
-    documentTitle: "Sign in",
-    switchCopy: "New to Mokly? ",
-    switchLabel: "Create an account",
-    switchTo: "/sign-up",
-  },
-  "sign-up": {
-    title: "Create your account",
-    documentTitle: "Create your account",
-    switchCopy: "Already have an account? ",
-    switchLabel: "Sign in",
-    switchTo: "/sign-in",
-  },
-} as const;
+/**
+ * Sign in or sign up. The desktop app's window cannot use the browser's
+ * sign-ins, so there the entry opens the browser instead of drawing the form.
+ */
+export function EntryScreen({
+  mode,
+  returnTo,
+}: {
+  mode: EntryMode;
+  returnTo: string;
+}) {
+  return isDesktopShell() ? (
+    <DesktopEntryScreen mode={mode} returnTo={returnTo} />
+  ) : (
+    <BrowserEntry mode={mode} returnTo={returnTo} />
+  );
+}
 
 /**
  * The panel that sign in and sign up draw, loaded or waiting: the title, the
@@ -56,7 +58,7 @@ function EntryLayout({
   submit: ReactNode;
   wait?: ShellWait;
 }) {
-  const text = copy[mode];
+  const text = entryCopy[mode];
   return (
     <AccountShell
       screen={"account-" + mode}
@@ -89,9 +91,11 @@ function EntryLayout({
  * signed-out reader here: the same panel with each control in its waiting
  * form, so nothing moves when sign in replaces it and nothing the reader could
  * type is lost on the way. No place of the panel waits for an answer, so the
- * guard's operation is named for screen readers only.
+ * guard's operation is named for screen readers only. In the desktop app's
+ * window, sign in is the window's own entry, so the guard draws its wait.
  */
 export function SignInWait() {
+  if (isDesktopShell()) return <DesktopSignInWait />;
   return (
     <EntryLayout
       mode="sign-in"
@@ -128,7 +132,7 @@ export function SignInWait() {
  * inserts nothing; Continue with GitHub stays busy until the page leaves for
  * GitHub.
  */
-export function EntryScreen({
+function BrowserEntry({
   mode,
   returnTo,
 }: {

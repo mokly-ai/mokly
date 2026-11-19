@@ -21,7 +21,7 @@ items, not the subscription, so the current period end is read from the items,
 which share one period.
 
 The plan derives only from the subscription status Stripe reports; the
-[architecture doc](../../architecture/cloud.md#billing) names the worker that applies
+[architecture doc](../../architecture/cloud-data-flows.md#billing) names the worker that applies
 it:
 
 | Subscription status                                                | Plan   |

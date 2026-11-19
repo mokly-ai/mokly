@@ -53,8 +53,7 @@ decoded once before validation.
 desktop origins and enumerates the same set for CORS and framing.
 `client_origins::DESKTOP_ORIGIN` owns `mokly-app://desktop`.
 Its Rust test reads [desktop-origin.json](../../fixtures/desktop-origin.json),
-the shared fixture for the web-app and shell readers. `app_paths` owns
-`EMAIL_DESKTOP_CALLBACK`, the public email landing with `?client=desktop`.
+the shared fixture for the web-app and shell readers.
 
 `entry_path` owns the portable Mokly entry grammar. `entry_path::entry_path`
 checks the grammar without a byte or segment quota, for the contract receiver
@@ -100,7 +99,7 @@ site's and the app's route sources with it.
 - [values.rs](./src/values.rs) — `Role`, `Visibility`, `Plan` and `SeatKind`, the finite permission, visibility and billing values with their stable string forms and `Role::can_admin`.
 - [slug.rs](./src/slug.rs) — `WorkspaceSlug` and `ProjectSlug`, the validated address segments; the reserved first-segment lists shared with the site and the app; `is_reserved`, `slugify` and `with_numeric_suffix`, the deterministic candidate derivation.
 - [data/github-reserved-names.txt](./data/github-reserved-names.txt) — the attributed GitHub reserved-name list that `slug::github_reserved_slugs` reads; [data/README.md](./data/README.md) records its source and license.
-- [app_paths.rs](./src/app_paths.rs) — the root-relative account and callback landing paths the API issues and the app routes, including `EMAIL_DESKTOP_CALLBACK`, and the slug-based workspace, project and publication addresses.
+- [app_paths.rs](./src/app_paths.rs) — the root-relative account and callback landing paths the API issues and the app routes, and the slug-based workspace, project and publication addresses.
 - [client_origins.rs](./src/client_origins.rs) — `AdmittedOrigins`, which classifies an exact `Origin` as the app or the desktop shell and lists the same origins for CORS and framing, and `DESKTOP_ORIGIN`.
 - [billing.rs](./src/billing.rs) — `CATALOGUE`, the typed plan catalogue, with `SeatKind::of_role`, `Plan::allows_private_projects` and `Plan::allows_publication`, the public/private publication gate; `src/_tests_/billing_tests.rs` parses the `billing.md` and `billing-catalogue.md` tables against it.
 - [pull_request.rs](./src/pull_request.rs) — `PullRequestRepositories`, the bound, head and base GitHub repository IDs of a pull request, and `is_fork`, the shared fork rule.

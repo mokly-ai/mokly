@@ -10,7 +10,8 @@ Its paths match the current source and generated catalogue.
 | `product/account/sign-in`           | GitHub/email sign-in                                                                  | Untouched account form                                             | Send refused beside its control; address on its field; GitHub refused or opening soon beside it |
 | `product/account/sign-up`           | GitHub/email account entry                                                            | Untouched account form                                             | Send refused beside its control; address on its field; GitHub refused or opening soon beside it |
 | `product/account/magic-link`        | Check your email; resend/change email                                                 | No pending link; enter email                                       | Link couldn't be sent; request another                                                          |
-| `product/account/callback`          | Signing in from an email or preview link                                              | Missing or invalid link                                            | Email expiry/use/failure; preview failure with retry                                            |
+| `product/account/callback`          | Signing in from an email or preview link or a desktop grant                           | Missing or invalid link                                            | Email expiry/use/failure; preview failure with retry; desktop expiry/failure                    |
+| `product/account/connect-desktop`   | The browser's account; Open Mokly and Use another account                             | Link without a valid challenge                                     | Open Mokly refused beside it; try again                                                         |
 | `product/account/create-workspace`  | Name, slug, address preview and Create                                                | Empty name, disabled submit                                        | Invalid, reserved or taken slug beside its field                                                |
 | `product/account/install-app`       | Install on GitHub, the one action; the CLI form beneath                               | Nothing bound (repeats the canonical drawing)                      | Suspended on GitHub; resume there, then install                                                 |
 | `product/account/choose-repository` | Repository select grouped by account, config path, slug/address; the CLI form beneath | No repositories yet; manage repository access                      | Load failure, retry; taken slug with a suggested recovery                                       |
@@ -41,10 +42,11 @@ with GitHub where that control's causes sit, because everything said about a
 control is said beside it. It offers no way back and discloses no reference,
 because the same request cannot be made to succeed. Each situation beyond the
 four states is its own screen beside sign in and sign up, in their folders:
-`github-connecting`, `github-refused`, `github-opens-soon` and
-`address-refused`. `github-connecting` draws the GitHub write while it runs: the
-form with **Continue with GitHub** busy with "Connecting…" until the page leaves
-for GitHub, as [Write in progress](./folio-chrome.md#compositions) defines.
+`github-connecting`, `github-refused`, `github-opens-soon`, `address-refused`
+and the [desktop app's](./product-mockups-account-desktop.md) `desktop`. `github-connecting` draws the
+GitHub write while it runs: the form with **Continue with GitHub** busy with
+"Connecting…" until the page leaves for GitHub, as
+[Write in progress](./folio-chrome.md#compositions) defines.
 
 The callback screens reproduce [Authentication callbacks](./auth-callbacks.md)
 without naming an environment. The callback folder's own structure is in
@@ -52,25 +54,23 @@ without naming an environment. The callback folder's own structure is in
 uses the invalid, expired, used and generic titles, says **Request another
 sign-in link**, and offers only **Back to sign in**. Preview invalid offers only
 **Back to sign in**; its generic failure offers primary **Try again** and
-secondary **Back to sign in**. API-backed examples include the closed
+secondary **Back to sign in**. The desktop landing's expired and generic
+failures offer only **Back to sign in**. API-backed examples include the closed
 **Details** disclosure; local missing-input and transport failures use the same
-screen without an invented reference. The desktop handoff says
-**Finish signing in** and **You requested this link from the
-Mokly app.**, offers primary **Open Mokly** with the external glyph because
-it leaves the browser and secondary **Continue in browser**, and draws no
-reference and no token.
+screen without an invented reference.
 
 See [Install and repository steps](#install-and-repository-steps) for the
 two steps that read GitHub and the CLI form beside them.
 
-The nine primary account/onboarding screens in the table share one composition, specified under Account entry
+The ten primary account/onboarding screens in the table share one composition, specified under Account entry
 in [Folio chrome: account entry](./folio-chrome-account.md): one 440px panel
 on a dotted canvas with
 the wordmark inside it, a 48px header carrying the identity or nothing, and a
 Terms/Privacy footer. The three steps from creating a workspace to
 choosing a repository carry the progress strip attached to the panel; sign in, sign up,
-the magic link, the callback and the finished project have no step to report.
-Sign in and sign up add the GitHub action, the `or` rule and the email field.
+the magic link, the callback, the desktop connect page and the finished project
+have no step to report. Sign in and sign up add the GitHub action, the `or`
+rule and the email field, except in the desktop app's window.
 The email-sent screen does not claim an authenticated identity. The finished
 project carries the family's one outbound documentation link. Account headers
 wrap when needed, keeping both gutters and readable type at 320px with 200%
@@ -196,10 +196,11 @@ current slug route immediately.
 the pending sign-in. `product/account/callback/email-invalid` has the email
 link's expired, used and generic-failure outcomes as its variants.
 `product/account/callback/preview-invalid` has the preview link's generic
-failure as its variant. `product/account/callback/desktop` draws the desktop
-handoff of [Desktop application](./desktop-app.md#sign-in-handoff) and has no
-variants. No screen carries more than four variants, and no empty, loading or
-error name is invented where the callback contract has none.
+failure as its variant. `product/account/callback/desktop-expired` draws the
+[desktop landing](./auth-callbacks.md#desktop-callback) in the window: its
+expired sign-in, with its generic failure as its variant. Its pending state is
+the folder's canonical page. No screen carries more than four variants, and no
+empty, loading or error name is invented where the callback contract has none.
 
 The GitHub installation landings are five more screens in the folder, each
 without variants. A reader starts that flow signed in, so the header names the
@@ -213,7 +214,12 @@ reader and the wordmark stays inert:
 | `product/account/callback/install-setup`     | Setup landing, completing                | **Install the Mokly app** over one state card placeholder whose title says "Completing installation…"                                    |
 | `product/account/callback/install-authorize` | Callback, completing                     | **GitHub installation** over one state card placeholder whose title says "Completing installation…"                                      |
 
-The situations declaration lists all thirteen callback states at these paths.
+The situations declaration lists all fourteen callback states at these paths.
+
+## Desktop App
+
+The drawings of desktop sign-in and of the desktop app's web setup are in
+[Product mockups: desktop app](./product-mockups-account-desktop.md).
 
 ## Recovery
 

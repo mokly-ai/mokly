@@ -1,6 +1,8 @@
 import { Badge } from "../../../entries/design/badge.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { profile } from "../../../fixtures/product-states";
+import type { Host } from "../host";
+import { setupGlyph } from "../host";
 import { Action, Section } from "../page-parts";
 import { ControlPlaceholder, TextBar } from "../placeholders";
 
@@ -20,9 +22,11 @@ const disconnectWidth = 153;
 const connectedWidth = 96;
 
 /**
- * The reader's GitHub connection. Connecting leaves for GitHub's authorization
- * and comes back to this pane, so while it runs, Connect GitHub stays busy
- * until the page leaves. While the settings scope loads, the session already
+ * The reader's GitHub connection. In a browser, connecting leaves for GitHub's
+ * authorization and comes back to this pane, so while it runs, Connect GitHub
+ * stays busy until the page leaves. In the desktop app's window, Connect GitHub
+ * opens this pane on the web, where the reader connects the account the
+ * browser is signed in to. While the settings scope loads, the session already
  * says whether the reader is connected, so the control draws itself, disabled.
  * While the session loads, nothing says it yet, so the note draws its most
  * common form, a connected account, with the account, its status and its
@@ -32,10 +36,16 @@ export function GithubSection({
   state,
   wait,
   connecting,
+  host,
 }: {
   state: ScreenState;
   wait: AccountWait | undefined;
   connecting: boolean;
+  /**
+   * Where the pane runs. The window's drawing is of a reader without GitHub,
+   * the reader its Connect GitHub serves.
+   */
+  host: Host;
 }) {
   return (
     <Section
@@ -52,7 +62,7 @@ export function GithubSection({
             <ControlPlaceholder size="md" width={disconnectWidth} />
           </div>
         </div>
-      ) : state === "empty" ? (
+      ) : state === "empty" || host === "window" ? (
         <>
           <p className="fo-copy">
             Connect GitHub to publish from your repositories.
@@ -62,7 +72,10 @@ export function GithubSection({
               label={connecting ? "Connecting…" : "Connect GitHub"}
               tone="primary"
               size="md"
-              icon="github"
+              icon={setupGlyph(host, "github")}
+              to={
+                host === "window" ? "product/settings/account/empty" : undefined
+              }
               disabled={wait !== undefined}
               busy={connecting ? "Connecting to GitHub" : undefined}
             />

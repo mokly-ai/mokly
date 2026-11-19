@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import {
+  InstallAppDesktopScreen,
   InstallAppEmptyScreen,
   InstallAppErrorScreen,
   InstallAppLoadingScreen,
@@ -13,6 +14,7 @@ const screens = {
   empty: InstallAppEmptyScreen,
   loading: InstallAppLoadingScreen,
   error: InstallAppErrorScreen,
+  desktop: InstallAppDesktopScreen,
 };
 
 export default defineScreen({
@@ -31,7 +33,9 @@ export default defineScreen({
     type: "object",
     additionalProperties: false,
     required: ["state"],
-    properties: { state: { enum: ["default", "empty", "loading", "error"] } },
+    properties: {
+      state: { enum: ["default", "empty", "loading", "error", "desktop"] },
+    },
   } as const,
   props: { state: "default" },
   render: ({ state }, { viewport }) => {
@@ -62,6 +66,14 @@ export default defineScreen({
         "The installation suspended on GitHub, with Resume on GitHub above the same action and the line to the CLI form beneath. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "account", "error"],
       props: { state: "error" },
+    },
+    {
+      slug: "desktop",
+      title: "Install GitHub App \u00b7 Desktop app",
+      description:
+        "The step in the desktop app's window: Install on GitHub keeps its label, carries the external glyph and opens this step on the web, with the line to the CLI form beneath. Static controls depict the documented action; no live writes occur.",
+      tags: ["product", "folio", "account", "desktop"],
+      props: { state: "desktop" },
     },
   ],
 });

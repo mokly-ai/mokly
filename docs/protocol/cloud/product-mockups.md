@@ -22,7 +22,7 @@ and Site and Email screens. Flows holds the product journeys. Each standard owni
 canonical state, with Empty, Loading and Error as its variants in that order.
 The callback landings instead use the protocol-named states that
 [Callback landings](./product-mockups-account.md#callback-landings) lists, the
-desktop handoff and the GitHub installation landings among them; calling an
+desktop landing and the GitHub installation landings among them; calling an
 expired or used link "empty" or "loading" would hide the situation the route
 actually reached. Every entry
 renders one semantic screen, in mobile/desktop and light/dark. A screen carries

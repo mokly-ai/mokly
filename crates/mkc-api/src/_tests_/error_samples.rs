@@ -95,6 +95,7 @@ pub(crate) fn samples() -> Vec<Sample> {
         ),
         plain(ApiError::SubscriptionActive),
         plain(ApiError::CsrfRejected),
+        plain(ApiError::DesktopGrantInvalid),
         plain(ApiError::MagicLinkInvalid),
         plain(ApiError::MagicLinkExpired),
         plain(ApiError::MagicLinkUsed),

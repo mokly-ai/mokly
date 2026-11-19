@@ -23,8 +23,11 @@ import {
   workspaceResourceScope,
 } from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
+import { isDesktopShell } from "../../navigation/desktop-shell";
 import { storeGitHubFlow } from "../../navigation/github-flow";
 import { settingsPath } from "../../navigation/paths";
+import { useShellFocus } from "../../navigation/shell-focus";
+import { openOnWeb } from "../../navigation/web-setup";
 import { useSettings } from "../context";
 import { RowMenu } from "../row-menu";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
@@ -165,6 +168,10 @@ export function GitHubWait({ administers = true }: { administers?: boolean }) {
  * it is a way out of settings and asks about unsaved work first; removing is
  * asked in a modal over the row it concerns, so the list keeps its place.
  * Owners and admins act on the accounts; every other member reads them.
+ *
+ * In the desktop app's window, adding opens this pane on the web instead,
+ * where the reader adds the account from the browser, so the window stays
+ * where it is; the window reads the accounts again when it gets focus back.
  */
 export function GitHubPane({ workspace }: { workspace: Workspace }) {
   const { leaveBy } = useSettings();
@@ -178,8 +185,11 @@ export function GitHubPane({ workspace }: { workspace: Workspace }) {
   );
   // The workspace's installation state is read beneath the dialog too — the
   // repository step hands a workspace with nothing connected back to the
-  // install step — so a removal refreshes every read of this workspace.
-  const removed = useCallback(() => invalidate([scope]), [invalidate, scope]);
+  // install step — so a removal refreshes every read of this workspace, and so
+  // does the window getting focus back from setup on the web.
+  const reread = useCallback(() => invalidate([scope]), [invalidate, scope]);
+  useShellFocus(reread);
+  const onWeb = isDesktopShell();
   const adding = useWrite(nothingToDo, alwaysSendable);
   const add = useCallback(
     () =>
@@ -206,11 +216,20 @@ export function GitHubPane({ workspace }: { workspace: Workspace }) {
             label={adding.label("Add GitHub account", "Adding…")}
             tone={tone}
             size={size}
-            icon="start"
+            icon={onWeb ? "external" : "start"}
             write={adding}
             operation="Adding a GitHub account"
             disabled={adding.disabled}
-            onPress={() => leaveBy(() => void add())}
+            onPress={() =>
+              onWeb
+                ? openOnWeb(
+                    settingsPath({
+                      pane: "github",
+                      workspaceSlug: workspace.slug,
+                    }),
+                  )
+                : leaveBy(() => void add())
+            }
             testID="add-github-account"
           />,
         )
@@ -243,7 +262,7 @@ export function GitHubPane({ workspace }: { workspace: Workspace }) {
                 key={installation.id}
                 installation={installation}
                 administers={administers}
-                onRemoved={removed}
+                onRemoved={reread}
               />
             ))}
           </ConnectedAccounts>

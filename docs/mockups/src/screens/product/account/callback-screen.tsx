@@ -6,14 +6,27 @@ import { StatePlaceholder } from "../placeholders";
 
 import { AccountShell } from "./account-shell";
 
+/**
+ * Where Back to sign in leads: sign in in the browser, or the entry screen of
+ * the desktop app's window, which is what `/sign-in` draws there.
+ */
+type SignIn = "product/account/sign-in" | "product/account/sign-in/desktop";
+
 type CallbackFailure = {
   id: string;
   title: string;
   message?: string;
   retry?: boolean;
+  signIn?: SignIn;
 };
 
-function CallbackActions({ retry = false }: { retry?: boolean }) {
+function CallbackActions({
+  retry = false,
+  signIn,
+}: {
+  retry?: boolean;
+  signIn: SignIn;
+}) {
   return (
     <div className="fo-account-actions">
       {retry && <Action label="Try again" tone="primary" icon="retry" block />}
@@ -22,13 +35,19 @@ function CallbackActions({ retry = false }: { retry?: boolean }) {
         tone={retry ? "secondary" : "primary"}
         icon={retry ? undefined : "retry"}
         block
-        to="product/account/sign-in"
+        to={signIn}
       />
     </div>
   );
 }
 
-function CallbackFailurePage({ id, title, message, retry }: CallbackFailure) {
+function CallbackFailurePage({
+  id,
+  title,
+  message,
+  retry,
+  signIn = "product/account/sign-in",
+}: CallbackFailure) {
   return (
     <AccountShell id={id} title={title} identity={{ kind: "none" }}>
       {message ? (
@@ -36,13 +55,13 @@ function CallbackFailurePage({ id, title, message, retry }: CallbackFailure) {
       ) : (
         <StateMessage announcement={title} error reference={failureReference} />
       )}
-      <CallbackActions retry={retry} />
+      <CallbackActions retry={retry} signIn={signIn} />
     </AccountShell>
   );
 }
 
 /**
- * The shared landing while either sign-in credential is being exchanged. Its
+ * The shared landing while any sign-in credential is being exchanged. Its
  * success replaces the route, so it waits as one state card in placeholder
  * form. The heading already names the operation, so the card's title is a
  * bar and screen readers still hear the name.
@@ -105,26 +124,6 @@ export function EmailCallbackFailureScreen(_props: { viewport: Viewport }) {
   );
 }
 
-/**
- * The email landing in a browser when the desktop app requested the link: it
- * holds the credential until the reader chooses where to finish signing in.
- */
-export function CallbackDesktopHandoffScreen(_props: { viewport: Viewport }) {
-  return (
-    <AccountShell
-      id="product/account/callback/desktop"
-      title="Finish signing in"
-      detail="You requested this link from the Mokly app."
-      identity={{ kind: "none" }}
-    >
-      <div className="fo-account-actions">
-        <Action label="Open Mokly" tone="primary" icon="external" block />
-        <Action label="Continue in browser" tone="secondary" block />
-      </div>
-    </AccountShell>
-  );
-}
-
 /** The preview landing when its credential is absent or invalid. */
 export function PreviewCallbackInvalidScreen(_props: { viewport: Viewport }) {
   return (
@@ -142,6 +141,32 @@ export function PreviewCallbackFailureScreen(_props: { viewport: Viewport }) {
       id="product/account/callback/preview-invalid/failure"
       title="We couldn’t sign you in"
       retry
+    />
+  );
+}
+
+/**
+ * The desktop landing in the app's window when the grant is expired, used or
+ * unmatched, or arrived without its verifier while the window is signed out.
+ * The grant is single use, so the way on is the window's entry, never a retry.
+ */
+export function DesktopCallbackExpiredScreen(_props: { viewport: Viewport }) {
+  return (
+    <CallbackFailurePage
+      id="product/account/callback/desktop-expired"
+      title="This sign-in has expired"
+      signIn="product/account/sign-in/desktop"
+    />
+  );
+}
+
+/** The desktop landing for an unclassified API or transport failure. */
+export function DesktopCallbackFailureScreen(_props: { viewport: Viewport }) {
+  return (
+    <CallbackFailurePage
+      id="product/account/callback/desktop-expired/failure"
+      title="We couldn’t sign you in"
+      signIn="product/account/sign-in/desktop"
     />
   );
 }

@@ -161,7 +161,7 @@ export async function expectSafeNavigationDiagnostic(
       app.emit(
         "open-url",
         { preventDefault: () => {} },
-        `mokly://auth/email/callback#token=${secret}`,
+        `mokly://auth/desktop/callback#grant=${secret}`,
       );
       await new Promise<void>((done) => setImmediate(done));
       return {

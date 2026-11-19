@@ -11,12 +11,23 @@ pub const IDLE_LIFETIME: Duration = Duration::days(7);
 
 /// Construct a session record after a service has verified the user's identity.
 pub fn new_session(user: UserId, credential: &str, csrf: &str, now: DateTime<Utc>) -> Session {
+    new_session_until(user, credential, csrf, now, now + Duration::days(30))
+}
+
+/// Construct a desktop session with the issuing session's absolute deadline.
+pub(crate) fn new_session_until(
+    user: UserId,
+    credential: &str,
+    csrf: &str,
+    now: DateTime<Utc>,
+    expires_at: DateTime<Utc>,
+) -> Session {
     Session {
         token_hash: hash(credential),
         user_id: user,
         csrf_token: csrf.to_owned(),
         created_at: now,
-        expires_at: now + Duration::days(30),
+        expires_at,
         last_seen_at: now,
     }
 }

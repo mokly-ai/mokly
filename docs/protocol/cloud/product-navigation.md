@@ -5,7 +5,7 @@ around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See
 [Viewer](./viewer.md), [Settings dialog](./settings-dialog.md), and the
 [OpenAPI boundary](../../api/README.md); comments and approvals are the draft
-contracts of the review phase. Product uses Folio's warm neutrals, generous
+contracts of the review phase. Product uses Folio's neutrals, generous
 sans typography and [shared controls](./shared-controls.md). The Mokly mark,
 serif wordmark and green accent remain the brand.
 
@@ -26,6 +26,8 @@ workspace slugs. See [Marketing site](./marketing-site.md).
 | `/workspaces/:uuid/invitations/:uuid/accept`              | Accept a pending invitation for the signed-in address               |
 | `/auth/preview/callback`                                  | Exchange a preview's shared sign-in link; open `/dashboard`         |
 | `/auth/github/callback`, `/auth/github/install`           | Complete GitHub authorization or installation                       |
+| `/connect/desktop`                                        | Sign the desktop app in from the browser; issue a desktop grant     |
+| `/auth/desktop/callback`                                  | Exchange a desktop grant in the app; restore the stored destination |
 | `/dashboard`                                              | Last opened project; otherwise continue onboarding                  |
 | `/new`, `/new?installationId=:id`                         | Create a workspace; carry a candidate installation into onboarding  |
 | `/install`, `/install?workspaceId=:uuid`                  | Install the App for a workspace                                     |
@@ -43,6 +45,10 @@ workspace slugs. See [Marketing site](./marketing-site.md).
 | `/:workspace/-/settings/github`                           | GitHub accounts settings pane                                       |
 | `/workspaces/:uuid`, `/projects/:uuid/…`                  | UUID permalink resolver; replace with the slug route                |
 | `/:retired-workspace/…`, `/:workspace/:retired-project/…` | Replace retired slugs with both current slugs                       |
+
+Inside the desktop app, `/sign-in` and `/sign-up` show the entry screen of
+[Desktop sign-in](./desktop-sign-in.md#entry-screen), which opens
+`/connect/desktop` in the browser.
 
 The `-` sentinel owns workspace-level actions, so project slugs need no
 reserved list. Static routes take precedence over `/:workspace`; adding a site or app
@@ -109,10 +115,10 @@ form-decode each key for validation and reject `token`, `secret`, `code` or
 opaque after validating their escapes and controls. Accepted output preserves
 escaped query bytes, escape case, literal `+`, Unicode, repeated keys and their
 order; encoded `%26`, `%2B` and `%23` remain value data. An absent or rejected
-value becomes `/dashboard`. Store the accepted value unchanged through email
-and GitHub sign-in. Every API request after navigation rechecks authorization
-without disclosing a private resource. Provider landings are defined in
-[Authentication callbacks](./auth-callbacks.md).
+value becomes `/dashboard`. Store the accepted value unchanged through email,
+GitHub and desktop grant sign-in. Every API request after navigation rechecks
+authorization without disclosing a private resource. Provider landings are
+defined in [Authentication callbacks](./auth-callbacks.md).
 
 ## Resolution And Fallbacks
 

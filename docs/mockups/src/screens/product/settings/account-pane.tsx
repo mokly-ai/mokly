@@ -9,6 +9,7 @@ import {
   placeholders,
   profile,
 } from "../../../fixtures/product-states";
+import type { Host } from "../host";
 import { Action, Facts, Pending, Section } from "../page-parts";
 import { factPlaceholder } from "../placeholders";
 
@@ -31,6 +32,7 @@ function AccountPane({
   wait,
   connecting = false,
   screen,
+  host = "browser",
 }: {
   state: ScreenState;
   viewport: Viewport;
@@ -39,6 +41,11 @@ function AccountPane({
   /** Connect GitHub's write is running. */
   connecting?: boolean;
   screen?: string;
+  /**
+   * The window's drawing is of a reader without GitHub, the reader its
+   * Connect GitHub serves, and its Sign out returns to the window's entry.
+   */
+  host?: Host;
 }) {
   const saving = state === "loading";
   // A save in flight shows its working word on the busy control, which
@@ -95,12 +102,21 @@ function AccountPane({
           )}
         </div>
       </section>
-      <GithubSection state={state} wait={wait} connecting={connecting} />
+      <GithubSection
+        state={state}
+        wait={wait}
+        connecting={connecting}
+        host={host}
+      />
       <Section title="Session">
         <div>
           <Action
             label="Sign out"
-            to="product/account/sign-in"
+            to={
+              host === "window"
+                ? "product/account/sign-in/desktop"
+                : "product/account/sign-in"
+            }
             tone="quiet"
             size="md"
             icon="signOut"
@@ -219,6 +235,25 @@ export function SettingsAccountGitHubConnectingScreen({
       state="empty"
       connecting
       screen="product/settings/account/github-connecting"
+    />
+  );
+}
+
+/**
+ * The pane in the desktop app's window for a reader without GitHub: Connect
+ * GitHub keeps its label and opens this pane on the web.
+ */
+export function SettingsAccountDesktopScreen({
+  viewport,
+}: {
+  viewport: Viewport;
+}) {
+  return (
+    <AccountPane
+      viewport={viewport}
+      state="default"
+      host="window"
+      screen="product/settings/account/desktop"
     />
   );
 }

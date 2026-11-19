@@ -1,15 +1,12 @@
 /**
- * The callback landings: the protocol-named states of the email and preview
- * callbacks, the desktop handoff the email landing draws in a browser when the
- * desktop app requested the link, and the GitHub installation landings' waits,
- * their request and their two install recovery states.
+ * The callback landings: the protocol-named states of the email, preview and
+ * desktop callbacks, and the GitHub installation landings' waits, their request
+ * and their two install recovery states.
  */
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-
-import { parseFragment } from "parse5";
 
 import {
   callbackLandingPages,
@@ -19,12 +16,7 @@ import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
 import { drawnPalette } from "./catalogue-reads";
 import { screenVariantLimit, variantParent } from "./catalogue-variants";
-import {
-  attribute,
-  byClass,
-  elements,
-  label,
-} from "./design-site-test-helpers";
+import { attribute, byClass, label } from "./design-site-test-helpers";
 import { drawnPage, pendingLabels } from "./drawn-page";
 import {
   inventoryPages,
@@ -111,12 +103,20 @@ test("the callback landing owns every protocol state in screens of at most four 
       actions: ["Try again", "Back to sign in"],
       details: true,
     },
+    // The grant is single use, so neither desktop failure offers a retry.
     {
-      id: "product/account/callback/desktop",
-      title: "Finish signing in",
-      message: "You requested this link from the Mokly app.",
-      actions: ["Open Mokly", "Continue in browser"],
-      details: false,
+      id: "product/account/callback/desktop-expired",
+      title: "This sign-in has expired",
+      message: undefined,
+      actions: ["Back to sign in"],
+      details: true,
+    },
+    {
+      id: "product/account/callback/desktop-expired/failure",
+      title: "We couldn’t sign you in",
+      message: undefined,
+      actions: ["Back to sign in"],
+      details: true,
     },
     // Nothing reached Mokly, so a request waiting for approval quotes nothing.
     {
@@ -180,34 +180,6 @@ test("the callback landing owns every protocol state in screens of at most four 
     for (const action of state.actions)
       assert.ok(html.includes(action), state.id + " " + action);
   }
-});
-
-test("the desktop handoff offers the app first and draws no credential", () => {
-  for (const view of ["mobile", "desktop"] as const)
-    for (const scheme of ["light", "dark"] as const) {
-      const id = "product/account/callback/desktop " + view + " " + scheme;
-      const html = readFileSync(
-        screenFile("product/account/callback/desktop", view, scheme),
-        "utf8",
-      );
-      const page = parseFragment(html.slice(html.indexOf("<main")));
-      const actions = elements(page, (element) =>
-        /^firna-button-[a-z]+$/.test(attribute(element, "data-testid") ?? ""),
-      ).map((element) => [
-        attribute(element, "data-testid")?.replace("firna-button-", ""),
-        label(element),
-      ]);
-      assert.deepEqual(
-        actions,
-        [
-          ["primary", "Open Mokly"],
-          ["secondary", "Continue in browser"],
-        ],
-        id,
-      );
-      assert.ok(!html.includes("mokly://"), id + " draws no scheme address");
-      assert.ok(!/token/i.test(label(page)), id + " draws no credential");
-    }
 });
 
 test("the pending landing says Signing you in only in its heading and keeps its placeholder", () => {

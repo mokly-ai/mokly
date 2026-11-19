@@ -54,6 +54,7 @@ test("every reader who can create a project is offered the CLI form their worksp
     "product/account/install-app/empty": untouched,
     "product/account/install-app/loading": undefined,
     "product/account/install-app/error": untouched,
+    "product/account/install-app/desktop": untouched,
     "product/account/install-app/installing": untouched,
     "product/account/install-app/suspended-loading": untouched,
     "product/account/install-app/member": untouched,

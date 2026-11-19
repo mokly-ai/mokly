@@ -3,10 +3,10 @@
 The hourly `auth-prune` CronJob runs the released API image with `prune`, a
 ten-minute deadline, no retries and `concurrencyPolicy: Forbid`. It uses the
 API Workload Identity and native Cloud SQL proxy sidecar. It mounts no mail,
-GitHub, signing or storage secrets. All three deletes commit together. Cloud
-builds add a second transaction that prunes finished
-[builds](../protocol/cloud/cloud-builds.md#retention-and-recovery), at most 1,000
-per run, after `MKC_BUILD_RETENTION_SECONDS` (default 2592000).
+GitHub, signing or storage secrets. The link, desktop grant, session and
+counter deletes commit together. Cloud builds add a second transaction that
+prunes finished [builds](../protocol/cloud/cloud-builds.md#retention-and-recovery),
+at most 1,000 per run, after `MKC_BUILD_RETENTION_SECONDS` (default 2592000).
 Build pruning follows the
 [build and publication lock order](../protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 
@@ -17,12 +17,13 @@ kubectl -n "mkc-$ENVIRONMENT" logs job/auth-prune-manual -c maintenance
 ```
 
 Use a unique manual Job name for subsequent runs. A successful command exits
-zero and reports link, session, counter and build counts. A failed command exits
-nonzero; inspect database reachability and migration state before retrying.
+zero and reports link, desktop grant, session, counter and build counts.
+A failed command exits nonzero; inspect database reachability and migration
+state before retrying.
 Never infer success from an empty count or a missing scheduled run.
 
 Retention settings are seconds after expiry, from zero through 31536000:
-`MKC_AUTH_LINK_RETENTION_SECONDS=604800`,
+`MKC_AUTH_LINK_RETENTION_SECONDS=604800` for links and desktop grants,
 `MKC_AUTH_SESSION_RETENTION_SECONDS=86400`, and
 `MKC_AUTH_RATE_RETENTION_SECONDS=86400`. The chart owns the same auth defaults.
 The runtime setting `MKC_BUILD_RETENTION_SECONDS=2592000` uses the same
@@ -30,8 +31,9 @@ The runtime setting `MKC_BUILD_RETENTION_SECONDS=2592000` uses the same
 it only on the prune workload through `maintenance.buildRetentionSeconds`,
 including when builds are disabled. Prune needs no E2B credential.
 Session expiry is the earlier of its absolute deadline and seven days since
-last activity. Used-link diagnostics disappear after pruning. Active links,
-sessions and admission windows are always retained.
+last activity. Used-link and used-grant diagnostics disappear after pruning.
+Active links, desktop grants, sessions and admission windows are always
+retained.
 
 The daily `github-prune` CronJob runs `prune-github` in every environment with
 database credentials only. It removes OAuth flow hashes one day after expiry
@@ -80,4 +82,4 @@ deadline and no automatic Job retry. GCS lifecycle deletes only noncurrent
 versions and incomplete uploads; it never substitutes for reference-aware
 publication cleanup. Provider soft deletion can retain deleted object versions
 for seven more days. See [retention](../protocol/cloud/retention.md) and
-[authentication persistence](../protocol/cloud/persistence-boundaries.md).
+[authentication retention](../protocol/cloud/persistence-transactions.md#authentication-retention).

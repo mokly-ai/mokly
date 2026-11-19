@@ -60,7 +60,7 @@ startDesktop({
       ),
     );
     const exchange = {
-      urls: [configuration.config.apiOrigin + "/v1/auth/callback"],
+      urls: [configuration.config.apiOrigin + "/v1/auth/desktop/callback"],
     };
     session.defaultSession.webRequest.onBeforeRequest(
       exchange,

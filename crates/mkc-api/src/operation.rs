@@ -31,6 +31,10 @@ pub(crate) enum Operation {
     SendMagicLink,
     #[serde(rename = "verifyPreviewSignIn")]
     VerifyPreviewSignIn,
+    #[serde(rename = "issueDesktopGrant")]
+    IssueDesktopGrant,
+    #[serde(rename = "exchangeDesktopGrant")]
+    ExchangeDesktopGrant,
     #[serde(rename = "connectGitHub")]
     ConnectGitHub,
     #[serde(rename = "startGitHubSignIn")]

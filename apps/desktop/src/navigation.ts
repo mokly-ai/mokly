@@ -6,12 +6,11 @@ import { SITE_FIRST_SEGMENTS } from "./site-segments.js";
 export type Navigation =
   { action: "allow" | "drop" } | { action: "load" | "external"; url: string };
 const roundTrips = new Set([
-  "https://github.com",
   "https://checkout.stripe.com",
   "https://billing.stripe.com",
 ]);
 
-/** Public product addresses return to the bundle; site addresses stay on the site. */
+/** Public product navigation returns to the bundle; public popups use the browser. */
 export function navigationTarget(
   address: string,
   appOrigin: string,
@@ -37,7 +36,7 @@ export function navigationTarget(
     const site =
       url.pathname === "/" ||
       (SITE_FIRST_SEGMENTS as readonly string[]).includes(first);
-    return site
+    return popup || site
       ? { action: "external", url: url.href }
       : {
           action: "load",

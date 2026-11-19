@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import {
+  SettingsAccountDesktopScreen,
   SettingsAccountEmptyScreen,
   SettingsAccountErrorScreen,
   SettingsAccountLoadingScreen,
@@ -13,6 +14,7 @@ const screens = {
   empty: SettingsAccountEmptyScreen,
   loading: SettingsAccountLoadingScreen,
   error: SettingsAccountErrorScreen,
+  desktop: SettingsAccountDesktopScreen,
 };
 
 export default defineScreen({
@@ -29,7 +31,9 @@ export default defineScreen({
     type: "object",
     additionalProperties: false,
     required: ["state"],
-    properties: { state: { enum: ["default", "empty", "loading", "error"] } },
+    properties: {
+      state: { enum: ["default", "empty", "loading", "error", "desktop"] },
+    },
   } as const,
   props: { state: "default" },
   render: ({ state }, context) => {
@@ -60,6 +64,14 @@ export default defineScreen({
         "Account — error scenario. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "settings", "error"],
       props: { state: "error" },
+    },
+    {
+      slug: "desktop",
+      title: "Account · Desktop app",
+      description:
+        "The pane in the desktop app's window for a reader without GitHub: Connect GitHub keeps its label, carries the external glyph and opens this pane on the web. Static controls depict the documented action; no live writes occur.",
+      tags: ["product", "folio", "settings", "desktop"],
+      props: { state: "desktop" },
     },
   ],
 });

@@ -3,6 +3,8 @@ import { Badge } from "../../../entries/design/badge.mockup";
 import { ResponsiveMenu } from "../../../entries/design/responsive-menu.mockup";
 import { githubAccounts } from "../../../fixtures/product";
 import type { GitHubAccount } from "../../../fixtures/product";
+import type { Host } from "../host";
+import { setupGlyph } from "../host";
 import { Action, ExternalLink, Section } from "../page-parts";
 import { NoteRowPlaceholder } from "../placeholder-rows";
 import { ControlPlaceholder } from "../placeholders";
@@ -17,6 +19,18 @@ import { MenuTriggerPlaceholder } from "./row-placeholders";
 
 /** Owners and admins act on the accounts; every other member reads them. */
 export type Reader = "administrator" | "member";
+
+/**
+ * The glyph Add GitHub account carries and where it leads. In a browser it
+ * leaves for GitHub; in the desktop app's window it opens this pane on the
+ * web instead, where the reader adds the account from the browser.
+ */
+export function addAccount(host: Host) {
+  return {
+    icon: setupGlyph(host, "start"),
+    to: host === "window" ? "product/settings/github" : undefined,
+  };
+}
 
 /** One account's own actions, which its trigger and its open sheet share. */
 export function accountMenu(account: GitHubAccount): RowMenuContent {
@@ -90,6 +104,7 @@ export function ConnectedAccounts({
   opened,
   waiting = false,
   adding = false,
+  host = "browser",
 }: {
   reader: Reader;
   suspended?: boolean;
@@ -97,6 +112,7 @@ export function ConnectedAccounts({
   opened?: GitHubAccount;
   waiting?: boolean;
   adding?: boolean;
+  host?: Host;
 }) {
   return (
     <div className="fo-stack">
@@ -109,7 +125,7 @@ export function ConnectedAccounts({
             <Action
               label={adding ? "Adding…" : "Add GitHub account"}
               size="sm"
-              icon="start"
+              {...addAccount(host)}
               busy={adding ? "Adding a GitHub account" : undefined}
             />
           ) : undefined

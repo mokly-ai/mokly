@@ -1,12 +1,12 @@
 /**
  * The shared sign-in landing has protocol-named outcomes rather than the
  * data-screen empty/loading/error taxonomy. Its canonical pending screen comes
- * first; each provider's first outcome is a screen whose other outcomes are its
- * variants, so no screen carries more than four. The desktop handoff is the
- * email landing outside the desktop app, a screen of its own after them. The
- * GitHub installation landings follow, each a screen of its own because each
- * says something the others do not; a reader starts that flow signed in, so
- * their header names the reader.
+ * first, and it is also the pending state of the email, preview and desktop
+ * landings; each provider's first outcome is a screen whose other outcomes are
+ * its variants, so no screen carries more than four. The desktop landing is in
+ * the app's window, which is signed out. The GitHub installation landings
+ * follow, each a screen of its own because each says something the others do
+ * not; a reader starts that flow signed in, so their header names the reader.
  */
 export const callbackLandingPages = [
   { path: "product/account/callback", state: "pending" },
@@ -19,7 +19,11 @@ export const callbackLandingPages = [
     path: "product/account/callback/preview-invalid/failure",
     state: "failure",
   },
-  { path: "product/account/callback/desktop", state: "handoff" },
+  { path: "product/account/callback/desktop-expired", state: "expired" },
+  {
+    path: "product/account/callback/desktop-expired/failure",
+    state: "failure",
+  },
   {
     path: "product/account/callback/install-requested",
     state: "requested",
@@ -62,7 +66,10 @@ export const callbackLandingScreens = [
     path: "product/account/callback/preview-invalid",
     variants: ["product/account/callback/preview-invalid/failure"],
   },
-  { path: "product/account/callback/desktop", variants: [] },
+  {
+    path: "product/account/callback/desktop-expired",
+    variants: ["product/account/callback/desktop-expired/failure"],
+  },
   { path: "product/account/callback/install-requested", variants: [] },
   { path: "product/account/callback/install-conflict", variants: [] },
   { path: "product/account/callback/install-denied", variants: [] },

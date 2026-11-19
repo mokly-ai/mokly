@@ -1,8 +1,8 @@
 import { DESKTOP_ORIGIN } from "./origin.js";
 
-/** Accept one exact scheme form, with no URL normalization or extra fields. */
+/** Accept the exact grant address, with no URL normalization or extra fields. */
 export function handoffToken(address: string): string | undefined {
-  return /^mokly:\/\/auth\/email\/callback#token=([0-9a-f]{64})$/.exec(
+  return /^mokly:\/\/auth\/desktop\/callback#grant=([0-9a-f]{64})$/.exec(
     address,
   )?.[1];
 }
@@ -19,6 +19,7 @@ export interface HandoffExchange {
 
 interface PendingHandoff {
   phase: "reset" | "loading" | "landing";
+  landing: string;
   requestId?: number;
 }
 
@@ -31,24 +32,28 @@ export function createHandoff(dependencies: {
   let pending: PendingHandoff | undefined;
   const load = async (
     window: HandoffWindow,
-    token: string,
+    callback: string,
     attempt: PendingHandoff,
   ) => {
-    // A fragment-only load reuses the old landing and cannot capture a new token.
+    // A fragment-only load reuses the old landing and cannot capture a new credential.
     await window.load("about:blank");
     attempt.phase = "loading";
-    await window.load(`${DESKTOP_ORIGIN}/auth/email/callback#token=${token}`);
+    await window.load(`${DESKTOP_ORIGIN}${callback}`);
   };
   return {
     receive(address: string): boolean {
-      const token = handoffToken(address);
-      if (!token || received.has(token) || pending) return false;
+      if (!handoffToken(address) || received.has(address) || pending)
+        return false;
       const window = dependencies.window();
-      received.add(token);
-      const attempt: PendingHandoff = { phase: "reset" };
+      received.add(address);
+      const callback = address.replace("mokly://auth", "/auth");
+      const attempt: PendingHandoff = {
+        phase: "reset",
+        landing: callback.split("#")[0],
+      };
       pending = attempt;
       window.focus();
-      void load(window, token, attempt).catch((error) => {
+      void load(window, callback, attempt).catch((error) => {
         if (pending === attempt) pending = undefined;
         dependencies.warn(error);
       });
@@ -65,7 +70,7 @@ export function createHandoff(dependencies: {
     navigated(address: string): void {
       if (pending?.phase === "reset" || address === "about:blank") return;
       try {
-        const landing = new URL(address).pathname === "/auth/email/callback";
+        const landing = new URL(address).pathname === pending?.landing;
         if (pending?.phase === "loading") {
           if (landing) pending.phase = "landing";
         } else if (!landing) pending = undefined;

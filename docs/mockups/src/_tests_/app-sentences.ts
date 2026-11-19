@@ -18,10 +18,9 @@ export type SentenceDeclaration =
  * unsupported-lockfile build's line, the plan refusal's line for everyone but
  * an owner, a reviewer's queued build's line and the fork card's line do. It
  * may also name the heading of an account panel, which no control, option or
- * state title carries: the desktop handoff's was redrawn so that it stops
- * repeating the action below it, and the running screen has to say the new one.
- * The install step read by a member or a reviewer draws no control at all, and
- * the GitHub installation landings say their outcome in a heading and a line.
+ * state title carries. The install step read by a member or a reviewer draws
+ * no control at all, and the GitHub installation landings say their outcome in
+ * a heading and a line.
  * The GitHub accounts pane read by a member draws no control either, so it is
  * compared by the heading its accounts sit under.
  */
@@ -42,7 +41,6 @@ export const sentences: Partial<
     },
   ],
   "product/settings/billing/unavailable": ["Billing opens soon."],
-  "product/account/callback/desktop": ["Finish signing in"],
   "product/settings/project/no-builds": [
     {
       sentence: "This project publishes from CI.",
@@ -117,6 +115,4 @@ export const droppedSentences: Partial<
       constant: { file: "api/labels.ts", name: "publicOnFree" },
     },
   ],
-  // The heading repeated Open Mokly, the action directly below it.
-  "product/account/callback/desktop": ["Open Mokly to finish signing in"],
 };

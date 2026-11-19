@@ -4,7 +4,8 @@ import { CallbackPendingScreen } from "../../../../screens/product/account/callb
 
 export default defineScreen({
   title: "Sign-in link · Pending",
-  description: "The shared email and preview landing while sign-in completes.",
+  description:
+    "The shared email, preview and desktop landing while sign-in completes.",
 
   relatedDocs: [
     "docs/protocol/cloud/auth-callbacks.md",

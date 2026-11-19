@@ -18,7 +18,7 @@
   - The `loading` variant draws a body in place of the control. The app keeps the control, which reads "Sending…", with the pending line "Sending sign-in link" above it.
   - No variant draws the resent state. In the app, Resend link rests at "Link sent" after a link has gone.
   - `docs/protocol/cloud/product-mockups-account.md:12` gives the error recovery as "Link couldn't be sent; request another".
-  - The refusal paragraph at `docs/protocol/cloud/product-mockups-account.md:25-44` does not cover the resend.
+  - The refusal paragraph at `docs/protocol/cloud/product-mockups-account.md:26-49` does not cover the resend.
 - **Impact if no action:** Reviewers see a refusal and a pending state that the product does not have. The parity suite keeps two allowances, so it does not report changes to these labels.
 - **Root question:** How does the catalogue show the "Check your email" screen as the product draws it while a resend works, fails and succeeds?
 - **Options:**

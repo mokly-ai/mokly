@@ -5,6 +5,9 @@ export const installPath = "/install";
 export const signInPath = "/sign-in";
 export const signUpPath = "/sign-up";
 
+/** The browser page that signs the desktop app in from the browser's account. */
+export const connectDesktopPath = "/connect/desktop";
+
 /** The nonsecret pending-membership address carried by an invitation email. */
 export function invitationAcceptancePath(
   workspaceId: string,

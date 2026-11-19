@@ -10,7 +10,7 @@ const credential = "e".repeat(64);
 test("diagnostics never include navigation credentials or arbitrary error fields", () => {
   for (const error of [
     navigationError(
-      `mokly-app://desktop/auth/email/callback#token=${credential}`,
+      `mokly-app://desktop/auth/desktop/callback#grant=${credential}`,
     ),
     credential,
     { code: credential },
@@ -25,7 +25,7 @@ test("diagnostics never include navigation credentials or arbitrary error fields
   assert.equal(
     safeDiagnostic(
       navigationError(
-        `mokly-app://desktop/auth/email/callback#token=${credential}`,
+        `mokly-app://desktop/auth/desktop/callback#grant=${credential}`,
       ),
     ),
     "Desktop operation failed (ERR_ABORTED)",

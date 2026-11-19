@@ -25,10 +25,10 @@ is the historical record of that scope.
    element in the conversation, and publish-from-session back to the branch.
 4. **Native.** Desktop is an Electron shell under `apps/desktop` that ships
    the web build inside the app, serves it from its own origin so the product
-   opens offline, and hands the email sign-in link to the shell through the
-   `mokly` scheme. It exists for local mode: a checkout's
-   unpublished screens in the same viewer, once the open-source package
-   releases a serve contract for a host program. The contract is
+   opens offline, and signs in through the browser, which hands a one-use
+   grant to the shell through the `mokly` scheme. It exists for local mode: a
+   checkout's unpublished screens in the same viewer, once the open-source
+   package releases a serve contract for a host program. The contract is
    [Desktop application](./protocol/cloud/desktop-app.md). iOS and Android remain
    the Expo app against the same API, with the viewer hosted in a web view
    and native chrome around it.

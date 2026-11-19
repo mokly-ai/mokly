@@ -215,16 +215,18 @@ surfaces and the desktop shell use the public app origin. The app recognizes
 the desktop shell by the page's `mokly-app:` protocol. The boundary is
 [Marketing site](./marketing-site.md).
 
-`Action` follows its `href` through `follow()`. An application route goes to
-the router. An address that leaves the application, such as the desktop
-handoff's `mokly://` address, opens in the same tab from the page itself, and
-an address whose scheme runs in the page, such as `javascript:`, is never
-followed. The package Button renders no anchor and takes no wrapper, so such
-an action stays one control. An action that opens a known address in this
-tab names it through `href`, never in a press handler of its own: the
-handoff's **Open Mokly**, **Publish from CI** on the project created page, and
-**Set up publishing** on the stage, the switcher and the share panel. The last
-two open the site's CI setup guide. The viewer's panel host gives the panels
-that address only for a reader who administers the project. An address the
-API returns after a press, such as GitHub's authorization page or a Stripe
-page, is assigned by the flow that requested it.
+An action follows its `href`. An application route goes to the router. An
+address that leaves the application, such as the site's CI setup guide, opens
+in the same tab from the page itself, and an address whose scheme runs in the
+page, such as `javascript:`, is never followed. The package Button renders no
+anchor and takes no wrapper, so such an action stays one control. An action
+that opens a known address in this tab names it through `href`, never in a
+press handler of its own: **Publish from CI** on the project created page, and
+**Set up publishing** on the stage, the switcher and the share panel. Both open
+the site's CI setup guide. The viewer's panel host gives the panels that
+address only for a reader who administers the project. An address that the flow
+builds from what the API returns after a press, such as GitHub's authorization
+page, a Stripe page or the `mokly://` address of the desktop connect page's
+**Open Mokly**, is assigned by the flow that requested it. In the desktop
+shell, the GitHub actions open their web pages as popups instead, as
+[Desktop application](./desktop-app.md#web-setup) defines.
