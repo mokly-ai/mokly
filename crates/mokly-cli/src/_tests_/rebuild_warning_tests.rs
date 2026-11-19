@@ -14,7 +14,7 @@ use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, RebuildReporter, RebuildReporterMock};
 use crate::serve_state::ServeStateFactoryMock;
 use crate::serve_watch::{CandidateWatch, WatchInputsMock};
-use crate::warning_support::{Scripted, catalogue, invalid, plan, scopes, warning};
+use crate::warning_support::{Scripted, catalogue, invalid, plan, record, scopes, warning};
 
 use super::serve_rebuild_tests::initial;
 
@@ -37,13 +37,13 @@ fn failed_catalogue_combines_pending_and_error_warnings_and_repair_reports_only_
     let mock = Unimock::new((
         WatchInputsMock::begin.each_call(matching!()).returns(()),
         WatchInputsMock::candidate.next_call(matching!(_)).returns(Ok(CandidateWatch {
-            plan: plan(), observer: Arc::new(observer.clone()), recheck: true,
+            observer: Arc::new(observer.clone()), recheck: true, record: record(),
         })),
         WatchInputsMock::failed.next_call(matching!()).returns(()),
         WatchInputsMock::plan.next_call(matching!()).returns(plan()),
         RebuildReporterMock::watched_catalogue_failure.next_call(matching!((_, _, records, _) if *records == [warning("a"), warning("pending"), warning("z")])).returns(()),
         WatchInputsMock::candidate.next_call(matching!(_)).returns(Ok(CandidateWatch {
-            plan: plan(), observer: Arc::new(observer.clone()), recheck: false,
+            observer: Arc::new(observer.clone()), recheck: false, record: record(),
         })),
         PublicationsMock::current.next_call(matching!()).returns(origin.clone()),
         ServeStateFactoryMock::replace.next_call(matching!(_, 2, _, _)).returns(Ok(origin.at_revision(2))),
@@ -114,9 +114,9 @@ fn watched_recheck_keeps_first_pass_warnings_only_when_its_recheck_fails() {
         let candidate = WatchInputsMock::candidate
             .next_call(matching!(_))
             .returns(Ok(CandidateWatch {
-                plan: plan(),
                 observer: Arc::new(observer.clone()),
                 recheck: true,
+                record: record(),
             }));
         let origin = initial();
         let mock = if fails {

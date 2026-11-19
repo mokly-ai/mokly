@@ -26,6 +26,7 @@ use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
 
 use super::serve_rebuild_tests::{initial, warning_scopes};
+use crate::warning_support::record;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
@@ -187,9 +188,9 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| {
                 Ok(CandidateWatch {
-                    plan: plan.clone(),
                     observer: Arc::new(Unimock::new(())),
                     recheck: false,
+                    record: record(),
                 })
             })),
         WatchInputsMock::adopt

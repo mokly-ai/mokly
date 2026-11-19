@@ -68,7 +68,7 @@
       builds the input stamp from the metadata inputs and the module digests.
       The stamp gives the `resolution_files` that the watcher observes, at
       `crates/mokly-render/src/bundle.rs:199` and
-      `crates/mokly-cli/src/serve_watch.rs:248`.
+      `crates/mokly-cli/src/serve_watch_plan.rs:95`.
     - The section "Watch Targets And Readiness" of
       `docs/protocol/mokly-watch.md` says that this evidence is not a watch
       input and moves no render input key.

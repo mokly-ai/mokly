@@ -1,6 +1,6 @@
 //! Scripted catalogue passes and pure warning fixtures for Serve orchestration tests.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config::ConfigLoaderMock;
@@ -8,16 +8,20 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::diagnostic::{Code, Issue, Warning, WarningSubject};
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::{CatalogueBuilderMock, PreparedCatalogue};
+use mokly_cli::build::{BuildChanges, BuildSummary};
 use mokly_cli::cancellation::ServeCancellation;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
-use mokly_cli::serve::{CatalogueServe, ServePreparation};
-use mokly_graph::types::{GraphFactoryMock, RenderGeneration, RenderGraph, RenderGraphMock};
+use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
+use mokly_graph::types::{
+    GraphFactoryMock, RenderGeneration, RenderGenerationMock, RenderGraph, RenderGraphMock,
+};
 use mokly_model::catalogue::CatalogueModel;
 use mokly_watch::plan::Plan;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
+use crate::serve_watch_plan::{PlanInputs, PlanRecord};
 
 /// One normalized record with a stable subject.
 pub(crate) fn warning(message: &str) -> Warning {
@@ -43,6 +47,32 @@ pub(crate) fn config() -> ResolvedConfig {
 /// Watch plan for the empty scripted catalogue.
 pub(crate) fn plan() -> Plan {
     Plan::new(&config(), &[], &[], &Default::default()).unwrap()
+}
+
+/// The plan record of the empty scripted catalogue, read as a watch candidate reads it.
+pub(crate) fn record() -> Arc<PlanRecord> {
+    let generation = Unimock::new((
+        RenderGenerationMock::catalogue
+            .some_call(matching!())
+            .returns(catalogue(vec![])),
+        RenderGenerationMock::stylesheet_directories
+            .some_call(matching!())
+            .returns(vec![]),
+        RenderGenerationMock::watch_files
+            .some_call(matching!())
+            .returns(BTreeSet::new()),
+    ));
+    let prepared = PreparedServe {
+        config: config(),
+        generation: Arc::new(generation),
+        summary: BuildSummary {
+            changes: BuildChanges::Disabled,
+            documents: 0,
+            counts: Default::default(),
+            warnings: vec![],
+        },
+    };
+    Arc::new(PlanRecord::new(PlanInputs::of(&prepared)).unwrap())
 }
 
 /// Prepared metadata for a successful scripted pass.
