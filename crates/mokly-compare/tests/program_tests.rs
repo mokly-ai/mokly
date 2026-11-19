@@ -125,6 +125,12 @@ fn install_environment_removes_mokly_token() {
     };
     let executable = std::path::PathBuf::from(std::env::var_os("MOKLY_ENV_PROBE_PATH").unwrap());
     let temporary = executable.parent().unwrap();
+    std::fs::write(
+        &executable,
+        b"#!/bin/sh\nprintf '%s' \"${MOKLY_TOKEN-unset}\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
     let spawner: &dyn mokly_compare::commands::Spawner = &mokly_compare::process::SystemSpawner {
         groups: std::sync::Arc::new(mokly_platform::processes::SystemProcessGroups),
     };
@@ -148,13 +154,6 @@ fn install_environment_removes_mokly_token() {
 #[test]
 fn environment_probe_runs_with_a_token_and_absolute_manager_path() {
     let temporary = tempfile::tempdir().unwrap();
-    let executable = temporary.path().join("npm");
-    std::fs::write(
-        &executable,
-        b"#!/bin/sh\nprintf '%s' \"${MOKLY_TOKEN-unset}\"\n",
-    )
-    .unwrap();
-    std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
     let output = std::process::Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
