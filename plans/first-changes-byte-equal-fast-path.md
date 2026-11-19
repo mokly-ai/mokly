@@ -1,6 +1,6 @@
 # First Changes byte-equal fast path
 
-Status: Active. On branch `calummoore/mokly-first-changes-2-byte-equal-fast-10j4`, no pull request yet. The completion pull request deletes this plan.
+Status: Active. [PR #355](https://github.com/mokly-ai/mokly/pull/355) is open as a draft. The completion pull request deletes this plan.
 
 Mokly compares rendered base and head documents to classify Changes. The
 first classification currently repeats work for documents with equal bytes.
@@ -227,8 +227,8 @@ The push gives both measurement arms exact source commits.
       Keep its exact state-count and privacy assertions.
 - [x] Run targeted checks, `cargo xtask check --suite repository`, and `cargo xtask check`.
       Report each blocked suite if the complete gate cannot run here.
-- [ ] Commit with Conventional Commits and push the implementation.
-- [ ] Send the implementation SHA to the performance orchestrator. Use the same
+- [x] Commit with Conventional Commits and push the implementation.
+- [x] Send the implementation SHA to the performance orchestrator. Use the same
       commit for dist, unless a different dist source is required.
 
 Evidence and the short continuation ledger live under
@@ -244,21 +244,47 @@ Use separate release checkouts and target directories for merged main and
 this branch. Run Cargo builds one at a time with incremental and dev debug
 output disabled. Check disk and available memory before each large build.
 
-- [ ] Check `examples/basic` and generated large catalogues from `scripts/large/`.
-- [ ] Measure at least six interleaved baseline and branch rounds, warm and cold.
-- [ ] Compare first Changes, comparison stages, and exact output. Check strict
+- [x] Check `examples/basic` and generated large catalogues from `scripts/large/`.
+- [x] Measure at least six interleaved baseline and branch rounds, warm and cold.
+- [x] Compare first Changes, comparison stages, and exact output. Check strict
       static build output bytes on the same three fixture roots too.
-- [ ] Measure whole-tree anonymous memory plus swap at startup and for ten edits.
-- [ ] Confirm local memory within 2% of main for startup and ten edits.
-- [ ] Obtain `mokly-cloud` evidence for at least 0.3 seconds less comparison time
+- [x] Measure whole-tree anonymous memory plus swap at startup and for ten edits.
+- [x] Check local memory against the 2% target. Apply the accepted retained-core
+      analysis and keep every measured cache-state ratio in the report.
+- [x] Obtain `mokly-cloud` evidence for at least 0.3 seconds less comparison time
       and at least 0.3 seconds earlier first Changes, mean of six interleaved runs.
-- [ ] Report admitted byte-and-metadata-equal view counts on `mokly-cloud`.
-- [ ] Confirm `mokly-cloud` memory within 2% of main for startup and ten edits.
-- [ ] Review the complete diff against `origin/main`, or the supplied step-1 base,
+- [x] Report admitted byte-and-metadata-equal view counts on `mokly-cloud`.
+- [x] Check `mokly-cloud` memory against the 2% target. Record the performance
+      orchestrator's acceptance of measured startup and ten-edit memory.
+- [x] Review the complete diff against `origin/main`, or the supplied step-1 base,
       with the implementation-review skill. Check findings and apply up to two fix rounds.
-- [ ] Merge the supplied step-1 branch with the git-merge skill when available.
-      Audit the merge and verify the combined tree.
+- [x] Check the supplied step-1 branch before opening the pull request. It has
+      no pull request yet, so target `main` as the performance orchestrator
+      directed. Merge and retarget when it supplies step 1's pull request.
 - [ ] Delete this plan after every other required TODO is complete and review is done.
 - [ ] Open the stacked pull request. Preserve dated calls and the plan permalink
       in its description. Wait for CI with the finish-work skill's `scripts/ci-wait.sh`.
       Send the final report to the performance orchestrator. Do not merge.
+
+## Acceptance record
+
+On 2026-11-19, the performance orchestrator accepted `6bf63397f` after six
+interleaved `mokly-cloud` rounds and two ten-edit memory sessions per arm.
+Comparison improved by 309 ms. First Changes improved by 220 ms, below the
+original 300 ms target. It accepted that end-to-end result because the base
+stage varied and digest work added 63 ms to capture encoding. It judged
+memory neutral. All 1,488 unchanged views admitted, while 20 changed views
+kept the full path. Evidence: `.context/first-changes-byte-equal-fast-path/cloud-measurements.md`.
+
+The same message requested a Small exact digest-cost cut only if available.
+The workspace orchestrator kept the implementation because capture already
+hashes in the encoding pass and no faster hash exists in the dependency
+tree. No new dependency is permitted. This is its call of 2026-11-19.
+
+The same day, the performance orchestrator accepted local peak variation if
+existing warm-basic logs showed no core retention beyond the digest.
+All six pairs satisfy that condition. Capture adds exactly 18,880 bytes,
+which is 590 views times 32. Encoded bytes, comparison retention, comparison
+peak charge, and render-cache charge are equal. Local per-process RSS was
+not sampled. Raw cold and warm ratios remain part of the report. Evidence:
+`.context/first-changes-byte-equal-fast-path/measurement/basic-warm-core-retention.json`.
