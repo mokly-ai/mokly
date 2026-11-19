@@ -15,17 +15,15 @@ use mokly_model::catalogue::EntryContent;
 use mokly_model::material::digest;
 use mokly_model::wire_decode;
 
-use crate::composition::Engine;
+use crate::composition::{CompositionAdmission, Engine};
 use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{FragmentRequest, RenderKind};
+use crate::root_context_weight;
 use crate::tree::Node;
-use crate::{
-    fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links,
-    source_checks,
-};
+use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
 impl Engine<'_> {
     pub(crate) fn javascript_expansion(
@@ -33,6 +31,7 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: Arc<Context>,
+        admission: Option<&dyn CompositionAdmission>,
     ) -> Result<Expansion> {
         let entry = self
             .request
@@ -103,6 +102,12 @@ impl Engine<'_> {
             slots: tokens.clone(),
             saved_slots: recipe.map_or_else(BTreeMap::new, |source| source.slots.clone()),
         })?;
+        if let Some(admission) = admission {
+            admission.root_fragment(
+                &result,
+                root_context_weight::retained(self.request, &context),
+            );
+        }
         self.styles.extend(result.styles.clone());
         self.resources.extend(result.resources.clone());
         self.warnings.extend(result.warnings.clone());
@@ -112,7 +117,7 @@ impl Engine<'_> {
         } else {
             DeliveredHtml::fragment(&result.html)
         };
-        let mut nodes = parse::html(html);
+        let (mut nodes, checks) = parse::consumer(html);
         let removed = ignore_checks::filter_tree(&mut nodes);
         if page {
             let mut seen = BTreeSet::new();
@@ -125,9 +130,8 @@ impl Engine<'_> {
                     });
                 }
             }
-            source_checks::page(html)?;
         }
-        source_checks::validate(html, true)?;
+        checks.validate(page)?;
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
             && effective.metadata.path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(
@@ -197,8 +201,10 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: &Context,
+        admission: Option<&dyn CompositionAdmission>,
     ) -> Result<Vec<Node>> {
-        let expansion = self.javascript_expansion(path, kind, Arc::new(context.clone()))?;
+        let expansion =
+            self.javascript_expansion(path, kind, Arc::new(context.clone()), admission)?;
         self.expand(expansion)
     }
 }

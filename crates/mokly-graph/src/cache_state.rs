@@ -24,6 +24,7 @@ pub(crate) struct State {
     /// Wrapping sequence of public reads and writes.
     pub(crate) operations: u128,
     retained: usize,
+    pub(crate) leased: usize,
 }
 
 impl State {
@@ -39,7 +40,32 @@ impl State {
             stats: CacheStats::default(),
             operations: 0,
             retained,
+            leased: 0,
         }
+    }
+
+    /// Active transient owners consume retained space, never compaction headroom.
+    pub(crate) fn available(&self) -> usize {
+        self.retained - self.leased
+    }
+
+    /// Admission only evicts. It never encodes a document or waits for another lease.
+    pub(crate) fn reserve_bytes(&mut self, bytes: usize) -> bool {
+        if bytes > self.available() {
+            return false;
+        }
+        let remaining = self.available() - bytes;
+        while self.compact.bytes > remaining {
+            self.compact.oldest();
+            self.stats.evictions = self.stats.evictions.saturating_add(1);
+        }
+        while self.full.bytes > remaining - self.compact.bytes {
+            self.full.oldest();
+            self.stats.evictions = self.stats.evictions.saturating_add(1);
+        }
+        self.leased += bytes;
+        self.full.bound = remaining - self.compact.bytes;
+        true
     }
 
     /// Statistics reads and internal demotions are not cache operations.
@@ -50,7 +76,7 @@ impl State {
     /// Remove the same compact value and release its capacity to the full tier.
     pub(crate) fn remove_compact(&mut self, key: &NodeKey, value: &Arc<EncodedView>) -> bool {
         let removed = self.compact.remove_same(key, value);
-        self.full.bound = self.retained - self.compact.bytes;
+        self.full.bound = self.available() - self.compact.bytes;
         removed
     }
 
@@ -62,20 +88,20 @@ impl State {
         value: Arc<Artifact>,
         cost: usize,
     ) -> Vec<Transit<'a>> {
-        if cost > self.retained {
+        if cost > self.available() {
             let removed = self.full.remove(&key).is_some();
             self.stats.evictions = self.stats.evictions.saturating_add(usize::from(removed));
             return Vec::new();
         }
-        while cost > self.retained - self.compact.bytes {
+        while cost > self.available() - self.compact.bytes {
             if self.compact.oldest().is_none() {
                 break;
             }
             self.stats.evictions = self.stats.evictions.saturating_add(1);
         }
         self.full.remove(&key);
-        let mut pending = self.trim_full(owner, self.retained - self.compact.bytes - cost);
-        self.full.bound = self.retained - self.compact.bytes;
+        let mut pending = self.trim_full(owner, self.available() - self.compact.bytes - cost);
+        self.full.bound = self.available() - self.compact.bytes;
         for entry in self.full.insert(key, value, cost) {
             if let Some(reservation) = self.reserve(owner, entry) {
                 pending.push(reservation);
@@ -92,17 +118,17 @@ impl State {
         value: Arc<EncodedView>,
         cost: usize,
     ) -> Vec<Transit<'a>> {
-        if cost > self.compact.bound {
+        if cost > self.compact.bound.min(self.available()) {
             self.stats.evictions = self.stats.evictions.saturating_add(1);
             return Vec::new();
         }
-        while self.compact.bytes > self.compact.bound - cost {
+        while self.compact.bytes > self.compact.bound.min(self.available()) - cost {
             if self.compact.oldest().is_none() {
                 break;
             }
             self.stats.evictions = self.stats.evictions.saturating_add(1);
         }
-        let bound = self.retained - self.compact.bytes - cost;
+        let bound = self.available() - self.compact.bytes - cost;
         let pending = self.trim_full(owner, bound);
         self.full.bound = bound;
         self.compact.insert(key, value, cost);

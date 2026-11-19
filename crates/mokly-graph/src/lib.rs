@@ -1,9 +1,11 @@
 //! Content-addressed catalogue rendering and bounded process caches.
 #![warn(unreachable_pub)]
 
+pub mod background;
 pub mod cache;
 mod cache_encoder_pool;
 mod cache_encoding;
+pub mod cache_lease;
 mod cache_state;
 mod cache_tier;
 mod cache_transit;
@@ -23,6 +25,7 @@ mod document_usage;
 mod document_weight;
 mod document_writer;
 pub mod error;
+mod fragment_weight;
 pub mod fragments;
 pub mod graph;
 pub mod key;
@@ -76,6 +79,10 @@ mod boundaries_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_tests.rs"]
 mod cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap_cache_tests.rs"]
+mod overlap_cache_tests;
 
 mod resource_access;
 

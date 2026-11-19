@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use axum::body::Bytes;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_graph::background::Completion;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
@@ -30,6 +31,15 @@ pub struct PreviewDocument {
 /// Graph work; HTTP runs IO outside its event loop.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
+    /// Render with an optional root handoff owned by this background view.
+    /// Legacy backends keep their original worker for the complete render.
+    fn background_staged(
+        &self,
+        route: &str,
+        _completion: Arc<dyn Completion>,
+    ) -> Result<Vec<Warning>> {
+        self.background(route)
+    }
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
     /// Reserve shared storage with no IO before foreground worker admission.
@@ -86,12 +96,21 @@ impl GraphDocuments {
     }
     /// Render a declared route and record its usage. A foreground render reports its
     /// warnings here; a background render leaves them to the usage pass.
-    fn render(&self, route: &str, report: bool) -> Result<Option<Arc<Artifact>>> {
+    fn render(
+        &self,
+        route: &str,
+        report: bool,
+        completion: Option<Arc<dyn Completion>>,
+    ) -> Result<Option<Arc<Artifact>>> {
         let Some(lock) = self.locks.get(route) else {
             return Ok(None);
         };
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
-        match self.generation.render(route) {
+        let rendered = match completion {
+            Some(completion) => self.generation.render_background(route, completion),
+            None => self.generation.render(route),
+        };
+        match rendered {
             Ok(artifact) => {
                 if let Some(document) = &artifact.document
                     && report
@@ -128,7 +147,7 @@ impl Documents for GraphDocuments {
 
     fn generated(&self, route: &str) -> Result<Option<File>> {
         if self.locks.contains_key(route) {
-            return Ok(self.render(route, true)?.map(|artifact| File {
+            return Ok(self.render(route, true, None)?.map(|artifact| File {
                 bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
                 content_type: artifact.content_type.clone(),
             }));
@@ -150,23 +169,14 @@ impl Documents for GraphDocuments {
         }
     }
     fn background(&self, route: &str) -> Result<Vec<Warning>> {
-        if self.locks.get(route).is_some_and(|state| {
-            state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .is_some()
-        }) {
-            return Ok(Vec::new());
-        }
-        Ok(self
-            .render(route, false)?
-            .and_then(|artifact| {
-                artifact
-                    .document
-                    .as_ref()
-                    .map(|document| document.warnings.clone())
-            })
-            .unwrap_or_default())
+        self.background_document(route, None)
+    }
+    fn background_staged(
+        &self,
+        route: &str,
+        completion: Arc<dyn Completion>,
+    ) -> Result<Vec<Warning>> {
+        self.background_document(route, Some(completion))
     }
     fn report(&self, warnings: &[Warning], failed: bool) {
         self.warnings.report(warnings, failed);
@@ -200,6 +210,32 @@ impl Documents for GraphDocuments {
             .map_or(&[][..], |document| document.warnings.as_slice());
         self.warnings.report(warnings, result.is_err());
         result
+    }
+}
+
+impl GraphDocuments {
+    fn background_document(
+        &self,
+        route: &str,
+        completion: Option<Arc<dyn Completion>>,
+    ) -> Result<Vec<Warning>> {
+        if self.locks.get(route).is_some_and(|state| {
+            state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .is_some()
+        }) {
+            return Ok(Vec::new());
+        }
+        Ok(self
+            .render(route, false, completion)?
+            .and_then(|artifact| {
+                artifact
+                    .document
+                    .as_ref()
+                    .map(|document| document.warnings.clone())
+            })
+            .unwrap_or_default())
     }
 }
 #[cfg(test)]

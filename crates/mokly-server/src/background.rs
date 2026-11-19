@@ -7,8 +7,9 @@ use mokly_catalogue::diagnostic::Warning;
 use tokio::sync::{broadcast, watch};
 
 use crate::backend::Documents;
-use crate::background_batch::Window;
+use crate::background_batch::{Event, Window};
 use crate::background_capacity::BackgroundCapacity;
+use crate::background_stage::Stages;
 use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
@@ -44,12 +45,16 @@ impl Background for UsagePass {
             return;
         }
         let mut updates = self.publications.subscribe().updates;
+        let stages = Stages::new(self.capacity.clone());
         loop {
             if stopped(&stop) {
                 return;
             }
             let origin = self.publications.current();
-            if !self.fill(&origin, &mut stop, &mut updates).await {
+            if !self
+                .fill_staged(&origin, &mut stop, &mut updates, &stages)
+                .await
+            {
                 continue;
             }
             if let Some(changes) = &self.changes {
@@ -70,11 +75,12 @@ impl Background for UsagePass {
 
 impl UsagePass {
     #[tracing::instrument(name = "serve.background", skip_all, fields(status = "ok"))]
-    async fn fill(
+    async fn fill_staged(
         &self,
         origin: &Arc<Snapshot>,
         stop: &mut watch::Receiver<bool>,
         updates: &mut broadcast::Receiver<PublicationEvent>,
+        stages: &Arc<Stages>,
     ) -> bool {
         let mut window = Window::new(1);
         let mut routes = origin.routes.iter().enumerate();
@@ -95,10 +101,15 @@ impl UsagePass {
                 if current.completed.contains_key(&route.route) {
                     continue;
                 }
-                window.start(
+                let stage = stages.view(&route.route);
+                window.start_staged(
                     position,
-                    self.work
-                        .background(origin.documents.clone(), route.route.clone()),
+                    self.work.background_staged(
+                        origin.documents.clone(),
+                        route.route.clone(),
+                        stage.clone(),
+                    ),
+                    stage,
                 );
             }
             if window.is_empty() {
@@ -109,9 +120,11 @@ impl UsagePass {
                 _ = updates.recv() => {
                     if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                 },
-                (position, result) = window.next() => {
+                event = window.next_event() => {
                     if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
-                    for outcome in window.settle(position, result) { self.report(origin.documents.as_ref(), outcome); }
+                    if let Event::Completed(position, result) = event {
+                        for outcome in window.settle(position, result) { self.report(origin.documents.as_ref(), outcome); }
+                    }
                 }
             }
         }
@@ -140,6 +153,17 @@ impl UsagePass {
         }
         true
     }
+    #[cfg(test)]
+    async fn fill(
+        &self,
+        origin: &Arc<Snapshot>,
+        stop: &mut watch::Receiver<bool>,
+        updates: &mut broadcast::Receiver<PublicationEvent>,
+    ) -> bool {
+        self.fill_staged(origin, stop, updates, &Stages::new(self.capacity.clone()))
+            .await
+    }
+
     /// Report one view as a serial pass did: its warnings, then its failure diagnostic.
     fn report(&self, documents: &dyn Documents, outcome: Result<Vec<Warning>>) {
         match outcome {
@@ -174,3 +198,7 @@ mod quiet_background_tests;
 #[cfg(test)]
 #[path = "_tests_/background_batch/mod.rs"]
 mod background_batch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap/mod.rs"]
+mod overlap_tests;

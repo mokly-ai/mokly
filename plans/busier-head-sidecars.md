@@ -14,7 +14,9 @@ It found that core document work occupies 59.7% of the gaps. Admission and
 JSON work occupy small shares. Serve did not saturate four CPUs.
 
 The baseline is current `origin/main`, initially `6ae96ed08`, then
-`f4f0082fd`. The latter changes only agent instructions. Probe evidence is
+`f4f0082fd`. The latter changes only agent instructions. Before acceptance,
+main advanced to `c05a9d47b` with shutdown fixes and a Windows process test.
+The branch integrated it without conflicts and preserves every incoming path. Probe evidence is
 under `.context/busier-sidecars/probe/`. Logs remain outside this plan.
 
 Contract owners:
@@ -75,13 +77,58 @@ below. Its report is `.context/busier-sidecars/plan-options-check.md`.
 No choice needs Cal. A failed render-ahead call repeated by its own document
 is a retry under this task, regardless of its name.
 
+### 2. How should Node avoid repeated parsing?
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/registry-styles.ts`, `styles.ts`, `markup.ts`, and `render.ts`.
+- **Terms:**
+  - **Parsed fragment:** The parse5 tree for one exact HTML string. Registry class selection and markup finalization currently build separate trees.
+- **Background:** The Node profile attributes 7.78% of render samples to registry HTML parsing and 8.25% to final markup parsing. HTML stays equal unless a component renderer drops its node and needs a prefix. The duplicate parse exists only with a nonempty native registry sheet.
+- **Problem:** Screens parse the same bytes twice. Components can change the bytes by adding an output prefix, so their earlier tree cannot always be reused.
+- **Impact if no action:** Sidecars keep paying this parser and allocation cost while overlap approaches the CPU limit.
+- **Root question:** How can each render parse equal HTML bytes once, with identical output, errors, and order, and memory bounded by that render?
+- **Options:**
+  - **A.** Keep both parses and rely on the other planned cuts. This has no Node change but retains the measured work. Effort: Small.
+  - **B.** Share a typed per-render owner of exact HTML and its lazily parsed tree. Reuse it for both existing consumers. A changed string gets a new owner. The tree stays live during registry CSS filtering, so peak memory needs measurement. Effort: Medium.
+  - **C.** Merge registry class collection and markup finalization into one collector. It can also remove a tree walk, but must defer errors to preserve phase precedence. Effort: Large.
+  - **D.** Memoize parse results across renders. It could remove more work, but requires keys, eviction, byte accounting, and a measured equal-input rate. Effort: Large.
+  - **E.** Keep the string APIs and pass an exact-string parse memo through every consumer. It gives the same saving but can silently lose sharing when a caller omits it. Effort: Medium.
+- **Left out:** Skipping source locations changes replacement offsets. Reusing a tree after a prefix changes the input and its positions. Global unbounded memoization breaks memory limits. Registry CSS caching has no measured equal-input rate and answers a different question.
+- **Shared assumptions:** Exact HTML, CSS, marker records, offsets, error order, and wire output remain requirements from the task. No new persistent cache or budget is required. The separate parse invocations are code mechanics that B and C drop. D drops the per-render lifetime assumption.
+- **Wider fix:** B. One exact-input owner makes sharing explicit without persistent state.
+- **Previous examples:** The same profile found repeated core fragment tokenization, addressed in Milestone 3.
+- **Recommendation:** B. The independent check kept B. Its type binds each tree to its exact bytes, and every caller must use it. E permits a missed sharing argument.
+- **Action:** fix now, apply B. This is the workspace orchestrator's call of 2026-11-19 under Cal's delegation. The fresh options check is complete.
+
+Keep parsing lazy when the registry CSS is empty. Keep registry processing
+before marker finalization. A component output prefix changes the exact input
+and must invalidate its earlier tree. Session rendering and every direct
+consumer use the new owner. Do not retain a converter for the string API.
+The owner and its tree end with one render and never enter a wire response.
+Every parse uses source locations, even when the registry reads first. Both
+consumers treat the tree as read-only. Keep their separate walks: the registry
+does not enter template content, while markup finalization does. Markup skips
+style children, while registry selection visits them. Keep `nativeSheet()`
+and CSS failures before markup failures. Release the old owner after a prefix,
+without a second live alias. Keep registry styles before inline styles.
+
+The owner can overlap one tree with the PostCSS working tree. Check its early
+cgroup peak before accepting the cut. The large HTML fixture has no native
+registry and gets no parser saving. The profile's component views retain their
+node, so all 1,560 profiled views can share their parse. The check report is
+`.context/busier-sidecars/node-parse-options-check.md`.
+
 ## Design and ownership
 
 The process pool already releases its slot before completion. The new work
 must admit the next view sooner, rather than extend or replace that lease.
 Keep the default pool's claims and growth checks unchanged.
 
-Keep at most one stage bound of views in sidecar work and one in completion.
+Keep at most one stage bound of views in each current pass window and one
+shared bound of owning completion chains across replacement passes. Cancelled
+views that never hand off retain the original server worker and claim bounds.
 Read capacity before admission. A lower capacity stops new work without
 cancelling work already admitted. Preserve catalogue start order and ordered
 warning and failure delivery. Publish usage only after every document ends.
@@ -114,7 +161,9 @@ Release each charge when its owner ends, including failure and cancellation.
 If the shared budget cannot admit overlap, finish under the current document
 place, still within the completion bound. Do not create an uncharged queue or
 increase a budget. Compute charges from capacities without JSON encoding.
-Keep active composed trees bounded by the original stage bound.
+Keep owning document completion chains bounded by the original stage bound.
+Each chain retains only its existing synchronous nested link-validation work.
+Nested work takes no new completion place and cannot signal a handoff.
 
 Document the reason that sidecar-stage views can hold worker permits while
 their calls wait behind later calls from completion. Run an early cgroup
@@ -138,23 +187,33 @@ Replaced ways:
 - Separate fragment parsing and source-check parsing become one token stream.
   Consumers: JavaScript fragment expansion and its validation result.
   Migrate them in Milestone 3. Remove only the redundant invocation.
+- Separate Node HTML parses become one per-render exact-input owner.
+  Consumers: registry styles, style collection, markup finalization, render,
+  session rendering, and direct registry tests. Migrate them in Milestone 2.
 
 ## Milestone 1: Documentation and contracts
 
 Depends on: none
 
-- [ ] Document the bounded stages, charged memory, fallback, priority, order, and draining rules.
-- [ ] Update the server and CLI entry-point descriptions that change.
-- [ ] Keep protocol and README status lines until the implementation matches.
+- [x] Document the bounded stages, charged memory, fallback, priority, order, and draining rules.
+- [x] Update the server and CLI entry-point descriptions that change.
+- [x] Keep protocol and README status lines until the implementation matches.
+
+Evidence: `.context/busier-sidecars/docs-m1-report.md`. Root checked all four
+diffs and clarified the shared-work wait and the zero floor of cache capacity.
 
 ## Milestone 2: Sidecar CPU work
 
 Depends on: 1
 
-- [ ] Capture one Node CPU profile of the startup usage pass on clean main.
-- [ ] Identify Mokly-owned work separately from React and consumer rendering.
-- [ ] Record any selected sidecar cut and run its options check before implementation.
-- [ ] Apply only measured, byte-equal cuts. Record when no useful cut is supported.
+- [x] Capture one Node CPU profile of the startup usage pass on clean main.
+- [x] Identify Mokly-owned work separately from React and consumer rendering.
+- [x] Record any selected sidecar cut and run its options check before implementation.
+- [x] Share the per-render parsed HTML owner across registry and final markup processing.
+- [x] Preserve lazy empty-registry behavior, component-prefix invalidation, source positions, and error order.
+- [x] Keep separate read-only tree walks. Check the combined early cgroup peak in Milestone 4 before accepting the owner lifetime.
+- [x] Migrate all consumers and tests of the replaced string API, with every assertion preserved.
+- [x] Run targeted existing tests and a one-time exact-output and parse-count proof.
 
 Evidence: `.context/busier-sidecars/sidecar-cpu/`.
 
@@ -162,25 +221,35 @@ Evidence: `.context/busier-sidecars/sidecar-cpu/`.
 
 Depends on: 1
 
-- [ ] Share the existing token stream between fragment parsing and source checks.
-- [ ] Preserve error order, page precedence, source positions, repair, and warnings.
-- [ ] Run existing HTML and rendering tests unchanged. Save a mutation or equivalence proof.
-- [ ] Remove the redundant parse invocation and update useful code entry points.
+- [x] Share the existing token stream between fragment parsing and source checks.
+- [x] Preserve error order, page precedence, source positions, repair, and warnings.
+- [x] Run existing HTML and rendering tests unchanged. Save a mutation or equivalence proof.
+- [x] Remove the redundant parse invocation and identify the useful code entry points for documentation.
+
+Evidence: `.context/busier-sidecars/core-completion/` and
+`.context/busier-sidecars/node-parse/`. The existing saved-plan flake passed
+its one exact rerun. The pull request body will record this occurrence, as
+the performance orchestrator requested.
 
 ## Milestone 4: Bounded overlap
 
 Depends on: 2 and 3
 
-- [ ] Add failing behavioral tests before implementing the changed scheduling rule.
-- [ ] Prove that the next view can start while the first completes, within both stage bounds.
-- [ ] Prove ordered reporting, foreground priority, cancellation, and stop draining.
-- [ ] Add byte leases within existing render accounting and synchronous fallback when no charge fits.
-- [ ] Release dispatch ownership only after claim release and safe payload admission.
-- [ ] Check nested link renders, template eligibility, lock-free waits, and the unchanged single-attempt failure path.
-- [ ] Run background documents on their admitted blocking job without the graph-pool bottleneck.
-- [ ] Run an early cgroup anon-plus-swap diagnostic before the full acceptance matrix.
-- [ ] Keep the existing Serve and pool tests unchanged. Repeat new asynchronous tests ten times.
-- [ ] Remove pending documentation status lines after the implementation matches.
+- [x] Add failing behavioral tests before implementing the changed scheduling rule.
+- [x] Prove that the next view can start while the first completes, within both stage bounds.
+- [x] Prove ordered reporting, foreground priority, cancellation, and stop draining.
+- [x] Add byte leases within existing render accounting and synchronous fallback when no charge fits.
+- [x] Release dispatch ownership only after claim release and safe payload admission.
+- [x] Check nested link renders, template eligibility, lock-free waits, and the unchanged single-attempt failure path.
+- [x] Run background documents on their admitted blocking job without the graph-pool bottleneck.
+- [ ] Attribute the early diagnostic memory variation and confirm the acceptance bound.
+- [ ] Run an early cgroup anon-plus-swap diagnostic of both parser cuts and the bypass before accepting them or running the full matrix.
+- [x] Keep the existing Serve and pool tests unchanged. Repeat new asynchronous tests ten times.
+- [x] Remove pending documentation status lines after the implementation matches.
+
+Evidence: `.context/busier-sidecars/bounded-overlap/report.md` and
+`.context/busier-sidecars/docs-m4-report.md`. Root checked ownership, cache
+accounting, defaults, replacement, and preserved tests against the code.
 
 ## Milestone 5: Measurement and verification
 
@@ -191,12 +260,16 @@ Depends on: 4
 - [ ] Report pass time, first Changes, Serve CPU per second, host CPU, and cgroup anon plus swap for both arms.
 - [ ] Check foreground response times and ten-edit sessions for speed and peak memory.
 - [ ] Prove equal documents, usage, resources, warnings, diagnostics, and result order once.
-- [ ] Run targeted tests, the repository suite, and the complete gate with the required tools and locked Cargo graph.
-- [ ] Run the strict example build and a live smoke. Save a browser screenshot under `.context/`.
+- [x] Run targeted tests, the repository suite, and the complete gate with the required tools and locked Cargo graph.
+- [x] Run the strict example build and a live smoke. Save a browser screenshot under `.context/`.
 - [ ] Commit and push the implementation. Send its SHA and dist source commit immediately for cloud measurement.
 - [ ] Obtain cloud acceptance: both startup gains at least 0.8 s, later edits no slower, and both memory peaks within 2%.
 
 Evidence: `.context/busier-sidecars/measurements/` and `.context/busier-sidecars/checks/`.
+The complete gate hit the known saved-plan harness flake owned by PR #352.
+Its exact reruns passed. Standalone Native, Viewer, Browser, and delivery
+coverage passed. No complete-gate pass is claimed. The implementation push
+allows independent cloud measurement while local acceptance remains open.
 
 ## Milestone 6: Commit, review, and pull request
 

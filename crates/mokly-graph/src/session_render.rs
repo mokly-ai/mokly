@@ -2,6 +2,7 @@
 
 use std::sync::{Arc, Weak};
 
+use mokly_html::composition::CompositionAdmission;
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
@@ -12,13 +13,21 @@ use crate::workers::ArtifactWorker;
 use crate::{document_composition, resource_digests, validation};
 
 impl Session {
+    pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.raw_admitted(route, None)
+    }
+
     #[tracing::instrument(
         name = "render.document",
         skip_all,
         fields(viewport, scheme, cache_hit = false),
         err
     )]
-    pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
+    pub(crate) fn raw_admitted(
+        &self,
+        route: &str,
+        admission: Option<&dyn CompositionAdmission>,
+    ) -> Result<Arc<Artifact>> {
         let plan = self
             .state
             .plans
@@ -39,12 +48,16 @@ impl Session {
                 mokly_model::axes::ColorScheme::Dark => "dark",
             },
         );
-        if let Some(artifact) = self.state.cache.get(&plan.key) {
+        let cached = match admission {
+            Some(admission) => self.state.cache.get_admitted(&plan.key, admission),
+            None => self.state.cache.get(&plan.key),
+        };
+        if let Some(artifact) = cached {
             tracing::Span::current().record("cache_hit", true);
             return Ok(artifact);
         }
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = document_composition::document(self, plan, entry);
+        let result = document_composition::document(self, plan, entry, admission);
         match result {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(GraphError::Document {
@@ -53,20 +66,12 @@ impl Session {
             }),
         }
     }
-}
 
-impl ArtifactWorker for Session {
-    fn closure_job(&self, route: &str) -> Result<Closure> {
-        let artifact = self.artifact(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .expect("rendered document artifacts carry their composed tree");
-        self.walker()
-            .collect(route, &document.tree, &document.resources)
-    }
-    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let composed = self.raw(route)?;
+    pub(crate) fn finish_artifact(
+        &self,
+        route: &str,
+        composed: Arc<Artifact>,
+    ) -> Result<Arc<Artifact>> {
         let document = composed
             .document
             .as_ref()
@@ -104,6 +109,22 @@ impl ArtifactWorker for Session {
             self.state.inputs.closures.record(key, path);
         }
         Ok(artifact)
+    }
+}
+
+impl ArtifactWorker for Session {
+    fn closure_job(&self, route: &str) -> Result<Closure> {
+        let artifact = self.artifact(route)?;
+        let document = artifact
+            .document
+            .as_ref()
+            .expect("rendered document artifacts carry their composed tree");
+        self.walker()
+            .collect(route, &document.tree, &document.resources)
+    }
+    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
+        let composed = self.raw(route)?;
+        self.finish_artifact(route, composed)
     }
 }
 

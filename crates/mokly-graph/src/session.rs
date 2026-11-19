@@ -11,6 +11,7 @@ use mokly_html::composition::Composer;
 use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::background::{Completion, RootAdmission};
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::{Closure, Walker};
 use crate::collection::ComparisonCollector;
@@ -144,6 +145,19 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn render_background(
+        &self,
+        route: &str,
+        completion: Arc<dyn Completion>,
+    ) -> Result<Arc<Artifact>> {
+        self.check_cancelled()?;
+        let admission = RootAdmission {
+            cache: self.state.cache.clone(),
+            completion,
+        };
+        let composed = self.raw_admitted(route, Some(&admission))?;
+        self.finish_artifact(route, composed)
+    }
     fn comparison_identity(
         &self,
         read: ComparisonRead,

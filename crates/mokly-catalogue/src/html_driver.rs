@@ -22,11 +22,36 @@ pub trait DriverSink: TreeSink {
     fn after_token(&self);
 }
 
+/// A consumer of source tokens from the same pass that builds the HTML tree.
+pub trait TokenObserver {
+    /// Retain source evidence before the tree builder repairs or discards the token.
+    fn observe(&self, token: &Token);
+}
+
 /// Parse `text` as a document or as a fragment in a `body` element, and return the sink output.
 ///
 /// The parse disables scripting. It drops one leading byte order mark, as html5ever does, and
 /// keeps every span relative to `text`.
 pub fn drive<Sink: DriverSink>(text: &str, shape: HtmlShape, sink: Sink) -> Sink::Output {
+    run(text, shape, sink, None)
+}
+
+/// Build the tree and collect source evidence from its original token stream.
+pub fn drive_with_observer<Sink: DriverSink>(
+    text: &str,
+    shape: HtmlShape,
+    sink: Sink,
+    observer: &dyn TokenObserver,
+) -> Sink::Output {
+    run(text, shape, sink, Some(observer))
+}
+
+fn run<Sink: DriverSink>(
+    text: &str,
+    shape: HtmlShape,
+    sink: Sink,
+    observer: Option<&dyn TokenObserver>,
+) -> Sink::Output {
     let opts = TreeBuilderOpts {
         scripting_enabled: false,
         ..Default::default()
@@ -44,7 +69,7 @@ pub fn drive<Sink: DriverSink>(text: &str, shape: HtmlShape, sink: Sink) -> Sink
     } else {
         0
     };
-    let emitter = DriverEmitter::new(&builder, text, offset);
+    let emitter = DriverEmitter::new(&builder, text, offset, observer);
     match Tokenizer::new_with_emitter(&text[offset..], emitter).finish() {
         Ok(()) => {}
         Err(error) => match error {},

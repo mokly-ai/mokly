@@ -13,6 +13,7 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
+use crate::background::Completion;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
@@ -88,6 +89,15 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Render one admitted background owner; nested validation keeps its existing path.
+    fn render_background(
+        &self,
+        route: &str,
+        completion: Arc<dyn Completion>,
+    ) -> Result<Arc<Artifact>> {
+        completion.enter();
+        self.render(route)
+    }
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;
 

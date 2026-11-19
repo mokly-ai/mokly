@@ -1,6 +1,7 @@
 //! Document composition over the prepared catalogue and injected render boundaries.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 use std::mem;
 use std::sync::Arc;
 
@@ -19,7 +20,7 @@ use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::Expansion;
-use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
+use crate::fragment::{Fragment, FragmentRenderer, OwnedStyle, RenderKind};
 use crate::tree::Node;
 use crate::{
     assembly, component_root, error, links, raw_markers, regions, relative_links, source_locations,
@@ -59,8 +60,32 @@ pub struct Composed {
 /// Non-pure composition boundary: JavaScript fragments are injected.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComposerMock))]
 pub trait Composer: Send + Sync {
+    /// Compose within an owning background document's completion admission.
+    fn compose_admitted(
+        &self,
+        request: &ComposeRequest<'_>,
+        admission: &dyn CompositionAdmission,
+    ) -> Result<Composed> {
+        admission.enter();
+        self.compose(request)
+    }
     /// Compose a screen, component, or authored page with no file writes.
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed>;
+}
+
+/// Admission occurs outside every fragment flight and before a tree is composed.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CompositionAdmissionMock))]
+pub trait CompositionAdmission: Send + Sync {
+    /// Templates and custom composers retain their original document place.
+    fn enter(&self);
+    /// One successful own root may yield after its complete payload is charged.
+    fn root_fragment(&self, fragment: &Fragment, context_bytes: usize);
+}
+
+impl fmt::Debug for dyn CompositionAdmission + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("CompositionAdmission")
+    }
 }
 
 /// Core HTML renderer; no sidecar starts unless its fragment boundary needs one.
@@ -88,6 +113,23 @@ pub(crate) struct Engine<'a> {
 
 impl Composer for HtmlComposer {
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed> {
+        self.compose_with_admission(request, None)
+    }
+    fn compose_admitted(
+        &self,
+        request: &ComposeRequest<'_>,
+        admission: &dyn CompositionAdmission,
+    ) -> Result<Composed> {
+        self.compose_with_admission(request, Some(admission))
+    }
+}
+
+impl HtmlComposer {
+    fn compose_with_admission(
+        &self,
+        request: &ComposeRequest<'_>,
+        admission: Option<&dyn CompositionAdmission>,
+    ) -> Result<Composed> {
         let mut engine = Engine {
             invocation_sites: BTreeMap::new(),
             placed_slots: BTreeSet::new(),
@@ -123,6 +165,20 @@ impl Composer for HtmlComposer {
                 .variant_of
                 .as_deref()
                 .unwrap_or(&entry.metadata.path);
+            let admission = if request.catalogue.templates.contains_key(parent)
+                || request
+                    .catalogue
+                    .slot_fragments
+                    .get(&entry.metadata.path)
+                    .is_some_and(|slots| !slots.is_empty())
+            {
+                if let Some(admission) = admission {
+                    admission.enter();
+                }
+                None
+            } else {
+                admission
+            };
             let body_metadata = entry
                 .metadata
                 .variant_of
@@ -161,7 +217,7 @@ impl Composer for HtmlComposer {
                 } else {
                     RenderKind::Screen
                 };
-                engine.javascript(parent, kind, &context)?
+                engine.javascript(parent, kind, &context, admission)?
             };
             if matches!(entry.content, EntryContent::Component { .. }) {
                 engine.components.insert(0, parent.into());

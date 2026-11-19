@@ -79,6 +79,26 @@ composition root supplies its current capacity. `Workers` admits queued backgrou
 one at a time, in request order, whenever no foreground request is active.
 It runs each background document render in `RenderClass::Background`, so the
 sidecar calls of that render go after the other waiting head calls.
+
+A view of a JavaScript entry leaves the window's bound when it
+[hands off](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
+after its own root fragment returns. The `Window` then starts the next view,
+and it still reports in catalogue order. Each pass has its own `Window`, so the
+window bound counts only the views of the current pass. One `Stages` bound of
+the same size limits the views that build their documents. It serves every
+pass of the `UsagePass`, so the views of a replaced generation keep their
+completion places, and the bound counts them with the views of the current
+pass.
+
+A replaced view that has not handed off keeps its worker permit until it ends,
+and its active sidecar call keeps its claim. New starts can overlap such views
+only within the free workers and the sidecar capacity. Each view's `Stage`
+owns its worker permit, its completion place, and its byte lease. A handoff
+releases the worker. `Workers::stop` takes every worker permit and then drains
+the background jobs that released theirs. A `Documents` adapter that keeps the
+default `background_staged` keeps the original background call, so its view
+takes no completion place and keeps its worker for the whole call.
+
 Ready state installs the generation root, the base commit, Changes
 membership, moved paths, removed records, and per-view states, ignore ids, and
 evidence in one revision. Included details carry
@@ -230,6 +250,9 @@ generations.
   shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
+  `GraphDocuments::background_staged` passes the view's `Completion` to
+  `RenderGeneration::render_background`. The `Documents::background_staged`
+  default calls `background` and takes no completion place.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
@@ -244,14 +267,26 @@ generations.
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
-  usage pass's bounded batch, which keeps catalogue order for starts, warnings,
-  and failure reports.
+  bounded batch of the current usage pass, which keeps catalogue order for
+  starts, warnings, and failure reports. It counts only the views that have not handed off, and
+  a handoff event lets it start the next view.
+- [`src/background_stage.rs`](./src/background_stage.rs) defines `Stages`, the
+  completion bound that every pass of one `UsagePass` shares, and `Stage`, the
+  owner of one view's worker permit, completion place, and byte lease. `Stage`
+  implements the graph's `Completion`. Its handoff releases the worker and
+  wakes the window.
 - [`src/background_capacity.rs`](./src/background_capacity.rs) defines
   `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
+  `Work::background_staged` renders one view with its `Stage`, and its default
+  calls `background`.
   [`src/work_background.rs`](./src/work_background.rs) admits one background
-  render at a time and runs it in `RenderClass::Background`.
+  render at a time, attaches its worker permit to the view's `Stage`, and runs
+  it in `RenderClass::Background`.
+  [`src/work_active.rs`](./src/work_active.rs) counts the blocking background
+  jobs, so `Workers::stop` also waits for a job that has already released its
+  worker permit.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
 - [`src/render_request.rs`](./src/render_request.rs) and

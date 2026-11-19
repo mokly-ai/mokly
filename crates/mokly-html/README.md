@@ -30,6 +30,14 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
+`Composer::compose_admitted` composes a Serve background view under a
+`CompositionAdmission`. The default enters completion and then calls
+`compose`, so a custom composer keeps its document place. `HtmlComposer`
+enters before it composes a template or saved slot fragments. For other
+entries, it reports the entry's own root fragment once, after that fragment
+returns without failure, with the capacity of the root contexts. Nested
+component fragments report nothing.
+
 `parse::html` reads HTML through the catalogue's shared HTML driver with
 scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
 give `AuthoredHtml`, and all other HTML is `DeliveredHtml`. Authored parses
@@ -98,7 +106,9 @@ for the attributes that it removes, once per page and attribute, with the
 page's `entry` subject. The
 [HTML screens contract](../../docs/protocol/mokly-html-screens.md#links-and-markers)
 defines which wrapper the message names. Composition reports these warnings
-before the page and source checks run, so a later failure keeps them. Unknown
+before the page and source checks run, so a later failure keeps them. Those
+checks read the first driver pass of the callback HTML. The plaintext repair
+pass does not feed them. Unknown
 attribute values are not evaluated. Strict builds fail on these warnings.
 Reserved navigation names are not unknown attributes: composition keeps them,
 as the authored parse does, and reserved navigation metadata keeps its
@@ -177,7 +187,11 @@ aligned byte must equal its source byte or be an LF from a CR.
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
   `HtmlComposer`, which compose a screen, component, or page from a
-  `ComposeRequest` into a `Composed` document.
+  `ComposeRequest` into a `Composed` document. It also defines
+  `CompositionAdmission`, which `Composer::compose_admitted` uses to enter
+  completion or to report the own root fragment of a background view.
+- [`src/root_context_weight.rs`](./src/root_context_weight.rs) computes the
+  capacity charge of the root contexts that an admitted root fragment keeps.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
   records.
@@ -185,9 +199,18 @@ aligned byte must equal its source byte or be an LF from a CR.
   owned HTML5 tree with explicit composition regions.
 - [`src/parse.rs`](./src/parse.rs) provides `html`, which parses authored or
   delivered HTML through the catalogue's shared driver with scripting disabled.
-  The input type chooses the parse.
+  The input type chooses the parse. Its crate-private `consumer` parses
+  callback HTML once and returns the tree with the `SourceChecks` of that pass.
 - [`src/pipeline/runner.rs`](./src/pipeline/runner.rs) runs that driver with
-  the tree arena and applies the plaintext repair.
+  the tree arena and applies the plaintext repair. It gives an optional token
+  observer the original input only, so the repair pass cannot replace the
+  source evidence.
+- [`src/source_checks.rs`](./src/source_checks.rs) defines `SourceChecks`, the
+  token observer that keeps the page tag counts and the first
+  reserved-navigation or duplicate-attribute violation of callback HTML. Its
+  `validate` reports a page structure failure before that violation. The
+  public `validate` and `page` functions run the same checks over their own
+  token pass.
 - [`src/html_sink.rs`](./src/html_sink.rs) implements the html5ever
   `TreeSink` and the `DriverSink` hooks for the tree arena.
 - [`src/serialize.rs`](./src/serialize.rs) provides `html`, which writes

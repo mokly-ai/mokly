@@ -12,7 +12,8 @@ writes no files.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
 - Encode documents losslessly for the compact tier and the comparison capture.
-- Render all views through an injected worker pool.
+- Render views through an injected worker pool, and Serve background views on
+  their caller's thread.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
 - Validate logical anchors across destination views.
@@ -50,6 +51,23 @@ Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.
 
+`RenderGeneration::render_background` renders one Serve background view under
+the
+[on-demand background rules](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
+A prepared generation runs `check_cancelled`, then renders on the caller's
+thread instead of the render workers. The default enters the view's
+completion place and then calls `render`. A wrapper that does not forward it
+therefore keeps its worker and never hands off. The view's
+`background::Completion` owns its completion place. Through the private
+`RootAdmission`, the view enters that place before it composes a Markdown
+document, a template, or saved slots. It also enters before a cached document
+exposes its tree. After its own root fragment returns, `RootAdmission` charges
+the fragment, the root contexts, and the queue metadata through
+`RenderCache::reserve`. A granted `ByteLease` hands the view off. A refused
+charge only enters the completion place. A failed root fragment returns its
+error without an admission. Link checks inside the view use the ordinary path
+and never hand it off.
+
 Resources found during composition enter a leased dependency index. Each
 recipe retains its first observed digests. Later preparations add changed
 resource digests to its key. Usage completion alone keeps the published key.
@@ -84,8 +102,8 @@ requested identities in the document key.
 `MemoryCache` implements `dyn RenderCache` with a full tier and a compact tier
 under one total byte bound. `MemoryCache::new` takes that total and the ceiling
 of the compact tier. One sixteenth of the total is fixed headroom for documents
-in transit and their encoding workspace. The full and compact tiers share the
-rest. Each tier evicts by access order. The full tier charges document bytes,
+in transit and their encoding workspace. The full and compact tiers and the
+active byte leases share the rest. Each tier evicts by access order. The full tier charges document bytes,
 parsed trees, and evidence, including registry ownership in documents and fragments. The charge
 is an estimate of retained memory. Usage, instance, and slot records count at
 twice their JSON length. When the full tier evicts a document, the cache
@@ -95,7 +113,12 @@ allocates on first use and keeps a 384 KiB headroom charge while idle or active,
 up to 3 MiB for all eight. The encoder reuses its compressor and serialization
 buffers between documents. If the document and workspace charges do not fit,
 or no lease is free, the document leaves the cache and counts as an eviction.
-Inserts never wait. A reservation handle releases the document charge and
+Inserts never wait. `reserve` never waits either. It evicts the oldest compact
+and full entries without encoding them, and it refuses a byte lease that the
+shared part cannot hold. A `ByteLease` returns its bytes when its owner drops
+it. `get_admitted` enters the caller's completion admission only for a key that
+the cache holds, before it reads that entry. A reservation handle releases the
+document charge and
 returns the lease on every exit path, including encoding failure. Encoding runs outside the lock. Its
 completion transfers the document from transit to the compact tier in one
 locked step. The compact tier uses room from evicted full entries up to its
@@ -111,8 +134,8 @@ and a replacement would keep the same charge, an `insert` only refreshes its
 access order. It computes no new charge, and it still counts as a cache
 operation. A failed restore removes the entry, counts as a miss and as a
 restore failure, and logs an error without document data. `stats` reports the
-charged bytes of both tiers, transit, and encoder leases, retained artifact
-entries, and the hit,
+charged bytes of both tiers, transit, encoder leases, and active byte leases,
+retained artifact entries, and the hit,
 restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
@@ -141,7 +164,9 @@ failure names the referring route of the current check and the destination
 route.
 
 `document_codec::EncodedView` is the lossless compact form of one document. The
-compact tier and the base and head captures of `mokly-compare` share it.
+compact tier and the base and head captures of `mokly-compare` share it. It
+encodes trees with `postcard` and compresses trees and bytes with zlib through
+`flate2`.
 `EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
 annotations without parsing authored HTML, or returns a
 `document_error::CodecError`. An encoded view also lends its retained usage
@@ -318,7 +343,9 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call.
+  static output call. `RenderGeneration::render_background` renders one
+  admitted Serve background view, and its default enters completion before it
+  calls `render`.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -328,7 +355,17 @@ retention disabled.
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
   `Artifact`, and `CacheStats`, the render cache with its full and compact
-  tiers.
+  tiers. `RenderCache::reserve` grants a byte lease from the retained share,
+  and `RenderCache::get_admitted` enters completion before a cached tree is
+  exposed.
+- [`src/cache_lease.rs`](./src/cache_lease.rs) defines `ByteLease`, a
+  retained-byte reservation that returns its bytes when its owner drops it.
+- [`src/background.rs`](./src/background.rs) defines `Completion`, the
+  completion place and dispatch release of one Serve background view. Its
+  private `RootAdmission` enters that place, or charges a successful own root
+  fragment for a handoff.
+- [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
+  charge of an admitted root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
   the lossless compact document that the compact tier and the comparison
   capture share.
@@ -385,6 +422,7 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).

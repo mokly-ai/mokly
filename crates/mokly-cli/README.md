@@ -35,7 +35,9 @@ lazy sidecar pool. `--sidecars` and `MOKLY_SIDECARS` set an exact size.
 The default uses the core count as its upper bound and applies the
 [memory admission rules](../../docs/protocol/mokly-sidecar-memory.md#default-admission).
 Each command also creates one render cache at its entry point and uses it
-across catalogue preparation, document rendering, and live prop previews.
+across catalogue preparation, document rendering, live prop previews, and the
+[handoff charges](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
+of Serve's background views.
 The timing layer of `--debug-timings` reads the same cache for its cache
 counts. Head and base renders use `mokly_render::runtime::Runtime` with that
 shared pool and cache. The npm shim supplies its package root and Node
@@ -91,8 +93,13 @@ candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
 The usage pass reads the current sidecar capacity before each view starts.
-Its sliding window uses the smaller of that capacity and the worker count.
-Both source roots share that capacity. A shared admission
+Its sliding window bounds the current pass, and its completion bound also
+counts the views of a replaced pass that still complete. Both use the smaller
+of that capacity and the worker count. Both source roots share that capacity. A
+background view renders its document on its own admitted blocking thread, not
+on the shared render workers. So a view that waits for a sidecar holds no
+render worker that another view needs. HTTP renders, build, and comparison
+keep the shared render workers. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background
@@ -335,7 +342,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
   provider and its cancellations. Its `Source::comparison_attempt` begins one
   fenced reuse attempt.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
-  `comparison_reuse::MemoryComparisons` service.
+  `comparison_reuse::MemoryComparisons` service. It also composes `UsagePass`,
+  whose `UsageCapacity` gives both background stages the smaller of the worker
+  count and the sidecar limit.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

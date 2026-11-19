@@ -150,8 +150,8 @@ impl BackgroundCapacity for UsageCapacity {
     }
 }
 
-/// The background pass renders no more views at once than Serve has workers or
-/// sidecar admission slots, so its renders never queue for a sidecar among themselves.
+/// Each background stage uses the smaller worker and sidecar admission bound.
+/// A started view retains its place when capacity falls.
 fn background_batch(workers: u32, sidecars: usize) -> usize {
     (workers as usize).min(sidecars)
 }

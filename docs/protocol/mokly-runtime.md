@@ -46,30 +46,30 @@ viewport and colour scheme. A page renders once. A Markdown document renders
 once per enabled colour scheme. A watched change renders only the outputs whose
 inputs changed. A component with the same props on many screens renders once.
 
-The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
-The tiers share 240 MiB and evict the least recently used entry. Compaction reserves
-three times the document charge and one of eight encoder leases under one lock.
-Encoders allocate on first use and retain 384 KiB each, at most 3 MiB, while idle
-or active. If charges do not fit or no lease is free, the document leaves and counts
-as an eviction. Inserts never wait. Every exit returns the lease and releases the
-document charge. Encoding runs outside the lock. Completion moves transit to compact
-under one lock. Other evicted artifacts leave. Compact takes room from evicted full
-entries, up to 128 MiB. Full keeps at least 112 MiB. A catalogue fitting 240 MiB
-never restores. Reads check full, transit, then compact. Transit returns full artifacts.
-Compact restores exact bytes, trees, and trusted annotations. `postcard` encodes
-compact trees. `flate2` compresses trees and bytes with zlib. Only a second
-restore within fewer operations than full has entries promotes. A full pass
-never promotes. A document that compact cannot keep or restore leaves the cache.
-Decision: keep evicted documents compact. Rejected: a larger bound that still
-thrashes; a fixed tier split that reduces room for fitting catalogues; a
-scan-resistant order that still misses when the head exceeds the bound; a Serve
-head capture read by the base, because it only serves Changes and adds a copy.
-Both sides share equal keys with no side warning. Serve reads the head from the
-cache. A missing head document renders again on the head root. Each
-[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
-bound. The base-side extraction cache, the dependency install cache, and the bundle
-cache live in the operating system's cache directory under a key derived from the
-repository path, each with its own byte bound, and the terminal names that directory.
+The 256 MiB render cache reserves 16 MiB for transit and encoding. The tiers and the background
+[handoff charges](./mokly-on-demand.md#background-work-and-replacement) share 240 MiB. Each tier evicts in
+its own access order. Inserts and charges never wait. A handoff charge evicts compact entries until that
+tier fits the remaining room, then full entries until both tiers fit, without compaction. A charge that
+cannot fit is refused.
+
+Compaction reserves three times the document charge and one of eight encoder leases. Encoders allocate on
+first use and retain 384 KiB each, at most 3 MiB, while idle or active. If charges do not fit or no lease
+is free, the document leaves and counts as an eviction. Every exit returns the lease and the document
+charge. Other evicted artifacts leave, and compact takes room from evicted full entries, up to 128 MiB.
+Full keeps at least the larger of zero and 112 MiB less the active handoff charges.
+
+A catalogue fitting 240 MiB with its active handoff charges never restores. Compact restores exact bytes,
+trees, and trusted annotations. Only a second restore within fewer operations than full has entries
+promotes, so a full pass never promotes. A document that compact cannot keep or restore leaves the cache.
+Decision: keep evicted documents compact. Rejected: a larger bound that still thrashes, a fixed tier split
+that reduces room for fitting catalogues, a scan-resistant order that still misses when the head exceeds
+the bound, and a Serve head capture read by the base, because it only serves Changes and adds a copy.
+
+Both sides share equal keys with no side warning. Serve reads the head from the cache, and a missing head
+document renders again on the head root. Each
+[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own bound. The base extraction,
+dependency install, and bundle caches live in the operating system's cache directory, under a key derived
+from the repository path. Each has its own byte bound, and the terminal names that directory.
 
 ## Serve
 
