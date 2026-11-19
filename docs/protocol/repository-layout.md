@@ -77,6 +77,7 @@ paths hold Mokly Cloud:
 
 - `apps/`;
 - every `mkc-` crate under `crates/`;
+- `docs/mockups/`, the cloud mockup catalogue;
 - `packages/tokens/`;
 - `infra/`;
 - `scripts/cloud/`.
@@ -90,8 +91,10 @@ third-party file that names its own license, such as a notice under an AGPL
 path, keeps that license.
 
 The MIT License covers every other path: the Mokly crates and packages,
-`xtask`, the docs, the cloud mockups under `docs/mockups/`, and the plans.
+`xtask`, the other docs, and the plans.
 
+Decision: the cloud mockups are an AGPL path, because they import the cloud
+tokens and app modules, and MIT code never depends on AGPL code.
 Decision: AGPL-3.0 for the cloud paths and MIT for the rest, so that a
 competing host of the cloud must publish its changes. MIT for everything, MIT
 with a trademark policy, a source-available license for the cloud paths, and

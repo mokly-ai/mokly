@@ -326,7 +326,7 @@ and cloud project names its own entry points.
 
 Mokly is available under the [MIT License](./LICENSE). Mokly Cloud is
 available under the GNU Affero General Public License, version 3 only. Its
-paths are `apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and
-`scripts/cloud/`. [`LICENSE`](./LICENSE) names these paths, and
+paths are `apps/`, the `mkc-` crates, `docs/mockups/`, `packages/tokens/`,
+`infra/`, and `scripts/cloud/`. [`LICENSE`](./LICENSE) names these paths, and
 [`LICENSES/AGPL-3.0-only.txt`](./LICENSES/AGPL-3.0-only.txt) holds the AGPL
 text.

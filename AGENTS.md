@@ -127,8 +127,8 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
   and it uses the workspace `@mokly/*` packages and `mokly-*` crates directly,
   not published releases.
 - Every cloud crate has the `mkc-` prefix. `LICENSE` is MIT and names the
-  AGPL paths: `apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and
-  `scripts/cloud/`. `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text, and
+  AGPL paths: `apps/`, the `mkc-` crates, `docs/mockups/`, `packages/tokens/`,
+  `infra/`, and `scripts/cloud/`. `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text, and
   each Cargo or npm manifest under an AGPL path says `AGPL-3.0-only`. A new `mkc-` crate or
   cloud project follows the same rules. Every other path, the docs and the
   plans included, is MIT.

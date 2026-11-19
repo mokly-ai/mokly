@@ -81,6 +81,10 @@ the three open decisions. The check report is under
   freeze: nothing more merges into cloud `main`, and open cloud work moves
   here after the merge. Rejected: a GitHub ruleset that blocks merges into
   cloud `main`, and the end of the freeze with a port of each later commit.
+- License of the cloud mockups, answered on 2026-11-19 (option B).
+  `docs/mockups/` becomes an AGPL path, because its mockups import the AGPL
+  tokens and app modules. Rejected: an MIT exception, MIT tokens, and a
+  boundary check over every MIT path.
 - Verification, instructed on 2026-11-19. Local runs cover the targeted
   tests only. The CI of the pull request runs the full suite.
 
