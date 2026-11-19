@@ -1,6 +1,6 @@
 # Combine Mokly Cloud into the Mokly repository
 
-Status: Active. On branch `calummoore/combine-mokly-cloud-into-repo-704s`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #350](https://github.com/mokly-ai/mokly/pull/350) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Mokly Cloud is the hosted companion of the open-source Mokly packages. It
 publishes the catalogue of each branch, posts a GitHub check, and hosts the
@@ -85,6 +85,12 @@ the three open decisions. The check report is under
   `docs/mockups/` becomes an AGPL path, because its mockups import the AGPL
   tokens and app modules. Rejected: an MIT exception, MIT tokens, and a
   boundary check over every MIT path.
+- Release verification, answered on 2026-11-19. Release preparation
+  publishes only with applicable CI evidence of the tagged tree. The
+  release-time complete gate is removed.
+- Published-CLI consumers, answered on 2026-11-19 (option E). The build
+  fallback and the publication smoke use `@mokly/mokly@latest`, and the
+  contract fixtures carry no release number.
 - Verification, instructed on 2026-11-19. Local runs cover the targeted
   tests only. The CI of the pull request runs the full suite.
 
