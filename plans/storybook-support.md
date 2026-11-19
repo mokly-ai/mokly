@@ -135,13 +135,13 @@ and 11 needed no decision, and Milestone 3 fixes them.
   default. Rejected: esbuild plugins, A; JavaScript only, B; Vite for every
   project, D; webpack and Rspack too, E. Reason: Vite is Storybook's default
   builder, and C removes both the JavaScript and the CSS copies. Decision 22
-  below is open and blocks Milestone 14.
+  below settles a missing Vite.
 - **17. The Vite setup: E.** With a Storybook folder, Mokly loads
   Storybook's merged Vite setup for every JavaScript entry. An optional
   `mokly.vite.config.ts` can change that setup. Rejected: the app config only,
   A; a file that the project writes, B; two setups, C; D without the
   optional file. Reason: stories match Storybook, and each module loads once.
-  Decision 18 below is open and blocks Milestone 30.
+  Decision 18 below settles several Storybook folders.
 
 The options check of 2026-11-06 rewrote the root questions of decisions 18
 and 19, added options E and F to each, and raised decisions 20, 21, and 22.
@@ -211,6 +211,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   spike.
 - **Action:** ask the user, because A and F add a configuration error, B adds
   a warning that fails `--strict`, and E needs a spike.
+- **Answer:** E, chosen by the user on 2026-11-19, with a spike first in its
+  own workspace. Milestone 37 runs the spike. When the spike shows that E
+  cannot work, this decision goes back to the user with the evidence.
 
 ### 19. Ids of story component uses
 
@@ -401,6 +404,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Recommendation:** A. The project asked for its own build setup, so
   esbuild output without a clear failure would mislead.
 - **Action:** ask the user, because A adds a new case of a build error.
+- **Answer:** A, chosen by the user on 2026-11-19.
 
 ## Design calls
 
@@ -467,10 +471,12 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     and current catalogues keep esbuild.
 18. For a catalogue with one Storybook folder, each sidecar process runs one
     Vite server for its source root, with Vite's own watcher off. Mokly's
-    watcher invalidates changed modules. Decision 18 settles several
-    folders. Reason: a sidecar process serves one source root.
-19. Mokly resolves `vite` from the project. Decision 22 settles a missing
-    `vite`. Reason: Mokly ships no private runtime.
+    watcher invalidates changed modules. With several folders, decision 18
+    chose E: one Vite server for each folder, which feed one module runner.
+    Reason: a sidecar process serves one source root.
+19. Mokly resolves `vite` from the project. A missing `vite` fails `bundle`
+    with `bundle-failed`, as decision 22 chose. Reason: Mokly ships no
+    private runtime.
 20. Under the adapter, Mokly removes Storybook's browser-only plugins, such
     as its entry, docgen, globals, and stats plugins, with the public
     `withoutVitePlugins` helper. Reason: a render does not need them.
@@ -478,8 +484,9 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     setup as an inline module. Reason: plugins such as Tailwind's then run.
 22. The optional file exports `defineMoklyVite` from `@mokly/mokly/vite`. Its
     `app()` and `storybook()` loaders run only when called. For one
-    Storybook folder it returns one setup. Decision 18 settles several
-    folders. Reason: a project can avoid a broken Storybook release.
+    Storybook folder it returns one setup. With several folders, the spike
+    of decision 18 settles its shape. Reason: a project can avoid a broken
+    Storybook release.
 23. A static scan of the preview file finds `sb.mock()` calls for the
     `storybook-mock-without-vite` warning. Reason: the preview file does not
     run before the bundle.
@@ -511,12 +518,13 @@ answers. The ledger of the workspaces is in
 | A. Mockups                 | 1          | Nothing                                          |
 | B. Story reading           | 2 to 8     | Nothing                                          |
 | C. Imported assets         | 9 to 12    | Nothing                                          |
-| D. Vite adapter            | 13 to 17   | Nothing. Milestone 14 also waits for decision 22 |
+| D. Vite adapter            | 13 to 17   | Nothing                                          |
 | E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
 | F. Failed stories          | 23 to 25   | Tracks A and B                                   |
 | G. Storybook links         | 26 to 29   | Tracks A and E                                   |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, and E, and decision 18              |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                            |
 | I. Story component usage   | 34 to 36   | Tracks B and D, and decisions 19 and 21          |
+| J. Spike for decision 18   | 37         | Nothing                                          |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -943,7 +951,7 @@ Depends on: 26, 27, 28
 
 ## Milestone 30: Storybook setup on Vite documentation
 
-Depends on: 12, 17, 22, and the answer to decision 18
+Depends on: 12, 17, 22, 37
 
 Track H. The protocol states the Storybook setup rules of decision 17, with
 the answer to decision 18, and the `sb.mock()` warning of decision 12.
@@ -1039,7 +1047,30 @@ Depends on: 34, 35
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 37: Verification, commit, review, and pull request
+## Milestone 37: Spike for several Storybook folders
+
+Depends on: none
+
+Track J. Decision 18 chose E, with a spike first. The spike tests whether one
+module runner can run every file once while each file compiles with the
+Vite setup of the Storybook folder that owns it.
+
+- [ ] Build a scratch monorepo with two Storybook folders whose setups differ
+      in an alias, a plugin, and an `sb.mock()` call, and a module that both
+      packages import.
+- [ ] Prove or refute, with a prototype under `.context/`: each file compiles
+      with its owner's setup, the shared module loads once, virtual modules
+      and ids reach the right server, the module graph and the consumed bytes
+      stay complete, and the base side and Serve invalidation can work the
+      same way.
+- [ ] Measure the cost against one setup.
+- [ ] Record the result in decision 18, and update the TODOs of milestones 30
+      and 32 and design calls 18 and 22. When the spike refutes E, give
+      decision 18 back to the user with the evidence.
+- [ ] Commit, push, and open a pull request into this branch. The prototype
+      stays under `.context/`.
+
+## Milestone 38: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
