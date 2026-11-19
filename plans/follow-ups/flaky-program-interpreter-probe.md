@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-19, during the environment-token probe investigation at `f4f0082fd4bc8a6ffb2575f7416c37a216dfd0dd`.
-- **Location:** `crates/mokly-compare/tests/program_tests.rs:67` to line 117, especially the parent assertion at line 113.
+- **Location:** `crates/mokly-compare/tests/program_tests.rs:68`, with the parent test at line 99 and its status assertion at line 116.
 - **Reason:** This is a separate unchanged test from the environment-token test that the branch fixes.
 
 - **Source:** Implementation.

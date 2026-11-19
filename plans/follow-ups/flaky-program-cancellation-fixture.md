@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-19, while tracing the environment probe at commit `f4f0082fd4bc8a6ffb2575f7416c37a216dfd0dd`.
-- **Location:** `crates/mokly-compare/tests/program_tests.rs:178`, with fixture creation at line 189 and the FIFO read at line 224.
+- **Location:** `crates/mokly-compare/tests/program_tests.rs:181`, with fixture creation at line 192 and the FIFO read at line 228.
 - **Reason:** This is a separate test and assertion from the environment-token probe that the branch fixes.
 
 - **Source:** Implementation.
@@ -58,7 +58,7 @@
   - Confirmed evidence names `ETXTBSY` for two hangs. It does not establish the first untraced run's cause.
   - A separate 1,000-run whole-binary baseline with debug information disabled passed every run.
   - This passing baseline does not remove the two traced fixture start failures.
-  - Final investigation counts include seven cancellation hangs across the before and after batches.
+  - Before the process-code merge, investigation counts included seven cancellation hangs across the before and after batches.
   - Four hangs have a traced manager exec failure with `ETXTBSY`.
   - The other three hangs have no trace of the manager start. Their exact start outcomes remain unknown.
   - The final unchanged workspace-feature baseline made 1,000 untraced attempts during actual workspace test execution.
@@ -77,6 +77,11 @@
   - Its token probe passed in all 1,000 attempts.
   - These after batches changed only the token fixture setup. They left the cancellation test unchanged.
   - Together, untraced runs 520, 97, and 560 have unknown manager start outcomes.
+  - After the bounded-stop and background-reaper changes merged from `main` at `c05a9d47b`, another 1,000 fixed whole-binary runs had 999 complete passes and one cancellation hang.
+  - The environment-token probe passed all 1,000 attempts.
+  - The manager fixture again failed to start with `ETXTBSY`, before the new reaper could start.
+  - The test then waited on its FIFO before cancellation.
+  - This raises the recorded total to eight hangs, with five traced `ETXTBSY` starts and three unknown start outcomes.
 - **Problem:** A failed fixture start leaves the test waiting on the FIFO before it can inspect the worker result. Parallel child starts can inherit the fixture's writable descriptor and cause `ETXTBSY`.
 - **Impact if no action:** A required Rust test can wait forever until an outside job guard stops it. The gate loses the fixture start error.
 - **Root question:** How does the cancellation test start its shell tree without a writable executable shared with parallel process starts?
@@ -95,10 +100,10 @@
 - **Related:**
   - [flaky-program-interpreter-probe.md](./flaky-program-interpreter-probe.md)
     records another failure in the same test file. Its source remains unknown.
-  - [install-pipe-wait-after-stop.md](./install-pipe-wait-after-stop.md)
-    concerns surviving children that hold output pipes after a stop. This
-    failure has no running manager and blocks before cancellation. That
-    item's product fix does not settle it.
+  - The bounded stop in `crates/mokly-compare/src/process.rs` concerns
+    surviving children that hold output pipes after a stop. This failure
+    has no running manager and blocks before cancellation. The bounded
+    stop does not settle it.
 - **Recommendation:** A. It removes the writer race with one test setup change and keeps the tested cancellation behaviour.
 - **Action:** fix after merge, apply A, because this separate test predates the probe fix and needs its own branch.
 
