@@ -159,8 +159,10 @@
 - **Wider fix:** D, if a reproduction confirms unrelated ancestor churn. It is
   blocked, because it changes the stable-capture rule.
 - **Previous examples:**
-  - `plans/follow-ups/flaky-program-environment-probe.md` records another
-    flaky test whose source was unknown at the first failure.
+  - The environment-token probe in
+    `crates/mokly-compare/tests/program_tests.rs` had an unknown source at
+    its first failure. A later process trace found an inherited writable
+    fixture handle, which caused `ETXTBSY`.
   - On the branch of this item, the new sibling test
     `serve_plans_reject_an_added_earlier_absolute_paths_target` failed in the
     second complete gate with "Mock for BundleStore::save was never called.
