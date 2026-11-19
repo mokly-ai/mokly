@@ -4,6 +4,7 @@
 
 mod bundle;
 mod bundle_attempt;
+mod bundle_finish;
 mod bundle_inputs;
 mod declarations;
 mod definition_handle;
@@ -18,6 +19,7 @@ mod fragments;
 mod graph;
 mod input_stamp;
 mod leases;
+mod persistent_identity;
 pub mod physical_inputs;
 mod postcss;
 mod postcss_cache;
@@ -28,6 +30,7 @@ mod postcss_scan;
 mod postcss_turns;
 mod render_environment;
 pub mod runtime;
+mod runtime_factories;
 pub mod side;
 mod source_evidence;
 mod source_lease;

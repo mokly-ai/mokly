@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md). Serve does not read or write the render store yet. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects it.
+Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The

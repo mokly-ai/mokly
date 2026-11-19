@@ -25,12 +25,12 @@ struct Payload {
 
 /// Immutable compressed tree/bytes with Rust metadata outside the codec.
 pub struct EncodedView {
-    payload: Box<[u8]>,
-    bytes_len: usize,
-    tree_len: usize,
-    record_count: usize,
-    metadata: Metadata,
-    metadata_bytes: usize,
+    pub(crate) payload: Box<[u8]>,
+    pub(crate) bytes_len: usize,
+    pub(crate) tree_len: usize,
+    pub(crate) record_count: usize,
+    pub(crate) metadata: Metadata,
+    pub(crate) metadata_bytes: usize,
 }
 
 impl EncodedView {
@@ -217,3 +217,7 @@ mod document_optional_tests;
 #[cfg(test)]
 #[path = "_tests_/document_identity_tests.rs"]
 mod document_identity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/document_persistence_tests.rs"]
+mod document_persistence_tests;

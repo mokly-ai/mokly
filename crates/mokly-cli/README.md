@@ -20,7 +20,7 @@ other crate depends on it.
 - Keep one captured base in Serve between classifications, and reuse it while
   its key and its freshness checks hold.
 - Compose one rendering runtime, sidecar pool, bundle store, and render cache
-  per command.
+  per command, and the render store in Serve.
 
 ## What This Crate Does
 
@@ -78,6 +78,17 @@ reports readiness, `ServeServices::head_published` switches each later head
 preparation to `serveEdit`. Those preparations capture no reuse evidence and
 offer nothing to the bundle cache. The base side of Serve, `build`, and
 `publish` keep the `full` mode.
+
+Serve also composes the
+[render store](../../docs/protocol/mokly-render-store.md). `render_store_runtime`
+builds one `DocumentWriter` over the `renders` kind at the same cache location,
+with the `CAPACITY` bound, and `Runtime::with_document_store` gives it to the
+head and base graphs. The writer reads the native build identity and indexes
+the store while Serve starts. `serve_changes` calls `resume` after each
+completed Changes result, so the store writes nothing before the first one. The
+writer prints the cache warnings through the command's diagnostics, and its
+state reaches `--debug-timings` as `render.store` records. `build` and
+`publish` compose no render store.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -221,6 +232,12 @@ and process-recovery fixtures. Publish cleanup tests cover the allocated
 private directory and symbolic-link boundaries. The Windows MSVC binary
 reserves an 8 MiB main-thread stack through its linker settings in
 [`build.rs`](./build.rs), matching Linux and macOS main-thread headroom.
+`build.rs` also embeds `MOKLY_NATIVE_BUILD`, a new nonce for each native build,
+in the build identity of the render store. Linux adds the digest of the running
+executable. Other targets use only the nonce, so `build.rs` names an invocation
+marker that never exists. Cargo then runs the build script and relinks the
+binary on every build of those targets, also when only a dependency feature
+changed.
 
 ### Key Code
 
@@ -240,6 +257,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
   of one command over a `DiskCache` that the command's cancellation stops,
   and maps each store outcome to its warning lines.
+- [`src/render_store_runtime.rs`](./src/render_store_runtime.rs) composes the
+  render store of Serve: the paused `DocumentWriter` over the `renders` kind,
+  its `Startup` identity, and its warning lines.
 - [`src/changes_runtime.rs`](./src/changes_runtime.rs) composes the Changes
   service of `build` and `publish`. Its `reporter` gives the one-shot
   `OnceReporter` that the bundle store shares.
@@ -279,8 +299,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
   `--debug-timings` layer of every command and writes its records.
   [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the
-  bounded allow-lists of the record fields, such as the `cache` values and
-  the view comparison reuse fields.
+  bounded allow-lists of the record fields, such as the `cache` values, the
+  view comparison reuse fields, and the `render.store` state fields.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -357,7 +377,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [Terminal output](../../docs/protocol/mokly-terminal-output.md),
   [cache output](../../docs/protocol/mokly-terminal-cache.md), and
   [comparison steps](../../docs/protocol/mokly-terminal-steps.md).
-- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
+- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+  and the [render store](../../docs/protocol/mokly-render-store.md).
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).

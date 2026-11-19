@@ -48,10 +48,30 @@ those browser checks and the real base, but does not wait for Changes or review
 availability. Its result omits those measurements. `all` keeps the four complete
 scenarios; `serve` includes delivered Changes and available review.
 Cold and warm runs each use a new Serve process and browser context.
-Both keep the native comparison caches. Cold means application-cold, not an
-empty disk cache. Serve prepares the pinned fixture base from its sources. HTML
-reads Git sources. React acquires source and dependency leases. The harness
-records the announced cache directory and never resets a baseline output.
+Before each cold run, the harness empties only the `renders` kind of the
+announced Mokly cache. Source, dependency, and bundle caches stay in place.
+The warm restart keeps the completed documents written by its cold run.
+After a successful cold measurement, the harness ends its time and memory
+measurements, then keeps Serve alive until Changes completes and its optional
+writer reports no queued or active work. It uses the highest writer sequence,
+so a late older state cannot end the wait. This wait also applies when focused
+startup browsing returns before Changes. The separate `warmSeedPreparation`
+records the completion, final writer state, and preparation cost. A legacy
+process without store-state events still waits for Changes completion and
+reports `not-observed`. This does not claim persistent reuse. The existing
+300-second wait guard applies. The harness then stops cold Serve before the
+warm restart. Writer drops remain possible under the product's cache rules.
+Cold does not mean a flushed operating-system page cache.
+If no earlier child in the same benchmark call announced the cache directory,
+the harness starts an unmeasured Serve process to obtain that announcement.
+It stops that process before the reset and before the measured clock starts.
+This discovery does not wait for full Changes or complete dependency warming.
+The report's `renderStorePreparation` records discovery and reset costs
+separately from the measured results. Discovery logs, memory, and timing records
+use `.context/{scenario}-cache-discovery` names. Each measured result records
+its own child's announced cache directory. Serve prepares the pinned fixture
+base from its sources. HTML reads Git sources. React acquires source and
+dependency leases. The harness never resets a baseline output.
 Serve reports delivered Changes readiness and review availability separately.
 Changes verifies the browser's own event stream, delivered index, Changes
 control, and advertised review. The unrelated CSS edit must list no Changes.
@@ -139,6 +159,10 @@ memory budget.
   records its setup.
 - [`scripts/large/benchmark.ts`](../../../scripts/large/benchmark.ts) holds
   `benchmark`, which runs the selected scenarios on a prepared fixture.
+- [`scripts/large/render_store.ts`](../../../scripts/large/render_store.ts)
+  observes cache announcements and resets only the render kind before cold runs.
+- [`scripts/large/render_store_seed.ts`](../../../scripts/large/render_store_seed.ts)
+  keeps cold Serve alive after measurement until its warm seed is complete.
 - [`scripts/large/setup_budget.ts`](../../../scripts/large/setup_budget.ts)
   and [`scripts/large/startup_budget.ts`](../../../scripts/large/startup_budget.ts)
   apply the setup and startup budgets.

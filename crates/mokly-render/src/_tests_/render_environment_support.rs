@@ -93,6 +93,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
         cache: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: Arc::new(ReuseEvidence {
                 uncaptured: None,
                 durable: true,

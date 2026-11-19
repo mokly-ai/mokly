@@ -1,6 +1,6 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: Serve has no render store yet, so its counts and its bound do not apply. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects the store. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) empties the store before each cold run of the scale fixture and sets the final store bound.
+Status: The 128 MiB render store bound is provisional. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
 
 ## Opt-In Timings
 
@@ -17,9 +17,10 @@ interleave with the JSON-lines contract.
 
 Each record has `schemaVersion: 1`, a process-local `session`, `pid`, `role`,
 `stage`, numeric `id`, optional `parentId`, and monotonic `elapsedMs` since
-the session began. `event` is `start`, `end`, or `counts`. Span ends add
-`durationMs` and `status` (`ok` or `error`). Counts carry named numeric
-totals. `role` is `core` for the Mokly binary and `sidecar` for a sidecar
+the session began. `event` is `start`, `end`, `counts`, or `state`. Span ends
+add `durationMs` and `status` (`ok` or `error`). Counts carry named numeric
+totals, and a `state` record carries the current state of the render store.
+`role` is `core` for the Mokly binary and `sidecar` for a sidecar
 process; the core forwards sidecar records on the same stderr stream
 unchanged. The stage names and available counts are diagnostic details, not a
 stable public API. No documents, props, file contents, environment values, or
@@ -46,6 +47,10 @@ its files are installed. Its Serve duration includes queue time.
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
 | `render.fragment`                                | the wait for one sidecar render, or an HTML component render in the core                                                             |
+| `render.store.read`                              | one render store lookup after a render cache miss                                                                                    |
+| `render.store.write`                             | one segment publication of the render store writer                                                                                   |
+| `render.store.identity`                          | the read of the native build identity of the render store                                                                            |
+| `render.store.initialize`                        | the render store preparation on its writer: the native build identity and the index                                                  |
 | `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module; carries `cache`                      |
 | `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                             |
 | `serve.ready`                                    | command start to the listening URL                                                                                                   |
@@ -129,12 +134,19 @@ Decision: one counts record for each phase. Fields on each phase's own
 counts record were rejected, because they would rename `cacheHits` and lose
 the counts of a failed review phase.
 
-In Serve, `render.cache` also counts the [render store](./mokly-render-store.md)
-in the same interval. `storeHits` and `storeMisses` count the store lookups
-that did and did not serve a document. `storeFaults` counts the entry faults.
-`storeWrites` counts the documents that the store kept, and `storeDrops`
-counts the offered documents that it dropped. A stored read is a render cache
-miss, so `hits` and `cacheHits` never count it.
+In Serve, each change of the [render store](./mokly-render-store.md) writes a
+`render.store` record with `event: "state"` and no `parentId`: the preparation,
+each lookup, each admitted or dropped offer, each writer batch, the resume of
+the writes, and the stop. `sequence` orders these records. `hits` and `misses`
+count the store lookups that did and did not serve a document, and `faults`
+counts the rejected entries. `writes` and `bytes` count the documents and the
+bytes that the writer published. `drops` counts the offered documents that the
+store did not keep. `queued` and `active` give the keys that wait and the keys
+of the active batch. The totals cover the whole process. A stored read is a
+render cache miss, so `render.cache` never counts it as a hit.
+Decision: the render store writes its own state records. Store fields in
+`render.cache` were rejected, because store writes run after the phases that
+`render.cache` covers.
 
 ## Review Spans
 
@@ -174,7 +186,8 @@ constant and other heavy work idle:
    server and browser context for an OS-warm restart; `changesReadyMs`
    waits for delivered Changes in Browse. "Cold" means application-cold,
    with no documents in the [render store](./mokly-render-store.md), not a
-   flushed page cache. The warm restart keeps the documents of the cold run.
+   flushed page cache. The warm restart keeps the documents that the cold run
+   stored.
 3. Changes: the `changes.classify` duration and the CSS share, cold and warm.
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.

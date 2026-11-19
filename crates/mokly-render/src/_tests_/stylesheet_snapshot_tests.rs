@@ -74,6 +74,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                         epoch: 0,
                         compiled: Arc::new(CompiledGeneration {
                             toolchain: "fixture".into(),
+                            metadata_identity: None,
                             reuse_evidence: Arc::new(ReuseEvidence {
                                 uncaptured: None,
                                 durable: true,

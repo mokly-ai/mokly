@@ -90,11 +90,12 @@ Contract owners:
 - **Wider fix:** E. Existing toolchain and compilation evidence closes the
   identity gaps without another exhaustive configuration list.
 - **Previous examples:** The bundle kind of the cache uses the same separation.
-- **Recommendation:** E, changed from A after the options check. It avoids
-  reuse from an earlier native or sidecar build at the same package version.
-  If per-document durable writes cannot retain a full pass, evaluate D with
-  E's identity before the measurement milestone. D best protects write cost.
-- **Action:** fix now, apply E. The store is the performance orchestrator's
+- **Recommendation:** D with E's identity, changed from A through E after the
+  options check and storage measurement. Individual durable writes reached
+  about 144 documents per second. Segment batches reached about 707. The
+  writer retained 99.2% of a 1,508-document synthetic pass. These development
+  measurements select batching, not the final startup acceptance result.
+- **Action:** fix now, apply D and E. The store is the performance orchestrator's
   call of 2026-11-19. This workspace's orchestrator adds the identity coverage
   on the same date to preserve output across local rebuilds and restarts.
 
@@ -149,6 +150,21 @@ details apply the existing measurement and common-cache requirements.
 
 Options-check evidence: `.context/persistent-render-store/plan-options-check.md`.
 
+Implementation details of the checked calls, recorded on 2026-11-19:
+
+- Call 1 E uses the actual Linux running image through `/proc/self/exe`.
+  Other targets use an embedded native build nonce. A missing invocation
+  marker makes each non-Linux native build refresh that nonce, including
+  a dependency-feature rebuild. This requires a CLI relink on a non-Linux
+  no-op native build. It preserves native identity without a new process.
+- Call 2 D prepares identity and the disk index on the existing writer.
+  Encoding waits until the first completed Changes publication, ready or
+  unavailable, after head validation. This keeps writes off the cold
+  publication path. Stored reads remain available during that interval.
+- The store publishes separate cumulative `render.store` state events.
+  A sequence orders events from different threads. The process-cache
+  counts keep their existing meaning.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -170,18 +186,21 @@ Retain lossless complete documents under the common cache rules. Keep failures
 optional and preserve the process-cache bound.
 
 - [x] Read relevant crate READMEs and Rust reference rules.
-- [ ] Add assertion-red tests through real public boundaries for durable
+- [x] Add assertion-red tests through real public boundaries for durable
       restart bytes, changed-key misses, damaged and foreign-entry misses,
       access-order eviction, and full-queue drops without a time assertion.
-- [ ] Implement the versioned payload and fixed-byte render cache kind.
-- [ ] Implement bounded writer admission and off-path writes. Check writer
+- [x] Implement the versioned payload and fixed-byte render cache kind.
+- [x] Implement bounded writer admission and off-path writes. Check writer
       lifetime, cancellation, durable publication, and concurrent readers.
-- [ ] Measure stored fraction and durable write throughput after one complete
+- [x] Measure stored fraction and durable write throughput after one complete
       cold pass. Avoid per-document namespace scans. Evaluate batched segment
       publication if individual durable writes cannot retain that pass.
-- [ ] Record measured sizes, queue behavior, and write cost under `.context/`.
-- [ ] Measure encoder-lease contention with the writer active. Keep its
+- [x] Record measured sizes, queue behavior, and write cost under `.context/`.
+- [x] Measure encoder-lease contention with the writer active. Keep its
       export reservations inside the existing process-cache headroom.
+
+Evidence: `.context/persistent-render-store/milestone-2-report.md` and the
+final root checks in `m2-root-clippy.log` and `m2-root-repeats.json` there.
 
 ## Milestone 3: Render integration and freshness
 
@@ -189,21 +208,69 @@ Depends on: 2
 
 Use stored compositions without bypassing validation or changing output.
 
-- [ ] Key stored documents with all required runtime, build, and configuration inputs.
+- [x] Key stored documents with all required runtime, build, and configuration inputs.
       Test the `jsconfig.json` chain, including changed and missing candidates.
-- [ ] Inject the shared store into head and base graph runtimes. Read after a
+- [x] Inject the shared store into head and base graph runtimes. Read after a
       memory miss. Offer fresh documents without blocking publication.
-- [ ] Prove that stored reads repeat closure, link, and usage work for their
+- [x] Prove that stored reads repeat closure, link, and usage work for their
       current side. Preserve root scheduling and memory admission.
-- [ ] Run targeted tests. Run each new asynchronous test ten times. Record
+- [x] Run targeted tests. Run each new asynchronous test ten times. Record
       assertion-red evidence, run times, and test counts under `.context/`.
-- [ ] Remove documentation status lines when the implementation meets them.
-- [ ] Check the upgrade guide against implemented behavior. Correct the cache
+- [x] Remove documentation status lines when the implementation meets them.
+- [x] Check the upgrade guide against implemented behavior. Correct the cache
       deletion wording for the accepted unsupported-input rule.
+
+## Milestone 3a: Store-cold benchmark preparation
+
+Depends on: 2
+
+The benchmark reset is independent of graph wiring. It uses the CLI's cache
+announcement and the `renders` kind, without copying platform cache paths.
+Any discovery Serve invocation is unmeasured benchmark preparation. The
+product starts no new process for this helper.
+
+- [x] Make the official large-fixture cold path empty only the render kind
+      before every measured cold start. Keep the other cache kinds and warm
+      writes. Keep the existing scenario results and timeouts.
+- [x] Prove reset behavior red first, then green. Check the new asynchronous
+      test ten times. Align the large-fixture README.
+
+Evidence: `.context/persistent-render-store/official-large-cold-report.md`.
+
+## Milestone 3b: Complete the warm measurement seed
+
+Depends on: 3 and 3a
+
+The cold benchmark can finish before Changes completes. Optional writes wait
+for that completion. Keep the cold process alive outside its measured window,
+so its warm restart can reuse the documents that the writer retains.
+
+- [x] Wait for completed Changes and the writer's idle state after the measured
+      cold phase. Use existing wait limits. Record this preparation separately.
+- [x] Prove the cold-to-warm seed and retained measured result count through
+      targeted tests and a real official benchmark smoke.
+- [x] Align the recipe field contract and the unsupported-input authoring guide.
+
+Evidence: `.context/persistent-render-store/official-large-warm-seed-report.md`,
+`release-smoke.log`, and the official HTML release smoke records there.
+
+## Milestone 3c: Validate the store timing event
+
+Depends on: 3b
+
+The complete gate found an existing test reader that recognizes only the
+three older timing event kinds. Extend that reader for the accepted store
+state event. Keep all existing envelope, span, and count assertions.
+
+- [x] Validate the new store state fields and require the event in the
+      existing Serve timing test. Rerun the affected test and viewer suite.
+
+Evidence: `.context/persistent-render-store/timing-validator-report.md` and
+`viewer-gate-fixed.log`.
 
 ## Milestone 4: Measurements and verification
 
-Depends on: 3
+Depends on: 3c
 
 Measure release builds against the last merged main in separate checkouts and
 target directories. Run Cargo builds one at a time. Check disk and memory first.
@@ -211,14 +278,14 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
 - [ ] Measure at least six interleaved cold and warm rounds on `examples/basic`
       and large HTML and React fixtures. Include unchanged and one-line-edit
       restarts. Compare Changes and published bytes. Measure ten-edit memory.
-- [ ] Update the large-fixture cold-run path to clear only the render kind.
-      Keep its source, dependency, and bundle caches. Align the fixture README.
 - [ ] Send the pushed implementation SHA and dist build commit to the
       performance orchestrator for `mokly-cloud` measurement immediately.
+- [ ] Commit and push a measurement candidate after its targeted and required
+      gate checks. This lets the cloud measurement run before final acceptance.
 - [ ] Confirm the cloud goals: at least four seconds sooner on warm restart,
       cold startup no more than 2% slower, memory peak no more than 2% higher.
-- [ ] Run the strict example build and Serve smoke check.
-- [ ] Run `cargo xtask check --suite repository` and `cargo xtask check` with
+- [x] Run the strict example build and Serve smoke check.
+- [x] Run `cargo xtask check --suite repository` and `cargo xtask check` with
       Git 2.45 or later, git-lfs, pinned Bun, and locked Cargo dependencies.
       Record any machine blocker and each suite that ran.
 
@@ -228,7 +295,8 @@ Evidence: `.context/persistent-render-store/` holds all logs and reports.
 
 Depends on: 4
 
-- [ ] Commit with Conventional Commits and push. Watch CI with `scripts/ci-wait.sh`.
+- [ ] Commit the final implementation with Conventional Commits and push.
+      Watch CI with `scripts/ci-wait.sh`.
 - [ ] Review the complete local diff against `origin/main` after the push,
       with the `implementation-review` skill. Check findings with fresh
       second-pass reviewers. Apply up to two fix rounds and re-review.

@@ -1,12 +1,10 @@
 # Base Preparation Cache
 
-Status: The render kind does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds it.
-
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 It also defines the bundle cache of compiled JavaScript, which both comparison
-sides use. The render kind keeps the [render store](./mokly-render-store.md)
-of Serve under the common rules of the next section.
+sides use. The render kind keeps the documents of the
+[render store](./mokly-render-store.md) under the common rules of the next section.
 
 ## Cache Location And Ownership
 

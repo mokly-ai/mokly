@@ -1,7 +1,5 @@
 # Cache Output
 
-Status: Serve has no render store yet, so the store neither reports the cache directory nor warns. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects it.
-
 The [terminal output contract](./mokly-terminal-output.md) owns modes and width.
 
 ## Cache Directory

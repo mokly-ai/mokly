@@ -37,6 +37,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
 
                     compiled: Arc::new(CompiledGeneration {
                         toolchain: "fixture".into(),
+                        metadata_identity: None,
                         reuse_evidence: Arc::new(ReuseEvidence {
                             uncaptured: None,
                             durable: true,

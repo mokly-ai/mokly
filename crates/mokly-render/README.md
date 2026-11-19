@@ -254,6 +254,12 @@ view after the edit and counts real process starts and hello calls.
   the head runtime of Serve its plan record owner. A base runtime never gets
   one. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime.
+  `Runtime::with_document_store` gives the Serve runtime its render store, and
+  `Runtime::for_base` copies it, so the head and base graphs share one store.
+- [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
+  JavaScript part of a render store identity: the toolchain identity and the
+  metadata identity of a compilation with captured and durable reuse evidence,
+  or none.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
@@ -307,6 +313,7 @@ view after the edit and counts real process starts and hello calls.
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
 - [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).

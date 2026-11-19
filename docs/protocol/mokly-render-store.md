@@ -1,6 +1,6 @@
 # Render Store
 
-Status: Serve does not keep rendered documents across restarts yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds the store, [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects Serve to it, and [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final byte bound.
+Status: The byte bound of the store is provisional. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
 
 The render store keeps the complete documents that `mokly serve` renders, so
 that a later Serve process reuses them instead of rendering them again. It is
@@ -31,11 +31,11 @@ of unsupported inputs.
 
 ## Identity
 
-The key of an entry covers the
-[document key](./mokly-rendering.md#document-assembly) and the build identity
-of its document. Serve reuses a stored document only when both are equal to
-those of the document that it would render, so the entries of another build
-are absent. The build identity covers:
+Each stored document has a key that covers its
+[document key](./mokly-rendering.md#document-assembly) and its build identity.
+Serve reuses a stored document only when both are equal to those of the
+document that it would render, so the documents of another build are absent.
+The build identity covers:
 
 - the platform: the operating system and the architecture;
 - the build of the native core, so two builds at one Mokly version never share
@@ -48,10 +48,13 @@ are absent. The build identity covers:
 
 A document without a sidecar render has no sidecar part. JavaScript source
 bytes are not part of the build identity, because the document key covers
-them, so an edit misses only the documents whose keys moved. When a part of
-the identity is unknown, as for a compilation with incomplete evidence, Serve
-neither reads nor writes that document. The head side and the base side share
-an entry when both keys are equal.
+them, so an edit misses only the documents whose keys moved. The sidecar part
+is unknown when the compilation lacks the complete and stable reuse evidence
+that the [bundle cache](./mokly-base-cache.md#stable-capture) needs. Serve then
+neither reads nor writes the documents that need that part. When Serve cannot
+read the native build identity, the store is off for the process, as after a
+store fault. The head side and the base side share a stored document when both
+keys are equal.
 Decision: the build identity reuses the toolchain identity and the compilation
 evidence of the recipe rules, and adds the native core build. A short list of
 the Node version, the Mokly version, and the `jsconfig.json` chain was
@@ -61,45 +64,68 @@ was rejected, because one source edit would then miss every unchanged view.
 
 ## Reads
 
+Serve prepares the store while it starts, outside the render path: it reads
+the native build identity and indexes the stored documents. A lookup before
+that preparation ends is a miss. When Serve opens the store, it reports the
+cache directory under the
+[cache output rule](./mokly-terminal-cache.md#cache-directory), also when the
+store holds no entry.
+
 Serve reads the store after a render cache miss and before it renders the
 document. A stored read and a fresh render of the same side give equal results:
 the same bytes, public closure, link check results, build warnings, usage, and
-resource evidence. A read updates the access order of its entry. No read waits
-for a lock, so a held lock is a miss. The first store lookup of a process
-reports the cache directory, also when it finds no entry, under the
-[cache output rule](./mokly-terminal-cache.md#cache-directory).
+resource evidence. A read updates the access order of the entry that holds the
+document. No read waits for a lock, so a held lock is a miss.
 
 ## Writes
 
-Serve offers each document that it renders to the store. A render and a
+Serve offers each document that it renders to the store, after the document
+passes the closure walk and the link checks of its side. The writer starts to
+write only after Serve completes its first Changes result, ready or
+unavailable. Until then, offers wait in the pending set. A render and a
 publication never wait for a store write. The pending writes have a fixed
-count, and an offer that finds no room is dropped. Shutdown drops the pending
-writes. A later process renders a dropped document again.
+count and a fixed byte bound, and an offer that finds no room is dropped. No
+write waits for a lock, so a held lock drops the write. Shutdown drops the
+pending writes. A later process renders a dropped document again.
 
-A pending write holds no copy of its document. The write takes the document
-from the render cache when it starts, and a document that has left the render
-cache is not written. Its encoding uses the transit reserve and an encoder
-lease of the render cache, and a write that finds no room or no free lease is
-dropped. A write never promotes, refreshes, or counts a lookup of the render
-cache. So the store adds no document memory outside the render cache bound.
+A pending write holds no copy of its document. The writer takes each document
+from the render cache when it writes, and a document that has left the render
+cache is not written. The writer's work, its batch workspace included, uses
+the transit reserve of the render cache. The writer takes an encoder lease
+only to encode a document that is not compact yet. A document that finds no
+room or no free lease is dropped. A write never promotes, refreshes, or counts
+a lookup of the render cache. So the store adds no document memory outside the
+render cache bound.
 Decision: pending writes name documents that the render cache keeps, so the
 render cache stays the one owner of document memory. A queue of documents with
 its own byte bound was rejected, because it keeps documents alive after the
 render cache evicts them. A write during the render was rejected, because it
 delays the render. An unbounded queue was rejected, because it breaks the
-memory bound.
-
-An entry is complete only when its receipt is published, after its data is
-durable, under the common rules. No write waits for a lock, so a held lock
-drops the write.
+memory bound. Writes wait for the first Changes result. Writes during the first
+render pass were rejected, because they compete with the renders and the first
+Changes for the encoder leases, the transit reserve, and the disk.
 
 ## Entry Format
 
-Each entry names the entry format version 1, the Mokly version that wrote it,
-and the SHA-256 digest of its payload. A reader rejects another format or
-Mokly version before it reads the payload. A read checks the size and the
-digest before it serves the document. The payload is lossless: a read restores
-the exact bytes and every record of the document.
+An entry holds a bounded batch of complete documents. It names the entry
+format version 1, the Mokly version that wrote it, the SHA-256 digest of its
+payload, and the SHA-256 digest of each document. A reader rejects another
+format or Mokly version before it reads the payload. Before the store indexes
+an entry that this process did not write, it checks the size of the entry and
+the digest of its whole payload. Before it serves a document, it checks the
+digest of that document and that the entry is still the one that it indexed.
+A replaced entry is checked as a whole again. The payload is lossless: a read restores the exact bytes and
+every record of the document.
+
+One durable receipt publishes the whole entry, after all of its data is
+durable, under the common rules. So a reader finds every document of an entry
+or none of them.
+Decision: an entry holds a batch of documents. One entry for each document was
+rejected, because one durable publication for each document stores too few
+documents of a render pass. Entries without durable flushes were rejected,
+because they break the common durability rule. A read refreshes the whole
+entry, and eviction removes the whole entry, so eviction is coarser than one
+document.
 
 ## Faults
 
@@ -115,8 +141,8 @@ than a hit or a stored write falls into one class:
 | Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                                                                   | The directory warning, once    | Off for the rest of the process |
 | Normal event | A held lock, a full set of pending writes, no room or no free lease for a write, a document that left the render cache, or a cancelled operation | None                           | Stays on                        |
 
-A damaged entry has a damaged receipt, a wrong size or digest, or a payload
-that does not decode or does not match its key. A foreign entry has another
+A damaged entry has a damaged receipt or header, a wrong size or digest, or a
+document that does not decode or does not match its key. A foreign entry has another
 format or Mokly version. An unreadable entry has a file that Mokly cannot
 read. After an entry fault, Mokly tries once, without waiting, to remove the
 rejected entry, under the removal rule of the bundle cache. The
@@ -130,8 +156,8 @@ The bound counts complete entries, the staged writes of every process, and
 replaced or evicted data that is not yet deleted. Before a write, Mokly makes
 room for the whole new entry: it evicts the least recently used entries first,
 under the common eviction rule. When it cannot make room, it drops the write.
-Decision: a fixed byte bound with access-order eviction keeps the documents
-that recent Serve processes read. A fixed count of entries was rejected,
+Decision: a fixed byte bound with access-order eviction keeps the entries that
+recent Serve processes read or wrote. A fixed count of entries was rejected,
 because document sizes vary. A setting was rejected, because no other cache
 bound has one.
 
@@ -139,7 +165,8 @@ bound has one.
 
 A later Serve process for the same repository and the same build reads each
 stored document whose keys are equal. It renders only the documents that are
-new, changed, evicted, or dropped.
+new, changed, evicted, or dropped, and the documents that it needs before the
+store is prepared.
 
 For supported inputs, a stored document equals a fresh render, so deleting the
 cache changes time only. A render that reads files, environment variables, the

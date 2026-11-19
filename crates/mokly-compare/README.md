@@ -1,7 +1,5 @@
 # mokly-compare
 
-Status: The render kind does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds it.
-
 `mokly-compare` classifies Mokly Changes from two rendered source trees. Use
 its traits to prepare a Git base, compare annotated documents, attribute
 component impact, and retain the review result and the change snapshot. Its
@@ -69,8 +67,8 @@ needs files on disk. Its `review.base-extraction` span times the source key,
 the cache lookup, and a build, and records `action`: `reuse` for a complete
 entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
 lease a complete entry without a build, so base preparation can read an
-earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, and bundle
-namespaces under the directory that `SystemLocations` selects, with OS locks
+earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, bundle, and
+render namespaces under the directory that `SystemLocations` selects, with OS locks
 for namespace mutation and entry leases. When `SystemLocations` checks that the
 cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
@@ -114,24 +112,37 @@ gives a cache location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry format, the fault classes, the locks, and the bound.
 
-The render kind keeps the complete documents of the render store of
-`mokly-graph` in the same namespace, under the same location, receipt,
-durability, lease, and eviction rules, with its own fixed byte bound. Each
-entry is keyed by the document key and the build identity of its document. A
-read or a write finds its entry without a scan of every entry of the kind. One
-writer outside the render path takes a bounded set of pending writes and drops
-an offer that finds no room. The
-[render store contract](../../docs/protocol/mokly-render-store.md) owns the
+`RenderDisk` implements `SegmentCache` over the `renders` kind of the same
+namespace. It shares the receipts, the durable publication, the stripes, and
+the eviction of the bundle kind, under its own fixed bound,
+`render_store::CAPACITY`. `CachedDocuments` implements `DocumentBackend` over
+it. Each entry is one segment of at most 64 documents and 2 MiB, keyed by the
+digest of its bytes. A process inventories the kind once, checks each whole
+segment, and indexes at most 16,384 documents, from the most recently used
+segment down. Each read then checks the identity of its segment and the digest
+of its document. An access counter under the namespace lock orders the
+segments, so a read scans no entries. Only a segment publication scans the
+kind, to make room under the bound.
+`DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
+only keys, under the bounds of `WriterLimits`, and its one writer thread
+publishes a segment for each batch inside the workspace of the render cache.
+`DocumentWriter::prepared` starts that thread with its writes paused. The
+thread first prepares the native identity of its `Startup` and the index, and
+`resume` then releases the writes. `ImageIdentity` reads the identity once
+through `SystemImage`. On Linux, it digests the embedded build nonce and the
+running image through `/proc/self/exe`, and it gives no identity when the image
+changes during the read. On other targets, it digests the nonce alone.
+The [render store contract](../../docs/protocol/mokly-render-store.md) owns the
 identity, the entry format, the fault classes, and the bound.
 
-`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file
-in one place. The bundle kind uses 256 fixed stripes, selected by the first
-byte of the key. The source and dependency kinds keep one lock file for each
-key, because their callers wait for locks and hold long leases. A shared
-stripe there could make a build wait for an unrelated lease, or for its own.
-The stripe layout is fixed for the `bundles` directory, because every release
-must use the same lock file for an entry. A later layout needs a new
-directory.
+`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file in
+one place. The bundle and render kinds use 256 fixed stripes, selected by the
+first byte of the key. The source and dependency kinds keep one lock file for
+each key, because their callers wait for locks and hold long leases. A shared
+stripe there could make a build wait for an unrelated lease, or for its own. The
+stripe layout is fixed for the `bundles` and `renders` directories, because
+every release must use the same lock file for an entry. A later layout needs a
+new directory.
 
 `DependencyTiers` implements `dyn Dependencies`. `InputReader` and
 `WorkingInputs` read manifests and lockfiles from the base blobs and from the
@@ -501,6 +512,27 @@ development dependencies, and no test uses the internet.
   [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
   the bounded scans, and the durable receipts with their publication nonce and
   compilation digest.
+- [`src/render_store.rs`](./src/render_store.rs) defines `RenderDisk`,
+  `SegmentCache`, `CachedDocuments`, `DocumentBackend`, `WriteOutcome`, and
+  `CAPACITY`, the render kind and its document backend. The private
+  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory, and the
+  `render_store_*.rs` modules hold the index, the reads, and the writes.
+- [`src/render_segment.rs`](./src/render_segment.rs) encodes and checks format 1
+  of a segment: the prefix, the bounded header, and the digests.
+  [`src/render_sequence.rs`](./src/render_sequence.rs) advances the access
+  counter.
+- [`src/render_writer.rs`](./src/render_writer.rs) defines `DocumentWriter` and
+  `WriterLimits`, the bounded key admission and the one writer.
+  [`src/render_batch.rs`](./src/render_batch.rs) encodes one batch inside its
+  workspace. [`src/render_pending.rs`](./src/render_pending.rs) defines
+  `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`.
+- [`src/render_writer_control.rs`](./src/render_writer_control.rs) defines
+  `Startup` and `DocumentWriter::prepared`, the paused writer start that
+  prepares the identity and the index.
+- [`src/render_identity.rs`](./src/render_identity.rs) defines
+  `NativeIdentity`, the native build identity that the writer prepares, and
+  [`src/render_image.rs`](./src/render_image.rs) defines `ImageIdentity`,
+  `ImageSource`, and `SystemImage`, its implementation.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency

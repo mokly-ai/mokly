@@ -1,7 +1,5 @@
 # mokly-graph
 
-Status: The render store boundary does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds the store writes from the render cache, and [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) adds the stored reads and the offers.
-
 `mokly-graph` plans and evaluates catalogue renders for Mokly. Depend on it
 from Serve, comparison, or static output. It uses `mokly-catalogue` for
 prepared definitions, `mokly-html` for composition, and `mokly-css` for
@@ -13,8 +11,8 @@ writes no files.
 - Compute content-addressed node keys before document rendering.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
-- Encode documents losslessly for the compact tier and the comparison capture,
-  and identify their exact codec input.
+- Encode documents losslessly for the compact tier, the comparison capture,
+  and the render store, and identify their exact codec input.
 - Read stored documents after a render cache miss and offer fresh documents
   through an injected render store, without waiting for a write.
 - Render all views through an injected worker pool.
@@ -128,15 +126,27 @@ destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
 
-Serve can inject one render store into its head and base graphs. Other callers
-render without one. After a render cache miss, a generation reads the store
-before it renders. A stored read repeats the public closure walk, the link
-checks, and the usage records of its side, so it gives the result of a fresh
-render. A generation offers each document that it renders and never waits for
-the write. A store write takes its document from the render cache through a
-read that does not promote, refresh, or count, and encodes it under the transit
-headroom and an encoder lease. So the render cache stays the one owner of
-document memory. The
+`DocumentStore` is the optional render store boundary.
+`DeliveryInputs::persistence` carries one `Persistence`: the store and the
+JavaScript identity of the generation. Serve sets it for its head and base
+graphs, and direct and one-shot callers leave it absent. `StoreKey::new`
+combines a document key with the build identity: the native identity of the
+store and, for a document that uses JavaScript, the JavaScript identity. When
+a part is absent, the generation neither reads nor offers that document. After
+a render cache miss, a generation reads the store before it renders. A stored
+read repeats the public closure walk, the link checks, and the usage records of
+its side, so it gives the result of a fresh render. A fresh document is offered
+only after the checks of its side pass, and a comparison collection offers its
+documents only after the whole collection passes. No generation waits for the
+write. Serve calls `DocumentStore::resume` after each completed Changes result,
+so the store writes nothing before the first one. `RenderCache::with_encoded`
+lends a writer one encoded document without a promotion, a refresh, or a count.
+It charges three times the document charge to the transit headroom, and it
+takes an encoder lease only for a document that is not compact yet.
+`RenderCache::with_workspace` charges the writer's batch workspace to the same
+headroom. So the render cache stays the one owner of
+document memory. `EncodedView::stored` and `EncodedView::from_stored` keep every
+record of a document in a bounded private form. The
 [render store contract](../../docs/protocol/mokly-render-store.md) owns the
 identity, the faults, and the bound.
 
@@ -365,6 +375,17 @@ retention disabled.
   capture share. Its `encode_identified` and `comparison_identity` hash the
   complete codec input. The private `document_identity` and
   `document_metadata` modules hold that hash and the retained metadata.
+- [`src/document_store.rs`](./src/document_store.rs) defines `DocumentStore`,
+  the optional render store boundary, with `Persistence`, `StoreKey`,
+  `StoredDocument`, `ReadOutcome`, `OfferOutcome`, `EntryFault`, and
+  `StoreStats`. [`src/session_persistence.rs`](./src/session_persistence.rs)
+  builds the `StoreKey` of a route and offers a fresh document after its checks.
+- [`src/cache_export.rs`](./src/cache_export.rs) defines `EncodedConsumer` and
+  `CacheOperation`, the writer work that `RenderCache::with_encoded` and
+  `RenderCache::with_workspace` run inside the transit headroom.
+- [`src/document_persistence.rs`](./src/document_persistence.rs) and
+  [`src/document_store_metadata.rs`](./src/document_store_metadata.rs) encode
+  and restore the bounded stored record of a document with all of its metadata.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
   job. Its `stylesheets` method runs one `StylesheetWorker` job for

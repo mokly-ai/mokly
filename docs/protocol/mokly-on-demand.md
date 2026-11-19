@@ -1,7 +1,5 @@
 # On-demand Serve
 
-Status: Serve does not read documents from the render store yet. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) adds the reads.
-
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the

@@ -74,7 +74,7 @@ impl Builder for Announced<'_> {
         let step = match self.kind {
             Kind::Sources => Some(Step::Extracting),
             Kind::Dependencies => Some(Step::Installing),
-            Kind::Bundles => None,
+            Kind::Bundles | Kind::Renders => None,
         };
         if let Some(step) = step {
             self.steps.step(step);

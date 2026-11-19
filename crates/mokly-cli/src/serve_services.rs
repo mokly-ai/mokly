@@ -16,6 +16,7 @@ use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
 use mokly_cli::serve_settings::ServeSettings;
+use mokly_compare::render_writer::DocumentWriter;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_render::runtime::Runtime;
@@ -27,11 +28,13 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle_runtime::Reporting;
 use crate::cache_directory::ServeDirectory;
 use crate::render_runtime::Services;
+use crate::render_store_runtime;
 use crate::serve_pool::{PoolScheduling, ServePool};
 use crate::terminal::Terminal;
 use mokly_cli::options;
 
 pub(super) struct ServeServices {
+    documents: Arc<DocumentWriter>,
     pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) config: mokly_catalogue::config_types::ResolvedConfig,
@@ -83,6 +86,14 @@ impl ServeServices {
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
         options::apply_base_install_scripts(&mut config, common.base_install_scripts_override());
+        let documents = render_store_runtime::store(
+            &config.repo_root,
+            cancellation.clone(),
+            cache.clone(),
+            reporting.directory.clone(),
+            diagnostics.clone(),
+            reporting.mode,
+        );
         let services = match Services::new(
             tree.clone(),
             cwd,
@@ -105,7 +116,10 @@ impl ServeServices {
             ServePool::new(services.pool.clone(), services.pool).with_diagnostics(diagnostics),
         );
         let pool = sidecars.pool(None);
-        let mut runtime = (*services.runtime).clone().with_serve_edit_plans();
+        let mut runtime = (*services.runtime)
+            .clone()
+            .with_serve_edit_plans()
+            .with_document_store(documents.clone());
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
         let head_published = Arc::new(AtomicBool::new(false));
@@ -116,6 +130,7 @@ impl ServeServices {
             head_published: head_published.clone(),
         });
         Ok(Self {
+            documents,
             sidecars,
             runtime,
             config,
@@ -125,6 +140,12 @@ impl ServeServices {
             cache_announced,
             head_published,
         })
+    }
+}
+
+impl Drop for ServeServices {
+    fn drop(&mut self) {
+        self.documents.shutdown();
     }
 }
 

@@ -46,6 +46,7 @@ fn fresh() -> results::Bundle {
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: Arc::new(evidence("captured")),
             identity: "fresh".into(),
             code: String::new(),
@@ -253,6 +254,7 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
                     )]),
                     ..InputStamp::default()
                 },
+                persistence_identity: (kind == "captured").then(|| "captured-build".into()),
                 toolchain: if kind == "edit" {
                     edit_toolchain.into()
                 } else {
@@ -270,9 +272,13 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
                 .insert(state.lease.id.clone(), Arc::downgrade(state));
         }
         let described = runtime.describe(&config, &[]).unwrap();
+        let generation = described.generation.unwrap();
         assert_eq!(
-            described.generation.unwrap().id,
-            expected,
+            generation.persistence_identity.as_deref(),
+            (expected == "z-captured").then_some("captured-build")
+        );
+        assert_eq!(
+            generation.id, expected,
             "capture={capture:?}, physical={physical}, hash={hash}, member={member}, toolchain={edit_toolchain}"
         );
     }
