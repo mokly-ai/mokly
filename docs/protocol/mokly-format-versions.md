@@ -1,5 +1,7 @@
 # Combined Path And Output Format Versions
 
+Status: No render store entry exists yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds the format.
+
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                   |
@@ -21,6 +23,7 @@
 | Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                                                                                                                                                  |
 | Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                                                                                                                                       |
 | Bundle cache entry                      | 1                         | One [bundle cache](./mokly-base-cache.md#bundle-entries) entry. Its first line names this number, the writing Mokly version, and the payload SHA-256. The reader requires 1 and the running Mokly version before it reads the payload.              |
+| Render store entry                      | 1                         | One [render store](./mokly-render-store.md#entry-format) entry. It names this number, the writing Mokly version, and the payload SHA-256. The reader requires 1 and the running Mokly version before it reads the payload.                          |
 
 A format number changes only when the shape or the interpretation of its
 format changes. Package 1.0.0 is the first release with a stable format

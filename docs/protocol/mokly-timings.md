@@ -1,5 +1,7 @@
 # Startup Diagnostics And Scale Fixtures
 
+Status: Serve has no render store yet, so its counts and its bound do not apply. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects the store. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) empties the store before each cold run of the scale fixture and sets the final store bound.
+
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -127,6 +129,13 @@ Decision: one counts record for each phase. Fields on each phase's own
 counts record were rejected, because they would rename `cacheHits` and lose
 the counts of a failed review phase.
 
+In Serve, `render.cache` also counts the [render store](./mokly-render-store.md)
+in the same interval. `storeHits` and `storeMisses` count the store lookups
+that did and did not serve a document. `storeFaults` counts the entry faults.
+`storeWrites` counts the documents that the store kept, and `storeDrops`
+counts the offered documents that it dropped. A stored read is a render cache
+miss, so `hits` and `cacheHits` never count it.
+
 ## Review Spans
 
 [Review timing records](./mokly-review-timings.md) define the parent context,
@@ -164,7 +173,8 @@ constant and other heavy work idle:
    real preview content in a browser, measured cold and then in a fresh
    server and browser context for an OS-warm restart; `changesReadyMs`
    waits for delivered Changes in Browse. "Cold" means application-cold,
-   not a flushed page cache.
+   with no documents in the [render store](./mokly-render-store.md), not a
+   flushed page cache. The warm restart keeps the documents of the cold run.
 3. Changes: the `changes.classify` duration and the CSS share, cold and warm.
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.
@@ -190,6 +200,7 @@ CI's small correctness fixtures have
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
 | bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
+| render store namespace             | 128 MiB (134,217,728 bytes) per repository, complete and staged entries together                                               |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

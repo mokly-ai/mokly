@@ -1,0 +1,153 @@
+# Render Store
+
+Status: Serve does not keep rendered documents across restarts yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds the store, [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects Serve to it, and [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final byte bound.
+
+The render store keeps the complete documents that `mokly serve` renders, so
+that a later Serve process reuses them instead of rendering them again. It is
+the render kind of the [Mokly cache](./mokly-base-cache.md). The
+[common cache rules](./mokly-base-cache.md#cache-location-and-ownership) give
+its location, ownership, leases, receipts, durability, damaged-entry rule, and
+eviction order. The [render cache](./mokly-runtime.md#render-graph-and-cache)
+of each process keeps its own bound and its own rules.
+
+## Stored Documents
+
+Serve reads and writes the store for the head side and the base side of
+Changes. `build` and `publish` neither read nor write it, so static output and
+uploads render every document from sources. The store has no setting.
+
+A stored document keeps its exact bytes and every record that a fresh render
+keeps with it: the ownership tree, usage, resource evidence, instance
+identities, links, build warnings, and content type. The store keeps no
+description, fragment, live prop render, catalogue state, or Changes result.
+Decision: the store keeps the complete documents of Serve only. Stored
+descriptions were rejected, because a description depends on peers, the
+environment, and the time, so a stored one can be stale. Stored sidecar
+fragments were rejected, because a restart would still compose every document.
+A stored Serve state with the index, the details, and Changes was rejected,
+because it would store descriptions too. A store in `build` and `publish` was
+rejected, because static output and uploads would then keep the stored results
+of unsupported inputs.
+
+## Identity
+
+The key of an entry covers the
+[document key](./mokly-rendering.md#document-assembly) and the build identity
+of its document. Serve reuses a stored document only when both are equal to
+those of the document that it would render, so the entries of another build
+are absent. The build identity covers:
+
+- the platform: the operating system and the architecture;
+- the build of the native core, so two builds at one Mokly version never share
+  a document;
+- for a document with a sidecar render, the
+  [toolchain identity](./mokly-sidecar-recipes.md#reuse-and-identity) of its
+  generation and the compilation inputs that the document key does not cover,
+  such as `jsconfig.json` candidates, `extends` targets, peer manifests, and
+  the `tsconfig.json` and `package.json` candidates above the source root.
+
+A document without a sidecar render has no sidecar part. JavaScript source
+bytes are not part of the build identity, because the document key covers
+them, so an edit misses only the documents whose keys moved. When a part of
+the identity is unknown, as for a compilation with incomplete evidence, Serve
+neither reads nor writes that document. The head side and the base side share
+an entry when both keys are equal.
+Decision: the build identity reuses the toolchain identity and the compilation
+evidence of the recipe rules, and adds the native core build. A short list of
+the Node version, the Mokly version, and the `jsconfig.json` chain was
+rejected, because a local rebuild at one version, an `extends` file, or a peer
+manifest could then serve an older document. The whole bundle as the identity
+was rejected, because one source edit would then miss every unchanged view.
+
+## Reads
+
+Serve reads the store after a render cache miss and before it renders the
+document. A stored read and a fresh render of the same side give equal results:
+the same bytes, public closure, link check results, build warnings, usage, and
+resource evidence. A read updates the access order of its entry. No read waits
+for a lock, so a held lock is a miss. The first store lookup of a process
+reports the cache directory, also when it finds no entry, under the
+[cache output rule](./mokly-terminal-cache.md#cache-directory).
+
+## Writes
+
+Serve offers each document that it renders to the store. A render and a
+publication never wait for a store write. The pending writes have a fixed
+count, and an offer that finds no room is dropped. Shutdown drops the pending
+writes. A later process renders a dropped document again.
+
+A pending write holds no copy of its document. The write takes the document
+from the render cache when it starts, and a document that has left the render
+cache is not written. Its encoding uses the transit reserve and an encoder
+lease of the render cache, and a write that finds no room or no free lease is
+dropped. A write never promotes, refreshes, or counts a lookup of the render
+cache. So the store adds no document memory outside the render cache bound.
+Decision: pending writes name documents that the render cache keeps, so the
+render cache stays the one owner of document memory. A queue of documents with
+its own byte bound was rejected, because it keeps documents alive after the
+render cache evicts them. A write during the render was rejected, because it
+delays the render. An unbounded queue was rejected, because it breaks the
+memory bound.
+
+An entry is complete only when its receipt is published, after its data is
+durable, under the common rules. No write waits for a lock, so a held lock
+drops the write.
+
+## Entry Format
+
+Each entry names the entry format version 1, the Mokly version that wrote it,
+and the SHA-256 digest of its payload. A reader rejects another format or
+Mokly version before it reads the payload. A read checks the size and the
+digest before it serves the document. The payload is lossless: a read restores
+the exact bytes and every record of the document.
+
+## Faults
+
+Every rejected entry is a miss, and Serve then renders the document as it
+would without the store. No store fault fails a render, a publication, or a
+command. The fault classes and their output are those of the
+[bundle cache](./mokly-base-cache.md#bundle-entries). Each store event other
+than a hit or a stored write falls into one class:
+
+| Class        | Cases                                                                                                                                            | Output                         | Store afterwards                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------- |
+| Entry fault  | A damaged, unreadable, or foreign entry                                                                                                          | The entry warning at each read | Stays on                        |
+| Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                                                                   | The directory warning, once    | Off for the rest of the process |
+| Normal event | A held lock, a full set of pending writes, no room or no free lease for a write, a document that left the render cache, or a cancelled operation | None                           | Stays on                        |
+
+A damaged entry has a damaged receipt, a wrong size or digest, or a payload
+that does not decode or does not match its key. A foreign entry has another
+format or Mokly version. An unreadable entry has a file that Mokly cannot
+read. After an entry fault, Mokly tries once, without waiting, to remove the
+rejected entry, under the removal rule of the bundle cache. The
+[cache warnings](./mokly-terminal-cache.md#cache-warnings) give the text of
+both warnings.
+
+## Bound And Eviction
+
+The render kind has its own fixed [byte bound](./mokly-timings.md#budgets).
+The bound counts complete entries, the staged writes of every process, and
+replaced or evicted data that is not yet deleted. Before a write, Mokly makes
+room for the whole new entry: it evicts the least recently used entries first,
+under the common eviction rule. When it cannot make room, it drops the write.
+Decision: a fixed byte bound with access-order eviction keeps the documents
+that recent Serve processes read. A fixed count of entries was rejected,
+because document sizes vary. A setting was rejected, because no other cache
+bound has one.
+
+## Restarts And Deletion
+
+A later Serve process for the same repository and the same build reads each
+stored document whose keys are equal. It renders only the documents that are
+new, changed, evicted, or dropped.
+
+For supported inputs, a stored document equals a fresh render, so deleting the
+cache changes time only. A render that reads files, environment variables, the
+clock, or random values is
+[unsupported](./mokly-watch.md#invalidation-through-the-render-graph). It keeps
+its stored result across restarts until its key moves, its entry leaves the
+store, or the cache is deleted. Deleting the cache can then change its result.
+Decision: a restart reuses the stored result of a render with unsupported
+inputs. Keying these inputs was rejected, because Mokly does not observe them.
+Rendering every document again after a restart was rejected, because the first
+Changes then waits for the whole render pass.

@@ -1,13 +1,16 @@
 # Base Preparation Cache
 
+Status: The render kind does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds it.
+
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 It also defines the bundle cache of compiled JavaScript, which both comparison
-sides use.
+sides use. The render kind keeps the [render store](./mokly-render-store.md)
+of Serve under the common rules of the next section.
 
 ## Cache Location And Ownership
 
-The source, dependency, and bundle kinds live in a SHA-256 namespace under the
+The source, dependency, bundle, and render kinds live in a SHA-256 namespace under the
 operating system's cache directory. Windows honors an absolute `LOCALAPPDATA`
 value. The key hashes the canonical repository path's OS encoding. On Windows,
 canonical paths use the plain drive form without the `\\?\` prefix when that
@@ -17,7 +20,7 @@ the repository is invalid. Below that canonical root, directory links are
 rejected before writes. Dependency links remain data entries; traversal does
 not follow them.
 
-Source, dependency, and bundle namespaces have separate byte bounds. Each
+Source, dependency, bundle, and render namespaces have separate byte bounds. Each
 complete entry reserves 1,024 bytes for its receipt. Retained size counts
 regular-file bytes and link targets without following links. A hit checks the
 bounded completion receipt and recounts the data bytes. Only receipt schema 1 is

@@ -1,5 +1,7 @@
 # mokly-graph
 
+Status: The render store boundary does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds the store writes from the render cache, and [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) adds the stored reads and the offers.
+
 `mokly-graph` plans and evaluates catalogue renders for Mokly. Depend on it
 from Serve, comparison, or static output. It uses `mokly-catalogue` for
 prepared definitions, `mokly-html` for composition, and `mokly-css` for
@@ -12,6 +14,8 @@ writes no files.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
 - Encode documents losslessly for the compact tier and the comparison capture.
+- Read stored documents after a render cache miss and offer fresh documents
+  through an injected render store, without waiting for a write.
 - Render all views through an injected worker pool.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
@@ -122,6 +126,18 @@ destination renders in this same bounded cache. A repeated check of one
 destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
+
+Serve can inject one render store into its head and base graphs. Other callers
+render without one. After a render cache miss, a generation reads the store
+before it renders. A stored read repeats the public closure walk, the link
+checks, and the usage records of its side, so it gives the result of a fresh
+render. A generation offers each document that it renders and never waits for
+the write. A store write takes its document from the render cache through a
+read that does not promote, refresh, or count, and encodes it under the transit
+headroom and an encoder lease. So the render cache stays the one owner of
+document memory. The
+[render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the faults, and the bound.
 
 Each generation builds one immutable link index when it is created, and drops
 it with the generation. The index holds two positions for each catalogue entry
@@ -385,6 +401,7 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).

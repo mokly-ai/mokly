@@ -98,6 +98,15 @@ Contract owners:
   call of 2026-11-19. This workspace's orchestrator adds the identity coverage
   on the same date to preserve output across local rebuilds and restarts.
 
+This restart step activates the store in Serve only. The build and publish
+commands keep their current source-render path. This clarifies the scope of
+call 1 on 2026-11-19 and preserves behavior outside the requested Serve change.
+
+The timing counts keep store hits, misses, faults, writes, and drops separate
+from memory-cache hits. Cold measurements empty only the render store. The
+cache warning texts name documents and keep the bundle cache's cadence. These
+details apply the existing measurement and common-cache requirements.
+
 ### 2. Bound storage and queued work by bytes
 
 - **Severity:** High. **Effort:** Medium.
@@ -147,9 +156,11 @@ Depends on: none
 State the accepted persistent-render rules before implementation. Add a
 linked status line until the implementation meets those rules.
 
-- [ ] Update the cache, runtime, format, and timing contracts. Keep the watch
+- [x] Update the cache, runtime, format, and timing contracts. Keep the watch
       input list unchanged. Explain unsupported-input reuse across restarts.
-- [ ] Update the architecture and affected crate READMEs for the new boundary.
+- [x] Update the architecture and affected crate READMEs for the new boundary.
+
+Evidence: `.context/persistent-render-store/docs-report.md`.
 
 ## Milestone 2: Durable store and bounded writer
 
@@ -158,7 +169,7 @@ Depends on: 1
 Retain lossless complete documents under the common cache rules. Keep failures
 optional and preserve the process-cache bound.
 
-- [ ] Read relevant crate READMEs and Rust reference rules.
+- [x] Read relevant crate READMEs and Rust reference rules.
 - [ ] Add assertion-red tests through real public boundaries for durable
       restart bytes, changed-key misses, damaged and foreign-entry misses,
       access-order eviction, and full-queue drops without a time assertion.
@@ -169,6 +180,8 @@ optional and preserve the process-cache bound.
       cold pass. Avoid per-document namespace scans. Evaluate batched segment
       publication if individual durable writes cannot retain that pass.
 - [ ] Record measured sizes, queue behavior, and write cost under `.context/`.
+- [ ] Measure encoder-lease contention with the writer active. Keep its
+      export reservations inside the existing process-cache headroom.
 
 ## Milestone 3: Render integration and freshness
 
@@ -185,6 +198,8 @@ Use stored compositions without bypassing validation or changing output.
 - [ ] Run targeted tests. Run each new asynchronous test ten times. Record
       assertion-red evidence, run times, and test counts under `.context/`.
 - [ ] Remove documentation status lines when the implementation meets them.
+- [ ] Check the upgrade guide against implemented behavior. Correct the cache
+      deletion wording for the accepted unsupported-input rule.
 
 ## Milestone 4: Measurements and verification
 
@@ -196,6 +211,8 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
 - [ ] Measure at least six interleaved cold and warm rounds on `examples/basic`
       and large HTML and React fixtures. Include unchanged and one-line-edit
       restarts. Compare Changes and published bytes. Measure ten-edit memory.
+- [ ] Update the large-fixture cold-run path to clear only the render kind.
+      Keep its source, dependency, and bundle caches. Align the fixture README.
 - [ ] Send the pushed implementation SHA and dist build commit to the
       performance orchestrator for `mokly-cloud` measurement immediately.
 - [ ] Confirm the cloud goals: at least four seconds sooner on warm restart,

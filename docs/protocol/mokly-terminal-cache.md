@@ -1,13 +1,16 @@
 # Cache Output
 
+Status: Serve has no render store yet, so the store neither reports the cache directory nor warns. [Milestone 3: Render integration and freshness](../../plans/persistent-render-store.md#milestone-3-render-integration-and-freshness) connects it.
+
 The [terminal output contract](./mokly-terminal-output.md) owns modes and width.
 
 ## Cache Directory
 
 The first time a command opens the base-side extraction cache, the dependency
-install cache, or the bundle cache of the
+install cache, the bundle cache, or the
+[render store](./mokly-render-store.md) of the
 [cache contract](./mokly-base-cache.md), it writes one line that names the
-directory. All three caches share this line. While `build` or `publish`
+directory. All four caches share this line. While `build` or `publish`
 renders the head catalogue, the line waits. The command writes it before the
 next phase starts, or when rendering passes validation, whichever comes
 first. A failure or a cancellation while the line waits drops it. Serve and
@@ -29,17 +32,20 @@ rejected, because they delay or hold unrelated output.
 
 ## Cache Warnings
 
-The bundle cache writes one warning line on stderr in each of these cases:
+The bundle cache and the [render store](./mokly-render-store.md#faults) write
+one warning line on stderr in each of these cases:
 
 | Case                                                                    | Warning                                                              |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Mokly reads a damaged, unreadable, or foreign entry of the bundle cache | `A cached JavaScript bundle could not be reused. Bundling it again.` |
 | The bundle cache directory is unusable, at most once per process        | `The JavaScript bundle cache is unavailable. Bundling without it.`   |
+| Mokly reads a damaged, unreadable, or foreign entry of the render store | `A cached document could not be reused. Rendering it again.`         |
+| The render store directory is unusable, at most once per process        | `The rendered document cache is unavailable. Rendering without it.`  |
 
 Rich mode prefixes `!`, and plain mode prefixes `[mokly/warning]`. The command
-then compiles the bundle and continues. A cache warning is not a
+then compiles the bundle or renders the document, and continues. A cache warning is not a
 [build warning](./mokly-build-warnings.md), so `--strict` does not count it.
 Decision: a cache failure warns and the command continues. Failing the command
-was rejected, because deleting or damaging the cache must change time only. A
+was rejected, because cache faults must not fail a command. A
 record in the timing output alone was rejected, because the user then cannot
 see the failure.

@@ -1,5 +1,7 @@
 # mokly-compare
 
+Status: The render kind does not exist yet. [Milestone 2: Durable store and bounded writer](../../plans/persistent-render-store.md#milestone-2-durable-store-and-bounded-writer) adds it.
+
 `mokly-compare` classifies Mokly Changes from two rendered source trees. Use
 its traits to prepare a Git base, compare annotated documents, attribute
 component impact, and retain the review result and the change snapshot. Its
@@ -25,8 +27,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
-- Store source, dependency, and bundle caches outside the repository.
+- Store source, dependency, bundle, and render caches outside the repository.
 - Implement the sidecar's bundle store over the bounded `bundles` kind.
+- Implement the render store of `mokly-graph` over the bounded render kind,
+  with one writer outside the render path.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
 - Install base dependencies with scripts disabled by default, a deadline, and a
@@ -107,6 +111,16 @@ adds this store to the sidecar pool of each command when `SystemLocations`
 gives a cache location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry format, the fault classes, the locks, and the bound.
+
+The render kind keeps the complete documents of the render store of
+`mokly-graph` in the same namespace, under the same location, receipt,
+durability, lease, and eviction rules, with its own fixed byte bound. Each
+entry is keyed by the document key and the build identity of its document. A
+read or a write finds its entry without a scan of every entry of the kind. One
+writer outside the render path takes a bounded set of pending writes and drops
+an offer that finds no room. The
+[render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the entry format, the fault classes, and the bound.
 
 `entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file
 in one place. The bundle kind uses 256 fixed stripes, selected by the first
@@ -491,6 +505,7 @@ development dependencies, and no test uses the internet.
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
+  [render store](../../docs/protocol/mokly-render-store.md),
   [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),
   [dependency installation](../../docs/protocol/mokly-base-dependencies.md),
   and [install processes](../../docs/protocol/mokly-base-install-processes.md).
