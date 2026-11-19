@@ -24,7 +24,6 @@ test("close cleanup checks out the default ref after the PR head is deleted", ()
 
 test("site and CI actions use immutable reviewed pins and isolate secrets", () => {
   const approved = new Set([
-    "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
     "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
     "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
     "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",

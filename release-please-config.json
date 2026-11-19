@@ -343,12 +343,8 @@
         "docs/mockups",
         "docs/ops",
         "docs/api",
-        "docs/architecture/cloud.md",
-        "docs/development/cloud.md",
         "fixtures",
-        "diesel.toml",
-        "docker-compose.yml",
-        "mokly.config.json"
+        "rules"
       ]
     }
   }

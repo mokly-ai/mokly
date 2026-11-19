@@ -8,7 +8,9 @@ workflows of Mokly Cloud.
 ## Cloud Jobs
 
 The CI workflow runs the [cloud suites](./ci-verification.md#cloud-suites) in
-cloud jobs on Linux. [Required CI](./ci-workflow.md#required-ci) requires
+cloud jobs on GitHub-hosted `ubuntu-24.04`, under the
+[runner rule](./ci-workflow.md#job-execution).
+[Required CI](./ci-workflow.md#required-ci) requires
 each partition, the image check and the provider-plan result. Linux builds
 and tests every crate. Each job that
 builds the `mkc-` crates provides `libpq`, and each job that runs their
@@ -41,6 +43,12 @@ BuildKit and crane tools, then starts layered BuildKit. These services and
 tools let cloud workers run the same strict suites as CI without provider
 credentials. Each cloud database suite creates its own disposable database.
 
+Seven cloud commands, listed in the [remote README](../../xtask/remote/README.md),
+each run `node xtask/scripts/testbox-cloud.mjs --expect <fingerprint> --suites <list>`
+on their own box. Each installs the root lockfile and Chromium, attempts every
+listed suite, names each failed suite, and exits nonzero when any fails. They
+produce no suite report.
+
 Lighthouse runs as a separate report job. It retains failures and does not
 block `Required CI`.
 
@@ -65,6 +73,9 @@ cancelled plan evidence cannot pass as a permitted skip.
   preview lifecycle in one workflow.
 
 The cloud protocol docs under `docs/protocol/cloud/` define each workflow.
+
+Desktop package and release jobs use GitHub-hosted `macos-26` for macOS
+and `ubuntu-24.04` for Linux. They follow the same runner rule.
 
 Every push to `main` runs the cloud deploy, also when it changes only Mokly
 paths, because a change under `packages/` changes the hosted viewer.
@@ -94,6 +105,10 @@ when a preceding output claims that a deploy is requested.
 
 Release Please covers only the published packages. It keeps the cloud
 projects out of the changelog and out of the version bump.
+The configuration excludes each cloud directory because Release Please matches
+excluded directories only.
+Shared root files, including cloud workflows, root tool configurations, and the
+AGPL license text, count for the Mokly release.
 Dependency pins in cloud manifests follow the coordinated Mokly version;
 the cloud projects' own versions do not change.
 

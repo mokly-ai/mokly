@@ -361,9 +361,9 @@ Depends on: 6
 - [x] Set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` in every CI job that does not
       run Electron, and move that rule to the CI workflow pages.
 - [x] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
-- [ ] Scope Release Please to the published packages. Keep the cloud
+- [x] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
-- [ ] Run the cloud jobs of `ci.yml` and the desktop release builds on
+- [x] Run the cloud jobs of `ci.yml` and the desktop release builds on
       GitHub-hosted standard runners, as `main` PR #342 requires.
 - [x] Change the repository and the workflow paths in the Workload Identity
       Federation condition of `infra/terraform/modules/github`, and in its

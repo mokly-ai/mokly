@@ -87,7 +87,7 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
         assert_eq!(
             job["strategy"]["matrix"]["include"],
             json!([
-                {"platform": "macos", "runner": "blacksmith-6vcpu-macos-26"},
+                {"platform": "macos", "runner": "macos-26"},
                 {"platform": "linux", "runner": "ubuntu-24.04"}
             ])
         );

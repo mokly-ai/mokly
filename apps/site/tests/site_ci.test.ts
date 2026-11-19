@@ -14,7 +14,7 @@ test("Lighthouse uses the workspace tools and retains a failing report", async (
   const job = ci.jobs["site-lighthouse"];
   assert.ok(job);
   assert.equal(job["continue-on-error"], false);
-  assert.equal(job["runs-on"], "blacksmith-4vcpu-ubuntu-2404");
+  assert.equal(job["runs-on"], "ubuntu-24.04");
   assert.equal(
     workflowStep(job, "Set up Node.js").with?.["node-version-file"],
     ".nvmrc",
