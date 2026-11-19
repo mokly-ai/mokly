@@ -150,11 +150,25 @@ Depends on: 1, 2, 3
 
 - [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check` with the locked Cargo dependencies.
 - [x] Record each failed, skipped, or blocked check and the test cost in `.context/serve-bundle-affinity/`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Send the implementation SHA immediately to the performance orchestrator for the mokly-cloud acceptance measurement.
-- [ ] Confirm the mokly-cloud goal: at least 0.6 GiB lower peak, edits 2–10 mean within +1%, and no slower edit 1 or first Changes.
-- [ ] If affinity misses the goal, send the measured result to the performance orchestrator and apply the authorised next step.
-- [ ] Review the complete local diff against `origin/main` with `implementation-review` after the push. Run finding checks, fix the fix-now findings, record follow-up items, and re-review once. Use at most two fix rounds.
-- [ ] Re-fetch main and merge it with `git-merge` if needed. Preserve PR #351 and the other merged pool work. If main moves, rebuild and repeat the acceptance comparison against it.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Send the implementation SHA immediately to the performance orchestrator for the mokly-cloud acceptance measurement.
+- [x] Confirm the mokly-cloud goal: at least 0.6 GiB lower peak, edits 2–10 mean within +1%, and no slower edit 1 or first Changes.
+- [x] If affinity misses the goal, send the measured result to the performance orchestrator and apply the authorised next step.
+- [x] Review the complete local diff against `origin/main` with `implementation-review` after the push. Run finding checks, fix the fix-now findings, record follow-up items, and re-review once. Use at most two fix rounds.
+- [x] Re-fetch main and merge it with `git-merge` if needed. Preserve PR #351 and the other merged pool work. If main moves, rebuild and repeat the acceptance comparison against it.
 - [ ] Delete this plan under the `plans` skill after every prior required TODO completes.
 - [ ] Open the pull request into `main`. Preserve the dated decisions and plan permalink in its description. Watch final CI with the shared `finish-work/scripts/ci-wait.sh`. Send the report to the performance orchestrator. Do not merge.
+
+Cloud acceptance and both independent review rounds are complete. Affinity met the goal, so the conditional disposal step was not needed.
+Evidence: `.context/serve-bundle-affinity/cloud-acceptance.md` and `.context/reviews/calummoore/mokly-bundle-affinity-3-5gsm/findings.md`.
+
+The performance orchestrator made call A on 2026-11-19 after main merged PR #358 and PR #357.
+Acceptance remains valid for the unchanged sidecar diff. These upstream changes cover package-manager stop cleanup and a Windows test.
+Verify the combined tree with targeted tests and final CI. Do not repeat the acceptance sessions for these unrelated changes.
+This call replaces the repeat-measurement part of the main-move TODO above.
+
+The performance orchestrator also made a merge-hold call on 2026-11-19.
+After the clean main merge at `c067f8d91`, merge main again only for a conflict, a change to these files, or a CI failure.
+The user will request one final main merge and CI run when the hold ends. Do not merge this branch into main.
+
+Combined-tree verification is complete. Evidence: `.context/serve-bundle-affinity/latest-main-targeted-summary.json`. Final CI follows PR creation.
