@@ -21,10 +21,15 @@ use crate::serve_rebuild::RebuildReporterMock;
 use crate::serve_watch_files::ObserversMock;
 
 fn generation() -> Unimock {
+    generation_of(catalogue())
+}
+
+/// A generation of `catalogue` that one candidate reads.
+fn generation_of(catalogue: PreparedCatalogue) -> Unimock {
     Unimock::new((
         RenderGenerationMock::catalogue
             .next_call(matching!())
-            .returns(catalogue()),
+            .returns(catalogue),
         RenderGenerationMock::stylesheet_directories
             .next_call(matching!())
             .returns(vec![]),
@@ -132,6 +137,44 @@ fn changed_roots_attach_a_new_observer_and_recheck_only_when_uncovered() {
     }
 }
 
+#[test]
+fn the_adoption_after_a_second_preparation_installs_its_plan() {
+    let active: Arc<dyn Observer> = Arc::new(Unimock::new((
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+        ObserverMock::covers.some_call(matching!(_)).returns(false),
+        ObserverMock::take.some_call(matching!()).returns(vec![]),
+        ObserverMock::close.some_call(matching!()).returns(()),
+    )));
+    let next: Arc<dyn Observer> = Arc::new(Unimock::new((
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+        ObserverMock::replace
+            .some_call(matching!((plan) if plan.exact.contains_key(Path::new("/repo/src/new.ts"))))
+            .returns(Ok(())),
+        ObserverMock::replay.some_call(matching!(_)).returns(()),
+    )));
+    let factory = Unimock::new(
+        ObserversMock::attach
+            .some_call(matching!(_))
+            .returns(Ok(next)),
+    );
+    let watch = watch(active, factory);
+    let mut first = catalogue();
+    first.model.sources.clear();
+    let mut candidate = watch
+        .candidate(&prepared("next", generation_of(first)))
+        .unwrap();
+    assert!(candidate.recheck);
+    let second = prepared("next", Unimock::new(adoptable()));
+    watch.recheck(&mut candidate, &second).unwrap();
+    watch.clone().adopt(candidate, &second);
+    assert!(
+        watch
+            .plan()
+            .exact
+            .contains_key(Path::new("/repo/src/new.ts"))
+    );
+}
+
 #[tokio::test]
 async fn equal_plan_inputs_reuse_the_active_observer_and_a_queued_edit_still_rebuilds() {
     let adopted = adopted(
@@ -180,7 +223,11 @@ async fn equal_plan_inputs_reuse_the_active_observer_and_a_queued_edit_still_reb
     assert!(watch.drain(&mut batch, Arc::new(Unimock::new(()))).await);
     assert_eq!(batch.action, Some(Action::Rebuild));
     assert_eq!(batch.events.len(), 1);
-    assert_eq!(adopted.attached.lock().unwrap().len(), 3);
+    let attached = adopted.attached.lock().unwrap();
+    assert_eq!(attached.len(), 3);
+    let stale = Path::new("/repo/assets/stale.svg");
+    assert!(!attached[2].exact.contains_key(stale));
+    assert!(!watch.plan().exact.contains_key(stale));
 }
 
 #[test]

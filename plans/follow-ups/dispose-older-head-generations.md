@@ -44,31 +44,45 @@
     the old render generation. The old render generation started to drop
     before the first background render in 18 of 18 rebuilds on
     `examples/basic` and in 11 of 12 on the large fixture.
-  - Branch `calummoore/mokly-publish-path` tried an earlier start: the
-    background task handed its previous pass snapshot to a drop on a blocking
-    thread of the runtime, one drop at a time, and started the pass at once.
-    A drop that arrived during another drop ran on the caller. With the other
-    parts of that branch, the window fell from 76.1 ms to 30.5 ms on
-    `examples/basic` and from 197 ms to 94 ms on the large fixture.
+  - Test builds of branch `calummoore/mokly-publish-path` tried an earlier
+    start: the background task handed its previous pass snapshot to a drop
+    on a blocking thread of the runtime, one drop at a time, and started the
+    pass at once. A drop that arrived during another drop ran on the caller.
+    These builds also held the watch plan reuse, and they did not copy the
+    prepared catalogue or the projected snapshot. The merged branch holds the
+    watch plan reuse and keeps both copies, and it has no earlier start.
+  - The effect of the earlier start alone, on `examples/basic`, between two
+    builds with the plan reuse and without the copies: the window fell from
+    47.8, 50.3, and 52.6 ms to 33.4, 30.0, and 31.7 ms (3 runs each). No such
+    pair ran on the large fixture. There, the drop that the earlier start
+    removes took 68 ms on `main`.
   - The first background renders then started about 1 ms after the
     publication. On the large fixture, the old render generation started to
     drop after the first background render in 12 of 12 rebuilds, against 1 of
     12 on `main`. The processes that did not bundle then evaluated the new
     head generation while they still held the old one, until their next
     request.
-  - Peak RSS of the Serve process tree on `examples/basic`, 3 interleaved
-    runs each, 4 sidecars:
-    - `main`: 2,537, 2,539, and 2,540 MiB.
-    - With the earlier start: 2,636, 2,577, and 2,737 MiB, a mean of 4.4%
-      more.
-    - The same branch without the earlier start: 2,464, 2,539, and
-      2,472 MiB, a mean of 1.9% less.
+  - Peak RSS of the Serve process tree on `examples/basic`, 4 sidecars:
+    - `main` and the build with the earlier start ran as 3 interleaved pairs.
+      `main`: 2,537, 2,539, and 2,540 MiB. With the earlier start: 2,636,
+      2,577, and 2,737 MiB, a mean of 4.4% more.
+    - The build with the plan reuse and without the copies, but without the
+      earlier start, ran 3 times after those pairs: 2,464, 2,539, and
+      2,472 MiB. Against it, the earlier start added a mean of 6.4%.
+  - The merged state, the plan reuse alone with both copies (commit
+    `10487c8cc`), measured by the performance orchestrator on mokly-cloud on
+    2026-11-19, 12 interleaved rounds against `main` `3e624480e`:
+    - Window per edit: 129, 92, and 92 ms on `main`, 127, 42, and 42 ms with
+      the change.
+    - Edit-to-ready mean: 2.89 s on `main`, 2.81 s with the change.
+    - First Changes result: 12.96 s on `main`, 12.74 s with the change.
+    - Peak memory demand: 2,905 MiB on `main`, 2,768 MiB with the change.
   - The same overlap raised the peak memory demand of mokly-cloud by about 8%
     in attempt 1 of the head preload.
   - On 2026-11-19 the performance orchestrator chose, under the user's
-    delegation of 2026-11-16, to merge that branch without the earlier start,
-    and to make the pool rule below the root fix, in its own branch and
-    measurement.
+    delegation of 2026-11-16, to merge the plan reuse alone, without the
+    earlier start, and to make the pool rule below the root fix, in its own
+    branch and measurement.
 - **Task:**
   1. Add a pool rule: before a head process that did not bundle the newest
      head generation (`Head::warm`) runs a render of that generation,

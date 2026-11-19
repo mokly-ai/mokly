@@ -20,11 +20,15 @@
     `graph.prepare` and then drops the original. Each projection copies the
     projected snapshot and its generation, then drops the projected values.
     Neither copy changes output.
-  - Branch `calummoore/mokly-publish-path` removed both copies, because each
-    copy and drop costs time before the publication: 1.9 ms on
-    `examples/basic` and 16 ms on the large React fixture of
-    `scripts/large/` (5,850 documents), means of release builds on 4 vCPU on
-    2026-11-19.
+  - Branch `calummoore/mokly-publish-path` removed both copies in commit
+    `f9388f441`, because they cost time between the end of `graph.prepare`
+    and the publication: 2.9 ms on `examples/basic` (1.9 ms to copy and drop
+    the projected snapshot, 1.0 ms to drop the catalogue copy) and 16.2 ms on
+    the large React fixture of `scripts/large/` (5,850 documents: 11.1 and
+    2.4 ms for the snapshot, 2.7 ms for the catalogue), means of release
+    builds on 4 vCPU on 2026-11-19. The copy of the catalogue itself runs
+    before `graph.prepare`, and no run measured it. Commit `10487c8cc`
+    restored both copies.
   - Without the copies, the startup usage pass of the large React fixture
     took 2.4 s longer, about 4.7%, in 5 of 6 interleaved rounds: 53.6 s
     against 51.1 s with the copies, and 51.6 s on `main`.
