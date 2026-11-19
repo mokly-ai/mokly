@@ -92,6 +92,7 @@ setInterval(() => {}, 1000);
     fn timed(cancellation: Arc<Token>, clock: Arc<dyn Clock>, root: &Path) -> TimedCommands {
         TimedCommands {
             spawner: Arc::new(SystemSpawner {
+                clock: clock.clone(),
                 groups: Arc::new(SystemProcessGroups),
             }),
             clock,

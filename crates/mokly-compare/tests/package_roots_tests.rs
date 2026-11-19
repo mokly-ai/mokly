@@ -49,6 +49,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
         let groups = Arc::new(SystemProcessGroups);
         let commands: Arc<dyn Commands> = Arc::new(TimedCommands {
             spawner: Arc::new(SystemSpawner {
+                clock: clock.clone(),
                 groups: groups.clone(),
             }),
             clock: clock.clone(),

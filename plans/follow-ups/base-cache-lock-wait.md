@@ -137,14 +137,16 @@
 - **Wider fix:** B. A limit inside `DiskCache::lock` covers every current and
   later caller of the wait.
 - **Previous examples:**
-  - `plans/follow-ups/install-pipe-wait-after-stop.md`: a stopped base
-    install waits without a limit for its output pipes.
+  - A stopped base install waited without a limit for output pipes that a
+    survivor of the stop held. It was the same class of wait during base
+    preparation, with another cause. Its fix waits up to a short grace period
+    after the last signal of the stop. Then the install ends with the result
+    that the stop gives. The section
+    [Bounds And Stops](../../docs/protocol/mokly-base-install-processes.md#bounds-and-stops)
+    of the base install processes contract states that rule.
   - The bundle kind tries each lock once. The bundle disk cache change chose
     that rule on 2026-11-16.
 - **Related:**
-  - [install-pipe-wait-after-stop.md](./install-pipe-wait-after-stop.md): the
-    same class of wait without a limit during base preparation. The causes
-    and the fixes differ.
   - The
     [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime):
     Serve keeps one captured base, with its leases, between classifications
