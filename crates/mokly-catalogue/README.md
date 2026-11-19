@@ -202,7 +202,10 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/config.rs`](./src/config.rs) defines `ConfigLoader` and `Loader`,
   which find and load the configuration into a `ResolvedConfig`.
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
-  shape and the `ResolvedConfig` that later stages read.
+  shape and the `ResolvedConfig` that later stages read. `ViteConfig` is the
+  `vite` switch: `true`, `false`, or `ViteOptions`, an object without fields.
+  `ResolvedConfig::vite` tells whether a side compiles JavaScript through its
+  project's Vite setup.
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
   gives `ResolvedConfig::repository_path`, the one resolver of
   config-relative paths, with `renderer`, `postcss`, and `package_roots`.

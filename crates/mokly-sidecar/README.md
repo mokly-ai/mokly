@@ -459,6 +459,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
   `Worker`, `Clock`, and `Diagnostics` traits. It also defines `SpawnFailure`,
   the factory error that says whether a child process started.
+  `Diagnostics::operation` receives each `Operation` of
+  [`src/operations.rs`](./src/operations.rs): a catalogue esbuild call, a Vite
+  compile, or a PostCSS worker start or stop.
 - [`src/process_clock.rs`](./src/process_clock.rs) and
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
@@ -474,7 +477,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `BundleCapture`, `Full` by default or `ServeEdit`, and the optional
   request-only `plan` of a Serve edit. `results::Bundle` carries the optional
   `plan` beside `compiled`. Pool state, store calls, and restore requests take
-  only the `Bundle` settings. A successful `Response`
+  only the `Bundle` settings. `Bundle::vite` selects the Vite compile path. It
+  is omitted when false, so the settings of an esbuild compile keep their
+  bytes. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
   the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)
   decodes each envelope field by field, with no generic JSON tree.
@@ -484,7 +489,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   offers, and restore requests share the compilation instead of copying it.
   `ReuseEvidence` can carry the `UncapturedEvidence` marker of a deliberate
   Serve edit omission. Its `captured`, `serve_edit`, and `reusable` methods
-  decide which candidates a call admits.
+  decide which candidates a call admits. A Vite compilation keeps its
+  `ViteRecipe` in `CompiledGeneration::vite`: the Vite version, the entry URL,
+  and one `ViteModuleFetch` for each module fetch. Each `ViteFetchResult` is
+  transformed code or an external module with its `ViteExternalType`.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the fail-closed error

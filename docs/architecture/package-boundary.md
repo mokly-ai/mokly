@@ -1,6 +1,6 @@
 # Package And Consumer Boundary
 
-Status: No receiver checks the catalogue content of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud. The [Storybook support plan](../../plans/storybook-support.md) adds the Vite adapter and the optional `vite` peer dependency, which are not available yet.
+Status: No receiver checks the catalogue content of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
 
 ## Rule
 

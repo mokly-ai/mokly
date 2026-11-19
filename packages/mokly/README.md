@@ -26,7 +26,9 @@ npm install --save-dev @mokly/mokly
 The binary comes from an optional dependency, so keep optional dependencies
 enabled when you install. React and React DOM 19 or newer are optional peer
 dependencies. Install them only when screens or components are written in
-React. A catalogue of HTML files needs neither package.
+React. A catalogue of HTML files needs neither package. Vite 8 is also an
+optional peer dependency. Install it only for the
+[Vite adapter](../../docs/guides/authoring/vite.md).
 
 ## Configure
 
@@ -177,7 +179,9 @@ the packed contents of the package.
   dispatches each sidecar request to its method. It removes the request-only
   `capture` and `plan` values of a `bundle` request before the reuse check,
   the compile, the identity, and the restore see the settings. It gives a
-  `CaptureDurability` only to a `full` request.
+  `CaptureDurability` only to a `full` request. It sends a `bundle` request
+  with `vite` to `ViteCompiler` instead of `bundle`. It awaits `evaluateVite`
+  before `describe` and before each render.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
@@ -229,6 +233,9 @@ the packed contents of the package.
 - [`src/sidecar/toolchain.ts`](./src/sidecar/toolchain.ts) holds
   `toolchainIdentity`, which each sidecar process computes once from the
   package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
+  [`src/sidecar/vite-toolchain.ts`](./src/sidecar/vite-toolchain.ts) adds the
+  Vite version and the real path of the Vite package for a Vite compile and
+  for its reuse check.
 - [`src/sidecar/resolution-evidence.ts`](./src/sidecar/resolution-evidence.ts)
   holds `ResolutionEvidence`, the esbuild plugin that records the candidate
   directories, manifests, and configurations of each import before esbuild
@@ -276,6 +283,42 @@ the packed contents of the package.
   `sameCaptureStat` compares a witness with its recheck.
   [`src/sidecar/capture-volumes.ts`](./src/sidecar/capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
+- [`src/sidecar/vite-compiler.ts`](./src/sidecar/vite-compiler.ts) holds
+  `ViteCompiler`, which compiles a `bundle` request with `vite` into a
+  compiled recipe with a `ViteRecipe` and empty, incomplete reuse evidence.
+  It keeps one Vite server and replaces it when the roots, the peers, or the
+  setup stamp change.
+  [`src/sidecar/vite-setup.ts`](./src/sidecar/vite-setup.ts) holds
+  `viteSetup`, which loads the app's `vite.config.*` with Vite's runner loader
+  and starts the server with no HTTP server, watcher, hot reload, or
+  dependency pre-bundling. Its `setupStamp` digests the config files, their
+  imports, the env files, and the file list of the configuration directory.
+- [`src/sidecar/vite-peers.ts`](./src/sidecar/vite-peers.ts) holds
+  `withVitePeers`, which runs the Vite compile inside one esbuild call, so
+  that the consumer peer resolver of the esbuild path resolves `vite` and
+  React. Its `loadVite` loads that `vite` and finds the real path of its
+  package. [`src/sidecar/vite-node-peers.ts`](./src/sidecar/vite-node-peers.ts)
+  holds `withViteNodePeers`, a scoped Node resolve hook. `Session` runs each
+  request inside it, so a dependency that Node loads for a Vite generation
+  gets the side's one React runtime.
+- [`src/sidecar/vite-graph.ts`](./src/sidecar/vite-graph.ts) holds
+  `walkVite`, which records every module fetch from the virtual entry in the
+  `ViteRecipe` before any evaluation. Its `viteGraph` builds the module graph
+  from these fetches. [`src/sidecar/vite-fetch.ts`](./src/sidecar/vite-fetch.ts)
+  holds `createViteFetch`, the one boundary that fetches a module from the
+  Vite server. Each fetch confines its file and records its bytes and imports.
+  [`src/sidecar/vite-plugin.ts`](./src/sidecar/vite-plugin.ts) holds
+  `moklyVitePlugin`, the `mokly` plugin, which runs before the plugins of the
+  setup. It handles Mokly's virtual modules, React, the style library wrappers,
+  the stylesheet stubs, and the confinement of each resolved file.
+- [`src/sidecar/vite-evaluate.ts`](./src/sidecar/vite-evaluate.ts) holds
+  `evaluateVite`, which evaluates a Vite generation once through Vite's module
+  runner. The runner reads only the recorded fetches of the `ViteRecipe`, so a
+  restored recipe needs no source read and no transform.
+- [`src/sidecar/virtual-modules.ts`](./src/sidecar/virtual-modules.ts) builds
+  the authoring facade, the JSX development shim, and the CSS Modules stub for
+  both compile paths. It also limits the reserved runtime imports to Mokly's
+  own virtual modules.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes.
 - [`src/generated/sidecar`](./src/generated/sidecar) holds the request and

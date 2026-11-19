@@ -1,6 +1,6 @@
 # Imported Stylesheet Diagnostics
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working

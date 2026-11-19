@@ -1,7 +1,5 @@
 # Watched Catalogue Development
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
-
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch

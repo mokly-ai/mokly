@@ -1,6 +1,6 @@
 # Mokly Package And Authoring Contract
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 ## Scope
 
@@ -21,20 +21,20 @@ screens may exist only under examples and test fixtures.
 | `@mokly/native-<target>` | one `mokly` binary per platform: `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, and `win32-x64-msvc`                                 |
 | `@mokly/viewer`          | the Browse shell, rendered in the browser, and the readers of the catalogue index and entry detail                                                      |
 
-`@mokly/mokly` lists the five platform packages as exact optional
-dependencies and depends on the exact coordinated `@mokly/viewer` version. It
-declares `react` and `react-dom` `>=19.0.0` as peer dependencies, needed only
-when screens or components are written in React; an HTML-only catalogue runs
-without them and never starts the sidecar, unless the
-[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript) transforms its stylesheets. The shim requires a version in the
-[supported Node range](#node-support) and rejects another version with an actionable error before it starts
-the binary. It resolves the platform package for the current platform,
-requires its version to equal the CLI package version, and runs the binary
-with inherited standard streams; it never falls back to a JavaScript
-implementation. The binary owns every command and every file write under the
-[Rust core architecture](../architecture/rust-core.md), and it starts the
-[render sidecar](./mokly-sidecar.md) only when a catalogue needs JavaScript or a Vite stylesheet transform.
-The [package boundary](../architecture/package-boundary.md) names what each package may depend on.
+`@mokly/mokly` lists the five platform packages as exact optional dependencies and depends on the
+exact coordinated `@mokly/viewer` version. It declares `react` and `react-dom` `>=19.0.0` as peer
+dependencies, needed only when screens or components are written in React; an HTML-only catalogue
+runs without them and never starts the sidecar, unless the
+[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript) transforms its stylesheets.
+It also declares `vite` `^8.0.0` as an optional peer dependency, needed only for the
+[Vite adapter](./mokly-vite-adapter.md#loading-vite). The shim requires a version in the
+[supported Node range](#node-support) and rejects another version with an actionable error before it
+starts the binary. It resolves the platform package for the current platform, requires its version
+to equal the CLI package version, and runs the binary with inherited standard streams; it never
+falls back to a JavaScript implementation. The binary owns every command and every file write under
+the [Rust core architecture](../architecture/rust-core.md), and it starts the
+[render sidecar](./mokly-sidecar.md) only when a catalogue needs JavaScript or a Vite stylesheet
+transform. The [package boundary](../architecture/package-boundary.md) names what each package may depend on.
 
 ## Node Support
 

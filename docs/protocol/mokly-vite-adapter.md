@@ -1,6 +1,6 @@
 # Vite Adapter
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The base side, Storybook's merged setup, and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
 
 This page extends the [sidecar bundling contract](./mokly-sidecar.md#bundling)
 and the [module source rules](./mokly-sidecar-modules.md). It defines the Vite
@@ -140,8 +140,12 @@ setup emits the development JSX runtime.
 ## Module Graph
 
 Each module that Vite transforms is a module of the graph. It carries the
-digest of its consumed bytes and its imports in source order, including
-re-exports, dynamic imports, and stylesheets. A file that a query selects,
+digest of its consumed bytes and its imports: first its static imports and
+re-exports in source order, then its dynamic imports in source order, with
+stylesheets among them. Decision: dynamic imports come after static imports,
+because a module evaluates every static import first, as in the project's
+own Vite build. The esbuild path's interleaved order was rejected under the
+adapter. A file that a query selects,
 such as `?raw`, `?url`, or `?react`, counts as its file with its bytes. A
 plugin's virtual module is not a module of the graph. The files that it
 imports count as imports of its importer.

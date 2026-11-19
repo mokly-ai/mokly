@@ -1,6 +1,6 @@
 # Sidecar Module Sources
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite adapter on the base side is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
@@ -69,9 +69,11 @@ that source root. Missing files and escaping symlinks fail closed. npm and
 pnpm links follow the same rule. A file outside source, repository mapping,
 and selected dependencies fails closed for JavaScript and CSS alike.
 
-The graph lists each module's imports in record order from the bundler's
-metafile. That order includes re-exports and dynamic imports. Stylesheets
-use their resolved logical names. The binary watches source files, hashes
+On the esbuild path, the graph lists each module's imports in record order
+from the bundler's metafile. That order includes re-exports and dynamic
+imports. The [module graph rules](./mokly-vite-adapter.md#module-graph) of
+the Vite adapter define the graph of a Vite compile. Stylesheets use their
+resolved logical names. The binary watches source files, hashes
 dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 

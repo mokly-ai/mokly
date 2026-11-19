@@ -1,7 +1,5 @@
 # Compiled Recipes And Release
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
-
 These rules belong to the `bundle` and `restoreGeneration` requests of the
 [render sidecar](./mokly-sidecar.md), under the
 [module source rules](./mokly-sidecar-modules.md).

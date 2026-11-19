@@ -1,6 +1,6 @@
 # Rust Core Architecture
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the

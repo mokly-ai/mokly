@@ -1,6 +1,6 @@
 # Vite Adapter Stylesheets
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 This page continues the [Vite adapter contract](./mokly-vite-adapter.md). It
 defines how the setup of the adapter transforms stylesheets.

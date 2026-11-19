@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite` field is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The `vite.config` field is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path

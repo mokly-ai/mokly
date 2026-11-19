@@ -745,7 +745,10 @@ own lines of this plan.
   variant counts as its file. A plugin's virtual module is not a module, and
   its file imports count for its importer. An externalized dependency is a
   module with the digest of its resolved file and no imports. Reason: the
-  render key rules stay without a second compiler.
+  render key rules stay without a second compiler. Refined on 2026-11-19: a
+  module lists its static imports in source order, then its dynamic imports
+  in source order. Reason: a module evaluates every static import first, as
+  in the project's own Vite build.
 - D5. A Vite compile records no reuse evidence, so the bundle cache never
   stores it, and only a `serveEdit` request reuses it. The toolchain
   identity adds the Vite version and its real path. Reason: Vite's resolver
@@ -1140,23 +1143,23 @@ The project's Vite setup compiles JavaScript, as decision 16 says.
       as decision 17 says. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Test a Vite fixture with an alias, `import.meta.env`, a `?raw` import,
       and the SVGR plugin in `build`. Branch: `conductor/storybook-support-d-vite-adapter`.
-- [ ] Add `docs/guides/authoring/vite.md`, and update the
-      `packages/mokly/README.md` key code.
+- [x] Add `docs/guides/authoring/vite.md`, and update the
+      `packages/mokly/README.md` key code. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Move the virtual module helpers that both compile paths need out of
       `plugins.ts`, as a separate commit, with no behaviour change. The
       primary orchestrator approved this on 2026-11-18. Branch: `conductor/storybook-support-d-vite-adapter`.
-- [ ] Add the optional `vite` peer dependency, and update its check in
+- [x] Add the optional `vite` peer dependency, and update its check in
       `scripts/release/manifest.mjs`, `docs/protocol/mokly-package.md`, and
-      `docs/protocol/npm-release.md`.
+      `docs/protocol/npm-release.md`. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Add the rule of the answer to decision 22 to
       `docs/protocol/mokly-vite-adapter.md`. Branch:
       `conductor/storybook-support-d-vite-adapter`.
 - [ ] Apply the answer to track D decision 4 to the configuration check and
       to `docs/protocol/mokly-vite-adapter.md`.
-- [ ] Name the `vite` setting in the `bundle` row of
+- [x] Name the `vite` setting in the `bundle` row of
       `docs/protocol/mokly-sidecar.md`, which is at its 250-line cap, and
       scope the esbuild "metafile" sentence of
-      `docs/protocol/mokly-sidecar-modules.md` to the esbuild path.
+      `docs/protocol/mokly-sidecar-modules.md` to the esbuild path. Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 15: Vite adapter on the base side and in Serve
 

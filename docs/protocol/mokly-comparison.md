@@ -1,6 +1,6 @@
 # Tree Comparison And Changes
 
-Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 ## Purpose And Inputs
 
