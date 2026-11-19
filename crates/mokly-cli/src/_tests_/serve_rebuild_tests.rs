@@ -39,6 +39,7 @@ pub(super) fn initial() -> Arc<Snapshot> {
         document_keys: BTreeMap::new(),
         index,
         details: BTreeMap::new(),
+        recent_details: Default::default(),
         completed: BTreeMap::new(),
         files: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),
@@ -76,6 +77,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };

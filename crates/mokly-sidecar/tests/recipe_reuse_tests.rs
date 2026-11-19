@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_platform::processes::SystemProcessGroups;
-use mokly_sidecar::methods::{Bundle, Call};
+use mokly_sidecar::methods::{Bundle, BundleRequest, Call};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -35,10 +35,17 @@ impl Diagnostics for Counts {
 }
 
 fn bundle(pool: &Pool, params: &Bundle) -> results::Bundle {
-    let MethodResult::Bundle(result) = pool.request(Call::Bundle(params.clone())).unwrap() else {
+    let MethodResult::Bundle(result) = pool
+        .request(Call::Bundle(BundleRequest {
+            plan: None,
+            params: params.clone(),
+            capture: None,
+        }))
+        .unwrap()
+    else {
         panic!("expected bundle")
     };
-    result
+    *result
 }
 
 fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
@@ -56,6 +63,7 @@ fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
         )),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: workspace.join("packages/mokly/dist/sidecar.js"),
             repository: root.into(),
@@ -145,5 +153,66 @@ fn stored_and_live_recipes_with_the_same_id_both_reach_the_input_check() {
         2,
         "the released directory recipe must remain available"
     );
+    pool.shutdown().unwrap();
+}
+
+#[test]
+fn released_recipes_reject_an_added_earlier_absolute_paths_target() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = dunce::canonicalize(directory.path()).unwrap();
+    fs::create_dir(root.join("one")).unwrap();
+    fs::create_dir(root.join("two")).unwrap();
+    fs::write(root.join("package.json"), "{}").unwrap();
+    fs::write(root.join("one/.keep"), "").unwrap();
+    fs::write(root.join("two/value.js"), "export const value='two';").unwrap();
+    let written = root.join("written.js").to_string_lossy().replace('\\', "/");
+    fs::write(
+        root.join("entry.ts"),
+        format!(
+            "export {{value}} from {};",
+            serde_json::to_string(&written).unwrap()
+        ),
+    )
+    .unwrap();
+    fs::write(
+        root.join("tsconfig.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "compilerOptions": { "paths": { written: ["./one/value.js", "./two/value.js"] } }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let counts = Arc::new(Counts::default());
+    let pool = pool(&root, counts.clone());
+    let params = settings(&root);
+    let original = bundle(&pool, &params);
+    assert_eq!(
+        original
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "two/value.js"]
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    pool.release_generation(&original.generation, original.epoch);
+    let unchanged = bundle(&pool, &params);
+    assert_eq!(
+        unchanged.compiled.runtime_key,
+        original.compiled.runtime_key
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    pool.release_generation(&unchanged.generation, unchanged.epoch);
+    fs::write(root.join("one/value.js"), "export const value='one';").unwrap();
+    let changed = bundle(&pool, &params);
+    assert_eq!(
+        changed
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "one/value.js"]
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 2);
     pool.shutdown().unwrap();
 }

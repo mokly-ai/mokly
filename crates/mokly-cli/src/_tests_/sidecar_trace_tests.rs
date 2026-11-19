@@ -114,6 +114,7 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
                 Arc::new(factory.clone()),
                 Arc::new(clock.clone()),
                 Launch {
+                    capture_durability: false,
                     node: "private-node".into(),
                     entry: "private-entry".into(),
                     repository: "/private-root".into(),

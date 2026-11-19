@@ -7,6 +7,8 @@ import test from "node:test";
 
 import { runRepositoryRatchets } from "../scripts/verification/repository-ratchets.mjs";
 
+import { startDuration } from "./helpers/durations.js";
+
 const legacyModule =
   "export const knownUnused = 1;\n" + "void 0;\n".repeat(300);
 const longProtocolDocument =
@@ -86,6 +88,44 @@ test("unused-export ratchet rejects every JavaScript module extension", async (c
   }
 });
 
+test("unused-export ratchet audits UI internals while keeping its public surface", async (context) => {
+  const duration = startDuration();
+  const fixture = await createDivergedRepository();
+  context.after(() => fs.rm(fixture.root, { force: true, recursive: true }));
+  context.after(() => context.diagnostic(`UI internal audit: ${duration()}`));
+  await fs.mkdir(path.join(fixture.root, "packages/ui/src"), {
+    recursive: true,
+  });
+  await Promise.all([
+    fs.writeFile(
+      path.join(fixture.root, "packages/ui/package.json"),
+      JSON.stringify({
+        name: "@mokly/ui",
+        exports: { ".": { import: "./dist/index.js" } },
+      }),
+    ),
+    fs.writeFile(
+      path.join(fixture.root, "packages/ui/src/index.ts"),
+      "export const publicUiValue = 1;\n",
+    ),
+    fs.writeFile(
+      path.join(fixture.root, "packages/ui/src/internal.ts"),
+      "export const unusedUiValue = 2;\nvoid unusedUiValue;\n",
+    ),
+  ]);
+
+  const result = captureRatchets(fixture.root);
+  assert.equal(result.passed, false, result.output);
+  assert.match(
+    result.output,
+    /new unused internal export: packages\/ui\/src\/internal\.ts#unusedUiValue/u,
+  );
+  assert.doesNotMatch(
+    result.output,
+    /new unused internal export: .*#publicUiValue/u,
+  );
+});
+
 test("moving a capped protocol document into a subfolder keeps its cap", async (context) => {
   const fixture = await createDivergedRepository();
   context.after(() => fs.rm(fixture.root, { force: true, recursive: true }));
@@ -121,6 +161,7 @@ async function createDivergedRepository() {
     fs.mkdir(path.join(root, "docs/guides/start"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/model"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/frame"), { recursive: true }),
+    fs.mkdir(path.join(root, "packages/ui"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/viewer"), { recursive: true }),
     fs.mkdir(path.join(root, "scripts"), { recursive: true }),
     fs.mkdir(path.join(root, "xtask"), { recursive: true }),
@@ -145,6 +186,10 @@ async function createDivergedRepository() {
     fs.writeFile(
       path.join(root, "packages/frame/package.json"),
       '{ "name": "ratchet-frame-fixture", "exports": {} }\n',
+    ),
+    fs.writeFile(
+      path.join(root, "packages/ui/package.json"),
+      '{ "name": "ratchet-ui-fixture", "exports": {} }\n',
     ),
     fs.writeFile(
       path.join(root, "packages/viewer/package.json"),

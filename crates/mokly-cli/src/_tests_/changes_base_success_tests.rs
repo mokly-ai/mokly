@@ -6,15 +6,19 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
+use mokly_compare::base_freshness::{DependencySelection, FreshnessMock};
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
+use mokly_git::repository::RepositoryMock;
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::workers::RenderWorkersMock;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_sidecar::pool::PoolMock;
@@ -25,6 +29,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
 use crate::changes_base::NativeBase;
+use crate::changes_freshness::PreparedDependencies;
 
 fn tree() -> Unimock {
     Unimock::new((
@@ -85,12 +90,16 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     let pool = Unimock::new((
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::Bundle(bundle)
-                if Path::new(&bundle.source_root) == Path::new("/base")
-                    && bundle.entry_files == ["specs/card.mockup.ts"])))
-            .returns(Ok(MethodResult::Bundle(Bundle {
+                if Path::new(&bundle.params.source_root) == Path::new("/base")
+                    && bundle.params.entry_files == ["specs/card.mockup.ts"])))
+            .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
+                plan: None,
+                cache: None,
                 unmapped_dependency_directories: None,
                 epoch: 0,
-                compiled: mokly_sidecar::compiled::CompiledGeneration {
+                compiled: Arc::new(CompiledGeneration {
+                    toolchain: "fixture".into(),
+                    reuse_evidence: Arc::new(ReuseEvidence { uncaptured: None, durable: true, complete: true, inputs: Default::default() }),
                     identity: "base-bundle".into(),
                     code: "module.exports={}".into(),
                     runtime_key: "fixture-runtime".into(),
@@ -103,14 +112,14 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     input_directories: BTreeMap::new(),
                     metadata_directories: BTreeMap::new(),
                     unmapped_dependency_directories: None,
-                },
+                }),
                 generation: "base-bundle".into(),
                 modules: vec![Module {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
                 }],
-            }))),
+            })))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
             .returns(Ok(MethodResult::Empty)),
@@ -136,6 +145,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
+            Arc::new(Unimock::new(())),
             Arc::new(pool),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(
@@ -147,11 +157,14 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             None,
         )),
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
+        freshness: Some(Arc::new(Unimock::new(FreshnessMock::record
+            .some_call(matching!((checkout, _, roots, _) if checkout.digest == "checkout" && roots.is_none()))
+            .returns(Ok(None))))),
         dependencies: Arc::new(Unimock::new(
             BaseDependenciesMock::prepare
-                .next_call(matching!((request, _, _, _, early)
+                .next_call(matching!((request, _, _, early)
                     if !request.install_scripts && early.is_none()))
-                .returns(Ok(side)),
+                .returns(Ok(PreparedDependencies { side, selection: Some(DependencySelection::default()) })),
         )),
     };
     let config = ResolvedConfig {
@@ -159,13 +172,21 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     };
     let prepared = provider
         .prepare(&BaseRequest {
             head: &Unimock::new(()),
             working_config: &config,
-            repository: Arc::new(Unimock::new(())),
+            repository: Arc::new(Unimock::new(
+                RepositoryMock::checkout_identity
+                    .some_call(matching!(_))
+                    .returns(Ok(CheckoutIdentity {
+                        digest: "checkout".into(),
+                        filtered: false,
+                    })),
+            )),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             install_scripts: false,
             sources: HistoricalSources {

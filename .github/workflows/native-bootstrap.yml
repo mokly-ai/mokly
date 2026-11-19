@@ -42,13 +42,13 @@ jobs:
             runner: ubuntu-24.04
           - target: linux-arm64-gnu
             triple: aarch64-unknown-linux-gnu
-            runner: blacksmith-2vcpu-ubuntu-2404-arm
+            runner: ubuntu-24.04-arm
           - target: darwin-arm64
             triple: aarch64-apple-darwin
-            runner: blacksmith-6vcpu-macos-26
+            runner: macos-26
           - target: win32-x64-msvc
             triple: x86_64-pc-windows-msvc
-            runner: blacksmith-2vcpu-windows-2025
+            runner: windows-2025
           - target: darwin-x64
             triple: x86_64-apple-darwin
             runner: macos-26-intel
@@ -61,14 +61,6 @@ jobs:
         shell: bash
     steps:
       - name: Check out reviewed commit
-        if: startsWith(matrix.runner, 'blacksmith-')
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 1
-          ref: ${{ inputs.commit }}
-          persist-credentials: false
-      - name: Check out reviewed commit on a GitHub-hosted runner
-        if: "!startsWith(matrix.runner, 'blacksmith-')"
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 1

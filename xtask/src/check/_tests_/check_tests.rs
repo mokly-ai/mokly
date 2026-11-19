@@ -131,7 +131,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             "node scripts/verification/repository-ratchets.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
-            "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings",
+            "cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings",
             "cargo xtask build-native",
             "npm run build --workspace \"@mokly/ui\"",
             "npm run build --workspace \"@mokly/model\"",

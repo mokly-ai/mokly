@@ -38,6 +38,7 @@ fn release_cleanup_after_pool_drop_keeps_mock_verification_on_the_owner() {
             Arc::new(factory.clone()),
             Arc::new(clock.clone()),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),

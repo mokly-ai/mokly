@@ -8,7 +8,8 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::Inventory;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::catalogue::CatalogueModel;
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory;
 use mokly_static::error::Error;
 
 use crate::grammar::{Build, Common};
@@ -18,6 +19,7 @@ pub(super) fn config() -> ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     }
@@ -51,15 +53,11 @@ pub(super) fn catalogue() -> PreparedCatalogue {
     }
 }
 pub(super) fn artifact() -> Artifact {
-    Artifact::finalize(
-        "/repo/site".into(),
-        vec![File {
-            path: "index.html".into(),
-            bytes: b"site".as_slice().into(),
-        }],
-        None,
-    )
-    .unwrap()
+    let mut files = inventory::Inventory::default();
+    files
+        .insert("index.html".into(), b"site".as_slice().into())
+        .unwrap();
+    Artifact::finalize("/repo/site".into(), files, None).unwrap()
 }
 pub(super) fn warning() -> Warning {
     Warning {

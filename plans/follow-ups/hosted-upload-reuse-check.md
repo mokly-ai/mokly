@@ -6,8 +6,9 @@
 - **Location:** None in the code. The check publishes
   `examples/basic/mokly.config.json` to a deployed Mokly Cloud environment.
   The Plan answer follows `docs/protocol/mokly-upload-exchange.md`.
-- **Reason:** The check needs a deployed Mokly Cloud environment, a project
-  there, and its credentials.
+- **Reason:** The check needs a live publication to a deployed Mokly Cloud
+  project, with credentials for that project, and no such publication is
+  recorded yet.
 
 - **Terms:**
   - **Entry detail:** the JSON file of one screen or component in the
@@ -29,11 +30,29 @@
     item said 2,768,084 bytes. Before PR #224, the same edit gave 250 digests
     and 23,493,689 bytes. Most of the rest is the index and the ownership
     marker.
-  - Release 0.18.0 shipped PR #224 on 2026-11-01. The cloud receiver reads
-    index version 9 only, in `crates/mkc-mokly-contract/src/index.rs:29-36`.
+  - Release 0.18.0 is the first release that holds PR #224. It reached
+    GitHub and npm on 2026-11-01. Its `CHANGELOG.md` entry carries the
+    breaking-change note of index version 9 and entry detail version 4.
+  - The cloud receiver reads index version 9 only, in
+    `crates/mkc-mokly-contract/src/index.rs:30-36`.
+  - Mokly Cloud accepts index version 9 in production. Facts checked on
+    2026-11-18 at the Cloud `main` commit `767be7b2`:
+    - On 2026-11-03, Cloud commit `908484d2` adopted 0.18.0 and index
+      version 9. Its
+      [Deploy run 41685858274](https://github.com/mokly-ai/mokly-cloud/actions/runs/41685858274)
+      passed, including the job that deploys the production workloads.
+    - On 2026-11-17, Cloud commit `6d5163d6` moved the pins to 0.19.0. Its
+      [Deploy run 44092627866](https://github.com/mokly-ai/mokly-cloud/actions/runs/44092627866)
+      passed, including the same production job. Release 0.19.0 keeps index
+      version 9.
+  - The deploy runbook `docs/ops/deploy.md` records no credentialed publish
+    proof with 0.19.0. Its only recorded publish proof, of 2026-09-20, used
+    `@mokly/mokly@0.11.0`, at lines 701-717. Lines 801-802 ask for a new
+    credentialed proof after the cutover. So no live publication that shows
+    the reuse is recorded.
 - **Task:**
-  1. With a Mokly CLI at 0.18.0 or later, publish `examples/basic` to a
-     Mokly Cloud project.
+  1. With a Mokly CLI that holds PR #224, 0.18.0 or later, publish
+     `examples/basic` to a Mokly Cloud project.
   2. Edit one heading of one entry, commit the edit, and publish again.
   3. Read the second Plan answer. Confirm that it asks only for the changed
      files: the index, the ownership marker, the deployment file, and the
@@ -42,8 +61,9 @@
 - **Impact if no action:** Nobody confirms that hosted publications get the
   reuse that the local builds show. A receiver defect can then keep the old
   upload size unnoticed.
-- **Needs:** A Mokly CLI at 0.18.0 or later, a project in a deployed Mokly
-  Cloud environment, and credentials for it.
+- **Needs:** A project in a deployed Mokly Cloud environment, and
+  credentials for it. A Mokly CLI that holds PR #224, 0.18.0 or later, and a
+  Cloud receiver that accepts index version 9 already exist.
 - **Done when:** The second Plan answer lists only the changed files, and
   the recorded digest count and bytes are close to the local build pair.
 - **Related:**

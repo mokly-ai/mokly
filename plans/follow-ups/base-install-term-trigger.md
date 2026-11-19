@@ -1,14 +1,13 @@
-# Three items misstate when a base install runs
+# Two items misstate when a base install runs
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-01, from the branch
   `conductor/rust-rebuild-150-process-tree-stops`. The finding check of its
   third review round found it outside the scope.
-- **Location:** `plans/follow-ups/package-manager-script-guard-fixtures.md:17`
-  to line 19, `plans/follow-ups/typed-lockfile-model.md:14` to line 16, and
+- **Location:** `plans/follow-ups/typed-lockfile-model.md:14` to line 16, and
   `plans/follow-ups/yarn-tls-file-confinement.md:18` to line 20.
-- **Reason:** The three items are older than the branch that found the
+- **Reason:** The two items are older than the branch that found the
   problem, and the diff of that branch does not change them.
 
 - **Source:** Review.
@@ -21,19 +20,20 @@
     side, and with pnpm or Yarn lockfiles also the manager configuration
     files.
 - **Background:**
-  - Each of the three items defines the base install with the same words
+  - Each of the two items defines the base install with the same words
     in its **Terms**. The words are: "the private install of the base
     commit's dependencies that Changes runs when the base lockfile differs
     from the working tree."
-  - `crates/mokly-cli/src/changes_base.rs:87` to line 91 sets the flag
+  - `crates/mokly-cli/src/changes_base.rs:99` to line 103 sets the flag
     `needs_sidecar`, which says whether the base needs JavaScript rendering.
     The flag reads the base configuration and the base catalogue. It is true
     when the configuration names PostCSS or a renderer. It is also true when
     the catalogue has an entry module or a stories file that is not
     excluded.
-  - Lines 92 to 102 prepare the base dependencies only when `needs_sidecar`
+  - Lines 104 to 115 prepare the base dependencies only when `needs_sidecar`
     is true. Only that path can start a package manager.
-  - Otherwise, lines 109 to 123 call `html_dependencies`. It compares only
+  - Otherwise, lines 116 to 130 call `html_dependencies` of
+    `crates/mokly-cli/src/changes_freshness.rs`. It compares only
     the manifests and the lockfiles that govern the `node_modules`
     directories of the head. When they differ, it gives the warning "Base
     dependencies differ. HTML comparison uses working-tree dependencies."
@@ -49,13 +49,11 @@
     `pnpm-workspace.yaml`, `.yarnrc.yml`, `.yarnrc`, and `.npmrc`.
   - `plans/follow-ups/install-pipe-wait-after-stop.md` already holds the
     corrected term, with the conditions in its **Background**.
-- **Problem:** The three items say that a lockfile difference alone starts
+- **Problem:** The two items say that a lockfile difference alone starts
   a base install. An HTML-only base never starts one. A change to a manifest
   or to a manager configuration file can also start one.
 - **Impact if no action:** A reader who sets up a run from these words can
-  choose an HTML-only catalogue, and then no install starts. Option C of
-  `plans/follow-ups/package-manager-script-guard-fixtures.md` asks for runs
-  with a real base install.
+  choose an HTML-only catalogue, and then no install starts.
 - **Root question:** How do these items tell a reader when Changes starts a
   base install?
 - **Options:**
@@ -72,7 +70,7 @@
     in one place. The two pages then state the HTML-only rule twice, and
     the two copies can drift. Effort: Small.
 - **Left out:**
-  - Change nothing. The three items stay wrong, so it fails the goal.
+  - Change nothing. The two items stay wrong, so it fails the goal.
   - Replace the condition with a link to the two protocol pages. It breaks
     the rule of the `plans` skill that an item copies each fact that its
     work needs.
@@ -91,4 +89,4 @@
 - **Recommendation:** A. It makes each item true and keeps the conditions
   that a real run needs, at the same effort as B.
 - **Action:** fix after merge, apply A, because the branch that found the
-  problem does not change the three items, and A adds no requirement.
+  problem does not change the two items, and A adds no requirement.

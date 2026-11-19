@@ -2,7 +2,7 @@
 
 import type { Root } from "react-dom/client";
 
-import type { FrameAdapter, MountedFrame } from "@mokly/frame";
+import type { FrameAdapter, FrameEvent, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
 import type { ComponentViewRecord } from "../src/components/view_types.js";
@@ -28,6 +28,8 @@ export interface HookHost {
   previewUsage?: ComponentViewRecord;
   pendingMounts: Deferred<MountedFrame>[];
   pendingUpdates: Deferred<void>[];
+  /** The event receiver that the hook gave to its latest mount. */
+  receive: ((event: FrameEvent) => void) | undefined;
   registry: ShellFrameRegistry | undefined;
   root: Root;
   source: string;

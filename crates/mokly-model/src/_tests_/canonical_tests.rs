@@ -2,11 +2,13 @@
 
 use serde::Serialize;
 use serde_json::json;
+use sha2::{Digest, Sha256};
+
+use crate::error::{InternalError, ModelError};
+use crate::prop_schema::PropSchema;
+use crate::{typescript, versions};
 
 use super::{compare_utf16, to_string};
-use crate::prop_schema::PropSchema;
-use crate::typescript;
-use crate::versions;
 
 #[test]
 fn canonical_bytes_use_utf16_and_preserve_authored_arrays() {
@@ -79,4 +81,72 @@ fn detail_id_ignores_its_own_id_and_current_revision() {
     assert_eq!(first, super::detail_id(&changed_id).unwrap());
     changed_id["entry"]["path"] = serde_json::json!("other");
     assert_ne!(first, super::detail_id(&changed_id).unwrap());
+}
+
+#[test]
+fn nested_canonical_preimages_preserve_numbers_escapes_arrays_and_unicode() {
+    let value = json!({
+        "revision": 0,
+        "nested": {
+            "\u{e000}": {},
+            "😀": [],
+            "text": "café\n\t\\\"detailId\\\":\\\"nested\\\"",
+            "numbers": [0, -0.0, 1.5, 100.0, 1e16],
+            "array": [{"revision": 9, "detailId": "nested"}, null, true]
+        },
+        "detailId": "0".repeat(64)
+    });
+    let expected = concat!(
+        "{\n",
+        "  \"detailId\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n",
+        "  \"nested\": {\n",
+        "    \"array\": [\n",
+        "      {\n",
+        "        \"detailId\": \"nested\",\n",
+        "        \"revision\": 9\n",
+        "      },\n",
+        "      null,\n",
+        "      true\n",
+        "    ],\n",
+        "    \"numbers\": [\n",
+        "      0,\n",
+        "      -0.0,\n",
+        "      1.5,\n",
+        "      100.0,\n",
+        "      1e+16\n",
+        "    ],\n",
+        "    \"text\": \"café\\n\\t\\\\\\\"detailId\\\\\\\":\\\\\\\"nested\\\\\\\"\",\n",
+        "    \"😀\": [],\n",
+        "    \"\u{e000}\": {}\n",
+        "  },\n",
+        "  \"revision\": 0\n",
+        "}\n"
+    );
+    assert_eq!(to_string(&value).unwrap(), expected);
+    assert_eq!(super::detail_preimage(&value).unwrap(), expected);
+    let hash = |text: &str| {
+        Sha256::digest(text)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    };
+    assert_eq!(super::detail_id(&value).unwrap(), hash(expected));
+    let mut changed = value.clone();
+    changed["detailId"] = json!("f".repeat(64));
+    changed["revision"] = json!(u64::MAX);
+    assert_eq!(super::detail_id(&changed).unwrap(), hash(expected));
+    changed.as_object_mut().unwrap().remove("revision");
+    let absent = expected.replace(",\n  \"revision\": 0", "");
+    assert_eq!(super::detail_id(&changed).unwrap(), hash(&absent));
+    assert_ne!(hash(expected), hash(&absent));
+    let ModelError::Internal(InternalError::Json { source }) =
+        super::detail_id(&json!([])).unwrap_err()
+    else {
+        panic!("a non-object detail must retain its JSON error");
+    };
+    assert_eq!(
+        source.io_error_kind(),
+        Some(std::io::ErrorKind::InvalidData)
+    );
+    assert_eq!(source.to_string(), "detail must be an object");
 }

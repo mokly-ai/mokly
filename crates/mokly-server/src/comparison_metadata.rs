@@ -54,7 +54,7 @@ fn detail_map(
     projection_removed::workspaces(&mut details);
     compared(projection_workspace::apply(&mut details, result))?;
     for detail in details.values_mut() {
-        detail.detail_id = detail_id(detail);
+        detail.detail_id = detail_id(detail)?;
     }
     Ok(details)
 }

@@ -13,7 +13,9 @@ interface WorkflowJob {
   "runs-on"?: unknown;
   steps?: readonly { run?: string }[];
   strategy?: {
-    matrix?: Readonly<Record<string, unknown>>;
+    matrix?: Readonly<Record<string, unknown>> & {
+      include?: readonly Readonly<Record<string, unknown>>[];
+    };
   };
 }
 
@@ -21,27 +23,12 @@ interface Workflow {
   jobs?: Readonly<Record<string, WorkflowJob>>;
 }
 
-/** npm trusted publishing creates provenance only on GitHub-hosted runners. */
-const PROVENANCE_PUBLISH_RUNNER = "ubuntu-24.04";
-/** Small Linux x64 jobs run on the GitHub-hosted runner, free for public repositories. */
-const SMALL_LINUX_RUNNER = "ubuntu-24.04";
-/**
- * Linux jobs above the smallest tier: the design matrix, CI Rust builds, and
- * the Testbox job, which runs the same suites on the same runner as CI.
- */
-const LARGER_LINUX_RUNNERS: Readonly<Record<string, string>> = {
-  "design-attribution.yml:design-attribution": "blacksmith-8vcpu-ubuntu-2404",
-  "ci.yml:repository": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:viewer": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:browser": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:check": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:images": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:site-lighthouse": "blacksmith-4vcpu-ubuntu-2404",
-  "ci.yml:static-delivery": "blacksmith-4vcpu-ubuntu-2404",
-  "blacksmith-testbox.yml:testbox": "blacksmith-4vcpu-ubuntu-2404",
-};
-/** CI's Windows native job compiles and tests the whole Rust workspace. */
-const CI_WINDOWS_NATIVE_RUNNER = "blacksmith-8vcpu-windows-2025";
+const STANDARD_RUNNERS = [
+  "ubuntu-24.04",
+  "ubuntu-24.04-arm",
+  "windows-2025",
+  "macos-26",
+];
 /** Workflows whose native build matrix may run `darwin-x64` on Intel macOS. */
 const INTEL_MACOS_WORKFLOWS = [
   "release.yml",
@@ -49,7 +36,7 @@ const INTEL_MACOS_WORKFLOWS = [
   "native-bootstrap.yml",
 ];
 
-test("workflows use GitHub-hosted small Linux runners, the smallest Blacksmith tiers elsewhere, and publish to npm from GitHub-hosted runners", async () => {
+test("workflows use free GitHub-hosted standard runners except the Blacksmith Testbox", async () => {
   const workflowsDirectory = path.join(repositoryRoot, ".github", "workflows");
   const workflowNames = (await fs.readdir(workflowsDirectory)).filter(
     (name) => name.endsWith(".yml") || name.endsWith(".yaml"),
@@ -74,54 +61,54 @@ test("workflows use GitHub-hosted small Linux runners, the smallest Blacksmith t
       }
       const runsOn = job["runs-on"];
       assert.ok(typeof runsOn === "string", `${context} runner`);
-      const largerRunner = LARGER_LINUX_RUNNERS[context];
-      if (largerRunner) {
-        assert.equal(runsOn, largerRunner, `${context} runner`);
+      if (context === "blacksmith-testbox.yml:testbox") {
+        assert.equal(
+          runsOn,
+          "blacksmith-4vcpu-ubuntu-2404",
+          `${context} runner`,
+        );
         continue;
       }
       if (publishesWithProvenance(job)) {
         provenancePublishers.push(context);
         assert.equal(
           runsOn,
-          PROVENANCE_PUBLISH_RUNNER,
+          "ubuntu-24.04",
           `${context} must publish from a GitHub-hosted runner`,
         );
         continue;
       }
       const matrixReference = /^\$\{\{\s*matrix\.([\w-]+)\s*\}\}$/.exec(runsOn);
       if (!matrixReference) {
-        assertMinimumRunner(runsOn, context);
+        assert.ok(
+          STANDARD_RUNNERS.includes(runsOn),
+          `${context} must use a free GitHub-hosted standard runner`,
+        );
         continue;
       }
 
       const key = matrixReference[1]!;
       const values =
         job.strategy?.matrix?.[key] ??
-        (
-          job.strategy?.matrix?.include as Record<string, unknown>[] | undefined
-        )?.map((row) => row[key]);
+        job.strategy?.matrix?.include?.map((row) => row[key]);
       assert.ok(Array.isArray(values), `${context} runner matrix`);
       for (const value of values) {
         assert.ok(typeof value === "string", `${context} runner matrix value`);
-        if (
-          INTEL_MACOS_WORKFLOWS.includes(workflowName) &&
-          jobName === "build-native" &&
-          value === "macos-26-intel"
-        ) {
-          const rows = job.strategy?.matrix?.include as Record<
-            string,
-            unknown
-          >[];
+        if (value === "macos-26-intel") {
+          assert.ok(INTEL_MACOS_WORKFLOWS.includes(workflowName), context);
+          assert.equal(jobName, "build-native", context);
+          const rows = job.strategy?.matrix?.include;
+          assert.ok(rows, `${context} must define target rows`);
           assert.deepEqual(
             rows.filter((row) => row[key] === value).map((row) => row.target),
             ["darwin-x64"],
+            `${context} must use Intel macOS only for darwin-x64`,
           );
-        } else if (
-          context === "ci.yml:native" &&
-          value.endsWith("-windows-2025")
-        ) {
-          assert.equal(value, CI_WINDOWS_NATIVE_RUNNER);
-        } else assertMinimumRunner(value, context);
+        } else
+          assert.ok(
+            STANDARD_RUNNERS.includes(value),
+            `${context} must use a free GitHub-hosted standard runner`,
+          );
       }
     }
   }
@@ -132,22 +119,5 @@ function publishesWithProvenance(job: WorkflowJob): boolean {
   return (
     job.permissions?.["id-token"] === "write" &&
     (job.steps ?? []).some((step) => /\bnpm publish\b/.test(step.run ?? ""))
-  );
-}
-
-function assertMinimumRunner(label: string, context: string): void {
-  if (label === SMALL_LINUX_RUNNER) return;
-  const match = /^blacksmith-(\d+)vcpu-(.+)$/.exec(label);
-  assert.ok(match, `${context} must use a sized Blacksmith runner`);
-  assert.notEqual(
-    match[2],
-    "ubuntu-2404",
-    `${context} must use ${SMALL_LINUX_RUNNER} for a small Linux x64 job`,
-  );
-  const expected = match[2]!.startsWith("macos-") ? 6 : 2;
-  assert.equal(
-    Number(match[1]),
-    expected,
-    `${context} must use the smallest ${match[2]} runner`,
   );
 }

@@ -9,11 +9,17 @@ import {
 } from "./package-exports.mjs";
 
 const BASELINE = "xtask/unused-internal-exports.txt";
-const SOURCE_ROOTS = ["src", "packages/viewer/src", "scripts"];
+const SOURCE_ROOTS = [
+  "src",
+  "packages/ui/src",
+  "packages/viewer/src",
+  "scripts",
+];
 const PACKAGE_ROOTS = [
   "",
   "packages/model",
   "packages/frame",
+  "packages/ui",
   "packages/viewer",
 ];
 
@@ -111,7 +117,9 @@ function baselineFormatFindings(baseline) {
     findings.push("unused internal export baseline contains duplicates");
   for (const entry of baseline) {
     if (
-      !/^(?:src|packages\/viewer\/src|scripts)\/[^#\s]+#[^#\s]+$/u.test(entry)
+      !/^(?:src|packages\/(?:ui|viewer)\/src|scripts)\/[^#\s]+#[^#\s]+$/u.test(
+        entry,
+      )
     )
       findings.push(`invalid unused internal export baseline entry: ${entry}`);
   }

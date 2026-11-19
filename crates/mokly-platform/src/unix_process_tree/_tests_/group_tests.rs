@@ -133,7 +133,7 @@ fn a_read_failure_still_signals_the_group() {
     );
     let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
     let kind = match ProcessGroup::kill(&group) {
-        Err(Error::Internal(InternalError::Io { source })) => Some(source.kind()),
+        Err(Error::Internal(InternalError::Io { source, .. })) => Some(source.kind()),
         _ => None,
     };
     assert_eq!(kind, Some(io::ErrorKind::PermissionDenied));

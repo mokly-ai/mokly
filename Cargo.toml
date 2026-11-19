@@ -10,6 +10,7 @@ authors = ["Mokly"]
 rust-version = "1.98.1"
 
 [workspace.dependencies]
+mokly-test-support = { path = "crates/mokly-test-support" }
 mokly-model = { path = "crates/mokly-model" }
 mokly-platform = { path = "crates/mokly-platform" }
 

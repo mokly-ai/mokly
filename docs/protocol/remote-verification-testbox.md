@@ -11,15 +11,16 @@ workflow file only. A branch push must match both filters. Tag pushes do not
 start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
-Run one job on the runner of the CI suite jobs, `blacksmith-4vcpu-ubuntu-2404`.
+Run one job on `blacksmith-4vcpu-ubuntu-2404`, which has the 4 vCPUs of the CI Linux runners.
 Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.
 
-The job matches the CI suite jobs in runner, Cargo settings, and Rust build
-cache, so each command takes about the time and runner cost of its CI job.
-One job serves all fourteen commands. The repository command therefore restores
-the cache of the other suites, not the cache of the CI repository job.
+The job matches the CI suite jobs in Cargo settings and Rust cache options, but
+not in runner. CI saves its cache on GitHub-hosted runners, so no job refreshes
+the cache that a box restores. One job serves all fourteen commands. The
+repository command uses the cache options of the other suites, not those of its
+CI job.
 
 Run the steps in this order:
 
@@ -34,9 +35,9 @@ Run the steps in this order:
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.98.1 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Restore the Rust build cache that the CI viewer, browser, and
-   static-delivery jobs share, with the same action and options. Set
-   `save-if: false`. Boxes run unreviewed local trees, so they never save.
+5. Restore the Rust build cache with the action and options that the CI viewer,
+   browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
+   unreviewed local trees, so they never save.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`

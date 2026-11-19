@@ -2,6 +2,7 @@
 export type BundlePhase =
   | "sidecar.bundle.compile"
   | "sidecar.bundle.classify"
+  | "sidecar.bundle.mapped-lookups"
   | "sidecar.bundle.graph"
   | "sidecar.bundle.inputs"
   | "sidecar.bundle.resolution";

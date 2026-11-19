@@ -69,6 +69,13 @@
     and Serve memory, and file count, not upload bytes. In the example the
     rule removes 98.4% of the before side. In the comparison fixture, with
     real changes, it removed 24.3% on 2026-10-27.
+  - On 2026-11-03, Mokly Cloud removed its `review.json` reader in its
+    commit `908484d2`. Its receiver now reads Changes from the index. The
+    deleted item
+    [`cloud-without-review-json.md`](https://github.com/mokly-ai/mokly/blob/be242a628db21c24212b105c5a1f7277de2e8a29/plans/follow-ups/cloud-without-review-json.md?plain=1)
+    tracked that Cloud work. This item records no later check of the
+    receiver rule of decision 2. Check that rule in Mokly Cloud before you
+    answer decision 2.
 - **Problem:** A build with Changes writes a second copy of each unchanged
   view document.
 - **Impact if no action:** Each output carries about 12 MB of copies in the

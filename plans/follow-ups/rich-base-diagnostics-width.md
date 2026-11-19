@@ -6,7 +6,7 @@
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`, which put
   the problem outside the scope of its first review.
 - **Location:** `crates/mokly-cli/src/changes_output.rs:95` to line 121,
-  `crates/mokly-cli/src/one_shot.rs:209` to line 222,
+  `crates/mokly-cli/src/one_shot/phases.rs:93` to line 106,
   `docs/protocol/mokly-terminal-output.md:51` to line 58,
   `docs/protocol/mokly-terminal-errors.md:150` to line 157, and
   `crates/mokly-cli/tests/changes_build_tests.rs:91` to line 126.
@@ -39,9 +39,9 @@
     detail lines that name the full base commit and the original terminal
     code.
   - `changes_output::diagnostics` prints each detail as
-    `base {commit}: [mokly/{code}] {message}`. `one_shot.rs` writes these
-    lines to stderr. Rich mode adds a two-space indent and does not cut the
-    line.
+    `base {commit}: [mokly/{code}] {message}`. `one_shot/phases.rs` writes
+    these lines to stderr. Rich mode adds a two-space indent and does not cut
+    the line.
   - The text before each message takes 71 columns for `build-invalid`. The
     scripts hint line has 176 columns.
   - The hint rule at `docs/protocol/mokly-terminal-errors.md:150` to line 157
@@ -95,7 +95,7 @@
     long line then wraps at the terminal edge without its indent. The user
     sees the full failure text. About ten `bounded` calls in eight files
     under `crates/mokly-cli/src` change. Examples are `output.rs:173`,
-    `:187`, and `:189`, `build_output.rs:32`, `one_shot.rs:203`,
+    `:187`, and `:189`, `build_output.rs:32`, `one_shot/phases.rs:87`,
     `changes_output.rs:85`, `publish_errors.rs:185`, and
     `serve_progress.rs:242`. Three protocol rules change:
     `docs/protocol/mokly-terminal-output.md:51` to line 58,

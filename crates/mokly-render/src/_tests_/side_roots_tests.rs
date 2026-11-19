@@ -25,6 +25,7 @@ fn config() -> ResolvedConfig {
         },
         file: PathBuf::from("/repo/app/mokly.config.json"),
         repo_root: PathBuf::from("/repo"),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     }

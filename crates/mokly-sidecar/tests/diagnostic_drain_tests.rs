@@ -96,6 +96,7 @@ fn real_child_flushes_exact_stderr_pieces_before_signalling_drained() {
         .unwrap();
     let mut process = factory
         .spawn(&Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: root.join("tests/fixtures/sidecar/shutdown-tail.mjs"),
             repository: root,

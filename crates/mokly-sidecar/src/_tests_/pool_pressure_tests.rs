@@ -77,6 +77,7 @@ fn sixty_four_high_memory_requests_have_five_recycles_and_one_notice() {
             ClockMock::now_ms.each_call(matching!()).returns(0_u64),
         )),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar".into(),
             repository: "/repo".into(),

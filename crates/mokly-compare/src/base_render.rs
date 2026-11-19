@@ -3,18 +3,18 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
-use mokly_model::material::catalogue_key;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::base_freshness::PreparationInputs;
+use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
 use crate::base_selection::{BaseLookup, PinnedBase};
-use crate::comparison_steps::{Step, Steps};
-use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
+use crate::comparison_steps::Steps;
+use crate::comparison_types::{Comparison, ComparisonResult};
 use crate::error::{Error, Result};
 use crate::extraction_snapshots::Snapshots;
 use crate::git_tree::GitTree;
@@ -49,6 +49,8 @@ pub struct PreparedBase {
     pub generation: Arc<dyn RenderGeneration>,
     /// True only when a tier-two install supplied dependencies with scripts off.
     pub scripts_off: bool,
+    /// Original preparation evidence. None prevents production retention.
+    pub freshness: Option<PreparationInputs>,
 }
 
 /// A base preparation failure retains whether a scripts-off tier-two install completed.
@@ -128,8 +130,31 @@ pub struct BaseRequest<'a> {
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseProviderMock))]
 pub trait BaseProvider: Send + Sync {
+    /// Find an equal, current base and create this classification's reader.
+    /// A miss releases a different or stale base before any fresh preparation.
+    /// Fresh preparation samples checkout identity before its first base read,
+    /// including the bounded fallback that does not call this method again.
+    fn find_kept(&self, _request: &BaseRetentionRequest<'_>) -> Result<Option<BaseReuse>> {
+        Ok(None)
+    }
+
     /// Load current-version definitions and render through the common generation interface.
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult;
+
+    /// Keep a successful capture and detach it from the preparing classification.
+    /// Return its reader, or None when this provider retains no base.
+    /// Retain no source failure, conversion warning, filtered checkout, or retryable fallback.
+    /// Replace any existing slot. Preserve the checkout sample taken before preparation.
+    fn keep(
+        &self,
+        _request: &BaseRetentionRequest<'_>,
+        _base: Arc<KeptBase>,
+    ) -> Result<Option<BaseReuse>> {
+        Ok(None)
+    }
+
+    /// Release only this exact kept identity, so a late failure preserves a newer base.
+    fn release(&self, _base: &Arc<KeptBase>) {}
 }
 
 /// Build and Serve call the same base-selection service.
@@ -176,101 +201,7 @@ impl ChangesService for Changes {
         head: Arc<dyn RenderGeneration>,
         install_scripts: Option<bool>,
     ) -> Result<ComparisonResult> {
-        let install_scripts = install_scripts
-            .or_else(|| {
-                config
-                    .input
-                    .review
-                    .as_ref()
-                    .and_then(|review| review.base_install_scripts)
-            })
-            .unwrap_or(false);
-        self.steps.step(Step::Reading);
-        let selected = match &self.pinned {
-            Some(pinned) => pinned.clone(),
-            None => self
-                .lookup
-                .pin(&config.repo_root, selected_base(config, base))?,
-        };
-        let base = &selected.reference;
-        let repository = selected.repository.clone();
-        let commit = selected.commit.clone();
-        let (before, failures, scripts_off) = {
-            let base_span = tracing::info_span!("review.base-tree", status = "error");
-            let _scope = base_span.enter();
-            let sources =
-                self.sources
-                    .create(repository.clone(), commit.clone(), &config.repo_root)?;
-            let failures = sources.failures.clone();
-            let prepared = self.provider.prepare(&BaseRequest {
-                head: head.as_ref(),
-                working_config: config,
-                repository,
-                commit: commit.clone(),
-                sources,
-                install_scripts,
-                steps: self.steps.clone(),
-            });
-            if let Some(source) = failures.failure() {
-                return Err(Error::Base {
-                    commit: commit.to_string(),
-                    scripts_off: prepared
-                        .as_ref()
-                        .map_or_else(|error| error.scripts_off, |prepared| prepared.scripts_off),
-                    source: Box::new(Error::SourceFailure { source }),
-                });
-            }
-            let prepared = match prepared {
-                Ok(prepared) => prepared,
-                Err(source) => {
-                    return Err(Error::Base {
-                        commit: commit.to_string(),
-                        scripts_off: source.scripts_off,
-                        source: source.source,
-                    });
-                }
-            };
-            let before = match self.comparison.capture_base(prepared.generation) {
-                Ok(before) => before,
-                Err(source) => {
-                    if let Some(source) = failures.failure() {
-                        return Err(Error::Base {
-                            commit: commit.to_string(),
-                            scripts_off: prepared.scripts_off,
-                            source: Box::new(Error::SourceFailure { source }),
-                        });
-                    }
-                    return Err(Error::Base {
-                        commit: commit.to_string(),
-                        scripts_off: prepared.scripts_off,
-                        source: Box::new(source),
-                    });
-                }
-            };
-            base_span.record("status", "ok");
-            (before, failures, prepared.scripts_off)
-        };
-        self.steps.step(Step::Comparing);
-        let result = self.comparison.compare_prepared(
-            &ComparisonRequest {
-                base_ref: base.into(),
-                base_commit: commit.to_string(),
-                catalogue_identity: catalogue_key(&relative(&config.file, &config.repo_root)),
-            },
-            before,
-            head,
-        );
-        if let Some(source) = failures.failure() {
-            return Err(Error::Base {
-                commit: commit.to_string(),
-                scripts_off,
-                source: Box::new(Error::SourceFailure { source }),
-            });
-        }
-        let mut result = result?;
-        result.warnings.extend(failures.warnings());
-        mokly_catalogue::diagnostic::normalize_warnings(&mut result.warnings);
-        Ok(result)
+        self.classify_base(config, base, head, install_scripts)
     }
 }
 
@@ -294,3 +225,7 @@ mod base_render_failures_tests;
 #[cfg(test)]
 #[path = "_tests_/base_render_steps_tests.rs"]
 mod base_render_steps_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_reuse/mod.rs"]
+mod base_reuse_tests;

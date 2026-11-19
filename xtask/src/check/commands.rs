@@ -94,6 +94,7 @@ fn mokly_cargo(operation: &str) -> CommandSpec {
 fn design_matrix_clippy() -> CommandSpec {
     cargo(&[
         "clippy",
+        "--locked",
         "-p",
         "mokly-cli",
         "--features",

@@ -5,7 +5,7 @@ import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 /** The catalogue background each appearance mockup paints for its scheme. */
 const BACKGROUNDS = {
-  dark: "rgb(22, 21, 18)",
+  dark: "rgb(24, 24, 27)",
   light: "rgb(244, 244, 241)",
 } as const;
 

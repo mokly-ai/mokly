@@ -16,9 +16,9 @@ use crate::publication_support;
 use crate::snapshot::Snapshot;
 
 async fn delivered(snapshot: &Snapshot) -> Value {
-    let detail = &snapshot.details["screen-0"];
+    let mut detail = (*snapshot.details["screen-0"]).clone();
 
-    let encoded = EncodedDetails.encode(detail);
+    let encoded = EncodedDetails.encode(&mut detail).unwrap();
     let bytes = to_bytes(
         encoded.response(snapshot.index.revision).into_body(),
         usize::MAX,

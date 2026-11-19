@@ -1,11 +1,13 @@
 import { build } from "esbuild";
 
 import { definitionData } from "../authoring/runtime.js";
+import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 import type { Operation } from "../generated/sidecar/Operation.js";
 import type { Request } from "../generated/sidecar/Request.js";
 
 import { bundle } from "./bundle.js";
 import type { Generation } from "./bundle.js";
+import { CaptureDurability } from "./capture-durability.js";
 import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
@@ -18,6 +20,7 @@ import { render } from "./render.js";
 
 export class Session {
   private hello = false;
+  private capture: CaptureHint | undefined;
   private generations = new Map<string, Generation>();
   private workers: PostcssWorkers;
 
@@ -56,21 +59,32 @@ export class Session {
       if (request.method !== "hello")
         protocol("hello must be the first request");
       this.hello = true;
+      this.capture = request.params.capture;
       return { version: this.version };
     }
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const previous = await reuse(this.generations.values(), request.params);
+        const { capture = "full", plan, ...params } = request.params;
+        const previous = await reuse(
+          this.generations.values(),
+          params,
+          capture,
+        );
         const { generation, result } = previous
           ? { generation: previous, result: bundleResult(previous) }
           : await bundle(
-              request.params,
+              params,
               (options) => {
                 this.operation("esbuild");
                 return this.compile(options);
               },
               this.measurements,
+              capture === "full" && this.capture
+                ? new CaptureDurability(this.capture)
+                : undefined,
+              capture,
+              plan,
             );
         this.generations.set(generation.id, generation);
         return result;

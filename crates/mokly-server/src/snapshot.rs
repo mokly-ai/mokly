@@ -19,6 +19,7 @@ use crate::assets::File;
 use crate::backend::Documents;
 use crate::changes::Accepted;
 use crate::detail_encoding::EncodedDetails;
+use crate::detail_publication::RecentDetails;
 use crate::error::Result;
 use crate::evidence::{Completion, RenderRoute};
 use crate::generation::Generation;
@@ -37,6 +38,8 @@ pub struct Snapshot {
     pub generation: Arc<Generation>,
     /// Typed payloads; their wire revision is supplied by this snapshot.
     pub details: BTreeMap<String, Arc<EntryDetailV4>>,
+    /// Bounded shared detail records copied when a candidate is projected.
+    pub recent_details: RecentDetails,
     /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
@@ -121,7 +124,7 @@ impl SnapshotFactory for Projector {
         generation: Arc<dyn RenderGeneration>,
         input: SnapshotInput,
     ) -> Result<Arc<Snapshot>> {
-        Ok(self.project(generation, input, None))
+        self.project(generation, input, None)
     }
     fn replace(
         &self,
@@ -129,7 +132,7 @@ impl SnapshotFactory for Projector {
         input: SnapshotInput,
         previous: &Snapshot,
     ) -> Result<Arc<Snapshot>> {
-        Ok(self.project(generation, input, Some(previous)))
+        self.project(generation, input, Some(previous))
     }
 }
 
@@ -139,7 +142,7 @@ impl Projector {
         generation: Arc<dyn RenderGeneration>,
         input: SnapshotInput,
         previous: Option<&Snapshot>,
-    ) -> Arc<Snapshot> {
+    ) -> Result<Arc<Snapshot>> {
         let keys = projection_index::keys(generation.as_ref());
         let live_generation = generation.generation_key().to_owned();
         let state = Publication {
@@ -160,8 +163,17 @@ impl Projector {
             .collect();
         let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
         let completed = replacement::reuse_usage(&mut details, &index, &document_keys, previous);
-        let details =
-            replacement::encode_details(details, &mut index, previous, &mut files, &EncodedDetails);
+        let mut recent_details = previous
+            .map(|snapshot| snapshot.recent_details.clone())
+            .unwrap_or_default();
+        let details = replacement::encode_details(
+            details,
+            &mut index,
+            previous,
+            &mut recent_details,
+            &mut files,
+            &EncodedDetails,
+        )?;
         files.insert(
             viewer("index.json"),
             RevisionFile::new(encode_index(&index)),
@@ -215,16 +227,17 @@ impl Projector {
             stub: shell::html(&index.identity.title).into(),
             render_token,
         });
-        Arc::new(Snapshot {
+        Ok(Arc::new(Snapshot {
             changes: None,
             generation: shared,
             document_keys,
             details,
+            recent_details,
             completed,
             lease: Arc::new(RevisionLease::default()),
             index,
             files,
-        })
+        }))
     }
 }
 

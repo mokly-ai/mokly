@@ -12,19 +12,24 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_compare::ancestor_roots;
+use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
 use mokly_graph::cache::RenderCache;
+use mokly_graph::delivery_inputs::STYLE_REFERENCE_BYTES;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::RenderWorkers;
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
+use crate::edit_plans::Records;
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
+use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
@@ -40,8 +45,12 @@ pub struct Runtime {
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
     /// Physical reader for the selected installed third-party dependencies.
     pub dependency_tree: Arc<dyn SourceTree>,
+    /// Filesystem reader for physical compilation evidence outside the side tree.
+    pub physical_inputs: Arc<dyn PhysicalInputs>,
     /// Lazily started Node processes.
     pub pool: Arc<dyn SidecarPool>,
+    /// Per-request evidence policy; Serve selects edit mode after its first publication.
+    pub bundle_capture: BundleCapture,
     /// Shared byte-bounded render cache.
     pub cache: Arc<dyn RenderCache>,
     /// Worker scheduler supplied by the composition root.
@@ -52,6 +61,9 @@ pub struct Runtime {
     pub base: Option<Arc<BaseSide>>,
     /// Ancestor dependency directories used by the working generation.
     pub dependency_usage: Arc<dyn DependencyUsage>,
+    /// Inline style reference scans shared by every generation of this runtime and of each
+    /// base runtime that `for_base` makes from it.
+    pub(crate) style_references: Arc<dyn ReferenceCache>,
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
@@ -61,9 +73,18 @@ pub struct Runtime {
     pub(crate) describing: Arc<Mutex<()>>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
+    pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
 }
 
 impl Runtime {
+    /// Keep bounded captured plans for the head preparations of one Serve command.
+    pub fn with_serve_edit_plans(mut self) -> Self {
+        if self.base.is_none() && self.edit_plans.is_none() {
+            self.edit_plans = Some(Arc::new(Mutex::new(Records::default())));
+        }
+        self
+    }
+
     /// Clone the factories over one attempt's source snapshot and shared runtime caches.
     pub fn with_tree(&self, tree: Arc<dyn SourceTree>) -> Self {
         let mut runtime = self.clone();
@@ -83,25 +104,84 @@ impl Runtime {
             })
     }
     /// Assemble runtime services without starting a sidecar or reading sources.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "source trees and physical reuse evidence have separate injectable read boundaries"
+    )]
     pub fn new(
         tree: Arc<dyn SourceTree>,
         dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
         pool: Arc<dyn SidecarPool>,
         cache: Arc<dyn RenderCache>,
         workers: Arc<dyn RenderWorkers>,
         version: String,
         base: Option<Arc<BaseSide>>,
     ) -> Self {
-        Self {
-            inventory_tree: tree.clone(),
+        Self::assemble(
             tree,
             dependency_tree,
+            physical_inputs,
             pool,
             cache,
             workers,
             version,
             base,
+            Arc::new(MemoryReferenceCache::new(STYLE_REFERENCE_BYTES)),
+        )
+    }
+
+    /// The runtime of one base preparation over `tree`. It shares the dependency reader,
+    /// the physical inputs, the sidecar pool, the render cache, the workers, and the style
+    /// memo of this runtime, and it starts its own stores.
+    pub fn for_base(
+        &self,
+        tree: Arc<dyn SourceTree>,
+        version: String,
+        base: Option<Arc<BaseSide>>,
+    ) -> Self {
+        Self::assemble(
+            tree,
+            self.dependency_tree.clone(),
+            self.physical_inputs.clone(),
+            self.pool.clone(),
+            self.cache.clone(),
+            self.workers.clone(),
+            version,
+            base,
+            self.style_references.clone(),
+        )
+    }
+
+    /// Every field of a runtime, so that each constructor passes the style memo.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each constructor passes the shared services and the style memo explicitly"
+    )]
+    fn assemble(
+        tree: Arc<dyn SourceTree>,
+        dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
+        pool: Arc<dyn SidecarPool>,
+        cache: Arc<dyn RenderCache>,
+        workers: Arc<dyn RenderWorkers>,
+        version: String,
+        base: Option<Arc<BaseSide>>,
+        style_references: Arc<dyn ReferenceCache>,
+    ) -> Self {
+        Self {
+            inventory_tree: tree.clone(),
+            tree,
+            dependency_tree,
+            physical_inputs,
+            pool,
+            bundle_capture: BundleCapture::Full,
+            cache,
+            workers,
+            version,
+            base,
             dependency_usage: Arc::new(UsedDependencies::default()),
+            style_references,
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
@@ -109,6 +189,7 @@ impl Runtime {
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
+            edit_plans: None,
         }
     }
 
@@ -194,3 +275,7 @@ impl GraphFactory for Runtime {
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_reuse_tests.rs"]
+mod bundle_reuse_tests;

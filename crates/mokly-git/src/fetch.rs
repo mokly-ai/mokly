@@ -65,12 +65,11 @@ impl GitRepository {
         let Some(object) = missing.first().map(ToString::to_string) else {
             return Ok(false);
         };
-        let remotes = self.promisor_remotes()?;
-        if remotes.is_empty() {
+        if self.promisor_remotes.is_empty() {
             return Err(Error::MissingObject { object });
         }
         let mut last = None;
-        for remote in remotes {
+        for remote in &self.promisor_remotes {
             let request = Request {
                 process_mode: Default::default(),
                 directory: self.directory.clone(),
@@ -85,7 +84,7 @@ impl GitRepository {
                     "--no-auto-maintenance",
                     "--stdin",
                     "--",
-                    &remote,
+                    remote,
                 ]
                 .into_iter()
                 .map(OsString::from)
@@ -109,7 +108,7 @@ impl GitRepository {
                 Err(Error::Cancelled) => return Err(Error::Cancelled),
                 Err(source) => {
                     last = Some(Error::FetchFailed {
-                        remote,
+                        remote: remote.clone(),
                         object: object.clone(),
                         source: Box::new(source),
                     })
@@ -119,10 +118,16 @@ impl GitRepository {
         Err(last.unwrap_or(Error::MissingObject { object }))
     }
 
-    fn promisor_remotes(&self) -> Result<Vec<String>> {
+    /// Read both promisor flags and the original partial-clone remote setting.
+    pub(crate) fn read_promisor_remotes(&self) -> Result<Vec<String>> {
         let output = match self.command_with_mode(
             ProcessMode::PlainGroup,
-            &["config", "--null", "--get-regexp", "remote\\..*\\.promisor"],
+            &[
+                "config",
+                "--null",
+                "--get-regexp",
+                r"^(remote\..*\.promisor|extensions\.partialclone)$",
+            ],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
         ) {
@@ -133,14 +138,20 @@ impl GitRepository {
             Err(error) => return Err(error),
         };
         let mut remotes = Vec::new();
+        let mut partial_clone = None;
         for record in text(&output)?.split_terminator('\0') {
-            let Some((key, value)) = record.split_once('\n') else {
-                return Err(Error::MalformedOutput);
+            let (key, value) = match record.split_once('\n') {
+                Some(setting) => setting,
+                None if record.starts_with("remote.") && record.ends_with(".promisor") => {
+                    (record, "true")
+                }
+                None => return Err(Error::MalformedOutput),
             };
-            if !matches!(
-                value.to_ascii_lowercase().as_str(),
-                "true" | "yes" | "on" | "1" | ""
-            ) {
+            if key == "extensions.partialclone" {
+                partial_clone = Some(value.to_owned());
+                continue;
+            }
+            if !promisor_enabled(value) {
                 continue;
             }
             let Some(remote) = key
@@ -151,6 +162,23 @@ impl GitRepository {
             };
             remotes.push(remote.to_owned());
         }
+        if let Some(remote) = partial_clone
+            && !remotes.contains(&remote)
+        {
+            remotes.push(remote);
+        }
         Ok(remotes)
     }
+}
+
+/// Keep full ownership unless a promisor setting is a known false value.
+fn promisor_enabled(value: &str) -> bool {
+    let value = value.to_ascii_lowercase();
+    if matches!(value.as_str(), "false" | "no" | "off" | "") {
+        return false;
+    }
+    let number = value.strip_prefix(['+', '-']).unwrap_or(&value);
+    let number = number.strip_suffix(['k', 'm', 'g']).unwrap_or(number);
+    let digits = number.strip_prefix("0x").unwrap_or(number);
+    digits.is_empty() || !digits.bytes().all(|digit| digit == b'0')
 }

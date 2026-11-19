@@ -37,16 +37,12 @@ export const home=defineScreen({path:'home',title:'Home',description:'',relatedD
       );
       assert.equal(response.status, 200);
       assert.match(await response.text(), /Home/);
-      const binaries = processTree(process.pid).filter(({ command }) =>
-        /[/\\]mokly serve(?: |$)/u.test(command),
-      );
-      assert.equal(binaries.length, 1);
-      const binary = binaries[0]!;
-      sidecars = processTree(binary.pid).filter(({ command }) =>
+      const binaryPid = host.binaryPid;
+      sidecars = processTree(binaryPid).filter(({ command }) =>
         /[/\\]sidecar\.js(?: |$)/u.test(command),
       );
       assert.ok(sidecars.length > 0, "the host must own a real sidecar");
-      process.kill(binary.pid, "SIGKILL");
+      process.kill(binaryPid, "SIGKILL");
       killed = true;
       // Observe parent-death protection before invoking the host's tree drain.
       // This deadline is a hang guard; only the process state decides success.

@@ -24,7 +24,7 @@ use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
-use crate::{sources, stylesheets};
+use crate::{definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -37,7 +37,7 @@ impl RenderGraph for JavaScriptGraph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> mokly_graph::error::Result<Arc<dyn RenderGeneration>> {
-        if (config.input.postcss.is_some() || catalogue.javascript.generation.is_some())
+        if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)
         {
@@ -78,8 +78,12 @@ impl JavaScriptGraph {
         let mut inputs = DeliveryInputs {
             resources: self.runtime.resources.clone(),
             closures: self.runtime.closures.clone(),
+            style_references: self.runtime.style_references.clone(),
             dependency_aliases: side.dependency_aliases.clone(),
-            ..Default::default()
+            render_keys: None,
+            stylesheet_roots: Vec::new(),
+            component_stylesheets: BTreeMap::new(),
+            entry_modules: BTreeMap::new(),
         };
         let mut compiler = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;
@@ -138,7 +142,7 @@ impl JavaScriptGraph {
                     Some((source.handle.clone(), entry.metadata.source.path.clone()))
                 })
                 .collect();
-            let keys = Arc::new(RenderKeys::build(
+            let keys = Arc::new(RenderKeys::build_with_workers(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
@@ -147,6 +151,7 @@ impl JavaScriptGraph {
                     declarations: &declaring,
                 },
                 NodeKey(fingerprint),
+                self.runtime.workers.as_ref(),
             ));
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
@@ -164,12 +169,7 @@ impl JavaScriptGraph {
                 .map(|(path, source)| {
                     (
                         path.clone(),
-                        source
-                            .handle
-                            .split('#')
-                            .next()
-                            .expect("splitting a handle always yields its module segment")
-                            .to_owned(),
+                        definition_handle::split(&source.handle).0.to_owned(),
                     )
                 })
                 .collect();
@@ -177,6 +177,7 @@ impl JavaScriptGraph {
             inputs = DeliveryInputs {
                 resources: self.runtime.resources.clone(),
                 closures: self.runtime.closures.clone(),
+                style_references: self.runtime.style_references.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
                 stylesheet_roots: stylesheets::roots(

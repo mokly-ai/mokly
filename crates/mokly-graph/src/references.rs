@@ -1,9 +1,10 @@
 //! Resource edges collected from parsed HTML and tokenized CSS.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use mokly_catalogue::html_input::DeliveredHtml;
-use mokly_css::syntax;
+use mokly_css::syntax::{self, Reference};
 use mokly_html::parse;
 use mokly_html::tree::{self, Element, Node, RegionKind};
 use mokly_model::evidence::EvidenceOwner;
@@ -24,6 +25,15 @@ pub struct ResourceReference {
 
 /// Collect URL-bearing attributes, style URLs, and embedded documents.
 pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
+    collect_with(nodes, &|source| syntax::references(source).into())
+}
+
+/// Collect like `collect`. `styles` gives the references of each inline style text and
+/// must equal a direct scan.
+pub(crate) fn collect_with(
+    nodes: &[Node],
+    styles: &dyn Fn(&str) -> Arc<[Reference]>,
+) -> Vec<ResourceReference> {
     let mut output = Vec::new();
     let mut instances = BTreeMap::new();
     instance_paths(nodes, &mut instances);
@@ -33,6 +43,7 @@ pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
         None,
         false,
         &instances,
+        styles,
         &mut output,
     );
     output
@@ -62,6 +73,7 @@ fn walk(
     instance_key: Option<&str>,
     ignored: bool,
     instances: &BTreeMap<String, String>,
+    styles: &dyn Fn(&str) -> Arc<[Reference]>,
     output: &mut Vec<ResourceReference>,
 ) {
     let mut pending: Vec<_> = nodes
@@ -116,7 +128,14 @@ fn walk(
             }
             Node::Element(element) => {
                 ignored |= speculative(element);
-                element_references(element, &owner, instance_key.as_deref(), ignored, &mut next);
+                element_references(
+                    element,
+                    &owner,
+                    instance_key.as_deref(),
+                    ignored,
+                    styles,
+                    &mut next,
+                );
             }
             _ => {}
         }
@@ -145,6 +164,7 @@ fn element_references(
     owner: &EvidenceOwner,
     instance_key: Option<&str>,
     ignored: bool,
+    styles: &dyn Fn(&str) -> Arc<[Reference]>,
     output: &mut Vec<Step<'_>>,
 ) {
     let reference = |url| {
@@ -165,9 +185,9 @@ fn element_references(
             }
             "srcset" => output.extend(srcset(&attribute.value).into_iter().map(reference)),
             "style" => output.extend(
-                syntax::references(&format!("x{{{}}}", attribute.value))
-                    .into_iter()
-                    .map(|value| reference(value.value)),
+                styles(&format!("x{{{}}}", attribute.value))
+                    .iter()
+                    .map(|value| reference(value.value.clone())),
             ),
             "srcdoc" => output.extend(
                 parse::html(DeliveredHtml::document(&attribute.value))
@@ -188,9 +208,9 @@ fn element_references(
         for child in &element.children {
             if let Node::Text(css) = child {
                 output.extend(
-                    syntax::references(css)
-                        .into_iter()
-                        .map(|value| reference(value.value)),
+                    styles(css)
+                        .iter()
+                        .map(|value| reference(value.value.clone())),
                 );
             }
         }

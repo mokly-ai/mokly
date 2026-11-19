@@ -29,6 +29,7 @@ fn config(dir: &str) -> ResolvedConfig {
         input: Config::default(),
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![ResolvedRoot {
             directory: format!("/repo/{dir}").into(),

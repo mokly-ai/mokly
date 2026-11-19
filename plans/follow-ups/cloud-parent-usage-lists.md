@@ -1,15 +1,17 @@
-# Check parent usage lists of variants in Mokly Cloud
+# Check parent usage lists in Mokly Cloud
 
 - **Severity:** High. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, an unchecked
   post-merge task.
 - **Location:** The `detail` source of the embedded viewer in Mokly Cloud is
-  `detailSource` in `apps/app/src/viewer/catalogue-source.web.ts:151`. The
-  rule is in `docs/protocol/mokly-viewer.md:58-63`, and the viewer request is
-  built in `packages/viewer/src/catalogue/detail_fences.ts:21`.
-- **Reason:** No automated test opens a component variant in the app, so
-  only a run of the app with a published catalogue shows the result.
+  `detailSource` in `apps/app/src/viewer/catalogue-source.web.ts:151-167`.
+  Its browser spec `apps/app/src/_tests_/viewer/entry.spec.ts:144-167` opens
+  a variant. The rule is in `docs/protocol/mokly-viewer.md:59-63`, and the
+  viewer request is built in
+  `packages/viewer/src/catalogue/detail_fences.ts:21`.
+- **Reason:** Mokly Cloud now answers the parent's path, but no check proves
+  that a published variant in Mokly Cloud shows both lists of its parent.
 
 - **Terms:**
   - **Entry detail:** the JSON file of one screen or component that the
@@ -27,31 +29,44 @@
   - PR #223 merged on 2026-10-28 and raised the entry detail version. The
     workspace of a current component variant then has no `usedBy` and no
     `affected`. Release 0.17.0 shipped it on 2026-10-29 as a breaking change.
-  - `docs/protocol/mokly-viewer.md:58-63` states that the viewer calls
+  - `docs/protocol/mokly-viewer.md:59-63` states that the viewer calls
     `detail` with the parent's path for a current component variant, and
     line 124 states that such a variant shows the Used by and Affected lists
     of its parent's detail.
   - `workspaceDetailRequest` in
     `packages/viewer/src/catalogue/detail_fences.ts:21` names the parent's
-    path for a current variant.
-  - The app embeds the workspace `@mokly/viewer` of this repository. Its
-    `detailSource` reads any entry path that the viewer names, under
-    `mokly-viewer/entries/`, so a read of the code shows that it answers
-    the parent's path. The pin and the code steps of the first task are
-    therefore done. The check in the running app is not.
+    path for a current variant. So the embedded viewer calls the host's
+    `detail` source with that path.
+  - The app embeds the workspace `@mokly/viewer` of this repository, at
+    0.19.0, a later version than 0.17.0.
+  - Facts about Mokly Cloud, checked on 2026-11-18 at its `main` commit
+    `767be7b2`. The paths and lines are those of this repository.
+    - `detailSource` in `apps/app/src/viewer/catalogue-source.web.ts:151-167`
+      reads each path that the viewer requests, under
+      `mokly-viewer/entries/`. So it also answers the parent's path of a
+      current variant.
+    - The browser spec `apps/app/src/_tests_/viewer/entry.spec.ts:144-167`
+      opens the variant `notice/draft`. It does not check the Used by list
+      or the Affected list.
 - **Task:**
-  1. Publish a catalogue with a current component variant, for example
+  1. Done: the app embeds the workspace `@mokly/viewer`, a later version
+     than 0.17.0.
+  2. Done: the `detail` source of the embedded viewer answers each requested
+     path, which includes the parent's path of a component variant.
+  3. Publish a catalogue with a current component variant, for example
      `examples/basic`, to the app with a local API or to a preview
      environment.
-  2. Open the variant in the app. Check that its Usage panel shows the Used
+  4. Open the variant in the app. Check that its Usage panel shows the Used
      by and Affected lists of its parent.
-  3. Fix `detailSource` when the lists do not show. Add a test that holds
+  5. Fix `detailSource` when the lists do not show. Add a test that holds
      the result.
-- **Impact if no action:** If the host fails to answer the parent's path, a
-  component variant page in Mokly Cloud shows no Used by or Affected list,
-  or shows an error, and nobody notices.
-- **Needs:** A running app and API, or a preview environment, and a
-  publication with a current component variant.
+- **Impact if no action:** Nobody confirms that a component variant page in
+  Mokly Cloud shows the Used by and Affected lists of its parent. If the
+  host fails to answer the parent's path, the page shows no Used by or
+  Affected list, or shows an error, and nobody notices.
+- **Needs:** A running app and API, or a preview environment, a publication
+  with a current component variant there, and access to open it. The
+  workspace `@mokly/viewer` and the `detail` source are already in the app.
 - **Done when:** A current component variant in Mokly Cloud shows the Used
   by and Affected lists of its parent.
 

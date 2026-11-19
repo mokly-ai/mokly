@@ -12,9 +12,8 @@ use mokly_publish::completion::{Completion, Outcome};
 use mokly_publish::runtime::Reporter;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::phase_format::{duration, frame};
 use crate::terminal::TerminalMock;
-
-use super::{duration, frame};
 
 #[test]
 fn retained_publication_warning_clears_active_progress_before_printing() {

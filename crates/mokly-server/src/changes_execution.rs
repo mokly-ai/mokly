@@ -27,6 +27,7 @@ impl ChangesPass {
         cancel: Arc<dyn ChangeCancellation>,
         references: Result<String>,
     ) {
+        let _staging = Staging(source.clone());
         let started = Instant::now();
         let phase = source.started(cancel.clone());
         let progress: Arc<dyn ChangeProgress> = Arc::new(Progress {
@@ -204,6 +205,12 @@ impl ChangesPass {
 }
 
 struct RetryWake(Notify);
+struct Staging(Arc<dyn ChangeSource>);
+impl Drop for Staging {
+    fn drop(&mut self) {
+        self.0.discarded();
+    }
+}
 impl ChangeSignal for RetryWake {
     fn notify(&self) {
         self.0.notify_one();
@@ -232,3 +239,7 @@ mod changes_retry_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_trace_tests.rs"]
 mod changes_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_completion_tests.rs"]
+mod changes_completion_tests;

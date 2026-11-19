@@ -35,6 +35,7 @@ pub(crate) fn config() -> ResolvedConfig {
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: vec![],
+        modules: Default::default(),
         authored_inputs: vec![],
     }
 }

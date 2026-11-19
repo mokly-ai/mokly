@@ -101,6 +101,7 @@ pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     };

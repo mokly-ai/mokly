@@ -17,8 +17,8 @@ pub(super) struct ProcessWorker {
     pub(super) diagnostics: Arc<dyn Diagnostics>,
     pub(super) client: Box<dyn SidecarClient>,
     pub(super) clock: Arc<dyn Wait>,
-    pub(super) memory: Box<dyn ResidentMemory>,
-    pub(super) discover_memory: AtomicBool,
+    pub(super) memory: Arc<dyn ResidentMemory>,
+    pub(super) discover_memory: Arc<AtomicBool>,
     pub(super) deadlines: Arc<Deadlines>,
     pub(super) phases: PhaseState,
 }

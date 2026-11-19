@@ -23,6 +23,7 @@ use crate::delivery_inputs::DeliveryInputs;
 use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::key::NodeKey;
+use crate::link_results::MemoryLinkResults;
 use crate::resource_inputs::ResourceInputsMock;
 use crate::session::{Session, SessionInput};
 use crate::styles::Matchers;
@@ -31,12 +32,16 @@ use crate::validation;
 
 pub(super) struct Probe {
     pub(super) session: Session,
-    compositions: Arc<AtomicUsize>,
-    reads: Arc<AtomicUsize>,
+    pub(super) compositions: Arc<AtomicUsize>,
+    pub(super) reads: Arc<AtomicUsize>,
     artifacts: Arc<Mutex<BTreeMap<NodeKey, Arc<Artifact>>>>,
 }
 
 pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
+    configured_probe(retain, missing_dark_mobile, 0)
+}
+
+pub(super) fn configured_probe(retain: bool, missing_dark_mobile: bool, bound: usize) -> Probe {
     let compositions = Arc::new(AtomicUsize::new(0));
     let renders = compositions.clone();
     let reads = Arc::new(AtomicUsize::new(0));
@@ -104,6 +109,7 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     };
@@ -128,7 +134,13 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
                 ),
                 entry(
                     "journey",
-                    json!({"kind":"use-case","steps":[{"screenPath":"target"}]}),
+                    json!({"kind":"use-case","steps":[{"screenPath":"target"},{"screenPath":"unknown"}]}),
+                ),
+                entry("zero", json!({"kind":"page"})),
+                entry("empty", json!({"kind":"use-case","steps":[]})),
+                entry(
+                    "orphan",
+                    json!({"kind":"use-case","steps":[{"screenPath":"unknown"}]}),
                 ),
             ],
             folders: vec![],
@@ -164,7 +176,7 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
         }
     }
     let matchers = Matchers::new(&config).unwrap();
-    let session = Session::new(
+    let mut session = Session::new(
         &graph,
         SessionInput {
             config,
@@ -177,6 +189,8 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
             directories: vec![],
         },
     );
+    Arc::get_mut(&mut session.state).unwrap().link_results =
+        Arc::new(MemoryLinkResults::new(bound));
     Probe {
         session,
         compositions,
@@ -185,7 +199,7 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
     }
 }
 
-fn reference(target: &str, fragment: &str) -> Reference {
+pub(super) fn reference(target: &str, fragment: &str) -> Reference {
     Reference {
         source_route: "caller/index.desktop.html".into(),
         target: target.into(),

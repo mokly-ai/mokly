@@ -4,8 +4,9 @@ use std::sync::Arc;
 
 use crate::codec::{self, MAX_FRAME_BYTES};
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
-use crate::methods::{Bundle, Call};
+use crate::methods::{Bundle, BundleCapture, Call};
 use crate::results::Module;
+use crate::reusable_recipe::ReusableRecipe;
 use crate::wire::Request;
 
 /// Released recipes charged by their serialized restore envelopes.
@@ -17,10 +18,7 @@ pub(super) struct Recipes {
 }
 
 struct Recipe {
-    generation: String,
-    params: Bundle,
-    modules: Vec<Module>,
-    compiled: Arc<CompiledGeneration>,
+    reusable: ReusableRecipe,
     bytes: usize,
     used: u64,
 }
@@ -29,10 +27,10 @@ impl Recipe {
     /// Keep a stored seed separate from a live recipe with the same content id.
     fn restore(&self) -> Box<RestoreGeneration> {
         Box::new(RestoreGeneration {
-            generation: seed_id(&self.generation),
-            params: self.params.clone(),
-            modules: self.modules.clone(),
-            compiled: (*self.compiled).clone(),
+            generation: seed_id(self.reusable.generation()),
+            params: self.reusable.params().clone(),
+            modules: self.reusable.modules().to_vec(),
+            compiled: self.reusable.compiled().clone(),
         })
     }
 }
@@ -59,11 +57,11 @@ impl Recipes {
         if let Some(index) = self.find(&params) {
             self.remove(index);
         }
+        let Some(reusable) = ReusableRecipe::new(generation, params, modules, compiled) else {
+            return;
+        };
         let mut recipe = Recipe {
-            generation,
-            params,
-            modules,
-            compiled,
+            reusable,
             bytes: 0,
             used: 0,
         };
@@ -97,8 +95,20 @@ impl Recipes {
     }
 
     /// Touch and materialize a retained recipe for a bundle request.
-    pub(super) fn seed(&mut self, params: &Bundle) -> Option<Box<RestoreGeneration>> {
+    pub(super) fn seed(
+        &mut self,
+        params: &Bundle,
+        capture: BundleCapture,
+    ) -> Option<Box<RestoreGeneration>> {
         let index = self.find(params)?;
+        if !self.entries[index]
+            .reusable
+            .compiled()
+            .reuse_evidence
+            .reusable(capture)
+        {
+            return None;
+        }
         self.counter += 1;
         self.entries[index].used = self.counter;
         Some(self.entries[index].restore())
@@ -111,10 +121,14 @@ impl Recipes {
         compiled: &CompiledGeneration,
     ) -> Option<Arc<CompiledGeneration>> {
         let index = self.find(params)?;
-        if !self.entries[index].compiled.same_recipe(compiled) {
+        if !self.entries[index]
+            .reusable
+            .compiled()
+            .same_recipe(compiled)
+        {
             return None;
         }
-        Some(self.remove(index).compiled)
+        Some(self.remove(index).reusable.compiled().clone())
     }
 
     /// Discard every retained recipe when the pool stops.
@@ -127,7 +141,7 @@ impl Recipes {
     fn find(&self, params: &Bundle) -> Option<usize> {
         self.entries
             .iter()
-            .position(|entry| same_settings(&entry.params, params))
+            .position(|entry| same_settings(entry.reusable.params(), params))
     }
 
     fn remove(&mut self, index: usize) -> Recipe {

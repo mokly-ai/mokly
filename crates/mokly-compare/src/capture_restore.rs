@@ -7,6 +7,10 @@ use mokly_graph::document_error::Result;
 /// Restore the retained document, or let the capture return to its source.
 #[cfg_attr(test, unimock::unimock(api = DocumentRestorerMock))]
 pub(crate) trait DocumentRestorer: Send + Sync {
+    /// Trusted in-process codecs may prove restoration without running a fallback.
+    fn proves_restore(&self) -> bool {
+        false
+    }
     /// Decode one trusted in-process view.
     fn restore(&self, view: &EncodedView) -> Result<Artifact>;
 }
@@ -15,6 +19,9 @@ pub(crate) trait DocumentRestorer: Send + Sync {
 pub(crate) struct LosslessRestorer;
 
 impl DocumentRestorer for LosslessRestorer {
+    fn proves_restore(&self) -> bool {
+        true
+    }
     fn restore(&self, view: &EncodedView) -> Result<Artifact> {
         view.restore()
     }

@@ -43,9 +43,8 @@ command with an error fails with `build-invalid`. Non-fatal findings are
 The [architecture page](../architecture/rust-core.md#render-graph) describes
 the render graph. A screen or component renders once per view, that is per
 viewport and colour scheme. A page renders once. A Markdown document renders
-once per enabled colour scheme. A watched change renders again only the
-outputs whose inputs changed, and a component rendered with the same props on
-many screens renders once.
+once per enabled colour scheme. A watched change renders only the outputs whose
+inputs changed. A component with the same props on many screens renders once.
 
 The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
 The tiers share 240 MiB and evict the least recently used entry. Compaction reserves
@@ -57,9 +56,10 @@ document charge. Encoding runs outside the lock. Completion moves transit to com
 under one lock. Other evicted artifacts leave. Compact takes room from evicted full
 entries, up to 128 MiB. Full keeps at least 112 MiB. A catalogue fitting 240 MiB
 never restores. Reads check full, transit, then compact. Transit returns full artifacts.
-Compact restores exact bytes, trees, and trusted annotations. Only a second restore
-within fewer operations than full has entries promotes. A full pass never promotes.
-A document that compact cannot keep or restore leaves the cache.
+Compact restores exact bytes, trees, and trusted annotations. `postcard` encodes
+compact trees. `flate2` compresses trees and bytes with zlib. Only a second
+restore within fewer operations than full has entries promotes. A full pass
+never promotes. A document that compact cannot keep or restore leaves the cache.
 Decision: keep evicted documents compact. Rejected: a larger bound that still
 thrashes; a fixed tier split that reduces room for fitting catalogues; a
 scan-resistant order that still misses when the head exceeds the bound; a Serve
@@ -67,9 +67,9 @@ head capture read by the base, because it only serves Changes and adds a copy.
 Both sides share equal keys with no side warning. Serve reads the head from the
 cache. A missing head document renders again on the head root. Each
 [capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
-bound. The base-side extraction cache and the dependency install cache live in
-the operating system's cache directory under a key derived from the repository
-path, each with its own byte bound, and the terminal names that directory.
+bound. The base-side extraction cache, the dependency install cache, and the bundle
+cache live in the operating system's cache directory under a key derived from the
+repository path, each with its own byte bound, and the terminal names that directory.
 
 ## Serve
 
@@ -204,10 +204,11 @@ invalidation through the render graph, recovery, and publication.
 Both sides of a comparison render from sources with the current Mokly version,
 the head from the working tree and the base from the base commit's Git tree,
 under the [comparison contract](./mokly-comparison.md). Serve classifies Changes
-in background work after readiness and publishes the result as a revision.
-Comparison snapshots render on demand when the reader selects a diff, under the
-[comparison serving contract](./mokly-comparison-serving.md). `build` writes one
-complete comparison generation. There is no standalone comparison command.
+in background work after readiness and publishes the result as a revision. Serve
+keeps one [captured base](./mokly-base-preparation.md#serve-base-lifetime) between
+classifications. Comparison snapshots render on demand when the reader selects a
+diff, under the [comparison serving contract](./mokly-comparison-serving.md). `build`
+writes one complete comparison generation. There is no standalone comparison command.
 
 ## Shutdown
 
@@ -219,8 +220,7 @@ Shutdown runs in this order:
    remaining client connection, including incomplete requests.
    Event-stream connections have a 250 ms grace period to flush their final
    chunk before the other connections close.
-2. Stop the watcher and discard a configuration candidate that has not been
-   adopted.
+2. Stop the watcher and discard a configuration candidate that has not been adopted.
 3. Cancel outstanding render, background, and comparison work; drain the
    comparison generation work in flight before any generation is released.
 4. Cancel every Git process through its owned process tree, `SIGTERM` then
@@ -237,10 +237,10 @@ commit point and never leave a partial output directory in place.
 
 ## No Writes
 
-No command writes into the repository except `build` into its output
-directory. Serve, Changes, live prop editing, and comparison generations keep
-every result in process memory. The caches outside the repository are the
-only other files Mokly writes, and deleting them changes time only.
+No command writes into the repository except `build` into its output directory. Serve,
+Changes, live prop editing, and comparison generations keep every result in process
+memory. The [caches](./mokly-base-cache.md) outside the repository, compiled bundles
+included, are the only other files Mokly writes, and deleting them changes time only.
 
 ## Related Docs
 

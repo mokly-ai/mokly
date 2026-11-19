@@ -1,0 +1,35 @@
+# Choose which native jobs use Blacksmith
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the branch `calummoore/ci-provider`, design item 5.
+- **Location:** the `runner` matrix of the `native` job in `.github/workflows/ci.yml`, and the runner rule in the section "Job Execution" of `docs/protocol/ci-workflow.md`.
+- **Reason:** The choice trades the monthly Blacksmith bill against the CI wait, and only the user sets that balance.
+
+- **Source:** Design.
+- **Category:** Process.
+- **Terms:**
+  - **Native jobs:** the two CI jobs that build and test the Rust code with `cargo xtask check --suite native`, once on macOS and once on Windows.
+  - **Job guard:** the `timeout-minutes` limit that stops a whole CI job.
+- **Background:**
+  - On 2026-11-18 the user moved every CI job from Blacksmith, which bills each minute, to free GitHub-hosted runners. The native jobs run on `macos-26` and `windows-2025`.
+  - The user then asked whether the native jobs should stay on Blacksmith, because they give the most speed for the money.
+  - Blacksmith cost for each CI run: macOS $0.55 and Windows $0.41. At the pace of November 2026, that is about $230 to $330 a month for macOS and $155 to $250 for Windows, at list price.
+  - Job times on Blacksmith in run 44346703481: macOS 7.0 minutes and Windows 15.7 minutes.
+  - Job times on GitHub-hosted runners with cold caches in run 44366055696: macOS 22.5 minutes and Windows 28.2 minutes. An estimate with warm caches gives 16 to 18 minutes for macOS and 20 to 25 minutes for Windows.
+  - The slowest Linux job, Repository, takes about 16.5 minutes on GitHub-hosted runners. A pull request waits for the slowest job.
+- **Problem:** The native jobs are the slowest jobs on free runners and the costliest jobs on Blacksmith.
+- **Impact if no action:** Both jobs stay on free runners. CI waits 20 to 28 minutes, and `native-ci-timeout-headroom.md` needs a 90-minute guard.
+- **Root question:** Which native jobs are worth a Blacksmith bill?
+- **Options:**
+  - **A.** Keep both native jobs on Blacksmith. CI waits about 15 to 17 minutes. The bill is about $385 to $580 a month. The guard item closes. Effort: Small.
+  - **B.** Keep only the Windows job on Blacksmith. CI waits about 16 to 18 minutes with warm caches and 22.5 minutes with cold caches. The bill is about $155 to $250 a month. The guard item then covers only macOS, with a 70-minute guard. Effort: Small.
+  - **C.** Keep both jobs on free runners, as `main` does after the branch merges. CI waits 20 to 28 minutes. The bill is about $5 a month. The guard item needs a 90-minute guard. Effort: Small.
+- **Left out:**
+  - Only macOS on Blacksmith: Windows stays the slowest job, so the wait barely drops.
+  - Blacksmith only for pull request runs: merges to `main` would then save the build cache on GitHub, and the Blacksmith jobs would run with cold caches.
+- **Wider fix:** None, because this is a choice of runners and not a defect class.
+- **Previous examples:** #211, 2026-10-26, moved Windows to 8 vCPUs, because on 2 vCPUs it was the slowest CI job.
+- **Related:** `plans/follow-ups/native-ci-timeout-headroom.md` waits for this answer. A closes it. B keeps it for macOS only. C keeps it as it is.
+- **Recommendation:** B. It keeps most of the speed for about 40% of the cost of A.
+- **Action:** ask the user, because each option trades the monthly bill against the CI wait.

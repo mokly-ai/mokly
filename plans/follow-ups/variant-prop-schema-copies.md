@@ -37,9 +37,10 @@
   - The viewer already checks each detail against the parent schemas of the
     index, in `packages/viewer/src/catalogue/detail_fences.ts:167`.
   - Release 0.18.0 shipped index version 9. A format change needs index
-    version 10. The Mokly Cloud receiver in this repository reads index
-    version 9 only, in `crates/mkc-mokly-contract/src/index.rs:29-36`, so
-    the change also moves that reader and its fixtures.
+    version 10. The Mokly Cloud receiver in this repository accepts index
+    version 9 only, and it answers 426 to another version, in
+    `crates/mkc-mokly-contract/src/index.rs:28-43`. So the change also moves
+    that reader and its fixtures.
 - **Problem:** The index stores each prop schema once for the parent and
   once more for each variant. Here the copies are 53% of the index.
 - **Impact if no action:** Each variant adds another schema copy to a file

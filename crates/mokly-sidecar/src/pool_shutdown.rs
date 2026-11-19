@@ -6,9 +6,14 @@ use crate::pool::Pool;
 impl Pool {
     pub(super) fn cancel_busy(&self) -> Result<()> {
         let controls = {
+            let _starting = self
+                .starting
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
             let mut state = self.lock();
             state.stopped = true;
             state.recipes.clear();
+            state.head.candidates.clear();
             let busy: Vec<_> = state
                 .controls
                 .keys()
@@ -17,22 +22,30 @@ impl Pool {
                 .collect();
             let controls = busy
                 .into_iter()
-                .filter_map(|index| state.controls.remove(&index))
+                .filter_map(|index| {
+                    state
+                        .controls
+                        .get(&index)
+                        .cloned()
+                        .map(|control| (index, control))
+                })
                 .collect::<Vec<_>>();
             self.ready.notify_all();
             controls
         };
         let mut failure = None;
         let deadline = (!controls.is_empty()).then(|| self.clock.now_ms().saturating_add(2_000));
-        for control in &controls {
+        for (_, control) in &controls {
             if let Err(error) = control.kill() {
                 failure.get_or_insert(error);
             }
         }
         if let Some(deadline) = deadline {
-            for control in controls {
+            for (index, control) in controls {
                 if let Err(error) = control.finish(deadline) {
                     failure.get_or_insert(error);
+                } else {
+                    self.lock().controls.remove(&index);
                 }
             }
         }
@@ -41,9 +54,14 @@ impl Pool {
 
     pub(super) fn stop(&self, force: bool) -> Result<()> {
         let controls = {
+            let _starting = self
+                .starting
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
             let mut state = self.lock();
             state.stopped = true;
             state.recipes.clear();
+            state.head.candidates.clear();
             self.ready.notify_all();
             state.controls.values().cloned().collect::<Vec<_>>()
         };

@@ -17,7 +17,7 @@
   `npm run build --workspace @mokly/frame`, then
   `npm run build --workspace @mokly/viewer`, then
   `npm run build --workspace @mokly/mokly` before a raw Cargo run.
-- Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
+- Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
 - `npm run test:browser -- [<spec> ...] [-g "<name>"]` builds first, then
   forwards its arguments to Playwright. Without filters, it runs every browser
   spec against `mokly serve` of the example catalogue.
@@ -189,6 +189,26 @@ complete gate. Only the complete `cargo xtask check`, or the validated CI
 aggregate defined in
 [CI verification](./ci-verification.md#verification-boundary), provides
 complete verification.
+
+## Locked Cargo Dependencies
+
+`cargo xtask check` uses the locked dependency graph: the exact Rust
+dependency versions that `Cargo.lock` records. This holds for the complete
+gate and for each `--suite` run, in local, remote, and CI runs. The gate never
+changes `Cargo.lock`.
+
+A stale `Cargo.lock` no longer matches the `Cargo.toml` manifests of the
+workspace. It fails the run with Cargo's own error, before any suite starts.
+Every other `cargo xtask` command fails in the same way. `npm run build` also
+fails, so the test commands that build first fail too.
+
+Decision: `cargo xtask` and each gate Cargo command that resolves dependencies
+use Cargo's `--locked` flag. Rejected: implicit lock updates. With them, a
+stale `Cargo.lock` would pass the gate and CI and fail only the
+[locked release build](./npm-release.md#release-build-matrix-and-publication-order).
+
+To refresh a stale `Cargo.lock`, run one Cargo command without `--locked`,
+such as `cargo check --workspace`. Then commit the updated `Cargo.lock`.
 
 ## Packed Consumer Smoke
 

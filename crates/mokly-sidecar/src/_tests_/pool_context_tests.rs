@@ -20,6 +20,7 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
         Arc::new(Unimock::new(())),
         Arc::new(clock.clone()),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

@@ -15,6 +15,7 @@ use crate::material::mapped;
 use crate::owned_style_chain_source::DocumentIndex;
 use crate::owned_style_instances;
 use crate::resource_memo::ResourceMemo;
+use crate::rule_weight;
 use crate::view_material::MaterialComparison;
 
 #[derive(Default)]
@@ -85,6 +86,21 @@ pub(crate) fn compare(
 }
 
 impl Changes {
+    pub(crate) fn retained_bytes(&self) -> usize {
+        rule_weight::rules(&self.rules)
+            + self.chains.capacity() * mem::size_of::<(String, owned_style_instances::Compact)>()
+            + self
+                .chains
+                .iter()
+                .map(|(owner, chains)| owner.capacity() + chains.retained_bytes())
+                .sum::<usize>()
+            + self.candidates.capacity() * mem::size_of::<(String, String)>()
+            + self
+                .candidates
+                .iter()
+                .map(|(owner, key)| owner.capacity() + key.capacity())
+                .sum::<usize>()
+    }
     /// Move admission follows physical claims for declared owned rules.
     pub(crate) fn changes_owner(&self, owner: Option<&str>) -> bool {
         let Some(owner) = owner else {
@@ -123,7 +139,7 @@ impl Changes {
     }
 
     /// Select exact paired component instances with the unfiltered own-page sets.
-    pub(crate) fn instances(&mut self, own_pages: &OwnPageMatches) -> Vec<(String, String)> {
+    pub(crate) fn instances(&self, own_pages: &OwnPageMatches) -> Vec<(String, String)> {
         if self.candidates.is_empty() {
             return Vec::new();
         }
@@ -131,9 +147,10 @@ impl Changes {
         for (owner, chains) in &self.chains {
             instances.extend(owned_style_instances::matched(chains, owner, own_pages));
         }
-        mem::take(&mut self.candidates)
-            .into_iter()
+        self.candidates
+            .iter()
             .filter(|(_, instance)| instances.contains(instance))
+            .cloned()
             .collect()
     }
 

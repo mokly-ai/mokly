@@ -4,7 +4,7 @@ use std::io;
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_platform::error::{InternalError, Result};
+use mokly_platform::error::{Error, Result};
 use mokly_platform::rename::Rename;
 
 use super::Faults;
@@ -26,10 +26,9 @@ impl Rename for Injected {
         };
         self.faults.event(step);
         if self.faults.has(step) {
-            return Err(InternalError::Io {
-                source: io::Error::other(format!("injected {step} failure")),
-            }
-            .into());
+            return Err(Error::io(io::Error::other(format!(
+                "injected {step} failure"
+            ))));
         }
         self.inner.exclusive(source, destination)?;
         if step == "capture" {

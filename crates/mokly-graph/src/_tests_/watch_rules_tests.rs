@@ -42,6 +42,7 @@ fn nested_watch_input_hashes_have_the_same_posix_keys_on_every_host() {
         },
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };

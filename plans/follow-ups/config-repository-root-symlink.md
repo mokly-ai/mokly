@@ -4,8 +4,8 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #240 and its completed plan, which put the
   problem outside the scope of its first review.
-- **Location:** `crates/mokly-catalogue/src/config.rs:144` and
-  `crates/mokly-catalogue/src/config_paths.rs:202`.
+- **Location:** `crates/mokly-catalogue/src/config.rs:155` and
+  `crates/mokly-catalogue/src/config_inputs.rs:182`.
 - **Reason:** The two checks are older than PR #240, and the review found the
   difference outside the diff of that change.
 
@@ -21,8 +21,13 @@
   - PR #240, merged on 2026-10-28, gave config-relative paths one normalized
     form for the renderer, the PostCSS module, package roots, and local
     stylesheets.
-  - `crates/mokly-catalogue/src/config.rs:144` checks each `roots[].dir`.
-  - `crates/mokly-catalogue/src/config_paths.rs:202` checks the other path
+  - A later fix gave the renderer and the PostCSS module a resolved form at
+    configuration load: the repository-relative path of the file that the
+    lexical path reaches through symbolic links. Package roots and local
+    stylesheets keep the normalized form of PR #240. The fix changed neither
+    containment check.
+  - `crates/mokly-catalogue/src/config.rs:155` checks each `roots[].dir`.
+  - `crates/mokly-catalogue/src/config_inputs.rs:182` checks the other path
     fields.
   - The review of PR #240 found on 2026-10-28 that, when `repoRoot` goes
     through a symbolic link, `roots[].dir` is checked against the lexical
@@ -50,9 +55,13 @@
 - **Previous examples:** PR #240 replaced four separate joins of the authored
   spelling with one normalized form on 2026-10-28.
 - **Related:**
-  - [linked-renderer-stylesheet-root.md](./linked-renderer-stylesheet-root.md)
-    is the second linked-path problem that the same review found. It loses
-    a renderer's styles when the renderer path goes through a link.
+  - [linked-renderer-stylesheet-root.md at its last version on `main`](https://github.com/mokly-ai/mokly/blob/337e619f20d76d3df11b00d5df4172ba8649d7f9/plans/follow-ups/linked-renderer-stylesheet-root.md)
+    was the second linked-path problem that the same review found. It lost
+    a renderer's styles when the renderer path went through a link. Its fix
+    applied its option C: configuration load gives every configured module
+    path, the renderer and the PostCSS module, one resolved form, so that no
+    consumer compares a link path with a real path. That fix left both
+    containment checks as they were, so this item stays open.
   - [base-symlink-package-root.md at its last version on `main`](https://github.com/mokly-ai/mokly/blob/208205c24cb0b6d9f78bfe507ef0373af25f11ba/plans/follow-ups/base-symlink-package-root.md)
     concerned linked package roots in the base tree of Changes. It is the
     same class of link handling in another reader. The 2026-10-28 decision

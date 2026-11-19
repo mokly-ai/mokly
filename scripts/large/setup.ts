@@ -10,6 +10,7 @@ import type {
 } from "../../tests/fixtures/large/generate.js";
 
 import type { AcceptanceBuild } from "./acceptance_build.js";
+import { settleFixtureFiles } from "./setup_files.js";
 import { measureSetup } from "./setup_measurement.js";
 import type { SetupSystem } from "./setup_memory.js";
 import { prepareToolchain } from "./toolchain.js";
@@ -88,6 +89,7 @@ export async function prepareFixture(
     JSON.stringify(record, null, 2) + "\n",
   );
   if (measurement.reason) throw new Error(measurement.reason);
+  await settleFixtureFiles(root);
   return record;
 }
 export async function preparedFixture(root: string): Promise<PreparedFixture> {

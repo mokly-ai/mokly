@@ -1,6 +1,6 @@
 //! Bundle requests name the renderer by its normalized repository path.
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_sidecar::methods::ModuleResolution;
 
 use crate::bundle_inputs::params;
@@ -19,7 +19,7 @@ fn side() -> SideInputs {
 }
 
 #[test]
-fn the_bundle_request_names_the_normalized_renderer_path() {
+fn the_bundle_request_uses_the_resolved_renderer_identity() {
     for (file, renderer, expected) in [
         (
             "/repo/app/mokly.config.json",
@@ -49,6 +49,10 @@ fn the_bundle_request_names_the_normalized_renderer_path() {
             },
             file: file.into(),
             repo_root: "/repo".into(),
+            modules: ResolvedModules {
+                renderer: Some(expected.into()),
+                ..Default::default()
+            },
             authored_inputs: Vec::new(),
             roots: Vec::new(),
         };

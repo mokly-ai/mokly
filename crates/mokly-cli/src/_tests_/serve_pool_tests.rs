@@ -13,6 +13,7 @@ use mokly_sidecar::wire::MethodResult;
 use tokio::sync::oneshot;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::serve_pool::serve_pool_support::capacity;
 use crate::serve_pool::{PoolScheduling, ServePool};
 
 use super::serve_pool_support::{css, pool};
@@ -42,7 +43,7 @@ fn whole_foreground_bursts_share_roots_with_one_or_three_workers() {
             inner.abort().unwrap();
 
             let (_owner, inner, observed) = pool();
-            let scheduler = ServePool::new(inner, size);
+            let scheduler = ServePool::new(inner, capacity(size));
             let head = scheduler.pool(None);
             let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
             base.request(css("/base", 0)).unwrap();
@@ -96,7 +97,7 @@ fn whole_foreground_bursts_share_roots_with_one_or_three_workers() {
 #[test]
 fn cancellation_wakes_queued_base_work_without_waiting_for_the_foreground() {
     let inner = Unimock::new(());
-    let scheduler = ServePool::new(Arc::new(inner.clone()), 1);
+    let scheduler = ServePool::new(Arc::new(inner.clone()), capacity(1));
     let _foreground = scheduler.enter();
     let token: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
     let base = scheduler.pool(Some(token.clone()));
@@ -122,7 +123,7 @@ fn shutdown_closes_both_sides_and_wakes_pending_admission() {
             .next_call(matching!())
             .returns(Ok(())),
     );
-    let scheduler = ServePool::new(Arc::new(inner.clone()), 1);
+    let scheduler = ServePool::new(Arc::new(inner.clone()), capacity(1));
     let _foreground = scheduler.enter();
     let head = scheduler.pool(None);
     let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
@@ -139,7 +140,7 @@ fn shutdown_closes_both_sides_and_wakes_pending_admission() {
 #[tokio::test]
 async fn http_priority_covers_gaps_between_a_documents_sidecar_calls() {
     let (_owner, inner, observed) = pool();
-    let scheduler = Arc::new(ServePool::new(inner, 1));
+    let scheduler = Arc::new(ServePool::new(inner, capacity(1)));
     let head = scheduler.pool(None);
     let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
     base.request(css("/base", 0)).unwrap();
@@ -195,7 +196,7 @@ fn base_admission_never_exceeds_the_configured_worker_count() {
                 }))
                 .n_times(size * 4),
         );
-        let scheduler = ServePool::new(Arc::new(inner.clone()), size);
+        let scheduler = ServePool::new(Arc::new(inner.clone()), capacity(size));
         let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
         let jobs: Vec<_> = (0..size * 4)
             .map(|index| {
@@ -222,7 +223,7 @@ fn base_admission_never_exceeds_the_configured_worker_count() {
 #[test]
 fn the_admission_limit_matches_configured_positive_sidecar_counts() {
     for (size, limit) in [(1, 1), (3, 3)] {
-        let scheduler = ServePool::new(Arc::new(Unimock::new(())), size);
+        let scheduler = ServePool::new(Arc::new(Unimock::new(())), capacity(size));
         assert_eq!(scheduler.limit(), limit);
     }
 }

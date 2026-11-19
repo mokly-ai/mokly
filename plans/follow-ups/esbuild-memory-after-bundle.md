@@ -57,6 +57,9 @@
     records an esbuild peak of 2.91 GB in a Mokly Cloud sample. It closed
     on 2026-11-01, when the sidecar pool started to keep the last released
     compiled recipe of each set of bundle settings.
+  - [cold-start-base-overlap-memory.md](./cold-start-base-overlap-memory.md):
+    its option D can test whether returning bundler memory removes added
+    demand of early base work.
 - **Recommendation:** B. It frees the memory as soon as a bundle ends, and
   it changes no protocol rule.
 - **Action:** fix after merge, apply B, because no open branch owns the

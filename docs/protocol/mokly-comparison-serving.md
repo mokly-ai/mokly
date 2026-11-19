@@ -38,7 +38,9 @@ Otherwise the snapshot route returns 404 and starts no work, even while the
 generation's cached JSON remains available.
 Delivery files count against the 128 MiB comparison store. Each classification
 can also retain a separate base capture of up to 256 MiB, beside the 256 MiB
-render cache. An old capture held by in-flight work can overlap a new
+render cache. Serve keeps at most one base capture between classifications,
+under the [base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime).
+An old capture held by in-flight work can overlap a new
 classification's capture. These bounds are separate, not a process memory limit.
 A route whose generation is gone returns 404
 and never redirects or starts work. The shell derives every snapshot and
@@ -101,17 +103,22 @@ Complete base validation and capture must use the same rendered input for each
 view. Capture must preserve validation failures and warning order, including
 when another view fails later. A failed validation publishes no partial capture.
 
-Replacing an unfinished classification cancels its base capture, its base
-workers, its source reads, and its sidecar calls. Command shutdown cancels
-both current and base work.
+Replacing an unfinished classification cancels the base that it prepares: its
+base capture, its base workers, its source reads, and its sidecar calls. A
+replaced classification that reads the kept base stops before its next call
+to that base. A call that already runs finishes, and the kept base stays
+usable, under the
+[kept base cancellation rule](./mokly-base-preparation.md#cancellation).
+Command shutdown cancels both current and base work, the kept base included.
 
 ## Base And Head Capture
 
 A capture is a bounded store of one side's rendered views. A later read of a
-kept view restores it without a render. Each classification captures its
-base side in Serve, `build`, and `publish`. `build` and `publish` also capture
-the head side once, during the build check. Changes, the output, and the
-comparison output read that head capture. Each side's capture has its own
+kept view restores it without a render. Each preparation of a base side
+captures it, in Serve, `build`, and `publish`. A Serve classification that
+reuses the kept base captures nothing again. `build` and `publish` also
+capture the head side once, during the build check. Changes, the output, and
+the comparison output read that head capture. Each side's capture has its own
 256 MiB bound beside the render cache.
 Decision: the head reuses the base capture, so a build renders each head
 document once. A larger render cache, bounded render batches, and a reordered
@@ -141,6 +148,53 @@ that fits the final capacity, was rejected, because it adds renders when memory
 is tight. The default [large fixture](./mokly-timings.md#scale-fixture) does not
 need that pass, because each side keeps every view within about a third of the
 bound.
+
+## View Comparison Reuse
+
+Serve keeps the view comparisons of one classification, its last accepted
+classification, for the
+[proven view reuse](./mokly-changes-serving.md#proven-view-reuse) of the next
+classification. A classification is accepted when Serve has published its
+`ready` state and no replacement or shutdown has cancelled the classification.
+Each accepted classification replaces the kept comparisons with its own. A
+failed, cancelled, or superseded classification leaves them unchanged. `build`
+and `publish` keep no view comparison and compare every view.
+Decision: only Serve keeps view comparisons, in memory. A cache on disk or one
+shared across commands was rejected, because it adds persistent state beyond
+one Serve process.
+Decision: a failed or cancelled classification keeps the earlier comparisons.
+Keeping them with the published Changes state was rejected, because an
+`unavailable` state would drop them, and the next classification would compare
+every view again.
+
+Reuse never changes output. A classification that reuses comparisons
+publishes the same bytes as a full comparison of the same inputs: the index,
+the entry details, the generation files, and the snapshots. It reports the
+same Changes, moved, and ignored-only counts, the same warnings, and the same
+failure diagnostics. Reuse changes no cancellation, publication, or capture
+rule of this page.
+
+The kept comparisons hold no document, no document tree, no resource bytes,
+and no usage. They keep no base capture, no render generation, and no base
+cache lease alive. Serve compares every view in full when it keeps no
+comparison. It also compares every view in full when the base commit, the
+selected base reference, the adopted configuration, or an effective comparison
+setting differs from that of the kept comparisons.
+
+The kept comparisons and the comparisons that each running classification
+collects share one fixed byte bound of at most 32 MiB. A cancelled
+classification that still drains counts too. A comparison that several of them
+share counts once. The collected comparisons never pass the bound. A
+classification whose comparisons do not fit still publishes its complete
+output. When Serve accepts it, Serve keeps no comparison, and the next
+classification compares every view in full. This bound is separate from the
+comparison store, the base captures, and the render cache.
+Decision: the bound is a fixed byte count of at most 32 MiB, one eighth of the
+render cache bound. A limit on the number of views was rejected, because it
+does not bound bytes.
+Decision: comparisons that do not fit are not kept at all. Keeping the views
+that fit, or the earlier comparisons, was rejected, because Serve keeps either
+every comparison of its last accepted classification or none.
 
 ## Build And Publish
 

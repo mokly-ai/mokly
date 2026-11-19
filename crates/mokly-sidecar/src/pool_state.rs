@@ -8,6 +8,7 @@ use crate::bindings::Bindings;
 use crate::compiled::CompiledGeneration;
 use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
+use crate::pool_head::Head;
 use crate::pool_recipes::Recipes;
 use crate::pool_timing::Reason;
 use crate::results::Module;
@@ -34,13 +35,26 @@ pub(super) struct Affinity {
     pub(super) source_root: PathBuf,
 }
 
+pub(super) struct Waiting {
+    pub(super) context: Option<String>,
+    pub(super) root: PathBuf,
+    pub(super) claim: Option<u64>,
+}
+
 #[derive(Default)]
 pub(super) struct State {
+    pub(super) head: Head,
+    pub(super) source_roots: BTreeMap<usize, PathBuf>,
     pub(super) replacement_reasons: BTreeMap<usize, Reason>,
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
+    pub(super) claims: BTreeMap<u64, usize>,
+    pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
+    /// Unused indexes have no reservation and never enter ordinary available selection.
+    pub(super) free: BTreeSet<usize>,
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,
+    pub(super) retired: BTreeSet<usize>,
     pub(super) next_epoch: u64,
     pub(super) epochs: BTreeMap<String, u64>,
     pub(super) bundles: BTreeMap<String, Bundle>,
@@ -52,8 +66,15 @@ pub(super) struct State {
     pub(super) bindings: BTreeMap<String, Arc<Bindings>>,
     pub(super) contexts: BTreeSet<String>,
     pub(super) affinity: BTreeMap<String, Affinity>,
-    pub(super) waiting: BTreeMap<u64, Option<String>>,
+    pub(super) waiting: BTreeMap<u64, Waiting>,
     pub(super) ticket: u64,
     pub(super) serving: u64,
     pub(super) stopped: bool,
+}
+
+impl State {
+    /// Count retained and pending reservations, including permanently retired indexes.
+    pub(super) fn allocated(&self) -> usize {
+        self.slots.len() - self.free.len()
+    }
 }

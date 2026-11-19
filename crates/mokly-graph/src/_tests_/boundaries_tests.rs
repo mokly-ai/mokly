@@ -86,6 +86,7 @@ fn public_policy_caches_success_and_denial_and_allows_ordinary_browser_scripts()
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
