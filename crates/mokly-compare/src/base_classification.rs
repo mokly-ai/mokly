@@ -133,7 +133,10 @@ impl Changes {
                 return Err(base_error(&commit.to_string(), scripts_off, *error.source));
             }
         };
-        let captured = self.comparison.capture_base(prepared.generation);
+        let captured = {
+            let _prefetch = prepared.prefetch;
+            self.comparison.capture_base(prepared.generation)
+        };
         if let Some(source) = failures.failure() {
             return Err(base_error(
                 &commit.to_string(),

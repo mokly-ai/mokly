@@ -2,9 +2,10 @@
 
 use std::collections::BTreeMap;
 use std::mem;
+use std::sync::Arc;
 
-use mokly_graph::cache::Artifact;
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::{ComparisonEncoder, EncodedComparisonDocument};
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
@@ -42,15 +43,23 @@ impl Collector {
 }
 
 impl ComparisonCollector for Collector {
+    fn encoder(&self) -> Arc<dyn ComparisonEncoder> {
+        Arc::new(Encoder)
+    }
+
+    fn remaining(&self) -> usize {
+        self.bound
+            .saturating_sub(self.fixed)
+            .saturating_sub(self.retained)
+    }
     fn summary(&mut self, summary: &RenderSummary) {
         self.fixed = mem::size_of::<CapturedGeneration>() + capture_weight::summary(summary);
         self.trim(self.bound.saturating_sub(self.fixed));
     }
 
-    fn collect(&mut self, route: &str, input: ComparisonDocument) -> Result<()> {
-        let document = encode(&input.artifact)?;
+    fn collect(&mut self, route: &str, input: EncodedComparisonDocument) -> Result<()> {
         let view = CapturedView {
-            document,
+            document: input.document,
             closure: input.closure,
         };
         let cost = view.charge(route);
@@ -67,13 +76,21 @@ impl ComparisonCollector for Collector {
     }
 }
 
-#[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
-fn encode(artifact: &Artifact) -> Result<EncodedView> {
-    let document = capture_error::graph(EncodedView::encode(artifact).capture())?;
-    tracing::Span::current().record("status", "ok");
-    Ok(document)
+struct Encoder;
+
+impl ComparisonEncoder for Encoder {
+    #[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
+    fn encode(&self, _route: &str, input: &ComparisonDocument) -> Result<EncodedView> {
+        let document = capture_error::graph(EncodedView::encode(&input.artifact).capture())?;
+        tracing::Span::current().record("status", "ok");
+        Ok(document)
+    }
 }
 
 #[cfg(test)]
 #[path = "_tests_/capture_collection_tests.rs"]
 mod capture_collection_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_window_retention_tests.rs"]
+mod capture_window_retention_tests;

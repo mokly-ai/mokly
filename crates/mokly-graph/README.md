@@ -13,6 +13,8 @@ writes no files.
   tier for evicted documents.
 - Encode documents losslessly for the compact tier and the comparison capture.
 - Render all views through an injected worker pool.
+- Run complete side validation in a bounded window, and hand each view to the
+  comparison collector in route order.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
 - Validate logical anchors across destination views.
@@ -117,8 +119,12 @@ restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
 recipes rather than a complete set of parsed documents.
-Eviction changes work only. Cross-view anchor checks retain successful
-destination renders in this same bounded cache. A repeated check of one
+Eviction changes work only. `RenderCache::contains` reports whether any tier
+holds a key. It restores nothing and changes no access order. A generation uses
+it to list the routes of its
+[early renders](../../docs/protocol/mokly-base-preparation.md#shared-render-runtime).
+Cross-view anchor checks retain successful destination renders in this same
+bounded cache. A repeated check of one
 destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
@@ -151,11 +157,32 @@ usage.
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
 cache retains nothing. The build head capture and the base capture use this
-validation path. Validation keeps only cross-view facts between batches.
-It preserves aggregate failures and warning order. Inputs stay provisional
-until the final anchor and output-name checks succeed. Batches use the
-generation's existing render pool and sidecar count, with at most one
-transient input per render worker.
+validation path. It renders the views through
+`RenderGeneration::schedule_capture_window`, in the sliding window of the
+[capture rules](../../docs/protocol/mokly-comparison-serving.md#base-and-head-capture).
+That method runs `RenderWorkers::capture_window` on the generation's render
+workers, with the limit from `RenderGeneration::capture_parallelism`. This
+crate owns the window and the hand-off in route order. A worker encodes
+each finished view with the `ComparisonEncoder` from
+`ComparisonCollector::encoder`, and then it releases the decoded input. The
+result is an `EncodedComparisonDocument`. The collector in `mokly-compare` owns
+the capture bound, and `ComparisonCollector::remaining` gives the bytes that
+the bound has left. Encoded views that wait for their turn share those bytes.
+The window's `CaptureConsumer` frees the slot of a finished view only when the
+view fits them, so a view that does not fit keeps its place until its turn. A
+waiting view never changes which earlier views the collector keeps. Validation
+keeps only cross-view facts, and it records them, the warnings, and the
+aggregate failures at each view's turn. Inputs stay provisional until the final
+anchor and output-name checks succeed. Apart from the capture bound, the window
+holds at most one transient input or finished view for each render worker.
+
+`RenderGeneration::uncached_documents` lists the routes whose document keys no
+cache tier holds. `RenderGeneration::prefetch_comparison` starts their early
+renders on the workers of the capture window, and it returns a `PrefetchGuard`.
+Each early
+render enters the render cache. A capture read of the same route waits for an
+early render that still runs, and it takes over one that has not started. When
+the guard drops, it stops new early renders and waits for every running one.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides validate reached resources under the
@@ -212,16 +239,21 @@ Serve can order the sidecar calls of that render. The trait
 defaults have a capacity of one. They run the indexes in order on the caller,
 and the stream default prepares and consumes one index at a time.
 
-Wrappers forward `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to their inner
-generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
-`comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
-Without these forwards, the comparison runs one view at a time. A scheduled
-task still calls the wrapper's own methods, so the wrapper's checks stay
-active. `RenderKeys::build_with_workers` also runs one key job for each
-exporting module through `comparison_tasks` on the shared render workers.
-Without the `comparison_tasks` forward, the key calculation runs one module at
-a time.
+Wrappers forward `comparison_parallelism`, `capture_parallelism`,
+`schedule_capture_window`, `schedule_comparison_tasks`, and
+`schedule_comparison_stream` to their inner generation. A capture wrapper and
+a checking wrapper keep these forwards too. `RenderWorkers` wrappers forward
+`comparison_parallelism`, `capture_parallelism`, `capture_window`,
+`prefetch_tasks`, `comparison_tasks`, and `comparison_stream` in the same way. Without these
+forwards, the comparison runs one view at a time. A scheduled task still calls
+the wrapper's own methods, so the wrapper's checks stay active. A wrapper that
+checks capture inputs wraps the `ComparisonEncoder` of
+`ComparisonCollector::encoder`, so its checks run on the worker before the
+encoding. It forwards `ComparisonCollector::remaining`, so the waiting views
+keep the same byte bound. `RenderKeys::build_with_workers` also runs one key
+job for each exporting module through `comparison_tasks` on the shared render
+workers. Without the `comparison_tasks` forward, the key calculation runs one
+module at a time.
 
 `retained_comparison_input` returns a comparison input that the generation
 already holds. It reads no source and logs nothing. `Ready` holds the decoded
@@ -318,7 +350,10 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call.
+  static output call. `RenderGeneration::uncached_documents` lists the routes
+  that no cache tier holds, and `RenderGeneration::prefetch_comparison` starts
+  their early renders. `RenderGeneration::schedule_capture_window` runs the
+  capture window with the limit of `RenderGeneration::capture_parallelism`.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -328,7 +363,7 @@ retention disabled.
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
   `Artifact`, and `CacheStats`, the render cache with its full and compact
-  tiers.
+  tiers. `RenderCache::contains` checks every tier without a restore.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
   the lossless compact document that the compact tier and the comparison
   capture share.
@@ -339,7 +374,13 @@ retention disabled.
   root order. Its `comparison_tasks` method runs every index of a
   `ComparisonTask` once and returns when all of them have run. Its
   `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
-  at most twice the pool size started and not yet consumed.
+  at most twice the pool size started and not yet consumed. Its
+  `capture_window` method runs a bounded capture window and joins every
+  admitted task before it returns. Its `capture_parallelism` method gives the
+  window limit, which includes the sidecar bound of the runtime.
+- [`src/capture_window.rs`](./src/capture_window.rs) defines
+  `CaptureConsumer`, which admits each route index of a capture window and
+  frees the slot of a finished view only when its queued bytes fit.
 - [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
   scheduling class of a blocking render, `Foreground` by default.
   `RenderClass::in_scope` sets a class for one operation and restores the
@@ -362,7 +403,15 @@ retention disabled.
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
   referenced file of one generation and its reads of the style memo.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
-  which consumes validated comparison inputs in route order.
+  which consumes encoded comparison inputs in route order. Its `encoder`
+  method gives the encoder that the workers use, and its `remaining` method
+  gives the capture bytes that waiting views can use.
+- [`src/collection_input.rs`](./src/collection_input.rs) defines
+  `ComparisonEncoder`, the encoding boundary that a collector or a checking
+  wrapper supplies, and `EncodedComparisonDocument`, one encoded view that
+  waits for its turn.
+- [`src/prefetch.rs`](./src/prefetch.rs) defines `PrefetchGuard`, which stops
+  the early renders of one classification and waits for them when it drops.
 - [`src/comparison_input.rs`](./src/comparison_input.rs) defines
   `RetainedComparisonInput` and `ComparisonFallback`, a retained comparison
   input and the deferred source read of a failed restore.
@@ -389,3 +438,4 @@ retention disabled.
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).
+- [Base and head capture](../../docs/protocol/mokly-comparison-serving.md#base-and-head-capture).

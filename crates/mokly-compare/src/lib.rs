@@ -231,6 +231,10 @@ mod capture_producer;
 mod capture_collection;
 
 #[cfg(test)]
+#[path = "_tests_/capture_window_fixture.rs"]
+mod capture_window_fixture;
+
+#[cfg(test)]
 #[path = "_tests_/bundle_fixture.rs"]
 mod bundle_fixture;
 

@@ -5,6 +5,7 @@ use std::mem;
 use std::sync::Arc;
 
 use mokly_graph::closure::Closure;
+use mokly_graph::collection_charge;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::RenderGeneration;
@@ -47,7 +48,9 @@ pub(crate) struct CapturedView {
 
 impl CapturedView {
     pub(crate) fn charge(&self, route: &str) -> usize {
-        256 + route.len() + self.document.retained_bytes() + capture_weight::closure(&self.closure)
+        256 + route.len()
+            + self.document.retained_bytes()
+            + collection_charge::closure(&self.closure)
     }
 }
 

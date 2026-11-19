@@ -6,11 +6,11 @@ use std::thread::{self, ThreadId};
 
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumerMock;
 use mokly_graph::closure::Closure;
 use mokly_graph::error::{GraphError, Result};
-use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, RenderWorkersMock,
+    ArtifactWorker, ComparisonTask, DocumentWorker, RenderWorkers, RenderWorkersMock,
     StylesheetWorker, ThreadWorkers, ValidatedView,
 };
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
@@ -93,8 +93,8 @@ impl ArtifactWorker for Unused {
     }
 }
 
-impl ComparisonWorker for Unused {
-    fn input(&self, _route: &str) -> Result<ComparisonDocument> {
+impl ComparisonTask for Unused {
+    fn run(&self, _index: usize) {
         unreachable!("the inner workers answer without the job")
     }
 }
@@ -118,9 +118,11 @@ fn every_other_job_reaches_the_inner_workers() {
             RenderWorkersMock::comparison_parallelism
                 .next_call(matching!())
                 .returns(3_usize),
-            RenderWorkersMock::comparison
-                .next_call(matching!(_, _))
-                .answers(&|_, _, _| Vec::new()),
+            RenderWorkersMock::capture_window
+                .next_call(matching!(_, _, _))
+                .answers(&|_, _, _, consumer| {
+                    consumer.complete(0);
+                }),
             RenderWorkersMock::cancelled
                 .next_call(matching!())
                 .returns(true),
@@ -137,7 +139,19 @@ fn every_other_job_reaches_the_inner_workers() {
     };
     let unused = Unused;
     assert_eq!(workers.comparison_parallelism(), 3);
-    assert!(workers.comparison(&[], &unused).is_empty());
+    let completed = Arc::new(Mutex::new(Vec::new()));
+    let recorded = completed.clone();
+    let mut consumer = Unimock::new(
+        CaptureConsumerMock::complete
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, index| {
+                recorded.lock().unwrap().push(index);
+                true
+            }))
+            .at_least_times(0),
+    );
+    workers.capture_window(3, &unused, &mut consumer);
+    assert_eq!(*completed.lock().unwrap(), [0]);
     assert!(workers.cancelled());
     assert!(workers.closure("page", &unused).is_ok());
     assert!(workers.document("page", &unused).is_ok());

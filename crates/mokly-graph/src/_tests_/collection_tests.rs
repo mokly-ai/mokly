@@ -60,7 +60,8 @@ fn validated_collection_composes_each_view_once_at_one_and_four_sizes() {
                 .each_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, route, input| {
                     assert!(
-                        String::from_utf8_lossy(&input.artifact.bytes).contains("id=\"anchor\"")
+                        String::from_utf8_lossy(&input.document.restore().unwrap().bytes)
+                            .contains("id=\"anchor\"")
                     );
                     assert!(input.closure.files.is_empty());
                     let pending = composed.lock().unwrap().len() - recorded.lock().unwrap().len();
@@ -163,7 +164,7 @@ fn collection_keeps_full_validation_errors_and_warnings_ahead_of_encoding_failur
 }
 
 #[test]
-fn summary_updates_once_per_batch_before_its_first_encoded_view() {
+fn summary_updates_at_each_route_before_its_encoded_view() {
     let run = |count| {
         let probe = collection_support::probe(count);
         let expected_summary = probe.session.render_all().unwrap();
@@ -192,9 +193,9 @@ fn summary_updates_once_per_batch_before_its_first_encoded_view() {
         assert_eq!(summary.warnings, expected_summary.warnings);
         assert_eq!(summary.warnings.len(), count + 1);
         let mut expected = vec![("summary", 1)];
-        for batch in 0..count / 2 {
-            expected.push(("summary", 1 + 2 * (batch + 1)));
-            expected.extend([("collect", 0), ("collect", 0)]);
+        for route in 0..count {
+            expected.push(("summary", route + 2));
+            expected.push(("collect", 0));
         }
         expected.push(("summary", count + 1));
         let events = events.lock().unwrap();

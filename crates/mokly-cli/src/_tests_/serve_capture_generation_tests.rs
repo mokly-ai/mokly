@@ -24,6 +24,7 @@ use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::serve_base_cancel::PreparingBase;
 use crate::serve_capture_cancel::CaptureCancellation;
@@ -52,11 +53,14 @@ fn source(
                 32 * 1024 * 1024,
             )),
             kept_base: Arc::default(),
-            sidecars: Arc::new(Unimock::new(
+            sidecars: Arc::new(Unimock::new((
                 PoolSchedulingMock::pool
                     .next_call(matching!(Some(_)))
                     .returns(pool),
-            )),
+                PoolSchedulingMock::limit
+                    .each_call(matching!())
+                    .returns(2_usize),
+            ))),
             progress: Arc::new(Unimock::new(())),
             refreshes: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),
@@ -132,7 +136,8 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             .answers(&|_, _| Ok(())),
     )));
     let provider = NativeBase {
-        runtime: source.classification_runtime(cancellation.clone()),
+        admission: Arc::new(ImmediateBaseRenders),
+        runtime: source.classification_runtime(cancellation.clone()).unwrap(),
         cancellation,
         dependencies: Arc::new(Unimock::new(())),
         freshness: Some(Arc::new(Unimock::new(
@@ -236,6 +241,7 @@ fn background_base_workers_bundle_stylesheet_roots_on_the_classification_thread(
     let jobs = Threads::default();
     let bundles = source
         .classification_runtime(cancellation)
+        .unwrap()
         .workers
         .stylesheets(&[root("a.css"), root("b.css")], &jobs)
         .unwrap();

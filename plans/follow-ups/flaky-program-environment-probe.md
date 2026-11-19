@@ -118,13 +118,20 @@
       `cargo test --locked -p mokly-compare --test program_tests environment_probe_runs_with_a_token_and_absolute_manager_path -- --exact --nocapture`.
       It reported `1 passed; 0 failed; 0 ignored; 6 filtered out` and exited 0.
       No process trace was taken. The source stays unknown.
+  - The fourth failure:
+    - On 2026-11-19, the repository suite of the miss-first base capture branch failed in `cargo test --locked --workspace`.
+    - The parent failed at `program_tests.rs:170:5`. Its child failed at line 143 with `called Result::unwrap() on an Err value: CommandUnavailable`.
+    - The binary reported `6 passed; 1 failed; 0 ignored`. The test and both process source files matched main `f4f0082fd`.
+    - One unchanged rerun passed with `1 passed; 0 failed; 0 ignored; 6 filtered out`:
+      `cargo test --locked -p mokly-compare --test program_tests environment_probe_runs_with_a_token_and_absolute_manager_path -- --exact --nocapture`.
+    - The subsequent complete gate passed this test unchanged. No process trace was taken.
   - Suspected source: unknown. One candidate is a start failure of the
     short-lived shebang script that the parent test had just written, while
     other tests of the same binary started processes. Nobody reproduced or
     traced the failure, so this candidate is not a confirmed cause. Nobody
     took a trace of the second failure either, so the source stays unknown.
-- **Problem:** The parent test failed twice on 2026-11-17 and once on
-  2026-11-18, in a complete gate and repository suite runs. Each
+- **Problem:** The parent test failed twice on 2026-11-17, once on 2026-11-18,
+  and once on 2026-11-19 in complete gate and repository suite runs. Each
   time, the child test's spawn of the fixture `npm` returned
   `CommandUnavailable`, and an unchanged single rerun passed. The error keeps
   no OS error, so the source is unknown.

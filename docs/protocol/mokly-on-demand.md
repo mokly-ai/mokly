@@ -98,11 +98,20 @@ priority. Decision: warnings and
 failures report in catalogue order. Reporting each view when its render ends
 was rejected, because the order of the lines would change between runs.
 
+No base work of a classification, its
+[early renders](./mokly-base-preparation.md#shared-render-runtime) included,
+starts before the background pass of its state ends.
+Decision: base work waits for the background pass. Rejected: base preparation
+or early renders during the pass, because the memory of head and base work
+would then add up.
+
 Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. The
-queued calls of started background views go after the other queued head calls,
-such as the calls of HTTP renders. A call of a started view does not wait for
-the end of an HTTP request. Active calls finish under their deadlines.
+Queued base calls wait until those requests finish their sidecar work. While
+the calls of a base capture or of its early renders wait, they hold no render
+worker that foreground renders use. The queued calls of started background
+views go after the other queued head calls, such as the calls of HTTP renders.
+A call of a started view does not wait for the end of an HTTP request. Active
+calls finish under their deadlines.
 
 Head and base calls share the
 [sidecar capacity](./mokly-sidecar-memory.md#capacity), including a capacity
@@ -120,6 +129,11 @@ before memory fell, or while base calls held the sidecars, would then delay a
 foreground render. A wait for the end of each HTTP request was rejected,
 because that request can share the render of the view, and neither would then
 finish.
+
+Decision: a base capture and its early renders wait for admission without a
+shared render worker. Rejected: a claim before each base job, because a claim
+covers one call, not a whole job. Rejected: a separate pool for foreground
+renders, because it changes how a foreground request waits for a busy worker.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no

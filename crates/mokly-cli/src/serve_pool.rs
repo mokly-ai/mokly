@@ -151,6 +151,10 @@ mod serve_pool_tests;
 mod serve_capacity_tests;
 
 #[cfg(test)]
+#[path = "_tests_/serve_capture_workers_tests.rs"]
+mod serve_capture_workers_tests;
+
+#[cfg(test)]
 #[path = "_tests_/serve_priority_tests.rs"]
 mod serve_priority_tests;
 

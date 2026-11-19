@@ -28,6 +28,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::changes_freshness::PreparedDependencies;
 
@@ -141,7 +142,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .next_call(matching!("base-bundle", 0))
             .returns(()),
     ));
-    let provider: &dyn BaseProvider = &NativeBase {
+    let provider: &dyn BaseProvider = &NativeBase { admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),

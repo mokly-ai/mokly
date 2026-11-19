@@ -7,8 +7,11 @@ mod cache_encoding;
 mod cache_state;
 mod cache_tier;
 mod cache_transit;
+pub mod capture_window;
 pub mod closure;
 pub mod collection;
+pub mod collection_charge;
+pub mod collection_input;
 pub mod comparison_input;
 pub mod comparison_proof;
 pub mod comparison_stream;
@@ -29,6 +32,7 @@ pub mod key;
 mod link_index;
 mod link_results;
 pub mod policy;
+pub mod prefetch;
 pub mod public_denial;
 pub mod public_inputs;
 mod public_locations;
@@ -103,7 +107,10 @@ mod reference_tests;
 
 pub mod asset_delivery;
 
+mod collection_jobs;
+mod prefetch_state;
 mod session_collection;
+mod session_prefetch;
 mod validation_summary;
 
 #[cfg(test)]

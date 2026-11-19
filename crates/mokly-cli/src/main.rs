@@ -3,6 +3,7 @@
 use mimalloc::MiMalloc;
 
 mod base_dependencies;
+mod base_render_admission;
 mod bundle_runtime;
 mod cache_directory;
 mod changes_base;
@@ -24,6 +25,7 @@ mod serve_base_cancel;
 mod serve_base_key;
 mod serve_candidates;
 mod serve_capture_cancel;
+mod serve_capture_workers;
 mod serve_changes;
 mod serve_changes_base;
 mod serve_changes_native;

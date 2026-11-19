@@ -5,7 +5,7 @@ Status: Active. On branch `calummoore/mokly-first-changes-1-miss-first-capture-6
 On 2026-11-19, the user chose option D for first Changes latency: improve the
 first classification through five separate, stacked pull requests. This plan
 owns step 1 only. The user authorized design calls that preserve output and
-keep memory in check. The user holds all merges. This bottom pull request
+keep memory within 2% of main. The user holds all merges. This bottom pull request
 targets `main` and must stay open.
 
 Mokly renders the head catalogue before it prepares the historical base.
@@ -36,8 +36,7 @@ Contract owners:
 
 ## Design calls
 
-These calls belong to the performance orchestrator on 2026-11-19. The task
-message authorizes their implementation. The options check also reviews them.
+The performance orchestrator supplied immediate misses, ordered capture, and classification lifetime on 2026-11-19. This workspace records its additional calls below. The task authorizes implementation.
 
 ### 1. Start known base misses immediately
 
@@ -134,50 +133,105 @@ Shared assumptions and sources:
 - Prefetch publishes no capture or error ahead of route order. Source: task design call 3 and comparison serving contract.
 - Kept-base lifetime and cancellation semantics stay equal. Source: base preparation contract.
 
+### 4. Preserve static evidence admission
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** code structure.
+- **Location:** `crates/mokly-cli/src/base_render_admission.rs`, `crates/mokly-cli/src/changes_static.rs`, and `crates/mokly-cli/src/changes_base.rs`.
+- **Terms:**
+  - **Source evidence:** The recorded files and package inputs that a static command verifies before a base document callback.
+- **Background:** Serve can start early renders when graph preparation ends. Static commands must first verify their source evidence.
+- **Problem:** Starting early renders inside preparation bypassed the static provider's later verification.
+- **Impact if no action:** A rejected static build can execute a base document callback before it rejects changed inputs.
+- **Root question:** How can every base document callback wait for its command's evidence check while Serve starts known misses immediately?
+- **Options:**
+  - **A.** Start static early renders only after the provider returns and verifies evidence. Keep Serve's start inside preparation. This duplicates start and lifetime handling. Effort: Small.
+  - **B.** Inject a command-specific prerequisite at the common early-render start. Static commands verify once. Serve admits immediately. Effort: Small.
+  - **C.** Split the provider interface into prepared-key and admitted-render phases for every caller. This changes the preparation boundary more widely. Effort: Medium.
+  - **D.** Check once at the composition boundary for every base document callback. It covers future early-render starts too. It moves verification to a render thread and changes failure order. A base with no miss rejects changed inputs later. Effort: Medium.
+  - **E.** Start early renders in Serve only. Keep the static provider's outer verification. Static misses then wait for their capture routes. Effort: Small.
+- **Left out:** Removing static verification breaks the existing input-change rule. Delaying Serve until capture misses the authorized start point. A generation wrapper cannot see early renders on its inner session. A new callback rejection adds behavior outside this step.
+- **Wider fix:** D, revised from B after the options check. It covers a new early-render start without depending on its caller.
+- **Previous examples:** The checking-wrapper notes on `RenderGeneration` describe forwarded calls that bypass checks. The existing static PostCSS evidence test caught this regression.
+- **Recommendation:** B. It keeps the existing verification thread, typed errors, failure order, and Serve start. D requires a separate treatment of those constraints.
+- **Action:** fix now, apply B. This workspace's call of 2026-11-19, under the user's authority to preserve output and freshness.
+
+Shared assumptions and sources:
+
+- Static commands verify source evidence before base document callbacks. Source: `docs/protocol/mokly-export.md` and the existing static PostCSS evidence test.
+- Serve starts known misses immediately after graph preparation. Source: performance orchestrator's design call 1.
+- Verification runs once and keeps its existing typed errors. Source: existing static preparation behavior.
+- No setting, gate, retry, timeout, or process is added. Source: task common rules. The prerequisite is the existing static check.
+- Static preparations also start early renders. Source: this branch's shared preparation design. E drops that assumption.
+- The check guards the existing early-render start. Source: its sole production caller. D drops that assumption.
+
+The broader callback-boundary study is recorded in `plans/follow-ups/static-evidence-callback-boundary.md`. It must preserve the current verification point and error precedence.
+
 ## Replaced ways
 
 - Fixed capture batches become an encoded sliding window. Its worker-side collector changes `crates/mokly-graph/src/collection.rs` and `crates/mokly-compare/src/capture_collection.rs`. Consumers: base capture in Serve, build, and publish, and head build capture. Move every consumer in milestone 2. Remove the unused batch loop there.
 - Unused batch APIs lose their last caller: `RenderGeneration::schedule_comparison`, `RenderWorkers::comparison`, and their wrapper forwards. Remove them in milestone 2.
 - Demand-only base misses gain classification-owned prefetch. Capture remains the sole ordered publisher and shares in-flight results. No compatibility converter remains.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Documentation and protocol, complete
 
 Depends on: none
 
 The docs implementor records the authorized scheduling requirements before code changes.
 
-- [ ] State immediate non-restoring miss discovery, bounded prefetch, ordered capture, and cancellation in the relevant protocol docs.
-- [ ] Keep root selection, memory admission, output, and freshness rules intact.
-- [ ] Update the graph and CLI README entry points and worker ownership where needed.
+- [x] State immediate non-restoring miss discovery, bounded prefetch, ordered capture, and cancellation in the relevant protocol docs.
+- [x] Keep root selection, memory admission, output, and freshness rules intact.
+- [x] Update the graph and CLI README entry points and worker ownership where needed.
 
-## Milestone 2: Ordered capture and miss-first rendering
+Evidence: `.context/miss-first-base-capture/reports/docs.md` and `docs-checks/` hold the documentation handoff and checks.
+
+## Milestone 2: Ordered capture and miss-first rendering, complete
 
 Depends on: 1
 
 The non-ui implementor changes the shared capture path and the base integration.
 
-- [ ] Add tests first and see assertion failures for misses starting before their capture route.
-- [ ] Add or extend tests for route commit order and failure order under out-of-order completion.
-- [ ] Add tests for cancellation, stop or supersession, and eviction between miss listing and capture.
-- [ ] Discover misses after base graph preparation through keys without restoration.
-- [ ] Start bounded, classification-owned prefetch immediately. Avoid shared-worker admission waits. Share its in-flight results with capture.
-- [ ] Replace fixed capture batches for every consumer with the selected encoded sliding window.
-- [ ] Preserve validation facts, error precedence, warning order, and retained route order.
-- [ ] Join prefetch on every exit. Preserve kept-base behavior and every existing assertion.
-- [ ] Remove the unused fixed-batch loop, batch APIs, and wrapper forwards. Update live references.
-- [ ] Run each new asynchronous test ten times and record test costs.
+- [x] Add tests first and see assertion failures for misses starting before their capture route.
+- [x] Add or extend tests for route commit order and failure order under out-of-order completion.
+- [x] Add tests for cancellation, stop or supersession, and eviction between miss listing and capture.
+- [x] Discover misses after base graph preparation through keys without restoration.
+- [x] Start bounded, classification-owned prefetch immediately. Avoid shared-worker admission waits. Share its in-flight results with capture.
+- [x] Replace fixed capture batches for every consumer with the selected encoded sliding window.
+- [x] Preserve validation facts, error precedence, warning order, and retained route order.
+- [x] Join prefetch on every exit. Preserve kept-base behavior and every existing assertion.
+- [x] Remove the unused fixed-batch loop, batch APIs, and wrapper forwards. Update live references.
+- [x] Update the README API entries and narrow the remaining kept-base worker follow-up.
+- [x] Remove the five pending status lines after the targeted code checks pass.
+- [x] Run each new asynchronous test ten times and record test costs.
 
-Evidence: `.context/miss-first-base-capture/` holds prompts, red and green tests, and check logs. `reports/options-check.md` holds the options check.
+Evidence: `.context/miss-first-base-capture/reports/implementation.md`, `requirement-test-map.md`, and `ten-runs.json` hold the implementation and test proof. `reports/options-check.md` holds the options check.
 
-## Milestone 3: Measurements and verification
+## Milestone 2a: Preserve static callback admission, complete
 
 Depends on: 2
 
+The complete gate found an early render before static input verification. Preserve that existing prerequisite without delaying Serve early renders.
+
+- [x] Extend the static preparation test to require verification before any early document callback.
+- [x] Place static witness admission before early rendering. Preserve immediate Serve scheduling, error types, cancellation, and output.
+- [x] Pass the failed PostCSS witness Node case and the affected Rust checks. Record its assertion-level red proof.
+
+Evidence: `.context/miss-first-base-capture/complete-gate-1.log` holds the original callback-admission regression.
+
+## Milestone 3: Measurements and verification
+
+Depends on: 2a
+
 The orchestrator measures release builds in separate checkouts and target directories.
+
+- [x] Correct the final README guard lifetime and the static admission references in the scripts-off follow-up.
+- [ ] Push a checked implementation snapshot and send its SHA and dist provenance for cloud measurements before the local timing matrix.
 
 - [ ] Measure baseline and candidate on `examples/basic` and the large HTML and React fixtures, warm and cold, in six interleaved rounds.
 - [ ] Compare first Changes, capture stages, exact output, and cgroup anonymous memory plus swap.
 - [ ] Measure whole-tree startup and ten-edit peaks against the 2% memory limit.
+- [ ] Remove the capture-batch-window follow-up after its implementation and measurements pass. Keep the wider kept-base worker follow-up open.
 - [ ] Run targeted tests, the repository suite, and the complete gate. Use Git 2.45 or later, git-lfs, pinned Bun, and locked Cargo.
 - [ ] Run large Cargo builds serially, check disk and memory first, and disable incremental builds and dev debug information.
 
