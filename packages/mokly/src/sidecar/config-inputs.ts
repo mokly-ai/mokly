@@ -10,6 +10,13 @@ export interface PathSettings {
   paths?: { directory: string; targets: Record<string, string[]> };
 }
 
+/** Native expansion uses the top-level configuration after inherited settings merge. */
+function configPath(value: string, directory: string): string {
+  return value.startsWith("${configDir}")
+    ? path.resolve(directory, "./" + value.slice("${configDir}".length))
+    : value;
+}
+
 /** Capture nearest configurations and every supported extends target before resolution. */
 export class ConfigInputs {
   private readonly scopes = new Map<string, PathSettings>();
@@ -61,7 +68,30 @@ export class ConfigInputs {
     for (const name of ["tsconfig.json", "jsconfig.json"]) {
       const file = path.join(directory, name);
       const value = this.inputs.file(file, name === "jsconfig.json");
-      if (value?.kind === "file") return this.config(file, []);
+      if (value?.kind === "file") {
+        const settings = this.config(file, []);
+        return {
+          ...settings,
+          ...(settings.baseUrl === undefined
+            ? {}
+            : { baseUrl: configPath(settings.baseUrl, directory) }),
+          ...(settings.paths
+            ? {
+                paths: {
+                  ...settings.paths,
+                  targets: Object.fromEntries(
+                    Object.entries(settings.paths.targets).map(
+                      ([pattern, values]) => [
+                        pattern,
+                        values.map((value) => configPath(value, directory)),
+                      ],
+                    ),
+                  ),
+                },
+              }
+            : {}),
+        };
+      }
     }
     const parent = path.dirname(directory);
     return parent === directory ? {} : this.scope(parent);
@@ -101,6 +131,9 @@ export class ConfigInputs {
       chain.length > 1 || path.basename(file) === "jsconfig.json",
     );
     if (!json) throw new Error("missing configuration");
+    const canonical = this.inputs.canonicalFile(file);
+    if (!canonical) throw new Error("missing configuration path");
+    const directory = path.dirname(canonical);
     let settings: PathSettings = {};
     const extensions =
       json.extends === undefined
@@ -111,7 +144,7 @@ export class ConfigInputs {
     for (const extension of extensions) {
       if (typeof extension !== "string" || !extension.startsWith("."))
         throw new Error("unsupported configuration extends");
-      const candidate = path.resolve(path.dirname(file), extension);
+      const candidate = path.resolve(directory, extension);
       const exact = this.inputs.file(candidate, true);
       const target = exact?.kind === "file" ? candidate : candidate + ".json";
       this.inputs.file(target, true);
@@ -124,7 +157,9 @@ export class ConfigInputs {
     if (options.baseUrl !== undefined) {
       if (typeof options.baseUrl !== "string")
         throw new Error("unsupported baseUrl");
-      settings.baseUrl = path.resolve(path.dirname(file), options.baseUrl);
+      settings.baseUrl = options.baseUrl.startsWith("${configDir}")
+        ? options.baseUrl
+        : path.resolve(directory, options.baseUrl);
     }
     if (options.paths !== undefined) {
       if (!jsonObject(options.paths)) throw new Error("unsupported paths");
@@ -144,7 +179,7 @@ export class ConfigInputs {
           enumerable: true,
         });
       }
-      settings.paths = { directory: path.dirname(file), targets };
+      settings.paths = { directory, targets };
     }
     return settings;
   }

@@ -9,23 +9,13 @@ import type { CaptureDurability } from "./capture-durability.js";
 import { ConfigInputs } from "./config-inputs.js";
 import { jsonObject } from "./config-json.js";
 import { importerDirectory } from "./importer-resolution.js";
+import { mappedPaths } from "./mapped-paths.js";
 import type { ModulePaths } from "./module-paths.js";
+import { substitution } from "./path-pattern.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { resolutionOptions } from "./resolution.js";
 import { bareSpecifier, packageName } from "./specifier.js";
-
-function substitution(pattern: string, name: string): string | undefined {
-  const star = pattern.indexOf("*");
-  if (star < 0) return pattern === name ? "" : undefined;
-  const prefix = pattern.slice(0, star);
-  const suffix = pattern.slice(star + 1);
-  return name.startsWith(prefix) &&
-    name.endsWith(suffix) &&
-    name.length >= prefix.length + suffix.length
-    ? name.slice(prefix.length, name.length - suffix.length)
-    : undefined;
-}
 
 /** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
@@ -67,10 +57,7 @@ export class ResolutionEvidence {
       ...this.params.storiesFiles,
       ...(this.params.renderer ? [this.params.renderer] : []),
     ])
-      await this.record(
-        path.resolve(this.params.sourceRoot, file),
-        this.params.sourceRoot,
-      );
+      this.candidate(path.resolve(this.params.sourceRoot, file));
     // Preview selection checks exact files, not module-resolution candidates.
     let preview: string | null = null;
     if (this.params.storiesFiles.length)
@@ -80,6 +67,7 @@ export class ResolutionEvidence {
         );
         if (present && preview === null) preview = file;
       }
+    if (preview) this.candidate(path.resolve(this.params.sourceRoot, preview));
     this.configs.scope(
       path.resolve(this.params.sourceRoot, this.params.configurationDirectory),
     );
@@ -156,22 +144,16 @@ export class ResolutionEvidence {
       name.includes("*")
     )
       throw new Error("unsupported module specifier");
-    if (!bareSpecifier(name) || path.isAbsolute(name)) {
+    const absolute = path.isAbsolute(name);
+    if (!bareSpecifier(name) && !absolute) {
       this.candidate(path.resolve(directory, name));
       return;
     }
-    if (config.paths) {
-      for (const [pattern, targets] of Object.entries(config.paths.targets)) {
-        const matched = substitution(pattern, name);
-        if (matched === undefined) continue;
-        for (const target of targets)
-          this.candidate(
-            path.resolve(
-              config.baseUrl ?? config.paths.directory,
-              target.replace("*", matched),
-            ),
-          );
-      }
+    for (const target of mappedPaths(config, name, "all"))
+      this.candidate(target);
+    if (absolute) {
+      this.candidate(path.resolve(directory, name));
+      return;
     }
     if (config.baseUrl) this.candidate(path.resolve(config.baseUrl, name));
     for (let current = directory; ;) {
