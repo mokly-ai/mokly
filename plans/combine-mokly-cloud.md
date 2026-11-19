@@ -161,6 +161,16 @@ Each call below is my call, made on 2026-11-17.
 - Contract fixtures. `cargo xtask mokly-fixtures` regenerates the contract
   fixtures from the workspace build, not from installed npm releases. The
   drift check stays.
+- Cloud commits after the snapshot. Decided on 2026-11-19. Cloud `main`
+  merged PR #136 (`767be7b2`) and PR #132 (`55972c86`) on 2026-11-18, after
+  the freeze. Milestone 2a ports both to the combined paths. Production
+  probably runs #132 and its migration, so a deploy from this repository
+  without it would remove the desktop grant API.
+- Runners. Decided on 2026-11-19, at the merge of `main`. On 2026-11-18 the
+  user moved every CI job to GitHub-hosted standard runners, in `main` PR
+  #342. The cloud jobs follow that decision: the `check`, `images`, and
+  `site-lighthouse` jobs of `ci.yml` run on `ubuntu-24.04`, and the macOS
+  rows of `desktop-release.yml` run on `macos-26`.
 
 ## Contract owners
 
@@ -230,6 +240,20 @@ the first push of an imported file publishes it, as Cal decided.
       the license of the Inter font under `docs/mockups/styles/fonts/`.
 - [x] Run the secret scan again over the imported paths. Save the report
       under `.context/combine-cloud/`.
+
+## Milestone 2a: Port the cloud changes after the snapshot
+
+Depends on: 2
+
+Cloud `main` moved past the snapshot after the freeze. Each later cloud
+commit moves to the combined paths, so that no merged cloud change is lost.
+
+- [ ] Port cloud commit `767be7b2`, PR #136: the neutral Graphite tokens of
+      dark Folio.
+- [ ] Port cloud commit `55972c86`, PR #132: desktop sign-in through the
+      browser, with the `desktop_grants` migration and its lock entry.
+- [ ] Before the pull request merges, confirm that cloud `main` has no commit
+      after the last ported commit. Port each new commit in the same way.
 
 ## Milestone 3: One Cargo workspace
 
@@ -339,6 +363,8 @@ Depends on: 6
 - [x] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
 - [ ] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
+- [ ] Run the cloud jobs of `ci.yml` and the desktop release builds on
+      GitHub-hosted standard runners, as `main` PR #342 requires.
 - [x] Change the repository and the workflow paths in the Workload Identity
       Federation condition of `infra/terraform/modules/github`, and in its
       contract tests.
@@ -362,6 +388,9 @@ commands and the checklist.
 ## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
+
+The merge of `main` on 2026-11-19 records its conflict resolutions in
+`.context/combine-cloud/merge-main-2026-11-19.md`.
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
