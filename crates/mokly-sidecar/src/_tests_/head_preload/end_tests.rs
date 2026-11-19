@@ -46,7 +46,7 @@ fn a_busy_head_process_gets_the_preload_only_after_its_request() {
     assert_eq!((while_busy, after), (0, 1));
     assert_eq!(
         harness.events.calls(1),
-        ["hold", "restoreGeneration g", "cssModules g", "describe g"]
+        ["hold", "restoreGeneration g", "cssModules g"]
     );
 }
 

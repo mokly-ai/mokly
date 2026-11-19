@@ -6,7 +6,8 @@ use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation, ProcessCss};
+use crate::bindings::Bindings;
+use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation, ProcessCss, RenderPage};
 use crate::pool::{Pool, SidecarPool};
 
 use super::support::Event;
@@ -42,6 +43,20 @@ pub(super) fn maps(generation: &str) -> Call {
 pub(super) fn describe(generation: &str) -> Call {
     Call::Describe(Generation {
         generation: generation.into(),
+    })
+}
+
+pub(super) fn bindings(generation: &str) -> Call {
+    Call::Bindings(Bindings {
+        generation: generation.into(),
+        entries: BTreeMap::new(),
+    })
+}
+
+pub(super) fn render(generation: &str) -> Call {
+    Call::RenderPage(RenderPage {
+        generation: generation.into(),
+        handle: "page#default".into(),
     })
 }
 

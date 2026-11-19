@@ -64,12 +64,7 @@ fn a_waiting_request_takes_the_preloading_process_after_its_call() {
     assert_eq!(resumed, 1);
     assert_eq!(
         harness.events.calls(1),
-        [
-            "restoreGeneration g",
-            "queued",
-            "cssModules g",
-            "describe g"
-        ]
+        ["restoreGeneration g", "queued", "cssModules g"]
     );
     assert_eq!(harness.events.calls(2), ["base"]);
     assert!(!events.contains(&Event::Spawn), "{events:?}");
@@ -162,15 +157,10 @@ fn a_call_that_serve_admitted_holds_back_the_preload_until_it_arrives() {
     assert_eq!(resumed, 2);
     assert_eq!(
         harness.events.calls(1),
-        [
-            "arrived",
-            "restoreGeneration g",
-            "cssModules g",
-            "describe g"
-        ]
+        ["arrived", "restoreGeneration g", "cssModules g"]
     );
     assert_eq!(
         harness.events.calls(2),
-        ["restoreGeneration g", "cssModules g", "describe g"]
+        ["restoreGeneration g", "cssModules g"]
     );
 }

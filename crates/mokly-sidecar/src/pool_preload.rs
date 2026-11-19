@@ -1,4 +1,4 @@
-//! Idle head processes load a newly described head generation before its renders.
+//! Idle head processes restore a newly described head generation and its class maps before its renders.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -48,7 +48,7 @@ impl Preload {
 }
 
 impl Pool {
-    /// Load the missing inputs on one idle candidate, returning whether a process was taken.
+    /// Restore and map the generation on one idle candidate, returning whether a process was taken.
     pub(super) fn maintain_preload(&self) -> bool {
         let Some((index, mut slot, generation)) = self.claim_preload() else {
             return false;
@@ -132,10 +132,10 @@ impl Pool {
         Some((index, slot, generation))
     }
 
-    /// Send each missing input in its own call; `Ok(true)` means that the process holds them all.
+    /// Send each missing call in turn; `Ok(true)` means that the process holds the generation and its maps.
     fn preload(&self, slot: &mut Slot, generation: &str) -> Result<bool> {
         loop {
-            let (preparation, describe) = {
+            let preparation = {
                 let state = self.lock();
                 if !current(&state, generation) || pending(&state, slot) {
                     return Ok(false);
@@ -148,7 +148,7 @@ impl Pool {
                 }
                 step
             };
-            self.restore(slot, generation, describe, preparation)?;
+            self.restore(slot, generation, false, preparation)?;
         }
     }
 }
@@ -174,7 +174,7 @@ fn current(state: &State, generation: &str) -> bool {
         && state.maps.contains_key(generation)
 }
 
-/// A candidate ends when its process left the head root or was replaced, or holds every input.
+/// A candidate ends when its process left the head root or was replaced, or holds the generation and maps.
 fn ended(
     state: &State,
     index: usize,
@@ -198,29 +198,25 @@ fn ended(
             .is_some_and(|slot| holds(state, slot, generation))
 }
 
-/// The slot holds the current lifetime of the generation with its maps and description.
+/// The slot holds the current lifetime of the generation with its class maps.
 fn holds(state: &State, slot: &Slot, generation: &str) -> bool {
     slot.generations
         .get(generation)
         .is_some_and(|epoch| !stale_generation(state, generation, *epoch))
         && slot.maps.contains(generation)
-        && slot.described.contains(generation)
 }
 
-/// The one call that a slot without stale state needs next, with whether that call describes.
-fn next(state: &State, slot: &Slot, generation: &str) -> Option<(Preparation, bool)> {
-    let (maps, describe) = if !slot.generations.contains_key(generation) {
-        (false, false)
+/// The restore or the class maps that a slot without stale state needs next; the first render describes.
+fn next(state: &State, slot: &Slot, generation: &str) -> Option<Preparation> {
+    let maps = if !slot.generations.contains_key(generation) {
+        false
     } else if !slot.maps.contains(generation) {
-        (true, false)
-    } else if !slot.described.contains(generation) {
-        (false, true)
+        true
     } else {
         return None;
     };
-    Some((
-        Preparation::snapshot(state, slot, generation, maps, false, false),
-        describe,
+    Some(Preparation::snapshot(
+        state, slot, generation, maps, false, false,
     ))
 }
 

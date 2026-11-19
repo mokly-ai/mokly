@@ -119,9 +119,10 @@ The same worker runs the head preload when the return pass has no step. A
 successful `describe` of the newest head generation records the other live
 head workers as candidates and wakes Serve. Each step then takes one idle
 candidate while no request waits and no admitted call is still on its way to
-the pool queue. It sends the `restoreGeneration`, `cssModules`, and `describe`
-calls that the worker lacks, one at a time, and it gives the worker back
-before the next call when a request waits or a return step can start. The
+the pool queue. It sends the `restoreGeneration` and `cssModules` calls that
+the worker lacks, one at a time, and it gives the worker back before the next
+call when a request waits or a return step can start. It evaluates nothing, so
+the first render on the worker still sends `describe`. The
 first head request that finds no idle head worker waits for that worker
 instead of starting or replacing one. Later requests keep their choice. A
 failed preload call keeps or replaces the worker as a failed request does, and
@@ -359,7 +360,8 @@ holders and non-holders, with FIFO ties. Stale epochs and missing records
 never win the rank. Calls without a generation keep FIFO order, and context
 affinity and the pass preference still come first. Parallel renders use every
 available slot and start no process. Head preload tests check that a head
-describe wakes Serve and prepares each idle head worker in turn. A waiting
+describe wakes Serve and restores and maps the generation on each idle head
+worker in turn, with no `describe` until the first render there. A waiting
 head request takes the preloading worker after the call in flight, a second
 one keeps its own choice, and other requests run on other slots. An admitted
 call on its way and a ready return step hold the preload back. Busy, base, and
@@ -409,7 +411,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_preload.rs`](./src/pool_preload.rs) defines `Preload`, the
   generation and the candidate workers of a head preload, and
   `Pool::maintain_preload`, which runs one preload step through the existing
-  preparation calls when the return pass has no step. The pool state records
+  preparation calls, restore and class maps only, when the return pass has no
+  step. The pool state records
   the call claims whose call reached the queue, so that the preload can see an
   admitted call that has not arrived yet.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and

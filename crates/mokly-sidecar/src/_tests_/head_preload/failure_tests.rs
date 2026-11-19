@@ -54,11 +54,7 @@ fn a_failed_preload_call_ends_the_preload_of_that_process_only() {
         harness.pool.abort().unwrap();
         assert_eq!((steps, again), (2, 0), "{name}");
         assert_eq!(failed, ["restoreGeneration g"], "{name}");
-        assert_eq!(
-            prepared,
-            ["restoreGeneration g", "cssModules g", "describe g"],
-            "{name}"
-        );
+        assert_eq!(prepared, ["restoreGeneration g", "cssModules g"], "{name}");
         assert_eq!(killed, kills, "{name}");
         assert_eq!((live, retired), (kept, 0), "{name}");
     }

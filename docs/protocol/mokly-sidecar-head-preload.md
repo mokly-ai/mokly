@@ -4,8 +4,8 @@ This page expands the
 [source root scheduling rules](./mokly-sidecar-root-scheduling.md#head-generation-preload).
 After an edit, Serve describes the new head generation on one process. The
 renders of that generation follow after the core prepares its render inputs.
-A head preload loads the generation into the other idle head processes in
-that time, so that the renders find it loaded.
+A head preload restores the generation and installs its class maps on the
+other idle head processes in that time, so that the renders find it there.
 
 ## Start And Candidates
 
@@ -26,17 +26,18 @@ because the pool already sees the `describe`.
 
 Decision: the candidates are the head processes that are live at the
 `describe`. Rejected: every later head process, because the return pass and a
-recycle would then load the generation in advance, and the preload would not
+recycle would then restore the generation in advance, and the preload would not
 end.
 
 ## Preload Steps
 
 The preload takes one idle candidate at a time. It sends the
-`restoreGeneration`, `cssModules`, and `describe` calls that the process lacks,
-one call at a time, in that order. It sends no `bindings`. A process that
-lacks the latest bindings table receives it with its first render. The preload
-starts only while no request waits. A call that Serve admitted counts as
-waiting until it reaches the pool queue.
+`restoreGeneration` and `cssModules` calls that the process lacks, one call at
+a time, in that order. It sends no `describe` and no `bindings`, so it runs no
+consumer code. The first render on the process describes the generation and
+installs the latest bindings table. The preload starts only while no request
+waits. A call that Serve admitted counts as waiting until it reaches the pool
+queue.
 
 A request that waits always wins. The preload stops before its next call and
 gives its process back. The first head request that finds no idle head process
@@ -46,6 +47,13 @@ without the preload, so a request that can use an idle process runs at once.
 A base request counts the preloading process as busy, under the warm head rule.
 A return step that can start also stops the preload before its next call. The
 preload continues with the same candidate when no request waits.
+
+Decision: the preload evaluates nothing. Rejected: a `describe` in advance,
+because each preloaded process then evaluated the new generation while the
+previous one was still published, and so held two evaluated head generations
+until the previous one was released. On a catalogue of 167 entries with four
+sidecars, that raised the peak memory demand by 8% and made the bundle of
+later edits slower.
 
 Decision: the preload takes one process at a time. Rejected: every candidate
 at once, because three sidecars and the parallel graph work of the core would
@@ -65,8 +73,8 @@ the first request takes.
 ## End
 
 A candidate ends when it holds the current lifetime of the generation with
-its class maps and its description, when its process ends or leaves the head
-root, and when a preload call fails. After a failed call, the pool keeps or
+its class maps, when its process ends or leaves the head root, and when a
+preload call fails. After a failed call, the pool keeps or
 replaces the process as after a failed request. The failure reaches no output.
 A later request that needs the same input reports its own failure.
 
@@ -76,9 +84,10 @@ also ends the preload, and no later `describe` starts one. Shutdown,
 cancellation, and forced termination follow the
 [cancellation rules](./mokly-sidecar-lifecycle.md#cancellation-and-timeouts).
 The preload starts no process. A process that it prepared holds the generation
-as if a request had loaded it, so the
+and its class maps as if a request had loaded them, so the
 [generation affinity](./mokly-sidecar-root-scheduling.md#generation-affinity)
-rank counts it.
+rank counts it. The release of a generation reaches a preloaded process as it
+reaches every other process that holds the generation.
 
 Decision: a failed call keeps the rule of a failed request and stays silent.
 Rejected: a diagnostic for each failure, because a preload failure changes no
