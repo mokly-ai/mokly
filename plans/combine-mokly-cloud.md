@@ -267,7 +267,7 @@ commit moves to the combined paths, so that no merged cloud change is lost.
 - [x] Port cloud commit `55972c86`, PR #132: desktop sign-in through the
       browser, with the `desktop_grants` migration and its lock entry.
       Branch: `conductor/combine-mokly-cloud-port-cloud-commits`.
-- [ ] Before the pull request merges, confirm that cloud `main` has no commit
+- [x] Before the pull request merges, confirm that cloud `main` has no commit
       after the last ported commit. Port each new commit in the same way.
       Branch: `conductor/combine-mokly-cloud-port-cloud-commits`.
 
