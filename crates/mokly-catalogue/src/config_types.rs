@@ -23,6 +23,9 @@ pub struct Config {
     pub renderer: Option<String>,
     /// Optional consumer PostCSS module.
     pub postcss: Option<String>,
+    /// Use the project's Vite setup for JavaScript compilation.
+    #[serde(skip_serializing_if = "vite_disabled")]
+    pub vite: Option<ViteConfig>,
     /// Consumer bundler resolution settings.
     pub module_resolution: Option<ModuleResolution>,
     /// Ordered route-to-stylesheet rules.
@@ -45,6 +48,25 @@ pub struct RootConfig {
     pub path: Option<String>,
     /// Directory names omitted from derived paths.
     pub transparent: Option<Vec<String>>,
+}
+
+/// The opt-in Vite adapter switch or its currently empty options.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum ViteConfig {
+    /// Explicitly enable or disable the adapter.
+    Flag(bool),
+    /// Enable the adapter with its default setup.
+    Options(ViteOptions),
+}
+
+/// Reserved adapter options, with no authored fields yet.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ViteOptions {}
+
+fn vite_disabled(value: &Option<ViteConfig>) -> bool {
+    matches!(value, None | Some(ViteConfig::Flag(false)))
 }
 
 /// Consumer module resolution options.
@@ -165,6 +187,13 @@ pub struct ResolvedConfig {
     pub roots: Vec<ResolvedRoot>,
 }
 
+impl ResolvedConfig {
+    /// Whether this side compiles JavaScript through its project's Vite setup.
+    pub fn vite(&self) -> bool {
+        !vite_disabled(&self.input.vite)
+    }
+}
+
 /// One root with its projected physical identity.
 #[derive(Clone, Debug)]
 pub struct ResolvedRoot {
@@ -175,3 +204,7 @@ pub struct ResolvedRoot {
     /// Canonical root identity.
     pub identity: PathBuf,
 }
+
+#[cfg(test)]
+#[path = "_tests_/config_vite_tests.rs"]
+mod config_vite_tests;

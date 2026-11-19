@@ -18,6 +18,7 @@ import { currentEvidence } from "./physical-inputs.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
+import { currentViteToolchain } from "./vite-toolchain.js";
 
 /**
  * The generation id: the compilation identity `bundle` hashes, plus the core's
@@ -113,11 +114,14 @@ export async function reuse(
   params: BundleParams,
   capture: BundleCapture = "full",
 ): Promise<Generation | undefined> {
+  if (params.vite && capture === "full") return;
   const paths = await ModulePaths.create(params);
   params = { ...params, sourceRoot: paths.sourceRoot };
   const settings = (value: BundleParams) =>
     JSON.stringify({ ...value, evaluation: undefined });
-  const toolchain = await toolchainIdentity();
+  const toolchain = await (params.vite
+    ? currentViteToolchain(params)
+    : toolchainIdentity());
   const candidates = [...generations];
   const captured = candidates.filter(
     ({ compiled: { reuseEvidence } }) =>

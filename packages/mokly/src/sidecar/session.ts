@@ -17,12 +17,16 @@ import type { Measurements } from "./measurements.js";
 import { PostcssWorkers } from "./postcss.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
+import { ViteCompiler } from "./vite-compiler.js";
+import { evaluateVite } from "./vite-evaluate.js";
+import { withViteNodePeers } from "./vite-node-peers.js";
 
 export class Session {
   private hello = false;
   private capture: CaptureHint | undefined;
   private generations = new Map<string, Generation>();
   private workers: PostcssWorkers;
+  private vite = new ViteCompiler();
 
   constructor(
     private readonly version: string,
@@ -37,7 +41,11 @@ export class Session {
 
   async call(request: Request): Promise<unknown> {
     try {
-      return await this.dispatch(request);
+      const generation =
+        "generation" in request.params
+          ? this.generations.get(request.params.generation)
+          : undefined;
+      return await withViteNodePeers(generation, () => this.dispatch(request));
     } catch (error) {
       if (error instanceof SidecarError) throw error;
       const rendering = request.method.startsWith("render");
@@ -73,19 +81,24 @@ export class Session {
         );
         const { generation, result } = previous
           ? { generation: previous, result: bundleResult(previous) }
-          : await bundle(
-              params,
-              (options) => {
-                this.operation("esbuild");
-                return this.compile(options);
-              },
-              this.measurements,
-              capture === "full" && this.capture
-                ? new CaptureDurability(this.capture)
-                : undefined,
-              capture,
-              plan,
-            );
+          : params.vite
+            ? await (() => {
+                this.operation("vite");
+                return this.vite.bundle(params, this.compile, capture);
+              })()
+            : await bundle(
+                params,
+                (options) => {
+                  this.operation("esbuild");
+                  return this.compile(options);
+                },
+                this.measurements,
+                capture === "full" && this.capture
+                  ? new CaptureDurability(this.capture)
+                  : undefined,
+                capture,
+                plan,
+              );
         this.generations.set(generation.id, generation);
         return result;
       }
@@ -99,6 +112,7 @@ export class Session {
         return null;
       }
       case "describe":
+        await evaluateVite(this.generation(request.params.generation));
         return describe(this.generation(request.params.generation));
       case "cssModules": {
         const generation = this.generation(request.params.generation);
@@ -121,18 +135,21 @@ export class Session {
         return null;
       }
       case "renderScreen":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "screen",
           request.params,
         );
       case "renderComponent":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "component",
           request.params,
         );
       case "renderStory":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "story",
@@ -140,6 +157,7 @@ export class Session {
         );
       case "renderPage": {
         const generation = this.generation(request.params.generation);
+        await evaluateVite(generation);
         const data = definitionData(
           generation.handles.get(request.params.handle),
         )!;
@@ -180,6 +198,7 @@ export class Session {
         await this.workers.dispose(request.params.context);
         return null;
       case "shutdown":
+        await this.vite.dispose();
         await this.workers.dispose();
         this.generations.clear();
         return null;
@@ -187,6 +206,7 @@ export class Session {
   }
 
   async dispose(): Promise<void> {
+    await this.vite.dispose();
     this.generations.clear();
     await this.workers.dispose();
   }

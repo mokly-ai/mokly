@@ -80,6 +80,7 @@ fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
 fn settings(root: &Path) -> Bundle {
     let root = dunce::canonicalize(root).unwrap();
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         stories_files: Vec::new(),

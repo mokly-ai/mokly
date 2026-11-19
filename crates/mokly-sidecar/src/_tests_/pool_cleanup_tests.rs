@@ -26,6 +26,7 @@ fn state(epoch: Option<u64>, bundle: bool) -> State {
                 stories_files: vec![],
                 module_resolution: Default::default(),
                 repository_roots: vec![],
+                vite: false,
                 evaluation: None,
             },
         );

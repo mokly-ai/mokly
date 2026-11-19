@@ -19,6 +19,7 @@ fn fixture() -> (State, Slot) {
     state.bundles.insert(
         "g".into(),
         Bundle {
+            vite: false,
             evaluation: Some("evaluation".into()),
             entry_files: vec!["entry.ts".into()],
             renderer: None,
@@ -50,6 +51,7 @@ fn fixture() -> (State, Slot) {
             unmapped_dependency_directories: None,
             identity: "compiled".into(),
             code: "code".into(),
+            vite: None,
             runtime_key: "runtime".into(),
             dependency_roots: Vec::new(),
             css_modules: vec!["entry.module.css".into()],

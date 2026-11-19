@@ -106,6 +106,10 @@ impl ReuseEvidence {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CompiledGeneration {
+    /// Recorded Vite fetches, replayed without a server or source reads.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub vite: Option<ViteRecipe>,
     /// The Mokly, esbuild, Node, package-root, and installed program identity.
     pub toolchain: String,
     /// Cache-only physical inputs, never exported as render or watch inputs.
@@ -138,6 +142,68 @@ pub struct CompiledGeneration {
     pub metadata_directories: BTreeMap<String, Vec<String>>,
 }
 
+/// A Vite generation's entry and immutable fetch transport.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+pub struct ViteRecipe {
+    /// Installed Vite version for replay diagnostics.
+    pub version: String,
+    /// Virtual entry URL used by the module runner.
+    pub entry: String,
+    /// Each fetch indexed by the requested URL and importer.
+    pub modules: Vec<ViteModuleFetch>,
+}
+
+/// One response to Vite's module-runner fetch protocol.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+pub struct ViteModuleFetch {
+    /// Requested module URL, before resolution.
+    pub url: String,
+    /// Resolved importing module id, absent for the entry.
+    pub importer: Option<String>,
+    /// Transformed code or an external dependency.
+    pub result: ViteFetchResult,
+}
+
+/// Uncached Vite fetch responses retained by the recipe.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+#[serde(untagged)]
+pub enum ViteFetchResult {
+    /// A transformed ESM module.
+    Transformed {
+        /// Code for Vite's module evaluator.
+        code: String,
+        /// Physical source file, absent for a virtual module.
+        file: Option<String>,
+        /// Resolved module id, including a query variant.
+        id: String,
+        /// Module URL in Vite's graph.
+        url: String,
+        /// Whether the runner must discard a previous evaluated value.
+        invalidate: bool,
+    },
+    /// An external module loaded by the evaluator.
+    External {
+        /// Physical file URL, Node builtin, or reserved Mokly key.
+        externalize: String,
+        /// Evaluation and export interop rule.
+        r#type: ViteExternalType,
+    },
+}
+
+/// The external evaluation kinds that Vite reports.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+#[serde(rename_all = "lowercase")]
+pub enum ViteExternalType {
+    /// Native ESM dependency.
+    Module,
+    /// CommonJS dependency.
+    Commonjs,
+    /// Node builtin.
+    Builtin,
+    /// URL handled by the runtime.
+    Network,
+}
+
 /// Install captured code in a fresh worker without invoking esbuild.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -165,3 +231,7 @@ impl CompiledGeneration {
             && self.unmapped_dependency_directories == other.unmapped_dependency_directories
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/vite_compiled_tests.rs"]
+mod vite_compiled_tests;

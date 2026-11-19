@@ -76,6 +76,7 @@ fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
     pool.request(Call::Bundle(BundleRequest {
         plan: None,
         params: Bundle {
+            vite: false,
             evaluation: None,
             entry_files: vec!["entry.ts".into()],
             renderer: None,
@@ -96,6 +97,7 @@ fn edit(pool: &Pool, source: &Path, plan: Option<Arc<ResolutionPlan>>) -> result
         plan,
         capture: Some(BundleCapture::ServeEdit),
         params: Bundle {
+            vite: false,
             evaluation: None,
             entry_files: vec!["entry.ts".into()],
             renderer: None,

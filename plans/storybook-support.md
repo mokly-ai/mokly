@@ -1125,20 +1125,21 @@ Depends on: 13, and the answer to decision 22
 
 The project's Vite setup compiles JavaScript, as decision 16 says.
 
-- [ ] Add the `vite` field to the configuration and its schema, as design
-      call 17 says.
-- [ ] Resolve `vite` as design call 19 says, and apply the answer to
-      decision 22.
-- [ ] Run one Vite server for each sidecar process, as design call 18 says.
-- [ ] Add the Mokly Vite plugin: the entry module, the authoring facade, the
+- [x] Add the `vite` field to the configuration and its schema, as design
+      call 17 says. The optional `config` field waits for track H. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Resolve `vite` as design call 19 says, and apply the answer to
+      decision 22. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Run one Vite server for each sidecar process, as design call 18 says.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Add the Mokly Vite plugin: the entry module, the authoring facade, the
       runtime module, CSS Modules maps, the JSX development shim, confinement
-      and logical names, consumed bytes, and the module graph.
-- [ ] Evaluate the entry through Vite's module runner with one React
-      runtime. Keep Mokly's stylesheet pipeline in this milestone.
-- [ ] Load the app's `vite.config.*` when no root names a Storybook folder,
-      as decision 17 says.
-- [ ] Test a Vite fixture with an alias, `import.meta.env`, a `?raw` import,
-      and the SVGR plugin in `build`.
+      and logical names, consumed bytes, and the module graph. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Evaluate the entry through Vite's module runner with one React
+      runtime. Keep Mokly's stylesheet pipeline in this milestone. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Load the app's `vite.config.*` when no root names a Storybook folder,
+      as decision 17 says. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test a Vite fixture with an alias, `import.meta.env`, a `?raw` import,
+      and the SVGR plugin in `build`. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Add `docs/guides/authoring/vite.md`, and update the
       `packages/mokly/README.md` key code.
 - [x] Move the virtual module helpers that both compile paths need out of

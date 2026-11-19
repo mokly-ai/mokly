@@ -25,6 +25,7 @@ pub(super) enum Loaded {
 
 pub(super) fn bundle(root: &str) -> Bundle {
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec!["page.ts".into()],
         renderer: None,

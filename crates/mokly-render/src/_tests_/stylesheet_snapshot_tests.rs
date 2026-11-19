@@ -82,6 +82,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                             }),
                             identity: "bundle".into(),
                             code: "module.exports={}".into(),
+                            vite: None,
                             runtime_key: "fixture-runtime".into(),
                             dependency_roots: Vec::new(),
                             css_modules: Vec::new(),

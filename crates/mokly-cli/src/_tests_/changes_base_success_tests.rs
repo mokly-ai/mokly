@@ -102,6 +102,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     reuse_evidence: Arc::new(ReuseEvidence { uncaptured: None, durable: true, complete: true, inputs: Default::default() }),
                     identity: "base-bundle".into(),
                     code: "module.exports={}".into(),
+                    vite: None,
                     runtime_key: "fixture-runtime".into(),
                     dependency_roots: Vec::new(),
                     css_modules: Vec::new(),

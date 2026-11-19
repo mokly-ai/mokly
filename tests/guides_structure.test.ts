@@ -28,6 +28,7 @@ const EXPECTED = [
   "authoring/styles",
   "authoring/props-and-variants",
   "authoring/storybook",
+  "authoring/vite",
   "catalogue/browse",
   "catalogue/search-and-filters",
   "catalogue/changes",
@@ -92,7 +93,7 @@ test("the guide tree contains the exact guide reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    34,
+    35,
   );
 });
 

@@ -15,6 +15,10 @@ capture?: BundleCapture,
  */
 plan?: ResolutionPlan,
 /**
+ * Opt-in project Vite compilation; omission preserves esbuild settings bytes.
+ */
+vite?: boolean,
+/**
  * Core input digest that isolates resolved bindings and CSS Modules lifetimes.
  */
 evaluation?: string,

@@ -13,6 +13,11 @@ import { SidecarError, detail } from "./errors.js";
 /** Evaluate only after the generation's complete class-map table is installed. */
 export function evaluate(generation: Generation): BundleExports {
   if (generation.exports) return generation.exports;
+  if (generation.compiled.vite)
+    throw new SidecarError(
+      "bundle-failed",
+      "Vite generation must finish asynchronous evaluation before use",
+    );
   try {
     let react: typeof React | undefined;
     try {

@@ -228,10 +228,11 @@ function validateCliOrNative(metadata, name) {
     ".": entry("index"),
     "./package.json": "./package.json",
   });
-  assert.deepEqual(metadata.peerDependencies, PEERS);
+  assert.deepEqual(metadata.peerDependencies, { ...PEERS, vite: "^8.0.0" });
   assert.deepEqual(metadata.peerDependenciesMeta, {
     react: { optional: true },
     "react-dom": { optional: true },
+    vite: { optional: true },
   });
   assert.match(metadata.dependencies?.["@mokly/viewer"] ?? "", VERSION);
   assert.deepEqual(

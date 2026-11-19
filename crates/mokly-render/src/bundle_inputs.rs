@@ -11,6 +11,7 @@ use crate::side::{SideInputs, dependency_roots};
 
 pub(crate) fn params(config: &ResolvedConfig, files: &[SourceFile], side: &SideInputs) -> Bundle {
     Bundle {
+        vite: config.vite(),
         evaluation: None,
         entry_files: files
             .iter()

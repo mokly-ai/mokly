@@ -58,6 +58,10 @@ pub struct ModuleResolution {
 #[serde(rename_all = "camelCase")]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
+    /// Opt-in project Vite compilation; omission preserves esbuild settings bytes.
+    #[serde(default, skip_serializing_if = "disabled")]
+    #[ts(optional, as = "Option<bool>")]
+    pub vite: bool,
     /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -279,3 +283,7 @@ impl Call {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/vite_methods_tests.rs"]
+mod vite_methods_tests;

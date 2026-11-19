@@ -21,6 +21,7 @@ type RestoreAction = Box<dyn FnOnce() + Send>;
 
 pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     Bundle {
+        vite: false,
         evaluation: Some(evaluation.into()),
         entry_files: vec![entry.into()],
         stories_files: Vec::new(),
@@ -44,6 +45,7 @@ fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
         }),
         identity: id.into(),
         code: "quoted \"code\" with a newline\n and Unicode \u{e9}".repeat(4),
+        vite: None,
         runtime_key: "runtime".into(),
         dependency_roots: Vec::new(),
         css_modules: Vec::new(),

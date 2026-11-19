@@ -79,6 +79,9 @@ React and React DOM resolve from the consumer. CSS imports use Mokly's delivery
 rules. Only `empty` can override `.css` and `.module.css` handling.
 A JavaScript `file` loader is invalid because it emits an undelivered file.
 
+Set `vite` to `true` or `{}` to compile JavaScript with the project's Vite
+setup. See [Vite](/docs/authoring/vite/) for installation and module settings.
+
 ## Review and watch
 
 `review.base` selects the Git base, with `origin/main` as its default.
@@ -108,6 +111,7 @@ The configuration declares no output directory and no build recipe.
 | `stylesheets`               | Ordered route rules with shared and scheme-specific CSS                      |
 | `renderer`                  | A local module that wraps React renders with product providers               |
 | `postcss`                   | A local module that supplies consumer PostCSS plugins                        |
+| `vite`                      | Use the project's Vite setup for JavaScript with `true` or `{}`              |
 | `moduleResolution`          | Consumer aliases, package roots, conditions, fields, extensions, and loaders |
 | `review.base`               | The Git ref used to find the comparison base                                 |
 | `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false            |

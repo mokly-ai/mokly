@@ -17,6 +17,7 @@ fn bundle() -> Call {
     Call::Bundle(BundleRequest {
         plan: None,
         params: Bundle {
+            vite: false,
             evaluation: None,
             entry_files: vec![],
             stories_files: vec![],

@@ -53,6 +53,7 @@ pub fn cache(root: PathBuf) -> DiskCache {
 /// Settings for one independent disk entry.
 pub fn params(entry: &str) -> Bundle {
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec![entry.into()],
         renderer: None,
@@ -82,6 +83,7 @@ pub fn recipe(params: Bundle, code: &str) -> DurableRecipe {
                 unmapped_dependency_directories: None,
                 identity: code.into(),
                 code: code.into(),
+                vite: None,
                 runtime_key: format!("runtime:{code}"),
                 dependency_roots: vec![],
                 css_modules: vec![],

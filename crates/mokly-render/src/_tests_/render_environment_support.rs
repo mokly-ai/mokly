@@ -52,6 +52,7 @@ pub(super) fn derive_at(
 
 pub(super) fn params(source_root: &str) -> Bundle {
     Bundle {
+        vite: false,
         evaluation: Some(format!("evaluation of {source_root}")),
         entry_files: vec![format!("{source_root}-entries")],
         renderer: Some("renderer.tsx".into()),
@@ -70,6 +71,7 @@ pub(super) fn params(source_root: &str) -> Bundle {
 pub(super) fn params_at(root: &str) -> Bundle {
     let root = physical(root);
     Bundle {
+        vite: false,
         evaluation: Some(format!("evaluation of {root}")),
         entry_files: vec![format!("{root}/specs/entries")],
         renderer: Some("renderer.tsx".into()),
@@ -102,6 +104,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: String::new(),
+            vite: None,
             runtime_key: String::new(),
             dependency_roots: vec![physical(dependency_root)],
             css_modules: Vec::new(),
@@ -123,6 +126,7 @@ pub(super) fn cache_params(root: &str, namespace: &str) -> Bundle {
     let source_root = format!("{namespace}/sources/entries/base/data");
     let dependency_root = format!("{namespace}/dependencies/entries/install/data");
     Bundle {
+        vite: false,
         evaluation: Some("evaluation".into()),
         entry_files: vec!["specs/entries".into()],
         renderer: Some("renderer.tsx".into()),

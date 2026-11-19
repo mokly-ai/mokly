@@ -59,6 +59,7 @@ fn child_checks_environment() {
         .request(Call::Bundle(BundleRequest {
             plan: None,
             params: Bundle {
+                vite: false,
                 evaluation: None,
                 entry_files: vec!["component.mockup.tsx".into()],
                 renderer: Some("renderer.tsx".into()),
