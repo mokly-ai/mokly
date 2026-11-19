@@ -3,7 +3,8 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the memory-guard options check on branch
-  `calummoore/mokly-sidecar-memory-guard-cf9n`.
+  `calummoore/mokly-sidecar-memory-guard-cf9n`. Updated on 2026-11-19 with two
+  cases that the options check of an unmerged head preload attempt found.
 - **Location:** `crates/mokly-sidecar/src/pool_return.rs:54`,
   `crates/mokly-sidecar/src/pool_releases.rs:109`, and
   `crates/mokly-cli/src/serve_pool.rs`.
@@ -22,6 +23,18 @@
   and idle release cleanup can take an available pool slot without entering
   that gate. The root-scheduling protocol owns head return, and the on-demand
   protocol owns foreground priority.
+  - On 2026-11-19 the options check of an unmerged head preload attempt, on
+    the branch `calummoore/mokly-generation-prefetch`, found two more cases of
+    this class on `main`. Nobody reproduced either case.
+  - `claim_return` in `crates/mokly-sidecar/src/pool_return.rs` gives up only
+    when a base request already waits in the pool's `waiting` queue. It cannot
+    see a base call that the gate admitted but that has not reached that
+    queue. So a return pass can start, and it can end the base process that
+    such a call needs, while the call is on its way.
+  - `clean_idle` in `crates/mokly-sidecar/src/pool_releases.rs` takes every
+    idle slot with stale generation or PostCSS state out of `available` at
+    once. A head request that arrives in that time finds no idle slot, so it
+    can start or replace a process instead of using an idle one.
 - **Problem:** A call that passes the gate can still wait in the pool queue
   for maintenance. `claim_return` removes a slot from `available` and marks
   head return active. `clean_idle` also removes slots while it releases old
@@ -45,6 +58,12 @@
     This also replaces Serve's external admission ownership and requires
     propagation of request priority through every affected caller.
     Effort: Large.
+  - **D.** One rule for each owner that holds an idle process without a
+    request, the return pass and the idle cleanup. Each owner counts an
+    admitted call that has not reached the pool queue as waiting. It gives the
+    process back between its steps. The first request that would take that
+    process waits for it instead of starting or replacing a process. Effort:
+    Medium.
 - **Left out:** Retrying a call does not account for a maintenance owner.
   Reserving an idle worker permanently would reduce useful concurrency.
 - **Wider fix:** B. One owner accounts for both kinds of slot use.
