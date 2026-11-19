@@ -4,8 +4,8 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
-- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:64` and
-  `packages/mokly/src/sidecar/bundle-graph.ts:15`.
+- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:82` and
+  `packages/mokly/src/sidecar/metafile-edges.ts:25`.
 - **Reason:** The failure exists on `origin/main` before PR #226, and the
   review found it outside the diff of that change.
 
@@ -20,11 +20,12 @@
 - **Background:**
   - `moduleGraph` in `packages/mokly/src/sidecar/bundle-graph.ts` turns each
     input of the esbuild metafile into a logical module name and a physical
-    path. Its helper `clean` at line 15 removes only the `mokly-css:`
-    namespace.
+    path, through `MetafileEdges` in
+    `packages/mokly/src/sidecar/metafile-edges.ts`. Its `clean`, at line 25
+    of that file, removes only the `mokly-css:` namespace.
   - The `file` load hook in `packages/mokly/src/sidecar/plugins.ts:42`
     records the bytes of each loaded file under its file path.
-  - At `packages/mokly/src/sidecar/bundle-recipe.ts:64`, the recipe looks up
+  - At `packages/mokly/src/sidecar/bundle-recipe.ts:82`, the recipe looks up
     the recorded bytes of each module under its physical path. A missing
     entry fails the bundle.
   - The bundling contract in `docs/protocol/mokly-sidecar.md:98` requires the
