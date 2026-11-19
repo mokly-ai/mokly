@@ -37,8 +37,8 @@ fn ci_pins_tools_checks_pull_requests_and_has_an_unconditional_aggregate() {
         ),
         ("npm ci", "npm install", Violation::Chromium),
         (
-            "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
-            "useblacksmith/checkout@main",
+            "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+            "actions/checkout@main",
             Violation::ActionPin,
         ),
     ] {

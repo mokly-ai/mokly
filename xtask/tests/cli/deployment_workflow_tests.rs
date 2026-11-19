@@ -221,7 +221,7 @@ fn workflows_pin_actions_scope_identity_and_name_secrets() {
             ("contents: read", "contents: write", "permissions"),
             (
                 "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
-                "useblacksmith/checkout@main",
+                "actions/checkout@main",
                 "action-pin",
             ),
             (
@@ -236,14 +236,6 @@ fn workflows_pin_actions_scope_identity_and_name_secrets() {
             ),
             ("id: credentials", "id: unchecked", "credential-gate"),
         ] {
-            let (from, to) = if name == "ci" && from.starts_with("actions/checkout@") {
-                (
-                    "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
-                    "useblacksmith/checkout@main",
-                )
-            } else {
-                (from, to)
-            };
             assert!(
                 validate(&text.replace(from, to), name).contains(&expected),
                 "{name}: {expected}"

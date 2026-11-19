@@ -10,11 +10,11 @@
   - **Expo SDK:** The coordinated Expo, React Native, and Expo Router versions used by the private cloud app.
   - **Private-app exception:** A reviewed advisory record for a private workspace under `apps/`, excluded from every published workspace's production dependencies.
 - **Background:** The cloud app uses Expo 56.0.21 and Expo Router 56.2.20.
-  Expo's dependency chains retain six advisory identifiers:
+  Expo's dependency chains have these advisory records:
   - `decode-uri-component`: GHSA-vcc3-ghjq-m6fr and GHSA-qr28-fpjm-wq7f, through Expo Router and `query-string`.
   - `glob`: GHSA-3g3m-2fjr-6pw4, through Expo configuration, fingerprinting, Metro configuration, and CLI packages.
   - `minimatch`: GHSA-g3hv-75wg-m249, through Expo fingerprinting and the shared hoisted install.
-  - `picomatch`: GHSA-fc5q-39xc-vjpf, through Expo CLI, Metro, and React Native source discovery.
+  - `picomatch`: GitHub withdrew GHSA-fc5q-39xc-vjpf on 2026-11-18. Its ten exceptions are gone.
   - `zod`: GHSA-mrhx-c7xc-m3w5, through Expo CLI.
     Reviewed records end on 2026-12-18 UTC. Published Mokly packages cannot reach an excepted install through production, optional, or peer dependencies.
     Expo Router can decode attacker-supplied navigation URLs in the browser. A crafted URL can block the affected tab.
@@ -24,7 +24,6 @@
   Regenerate the root npm lockfile with its pinned npm version.
   Remove each private-app exception whose advisory or install location disappears.
   Recheck the shared `minimatch` install used by `eslint-plugin-import-x`; an Expo upgrade does not prove that the plugin's risk disappeared.
-  Recheck `picomatch` against the live advisory database. It had no patched release on 2026-11-17.
   SDK 58 must remove the affected Expo chains or select fixed releases before their records can go.
   Retain and review any still-live Electron, Astro, Vite, Vitest, or shared-install records separately.
   Never extend an exception automatically.

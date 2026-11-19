@@ -364,7 +364,9 @@ class ReleaseTests(unittest.TestCase):
             with self.subTest(job=name):
                 checkout = job.split(revision, 1)[1].split("      - name:", 1)[0]
                 self.assertIn("persist-credentials: false", checkout)
-                for step in job.split("uses: useblacksmith/checkout@")[1:]:
+                checkouts = job.split("uses: actions/checkout@")[1:]
+                self.assertTrue(checkouts, name)
+                for step in checkouts:
                     checkout = step.split("      - name:", 1)[0]
                     self.assertIn("persist-credentials: false", checkout)
                 self.assertNotIn("actions/cache@", job)

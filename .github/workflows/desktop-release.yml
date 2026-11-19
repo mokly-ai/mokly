@@ -40,7 +40,7 @@ jobs:
       matrix:
         include:
           - platform: macos
-            runner: blacksmith-6vcpu-macos-26
+            runner: macos-26
           - platform: linux
             runner: ubuntu-24.04
     env:
@@ -121,7 +121,7 @@ jobs:
       matrix:
         include:
           - platform: macos
-            runner: blacksmith-6vcpu-macos-26
+            runner: macos-26
           - platform: linux
             runner: ubuntu-24.04
     env:

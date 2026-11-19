@@ -76,6 +76,13 @@ the three open decisions. The check report is under
 - Milestone order, answered on 2026-11-17 (option A). Plans in this
   repository follow the order of the shared `plans` skill. The cloud
   override that put documentation first is gone.
+- Cloud freeze after the late merges, answered on 2026-11-19 (option A).
+  Cloud `main` merged PR #136 and PR #132 after the freeze. Cal kept the
+  freeze: nothing more merges into cloud `main`, and open cloud work moves
+  here after the merge. Rejected: a GitHub ruleset that blocks merges into
+  cloud `main`, and the end of the freeze with a port of each later commit.
+- Verification, instructed on 2026-11-19. Local runs cover the targeted
+  tests only. The CI of the pull request runs the full suite.
 
 ## Design calls
 
@@ -171,6 +178,13 @@ Each call below is my call, made on 2026-11-17.
   #342. The cloud jobs follow that decision: the `check`, `images`, and
   `site-lighthouse` jobs of `ci.yml` run on `ubuntu-24.04`, and the macOS
   rows of `desktop-release.yml` run on `macos-26`.
+- Release Please scope. Decided on 2026-11-19. Release Please 17.6.0, which
+  the release workflow pins, matches excluded directories only. The
+  configuration excludes each cloud directory. Shared root files, such as
+  the cloud workflows, root tool configurations, and the AGPL license text,
+  count for the Mokly release like every other root file. Rejected: moving
+  those files into excluded directories, because the workflows cannot move,
+  and patching Release Please.
 
 ## Contract owners
 
@@ -199,7 +213,7 @@ Each call below is my call, made on 2026-11-17.
   `npm --prefix ts`. Moved in Milestone 4. Deleted in Milestone 4.
 - The `mokly-ai/mokly-cloud` repository → this repository. Consumers: the
   Workload Identity Federation condition in Terraform, the GitHub App, the
-  repository secrets and environments, the links in docs, and the Conductive
+  repository secrets and environments, the links in docs, and the Conductor
   repository list. Moved in Milestones 7 and 8. Archived after the merge.
 
 ## Milestone 1: Documentation and protocol
@@ -297,7 +311,7 @@ Depends on: 2
       resolve the one installed version.
 - [x] Let reviewed audit exceptions cover production paths that only the
       private `apps/*` projects reach. Add the follow-up item for Expo SDK 58.
-- [ ] Make the cloud build of the app, the site, the mockups, and the
+- [x] Make the cloud build of the app, the site, the mockups, and the
       desktop bundle use the built workspace packages. Make
       `cargo xtask mokly-fixtures` read the workspace build.
 - [x] Regenerate `package-lock.json`. Run `npm ci`, `npm run build`, and the
@@ -363,9 +377,9 @@ Depends on: 6
 - [x] Set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` in every CI job that does not
       run Electron, and move that rule to the CI workflow pages.
 - [x] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
-- [ ] Scope Release Please to the published packages. Keep the cloud
+- [x] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
-- [ ] Run the cloud jobs of `ci.yml` and the desktop release builds on
+- [x] Run the cloud jobs of `ci.yml` and the desktop release builds on
       GitHub-hosted standard runners, as `main` PR #342 requires.
 - [x] Change the repository and the workflow paths in the Workload Identity
       Federation condition of `infra/terraform/modules/github`, and in its
@@ -376,7 +390,9 @@ Depends on: 6
 Depends on: 7
 
 Each TODO needs an operator with owner access. The agent prepares the
-commands and the checklist.
+commands and the checklist. The
+[repository cutover runbook](../docs/ops/repository-cutover.md) gives each
+step, its command, and its check.
 
 - [ ] Copy the repository secrets, the variables, and the `production` and
       preview environments, with their protection rules, to this
@@ -384,7 +400,7 @@ commands and the checklist.
 - [ ] Apply the Terraform change of Milestone 7, so that Google Cloud trusts
       both repositories during the cutover.
 - [ ] Point the GitHub App and the preview environments at this repository.
-- [ ] Add the cloud services to the Conductive repository setup of this
+- [ ] Add the cloud services to the Conductor repository setup of this
       repository.
 
 ## Milestone 9: Verification, commit, review, and pull request
@@ -394,7 +410,8 @@ Depends on: every other milestone
 The merge of `main` on 2026-11-19 records its conflict resolutions in
 `.context/combine-cloud/merge-main-2026-11-19.md`.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Run the targeted tests. The CI of the pull request runs the
+      complete gate.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -409,11 +426,14 @@ The merge of `main` on 2026-11-19 records its conflict resolutions in
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Watch the first deploy from `main` of this repository through to
-      production.
+- [ ] Set `MKC_CLOUD_CUTOVER_ENABLED` to `true`. Watch the first deploy from
+      `main` of this repository through to production.
 - [ ] Remove the old repository from the Terraform trust condition.
+- [ ] Move the open cloud pull requests #133, #107, and #88 to this
+      repository, or close them. Do this before the archive, because an
+      archived repository is read-only.
 - [ ] Archive `mokly-ai/mokly-cloud`. Point its README at this repository.
-- [ ] Reopen the open cloud pull requests #133, #132, #107, #93, and #88
-      against this repository, or close them.
+- [ ] Remove the cutover-only trust code: the legacy repository input,
+      `MKC_LEGACY_REPOSITORY_ID`, and `infra/terraform/modules/github/moved.tf`.
 - [ ] Replace the cloud's own Mokly contract types in `mkc-mokly-contract`
       with the `mokly-model` types.

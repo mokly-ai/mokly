@@ -18,7 +18,7 @@ run "topology" {
     error_message = "Undelivered check alerts must notify an operator."
   }
   assert {
-    condition     = strcontains(google_monitoring_alert_policy.publication_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.dead_letter_count>0") && strcontains(google_monitoring_alert_policy.publication_dead_letters.conditions[0].condition_matched_log[0].filter, "mkc-main-preview") && strcontains(google_monitoring_alert_policy.publication_dead_letters.documentation[0].content, "docs/ops/check-recovery.md")
+    condition     = strcontains(google_monitoring_alert_policy.publication_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.dead_letter_count>0") && strcontains(google_monitoring_alert_policy.publication_dead_letters.conditions[0].condition_matched_log[0].filter, "mkc-main-preview") && strcontains(google_monitoring_alert_policy.publication_dead_letters.documentation[0].content, "https://github.com/mokly-ai/mokly/blob/main/docs/ops/check-recovery.md") && contains(google_monitoring_alert_policy.publication_dead_letters.documentation[0].links[*].url, "https://github.com/mokly-ai/mokly/blob/main/docs/ops/check-recovery.md")
     error_message = "The alert must scope positive undelivered counts to its environment and link recovery."
   }
   assert {
@@ -26,7 +26,7 @@ run "topology" {
     error_message = "Undelivered billing delivery alerts must notify an operator."
   }
   assert {
-    condition     = strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.message=\"billing delivery status\"") && strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.dead_letter_count>0") && strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "mkc-main-preview") && strcontains(google_monitoring_alert_policy.billing_dead_letters.documentation[0].content, "docs/ops/billing-smoke.md")
+    condition     = strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.message=\"billing delivery status\"") && strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "jsonPayload.fields.dead_letter_count>0") && strcontains(google_monitoring_alert_policy.billing_dead_letters.conditions[0].condition_matched_log[0].filter, "mkc-main-preview") && strcontains(google_monitoring_alert_policy.billing_dead_letters.documentation[0].content, "https://github.com/mokly-ai/mokly/blob/main/docs/ops/billing-smoke.md") && contains(google_monitoring_alert_policy.billing_dead_letters.documentation[0].links[*].url, "https://github.com/mokly-ai/mokly/blob/main/docs/ops/billing-smoke.md")
     error_message = "The billing alert must scope positive undelivered counts to its environment and link recovery."
   }
   assert {

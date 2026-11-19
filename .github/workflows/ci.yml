@@ -335,7 +335,7 @@ jobs:
           retention-days: 14
   check:
     name: ${{ matrix.name }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     needs: [profile]
     timeout-minutes: 120
     strategy:
@@ -410,7 +410,7 @@ jobs:
       MKC_TEST_DATABASE_URL: postgres://postgres:postgres@localhost/mkc_test
     steps:
       - name: Check out the complete history
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - name: Install Node
@@ -501,12 +501,12 @@ jobs:
 
   images:
     name: Workload image checks
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     needs: [profile]
     timeout-minutes: 60
     steps:
       - name: Check out the source
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -574,7 +574,7 @@ jobs:
     steps:
       - name: Check out the trusted main revision
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Gate the real provider plan
@@ -627,11 +627,11 @@ jobs:
       ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
     name: Site Lighthouse
     continue-on-error: false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Check out the complete history
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false

@@ -99,11 +99,8 @@ These selected delivery checks do not replace any of the five suite reports.
 No browser shard runs delivery after its ordinary specs. Browser work and portable
 delivery use separate 30-minute Testbox job guards.
 
-Seven cloud commands, listed in the [remote README](../../xtask/remote/README.md),
-each run `node xtask/scripts/testbox-cloud.mjs --expect <fingerprint> --suites <list>`
-on their own box. Each installs the root lockfile and Chromium, attempts every
-listed suite, names each failed suite, and exits nonzero when any fails. They
-produce no suite report.
+Seven cloud commands run on their own boxes, as the
+[cloud Testbox tools](./ci-workflow-cloud.md#cloud-testbox-tools) say.
 
 ## Readiness And Sync Probe
 
