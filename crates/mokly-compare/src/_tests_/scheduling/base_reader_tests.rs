@@ -7,7 +7,6 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use mokly_git::control::CancellationMock;
 use mokly_graph::comparison_input::RetainedComparisonInput;
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_error::{CodecError, CodecInternalError};
 use mokly_graph::error::GraphError;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
@@ -92,10 +91,7 @@ fn capture(source: Arc<dyn RenderGeneration>, restorer: Unimock) -> Arc<dyn Rend
         source,
         views: BTreeMap::from([(
             route(0),
-            CapturedView {
-                document: EncodedView::encode(&artifact(0)).unwrap(),
-                closure: closure(0),
-            },
+            CapturedView::encode(&artifact(0), closure(0)).unwrap(),
         )]),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),

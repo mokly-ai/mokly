@@ -37,8 +37,9 @@ The performance orchestrator made these calls on 2026-11-19:
   byte checks and proof reads with their recording. Keep ordered memo calls.
 - Exclude moved entries because their comparisons normalize paths.
 - Also exclude a view when the catalogue relocation map can change its base
-  projection. Start with an empty-map guard because other moves can affect
-  unmoved consumers too.
+  projection. Require every paired entry to keep its exact original spelling.
+  Any accepted move or case-only rename disables admission for the
+  classification. Require equal view route spellings too.
 - Require equal comparison metadata as well as equal bytes before sharing
   document work. Derive nothing that the bytes do not carry. This replaces
   the performance orchestrator's original call to derive all fields from
@@ -47,6 +48,9 @@ The performance orchestrator made these calls on 2026-11-19:
   retained by the lossless codec. Hash that complete codec input with the
   exact bytes. Equal digests prove both. Preserve conservative input signals
   for usage that is not ready.
+- Report admitted views as one aggregate comparison timing count. The user
+  requested coverage on 2026-11-19. The workspace orchestrator chose this
+  existing diagnostic record to avoid a separate probe or process.
 - Retain a fixed digest per captured view. Charge its storage to the existing
   bounded capture budget. Keep the render cache bound and memory admission.
 - Add the requested differential coverage. Compare the shortcut and full
@@ -118,8 +122,62 @@ The regression uses equal bytes with different metadata. Measurements also
 report the number of the 1,508 `mokly-cloud` views admitted by this guard.
 The workspace orchestrator chose C after the independent options check on
 2026-11-19. It avoids a field list that can miss private annotations.
-The empty-relocation-map guard is also this orchestrator's call of that date.
-It preserves normalization for consumers of other moved entries.
+The unchanged-pair-spelling guard is also this orchestrator's call of that
+date. It preserves normalization for consumers of other moved entries.
+
+### 2. Admit views when identity pairs exist
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** performance.
+- **Location:** `crates/mokly-compare/src/move_types.rs` and
+  `comparison_preparation.rs`.
+- **Background:** The catalogue relocation map contains all surviving pairs,
+  including entries whose paths stay equal. Its keys use lowercase spelling.
+- **Problem:** A literal empty-map guard rejects every paired catalogue.
+  Checking moves alone misses case-only renames.
+- **Impact if no action:** No view takes the shortcut, so the time goal fails.
+- **Root question:** How can admission prove that relocation preserves the
+  result of a view whose two complete document digests are equal?
+- **Options:**
+  - **A.** Use one helper to compare each paired entry's original base and
+    head path spellings. Disable admission for any difference. Also require
+    equal view routes. This rejects an entire classification with a move.
+    Effort: Small.
+  - **B.** Walk each document's references, instance paths, and usage ids.
+    Admit only views whose projection stays equal under the relocation map.
+    This admits more views but needs more traversal and coverage. Effort: Medium.
+  - **C.** Reject only accepted moves whose old path is also a current path,
+    ignoring case. Keep equal routes. A simpler form rejects every accepted
+    move. This admits more views but needs more render and pairing facts in
+    its exactness proof. Effort: Small.
+  - **D.** Give preparation a second map containing only spelling changes.
+    An empty preparation map then proves no rewrite for any input spelling.
+    Consumers retain the full map. Review the reuse identity and all callers
+    for the split maps. Effort: Small.
+  - **E.** Check paths in the decoded head's links, components, and usage.
+    Equal digests prove that the base holds those same paths. This skips a
+    base decode but needs a maintained path-field list. Effort: Medium.
+- **Left out:** Raw map emptiness rejects valid identity pairs. Lowercased
+  map keys cannot distinguish unchanged mixed-case paths from case-only
+  renames. A retained path list adds memory without saving a head walk.
+  Move-list emptiness remains available through C with equal digests and routes.
+- **Wider fix:** D. An empty preparation map cannot rewrite any spelling.
+- **Previous examples:** The documentation audit found identity pairs in
+  `Pairing::paths` while checking this plan.
+- **Recommendation:** A. It preserves the intended conservative admission
+  without another document field list or a split between preparation and
+  consumer maps. The target startup workload has no move.
+- **Action:** fix now, apply A.
+
+Shared assumptions: complete output equality and preserved normalization come
+from the task and comparison contracts. The relocation map's lowercase keys
+come from the current code. The renderer writes exact catalogue spellings,
+and catalogue validation rejects paths that differ only in case. These code
+facts make A exact. B, D, and E drop those assumptions. A keeps a
+catalogue-level guard. B and E drop that restriction. C drops classification
+rejection for case-only renames. The workspace orchestrator chose A on
+2026-11-19. The independent options check confirmed it and added C, D, and E.
 
 ## Milestone 1: Documentation alignment
 
@@ -128,9 +186,11 @@ Depends on: none
 Confirm that the unchanged-view and comparison contracts cover the shortcut.
 Keep requirements unchanged because the observable output stays equal.
 
-- [ ] Delegate a protocol and README audit to the docs implementor.
-- [ ] Update the comparison crate's entry-point notes only if they become stale.
-- [ ] Record any required design correction before implementation.
+- [x] Delegate a protocol and README audit to the docs implementor.
+- [x] Check the comparison crate's current entry-point notes for stale requirements.
+- [x] Record any required design correction before implementation.
+
+The unchanged contracts need no protocol edit. Audit: `.context/first-changes-byte-equal-fast-path/docs-audit.md`.
 
 ## Milestone 2: Exact document identity and safe preparation
 
@@ -139,21 +199,46 @@ Depends on: 1
 Delegate the bounded digest and comparison shortcut to the non-ui implementor.
 Keep the complete path for ineligible, moved, and one-sided views.
 
-- [ ] Add exact-byte identity for retained documents and charge its resident bytes.
-- [ ] Add red-first behavioural coverage for new shortcut admission and its safety.
-- [ ] Reject equal-byte inputs with different usage or tree annotations,
+- [x] Add exact-byte identity for retained documents and charge its resident bytes.
+- [x] Add red-first behavioural coverage for new shortcut admission and its safety.
+- [x] Reject equal-byte inputs with different usage or tree annotations,
       including new ignore regions and changed style ownership.
-- [ ] Avoid base decoding and duplicate preparation only after safe admission.
-- [ ] Derive only results proved equal by admission from one document. Compute
+- [x] Admit mixed-case identity path pairs. Reject moves and case-only renames
+      through the shared original-spelling guard.
+- [x] Avoid base decoding and duplicate preparation only after safe admission.
+- [x] Derive only results proved equal by admission from one document. Compute
       conservative material input signals when usage is not ready.
-- [ ] Keep both closure policies, all resource byte checks, proof reads and recording,
+- [x] Keep both closure policies, all resource byte checks, proof reads and recording,
       fallback behaviour, cancellation, and memo order.
-- [ ] Add differential corpus coverage for results and published bytes.
-- [ ] Run targeted tests and record test cost and red evidence.
+- [x] Add differential corpus coverage for results and published bytes.
+- [x] Run targeted tests and record test cost and red evidence.
+- [x] Delegate comparison and graph README entry-point notes after the new APIs
+      exist. Distinguish the codec-input digest from recipe-based reuse identities.
 
-## Milestone 3: Measurement and acceptance
+## Milestone 3: Verification and implementation push
 
 Depends on: 2
+
+The workspace orchestrator owns the checks and the implementation push.
+The push gives both measurement arms exact source commits.
+
+- [x] Put Git 2.45 or later first on PATH, install git-lfs, and use pinned Bun.
+- [x] Align the existing static timing test with the approved admission count.
+      Keep its exact state-count and privacy assertions.
+- [x] Run targeted checks, `cargo xtask check --suite repository`, and `cargo xtask check`.
+      Report each blocked suite if the complete gate cannot run here.
+- [ ] Commit with Conventional Commits and push the implementation.
+- [ ] Send the implementation SHA to the performance orchestrator. Use the same
+      commit for dist, unless a different dist source is required.
+
+Evidence and the short continuation ledger live under
+`.context/first-changes-byte-equal-fast-path/`.
+The independent options check is in `plan-options-check.md` in that folder.
+The main merge audit and its preservation record are in `main-merge.md`.
+
+## Milestone 4: Acceptance, review, and pull request
+
+Depends on: 1, 2, 3
 
 Use separate release checkouts and target directories for merged main and
 this branch. Run Cargo builds one at a time with incremental and dev debug
@@ -161,28 +246,14 @@ output disabled. Check disk and available memory before each large build.
 
 - [ ] Check `examples/basic` and generated large catalogues from `scripts/large/`.
 - [ ] Measure at least six interleaved baseline and branch rounds, warm and cold.
-- [ ] Compare first Changes, comparison stages, and exact output.
+- [ ] Compare first Changes, comparison stages, and exact output. Check strict
+      static build output bytes on the same three fixture roots too.
 - [ ] Measure whole-tree anonymous memory plus swap at startup and for ten edits.
-- [ ] Send the implementation SHA and dist build commit to the performance orchestrator.
+- [ ] Confirm local memory within 2% of main for startup and ten edits.
 - [ ] Obtain `mokly-cloud` evidence for at least 0.3 seconds less comparison time
       and at least 0.3 seconds earlier first Changes, mean of six interleaved runs.
 - [ ] Report admitted byte-and-metadata-equal view counts on `mokly-cloud`.
-- [ ] Confirm memory within 2% of main for startup and ten edits.
-
-Evidence and the short continuation ledger live under
-`.context/first-changes-byte-equal-fast-path/`.
-The independent options check is in `plan-options-check.md` in that folder.
-
-## Milestone 4: Verification, review, and pull request
-
-Depends on: 1, 2, 3
-
-The workspace orchestrator owns verification, commits, review, and the pull request.
-
-- [ ] Put Git 2.45 or later first on PATH, install git-lfs, and use pinned Bun.
-- [ ] Run targeted checks, `cargo xtask check --suite repository`, and `cargo xtask check`.
-      Report each blocked suite if the complete gate cannot run here.
-- [ ] Commit with Conventional Commits and push the implementation.
+- [ ] Confirm `mokly-cloud` memory within 2% of main for startup and ten edits.
 - [ ] Review the complete diff against `origin/main`, or the supplied step-1 base,
       with the implementation-review skill. Check findings and apply up to two fix rounds.
 - [ ] Merge the supplied step-1 branch with the git-merge skill when available.
