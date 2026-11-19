@@ -135,13 +135,13 @@ and 11 needed no decision, and Milestone 3 fixes them.
   default. Rejected: esbuild plugins, A; JavaScript only, B; Vite for every
   project, D; webpack and Rspack too, E. Reason: Vite is Storybook's default
   builder, and C removes both the JavaScript and the CSS copies. Decision 22
-  below is open and blocks Milestone 14.
+  below settles a missing Vite.
 - **17. The Vite setup: E.** With a Storybook folder, Mokly loads
   Storybook's merged Vite setup for every JavaScript entry. An optional
   `mokly.vite.config.ts` can change that setup. Rejected: the app config only,
   A; a file that the project writes, B; two setups, C; D without the
   optional file. Reason: stories match Storybook, and each module loads once.
-  Decision 18 below is open and blocks Milestone 30.
+  Decision 18 below settles several Storybook folders.
 
 The options check of 2026-11-06 rewrote the root questions of decisions 18
 and 19, added options E and F to each, and raised decisions 20, 21, and 22.
@@ -211,6 +211,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   spike.
 - **Action:** ask the user, because A and F add a configuration error, B adds
   a warning that fails `--strict`, and E needs a spike.
+- **Answer:** E, chosen by the user on 2026-11-19, with a spike first in its
+  own workspace. Milestone 37 runs the spike. When the spike shows that E
+  cannot work, this decision goes back to the user with the evidence.
 
 ### 19. Ids of story component uses
 
@@ -218,18 +221,23 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Source:** Design, with options E and F from the options check.
 - **Category:** Docs or spec.
 - **Location:** `docs/protocol/mokly-instances.md:28-41`,
-  `docs/protocol/mokly-instances.md:69-86`.
+  `docs/protocol/mokly-instances.md:66-86`.
 - **Background:**
   - An instance id is the `moklyInstance` prop of a wrapper or the
     `mokly-instance` attribute of a component element. Without one, the id
     defaults to the last segment of the component's path.
   - Duplicate ids in one scope and placement are build errors.
+  - The instance rules keep an id when siblings move, when data props
+    change, and when source lines move. They also record a decision: never
+    repair a collision with a positional suffix, because that breaks
+    stability under reordering.
   - Changes pairs the uses of two commits only by equal scoped ids.
   - Decision 13 records a use whenever a screen renders the component of a
     stories meta. That component is a plain product component, often used
     many times in one screen, and `moklyInstance` is not in its type.
 - **Problem:** Repeated uses of a story component in one scope get the same
-  default id, which the current rule rejects.
+  default id, which the current rule rejects. Each automatic id breaks one of
+  the stability rules.
 - **Impact if no action:** Decision 13 fails the build for most screens that
   render a story component twice.
 - **Root question:** How does Mokly tell each use of a story component apart,
@@ -244,39 +252,43 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
     React `key` wins when it matches the id grammar, after the component's
     path segment, such as `button-save`. An automatic number skips an id
     that an explicit one takes. Inserting a use renumbers the later ones, so
-    Changes shows them as moved. This changes the duplicate rule and the
+    Changes shows them as moved. This reverses the recorded decision
+    against positional suffixes, and it changes the duplicate rule and the
     stability rule of `docs/protocol/mokly-instances.md`. Effort: Medium.
   - **C.** Derive the id from the source location of the use. One call site
     that renders several uses, such as a `.map()`, still needs B's numbers,
     and a `createElement` call has no location. An edit above a use changes
-    its id. This puts source locations into keys, which the instance rules
-    exclude today. Effort: Medium.
+    its id. This breaks the rule that a moved source line keeps an id.
+    Effort: Medium.
   - **D.** Record these uses without instance keys. Pages list the screens
     that use the component, but nobody can select or compare one use, and an
     edit of the component stays a direct change of each consuming screen.
-    Effort: Medium.
+    It changes no instance rule. Effort: Medium.
   - **E.** Derive the default id from the content of the use: the path
     segment and a short digest of its data props and text children. Equal
     uses become placements of one logical instance. An insertion or a
     reorder keeps every other id. A props edit shows as one removed and one
-    added use, and the ids are hard to read. Effort: Large.
+    added use, which breaks the rule that a data props edit keeps an id, and
+    the ids are hard to read. Effort: Large.
   - **F.** Do B, and let the comparison pair the automatic ids of one
     component in one scope by aligning their props digests. An insertion
     then shows as one added use. This changes the record-only resolution and
     the pairing by scoped id. It can follow B after the merge. Effort: Large.
 - **Left out:** Record only the uses that catalogue files write: a screen that
   renders a product page would record none of the uses inside that page.
-- **Wider fix:** B. Every use gets an id without an edit, and an explicit id
-  stays possible.
+- **Wider fix:** None, because each option that gives every use a key
+  breaks a stability rule, and D gives no keys.
 - **Previous examples:** React keys repeated children by position when no
-  `key` is given.
-- **Related:** Decisions 13 and 21. Milestone 34 waits for this answer.
-- **Recommendation:** B. It is the smallest option that builds every screen
-  with no edit and keeps a selection for each use. Record F as a follow-up
-  item that removes B's wrong pairs. E is better if no wrong pair matters
-  more than effort.
-- **Action:** ask the user, because B changes the duplicate rule and the
-  stability rule of `docs/protocol/mokly-instances.md`.
+  `key` is given. The instance rules reject that for Mokly.
+- **Related:** Decisions 13 and 21. With D, decision 21 needs no new rule.
+  Milestone 34 waits for this answer.
+- **Recommendation:** D, changed from B on 2026-11-19. The component page
+  then lists every screen that uses a story component, with no wrong pairs
+  and no change to the instance rules. B gives each use a selection and a
+  comparison, but it reverses the recorded decision against positional
+  suffixes, whose reason still holds.
+- **Action:** ask the user, because D records less than decision 13 says,
+  and every other option except A changes a stability rule.
 
 ### 20. Roots from the `stories` field of `main.*`
 
@@ -356,9 +368,12 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   files then need edits that only Mokly reads, and A covers the same content.
 - **Wider fix:** A. Every input that a screen gives stays visible.
 - **Previous examples:** None found.
-- **Related:** Decisions 13 and 19. Milestone 34 waits for this answer.
-- **Recommendation:** A. Every content edit stays visible, and screens and
-  stories need no change.
+- **Related:** Decisions 13 and 19. With 19 = D, a use has no region of its
+  own, so its content stays in the screen's comparison. Milestone 34 waits
+  for this answer.
+- **Recommendation:** B, changed from A on 2026-11-19 to match decision 19.
+  With 19 = D, the content already stays in the screen's comparison, and
+  Changes needs no new rule. When decision 19 is B, C, E, or F, choose A.
 - **Action:** ask the user, because A adds a rule to the Changes contract.
 
 ### 22. The Vite adapter without Vite
@@ -389,6 +404,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Recommendation:** A. The project asked for its own build setup, so
   esbuild output without a clear failure would mislead.
 - **Action:** ask the user, because A adds a new case of a build error.
+- **Answer:** A, chosen by the user on 2026-11-19.
 
 The mockups of Milestone 1 raised decisions 23 to 27 on 2026-11-18. The
 options check of the same day rewrote the root questions of decisions 24, 25,
@@ -674,10 +690,12 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     and current catalogues keep esbuild.
 18. For a catalogue with one Storybook folder, each sidecar process runs one
     Vite server for its source root, with Vite's own watcher off. Mokly's
-    watcher invalidates changed modules. Decision 18 settles several
-    folders. Reason: a sidecar process serves one source root.
-19. Mokly resolves `vite` from the project. Decision 22 settles a missing
-    `vite`. Reason: Mokly ships no private runtime.
+    watcher invalidates changed modules. With several folders, decision 18
+    chose E: one Vite server for each folder, which feed one module runner.
+    Reason: a sidecar process serves one source root.
+19. Mokly resolves `vite` from the project. A missing `vite` fails `bundle`
+    with `bundle-failed`, as decision 22 chose. Reason: Mokly ships no
+    private runtime.
 20. Under the adapter, Mokly removes Storybook's browser-only plugins, such
     as its entry, docgen, globals, and stats plugins, with the public
     `withoutVitePlugins` helper. Reason: a render does not need them.
@@ -685,8 +703,9 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     setup as an inline module. Reason: plugins such as Tailwind's then run.
 22. The optional file exports `defineMoklyVite` from `@mokly/mokly/vite`. Its
     `app()` and `storybook()` loaders run only when called. For one
-    Storybook folder it returns one setup. Decision 18 settles several
-    folders. Reason: a project can avoid a broken Storybook release.
+    Storybook folder it returns one setup. With several folders, the spike
+    of decision 18 settles its shape. Reason: a project can avoid a broken
+    Storybook release.
 23. A static scan of the preview file finds `sb.mock()` calls for the
     `storybook-mock-without-vite` warning. Reason: the preview file does not
     run before the bundle.
@@ -740,12 +759,13 @@ answers. The ledger of the workspaces is in
 | A. Mockups                 | 1          | Nothing                                          |
 | B. Story reading           | 2 to 8     | Nothing                                          |
 | C. Imported assets         | 9 to 12    | Nothing                                          |
-| D. Vite adapter            | 13 to 17   | Nothing. Milestone 14 also waits for decision 22 |
+| D. Vite adapter            | 13 to 17   | Nothing                                          |
 | E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
 | F. Failed stories          | 23 to 25   | Tracks A and B, and decisions 24 and 26          |
 | G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23, 25, and 27     |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, and E, and decision 18              |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                            |
 | I. Story component usage   | 34 to 36   | Tracks B and D, and decisions 19 and 21          |
+| J. Spike for decision 18   | 37         | Nothing                                          |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -1188,7 +1208,7 @@ Depends on: 26, 27, 28
 
 ## Milestone 30: Storybook setup on Vite documentation
 
-Depends on: 12, 17, 22, and the answer to decision 18
+Depends on: 12, 17, 22, 37
 
 Track H. The protocol states the Storybook setup rules of decision 17, with
 the answer to decision 18, and the `sb.mock()` warning of decision 12.
@@ -1284,7 +1304,30 @@ Depends on: 34, 35
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 37: Verification, commit, review, and pull request
+## Milestone 37: Spike for several Storybook folders
+
+Depends on: none
+
+Track J. Decision 18 chose E, with a spike first. The spike tests whether one
+module runner can run every file once while each file compiles with the
+Vite setup of the Storybook folder that owns it.
+
+- [ ] Build a scratch monorepo with two Storybook folders whose setups differ
+      in an alias, a plugin, and an `sb.mock()` call, and a module that both
+      packages import.
+- [ ] Prove or refute, with a prototype under `.context/`: each file compiles
+      with its owner's setup, the shared module loads once, virtual modules
+      and ids reach the right server, the module graph and the consumed bytes
+      stay complete, and the base side and Serve invalidation can work the
+      same way.
+- [ ] Measure the cost against one setup.
+- [ ] Record the result in decision 18, and update the TODOs of milestones 30
+      and 32 and design calls 18 and 22. When the spike refutes E, give
+      decision 18 back to the user with the evidence.
+- [ ] Commit, push, and open a pull request into this branch. The prototype
+      stays under `.context/`.
+
+## Milestone 38: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
