@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::command::{Output, RunnerMock};
+use crate::error::Error;
 use crate::identity::ObjectId;
 use crate::repository::{GitRepository, Repository};
 use crate::source_key::{CheckoutIdentity, MemoryKeptListing};
@@ -15,11 +16,12 @@ use crate::source_key::{CheckoutIdentity, MemoryKeptListing};
 const FIXTURE: &str = "be4550f445d2b4c0c208f0c71b86d262d49bbda492ae5b7a41e82054ce155d6d";
 
 /// The values that the runner gives now, and the count of object checks, which run one
-/// `rev-list` each.
+/// `rev-list` each. `missing` is the `rev-list` output that names missing objects.
 struct Answers {
     config: Mutex<Vec<u8>>,
     listing: Mutex<Vec<u8>>,
     notes: Mutex<Vec<u8>>,
+    missing: Mutex<Vec<u8>>,
     checks: AtomicUsize,
 }
 
@@ -31,6 +33,7 @@ impl Answers {
                 format!("100644 blob {} 5\tnotes.txt\0", "b".repeat(40)).into_bytes(),
             ),
             notes: Mutex::new(b"text\0set\0".to_vec()),
+            missing: Mutex::new(Vec::new()),
             checks: AtomicUsize::new(0),
         })
     }
@@ -81,7 +84,7 @@ fn repository(answers: &Arc<Answers>) -> GitRepository {
             .each_call(matching!((request) if request.args[2] == "rev-list"))
             .answers_arc(Arc::new(move |_, _| {
                 check.checks.fetch_add(1, Ordering::Relaxed);
-                Ok(output(b""))
+                Ok(output(&check.missing.lock().unwrap()))
             })),
         RunnerMock::run
             .each_call(matching!((request) if request.args[3] == "check-attr"))
@@ -152,4 +155,21 @@ fn a_kept_listing_reads_the_configuration_and_the_attributes_again() {
         ]
     );
     assert_eq!(answers.checks.load(Ordering::Relaxed), 1);
+}
+
+#[test]
+fn a_failed_object_check_keeps_no_listing() {
+    let answers = Answers::new();
+    *answers.missing.lock().unwrap() = format!("?{}\n", "b".repeat(40)).into_bytes();
+    let repository = repository(&answers);
+    let commit = ObjectId::parse(&"a".repeat(40)).unwrap();
+    let kept = MemoryKeptListing::default();
+    for read in 0..2 {
+        let result = repository.checkout_identity_kept(&commit, &kept);
+        assert!(
+            matches!(&result, Err(Error::MissingObject { object }) if *object == "b".repeat(40)),
+            "{read}: {result:?}"
+        );
+    }
+    assert_eq!(answers.checks.load(Ordering::Relaxed), 2);
 }

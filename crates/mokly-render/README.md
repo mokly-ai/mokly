@@ -124,6 +124,9 @@ one stream per path and keeps the original observations through cache hits.
 File-object stamps invalidate same-byte replacements. Base identity checks
 retain the extracted-file identity beside the pinned Git content proof.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
+One `MemoryReferenceCache` with a 4 MiB bound keeps the inline style scans of
+every generation of a runtime. A base runtime takes the memo of its head
+runtime.
 Their records share storage. Oversized results return without cache retention.
 Each record keeps the read evidence of its own inputs. The module evidence of
 a PostCSS context is kept once. When a later result of the context carries

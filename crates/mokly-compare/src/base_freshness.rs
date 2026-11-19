@@ -169,15 +169,9 @@ impl FreshnessChecks {
             return Ok(false);
         }
         let repository = request.selected.repository.as_ref();
-        let commit = &request.selected.commit;
-        let kept = match kept {
-            Some(kept) => repository.checkout_identity_kept(commit, kept).base()?,
-            None => None,
-        };
-        let checkout = match kept {
-            Some(checkout) => checkout,
-            None => repository.checkout_identity(commit).base()?,
-        };
+        let checkout = repository
+            .checkout_identity_with(&request.selected.commit, kept)
+            .base()?;
         if checkout.filtered || checkout != inputs.checkout {
             return Ok(false);
         }

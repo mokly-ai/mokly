@@ -149,7 +149,8 @@ exact base, so a late reader cannot clear a newer base.
 
 Only Serve gives `NativeBase` a `Freshness`. With it, `NativeBase` samples the
 checkout identity before its first base read and records the evidence of the
-preparation. `build` and `publish` take no sample and record no evidence. A
+preparation. The base runtime of a preparation takes the style memo of the head
+runtime. `build` and `publish` take no sample and record no evidence. A
 sample or record failure, other than a cancellation, gives no evidence, and
 the fresh preparation continues without a kept base. The Git runner, the
 source tree, the dependency step, the sidecar pool handle, and the render

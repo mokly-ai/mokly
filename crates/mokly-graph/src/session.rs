@@ -106,7 +106,9 @@ impl Session {
                 directories: input.directories,
                 document_keys,
                 matchers: Arc::new(input.matchers),
-                reference_index: Arc::new(MemoryReferenceIndex::default()),
+                reference_index: Arc::new(MemoryReferenceIndex::new(
+                    graph.inputs.style_references.clone(),
+                )),
                 inputs: graph.inputs.clone(),
                 config: Arc::new(input.config),
                 catalogue: Arc::new(input.catalogue),

@@ -1,6 +1,7 @@
 //! Content-addressed CSS reference scans with a retained-byte bound.
 
 use std::collections::BTreeMap;
+use std::fmt::Debug;
 use std::mem;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -23,9 +24,9 @@ pub struct ReferenceCacheStats {
     pub hits: usize,
 }
 
-/// Stateful scan boundary. Equal text shares one scan.
+/// Stateful scan boundary. An equal text reuses a scan that the cache still holds.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReferenceCacheMock))]
-pub trait ReferenceCache: Send + Sync {
+pub trait ReferenceCache: Debug + Send + Sync {
     /// The references of `source`, equal to `syntax::references(source)`.
     fn references(&self, source: &str) -> Arc<[Reference]>;
     /// Observe byte charges and operation counts.
@@ -35,12 +36,13 @@ pub trait ReferenceCache: Send + Sync {
 /// Process-memory LRU keyed by the SHA-256 digest of each text. A text that cannot hold a
 /// reference returns an empty list without a lookup or a count. A scan runs outside the
 /// lock, and a scan whose charge passes the bound returns without retention.
+#[derive(Debug)]
 pub struct MemoryReferenceCache {
     bound: usize,
     state: Mutex<State>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct State {
     entries: BTreeMap<[u8; 32], Entry>,
     order: BTreeMap<u64, [u8; 32]>,
@@ -48,6 +50,7 @@ struct State {
     stats: ReferenceCacheStats,
 }
 
+#[derive(Debug)]
 struct Entry {
     sequence: u64,
     cost: usize,

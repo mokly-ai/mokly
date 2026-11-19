@@ -12,7 +12,9 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_compare::ancestor_roots;
+use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
 use mokly_graph::cache::RenderCache;
+use mokly_graph::delivery_inputs::STYLE_REFERENCE_BYTES;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
@@ -59,6 +61,9 @@ pub struct Runtime {
     pub base: Option<Arc<BaseSide>>,
     /// Ancestor dependency directories used by the working generation.
     pub dependency_usage: Arc<dyn DependencyUsage>,
+    /// Inline style reference scans shared by every generation of this runtime and of each
+    /// runtime that takes this memo.
+    pub style_references: Arc<dyn ReferenceCache>,
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
@@ -125,6 +130,7 @@ impl Runtime {
             version,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
+            style_references: Arc::new(MemoryReferenceCache::new(STYLE_REFERENCE_BYTES)),
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),

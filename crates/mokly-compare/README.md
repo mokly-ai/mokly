@@ -291,9 +291,8 @@ A provider must not keep a base without evidence. `PreparedBase` and
 `Freshness::current` says whether that evidence still holds for the current
 checkout identity, dependency directories, working inputs, install records,
 and head bundle. `Freshness::current_kept` runs the same checks, and it reads
-the checkout identity with the `KeptListing` of the kept base. A repository
-without that read gives `None`, and the check reads `checkout_identity`. By
-default `current_kept` runs `current`. The
+the checkout identity through `checkout_identity_with` with the `KeptListing`
+of the kept base. By default `current_kept` runs `current`. The
 [freshness checks rule](../../docs/protocol/mokly-base-preparation.md#freshness-checks)
 owns what the checks cover and what they miss.
 

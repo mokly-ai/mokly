@@ -20,15 +20,15 @@ pub struct CheckoutIdentity {
     pub filtered: bool,
 }
 
-/// The whole-tree listing of one commit after its object check passed. An equal later
-/// listing names the same objects, so it needs no second object check. The configuration
-/// and the attributes are read again for each identity.
+/// The tree listing of one commit after its object check passed. An equal later listing
+/// names the same objects, so it needs no second object check. The configuration and the
+/// attributes are read again for each identity.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = KeptListingMock))]
 pub trait KeptListing: Send + Sync {
     /// Whether `listing` equals the kept listing of `commit`.
     fn matches(&self, commit: &ObjectId, listing: &[u8]) -> bool;
     /// Keep the checked `listing` of `commit` in place of any earlier listing.
-    fn keep(&self, commit: &ObjectId, listing: Vec<u8>);
+    fn keep(&self, commit: &ObjectId, listing: &[u8]);
 }
 
 impl fmt::Debug for dyn KeptListing + '_ {
@@ -37,24 +37,27 @@ impl fmt::Debug for dyn KeptListing + '_ {
     }
 }
 
-/// One kept listing in process memory.
+/// One kept listing in process memory, as the SHA-256 digest of its bytes, so that its
+/// charge does not grow with the tree.
 #[derive(Default)]
 pub struct MemoryKeptListing {
-    slot: Mutex<Option<(ObjectId, Vec<u8>)>>,
+    slot: Mutex<Option<(ObjectId, [u8; 32])>>,
 }
 
 impl KeptListing for MemoryKeptListing {
     fn matches(&self, commit: &ObjectId, listing: &[u8]) -> bool {
+        let digest: [u8; 32] = Sha256::digest(listing).into();
         self.slot
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .as_ref()
-            .is_some_and(|(kept, bytes)| kept == commit && bytes == listing)
+            .is_some_and(|(kept, kept_digest)| kept == commit && *kept_digest == digest)
     }
 
-    fn keep(&self, commit: &ObjectId, listing: Vec<u8>) {
+    fn keep(&self, commit: &ObjectId, listing: &[u8]) {
+        let digest: [u8; 32] = Sha256::digest(listing).into();
         *self.slot.lock().unwrap_or_else(|error| error.into_inner()) =
-            Some((commit.clone(), listing));
+            Some((commit.clone(), digest));
     }
 }
 

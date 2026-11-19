@@ -25,7 +25,7 @@ fn each_check_of_a_kept_base_sees_the_listing_of_its_last_check() {
                 let seen = seen.clone();
                 Arc::new(move |_, commit, kept| {
                     seen.lock().unwrap().push(kept.matches(commit, b"listing"));
-                    kept.keep(commit, b"listing".to_vec());
+                    kept.keep(commit, b"listing");
                     Ok(Some(CheckoutIdentity {
                         digest: "before".into(),
                         filtered: false,

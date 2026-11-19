@@ -1,0 +1,36 @@
+# Share the style memo with the other scans
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-19, from the branch `calummoore/mokly-classify-memo`, the wider fix that its first review split off finding 1.
+- **Location:** `crates/mokly-graph/src/resource_edges.rs` (`urls`), `crates/mokly-graph/src/reference_index.rs` (`MemoryReferenceIndex::parse`), `crates/mokly-graph/src/resource_keys.rs` (`seeds`), `crates/mokly-compare/src/resource_memo.rs:160`, `crates/mokly-compare/src/material_urls.rs` (`css`), `crates/mokly-render/src/postcss_nested.rs:92`, `crates/mokly-graph/src/cache.rs` (`RenderCache`).
+- **Reason:** The performance orchestrator's call of 2026-11-18 allows a memo for `MemoryReferenceIndex::parse` only when it is pure and a measurement shows a gain, and nobody measured these sites yet.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Style memo:** `MemoryReferenceCache` in `crates/mokly-css/src/reference_cache.rs`. It keeps each `syntax::references` result by the SHA-256 digest of its text, within a fixed byte bound. Each result equals a direct scan.
+  - **Render runtime:** `Runtime` in `crates/mokly-render/src/runtime.rs`, the render services of one command. It owns one style memo with a 4 MiB bound, and a base runtime takes the memo of its head runtime.
+  - **`DeliveryInputs`:** the `mokly-graph` struct that carries the shared stores of the render runtime into each generation.
+- **Background:**
+  - The render runtime passes its style memo to each generation through `DeliveryInputs`. The `MemoryReferenceIndex` of each session reads the inline style scans of `Walker::collect` through it.
+  - These scans of the same classification still call `mokly_css::syntax::references` directly on each edit:
+    - `resource_edges::urls`, which `MemoryReferenceIndex::parse` calls once for each referenced CSS or HTML file of a generation. The HTML branch scans inline styles through `references::collect`.
+    - `resource_keys::seeds`, the template seeds of planning, through `references::collect`.
+    - `resource_memo.rs:160` and `material_urls::css` on the comparison side.
+    - `postcss_nested.rs:92`, the import scan of nested PostCSS sources.
+  - The orchestrator's profile of `main` `2e48d7dbe` on the `mokly-cloud` catalogue (2026-11-18) gave `MemoryReferenceIndex::parse` and `resource_edges::urls` about 10% of the document validation samples. No profile names the other sites.
+  - These sites can scan whole stylesheets, so a shared bound sized for inline styles can be too small for them.
+- **Problem:** The sites above scan unchanged texts again on each edit, and their cost is unmeasured.
+- **Impact if no action:** Each edit keeps the repeated scans of these sites. The orchestrator's estimate gives about 10% of the validation samples to the parse path alone.
+- **Root question:** Which reference scans of the Changes classification use the shared style memo, and which owner hands it to them?
+- **Options:**
+  - **A.** Measure first. Profile `review.compare-views` on `mokly-cloud` with this memo in place, and give each site its share of the samples. Route only the sites with a gain. Effort: Small.
+  - **B.** Route `resource_edges::urls` and `resource_keys::seeds` through the memo of the index, and size the bound for whole stylesheets with a measured charge. Effort: Medium.
+  - **C.** Do B, and give `ParsedCssCache` a method with a default body that scans directly. Let `MemoryParsedCss` answer it from the runtime memo, and use it in `resource_memo.rs` and `material_urls::css`. Route `postcss_nested` through the runtime memo too. Effort: Medium.
+  - **D.** Move the memo behind the render cache: add `RenderCache::style_references`, answered by `MemoryCache` from its own bounded memo. Every generation that gets the shared render cache then reaches the memo without plumbing through the runtime. The render cache then holds two stores with two bounds. Effort: Medium.
+- **Left out:** A process-wide memo, because the architecture rules forbid a hidden global. A memo field on `Engine` in `mokly-compare`, because C reaches the same scans through the existing `ParsedCssCache` and keeps the `Engine` test literals.
+- **Wider fix:** D. A generation that gets the shared render cache cannot miss the memo, also on a new runtime path.
+- **Previous examples:** `MemoryParsedCss` in `crates/mokly-css/src/parsed_cache.rs` shares parsed sheets by digest across paths and sides.
+- **Recommendation:** B after A shows a gain. The orchestrator's call needs the measurement, and the parse path is the only site with a profile share. D best protects the codebase.
+- **Action:** fix after merge, apply B, because the orchestrator's call of 2026-11-18 needs a measured gain first, and these sites lie outside the files of that branch.

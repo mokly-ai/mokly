@@ -77,7 +77,7 @@ impl GitRepository {
             entries = tree::parse(&listing, limits)?;
         }
         if let Some(kept) = kept {
-            kept.keep(commit, listing);
+            kept.keep(commit, &listing);
         }
         Ok(entries)
     }

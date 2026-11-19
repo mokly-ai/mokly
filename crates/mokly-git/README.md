@@ -123,9 +123,10 @@ owns the source identity and the filter rule.
 attributes again in each call. A `KeptListing` keeps the tree listing of the
 last call after its missing-object preflight passed. When the next listing of
 that commit is equal, the call skips the preflight, because the preflight
-would check the same objects. `MemoryKeptListing` keeps one listing in memory.
-The default `checkout_identity_kept` returns `None`, and the caller then reads
-`checkout_identity`.
+would check the same objects. `MemoryKeptListing` keeps the SHA-256 digest of
+one listing in memory. The default `checkout_identity_kept` returns `None`.
+Callers read the identity through `checkout_identity_with` on
+`dyn Repository`, which then reads `checkout_identity`.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change

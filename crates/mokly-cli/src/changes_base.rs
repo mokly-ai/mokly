@@ -138,7 +138,7 @@ impl NativeBase {
             return Err(Error::Cancelled);
         }
         request.steps.step(Step::Rendering);
-        let runtime = Arc::new(Runtime::new(
+        let mut runtime = Runtime::new(
             tree.clone(),
             self.runtime.dependency_tree.clone(),
             self.runtime.physical_inputs.clone(),
@@ -147,7 +147,9 @@ impl NativeBase {
             self.runtime.workers.clone(),
             VERSION.into(),
             base.clone(),
-        ));
+        );
+        runtime.style_references = self.runtime.style_references.clone();
+        let runtime = Arc::new(runtime);
         let builder: &dyn CatalogueBuilder = &Builder {
             tree,
             discovery: Arc::new(Discovered(inventory)),

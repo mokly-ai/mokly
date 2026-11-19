@@ -105,3 +105,7 @@ pub mod asset_delivery;
 
 mod session_collection;
 mod validation_summary;
+
+#[cfg(test)]
+#[path = "_tests_/style_memo_tests.rs"]
+mod style_memo_tests;

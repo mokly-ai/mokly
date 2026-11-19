@@ -1,5 +1,5 @@
-//! The reference memo gives the direct scan of each text, scans equal text once, and keeps
-//! its byte bound.
+//! The reference memo gives the direct scan of each text, reuses the scan of an equal text
+//! that it still holds, and keeps its byte bound.
 
 use std::thread;
 

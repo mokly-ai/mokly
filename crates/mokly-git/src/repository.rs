@@ -84,7 +84,8 @@ pub trait Repository: Send + Sync {
     /// The identity of `checkout_identity`, read again with the current configuration and
     /// attributes. A tree listing equal to the listing in `kept` skips the object check
     /// that the kept listing passed, and a newly checked listing goes into `kept`. None
-    /// means that this repository has no such read, so the caller reads `checkout_identity`.
+    /// means that this repository has no such read. Callers use `checkout_identity_with`,
+    /// which then reads `checkout_identity`.
     fn checkout_identity_kept(
         &self,
         _commit: &ObjectId,
@@ -166,6 +167,25 @@ mod repository_tests;
 #[cfg(test)]
 #[path = "_tests_/tree_requests_tests.rs"]
 mod tree_requests_tests;
+
+impl dyn Repository + '_ {
+    /// The checkout identity of `commit`. With `kept`, a repository that has the kept read
+    /// of `checkout_identity_kept` uses it. Each other read goes to `checkout_identity`,
+    /// through this trait object, so that a test double that answers only
+    /// `checkout_identity` keeps its answer.
+    pub fn checkout_identity_with(
+        &self,
+        commit: &ObjectId,
+        kept: Option<&dyn KeptListing>,
+    ) -> Result<CheckoutIdentity> {
+        if let Some(kept) = kept
+            && let Some(identity) = self.checkout_identity_kept(commit, kept)?
+        {
+            return Ok(identity);
+        }
+        self.checkout_identity(commit)
+    }
+}
 
 impl fmt::Debug for dyn Repository + '_ {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
