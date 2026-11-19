@@ -89,7 +89,8 @@ available slot while the worker that holds its generation is busy. The launch
 root is the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
-after a successful render. The pool bound covers all roots.
+after a successful render request. A warm-up replay does not move it. The pool
+bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
 event. PostCSS context affinity prevents duplicate workers. A busy affine
 request does not block independent work on another available slot. Returning
@@ -115,8 +116,8 @@ remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
 
-The pool keeps the last 30 successful render calls of the newest head
-generation. After the return pass starts a head worker, the next steps warm
+The pool keeps the last 30 successful render requests of the newest head
+generation, and no replay. After the return pass starts a head worker, the next steps warm
 it up while no request waits and Serve holds no claim. A warm-up sends the
 missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
 then replays the recorded renders, one call at a time, and discards each
@@ -360,8 +361,9 @@ never win the rank. Calls without a generation keep FIFO order, and context
 affinity and the pass preference still come first. Parallel renders use every
 available slot and start no process. Return warm-up tests check the order of
 the preparation and the replays, the bound of 30 calls, the handover to a
-waiting request, the pause for a claim, the quiet flag of warm-up calls, and
-each end of a warm-up. Recipe store tests
+waiting request, the pause for a claim, the quiet flag of warm-up calls, the
+render count of replays, the warm head after replays, and each end of a
+warm-up. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -397,7 +399,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, the
   `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
-  records each successful head bundle and render.
+  records each successful head bundle and render request.
 - [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines `Warmups`, the
   recorded head render calls and the pending warm-ups, and
   `Pool::maintain_warmup`, which runs one warm-up step when no return step

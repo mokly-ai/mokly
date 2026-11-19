@@ -53,6 +53,11 @@ after the call in flight. The warm-up of that process continues when the pool
 is idle again. A request that finds no idle process makes the same choice as
 when the process runs a request.
 
+Decision: a replay does not move the warm head process. Rejected: a move at
+each replay, because background timing would then decide which process stays
+protected from base requests, and each warmed process holds the same
+generation, so the move gains nothing.
+
 Decision: the warm-up runs only while the pool is idle. Rejected: a warm-up
 beside requests, because CPU work beside a bundle competes with the core and
 can cancel the gain. Rejected: a stop only when a request waits, because a call

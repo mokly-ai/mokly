@@ -25,7 +25,7 @@
     process evaluates it once and then renders from it.
   - **Warm head process:** the process that bundled the newest head
     generation, or the process that last rendered it after a successful
-    render.
+    render request. A warm-up replay does not move it.
   - **Kept base:** the captured base side that Serve keeps between Changes
     classifications.
 - **Background:**

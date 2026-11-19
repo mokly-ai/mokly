@@ -8,7 +8,7 @@
   with the return warm-up as a third owner.
 - **Location:** `crates/mokly-sidecar/src/pool_return.rs:54`,
   `crates/mokly-sidecar/src/pool_releases.rs:109`,
-  `crates/mokly-sidecar/src/pool_warmup.rs` (`Pool::claim_warmup`), and
+  `crates/mokly-sidecar/src/pool_warmup.rs:148` (`Pool::claim_warmup`), and
   `crates/mokly-cli/src/serve_pool.rs`.
 - **Reason:** The maintenance paths already take slots outside Serve admission
   on main, independently of memory admission.

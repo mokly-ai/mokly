@@ -14,8 +14,10 @@ The launch root of the pool, the working repository, is the head root. Every
 other source root is a base root. A head request and a base request are
 requests in those roots. The newest head generation is the generation of the
 last successful `bundle` in the head root. The warm head process is the
-process that bundled that generation. After a successful render of that
-generation, the warm head process is the process that rendered it last.
+process that bundled that generation. After a successful render request of
+that generation, the warm head process is the process that rendered it last. A
+[warm-up](./mokly-sidecar-return-warmup.md#warm-up-steps) replay does not move
+it.
 
 A base request takes the warm head process only when no other idle process
 and no empty slot is available to it. So base work still uses every slot
@@ -71,6 +73,15 @@ instead of 3.14 s, and its penalty over later edits fell from 0.47 s to
 0.26 s. Each process spent about 0.33 s of CPU on it. Rejected: 120 renders,
 because they cut the penalty only to 0.21 s for about 0.7 s of CPU on each
 process.
+
+The warm-up raises the peak memory demand early in a session. On that
+catalogue, in two sessions of 10 edits each, it was about 200 MiB higher at the
+first Changes and about 550 MiB higher after the first edit. It met main by the
+third to fifth edit, and the session peak stayed within 1%: 3,988 MiB against
+3,953 MiB. Decision: accept that memory. Rejected: a bound of 2% on the peak
+memory demand of the first three edits, because every session on main reaches
+the same level after three to five edits, and the session peak sets the risk of
+running out of memory.
 
 When the pass cannot confirm that a process that it ended has exited, it takes
 only that slot out of use. The pool keeps owning that process, so the stop
