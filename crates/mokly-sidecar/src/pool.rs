@@ -17,9 +17,9 @@ use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
-use crate::workers::{Clock, SpawnFailure, WorkerFactory};
+use crate::workers::{Clock, SpawnFailure, WorkerControl, WorkerFactory};
 
-/// Wake the Serve owner when a pending head return can make progress.
+/// Wake the Serve owner when a pending head return or warm-up can make progress.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
 pub trait ReturnWake: Send + Sync {
     /// Record ready maintenance without waiting for a process.
@@ -43,7 +43,7 @@ pub trait SidecarPool: Send + Sync {
     fn release_context(&self, context: &str);
     /// Record one return pass without waiting for a process.
     fn schedule_head_return(&self) {}
-    /// Replace at most one idle base process, returning whether work was taken.
+    /// Return one idle base process or warm up one returned process, returning whether work was taken.
     fn maintain_head_return(&self) -> Result<bool> {
         Ok(false)
     }
@@ -191,16 +191,7 @@ impl Pool {
             && let Err(error) = self.cleanup(current)
         {
             tracing::warn!(%error, "sidecar cleanup failed");
-            let stopped = {
-                let mut state = self.lock();
-                state.replacement_reasons.insert(index, Reason::Replacement);
-                state.stopped
-            };
-            let _ = if stopped {
-                current.control.kill()
-            } else {
-                Reason::Replacement.kill(current.control.as_ref())
-            };
+            let _ = self.replace(index, current.control.as_ref());
             slot = None;
         }
         let mut state = self.lock();
@@ -219,6 +210,20 @@ impl Pool {
         }
         state.head.notify();
         self.ready.notify_all();
+    }
+
+    /// End a process that a failure left unusable, so that the next request replaces it.
+    pub(super) fn replace(&self, index: usize, control: &dyn WorkerControl) -> Result<()> {
+        let stopped = {
+            let mut state = self.lock();
+            state.replacement_reasons.insert(index, Reason::Replacement);
+            state.stopped
+        };
+        if stopped {
+            control.kill()
+        } else {
+            Reason::Replacement.kill(control)
+        }
     }
 }
 

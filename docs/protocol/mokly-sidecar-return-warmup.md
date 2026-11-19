@@ -1,0 +1,73 @@
+# Sidecar Return Warm-Up
+
+This page expands the
+[background return](./mokly-sidecar-root-scheduling.md#background-return). A
+head process that a return pass starts holds no generation. The warm-up
+prepares the newest head generation on that process and replays recent renders
+of that generation. So the first edit after Serve starts finds warm processes.
+
+## Recorded Renders
+
+The pool records each successful render request of the newest head generation
+on a head process. It keeps the last 30 such requests, in the order in which
+they finished. A successful head `bundle` of another generation clears the
+record. A replayed render is not recorded.
+
+## Warm-Up Steps
+
+Each head process that a return pass starts gets one warm-up. The warm-up
+sends the `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls
+of the newest head generation that the process lacks, in that order. Then it
+replays the recorded render requests, oldest first. The pool discards each
+result. It stores, publishes, and caches nothing from a warm-up, and a warm-up
+changes no output. A replayed render does not change the warm head process. It
+counts toward the render-count rule of
+[sampling and recycling](./mokly-sidecar-memory.md#sampling-and-recycling).
+
+Only Serve runs a warm-up, on the background worker of the return pass. A
+return step comes first, so a warm-up starts only when no return step can
+start. The warm-up sends one call at a time, and it warms one process at a
+time. It starts no process, and it holds no process except the one that it
+warms.
+
+The warm-up sends its next call only while no request waits in the pool queue
+and Serve has no admitted sidecar call. A request that waits takes the process
+after the call in flight. The warm-up of that process continues when the pool
+is idle again. A request that finds no idle process makes the same choice as
+when the process runs a request.
+
+Decision: the warm-up runs only while the pool is idle. Rejected: a warm-up
+beside requests, because CPU work beside a bundle competes with the core and
+can cancel the gain. Rejected: a stop only when a request waits, because a call
+that Serve admitted could then run on another process beside the warm-up.
+
+Decision: an interrupted warm-up continues later. Rejected: an end at the first
+request, because one request after the publication could then leave the
+process cold.
+
+## End
+
+The warm-up of a process ends when it has replayed every recorded request, when
+a call fails, when the process ends or leaves the head root, and when the
+process holds another head generation. Every warm-up ends when a newer head
+generation is bundled, when the newest head generation is released, when the
+pool stops, and when a failed reap ends background return. A process that a
+return pass starts later gets a warm-up of the newest head generation at that
+time.
+
+A warm-up never sends a call of an older head generation. It never evaluates a
+generation on a process that holds another head generation.
+
+After a failed call, the pool keeps or replaces the process as after a failed
+request. The failure reaches no output. A later request that needs the same
+input reports its own failure.
+
+Decision: a newer head generation ends every warm-up. Rejected: a warm-up of
+the newer generation, because the renders of the edit load it, and the warm-up
+would compete with them. Rejected: a warm-up on a process that holds another
+head generation, because an attempt that held two evaluated head generations on
+one process raised the peak memory demand by 8%.
+
+Decision: a failed warm-up call stays silent. Rejected: a diagnostic, because
+the failure changes no result, and the request that needs the input reports a
+real failure.

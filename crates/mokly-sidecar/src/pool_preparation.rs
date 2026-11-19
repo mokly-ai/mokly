@@ -169,7 +169,8 @@ impl Pool {
         self.restore(slot, generation, description_needed, preparation)
     }
 
-    fn restore(
+    /// Send the calls that a preparation snapshot names, one at a time.
+    pub(super) fn restore(
         &self,
         slot: &mut Slot,
         generation: &str,
@@ -214,7 +215,8 @@ impl Pool {
         Ok(())
     }
 
-    fn prerequisite(&self, slot: &mut Slot, call: Call) -> Result<()> {
+    /// Send one call outside the request queue and discard its result.
+    pub(super) fn prerequisite(&self, slot: &mut Slot, call: Call) -> Result<()> {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
@@ -224,7 +226,8 @@ impl Pool {
     }
 }
 
-struct Preparation {
+/// The retained inputs that one preparation sends to a slot.
+pub(super) struct Preparation {
     recipe: Option<Recipe>,
     maps: Option<CssModules>,
     bindings: Option<Arc<Bindings>>,
@@ -238,7 +241,8 @@ struct Recipe {
 }
 
 impl Preparation {
-    fn snapshot(
+    /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
+    pub(super) fn snapshot(
         state: &State,
         slot: &Slot,
         generation: &str,

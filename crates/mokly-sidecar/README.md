@@ -115,6 +115,18 @@ remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
 
+The pool keeps the last 30 successful render calls of the newest head
+generation. After the return pass starts a head worker, the next steps warm
+it up while no request waits and Serve holds no claim. A warm-up sends the
+missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
+then replays the recorded renders, one call at a time, and discards each
+result. A request takes the worker after the call in flight, and the warm-up
+continues later. A newer head generation, a stop, a failed call, or another
+loaded head generation ends it. A failed call keeps or replaces the worker as
+a failed request does. The
+[return warm-up contract](../../docs/protocol/mokly-sidecar-return-warmup.md)
+owns these rules.
+
 After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
 and directory lists in a bounded memory store. Captured evidence is complete
@@ -343,7 +355,9 @@ check that a worker with every input that a call needs comes before other
 holders and non-holders, with FIFO ties. Stale epochs and missing records
 never win the rank. Calls without a generation keep FIFO order, and context
 affinity and the pass preference still come first. Parallel renders use every
-available slot and start no process. Recipe store tests
+available slot and start no process. Return warm-up tests check the order of
+the preparation and the replays, the bound of 30 calls, the handover to a
+waiting request, the pause for a claim, and each end of a warm-up. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -377,9 +391,13 @@ spawn the built sidecar and render a component, screen, story, and page. The
   generation state that a call needs. Growth reuses a free slot before it adds
   a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
-  warm head worker, the candidates of the return pass, and the
-  `return_disabled` flag, and `Pool::record_head`, which records each
-  successful head bundle and render.
+  warm head worker, the candidates of the return pass, the
+  `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
+  records each successful head bundle and render.
+- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines `Warmups`, the
+  recorded head render calls and the pending warm-ups, and
+  `Pool::maintain_warmup`, which runs one warm-up step when no return step
+  can run.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
   runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,
