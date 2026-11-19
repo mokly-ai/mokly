@@ -1458,7 +1458,7 @@ independent check in `.context/storybook-support/spike-18-check/REPORT.md`.
       and 32 and design calls 18 and 22. When the spike refutes E, give
       decision 18 back to the user with the evidence.
       Branch: `conductor/storybook-support-j-spike-for-decision-18`.
-- [ ] Commit, push, and open a pull request into this branch. The prototype
+- [x] Commit, push, and open a pull request into this branch. The prototype
       stays under `.context/`.
       Branch: `conductor/storybook-support-j-spike-for-decision-18`.
 
