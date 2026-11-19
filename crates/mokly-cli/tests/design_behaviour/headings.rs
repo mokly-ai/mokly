@@ -26,7 +26,7 @@ pub(crate) fn check() {
     let fixture = catalogue::shared();
     let records = records::read(&fixture);
     let expected = records["headings"].as_object().unwrap();
-    assert_eq!(expected.len(), 8);
+    assert_eq!(expected.len(), 9);
     let paths: Vec<_> = fixture
         .generation
         .catalogue()
@@ -36,7 +36,7 @@ pub(crate) fn check() {
         .filter(|entry| entry.metadata.path.starts_with("design/components/"))
         .map(|entry| entry.metadata.path.clone())
         .collect();
-    assert_eq!(paths.len(), 53);
+    assert_eq!(paths.len(), 56);
     let mut seen = BTreeSet::new();
     for path in paths {
         for artifact in fixture.views(&path) {

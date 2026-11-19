@@ -23,7 +23,7 @@ import { definePage } from '@mokly/mokly';
 import { componentComparison, actionComparison } from './design/components/parts/comparison_fixtures.js';
 import { COMPONENT_PAGES, CONTROLS_PAGES, LIMIT_PAGES } from './design/components/parts/destinations.js';
 import { SOLE_CHANGES } from './design/components/parts/navigation_tree.js';
-const states = ['comparison', 'overlay', 'difference', 'overlay-tall', 'removed', 'style-changed'];
+const states = ['comparison', 'overlay', 'difference', 'overlay-tall', 'removed', 'style-changed', 'story-failed-changes'];
 const headings = Object.fromEntries(states.map(state => [COMPONENT_PAGES[state], componentComparison(state)]));
 headings[CONTROLS_PAGES.comparison] = actionComparison;
 headings[LIMIT_PAGES.removed] = componentComparison('removed');
