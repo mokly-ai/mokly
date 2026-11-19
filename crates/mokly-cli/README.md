@@ -155,7 +155,9 @@ the classification, its capture scope, and the command stop can cancel it.
 `ServeBase::keep` installs an eligible base in the slot inside the
 classification's commit callback, and it detaches the lifetime there. After
 that, only the command stop cancels the work of the kept base. A base that
-Serve does not keep stays on the classification lifetime.
+Serve does not keep stays on the classification lifetime. In every command,
+`NativeBase` builds the base runtime with `Runtime::for_base`, so the base
+shares the style memo of the head runtime.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate

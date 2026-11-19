@@ -252,7 +252,8 @@ view after the edit and counts real process starts and hello calls.
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
   the head runtime of Serve its plan record owner. A base runtime never gets
-  one.
+  one. `Runtime::for_base` builds the runtime of one base preparation, which
+  shares the services and the style memo of the head runtime.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only

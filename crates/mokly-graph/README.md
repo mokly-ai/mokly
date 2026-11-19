@@ -251,6 +251,10 @@ of a wrapper apply. An override must keep those checks.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+Each `MemoryReferenceIndex` reads the inline style scans of the walk through
+the style memo that `DeliveryInputs` passes in. The render runtime passes one
+memo to all its generations, so an equal inline style text reuses a scan that
+the bounded memo still holds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
@@ -318,7 +322,8 @@ retention disabled.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
-  `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation.
+  `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation
+  and the stores that related generations share.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
@@ -353,6 +358,9 @@ retention disabled.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
+- [`src/reference_index.rs`](./src/reference_index.rs) defines
+  `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
+  referenced file of one generation and its reads of the style memo.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
 - [`src/comparison_input.rs`](./src/comparison_input.rs) defines

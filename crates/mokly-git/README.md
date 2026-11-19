@@ -118,6 +118,13 @@ upstream, also changes the digest. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
 owns the source identity and the filter rule.
 
+The settings read of `source_key` and `checkout_identity` lists the whole tree
+with blob sizes. Git prints a size only for a blob that the object store
+holds, and `BAD` for a missing blob. So when each blob record has a decimal
+size, the read skips the missing-object preflight, because the preflight
+could find nothing missing. Any other size runs the preflight, as
+`Repository::list` does.
+
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
 time and inode. `Repository::read_extracted` and
