@@ -1,6 +1,7 @@
 // Fixed Git identity and isolated CLI process state for fixture generation.
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative } from "node:path";
 
@@ -92,7 +93,7 @@ export async function fixtureRuntime(root, temporary) {
 }
 
 function assertInside(parent, path) {
-  const child = relative(parent, path);
+  const child = relative(realpathSync(parent), realpathSync(path));
   assert(
     child && !child.startsWith("..") && !isAbsolute(child),
     `CLI state escaped its private root: ${path}`,

@@ -1,5 +1,8 @@
 //! Imported cloud contracts run against the merged runner and workspace scripts.
 
+// These contracts run CI scripts and cloud stages that require Linux.
+#![cfg(target_os = "linux")]
+
 mod ast_grep_tests;
 mod ci_capacity_tests;
 mod deployment_apply_workflow_tests;

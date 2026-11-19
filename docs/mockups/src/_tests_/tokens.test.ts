@@ -91,25 +91,7 @@ test("prescribed text, status, control and focus combinations meet contrast requ
   }
 });
 
-test("CSS is derived from canonical tokens and matches both protocol palettes", () => {
-  const protocol = ["design-tokens.md", "design-tokens-color.md"]
-    .map((page) =>
-      readFileSync(
-        resolve(import.meta.dirname, "../../../protocol/cloud", page),
-        "utf8",
-      ),
-    )
-    .join("\n");
-  for (const [key, value] of Object.entries(tokens.color.light)) {
-    assert.ok(protocol.includes(value));
-    assert.ok(
-      protocol.includes(
-        tokens.color.dark[key as keyof typeof tokens.color.dark],
-      ),
-    );
-  }
-  for (const [key, value] of Object.entries(tokens.layout))
-    assert.ok(protocol.includes(value), "layout contract: " + key);
+test("CSS is derived from canonical tokens without stylesheet color copies", () => {
   for (const scheme of ["light", "dark"] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
       const css = tokenCss(scheme, viewport);

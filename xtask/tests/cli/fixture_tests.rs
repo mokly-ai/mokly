@@ -7,6 +7,42 @@ use serde_json::{Value, json};
 use super::support::{Fixture, FixtureFactory, TemporaryFixtures, failure, repository, success};
 
 #[test]
+fn fixture_runtime_resolves_private_root_symlinks_and_rejects_escapes() {
+    let factory: &dyn FixtureFactory = &TemporaryFixtures;
+    let fixture = factory.create();
+    fixture.copy("xtask/scripts/mokly-fixture-runtime.mjs");
+    fixture.write("private-root/.keep", "");
+    fixture.write("outside-root/.keep", "");
+    fixture.link("private-link", &fixture.root().join("private-root"));
+    success(fixture.run(
+        "node",
+        &[
+            "--input-type=module",
+            "--eval",
+            r#"import assert from 'node:assert/strict';
+import { mkdirSync, realpathSync, symlinkSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fixtureRuntime } from './xtask/scripts/mokly-fixture-runtime.mjs';
+const runtime = await fixtureRuntime(process.cwd(), resolve('private-link'));
+const cache = (path) => runtime.run(process.execPath,
+  ['-e', "console.log('Mokly cache: ' + process.argv[1])", path], process.cwd());
+mkdirSync('private-link/runtime/cache/inside');
+const inside = realpathSync('private-link/runtime/cache/inside');
+assert.equal(cache(inside), `Mokly cache: ${inside}`);
+const outside = realpathSync('outside-root');
+assert.throws(() => cache(outside), {
+  code: 'ERR_ASSERTION', message: /^CLI state escaped its private root:/,
+});
+const escape = resolve('private-link/runtime/cache/escape');
+symlinkSync(outside, escape, 'dir');
+assert.throws(() => cache(escape), {
+  code: 'ERR_ASSERTION', message: /^CLI state escaped its private root:/,
+});"#,
+        ],
+    ));
+}
+
+#[test]
 fn missing_fixture_dependencies_explain_how_to_install_them() {
     let factory: &dyn FixtureFactory = &TemporaryFixtures;
     let fixture = factory.create();

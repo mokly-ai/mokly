@@ -52,6 +52,7 @@ once. The selected Native suite repeats those checks on the hosted macOS and
 Windows runners, for the `mokly-*` crates and `xtask` only. On Linux, the
 Native suite also selects only the Mokly crates and `xtask`. The cloud Rust
 suite covers cloud crates. Required CI requires both native jobs.
+The cloud contract tests of `xtask` run on Linux only.
 Decision: the macOS and Windows runs leave out the `mkc-` crates, because
 those crates use Diesel with Postgres, which needs `libpq`.
 

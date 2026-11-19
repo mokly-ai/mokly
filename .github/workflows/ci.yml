@@ -535,6 +535,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y e2fsprogs postgresql-16 libpq-dev
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
+          sudo -u postgres createdb mkc_test
+          pg_isready -h localhost -p 5432
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
       - name: Install pinned standalone image tools
         run: bash infra/scripts/install-build-tools.sh
