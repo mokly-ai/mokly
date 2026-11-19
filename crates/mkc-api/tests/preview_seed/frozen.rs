@@ -36,7 +36,7 @@ fn build(pull_request: Option<u32>, patch: &str) -> Catalogue {
     let output = Command::new("python3")
         .args([
             script.to_str().unwrap(),
-            "mokly-ai/mokly-cloud",
+            "mokly-ai/mokly",
             HEAD,
             "preview-seed",
             "mokly.config.json",

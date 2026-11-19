@@ -6,7 +6,7 @@ import importPlugin, { createNodeResolver } from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-import cloudRules from "./apps/eslint-rules.mjs";
+import cloudRules from "./rules/eslint/cloud-rules.mjs";
 import kebabCaseFileNames from "./scripts/eslint/kebab-case-file-names.mjs";
 import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.mjs";
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";

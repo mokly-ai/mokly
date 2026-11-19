@@ -58,7 +58,7 @@ test("the repository lint reads catalogue sources and skips generated output", a
     ".gitignore",
     "eslint.config.js",
     "package.json",
-    "apps/eslint-rules.mjs",
+    "rules/eslint/cloud-rules.mjs",
     ...eslintModules,
   ])
     await fixture.write(

@@ -1,4 +1,4 @@
-// Evaluated as an ESM entry from ts/ so the public package resolves normally.
+// Evaluated as an ESM entry from the repository root so the public package resolves normally.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";

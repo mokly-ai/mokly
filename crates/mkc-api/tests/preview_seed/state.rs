@@ -102,7 +102,7 @@ impl Harness {
         assert_eq!(record.state, "ready");
         assert_eq!(record.plan, "team");
         assert_eq!(record.visibility, "private");
-        assert_eq!(record.repository, "mokly-ai/mokly-cloud");
+        assert_eq!(record.repository, "mokly-ai/mokly");
         assert_eq!(record.config_path, "mokly.config.json");
         assert_eq!(
             record.pull_request,

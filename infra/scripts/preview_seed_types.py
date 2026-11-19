@@ -137,7 +137,7 @@ def validate_evidence(configuration):
         or proof.get("environment") != configuration.environment
         or proof.get("revision") != configuration.revision
         or proof.get("workspaceSlug") != "mokly-ai"
-        or proof.get("projectSlug") != "mokly-cloud"
+        or proof.get("projectSlug") != "mokly"
         or proof.get("publicationState") != "ready"
         or proof.get("pullRequest") != configuration.pull_request
         or proof.get("uploadStatus") not in (200, 201)

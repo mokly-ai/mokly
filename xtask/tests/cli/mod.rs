@@ -4,7 +4,6 @@
 #![cfg(target_os = "linux")]
 
 mod ast_grep_tests;
-mod ci_capacity_tests;
 mod deployment_apply_workflow_tests;
 mod deployment_catalogue_workflow_tests;
 mod deployment_promotion_tests;

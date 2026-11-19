@@ -50,9 +50,9 @@ pub(super) fn project() -> Reply {
             id: ProjectId(Uuid::from_u128(3)),
             workspace_id: OrganizationId(Uuid::from_u128(2)),
             name: "Mokly Cloud".to_owned(),
-            slug: "mokly-cloud".parse().unwrap(),
+            slug: "mokly".parse().unwrap(),
             workspace_slug: "mokly-ai".parse().unwrap(),
-            repository: "mokly-ai/mokly-cloud".to_owned(),
+            repository: "mokly-ai/mokly".to_owned(),
             config_path: "mokly.config.json".to_owned(),
             visibility: Visibility::Private,
             require_approval: false,
@@ -63,7 +63,7 @@ pub(super) fn project() -> Reply {
             can_request_builds: false,
             version: 1,
         },
-        canonical_slug: "mokly-cloud".parse().unwrap(),
+        canonical_slug: "mokly".parse().unwrap(),
         canonical_workspace_slug: "mokly-ai".parse().unwrap(),
     }))
 }
@@ -106,7 +106,7 @@ pub(super) fn publication() -> Ingested {
             expired_at: None,
         },
         organization_slug: "mokly-ai".parse().unwrap(),
-        project_slug: "mokly-cloud".parse().unwrap(),
+        project_slug: "mokly".parse().unwrap(),
         replay: false,
     }
 }

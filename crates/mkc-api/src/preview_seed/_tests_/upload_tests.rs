@@ -29,7 +29,7 @@ fn authorization() -> UploadAuthorization {
     UploadAuthorization::for_tests(
         project(),
         "mokly-ai".parse().unwrap(),
-        "mokly-cloud".parse().unwrap(),
+        "mokly".parse().unwrap(),
     )
 }
 
@@ -49,7 +49,7 @@ fn ingested() -> Ingested {
             expired_at: None,
         },
         organization_slug: "mokly-ai".parse().unwrap(),
-        project_slug: "mokly-cloud".parse().unwrap(),
+        project_slug: "mokly".parse().unwrap(),
         replay: false,
     }
 }

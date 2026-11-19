@@ -16,7 +16,7 @@
   - The same section rejects a fixed list of linted directories, because a directory missing from the list goes unlinted without a warning.
   - In the old cloud repository, before PR #74, the lint script ran `eslint ts`. ESLint never read the catalogue sources under `docs/mockups/src`, and no test failed.
   - PR #74 added `lint-scope.test.ts` to the mockup policy suite. The `cloud-mockups` suite runs it through `npm run mockups:test`.
-  - The test copies `.gitignore`, `eslint.config.js`, `package.json`, `apps/eslint-rules.mjs` and the modules under `scripts/eslint/` into a scratch Git repository, and it links the root `node_modules`.
+  - The test copies `.gitignore`, `eslint.config.js`, `package.json`, `rules/eslint/cloud-rules.mjs` and the modules under `scripts/eslint/` into a scratch Git repository, and it links the root `node_modules`.
   - It writes probes at four source paths and at three Mokly output paths. It runs the lint script and expects only the four source probes to fail. The source probes are under `docs/mockups/src/entries/`, `docs/mockups/src/screens/`, `docs/mockups/src/_tests_/` and `apps/mockups/src/`.
   - On 2026-10-31 the test ran in about 0.75 seconds.
   - The old cloud runner also had the stage test `eslint_stage_rejects_unused_typescript`, with one probe at `ts/app/src/failure.ts`. That test did not move into this repository.

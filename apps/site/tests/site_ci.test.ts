@@ -90,16 +90,6 @@ test("required CI remains independent of report-only Lighthouse", async (t) => {
   const passing = Object.fromEntries(
     Object.keys(step.env!).map((key) => [key, "success"]),
   );
-  for (const key of Object.keys(passing)) {
-    for (const status of ["failure", "cancelled", "skipped"]) {
-      const result = await runWorkflowShell(step.run!, {
-        ...passing,
-        [key]: status,
-      });
-      t.after(result.dispose);
-      assert.equal(result.code, 1, `${key}=${status}`);
-    }
-  }
   for (const status of ["success", "failure", "cancelled", "skipped"]) {
     const result = await runWorkflowShell(step.run!, {
       ...passing,

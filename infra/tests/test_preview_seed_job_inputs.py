@@ -32,7 +32,7 @@ class PreviewSeedJobInputTests(unittest.TestCase):
             self.assertEqual(commands.run_seed(["--validate-evidence"]).returncode, 0)
             proof_path = commands.context / "seed-proof.json"
             proof = json.loads(proof_path.read_text())
-            for field, value in (("revision", "b" * 40), ("viewerUrl", "https://elsewhere.example/"), ("publicationId", "invalid")):
+            for field, value in (("revision", "b" * 40), ("viewerUrl", "https://elsewhere.example/"), ("publicationId", "invalid"), ("projectSlug", "mokly-cloud")):
                 with self.subTest(field=field):
                     proof_path.write_text(json.dumps(dict(proof, **{field: value})))
                     result = commands.run_seed(["--validate-evidence"])

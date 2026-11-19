@@ -17,10 +17,10 @@ use super::identity_validation::{project, workspace};
 use super::service::SeedService;
 
 pub(super) const WORKSPACE_SLUG: &str = "mokly-ai";
-pub(super) const PROJECT_SLUG: &str = "mokly-cloud";
+pub(super) const PROJECT_SLUG: &str = "mokly";
 pub(super) const WORKSPACE_NAME: &str = "Mokly";
 pub(super) const PROJECT_NAME: &str = "Mokly Cloud";
-pub(super) const REPOSITORY: &str = "mokly-ai/mokly-cloud";
+pub(super) const REPOSITORY: &str = "mokly-ai/mokly";
 pub(super) const CONFIG_PATH: &str = "mokly.config.json";
 
 impl SeedService {

@@ -109,7 +109,7 @@ def comment(
         lines.append(f"- Open preview: {app}/auth/preview/callback#secret={secret}")
     if state == "success" and has_proof:
         lines.append(
-            f"- Sample project: {app}/mokly-ai/mokly-cloud/pull-requests/{number}"
+            f"- Sample project: {app}/mokly-ai/mokly/pull-requests/{number}"
         )
     return "\n".join(lines) + "\n"
 

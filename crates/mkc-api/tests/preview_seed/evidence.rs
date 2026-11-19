@@ -41,10 +41,10 @@ pub(crate) fn assert_seeded(
         proof,
         json!({
             "schemaVersion": 1, "environment": environment, "revision": HEAD,
-            "workspaceSlug": "mokly-ai", "projectSlug": "mokly-cloud",
+            "workspaceSlug": "mokly-ai", "projectSlug": "mokly",
             "projectId": proof["projectId"], "publicationId": proof["publicationId"],
             "publicationState": "ready", "pullRequest": pr,
-            "viewerUrl": format!("http://localhost:8081/mokly-ai/mokly-cloud/publications/{}?view=changes", proof["publicationId"].as_str().unwrap()),
+            "viewerUrl": format!("http://localhost:8081/mokly-ai/mokly/publications/{}?view=changes", proof["publicationId"].as_str().unwrap()),
             "uploadStatus": upload_status, "checkedAt": proof["checkedAt"],
         })
     );

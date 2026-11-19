@@ -13,7 +13,7 @@ fn desktop_ci_has_a_cached_binary_and_its_system_dependencies() {
         "ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ matrix.command != 'cloud-desktop' && '1' || '' }}"
     ));
     assert!(text.contains("path: ~/.cache/electron"));
-    assert!(text.contains("key: electron-${{ runner.os }}-${{ runner.arch }}-44.7.2"));
+    assert!(text.contains("key: electron-${{ runner.os }}-${{ runner.arch }}-44.11.3"));
     assert!(text.contains(
         "if: matrix.command == 'cloud-desktop'\n        run: sudo apt-get install -y xvfb"
     ));

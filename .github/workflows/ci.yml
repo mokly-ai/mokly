@@ -441,7 +441,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/electron
-          key: electron-${{ runner.os }}-${{ runner.arch }}-44.7.2
+          key: electron-${{ runner.os }}-${{ runner.arch }}-44.11.3
       - name: Install dependencies
         if: matrix.install_dependencies
         run: npm ci

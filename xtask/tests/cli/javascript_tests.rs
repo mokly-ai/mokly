@@ -71,7 +71,7 @@ fn eslint_stage_rejects_unused_typescript() {
     let fixture = TemporaryFixtures.create();
     scripts(fixture.as_ref(), &["lint"], &[]);
     fixture.copy("eslint.config.js");
-    fixture.copy("apps/eslint-rules.mjs");
+    fixture.copy("rules/eslint/cloud-rules.mjs");
     fixture.copy_tree("scripts/eslint");
     fixture.tools();
     fixture.write("apps/app/src/index.ts", "export const ready = true;\n");

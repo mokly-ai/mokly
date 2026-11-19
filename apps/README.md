@@ -84,7 +84,7 @@ npm exec --workspace @mokly-cloud/mockups -- playwright install chromium
 - `../package-lock.json` — the one lockfile; `npm ci` installs exactly what it records.
 - `app/package.json`, `desktop/package.json`, `mockups/package.json` and `site/package.json` — the workspace `@mokly/*` versions and the exact `@firna/ui`, React Native, Electron and Playwright pins of each project.
 - `app/`, `desktop/`, `mockups/`, `site/` and `worker/` — the five projects, each with its own README; `../packages/tokens/` holds the tokens package.
-- `eslint-rules.mjs` — the ESLint rules of the cloud projects, which the root `eslint.config.js` applies after the repository-wide rules.
+- `../rules/eslint/cloud-rules.mjs` — the ESLint rules of the cloud projects, which the root `eslint.config.js` applies after the repository-wide rules.
 - `tsconfig.json` — the shared TypeScript compiler options that the project configurations extend.
 - `_tests_/scratch.mjs` — `scratchDirectory`, which creates an owned temporary directory for a repository-local test even when the scratch parent is absent, as on a fresh CI runner.
 

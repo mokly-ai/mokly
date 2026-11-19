@@ -117,6 +117,9 @@ class PreviewCommentTests(unittest.TestCase):
         )
         self.assertNotIn("#secret=", body)
         self.assertIn("- Sample project:", body)
+        self.assertIn(
+            "https://pr-42.preview.example.com/mokly-ai/mokly/pull-requests/42", body
+        )
 
     def test_proof_content_and_other_credentials_never_appear(self):
         body = self.render(
