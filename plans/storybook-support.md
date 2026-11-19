@@ -121,8 +121,8 @@ and 11 needed no decision, and Milestone 3 fixes them.
 - **13. Usage of story components: C.** A screen's use of a stories meta's
   `component` records an instance of that stories entry. Rejected: no change,
   A; a `fromStories` helper, B. Reason: projects get usage evidence with no
-  change to their screens. Decision 19 below chose how uses get names.
-  Decision 21 below is open and blocks Milestone 34.
+  change to their screens. Decision 19 below chose how uses get names, and
+  decision 21 below chose how Changes keeps their content.
 - **14. The catalogue and the Storybook sidebar: A.** Storybook story names,
   custom tags, the docs description, and the `dev` tag filter. Paths stay
   file-derived. Rejected: title paths, B; auto titles, C. Reason: no path
@@ -387,6 +387,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   chose L. Each use then has its own region, so without A a text edit inside
   a story component would drop out of Changes.
 - **Action:** ask the user, because A adds a rule to the Changes contract.
+- **Answer:** A, chosen by the user on 2026-11-19.
 
 ### 22. The Vite adapter without Vite
 
@@ -535,7 +536,7 @@ answers. The ledger of the workspaces is in
 | F. Failed stories          | 23 to 25   | Tracks A and B                                   |
 | G. Storybook links         | 26 to 29   | Tracks A and E                                   |
 | H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                            |
-| I. Story component usage   | 34 to 36   | Tracks B and D, and decision 21                  |
+| I. Story component usage   | 34 to 36   | Tracks B and D                                   |
 | J. Spike for decision 18   | 37         | Nothing                                          |
 
 The last milestone of each track runs the targeted tests and the complete
@@ -1021,7 +1022,7 @@ Depends on: 30, 31, 32
 
 ## Milestone 34: Story component usage documentation
 
-Depends on: 8, 17, and the answer to decision 21
+Depends on: 8, 17
 
 Track I. The protocol states the usage rules of decision 13, with the
 answers to decisions 19 and 21.
@@ -1050,7 +1051,9 @@ Screens that render a story component record its use, as decision 13 says.
 - [ ] Warn about each numbered use, with the prop to add: a `key` on a
       product component, or `moklyInstance` on a Mokly wrapper.
 - [ ] Add the configuration field that changes the list of naming props.
-- [ ] Keep the content of each use in Changes as decision 21 chooses.
+- [ ] Keep the content of each use in Changes, as decision 21 chose:
+      `children` and each prop that holds React content become implicit
+      slots, and function props stay out of the props digest.
 - [ ] Test repeated uses, a wrapped component, an edit of a use's children,
       and a changed component that affects a screen, on esbuild and on the
       Vite adapter.
