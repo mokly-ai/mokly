@@ -152,6 +152,78 @@ The task requires every existing freshness decision. The selection code
 proves why HTML and renderer paths differ. Do not extend stored evidence
 or watcher invalidation in this change without a new options check.
 
+### 4. Keep release comparison inputs equal
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** test.
+- **Location:** The ignored release measurement controller.
+- **Background:** Bundle identity includes physical source, dependency, and repository roots. Separate runtime checkouts supplied different roots.
+- **Problem:** Generation fields differed before the core implementation could be isolated.
+- **Impact if no action:** The exact cross-arm comparison cannot complete.
+- **Root question:** How can release measurements isolate the core implementation?
+- **Options:**
+  - **A.** Use main's runtime checkout, dependency tree, dist, and normal CLI entry. Atomically install each immutable release binary before its run. Verify and restore the packaged executable. Effort: Small.
+  - **B.** Prepare a third shared runtime checkout and dependency tree. This adds setup and another identity to validate. Effort: Medium.
+  - **C.** Use a custom launcher that selects an immutable core directly. This needs a separate environment, signal, and package-selection proof. Effort: Medium.
+  - **D.** Bind the selected executable read-only into each service. This avoids package replacement but adds a mount namespace and another harness adapter. Effort: Small.
+- **Left out:** Separate physical roots retain unequal inputs. A product identity change exceeds this task. Mirrored containers add infrastructure without a required benefit.
+- **Wider fix:** A. One explicit runtime checkout governs every arm and fixture.
+- **Previous examples:** The large fixtures already share their dependency paths. The cloud measurement uses main's dist for both cores.
+- **Recommendation:** A. The fresh options check retained the normal CLI and the saved main runtime identity.
+- **Action:** fix now, apply A. The performance orchestrator made this call on 2026-11-19 under the user's delegation of 2026-11-16.
+
+Reason: physical roots are identity inputs. Keep them equal and change only
+core executable bytes. Source checkouts and Cargo release targets remain
+separate. Pin both source commits and binary digests. Preserve raw evidence.
+Use one shared warm cache per repository. Keep cold and cross-root samples
+outside the controlled means. Compare six-round memory means and spreads.
+Report example phase and process peaks before the PR if its branch mean
+exceeds main by 5%.
+
+The check added option D. Its namespace changes the process context, so A
+remains selected. Root added immutable-source and installed-inode checks.
+The committed-source release build retains the measured binary digest.
+Evidence: `.context/git-command-wait/shared-inputs-options-check.md` and
+`.context/git-command-wait/measurement-inputs-decision.md`.
+
+### 5. Compare intentional generation randomness
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** test.
+- **Location:** The ignored release comparison oracle.
+- **Background:** A non-reusable bundle hashes a random runtime key into its identity. The key reaches the live generation and the comparison URL.
+- **Problem:** Saved main/main React edit controls differ in these two values while all other captured output matches.
+- **Impact if no action:** Intended existing randomness stops the release comparison.
+- **Root question:** How can the comparison prove unchanged captured output when existing identities contain randomness?
+- **Options:**
+  - **A.** Derive a phase policy from actual main/main controls. Exclude only the live generation value and the comparison URL's hash segment in proven phases. Keep every other captured field and within-run freshness check exact. Effort: Small.
+  - **B.** Add separate comparison-route captures outside the timing sample. This broadens public route coverage but cannot expose the private review and snapshot serializations by itself. Effort: Medium.
+- **Left out:** Raw random-value equality cannot complete. Seeds, shared sidecars, or product identity changes alter the fixed runtime. Whole-field removal drops required observations. Consistent renaming adds no check beyond A and the existing within-run generation checks.
+- **Wider fix:** None within the parent's exact two-value limit. A is the confined direct fix.
+- **Previous examples:** The performance orchestrator reports the same React edit rule in workspace 47 on 2026-11-18. Current main/main controls independently prove it.
+- **Recommendation:** A. The fresh options check retained the approved rule and all 36 valid samples.
+- **Action:** fix now, apply A. The performance orchestrator made this call on 2026-11-19 under the user's delegation of 2026-11-16.
+
+Reason: `bundle.ts` creates `randomBytes(24)`. `bundle-recipe.ts` hashes the
+runtime key when reuse evidence is incomplete. The six relevant source files
+are identical between main and the branch. Twelve main/main phase controls
+permit only the three React edit phases. All example and HTML phases and
+React initial retain full comparison. Keep live object presence and other
+fields. Keep every character outside the comparison URL's hash. Validate
+hash shape and preserve raw values. Keep body, detail, document-key, and
+within-run descriptor and generation-change checks.
+
+The control validates captured routes. It does not claim every historical
+comparison route or private review and snapshot serialization. Revalidate
+masked indexes as canonical JSON bytes so scalar types remain distinct.
+Reuse completed valid runs without resampling. Preserve invalid observer
+attempts separately. No product source, setting, timeout, or test changes.
+Evidence: `.context/git-command-wait/generation-rule-options-check.md`,
+`.context/git-command-wait/baseline/generation-value-policy-e8323008b.json`,
+and `.context/git-command-wait/baseline/interleaved-final-audit-e8323008b.json`.
+
 ## Replaced ways
 
 - Fixed completion polling becomes completion events in the Git runner.
@@ -225,8 +297,8 @@ Cargo builds one at a time.
 - [x] Run `cargo xtask check --suite repository` with locked dependencies.
 - [x] Run the complete `cargo xtask check` gate with locked dependencies.
 - [x] Check current `origin/main` and merge it with the git-merge skill when it advances. Preserve the sidecar warm-up change if it merges first.
-- [ ] Commit with Conventional Commits and push the implementation.
-- [ ] Send the pushed implementation SHA immediately for the orchestrator's `mokly-cloud` measurements.
+- [x] Commit with Conventional Commits and push the implementation.
+- [x] Send the pushed implementation SHA immediately for the orchestrator's `mokly-cloud` measurements.
 
 The local complete gate remains blocked by the existing saved-plan flake.
 Evidence: `.context/git-command-wait/check-complete.log` and
@@ -240,9 +312,14 @@ The performance orchestrator requested this check on 2026-11-19. Compare
 the complete render integration binary on otherwise idle runs. Keep the
 gate profile and test-thread settings. Use `main` at `6ae96ed08`.
 
-- [ ] Run ten render integration binaries per arm in interleaved order.
-- [ ] Count the plan-invalidation failures for each arm.
-- [ ] Report a higher branch failure count before the PR. Record equal counts in the existing follow-up.
+- [x] Run ten render integration binaries per arm in interleaved order.
+- [x] Count the plan-invalidation failures for each arm.
+- [x] Report both failure counts to the performance orchestrator. Record occurrences in the PR body under the current ownership of PR #352.
+
+The performance orchestrator accepted the diagnostic comparison. PR #352
+owns the harness fix and deletes the existing follow-up. Keep the already
+committed record until that PR merges. Add no new record to that file.
+Evidence: `.context/git-command-wait/reports/interleaved-render-diagnostics.md`.
 
 ## Milestone 5: Release measurements
 
@@ -252,10 +329,16 @@ Keep the tested implementation fixed while both machines measure it. The
 orchestrator measures local fixtures while the performance orchestrator
 measures `mokly-cloud` on its own machine.
 
-- [ ] Run six interleaved release rounds against current `main`, with separate checkouts and target directories.
-- [ ] Compare three edit windows for `review.base-tree` and `changes.classify` on each fixture.
-- [ ] Compare exact output and freshness observations and whole-tree cgroup anonymous memory plus swap.
-- [ ] Confirm at least 25 ms mean reduction on `mokly-cloud` and no memory rise above 5%.
+- [x] Build both releases in separate checkouts and targets. Run six balanced rounds with the approved shared runtime and dependency tree.
+- [x] Compare three edit windows for `review.base-tree` and `changes.classify` on each fixture.
+- [x] Compare captured output under the approved identity rule, exact freshness observations, and whole-tree cgroup anonymous memory plus swap.
+- [x] Confirm at least 25 ms mean reduction on `mokly-cloud` and no memory rise above 5%.
+
+Completed on 2026-11-19. All valid samples remain included. The offline
+artifact, source, binary, memory, and typed-JSON audits passed. The report
+keeps the stopped cross-root setup, observer repair, and audit-file timing
+limit. Evidence: `.context/git-command-wait/reports/interleaved-measurements.md`
+and `.context/git-command-wait/baseline/interleaved-final-audit-e8323008b.json`.
 
 ## Milestone 6: Review and pull request
 
@@ -264,9 +347,15 @@ Depends on: 4a, 5
 Keep the review and pull request with the orchestrator. The implementation
 push starts the performance orchestrator's measurement before local rounds.
 
-- [ ] Confirm the implementation push. Commit and push each approved review fix with its checks.
-- [ ] Review the complete diff against `origin/main` after the push with the implementation-review skill. Confirm findings, run up to two fix rounds, and record follow-ups.
-- [ ] Merge current `origin/main` with the git-merge skill when it advances. Preserve the sidecar warm-up change if it merges first.
+- [x] Confirm the implementation push. Commit and push each approved review fix with its checks.
+- [x] Review the complete diff against `origin/main` after the push with the implementation-review skill. Confirm findings, run up to two fix rounds, and record follow-ups.
+- [x] Merge current `origin/main` with the git-merge skill when it advances. Preserve the sidecar warm-up change if it merges first.
+      The fresh production review found no in-scope issue. No finding check or
+      fix round was needed. Existing outside items retain their owners. Main
+      `f4f0082fd` was merged with a clean two-parent preservation audit. It updates
+      `AGENTS.md` only. Evidence: `.context/reviews/calummoore/mokly-git-command-wait-kvvh/`
+      and `.context/git-command-wait/merge-audit-f4f0082.txt`.
+
 - [ ] Delete this plan after the other required TODOs and review rounds complete.
 - [ ] Open the pull request into `main`. Preserve dated decisions, design calls, the plan permalink, and follow-up items in its description.
 
