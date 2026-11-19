@@ -179,7 +179,10 @@ fn run_install(version: &str, _ci: bool, _actions: bool) {
     };
     let source = extraction.acquire(&commit).unwrap();
     let commands: Arc<dyn Commands> = Arc::new(TimedCommands {
-        spawner: Arc::new(SystemSpawner { groups }),
+        spawner: Arc::new(SystemSpawner {
+            groups,
+            clock: clock.clone(),
+        }),
         clock: clock.clone(),
         cancellation: token,
         storage: storage(temporary.path()),
