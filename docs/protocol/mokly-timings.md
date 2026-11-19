@@ -56,7 +56,7 @@ its files are installed. Its Serve duration includes queue time.
 | `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
-| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
+| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `admittedViews`, `unchanged`, `changed`, and `ignoredOnly`                 |
 | `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                           |
 | `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included                        |
