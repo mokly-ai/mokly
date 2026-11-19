@@ -377,3 +377,174 @@ jobs:
         env:
           EXPECTED_RUNTIMES: ${{ needs.profile.outputs.verification-runtimes }}
         run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"
+
+  serve-stop-reproduction:
+    name: Serve stop evidence (${{ matrix.checkout }}, trial ${{ matrix.trial }})
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        checkout: [merge, main]
+        trial: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    env:
+      PLAYWRIGHT_CHANNEL: chromium
+      MOKLY_VERIFICATION_RUNTIME: node-22.15.0
+      MOKLY_VERIFICATION_REPORT: .context/flaky-example-serve-stop/${{ matrix.checkout }}-${{ matrix.trial }}/verification.json
+      SERVE_STOP_EVIDENCE_DIR: ${{ github.workspace }}/.context/flaky-example-serve-stop/${{ matrix.checkout }}-${{ matrix.trial }}
+    steps:
+      - name: Check out reproduction source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ matrix.checkout == 'main' && 'f4f0082fd4bc8a6ffb2575f7416c37a216dfd0dd' || github.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check checkout shape and install observer
+        env:
+          CHECKOUT_MODE: ${{ matrix.checkout }}
+          TRIAL: ${{ matrix.trial }}
+        run: |
+          mkdir -p "$SERVE_STOP_EVIDENCE_DIR"
+          if [ "$CHECKOUT_MODE" = main ]; then
+            git switch --force-create main f4f0082fd4bc8a6ffb2575f7416c37a216dfd0dd
+            test "$(git symbolic-ref --short HEAD)" = main
+          else
+            test "$(git rev-list --parents -n 1 HEAD | wc -w)" -eq 3
+            if git symbolic-ref --quiet HEAD; then
+              exit 1
+            fi
+            if git show-ref --verify --quiet refs/heads/main; then
+              exit 1
+            fi
+          fi
+          {
+            printf 'mode=%s\ntrial=%s\ngithub_sha=%s\n' "$CHECKOUT_MODE" "$TRIAL" "$GITHUB_SHA"
+            git log -1 --format='head=%H%nparents=%P%nsubject=%s'
+            git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/remotes
+          } > "$SERVE_STOP_EVIDENCE_DIR/checkout.txt"
+          cat > "$SERVE_STOP_EVIDENCE_DIR/observe-process.mjs" <<'SERVE_STOP_OBSERVER'
+          import { ChildProcess } from "node:child_process";
+          import fs from "node:fs";
+
+          const destination = process.env.MOKLY_SHUTDOWN_OBSERVER;
+
+          function record(event, details = {}) {
+            if (!destination) return;
+            try {
+              fs.appendFileSync(
+                destination,
+                `${JSON.stringify({
+                  at: new Date().toISOString(),
+                  monotonic: process.hrtime.bigint().toString(),
+                  pid: process.pid,
+                  ppid: process.ppid,
+                  event,
+                  ...details,
+                })}\n`,
+              );
+            } catch {}
+          }
+
+          record("process_start", {
+            argv: process.argv,
+            cwd: process.cwd(),
+            node: process.versions.node,
+          });
+
+          const originalEmit = ChildProcess.prototype.emit;
+          ChildProcess.prototype.emit = function (event, ...arguments_) {
+            const child = {
+              childPid: this.pid,
+              spawnfile: this.spawnfile,
+              spawnargs: this.spawnargs,
+            };
+            if (event === "spawn") record("child_spawn", child);
+            if (event === "exit" || event === "close")
+              record(`child_${event}`, {
+                ...child,
+                code: arguments_[0],
+                signal: arguments_[1],
+              });
+            if (event === "error")
+              record("child_error", { ...child, error: arguments_[0]?.message });
+            return Reflect.apply(originalEmit, this, [event, ...arguments_]);
+          };
+
+          const originalChildKill = ChildProcess.prototype.kill;
+          ChildProcess.prototype.kill = function (signal) {
+            if (signal !== 0)
+              record("child_signal", {
+                childPid: this.pid,
+                spawnfile: this.spawnfile,
+                spawnargs: this.spawnargs,
+                signal: signal ?? "SIGTERM",
+              });
+            return Reflect.apply(originalChildKill, this, [signal]);
+          };
+
+          const originalProcessKill = process.kill;
+          process.kill = function (pid, signal) {
+            if (signal !== 0)
+              record("process_signal", {
+                targetPid: pid,
+                signal: signal ?? "SIGTERM",
+              });
+            return Reflect.apply(originalProcessKill, this, [pid, signal]);
+          };
+
+          process.once("exit", (code) => {
+            record("process_exit", { code });
+          });
+          SERVE_STOP_OBSERVER
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22.15.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: false
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Record tool versions
+        run: |
+          {
+            node --version
+            npm --version
+            git --version
+            rustc --version
+            cargo --version
+            npx playwright --version
+          } > "$SERVE_STOP_EVIDENCE_DIR/versions.txt"
+      - name: Run observed browser shard
+        shell: bash
+        run: |
+          export GIT_TRACE2_EVENT="$SERVE_STOP_EVIDENCE_DIR/git-trace.jsonl"
+          export MOKLY_SHUTDOWN_OBSERVER="$SERVE_STOP_EVIDENCE_DIR/processes.jsonl"
+          export NODE_OPTIONS="--import=$SERVE_STOP_EVIDENCE_DIR/observe-process.mjs"
+          set +e
+          cargo xtask check --suite browser --shard 3/4 2>&1 | tee "$SERVE_STOP_EVIDENCE_DIR/shard.log"
+          result=${PIPESTATUS[0]}
+          printf '%s\n' "$result" > "$SERVE_STOP_EVIDENCE_DIR/command-exit.txt"
+          exit "$result"
+      - name: Retain Serve stop evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: serve-stop-evidence-${{ matrix.checkout }}-${{ matrix.trial }}-attempt-${{ github.run_attempt }}
+          path: ${{ env.SERVE_STOP_EVIDENCE_DIR }}/
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
