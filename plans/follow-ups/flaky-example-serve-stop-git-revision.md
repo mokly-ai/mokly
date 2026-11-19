@@ -1,10 +1,10 @@
 # Example Serve fails to stop after browser shards
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-18, from PR #341, branch `calummoore/mokly-stamp-early-exit`, at the request of the follow-up orchestrator, which owns the flaky-test items.
 - **Location:** `tests/browser/hosts.ts:45-50`, `tests/browser/setup.ts:63` and `:141`, `tests/browser/example_setup.ts:32`, `tests/helpers/example_base.ts:1-8`, and `scripts/verification/serve-process.mjs:137-159`.
-- **Reason:** The failure lies outside PR #341, which changes only the input stamp check of `mokly-render`. The same failure hit a release pull request with no code change and one push run of `main`.
+- **Reason:** On 2026-11-19, 21 repetitions under option A did not show the failure, so its source is unknown and the next step needs a user decision.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -12,6 +12,8 @@
   - **Example Serve worker:** a `mokly serve` process of the example catalogue that the global setup of the browser suite starts for the shared specs.
   - **Global teardown:** the function that `tests/browser/setup.ts` returns. It stops each browser host after the last test of the shard.
   - **Pull-request checkout:** the checkout of a pull request run, a detached merge commit with no local `main` branch.
+  - **Serve process chain:** the Node worker, its `mokly` shim, and the shim's native Serve binary, started through `scripts/verification/serve-process-worker.mjs`.
+  - **Stop guard:** the SIGKILL that `scripts/verification/serve-process.mjs` sends when the Node worker remains alive 10 seconds after SIGINT.
 - **Background:**
   - `exampleServerCommand` in `tests/browser/example_servers.ts` starts the Example Serve worker with `--base refs/mokly/browser-suite-no-base`, a reference that does not exist. `validateExampleDiagnostics` in `tests/helpers/example_base.ts` expects exactly one `[mokly/git-failed]` line in the output of that Serve.
   - `serveHost` in `tests/browser/hosts.ts:45-50` stops Serve with `server.stop()`. It throws "Example Serve did not stop cleanly" with the Serve output when the exit code is not 0. `stop` in `scripts/verification/serve-process.mjs:137-159` sends SIGINT, and SIGKILL after 10 seconds. A process that the kill stops also has no exit code 0.
@@ -29,14 +31,42 @@
 
   - The stack runs through `tests/browser/setup.ts:63` and `:141`, `tests/browser/hosts.ts:48`, and `tests/browser/example_setup.ts:32`.
   - These jobs failed this way. In each, every test of the shard passed, and only the global teardown failed:
-    - PR #341, run 44408550558 attempt 1, job 135170626095, `Browser (Node 22.15.0, shard 3/4)`, commit `12c3f5734`.
+    - PR #341, run 44408550558 attempt 1, job 135170626095, `Browser (Node 22.15.0, shard 3/4)`, commit `12c3f5734`. PR #341 changes only the input stamp check of `mokly-render`, so the failure lies outside it.
     - The rerun of the same job, attempt 2, job 135182862242. It failed in the same way.
     - Release PR #292, branch `release-please--branches--main--components--mokly`, commit `e9a1de92e`, which changes no code: run 44356902536, job 134987433206, `Browser (Node 22.15.0, shard 3/4)`. The `Browser (Node 24, shard 3/4)` job of the same run passed.
     - A push run of `main` at commit `f0d5363df`: run 44338526521, job 134922074235, `Browser (Node 22.15.0, shard 4/4)`.
   - The push runs of `main` at `51677c31f`, `4614c4a90`, and `47a563ea0` passed.
   - A guess, not a confirmed cause: the failure depends on the pull-request checkout, which has no local `main` branch, while a push to `main` has one. The failed push run at `f0d5363df` shows that a pull-request checkout is not the only condition.
-  - Nobody reproduced the failure.
-- **Problem:** The global teardown fails after every test of a shard passed, because the Example Serve worker does not exit with code 0. The output names a Git failure. The expected `[mokly/git-failed]` line has the same text, so the output does not show whether the stop failed on a second Git failure, or for another reason.
+  - Nobody reproduced the failure. The 21 repetitions of 2026-11-19 below also did not show it.
+  - The repetitions under option A, on 2026-11-19:
+    - On 2026-11-19, the user chose option A. The user also said what follows when the repetitions name no source. That result gets no code change, an update of this item only, and a user decision that includes option B. This investigation is complete. It did not reproduce the failure, and it named no source.
+    - All 21 runs of browser shard 3/4 passed:
+      - 10 remote runs on a pull-request checkout. Each checkout step asserted a detached merge commit with two parents and no local branch.
+      - 10 remote runs on `main` at commit `f4f0082fd`, with a local `main` branch.
+      - 1 local run on `main` at commit `f4f0082fd`, with a local `main` branch.
+    - Each run passed 715 tests, with 0 failed, skipped, cancelled, or timed out. The total is 15,015 passes.
+    - The remote runs used GitHub-hosted `ubuntu-24.04` runners and the command `cargo xtask check --suite browser --shard 3/4`. The local run used the equivalent prepared command `node scripts/verification/run-browser.mjs --shard 3/4`.
+    - The remote runs used Node 22.15.0, npm 11.21.0, Git 2.56.1, Rust 1.95.0, and Playwright 1.61.1. The local run also used Node 22.15.0.
+    - Every run used the default of one Playwright test worker and no test retries. The stop guard stayed at 10 seconds.
+    - The merge commit was `397c56eb5dbd363d713eb1163e533bba125f4ce1`. Its parents were `main` at `f4f0082fd4bc8a6ffb2575f7416c37a216dfd0dd` and the temporary diagnostic commit `71bc1d770b4f5a0614f5bccbb81ad3ae15a01f71`. The merge differed from `main` only in `.github/workflows/ci.yml`.
+    - A temporary trace recorded each process exit, each signal, and each Git command. In all 21 runs, the Node worker, the shim, and the native binary each exited with code 0 and no signal. The trace caught the SIGINT at each step of the Serve process chain.
+    - In no run did the stop guard send SIGKILL before the Node worker exited. Each later SIGKILL came from the normal cleanup that `stop` runs after the Node worker exits.
+    - In each run, the shared Example Serve worker ran this Git command once. It exited with status 128 and the error `Needed a single revision`, and it ended before the stop:
+
+      ```text
+      git --no-optional-locks rev-parse --verify --end-of-options 'refs/mokly/browser-suite-no-base^{commit}'
+      ```
+
+    - The shared command passes `--no-watch`, so Serve does not poll Git references again for this host. On this path, the guess in option A, a reference poll that fails at shutdown, has no support.
+    - The repetitions did not confirm the guess about the pull-request checkout. Neither checkout type reproduced the failure.
+    - The first diagnostic run also started 10 `main` jobs that stopped in setup, before any browser test. Their `GITHUB_SHA` was the merge commit, which did not match the pinned `main` commit. These jobs are not counted. The temporary commit `c1e2dfb5a9208e23bf7307d48afa7638ccaa1bf6` set the source identity for the 10 counted remote `main` runs.
+    - Run 44602176341 holds the merge runs and the 10 setup failures. Run 44602806738 holds the counted remote `main` runs, and there four contract assertions of the Viewer job rejected the temporary job. Neither run passed as a whole. Only their diagnostic shard jobs count here.
+    - No product code, test, or workflow change was kept from the repetitions.
+    - Limits of this evidence:
+      - The four failed jobs ran on Blacksmith runners, label `blacksmith-4vcpu-ubuntu-2404`, on 2026-11-18. PR #342, commit `09db57306`, moved the browser shards to GitHub-hosted `ubuntu-24.04` runners on 2026-11-19, before the repetitions. So the repetitions did not use the runner type of the failures. This difference is not a known cause, and the evidence does not show that the move fixed the failure.
+      - The old logs give no exit code and no signal. In the failed job of PR #341, attempt 1, about 11 seconds pass from the last passed test to the cleanup error. That gap fits a SIGKILL from the stop guard, but it does not prove one. It stays a guess, not a named source.
+      - The 21 clean runs do not show that the failure is gone.
+- **Problem:** Global teardown sometimes fails after every test passed because the Example Serve worker does not exit with code 0. Its output contains the same `[mokly/git-failed]` text as the expected initial diagnostic. The error omits the exit code and signal, so it cannot identify a second Git failure or another stop cause.
 - **Impact if no action:** Required CI fails on healthy pull requests, and each author must rerun the job or ask why. One rerun of PR #341 failed again.
 - **Root question:** Why does the Example Serve worker sometimes end with an exit code other than 0 when the global teardown stops it?
 - **Options:**
@@ -45,8 +75,10 @@
 - **Left out:**
   - A retry of the stop or of the shard, because the flaky-test rule of the `testing` skill forbids a retry.
   - A host that accepts any exit code, because it would hide a real failure of Serve at shutdown.
+  - A change to the stop before a source is named, because the flaky-test rule of the `testing` skill needs a named source first.
+  - Only two approaches are real, because before a source is named, work can only repeat the shard or add evidence to the next failure.
 - **Wider fix:** None. The cause is unknown, so no class of failure is known yet.
 - **Previous examples:** The deleted item `browser-host-cleanup-failure.md`, at the permalink above, recorded the same cleanup failure before PR #322 kept its inner errors.
 - **Related:** None.
-- **Recommendation:** A. A reproduction names the Git command and the exit path, so the fix can keep every check of the teardown.
-- **Action:** fix after merge, apply A, because the failure is outside the scope of PR #341, and the follow-up orchestrator owns it.
+- **Recommendation:** B. The first recommendation was A, before the repetitions of 2026-11-19. All 21 clean runs gave no failure to study. B makes the next CI failure show the exit code and signal of `server.stop()`. A stays the only option that fixes the failure. It still needs a reproducible failure or a named source.
+- **Action:** ask the user, because option A named no source, and the user asked to choose the next step, including B, for that result.
