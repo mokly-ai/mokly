@@ -24,10 +24,10 @@ resource "google_monitoring_alert_policy" "publication_dead_letters" {
   }
   documentation {
     mime_type = "text/markdown"
-    content   = "The five-minute publication-check-status Job observed undelivered dead letters. Inspect the current count and recover the event using [the operator runbook](https://github.com/mokly-ai/mokly-cloud/blob/main/docs/ops/check-recovery.md). A closed incident alone does not prove recovery; verify the same event was delivered."
+    content   = "The five-minute publication-check-status Job observed undelivered dead letters. Inspect the current count and recover the event using [the operator runbook](https://github.com/mokly-ai/mokly/blob/main/docs/ops/check-recovery.md). A closed incident alone does not prove recovery; verify the same event was delivered."
     links {
       display_name = "Publication check recovery"
-      url          = "https://github.com/mokly-ai/mokly-cloud/blob/main/docs/ops/check-recovery.md"
+      url          = "https://github.com/mokly-ai/mokly/blob/main/docs/ops/check-recovery.md"
     }
   }
 }
@@ -50,10 +50,10 @@ resource "google_monitoring_alert_policy" "billing_dead_letters" {
   }
   documentation {
     mime_type = "text/markdown"
-    content   = "The five-minute billing-delivery-status Job observed undelivered billing deliveries. Inspect the event and requeue it with `mkc-api requeue-billing-delivery --event <id>` using [the billing smoke runbook](https://github.com/mokly-ai/mokly-cloud/blob/main/docs/ops/billing-smoke.md)."
+    content   = "The five-minute billing-delivery-status Job observed undelivered billing deliveries. Inspect the event and requeue it with `mkc-api requeue-billing-delivery --event <id>` using [the billing smoke runbook](https://github.com/mokly-ai/mokly/blob/main/docs/ops/billing-smoke.md)."
     links {
       display_name = "Billing delivery recovery"
-      url          = "https://github.com/mokly-ai/mokly-cloud/blob/main/docs/ops/billing-smoke.md"
+      url          = "https://github.com/mokly-ai/mokly/blob/main/docs/ops/billing-smoke.md"
     }
   }
 }

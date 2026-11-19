@@ -18,6 +18,7 @@ fn required_result(production: &str, overrides: &[(&str, &str)]) -> Output {
     };
     Command::new("bash")
         .args(["-euc", step["run"].as_str().unwrap()])
+        .env("CLOUD_DELIVERY_EXPECTED", "true")
         .env("FOUNDATION_GATE_RESULT", "success")
         .env("BUILD_RESULT", "success")
         .env("PUBLISH_RESULT", "success")

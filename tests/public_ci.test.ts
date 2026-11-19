@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -12,6 +13,8 @@ interface Job {
   if?: string;
   environment?: unknown;
   permissions?: Record<string, string>;
+  needs?: readonly string[];
+  steps?: readonly { env?: Record<string, string>; run?: string }[];
 }
 interface Workflow {
   on: Record<string, unknown>;
@@ -160,3 +163,99 @@ test("cloud delivery stays disabled until the operator enables cutover", () => {
     }
   }
 });
+
+function requiredResult(
+  job: Job,
+  cutover: string,
+  results: Readonly<Record<string, string>> = {},
+  ref = "refs/heads/main",
+) {
+  assert.ok(Array.isArray(job.needs));
+  const step = job.steps?.[0];
+  assert.ok(step?.run);
+  const needs = Object.fromEntries(
+    job.needs.map((name: string) => {
+      const result = results[name] ?? "skipped";
+      const output = result === "success" ? "true" : "";
+      return [
+        name,
+        {
+          result,
+          outputs: {
+            enabled: output,
+            applied: output,
+            completed: output,
+            deployed: output,
+          },
+        },
+      ];
+    }),
+  );
+  const env = Object.fromEntries(
+    Object.entries(step.env ?? {}).map(([name, binding]) => {
+      const expression = /^\$\{\{\s*(.*?)\s*\}\}$/u.exec(binding);
+      const value: unknown = expression
+        ? runInNewContext(
+            expression[1]!.replace(/needs\.([\w-]+)/g, 'needs["$1"]'),
+            {
+              github: { ref },
+              needs,
+              vars: {
+                MKC_CLOUD_CUTOVER_ENABLED: cutover,
+                MKC_PRODUCTION_ENABLED: "false",
+              },
+            },
+          )
+        : binding;
+      return [name, value === undefined ? "" : String(value)];
+    }),
+  );
+  return spawnSync("bash", ["-euo", "pipefail", "-c", step.run], {
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
+}
+
+for (const { file, name, forbiddenRefs } of [
+  { file: "deploy.yml", name: "Deployment", forbiddenRefs: [] },
+  {
+    file: "foundation.yml",
+    name: "Foundation",
+    forbiddenRefs: ["refs/heads/feature"],
+  },
+]) {
+  test(`${name} required passes before cutover only when all jobs are skipped`, () => {
+    const job = workflows.find((workflow) => workflow.name === file)?.workflow
+      .jobs.required;
+    assert.ok(job);
+    assert.ok(Array.isArray(job.needs));
+    const dependencies: readonly string[] = job.needs;
+    for (const cutover of ["", "false"]) {
+      const skipped = requiredResult(job, cutover);
+      assert.equal(skipped.status, 0, skipped.stderr);
+      assert.equal(skipped.stdout, "SKIP cloud delivery: off until cutover\n");
+      for (const dependency of dependencies) {
+        for (const status of ["success", "failure", "cancelled", ""]) {
+          const result = requiredResult(job, cutover, { [dependency]: status });
+          assert.equal(result.status, 1, `${file}: ${dependency}=${status}`);
+        }
+      }
+      for (const ref of forbiddenRefs) {
+        const result = requiredResult(job, cutover, {}, ref);
+        assert.equal(result.status, 1, `${file}: ${ref}`);
+        assert.match(
+          result.stderr,
+          /Foundation runs only from refs\/heads\/main/,
+        );
+      }
+    }
+    const successful = Object.fromEntries(
+      dependencies.map((dependency: string) => [
+        dependency,
+        dependency.includes("production") ? "skipped" : "success",
+      ]),
+    );
+    const enabled = requiredResult(job, "true", successful);
+    assert.equal(enabled.status, 0, enabled.stderr);
+  });
+}

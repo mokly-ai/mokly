@@ -197,7 +197,8 @@ of this repository starts, and the Pages previews of the Mokly example stop too.
 gives the rule. Production promotion also needs `MKC_PRODUCTION_ENABLED=true`.
 Set the switch directly after the merge, and hold other merges until step 3
 passes. The Foundation and Deploy runs of the merge commit ran without the
-switch. Do not re-run them.
+switch, so their result jobs print `SKIP cloud delivery: off until cutover`. Do
+not re-run them. Steps 2 and 3 start new runs.
 
 1. Run `gh variable set MKC_CLOUD_CUTOVER_ENABLED -R mokly-ai/mokly --body true`.
    Check: `gh variable get MKC_CLOUD_CUTOVER_ENABLED -R mokly-ai/mokly` prints `true`.
@@ -205,8 +206,9 @@ switch. Do not re-run them.
    run passes, which proves the trust here, and `plan-foundation` has no changes.
 3. After Foundation passes, run
    `gh workflow run deploy.yml -R mokly-ai/mokly --ref main`. Check: **Deploy
-   main-preview workloads** and **Deploy production workloads** pass. A `SKIP`
-   line in **Deployment required** means that a secret is missing.
+   main-preview workloads** and **Deploy production workloads** pass. With the
+   switch on, a `SKIP` line in **Deployment required** means that a secret is
+   missing.
    [Wait failures](./foundation.md#wait-failures) gives the recovery.
 4. The next push to `main` must pass **Deploy Main Site**, **Deploy Main
    Preview** and the **Credential-gated infrastructure plan**. The next

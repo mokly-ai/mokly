@@ -976,6 +976,7 @@ jobs:
     steps:
       - name: Require the complete promotion chain
         env:
+          CLOUD_DELIVERY_EXPECTED: ${{ vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' }}
           FOUNDATION_GATE_RESULT: ${{ needs.foundation-gate.result }}
           BUILD_RESULT: ${{ needs.build.result }}
           PUBLISH_RESULT: ${{ needs.publish.result }}
@@ -1002,6 +1003,19 @@ jobs:
           PRODUCTION_RELEASE: ${{ needs.release-production.result }}
           DEPLOYED: ${{ needs.release-production.outputs.deployed }}
         run: |
+          if [[ "$CLOUD_DELIVERY_EXPECTED" != true ]]; then
+            for result in \
+              "$FOUNDATION_GATE_RESULT" "$BUILD_RESULT" "$PUBLISH_RESULT" \
+              "$ORIGIN_ROUTER_RESULT" "$PLATFORM_RESULT" \
+              "$PREVIEW_PLAN" "$PREVIEW_APPLY" "$PREVIEW_EMAIL" \
+              "$PREVIEW_CATALOGUE" "$PREVIEW_RELEASE" \
+              "$PRODUCTION_PLAN" "$PRODUCTION_APPLY" "$PRODUCTION_EMAIL" \
+              "$PRODUCTION_CATALOGUE" "$PRODUCTION_RELEASE"; do
+              test "$result" = skipped
+            done
+            echo 'SKIP cloud delivery: off until cutover'
+            exit 0
+          fi
           case "$PRODUCTION_ENABLED" in
             ''|false|true) ;;
             *) echo 'MKC_PRODUCTION_ENABLED must be true, false or unset' >&2; exit 1 ;;

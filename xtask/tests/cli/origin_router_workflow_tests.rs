@@ -77,6 +77,7 @@ fn aggregate_accepts_an_explicit_router_skip_only_without_cloud_deployment() {
     ] {
         let status = Command::new("bash")
             .args(["-euc", aggregate])
+            .env("CLOUD_DELIVERY_EXPECTED", "true")
             .env("FOUNDATION_GATE_RESULT", "success")
             .env("BUILD_RESULT", "success")
             .env("PUBLISH_RESULT", "success")

@@ -91,7 +91,10 @@ runs them.
 Every cloud delivery job also requires repository variable
 `MKC_CLOUD_CUTOVER_ENABLED` to equal `true`. Until the operator sets it, no
 cloud plan, deploy, foundation apply, site deploy, desktop package or release,
-or preview lifecycle can start. This switch adds no approval environment.
+or preview lifecycle can start. While the switch is off, the result jobs
+**Deployment required** and **Foundation required** pass only when every
+delivery job of their run was skipped, and they print a skip line. This switch
+adds no approval environment.
 The preview release uses the existing `preview` environment. Production
 promotion still requires `MKC_PRODUCTION_ENABLED=true`.
 

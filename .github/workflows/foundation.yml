@@ -137,6 +137,7 @@ jobs:
     steps:
       - name: Require the complete foundation promotion
         env:
+          CLOUD_DELIVERY_EXPECTED: ${{ vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' }}
           REF: ${{ github.ref }}
           PLAN_RESULT: ${{ needs.plan.result }}
           ENABLED: ${{ needs.plan.outputs.enabled }}
@@ -146,6 +147,12 @@ jobs:
           if [[ "$REF" != refs/heads/main ]]; then
             echo 'Foundation runs only from refs/heads/main' >&2
             exit 1
+          fi
+          if [[ "$CLOUD_DELIVERY_EXPECTED" != true ]]; then
+            test "$PLAN_RESULT" = skipped
+            test "$APPLY_RESULT" = skipped
+            echo 'SKIP cloud delivery: off until cutover'
+            exit 0
           fi
           test "$PLAN_RESULT" = success
           if [[ "$ENABLED" == true ]]; then
