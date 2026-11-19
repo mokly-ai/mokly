@@ -20,6 +20,8 @@ use mokly_compare::node_executable::{NodeExecutable, SystemNodeExecutable};
 #[cfg(unix)]
 use mokly_compare::process::SystemSpawner;
 #[cfg(unix)]
+use mokly_git::control::SystemClock;
+#[cfg(unix)]
 use mokly_platform::processes::SystemProcessGroups;
 
 #[cfg(unix)]
@@ -33,6 +35,7 @@ fn relative_node_probe() {
     fs::write(&node, "#!/bin/sh\nprintf historical-node\n").unwrap();
     fs::set_permissions(node, fs::Permissions::from_mode(0o755)).unwrap();
     let spawner: &dyn Spawner = &SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: Arc::new(SystemProcessGroups),
     };
     let result = spawner.spawn(&Command {
@@ -87,6 +90,7 @@ fn selected_node_probe() {
     let node = SystemNodeExecutable.resolve().unwrap();
     assert_eq!(node, root.join("selected/node"));
     let spawner: &dyn Spawner = &SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: Arc::new(SystemProcessGroups),
     };
     for (program, pinned, expected) in [

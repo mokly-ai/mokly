@@ -47,7 +47,7 @@
     dependency inputs. They hold every tracked package manifest and
     lockfile. With pnpm or Yarn lockfiles, they also hold
     `pnpm-workspace.yaml`, `.yarnrc.yml`, `.yarnrc`, and `.npmrc`.
-  - `plans/follow-ups/install-pipe-wait-after-stop.md` already holds the
+  - `plans/follow-ups/macos-process-tree-smoke-test.md` already holds the
     corrected term, with the conditions in its **Background**.
 - **Problem:** The two items say that a lockfile difference alone starts
   a base install. An HTML-only base never starts one. A change to a manifest

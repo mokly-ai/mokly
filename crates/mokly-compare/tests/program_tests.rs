@@ -27,6 +27,7 @@ fn relative_path_probe() {
     )
     .unwrap();
     let spawner: &dyn mokly_compare::commands::Spawner = &mokly_compare::process::SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: std::sync::Arc::new(mokly_platform::processes::SystemProcessGroups),
     };
     let result = spawner.spawn(&mokly_compare::commands::Command {
@@ -73,6 +74,7 @@ fn interpreter_probe() {
     std::fs::write(&node, b"#!/bin/sh\nprintf history-node\n").unwrap();
     std::fs::set_permissions(node, std::fs::Permissions::from_mode(0o755)).unwrap();
     let spawner: &dyn mokly_compare::commands::Spawner = &mokly_compare::process::SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: std::sync::Arc::new(mokly_platform::processes::SystemProcessGroups),
     };
     let mut child = spawner
@@ -132,6 +134,7 @@ fn install_environment_removes_mokly_token() {
     .unwrap();
     std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
     let spawner: &dyn mokly_compare::commands::Spawner = &mokly_compare::process::SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: std::sync::Arc::new(mokly_platform::processes::SystemProcessGroups),
     };
     let mut child = spawner
@@ -199,6 +202,7 @@ fn cancellation_kills_a_script_child_tree() {
     let cancellation = Arc::new(Token::default());
     let commands = mokly_compare::commands::TimedCommands {
         spawner: Arc::new(mokly_compare::process::SystemSpawner {
+            clock: Arc::new(SystemClock::default()),
             groups: Arc::new(mokly_platform::processes::SystemProcessGroups),
         }),
         clock: Arc::new(SystemClock::default()),
