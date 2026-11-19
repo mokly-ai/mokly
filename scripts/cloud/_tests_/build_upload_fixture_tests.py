@@ -8,7 +8,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from publication_exchange import digest
-from publication_smoke_support import files_from_tar
+from publication_smoke_support import files_from_tar, fixture_mokly_version
 
 
 class BuildUploadFixtureTests(unittest.TestCase):
@@ -28,7 +28,7 @@ class BuildUploadFixtureTests(unittest.TestCase):
         files, blobs = self.fixture()
         envelope = json.loads(files["mokly-upload.json"])
         self.assertEqual(envelope["schemaVersion"], 3)
-        self.assertEqual(envelope["moklyVersion"], "0.19.0")
+        self.assertEqual(envelope["moklyVersion"], fixture_mokly_version(Path(__file__).resolve().parents[3]))
         self.assertEqual(envelope["repository"], {"host": "github.com", "owner": "owner", "name": "repo"})
         self.assertEqual(envelope["headSha"], "a" * 40)
         self.assertEqual(envelope["branch"], "feature/build")

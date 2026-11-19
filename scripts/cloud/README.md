@@ -23,6 +23,8 @@ format dependency.
 - `smoke_publications.py` runs the publication scenarios against real services.
 - `publication_exchange.py` builds three-file Plans and runs Blob and Complete.
   It also converts test uploads to current-only indexes and envelopes.
+- `publication_smoke_support.py` reads the committed fixture's producer version
+  from `checksums.json`. Fixture consumers use that metadata, not a release pin.
 - `publication_smoke_fixture.py` strictly validates two source-only revisions
   of the [frozen fixture](./fixtures/publication-smoke-v0.19/README.md).
 - `publication_smoke_consumer.py` installs npm `latest`, rejects linked or

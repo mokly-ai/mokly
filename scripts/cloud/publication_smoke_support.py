@@ -61,6 +61,12 @@ def files_from_tar(body):
         return {item.name: archive.extractfile(item).read() for item in archive if item.isfile()}
 
 
+def fixture_mokly_version(root):
+    """Read the producer attribution recorded for the committed contract fixture."""
+    metadata = root / "crates/mkc-mokly-contract/fixtures/checksums.json"
+    return json.loads(metadata.read_bytes())["moklyVersion"]
+
+
 def archive(files):
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz", format=tarfile.USTAR_FORMAT) as output:

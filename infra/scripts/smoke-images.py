@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/cloud"))
 from smoke_support import Api
 from publication_exchange import ENVELOPE, INDEX, MARKER, publish
-from publication_smoke_support import Catalogue, files_from_tar, project_and_token
+from publication_smoke_support import Catalogue, files_from_tar, fixture_mokly_version, project_and_token
 
 
 def command(args, **options):
@@ -36,9 +36,8 @@ def publication_fixture():
     """Read the regenerated package fixture before the image upload exchange."""
     files = files_from_tar((ROOT / "crates/mkc-mokly-contract/fixtures/dogfood.tar.gz").read_bytes())
     envelope = json.loads(files[ENVELOPE])
-    package = json.loads((ROOT / "packages/mokly/package.json").read_bytes())
     assert envelope["schemaVersion"] == 3
-    assert envelope["moklyVersion"] == package["version"]
+    assert envelope["moklyVersion"] == fixture_mokly_version(ROOT)
     assert json.loads(files[MARKER])["schemaVersion"] == 3
     index = json.loads(files[INDEX])
     assert index["schemaVersion"] == 9

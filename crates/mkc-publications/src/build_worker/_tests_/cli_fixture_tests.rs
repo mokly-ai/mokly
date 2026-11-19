@@ -6,6 +6,7 @@ use mkc_build_interface::cli_code::MoklyCliCode;
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_store_interface::build_state::{BuildFailure, BuildState};
 use serde::Deserialize;
+use serde_json::Value;
 
 use super::finish;
 
@@ -30,7 +31,11 @@ fn workspace_cli_evidence_covers_every_worker_mapped_code_and_result() {
         "../../../../mkc-mokly-contract/fixtures/cli-errors.json"
     ))
     .unwrap();
-    assert_eq!(fixture.mokly_version, "0.0.0");
+    let metadata: Value = serde_json::from_str(include_str!(
+        "../../../../mkc-mokly-contract/fixtures/checksums.json"
+    ))
+    .unwrap();
+    assert_eq!(fixture.mokly_version, metadata["moklyVersion"]);
     assert_eq!(fixture.scenarios.len(), 2);
     let at = "2026-10-12T00:00:00Z".parse().unwrap();
     for typed in [

@@ -82,6 +82,10 @@ fn fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_fil
     let fixture = factory.create();
     prepare(fixture.as_ref());
     let generator = "xtask/scripts/mokly-fixtures.mjs";
+    let metadata: Value = serde_json::from_slice(
+        &fs::read(repository().join("crates/mkc-mokly-contract/fixtures/checksums.json")).unwrap(),
+    )
+    .unwrap();
     success(fixture.run("node", &[generator]));
     for name in [
         "mokly-upload.json",
@@ -95,7 +99,7 @@ fn fixture_generator_reproduces_output_and_cli_rejects_changed_missing_extra_fil
             .join("crates/mkc-mokly-contract/fixtures")
             .join(name);
         let value: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
-        assert_eq!(value["moklyVersion"], "0.0.0", "{name}");
+        assert_eq!(value["moklyVersion"], metadata["moklyVersion"], "{name}");
     }
     success(fixture.run("node", &[generator, "--check"]));
     fixture.write(

@@ -84,6 +84,9 @@ mode 0644. Each complete export stays below 640 KiB. The generator refuses
 unexpected files. Only the README, source trees, corpus, and its two Node
 modules are authored inputs.
 
+Consumers read the fixture producer version from `checksums.json`.
+The recorded placeholder is independent of the workspace package version.
+
 ## Index Changes-Count Corpus
 
 `index-v9-cases.json` is an authored, language-neutral schema-1 corpus. It has
