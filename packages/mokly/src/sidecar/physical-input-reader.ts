@@ -190,7 +190,22 @@ export abstract class PhysicalInputReader {
 
   /** A check allocates at most its recorded directory bytes and bounded metadata. */
   current(evidence: ReuseEvidence): boolean {
-    if (!evidence.complete) return false;
+    return evidence.complete && this.entriesCurrent(evidence);
+  }
+
+  markedCurrent(evidence: ReuseEvidence): boolean {
+    return (
+      evidence.uncaptured === "serveEdit" &&
+      !evidence.complete &&
+      !evidence.durable &&
+      Object.values(evidence.inputs).every((value) =>
+        ["file", "absent", "link"].includes(value.kind),
+      ) &&
+      this.entriesCurrent(evidence)
+    );
+  }
+
+  private entriesCurrent(evidence: ReuseEvidence): boolean {
     try {
       return Object.entries(evidence.inputs).every(([file, expected]) => {
         switch (expected.kind) {

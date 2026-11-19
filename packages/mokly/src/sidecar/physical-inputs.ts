@@ -3,7 +3,8 @@ import path from "node:path";
 import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
-import { jsonObject, parseJson } from "./config-json.js";
+import { MetadataInputs } from "./metadata-inputs.js";
+import type { PackageJson } from "./package-json.js";
 import {
   EVIDENCE_LIMIT,
   PhysicalInputReader,
@@ -26,13 +27,17 @@ export class PhysicalInputs extends PhysicalInputReader {
   private readonly requests = new Map<string, Promise<void>>();
   private readonly directories = new Set<string>();
   private readonly files = new Map<string, CapturedMetadata>();
-  private readonly jsonFiles = new Map<string, Record<string, unknown>>();
+  private readonly observedFiles = new Set<string>();
+  private readonly inspectedPaths = new Set<string>();
+  private inspectionBytes = 0;
+  private readonly metadata = new MetadataInputs(this);
 
   get usage() {
     return {
       evidenceBytes: this.bytes,
       metadataBytes: this.metadataBytes,
-      visitedPathBytes: this.linkBytes + (this.durability?.bytes ?? 0),
+      visitedPathBytes:
+        this.linkBytes + this.inspectionBytes + (this.durability?.bytes ?? 0),
       requestBytes: this.requestBytes,
     };
   }
@@ -135,16 +140,17 @@ export class PhysicalInputs extends PhysicalInputReader {
   private captureFile(file: string): CapturedMetadata | undefined {
     if (!this.complete) return undefined;
     const existing = this.files.get(file);
-    if (existing) return existing;
+    if (existing && this.observedFiles.has(file)) return existing;
     try {
       this.pathLinks(file);
       if (!this.complete) return undefined;
-      const value = this.readMetadata(file, this.pathKinds.get(file));
+      const value = this.inspectMetadata(file);
+      if (!value) return undefined;
       this.save(
         value.input.kind === "absent" ? file : this.realPath(file),
         value.input,
       );
-      this.files.set(file, value);
+      this.observedFiles.add(file);
       return value;
     } catch {
       this.complete = false;
@@ -153,16 +159,40 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   json(file: string, identity = false): Record<string, unknown> | undefined {
-    if (this.file(file, identity)?.kind !== "file") return undefined;
-    const existing = this.jsonFiles.get(file);
+    return this.metadata.json(file, identity);
+  }
+
+  packageJson(
+    file: string,
+    observe = true,
+    current = false,
+    allowNonObject = false,
+  ): PackageJson | undefined {
+    return this.metadata.package(file, observe, current, allowNonObject);
+  }
+
+  /** Pin metadata without publishing an observation for an unrelated resolution. */
+  inspectMetadata(file: string): CapturedMetadata | undefined {
+    const existing = this.files.get(file);
     if (existing) return existing;
-    const value = this.captureFile(file);
-    if (!value?.bytes) return undefined;
+    const value = this.freshMetadata(file);
+    if (value) this.files.set(file, value);
+    return value;
+  }
+
+  /** Fresh verification and classification reads use the same aggregate metadata allowance. */
+  freshMetadata(file: string): CapturedMetadata | undefined {
+    if (!this.complete) return undefined;
     try {
-      const json = parseJson(value.bytes.toString("utf8"));
-      if (!jsonObject(json)) throw new Error("configuration must be an object");
-      this.jsonFiles.set(file, json);
-      return json;
+      if (!this.pathKinds.has(file) && !this.inspectedPaths.has(file)) {
+        const bytes = Buffer.byteLength(file);
+        if (this.linkBytes + this.inspectionBytes + bytes > EVIDENCE_LIMIT)
+          throw new Error("metadata path evidence limit");
+        this.inspectionBytes += bytes;
+        this.inspectedPaths.add(file);
+        this.durability?.budget(this.linkBytes + this.inspectionBytes);
+      }
+      return this.readMetadata(file, this.pathKinds.get(file));
     } catch {
       this.complete = false;
       return undefined;
@@ -197,14 +227,16 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   private pathLinks(file: string): void {
+    if (this.inspectedPaths.delete(file))
+      this.inspectionBytes -= Buffer.byteLength(file);
     if (!this.complete || this.pathKinds.has(file)) return;
     const bytes = Buffer.byteLength(file);
-    if (this.linkBytes + bytes > EVIDENCE_LIMIT) {
+    if (this.linkBytes + this.inspectionBytes + bytes > EVIDENCE_LIMIT) {
       this.complete = false;
       return;
     }
     this.linkBytes += bytes;
-    this.durability?.budget(this.linkBytes);
+    this.durability?.budget(this.linkBytes + this.inspectionBytes);
     this.pathKinds.set(file, undefined);
     const parent = path.dirname(file);
     if (parent !== file) this.pathLinks(parent);

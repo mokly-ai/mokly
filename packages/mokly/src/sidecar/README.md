@@ -34,11 +34,12 @@ its requests and results. The paths below are relative to the package root.
   planned compile resolves each import outside its plan with the full
   resolver. A `full` call keeps the native plan, also of an exact native
   compile. A `serveEdit` call with a plan runs one planned compile with that
-  plan and no native compile. In a `full` call, one evidence owner and one
-  preparation serve every attempt. A `serveEdit` call creates no evidence
+  plan and no native compile. In a `full` call, one full capture owner and one
+  preparation serve every attempt. A `serveEdit` call creates no full capture
   owner, no evidence plugin, and no durability check. It still records the
   consumed sources, the module graph, the metadata digests, and the directory
-  lists.
+  lists. For its private folder files, `PackageFolderLookups` owns a separate
+  `PhysicalInputs`.
   [`src/sidecar/bundle-entry.ts`](./bundle-entry.ts) builds the
   virtual entry module. `configuredFiles` in
   [`src/sidecar/configured-files.ts`](./configured-files.ts), the
@@ -53,12 +54,14 @@ its requests and results. The paths below are relative to the package root.
   when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
-  result before it drops the evidence. A `serveEdit` compile gets empty,
-  incomplete evidence with the `uncaptured: "serveEdit"` marker. A compile
-  without a toolchain identity gets no marker. A `serveEdit` compile also gets
-  no marker when `ServeEditImports.record` returns false. `bundleRecipe` calls
-  it in the `sidecar.bundle.mapped-lookups` timing phase, before
-  `resolutionInputs`.
+  result before it drops the evidence. A `serveEdit` compile gets incomplete
+  evidence with the `uncaptured: "serveEdit"` marker, and its inputs hold only
+  its private folder files. A compile without a toolchain identity gets no
+  marker. A `serveEdit` compile also gets no marker when
+  `ServeEditImports.record` returns false or `PackageFolderLookups.record`
+  returns no evidence.
+  `bundleRecipe` calls both in the `sidecar.bundle.mapped-lookups` timing
+  phase, before `resolutionInputs`.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
@@ -110,8 +113,8 @@ its requests and results. The paths below are relative to the package root.
   toolchain, input digests, and directory lists still match. It tries the
   captured compilations first, and also checks their reuse evidence. Then a
   `serveEdit` request tries the marked compilations with these live checks
-  alone. A `full` request never takes a marked compilation. Its `restore`
-  installs a recipe without a compile.
+  and their private folder files. A `full` request never takes a marked
+  compilation. Its `restore` installs a recipe without a compile.
 - [`src/sidecar/toolchain.ts`](./toolchain.ts) holds
   `toolchainIdentity`, which each sidecar process computes once from the
   package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
@@ -120,7 +123,11 @@ its requests and results. The paths below are relative to the package root.
   directories, manifests, and configurations of each import before esbuild
   resolves it. A form that it cannot map makes the evidence incomplete. Its
   `paths` step records every target of each matching key from `mappedPaths`,
-  also for an absolute import.
+  also for an absolute import. Its package step records the main-field and
+  package-map targets of the own, PnP, installed, linked, and configured
+  packages through the shared package-map description below. When a PnP
+  data file exists, its `finish` lets `PnpInputs` check each native bare
+  selection.
   [`src/sidecar/resolution-request.ts`](./resolution-request.ts)
   applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./config-inputs.ts) records
@@ -132,10 +139,52 @@ its requests and results. The paths below are relative to the package root.
   `${configDir}` prefix from the folder of the top-level configuration, as
   found. [`src/sidecar/config-json.ts`](./config-json.ts) parses JSON
   with comments and trailing commas.
+- [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
+  description that the full capture and the marked checks share.
+  `packageMapTargets` gives the targets of the matching `exports` or `imports`
+  keys, conditions, and arrays. It marks the folder-map targets and the key
+  that esbuild selects. `packageTarget` decodes a package-relative target as
+  esbuild does, and `packageFolderCandidates` adds the main-field targets of a
+  mapped folder. [`src/sidecar/package-json.ts`](./package-json.ts) holds
+  `parsePackageJson`, which validates a manifest and returns a `PackageJson`.
+  It keeps the order and every repeated key of the fields that resolution
+  reads, because esbuild uses the first repeated key.
+  `PhysicalInputs.packageJson` parses each manifest of the package walkers
+  with it. In [`src/sidecar/package-lookup.ts`](./package-lookup.ts),
+  `nearestPackage` finds the own package, and `packageDirectories` gives the
+  installed, linked, and configured package roots.
+  [`src/sidecar/package-folders.ts`](./package-folders.ts) holds
+  `PackageFolders`. After a compile, its `lookup` places a native selection
+  among these candidates. It returns the candidates, the defining manifests,
+  and whether it placed the module.
+  [`src/sidecar/package-folder-lookups.ts`](./package-folder-lookups.ts) holds
+  `PackageFolderLookups`. Its `record` uses `PackageFolders` to find each
+  import that a package folder mapping selects, and it adds the candidate
+  folders to the live lookup directories. `markedFileEvidence` in
+  [`src/sidecar/marked-file-evidence.ts`](./marked-file-evidence.ts) turns the
+  folder files into the private evidence of the marked compilation: file,
+  absent, and link entries beside the `uncaptured: "serveEdit"` marker.
+  `record` returns no evidence when it cannot place such an import, when its
+  staged paths or its table pass `EVIDENCE_LIMIT`, when it cannot read the
+  package metadata of an import within the metadata bounds, or when the table
+  holds another kind or fails a fresh read.
+- [`src/sidecar/pnp-inputs.ts`](./pnp-inputs.ts) holds `PnpInputs`, which
+  indexes the package locations of the PnP data without copying PnP
+  selection, so the capture also records the folder maps of PnP packages. It
+  reads and records the PnP data through `PhysicalInputs`, within its one
+  read budget. Its `finish` checks each native bare selection through
+  `PackageFolders`. It makes the evidence incomplete for an uncovered folder
+  map, a metadata bound, or a failed lookup.
+  [`src/sidecar/pnp-json.ts`](./pnp-json.ts) reads `.pnp.data.json` and the
+  state that `.pnp.cjs` or `.pnp.js` embeds, without running their code.
+  `pnpFiles` in [`src/sidecar/pnp-files.ts`](./pnp-files.ts) gives the PnP
+  state files that native discovery checks, up to the first present one.
 - [`src/sidecar/physical-inputs.ts`](./physical-inputs.ts) holds
   `PhysicalInputs`, the one owner of the evidence reads. It reads each
-  metadata file within 1 MiB, parses the configurations, and queues each
-  unique resolution request once. Each queued capture uses synchronous
+  metadata file within 1 MiB and queues each unique resolution request once.
+  `MetadataInputs` in [`src/sidecar/metadata-inputs.ts`](./metadata-inputs.ts)
+  parses its configurations and package manifests from the same snapshots,
+  within its one read budget. Each queued capture uses synchronous
   filesystem reads before esbuild resolves the import. Its retained
   observations, metadata read bytes, visited paths, and request keys each stay
   within 8 MiB. Each charged visited path keeps its first-touch kind. Later

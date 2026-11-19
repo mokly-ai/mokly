@@ -12,7 +12,7 @@ export function planCapture(root: string): CaptureDurability {
     if (path.dirname(parent) === parent) break;
   }
   const now = BigInt(Date.now() + 10_000) * 1_000_000n;
-  return new CaptureDurability(
+  const durability = new CaptureDurability(
     { volumes: [] },
     {
       ...captureRuntime,
@@ -23,4 +23,8 @@ export function planCapture(root: string): CaptureDurability {
       stat: (file) => ancestors.get(file) ?? captureRuntime.stat(file),
     },
   );
+  const observe = durability.observe.bind(durability);
+  durability.observe = (file, stat, follow, metadata = false) =>
+    observe(file, ancestors.get(file) ?? stat, follow, metadata);
+  return durability;
 }

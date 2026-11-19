@@ -24,7 +24,7 @@ use crate::physical_inputs::PhysicalInputsMock;
 use crate::runtime::Runtime;
 use crate::{bundle_inputs, render_environment};
 
-fn definitions() -> Definitions {
+pub(super) fn definitions() -> Definitions {
     Definitions {
         screens: vec![],
         pages: vec![],
@@ -76,7 +76,7 @@ fn evidence(kind: &str) -> ReuseEvidence {
     }
 }
 
-fn pool(capture: BundleCapture, expected: &str) -> Unimock {
+pub(super) fn pool(capture: BundleCapture, expected: &str) -> Unimock {
     let release = PoolMock::release_generation
         .each_call(matching!(_, _))
         .returns(());

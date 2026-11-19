@@ -63,7 +63,7 @@ pub struct PhysicalEntry {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum UncapturedEvidence {
-    /// Serve edit compilation kept the existing live reuse inputs only.
+    /// Serve edit compilation kept live checks and private package-folder file observations.
     ServeEdit,
 }
 
@@ -88,12 +88,17 @@ impl ReuseEvidence {
         self.complete && self.uncaptured.is_none()
     }
 
-    /// Only the explicit empty Serve edit omission can enter live-only reuse.
+    /// A Serve edit omission admits only cache-file observations alongside its live checks.
     pub fn serve_edit(&self) -> bool {
         self.uncaptured == Some(UncapturedEvidence::ServeEdit)
             && !self.complete
             && !self.durable
-            && self.inputs.is_empty()
+            && self.inputs.values().all(|input| {
+                matches!(
+                    input,
+                    PhysicalInput::File { .. } | PhysicalInput::Absent | PhysicalInput::Link { .. }
+                )
+            })
     }
 
     /// Full requests require captured inputs; Serve edits also admit their marker.
@@ -165,3 +170,7 @@ impl CompiledGeneration {
             && self.unmapped_dependency_directories == other.unmapped_dependency_directories
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/compiled_evidence_tests.rs"]
+mod compiled_evidence_tests;

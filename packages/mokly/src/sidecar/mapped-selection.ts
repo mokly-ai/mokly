@@ -11,6 +11,28 @@ const rewrittenExtensions: Readonly<Record<string, readonly string[]>> = {
   ".cjs": [".cts"],
 };
 
+export function resolutionExtensions(
+  configured: readonly string[],
+): readonly string[] {
+  return configured.length
+    ? configured
+    : [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
+}
+
+export function mappedFiles(
+  base: string,
+  configured: readonly string[],
+): string[] {
+  const extension = path.extname(base);
+  return [
+    base,
+    ...resolutionExtensions(configured).map((extension) => base + extension),
+    ...(rewrittenExtensions[extension] ?? []).map(
+      (replacement) => base.slice(0, -extension.length) + replacement,
+    ),
+  ];
+}
+
 function canonical(file: string): string | undefined {
   try {
     return fs.realpathSync.native(file);
@@ -26,17 +48,8 @@ export function mappedSelection(
   selected: string,
   configuredExtensions: readonly string[],
 ): "file" | "directory" | "contained" | undefined {
-  const extensions = configuredExtensions.length
-    ? configuredExtensions
-    : [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
-  const extension = path.extname(base);
-  const files = [
-    base,
-    ...extensions.map((extension) => base + extension),
-    ...(rewrittenExtensions[extension] ?? []).map(
-      (replacement) => base.slice(0, -extension.length) + replacement,
-    ),
-  ];
+  const extensions = resolutionExtensions(configuredExtensions);
+  const files = mappedFiles(base, configuredExtensions);
   if (files.includes(selected)) return "file";
   const real = canonical(base);
   if (real === selected) return "file";

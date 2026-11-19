@@ -4,7 +4,6 @@ import path from "node:path";
 
 import type { BuildResult } from "esbuild";
 
-import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
@@ -18,6 +17,7 @@ import { bundleResult, generationId, restore } from "./compiled.js";
 import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
+import { PackageFolderLookups } from "./package-folder-lookups.js";
 import type { ConsumerRequire } from "./paths.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
@@ -35,7 +35,6 @@ export interface CompiledBundle {
   preview: string | null | undefined;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
-  capture: BundleCapture;
   editImports: ServeEditImports | undefined;
   plan: ReadonlyMap<string, PlannedImport> | undefined;
 }
@@ -52,17 +51,22 @@ export async function bundleRecipe(
     preview,
     runtimeKey,
     evidence,
-    capture,
     editImports,
     plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
-  const editReusable = editImports
-    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
-        editImports.record(compiled.metafile!, paths),
-      )
-    : false;
+  const folderEvidence = editImports
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () => {
+        const folders = new PackageFolderLookups(paths).record(
+          compiled.metafile!,
+          path.resolve(params.sourceRoot, params.configurationDirectory),
+        );
+        return editImports.record(compiled.metafile!, paths)
+          ? folders
+          : undefined;
+      })
+    : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
     "sidecar.bundle.graph",
@@ -127,14 +131,11 @@ export async function bundleRecipe(
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence
     ? await evidence.finish(compiled.metafile!)
-    : {
+    : (folderEvidence ?? {
         complete: false,
         durable: false,
         inputs: {},
-        ...(capture === "serveEdit" && editReusable
-          ? { uncaptured: "serveEdit" as const }
-          : {}),
-      };
+      });
   const toolchain = await toolchainIdentity();
   if (!toolchain) {
     reuseEvidence.complete = false;
