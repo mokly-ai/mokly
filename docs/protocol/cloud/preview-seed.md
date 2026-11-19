@@ -1,9 +1,10 @@
 # Preview Seed
 
 This sub-contract of [PR preview environments](./pr-preview-environments.md)
-gives every labelled PR one link that signs in a shared account and a sample
-project holding the PR's own mockups and comparison against `main`.
-Stable environments never run it. `D`, `C` and `N` follow the parent contract.
+gives every labelled PR a shared account and a sample project holding the PR's
+own mockups and comparison against `main`. One link signs in the shared
+account, and only the comment of a private repository carries it. Stable
+environments never run the seed. `D`, `C` and `N` follow the parent contract.
 
 ## Account And Sign-In Link
 
@@ -23,12 +24,15 @@ database and signing Secrets, it may be created beside a retained PVC: a new
 value only retires earlier links. Namespace deletion removes the Secret
 together with every session.
 
-Anyone who can read the PR, including copies of its comment in email
-notifications or chat, can sign in to that preview as the shared account until
-its namespace is deleted. This exposure is accepted: the repository is private
-and a preview holds only seed data, test data and reviewers' own uploads. The
-link is the only credential the PR comment may carry. Other addresses keep
-the [log reader](./preview-scripts.md#sign-in-log-reader).
+In a private repository, anyone who can read the PR, including copies of its
+comment in email notifications or chat, can sign in to that preview as the
+shared account until its namespace is deleted. This exposure is accepted,
+because only people with access can read a private repository, and a preview
+holds only seed data, test data and reviewers' own uploads. The link is the
+only credential the PR comment may carry. A public repository gets no link in
+the comment, because anyone can read it. There, the shared account signs in
+like every other address, with an email link that the
+[log reader](./preview-scripts.md#sign-in-log-reader) reads.
 
 ## Catalogue Capture
 
@@ -87,10 +91,12 @@ environment and revision, and the proof carries its pull request.
 ## Seed Steps
 
 The seed identities are workspace `Mokly` with slug `mokly-ai`, and project
-`Mokly Cloud` with slug `mokly-cloud`, repository `mokly-ai/mokly-cloud` and
-config path `mokly.config.json`. The sample project has no
-repository link and publishes through its project token. The seed log names each step, and a
-failure names the failed step and its reason:
+`Mokly Cloud` with slug `mokly`, repository `mokly-ai/mokly` and config path
+`mokly.config.json`. The repository is the one that runs the preview, because
+[capture](./preview-capture.md#catalogue-capture) uploads for that repository.
+The sample project has no repository link and publishes through its project
+token. The seed log names each step, and a failure names the failed step and
+its reason:
 
 1. Read `request.json`. Require a valid environment, a pull request number
    that matches it, and a 40-digit revision. When the request is missing or
@@ -175,7 +181,7 @@ atomically writes this exact proof from the validated publication:
   "environment": "preview-pr-N",
   "revision": "<publication-headSha>",
   "workspaceSlug": "mokly-ai",
-  "projectSlug": "mokly-cloud",
+  "projectSlug": "mokly",
   "projectId": "<project-uuid>",
   "publicationId": "<publication-uuid>",
   "publicationState": "ready",
@@ -209,7 +215,7 @@ failure never invokes Helm rollback.
 The Open preview cells also require the event's validated
 `repository.private` to be true; a public repository gets no credential link.
 Sample project is
-`https://pr-N.preview.D/mokly-ai/mokly-cloud/pull-requests/N`. The proof is only
+`https://pr-N.preview.D/mokly-ai/mokly/pull-requests/N`. The proof is only
 its presence flag; no proof value forms either link. Status selects the exact
 message independently of the link inputs.
 

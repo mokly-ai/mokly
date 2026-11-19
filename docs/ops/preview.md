@@ -18,17 +18,16 @@ operator commands below remain available for investigation and recovery.
    Deployment smoke and the sample project seed must pass; open the run to see
    a failing check. The seed step prints the seed Job's log, which names the
    failed step and its reason. Rerun the workflow to seed again.
-3. Open **Open preview** in the bot's comment. It signs you in as
-   `preview@mokly.ai`; **Sample project** opens the seeded publication in the
-   **Mokly Cloud** project. The publication carries this PR's mockups and its
-   comparison against `main`. The project is private, and the viewer
-   cannot load a private comparison, so Changes show an overlay without an
-   action. Browse the current catalogue, and do not treat
-   unavailable private Changes as a seed failure. Anyone who can read
-   the PR can use the sign-in link until the preview is removed. To use another address, open
-   **App** (`https://pr-N.preview.D/sign-in`, where `D` is `MKC_DOMAIN`,
-   `mokly.ai`), request a link on Sign in or Sign up, then read it using the
-   command below.
+3. Sign in as the shared account `preview@mokly.ai`. This public repository
+   gets no **Open preview** link. Open **App**
+   (`https://pr-N.preview.D/sign-in`, where `D` is `MKC_DOMAIN`, `mokly.ai`),
+   and request a link for that address on Sign in. Then
+   [read the link](#read-a-sign-in-link), or ask an operator to read it. Only
+   the shared account can open **Sample project**, because the seed creates
+   that private **Mokly Cloud** project in its workspace. The publication carries this PR's mockups and its
+   comparison against `main`. The viewer cannot load a private comparison, so
+   Changes show an overlay without an action. Browse the current catalogue,
+   and do not treat unavailable private Changes as a seed failure.
 4. Review your change. Data survives pushes, including accounts and publications.
    Removing the label or closing the PR deletes that data; save anything you
    need first.
@@ -36,9 +35,11 @@ operator commands below remain available for investigation and recovery.
 There is one comment marked `<!-- mokly-preview -->`. It shows App, API,
 Catalogue, the tested commit and a link to check results. Open preview appears
 after a successful deploy when seed sign-in was accepted and the event confirms
-the repository is private. Sample project appears only with a completed seed
-proof. A failed capture or later seed step can therefore keep Open preview
-without claiming the sample project succeeded. Catalogue shows
+the repository is private. That link signs in the shared account without a
+request. Anyone who can read the PR can use it until the preview is removed.
+Sample project appears only with a completed seed proof. A failed capture or
+later seed step can therefore keep Open preview without claiming the sample
+project succeeded. Catalogue shows
 `p-<publication-id>.pr-N.preview.C` as a pattern; the base suffix alone is not
 a publication. `C` is `MKC_CATALOGUE_BASE_DOMAIN`
 (`moklyusercontent.com`). Updates replace the same comment. A failed update
@@ -57,17 +58,18 @@ mean the app namespace is retained, or the reverse.
 
 ## Read A Sign-In Link
 
-The shared account signs in from the comment's link. Previews deliver every
-other address's sign-in link to restricted API logs. A reviewer with namespace
-pod/log access, authenticated kubectl and the repository checkout runs:
+Previews deliver every sign-in link to restricted API logs, also the link of
+the shared account. A reviewer with namespace pod/log access, authenticated
+kubectl and the repository checkout runs:
 
 ```sh
 export MKC_DOMAIN=mokly.ai
 python3 infra/scripts/preview-link.py preview-pr-123 \
-  --email reviewer@example.com
+  --email preview@mokly.ai
 ```
 
-Use your PR number and the address you just entered in the app. The command
+Use your PR number and the address you just entered in the app. To review as
+another address, request its link on Sign in or Sign up first. The command
 prints the newest matching link from the last 15 minutes, waiting up to 30
 seconds for it. Open the complete URL, including its `#token=...` fragment, in
 the browser where you requested it. A consumed or expired link needs a new
@@ -114,7 +116,7 @@ Each PR owns the following resources; none needs an operator provisioning step:
 | API, catalogue, app and Postgres 16, one replica each   | Label lifecycle                                          |
 | Postgres PVC `data-postgres-0`, 2 GiB                   | Preserved across pushes; deleted with namespace          |
 | Secrets `postgres-credentials`, `catalogue-signing-key` | Generated once; preserved across pushes                  |
-| Secret `preview-sign-in`                                | Generated once; the comment's sign-in link               |
+| Secret `preview-sign-in`                                | Generated once; the shared account's sign-in secret      |
 | Certificate/Secret `catalogue-tls`                      | Let's Encrypt `*.pr-N.preview.C`; retained across pushes |
 | DNS-only A `*.pr-N.preview.C`                           | Preview workflow creates/deletes it                      |
 | Objects under `pr-N/` in the shared bucket              | Deleted with the namespace database during cleanup       |

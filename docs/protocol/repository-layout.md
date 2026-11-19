@@ -1,7 +1,5 @@
 # Repository Layout
 
-Status: The move of Mokly Cloud into this layout is not complete, and no check enforces the boundary yet. The [combine plan](../../plans/combine-mokly-cloud.md) completes the move and adds the check.
-
 This repository holds one product in two parts. Mokly is the open-source
 toolkit: the Rust core, the `mokly` command, and the npm packages that build,
 serve, and view mockup catalogues. Mokly Cloud is its hosted companion. It
@@ -115,9 +113,11 @@ The cloud may depend on Mokly. A check in the Repository suite of
 
 The cloud uses the workspace `@mokly/*` packages and `mokly-*` crates
 directly, not published npm releases. A Mokly change therefore reaches the
-cloud without a release, and the cloud deploys unreleased Mokly code from
-`main`. Decision: workspace use, not exact pins on published releases, so that
-a change across both parts needs no release and no version bump.
+cloud without a release. While the
+[cutover switch](./ci-workflow-cloud.md#forks-and-protection) is on, the cloud
+deploys unreleased Mokly code from `main`. Decision: workspace use, not exact
+pins on published releases, so that a change across both parts needs no
+release and no version bump.
 
 `cargo xtask mokly-fixtures` regenerates the cloud contract fixtures from the
 workspace build, not from installed npm releases. The drift check of the gate

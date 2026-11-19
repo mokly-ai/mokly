@@ -1,5 +1,7 @@
 # Publication Index And Changes
 
+Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
+
 This is the catalogue index sub-contract of
 [upload validation](./publication-upload-validation.md). Mokly's
 [catalogue](../mokly-catalogue.md), [catalogue changes](../mokly-catalogue-changes.md),
@@ -7,8 +9,9 @@ This is the catalogue index sub-contract of
 [moves](../mokly-moves.md) and [shell delivery](../mokly-shell-delivery.md) docs
 own the index format, together with the generated declarations of
 `@mokly/viewer`. The receiver reads the catalogue index
-`mokly-viewer/index.json` that the Plan archive carries. It
-parses no entry detail, no deployment file and no comparison file.
+`mokly-viewer/index.json` that the Plan archive carries, and the
+[content check](#content-check) reads every entry detail. The receiver parses
+no deployment file and no other comparison file.
 No review file exists, because Mokly keeps its review result in memory.
 The
 [validation quotas](./publication-upload-validation.md#plan-archive-and-limits)
@@ -28,44 +31,21 @@ fixed [REST copy](./rest-api-surface.md#implemented-surface). A
 missing version and a malformed body return 400 `upload-invalid-bundle`.
 Quota excess returns 413 `upload-too-large`.
 
-An entry path has one or more `/`-joined segments. Each segment matches
-`^[A-Za-z0-9_-]+$`. Preserve authored case. Reject empty, leading or trailing
-segments, dots, spaces, escapes and separators inside a segment. Reject
-Windows device names without case sensitivity: `aux`, `con`, `nul`, `prn`,
-`com1`–`com9` and `lpt1`–`lpt9`. The first segment cannot equal
-`mokly-generated`, without case sensitivity. Later segments may use that
-name.
+Every entry path follows the
+[segment grammar](../mokly-paths.md#segment-grammar) of Mokly paths. The
+receiver limits every entry path that it reads to 1,024 UTF-8 bytes and 64
+segments.
 
-The receiver limits every entry path that it reads to 1,024 UTF-8 bytes and
-64 segments.
+## Content Check
 
-## Fields The Receiver Reads
+Before it completes an upload, the receiver checks the index and every entry
+detail with the core readers, as
+[Catalogue Content](../mokly-upload-validation.md#catalogue-content) requires.
+The receiver also applies one rule that the core readers do not apply: every
+current and removed path is unique without ASCII case sensitivity. A check
+that fails returns 400 `upload-invalid-bundle`.
 
-The receiver reads these index fields and no others:
-
-- The root `schemaVersion`, `base`, `baseCommit`, `changesStatus` and
-  `comparisonUrl`.
-- The `path`, `title`, `previousPath` and `changes` of each current record in
-  `screens`, `pages`, `documents`, `useCases` and `components`.
-- The `viewport` and `colorScheme` of each view of a current screen record.
-- The `entry.path`, `entry.title` and `entry.changes` of each record in
-  `removedEntries`.
-
-Each read field follows these rules:
-
-- A title is a nonempty string.
-- A `path` or `previousPath` follows the entry-path grammar above.
-- A `changes` object has a `status` of `preparing`, `pending`, `ready`,
-  `unavailable` or `disabled`. A `ready` status also carries a `kind` of
-  `added`, `changed`, `removed` or `unmodified` and a boolean `included`.
-- A view has a `viewport` of `mobile` or `desktop` and a `colorScheme` of
-  `light` or `dark`.
-- Every current and removed path is unique without ASCII case sensitivity.
-- A current record never carries the kind `removed`.
-
-A read field that is missing, has the wrong type or breaks these rules returns
-400 `upload-invalid-bundle`. The receiver does not validate the
-other index fields. The app reads the index under the
+The app reads the index under the
 [reader contract](./mokly-artifact-compatibility.md#frame-boundary).
 An index read that fails shows the failed-index card of
 [Viewer host](./viewer-host.md#sources).

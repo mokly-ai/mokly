@@ -1,5 +1,7 @@
 # Publication Upload Validation
 
+Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
+
 This document defines how the receiver validates the plan request of the
 [upload exchange](./publication-upload-exchange.md): the plan archive's
 framing and quotas, the schema 3 ownership marker and the catalogue index.
@@ -150,9 +152,10 @@ Such an upload declares no `mokly-viewer/diffs` path. Any
 disagreement between the envelope and the index is HTTP 400
 `upload-invalid-bundle`.
 
-[Publication index](./publication-review.md) defines the index fields that the
-receiver reads and the Changes count. The receiver validates the
-relationships that the envelope, the index and the declarations prove.
-Changes attribution, CSS matches, prop schemas, usage and flow membership are
-producer checks. Retain the received bytes; never claim producer authenticity
-or invent evidence.
+[Publication index](./publication-review.md) defines the content check and the
+Changes count. The receiver validates the relationships that the envelope, the
+index and the declarations prove. The
+[content check](../mokly-upload-validation.md#catalogue-content) applies the
+rules of the core readers to the index and every entry detail. Changes
+attribution and CSS matches stay producer checks. Retain the received bytes;
+never claim producer authenticity or invent evidence.

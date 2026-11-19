@@ -1,7 +1,5 @@
 # A guide for agents
 
-Status: Mokly Cloud is not in its paths, workspaces, and suites yet, so some cloud commands below do not work. The [combine plan](./plans/combine-mokly-cloud.md) completes the move.
-
 This repository holds Mokly and Mokly Cloud. Mokly builds app-independent
 static mockup catalogues, serves them for development browsing, and renders
 visual comparisons. Mokly Cloud, its hosted companion, publishes the

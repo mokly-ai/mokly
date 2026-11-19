@@ -1,5 +1,7 @@
 # Viewer Catalogue
 
+Status: The receiver does not run the content check yet, so the app can load an index or an entry detail that the core readers refuse. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
+
 This is the public-catalogue sub-contract of [Viewer](./viewer.md).
 The app reads the catalogue index v9 and the entry details v4 that
 the Mokly CLI publishes, and the workspace `@mokly/viewer` reads both
@@ -19,8 +21,9 @@ policy and the renewal after a 401. Reject cross-origin redirects and
 unsuccessful responses.
 
 The public readers accept index `schemaVersion: 9` and detail
-`schemaVersion: 4` only. They copy content without validation. The receiver validates the
-index fields that [Publication index](./publication-review.md) defines.
+`schemaVersion: 4` only. They copy content without validation. The receiver
+checks the index and every entry detail before it completes an upload, as
+[Catalogue Content](../mokly-upload-validation.md#catalogue-content) requires.
 Every other version throws `MoklyVersionError` before entry or
 path use. Preserve that type for the
 [version failure](./viewer-host.md#version-failure). Never convert old IDs or

@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-03, from the branch `calummoore/rust-viewer-checks-plan`: the two post-merge tasks of the plan that moved the read-model checks out of the viewer.
-- **Location:** The cloud receiver: `crates/mkc-mokly-contract/Cargo.toml`, the index parser `crates/mkc-mokly-contract/src/index.rs:28-43`, `crates/mkc-mokly-contract/src/index_validation.rs`, `crates/mkc-api/src/upload_complete.rs`, and `crates/mkc-publications/src/ingest.rs`. The cloud contract: `docs/protocol/cloud/publication-review.md`, sections "Fields The Receiver Reads" and "Reader Conformance And Cloud Checks". The Mokly readers and rules: `crates/mokly-model/src/readers.rs`, `crates/mokly-model/src/detail_context.rs`, `crates/mokly-model/README.md`, `docs/protocol/mokly-upload-validation.md`, and `docs/protocol/mokly-catalogue-serialization.md`.
+- **Location:** The cloud receiver: `crates/mkc-mokly-contract/Cargo.toml`, the index parser `crates/mkc-mokly-contract/src/index.rs:28-43`, `crates/mkc-mokly-contract/src/index_validation.rs`, `crates/mkc-mokly-contract/README.md`, `crates/mkc-api/src/upload_complete.rs`, and `crates/mkc-publications/src/ingest.rs`. The cloud contract: `docs/protocol/cloud/publication-review.md`, sections "Content Check" and "Reader Conformance And Cloud Checks", `docs/protocol/cloud/mokly-artifact-compatibility.md`, sections "Version Boundary" and "Frame Boundary", `docs/protocol/cloud/publication-upload-validation.md`, section "Comparison Validation", `docs/protocol/cloud/publication-upload-exchange.md`, section "Completion", and `docs/protocol/cloud/viewer-catalogue.md`, section "Fetch And Version Gate". Each of these five cloud pages has a status line that links this item. The Mokly readers and rules: `crates/mokly-model/src/readers.rs`, `crates/mokly-model/src/detail_context.rs`, `crates/mokly-model/README.md`, `docs/protocol/mokly-upload-validation.md`, and `docs/protocol/mokly-catalogue-serialization.md`.
 - **Reason:** The change that moved Mokly Cloud into this repository moves code without a change of behaviour, and this check changes which uploads the cloud API accepts.
 
 - **Terms:**
@@ -29,8 +29,8 @@
   - Mokly 0.17 removed the review file. Since then the receiver checks only
     the index fields that it reads: the base fields, the record paths and
     titles, `changes`, and the screen view axes. It ignores the other
-    fields, as `docs/protocol/cloud/publication-review.md`, section "Fields
-    The Receiver Reads", states. A corpus test proves that the Rust reader
+    fields. The status line of each cloud page that the Location names
+    records this gap. A corpus test proves that the Rust reader
     and `readCatalogueIndex` of `@mokly/viewer` give equal Changes counts.
   - On 2026-11-01 a docs agent of the Mokly 0.18.0 upgrade asked what the
     cloud promises for an upload whose index the viewer refuses. The
@@ -58,10 +58,18 @@
       in Rust.
     - A second copy of the rules in TypeScript, because the two copies drift.
   - That choice is option E of the cloud question, with the crate in this
-    repository. On 2026-11-17 this item took in the cloud question, so the
-    cloud protocol page changes with this task. On 2026-11-18 the old cloud
-    repository still listed the question as a decision that waits for the
-    user.
+    repository. On 2026-11-17 this item took in the cloud question. On
+    2026-11-18 the old cloud repository still listed the question as a
+    decision that waits for the user.
+  - On 2026-11-19 the cloud pages that the Location names took the full
+    check as their requirement. Each copy of a core reader rule became a
+    link to `docs/protocol/mokly-upload-validation.md`, section Catalogue
+    Content, or to `docs/protocol/mokly-paths.md`, section Segment Grammar.
+    The pages keep only the cloud quotas, the 400 answer, and one rule that
+    the core readers do not apply: every current and removed path is unique
+    without ASCII case sensitivity. Each page got a status line that links
+    this item. The completion order of `publication-upload-exchange.md` got
+    the content check after the durable-blob check and before the publish.
   - The lenient readers check versions, known field types, relationships,
     and the field placement inside each tagged union. They ignore additive
     unknown fields in public records. A prop schema still rejects an unknown
@@ -142,14 +150,13 @@
       `crates/mkc-mokly-contract/Cargo.toml` has no dependency on a Mokly
       crate.
     - The receiver reads no entry detail.
-      `docs/protocol/cloud/publication-review.md:10-11` says the same.
     - The receiver reads the index only with its own parser,
       `crates/mkc-mokly-contract/src/index.rs:28-43`. The parser accepts
       index version 9 only, and it answers 426 for another version. It
       checks only the index fields that the receiver reads.
   - So no part of Mokly Cloud checks the content of an upload beyond the
-    read index fields. The Mokly pages that the last Task step names carry
-    status lines for this gap.
+    read index fields. The Mokly pages and the cloud pages that the last Task
+    step names carry status lines for this gap.
   - The first order of this item was the receiver check first and the viewer
     upgrade second. That order did not happen. Cloud adopted a viewer that
     trusts the content before its receiver had the shared lenient index
@@ -179,10 +186,16 @@
      digest and size checks of `docs/protocol/mokly-upload-validation.md`.
   6. Answer 400 or 422 when a check fails. Publish nothing for that upload.
      Keep the version gate, which answers 426, before the content check.
-  7. Rewrite the sections "Fields The Receiver Reads" and "Reader
-     Conformance And Cloud Checks" of
-     `docs/protocol/cloud/publication-review.md` for the full check, with
-     the decision of 2026-11-03 and the rejected options.
+  7. Make the receiver meet the cloud pages that the Location names. They
+     already state the full check through links to the Mokly pages, so they
+     need no new rule. Keep the cloud quotas, the 400 answer, and the rule
+     that every current and removed path is unique without ASCII case
+     sensitivity, because the core readers do not apply it. The decision of
+     2026-11-03 stays in `docs/protocol/mokly-upload-validation.md`, section
+     Catalogue Content, and the cloud pages link it. Rewrite the section
+     "Reader Conformance And Cloud Checks" of
+     `docs/protocol/cloud/publication-review.md` for the reader that the
+     receiver then runs.
   8. Deploy the receiver, and smoke-test it:
      - Publish a good catalogue, such as `examples/basic/mokly.config.json`.
        Cloud accepts it, and the embedded viewer shows it.
@@ -197,7 +210,14 @@
      `docs/protocol/mokly-component-usage-records.md`,
      `docs/protocol/mokly-shell-delivery.md`, and
      `docs/architecture/package-boundary.md`. Keep status clauses owned by
-     other follow-up items.
+     other follow-up items. Remove the status lines that link this item from
+     the cloud pages `docs/protocol/cloud/publication-review.md`,
+     `docs/protocol/cloud/mokly-artifact-compatibility.md`,
+     `docs/protocol/cloud/publication-upload-validation.md`,
+     `docs/protocol/cloud/publication-upload-exchange.md`, and
+     `docs/protocol/cloud/viewer-catalogue.md`. Update the sentence of
+     `crates/mkc-mokly-contract/README.md` that says which index fields the
+     reader checks.
 - **Impact if no action:** Cloud already runs `@mokly/viewer` 0.19.0, which
   trusts the content. Its receiver lacks the shared lenient index checks and
   every entry detail check. It still checks its own index read fields. So
@@ -211,9 +231,9 @@
   already exist.
 - **Done when:** The deployed Cloud receiver rejects the bad upload with 400
   or 422, and the CLI reports `upload-invalid-bundle`. It accepts the good
-  upload, and the embedded viewer shows that catalogue. The cloud receiver
-  page states the full check, and the status lines that link this item are
-  gone.
+  upload, and the embedded viewer shows that catalogue. The status lines
+  that link this item are gone from the Mokly pages and from the five cloud
+  pages that the Location names.
 - **Related:**
   - [hosted-upload-reuse-check.md](./hosted-upload-reuse-check.md) confirms
     that uploads reuse unchanged detail Blobs. This task checks those reused

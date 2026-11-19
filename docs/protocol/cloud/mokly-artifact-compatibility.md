@@ -1,5 +1,7 @@
 # Mokly Artifact Compatibility
 
+Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
+
 The cloud uses the public artifacts and documented exports of the workspace
 packages `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui` together. The
 receiver, the app, the mockups, the site and the tooling implement these
@@ -91,7 +93,7 @@ versions. The cloud uses them together.
 | Export ownership marker                | 3                              | `.mokly-export-artifact` parser                                       |
 | Plan response/exchange                 | 1                              | Plan, blob and completion transport                                   |
 | Catalogue index                        | 9                              | Plan checks, Changes count, check links, screens and the app's viewer |
-| Entry detail                           | 4                              | The app's viewer; the receiver parses none                            |
+| Entry detail                           | 4                              | The receiver's content check and the app's viewer                     |
 | Static deployment file                 | 1                              | Served unchanged; the receiver parses none                            |
 | Frame probe wire envelope              | 3                              | Packaged frame adapter and frame probe                                |
 | Removed page/document preview metadata | 3                              | Packaged removed-preview reader                                       |
@@ -118,9 +120,11 @@ Decision: the envelope 3 and index 9 gates are the only version gates, and the
 receiver has no `moklyVersion` floor. These gates already answer
 426 to every earlier producer: releases up to 0.16 write envelope 2, and 0.17
 writes index 8. Rejected: a floor at 0.18.0, because it refuses no extra
-producer; version checks of each detail and preview file on arrival, because
-the receiver parses none of them; and accepting only the workspace version,
-because it refuses compatible published releases.
+producer; a separate gate for each detail and preview file, because the
+[content check](../mokly-upload-validation.md#catalogue-content) already
+checks each detail version, and the receiver parses no preview file; and
+accepting only the workspace version, because it refuses compatible published
+releases.
 
 ### Ownership Schema 3 Boundary
 
@@ -200,8 +204,8 @@ such catalogues after the matching app deploys. Stored publications are not
 converted.
 
 The public index and detail readers gate versions and return copies.
-They do not validate content. The cloud receiver keeps its documented
-index validation and rejection cases.
+They do not validate content. The receiver checks the content, as
+[Catalogue Content](../mokly-upload-validation.md#catalogue-content) requires.
 
 ## Fixture Ownership
 

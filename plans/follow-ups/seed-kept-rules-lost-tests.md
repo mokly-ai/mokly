@@ -9,7 +9,7 @@
 - **Category:** Test (estimate).
 
 - **Terms:**
-  - **Preview seed command:** `mkc-api preview-seed --run <run>`. It creates the shared preview account, the workspace `Mokly` (`mokly-ai`), the project `Mokly Cloud` (`mokly-cloud`) and a publication of the PR's mockups in a preview environment.
+  - **Preview seed command:** `mkc-api preview-seed --run <run>`. It creates the shared preview account, the workspace `Mokly` (`mokly-ai`), the project `Mokly Cloud` (`mokly`) and a publication of the PR's mockups in a preview environment.
   - **Project token:** a credential that permits uploads to one project. The seed creates one named `Preview seed` and revokes it at the end.
 - **Background:**
   - The Python preview seed was deleted on 2026-10-30, with the user's approval, when the seed moved into the API binary.

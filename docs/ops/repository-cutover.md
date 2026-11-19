@@ -17,13 +17,44 @@ print the newest commit that the pull request ports. On 2026-11-19 that was
 `55972c86` (cloud PR #132). Leave `MKC_CLOUD_CUTOVER_ENABLED` unset until
 [the switch](#turn-on-cloud-delivery).
 
+### Stop The Old Deployments
+
+The trust step keeps the old repository in the trust until
+[it retires](#retire-the-old-repository). The old `site` and `desktop-release`
+workflows also deploy with secrets outside that trust. So stop the deploy
+paths of the old repository first, shortly before the trust step:
+
+1. Close the open pull requests there, so that the old **Close PR Site** job
+   deletes their `pr-N` deployments of the `mokly-site` Pages project. Their
+   branches stay for the port after the merge. On 2026-11-19,
+   `gh pr list -R mokly-ai/mokly-cloud` listed #133, #107 and #88, each with a
+   site preview. Run
+   `gh pr close NUMBER -R mokly-ai/mokly-cloud --comment "Closed for the move to mokly-ai/mokly."`.
+   Check: the **Mokly website** comment of each one has a **Cleanup** line
+   that starts with `deleted`. When it starts with `retained`, run
+   `gh run rerun RUN -R mokly-ai/mokly-cloud` for the run that the comment
+   links.
+2. Run `for name in deploy desktop-release site; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
+   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows **Deploy**,
+   **Desktop release** and **Site** as `disabled_manually`.
+
+The old `preview` workflow stays on until the old repository retires, so that
+the cleanup of an old preview can run. The old `ci` and `foundation` workflows
+stay on too. Old CI deploys nothing. An old Foundation run stops at its plan,
+because that plan deletes the new trust bindings, and CI never deletes a
+[trust resource](../protocol/cloud/foundation-promotion.md#trust-set). If the
+merge does not happen, run the same loop with `enable` in place of `disable`.
+Then reopen each pull request with `gh pr reopen NUMBER -R mokly-ai/mokly-cloud`.
+
 ### Trust Both Repositories
 
 Google Cloud trusts only the workflows that the federation condition names, so
 CI here cannot apply this change. The operator applies it from the head of the
-pull request, shortly before the merge. After it, a new commit on the old
-`main` cannot deploy. Set the other inputs as the
-[Terraform README](../../infra/terraform/README.md#shared-foundation) shows:
+pull request, shortly before the merge. The new condition trusts the `ci`,
+`deploy`, `foundation` and `preview` workflows on `main` of both repositories,
+so the old repository keeps its access until it retires. Set the other inputs
+as the [Terraform README](../../infra/terraform/README.md#shared-foundation)
+shows:
 
 ```sh
 export MKC_REPOSITORY_ID="$(gh api repos/mokly-ai/mokly --jq .id)"
@@ -216,8 +247,9 @@ not re-run them. Steps 2 and 3 start new runs.
 5. Label a pull request here with `preview`, as
    [Review A Labelled PR](./preview.md#review-a-labelled-pr) shows. Check:
    **Preview required** passes, and the comment says **Checks passed**. This
-   repository is public, so the comment has no **Open preview** link; use
-   [Read A Sign-In Link](./preview.md#read-a-sign-in-link). Remove the label.
+   repository is public, so the comment has no **Open preview** link. Sign in
+   as `preview@mokly.ai`, as
+   [Read A Sign-In Link](./preview.md#read-a-sign-in-link) shows. Remove the label.
    Check: the comment changes to **Preview removed**.
 
 ### Retire The Old Repository
@@ -226,9 +258,9 @@ Do these steps in order after the first Deploy run reaches production.
 
 1. `gh pr list -R mokly-ai/mokly-cloud --label preview` must print nothing,
    because the cleanup of an old preview needs the old workflows and trust.
-   Then disable the old workflows, so that no push there deploys:
-   `for name in ci deploy desktop-release foundation preview site; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
-   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows each as `disabled_manually`.
+   Then disable the other old workflows:
+   `for name in ci foundation preview; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
+   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows all six as `disabled_manually`.
 2. Remove the old repository from the trust. CI cannot, because the change
    deletes trust bindings. Hold merges to `main`. Run
    `gh variable delete MKC_LEGACY_REPOSITORY_ID -R mokly-ai/mokly`, then steps 2
@@ -236,11 +268,11 @@ Do these steps in order after the first Deploy run reaches production.
    with `MKC_LEGACY_REPOSITORY_ID` unset. Expect 8 deletes of
    `mokly-ai/mokly-cloud/` bindings and an in-place update of the condition.
    Check: the `gcloud` command of the trust step prints only `mokly-ai/mokly`.
-3. Move the open pull requests before the archive, because an archived
-   repository is read-only. On 2026-11-19, `gh pr list -R mokly-ai/mokly-cloud`
-   listed #133, #107 and #88. Port each change to the
+3. Port the change of each pull request that
+   [Stop The Old Deployments](#stop-the-old-deployments) closed to the
    [combined paths](../protocol/repository-layout.md#directories) here, or drop
-   it. Then run `gh pr close NUMBER -R mokly-ai/mokly-cloud --comment "Moved to URL."`.
+   it. Then run `gh pr comment NUMBER -R mokly-ai/mokly-cloud --body "Moved to URL."`
+   before the archive, because an archived repository is read-only.
    Check: `gh pr list -R mokly-ai/mokly-cloud` prints nothing.
 4. The old CI no longer runs, so turn off its required check with
    `gh api -X PUT repos/mokly-ai/mokly-cloud/rulesets/23759144 -f enforcement=disabled`.

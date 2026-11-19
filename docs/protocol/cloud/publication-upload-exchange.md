@@ -1,5 +1,7 @@
 # Publication Upload Exchange
 
+Status: Completion does not run the content check yet. The receiver checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
+
 This is the plan, blob and completion exchange of
 [Publication upload](./publication-upload.md). Mokly's
 [upload exchange v1](../mokly-upload-exchange.md),
@@ -141,8 +143,12 @@ before stored digests are checked:
    then publishes normally. No link to an earlier winner is stored.
 4. While any reserved blob is not durable, completion answers HTTP 409 with
    `upload-incomplete`.
-5. Otherwise the server publishes the attempt in one transaction that applies
-   this order again. It answers HTTP 201, or HTTP 200 with the winner when a
+5. Otherwise the server runs the
+   [content check](./publication-review.md#content-check) on the index and
+   every entry detail. A failed check answers HTTP 400 with
+   `upload-invalid-bundle` and publishes nothing. After a passed check, the
+   server publishes the attempt in one transaction that applies this order
+   again. It answers HTTP 201, or HTTP 200 with the winner when a
    different upload committed the identity first. A completion that overlaps
    an earlier one for the same attempt answers 201 with the publication the
    earlier one made.

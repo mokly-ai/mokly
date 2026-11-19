@@ -145,9 +145,9 @@ timeout.
 
 ## Sign-In Log Reader
 
-The shared preview account uses the comment's sign-in link; this reader serves
-every other address. The reviewer first requests a link in `/sign-in` or
-`/sign-up`.
+This reader serves every address. The shared preview account uses it too,
+because only the comment of a private repository carries its sign-in link.
+The reviewer first requests a link in `/sign-in` or `/sign-up`.
 `preview-link.py` normalizes the full email as the API does and matches exact
 addresses, never substrings. Select API pods by `app.kubernetes.io/name=api`
 and read container `api` with timestamps since the requested time. Parse only

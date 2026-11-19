@@ -44,8 +44,9 @@ every artifact and path. Marker parsing alone is a shape check; the hosting
 policy and the reserved roots apply at plan validation, so upstream valid
 marker cases stay valid marker shapes. Marker and index unknown fields are
 ignored. Envelope unknown fields are rejected. The index reader checks only
-the documented read fields. It does not validate the catalogue tree, details,
-usage, resource evidence or producer attribution.
+the fields that the receiver reads: the base fields, the record paths and
+titles, `changes`, and the screen view axes. It does not validate the
+catalogue tree, details, usage, resource evidence or producer attribution.
 
 `PlanBundle::index()` returns the validated index facts. `index_bytes()`
 returns its exact, digest-checked bytes. `artifacts()` returns the envelope,

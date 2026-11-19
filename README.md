@@ -22,8 +22,6 @@
   <a href="./docs/protocol/README.md">Protocols</a>
 </p>
 
-Status: The move of Mokly Cloud into this repository is not complete. The [combine plan](./plans/combine-mokly-cloud.md) completes it.
-
 Mokly is an open-source toolkit for turning product screens into a searchable
 static catalogue. A screen is an HTML file with YAML front matter, a React
 component, or a Storybook story. Mokly renders every screen at mobile and
@@ -274,7 +272,9 @@ router, and mockup tooling are under `apps/`. Its design tokens are under
 `packages/tokens`, and its Terraform, workload images, and Helm charts are
 under `infra/`. The cloud uses the workspace packages and crates of this
 repository directly, so a Mokly change reaches the cloud without a release.
-Mokly never depends on the cloud.
+The cloud deploys from this repository while its
+[cutover switch](./docs/protocol/ci-workflow-cloud.md#forks-and-protection) is
+on. Mokly never depends on the cloud.
 [Repository layout](./docs/protocol/repository-layout.md) defines the paths,
 the licenses, and this boundary.
 
