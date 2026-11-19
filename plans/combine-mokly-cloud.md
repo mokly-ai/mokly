@@ -213,7 +213,7 @@ Each call below is my call, made on 2026-11-17.
   `npm --prefix ts`. Moved in Milestone 4. Deleted in Milestone 4.
 - The `mokly-ai/mokly-cloud` repository → this repository. Consumers: the
   Workload Identity Federation condition in Terraform, the GitHub App, the
-  repository secrets and environments, the links in docs, and the Conductive
+  repository secrets and environments, the links in docs, and the Conductor
   repository list. Moved in Milestones 7 and 8. Archived after the merge.
 
 ## Milestone 1: Documentation and protocol
@@ -388,7 +388,9 @@ Depends on: 6
 Depends on: 7
 
 Each TODO needs an operator with owner access. The agent prepares the
-commands and the checklist.
+commands and the checklist. The
+[repository cutover runbook](../docs/ops/repository-cutover.md) gives each
+step, its command, and its check.
 
 - [ ] Copy the repository secrets, the variables, and the `production` and
       preview environments, with their protection rules, to this
@@ -396,7 +398,7 @@ commands and the checklist.
 - [ ] Apply the Terraform change of Milestone 7, so that Google Cloud trusts
       both repositories during the cutover.
 - [ ] Point the GitHub App and the preview environments at this repository.
-- [ ] Add the cloud services to the Conductive repository setup of this
+- [ ] Add the cloud services to the Conductor repository setup of this
       repository.
 
 ## Milestone 9: Verification, commit, review, and pull request
@@ -422,11 +424,14 @@ The merge of `main` on 2026-11-19 records its conflict resolutions in
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Watch the first deploy from `main` of this repository through to
-      production.
+- [ ] Set `MKC_CLOUD_CUTOVER_ENABLED` to `true`. Watch the first deploy from
+      `main` of this repository through to production.
 - [ ] Remove the old repository from the Terraform trust condition.
+- [ ] Move the open cloud pull requests #133, #107, and #88 to this
+      repository, or close them. Do this before the archive, because an
+      archived repository is read-only.
 - [ ] Archive `mokly-ai/mokly-cloud`. Point its README at this repository.
-- [ ] Reopen the open cloud pull requests #133, #132, #107, #93, and #88
-      against this repository, or close them.
+- [ ] Remove the cutover-only trust code: the legacy repository input,
+      `MKC_LEGACY_REPOSITORY_ID`, and `infra/terraform/modules/github/moved.tf`.
 - [ ] Replace the cloud's own Mokly contract types in `mkc-mokly-contract`
       with the `mokly-model` types.
