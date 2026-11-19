@@ -145,6 +145,10 @@
   - [sidecar-loaded-state-selection.md](./sidecar-loaded-state-selection.md)
     chooses processes by their loaded state. An eviction rule as in option B
     changes that state, so design the two together.
+  - [dispose-older-head-generations.md](./dispose-older-head-generations.md)
+    plans the eviction rule of option B for the earlier start of the
+    background pass after a publication. When that item merges, option B
+    needs only the preload itself.
 - **Recommendation:** B, measured once. Attempt 1 gave the larger background
   gain, and its two misses, more memory and slower later bundles, follow
   from the overlap that B removes. Its window cost without the bundle was
