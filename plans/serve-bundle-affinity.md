@@ -106,16 +106,23 @@ Completed. Evidence: `.context/serve-bundle-affinity/docs-report.md`.
 
 Depends on: 1
 
-- [ ] Delegate implementation and regression tests to the `non-ui implementor`.
-- [ ] Add deterministic tests first and observe the new preference assertions fail.
-- [ ] Cover newest idle preference, busy-to-next-newest fallback, no-record selection, other-root isolation, and recycled, retired, or reaped record loss.
-- [ ] Keep the record with each live process. Update it only after successful head compilations. Verify that recipe reuse does not raise the rank when the result identifies reuse.
-- [ ] Preserve context and generation affinity, admission, claims, warm head, return, and retirement.
-- [ ] Read PR #351's pool changes and confirm that both changes can survive either merge order. A overlaps its `Head` struct and bundle-recording arm. Preserve both behaviours.
-- [ ] Run the sidecar, pool, and relevant Serve tests unchanged.
-- [ ] Delegate removal of the protocol status line and the README's temporary queue-order wording when the implementation passes. Update its test summary and Key Code where needed.
+- [x] Delegate implementation and regression tests to the `non-ui implementor`.
+- [x] Add deterministic tests first and observe the new preference assertions fail.
+- [x] Cover newest idle preference, busy-to-next-newest fallback, no-record selection, other-root isolation, and recycled, retired, or reaped record loss.
+- [x] Keep the record with each live process. Update it only after successful head compilations. Verify that recipe reuse does not raise the rank when the result identifies reuse.
+- [x] Preserve context and generation affinity, admission, claims, warm head, return, and retirement.
+- [x] Read PR #351's pool changes and confirm that both changes can survive either merge order. A overlaps its `Head` struct and bundle-recording arm. Preserve both behaviours.
+- [x] Run the sidecar, pool, and relevant Serve tests unchanged.
+- [x] Delegate removal of the protocol status line and the README's temporary queue-order wording when the implementation passes. Update its test summary and Key Code where needed.
+
+Completed. Evidence: `.context/serve-bundle-affinity/pool-report.md` and `.context/serve-bundle-affinity/docs-cleanup-report.md`.
 
 Evidence lives in `.context/serve-bundle-affinity/`.
+
+Implementation call on 2026-11-19: run the recipe test fixture's `/repo` requests as base work by giving its pool a separate launch root.
+Three recipe tests select a fresh worker through FIFO order. The approved head rank intentionally replaces that selection rule.
+The fixture change preserves their recipe requests, test bodies, exact assertions, and expected values. New tests cover head selection.
+This isolates recipe seeding from head scheduling. Evidence: `.context/serve-bundle-affinity/pool-sidecar-unit.log`.
 
 ## Milestone 3: Release measurements
 
@@ -123,21 +130,26 @@ Depends on: 2
 
 Harness preparation is independent. Run measurements only after Milestone 2 passes.
 
-- [ ] Delegate fixture measurement tooling to the `non-ui implementor`. Keep one-time tooling under `.context/`.
-- [ ] Build current merged main and the branch in separate checkouts and Cargo target directories.
-- [ ] Use Git 2.45 or later, git-lfs, pinned Bun, `CARGO_INCREMENTAL=0`, and `CARGO_PROFILE_DEV_DEBUG=0`.
-- [ ] Check disk and memory before each large Cargo build. Run Cargo builds one at a time.
-- [ ] Run three interleaved 10-edit sessions per arm on `examples/basic` and the HTML and React large fixtures.
-- [ ] Use a separate cache per arm. Restore source files between sessions. Keep four sidecars.
-- [ ] Record cgroup anon plus swap peaks, esbuild count and RSS, bundle owners, bundle and compile times, first Changes, and edit times. Separate sidecar-owned services from PostCSS-worker services.
-- [ ] Compare corresponding output for equality. Keep performance measurements outside permanent tests.
+- [x] Delegate fixture measurement tooling to the `non-ui implementor`. Keep one-time tooling under `.context/`.
+- [x] Build current merged main and the branch in separate checkouts and Cargo target directories.
+- [x] Use Git 2.45 or later, git-lfs, pinned Bun, `CARGO_INCREMENTAL=0`, and `CARGO_PROFILE_DEV_DEBUG=0`.
+- [x] Check disk and memory before each large Cargo build. Run Cargo builds one at a time.
+- [x] Run three interleaved 10-edit sessions per arm on `examples/basic` and the HTML and React large fixtures.
+- [x] Use a separate cache per arm. Restore source files between sessions. Keep four sidecars.
+- [x] Record cgroup anon plus swap peaks, esbuild count and RSS, bundle owners, bundle and compile times, first Changes, and edit times. Separate sidecar-owned services from PostCSS-worker services.
+- [x] Compare corresponding output for equality. Keep performance measurements outside permanent tests.
+
+Completed. Evidence: `.context/serve-bundle-affinity/measurement/measurement-report.md` and `.context/serve-bundle-affinity/root-served-body-equality.json`.
+The generated fixtures use the documented shared-machine dimensions. Basic keeps its full authored catalogue.
+Local React edit 1 is 19.717 ms slower on average. No local result replaces the required cloud acceptance below.
+The same-input proof compares raw served bytes and maps only exact identities that the existing delivery contract permits to differ.
 
 ## Milestone 4: Verification, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check` with the locked Cargo dependencies.
-- [ ] Record each failed, skipped, or blocked check and the test cost in `.context/serve-bundle-affinity/`.
+- [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check` with the locked Cargo dependencies.
+- [x] Record each failed, skipped, or blocked check and the test cost in `.context/serve-bundle-affinity/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Send the implementation SHA immediately to the performance orchestrator for the mokly-cloud acceptance measurement.
 - [ ] Confirm the mokly-cloud goal: at least 0.6 GiB lower peak, edits 2–10 mean within +1%, and no slower edit 1 or first Changes.

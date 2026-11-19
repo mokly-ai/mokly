@@ -1,7 +1,5 @@
 # Sidecar Source Root Scheduling
 
-Status: The pool does not apply the [head bundle rank](#head-bundle-affinity) yet. The [pool preference milestone](../../plans/serve-bundle-affinity.md#milestone-2-pool-preference) adds it.
-
 This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool
