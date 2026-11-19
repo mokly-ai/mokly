@@ -166,10 +166,10 @@
     readers still checked the content. On the same day, its two content
     security policies blocked WebAssembly. The check of 2026-11-18 did not
     cover the WebAssembly fact.
-  - A separate post-merge task of the change that moved Mokly Cloud into
-    this repository replaces the cloud's own Mokly contract types in
-    `mkc-mokly-contract` with the `mokly-model` types. Both changes touch
-    the same crate.
+  - The post-merge task
+    [cloud-contract-types-use-mokly-model.md](./cloud-contract-types-use-mokly-model.md)
+    replaces the cloud's own Mokly contract types in `mkc-mokly-contract`
+    with the `mokly-model` types. Both changes touch the same crate.
 - **Task:**
   1. Add `mokly-model` as a workspace dependency of `mkc-mokly-contract`.
      The receiver and the embedded workspace `@mokly/viewer` then read the

@@ -1,6 +1,6 @@
 # Combine Mokly Cloud into the Mokly repository
 
-Status: Active. [PR #350](https://github.com/mokly-ai/mokly/pull/350) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Complete. [PR #350](https://github.com/mokly-ai/mokly/pull/350) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Mokly Cloud is the hosted companion of the open-source Mokly packages. It
 publishes the catalogue of each branch, posts a GitHub check, and hosts the
@@ -404,13 +404,13 @@ commands and the checklist. The
 [repository cutover runbook](../docs/ops/repository-cutover.md) gives each
 step, its command, and its check.
 
-- [ ] Copy the repository secrets, the variables, and the `production` and
+- [x] Copy the repository secrets, the variables, and the `production` and
       preview environments, with their protection rules, to this
       repository.
-- [ ] Apply the Terraform change of Milestone 7, so that Google Cloud trusts
+- [x] Apply the Terraform change of Milestone 7, so that Google Cloud trusts
       both repositories during the cutover.
-- [ ] Point the GitHub App and the preview environments at this repository.
-- [ ] Add the cloud services to the Conductor repository setup of this
+- [x] Point the GitHub App and the preview environments at this repository.
+- [x] Add the cloud services to the Conductor repository setup of this
       repository.
 
 ## Milestone 9: Verification, commit, review, and pull request
@@ -420,17 +420,17 @@ Depends on: every other milestone
 The merge of `main` on 2026-11-19 records its conflict resolutions in
 `.context/combine-cloud/merge-main-2026-11-19.md`.
 
-- [ ] Run the targeted tests. The CI of the pull request runs the
+- [x] Run the targeted tests. The CI of the pull request runs the
       complete gate.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 

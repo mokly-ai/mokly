@@ -8,9 +8,6 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
-- [Combine Mokly Cloud into the Mokly repository](./combine-mokly-cloud.md) —
-  move the cloud into this repository with one Cargo workspace, one npm
-  workspace, one `xtask`, one gate and one CI.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
