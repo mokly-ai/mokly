@@ -91,6 +91,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
             attach_reported: false,
             closed: false,
             started: SystemTime::UNIX_EPOCH,
+            record: None,
         })),
     })
 }
@@ -198,6 +199,7 @@ async fn adoption_replays_events_and_subscribes_before_copying_resources() {
             plan: plan("next"),
             observer: Arc::new(next.clone()),
             recheck: true,
+            record: None,
         },
         &prepared,
     );

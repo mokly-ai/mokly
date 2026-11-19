@@ -9,6 +9,7 @@ use std::time::SystemTime;
 
 use crate::serve_watch_events;
 use crate::serve_watch_files::{self, NativeObservers, Observers};
+use crate::serve_watch_plan::{PlanInputs, PlanRecord};
 use async_trait::async_trait;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
@@ -31,6 +32,8 @@ pub type WatchWait = Pin<Box<dyn Future<Output = ()> + Send>>;
 pub(super) trait WatchInputs: Send + Sync {
     /// Record that a preparation starts now, before it reads any input.
     fn begin(&self);
+    /// Build the watch candidate of `prepared`. After a successful rebuild and observer
+    /// update, equal plan inputs reuse the adopted plan and observer without attaching.
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch>;
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()>;
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe);
@@ -57,6 +60,8 @@ pub(super) struct State {
     pub(super) closed: bool,
     /// When the latest preparation began.
     pub(super) started: SystemTime,
+    /// The inputs, plan, and targets of the adopted candidate.
+    pub(super) record: Option<Arc<PlanRecord>>,
 }
 /// Prepared observer state exposed inside this private module for generated mocks.
 pub struct CandidateWatch {
@@ -64,6 +69,9 @@ pub struct CandidateWatch {
     pub(super) observer: Arc<dyn Observer>,
     /// The new roots reach a directory that the active observer did not watch.
     pub(super) recheck: bool,
+    /// The inputs and targets of `plan`. `None` means that they are unknown, so the next
+    /// candidate builds its plan again.
+    pub(super) record: Option<Arc<PlanRecord>>,
 }
 
 impl WatchedInputs {
@@ -84,6 +92,7 @@ impl WatchedInputs {
                 attach_reported: false,
                 closed: false,
                 started,
+                record: None,
             })),
             ready: Arc::new(Notify::new()),
         })
@@ -109,44 +118,49 @@ impl WatchInputs for WatchedInputs {
         self.state.lock().unwrap_or_else(|e| e.into_inner()).started = started;
     }
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch> {
-        let plan = plan(prepared)?;
+        let (recorded, active) = {
+            let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            let settled = !current.failed && !current.attach_reported;
+            (
+                current.record.clone().filter(|_| settled),
+                current.observer.clone(),
+            )
+        };
+        if let Some(record) = recorded.filter(|record| record.matches(prepared)) {
+            self.replay(&active, &record.unobserved(active.as_ref()));
+            return Ok(record.candidate(active, false));
+        }
+        let record = Arc::new(PlanRecord::new(PlanInputs::of(prepared))?);
         let (changed, old, previous) = {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
             (
-                current.plan.roots != plan.roots,
+                current.plan.roots != record.plan.roots,
                 current.observer.clone(),
                 current.plan.clone(),
             )
         };
-        let unobserved = serve_watch_files::unobserved(&plan, old.as_ref());
+        let unobserved = record.unobserved(old.as_ref());
         if changed {
-            let observer = self.factory.attach(&plan)?;
-            let recheck = !old.covers(&plan);
+            let observer = self.factory.attach(&record.plan)?;
+            let recheck = !old.covers(&record.plan);
             if !recheck {
                 self.replay(&observer, &unobserved);
             }
-            return Ok(CandidateWatch {
-                plan,
-                observer,
-                recheck,
-            });
+            return Ok(record.candidate(observer, recheck));
         }
-        let mut attachment = plan.clone();
+        let mut attachment = record.plan.clone();
         attachment.extend_required(&previous);
         watch_result(old.replace(&attachment))?;
         self.replay(&old, &unobserved);
-        Ok(CandidateWatch {
-            plan,
-            observer: old,
-            recheck: false,
-        })
+        Ok(record.candidate(old, false))
     }
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()> {
-        candidate.plan = plan(prepared)?;
-        let unobserved =
-            serve_watch_files::unobserved(&candidate.plan, candidate.observer.as_ref());
-        watch_result(candidate.observer.replace(&candidate.plan))?;
+        let record = Arc::new(PlanRecord::new(PlanInputs::of(prepared))?);
+        let unobserved = record.unobserved(candidate.observer.as_ref());
+        watch_result(candidate.observer.replace(&record.plan))?;
         self.replay(&candidate.observer, &unobserved);
+        candidate.plan = record.plan.clone();
+        candidate.record = Some(record);
         Ok(())
     }
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe) {
@@ -162,6 +176,7 @@ impl WatchInputs for WatchedInputs {
             }
             state.plan = candidate.plan;
             state.observer = candidate.observer;
+            state.record = candidate.record;
             state.generation = Some(prepared.generation.clone());
             state.failed = false;
             state.attach_reported = false;
@@ -234,23 +249,6 @@ impl WatchInputs for WatchedInputs {
             .plan
             .clone()
     }
-}
-
-fn plan(prepared: &PreparedServe) -> Result<Plan> {
-    let catalogue = prepared.generation.catalogue();
-    let mut plan = watch_result(Plan::new(
-        &prepared.config,
-        &catalogue.model.sources,
-        prepared.generation.stylesheet_directories(),
-        &prepared.generation.watch_files(),
-    ))?;
-    if let Some(generation) = &catalogue.javascript.generation {
-        plan.resolution(
-            &generation.resolution_files,
-            &generation.resolution_directories,
-        );
-    }
-    Ok(plan)
 }
 
 pub(super) fn failure(source: mokly_watch::error::Error) -> ServerError {

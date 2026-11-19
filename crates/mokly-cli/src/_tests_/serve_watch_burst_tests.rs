@@ -190,6 +190,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                     plan: plan.clone(),
                     observer: Arc::new(Unimock::new(())),
                     recheck: false,
+                    record: None,
                 })
             })),
         WatchInputsMock::adopt

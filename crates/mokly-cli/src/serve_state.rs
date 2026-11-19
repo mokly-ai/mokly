@@ -115,8 +115,8 @@ impl NativeServeState {
                 .replace(prepared.generation.clone(), input, previous),
             None => self.projector.create(prepared.generation.clone(), input),
         }?;
-        let mut snapshot = (*snapshot).clone();
-        let mut generation = (*snapshot.generation).clone();
+        let mut snapshot = Arc::unwrap_or_clone(snapshot);
+        let mut generation = Arc::unwrap_or_clone(snapshot.generation);
         generation.changes = Some(self.changes.create(prepared, warnings));
         snapshot.generation = Arc::new(generation);
         Ok(Arc::new(snapshot))

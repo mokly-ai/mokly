@@ -30,6 +30,7 @@ async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
                 plan: plan(),
                 observer: Arc::new(observer.clone()),
                 recheck: true,
+                record: None,
             }));
         let begin = || WatchInputsMock::begin.each_call(matching!()).returns(());
         let watch = match outcome {
