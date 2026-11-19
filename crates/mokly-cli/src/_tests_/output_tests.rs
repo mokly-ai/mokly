@@ -78,6 +78,23 @@ fn failures_are_plain_or_rich_with_redaction_before_width_bounds() {
 }
 
 #[test]
+fn rich_error_hints_print_in_full_when_the_terminal_is_narrow() {
+    let style = Style {
+        mode: Mode::Rich,
+        color: false,
+        ascii: false,
+        columns: 24,
+    };
+    assert_eq!(
+        style
+            .error(Code::CliInvalid, "bad argument", &Redactor::default())
+            .lines()
+            .last(),
+        Some("  Run `mokly --help` to see commands.")
+    );
+}
+
+#[test]
 fn redaction_matches_mixed_case_percent_escapes_without_matching_similar_text() {
     let redactor = Redactor::collect(&[], Some("a/b=="));
     for value in ["a%2fb%3d%3d", "a%2Fb%3D%3d", "a%2fb=="] {

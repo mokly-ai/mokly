@@ -16,6 +16,7 @@ use crate::build::{BuildChanges, BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::BuildCancellation;
 use crate::changes_diagnostics;
 use crate::codes::Code;
+use crate::output::Mode;
 use crate::serve_errors::changes_reason;
 
 use super::build_tests::{capture_head, config, graphs, options, prepared};
@@ -94,7 +95,7 @@ fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
             },
         }),
     };
-    let message = changes_diagnostics::failure_detail(&error);
+    let message = changes_diagnostics::failure_detail(&error, Mode::Plain);
     assert!(message.contains("review.baseInstallScripts"));
     assert!(message.contains("--base-install-scripts"));
     let expected = format!("base {}: render failed. {HINT}", "a".repeat(40));
@@ -114,7 +115,7 @@ fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
             },
         }),
     };
-    let detail = changes_diagnostics::failure_detail(&error);
+    let detail = changes_diagnostics::failure_detail(&error, Mode::Plain);
     assert!(detail.contains(&format!("base {}", "a".repeat(40))));
     assert!(detail.ends_with("--base-install-scripts`."));
     assert!(!detail.contains(".."));
@@ -140,9 +141,12 @@ fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
             .iter()
             .any(|diagnostic| { diagnostic.message.ends_with("--base-install-scripts`.") })
     );
-    let serve_reason = changes_reason(&ServerError::Comparison {
-        source: Box::new(error),
-    });
+    let serve_reason = changes_reason(
+        &ServerError::Comparison {
+            source: Box::new(error),
+        },
+        Mode::Plain,
+    );
     assert!(serve_reason.ends_with("--base-install-scripts`."));
 }
 
@@ -155,11 +159,14 @@ fn preparation_error_prefix_does_not_change_cli_details() {
         source: prepared.source,
     };
     let expected = format!("base {}: build cancelled", "a".repeat(40));
-    assert_eq!(changes_diagnostics::failure_detail(&error), expected);
+    assert_eq!(
+        changes_diagnostics::failure_detail(&error, Mode::Plain),
+        expected
+    );
     let serve = ServerError::Comparison {
         source: Box::new(error),
     };
-    assert_eq!(changes_reason(&serve), expected);
+    assert_eq!(changes_reason(&serve, Mode::Plain), expected);
 }
 
 #[test]
