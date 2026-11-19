@@ -42,27 +42,49 @@ fn editor_changes(remove: bool) {
 
 #[test]
 fn selectable_and_hidden_preferred_candidates_reject_plans_and_match_native_results() {
-    for hidden in [false, true] {
+    for (name, specifier, initial, target, expected) in [
+        (
+            "extension",
+            "./value",
+            "value.ts",
+            "value.tsx",
+            ["entry.ts", "value.tsx"],
+        ),
+        (
+            "hidden directory",
+            "./lib/item",
+            "lib/item/index.js",
+            "lib/item.ts",
+            ["entry.ts", "lib/item.ts"],
+        ),
+        (
+            "extension-only file",
+            "./.js",
+            ".tsx",
+            ".ts",
+            [".ts", "entry.ts"],
+        ),
+        (
+            "extension-only directory",
+            "./.js",
+            ".js/index.ts",
+            ".ts",
+            [".ts", "entry.ts"],
+        ),
+    ] {
         let mut fixture = Fixture::new();
-        if hidden {
-            fixture.write("entry.ts", "export {value} from './lib/item';");
-            fixture.write("lib/item/index.js", "export const value='index';");
-        }
+        fixture.write("entry.ts", &format!("export {{value}} from {specifier:?};"));
+        fixture.write(initial, "export const value='original';");
         fixture.prepare();
         fixture.edit();
-        let target = if hidden { "lib/item.ts" } else { "value.tsx" };
         fixture.write(target, "export const value='preferred';");
         fixture.write(
             "entry.ts",
-            if hidden {
-                "export {value} from './lib/item'; export const edited=1;"
-            } else {
-                "export {value} from './value'; export const edited=1;"
-            },
+            &format!("export {{value}} from {specifier:?}; export const edited=1;"),
         );
-        assert_eq!(fixture.prepare(), ["entry.ts", target]);
-        assert!(!fixture.sent_plan(), "hidden={hidden}");
-        assert_eq!(fixture.attempts(), 4, "hidden={hidden}");
+        assert_eq!(fixture.prepare(), expected, "{name}");
+        assert!(!fixture.sent_plan(), "{name}");
+        assert_eq!(fixture.attempts(), 4, "{name}");
         fixture.assert_native();
     }
 }

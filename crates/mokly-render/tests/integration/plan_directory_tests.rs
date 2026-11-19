@@ -44,9 +44,11 @@ fn plan_directory_names_ignore_only_unrelated_ascii_members() {
     fs::write(root.join(".value.ts.swp"), "swap").unwrap();
     assert!(matches());
     assert!(!SystemPhysicalInputs.matches(&root, &expected).unwrap());
-    fs::write(root.join("VALUE.TS"), "collision").unwrap();
+    fs::remove_file(root.join("value.ts")).unwrap();
+    fs::write(root.join("VALUE.TS"), "renamed").unwrap();
     assert!(!matches());
     fs::remove_file(root.join("VALUE.TS")).unwrap();
+    fs::write(root.join("value.ts"), "original").unwrap();
     fs::write(root.join("Value.TSX"), "preferred").unwrap();
     assert!(!matches());
     fs::remove_file(root.join("Value.TSX")).unwrap();
@@ -55,6 +57,29 @@ fn plan_directory_names_ignore_only_unrelated_ascii_members() {
     assert!(!matches());
     fs::remove_dir(root.join("value.ts")).unwrap();
     assert!(!matches());
+}
+
+#[test]
+fn plan_directory_checks_follow_actual_case_collision_entries() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = dunce::canonicalize(directory.path()).unwrap();
+    fs::write(root.join("value.ts"), "original").unwrap();
+    let expected = PhysicalInput::Directory {
+        entries: vec![entry("value.ts", PhysicalEntryKind::File, None)],
+    };
+    fs::write(root.join("VALUE.TS"), "collision").unwrap();
+    let mut entries: Vec<_> = fs::read_dir(&root)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .collect();
+    entries.sort();
+    assert_eq!(
+        SystemPhysicalInputs
+            .matches_candidates(&root, &expected, &["value.ts".into()])
+            .unwrap(),
+        entries == ["value.ts"],
+        "actual entries: {entries:?}"
+    );
 }
 
 #[test]
@@ -118,7 +143,7 @@ fn current_non_ascii_names_reject_a_narrowed_directory() {
     let root = dunce::canonicalize(directory.path()).unwrap();
     let expected = PhysicalInput::Directory { entries: vec![] };
     let names = ["key.ts".into()];
-    for name in ["İ.ts", "Key.ts"] {
+    for name in ["İ.ts", "\u{212a}ey.ts"] {
         fs::write(root.join(name), "unicode").unwrap();
         assert!(
             !SystemPhysicalInputs

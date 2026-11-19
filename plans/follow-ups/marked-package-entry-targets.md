@@ -7,8 +7,8 @@
   `46c40bade` against `main` at `4614c4a90`. The finding check of the same
   round added the index-fallback form.
 - **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:19` and line
-  52 to line 63, `packages/mokly/src/sidecar/resolution-evidence.ts:148` to
-  line 151 and line 204, and `packages/mokly/src/sidecar/config-inputs.ts:47`
+  52 to line 63, `packages/mokly/src/sidecar/resolution-evidence.ts:153` to
+  line 158 and line 219 to line 221, and `packages/mokly/src/sidecar/config-inputs.ts:47`
   to line 56.
 - **Reason:** The limit predates the absolute paths fix and also occurs
   without its mapped-import pass, so a fix needs its own decision on the
@@ -96,8 +96,8 @@
   - By code reading only, the captured evidence may share the gap. For a
     relative or mapped folder candidate, `ResolutionEvidence` records the
     folder and its parent, at
-    `packages/mokly/src/sidecar/resolution-evidence.ts:148` to line 151.
-    `targets`, at line 204, records the file of each entry field, but it runs
+    `packages/mokly/src/sidecar/resolution-evidence.ts:153` to line 158.
+    `targets`, at line 219 to line 221, records the file of each entry field, but it runs
     only for the package lookup of a bare import. `ConfigInputs.manifest`, at
     `packages/mokly/src/sidecar/config-inputs.ts:47` to line 56, records the
     manifest file and not its entry targets. A recorded folder lists its

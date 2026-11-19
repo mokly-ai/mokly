@@ -247,8 +247,20 @@ export class ResolutionEvidence {
       for (const item of value)
         this.exports(pkg, item, requested, matched, depth + 1);
     } else if (jsonObject(value)) {
+      const exact =
+        !requested.endsWith("/") &&
+        !requested.includes("*") &&
+        Object.hasOwn(value, requested);
       for (const [key, target] of Object.entries(value)) {
         if (key.startsWith(".")) {
+          if (
+            key.startsWith("./") &&
+            key.endsWith("/") &&
+            !key.includes("*") &&
+            requested.startsWith(key) &&
+            !exact
+          )
+            this.candidates.unproved();
           if (key.split("*").length > 2)
             throw new Error("unsupported export pattern");
           const match = substitution(key, requested);

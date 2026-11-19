@@ -101,6 +101,52 @@ The additional fresh check stays in `.context/serve-plan-editor-invalidation/tab
 It recommends B with D. My call of 2026-11-18 retains the approved B until capacity measurements finish.
 D cannot supply the required margin and can discard the names needed for the editor goal. A failed condition goes to the performance orchestrator.
 
+### 3. Unused legacy exports remove every selector
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/plan-candidate-metadata.ts` and `resolution-evidence.ts`.
+- **Terms:**
+  - **Identity folder export:** A literal package export such as `"./regenerator/": "./regenerator/"`.
+- **Background:** G keeps whole directory comparisons for unproved resolver forms. One unproved form currently removes every selector from a plan.
+- **Problem:** An unused identity folder export in Babel removes all selectors from both example plans. The release editor case still falls back.
+- **Impact if no action:** The branch fails its measured editor-file goal despite complete evidence and records below both bounds.
+- **Root question:** How can an editor-file addition keep exact plan reuse when a dependency manifest holds an export form that the candidate model does not prove?
+- **Options:**
+  - **A.** Admit only literal identity folder exports in metadata. Disable all selectors before export substitution when a folder key can prefix-match the effective request. Preserve the shared evidence walk and reads. Effort: Small.
+  - **B.** Model selected legacy folder targets fully. Add their candidates and any missing shared evidence. This widens capture work and needs a separate proof for self-package and alias routes. Effort: Medium.
+  - **C.** Track unproved export provenance per directory or import. Retain selectors elsewhere. This needs a new dependency index and a wider proof. Effort: Large.
+  - **D.** Admit literal folder keys regardless of their target, with the same request guard and existing target checks. Skip the guard for an exact key that esbuild selects first. Effort: Small.
+  - **E.** Check all export forms only when their requests visit them. It needs a broader proof of substituted and decoded targets. Effort: Medium.
+  - **F.** Keep selectors for proved matched identity exports on installed or NODE_PATH routes. Self-package routes stay conservative. Duplicate keys and encoded requests need separate exclusions. Effort: Medium.
+- **Left out:** Keeping the metadata guard fails the measured goal. Removing it without a request guard admits an unproved selection. Editor ignore rules cannot prove exactness.
+- **Shared assumptions:** The task requires exact output, inputs, and errors, unchanged compiled and disk reuse, both bounds, and no edit capture. The existing global selector fallback is a code choice. C drops that assumption. A preserves the current shared capture and physical reads.
+- **Wider fix:** B's shared-evidence half records folder targets for every reuse owner. The performance orchestrator owns that separate repair. C addresses other global unproved-form fallbacks.
+- **Previous examples:** The initial G audit keeps whole comparisons for absolute mapped imports. Main #343 subsequently repairs their shared evidence.
+- **Recommendation:** D, replacing A. The guard depends on the key and effective request, so an unused target needs no identity restriction.
+- **Action:** Apply my call of 2026-11-19 under the approved conservative G scope, after a fresh options check.
+
+My call of 2026-11-19 keeps shared capture behavior and reads unchanged.
+Unused literal folder exports gain selectors. A possible prefix match disables every selector before the existing substitution.
+An existing exact key that esbuild selects first avoids that prefix fallback. No shared observation or physical read changes.
+The fresh check recommends D instead of A. My checked call of 2026-11-19 applies D.
+The full check stays in `.context/serve-plan-editor-invalidation/unused-exports-options-check.md`.
+Whole comparisons retain main's existing observations. They do not repair its missing folder-target or duplicate-key evidence.
+The separate self-package follow-up records the reproduced stale compiled, disk, and strict results.
+The source proof stays in `.context/serve-plan-editor-invalidation/editor-measurement-failure-analysis.md`.
+
+The performance orchestrator's call of 2026-11-19 requires this correction before the pull request.
+Its real mokly-cloud capture confirms that the unused Babel folder export removes every selector.
+It requires the calibrated size fixture to capture that Babel form, with names present on both sides.
+The fresh check considered full folder-target modeling and local provenance, then recommended the smaller unused-key proof D.
+
+My review call of 2026-11-19 applies finding 1 option C and finding 2 option E after their fresh Opus checks.
+Suffix matching includes extension-only basenames. A capture-time check keeps whole comparison when candidate names omit a native selected target.
+It uses the native attempt's metafile and adds no resolver operation or physical read. Each allocation stays inside the existing capture budget.
+Portable case fixtures preserve every case-rule assertion. Literal collision evidence and a single-spelling contrast replace a host-dependent Node fixture.
+The marked-scan rewrite omission and the self-package folder capture gap predate G and get separate follow-ups.
+
 ## Implementation design
 
 Full captured resolution evidence stays unchanged. Candidate names live with the plan, inside both existing serialized bounds.
@@ -187,8 +233,8 @@ Source proof: `.context/serve-plan-editor-invalidation/candidate-preflight.md`.
 - [x] Compare output, recorded inputs, and errors with native-first. Preserve other reuse-owner tests unchanged.
 - [x] Update the approved new-module count. Keep output assertions and add a stale-candidate contrast.
 - [ ] Measure pair and retained-key bytes on examples/basic, large React, and the cloud-shaped synthetic catalogue.
-- [ ] Confirm about 4,400 modules, 13,000 imports, 23,000 inputs, and icon directories of about 1,800 and 1,600 files. Calibrate path lengths and compare the old pair with the real 8,102,796-byte pair.
-- [ ] Confirm both bounds fit, with at least 1 MiB margin on that shape. Check both head and base records. Ask the performance orchestrator if they fail.
+- [ ] Confirm about 4,400 modules, 13,000 imports, 23,000 inputs, and icon directories of about 1,800 and 1,600 files. Include a used Babel runtime helper and its unused folder export in both captures. Calibrate path lengths and compare the old pair with the real 8,102,796-byte pair.
+- [ ] Confirm both bounds fit, with at least 1 MiB margin on that shape. Require actual selectors on both head and base records. Ask the performance orchestrator if they fail.
 
 Evidence: `.context/serve-plan-editor-invalidation/code-milestone-4-report.md`.
 
@@ -204,8 +250,10 @@ Evidence: `.context/serve-plan-editor-invalidation/2026-11-19-main-code-integrat
 - [ ] Smoke-test examples/basic. Measure alternating release main and branch in separate checkouts, targets, and matching dists.
 - [x] Extract the merged 303-line bundle owner without changing runtime behavior. Recheck the file cap.
 - [x] Run `cargo xtask check --suite repository` and complete `cargo xtask check` with Git 2.45+, Git LFS, and pinned Bun.
+- [x] Correct hidden-basename rewrite candidates. Add the checked native-selection fallback. Apply the checked portable case fixtures and preserve every assertion.
+- [ ] Apply checked option D for unused folder exports, with exact-key priority. Cover matched conservative forms. Keep whole comparisons for unproved encoded bare requests. Repeat the failed editor measurement.
 - [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
-- [ ] Obtain real mokly-cloud measurements and sizes for head and base records. Require at least 1 MiB margin in both bounds. Resolve regressions and failed size conditions.
+- [ ] Obtain real mokly-cloud measurements and sizes for head and base records, with selectors present. Audit rejected real manifests. Require at least 1 MiB margin in both bounds and resolve failed conditions.
 - [ ] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
 - [ ] Delete this plan and the resolved editor-invalidation item after other TODOs and reviews. Update live references.
 - [ ] Open the pull request into `main`. Preserve dated calls and a plan permalink. Wait for CI with `ci-wait.sh`. Report to the performance orchestrator. Do not merge.

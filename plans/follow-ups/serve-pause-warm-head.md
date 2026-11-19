@@ -177,6 +177,7 @@
   stop or a cancellation ends it, are in
   `docs/protocol/mokly-sidecar-root-scheduling.md`.
 - **Related:**
+  - [serve-plan-per-import-evidence.md](./serve-plan-per-import-evidence.md), linked alternatives. Per-import admission can retain edit reuse before an idle compile. It changes a different decision and still needs its own measurement.
   - `plans/follow-ups/serve-editor-files-disk-cache.md`, linked
     alternatives: retained editor files make a restart miss the head entry.
     Its recommended option is the pause compile of this item, so it waits

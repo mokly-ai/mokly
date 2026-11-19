@@ -25,8 +25,9 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` records each planned import through
-  `PlanBuilder` and reports whether the native compile is exact. A failed
-  native compile compiles again with full resolution. The
+  `PlanBuilder` and reports whether the native compile is exact. It also
+  records selected native targets for the candidate collector of a captured
+  compile. A failed native compile compiles again with full resolution. The
   resolve callback of `consumerPlugins` in
   [`src/sidecar/plugins.ts`](./plugins.ts) applies the resolution
   mode of
@@ -113,7 +114,8 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/plan-candidate-directories.ts`](./plan-candidate-directories.ts)
   merges lexical names into recorded canonical directories and adds their
   table positions. Captured non-ASCII members and folded-name collisions keep
-  whole comparisons.
+  whole comparisons. A selected native target absent from the merged names
+  keeps its directory's whole comparison.
   [`src/sidecar/plan-candidate-metadata.ts`](./plan-candidate-metadata.ts)
   derives main-target names and checks export forms from already-read
   manifests. `bundleRecipe` attaches the names before the combined byte check.
@@ -137,7 +139,8 @@ its requests and results. The paths below are relative to the package root.
   directories, manifests, and configurations of each import before esbuild
   resolves it. A form that it cannot map makes the evidence incomplete. Its
   `paths` step records every target of each matching key from `mappedPaths`,
-  also for an absolute import.
+  also for an absolute import. Its `exports` step marks candidate narrowing
+  unproved for a possible folder match unless an exact key applies.
   [`src/sidecar/resolution-request.ts`](./resolution-request.ts)
   applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./config-inputs.ts) records

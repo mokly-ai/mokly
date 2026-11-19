@@ -8,7 +8,7 @@
 - **Location:** `crates/mokly-render/tests/integration/plan_invalidation_tests.rs:115`,
   `crates/mokly-render/tests/integration/plan_support.rs:54` to line 119,
   `crates/mokly-render/tests/integration/plan_support.rs:164` to line 176,
-  `crates/mokly-render/src/edit_plans.rs:47`,
+  `crates/mokly-render/src/edit_plans.rs:60`,
   `crates/mokly-sidecar/src/pool.rs:129` to line 133, and
   `packages/mokly/src/sidecar/capture-durability.ts:76` to line 92.
 - **Reason:** The failing test function and its fixture are byte-identical to
@@ -55,7 +55,7 @@
     `crates/mokly-sidecar/src/process_factory.rs:193` to line 197, and the
     sidecar checks durability.
   - The core keeps a plan record only from captured and durable evidence, at
-    `crates/mokly-render/src/edit_plans.rs:47`. It sends the plan only while
+    `crates/mokly-render/src/edit_plans.rs:60`. It sends the plan only while
     the evidence of the record still matches. So `left: false` means that no
     record was kept, or that its evidence check failed before the edit. No
     log shows which.

@@ -31,6 +31,7 @@ export class PlanCandidates implements PhysicalInputObserver {
   private readonly names = new Map<string, Set<string>>();
   private readonly redirects = new Map<string, string>();
   private readonly blocked = new Set<string>();
+  private readonly selectedTargets = new Set<string>();
   private readonly extensions: readonly string[];
   private bytes = 0;
   private overflow = false;
@@ -50,7 +51,7 @@ export class PlanCandidates implements PhysicalInputObserver {
 
   request(name: string, config: PathSettings): void {
     if (name.includes("\\") || name.includes("\0")) this.proved = false;
-    if (/[?#]/.test(name) && bareSpecifier(name)) this.proved = false;
+    if (/[%?#]/.test(name) && bareSpecifier(name)) this.proved = false;
     if (!config.paths) return;
     for (const [pattern, targets] of Object.entries(config.paths.targets)) {
       const matched = substitution(pattern, name);
@@ -101,7 +102,7 @@ export class PlanCandidates implements PhysicalInputObserver {
       this.add(base, "index" + extension);
     }
     this.add(base, "index");
-    const extension = path.extname(name);
+    const extension = name.slice(name.lastIndexOf("."));
     const substitutions =
       extension === ".js" || extension === ".jsx"
         ? [".ts", ".tsx"]
@@ -156,6 +157,19 @@ export class PlanCandidates implements PhysicalInputObserver {
       this.proved = false;
   }
 
+  selected(file: string): void {
+    if (
+      this.active() &&
+      !this.selectedTargets.has(file) &&
+      this.retain(file, 1)
+    )
+      this.selectedTargets.add(file);
+  }
+
+  unproved(): void {
+    this.proved = false;
+  }
+
   attach(
     plan: ResolutionPlan | undefined,
     evidence: ReuseEvidence,
@@ -165,6 +179,7 @@ export class PlanCandidates implements PhysicalInputObserver {
     return candidateDirectories(plan, evidence, {
       names: this.names,
       blocked: this.blocked,
+      selected: this.selectedTargets,
       canonical: (directory) => this.canonical(directory),
       retain: (value, bytes) => this.retain(value, bytes),
       reserve: (bytes) => this.budget(bytes),

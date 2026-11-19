@@ -33,7 +33,11 @@ function ordinaryExports(value: unknown, depth = 0): boolean {
   if (jsonObject(value))
     return Object.entries(value).every(
       ([key, item]) =>
-        !(key.startsWith(".") && key.endsWith("/")) &&
+        !(
+          key.startsWith(".") &&
+          key.endsWith("/") &&
+          (!key.startsWith("./") || key.includes("*"))
+        ) &&
         !/[%?#\\]/.test(key) &&
         ordinaryExports(item, depth + 1),
     );

@@ -266,7 +266,9 @@ async function bundleAttempt(
     if (resolution.mode === "native") {
       const { metafile } = compiled;
       const plan = await measurements
-        .run("sidecar.bundle.classify", () => planNative(metafile, paths))
+        .run("sidecar.bundle.classify", () =>
+          planNative(metafile, paths, evidence?.candidates),
+        )
         .catch(() => undefined);
       if (!plan) return {};
       if (capture.mode === "full") capture.plan = plan.plan;

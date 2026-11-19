@@ -1,9 +1,12 @@
+import path from "node:path";
+
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 interface CandidateSource {
   names: ReadonlyMap<string, ReadonlySet<string>>;
   blocked: ReadonlySet<string>;
+  selected: ReadonlySet<string>;
   canonical(directory: string): string;
   retain(value: string, containerBytes: number): boolean;
   reserve(bytes: number): boolean;
@@ -43,6 +46,16 @@ export function candidateDirectories(
       if (members.has(name)) continue;
       if (!source.retain(name, 1)) return undefined;
       members.add(name);
+    }
+  }
+  for (const file of source.selected) {
+    const directory = source.canonical(path.dirname(file));
+    if (
+      !merged.get(directory)?.has(path.basename(file).toLowerCase()) &&
+      !blocked.has(directory)
+    ) {
+      if (!source.retain(directory, 1)) return undefined;
+      blocked.add(directory);
     }
   }
   if (!source.reserve(plan.paths.length * 8 + 2)) return undefined;

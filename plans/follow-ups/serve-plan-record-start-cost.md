@@ -306,6 +306,7 @@
   - The pull request gives the stage profile, the sizes, and the complete
     before and after results.
 - **Related:**
+  - [serve-plan-per-import-evidence.md](./serve-plan-per-import-evidence.md), the same record. A per-import dependency index changes retained bytes and start work. Measure that index before replacing whole-record admission.
   - `plans/follow-ups/serve-editor-files-disk-cache.md`, the same code. Its
     candidate names in compiled and stored reuse would change the evidence
     bytes and the counting cost that this item measures. A restart profile

@@ -262,6 +262,9 @@
   `plans/follow-ups/link-target-kind-evidence.md` change the same capture
   code. They own changes after a completed capture, and this item owns
   changes during a compile.
+  [self-package-folder-export-evidence.md](./self-package-folder-export-evidence.md)
+  records a reproduced missing folder-target observation in the same owners.
+  Its stale disk and strict results need no capture-window change.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

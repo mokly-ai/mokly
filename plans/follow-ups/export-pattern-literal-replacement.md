@@ -6,7 +6,7 @@
   of the absolute paths reuse evidence plan on branch
   `calummoore/mokly-absolute-paths-evidence-fix-zqzl`. Extended on the same
   day from the options check of this item, with the exact-key symptom.
-- **Location:** `packages/mokly/src/sidecar/resolution-evidence.ts:240` and
+- **Location:** `packages/mokly/src/sidecar/resolution-evidence.ts:245` and
   `packages/mokly/src/sidecar/path-pattern.ts:10`.
 - **Reason:** The absolute paths fix does not change the package exports step
   of the reuse evidence, and the probes show no changed reuse result.
@@ -30,11 +30,11 @@
     `packages/mokly/src/sidecar/resolution-evidence.ts` records the candidate
     of each export target that matches the requested subpath, before esbuild
     resolves the import.
-  - At line 240 it builds the candidate with
+  - At line 245 it builds the candidate with
     `value.replaceAll("*", matched ?? "")`. `matched` is the text of the
     requested subpath that the `*` of the key matched. For an exact key,
     `substitution` in `packages/mokly/src/sidecar/path-pattern.ts:10` gives an
-    empty match, so line 240 removes each `*` of the target.
+    empty match, so line 245 removes each `*` of the target.
   - A native esbuild 0.28.2 probe of 2026-11-18 compared the selected file
     with the candidate of line 240:
     - Exact key `"./x": "./dist/a*b.js"`: esbuild selects `dist/a*b.js`. Line
@@ -76,7 +76,7 @@
   the target path that esbuild resolves for a requested subpath?
 - **Options:**
   - **A.** Change nothing. The evidence keeps both misreads. Effort: Small.
-  - **B.** Use a function replacement at line 240,
+  - **B.** Use a function replacement at line 245,
     `value.replaceAll("*", () => matched ?? "")`, as the `paths` step does.
     Add one regression test: a subpath with `$&` under an export pattern
     records the literal target path. The exact-key misread stays. Effort:
@@ -113,7 +113,7 @@
 - **Shared assumptions:**
   - An exact key and a pattern key share one fill rule. Source: the code at
     `packages/mokly/src/sidecar/path-pattern.ts:10` and
-    `resolution-evidence.ts:240`. The reason does not hold, because esbuild
+    `resolution-evidence.ts:245`. The reason does not hold, because esbuild
     keeps the target of an exact key as written. D drops it.
   - The misread can hide a candidate that esbuild checks. Source: the first
     text of this item. The reason does not hold: an array skips only an

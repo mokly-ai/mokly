@@ -5,6 +5,7 @@ import test from "node:test";
 import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
+import { PlanCandidates } from "../packages/mokly/src/sidecar/plan-candidates.js";
 
 import {
   nativeParams,
@@ -67,8 +68,8 @@ test("a captured plan indexes fixed names, independent rewrites, and relative ma
     );
 });
 
-test("captured non-ASCII members and folded collisions retain whole directory comparisons", async (context) => {
-  for (const members of [["İ.ts"], ["Key.ts"], ["other.ts", "OTHER.ts"]]) {
+test("captured non-ASCII members retain whole directory comparisons", async (context) => {
+  for (const members of [["İ.ts"], ["\u212Aey.ts"]]) {
     const root = await nativeRoot(context);
     await write(path.join(root, "entry.mjs"), 'export {value} from "./value";');
     await write(path.join(root, "value.js"), "export const value=1;");
@@ -86,6 +87,78 @@ test("captured non-ASCII members and folded collisions retain whole directory co
       plan.candidates?.some(([index]) => plan.paths[index] === root) ?? false,
       false,
       members.join(","),
+    );
+  }
+});
+
+test("literal folded collisions retain whole comparisons while a single spelling keeps selectors", () => {
+  const root = path.resolve("fixture");
+  for (const [members, narrowed] of [
+    [["other.ts", "OTHER.ts"], false],
+    [["other.ts"], true],
+  ] as const) {
+    const candidates = new PlanCandidates(nativeParams(root).moduleResolution);
+    candidates.candidate(path.join(root, "value"));
+    const plan = candidates.attach(
+      { paths: [], imports: [] },
+      {
+        complete: true,
+        durable: true,
+        inputs: {
+          [root]: {
+            kind: "directory",
+            entries: members.map((name) => ({
+              name,
+              kind: "file",
+              target: null,
+            })),
+          },
+        },
+      },
+    );
+    assert.ok(plan);
+    assert.equal(
+      plan.candidates?.some(([index]) => plan.paths[index] === root) ?? false,
+      narrowed,
+      members.join(","),
+    );
+  }
+});
+
+test("a native selected target omitted from candidate names retains its canonical directory comparison", () => {
+  const root = path.resolve("fixture");
+  const alias = path.join(root, "alias");
+  const canonical = path.join(root, "canonical");
+  for (const [target, narrowed] of [
+    ["value.ts", true],
+    ["unindexed.ts", false],
+  ] as const) {
+    const candidates = new PlanCandidates(nativeParams(root).moduleResolution);
+    candidates.candidate(path.join(alias, "value"));
+    candidates.directory(alias, canonical);
+    candidates.selected(path.join(alias, target));
+    const plan = candidates.attach(
+      { paths: [], imports: [] },
+      {
+        complete: true,
+        durable: true,
+        inputs: {
+          [canonical]: {
+            kind: "directory",
+            entries: [
+              { name: "value.ts", kind: "file", target: null },
+              { name: "unindexed.ts", kind: "file", target: null },
+            ],
+          },
+        },
+      },
+    );
+    assert.ok(plan);
+    assert.equal(
+      plan.candidates?.some(([index]) => plan.paths[index] === canonical) ??
+        false,
+      narrowed,
+      target,
     );
   }
 });

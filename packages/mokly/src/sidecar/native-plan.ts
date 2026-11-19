@@ -10,6 +10,7 @@ import { detail, protocol } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeImport } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
+import type { PlanCandidates } from "./plan-candidates.js";
 import { PlanBuilder } from "./resolution-plan.js";
 
 interface Target {
@@ -42,6 +43,7 @@ export interface NativePlan {
 export async function planNative(
   metafile: Metafile,
   paths: ModulePaths,
+  candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
   const targets = new Map<string, Promise<Target | undefined>>();
@@ -94,6 +96,7 @@ export async function planNative(
       exact = false;
       continue;
     }
+    candidates?.selected(edge.file);
     builder.addImport(
       edge.importer,
       edge.specifier,
