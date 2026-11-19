@@ -19,6 +19,11 @@ interface Target {
   distinct: boolean;
 }
 
+/** A native compile that is not final: its plan, or none after a failure. */
+export interface NativeOutcome {
+  plan?: ResolutionPlan;
+}
+
 /** The classified imports of one native compile. */
 export interface NativePlan {
   /** The native compile produced the full path's result. */

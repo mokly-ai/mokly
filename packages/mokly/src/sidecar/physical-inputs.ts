@@ -3,7 +3,9 @@ import path from "node:path";
 import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
+import type { CaptureDurability } from "./capture-durability.js";
 import { jsonObject, parseJson } from "./config-json.js";
+import type { PhysicalInputObserver } from "./physical-input-observer.js";
 import {
   EVIDENCE_LIMIT,
   PhysicalInputReader,
@@ -27,6 +29,13 @@ export class PhysicalInputs extends PhysicalInputReader {
   private readonly directories = new Set<string>();
   private readonly files = new Map<string, CapturedMetadata>();
   private readonly jsonFiles = new Map<string, Record<string, unknown>>();
+
+  constructor(
+    durability?: CaptureDurability,
+    private readonly observer?: PhysicalInputObserver,
+  ) {
+    super(durability);
+  }
 
   get usage() {
     return {
@@ -145,6 +154,7 @@ export class PhysicalInputs extends PhysicalInputReader {
         value.input,
       );
       this.files.set(file, value);
+      if (value.bytes) this.observer?.metadata(file, value.bytes);
       return value;
     } catch {
       this.complete = false;
@@ -181,11 +191,13 @@ export class PhysicalInputs extends PhysicalInputReader {
         Infinity,
         this.pathKinds.get(directory),
       );
-      if (value)
-        this.save(
-          value.kind === "absent" ? directory : this.realPath(directory),
-          value,
-        );
+      if (value) {
+        const canonical =
+          value.kind === "absent" ? directory : this.realPath(directory);
+        this.save(canonical, value);
+        if (value.kind === "directory")
+          this.observer?.directory(directory, canonical);
+      }
     } catch {
       this.complete = false;
     }
@@ -206,6 +218,7 @@ export class PhysicalInputs extends PhysicalInputReader {
     this.linkBytes += bytes;
     this.durability?.budget(this.linkBytes);
     this.pathKinds.set(file, undefined);
+    this.observer?.path(file);
     const parent = path.dirname(file);
     if (parent !== file) this.pathLinks(parent);
     if (!this.complete) return;
@@ -215,7 +228,10 @@ export class PhysicalInputs extends PhysicalInputReader {
       return;
     }
     const target = this.linkTarget(file);
-    if (target !== undefined) this.save(file, { kind: "link", target });
+    if (target !== undefined) {
+      this.save(file, { kind: "link", target });
+      this.observer?.link(file, target);
+    }
   }
 
   async finish(): Promise<ReuseEvidence> {

@@ -24,7 +24,7 @@ import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
-import { planNative } from "./native-plan.js";
+import { planNative, type NativeOutcome } from "./native-plan.js";
 import { nativeLogOverride } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
@@ -66,11 +66,6 @@ export interface BundleExports {
 export interface Bundled {
   generation: Generation;
   result: BundleResult;
-}
-
-/** A native compile that is not final: its plan, or none after a failure. */
-interface NativeOutcome {
-  plan?: ResolutionPlan;
 }
 
 interface BundleCaptureState {

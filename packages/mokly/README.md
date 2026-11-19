@@ -1,7 +1,5 @@
 # @mokly/mokly
 
-Status: The [Serve plan change](../../plans/serve-plan-editor-invalidation.md) adds the path table and candidate names described here.
-
 `@mokly/mokly` is the Mokly command-line tool and authoring API. Mokly turns
 product screens into a searchable static catalogue. A screen is an HTML file
 with YAML front matter, a React component, or a Storybook story. Mokly renders

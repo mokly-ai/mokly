@@ -7,10 +7,10 @@
   `calummoore/mokly-sidecar-plan-reuse-srh7`. Updated 2026-11-18 on branch
   `calummoore/mokly-plan-reuse-editor-files-6dni`, which took over the
   importer and target table encoding.
-- **Location:** `packages/mokly/src/sidecar/captured-plan.ts:8`,
-  `packages/mokly/src/sidecar/recipe-size.ts:15` to line 22,
+- **Location:** `packages/mokly/src/sidecar/captured-plan.ts:7`,
+  `packages/mokly/src/sidecar/recipe-size.ts:7` to line 31,
   `packages/mokly/src/sidecar/transport.ts:39`,
-  `crates/mokly-sidecar/src/resolution_plan.rs:26` to line 46,
+  `crates/mokly-sidecar/src/resolution_plan.rs:62` to line 128,
   `crates/mokly-sidecar/src/compiled.rs:72` to line 83,
   `crates/mokly-sidecar/src/durable_recipe.rs:18`,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:86`, line 128, and line
@@ -18,7 +18,7 @@
   `crates/mokly-compare/src/bundle_codec_write.rs:18` to line 24,
   `crates/mokly-compare/src/bundle_codec_read.rs:100`,
   `crates/mokly-compare/src/bundle_store.rs:147` to line 149,
-  `crates/mokly-render/src/edit_plans.rs:57`,
+  `crates/mokly-render/src/edit_plans.rs:60`,
   `crates/mokly-render/src/bundle_attempt.rs:51`, and
   `crates/mokly-render/src/side.rs:85` to line 97.
 - **Reason:** The performance orchestrator accepted this start cost on
@@ -42,17 +42,19 @@
     native esbuild attempt when a Rust check proves its plan record current.
   - Since that change, the plan crosses or is counted at these places. Each
     one is a source fact, and nobody timed it on its own:
-    - `capturedPlan` at `packages/mokly/src/sidecar/captured-plan.ts:8`
+    - `capturedPlan` at `packages/mokly/src/sidecar/captured-plan.ts:7`
       counts the plan and the evidence against 8 MiB. It serializes the
       whole evidence once to count it.
-    - `checkRecipeSize` at `packages/mokly/src/sidecar/recipe-size.ts:15`
-      serializes the whole result, plan included, to check the frame limit.
-      Line 21 drops the plan first when the result does not fit.
+    - `recipeBytes` at `packages/mokly/src/sidecar/recipe-size.ts:7`
+      serializes the compiled payload and module graph once. It sizes the
+      response and restore envelopes, with the plan only in the response.
+      `checkRecipeSize` at line 22 drops the plan first at line 29 when the
+      result does not fit.
     - The transport writes each response through `jsonText` at
       `packages/mokly/src/sidecar/transport.ts:39`. `jsonText` sorts the keys
       of every object, also each object of the plan.
     - The core decodes the whole plan as `ResolutionPlan` at
-      `crates/mokly-sidecar/src/resolution_plan.rs:26`, with its path table
+      `crates/mokly-sidecar/src/resolution_plan.rs:82`, with its path table
       and its candidate names.
     - `DurableRecipe::with_plan` at
       `crates/mokly-sidecar/src/durable_recipe.rs:18` serializes the plan and
@@ -77,7 +79,7 @@
     - A disk hit decodes the stored plan with the payload. The pool keeps
       the plan beside the restored seed, at `pool_bundle_cache.rs:86`, and
       adds it to an accepted result at line 128.
-    - `Records::insert` at `crates/mokly-render/src/edit_plans.rs:57`
+    - `Records::insert` at `crates/mokly-render/src/edit_plans.rs:60`
       serializes the resolution settings, the plan, and the evidence again to
       count them, under the records mutex. Only the Serve head core calls it,
       from `crates/mokly-render/src/bundle_attempt.rs:51`.
@@ -109,6 +111,30 @@
         4,869,857 bytes.
       - The whole head recipe has 14,177,681 bytes, and the whole base
         recipe 11,103,681 bytes.
+  - Later on 2026-11-18, the performance orchestrator measured a path-table
+    checkpoint at `8d530bc6747fb84cf3a24c839d0f3e7b4fe3b1ab`. It ran a strict
+    mokly-cloud build with `--base HEAD`, from an empty bundle cache, with
+    the matching core and sidecar dist. This checkpoint has no
+    candidate names:
+    - Head: 13,057 planned imports, 4,438 paths, and 22,927 evidence inputs.
+      The import entries use 792,117 bytes, and the paths use 529,929 bytes.
+      The plan has 1,322,067 bytes, and the evidence 3,965,184 bytes. Their
+      sum is 5,287,251 bytes, with 3,101,357 bytes under 8 MiB. The whole
+      head recipe has 11,362,136 bytes.
+    - Base: the plan has 1,384,347 bytes, and its 26,455 evidence inputs use
+      4,869,857 bytes. Their sum is 6,254,204 bytes, with 2,134,404 bytes
+      under 8 MiB.
+    - These pair values and the earlier mokly-cloud pair value count
+      `planBytes + evidenceBytes`. The Rust `[plan,evidence]` pair adds
+      three bytes. The checkpoint Rust pairs are therefore 5,287,254 head
+      bytes and 6,254,207 base bytes.
+    - No retained-entry size was supplied for this checkpoint. Its values
+      prove path-table capacity only. They prove no final candidate-name
+      size, final edit speed, or current start cost.
+    - The performance orchestrator required the final head and base pairs
+      and retained entries to leave at least 1,048,576 bytes under 8 MiB.
+      Final measurements must count candidate names and retained resolution
+      settings. No final candidate-name measurement is available here.
   - The performance orchestrator measured the change on the mokly-cloud
     catalogue on 2026-11-18:
     - It used 4 vCPUs, pool size 4, and `--base HEAD`.
@@ -171,8 +197,10 @@
     - The bundle cache write stays inside the bundle response, as a review
       of 2026-11-18 decided. `plans/follow-ups/bundle-cache-request-cost.md`
       holds the option that moves it.
-    - The 64 MiB frame limit of `docs/protocol/mokly-sidecar.md:38` and the
-      512 MiB bundle namespace of `docs/protocol/mokly-timings.md:192` stay.
+    - The 64 MiB frame limit of the section "Transport" in
+      `docs/protocol/mokly-sidecar.md` stays. The 512 MiB bundle namespace
+      of the section "Budgets" in `docs/protocol/mokly-timings.md`
+      stays.
   - The table encoding left this item on 2026-11-18:
     - The performance orchestrator moved it to the exact Serve plan change of
       branch `calummoore/mokly-plan-reuse-editor-files-6dni`. That change
@@ -206,8 +234,10 @@
       `crates/mokly-render/src/side.rs:85` to line 97. The settings include
       the source root, so a base entry never matches a head request. So
       base-side results carry and store plans that no runtime uses. The
-      measured mokly-cloud base above had no plan. A head-side entry of
-      `build` can still serve the next warm Serve start.
+      earlier mokly-cloud base at `efb17e824` had no plan. The path-table
+      checkpoint at `8d530bc67` retained a 1,384,347-byte base plan. No base
+      runtime uses that plan. A head-side entry of `build` can still serve
+      the next warm Serve start.
       This changes the rule of the section "Plan Records" of
       `docs/protocol/mokly-sidecar-plans.md`, so it needs a decision of the
       performance orchestrator and a protocol update.
@@ -230,8 +260,8 @@
 - **Task:**
   1. Build three release cores with matching sidecar dists, in separate
      checkouts and Cargo targets. Use the `main` commit before the plan reuse
-     merge, the latest `main` commit, which also has the path table, and the
-     work branch.
+     merge, the latest `main` commit with indexed paths and plan-only
+     candidate names, and the work branch.
   2. Profile one warm start, one strict build, and one dirty restart of
      mokly-cloud on the first two builds. Use one-time probes or local
      instrumentation that the change does not keep.
@@ -252,21 +282,22 @@
      representation or rule.
   9. Update `docs/protocol/mokly-sidecar-plans.md` and the area READMEs
      when a behaviour or an entry point changes.
-  10. Measure the work branch against `main` with the plan reuse merge under
-      the accepted method, with release builds. Also run `examples/basic`
-      and the default large React fixture.
+  10. Measure the work branch against the latest `main` with indexed paths
+      and plan-only candidate names. Use the accepted method and release
+      builds. Also run `examples/basic` and the default large React fixture.
   11. Run `cargo xtask check`.
-- **Impact if no action:** Each Serve start on mokly-cloud keeps the accepted
-  cost. A warm serve.ready takes about 0.17 s more, and a warm first Changes
-  0.4 s more. A strict build takes 0.7 s more, and a dirty-restart
-  serve.ready 0.44 s more. The edit gain stays.
+- **Impact if no action:** The accepted measurements before the path table
+  showed added start cost on mokly-cloud. Warm serve.ready took about 0.17 s
+  more, and warm first Changes 0.4 s more. A strict build took 0.7 s more,
+  and dirty-restart serve.ready 0.44 s more. Nobody measured how much of
+  that cost remains after indexed paths and candidate names. This item must
+  keep the accepted edit gain.
 - **Needs:** Release builds of the three commits with matching sidecar
   dists. A checkout of the mokly-cloud repository. A machine with 4 vCPUs on
   which no other build, test, or timing run is active.
 - **Done when:**
   - Under the accepted method, the work branch lowers the start measures
-    against `main` with the plan reuse merge, beyond the spread of the
-    interleaved rounds. The start measures are warm serve.ready, warm first
+    against that latest `main`, beyond the spread of the interleaved rounds. The start measures are warm serve.ready, warm first
     Changes, strict build, and dirty-restart serve.ready and first Changes.
   - Edit to Changes ready, esbuild compiles per edit, whole-tree peak, and
     core peak are no worse.

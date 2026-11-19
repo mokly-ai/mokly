@@ -6,9 +6,9 @@
   bundle disk cache change on branch `calummoore/lisbon-h906`. The check put
   this in-process exposure outside the new functionality of that call and
   asked for a follow-up item.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:106`,
-  `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143,
-  `packages/mokly/src/sidecar/physical-inputs.ts:166`, and
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:111`,
+  `packages/mokly/src/sidecar/resolution-evidence.ts:126` to line 140,
+  `packages/mokly/src/sidecar/physical-inputs.ts:182`, and
   `crates/mokly-render/src/bundle.rs:63`.
 - **Reason:** The exposure predates the bundle disk cache change, which keeps
   it out of the disk cache, except in the documented limit of the durable
@@ -44,13 +44,13 @@
     `packages/mokly/src/sidecar/physical-inputs.ts` owns every read. After
     the last attempt, `finish()` reads the whole evidence again. A
     difference makes the evidence incomplete.
-  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:106` accepts an
+  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:111` accepts an
     earlier compilation while its toolchain, settings, dependency roots,
     consumed file digests, consumed directory lists, and complete reuse
     evidence still match. The core's bundle fast path checks the same
     evidence at `crates/mokly-render/src/bundle.rs:63`.
-  - The section "Compiled Recipes And Release" of
-    `docs/protocol/mokly-sidecar-modules.md` states the rules. A compilation
+  - The section "Reuse And Identity" of
+    `docs/protocol/mokly-sidecar-recipes.md` states the rules. A compilation
     is reused only while its inputs stay unchanged. An incomplete
     compilation is never reused and never stored, and it gets a fresh
     identity at each compile.
@@ -82,10 +82,10 @@
       evidence and the filesystem both list the higher one.
     - Cached-listing window: esbuild reads and caches a directory listing at
       its first lookup there, for the whole build. An exact-file lookup at
-      `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143
+      `packages/mokly/src/sidecar/resolution-evidence.ts:126` to line 140
       records the file path and no listing. A later open lookup in the same
       directory records the listing through
-      `packages/mokly/src/sidecar/physical-inputs.ts:166`. A candidate that
+      `packages/mokly/src/sidecar/physical-inputs.ts:182`. A candidate that
       appears between the two reads enters the evidence, but not the
       selection of esbuild.
   - Two real esbuild regressions in `tests/sidecar_capture_mutations.test.ts`
@@ -107,8 +107,8 @@
       durable check, both tests passed in 10 of 10 runs.
   - The second test shows the esbuild listing cache: esbuild selects
     `values/value.js` although `values/value.ts` exists when it resolves
-    `./values/value`. Nobody read the Go source of esbuild, so no other
-    esbuild version or platform is checked.
+    `./values/value`. Those regressions did not inspect the Go source of
+    esbuild. They check no other esbuild version or platform.
   - On 2026-11-17, the bundle disk cache change closed a third window for
     every consumer. All attempts of one `bundle()` call now share one
     evidence owner, so a lasting change between attempts makes the evidence

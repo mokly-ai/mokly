@@ -8,11 +8,23 @@ use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput, R
 use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::stream::{OpenedSource, SourceStream};
 
+use crate::plan_directory;
+
 /// Physical reads used only to decide whether an earlier compilation remains current.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PhysicalInputsMock))]
 pub trait PhysicalInputs: Send + Sync {
     /// Compare one observation. Read errors must reject reuse, including recorded absence.
     fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool>;
+    /// Compare a plan directory using proved names. Other readers retain full checks.
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+    ) -> Result<bool> {
+        let _ = names;
+        self.matches(path, expected)
+    }
 }
 
 /// Native filesystem reader. File content checks retain one 64 KiB streaming buffer.
@@ -21,6 +33,25 @@ pub struct SystemPhysicalInputs;
 impl PhysicalInputs for SystemPhysicalInputs {
     fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool> {
         match self.read(path, expected) {
+            Ok(matches) => Ok(matches),
+            Err(source) => Err(SourceError::Io {
+                operation: "check physical compilation input",
+                path: path.into(),
+                source,
+            }),
+        }
+    }
+
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+    ) -> Result<bool> {
+        if !matches!(expected, PhysicalInput::Directory { .. }) {
+            return self.matches(path, expected);
+        }
+        match plan_directory::matches(path, expected, names) {
             Ok(matches) => Ok(matches),
             Err(source) => Err(SourceError::Io {
                 operation: "check physical compilation input",
@@ -102,7 +133,7 @@ impl SystemPhysicalInputs {
     }
 }
 
-fn real_path(path: &Path) -> io::Result<String> {
+pub(crate) fn real_path(path: &Path) -> io::Result<String> {
     let real = dunce::canonicalize(path)?;
     match real.into_os_string().into_string() {
         Ok(real) => Ok(real),

@@ -9,11 +9,10 @@
 - **Location:** `packages/mokly/src/sidecar/compiled.ts:150` to line 157,
   `packages/mokly/src/sidecar/resolution-inputs.ts:76` to line 84,
   `packages/mokly/src/sidecar/physical-input-reader.ts:219` to line 237,
-  `crates/mokly-render/src/bundle_attempt.rs:108` to line 118,
-  `crates/mokly-render/src/input_stamp.rs:119` to line 130,
-  `crates/mokly-render/src/bundle.rs:62`, and
-  `docs/protocol/mokly-sidecar-recipes.md:57`, line 80, and line 96 to
-  line 103.
+  `crates/mokly-render/src/bundle_attempt.rs:112` to line 124,
+  `crates/mokly-render/src/input_stamp.rs:109` to line 123,
+  `crates/mokly-render/src/bundle.rs:62`, and the section "Reuse And Identity"
+  of `docs/protocol/mokly-sidecar-recipes.md`.
 - **Reason:** On 2026-11-18 the performance orchestrator limited candidate
   names to the plan check of a Serve edit, and it left compiled and stored
   reuse for a separate, later decision. The exact Serve plan change does not
@@ -48,7 +47,8 @@
     capture. The new compilation then replaces the head entry.
   - Three kinds of check compare whole directories:
     - The reuse evidence keeps every entry of each recorded directory, as
-      `docs/protocol/mokly-sidecar-recipes.md:80` requires. `current` in
+      the section "Reuse And Identity" of
+      `docs/protocol/mokly-sidecar-recipes.md` requires. `current` in
       `packages/mokly/src/sidecar/physical-input-reader.ts` compares whole
       directories at line 219 to line 237. The Rust check
       `physical_inputs::current` in `crates/mokly-render/src/physical_inputs.rs`
@@ -57,14 +57,14 @@
       `packages/mokly/src/sidecar/resolution-inputs.ts:76` to line 84
       records the file and link names of each consumed-module directory and
       each lookup directory. It writes them as `inputDirectories` and
-      `metadataDirectories`. `docs/protocol/mokly-sidecar-recipes.md:57`
-      requires this check: added or removed files in a consumed-module
-      directory invalidate reuse, so a higher-priority module cannot remain
-      hidden.
-    - `stamp` at `crates/mokly-render/src/bundle_attempt.rs:108` to line
-      118 turns `metadataDirectories` into `InputStamp` memberships. The core
-      reuses a retained state only while `InputStamp::current` at
-      `crates/mokly-render/src/input_stamp.rs:119` to line 130 lists the same
+      `metadataDirectories`. The section "Reuse And Identity" of
+      `docs/protocol/mokly-sidecar-recipes.md` requires this check. Added or
+      removed files in a consumed-module directory invalidate reuse, so a
+      higher-priority module cannot remain hidden.
+    - `stamp` at `crates/mokly-render/src/bundle_attempt.rs:112` to line
+      124 turns `metadataDirectories` into `InputStamp` memberships. The core
+      reuses a retained state only while `InputStamp::matches` at
+      `crates/mokly-render/src/input_stamp.rs:109` to line 123 lists the same
       names. The check is at `crates/mokly-render/src/bundle.rs:62`.
   - The measured editor case ran on 2026-11-18. It used the release binary
     of `main` at `be242a628` with its matching sidecar dist, on a copy of
@@ -103,10 +103,10 @@
     - So an edit with retained editor files keeps its plan and makes one
       esbuild call. A restart still rejects the head entry. In-process reuse
       still rejects a retained state whose directory changed.
-    - The decision at `docs/protocol/mokly-sidecar-recipes.md:96` to line
-      103 stays for compiled and stored reuse. A reuse check of a
-      compilation compares whole directory entries, so it copies no resolver
-      rule.
+    - The decision in the section "Reuse And Identity" of
+      `docs/protocol/mokly-sidecar-recipes.md` stays for compiled and stored
+      reuse. A reuse check of a compilation compares whole directory entries,
+      so it copies no resolver rule.
   - Why the performance orchestrator chose plan-only candidate names on
     2026-11-18, under the user's delegation of 2026-11-16 for Changes speed
     and reliability:
@@ -159,10 +159,10 @@
     compiles the head once and stores the new entry. Effort: Small.
   - **B.** Use candidate names in every reuse check, in TypeScript and in
     Rust. This covers the captured reuse evidence and the three
-    consumed-directory lists. It changes the rules at
-    `docs/protocol/mokly-sidecar-recipes.md:57`, line 80, and line 96 to
-    line 103. An error in the candidate rules can then reach compiled reuse
-    and stored bundles. Effort: Large.
+    consumed-directory lists. It changes the rules in the section
+    "Reuse And Identity" of `docs/protocol/mokly-sidecar-recipes.md`. An error
+    in the candidate rules can then reach compiled reuse and stored bundles.
+    Effort: Large.
   - **C.** Use candidate names only when the sidecar checks a restored
     stored compilation. Take the names from the stored plan of the entry.
     In-process reuse and bundle cache admission keep whole directories. The

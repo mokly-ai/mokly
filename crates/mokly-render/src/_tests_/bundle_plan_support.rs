@@ -39,6 +39,7 @@ pub(super) fn evidence() -> Arc<ReuseEvidence> {
 
 pub(super) fn plan() -> Arc<ResolutionPlan> {
     Arc::new(ResolutionPlan {
+        candidates: None,
         paths: vec!["/repo/entry.ts".into(), "/repo/value.ts".into()],
         imports: vec![PlannedImport(
             0,

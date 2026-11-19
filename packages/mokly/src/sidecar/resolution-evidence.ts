@@ -13,6 +13,7 @@ import { mappedPaths } from "./mapped-paths.js";
 import type { ModulePaths } from "./module-paths.js";
 import { substitution } from "./path-pattern.js";
 import { PhysicalInputs } from "./physical-inputs.js";
+import { PlanCandidates } from "./plan-candidates.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { resolutionOptions } from "./resolution.js";
 import { bareSpecifier, packageName } from "./specifier.js";
@@ -24,13 +25,15 @@ export class ResolutionEvidence {
   private readonly packages = new Set<string>();
   private readonly aliases: Array<[string, string]>;
   private readonly aliasDirectory: string;
+  readonly candidates: PlanCandidates;
 
   constructor(
     private readonly params: BundleParams,
     private readonly paths: ModulePaths,
     durability?: CaptureDurability,
   ) {
-    this.physical = new PhysicalInputs(durability);
+    this.candidates = new PlanCandidates(paths.settings);
+    this.physical = new PhysicalInputs(durability, this.candidates);
     this.configs = new ConfigInputs(this.physical, paths);
     this.aliases = Object.entries(paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,
@@ -122,6 +125,7 @@ export class ResolutionEvidence {
 
   private candidate(base: string): void {
     if (!this.physical.complete) return;
+    this.candidates.candidate(base);
     const extension = path.extname(base).toLowerCase();
     if (
       !extension ||
@@ -137,6 +141,7 @@ export class ResolutionEvidence {
 
   private capture(name: string, directory: string): void {
     const config = this.configs.scope(directory);
+    this.candidates.request(name, config);
     this.configs.manifest(directory);
     if (
       name.startsWith("#") ||
@@ -256,6 +261,7 @@ export class ResolutionEvidence {
   }
 
   finish(metafile: Metafile) {
+    this.candidates.metafile(metafile);
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file)) continue;
       for (const edge of input.imports) {

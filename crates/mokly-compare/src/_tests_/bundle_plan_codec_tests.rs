@@ -14,6 +14,7 @@ fn a_disk_entry_keeps_its_optional_plan_but_an_unchanged_restore_never_carries_i
     let original = recipe();
     let restore = serde_json::to_vec(&disk_seed_request(&original)).unwrap();
     let plan = Arc::new(ResolutionPlan {
+        candidates: None,
         paths: vec!["/repo/entry.ts".into(), "/repo/target.ts".into()],
         imports: vec![PlannedImport(
             0,

@@ -7,11 +7,11 @@
   listed this gap outside the plan, and from a read-only source check of the
   gap on the same date. The check read the source at `be242a628` and
   esbuild 0.28.2, and it ran nothing.
-- **Location:** `packages/mokly/src/sidecar/bundle.ts:208` to line 211,
-  `packages/mokly/src/sidecar/config-inputs.ts:40` to line 86,
-  `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 75,
-  `packages/mokly/src/sidecar/physical-inputs.ts:193` to line 213, and
-  `docs/protocol/mokly-sidecar-recipes.md:66` to line 78.
+- **Location:** `packages/mokly/src/sidecar/bundle.ts:214` to line 217,
+  `packages/mokly/src/sidecar/config-inputs.ts:47` to line 115,
+  `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 83,
+  `packages/mokly/src/sidecar/physical-inputs.ts:211` to line 234, and the
+  section "Reuse And Identity" of `docs/protocol/mokly-sidecar-recipes.md`.
 - **Reason:** The gap predates the exact Serve plan change, which keeps the
   current comparisons of recorded inputs, and nobody has reproduced a
   changed output.
@@ -29,7 +29,7 @@
     sidecar sets it to the configuration directory under the source root.
 - **Background:**
   - The sidecar sets the esbuild working directory at
-    `packages/mokly/src/sidecar/bundle.ts:208` to line 211. It joins the
+    `packages/mokly/src/sidecar/bundle.ts:214` to line 217. It joins the
     source root and the configuration directory.
   - esbuild 0.28.2 looks for one manifest at the first resolve of each
     build. The source is `internal/resolver/resolver.go` at the esbuild tag
@@ -42,21 +42,23 @@
     - Line 2402 to line 2455 resolve package imports through an active
       manifest, and report its errors.
   - The capture records no manifest name:
-    - `manifest` at `packages/mokly/src/sidecar/config-inputs.ts:40` records
-      `package.json` candidates. Line 58 to line 86 record `tsconfig.json`
-      and `jsconfig.json` candidates.
-    - `pathLinks` at `packages/mokly/src/sidecar/physical-inputs.ts:193` to
-      line 213 walks the parent paths for link and durability observations.
+    - `manifest` at `packages/mokly/src/sidecar/config-inputs.ts:47` records
+      `package.json` candidates. `configuration` at line 65 and
+      `candidateInputs` at line 100 record `tsconfig.json` and `jsconfig.json`
+      candidates.
+    - `pathLinks` at `packages/mokly/src/sidecar/physical-inputs.ts:211` to
+      line 234 walks the parent paths for link and durability observations.
       It saves no listing of each parent.
     - `resolutionInputs` at
-      `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 75 saves
+      `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 83 saves
       the listings of consumed-module directories and lookup directories. On
       the ancestor chains it records only `package.json` and
       `tsconfig.json`.
-  - The rule in force, at `docs/protocol/mokly-sidecar-recipes.md:66` to
-    line 78: the reuse evidence records each file and directory that can
-    change how a bundled import or a peer resolves. Its list names the
-    package, tsconfig, and jsconfig candidates, and no manifest.
+  - The rule in force, in the section "Reuse And Identity" of
+    `docs/protocol/mokly-sidecar-recipes.md`: the reuse evidence records each
+    file and directory that can change how a bundled import or a peer resolves.
+    Its list names the package, tsconfig, and jsconfig candidates, and no
+    manifest.
   - The condition: an ancestor directory that esbuild searches has no
     recorded listing, and no other recorded input observes the manifest
     change. A manifest that appears there later has no recorded absence. A

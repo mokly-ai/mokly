@@ -181,24 +181,31 @@ Depends on: 1, 3
 
 Source proof: `.context/serve-plan-editor-invalidation/candidate-preflight.md`.
 
-- [ ] Add red swap and backup regressions for additions and removals after capture, selectable-candidate invalidation, and hidden preferred-candidate invalidation.
-- [ ] Capture bounded names with indexed directories. Narrow only Rust plan checks for audited forms and version.
-- [ ] Cover metadata and PnP, traversed children, rewrites, index names, suffix prefixes, links, configured extensions, and case fallback.
-- [ ] Compare output, recorded inputs, and errors with native-first. Preserve other reuse-owner tests unchanged.
-- [ ] Update the approved new-module count. Keep output assertions and add a stale-candidate contrast.
+- [x] Add red swap and backup regressions for additions and removals after capture, selectable-candidate invalidation, and hidden preferred-candidate invalidation.
+- [x] Capture bounded names with indexed directories. Narrow only Rust plan checks for audited forms and version.
+- [x] Cover metadata and PnP, traversed children, rewrites, index names, suffix prefixes, links, configured extensions, and case fallback.
+- [x] Compare output, recorded inputs, and errors with native-first. Preserve other reuse-owner tests unchanged.
+- [x] Update the approved new-module count. Keep output assertions and add a stale-candidate contrast.
 - [ ] Measure pair and retained-key bytes on examples/basic, large React, and the cloud-shaped synthetic catalogue.
 - [ ] Confirm about 4,400 modules, 13,000 imports, 23,000 inputs, and icon directories of about 1,800 and 1,600 files. Calibrate path lengths and compare the old pair with the real 8,102,796-byte pair.
-- [ ] Confirm both bounds fit, with at least 1 MiB margin on that shape. Ask the performance orchestrator if they fail.
+- [ ] Confirm both bounds fit, with at least 1 MiB margin on that shape. Check both head and base records. Ask the performance orchestrator if they fail.
+
+Evidence: `.context/serve-plan-editor-invalidation/code-milestone-4-report.md`.
 
 ## Milestone 5: Verification, measurement, and review
 
 Depends on: 1a, 2, 3, 4
 
-- [ ] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
+Evidence: `.context/serve-plan-editor-invalidation/2026-11-19-main-code-integration-report.md`.
+
+- [x] Preserve current main's mapped-path capture, configured files, stamp checks, style memo, and watch-plan reuse. Recheck G after integration.
+- [x] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
+- [x] Align the final owner README, protocol status lines, and follow-up pointers. Remove the item resolved by main #343.
 - [ ] Smoke-test examples/basic. Measure alternating release main and branch in separate checkouts, targets, and matching dists.
-- [ ] Run `cargo xtask check --suite repository` and complete `cargo xtask check` with Git 2.45+, Git LFS, and pinned Bun.
+- [x] Extract the merged 303-line bundle owner without changing runtime behavior. Recheck the file cap.
+- [x] Run `cargo xtask check --suite repository` and complete `cargo xtask check` with Git 2.45+, Git LFS, and pinned Bun.
 - [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
-- [ ] Obtain real mokly-cloud measurements and sizes. Resolve regressions and failed size conditions.
+- [ ] Obtain real mokly-cloud measurements and sizes for head and base records. Require at least 1 MiB margin in both bounds. Resolve regressions and failed size conditions.
 - [ ] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
 - [ ] Delete this plan and the resolved editor-invalidation item after other TODOs and reviews. Update live references.
 - [ ] Open the pull request into `main`. Preserve dated calls and a plan permalink. Wait for CI with `ci-wait.sh`. Report to the performance orchestrator. Do not merge.

@@ -13,6 +13,7 @@ use super::{bundle, pool, recipe, worker};
 #[test]
 fn a_warm_plan_is_returned_only_for_the_runtime_key_the_sidecar_accepted() {
     let plan = Arc::new(ResolutionPlan {
+        candidates: None,
         paths: vec!["/repo/entry.ts".into(), "/repo/target.ts".into()],
         imports: vec![PlannedImport(
             0,

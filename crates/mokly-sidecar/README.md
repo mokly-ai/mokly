@@ -1,7 +1,5 @@
 # mokly-sidecar
 
-Status: The [Serve plan change](../../plans/serve-plan-editor-invalidation.md) adds the indexed plan format described here.
-
 `mokly-sidecar` is the Rust client and process pool for Mokly's optional Node
 render sidecar. Catalogue and render services depend on its `SidecarPool`
 trait. `mokly-model` owns shared schemas. `mokly-platform` owns process trees.
@@ -445,9 +443,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `PlannedImport`, one target. The plan lists each path once in its path
   table. Each `PlannedImport` gives its importer and its target as table
   positions, with its specifier, its import kind, and its side effects flag.
-  The plan also holds the candidate names of its recorded directories, each
-  set with its directory as a table position. Its decode rejects a position
-  outside the table.
+  `DirectoryCandidates` holds one recorded directory's table position and
+  its sorted, unique lowercase ASCII names. The optional `candidates` field
+  holds these sets. Its decode rejects an invalid table position, a repeated
+  directory position, or names that violate this format.
   `RECORD_BYTES` is the 8 MiB bound of a plan record and of the records that
   the core keeps. `ResolutionPlan::record_bytes` admits a plan only with
   captured and durable evidence. `bounded_record_bytes` counts a serialized

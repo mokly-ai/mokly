@@ -187,7 +187,13 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
+  const result = bundleResult(
+    generation,
+    capturedPlan(
+      evidence ? evidence.candidates.attach(plan, reuseEvidence) : plan,
+      reuseEvidence,
+    ),
+  );
   if (reusable && !compilation.reuseEvidence.complete) {
     compilation.identity = createHash("sha256")
       .update(compilation.identity)

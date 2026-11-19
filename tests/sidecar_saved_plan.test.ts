@@ -53,8 +53,8 @@ for (const exact of [true, false])
     const plan = captured.result.plan;
     assert.deepEqual(
       [...plan.paths].sort(),
-      ["mokly-entry", "entry.mjs", "value.js"]
-        .map((file) => path.join(root, file))
+      ["mokly-entry", "entry.mjs", "value.js", "."]
+        .map((file) => path.resolve(root, file))
         .sort(),
     );
     assert.deepEqual(

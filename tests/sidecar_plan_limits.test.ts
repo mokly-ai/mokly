@@ -23,6 +23,7 @@ test("the combined plan bound counts escaped specifiers and shared paths at the 
   const plan: ResolutionPlan = {
     paths: ['quoted"\\é💾\u0001\ud800', 'importer"\\é💾\udc00'],
     imports: [[1, 'specifier"\\é💾\udc00', "import-statement", 0, false]],
+    candidates: [[0, ['candidate"\u0001', "other"]]],
   };
   const evidence = { complete: true, durable: true, inputs: {} };
   const bytes = Buffer.byteLength(JSON.stringify([plan, evidence]));

@@ -35,11 +35,29 @@ export function capturedPlan(
       2;
     if (bytes > EVIDENCE_LIMIT) return undefined;
   }
+  if (plan.candidates) {
+    bytes += Buffer.byteLength(',"candidates":[]');
+    first = true;
+    for (const [directory, names] of plan.candidates) {
+      bytes +=
+        (first ? 0 : 1) + Buffer.byteLength(JSON.stringify([directory, []]));
+      first = false;
+      let firstName = true;
+      for (const name of names) {
+        bytes += firstName ? 0 : 1;
+        firstName = false;
+        const nameBytes = stringBytes(name, EVIDENCE_LIMIT - bytes);
+        if (nameBytes === undefined) return undefined;
+        bytes += nameBytes;
+      }
+      if (bytes > EVIDENCE_LIMIT) return undefined;
+    }
+  }
   return bytes <= EVIDENCE_LIMIT ? plan : undefined;
 }
 
 /** Count JSON string escaping without allocating an oversized encoded string. */
-function stringBytes(value: string, limit: number): number | undefined {
+export function stringBytes(value: string, limit: number): number | undefined {
   let bytes = 2;
   for (let index = 0; index < value.length; index++) {
     const code = value.charCodeAt(index);

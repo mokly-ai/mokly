@@ -1,7 +1,5 @@
 # mokly-render
 
-Status: The [Serve plan change](../../plans/serve-plan-editor-invalidation.md) adds the resolution settings key and candidate comparisons described here.
-
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -270,9 +268,18 @@ view after the edit and counts real process starts and hello calls.
   compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
   filesystem implementation. Its `current` check rejects marked evidence and
   compares whole directories. It does not read the `durable` flag of the
-  evidence. The plan check of a Serve edit uses the same reader. It compares a
-  recorded directory that has candidate names only on those names, under the
+  evidence. Its `matches_candidates` method defaults to the whole comparison
+  for readers without a candidate implementation.
+- [`src/plan_inputs.rs`](./src/plan_inputs.rs) holds `current`, the plan
+  check that `bundle_attempt.rs` runs before a Serve edit. It selects
+  candidate comparisons for the recorded directories that have candidate
+  names, under the
   [candidate name rules](../../docs/protocol/mokly-sidecar-plans.md#candidate-names).
+  Other observations keep the whole comparison.
+- [`src/plan_directory.rs`](./src/plan_directory.rs) holds `matches`, the
+  streaming candidate comparison that `SystemPhysicalInputs` uses. It checks
+  each current entry and link before filtering unrelated ASCII names. It
+  compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines

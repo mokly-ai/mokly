@@ -10,7 +10,8 @@
 - **Location:** `crates/mokly-sidecar/src/compiled.rs:51` to line 60,
   `packages/mokly/src/sidecar/physical-input-reader.ts:164` to line 176,
   line 214 to line 218, and line 219 to line 237, and
-  `crates/mokly-render/src/physical_inputs.rs:64` to line 100.
+  `crates/mokly-render/src/physical_inputs.rs:95` to line 131, and
+  `crates/mokly-render/src/plan_directory.rs:32` to line 65.
 - **Reason:** The gap predates the exact Serve plan change, which keeps the
   current comparisons of recorded inputs, and nobody has reproduced a
   changed output.
@@ -40,8 +41,11 @@
     target.
   - The Rust check in `crates/mokly-render/src/physical_inputs.rs` reads the
     kind of each member with `file_type`, which does not follow a link, at
-    line 71. Line 87 to line 95 compare the canonical target. Line 97 to
-    line 100 check a standalone link. Neither compares the followed kind.
+    line 102. Line 118 to line 126 compare the canonical target. Line 128 to
+    line 131 check a standalone link. Neither compares the followed kind.
+    The plan-only directory check in
+    `crates/mokly-render/src/plan_directory.rs:32` to line 65 uses the same
+    kind and canonical-target facts.
   - esbuild 0.28.2 uses the followed kind. The sources are
     `internal/fs/fs_real.go` and `internal/resolver/resolver.go` at the
     esbuild tag `v0.28.2`:

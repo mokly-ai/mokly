@@ -1,5 +1,6 @@
 //! Native import targets captured beside one compilation's reuse evidence.
 
+use std::collections::BTreeSet;
 use std::io::{self, Write};
 
 use serde::de::Error;
@@ -48,6 +49,15 @@ pub struct PlannedImport(
     pub bool,
 );
 
+/// One directory path index and its sorted, unique lowercase ASCII lookup names.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
+pub struct DirectoryCandidates(
+    /// Directory's position in the shared path table.
+    pub u32,
+    /// Names whose membership can change a native resolution.
+    pub Vec<String>,
+);
+
 /// Classified native imports with shared importer and target paths.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, TS)]
 pub struct ResolutionPlan {
@@ -55,12 +65,17 @@ pub struct ResolutionPlan {
     pub paths: Vec<String>,
     /// Import targets reusable only with their matching captured evidence.
     pub imports: Vec<PlannedImport>,
+    /// Missing directories retain their full evidence comparison.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub candidates: Option<Vec<DirectoryCandidates>>,
 }
 
 #[derive(Deserialize)]
 struct PlanData {
     paths: Vec<String>,
     imports: Vec<PlannedImport>,
+    candidates: Option<Vec<DirectoryCandidates>>,
 }
 
 impl<'de> Deserialize<'de> for ResolutionPlan {
@@ -71,12 +86,26 @@ impl<'de> Deserialize<'de> for ResolutionPlan {
         let plan = PlanData::deserialize(deserializer)?;
         if plan.imports.iter().any(|entry| {
             plan.paths.get(entry.0 as usize).is_none() || plan.paths.get(entry.3 as usize).is_none()
+        }) || plan.candidates.as_ref().is_some_and(|directories| {
+            let mut seen = BTreeSet::new();
+            directories.iter().any(|DirectoryCandidates(index, names)| {
+                plan.paths.get(*index as usize).is_none()
+                    || !seen.insert(index)
+                    || names.iter().any(|name| {
+                        name.is_empty()
+                            || !name.is_ascii()
+                            || name.bytes().any(|byte| byte.is_ascii_uppercase())
+                            || name.contains(['/', '\\'])
+                    })
+                    || names.windows(2).any(|pair| pair[0] >= pair[1])
+            })
         }) {
             return Err(D::Error::custom("invalid resolution plan reference"));
         }
         Ok(Self {
             paths: plan.paths,
             imports: plan.imports,
+            candidates: plan.candidates,
         })
     }
 }

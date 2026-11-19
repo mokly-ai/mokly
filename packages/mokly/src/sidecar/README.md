@@ -24,9 +24,9 @@ its requests and results. The paths below are relative to the package root.
   records. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
-  the bundle. Its `planNative` keys each planned import by importer,
-  specifier, and import kind, and it reports whether the native compile is
-  exact. A failed native compile compiles again with full resolution. The
+  the bundle. Its `planNative` records each planned import through
+  `PlanBuilder` and reports whether the native compile is exact. A failed
+  native compile compiles again with full resolution. The
   resolve callback of `consumerPlugins` in
   [`src/sidecar/plugins.ts`](./plugins.ts) applies the resolution
   mode of
@@ -100,6 +100,23 @@ its requests and results. The paths below are relative to the package root.
   physical file, a selection outside the dependencies that no candidate
   proves or contains, or staged paths above the 8 MiB `EVIDENCE_LIMIT` make
   `record` return false.
+- [`src/sidecar/resolution-plan.ts`](./resolution-plan.ts) holds
+  `PlanBuilder`, which interns importer and target paths in one table, and
+  `PlanLookup`, which indexes imports by importer position, specifier, and
+  import kind. Planned resolution reads each target through the same table.
+- [`src/sidecar/plan-candidates.ts`](./plan-candidates.ts) holds
+  `PlanCandidates`, the bounded collector of plan-only candidate names for
+  esbuild 0.28.2. It consumes the requests, paths, canonical mappings, and
+  metadata bytes of the existing evidence capture. It adds no physical read.
+  Matching absolute `paths` mappings and other unproved forms keep whole
+  comparisons. Collector overflow drops the optional plan.
+  [`src/sidecar/plan-candidate-directories.ts`](./plan-candidate-directories.ts)
+  merges lexical names into recorded canonical directories and adds their
+  table positions. Captured non-ASCII members and folded-name collisions keep
+  whole comparisons.
+  [`src/sidecar/plan-candidate-metadata.ts`](./plan-candidate-metadata.ts)
+  derives main-target names and checks export forms from already-read
+  manifests. `bundleRecipe` attaches the names before the combined byte check.
 - [`src/sidecar/captured-plan.ts`](./captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
   only with complete, durable, and unmarked evidence. The plan and the
