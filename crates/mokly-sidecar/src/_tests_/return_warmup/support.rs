@@ -2,20 +2,18 @@
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
+use std::thread;
 use std::time::Duration;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::compiled_fixture::compiled;
 use crate::error::Result;
-use crate::methods::Call;
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
-use crate::results;
-use crate::wire::MethodResult;
-use crate::workers::{ClockMock, ControlMock, FactoryMock, Spawned, WorkerMock};
+use crate::workers::{ClockMock, FactoryMock, Spawned};
 
 use super::calls::{bindings, bundle, css, maps, render};
+use super::process::process;
 
 /// The polling allowance for an expected state; it guards hangs and is not a speed contract.
 const ALLOWANCE: Duration = Duration::from_secs(10);
@@ -24,6 +22,7 @@ const ALLOWANCE: Duration = Duration::from_secs(10);
 pub(super) enum Event {
     Spawn(usize, String),
     Call(usize, String),
+    Quiet(usize, String),
     Kill(usize),
     Reap(usize),
 }
@@ -37,7 +36,7 @@ pub(super) struct Journal {
 }
 
 impl Journal {
-    fn emit(&self, event: Event) {
+    pub(super) fn emit(&self, event: Event) {
         self.events.lock().unwrap().push(event);
     }
 
@@ -51,6 +50,17 @@ impl Journal {
             .into_iter()
             .filter_map(|event| match event {
                 Event::Call(id, label) if id == process => Some(label),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// The labels of the calls that asked the process to stay quiet.
+    pub(super) fn quiet(&self, process: usize) -> Vec<String> {
+        self.read()
+            .into_iter()
+            .filter_map(|event| match event {
+                Event::Quiet(id, label) if id == process => Some(label),
                 _ => None,
             })
             .collect()
@@ -166,6 +176,16 @@ impl Harness {
         self.pool.request(css("/base", "base")).unwrap();
     }
 
+    /// Move both slots of a two-slot pool to the base root; the hook holds process 1's "hold".
+    pub(super) fn two_base(&self, hold: &Gate) {
+        let pool = self.pool.clone();
+        let busy = thread::spawn(move || pool.request(css("/base", "hold")).unwrap());
+        hold.entered();
+        self.pool.request(css("/base", "second")).unwrap();
+        hold.open();
+        busy.join().unwrap();
+    }
+
     /// A publication schedules the return pass, and one step returns one base process.
     pub(super) fn returned(&self) {
         self.pool.schedule_head_return();
@@ -191,58 +211,4 @@ impl Harness {
             .unwrap();
         assert_eq!(state.waiting.len(), count, "requests in the pool queue");
     }
-}
-
-fn process(id: usize, events: &Arc<Journal>, hook: Hook) -> Unimock {
-    let calls = events.clone();
-    let kills = events.clone();
-    let reaps = events.clone();
-    Unimock::new((
-        WorkerMock::handshake
-            .each_call(matching!(_))
-            .answers(&|_, _| Ok(())),
-        WorkerMock::request
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, request, _| {
-                let label = match &request.call {
-                    Call::Bundle(params) => format!("bundle {}", params.params.entry_files[0]),
-                    Call::ProcessCss(params) => params.context.clone(),
-                    call => call.to_string(),
-                };
-                let event = Event::Call(id, label);
-                calls.emit(event.clone());
-                hook(&event)?;
-                Ok(match &request.call {
-                    Call::Bundle(params) => MethodResult::Bundle(Box::new(results::Bundle {
-                        plan: None,
-                        generation: params.params.entry_files[0].clone(),
-                        epoch: 0,
-                        cache: None,
-                        compiled: Arc::new(compiled(&params.params.entry_files[0])),
-                        modules: vec![],
-                        unmapped_dependency_directories: None,
-                    })),
-                    _ => MethodResult::Empty,
-                })
-            })),
-        WorkerMock::resident_bytes
-            .each_call(matching!())
-            .answers(&|_| Ok(0)),
-        ControlMock::kill
-            .each_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                kills.emit(Event::Kill(id));
-                Ok(())
-            })),
-        ControlMock::shutdown
-            .each_call(matching!())
-            .answers(&|_| Ok(())),
-        ControlMock::finish
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, _| {
-                reaps.emit(Event::Reap(id));
-                Ok(())
-            })),
-    ))
-    .no_verify_in_drop()
 }

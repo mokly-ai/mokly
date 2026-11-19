@@ -120,7 +120,10 @@ generation. After the return pass starts a head worker, the next steps warm
 it up while no request waits and Serve holds no claim. A warm-up sends the
 missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
 then replays the recorded renders, one call at a time, and discards each
-result. A request takes the worker after the call in flight, and the warm-up
+result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
+console and output writes of the code that the call runs, and its timing
+records still appear. `Request::quiet` has no default, so each request builder
+chooses it. A request takes the worker after the call in flight, and the warm-up
 continues later. A newer head generation, a stop, a failed call, or another
 loaded head generation ends it. A failed call keeps or replaces the worker as
 a failed request does. The
@@ -357,7 +360,8 @@ never win the rank. Calls without a generation keep FIFO order, and context
 affinity and the pass preference still come first. Parallel renders use every
 available slot and start no process. Return warm-up tests check the order of
 the preparation and the replays, the bound of 30 calls, the handover to a
-waiting request, the pause for a claim, and each end of a warm-up. Recipe store tests
+waiting request, the pause for a claim, the quiet flag of warm-up calls, and
+each end of a warm-up. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.

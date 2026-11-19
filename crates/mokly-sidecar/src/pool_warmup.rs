@@ -121,11 +121,11 @@ impl Pool {
                 Step::Pause => break (false, true),
                 Step::End => break (true, true),
                 Step::Prepare(preparation, generation, describe) => {
-                    self.restore(&mut slot, &generation, describe, preparation)
+                    self.restore(&mut slot, &generation, describe, preparation, true)
                 }
                 Step::Replay(call) => {
                     slot.renders += 1;
-                    self.prerequisite(&mut slot, call)
+                    self.prerequisite(&mut slot, call, true)
                 }
             };
             sent = true;

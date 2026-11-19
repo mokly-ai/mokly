@@ -52,6 +52,7 @@ impl Pool {
         let mut result = slot.worker.request(
             &Request {
                 id: 1,
+                quiet: false,
                 call: call.clone(),
             },
             deadline,

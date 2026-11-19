@@ -67,6 +67,7 @@ impl Recipes {
         };
         let request = Request {
             id: 1,
+            quiet: false,
             call: Call::RestoreGeneration(recipe.restore()),
         };
         let Ok(encoded) = codec::encode(&request) else {

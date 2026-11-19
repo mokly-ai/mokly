@@ -57,16 +57,23 @@ fn a_waiting_request_takes_the_process_after_the_call_in_flight_and_the_warm_up_
     let resumed = harness.maintain();
     let spawns = harness.events.spawns();
     let warmed = harness.events.calls(2);
+    let quiet = harness.events.quiet(2);
     harness.pool.abort().unwrap();
     let mut expected = vec!["restoreGeneration g".to_owned(), "next".to_owned()];
     expected.extend(prepared("g").into_iter().skip(1));
     expected.extend(replayed("g", &rendered));
+    let mut warm_up = prepared("g");
+    warm_up.extend(replayed("g", &rendered));
     assert!(stepped);
     assert!(woken, "a pending warm-up wakes the maintenance owner");
     assert_eq!(interrupted, ["restoreGeneration g", "next"]);
     assert_eq!(resumed, 1);
     assert_eq!(spawns, 3, "the waiting request starts no process");
     assert_eq!(warmed, expected);
+    assert_eq!(
+        quiet, warm_up,
+        "the request between warm-up calls is not quiet"
+    );
 }
 
 #[test]

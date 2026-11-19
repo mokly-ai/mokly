@@ -18,12 +18,18 @@ fn a_returned_process_prepares_the_newest_head_generation_then_replays_its_30_la
     let steps = harness.maintain();
     let spawns = harness.events.spawns();
     let warmed = harness.events.calls(2);
+    let quiet = [harness.events.quiet(0), harness.events.quiet(2)];
     harness.pool.abort().unwrap();
     let mut expected = prepared("g");
     expected.extend(replayed("g", &rendered[2..]));
     assert_eq!(steps, 1);
     assert_eq!(spawns, 3, "the warm-up starts no process");
     assert_eq!(warmed, expected);
+    assert_eq!(
+        quiet,
+        [Vec::new(), expected],
+        "only warm-up calls are quiet"
+    );
 }
 
 #[test]

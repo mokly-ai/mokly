@@ -3,6 +3,7 @@
 mod calls;
 mod end_tests;
 mod failure_tests;
+mod process;
 mod support;
 mod warmup_tests;
 mod yield_tests;

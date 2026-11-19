@@ -64,6 +64,7 @@ pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
 pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleCapture) -> usize {
     codec::encode(&Request {
         id: 1,
+        quiet: false,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),

@@ -20,9 +20,26 @@ sends the `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls
 of the newest head generation that the process lacks, in that order. Then it
 replays the recorded render requests, oldest first. The pool discards each
 result. It stores, publishes, and caches nothing from a warm-up, and a warm-up
-changes no output. A replayed render does not change the warm head process. It
-counts toward the render-count rule of
+changes no published output. A replayed render does not change the warm head
+process. It counts toward the render-count rule of
 [sampling and recycling](./mokly-sidecar-memory.md#sampling-and-recycling).
+
+Each warm-up call is a quiet call: its request has `quiet: true`, and every
+other request omits the field. From the start of a quiet call until its reply,
+the sidecar drops each console, standard output, and standard error write of
+the code that the call runs. Timing records of the call still appear. Two kinds
+of output stay visible: the report that Node writes when a warm-up call crashes
+its process, and output from code that runs after the call returns, such as a
+timer.
+
+Decision: a warm-up call is quiet. Rejected: warm-up output on the terminal,
+because each returned process would repeat the console output of module
+evaluation and of up to 30 views while Serve is idle. Rejected: a filter of the
+forwarded lines in the pool, because the line reader runs on its own thread, so
+a warm-up line could pass or the first line of the next request could drop. The
+field is a design call and not a user decision, because the sidecar request
+protocol is internal: the core and the sidecar ship together, and nothing
+outside Mokly reads it.
 
 Only Serve runs a warm-up, on the background worker of the return pass. A
 return step comes first, so a warm-up starts only when no return step can
@@ -59,7 +76,8 @@ A warm-up never sends a call of an older head generation. It never evaluates a
 generation on a process that holds another head generation.
 
 After a failed call, the pool keeps or replaces the process as after a failed
-request. The failure reaches no output. A later request that needs the same
+request. The pool reports no diagnostic for the failure, so only a crash report
+of the process can reach the terminal. A later request that needs the same
 input reports its own failure.
 
 Decision: a newer head generation ends every warm-up. Rejected: a warm-up of

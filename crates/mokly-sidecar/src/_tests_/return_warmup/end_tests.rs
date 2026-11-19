@@ -3,10 +3,11 @@
 use std::sync::Arc;
 use std::thread;
 
+use crate::error::Error;
 use crate::pool::SidecarPool;
 
 use super::calls::{call, css, prepared, render, replayed, views};
-use super::support::{Gate, Harness};
+use super::support::{Event, Gate, Harness};
 
 type Action = fn(&Harness);
 
@@ -115,4 +116,84 @@ fn a_process_that_holds_another_head_generation_gets_no_warm_up() {
     assert_eq!(served, expected);
     assert_eq!(after, served, "the warm-up never evaluates h beside g");
     assert!(!left);
+}
+
+#[test]
+fn a_released_newest_generation_ends_the_warm_up_without_a_call() {
+    let harness = Harness::plain(1);
+    harness.head("g", &views("view", 2));
+    harness.base();
+    harness.returned();
+    harness.pool.release_generation("g", 1);
+    let pool = harness.pool.clone();
+    let ended = thread::spawn(move || pool.maintain_head_return()).join();
+    let left = harness.pool.maintain_head_return();
+    let warmed = harness.events.calls(2);
+    harness.pool.abort().unwrap();
+    assert!(
+        matches!(ended, Ok(Ok(true))),
+        "the claimed warm-up ends at once"
+    );
+    assert!(matches!(left, Ok(false)), "{left:?}");
+    assert_eq!(warmed, Vec::<String>::new());
+}
+
+#[test]
+fn a_new_process_in_the_slot_gets_no_warm_up() {
+    let harness = Harness::new(
+        1,
+        Arc::new(|event| {
+            if *event == call(2, "crash") {
+                return Err(Error::Crashed);
+            }
+            Ok(())
+        }),
+    );
+    harness.head("g", &views("view", 2));
+    harness.base();
+    harness.returned();
+    harness.pool.request(css("/head", "crash")).unwrap();
+    let worked = harness.pool.maintain_head_return().unwrap();
+    let (crashed, retried) = (harness.events.calls(2), harness.events.calls(3));
+    harness.pool.abort().unwrap();
+    assert!(!worked);
+    assert_eq!(crashed, ["crash"]);
+    assert_eq!(
+        retried,
+        ["crash"],
+        "the retry's process gets no warm-up call"
+    );
+}
+
+#[test]
+fn a_failed_reap_ends_every_warm_up() {
+    let hold = Arc::new(Gate::default());
+    let held = hold.clone();
+    let harness = Harness::new(
+        2,
+        Arc::new(move |event| {
+            if *event == call(1, "hold") {
+                held.block();
+            }
+            if *event == Event::Reap(1) {
+                return Err(Error::Unavailable {
+                    part: "injected reap".into(),
+                });
+            }
+            Ok(())
+        }),
+    );
+    harness.head("g", &views("view", 2));
+    harness.two_base(&hold);
+    harness.returned();
+    let disabled = harness.pool.maintain_head_return();
+    let worked = harness.pool.maintain_head_return();
+    let warmed = harness.events.calls(3);
+    harness.pool.abort().unwrap();
+    assert!(
+        matches!(disabled, Err(Error::HeadReturnDisabled { .. })),
+        "{disabled:?}"
+    );
+    assert!(matches!(worked, Ok(false)), "{worked:?}");
+    assert_eq!(warmed, Vec::<String>::new());
 }
