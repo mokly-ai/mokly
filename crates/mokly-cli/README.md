@@ -135,8 +135,11 @@ the slot. A base reader keeps only its exact kept base, its cancellation, and
 a `ReleaseBase` capability, which also holds only a weak handle of the slot.
 It keeps no provider, so it holds no progress callback of the preparation and
 no strong handle of the slot. An old reader can keep only its own base alive.
-`ServeBase::find_kept` compares the `BaseKey`, then runs `Freshness::current`
-outside the slot lock. A current base returns a reader with the
+`ServeBase::find_kept` compares the `BaseKey`, then runs
+`Freshness::current_kept` outside the slot lock. The slot entry holds a
+`KeptListing` from the keep to the release, so a check of that base skips the
+missing-object preflight when the tree listing has not changed since the
+previous check. A current base returns a reader with the
 classification's own cancellation. Another key, a stale check, or a check
 error other than a cancellation releases the kept base before the fresh
 preparation. A cancelled classification keeps a valid kept base, and the

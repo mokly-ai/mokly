@@ -251,6 +251,8 @@ of a wrapper apply. An override must keep those checks.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+The `MemoryReferenceIndex` of a generation scans each distinct inline style
+text once, so documents with equal inline styles share one scan.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
@@ -353,6 +355,9 @@ retention disabled.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
+- [`src/reference_index.rs`](./src/reference_index.rs) defines
+  `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
+  referenced file and the inline style scans of one generation.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
 - [`src/comparison_input.rs`](./src/comparison_input.rs) defines

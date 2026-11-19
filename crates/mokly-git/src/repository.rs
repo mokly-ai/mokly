@@ -12,7 +12,7 @@ use crate::disk::Disk;
 use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
-use crate::source_key::CheckoutIdentity;
+use crate::source_key::{CheckoutIdentity, KeptListing};
 use crate::tree::{Entry, Limits, text};
 
 /// Immutable-base operations for a validated repository root.
@@ -80,6 +80,17 @@ pub trait Repository: Send + Sync {
             digest: commit.to_string(),
             filtered: false,
         })
+    }
+    /// The identity of `checkout_identity`, read again with the current configuration and
+    /// attributes. A tree listing equal to the listing in `kept` skips the object check
+    /// that the kept listing passed, and a newly checked listing goes into `kept`. None
+    /// means that this repository has no such read, so the caller reads `checkout_identity`.
+    fn checkout_identity_kept(
+        &self,
+        _commit: &ObjectId,
+        _kept: &dyn KeptListing,
+    ) -> Result<Option<CheckoutIdentity>> {
+        Ok(None)
     }
     /// Source cache identity includes the user's current checkout settings.
     fn source_key(&self, commit: &ObjectId) -> Result<String> {
