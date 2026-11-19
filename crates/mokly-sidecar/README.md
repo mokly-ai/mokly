@@ -84,9 +84,11 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-Ties and calls without a generation keep queue order. A call can use another
-available slot while the worker that holds its generation is busy. The launch
-root is the head root.
+Ties and calls without a generation, also head bundles, keep queue order. The
+pool does not apply the
+[head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity)
+yet. A call can use another available slot while the worker that holds its
+generation is busy. The launch root is the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
 after a successful render. The pool bound covers all roots.

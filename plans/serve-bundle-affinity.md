@@ -86,6 +86,8 @@ The fresh `second-pass review agent` checked the decision and all recorded calls
 Its report is `.context/serve-bundle-affinity/options-check.md`.
 It confirmed the diagnosis, added D and E, and corrected the PostCSS scope of C.
 The performance orchestrator approved D with the conditions recorded above. No decision waits.
+The implementation uses the existing cache classification. A known rare false-negative reuse classification can still raise a process's rank.
+The existing [reuse provenance follow-up](./follow-ups/worker-bundle-reuse-provenance.md) owns that defect. This change does not repair it.
 
 Replaced ways: no API, data format, or consumer mechanism is replaced.
 Bundle selection gains one preference before its existing fallback.
@@ -94,9 +96,11 @@ Bundle selection gains one preference before its existing fallback.
 
 Depends on: none
 
-- [ ] Delegate the source-root scheduling contract update to the `docs implementor`.
-- [ ] State eligible head-bundler preference and unchanged fallback without code mechanics.
-- [ ] Align the sidecar README where needed. Preserve the existing contracts and add the temporary status line if needed.
+- [x] Delegate the source-root scheduling contract update to the `docs implementor`.
+- [x] State eligible head-bundler preference and unchanged fallback without code mechanics.
+- [x] Align the sidecar README where needed. Preserve the existing contracts and add the temporary status line if needed.
+
+Completed. Evidence: `.context/serve-bundle-affinity/docs-report.md`.
 
 ## Milestone 2: Pool preference
 
@@ -109,12 +113,15 @@ Depends on: 1
 - [ ] Preserve context and generation affinity, admission, claims, warm head, return, and retirement.
 - [ ] Read PR #351's pool changes and confirm that both changes can survive either merge order. A overlaps its `Head` struct and bundle-recording arm. Preserve both behaviours.
 - [ ] Run the sidecar, pool, and relevant Serve tests unchanged.
+- [ ] Delegate removal of the protocol status line and the README's temporary queue-order wording when the implementation passes. Update its test summary and Key Code where needed.
 
 Evidence lives in `.context/serve-bundle-affinity/`.
 
 ## Milestone 3: Release measurements
 
 Depends on: 2
+
+Harness preparation is independent. Run measurements only after Milestone 2 passes.
 
 - [ ] Delegate fixture measurement tooling to the `non-ui implementor`. Keep one-time tooling under `.context/`.
 - [ ] Build current merged main and the branch in separate checkouts and Cargo target directories.
@@ -124,18 +131,17 @@ Depends on: 2
 - [ ] Use a separate cache per arm. Restore source files between sessions. Keep four sidecars.
 - [ ] Record cgroup anon plus swap peaks, esbuild count and RSS, bundle owners, bundle and compile times, first Changes, and edit times. Separate sidecar-owned services from PostCSS-worker services.
 - [ ] Compare corresponding output for equality. Keep performance measurements outside permanent tests.
-- [ ] Push the implementation SHA and send it to the performance orchestrator immediately for the mokly-cloud acceptance measurement.
-- [ ] Confirm the mokly-cloud goal: at least 0.6 GiB lower peak, edits 2–10 mean within +1%, and no slower edit 1 or first Changes.
-- [ ] If affinity misses the goal, send the measured result to the performance orchestrator and apply the authorised next step.
 
 ## Milestone 4: Verification, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Remove the contract status line when implementation matches the contract.
 - [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check` with the locked Cargo dependencies.
 - [ ] Record each failed, skipped, or blocked check and the test cost in `.context/serve-bundle-affinity/`.
 - [ ] Commit with Conventional Commits and push the branch.
+- [ ] Send the implementation SHA immediately to the performance orchestrator for the mokly-cloud acceptance measurement.
+- [ ] Confirm the mokly-cloud goal: at least 0.6 GiB lower peak, edits 2–10 mean within +1%, and no slower edit 1 or first Changes.
+- [ ] If affinity misses the goal, send the measured result to the performance orchestrator and apply the authorised next step.
 - [ ] Review the complete local diff against `origin/main` with `implementation-review` after the push. Run finding checks, fix the fix-now findings, record follow-up items, and re-review once. Use at most two fix rounds.
 - [ ] Re-fetch main and merge it with `git-merge` if needed. Preserve PR #351 and the other merged pool work. If main moves, rebuild and repeat the acceptance comparison against it.
 - [ ] Delete this plan under the `plans` skill after every prior required TODO completes.

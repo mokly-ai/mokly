@@ -1,5 +1,7 @@
 # Sidecar Source Root Scheduling
 
+Status: The pool does not apply the [head bundle rank](#head-bundle-affinity) yet. The [pool preference milestone](../../plans/serve-bundle-affinity.md#milestone-2-pool-preference) adds it.
+
 This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool
@@ -149,7 +151,8 @@ needs a record of capture completeness and leaves less head capacity.
 These rules rank the idle processes of the root of a request. They apply to
 each request that names a generation: `cssModules`, `describe`, `bindings`,
 and the four render methods. A request that names no generation, such as
-`bundle` or `processCss`, keeps the queue order. The queue order puts the
+`processCss` or a base `bundle`, keeps the queue order. A head `bundle` uses
+the [head bundle rank](#head-bundle-affinity). The queue order puts the
 process that has been idle longest first. The PostCSS context rule of the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers) still
 applies before every other rule.
@@ -203,3 +206,17 @@ while requests wait.
 Decision: the pass preference comes before the rank. Rejected: the rank first,
 because base requests could then take more candidates, and fewer processes
 would return to the head root before the next edit.
+
+## Head Bundle Affinity
+
+For a head `bundle`, the pool ranks the idle processes of the head root by
+their last compile, newest first. Processes without a compile follow in the
+queue order. A successful `bundle` counts as a compile unless its
+[`cache` value](./mokly-timings.md#core-spans) is `memory` or `hit`. A compile
+belongs to its process, so a new process in the same slot has none. The
+bundle never waits for a busy process while another slot can run it.
+
+Decision: a head `bundle` prefers the process that compiled last, so fewer
+processes keep an idle compiler in memory. Rejected: the queue order, because
+bundles then rotate across processes. Rejected: one remembered process,
+because after a busy fallback it no longer prefers the older compiler.
