@@ -38,6 +38,11 @@
   - The same section states two limits. The macOS limit reads: "On macOS, a
     stop does not signal a descendant outside the manager's process group
     whose parent exited before the stop."
+  - The same section bounds the wait of a stopped install. After the last
+    stop signal, the install waits up to a short grace period for the manager
+    to exit and its output pipes to close. Then it ends with the result that
+    the stop gives. So a mid-walk orphan that holds an output pipe does not
+    keep the install from ending. The orphan itself keeps running.
   - `docs/protocol/mokly-runtime.md`, section "Shutdown", says that no orphan
     process survives a normal shutdown, a failed startup, or an interruption,
     except for the base install limits.
@@ -81,9 +86,9 @@
   - `docs/protocol/mokly-git.md` says that a Git helper process never
     outlives its command.
   - Two records quote the macOS limit:
-    `plans/follow-ups/install-pipe-wait-after-stop.md` and
-    `plans/follow-ups/macos-process-tree-smoke-test.md`. A change of the
-    limit changes them too.
+    `plans/follow-ups/macos-process-tree-smoke-test.md` and
+    `plans/follow-ups/git-helpers-outlive-commands.md`. A change of the limit
+    changes them too.
   - Both protocol pages start with a status line that links this item. A
     branch that applies an answer removes both lines only when both pages
     then match the code.
@@ -198,10 +203,6 @@
   - `plans/follow-ups/macos-process-tree-smoke-test.md` holds the post-merge
     macOS run of the same stop code. Its script waits for its child, so that
     run cannot show this gap.
-  - `plans/follow-ups/install-pipe-wait-after-stop.md` covers a survivor that
-    holds an output pipe of the base install. A mid-walk orphan can be such a
-    survivor. That item recommends a bounded wait after a stop, which also
-    ends the wait for it.
   - `plans/follow-ups/git-helpers-outlive-commands.md` holds the promise of
     the Git page that no Git helper outlives its command. The gap of this
     item also reaches Git helpers. Both items change the runtime words
