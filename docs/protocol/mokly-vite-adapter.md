@@ -1,6 +1,6 @@
 # Vite Adapter
 
-Status: The base side, Storybook's merged setup, and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
+Status: Storybook's merged setup and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
 
 This page extends the [sidecar bundling contract](./mokly-sidecar.md#bundling)
 and the [module source rules](./mokly-sidecar-modules.md). It defines the Vite

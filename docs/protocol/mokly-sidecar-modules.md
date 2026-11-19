@@ -1,7 +1,5 @@
 # Sidecar Module Sources
 
-Status: The Vite adapter on the base side is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
-
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.

@@ -1171,9 +1171,11 @@ Depends on: 14
 - [x] Test Changes between two commits of a Vite fixture, and a Serve edit.
       Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Apply the answers to track D decisions 2 and 3.
-- [ ] Add the Vite inputs to the table of `docs/protocol/mokly-watch.md`, and
-      the adapter to the early extraction lease of
-      `docs/protocol/mokly-base-preparation.md`.
+- [x] Add the Vite inputs to the table of `docs/protocol/mokly-watch.md`. The
+      early extraction lease of `docs/protocol/mokly-base-preparation.md`
+      needs no change: it covers only a renderer or a PostCSS module, and a
+      catalogue with JavaScript entries alone does not trigger it either.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 16: Stylesheets through Vite
 

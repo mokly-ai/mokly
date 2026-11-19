@@ -1,6 +1,6 @@
 # Render Sidecar
 
-Status: The Vite adapter on the base side and the Vite stylesheet transform are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
+Status: The Vite stylesheet transform is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
 
 ## Purpose And Boundary
 

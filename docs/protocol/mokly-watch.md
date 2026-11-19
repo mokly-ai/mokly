@@ -8,15 +8,16 @@ The watch set derives from the resolved configuration, the [source inventory](./
 the sidecar's module graph, and the resources the composed documents
 reference. Each input maps to the render graph node it feeds:
 
-| Input                                                                                                            | Node                              |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| the configuration file                                                                                           | config                            |
-| HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root | entry source                      |
-| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports               | bundle generation, render inputs  |
-| the consumer PostCSS module and the file and directory dependencies `processCss` reports                         | stylesheet bundle                 |
-| configured stylesheets, imported CSS, their nested imports, and the assets they reference                        | stylesheet bundle                 |
-| fonts, images, embedded documents, and other files in the public closure of a composed document                  | the documents that reference them |
-| paths named by a `watch.rules` entry of the [configuration contract](./mokly-configuration.md)                   | the rule's action                 |
+| Input                                                                                                                    | Node                              |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| the configuration file                                                                                                   | config                            |
+| HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root         | entry source                      |
+| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports                       | bundle generation, render inputs  |
+| under the [Vite adapter](./mokly-vite-adapter.md#inputs-and-serve), the Vite config file, its imports, and the env files | bundle generation, render inputs  |
+| the consumer PostCSS module and the file and directory dependencies `processCss` reports                                 | stylesheet bundle                 |
+| configured stylesheets, imported CSS, their nested imports, and the assets they reference                                | stylesheet bundle                 |
+| fonts, images, embedded documents, and other files in the public closure of a composed document                          | the documents that reference them |
+| paths named by a `watch.rules` entry of the [configuration contract](./mokly-configuration.md)                           | the rule's action                 |
 
 A created, renamed, moved, or deleted regular file below a root that matches
 one of its `files` globs re-runs discovery before the rebuild, so the file set
