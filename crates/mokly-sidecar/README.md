@@ -115,6 +115,21 @@ remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
 
+The same worker runs the head preload when the return pass has no step. A
+successful `describe` of the newest head generation records the other live
+head workers as candidates and wakes Serve. Each step then takes one idle
+candidate while no request waits and no admitted call is still on its way to
+the pool queue. It sends the `restoreGeneration`, `cssModules`, and `describe`
+calls that the worker lacks, one at a time, and it gives the worker back
+before the next call when a request waits or a return step can start. The
+first head request that finds no idle head worker waits for that worker
+instead of starting or replacing one. Later requests keep their choice. A
+failed preload call keeps or replaces the worker as a failed request does, and
+it ends the preload of that worker only. A failed reap that ends background
+return also ends the preload. The
+[head preload contract](../../docs/protocol/mokly-sidecar-head-preload.md)
+owns these rules.
+
 After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
 and directory lists in a bounded memory store. Captured evidence is complete
@@ -343,7 +358,14 @@ check that a worker with every input that a call needs comes before other
 holders and non-holders, with FIFO ties. Stale epochs and missing records
 never win the rank. Calls without a generation keep FIFO order, and context
 affinity and the pass preference still come first. Parallel renders use every
-available slot and start no process. Recipe store tests
+available slot and start no process. Head preload tests check that a head
+describe wakes Serve and prepares each idle head worker in turn. A waiting
+head request takes the preloading worker after the call in flight, a second
+one keeps its own choice, and other requests run on other slots. An admitted
+call on its way and a ready return step hold the preload back. Busy, base, and
+missing workers get no preload. Stops, releases, newer generations, and a
+failed reap end it, and a failed call ends it for its worker only. Recipe
+store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -366,8 +388,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   reuse and `request_claimed` for a call that holds a `CallClaim`, and
   `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
-  methods are the return pass boundary, and `ReturnWake` is the weak wake that
-  Serve registers through `observe_head_return`.
+  methods are the boundary of the return pass and the head preload, and
+  `ReturnWake` is the weak wake that Serve registers through
+  `observe_head_return`.
 - [`src/pool_leases.rs`](./src/pool_leases.rs) defines `Pool::acquire`, the
   root-aware FIFO queue of waiting requests. It protects the warm head worker
   from base requests, removes each taken slot from the return pass, and fails
@@ -375,11 +398,20 @@ spawn the built sidecar and render a component, screen, story, and page. The
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
   generation state that a call needs. Growth reuses a free slot before it adds
-  a new one.
+  a new one. Its `awaits_preload` check names a request that would take the
+  preloading worker, and the queue scan of `Pool::acquire` holds back only the
+  first such request.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
-  warm head worker, the candidates of the return pass, and the
-  `return_disabled` flag, and `Pool::record_head`, which records each
-  successful head bundle and render.
+  warm head worker, the candidates of the return pass, the
+  `return_disabled` flag, the pending preload, and the slot that a preload
+  step holds, and `Pool::record_head`, which records each successful head
+  bundle, describe, and render.
+- [`src/pool_preload.rs`](./src/pool_preload.rs) defines `Preload`, the
+  generation and the candidate workers of a head preload, and
+  `Pool::maintain_preload`, which runs one preload step through the existing
+  preparation calls when the return pass has no step. The pool state records
+  the call claims whose call reached the queue, so that the preload can see an
+  admitted call that has not arrived yet.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
   runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,
@@ -506,4 +538,5 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
   [module sources](../../docs/protocol/mokly-sidecar-modules.md).
 - [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
+- [Head preload](../../docs/protocol/mokly-sidecar-head-preload.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

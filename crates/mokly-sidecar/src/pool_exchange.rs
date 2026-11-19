@@ -10,6 +10,7 @@ use crate::pool_claim::CallClaim;
 use crate::pool_releases::Release;
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
+use crate::workers::WorkerControl;
 
 impl SidecarPool for Pool {
     fn served_generation(&self, generation: &str, epoch: u64) {
@@ -97,21 +98,8 @@ impl Pool {
                 self.record_head(index, &call, result);
             }
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
-            let reusable = outcome.is_ok()
-                || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())
-                || matches!(&outcome, Err(Error::Postcss { .. }));
-            if !reusable {
-                let stopped = {
-                    let mut state = self.lock();
-                    state.replacement_reasons.insert(index, Reason::Replacement);
-                    state.stopped
-                };
-                let killed = if stopped {
-                    current.control.kill()
-                } else {
-                    Reason::Replacement.kill(current.control.as_ref())
-                };
-                if let Err(error) = killed {
+            if outcome.as_ref().is_err_and(|error| !reusable(error)) {
+                if let Err(error) = self.replace(index, current.control.as_ref()) {
                     outcome = Err(error);
                     break;
                 }
@@ -146,4 +134,24 @@ impl Pool {
             outcome
         }
     }
+
+    /// End a process that a failure left unusable, so that the next request replaces it.
+    pub(super) fn replace(&self, index: usize, control: &dyn WorkerControl) -> Result<()> {
+        let stopped = {
+            let mut state = self.lock();
+            state.replacement_reasons.insert(index, Reason::Replacement);
+            state.stopped
+        };
+        if stopped {
+            control.kill()
+        } else {
+            Reason::Replacement.kill(control)
+        }
+    }
+}
+
+/// A valid remote error reply or a PostCSS failure leaves the process usable.
+pub(super) fn reusable(error: &Error) -> bool {
+    matches!(error, Error::Remote { code, .. } if code.reusable())
+        || matches!(error, Error::Postcss { .. })
 }

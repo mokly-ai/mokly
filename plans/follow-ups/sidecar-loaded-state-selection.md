@@ -54,6 +54,11 @@
     new processes load no generation in advance. So at the next edit, a call
     that reaches a new process loads the runtime packages and evaluates the
     generation from a cold start.
+  - Since 2026-11-19, the head preload loads each new head generation into the
+    other idle head processes, one at a time, after its `describe` and before
+    its renders. A call still reaches a process without the generation when
+    the preload has not reached that process yet.
+    `docs/protocol/mokly-sidecar-head-preload.md` holds these rules.
   - Serve keeps a base capture of at most 256 MiB, at
     `crates/mokly-compare/src/capture_weight.rs:12`. A view outside it renders
     again through the kept base and needs a base process. After the return

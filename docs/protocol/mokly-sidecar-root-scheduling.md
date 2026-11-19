@@ -4,8 +4,10 @@ This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool
 bound. These rules choose the process that changes root. They also let Serve
-return idle base processes to the head root after base work. Last, they rank
-the idle processes of one root by the generation that a request names.
+return idle base processes to the head root after base work. They rank the
+idle processes of one root by the generation that a request names. Last, they
+let Serve load a new head generation into idle head processes before its
+renders.
 
 ## Roots And The Warm Head Process
 
@@ -55,7 +57,9 @@ Decision: the pass waits for the reaping. Rejected: a start after the kill
 signal alone, because the old and the new process could then run together
 beyond the pool size. Decision: the new process loads no head generation in
 advance. Rejected: a replay of the newest head generation, because it adds CPU
-work and keeps more evaluated code in memory.
+work and keeps more evaluated code in memory. The
+[head preload](#head-generation-preload) accepts that cost only after an edit,
+when the renders of the new generation follow.
 
 When the pass cannot confirm that a process that it ended has exited, it takes
 only that slot out of use. The pool keeps owning that process, so the stop
@@ -198,8 +202,19 @@ only approximates the loaded state.
 
 Decision: a request never waits for a busy process that holds its generation.
 Rejected: a wait for that process, because idle slots would then stay unused
-while requests wait.
+while requests wait. The [head preload](#head-generation-preload) adds one
+exception for the process that it holds.
 
 Decision: the pass preference comes before the rank. Rejected: the rank first,
 because base requests could then take more candidates, and fewer processes
 would return to the head root before the next edit.
+
+## Head Generation Preload
+
+After the `describe` of a new head generation, Serve loads that generation
+into the other idle head processes before its renders. The preload takes one
+process at a time, only while no request waits, and starts no process. The
+first head request that finds no idle head process waits for the preloading
+process instead of starting or replacing a process. The
+[head preload rules](./mokly-sidecar-head-preload.md) define the candidates,
+the steps, and the end of a preload.

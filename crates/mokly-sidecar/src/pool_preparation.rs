@@ -169,7 +169,7 @@ impl Pool {
         self.restore(slot, generation, description_needed, preparation)
     }
 
-    fn restore(
+    pub(super) fn restore(
         &self,
         slot: &mut Slot,
         generation: &str,
@@ -224,7 +224,8 @@ impl Pool {
     }
 }
 
-struct Preparation {
+/// The retained inputs that one preparation sends to a slot.
+pub(super) struct Preparation {
     recipe: Option<Recipe>,
     maps: Option<CssModules>,
     bindings: Option<Arc<Bindings>>,
@@ -238,7 +239,7 @@ struct Recipe {
 }
 
 impl Preparation {
-    fn snapshot(
+    pub(super) fn snapshot(
         state: &State,
         slot: &Slot,
         generation: &str,

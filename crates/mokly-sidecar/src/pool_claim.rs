@@ -47,6 +47,7 @@ impl Drop for CallClaim {
         {
             let mut state = pool_cleanup::lock(&state);
             state.claims.remove(&owner.id);
+            state.arrived.remove(&owner.id);
             if let Some(ready) = owner.ready.upgrade() {
                 ready.notify_all();
             }

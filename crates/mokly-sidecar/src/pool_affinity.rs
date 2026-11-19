@@ -114,6 +114,22 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
     }
 }
 
+/// A request without context affinity or an idle process of its root would take the preloading process.
+pub(super) fn awaits_preload(state: &State, context: Option<&str>, root: &Path) -> bool {
+    context.and_then(|id| state.affinity.get(id)).is_none()
+        && state.head.preloading.is_some_and(|index| {
+            state
+                .source_roots
+                .get(&index)
+                .is_some_and(|held| held == root)
+        })
+        && !state.available.iter().any(|index| {
+            state.slots[*index]
+                .as_ref()
+                .is_some_and(|slot| slot.source_root == root)
+        })
+}
+
 #[cfg(test)]
 #[path = "_tests_/pool_root_selection_tests.rs"]
 mod pool_root_selection_tests;

@@ -49,6 +49,8 @@ pub(super) struct State {
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) claims: BTreeMap<u64, usize>,
+    /// Claims whose call entered the pool queue; another live claim is still on its way.
+    pub(super) arrived: BTreeSet<u64>,
     pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
     /// Unused indexes have no reservation and never enter ordinary available selection.

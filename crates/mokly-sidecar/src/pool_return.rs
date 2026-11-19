@@ -36,9 +36,10 @@ impl Pool {
         state.head.notify();
     }
 
+    /// A return step comes first, and a preload step runs only when no return step can.
     pub(super) fn maintain_return(&self) -> Result<bool> {
         let Some((index, pass, slot)) = self.claim_return() else {
-            return Ok(false);
+            return Ok(self.maintain_preload());
         };
         let outcome = self.return_slot(index, &slot);
         match outcome {
@@ -53,6 +54,15 @@ impl Pool {
 
     fn claim_return(&self) -> Option<(usize, u64, Slot)> {
         let mut state = self.lock();
+        let (position, index, pass) = self.next_return(&state)?;
+        let slot = state.slots[index].take()?;
+        state.available.remove(position);
+        state.head.active = Some(index);
+        Some((index, pass, slot))
+    }
+
+    /// The queue position, slot, and pass of the idle base process that a return step can take now.
+    pub(super) fn next_return(&self, state: &State) -> Option<(usize, usize, u64)> {
         if state.stopped
             || state.head.return_disabled
             || state.head.active.is_some()
@@ -63,22 +73,17 @@ impl Pool {
         {
             return None;
         }
-        let (position, index, pass) =
-            state
-                .available
-                .iter()
-                .enumerate()
-                .find_map(|(position, index)| {
-                    let pass = *state.head.candidates.get(index)?;
-                    state.slots[*index]
-                        .as_ref()
-                        .filter(|slot| slot.source_root != self.launch.repository)?;
-                    Some((position, *index, pass))
-                })?;
-        let slot = state.slots[index].take()?;
-        state.available.remove(position);
-        state.head.active = Some(index);
-        Some((index, pass, slot))
+        state
+            .available
+            .iter()
+            .enumerate()
+            .find_map(|(position, index)| {
+                let pass = *state.head.candidates.get(index)?;
+                state.slots[*index]
+                    .as_ref()
+                    .filter(|slot| slot.source_root != self.launch.repository)?;
+                Some((position, *index, pass))
+            })
     }
 
     fn return_slot(&self, index: usize, previous: &Slot) -> Result<Option<Slot>> {

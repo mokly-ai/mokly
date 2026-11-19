@@ -21,6 +21,9 @@ impl Pool {
     ) -> Result<(usize, Option<Slot>, Option<StartLease>)> {
         let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock();
+        if let Some(id) = claim {
+            state.arrived.insert(id);
+        }
         let ticket = state.ticket;
         state.ticket += 1;
         let context = match call {
@@ -63,10 +66,21 @@ impl Pool {
                         0
                     }
             };
+            let mut preload_waiter = false;
             let first = state
                 .waiting
                 .iter()
                 .find(|(_, waiting)| {
+                    if !preload_waiter
+                        && pool_affinity::awaits_preload(
+                            &state,
+                            waiting.context.as_deref(),
+                            &waiting.root,
+                        )
+                    {
+                        preload_waiter = true;
+                        return false;
+                    }
                     pool_affinity::runnable(
                         &state,
                         waiting.context.as_deref(),

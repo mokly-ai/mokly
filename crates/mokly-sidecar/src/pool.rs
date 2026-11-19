@@ -19,7 +19,7 @@ use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 use crate::workers::{Clock, SpawnFailure, WorkerFactory};
 
-/// Wake the Serve owner when a pending head return can make progress.
+/// Wake the Serve owner when a pending head return or head preload can make progress.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
 pub trait ReturnWake: Send + Sync {
     /// Record ready maintenance without waiting for a process.
@@ -43,7 +43,7 @@ pub trait SidecarPool: Send + Sync {
     fn release_context(&self, context: &str);
     /// Record one return pass without waiting for a process.
     fn schedule_head_return(&self) {}
-    /// Replace at most one idle base process, returning whether work was taken.
+    /// Return one idle base process or preload one idle head process, returning whether work was taken.
     fn maintain_head_return(&self) -> Result<bool> {
         Ok(false)
     }
@@ -191,19 +191,14 @@ impl Pool {
             && let Err(error) = self.cleanup(current)
         {
             tracing::warn!(%error, "sidecar cleanup failed");
-            let stopped = {
-                let mut state = self.lock();
-                state.replacement_reasons.insert(index, Reason::Replacement);
-                state.stopped
-            };
-            let _ = if stopped {
-                current.control.kill()
-            } else {
-                Reason::Replacement.kill(current.control.as_ref())
-            };
+            let _ = self.replace(index, current.control.as_ref());
             slot = None;
         }
-        let mut state = self.lock();
+        self.publish(&mut self.lock(), index, slot);
+    }
+
+    /// Give a slot back to the queue, or drop it after a stop, and wake its waiters.
+    pub(super) fn publish(&self, state: &mut State, index: usize, slot: Option<Slot>) {
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
@@ -212,7 +207,7 @@ impl Pool {
         state.available.push_back(index);
         if state.slots[index]
             .as_ref()
-            .is_some_and(|slot| pool_cleanup::pending(&state, slot))
+            .is_some_and(|slot| pool_cleanup::pending(state, slot))
             && let Some(sender) = &self.releases
         {
             let _ = sender.send(Notice::Work);

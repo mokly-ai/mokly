@@ -35,6 +35,7 @@ mod pool_exchange;
 mod pool_head;
 mod pool_leases;
 pub mod pool_options;
+mod pool_preload;
 mod pool_preparation;
 mod pool_recipes;
 mod pool_releases;
