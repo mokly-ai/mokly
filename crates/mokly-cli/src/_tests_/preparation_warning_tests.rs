@@ -9,7 +9,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_preparation;
 use crate::serve_watch::{CandidateWatch, WatchInputsMock};
-use crate::warning_support::{Scripted, catalogue, invalid, plan, scopes, warning};
+use crate::warning_support::{Scripted, catalogue, invalid, record, scopes, warning};
 
 #[tokio::test]
 async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
@@ -27,10 +27,9 @@ async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
         let candidate = WatchInputsMock::candidate
             .next_call(matching!(_))
             .returns(Ok(CandidateWatch {
-                plan: plan(),
                 observer: Arc::new(observer.clone()),
                 recheck: true,
-                record: None,
+                record: record(),
             }));
         let begin = || WatchInputsMock::begin.each_call(matching!()).returns(());
         let watch = match outcome {

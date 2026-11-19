@@ -59,20 +59,19 @@ impl ServePreparation for CatalogueServe {
                 });
             }
         };
-        let mut counts = BTreeMap::new();
-        for entry in &prepared.model.entries {
-            *counts.entry(entry.content.kind()).or_default() += 1;
-        }
-        let warnings = prepared.warnings.clone();
-        let generation = match graph.prepare(config.clone(), prepared, Some(&output)) {
+        let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
             Ok(generation) => generation,
             Err(source) => {
                 return Err(BuildError::Rendering {
                     source: Box::new(source),
-                    warnings,
+                    warnings: prepared.warnings,
                 });
             }
         };
+        let mut counts = BTreeMap::new();
+        for entry in &prepared.model.entries {
+            *counts.entry(entry.content.kind()).or_default() += 1;
+        }
         Ok(PreparedServe {
             config,
             generation,
@@ -80,7 +79,7 @@ impl ServePreparation for CatalogueServe {
                 changes: BuildChanges::Disabled,
                 documents: 0,
                 counts,
-                warnings,
+                warnings: prepared.warnings,
             },
         })
     }

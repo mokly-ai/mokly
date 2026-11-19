@@ -20,6 +20,7 @@ use tokio::sync::Notify;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporterMock;
+use crate::warning_support::record;
 
 use super::{CandidateWatch, State, WatchInputs, WatchedInputs};
 use crate::serve_watch_files::ObserversMock;
@@ -196,10 +197,9 @@ async fn adoption_replays_events_and_subscribes_before_copying_resources() {
     let prepared = prepared("next", generation);
     watch.clone().adopt(
         CandidateWatch {
-            plan: plan("next"),
             observer: Arc::new(next.clone()),
             recheck: true,
-            record: None,
+            record: record(),
         },
         &prepared,
     );

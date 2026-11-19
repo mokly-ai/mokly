@@ -1,6 +1,7 @@
 //! A watch plan derives only from its plan inputs, so a candidate whose inputs equal the
 //! adopted inputs reuses the adopted plan and its targets.
 
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -15,68 +16,75 @@ use mokly_watch::plan::Plan;
 use crate::serve_watch::{CandidateWatch, watch_result};
 
 /// Module resolution files, and resolution directories with the file names they hold.
-type Resolution = (BTreeSet<String>, BTreeMap<String, BTreeSet<String>>);
+type Resolution<'a> = (
+    Cow<'a, BTreeSet<String>>,
+    Cow<'a, BTreeMap<String, BTreeSet<String>>>,
+);
 
-/// Every value that the watch plan of a prepared generation reads.
-pub(super) struct PlanInputs {
-    config: ResolvedConfig,
-    sources: Vec<String>,
-    directories: Vec<DirectoryDependency>,
+/// Every value that the watch plan of a prepared generation reads. A candidate borrows
+/// them from its preparation, and a record keeps its own copy.
+#[derive(PartialEq)]
+pub(super) struct PlanInputs<'a> {
+    config: Cow<'a, ResolvedConfig>,
+    sources: Cow<'a, [String]>,
+    directories: Cow<'a, [DirectoryDependency]>,
     resources: BTreeSet<String>,
-    resolution: Option<Resolution>,
+    resolution: Option<Resolution<'a>>,
 }
 
-impl PlanInputs {
-    /// Copy the plan inputs of `prepared`, with one read of each generation value.
-    pub(super) fn of(prepared: &PreparedServe) -> Self {
+impl<'a> PlanInputs<'a> {
+    /// Borrow the plan inputs of `prepared`, with one read of each generation value.
+    pub(super) fn of(prepared: &'a PreparedServe) -> Self {
         let catalogue = prepared.generation.catalogue();
         Self {
-            config: prepared.config.clone(),
-            sources: catalogue.model.sources.clone(),
-            directories: prepared.generation.stylesheet_directories().to_vec(),
+            config: Cow::Borrowed(&prepared.config),
+            sources: Cow::Borrowed(&catalogue.model.sources),
+            directories: Cow::Borrowed(prepared.generation.stylesheet_directories()),
             resources: prepared.generation.watch_files(),
             resolution: catalogue.javascript.generation.as_ref().map(|generation| {
                 (
-                    generation.resolution_files.clone(),
-                    generation.resolution_directories.clone(),
+                    Cow::Borrowed(&generation.resolution_files),
+                    Cow::Borrowed(&generation.resolution_directories),
                 )
             }),
         }
     }
 
-    /// Whether `prepared` has these plan inputs. The resource files compare last, because
-    /// their read copies a set.
-    fn matches(&self, prepared: &PreparedServe) -> bool {
-        let catalogue = prepared.generation.catalogue();
-        let resolution = catalogue.javascript.generation.as_ref().map(|generation| {
-            (
-                &generation.resolution_files,
-                &generation.resolution_directories,
-            )
-        });
-        self.config == prepared.config
-            && self.directories == prepared.generation.stylesheet_directories()
-            && self.sources == catalogue.model.sources
-            && self
-                .resolution
-                .as_ref()
-                .map(|(files, directories)| (files, directories))
-                == resolution
-            && self.resources == prepared.generation.watch_files()
+    /// Copy each borrowed input, so that a record can keep the inputs.
+    fn into_owned(self) -> PlanInputs<'static> {
+        let Self {
+            config,
+            sources,
+            directories,
+            resources,
+            resolution,
+        } = self;
+        PlanInputs {
+            config: Cow::Owned(config.into_owned()),
+            sources: Cow::Owned(sources.into_owned()),
+            directories: Cow::Owned(directories.into_owned()),
+            resources,
+            resolution: resolution.map(|(files, directories)| {
+                (
+                    Cow::Owned(files.into_owned()),
+                    Cow::Owned(directories.into_owned()),
+                )
+            }),
+        }
     }
 }
 
 /// A watch plan with the inputs that it derives from and its targets.
 pub(super) struct PlanRecord {
-    inputs: PlanInputs,
+    inputs: PlanInputs<'static>,
     /// The plan of the inputs.
     pub(super) plan: Plan,
     targets: BTreeSet<PathBuf>,
 }
 
 impl PlanRecord {
-    /// Build the plan of `inputs` and its targets.
-    pub(super) fn new(inputs: PlanInputs) -> Result<Self> {
+    /// Build the plan of `inputs` and its targets, and keep a copy of the inputs.
+    pub(super) fn new(inputs: PlanInputs<'_>) -> Result<Self> {
         let mut plan = watch_result(Plan::new(
             &inputs.config,
             &inputs.sources,
@@ -88,15 +96,15 @@ impl PlanRecord {
         }
         let targets = plan.targets();
         Ok(Self {
-            inputs,
+            inputs: inputs.into_owned(),
             plan,
             targets,
         })
     }
 
-    /// Whether `prepared` has the inputs of this record, so its plan equals this plan.
-    pub(super) fn matches(&self, prepared: &PreparedServe) -> bool {
-        self.inputs.matches(prepared)
+    /// Whether `inputs` equal the inputs of this record, so their plan equals this plan.
+    pub(super) fn matches(&self, inputs: &PlanInputs<'_>) -> bool {
+        self.inputs == *inputs
     }
 
     /// The watch candidate of this plan with `observer`.
@@ -106,10 +114,9 @@ impl PlanRecord {
         recheck: bool,
     ) -> CandidateWatch {
         CandidateWatch {
-            plan: self.plan.clone(),
             observer,
             recheck,
-            record: Some(self),
+            record: self,
         }
     }
 

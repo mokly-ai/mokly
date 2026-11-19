@@ -65,13 +65,12 @@ pub(super) struct State {
 }
 /// Prepared observer state exposed inside this private module for generated mocks.
 pub struct CandidateWatch {
-    pub(super) plan: Plan,
     pub(super) observer: Arc<dyn Observer>,
     /// The new roots reach a directory that the active observer did not watch.
     pub(super) recheck: bool,
-    /// The inputs and targets of `plan`. `None` means that they are unknown, so the next
-    /// candidate builds its plan again.
-    pub(super) record: Option<Arc<PlanRecord>>,
+    /// The plan of the candidate, with the inputs and the targets that a later candidate
+    /// with equal inputs reuses.
+    pub(super) record: Arc<PlanRecord>,
 }
 
 impl WatchedInputs {
@@ -126,11 +125,12 @@ impl WatchInputs for WatchedInputs {
                 current.observer.clone(),
             )
         };
-        if let Some(record) = recorded.filter(|record| record.matches(prepared)) {
+        let inputs = PlanInputs::of(prepared);
+        if let Some(record) = recorded.filter(|record| record.matches(&inputs)) {
             self.replay(&active, &record.unobserved(active.as_ref()));
             return Ok(record.candidate(active, false));
         }
-        let record = Arc::new(PlanRecord::new(PlanInputs::of(prepared))?);
+        let record = Arc::new(PlanRecord::new(inputs)?);
         let (changed, old, previous) = {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
             (
@@ -159,8 +159,7 @@ impl WatchInputs for WatchedInputs {
         let unobserved = record.unobserved(candidate.observer.as_ref());
         watch_result(candidate.observer.replace(&record.plan))?;
         self.replay(&candidate.observer, &unobserved);
-        candidate.plan = record.plan.clone();
-        candidate.record = Some(record);
+        candidate.record = record;
         Ok(())
     }
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe) {
@@ -174,9 +173,9 @@ impl WatchInputs for WatchedInputs {
             if let Some(old) = &old {
                 candidate.observer.replay(old.take());
             }
-            state.plan = candidate.plan;
+            state.plan = candidate.record.plan.clone();
             state.observer = candidate.observer;
-            state.record = candidate.record;
+            state.record = Some(candidate.record);
             state.generation = Some(prepared.generation.clone());
             state.failed = false;
             state.attach_reported = false;
