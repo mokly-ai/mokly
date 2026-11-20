@@ -14,6 +14,10 @@ use crate::storage::valid_key;
 
 impl DiskCache {
     pub(crate) fn bundle_namespace(&self, key: &str) -> Result<PathBuf> {
+        self.raw_namespace(key, Kind::Bundles)
+    }
+
+    pub(crate) fn raw_namespace(&self, key: &str, kind: Kind) -> Result<PathBuf> {
         self.check()?;
         if key.len() != 64 || !valid_key(key) {
             return Err(Error::UnsafeCache {
@@ -21,7 +25,7 @@ impl DiskCache {
             });
         }
         self.reporter.opened(&self.root);
-        let namespace = self.root.join(Kind::Bundles.directory());
+        let namespace = self.root.join(kind.directory());
         for path in [
             namespace.clone(),
             namespace.join("locks"),

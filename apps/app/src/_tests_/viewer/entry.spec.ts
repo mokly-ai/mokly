@@ -12,7 +12,7 @@ import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";
-import { publishedViewerReady } from "./support";
+import { expectParentUsage, publishedViewerReady } from "./support";
 
 /** A signed-in reader with a project whose publications this test writes. */
 async function project(page: Page, label: string): Promise<string> {
@@ -165,6 +165,7 @@ test("a reference alias carries the whole selection to the publication", async (
     await expect(
       page.locator('[data-workspace-variant="notice/draft"]'),
     ).toHaveAttribute("aria-current", "page");
+    await expectParentUsage(page);
     await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
     await expect(page).toHaveURL(/viewport=both/);
     await expect(page).toHaveURL(/scheme=dark/);

@@ -56,6 +56,7 @@ async fn two_equal_merge_base_polls_preserve_ready_and_classify_once() {
                 .n_times(2),
         ))),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: true,
     };
     let (stop, stopping) = watch::channel(false);

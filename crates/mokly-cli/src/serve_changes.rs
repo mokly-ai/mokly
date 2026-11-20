@@ -200,6 +200,9 @@ impl ChangeSource for Source {
             }
         });
         self.services.sidecars.base_finished();
+        if let Some(store) = &self.services.runtime.document_store {
+            store.resume();
+        }
     }
     fn discarded(&self) {
         if let Some(staging) = self

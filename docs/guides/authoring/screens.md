@@ -139,8 +139,9 @@ render context:
   entry module that needs it. A setup module that only another entry module
   imports does not reach the cached views of this one.
 - Keep files, environment variables, the clock, and random values out of a
-  render. A view that reads them keeps its first result until one of its
-  inputs changes.
+  render. A view that reads them can keep its first result across Serve
+  restarts until one of its inputs changes. To refresh it, stop Serve, delete
+  the Mokly cache, and start Serve again.
 
 ## Write an HTML screen
 

@@ -21,10 +21,10 @@ pub(crate) struct Metadata {
 pub(crate) struct DocumentMetadata {
     pub(crate) usage: CatalogueUsage,
     #[serde(serialize_with = "warnings")]
-    warnings: Vec<Warning>,
-    resources: Vec<String>,
-    components: Vec<String>,
-    links: Vec<ReferenceRecord>,
+    pub(crate) warnings: Vec<Warning>,
+    pub(crate) resources: Vec<String>,
+    pub(crate) components: Vec<String>,
+    pub(crate) links: Vec<ReferenceRecord>,
 }
 
 impl Metadata {

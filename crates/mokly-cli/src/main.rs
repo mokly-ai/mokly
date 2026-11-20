@@ -19,6 +19,7 @@ mod one_shot;
 mod one_shot_summary;
 mod publication_runtime;
 mod render_runtime;
+mod render_store_runtime;
 mod serve_base;
 mod serve_base_cancel;
 mod serve_base_key;

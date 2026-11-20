@@ -13,6 +13,8 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 - Attach instance, slot, root, and ignore regions as tree nodes.
 - Adapt catalogue controls and rewrite logical links to portable URLs.
 - Render Markdown and apply its independent final safety allowlist.
+- Rebuild the root JavaScript request of a store-served view without
+  composing it, through the same builders as a fresh render.
 
 ## What This Crate Does
 
@@ -177,10 +179,17 @@ aligned byte must equal its source byte or be an LF from a CR.
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
   `HtmlComposer`, which compose a screen, component, or page from a
-  `ComposeRequest` into a `Composed` document.
+  `ComposeRequest` into a `Composed` document. `Composer::record_served`
+  passes the root JavaScript request of a store-served view to the fragment
+  boundary without composing it. An HTML template entry records nothing.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
-  records.
+  records. `FragmentRenderer::record_served` records a request without a
+  render.
+- [`src/root_inputs.rs`](./src/root_inputs.rs) and
+  [`src/javascript_request.rs`](./src/javascript_request.rs) build the root
+  inputs and the `FragmentRequest` once, for a fresh render and for a
+  store-served record.
 - [`src/tree.rs`](./src/tree.rs) defines `Node`, `Element`, and `Region`, the
   owned HTML5 tree with explicit composition regions.
 - [`src/parse.rs`](./src/parse.rs) provides `html`, which parses authored or

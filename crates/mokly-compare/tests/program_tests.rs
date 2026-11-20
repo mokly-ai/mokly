@@ -69,6 +69,14 @@ fn interpreter_probe() {
     let Some(tools) = std::env::var_os("MOKLY_NPM_INTERPRETER_PROBE") else {
         return;
     };
+    for (name, script) in [
+        ("npm", b"#!/usr/bin/env node\n".as_slice()),
+        ("node", b"#!/bin/sh\nprintf trusted-node\n"),
+    ] {
+        let path = std::path::Path::new(&tools).join(name);
+        std::fs::write(&path, script).unwrap();
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
     let temporary = tempfile::tempdir().unwrap();
     let node = temporary.path().join("node");
     std::fs::write(&node, b"#!/bin/sh\nprintf history-node\n").unwrap();
@@ -98,14 +106,6 @@ fn interpreter_probe() {
 #[test]
 fn npm_interpreters_also_ignore_relative_path_entries() {
     let tools = tempfile::tempdir().unwrap();
-    for (name, script) in [
-        ("npm", b"#!/usr/bin/env node\n".as_slice()),
-        ("node", b"#!/bin/sh\nprintf trusted-node\n"),
-    ] {
-        let path = tools.path().join(name);
-        std::fs::write(&path, script).unwrap();
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
-    }
     let output = std::process::Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "interpreter_probe", "--nocapture"])
         .env("MOKLY_NPM_INTERPRETER_PROBE", tools.path())

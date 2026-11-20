@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use mokly_graph::write_activity::{WriteActivity, WriteLease};
 use tokio::sync::watch;
 use tokio::time;
 use tracing::Instrument;
@@ -34,6 +35,8 @@ pub struct ChangesPass {
     pub comparisons: Arc<dyn Comparisons>,
     /// Projection failures use the normal diagnostic path.
     pub diagnostics: Arc<dyn Diagnostics>,
+    /// Reference probes and their refresh handoff suppress optional store writes.
+    pub activity: Option<Arc<dyn WriteActivity>>,
     /// Snapshot Serve does not poll Git refs.
     pub watching: bool,
 }
@@ -55,7 +58,10 @@ impl AfterUsage for ChangesPass {
         );
         poll.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         while !stopped(&stop) && self.current(&origin) {
-            let references = match queued.take() {
+            let Reference {
+                result: references,
+                activity,
+            } = match queued.take() {
                 Some(references) => references,
                 None => match self.reference(source.clone(), &origin, &mut stop).await {
                     Some(references) => references,
@@ -70,6 +76,7 @@ impl AfterUsage for ChangesPass {
             let task_cancel = cancel.clone();
             let mut work = tokio::spawn(
                 async move {
+                    let _activity = activity;
                     owner
                         .execute(head, task_source, task_cancel, references)
                         .await;
@@ -94,7 +101,7 @@ impl AfterUsage for ChangesPass {
                     _ = poll.tick(), if self.watching => {
                         self.comparisons.collect();
                         let Some(next) = self.reference(source.clone(), &origin, &mut stop).await else { cancel.cancel(); break; };
-                        if next.as_ref().ok() != expected.as_ref() {
+                        if next.result.as_ref().ok() != expected.as_ref() {
                             cancel.cancel(); queued = Some(next); refresh = true; break;
                         }
                     },
@@ -123,7 +130,7 @@ impl AfterUsage for ChangesPass {
                         self.comparisons.collect();
                         if self.watching {
                             let Some(next) = self.reference(source.clone(), &origin, &mut stop).await else { return; };
-                            if next.as_ref().ok() != expected.as_ref() { queued = Some(next); break; }
+                            if next.result.as_ref().ok() != expected.as_ref() { queued = Some(next); break; }
                         }
                     },
                 }
@@ -148,15 +155,20 @@ impl ChangesPass {
         source: Arc<dyn ChangeSource>,
         origin: &Snapshot,
         stop: &mut watch::Receiver<bool>,
-    ) -> Option<Result<String>> {
+    ) -> Option<Reference> {
         if stopped(stop) || !self.current(origin) {
             return None;
         }
         let cancel: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
         let task_cancel = cancel.clone();
         let parent = tracing::Span::current();
-        let mut work =
-            tokio::task::spawn_blocking(move || parent.in_scope(|| source.references(task_cancel)));
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
+        let mut work = tokio::task::spawn_blocking(move || {
+            parent.in_scope(|| Reference {
+                result: source.references(task_cancel),
+                activity,
+            })
+        });
         let mut updates = self.publications.subscribe().updates;
         loop {
             if stopped(stop) || !self.current(origin) {
@@ -165,12 +177,24 @@ impl ChangesPass {
                 return None;
             }
             tokio::select! {
-                result = &mut work => return Some(match result { Ok(result) => result, Err(source) => Err(InternalError::Task { source }.into()) }),
+                result = &mut work => return Some(match result {
+                    Ok(result) => result,
+                    Err(source) => Reference {
+                        result: Err(InternalError::Task { source }.into()),
+                        activity: None,
+                    },
+                }),
                 _ = stop.changed() => {},
                 _ = updates.recv() => {},
             }
         }
     }
+}
+
+/// A probe keeps its activity through a queued refresh and its classification task.
+struct Reference {
+    result: Result<String>,
+    activity: Option<Box<dyn WriteLease>>,
 }
 
 #[cfg(test)]
@@ -180,6 +204,10 @@ mod changes_background_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_scheduling_tests.rs"]
 mod changes_scheduling_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_activity/mod.rs"]
+mod changes_activity;
 
 #[cfg(test)]
 #[path = "_tests_/changes_install_tests.rs"]
