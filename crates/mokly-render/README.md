@@ -1,9 +1,5 @@
 # mokly-render
 
-Status: Base runtimes do not read head stylesheet records yet. Each
-stylesheet record key still holds the physical source root and lacks part of
-the resolver settings.
-
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -130,13 +126,13 @@ stamp checks each captured result again before reuse. A changed package entry
 or an earlier candidate that appears therefore prevents reuse. Delivery
 replays the captured read results beside the PostCSS read evidence. The
 capture adds digests and nodes, not file bytes. The store charges them under
-its existing bound. The record key holds the configuration input, the
-resolved modules, the physical source root, and the module resolution
-settings. It also holds the complete CSS resolver settings.
+its existing bound.
 Serve watches each captured path as an exact input, including resolution
 files and absent candidates. An edit to only a package's `style` or `exports`
 entry therefore starts a rebuild, which compiles each affected stylesheet
-again.
+again. A record keeps these paths as logical paths. Each delivery, also a
+cache hit, maps them to their current lexical, physical, and canonical paths.
+A base runtime maps no watch paths.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
@@ -174,31 +170,41 @@ when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
-A stylesheet record key holds the configuration input, the resolved modules,
-and the module resolution settings. It also holds the complete CSS resolver
-settings: the configuration directory, aliases, dependency aliases,
-conditions, main fields, logical dependency roots, and extensions. A PostCSS
-record comes from a configuration with a PostCSS module. Its key also holds
-the physical source root of its side, so only a preparation on that root can
-reuse it. A plain CSS record comes from a configuration without a PostCSS
-module. Its key omits that root only when its stamp proves each read,
-candidate probe, and absence that selected its inputs. The stamp names these
-inputs by logical path.
+A stylesheet record key holds the stylesheet root, the configuration input,
+the resolved modules, and the module resolution settings. It holds the
+physical paths of the selected dependency roots and of the repository roots
+of its side. It also holds the effective CSS resolver settings, which the
+resolver of the side uses: the configuration directory, aliases, dependency
+aliases, conditions, main fields, logical dependency roots, and extensions. A
+PostCSS record comes from a configuration with a PostCSS module. Its key also
+holds the physical source root of its side, so only a preparation on that
+root can reuse it. A plain CSS record comes from a configuration without a
+PostCSS module. Its key omits that root. Its stamp names each read, candidate
+probe, and absence that selected its inputs by logical path.
 
 `Runtime::for_base` gives each base runtime its own stylesheet store and a
-weak read-only reference to the head store. A base lookup checks its
+weak read-only reference to the stylesheet store of the original head
+runtime. A base runtime that `for_base` makes from another base runtime keeps
+that reference, so a base never reads the store of another base. The
+reference does not keep the head store alive. A base lookup checks its
 attempt-local store, the shared store of the base runtime, and then the head
-store. The base keeps no index of head records. A head record passes the
-same validation in the base side tree. Its observations then replay into the
-base tree like any base witness. A hit shares the storage of the head
-record. Each base store that keeps the record charges it under its own
-bound. The base never writes, evicts, or rejects a head record. Its misses
-and rejections stay in its own stores. When the head store is gone, the base
-finds no head candidate. A base never reuses a head PostCSS record, because
-the source roots differ. It keeps its own PostCSS contexts, processes, and
-bundle states. A hit makes no `css.bundle` span. Each real bundle keeps its
-span. A failed head candidate gives the miss reason `stamp-mismatch`. A miss
-without a candidate keeps its existing reason.
+store. The base keeps no index of head records. A head candidate must pass
+the same stamp and context-entry checks as a candidate of the base store, in
+the base side tree. Delivery then replays its observations into the base
+tree in the same way as for a record of the base. A hit keeps the same
+immutable `Arc<Record>` in the attempt-local store, so it shares the storage
+of the head record. That store charges the record under its own bound. The
+shared store of the base runtime keeps only the records that the base
+compiles. The base never writes to the head store, so it never inserts,
+evicts, or rejects a record there. Its misses and rejections stay in its own
+stores. When the head store is gone, the base finds no head candidate. A
+base never finds a head PostCSS record, because the key of each base PostCSS
+record holds the source root of the base extraction. It keeps its own
+PostCSS contexts, processes, and bundle states. A hit makes no `css.bundle`
+span. Each real bundle keeps its span. A candidate that fails its checks,
+from either store, gives the miss reason `stamp-mismatch`. A miss without a
+candidate reports the reason that the shared store of the base runtime keeps
+for the key.
 
 `BaseSide` takes the shared source lease and the complete dependency selection
 from `mokly-compare`. The base source reader holds the same lease. Bundle
@@ -306,8 +312,9 @@ view after the edit and counts real process starts and hello calls.
   the head runtime of Serve its plan record owner. A base runtime never gets
   one. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime. It starts its
-  own stores and keeps a weak read-only reference to the head stylesheet
-  store.
+  own stores and turns off physical watch mapping. Its `head_styles` field
+  keeps a weak read-only reference to the stylesheet store of the original
+  head runtime, also when `for_base` starts from another base runtime.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
@@ -351,11 +358,13 @@ view after the edit and counts real process starts and hello calls.
   side-specific context before scoping.
 - [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler
   of one side and the key of its records, and lists the stylesheet roots of a
-  module graph.
+  module graph. It passes the head store reference of the runtime to
+  `CachedStylesheets::with_head`. Only a base runtime has one.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
   attempt-local store, the shared store of its runtime, and, in a base
-  runtime, the head store. It times each real bundle as `css.bundle` with its
+  runtime, the head store that `CachedStylesheets::with_head` adds as the
+  last read-only source. It times each real bundle as `css.bundle` with its
   miss reason.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
@@ -371,6 +380,11 @@ view after the edit and counts real process starts and hello calls.
   `RecordingTree`, the source tree of one compilation, which keeps each read
   digest and projection. It also defines `Capture`, the stamp entries and the
   read evidence that the tree returns.
+- [`src/stylesheet_watch.rs`](./src/stylesheet_watch.rs) maps the logical
+  paths that a record captured to the exact lexical, physical, and canonical
+  paths that Serve watches on the current side. Each delivery, also a cache
+  hit, reaches it through `CapturingCompiler::watch_files`. In a base
+  runtime, that method returns no paths.
 - [`src/input_stamp.rs`](./src/input_stamp.rs) defines `InputStamp`, the
   recorded input results that `InputStamp::matches` checks again before a
   record is reused.

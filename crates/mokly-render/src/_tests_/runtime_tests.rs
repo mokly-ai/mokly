@@ -76,3 +76,30 @@ fn package_roots_reach_the_sidecar_in_normalized_form() {
         ["/repo/tools", "/repo", "/repo/packages/ui"].map(PathBuf::from)
     );
 }
+
+#[test]
+fn a_base_of_a_base_keeps_only_the_original_weak_head_source() {
+    let head = Runtime::new(
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        "version".into(),
+        None,
+    );
+    let first = head.for_base(Arc::new(Unimock::new(())), "version".into(), None);
+    let second = first.for_base(Arc::new(Unimock::new(())), "version".into(), None);
+    assert!(!first.watch_stylesheets);
+    assert!(!second.watch_stylesheets);
+    assert!(Arc::ptr_eq(
+        &second.head_styles.upgrade().unwrap(),
+        &head.styles
+    ));
+    assert!(!Arc::ptr_eq(
+        &second.head_styles.upgrade().unwrap(),
+        &first.styles
+    ));
+    assert_eq!(Arc::strong_count(&head.styles), 1);
+}

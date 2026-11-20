@@ -74,27 +74,30 @@ pub(crate) fn compiler(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
         config.modules,
-        side.source_root,
+        config.postcss().map(|_| &side.source_root),
         side.module_resolution,
         dependency_roots(side),
         side.repository_roots
     );
-    Arc::new(CachedStylesheets::new(
-        Arc::new(CapturingCompiler {
-            tree: tree.clone(),
-            root: config.repo_root.clone(),
-            resolution,
-            postcss,
-            watch_sources: runtime
-                .watch_stylesheets
-                .then(|| runtime.inventory_tree.clone()),
-            side: side.clone(),
-        }),
-        tree,
-        config.repo_root.clone(),
-        settings,
-        runtime.styles.clone(),
-    ))
+    Arc::new(
+        CachedStylesheets::new(
+            Arc::new(CapturingCompiler {
+                tree: tree.clone(),
+                root: config.repo_root.clone(),
+                resolution,
+                postcss,
+                watch_sources: runtime
+                    .watch_stylesheets
+                    .then(|| runtime.inventory_tree.clone()),
+                side: side.clone(),
+            }),
+            tree,
+            config.repo_root.clone(),
+            settings,
+            runtime.styles.clone(),
+        )
+        .with_head(runtime.head_styles.clone()),
+    )
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]

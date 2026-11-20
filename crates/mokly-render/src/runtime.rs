@@ -68,6 +68,7 @@ pub struct Runtime {
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
+    pub(crate) head_styles: Weak<Mutex<StylesheetCache>>,
     pub(crate) watch_stylesheets: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
@@ -153,6 +154,11 @@ impl Runtime {
             self.style_references.clone(),
         );
         runtime.watch_stylesheets = false;
+        runtime.head_styles = if self.watch_stylesheets {
+            Arc::downgrade(&self.styles)
+        } else {
+            self.head_styles.clone()
+        };
         runtime
     }
 
@@ -190,6 +196,7 @@ impl Runtime {
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
             styles: Arc::new(Mutex::new(StylesheetCache::default())),
+            head_styles: Weak::new(),
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),

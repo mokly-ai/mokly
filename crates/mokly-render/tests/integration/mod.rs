@@ -3,6 +3,11 @@
 mod alias_tests;
 mod ancestor_tests;
 mod base_styles_tests;
+mod base_stylesheet_differential_tests;
+mod base_stylesheet_postcss_tests;
+mod base_stylesheet_reuse_tests;
+mod base_stylesheet_support;
+mod base_stylesheet_symlink_tests;
 mod base_tests;
 mod cache_tests;
 mod config_path_tests;
