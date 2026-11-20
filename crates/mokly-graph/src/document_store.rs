@@ -6,6 +6,7 @@ use mokly_model::material::digest;
 
 use crate::cache::Artifact;
 use crate::key::NodeKey;
+use crate::store_memory::StoreMemory;
 
 /// A document key combined with the complete build identity of its composition.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -18,14 +19,6 @@ impl StoreKey {
             format!("{}:{}:{}", document.0.len(), document.0, build).as_bytes(),
         ))
     }
-}
-
-/// One document encoded within the writer's charged workspace.
-pub struct StoredDocument {
-    /// Complete document and build identity.
-    pub key: StoreKey,
-    /// Bounded lossless private document representation.
-    pub bytes: Vec<u8>,
 }
 
 /// An entry-local failure never disables unrelated documents.
@@ -70,6 +63,8 @@ pub enum OfferOutcome {
 /// Persistent counters remain separate from process-cache hit semantics.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct StoreStats {
+    /// Known owner capacities and separately named conservative charges.
+    pub memory: StoreMemory,
     /// Monotonic diagnostic event order across admission and completion threads.
     pub sequence: usize,
     /// Successful persistent document reads.
@@ -101,7 +96,7 @@ pub trait DocumentStore: Send + Sync {
     fn resume(&self) {}
     /// Read without bypassing the caller's current-side validation.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
-    /// Offer a process-cache key without waiting or encoding.
+    /// Offer a process-cache key without waiting for pending-set or disk work, or encoding.
     fn offer(&self, key: StoreKey, document: NodeKey) -> OfferOutcome;
     /// Observe independent persistent counters and writer state.
     fn stats(&self) -> StoreStats;

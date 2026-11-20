@@ -64,6 +64,9 @@ fn prepared_writer_reads_while_writes_wait_for_completed_changes() {
     let count = writes.clone();
     let saved = artifact.clone();
     let backend = Arc::new(Unimock::new((
+        DocumentBackendMock::version
+            .each_call(matching!())
+            .returns("current".to_owned()),
         DocumentBackendMock::initialize
             .some_call(matching!())
             .answers_arc(Arc::new(move |_| {
@@ -78,7 +81,7 @@ fn prepared_writer_reads_while_writes_wait_for_completed_changes() {
             .answers_arc(Arc::new(move |_, documents| {
                 count.fetch_add(1, Ordering::SeqCst);
                 write.send(()).unwrap();
-                WriteOutcome::Written(documents.len())
+                WriteOutcome::Written(documents.documents())
             })),
     )));
     let store = DocumentWriter::prepared(

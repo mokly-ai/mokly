@@ -77,33 +77,66 @@ the same bytes, public closure, link check results, build warnings, usage, and
 resource evidence. A read updates the access order of the entry that holds the
 document. No read waits for a lock, so a held lock is a miss.
 
+A head hit can also feed the
+[return warm-up record](./mokly-sidecar-return-warmup.md#recorded-renders),
+which owns the feed rules. The store keeps no data for the warm-up. The feed
+changes neither which documents the store keeps nor the entry format.
+
 ## Writes
 
 Serve offers each document that it renders to the store, after the document
-passes the closure walk and the link checks of its side. The writer starts to
-write only after Serve completes its first Changes result, ready or
-unavailable. Until then, offers wait in the pending set. A render and a
-publication never wait for a store write. The pending writes have a fixed
-count and a fixed byte bound, and an offer that finds no room is dropped. No
-write waits for a lock, so a held lock drops the write. Shutdown drops the
-pending writes. A later process renders a dropped document again.
+passes the closure walk and the link checks of its side. The writer may write
+only after Serve completes its first Changes result, ready or unavailable.
+After that, it starts a new encoding or save only while Serve is idle. Serve is
+idle when the `changesStatus` of the current revision is `ready` or
+`unavailable`, under [Changes in Serve](./mokly-changes.md#changes-in-serve),
+and no other Serve work is in flight. That work includes a foreground request,
+a watch action, also one that the `r` shortcut starts, a base ref refresh, a
+render worker job, a comparison capture, and any sidecar pool work, calls and
+maintenance included. An encoding or a save that already started may finish. A
+render and a publication never wait for a store write.
+
+While the writer may not start, offers wait in the pending set. The pending
+writes have a fixed count and a fixed byte bound, and an offer that finds no
+room is dropped. No write waits for a lock, so a held lock drops the write.
+Shutdown drops the pending writes. A later process renders a dropped document
+again.
 
 A pending write holds no copy of its document. The writer takes each document
 from the render cache when it writes, and a document that has left the render
-cache is not written. The writer's work, its batch workspace included, uses
-the transit reserve of the render cache. The writer takes an encoder lease
-only to encode a document that is not compact yet. A document that finds no
-room or no free lease is dropped. A write never promotes, refreshes, or counts
-a lookup of the render cache. So the store adds no document memory outside the
-render cache bound.
+cache is not written. The writer encodes one document at a time. Its batch
+and its segment buffer together stay within the
+[writer budget](./mokly-timings.md#budgets). The writer's work, its segment
+buffer included, uses the transit reserve of the render cache. The writer takes
+an encoder lease only to encode a document that is not compact yet. A document
+that finds no room or no free lease is dropped. A write never promotes,
+refreshes, or counts a lookup of the render cache. So the store adds no
+document memory outside the render cache bound.
 Decision: pending writes name documents that the render cache keeps, so the
 render cache stays the one owner of document memory. A queue of documents with
 its own byte bound was rejected, because it keeps documents alive after the
 render cache evicts them. A write during the render was rejected, because it
 delays the render. An unbounded queue was rejected, because it breaks the
-memory bound. Writes wait for the first Changes result. Writes during the first
-render pass were rejected, because they compete with the renders and the first
-Changes for the encoder leases, the transit reserve, and the disk.
+memory bound. Writes wait for the first Changes result and for idle Serve
+work. Writes during other Serve work were rejected, because they compete with
+it for the encoder leases, the transit reserve, and the disk. A pause around
+sidecar calls alone was rejected, because render worker jobs and Changes would
+then still compete.
+
+Each [`render.store` record](./mokly-timings.md#core-spans) also reports the
+writer's memory in bytes of capacity. `memory_queue_peak` is the highest
+capacity of the pending set and the active batch. `memory_segment_peak` is the
+highest capacity of the segment buffer with its fixed owner.
+`memory_export_peak` is the highest simultaneous capacity of the temporary
+encoding buffers, the encoder's known buffers included, and
+`memory_codec_peak` is the highest capacity of those encoder buffers.
+`memory_known` is the current simultaneous total of all of them, and
+`memory_known_peak` is its highest value, not a sum of the separate peaks.
+These fields leave out allocator rounding, free pages, the nodes of tree maps,
+and the opaque workspace of the compressor. `queue_bookkeeping_charge` allows
+for the tree map nodes of the pending set, and `codec_charge_peak` is the
+highest encoder reservation, its opaque workspace included. Both are charges,
+not measured memory.
 
 ## Entry Format
 

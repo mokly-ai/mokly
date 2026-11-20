@@ -14,6 +14,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 - Render generated documents on request through an injected graph adapter.
 - Read only reached authored resources through confined file handles.
 - Authenticate live prop edits and retain previews in bounded process memory.
+- Hold a write lease of the render store during render jobs and captures, so
+  its writer stays paused while Serve works.
 - End client connections before ordered subsystem shutdown.
 
 ## What This Crate Does
@@ -250,10 +252,14 @@ generations.
   `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
+  `Workers::with_activity` takes the `WriteActivity` of the render store, and
+  each queued or active job, native work included, holds a lease of it.
   [`src/work_background.rs`](./src/work_background.rs) admits one background
   render at a time and runs it in `RenderClass::Background`.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
+  `MemoryComparisons::with_activity` takes the same activity, and each queued
+  capture and its detached native work hold a lease.
 - [`src/render_request.rs`](./src/render_request.rs) and
   [`src/preview.rs`](./src/preview.rs) validate live prop requests and define
   `PreviewStore` and `MemoryPreviews`.
@@ -269,6 +275,7 @@ generations.
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Live controls](../../docs/protocol/mokly-component-controls.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

@@ -15,7 +15,7 @@ fn persistent_records_restore_all_metadata_and_exact_bytes() {
     let mut input = artifact(Vec::new());
     input.document.as_mut().unwrap().warnings[0].code = "html-foster-parented";
     let (encoded, identity) = EncodedView::encode_identified(&input).unwrap();
-    let bytes = encoded.stored(1024 * 1024).unwrap();
+    let bytes = stored(&encoded);
     assert!(
         bytes.is_some(),
         "complete document must have a persistent record"
@@ -45,7 +45,7 @@ fn persistent_lengths_are_rejected_before_restoration_allocates_them() {
     let mut input = artifact(Vec::new());
     input.document.as_mut().unwrap().warnings.clear();
     let encoded = EncodedView::encode(&input).unwrap();
-    let bytes = encoded.stored(1024 * 1024).unwrap().unwrap();
+    let bytes = stored(&encoded).unwrap();
     for offset in [8, 16, 24, 32, 40] {
         let mut damaged = bytes.clone();
         damaged[offset..offset + 8].copy_from_slice(&u64::MAX.to_le_bytes());
@@ -84,11 +84,7 @@ fn persistent_usage_preserves_props_at_the_64_level_limit() {
         slots: vec![],
         ranges: vec![],
     };
-    let bytes = EncodedView::encode(&input)
-        .unwrap()
-        .stored(1024 * 1024)
-        .unwrap()
-        .unwrap();
+    let bytes = stored(&EncodedView::encode(&input).unwrap()).unwrap();
     let decoded = EncodedView::from_stored(&bytes);
     assert!(
         decoded.is_ok(),
@@ -99,4 +95,11 @@ fn persistent_usage_preserves_props_at_the_64_level_limit() {
         restored.document.unwrap().usage,
         input.document.unwrap().usage
     );
+}
+
+fn stored(encoded: &EncodedView) -> Option<Vec<u8>> {
+    let mut bytes = vec![0; 1024 * 1024];
+    let length = encoded.write_stored(&mut bytes, None).unwrap()?;
+    bytes.truncate(length);
+    Some(bytes)
 }

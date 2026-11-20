@@ -110,9 +110,15 @@ mod reference_tests;
 
 pub mod asset_delivery;
 
+mod document_capacity;
+mod document_export;
+mod document_node_capacity;
+pub mod export_memory;
 mod session_collection;
 mod session_persistence;
+pub mod store_memory;
 mod validation_summary;
+pub mod write_activity;
 
 #[cfg(test)]
 #[path = "_tests_/style_memo_tests.rs"]

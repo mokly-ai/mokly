@@ -5,17 +5,39 @@ This page expands the
 head process that a return pass starts holds no generation. The warm-up
 prepares the newest head generation on that process and replays recent renders
 of that generation. So the first edit after Serve starts finds warm processes.
+An existing head process without a successful render of the newest head
+generation gets the same warm-up. So a warm restart, which serves head
+documents from the [render store](./mokly-render-store.md), also leaves warm
+processes for the first edit.
 
 ## Recorded Renders
 
 The pool records each successful render request of the newest head generation
-on a head process. It keeps the last 30 such requests, in the order in which
-they finished. A successful head `bundle` of another generation clears the
-record. A replayed render is not recorded.
+on a head process. The pool also records the top-level JavaScript render
+request of each head document that the render store serves. For such a
+request, it sends no call and starts no process. The request must name the head
+root as its source root and the newest head generation. So a base request is
+never recorded, also when the base and the head share a generation id. A
+JavaScript component call from an HTML body adds no store-served request, and a
+render cache hit adds nothing. A store-served request equal to one that the
+record already holds from the store adds no copy. Recorded renders keep their
+order and their duplicates. The pool keeps the last 30 requests of both kinds,
+in the order in which they finished or were served. A successful head `bundle`
+of another generation clears the record. A replayed render is not recorded.
+
+Decision: only top-level JavaScript requests come from the store. Rejected:
+private stored descriptors of the calls from HTML bodies, because they add
+stored data, and no measured catalogue makes such calls.
 
 ## Warm-Up Steps
 
-Each head process that a return pass starts gets one warm-up. The warm-up
+Each head process that a return pass starts gets one warm-up. When a return
+pass starts, each existing head process without a successful render or replay
+of the newest head generation also gets one warm-up. A store-served record is
+not such a render. Both kinds run on the same background worker under the same
+rules, and no setting controls them. A process gets at most one warm-up for the
+current newest head generation. A later publication of that generation neither
+restarts a finished or failed warm-up nor resets a paused one. The warm-up
 sends the `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls
 of the newest head generation that the process lacks, in that order. Then it
 replays the recorded render requests, oldest first. The pool discards each
@@ -23,6 +45,11 @@ result. It stores, publishes, and caches nothing from a warm-up, and a warm-up
 changes no published output. A replayed render does not change the warm head
 process. It counts toward the
 [500-render rule](./mokly-sidecar-memory.md#sampling-and-recycling).
+
+Decision: an existing head process without a successful render of the newest
+head generation also warms up. Rejected: a warm-up only of the processes that a
+return pass starts, because a warm restart serves head documents from the store
+and leaves the existing processes cold for the first edit.
 
 Each warm-up call is a quiet call: its request has `quiet: true`, and every
 other request omits the field. From the start of a quiet call until its reply,
@@ -51,7 +78,9 @@ The warm-up sends its next call only while no request waits in the pool queue
 and Serve has no admitted sidecar call. A request that waits takes the process
 after the call in flight. The warm-up of that process continues when the pool
 is idle again. A request that finds no idle process makes the same choice as
-when the process runs a request.
+when the process runs a request. A warm-up call in flight is sidecar pool work,
+so the [render store](./mokly-render-store.md#writes) writer starts no new work
+during it.
 
 Decision: a replay does not move the warm head process. Rejected: a move at
 each replay, because background timing would then decide which process stays

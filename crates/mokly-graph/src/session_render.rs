@@ -49,6 +49,13 @@ impl Session {
             && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
                 persistence.store.load(key)
         {
+            self.state
+                .composer
+                .record_served(&document_composition::request(
+                    self,
+                    plan,
+                    &self.state.catalogue.model.entries[plan.entry],
+                ));
             return Ok(artifact);
         }
         let entry = &self.state.catalogue.model.entries[plan.entry];

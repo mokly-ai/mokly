@@ -5,8 +5,10 @@ use mokly_model::usage::{
     CatalogueUsage, ComponentInstanceRecord, ComponentRangeRecord, ComponentSlotRecord,
 };
 use serde::{Deserialize, Serialize};
+use std::mem;
 
 use crate::document_annotations::ReferenceRecord;
+use crate::document_capacity;
 use crate::document_codec::EncodedView;
 
 #[derive(Deserialize, Serialize)]
@@ -131,8 +133,50 @@ pub(crate) struct StoredMetadata {
 }
 
 impl StoredMetadata {
+    pub(crate) fn known_bytes(&self) -> (usize, usize) {
+        let (usage, charge) = match &self.usage {
+            Usage::Ready {
+                instances,
+                slots,
+                ranges,
+            } => document_capacity::usage(instances, slots, ranges),
+            _ => (0, 0),
+        };
+        let warnings = self.warnings.capacity() * mem::size_of::<StoredWarning>()
+            + self
+                .warnings
+                .iter()
+                .map(|warning| {
+                    warning.code.capacity()
+                        + warning.message.capacity()
+                        + match &warning.subject {
+                            Subject::Route(value)
+                            | Subject::Entry(value)
+                            | Subject::Component(value)
+                            | Subject::Folder(value)
+                            | Subject::Configuration(value) => value.capacity(),
+                        }
+                })
+                .sum::<usize>();
+        (
+            usage
+                + warnings
+                + document_capacity::strings(&self.resources)
+                + document_capacity::strings(&self.components)
+                + document_capacity::links(&self.links)
+                + self.content_type.capacity(),
+            charge,
+        )
+    }
     pub(crate) fn new(value: &EncodedView) -> Option<Self> {
         let metadata = value.metadata.document.as_ref()?;
+        if metadata
+            .warnings
+            .iter()
+            .any(|warning| warning_code(warning.code).is_none())
+        {
+            return None;
+        }
         Some(Self {
             usage: Usage::from(&metadata.usage),
             resources: metadata.resources.clone(),

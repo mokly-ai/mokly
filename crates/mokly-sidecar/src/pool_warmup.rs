@@ -1,8 +1,7 @@
-//! A process that the return pass starts prepares and replays the newest head generation while
-//! the pool is idle.
+//! Cold head processes prepare and replay the newest head generation while the pool is idle.
 
-use std::collections::{BTreeMap, VecDeque};
-use std::sync::{Arc, Weak};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use crate::methods::Call;
 use crate::pool::Pool;
@@ -10,99 +9,15 @@ use crate::pool_cleanup::{pending, stale_generation};
 use crate::pool_exchange::reusable;
 use crate::pool_preparation::{Preparation, Prerequisites};
 use crate::pool_recycle::RENDER_LIMIT;
+use crate::pool_requests::generation;
 use crate::pool_state::{Slot, State};
-use crate::workers::WorkerControl;
-
-/// The bound of the recorded head render calls, and so of the replays of one warm-up.
-const REPLAYS: usize = 30;
-
-/// Recent head render calls and the processes of the return pass that still warm up.
-#[derive(Default)]
-pub(super) struct Warmups {
-    /// Successful render calls of the newest head generation, oldest first.
-    recent: VecDeque<Call>,
-    /// The warm-up of each slot, keyed by the slot index.
-    pending: BTreeMap<usize, Warmup>,
-    /// The serial of the warm-up whose step holds its process.
-    active: Option<u64>,
-    /// The serial of the newest warm-up.
-    serial: u64,
-}
-
-/// One process that the return pass started, and its replay progress.
-struct Warmup {
-    serial: u64,
-    /// Another process in the slot ends the warm-up.
-    control: Weak<dyn WorkerControl>,
-    /// The calls still to replay, copied when the preparation first completes.
-    replays: Option<VecDeque<Call>>,
-}
-
-impl Warmups {
-    /// Keep one successful render call of the newest head generation.
-    pub(super) fn record(&mut self, call: &Call) {
-        if self.recent.len() == REPLAYS {
-            self.recent.pop_front();
-        }
-        self.recent.push_back(call.clone());
-    }
-
-    /// A newer head generation or disabled background return ends every warm-up.
-    pub(super) fn reset(&mut self) {
-        self.recent.clear();
-        self.pending.clear();
-    }
-
-    /// Warm up a process that the return pass started in this slot.
-    pub(super) fn start(&mut self, index: usize, control: &Arc<dyn WorkerControl>) {
-        self.serial += 1;
-        self.pending.insert(
-            index,
-            Warmup {
-                serial: self.serial,
-                control: Arc::downgrade(control),
-                replays: None,
-            },
-        );
-    }
-
-    /// Some process still waits for its warm-up.
-    pub(super) fn waiting(&self) -> bool {
-        !self.pending.is_empty()
-    }
-
-    fn holds(&self, index: usize, serial: u64) -> bool {
-        self.pending
-            .get(&index)
-            .is_some_and(|warmup| warmup.serial == serial)
-    }
-
-    fn replay(&mut self, index: usize) -> Option<Call> {
-        let recent = &self.recent;
-        let warmup = self.pending.get_mut(&index)?;
-        warmup
-            .replays
-            .get_or_insert_with(|| recent.clone())
-            .pop_front()
-    }
-
-    /// A late outcome changes only its own warm-up.
-    fn close(&mut self, index: usize, serial: u64, ended: bool) {
-        if self.active == Some(serial) {
-            self.active = None;
-        }
-        if ended && self.holds(index, serial) {
-            self.pending.remove(&index);
-        }
-    }
-}
 
 /// The next action of a warm-up step.
 enum Step {
     /// Send the one render input that the process lacks, with whether it is `describe`.
-    Prepare(Preparation, String, bool),
+    Prepare(Box<Preparation>, String, bool),
     /// Send one recorded render call and discard its result.
-    Replay(Call),
+    Replay(Arc<Call>),
     /// Give the process back and continue later.
     Pause,
     /// Give the process back and end its warm-up.
@@ -122,11 +37,33 @@ impl Pool {
                 Step::Pause => break (false, true),
                 Step::End => break (true, true),
                 Step::Prepare(preparation, generation, describe) => {
-                    self.restore(&mut slot, &generation, describe, preparation, true)
+                    self.restore(&mut slot, &generation, describe, *preparation, true)
                 }
                 Step::Replay(call) => {
                     slot.renders += 1;
-                    self.prerequisite(&mut slot, call, true)
+                    let outcome = self.prerequisite(&mut slot, (*call).clone(), true);
+                    if outcome.is_ok() {
+                        let mut state = self.lock();
+                        if let Some(epoch) = state
+                            .head
+                            .warm
+                            .as_ref()
+                            .filter(|warm| generation(&call) == Some(warm.generation.as_str()))
+                            .and_then(|warm| state.epochs.get(&warm.generation))
+                            .copied()
+                            .filter(|epoch| {
+                                generation(&call).and_then(|id| slot.generations.get(id))
+                                    == Some(epoch)
+                            })
+                        {
+                            state.head.warmups.rendered(
+                                index,
+                                Arc::downgrade(&slot.control),
+                                epoch,
+                            );
+                        }
+                    }
+                    outcome
                 }
             };
             sent = true;
@@ -213,7 +150,7 @@ fn next(state: &mut State, index: usize, serial: u64, slot: &Slot) -> Step {
         return Step::Pause;
     }
     if let Some((preparation, describe)) = preparation(state, slot, &generation) {
-        return Step::Prepare(preparation, generation, describe);
+        return Step::Prepare(Box::new(preparation), generation, describe);
     }
     if slot.renders >= RENDER_LIMIT - 1 {
         return Step::End;

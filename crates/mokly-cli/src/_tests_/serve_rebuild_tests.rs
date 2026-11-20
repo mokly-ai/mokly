@@ -28,7 +28,7 @@ use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
 
-pub(super) fn initial() -> Arc<Snapshot> {
+pub(crate) fn initial() -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
         "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
@@ -158,6 +158,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
     ));
     let (warnings, _warning_terminal) = warning_scopes();
     let action = ManualRebuilds {
+        activity: None,
         warnings,
         watching: None,
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),

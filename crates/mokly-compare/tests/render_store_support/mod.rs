@@ -42,3 +42,5 @@ pub fn data(cache: &DiskCache, key: &str) -> PathBuf {
         .join(key)
         .join("data/bundle.json")
 }
+
+pub mod document;

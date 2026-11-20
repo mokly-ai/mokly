@@ -14,19 +14,11 @@ impl CachedDocuments {
         if !self.enabled.load(Ordering::Acquire) {
             return ReadOutcome::Miss;
         }
-        let (segment, mut store_fault) = {
-            let Ok(mut index) = self.index.try_lock() else {
+        let segment = {
+            let Ok(index) = self.index.try_lock() else {
                 return ReadOutcome::Miss;
             };
-            let fault = match self.initialize(&mut index) {
-                Ok(Some(fault)) => fault,
-                Ok(None) => return ReadOutcome::Miss,
-                Err(error) => return self.failed(error),
-            };
-            (
-                index.as_ref().and_then(|entries| entries.get(key)).cloned(),
-                fault,
-            )
+            index.as_ref().and_then(|entries| entries.get(key)).cloned()
         };
         if let Some(fault) = self
             .faults
@@ -34,20 +26,10 @@ impl CachedDocuments {
             .unwrap_or_else(|error| error.into_inner())
             .pop_front()
         {
-            return if store_fault {
-                self.enabled.store(false, Ordering::Release);
-                ReadOutcome::RejectedWithStoreFault(fault)
-            } else {
-                ReadOutcome::Rejected(fault)
-            };
+            return ReadOutcome::Rejected(fault);
         }
         let Some(position) = segment else {
-            return if store_fault {
-                self.enabled.store(false, Ordering::Release);
-                ReadOutcome::Unavailable
-            } else {
-                ReadOutcome::Miss
-            };
+            return ReadOutcome::Miss;
         };
         let segment = &position.segment.key;
         let mut entry = match self.opened(segment, false) {
@@ -111,7 +93,7 @@ impl CachedDocuments {
                     .and_then(|value| value.restore())
                     .or(Err(EntryFault::Damaged))
             });
-        store_fault |= entry.maintenance.is_some();
+        let store_fault = entry.maintenance.is_some();
         let decoded = {
             let _closed = entry;
             decoded

@@ -85,10 +85,14 @@ builds one `DocumentWriter` over the `renders` kind at the same cache location,
 with the `CAPACITY` bound, and `Runtime::with_document_store` gives it to the
 head and base graphs. The writer reads the native build identity and indexes
 the store while Serve starts. `serve_changes` calls `resume` after each
-completed Changes result, so the store writes nothing before the first one. The
-writer prints the cache warnings through the command's diagnostics, and its
-state reaches `--debug-timings` as `render.store` records. `build` and
-`publish` compose no render store.
+completed Changes result, so the store writes nothing before the first one.
+`render_store_runtime::bind` gives the writer the Changes status of the current
+publication as its `WriteReadiness`. The sidecar gate and pool, the rebuilds,
+the head-return worker, and the server's work and captures each hold a lease of
+the writer's `WriteActivity` while they run. So the writer starts new work only
+while Serve is idle. The writer prints the cache warnings through the command's
+diagnostics, and its state reaches `--debug-timings` as `render.store` records.
+`build` and `publish` compose no render store.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -259,7 +263,8 @@ changed.
   and maps each store outcome to its warning lines.
 - [`src/render_store_runtime.rs`](./src/render_store_runtime.rs) composes the
   render store of Serve: the paused `DocumentWriter` over the `renders` kind,
-  its `Startup` identity, and its warning lines.
+  its `Startup` identity, its warning lines, and the binding of its
+  `WriteReadiness` to the current Changes status.
 - [`src/changes_runtime.rs`](./src/changes_runtime.rs) composes the Changes
   service of `build` and `publish`. Its `reporter` gives the one-shot
   `OnceReporter` that the bundle store shares.
@@ -283,7 +288,8 @@ changed.
   the admission gate around the shared pool. Its narrow `BaseCompletion`
   capability schedules the return pass. Each head or base handle passes the
   caller's `RenderClass` to the gate and runs the admitted call through
-  `SidecarPool::request_claimed`.
+  `SidecarPool::request_claimed`. A handle forwards a store-served record to
+  `SidecarPool::record_served_render` without admission or a write lease.
 - [`src/serve_gate.rs`](./src/serve_gate.rs) defines `Gate`, which admits each
   call with a `CallClaim` from `PoolCapacity::try_claim`. Waiting
   `RenderClass::Background` calls go after the other waiting head calls, and

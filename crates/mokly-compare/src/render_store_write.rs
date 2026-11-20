@@ -1,36 +1,27 @@
 //! Segment publication and process-local index updates run only on the writer.
 
-use std::io::Cursor;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-use mokly_graph::document_store::{StoreKey, StoredDocument};
+use mokly_graph::document_store::StoreKey;
 use mokly_model::material::digest;
 
 use crate::bundle_cache_types::{Mutation, RawRead};
 use crate::error::Error;
 use crate::render_segment;
+use crate::render_segment_buffer::BuiltSegment;
 use crate::render_store::{CachedDocuments, SegmentIdentity, SegmentPosition, WriteOutcome};
 
 impl CachedDocuments {
-    pub(crate) fn save_documents(&self, documents: &[StoredDocument]) -> WriteOutcome {
+    pub(crate) fn save_segment(&self, built: &BuiltSegment<'_>) -> WriteOutcome {
         if !self.enabled.load(Ordering::Acquire) {
             return WriteOutcome::Skipped;
         }
-        let Some(bytes) = render_segment::encode(documents, &self.version) else {
-            return WriteOutcome::Skipped;
-        };
-        let segment = digest(&bytes);
-        let (header, start, header_digest) = match render_segment::header(
-            &mut Cursor::new(&bytes),
-            bytes.len() as u64,
-            &self.version,
-            false,
-        ) {
-            Ok(value) => value,
-            Err(_) => return WriteOutcome::Skipped,
-        };
-        match self.cache.replace(&segment, &bytes) {
+        let bytes = built.bytes();
+        let segment = digest(bytes);
+        let header_digest = built.header_digest;
+        let start = built.start;
+        match self.cache.replace(&segment, bytes) {
             Ok(Mutation::Written) => {
                 let mut fault = false;
                 if let Ok(mut index) = self.index.try_lock() {
@@ -57,17 +48,16 @@ impl CachedDocuments {
                             bytes: bytes.len() as u64,
                             start,
                         });
-                        for document in header.documents {
-                            if index.len() < 16_384
-                                || index.contains_key(&StoreKey(document.key.clone()))
-                            {
+                        for document in built.positions.iter().flatten() {
+                            let key = String::from_utf8_lossy(&document.key).into_owned();
+                            if index.len() < 16_384 || index.contains_key(&StoreKey(key.clone())) {
                                 index.insert(
-                                    StoreKey(document.key),
+                                    StoreKey(key),
                                     SegmentPosition {
                                         segment: segment.clone(),
-                                        offset: document.offset,
-                                        length: document.bytes,
-                                        digest: document.digest,
+                                        offset: document.offset as u64,
+                                        length: document.bytes as u64,
+                                        digest: render_segment::hex(&document.digest),
                                     },
                                 );
                             }
@@ -76,9 +66,9 @@ impl CachedDocuments {
                 }
                 if fault {
                     self.enabled.store(false, Ordering::Release);
-                    WriteOutcome::WrittenWithStoreFault(documents.len())
+                    WriteOutcome::WrittenWithStoreFault(built.documents())
                 } else {
-                    WriteOutcome::Written(documents.len())
+                    WriteOutcome::Written(built.documents())
                 }
             }
             Ok(_) | Err(Error::Cancelled | Error::CacheLimit { .. }) => WriteOutcome::Skipped,

@@ -160,6 +160,7 @@ impl JavaScriptGraph {
                 Arc::new(Fragments {
                     pool: self.runtime.pool.clone(),
                     generation: generation.id.clone(),
+                    source_root: side.source_root.clone(),
                     _lease: generation.lease.clone(),
                 }),
                 self.runtime.cache.clone(),

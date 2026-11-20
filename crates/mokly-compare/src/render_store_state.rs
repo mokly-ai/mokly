@@ -13,6 +13,36 @@ use crate::render_segment;
 use crate::render_store::{CachedDocuments, SegmentIdentity, SegmentPosition};
 
 impl CachedDocuments {
+    pub(crate) fn prepare_documents(&self) -> ReadOutcome {
+        if !self.enabled.load(Ordering::Acquire) {
+            return ReadOutcome::Miss;
+        }
+        let store_fault = {
+            let Ok(mut index) = self.index.try_lock() else {
+                return ReadOutcome::Miss;
+            };
+            match self.initialize(&mut index) {
+                Ok(Some(fault)) => fault,
+                Ok(None) => return ReadOutcome::Miss,
+                Err(error) => return self.failed(error),
+            }
+        };
+        let entry_fault = self
+            .faults
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .pop_front();
+        if store_fault {
+            self.enabled.store(false, Ordering::Release);
+            entry_fault.map_or(
+                ReadOutcome::Unavailable,
+                ReadOutcome::RejectedWithStoreFault,
+            )
+        } else {
+            entry_fault.map_or(ReadOutcome::Miss, ReadOutcome::Rejected)
+        }
+    }
+
     pub(crate) fn failed(&self, error: Error) -> ReadOutcome {
         if matches!(error, Error::Cancelled) {
             return ReadOutcome::Miss;

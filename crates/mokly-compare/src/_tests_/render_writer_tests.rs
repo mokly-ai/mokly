@@ -4,15 +4,14 @@ use std::sync::{Arc, Barrier, Mutex, mpsc};
 use std::thread;
 
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
-use mokly_graph::document_store::{
-    DocumentStore, EntryFault, OfferOutcome, ReadOutcome, StoreKey, StoredDocument,
-};
+use mokly_graph::document_store::{DocumentStore, EntryFault, OfferOutcome, ReadOutcome, StoreKey};
 use mokly_graph::key::NodeKey;
 use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::render_pending::{StoreObserverMock, StoreWarning};
+use crate::render_segment_buffer::BuiltSegment;
 use crate::render_store::{DocumentBackendMock, WriteOutcome};
 use crate::render_writer::{DocumentWriter, WriterLimits};
 
@@ -54,15 +53,18 @@ fn a_full_key_queue_returns_the_render_while_disk_publication_is_blocked() {
     let resume = Arc::new(Barrier::new(2));
     let release = resume.clone();
     let ready = Mutex::new(Some(ready));
-    let backend = Arc::new(Unimock::new(
+    let backend = Arc::new(Unimock::new((
+        DocumentBackendMock::version
+            .each_call(matching!())
+            .returns("current".to_owned()),
         DocumentBackendMock::save
             .some_call(matching!(_))
-            .answers_arc(Arc::new(move |_, documents: &[StoredDocument]| {
+            .answers_arc(Arc::new(move |_, documents: &BuiltSegment| {
                 ready.lock().unwrap().take().unwrap().send(()).unwrap();
                 release.wait();
-                WriteOutcome::Written(documents.len())
+                WriteOutcome::Written(documents.documents())
             })),
-    ));
+    )));
     let store = Arc::new(DocumentWriter::new(
         backend,
         cache.clone(),
@@ -119,6 +121,28 @@ fn a_full_key_queue_returns_the_render_while_disk_publication_is_blocked() {
     assert_eq!(store.stats().active, 0);
     assert_eq!(store.stats().writes, 1);
     assert_eq!(store.stats().drops, 3);
+    let memory = store.stats().memory;
+    assert!(
+        memory.segment_peak >= 163_852,
+        "the fixed byte allocation must be recorded"
+    );
+    assert!(memory.segment_peak <= 4 * 1024 * 1024);
+    assert!(
+        memory.export_peak > 0,
+        "a full export must report its known scratch"
+    );
+    assert!(memory.known_peak >= memory.segment_peak + memory.queue);
+    assert_eq!(
+        (
+            memory.segment,
+            memory.flatten,
+            memory.compressed,
+            memory.metadata,
+            memory.stored_metadata,
+            memory.codec
+        ),
+        (0, 0, 0, 0, 0, 0)
+    );
 }
 
 #[test]

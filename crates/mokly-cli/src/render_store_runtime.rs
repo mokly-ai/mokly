@@ -1,7 +1,7 @@
 //! Serve-only optional document storage shares cache ownership and command lifetime.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::Mode;
@@ -11,6 +11,7 @@ use mokly_compare::cache_types::Reporter;
 use mokly_compare::locations::{Locations, SystemLocations};
 use mokly_compare::render_image::{ImageIdentity, SystemImage};
 use mokly_compare::render_pending::{StoreObserver, StoreWarning, TraceStoreObserver};
+use mokly_compare::render_segment_buffer::BuiltSegment;
 use mokly_compare::render_store::{
     CAPACITY, CachedDocuments, DocumentBackend, RenderDisk, WriteOutcome,
 };
@@ -19,9 +20,12 @@ use mokly_compare::render_writer_control::Startup;
 use mokly_compare::storage::SystemStorage;
 use mokly_git::control::{self, SystemClock};
 use mokly_graph::cache::RenderCache;
-use mokly_graph::document_store::{ReadOutcome, StoreKey, StoreStats, StoredDocument};
+use mokly_graph::document_store::{ReadOutcome, StoreKey, StoreStats};
+use mokly_graph::write_activity::WriteReadiness;
+use mokly_model::public_metadata::ChangesStatus;
 use mokly_platform::flush::SystemFlush;
 use mokly_platform::locks::SystemLocks;
+use mokly_server::publication::Publications;
 use mokly_sidecar::workers::Diagnostics;
 
 pub(super) fn store(
@@ -75,6 +79,22 @@ pub(super) fn store(
     ))
 }
 
+pub(super) fn bind(writer: &DocumentWriter, publications: Arc<dyn Publications>) {
+    writer.bind_readiness(Arc::new(CurrentChanges(Arc::downgrade(&publications))));
+}
+
+struct CurrentChanges(Weak<dyn Publications>);
+impl WriteReadiness for CurrentChanges {
+    fn ready(&self) -> bool {
+        self.0.upgrade().is_some_and(|publications| {
+            matches!(
+                publications.current().index.changes_status,
+                ChangesStatus::Ready | ChangesStatus::Unavailable
+            )
+        })
+    }
+}
+
 struct CommandCancellation(Arc<dyn Cancellation>);
 impl control::Cancellation for CommandCancellation {
     fn cancelled(&self) -> bool {
@@ -84,13 +104,16 @@ impl control::Cancellation for CommandCancellation {
 
 struct Unavailable;
 impl DocumentBackend for Unavailable {
+    fn version(&self) -> &str {
+        VERSION
+    }
     fn initialize(&self) -> ReadOutcome {
         ReadOutcome::Unavailable
     }
     fn load(&self, _: &StoreKey) -> ReadOutcome {
         ReadOutcome::Unavailable
     }
-    fn save(&self, _: &[StoredDocument]) -> WriteOutcome {
+    fn save(&self, _: &BuiltSegment<'_>) -> WriteOutcome {
         WriteOutcome::Unavailable
     }
 }
@@ -99,6 +122,10 @@ struct Reported {
     diagnostics: Arc<dyn Diagnostics>,
     mode: Mode,
 }
+
+#[cfg(test)]
+#[path = "_tests_/render_store_runtime_tests.rs"]
+mod render_store_runtime_tests;
 impl StoreObserver for Reported {
     fn state(&self, stats: StoreStats) {
         TraceStoreObserver.state(stats);

@@ -165,8 +165,13 @@ a render cache miss and offers each document that it renders. The graph sees
 only the store boundary. The cache implementation owns the entries, the
 receipts, the bound, and the pending writes, and no render waits for a write.
 A pending write takes its document from the render cache, so the render cache
-stays the one owner of document memory. `build` and `publish` render without
-the store.
+stays the one owner of document memory. Serve's requests, rebuilds, captures,
+render worker jobs, and sidecar pool work tell the store when Serve is busy,
+and the publication tells it when the current Changes result is complete. The
+writer starts new work only while Serve is idle. A store hit of a head document
+also gives the sidecar pool its top-level JavaScript render request, without a
+call. The pool replays such requests to warm its head processes while Serve is
+idle. `build` and `publish` render without the store.
 
 ## Shell Delivery
 

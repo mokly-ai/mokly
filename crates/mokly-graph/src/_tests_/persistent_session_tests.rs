@@ -3,6 +3,7 @@
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::html_input::DeliveredHtml;
+use mokly_html::composition::ComposerMock;
 use mokly_html::links::Reference;
 use mokly_html::{parse, tree};
 use mokly_model::usage::CatalogueUsage;
@@ -52,6 +53,7 @@ pub(super) fn install(
     session: &mut Session,
     saved: Option<Arc<Artifact>>,
     offers: Arc<Mutex<Vec<String>>>,
+    with_fault: bool,
 ) {
     let store: Arc<dyn DocumentStore> = if let Some(saved) = saved {
         Arc::new(Unimock::new((
@@ -60,7 +62,13 @@ pub(super) fn install(
                 .returns(Some("native-build".into())),
             DocumentStoreMock::load
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| ReadOutcome::Hit(saved.clone()))),
+                .answers_arc(Arc::new(move |_, _| {
+                    if with_fault {
+                        ReadOutcome::HitWithStoreFault(saved.clone())
+                    } else {
+                        ReadOutcome::Hit(saved.clone())
+                    }
+                })),
         )))
     } else {
         Arc::new(Unimock::new((
@@ -89,38 +97,70 @@ pub(super) fn install(
 
 #[test]
 fn a_stored_document_keeps_bytes_usage_and_private_annotations_without_composition_or_offers() {
-    let mut probe = collection_support::probe(1);
-    probe.session.render_all().unwrap();
-    let mut baseline = Unimock::new(
-        ComparisonCollectorMock::collect
-            .each_call(matching!(_, _))
-            .answers(&|_, _, _| Ok(())),
-    );
-    probe.session.collect_comparison(&mut baseline).unwrap();
-    probe.renders.lock().unwrap().clear();
-    let saved = artifact();
-    let offers = Arc::new(Mutex::new(Vec::new()));
-    install(&mut probe.session, Some(saved.clone()), offers.clone());
-    let actual = probe
-        .session
-        .comparison_document("page-000/index.html")
-        .unwrap();
-    assert_eq!(actual.bytes, saved.bytes);
-    assert_eq!(actual.content_type, saved.content_type);
-    let before = saved.document.as_ref().unwrap();
-    let after = actual.document.as_ref().unwrap();
-    assert_eq!(after.tree, before.tree);
-    assert_eq!(after.usage, before.usage);
-    assert_eq!(after.components, before.components);
-    assert_eq!(after.warnings, before.warnings);
-    let mut collector = Unimock::new(
-        ComparisonCollectorMock::collect
-            .each_call(matching!(_, _))
-            .answers(&|_, _, _| Ok(())),
-    );
-    probe.session.collect_comparison(&mut collector).unwrap();
-    assert_eq!(*probe.renders.lock().unwrap(), Vec::<String>::new());
-    assert_eq!(*offers.lock().unwrap(), Vec::<String>::new());
+    for with_fault in [false, true] {
+        let mut probe = collection_support::probe(1);
+        probe.session.render_all().unwrap();
+        let mut baseline = Unimock::new(
+            ComparisonCollectorMock::collect
+                .each_call(matching!(_, _))
+                .answers(&|_, _, _| Ok(())),
+        );
+        probe.session.collect_comparison(&mut baseline).unwrap();
+        probe.renders.lock().unwrap().clear();
+        let recorded = Arc::new(Mutex::new(Vec::new()));
+        let captured = recorded.clone();
+        Arc::get_mut(&mut probe.session.state).unwrap().composer = Arc::new(Unimock::new(
+            ComposerMock::record_served
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, request| {
+                    captured
+                        .lock()
+                        .unwrap()
+                        .push(request.entry.metadata.path.clone());
+                })),
+        ));
+        Arc::get_mut(&mut probe.session.state).unwrap().cache =
+            Arc::new(MemoryCache::new(1024 * 1024, 0));
+        let saved = artifact();
+        let offers = Arc::new(Mutex::new(Vec::new()));
+        install(
+            &mut probe.session,
+            Some(saved.clone()),
+            offers.clone(),
+            with_fault,
+        );
+        let actual = probe
+            .session
+            .comparison_document("page-000/index.html")
+            .unwrap();
+        assert_eq!(actual.bytes, saved.bytes);
+        assert_eq!(actual.content_type, saved.content_type);
+        assert_eq!(*recorded.lock().unwrap(), ["page-000"]);
+        let before = saved.document.as_ref().unwrap();
+        let after = actual.document.as_ref().unwrap();
+        assert_eq!(after.tree, before.tree);
+        assert_eq!(after.usage, before.usage);
+        assert_eq!(after.components, before.components);
+        assert_eq!(after.warnings, before.warnings);
+        let cached = probe
+            .session
+            .comparison_document("page-000/index.html")
+            .unwrap();
+        assert_eq!(cached.bytes, saved.bytes);
+        assert_eq!(
+            *recorded.lock().unwrap(),
+            ["page-000"],
+            "a memory hit adds no store contribution"
+        );
+        let mut collector = Unimock::new(
+            ComparisonCollectorMock::collect
+                .each_call(matching!(_, _))
+                .answers(&|_, _, _| Ok(())),
+        );
+        probe.session.collect_comparison(&mut collector).unwrap();
+        assert_eq!(*probe.renders.lock().unwrap(), Vec::<String>::new());
+        assert_eq!(*offers.lock().unwrap(), Vec::<String>::new());
+    }
 }
 
 #[test]
@@ -144,6 +184,7 @@ fn stored_logical_links_still_fail_against_the_current_destination() {
         &mut probe.session,
         Some(Arc::new(saved)),
         Arc::new(Mutex::new(Vec::new())),
+        false,
     );
     let error = probe.session.comparison_document("page-000/index.html");
     assert!(
@@ -160,7 +201,7 @@ fn fresh_documents_are_offered_once_after_complete_collection_validation() {
         Some(Arc::new(MemoryCache::new(1024 * 1024, 0))),
     );
     let offers = Arc::new(Mutex::new(Vec::new()));
-    install(&mut probe.session, None, offers.clone());
+    install(&mut probe.session, None, offers.clone(), false);
     let pending = offers.clone();
     let mut failed = Unimock::new(
         ComparisonCollectorMock::collect

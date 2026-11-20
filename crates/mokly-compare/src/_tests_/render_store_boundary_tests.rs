@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::document_codec::EncodedView;
-use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey, StoredDocument};
+use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_graph::key::NodeKey;
 use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
@@ -14,10 +14,27 @@ use mokly_sidecar::bundle_store::RecordToken;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_cache_types::{Mutation, RawEntry, RawRead};
-use crate::render_segment;
+use crate::render_segment_buffer::{Append, SegmentBuffer};
 use crate::render_store::{CachedDocuments, DocumentBackend, SegmentCacheMock};
 
-fn records(count: usize) -> Vec<StoredDocument> {
+#[derive(Clone)]
+struct Record {
+    key: StoreKey,
+    document: Arc<EncodedView>,
+}
+
+fn encode(records: &[Record], version: &str) -> Option<Vec<u8>> {
+    let mut buffer = SegmentBuffer::new(1024 * 1024)?;
+    for record in records {
+        assert_eq!(
+            buffer.append(&record.key, &record.document, None),
+            Append::Added
+        );
+    }
+    Some(buffer.finish(version)?.bytes().to_vec())
+}
+
+fn records(count: usize) -> Vec<Record> {
     let artifact = Artifact {
         bytes: b"complete".to_vec(),
         content_type: "text/html".into(),
@@ -31,15 +48,11 @@ fn records(count: usize) -> Vec<StoredDocument> {
             warnings: vec![],
         }),
     };
-    let bytes = EncodedView::encode(&artifact)
-        .unwrap()
-        .stored(1024 * 1024)
-        .unwrap()
-        .unwrap();
+    let document = Arc::new(EncodedView::encode(&artifact).unwrap());
     (0..count)
-        .map(|index| StoredDocument {
+        .map(|index| Record {
             key: StoreKey::new(&NodeKey(index.to_string()), "build"),
-            bytes: bytes.clone(),
+            document: document.clone(),
         })
         .collect()
 }
@@ -57,7 +70,7 @@ fn entry(bytes: Vec<u8>) -> RawRead {
 
 fn reads(count: usize) -> (usize, usize, usize) {
     let records = records(count);
-    let bytes = Arc::new(render_segment::encode(&records, "current").unwrap());
+    let bytes = Arc::new(encode(&records, "current").unwrap());
     let inventory = Arc::new(AtomicUsize::new(0));
     let inspections = Arc::new(AtomicUsize::new(0));
     let lookups = Arc::new(AtomicUsize::new(0));
@@ -86,6 +99,10 @@ fn reads(count: usize) -> (usize, usize, usize) {
             })),
     )));
     let store = CachedDocuments::new(cache, "current".into());
+    assert!(matches!(
+        DocumentBackend::initialize(&store),
+        ReadOutcome::Miss
+    ));
     for record in &records {
         let ReadOutcome::Hit(artifact) = store.load(&record.key) else {
             panic!("retained document")
@@ -106,16 +123,56 @@ fn segment_inventory_runs_once_for_many_document_reads() {
 }
 
 #[test]
+fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparation_recovers() {
+    let documents = records(1);
+    let bytes = encode(&documents, "current").unwrap();
+    let inspected = bytes.clone();
+    let cache = Arc::new(Unimock::new((
+        SegmentCacheMock::entries.stub(|each| {
+            each.call(matching!())
+                .answers(&|_| Ok(None))
+                .once()
+                .then()
+                .answers(&|_| Ok(Some(vec!["segment".into()])));
+        }),
+        SegmentCacheMock::inspect
+            .some_call(matching!("segment"))
+            .answers_arc(Arc::new(move |_, _| Ok(entry(inspected.clone())))),
+        SegmentCacheMock::read
+            .some_call(matching!("segment"))
+            .answers_arc(Arc::new(move |_, _| Ok(entry(bytes.clone())))),
+    )));
+    let store = CachedDocuments::new(cache, "current".into());
+    assert!(matches!(store.load(&documents[0].key), ReadOutcome::Miss));
+    assert!(matches!(
+        DocumentBackend::initialize(&store),
+        ReadOutcome::Miss
+    ));
+    assert!(
+        matches!(store.load(&documents[0].key), ReadOutcome::Miss),
+        "a lookup must not retry contended index preparation"
+    );
+    assert!(matches!(
+        DocumentBackend::initialize(&store),
+        ReadOutcome::Miss
+    ));
+    let ReadOutcome::Hit(artifact) = store.load(&documents[0].key) else {
+        panic!("explicit preparation must recover the still-enabled store")
+    };
+    assert_eq!(artifact.bytes, b"complete");
+}
+
+#[test]
 fn a_full_startup_index_keeps_recent_positions_and_the_newest_duplicate() {
     let mut documents = records(16_385);
-    let duplicate = StoredDocument {
+    let duplicate = Record {
         key: documents[0].key.clone(),
-        bytes: documents[1].bytes.clone(),
+        document: documents[1].document.clone(),
     };
     documents.push(duplicate);
     let segments: Vec<_> = documents
         .chunks(64)
-        .map(|batch| render_segment::encode(batch, "current").unwrap())
+        .map(|batch| encode(batch, "current").unwrap())
         .collect();
     let input = Arc::new(segments);
     let inspected = input.clone();
@@ -138,6 +195,10 @@ fn a_full_startup_index_keeps_recent_positions_and_the_newest_duplicate() {
             })),
     )));
     let store = CachedDocuments::new(cache, "current".into());
+    assert!(matches!(
+        DocumentBackend::initialize(&store),
+        ReadOutcome::Miss
+    ));
     assert!(
         matches!(store.load(&documents[16_384].key), ReadOutcome::Hit(_)),
         "the most recent position must survive the index bound"
@@ -172,7 +233,7 @@ impl Seek for HeaderOnly {
 
 #[test]
 fn a_foreign_segment_is_rejected_before_its_payload_is_read() {
-    let mut bytes = render_segment::encode(&records(1), "current").unwrap();
+    let mut bytes = encode(&records(1), "current").unwrap();
     let size = bytes.len();
     let mut length = [0; 4];
     length.copy_from_slice(&bytes[8..12]);
@@ -208,7 +269,7 @@ fn a_foreign_segment_is_rejected_before_its_payload_is_read() {
     )));
     let store = CachedDocuments::new(cache, "current".into());
     assert!(matches!(
-        store.load(&records(1)[0].key),
+        DocumentBackend::initialize(&store),
         ReadOutcome::Rejected(EntryFault::Foreign)
     ));
     assert_eq!(payload_reads.load(Ordering::SeqCst), 0);

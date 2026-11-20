@@ -5,10 +5,15 @@ use std::sync::{Arc, Mutex};
 use crate::cache::{Artifact, MemoryCache};
 use crate::cache_state::State;
 use crate::document_codec::EncodedView;
+use crate::export_memory::{ExportBuffer, ExportObserver, ExportScope};
 use crate::key::NodeKey;
 
 /// Writer-side consumer that cannot keep an uncharged encoded handle.
 pub trait EncodedConsumer: Send {
+    /// Observe export scratch without changing shared cache accounting.
+    fn memory(&self) -> Option<Arc<dyn ExportObserver>> {
+        None
+    }
     /// Consume one borrowed document within its cache reservation.
     fn consume(&mut self, document: &EncodedView);
 }
@@ -81,13 +86,21 @@ impl MemoryCache {
                 source: Some(source),
             }
         };
+        let observer = consumer.memory();
+        let _scope = ExportScope(observer.as_deref());
         match &reservation.source {
             Some(Source::Compact(value)) => consumer.consume(value),
             Some(Source::Full(value)) => {
                 let Some(lease) = reservation.lease else {
                     return false;
                 };
-                let Ok(encoded) = self.encoder.encode(value, lease) else {
+                if let Some(observer) = &observer {
+                    observer.bytes(ExportBuffer::CodecCharge, self.encoder.workspace_bytes());
+                }
+                let Ok(encoded) = self
+                    .encoder
+                    .encode_export(value, lease, observer.as_deref())
+                else {
                     return false;
                 };
                 consumer.consume(&encoded);

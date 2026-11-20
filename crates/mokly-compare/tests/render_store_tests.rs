@@ -10,7 +10,7 @@ use mokly_compare::render_store::{
 };
 use mokly_graph::cache::Artifact;
 use mokly_graph::document_codec::EncodedView;
-use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey, StoredDocument};
+use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_graph::key::NodeKey;
 use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
@@ -22,7 +22,7 @@ mod support;
 #[path = "bundle_store_support/paused.rs"]
 mod paused;
 
-fn record(key: &str) -> StoredDocument {
+fn record(key: &str) -> support::document::Record {
     let artifact = Artifact {
         bytes: b"exact\0document\xff".to_vec(),
         content_type: "text/html; charset=utf-8".into(),
@@ -40,13 +40,9 @@ fn record(key: &str) -> StoredDocument {
             links: vec![],
         }),
     };
-    StoredDocument {
+    support::document::Record {
         key: StoreKey::new(&NodeKey(key.into()), "native-build"),
-        bytes: EncodedView::encode(&artifact)
-            .unwrap()
-            .stored(1024 * 1024)
-            .unwrap()
-            .unwrap_or_default(),
+        document: EncodedView::encode(&artifact).unwrap(),
     }
 }
 
@@ -60,8 +56,14 @@ fn reopening_repairs_a_stale_access_counter_before_evicting_recent_segments() {
         Arc::new(RenderDisk::new(cache.clone(), 1024 * 1024)),
         "current".into(),
     );
-    assert_eq!(first.save(&[record("a")]), WriteOutcome::Written(1));
-    assert_eq!(first.save(&[record("b")]), WriteOutcome::Written(1));
+    assert_eq!(
+        support::document::save(&first, &[record("a")]),
+        WriteOutcome::Written(1)
+    );
+    assert_eq!(
+        support::document::save(&first, &[record("b")]),
+        WriteOutcome::Written(1)
+    );
     assert!(matches!(first.load(&record("a").key), ReadOutcome::Hit(_)));
     let entries = cache
         .storage
@@ -78,8 +80,14 @@ fn reopening_repairs_a_stale_access_counter_before_evicting_recent_segments() {
         Arc::new(RenderDisk::new(cache.clone(), bound)),
         "current".into(),
     );
-    assert_eq!(reopened.save(&[record("c")]), WriteOutcome::Written(1));
-    assert_eq!(reopened.save(&[record("d")]), WriteOutcome::Written(1));
+    assert_eq!(
+        support::document::save(&reopened, &[record("c")]),
+        WriteOutcome::Written(1)
+    );
+    assert_eq!(
+        support::document::save(&reopened, &[record("d")]),
+        WriteOutcome::Written(1)
+    );
     assert!(
         matches!(reopened.load(&record("c").key), ReadOutcome::Hit(_)),
         "recent segment C must survive a stale counter"
@@ -110,7 +118,10 @@ fn damaged_and_foreign_segments_are_misses_and_are_retired() {
             Arc::new(RenderDisk::new(cache.clone(), 1024 * 1024)),
             "current".into(),
         );
-        assert_eq!(store.save(&[record("a")]), WriteOutcome::Written(1));
+        assert_eq!(
+            support::document::save(&store, &[record("a")]),
+            WriteOutcome::Written(1)
+        );
         let entries = cache
             .storage
             .bundle_records(&support::namespace(&cache).join("entries"), 1024 * 1024)
@@ -162,7 +173,7 @@ fn concurrent_segment_writers_never_publish_partial_data_and_preserve_newer_toke
     let disk = Arc::new(RenderDisk::new(cache.clone(), 1024 * 1024));
     let store = Arc::new(CachedDocuments::new(disk.clone(), "current".into()));
     let writing = store.clone();
-    let writer = thread::spawn(move || writing.save(&[record("a")]));
+    let writer = thread::spawn(move || support::document::save(writing.as_ref(), &[record("a")]));
     waiting.recv().unwrap();
     let stages = cache
         .storage
@@ -170,7 +181,10 @@ fn concurrent_segment_writers_never_publish_partial_data_and_preserve_newer_toke
         .unwrap();
     assert_eq!(stages.len(), 1);
     assert!(matches!(disk.read(&stages[0]).unwrap(), RawRead::Contended));
-    assert_eq!(store.save(&[record("a")]), WriteOutcome::Skipped);
+    assert_eq!(
+        support::document::save(store.as_ref(), &[record("a")]),
+        WriteOutcome::Skipped
+    );
     assert!(matches!(store.load(&record("a").key), ReadOutcome::Miss));
     assert!(
         !writer.is_finished(),
@@ -207,12 +221,16 @@ fn durable_restart_keeps_document_bytes_and_changed_keys_miss() {
         "current".into(),
     );
     let document = record("a");
-    assert_eq!(first.save(&[document]), WriteOutcome::Written(1));
+    assert_eq!(
+        support::document::save(&first, &[document]),
+        WriteOutcome::Written(1)
+    );
     drop(first);
     let second = CachedDocuments::new(
         Arc::new(RenderDisk::new(Arc::new(support::cache(root)), 1024 * 1024)),
         "current".into(),
     );
+    assert!(matches!(second.initialize(), ReadOutcome::Miss));
     let original = record("a");
     let ReadOutcome::Hit(artifact) = second.load(&original.key) else {
         panic!("new store must read durable bytes")

@@ -142,7 +142,12 @@ count the store lookups that did and did not serve a document, and `faults`
 counts the rejected entries. `writes` and `bytes` count the documents and the
 bytes that the writer published. `drops` counts the offered documents that the
 store did not keep. `queued` and `active` give the keys that wait and the keys
-of the active batch. The totals cover the whole process. A stored read is a
+of the active batch. The memory fields `memory_queue_peak`,
+`memory_segment_peak`, `memory_export_peak`, `memory_codec_peak`,
+`memory_known`, `memory_known_peak`, `queue_bookkeeping_charge`, and
+`codec_charge_peak` follow the
+[writer memory rule](./mokly-render-store.md#writes). The totals cover the
+whole process. A stored read is a
 render cache miss, so `render.cache` never counts it as a hit.
 Decision: the render store writes its own state records. Store fields in
 `render.cache` were rejected, because store writes run after the phases that
@@ -214,6 +219,7 @@ CI's small correctness fixtures have
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
 | bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
 | render store namespace             | 128 MiB (134,217,728 bytes) per repository, complete and staged entries together                                               |
+| render store writer                | 4 MiB (4,194,304 bytes) for the batch and the segment buffer of the [render store](./mokly-render-store.md#writes) writer      |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

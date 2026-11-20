@@ -198,6 +198,7 @@ pub(super) fn run(
                 reporter.clone(),
                 !options.no_watch,
                 services.sidecars.clone(),
+                &services,
             );
             let publications = delivery.publications;
             let background = delivery.background;
@@ -250,6 +251,7 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                activity: Some(services.activity()),
                 warnings: warnings.clone(),
                 watching,
                 candidates: candidates.clone(),

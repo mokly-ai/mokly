@@ -14,6 +14,7 @@ use crate::document_metadata::{DocumentMetadata, Metadata};
 use crate::document_nodes::FlatNode;
 use crate::document_store_metadata::StoredMetadata;
 use crate::document_weight;
+use crate::export_memory::{ExportBuffer, ExportObserver, Observation};
 
 const PREFIX: usize = 48;
 const MAX_RECORD: usize = 2 * 1024 * 1024;
@@ -31,8 +32,12 @@ fn valid(bytes: usize, tree: usize, records: usize, metadata: usize) -> bool {
 
 impl EncodedView {
     /// Encode complete metadata and compressed bytes under an exact byte bound.
-    pub fn stored(&self, limit: usize) -> Result<Option<Vec<u8>>> {
-        let limit = limit.min(MAX_RECORD);
+    pub fn write_stored(
+        &self,
+        bytes: &mut [u8],
+        observer: Option<&dyn ExportObserver>,
+    ) -> Result<Option<usize>> {
+        let limit = bytes.len().min(MAX_RECORD);
         if self.metadata_bytes > limit
             || !valid(
                 self.bytes_len,
@@ -43,12 +48,19 @@ impl EncodedView {
         {
             return Ok(None);
         }
+        let memory = Observation::new(observer, ExportBuffer::StoredMetadata);
+        let bookkeeping = Observation::new(observer, ExportBuffer::StoredBookkeeping);
         let Some(metadata) = StoredMetadata::new(self) else {
             return Ok(None);
         };
+        if observer.is_some() {
+            let (bytes, charge) = metadata.known_bytes();
+            memory.set(bytes);
+            bookkeeping.set(charge);
+        }
         let mut writer = Limited {
-            bytes: vec![0; PREFIX],
-            limit,
+            bytes: &mut bytes[..limit],
+            length: PREFIX,
             exceeded: false,
         };
         if PREFIX > limit {
@@ -60,7 +72,7 @@ impl EncodedView {
             }
             return Err(CodecInternalError::Metadata { source }.into());
         }
-        let metadata_len = writer.bytes.len() - PREFIX;
+        let metadata_len = writer.length - PREFIX;
         if writer.write_all(&self.payload).is_err() {
             return Ok(None);
         }
@@ -78,7 +90,7 @@ impl EncodedView {
             writer.bytes[8 + slot * 8..16 + slot * 8]
                 .copy_from_slice(&(value as u64).to_le_bytes());
         }
-        Ok(Some(writer.bytes))
+        Ok(Some(writer.length))
     }
 
     /// Decode checked private data before restoring any document allocation.
@@ -185,18 +197,19 @@ fn bounded_json(bytes: &[u8]) -> bool {
     !quoted && depth == 0
 }
 
-struct Limited {
-    bytes: Vec<u8>,
-    limit: usize,
+struct Limited<'a> {
+    bytes: &'a mut [u8],
+    length: usize,
     exceeded: bool,
 }
-impl Write for Limited {
+impl Write for Limited<'_> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if bytes.len() > self.limit.saturating_sub(self.bytes.len()) {
+        if bytes.len() > self.bytes.len().saturating_sub(self.length) {
             self.exceeded = true;
             return Err(io::Error::other(CodecInternalError::InvalidLength));
         }
-        self.bytes.extend_from_slice(bytes);
+        self.bytes[self.length..self.length + bytes.len()].copy_from_slice(bytes);
+        self.length += bytes.len();
         Ok(bytes.len())
     }
     fn flush(&mut self) -> io::Result<()> {

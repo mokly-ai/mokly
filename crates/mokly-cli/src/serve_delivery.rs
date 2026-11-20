@@ -96,20 +96,30 @@ pub(super) fn create(
     diagnostics: Arc<dyn Diagnostics>,
     watching: bool,
     sidecars: Arc<dyn PoolScheduling>,
+    services: &ServeServices,
 ) -> Delivery {
     let publications = Arc::new(SharedPublication::new(snapshot));
+    let activity = Some(services.activity());
+    services.bind_publications(publications.clone());
     let capacity: Arc<dyn BackgroundCapacity> = Arc::new(UsageCapacity {
         workers,
         sidecars: sidecars.clone(),
     });
-    let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(sidecars));
-    let comparisons = Arc::new(MemoryComparisons::new(
-        Arc::new(MonotonicClock::default()),
-        entropy.clone(),
-        Arc::new(SnapshotCapture),
-        publications.clone(),
-        diagnostics.clone(),
-    ));
+    let work = Arc::new(
+        Workers::new(workers, diagnostics.clone())
+            .with_foreground(sidecars)
+            .with_activity(activity.clone()),
+    );
+    let comparisons = Arc::new(
+        MemoryComparisons::new(
+            Arc::new(MonotonicClock::default()),
+            entropy.clone(),
+            Arc::new(SnapshotCapture),
+            publications.clone(),
+            diagnostics.clone(),
+        )
+        .with_activity(activity),
+    );
     let background: Arc<dyn Background> = Arc::new(UsagePass {
         capacity,
         changes: Some(Arc::new(ChangesPass {

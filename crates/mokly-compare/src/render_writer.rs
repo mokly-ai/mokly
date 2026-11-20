@@ -1,5 +1,6 @@
 //! Bounded document-key admission and one optional off-path writer.
 
+use std::mem;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -11,6 +12,7 @@ use mokly_graph::key::NodeKey;
 use crate::render_batch::Batch;
 use crate::render_pending::{Request, Shared, StoreObserver, StoreWarning};
 use crate::render_segment::MAX_DOCUMENTS;
+use crate::render_segment_buffer::SegmentBuffer;
 use crate::render_store::DocumentBackend;
 use crate::render_writer_control::Startup;
 
@@ -50,14 +52,7 @@ impl DocumentStore for DocumentWriter {
         self.startup.as_ref()?.current()
     }
     fn resume(&self) {
-        let mut pending = self
-            .shared
-            .pending
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        pending.paused = false;
-        self.shared.emit(pending.stats, self.observer.as_ref());
-        self.shared.ready.notify_one();
+        self.shared.admission.resume();
     }
     #[tracing::instrument(name = "render.store.read", skip_all)]
     fn load(&self, key: &StoreKey) -> ReadOutcome {
@@ -108,8 +103,7 @@ impl DocumentStore for DocumentWriter {
     fn offer(&self, key: StoreKey, document: NodeKey) -> OfferOutcome {
         let request = Request::new(key, document);
         let Ok(mut pending) = self.shared.pending.try_lock() else {
-            self.shared.contended_drops.fetch_add(1, Ordering::SeqCst);
-            self.shared.observe(self.observer.as_ref());
+            self.shared.contended(self.observer.as_ref());
             return OfferOutcome::Dropped;
         };
         if pending.keys.contains(&request.key) {
@@ -125,11 +119,15 @@ impl DocumentStore for DocumentWriter {
             return OfferOutcome::Dropped;
         }
         pending.bytes += request.bytes;
-        pending.keys.insert(request.key.clone());
+        let set_key = request.key.clone();
+        pending.strings +=
+            request.key.0.capacity() + request.document.0.capacity() + set_key.0.capacity();
+        pending.keys.insert(set_key);
         pending.queue.push_back(request);
         pending.stats.queued = pending.queue.len();
+        pending.sample();
         self.shared.emit(pending.stats, self.observer.as_ref());
-        self.shared.ready.notify_one();
+        self.shared.admission.notify();
         OfferOutcome::Queued
     }
     fn stats(&self) -> StoreStats {
@@ -143,13 +141,13 @@ impl DocumentStore for DocumentWriter {
             .unwrap_or_else(|error| error.into_inner());
         pending.closed = true;
         while let Some(request) = pending.queue.pop_front() {
-            pending.bytes -= request.bytes;
-            pending.keys.remove(&request.key);
+            pending.release(&request);
             pending.stats.drops += 1;
         }
         pending.stats.queued = 0;
+        pending.sample();
         self.shared.emit(pending.stats, self.observer.as_ref());
-        self.shared.ready.notify_one();
+        self.shared.admission.close();
     }
 }
 
@@ -167,29 +165,43 @@ pub(crate) fn run(
     observer: Arc<dyn StoreObserver>,
 ) {
     loop {
+        let (epoch, closed, allowed) = shared.admission.status();
+        if closed {
+            return;
+        }
+        if !allowed {
+            shared.admission.wait(epoch);
+            continue;
+        }
         let requests = {
             let mut pending = shared
                 .pending
                 .lock()
                 .unwrap_or_else(|error| error.into_inner());
-            while (pending.queue.is_empty() || pending.paused) && !pending.closed {
-                pending = shared
-                    .ready
-                    .wait(pending)
-                    .unwrap_or_else(|error| error.into_inner());
-            }
             if pending.closed {
                 return;
             }
-            let count = MAX_DOCUMENTS.min(pending.queue.len());
-            let requests: Vec<_> = pending.queue.drain(..count).collect();
-            pending.stats.queued = pending.queue.len();
-            pending.stats.active = requests.len();
-            shared.emit(pending.stats, observer.as_ref());
-            requests
+            if pending.queue.is_empty() {
+                None
+            } else {
+                let count = MAX_DOCUMENTS.min(pending.queue.len());
+                let requests: Vec<_> = pending.queue.drain(..count).collect();
+                pending.active_capacity = requests.capacity() * mem::size_of::<Request>();
+                pending.stats.queued = pending.queue.len();
+                pending.stats.active = requests.len();
+                pending.sample();
+                shared.emit(pending.stats, observer.as_ref());
+                Some(requests)
+            }
+        };
+        let Some(requests) = requests else {
+            shared.admission.wait(epoch);
+            continue;
         };
         let (written, bytes, unavailable) = {
             let mut batch = Batch {
+                shared: shared.clone(),
+                admission: shared.admission.as_ref(),
                 requests: &requests,
                 cache: cache.clone(),
                 backend: backend.clone(),
@@ -198,11 +210,7 @@ pub(crate) fn run(
                 bytes: 0,
                 unavailable: false,
             };
-            if let Some(workspace) = limits
-                .segment_bytes
-                .checked_mul(8)
-                .and_then(|bytes| bytes.checked_add(128 * 1024))
-            {
+            if let Some(workspace) = SegmentBuffer::workspace_bytes(limits.segment_bytes) {
                 cache.with_workspace(workspace, &mut batch);
             }
             (batch.written, batch.bytes, batch.unavailable)
@@ -216,10 +224,11 @@ pub(crate) fn run(
             pending.stats.bytes += bytes;
             pending.stats.drops += requests.len() - written;
             for request in requests {
-                pending.bytes -= request.bytes;
-                pending.keys.remove(&request.key);
+                pending.release(&request);
             }
+            pending.active_capacity = 0;
             pending.stats.active = 0;
+            pending.sample();
             shared.emit(pending.stats, observer.as_ref());
         }
         if unavailable && !shared.disabled.swap(true, Ordering::AcqRel) {
@@ -231,3 +240,7 @@ pub(crate) fn run(
 #[cfg(test)]
 #[path = "_tests_/render_writer_tests.rs"]
 mod render_writer_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_writer_state_tests.rs"]
+mod render_writer_state_tests;

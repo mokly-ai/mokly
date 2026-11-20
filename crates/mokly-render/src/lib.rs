@@ -28,6 +28,7 @@ mod postcss_nested;
 mod postcss_read_inventory;
 mod postcss_scan;
 mod postcss_turns;
+mod render_call;
 mod render_environment;
 pub mod runtime;
 mod runtime_factories;
@@ -72,3 +73,9 @@ mod source_precedence_tests;
 #[cfg(test)]
 #[path = "_tests_/graph_tests.rs"]
 mod graph_tests;
+#[cfg(test)]
+#[path = "_tests_/stored_call_tests.rs"]
+mod stored_call_tests;
+#[cfg(test)]
+#[path = "_tests_/stored_provenance_tests.rs"]
+mod stored_provenance_tests;

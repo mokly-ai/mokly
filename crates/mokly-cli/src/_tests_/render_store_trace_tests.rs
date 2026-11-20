@@ -2,6 +2,7 @@
 
 use mokly_compare::render_pending::{StoreObserver, TraceStoreObserver};
 use mokly_graph::document_store::StoreStats;
+use mokly_graph::store_memory::StoreMemory;
 
 use super::serve_trace_tests::capture;
 
@@ -18,6 +19,7 @@ fn render_store_timings_report_costs_and_an_ordered_idle_state_separately_from_m
             span.in_scope(|| {});
         }
         TraceStoreObserver.state(StoreStats {
+            memory: StoreMemory::default(),
             sequence: 7,
             queued: 2,
             active: 1,
@@ -29,6 +31,15 @@ fn render_store_timings_report_costs_and_an_ordered_idle_state_separately_from_m
             drops: 2,
         });
         TraceStoreObserver.state(StoreStats {
+            memory: StoreMemory {
+                known_peak: 2048,
+                queue_peak: 128,
+                segment_peak: 1024,
+                export_peak: 896,
+                codec_peak: 512,
+                codec_charge_peak: 4096,
+                ..StoreMemory::default()
+            },
             sequence: 9,
             queued: 0,
             active: 0,
@@ -64,6 +75,9 @@ fn render_store_timings_report_costs_and_an_ordered_idle_state_separately_from_m
     assert_eq!(states[1]["writes"], 8);
     assert_eq!(states[1]["bytes"], 256);
     assert_eq!(states[1]["drops"], 2);
+    assert_eq!(states[1]["memory_known_peak"], 2048);
+    assert_eq!(states[1]["memory_segment_peak"], 1024);
+    assert_eq!(states[1]["codec_charge_peak"], 4096);
     assert!(
         !records
             .iter()

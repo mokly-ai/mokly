@@ -2,8 +2,8 @@
 
 use std::io::SeekFrom;
 
-use mokly_graph::document_store::{EntryFault, StoreKey, StoredDocument};
-use serde::{Deserialize, Serialize};
+use mokly_graph::document_store::{EntryFault, StoreKey};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
 use crate::bundle_cache_types::BundleInput;
@@ -13,16 +13,14 @@ const MAX_HEADER: usize = 32 * 1024;
 pub(crate) const MAX_DOCUMENTS: usize = 64;
 const PREFIX: usize = 12;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Header {
-    pub(crate) format_version: u8,
-    pub(crate) mokly_version: String,
     pub(crate) payload_digest: String,
     pub(crate) documents: Vec<Position>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize)]
 pub(crate) struct Position {
     pub(crate) key: String,
     pub(crate) offset: u64,
@@ -35,63 +33,6 @@ pub(crate) struct Position {
 struct Version {
     format_version: u8,
     mokly_version: String,
-}
-
-pub(crate) fn encode(documents: &[StoredDocument], version: &str) -> Option<Vec<u8>> {
-    if documents.is_empty() || documents.len() > MAX_DOCUMENTS {
-        return None;
-    }
-    let mut payload = Vec::new();
-    let mut positions = Vec::new();
-    for document in documents {
-        if !valid_key(&document.key.0)
-            || document.bytes.len() > MAX_BYTES
-            || payload
-                .len()
-                .saturating_add(document.bytes.len())
-                .saturating_add(64)
-                > MAX_BYTES
-        {
-            return None;
-        }
-        positions.push(Position {
-            key: document.key.0.clone(),
-            offset: payload.len() as u64,
-            bytes: (64 + document.bytes.len()) as u64,
-            digest: {
-                let mut hash = Sha256::new();
-                hash.update(document.key.0.as_bytes());
-                hash.update(&document.bytes);
-                hex(&hash.finalize())
-            },
-        });
-        payload.extend_from_slice(document.key.0.as_bytes());
-        payload.extend_from_slice(&document.bytes);
-    }
-    let header = Header {
-        format_version: 1,
-        mokly_version: version.into(),
-        payload_digest: hex(&Sha256::digest(&payload)),
-        documents: positions,
-    };
-    let Ok(header) = serde_json::to_vec(&header) else {
-        return None;
-    };
-    if header.len() > MAX_HEADER
-        || header
-            .len()
-            .saturating_add(payload.len())
-            .saturating_add(PREFIX)
-            > MAX_BYTES
-    {
-        return None;
-    }
-    let mut bytes = Vec::with_capacity(PREFIX + header.len() + payload.len());
-    bytes.extend_from_slice(b"MKSEG001");
-    bytes.extend_from_slice(&(header.len() as u32).to_le_bytes());
-    bytes.extend_from_slice(&header);
-    bytes.extend_from_slice(&payload);
-    Some(bytes)
 }
 
 pub(crate) fn header(

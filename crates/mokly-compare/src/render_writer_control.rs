@@ -6,6 +6,7 @@ use std::thread;
 
 use mokly_graph::cache::RenderCache;
 use mokly_graph::document_store::{DocumentStore, ReadOutcome};
+use mokly_graph::write_activity::{WriteActivity, WriteReadiness};
 use mokly_model::material::digest;
 
 use crate::render_identity::NativeIdentity;
@@ -32,6 +33,15 @@ impl Startup {
 }
 
 impl DocumentWriter {
+    /// Suppress new optional units for the lifetime of local Serve work.
+    pub fn activity(&self) -> Arc<dyn WriteActivity> {
+        self.shared.admission.clone()
+    }
+
+    /// Bind a non-owning current-publication query after Serve creates its state.
+    pub fn bind_readiness(&self, readiness: Arc<dyn WriteReadiness>) {
+        self.shared.admission.bind(readiness);
+    }
     /// Start one writer without using a render worker or a sidecar.
     pub fn new(
         backend: Arc<dyn DocumentBackend>,
@@ -69,13 +79,12 @@ impl DocumentWriter {
         observer: Arc<dyn StoreObserver>,
         startup: Option<Startup>,
     ) -> Self {
-        let shared = Arc::new(Shared::new(limits.keys, limits.key_bytes));
-        shared
-            .pending
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .paused = startup.is_some();
-        observer.state(Default::default());
+        let shared = Arc::new(Shared::new(
+            limits.keys,
+            limits.key_bytes,
+            startup.is_some(),
+        ));
+        observer.state(shared.stats());
         let pending = shared.clone();
         let sink = observer.clone();
         let storage = backend.clone();

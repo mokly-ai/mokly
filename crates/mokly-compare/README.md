@@ -124,8 +124,16 @@ of its document. An access counter under the namespace lock orders the
 segments, so a read scans no entries. Only a segment publication scans the
 kind, to make room under the bound.
 `DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
-only keys, under the bounds of `WriterLimits`, and its one writer thread
-publishes a segment for each batch inside the workspace of the render cache.
+only keys, under the bounds of `WriterLimits`. `DocumentWriter::activity` gives
+the `WriteActivity` whose leases Serve work holds while it runs, and
+`DocumentWriter::bind_readiness` takes the `WriteReadiness` of the current
+Changes result. Its one writer thread starts a new export or save only while
+that readiness holds and no lease is held, and work that already started
+finishes. Each batch builds its segment in place in one `SegmentBuffer`, whose
+fixed capacity with its owner stays within 4 MiB inside the workspace of the
+render cache, and saves the `BuiltSegment` through the unchanged storage path.
+The state records carry the known capacities and the charges of the writer's
+buffers in `StoreMemory`.
 `DocumentWriter::prepared` starts that thread with its writes paused. The
 thread first prepares the native identity of its `Startup` and the index, and
 `resume` then releases the writes. `ImageIdentity` reads the identity once
@@ -518,18 +526,28 @@ development dependencies, and no test uses the internet.
   `CAPACITY`, the render kind and its document backend. The private
   [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory, and the
   `render_store_*.rs` modules hold the index, the reads, and the writes.
-- [`src/render_segment.rs`](./src/render_segment.rs) encodes and checks format 1
-  of a segment: the prefix, the bounded header, and the digests.
+- [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
+  segment: the prefix, the bounded header, and the digests.
+  [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines
+  `SegmentBuffer` and `BuiltSegment`, the fixed buffer in which a batch builds
+  its segment, and the private
+  [`src/render_segment_header.rs`](./src/render_segment_header.rs) writes the
+  bounded header into it.
   [`src/render_sequence.rs`](./src/render_sequence.rs) advances the access
   counter.
 - [`src/render_writer.rs`](./src/render_writer.rs) defines `DocumentWriter` and
   `WriterLimits`, the bounded key admission and the one writer.
-  [`src/render_batch.rs`](./src/render_batch.rs) encodes one batch inside its
+  [`src/render_batch.rs`](./src/render_batch.rs) builds one batch inside its
   workspace. [`src/render_pending.rs`](./src/render_pending.rs) defines
-  `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`.
+  `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`. The private
+  [`src/render_admission.rs`](./src/render_admission.rs) holds the admission
+  state that implements `WriteActivity`, and
+  [`src/render_memory.rs`](./src/render_memory.rs) updates the `StoreMemory` of
+  the state records.
 - [`src/render_writer_control.rs`](./src/render_writer_control.rs) defines
   `Startup` and `DocumentWriter::prepared`, the paused writer start that
-  prepares the identity and the index.
+  prepares the identity and the index, and `DocumentWriter::activity` and
+  `DocumentWriter::bind_readiness`.
 - [`src/render_identity.rs`](./src/render_identity.rs) defines
   `NativeIdentity`, the native build identity that the writer prepares, and
   [`src/render_image.rs`](./src/render_image.rs) defines `ImageIdentity`,

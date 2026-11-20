@@ -19,7 +19,9 @@ use mokly_cli::serve_settings::ServeSettings;
 use mokly_compare::render_writer::DocumentWriter;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
+use mokly_graph::write_activity::WriteActivity;
 use mokly_render::runtime::Runtime;
+use mokly_server::publication::Publications;
 use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::workers::Diagnostics;
@@ -53,6 +55,13 @@ pub(super) struct ServeOutput {
 }
 
 impl ServeServices {
+    pub(super) fn activity(&self) -> Arc<dyn WriteActivity> {
+        self.documents.activity()
+    }
+
+    pub(super) fn bind_publications(&self, publications: Arc<dyn Publications>) {
+        render_store_runtime::bind(&self.documents, publications);
+    }
     /// Only an installed initial head and successful Serve readiness end startup capture.
     pub(super) fn head_published(&self) {
         self.head_published.store(true, Ordering::Release);
@@ -113,7 +122,9 @@ impl ServeServices {
             }
         };
         let sidecars: Arc<dyn PoolScheduling> = Arc::new(
-            ServePool::new(services.pool.clone(), services.pool).with_diagnostics(diagnostics),
+            ServePool::new(services.pool.clone(), services.pool)
+                .with_diagnostics(diagnostics)
+                .with_activity(documents.activity()),
         );
         let pool = sidecars.pool(None);
         let mut runtime = (*services.runtime)

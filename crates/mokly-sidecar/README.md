@@ -122,8 +122,16 @@ remains, as in a one-slot pool, the pool stops. The
 owns these rules.
 
 The pool keeps the last 30 successful render requests of the newest head
-generation, and no replay. After the return pass starts a head worker, the next steps warm
-it up while no request waits and Serve holds no claim. A warm-up sends the
+generation, and no replay. `SidecarPool::record_served_render` also adds a
+store-served request without a call, when its source root is the launch
+repository and its generation is the newest head generation. An equal
+store-origin request already in the window adds no copy, and normal renders
+keep their order and their duplicates. The window and every warm-up share each
+call through an `Arc`. After the return pass starts a head worker, the next
+steps warm it up while no request waits and Serve holds no claim. The start of
+a return pass also enrolls each existing head worker without a successful
+render or replay of the newest generation's epoch, with one attempt for each
+epoch. A warm-up sends the
 missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
 then replays the recorded renders, one call at a time, and discards each
 result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
@@ -394,7 +402,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, with `served_generation` for a core
-  reuse and `request_claimed` for a call that holds a `CallClaim`, and
+  reuse, `request_claimed` for a call that holds a `CallClaim`, and
+  `record_served_render` for a store-served record, and
   `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
@@ -412,12 +421,19 @@ spawn the built sidecar and render a component, screen, story, and page. The
   warm head worker, the candidates of the return pass, the
   `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
   records each successful head bundle and render request.
-- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines `Warmups`, the
-  recorded head render calls and the pending warm-ups, and
+  `Pool::record_stored_render` checks the head root, the newest generation,
+  and the render kind of a store-served record.
+- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines
   `Pool::maintain_warmup`, which runs one warm-up step when no return step
-  can run.
+  can run. [`src/pool_warmup_state.rs`](./src/pool_warmup_state.rs) defines
+  `Warmups`: the recent window of shared calls with their store-origin flags,
+  the pending warm-ups, and the render proofs and attempts of each slot and
+  epoch. [`src/pool_render_equality.rs`](./src/pool_render_equality.rs)
+  compares two render calls exactly, signed zero included, without
+  serializing them.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
-  runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
+  runs one step in `Pool::maintain_return`. The start of a pass enrolls the
+  existing head workers that need a warm-up. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,
   it adds the slot to the retired set, sets `return_disabled`, and returns
   `Error::HeadReturnDisabled` with the original failure. Only the return pass

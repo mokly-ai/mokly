@@ -4,12 +4,13 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
-use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey, StoredDocument};
+use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_sidecar::bundle_store::RecordToken;
 
 use crate::bundle_cache_types::{Mutation, RawRead};
 use crate::cache::DiskCache;
 use crate::error::Result;
+use crate::render_segment_buffer::BuiltSegment;
 
 /// Fixed production disk bound, independent of the process render cache.
 pub const CAPACITY: u64 = 128 * 1024 * 1024;
@@ -71,8 +72,10 @@ pub trait DocumentBackend: Send + Sync {
     }
     /// Read one complete document from its retained segment.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
-    /// Write encoded documents while writer workspace remains charged.
-    fn save(&self, documents: &[StoredDocument]) -> WriteOutcome;
+    /// Envelope version used by the appending writer.
+    fn version(&self) -> &str;
+    /// Publish an already built segment while its fixed workspace remains charged.
+    fn save(&self, segment: &BuiltSegment<'_>) -> WriteOutcome;
 }
 
 /// Versioned segment reader with a process-local document index.
@@ -115,13 +118,16 @@ impl CachedDocuments {
 
 impl DocumentBackend for CachedDocuments {
     fn initialize(&self) -> ReadOutcome {
-        self.read_document(&StoreKey(String::new()))
+        self.prepare_documents()
     }
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         self.read_document(key)
     }
-    fn save(&self, documents: &[StoredDocument]) -> WriteOutcome {
-        self.save_documents(documents)
+    fn version(&self) -> &str {
+        &self.version
+    }
+    fn save(&self, segment: &BuiltSegment<'_>) -> WriteOutcome {
+        self.save_segment(segment)
     }
 }
 

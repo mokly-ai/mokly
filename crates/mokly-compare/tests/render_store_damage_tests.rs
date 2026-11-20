@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_compare::render_store::{CachedDocuments, DocumentBackend, RenderDisk, WriteOutcome};
 use mokly_graph::cache::Artifact;
 use mokly_graph::document_codec::EncodedView;
-use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey, StoredDocument};
+use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_graph::key::NodeKey;
 use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
@@ -14,7 +14,7 @@ use mokly_model::usage::CatalogueUsage;
 #[path = "render_store_support/mod.rs"]
 mod support;
 
-fn record(key: &str) -> StoredDocument {
+fn record(key: &str) -> support::document::Record {
     let artifact = Artifact {
         bytes: key.as_bytes().to_vec(),
         content_type: "text/html".into(),
@@ -28,13 +28,9 @@ fn record(key: &str) -> StoredDocument {
             links: vec![],
         }),
     };
-    StoredDocument {
+    support::document::Record {
         key: StoreKey::new(&NodeKey(key.into()), "native"),
-        bytes: EncodedView::encode(&artifact)
-            .unwrap()
-            .stored(1024 * 1024)
-            .unwrap()
-            .unwrap(),
+        document: EncodedView::encode(&artifact).unwrap(),
     }
 }
 
@@ -50,7 +46,7 @@ fn a_record_changed_after_index_adoption_is_rejected_before_it_is_restored() {
             "current".into(),
         );
         assert_eq!(
-            store.save(&[record("a"), record("b")]),
+            support::document::save(&store, &[record("a"), record("b")]),
             WriteOutcome::Written(2)
         );
         assert!(matches!(store.load(&record("a").key), ReadOutcome::Hit(_)));
@@ -70,7 +66,13 @@ fn a_record_changed_after_index_adoption_is_rejected_before_it_is_restored() {
             assert_eq!(changed.len(), end - 12);
             bytes[12..end].copy_from_slice(&changed);
         } else {
-            let start = end + record("a").bytes.len() + 128;
+            let mut scratch = [0; 4096];
+            let first = record("a")
+                .document
+                .write_stored(&mut scratch, None)
+                .unwrap()
+                .unwrap();
+            let start = end + first + 128;
             let marker = b"text/html";
             let offset = bytes[start..]
                 .windows(marker.len())
