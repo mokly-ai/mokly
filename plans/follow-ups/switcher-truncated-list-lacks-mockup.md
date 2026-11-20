@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 13O of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/mockups/src/entries/product/viewer/switcher.mockup.tsx:36-89`, `docs/mockups/src/screens/product/viewer/switcher-screen.tsx:62-113`, `apps/app/src/viewer/panels/switcher.tsx:115-138` and `:230-254`, and `docs/mockups/src/_tests_/app-parity-allowances.ts:100-104`.
+- **Location:** `docs/mockups/src/entries/product/viewer/switcher.mockup.tsx:36-89`, `docs/mockups/src/screens/product/viewer/switcher-screen.tsx:62-113`, `packages/app/src/viewer/panels/switcher.tsx:115-138` and `:230-254`, and `docs/mockups/src/_tests_/app-parity-allowances.ts:100-104`.
 - **Reason:** The recommended drawing adds a new mockup page, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still shows the cap notice above the loaded rows and the cap sentence in a capped no-match card. No drawing covers either, and the allowance is still there.
 - **Category:** Mockup.
@@ -16,7 +16,7 @@
   - The switcher reads references page by page and stops at `referencePageLimit`.
   - A list that stopped early looks the same as a complete one.
   - So the running switcher shows a state titled "More branches and pull requests". Its sentence is "This list shows the first N branches and pull requests."
-  - `apps/app/src/viewer/panels/switcher.tsx:115-138` writes the state. A capped no-match card at `:230-254` replaces its clearing advice with the cap sentence.
+  - `packages/app/src/viewer/panels/switcher.tsx:115-138` writes the state. A capped no-match card at `:230-254` replaces its clearing advice with the cap sentence.
   - The return branch for a project with no branches shows no cap notice, because an uncapped empty list has none.
   - It sits directly under the search field and above the first reference row.
   - An earlier review measured it at the foot of a thousand rows, about 65,000 pixels below the field. There, a capped list still looked complete.

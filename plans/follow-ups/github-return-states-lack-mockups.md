@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F5 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/screens/account/github-callback-screen.tsx:38-50` and `:81-108`, `apps/app/src/screens/account/github-install-screen.tsx:20-31` and `:165-166`, `docs/mockups/src/_tests_/callback-landings.ts:11-78` and `docs/protocol/cloud/product-mockups-account.md:193-217`.
+- **Location:** `packages/app/src/screens/account/github-callback-screen.tsx:38-50` and `:81-108`, `packages/app/src/screens/account/github-install-screen.tsx:20-31` and `:165-166`, `docs/mockups/src/_tests_/callback-landings.ts:11-78` and `docs/protocol/cloud/product-mockups-account.md:193-217`.
 - **Reason:** The drawings are new mockup pages, which are Large, and they change the folder inventory that the protocol doc fixes.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still renders the eight states, and the callback inventory still holds the eleven drawn states.
 - **Checked:** 2026-11-04, on the branch `calummoore/skeleton-sizing-mismatch`. The waits of the GitHub installation landings now have drawings, `product/account/callback/install-setup` and `callback/install-authorize`, so the callback inventory holds thirteen drawn states. The other GitHub return states still have no drawing, and the choice is still open.

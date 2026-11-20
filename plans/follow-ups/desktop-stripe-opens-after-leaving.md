@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from finding 2 of the round 1 review of `calummoore/stripe-loading-outside-app-mrlb`.
-- **Location:** `apps/app/src/settings/panes/billing-stripe.ts` (`openStripe`), called after the API answers in `apps/app/src/settings/panes/billing-pane.tsx`.
+- **Location:** `packages/app/src/settings/panes/billing-stripe.ts` (`openStripe`), called after the API answers in `packages/app/src/settings/panes/billing-pane.tsx`.
 - **Reason:** A rare Medium product bug gets `fix after merge` under the fix rule. The fix reaches the shared write layer.
 - **Category:** Product bug.
 

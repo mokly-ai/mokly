@@ -18,12 +18,12 @@ message: >-
   `aria-live="assertive"`. Moving one attribute onto a neighbour is the same
   shape and the same finding, in either direction.
 files:
-  - apps/app/src/**
+  - packages/app/src/**
 ignores:
   # The fragment's own definition. Every other surface in the package reads its
   # refusals through `.around(...)`, and a message that is not a refusal says so
   # with its own composition rather than with this one's pieces.
-  - apps/app/src/components/write-failure.tsx
+  - packages/app/src/components/write-failure.tsx
 rule:
   any:
     # The fragment's own cause line, and whatever announces it.

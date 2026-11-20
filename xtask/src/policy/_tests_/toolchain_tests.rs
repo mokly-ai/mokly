@@ -28,7 +28,7 @@ fn check(replacement: Option<(&str, &str)>) -> Result<(), Error> {
         ("packages/mokly/package.json", r#"{"version":"0.19.0"}"#),
         ("crates/mkc-build-sandbox/src/versions.rs", VERSIONS),
         ("docs/protocol/cloud/viewer-builds.md", SENTENCE),
-        ("apps/app/src/viewer/build-copy.ts", SENTENCE),
+        ("packages/app/src/viewer/build-copy.ts", SENTENCE),
         ("docs/mockups/src/fixtures/build-copy.ts", SENTENCE),
         ("infra/toolchains.json", r#"{"terraform":"1.16.2","helm":"4.3.0"}"#),
     ].into_iter().map(|(path, text)| (path.to_owned(), text.as_bytes().to_vec())).collect();
@@ -95,7 +95,7 @@ fn toolchain_stage_rejects_disagreeing_pin_files() {
             "0.18.0",
         ),
         (
-            "apps/app/src/viewer/build-copy.ts",
+            "packages/app/src/viewer/build-copy.ts",
             SENTENCE.replace("0.18.0", "0.17.0"),
             "unsupported-mokly-version sentence",
             "0.18.0",

@@ -1,7 +1,7 @@
 # Mockup Fixtures
 
 These files contain explicit design scenarios for this repository. They are
-never imported by `apps/app` or another product runtime.
+never imported by `packages/app` or another product runtime.
 
 `product.ts` retains the Folio product data: Mokly Team and `mokly-team`, Mokly Cloud
 and `mokly-cloud`, its repository and config path, Cal owner / Alex admin / Sam

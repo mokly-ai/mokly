@@ -135,7 +135,7 @@ Change a doc only when a requirement or a decision changes.
   Cloudflare Pages workflow.
 - [Site deployment](./site-deployment.md) — Pages workflow, PR cleanup and legacy redirects.
 - [Marketing boundary](./marketing-site.md) — route ownership and
-  cross-origin links between `apps/site` and `apps/app`.
+  cross-origin links between `apps/site` and `packages/app`.
 
 - [Product navigation](./product-navigation.md) — routes, resolution and
   fallbacks, and the navigation shell;

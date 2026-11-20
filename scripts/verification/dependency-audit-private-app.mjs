@@ -1,6 +1,7 @@
 import {
   DEPENDENCY_SCOPES,
   installPackageName,
+  isCloudAppLocation,
   resolveDependency,
   workspaceLocations,
 } from "./dependency-audit-lockfile.mjs";
@@ -43,8 +44,8 @@ export function privateAppPathErrors(exception, nodes, packages, workspaces) {
     errors.push(
       `reported install locations ${nodes.join(", ")} differ from the reviewed path`,
     );
-  if (!/^apps\/[^/]+$/u.test(start) || workspaces[start]?.private !== true)
-    errors.push("private-app path must start at a private apps/ workspace");
+  if (!isCloudAppLocation(start) || workspaces[start]?.private !== true)
+    errors.push("private-app path must start at a private Cloud app workspace");
   for (const location of locations)
     if (!packages[location]) errors.push(`path entry ${location} is missing`);
   for (let index = 1; index < locations.length; index++) {

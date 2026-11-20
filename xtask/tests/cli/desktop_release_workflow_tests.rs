@@ -129,7 +129,8 @@ fn desktop_release_pins_reject_mutable_action_references() {
 
 #[test]
 fn desktop_release_publisher_uses_the_updaters_public_version_tag() {
-    let text = fs::read_to_string(repository().join("apps/desktop/electron-builder.yml")).unwrap();
+    let text =
+        fs::read_to_string(repository().join("packages/desktop/electron-builder.yml")).unwrap();
     let builder: Value = serde_saphyr::from_str(&text).unwrap();
     assert_eq!(
         builder["publish"],
@@ -159,7 +160,7 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
     let pack = command_index(package, "scripts/package.mjs preview");
     let smoke = command_index(
         package,
-        "xvfb-run -a node apps/desktop/scripts/packaged-smoke.mjs",
+        "xvfb-run -a node packages/desktop/scripts/packaged-smoke.mjs",
     );
     let upload = steps(package)
         .iter()
@@ -205,6 +206,9 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
             step["env"]["GH_TOKEN"],
             "${{ secrets.DESKTOP_RELEASES_TOKEN }}"
         );
-        assert_eq!(step["run"], "node apps/desktop/scripts/package.mjs release");
+        assert_eq!(
+            step["run"],
+            "node packages/desktop/scripts/package.mjs release"
+        );
     }
 }

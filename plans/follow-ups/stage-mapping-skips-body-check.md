@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-05, from Milestone 6 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/_tests_/viewer/stage-drawings.test.ts` and `docs/mockups/src/_tests_/build-drawings.ts`.
+- **Location:** `packages/app/src/_tests_/viewer/stage-drawings.test.ts` and `docs/mockups/src/_tests_/build-drawings.ts`.
 - **Reason:** The fix is a test that catches a whole class of mapping mistake, which needs the user's approval.
 - **Category:** Test.
 
