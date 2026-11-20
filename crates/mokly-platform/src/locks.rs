@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::error::{Error, IoResult, Result};
 
-/// A held shared or exclusive lock; closing this object releases the OS lock.
+/// A held shared or exclusive lock; dropping this guard releases the OS lock.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock())]
 pub trait FileLock: Send + Sync {}
 
@@ -26,6 +26,16 @@ struct HeldLock {
 }
 
 impl FileLock for HeldLock {}
+
+#[cfg(unix)]
+/// Unlock before close so a forked child before exec cannot retain the lock.
+impl Drop for HeldLock {
+    fn drop(&mut self) {
+        if let Err(error) = self._file.unlock() {
+            tracing::warn!(%error, "file lock release failed");
+        }
+    }
+}
 
 impl Locks for SystemLocks {
     fn try_lock(&self, path: &Path) -> Result<Box<dyn FileLock>> {
