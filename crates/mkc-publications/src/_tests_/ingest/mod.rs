@@ -19,6 +19,8 @@ mod content_tests;
 mod index_observation_tests;
 mod plan_tests;
 mod replay_success_tests;
+mod storage_fixture;
+mod storage_tests;
 mod stored_index_tests;
 
 fn service(queries: Unimock, validator: Unimock, writer: Unimock) -> PublicationIngest {
