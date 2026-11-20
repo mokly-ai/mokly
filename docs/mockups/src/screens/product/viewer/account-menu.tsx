@@ -12,9 +12,9 @@ import { staticNoop } from "../../../components/static-controls";
 import { Segmented } from "../../../entries/design/segmented.mockup";
 import { sample } from "../../../fixtures/product";
 import { Icon } from "../icons";
-import type { IconName } from "../icons";
 
 import { ReaderAvatar } from "./account-trigger";
+import { HistoryGlyph, ShareGlyph } from "./glyphs";
 
 /**
  * The open account menu and the open More menu. The live menus portal from
@@ -35,23 +35,16 @@ const listHeight = 320;
  */
 const placement: ViewStyle = { top: 0, right: 0, width: 260 };
 
-/** A row's leading glyph from the product's icon set, or its empty column. */
-function Glyph({ name }: { name?: IconName }) {
-  return (
-    <span className="fo-canvas-menu-glyph">{name && <Icon name={name} />}</span>
-  );
-}
-
 /**
- * One menu row. A row whose action has no glyph in the product's icon set
- * keeps the glyph's column, so every label in the menu starts at one edge.
+ * One menu row, with its action's glyph in a column of one width, so every
+ * label in the menu starts at one edge.
  */
-function row(id: string, label: string, glyph?: IconName): DropdownListEntry {
+function row(id: string, label: string, glyph: ReactNode): DropdownListEntry {
   return {
     id,
     label,
     type: "item",
-    leading: <Glyph name={glyph} />,
+    leading: <span className="fo-canvas-menu-glyph">{glyph}</span>,
     onPress: staticNoop,
   };
 }
@@ -129,8 +122,8 @@ function AccountRows({
         </>
       }
       entries={[
-        row("settings", "Settings", "settings"),
-        row("sign-out", "Sign out", "signOut"),
+        row("settings", "Settings", <Icon name="settings" />),
+        row("sign-out", "Sign out", <Icon name="signOut" />),
       ]}
     />
   );
@@ -152,9 +145,13 @@ function MoreRows({ marked }: { marked: boolean }) {
       onClose={staticNoop}
       onActiveIdChange={staticNoop}
       entries={[
-        row("project", sample.workspace + " / " + sample.project, "project"),
-        row("history", "History"),
-        row("share", "Share"),
+        row(
+          "project",
+          sample.workspace + " / " + sample.project,
+          <Icon name="project" />,
+        ),
+        row("history", "History", <HistoryGlyph />),
+        row("share", "Share", <ShareGlyph />),
       ]}
     />
   );
@@ -190,13 +187,16 @@ export function MorePopover({ scheme }: { scheme: ColorScheme }) {
   );
 }
 
-/** More's rows in the phone's bottom sheet. */
+/**
+ * More's rows in the phone's bottom sheet, where each row is a 44px touch
+ * target.
+ */
 export function MoreSheetRows({ scheme }: { scheme: ColorScheme }) {
   return (
-    <>
+    <div className="fo-canvas-menu-sheet">
       <MoreRows marked={false} />
       <span className="fo-canvas-menu-rule" />
       <AccountRows scheme={scheme} instance="more-sheet" marked={false} />
-    </>
+    </div>
   );
 }

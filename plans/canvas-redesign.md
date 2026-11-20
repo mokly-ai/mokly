@@ -65,7 +65,7 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
 - [ ] Draw the right panel states: Inspect with the selection, the props and
       the box model, Usage and the component tree as sections, and Changes
       with every compare mode and Swipe (decisions 7 and 8).
-- [ ] Redraw the cloud viewer mockups under
+- [x] Redraw the cloud viewer mockups under
       `docs/mockups/src/entries/product/viewer/`: the bar, the account menu
       with Theme, Settings and Sign out, the compact More menu, the check in
       Changes, and the overlays. Branch:

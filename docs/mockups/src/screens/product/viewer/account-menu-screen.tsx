@@ -10,16 +10,23 @@ import { AccountMenu, MorePopover, MoreSheetRows } from "./account-menu";
 import { accountMenuPath } from "./account-trigger";
 import { ViewerChrome } from "./chrome";
 import { ViewerPanelScreen } from "./screen";
+import { viewerSettingsPath } from "./settings-screen";
 
 /** The ready viewer that the menus open over, and that Close returns to. */
 const viewerPath = "product/viewer/standalone";
 
-/** Where the menus' Settings and Sign out lead in the catalogue. */
+/**
+ * Where the menus' Settings and Sign out lead in the catalogue. Settings
+ * opens the settings dialog on its index, as the bar's Settings did, because
+ * it names no pane. The last link shows the dialog's Canvas look over the
+ * viewer, on a pane that its rail opens.
+ */
 function MenuDestinations() {
   return (
     <CatalogueLinks>
       <MockLink to="product/settings/sections">Settings</MockLink>
       <MockLink to="product/account/sign-in">Sign in</MockLink>
+      <MockLink to={viewerSettingsPath}>Settings dialog, Members pane</MockLink>
     </CatalogueLinks>
   );
 }

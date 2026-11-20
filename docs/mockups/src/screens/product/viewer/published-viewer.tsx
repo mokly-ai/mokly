@@ -11,6 +11,7 @@ import { useMockupRenderContext } from "../../../render-context";
 
 import { defaultReader } from "./account-trigger";
 import type { AccountLabel } from "./account-trigger";
+import { ChangesCheck } from "./check-panel";
 import { readyDetail } from "./pill";
 import {
   catalogueFilter,
@@ -51,6 +52,10 @@ const ids = {
  * drawing runs no script, and the layout states the document's scheme as its
  * appearance. The top bar takes no end control, because the cloud's bar has
  * no theme toggle, and its search field ends with the `⌘K` hint.
+ *
+ * A pull request's desktop drawing fills the `sidePanel` slot with the
+ * cloud's Mokly check. A phone draws no side panel, because the package's
+ * compact layout has none.
  *
  * A private comparison's message goes in the `stageOverlay` slot, as the app
  * places it. The package reveals that slot by a browser measurement, which a
@@ -131,6 +136,16 @@ export function PublishedViewer({
               layered={layered}
             />
           ),
+          ...(subject.check && viewport === "desktop"
+            ? {
+                sidePanel: {
+                  content: <ChangesCheck pull={subject.check} />,
+                  // The panel takes its own width, so the slot keeps none
+                  // where the panel hides with the full bar.
+                  width: "auto",
+                },
+              }
+            : {}),
           ...(comparisonBlocked
             ? {
                 stageOverlay: {

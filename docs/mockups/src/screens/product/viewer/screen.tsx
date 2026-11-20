@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
+import "../../../../styles/product/viewer-canvas-panels.css";
 import { LayerBeneath } from "../../../components/layer-beneath";
 import { Panel } from "../../../entries/design/panel.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
@@ -145,6 +146,10 @@ export function ViewerScreen({
  * There is no skip link. Everything before the panel is the inert backdrop, so
  * there is nothing between the start of the document and the main landmark for
  * a reader to skip; the panel is already the first thing they reach.
+ *
+ * A panel led by its search draws the field in the bar in place of the
+ * visible title, as the switcher does. The title stays the document's
+ * heading for assistive technology, visually hidden.
  */
 export function ViewerPanelScreen({
   id,
@@ -154,6 +159,7 @@ export function ViewerPanelScreen({
   subtitle,
   close,
   screen,
+  search,
   children,
 }: {
   id: string;
@@ -164,6 +170,8 @@ export function ViewerPanelScreen({
   close: string;
   /** An entry drawing one of the panel's own situations names itself. */
   screen?: string;
+  /** The search that leads the panel, in the bar in place of the title. */
+  search?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -174,17 +182,32 @@ export function ViewerPanelScreen({
       <LayerBeneath className="fo-viewer-backdrop">
         <ViewerChrome viewport={viewport} published layered />
       </LayerBeneath>
-      <div id="main" role="main" className="fo-viewer-surface">
+      <div
+        id="main"
+        role="main"
+        className={
+          search === undefined
+            ? "fo-viewer-surface"
+            : "fo-viewer-surface fo-canvas-panel-searching"
+        }
+      >
         <Panel
           moklyInstance={"panel-" + id.replaceAll("/", "-")}
           label={title}
           header={
-            <>
-              <h1 className="fo-viewer-panel-title">{title}</h1>
-              {subtitle && (
-                <span className="fo-viewer-panel-subtitle">{subtitle}</span>
-              )}
-            </>
+            search === undefined ? (
+              <>
+                <h1 className="fo-viewer-panel-title">{title}</h1>
+                {subtitle && (
+                  <span className="fo-viewer-panel-subtitle">{subtitle}</span>
+                )}
+              </>
+            ) : (
+              <>
+                <h1 className="fo-sr-only">{title}</h1>
+                <div className="fo-canvas-panel-search">{search}</div>
+              </>
+            )
           }
           actions={
             <Action

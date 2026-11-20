@@ -226,9 +226,12 @@ test("a phone opens More as a bottom sheet over the inert viewer", () => {
       ["Settings", "Sign out"],
     ],
   );
-  // The catalogue links below the artboard lead where the menu's rows go.
+  // The catalogue links below the artboard lead where the menu's rows go:
+  // Settings to the settings index, because it names no pane, and Sign out
+  // to sign-in. The last link shows the dialog's look over the viewer.
   assert.deepEqual(linksIn(one(drawn, "catalogue-links")).map(destination), [
     "product/settings/sections",
     "product/account/sign-in",
+    "product/viewer/standalone/settings",
   ]);
 });

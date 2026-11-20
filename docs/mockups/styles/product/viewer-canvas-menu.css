@@ -69,9 +69,16 @@
 /* A row's leading glyph, muted, in a column of one width. */
 .canvas-scope .fo-canvas-menu-glyph {
   display: flex;
+  align-items: center;
   justify-content: center;
   width: 16px;
   color: var(--mk-color-text-muted);
+}
+/* In a phone's sheet each row is a 44px touch target: the glyph's column
+   takes the height that the row's own 8px padding above and below leaves of
+   it, and the label stays centred beside it. */
+.canvas-scope .fo-canvas-menu-sheet .fo-canvas-menu-glyph {
+  min-height: calc(var(--mk-layout-control-min) - 16px);
 }
 
 /* The hairline between More's own rows and the account rows. */

@@ -17,7 +17,8 @@ const screens = {
 
 export default defineScreen({
   title: "Projects",
-  description: "Projects — workspaces, their projects and Create project.",
+  description:
+    "Projects — workspaces, their projects and Create project. The project the reader is in says Current.",
 
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",

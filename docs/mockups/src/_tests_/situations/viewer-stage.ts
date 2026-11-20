@@ -38,6 +38,15 @@ export const viewerStageSituations = [
     name: "account-menu",
     states: ["default"],
   },
+  // The settings dialog over the viewer, on the Members pane that its rail
+  // opens.
+  {
+    path: "product/viewer/standalone/settings",
+    family: "viewer",
+    screen: "standalone",
+    name: "settings",
+    states: ["default"],
+  },
   {
     path: "product/viewer/standalone/failed",
     family: "viewer",

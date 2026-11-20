@@ -72,6 +72,7 @@ export function PullRequestPage({
           kind: "pullRequest",
           changes: true,
           github: true,
+          check: pull,
         }}
       />
     );

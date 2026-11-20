@@ -29,6 +29,19 @@ export const viewerPanelOwners = {
     region: "bar",
     pending: "viewer/account-menu.tsx",
   },
+  // The settings dialog over the viewer, on the Members pane that its rail
+  // opens, which the members pane's own parts draw. Nothing on it has
+  // failed to load and no write has been refused, so neither shared answer is
+  // drawn here, and the pane's own module writes only the waits and the
+  // section headings, which no label on this page compares.
+  "product/viewer/standalone/settings": {
+    region: "pane",
+    files: [
+      "settings/panes/member-rows.tsx",
+      "settings/panes/member-invite.tsx",
+      "settings/panes/member-details.tsx",
+    ],
+  },
   // A failed attempt is named by the classification Mokly kept, which is read
   // and worded in `failure.ts`; the card around it is the stage's own.
   "product/viewer/standalone/failed": {

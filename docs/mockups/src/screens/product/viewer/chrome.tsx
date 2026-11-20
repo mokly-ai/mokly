@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { Viewport } from "@mokly/mokly";
 
 import "../../../../styles/product/viewer-canvas.css";
+import "../../../../styles/product/viewer-canvas-stage.css";
 import { sample } from "../../../fixtures/product";
 import { Pending } from "../page-parts";
 import { StatePlaceholder } from "../placeholders";
@@ -60,8 +61,9 @@ type ViewerChromeProps = {
  * readers, and the card's title, which would repeat it, is a bar.
  *
  * Every viewer drawing renders this chrome, so its module carries the Canvas
- * stylesheet of the drawings. The application links the Folio sheets and
- * never loads it.
+ * stylesheets of the drawings: the bar's, and the stage's dot-grid canvas
+ * with its floating cards. The application links the Folio sheets and never
+ * loads them.
  */
 export function ViewerChrome({
   viewport,

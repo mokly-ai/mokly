@@ -4,6 +4,7 @@ import { Action } from "../page-parts";
 
 import { AccountTrigger } from "./account-trigger";
 import type { AccountLabel } from "./account-trigger";
+import type { CheckedPullRequest } from "./check-panel";
 import { Pill, PillDot, PillGlyph, PillState } from "./pill";
 import type { ReferenceKind } from "./pill";
 import { slotBars, slotClass } from "./published-bar";
@@ -21,6 +22,8 @@ export interface PublishedSubject {
   changes?: boolean;
   github?: boolean;
   latest?: boolean;
+  /** The pull request whose Mokly check the side panel shows. */
+  check?: CheckedPullRequest;
 }
 
 /**
