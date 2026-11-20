@@ -17,6 +17,8 @@ use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
 use mokly_sidecar::workers::Diagnostics;
 
+use super::bundle_pool_observations::cache_files;
+use super::bundle_pool_trace::{TraceFactory, TraceStore};
 use super::{package_version, support};
 
 /// Actual esbuild operations reported by the real sidecar.
@@ -42,17 +44,17 @@ pub(super) fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
     let workspace =
         dunce::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
     Pool::new(
-        Arc::new(NodeFactory::new(
+        Arc::new(TraceFactory::new(Arc::new(NodeFactory::new(
             Arc::new(SystemProcessGroups),
             clock.clone(),
             counts,
             Arc::new(SystemMemory),
-        )),
+        )))),
         clock,
         Launch {
             capture_durability: false,
             node: "node".into(),
-            entry: workspace.join("packages/mokly/dist/sidecar.js"),
+            entry: workspace.join("crates/mokly-compare/tests/support/bundle_pool_sidecar.mjs"),
             repository: source.into(),
             version: package_version::read(),
         },
@@ -61,30 +63,37 @@ pub(super) fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
             timeout_ms: None,
         },
     )
-    .with_bundle_store(Arc::new(CachedBundles::new(
+    .with_bundle_store(Arc::new(TraceStore::new(Arc::new(CachedBundles::new(
         Arc::new(support::cache(cache.into(), 1)),
         package_version::read(),
-    )))
+    )))))
 }
 
 /// Request a full captured bundle through the pool.
 pub(super) fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
-    pool.request(Call::Bundle(BundleRequest {
-        plan: None,
-        params: Bundle {
-            evaluation: None,
-            entry_files: vec!["entry.ts".into()],
-            renderer: None,
-            stories_files: vec![],
-            source_root: source.to_string_lossy().into_owned(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
-            module_resolution: Default::default(),
-        },
-        capture: None,
-    }))
-    .unwrap()
-    .into_bundle()
+    let result = pool
+        .request(Call::Bundle(BundleRequest {
+            plan: None,
+            params: Bundle {
+                evaluation: None,
+                entry_files: vec!["entry.ts".into()],
+                renderer: None,
+                stories_files: vec![],
+                source_root: source.to_string_lossy().into_owned(),
+                configuration_directory: ".".into(),
+                repository_roots: vec![],
+                module_resolution: Default::default(),
+            },
+            capture: None,
+        }))
+        .unwrap()
+        .into_bundle();
+    eprintln!(
+        "bundle result source={}: {}",
+        source.display(),
+        capture_flags(&result)
+    );
+    result
 }
 
 /// Request a Serve edit with the supplied saved plan.
@@ -93,22 +102,29 @@ pub(super) fn edit(
     source: &Path,
     plan: Option<Arc<ResolutionPlan>>,
 ) -> results::Bundle {
-    pool.request(Call::Bundle(BundleRequest {
-        plan,
-        capture: Some(BundleCapture::ServeEdit),
-        params: Bundle {
-            evaluation: None,
-            entry_files: vec!["entry.ts".into()],
-            renderer: None,
-            stories_files: vec![],
-            source_root: source.to_string_lossy().into_owned(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
-            module_resolution: Default::default(),
-        },
-    }))
-    .unwrap()
-    .into_bundle()
+    let result = pool
+        .request(Call::Bundle(BundleRequest {
+            plan,
+            capture: Some(BundleCapture::ServeEdit),
+            params: Bundle {
+                evaluation: None,
+                entry_files: vec!["entry.ts".into()],
+                renderer: None,
+                stories_files: vec![],
+                source_root: source.to_string_lossy().into_owned(),
+                configuration_directory: ".".into(),
+                repository_roots: vec![],
+                module_resolution: Default::default(),
+            },
+        }))
+        .unwrap()
+        .into_bundle();
+    eprintln!(
+        "edit result source={}: {}",
+        source.display(),
+        capture_flags(&result)
+    );
+    result
 }
 
 /// Normalize run-specific identities before comparing the complete outputs.
@@ -127,11 +143,19 @@ pub(super) fn edit_fingerprint(mut result: results::Bundle) -> Vec<u8> {
 pub(super) fn capture_flags(result: &results::Bundle) -> String {
     let evidence = &result.compiled.reuse_evidence;
     format!(
-        "complete={}, durable={}, uncaptured={:?}, plan={}, toolchain={}",
+        "cache={:?}, complete={}, durable={}, uncaptured={:?}, plan_imports={:?}, toolchain={}, generation={}, runtime={}",
+        result.cache,
         evidence.complete,
         evidence.durable,
         evidence.uncaptured,
-        result.plan.is_some(),
-        !result.compiled.toolchain.is_empty()
+        result.plan.as_ref().map(|plan| plan.imports.len()),
+        !result.compiled.toolchain.is_empty(),
+        result.generation,
+        result.compiled.runtime_key,
     )
+}
+
+/// List the actual cache files without turning a diagnostic read into a test failure.
+pub(super) fn cache_snapshot(cache: &Path) -> String {
+    format!("root={}, files={:?}", cache.display(), cache_files(cache))
 }
