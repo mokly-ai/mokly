@@ -159,3 +159,34 @@ viewports and enabled color schemes.
 Consumer JavaScript runs during static rendering. It does not enter the
 catalogue's browser frames. Use data args and static component output for the
 states you want to show.
+
+## Loaders and hooks
+
+Before each story render, Mokly runs the story's loaders and `beforeEach`
+hooks, as Storybook's portable stories do. The render receives the loader
+results through `loaded`. This story uses `Button` and `meta` from the first
+example:
+
+```tsx
+export const Loaded: StoryObj<typeof meta> = {
+  loaders: [async () => ({ label: "Ready" })],
+  render: (args, { loaded }) => <Button {...args} label={loaded.label} />,
+};
+```
+
+A `beforeEach` hook can return a cleanup. Mokly runs it before the next story
+loads. The preview's `beforeAll` hook runs before the first story render of a
+build. Each render process keeps one active setup. When rebuilt stories render
+in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
+again. This can happen in `mokly serve` after an edit.
+
+Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
+run. Loaders and `beforeEach` hooks can read them from `context.globals`.
+
+A loader, hook, cleanup, or render that throws fails that render. If
+`beforeAll` throws, Mokly does not retry it for that build. Each story render
+of that build fails with its error. Mokly runs no `play` function or
+`afterEach` hook.
+
+Loaders and hooks run in Node during the static render. A hook that needs a
+browser API, such as `window` or `document`, does not work.
