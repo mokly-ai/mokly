@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { writeWindowsManagerNode } from "./base_manager_node.js";
 import { preserveGitPrograms } from "./base_manager_programs.js";
 import { write } from "./static_changes.js";
 
@@ -115,7 +116,7 @@ export async function managerPath(
     process.platform === "win32" ? "node.exe" : "node",
   );
   if (process.platform === "win32") {
-    await fs.copyFile(process.execPath, node);
+    await writeWindowsManagerNode(root, node);
   } else {
     // Inject the probe through a node wrapper. Mokly's install environment
     // allow list drops NODE_OPTIONS from the manager child, so the probe can
