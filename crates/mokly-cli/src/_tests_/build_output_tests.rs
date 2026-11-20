@@ -10,6 +10,9 @@ use crate::build_output::{failure, warnings};
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 
+#[path = "list_diagnostics_tests.rs"]
+mod list_diagnostics_tests;
+
 #[test]
 fn configuration_tags_survive_inside_build_failures() {
     for mode in [Mode::Plain, Mode::Rich] {

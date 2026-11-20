@@ -243,15 +243,28 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
 
 pub(crate) fn list(code: Code, heading: String, mut locations: Vec<String>) -> Issue {
     locations.sort_by(|a, b| compare_utf16(a, b));
+    let heading = escape_controls(&heading);
     Issue::new(
         code,
         format!(
             "{heading}\n{}",
             locations
                 .into_iter()
-                .map(|location| format!("  {location}"))
+                .map(|location| format!("  {}", escape_controls(&location)))
                 .collect::<Vec<_>>()
                 .join("\n")
         ),
     )
+}
+
+fn escape_controls(value: &str) -> String {
+    let mut output = String::with_capacity(value.len());
+    for character in value.chars() {
+        if character.is_control() {
+            output.push_str(&format!("\\u{:04x}", character as u32));
+        } else {
+            output.push(character);
+        }
+    }
+    output
 }

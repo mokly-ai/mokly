@@ -92,12 +92,12 @@ async function collect(generation: Generation): Promise<Definitions> {
             code: "duplicate-export",
             module,
             exportName,
-            message: `definition ${data.input.title} is exported by two entry modules:\n${[
+            message: `definition ${escapeControls(`${data.input.title}`)} is exported by two entry modules:\n${[
               previous,
               location,
             ]
               .sort()
-              .map((item) => `  ${item}`)
+              .map((item) => `  ${escapeControls(item)}`)
               .join("\n")}`,
           });
         continue;
@@ -163,4 +163,16 @@ async function collect(generation: Generation): Promise<Definitions> {
   await describeStories(generation, exports, result);
   generation.sources.clear();
   return (generation.definitions = result);
+}
+
+function escapeControls(value: string): string {
+  let output = "";
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    output +=
+      code <= 0x1f || (code >= 0x7f && code <= 0x9f)
+        ? `\\u${code.toString(16).padStart(4, "0")}`
+        : character;
+  }
+  return output;
 }

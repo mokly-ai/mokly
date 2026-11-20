@@ -24,6 +24,6 @@
 - **Previous examples:** `build_output::failure_diagnostics` keeps list lines for the head. `changes_output::diagnostics` retains catalogue codes and keeps base list lines through the same classifier.
 - **Requirements:** `docs/protocol/mokly-terminal-errors.md:52` requires locations on following lines, with controls escaped per line. Existing watched prefixes stay unchanged. Each rich continuation keeps its own width bound.
 - **Tests:** The current watched diagnostic unit test covers one ordinary `HtmlElement` issue in plain mode. It does not cover a list. Extend coverage through `watch_diagnostics::diagnostics` and `watch_output::failure` without removing that assertion.
-- **Related:** [list-diagnostic-authored-line-feeds.md](./list-diagnostic-authored-line-feeds.md) covers raw authored line feeds inside the same flat list messages. Keep that distinction when this printer starts preserving structural separators.
+- **Compatibility:** The list builders escape controls in authored values before joining structural location lines. Keep those escapes when this printer preserves structural separators.
 - **Recommendation:** C. It keeps the watched layout while sharing the rule already used by head and base output.
 - **Action:** fix after merge, apply C, because this separate watched printer is outside the base-detail follow-up's scope. No implementation starts in the branch that records this item.
