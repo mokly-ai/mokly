@@ -20,6 +20,7 @@ fn schema_mistakes_reach_the_single_rust_profile_validator() {
         let response: Response = serde_json::from_str(&json!({"id":1,"result":{"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","propSchema":schema}],"stories":[],"diagnostics":[]}}).to_string()).unwrap();
         let request = Request {
             id: 1,
+            quiet: false,
             call: Call::Describe(Generation {
                 generation: "g".into(),
             }),
@@ -66,6 +67,7 @@ fn describe_diagnostics_and_error_replies_keep_the_authoring_code() {
         assert!(matches!(
             response.decode_result(&Request {
                 id: 1,
+                quiet: false,
                 call: Call::Describe(Generation {
                     generation: "g".into()
                 })

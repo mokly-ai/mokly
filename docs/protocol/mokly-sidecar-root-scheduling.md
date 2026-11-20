@@ -4,8 +4,9 @@ This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool
 bound. These rules choose the process that changes root. They also let Serve
-return idle base processes to the head root after base work. Last, they rank
-the idle processes of one root by the generation that a request names.
+return idle base processes to the head root after base work, and warm up the
+returned processes. Last, they rank the idle processes of one root by the
+generation that a request names.
 
 ## Roots And The Warm Head Process
 
@@ -13,8 +14,10 @@ The launch root of the pool, the working repository, is the head root. Every
 other source root is a base root. A head request and a base request are
 requests in those roots. The newest head generation is the generation of the
 last successful `bundle` in the head root. The warm head process is the
-process that bundled that generation. After a successful render of that
-generation, the warm head process is the process that rendered it last.
+process that bundled that generation. After a successful render request of
+that generation, the warm head process is the process that rendered it last. A
+[warm-up](./mokly-sidecar-return-warmup.md#warm-up-steps) replay does not move
+it.
 
 A base request takes the warm head process only when no other idle process
 and no empty slot is available to it. So base work still uses every slot
@@ -46,16 +49,39 @@ such a gap would replace the process that the next base call needs.
 
 For each process, the pass ends the old process and waits until it exits and
 is reaped. Only then does it start the new process, so the two processes
-never run at the same time. The new process completes its hello and loads
+never run at the same time. The new process completes its hello. While the
+pool is idle, it then prepares the newest head generation and replays at most
+30 recent renders of that generation, under the
+[return warm-up rules](./mokly-sidecar-return-warmup.md). Otherwise it loads
 generations on demand, as after a recycle. A failed start or hello leaves the
 slot empty. The next request that takes the slot then starts a process as
 usual.
 
 Decision: the pass waits for the reaping. Rejected: a start after the kill
 signal alone, because the old and the new process could then run together
-beyond the pool size. Decision: the new process loads no head generation in
-advance. Rejected: a replay of the newest head generation, because it adds CPU
-work and keeps more evaluated code in memory.
+beyond the pool size.
+
+Decision: the new process warms up with the newest head generation and up to
+30 of its recent renders. Rejected: no warm-up, because the first edit after
+startup then bundled, described, and rendered on cold processes, 0.3 to 0.5 s
+slower than later edits. Rejected: synthetic React renders, because they did
+not make the real renders faster. Rejected: a preparation without renders,
+because it cut the background renders of the first edit only from 678 ms to
+624 ms. With 30 renders they fell from 675 ms to 542 ms. On a catalogue of 167
+entries and 1,508 views with four sidecars, the first edit then took 2.91 s
+instead of 3.14 s, and its penalty over later edits fell from 0.47 s to
+0.26 s. Each process spent about 0.33 s of CPU on it. Rejected: 120 renders,
+because they cut the penalty only to 0.21 s for about 0.7 s of CPU on each
+process.
+
+The warm-up raises the peak memory demand early in a session. On that
+catalogue, in two sessions of 10 edits each, it was about 200 MiB higher at the
+first Changes and about 550 MiB higher after the first edit. It met main by the
+third to fifth edit, and the session peak stayed within 1%: 3,988 MiB against
+3,953 MiB. Decision: accept that memory. Rejected: a bound of 2% on the peak
+memory demand of the first three edits, because every session on main reaches
+the same level after three to five edits, and the session peak sets the risk of
+running out of memory.
 
 When the pass cannot confirm that a process that it ended has exited, it takes
 only that slot out of use. The pool keeps owning that process, so the stop
@@ -104,7 +130,7 @@ after the hello. A base request that waits during the hello takes the slot
 after the pass ends and reaps the new process.
 
 Neither the publication of Changes nor the release of a generation or a
-PostCSS context waits for the pass. The
+PostCSS context waits for the pass or a warm-up. The
 [cancellation rules](./mokly-sidecar-lifecycle.md#cancellation-and-timeouts)
 define how shutdown, cancellation, and forced termination stop the pass.
 
