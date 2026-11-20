@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
 use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
+use crate::fixture_leases::FixtureLeases;
 use crate::methods::{Bundle, BundleCapture, BundleRequest, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -174,12 +175,6 @@ impl Fixture {
         self.pool.lock().recipes.len()
     }
 
-    pub(super) fn select(&self, slot: usize) {
-        let mut state = self.pool.lock();
-        state.available.retain(|index| *index != slot);
-        state.available.push_front(slot);
-    }
-
     pub(super) fn bundle(&self, entry: &str, id: &str) -> results::Bundle {
         self.bundle_with_capture(entry, id, BundleCapture::Full)
     }
@@ -222,7 +217,7 @@ impl Fixture {
         slot: usize,
         capture: BundleCapture,
     ) -> Vec<String> {
-        self.select(slot);
+        let _leases = FixtureLeases::only(&self.pool, slot);
         self.calls.lock().unwrap().clear();
         let probe = self.bundle_with_capture(entry, id, capture);
         let restored = self

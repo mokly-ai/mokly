@@ -8,6 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bindings::{Bindings, EntryBinding};
 use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
+use crate::fixture_leases::FixtureLeases;
 use crate::methods::{
     Bundle, BundleRequest, Call, CssModules, Generation, ModuleResolution, RenderPage,
 };
@@ -153,6 +154,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
             }));
         }
         state.available.push_back(0);
+        state.available.push_back(1);
         state.bundles.insert("g".into(), bundle());
         state.epochs.insert("g".into(), 0);
         state.modules.insert("g".into(), Vec::new());
@@ -201,6 +203,7 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
         ),
         worker(&sequence, 1),
     );
+    let mut leases = FixtureLeases::only(&pool, 0);
     pool.release_generation("g", 0);
     pool.synchronize_releases();
     pool.request(Call::Bundle(BundleRequest {
@@ -215,18 +218,13 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     }))
     .unwrap();
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    let lease_call = Call::Bundle(BundleRequest {
-        plan: None,
-        params: bundle(),
-        capture: None,
-    });
-    let (first_index, first_slot, first_start) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.lock().available.push_front(1);
+    leases.hold(0);
+    leases.release(1);
     render(&pool);
-    let (second_index, second_slot, second_start) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.release(first_index, first_slot, first_start);
+    leases.hold(1);
+    leases.release(0);
     render(&pool);
-    pool.release(second_index, second_slot, second_start);
+    leases.release(1);
 }
 
 #[test]
@@ -235,18 +233,14 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         worker(&["bindings:new/card"], 1),
         worker(&["bindings:new/card", "render"], 1),
     );
+    let mut leases = FixtureLeases::only(&pool, 0);
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    let lease_call = Call::Bundle(BundleRequest {
-        plan: None,
-        params: bundle(),
-        capture: None,
-    });
-    let (first_index, first_slot, first_start) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.lock().available.push_front(1);
+    leases.hold(0);
+    leases.release(1);
     render(&pool);
-    let (second_index, second_slot, second_start) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.release(first_index, first_slot, first_start);
-    pool.release(second_index, second_slot, second_start);
+    leases.hold(1);
+    leases.release(0);
+    leases.release(1);
 }
 
 #[test]
@@ -257,13 +251,16 @@ fn equal_bindings_keep_the_shared_revision_on_both_workers() {
     );
     let retained = pool.lock().bindings["g"].clone();
     for _ in 0..2 {
-        pool.request(Call::Bindings(bindings("old/card"))).unwrap();
+        {
+            let _leases = FixtureLeases::only(&pool, 0);
+            pool.request(Call::Bindings(bindings("old/card"))).unwrap();
+        }
         let state = pool.lock();
         assert!(Arc::ptr_eq(&state.bindings["g"], &retained));
         for slot in state.slots.iter().flatten() {
             assert!(Arc::ptr_eq(&slot.bindings["g"], &retained));
         }
     }
-    pool.lock().available.push_front(1);
+    let _leases = FixtureLeases::only(&pool, 1);
     render(&pool);
 }
