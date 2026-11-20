@@ -5,19 +5,15 @@ import { useDesignInstance } from "../../library/composition.js";
 import { boxModel } from "../../library/inspector/box-model.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 
-import {
-  SELECTION_FRAME,
-  contentSize,
-  instanceSize,
-  type WelcomeInstance,
-} from "./welcome_instances.js";
+import { SCHEMES, type CanvasFrameSpec } from "./frames.js";
+import { contentSize, instanceSize, type CanvasInstance } from "./instances.js";
 
 /**
  * The selected instance's component in a chip: a link to the Canvas artboard
  * that opens the component, as Open component does today, or else a picture
  * of the chip.
  */
-function ComponentChip({ instance }: { instance: WelcomeInstance }) {
+function ComponentChip({ instance }: { instance: CanvasInstance }) {
   const name = (
     <>
       <CanvasGlyph name="component" size={12} />
@@ -33,6 +29,11 @@ function ComponentChip({ instance }: { instance: WelcomeInstance }) {
   );
 }
 
+/** The class of the Selection section, which the panel may open scrolled to. */
+function sectionClass(initial: boolean | undefined): string {
+  return initial ? "cv-sec cv-initial" : "cv-sec";
+}
+
 /**
  * The Selection section with an instance selected: its component and the
  * frame it was picked on, the props that the instance record holds, its
@@ -44,17 +45,14 @@ export function InspectSelected({
 }: {
   /** The panel opens scrolled to the Selection section. */
   initial?: boolean | undefined;
-  instance: WelcomeInstance;
+  instance: CanvasInstance;
 }) {
   const size = instanceSize(instance);
   return (
-    <section
-      aria-label="Selection"
-      className={initial ? "cv-sec cv-initial" : "cv-sec"}
-    >
+    <section aria-label="Selection" className={sectionClass(initial)}>
       <h3 className="cv-sec-head">
         <ComponentChip instance={instance} />{" "}
-        <span className="cv-sec-count">{SELECTION_FRAME.label}</span>
+        <span className="cv-sec-count">{instance.frame.label}</span>
       </h3>
       <dl className="cv-props">
         {instance.props.map((prop) => (
@@ -85,6 +83,45 @@ export function InspectSelected({
         <CanvasGlyph name="document" size={13} />
         <span>{instance.source}</span>
       </p>
+    </section>
+  );
+}
+
+/**
+ * The Selection section with a frame of a variant set selected: a Frame chip
+ * with the frame's size, and the variant and the scheme that the frame
+ * shows.
+ */
+export function InspectFrameSelected({
+  frame,
+  initial,
+  variant,
+}: {
+  frame: CanvasFrameSpec;
+  /** The panel opens scrolled to the Selection section. */
+  initial?: boolean | undefined;
+  /** The title of the saved variant that the frame shows. */
+  variant: string;
+}) {
+  return (
+    <section aria-label="Selection" className={sectionClass(initial)}>
+      <h3 className="cv-sec-head">
+        <span className="cv-ins-chip">
+          <CanvasGlyph name="frame" size={12} />
+          Frame
+        </span>{" "}
+        <span className="cv-sec-count">
+          {frame.width} × {frame.height}
+        </span>
+      </h3>
+      <dl className="cv-props">
+        <MetaRow label="Variant" name="frame-variant" presentation="props">
+          {variant}
+        </MetaRow>
+        <MetaRow label="Scheme" name="frame-scheme" presentation="props">
+          {SCHEMES[frame.scheme]}
+        </MetaRow>
+      </dl>
     </section>
   );
 }

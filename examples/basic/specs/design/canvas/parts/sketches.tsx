@@ -3,27 +3,22 @@ import type {
   HighlightRegion,
   PreviewRegions,
 } from "../../parts/depicted_view.js";
-import type { DesignDestination } from "../../parts/destinations.js";
 import { MiniProfile } from "../../parts/mini_account.js";
-import { MiniAction } from "../../parts/mini_action.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { miniView } from "../../parts/mini_views.js";
 import { PaymentTerms } from "../../parts/spec_documents.js";
 
-import {
-  componentFrames,
-  readingFrame,
-  screenFrames,
-  type FrameScheme,
-} from "./frames.js";
-import { WELCOME_INSTANCES } from "./welcome_instances.js";
+import { readingFrame, screenFrames, type FrameScheme } from "./frames.js";
+import { WELCOME_INSTANCES } from "./instance_records.js";
+import { instanceLabel, type CanvasInstance } from "./instances.js";
 
 /**
  * The zoom in percent that fits each stage: a screen's four frames, Welcome's
  * two Light frames once the Frames filter hides Dark, Profile's two, the two
- * versions of a desktop frame side by side, the Action's variant set and a
- * reading frame at full size, and, in the compact form, a phone frame, a
- * desktop frame, a variant set, and two phone frames side by side.
+ * versions of a desktop frame side by side, the Action's and the Toolbar's
+ * variant sets and a reading frame at full size, and, in the compact form, a
+ * phone frame, a desktop frame, a whole variant set, a variant set's picked
+ * frame, and two phone frames side by side.
  */
 export const FITS = {
   welcome: 38,
@@ -31,43 +26,46 @@ export const FITS = {
   profile: 42,
   sideBySide: 29,
   action: 100,
+  toolbar: 100,
   document: 100,
   phone: 72,
   phoneDesktop: 27,
   phoneSet: 50,
+  phonePicked: 100,
   phoneSide: 44,
 } as const;
 
 /**
- * Welcome's four frames: the example's Welcome in each viewport and scheme.
- * Its link stays inert, because Canvas links stay inside the Canvas family.
+ * Welcome's four frames: its current version on the canonical branch, the
+ * revised Welcome with its introduction, in each viewport and scheme. Its
+ * link stays inert, because Canvas links stay inside the Canvas family.
  */
 export function welcomeFrames() {
   return screenFrames((viewport) => (
-    <MiniWelcome compact={viewport === "mobile"} inert />
+    <MiniWelcome compact={viewport === "mobile"} inert revised />
   ));
 }
 
 /** Welcome's depicted view, whose instances the highlight marks. */
-export const WELCOME_VIEW = miniView("welcome");
+export const WELCOME_VIEW = miniView("welcome-revised");
 
 /**
- * The artboard that shows each instance of Welcome selected, by the shell's
- * label of the instance: its component's title and its id.
+ * A view's regions, each label opening the artboard that shows its instance
+ * selected, by the instance records of the depicted entry.
  */
-const SELECTED_BY_LABEL: Readonly<Record<string, DesignDestination>> =
-  Object.fromEntries(
-    Object.values(WELCOME_INSTANCES).map((instance) => [
-      `${instance.component} · ${instance.id}`,
+function linkedRegions(
+  regions: PreviewRegions,
+  records: Readonly<Record<string, CanvasInstance>>,
+): PreviewRegions {
+  const pages = new Map(
+    Object.values(records).map((instance) => [
+      instanceLabel(instance),
       instance.page,
     ]),
   );
-
-/** A view's regions, each label opening the artboard of its selection. */
-function linkedRegions(regions: PreviewRegions): PreviewRegions {
   const link = (region: HighlightRegion): HighlightRegion => ({
     ...region,
-    to: SELECTED_BY_LABEL[region.label],
+    to: pages.get(region.label),
   });
   const [first, ...rest] = regions;
   return [link(first), ...rest.map(link)];
@@ -82,8 +80,8 @@ export function welcomeHighlighted(): DepictedView {
   return {
     highlight: "on",
     regions: {
-      desktop: linkedRegions(WELCOME_VIEW.regions.desktop),
-      mobile: linkedRegions(WELCOME_VIEW.regions.mobile),
+      desktop: linkedRegions(WELCOME_VIEW.regions.desktop, WELCOME_INSTANCES),
+      mobile: linkedRegions(WELCOME_VIEW.regions.mobile, WELCOME_INSTANCES),
     },
   };
 }
@@ -93,33 +91,6 @@ export function profileFrames() {
   return screenFrames(
     (viewport) => <MiniProfile compact={viewport === "mobile"} />,
     ["light"],
-  );
-}
-
-/** The nominal size of the Action's component document. */
-const ACTION_DOCUMENT = { width: 320, height: 132 } as const;
-
-/** The Action's variant set: Default, Disabled, and Secondary. */
-export function actionFrames() {
-  return componentFrames(
-    [
-      {
-        slug: "default",
-        title: "Default",
-        render: () => <MiniAction variant="default" />,
-      },
-      {
-        slug: "disabled",
-        title: "Disabled",
-        render: () => <MiniAction variant="disabled" />,
-      },
-      {
-        slug: "secondary",
-        title: "Secondary",
-        render: () => <MiniAction variant="secondary" />,
-      },
-    ],
-    ACTION_DOCUMENT,
   );
 }
 

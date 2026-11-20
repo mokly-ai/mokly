@@ -27,9 +27,15 @@ export interface CanvasFrameSpec {
   before?: ReactNode;
   /** The version that a frame of Side by side shows. */
   side?: FrameVersion;
+  /** The saved variant that a frame of a variant set shows, by its slug. */
+  variant?: string;
 }
 
-const SCHEMES: Record<FrameScheme, string> = { light: "Light", dark: "Dark" };
+/** The name of each scheme, as a frame's label and Inspect show it. */
+export const SCHEMES: Record<FrameScheme, string> = {
+  light: "Light",
+  dark: "Dark",
+};
 const VIEWPORTS: Record<ArtboardViewport, string> = {
   desktop: "Desktop",
   mobile: "Mobile",
@@ -158,6 +164,7 @@ export function componentFrames(
       kind: "component" as const,
       scheme,
       label: `${variant.title} · ${SCHEMES[scheme]}`,
+      variant: variant.slug,
       ...size,
       content: (
         <DesignInstances name={`${variant.slug}-${scheme}`}>

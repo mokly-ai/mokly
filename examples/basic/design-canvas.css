@@ -191,9 +191,11 @@
   outline-offset: -1px;
 }
 
+/* A row leaves room for a selected frame's size tag above the next row's
+   label. */
 .cv-frames[data-cv-kind="component"] {
   column-gap: 40px;
-  row-gap: 44px;
+  row-gap: 64px;
 }
 
 /* A page or a Markdown document opens as one reading frame. */
@@ -213,8 +215,10 @@
   z-index: 2;
 }
 
-/* The Action's document draws the button 24px from its top left. */
-.mbk-shot--action > .mbk-shot-pad {
+/* A component's document draws the component 24px from its top left: the
+   Action's button, and the Toolbar with its two Actions. */
+.mbk-shot--action > .mbk-shot-pad,
+.mbk-shot--toolbar > .mbk-shot-pad {
   padding: 24px;
 }
 

@@ -1,13 +1,18 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
+import { artboardStates, type ArtboardVariant } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { DetailsChanges } from "../parts/changes.js";
 import { DETAILS_VIEW, detailsFrames } from "../parts/changes_sketches.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { DetailsInspect } from "../parts/inspect_details.js";
+import {
+  DETAILS_INSTANCES,
+  type DetailsInstanceId,
+} from "../parts/instance_records.js";
 import { canvasChangesMetadata } from "../parts/metadata.js";
+import { ScreenSelection } from "../parts/selection_stage.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -64,6 +69,59 @@ function Added({
   );
 }
 
+/**
+ * Details with one of its instances selected on Mobile · Light, as its
+ * component tree selects it: the canvas zoomed onto that frame draws the
+ * selection, and Inspect opens at the Selection section. The catalogue's
+ * selected row opens this artboard.
+ */
+function Selected({
+  instance: id,
+  viewport,
+}: {
+  instance: DetailsInstanceId;
+  viewport: ArtboardViewport;
+}) {
+  const instance = DETAILS_INSTANCES[id];
+  return (
+    <ScreenSelection
+      catalogue={{
+        filter: "all",
+        activeKey: "details",
+        targets: { details: instance.page },
+      }}
+      entry={CANVAS_ENTRIES.details}
+      frames={detailsFrames()}
+      instance={instance}
+      panel={
+        <DetailsInspect
+          design={instance.page}
+          initial="selection"
+          selected={id}
+        />
+      }
+      view={DETAILS_VIEW}
+      viewport={viewport}
+    />
+  );
+}
+
+/** A saved state that selects one of Details' instances. */
+function selected(
+  id: DetailsInstanceId,
+  title: string,
+  description: string,
+): ArtboardVariant {
+  return {
+    colorSchemes: canvasChangesMetadata.colorSchemes,
+    description,
+    desktop: <Selected instance={id} viewport="desktop" />,
+    mobile: <Selected instance={id} viewport="mobile" />,
+    slug: id,
+    title,
+  };
+}
+
 export const canvasAddedScreen = defineScreen({
   ...canvasChangesMetadata,
   description:
@@ -85,6 +143,26 @@ export const canvasAddedScreen = defineScreen({
         slug: "changes",
         title: "Changes",
       },
+      selected(
+        "welcome",
+        "Action · welcome",
+        "Details' own Action, which returns to Welcome, selected from its component tree.",
+      ),
+      selected(
+        "toolbar",
+        "Toolbar · toolbar",
+        "Details' Toolbar selected, with its padding on all four sides.",
+      ),
+      selected(
+        "primary",
+        "Action · primary",
+        "The Toolbar's first Action selected, an instance nested in Details' Toolbar.",
+      ),
+      selected(
+        "secondary",
+        "Action · secondary",
+        "The Toolbar's second Action selected, an instance nested in Details' Toolbar.",
+      ),
     ],
   ),
   slug: "added",

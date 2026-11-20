@@ -7,6 +7,10 @@ export const CANVAS_PAGES = {
   overview: "design/canvas/overview",
   zoomed: "design/canvas/stage/zoomed",
   componentSet: "design/canvas/stage/component-set",
+  componentSetDisabled: "design/canvas/stage/component-set/disabled",
+  componentSetToolbar: "design/canvas/stage/component-set/toolbar",
+  componentSetPrimary: "design/canvas/stage/component-set/toolbar-primary",
+  componentSetSecondary: "design/canvas/stage/component-set/toolbar-secondary",
   document: "design/canvas/stage/document",
   catalogue: "design/canvas/stage/catalogue",
   home: "design/canvas/stage/home",
@@ -25,6 +29,10 @@ export const CANVAS_PAGES = {
   changesSwipe: "design/canvas/changes/swipe",
   added: "design/canvas/outcomes/added",
   addedChanges: "design/canvas/outcomes/added/changes",
+  addedWelcome: "design/canvas/outcomes/added/welcome",
+  addedToolbar: "design/canvas/outcomes/added/toolbar",
+  addedPrimary: "design/canvas/outcomes/added/primary",
+  addedSecondary: "design/canvas/outcomes/added/secondary",
 } as const;
 
 export type CanvasDestination =

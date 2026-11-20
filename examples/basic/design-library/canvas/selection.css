@@ -1,6 +1,7 @@
 /* The selected instance on a frame: a 1.5px signal outline with eight square
    handles, the name tag above the top-left corner, the size tag below the
-   centre, and the padding redline with its value outside the box. The
+   centre, and the padding redline with its value outside the box. A selected
+   frame draws the outline, a handle at each corner, and the size tag. The
    selection fills the box that its caller places, and lets the pointer
    through. Its marks keep their size at every zoom; the redline's length is
    the padding at the frame's scale, which a sample without a frame takes as

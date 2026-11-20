@@ -8,12 +8,15 @@ import {
   UsageList,
   type UsageRow,
 } from "../../../../../../packages/ui/src/usage-list/usage-list.js";
+import { COMPONENTS } from "../../components/parts/metadata.js";
 
 import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
 import {
+  DETAILS_INSTANCES,
+  TOOLBAR_INSTANCES,
   WELCOME_INSTANCES,
-  type WelcomeInstanceId,
-} from "./welcome_instances.js";
+} from "./instance_records.js";
+import type { CanvasInstance, InstanceRecords } from "./instances.js";
 
 /**
  * The Usage section of a screen in the shipped list: a screen has no
@@ -26,21 +29,27 @@ export function ScreenUsage() {
 /** The views of a consumer that renders in both viewports and schemes. */
 const CONSUMER_VIEWS = 4;
 
-/**
- * The Actions that Welcome renders, its own and the Toolbar's two. Details
- * renders as many: its own Action and the two of its Toolbar.
- */
-const WELCOME_ACTIONS = Object.values(WELCOME_INSTANCES).filter(
-  (instance) => instance.component === "Action",
-).length;
+/** The number of an entry's instances of one component, by its records. */
+function instancesOf(
+  records: Readonly<Record<string, CanvasInstance>>,
+  component: string,
+): number {
+  return Object.values(records).filter(
+    (instance) => instance.component === component,
+  ).length;
+}
 
-/** A screen that uses the Action itself, and the artboard that opens it. */
-function actionConsumer(title: string, to: CanvasDestination): UsageRow {
+/** A consumer that uses a component itself, and the artboard that opens it. */
+function consumer(
+  title: string,
+  to: CanvasDestination,
+  instances: number,
+): UsageRow {
   return {
     direct: true,
     href: mockLink(to),
     id: title,
-    instances: WELCOME_ACTIONS,
+    instances,
     key: title,
     removed: false,
     title,
@@ -48,33 +57,66 @@ function actionConsumer(title: string, to: CanvasDestination): UsageRow {
   };
 }
 
+/** The screens that render a component, each opening its Canvas artboard. */
+function screenConsumers(component: string): UsageRow[] {
+  return [
+    consumer(
+      "Welcome",
+      CANVAS_PAGES.overview,
+      instancesOf(WELCOME_INSTANCES, component),
+    ),
+    consumer(
+      "Details",
+      CANVAS_PAGES.added,
+      instancesOf(DETAILS_INSTANCES, component),
+    ),
+  ];
+}
+
 /**
- * The Usage section of the Action in the shipped list: the screens that
- * use it, each opening its Canvas artboard, Welcome and Details.
+ * The Usage section of the Action in the shipped list: the entries that use
+ * it, each opening its Canvas artboard. Welcome and Details render an Action
+ * and a Toolbar with two Actions, and the Toolbar renders its two Actions.
  */
 export function ActionUsage() {
+  const action = COMPONENTS.action.title;
   return (
     <UsageList
       affected={[]}
       usedBy={[
-        actionConsumer("Welcome", CANVAS_PAGES.overview),
-        actionConsumer("Details", CANVAS_PAGES.added),
+        ...screenConsumers(action),
+        consumer(
+          COMPONENTS.toolbar.title,
+          CANVAS_PAGES.componentSetToolbar,
+          instancesOf(TOOLBAR_INSTANCES, action),
+        ),
       ]}
     />
   );
 }
 
+/** The Usage section of the Toolbar: Welcome and Details render one each. */
+export function ToolbarUsage() {
+  return (
+    <UsageList
+      affected={[]}
+      usedBy={screenConsumers(COMPONENTS.toolbar.title)}
+    />
+  );
+}
+
 /**
- * Welcome's instances under one owner, by their records' order. Each links
+ * An entry's instances under one owner, by their records' order. Each links
  * to the artboard that shows it selected; the selected instance links to the
  * artboard that renders the tree.
  */
-function welcomeNodes(
-  owner: WelcomeInstanceId | undefined,
-  selected: WelcomeInstanceId | undefined,
+function instanceNodes(
+  records: Readonly<Record<string, CanvasInstance>>,
+  owner: string | undefined,
+  selected: string | undefined,
   design: CanvasDestination | undefined,
 ): InstanceNode[] {
-  return Object.values(WELCOME_INSTANCES)
+  return Object.values(records)
     .filter((instance) => instance.parent === owner)
     .map((instance) => ({
       href: mockLink(
@@ -84,41 +126,46 @@ function welcomeNodes(
       ),
       id: instance.id,
       key: instance.id,
-      nested: welcomeNodes(instance.id, selected, design),
+      nested: instanceNodes(records, instance.id, selected, design),
       title: instance.component,
     }));
 }
 
 /**
- * The Components section of Welcome in the shipped tree: its Action and its
- * Toolbar, and the Toolbar's two Actions in a nested list, which starts open
- * where one of them is selected or where the section shows the whole tree.
+ * The component tree of an entry in the shipped tree: a screen's
+ * Components, or a composed component's nested components. A nested list
+ * starts open where one of its instances is selected, or where the section
+ * shows the whole tree.
  */
-export function WelcomeComponents({
+export function InstanceComponents<Id extends string>({
   design,
   expanded,
+  records,
   selected,
 }: {
   /** The artboard that renders the tree, which the selected row opens. */
   design?: CanvasDestination | undefined;
-  /** The Toolbar's nested list starts open. */
+  /** Every nested list starts open. */
   expanded?: boolean | undefined;
-  selected?: WelcomeInstanceId | undefined;
+  records: InstanceRecords<Id>;
+  selected?: Id | undefined;
 }) {
-  const instances = Object.values(WELCOME_INSTANCES);
-  const parent =
-    selected === undefined ? undefined : WELCOME_INSTANCES[selected].parent;
+  const instances: readonly CanvasInstance[] = Object.values(records);
+  const owners = instances
+    .filter((owner) => instances.some((nested) => nested.parent === owner.id))
+    .map((owner) => owner.id);
+  const parent = selected === undefined ? undefined : records[selected].parent;
   return (
     <InstanceTree
       initiallyExpanded={
-        expanded || parent !== undefined ? [parent ?? "toolbar"] : []
+        expanded ? owners : parent === undefined ? [] : [parent]
       }
       selectedKey={selected}
       usage={{
         status: "ready",
         components: new Set(instances.map((instance) => instance.component))
           .size,
-        instances: welcomeNodes(undefined, selected, design),
+        instances: instanceNodes(records, undefined, selected, design),
         total: instances.length,
       }}
       viewport="mobile"

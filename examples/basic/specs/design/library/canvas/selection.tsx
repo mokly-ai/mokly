@@ -1,7 +1,7 @@
 import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { text, type LibraryProps } from "../schemas.js";
+import { enumOptions, text, type LibraryProps } from "../schemas.js";
 
 import { SelectionView } from "./selection.view.js";
 
@@ -15,6 +15,7 @@ const propSchema = {
     width: length,
     height: length,
     padding: { type: "integer", minimum: 1, maximum: 400 },
+    kind: { enum: ["instance", "frame"] },
   },
 } as const;
 export type SelectionProps = LibraryProps<typeof propSchema>;
@@ -30,12 +31,12 @@ export const selection = defineComponent({
     "canvas",
     "selection",
     "Selection",
-    "The selected instance on a frame: its outline and handles, its name and size, and its padding.",
+    "The selected instance on a frame, with its outline and handles, its name and size, and its padding, or the selected frame, with its corners and size.",
   ),
   propSchema,
   props: { name: action.name, width: action.width, height: action.height },
   controls: {
-    name: { kind: "text", label: "Component" },
+    name: { kind: "text", label: "Name" },
     width: lengthControl("Width"),
     height: lengthControl("Height"),
     padding: {
@@ -44,6 +45,11 @@ export const selection = defineComponent({
       minimum: 1,
       maximum: 400,
       step: 1,
+    },
+    kind: {
+      kind: "select",
+      label: "Selects",
+      options: enumOptions(propSchema.properties.kind),
     },
   },
   render: SelectionView,
@@ -58,6 +64,16 @@ export const selection = defineComponent({
       slug: "small",
       title: "Without a redline",
       props: { name: "Action", width: 107, height: 26 },
+    },
+    {
+      slug: "frame",
+      title: "Frame",
+      props: {
+        name: "Disabled · Light",
+        width: 320,
+        height: 132,
+        kind: "frame",
+      },
     },
   ],
 });

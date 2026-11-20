@@ -199,12 +199,15 @@ and box model draw the Canvas viewer that the `design/canvas/**` family
 depicts: `canvas/canvas-frame`, a bare frame with its mono label and size tag
 that holds a screen at its nominal size scaled by the zoom, in the frame's
 own scheme, and an unclipped overlay, such as a selection, that its caller
-places at the frame's scale; in a comparison the frame holds both versions
-in the shipped stacked layers, or names its version in a tag in Side by
-side; `canvas/zoom-pill`, zoom out, the zoom level, zoom in and Fit, whose
-Fit-only form the dock holds; `canvas/selection`, the selected instance's
-outline with eight handles, its name and size tags, and the redline of its
-padding, whose marks keep their size at every zoom; `canvas/swipe-divider`,
+places at the frame's scale; a component's frame names its saved variant,
+and a selected frame's label takes the signal; in a comparison the frame
+holds both versions in the shipped stacked layers, or names its version in a
+tag in Side by side; `canvas/zoom-pill`, zoom out, the zoom level, zoom in
+and Fit, whose Fit-only form the dock holds; `canvas/selection`, the
+selected instance's outline with eight handles, its name and size tags, and
+the redline of its padding, or a selected frame's outline with a handle at
+each corner and its size, whose marks keep their size at every zoom;
+`canvas/swipe-divider`,
 Swipe's divider over a frame, with its grip and the Before and Current tags;
 `panels/floating-panel`, the floating catalogue and right panel, and their
 bottom sheets with a grabber and a close control; `panels/panel-tabs`, the
@@ -226,13 +229,22 @@ native controls that the Canvas stylesheets read in place.
 
 Inspect's sections render the shipped parts of today's inspector tabs: the
 Selection section draws the selected instance's props in metadata rows and
-its box model; Props holds the entry's edit form with its prop fields; Usage
-draws the shipped usage list; and Components draws the shipped instance
-tree. The shipped tree draws an instance without an address as a button, so
-every instance of a depicted tree links to the artboard that shows it
-selected: the `selection` screen and its saved states select each of
-Welcome's four instances. A static artboard opens the panel scrolled to the
-section that its state is about, the selection or an unfolded section.
+its box model, or the selected frame's size, variant, and scheme; Props
+holds the entry's edit form with its prop fields; Usage draws the shipped
+usage list; and Components draws the shipped instance tree. A component
+opens as its variant set, so its Props edits the saved variant of the
+selected frame, or of the frame that holds the selected instance, and says
+to choose a variant while nothing is selected; choosing a variant selects
+its Light frame. A leaf component, such as the Action, has no component
+tree, and a composed one, such as the Toolbar, lists its Nested components.
+The shipped tree draws an instance without an address as a button, so every
+instance of a depicted tree links to the artboard that shows it selected:
+the saved states of `selection` select Welcome's four instances, those of
+`outcomes/added` Details' four, and those of `stage/component-set` the
+Toolbar's two Actions. `../canvas/parts/instance_records.ts` holds each
+entry's instance records, with each instance's frame, box, and padding. A
+static artboard opens the panel scrolled to the section that its state is
+about, the selection or an unfolded section.
 
 The Changes tab draws the stepper, then Compared, the version before and
 the current version on a rail, then the compare modes, and the shipped
@@ -261,10 +273,14 @@ render, where only the sheet that a state opens is drawn, at its expanded
 height where the state asks, and where the pill above the dock names a
 selection; `CanvasStage` draws the selected entry's section with its frames,
 panned onto a frame where the state asks, with what lies over each frame,
-such as the selection, and the compact entry bar with the frame picker. They
-take the destination, the viewport, the catalogue's filter and row, the
-entry's title, path, and status, a render of each frame's sketch by viewport
-and scheme, and the Inspect body. A depicted view that the shell highlights
+such as the selection, and the compact entry bar with the frame picker,
+which a variant set shows only once a selection picks a frame, and then that
+frame alone. They take the destination, the viewport, the catalogue's
+filter and row, the entry's title, path, and status, a render of each
+frame's sketch by viewport and scheme, and the Inspect body.
+`ScreenSelection` composes them for a screen with an instance selected, and
+`VariantSetArtboard` for a variant set with or without a selection. A
+depicted view that the shell highlights
 shows its highlight in the compact form also while the panel sheet, which
 holds the switch, is closed. Canvas links stay inside the Canvas family:
 `../canvas/parts/destinations.ts` names its artboards, and the `canvas`

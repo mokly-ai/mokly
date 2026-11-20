@@ -51,6 +51,15 @@
   margin-left: auto;
 }
 
+/* A selected frame's name and glyph take the signal; its size stays quiet. */
+.cv-frame[data-cv-selected] > .cv-frame-label {
+  color: var(--cv-signal-deep);
+}
+
+.cv-frame[data-cv-selected] .cv-frame-size {
+  color: var(--cv-text-muted);
+}
+
 /* A frame too narrow for its label and its size keeps the label. */
 @container cv-frame (width < 190px) {
   .cv-frame-size {

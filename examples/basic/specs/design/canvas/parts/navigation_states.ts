@@ -44,13 +44,22 @@ const welcomeMode = (fit: CanvasDestination) => ({
   canvas: { inspectTab: C.overview, fit },
 });
 
+/** A variant set fits at full size, so Fit keeps its state, selection and all. */
+const fitted = (fit: CanvasDestination) => ({ canvas: { fit } });
+
+/** A selection on Details zooms its phone frame, and Changes opens its own. */
+const detailsSelection = { canvas: { changesTab: C.addedChanges } } as const;
+
 /**
  * Canonical states of the Canvas artboards. The catalogue filter of a
  * Welcome artboard opens the Changes filter, which keeps Welcome selected.
- * While an instance is selected, the canvas is zoomed onto it, and no
- * artboard shows another zoom with the selection, so the zoom controls are
- * pictures there; the panel sheet with the selection is the sections state.
- * Payment terms has no Changes artboard, so its Changes tab is a picture.
+ * While an instance of a screen is selected, the canvas is zoomed onto it,
+ * and no artboard shows another zoom with the selection, so the zoom
+ * controls are pictures there; the panel sheet with Welcome's selection is
+ * the sections state. A variant set keeps its fitted zoom with a selection.
+ * No artboard shows a variant set's selection with its sheet closed, so the
+ * open sheet's close is a picture there. Payment terms has no Changes
+ * artboard, so its Changes tab is a picture.
  */
 export const CANVAS_NAVIGATION_STATES = {
   [C.overview]: { changes: C.catalogue, canvas: { ...welcome, ...changes } },
@@ -58,7 +67,11 @@ export const CANVAS_NAVIGATION_STATES = {
     changes: C.catalogue,
     canvas: { fit: C.overview, ...changes },
   },
-  [C.componentSet]: { canvas: { fit: C.componentSet } },
+  [C.componentSet]: fitted(C.componentSet),
+  [C.componentSetDisabled]: fitted(C.componentSetDisabled),
+  [C.componentSetToolbar]: fitted(C.componentSetToolbar),
+  [C.componentSetPrimary]: fitted(C.componentSetPrimary),
+  [C.componentSetSecondary]: fitted(C.componentSetSecondary),
   [C.document]: { canvas: { fit: C.document } },
   [C.catalogue]: {
     all: C.overview,
@@ -92,4 +105,8 @@ export const CANVAS_NAVIGATION_STATES = {
   [C.changesSwipe]: welcomeMode(C.changesSwipe),
   [C.added]: { canvas: { changesTab: C.addedChanges, fit: C.added } },
   [C.addedChanges]: { canvas: { inspectTab: C.added, fit: C.addedChanges } },
+  [C.addedWelcome]: detailsSelection,
+  [C.addedToolbar]: detailsSelection,
+  [C.addedPrimary]: detailsSelection,
+  [C.addedSecondary]: detailsSelection,
 } satisfies Record<CanvasDestination, NavigationState>;

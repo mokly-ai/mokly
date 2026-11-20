@@ -4,15 +4,13 @@ import { artboardStates, type ArtboardVariant } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { WelcomeInspect } from "../parts/inspect_welcome.js";
-import { canvasDesignMetadata } from "../parts/metadata.js";
-import { SelectionPill, selectionOverlays } from "../parts/selection.js";
-import { CanvasShell } from "../parts/shell.js";
-import { FITS, WELCOME_VIEW, welcomeFrames } from "../parts/sketches.js";
-import { CanvasStage } from "../parts/stage.js";
 import {
   WELCOME_INSTANCES,
   type WelcomeInstanceId,
-} from "../parts/welcome_instances.js";
+} from "../parts/instance_records.js";
+import { canvasDesignMetadata } from "../parts/metadata.js";
+import { ScreenSelection } from "../parts/selection_stage.js";
+import { WELCOME_VIEW, welcomeFrames } from "../parts/sketches.js";
 
 /**
  * Welcome with one of its instances selected on Mobile · Light: the canvas
@@ -27,14 +25,13 @@ function Selection({
   instance: WelcomeInstanceId;
   viewport: ArtboardViewport;
 }) {
-  const entry = CANVAS_ENTRIES.welcome;
   const instance = WELCOME_INSTANCES[id];
   return (
-    <CanvasShell
+    <ScreenSelection
       catalogue={{ filter: "all", activeKey: "welcome" }}
-      compactZoom={FITS.phone}
-      design={instance.page}
-      entry={entry}
+      entry={CANVAS_ENTRIES.welcome}
+      frames={welcomeFrames()}
+      instance={instance}
       panel={
         <WelcomeInspect
           design={instance.page}
@@ -42,19 +39,9 @@ function Selection({
           selected={id}
         />
       }
-      pill={<SelectionPill instance={instance} />}
+      view={WELCOME_VIEW}
       viewport={viewport}
-      zoom={100}
-    >
-      <CanvasStage
-        entry={entry}
-        frames={welcomeFrames()}
-        overlays={selectionOverlays(instance)}
-        pan="end"
-        view={WELCOME_VIEW}
-        zoom={100}
-      />
-    </CanvasShell>
+    />
   );
 }
 

@@ -53,6 +53,13 @@ export const CANVAS_ENTRIES = {
     kind: "component",
     changed: false,
   },
+  toolbar: {
+    title: COMPONENT_ENTRIES.toolbar.title,
+    slug: "toolbar",
+    path: COMPONENT_ENTRIES.toolbar.path,
+    kind: "component",
+    changed: false,
+  },
   paymentTerms: {
     title: "Payment terms",
     slug: "payment-terms",

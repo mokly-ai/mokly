@@ -3,7 +3,7 @@ import { defineComponent } from "@mokly/mokly";
 import { MiniAction } from "../../parts/mini_action.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { enumOptions, text, type LibraryProps } from "../schemas.js";
+import { enumOptions, flag, text, type LibraryProps } from "../schemas.js";
 
 import { CanvasFrameView } from "./canvas-frame.view.js";
 
@@ -22,6 +22,8 @@ const propSchema = {
     zoom: { type: "number", minimum: 0.05, maximum: 4 },
     compare: { enum: ["overlay", "difference", "swipe"] },
     side: { enum: ["before", "after"] },
+    variant: text,
+    selected: flag,
   },
 } as const;
 const slots = ["children", "before", "overlay"] as const;
@@ -60,6 +62,7 @@ export const canvasFrame = defineComponent({
       maximum: 4,
       step: 0.01,
     },
+    selected: { kind: "boolean", label: "Selected" },
   },
   render: CanvasFrameView,
   variants: [
@@ -67,7 +70,7 @@ export const canvasFrame = defineComponent({
       slug: "desktop-light",
       title: "Desktop · Light",
       props: desktop,
-      slots: { children: <MiniWelcome inert /> },
+      slots: { children: <MiniWelcome inert revised /> },
     },
     {
       slug: "mobile-dark",
@@ -81,7 +84,7 @@ export const canvasFrame = defineComponent({
         height: 844,
         zoom: 0.4,
       },
-      slots: { children: <MiniWelcome compact inert /> },
+      slots: { children: <MiniWelcome compact inert revised /> },
     },
     {
       slug: "component",

@@ -269,6 +269,7 @@
         "design/canvas/inspect/unchanged",
         "design/canvas/outcomes/added/changes",
         "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set/disabled",
         "design/canvas/stage/home"
       ]
     },
@@ -294,7 +295,8 @@
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
         "design/canvas/inspect/unchanged",
-        "design/canvas/outcomes/added/changes"
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/component-set/disabled"
       ]
     },
     {
@@ -319,7 +321,8 @@
       "only": [
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
-        "design/canvas/inspect/unchanged"
+        "design/canvas/inspect/unchanged",
+        "design/canvas/stage/component-set/disabled"
       ]
     },
     {
@@ -345,7 +348,8 @@
       "only": [
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
-        "design/canvas/inspect/unchanged"
+        "design/canvas/inspect/unchanged",
+        "design/canvas/stage/component-set/disabled"
       ]
     },
     {
@@ -367,6 +371,10 @@
         "design/canvas/inspect/selection/toolbar",
         "design/canvas/outcomes/added",
         "design/canvas/outcomes/added/changes",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/zoomed"
@@ -375,7 +383,7 @@
     {
       "family": "canvas",
       "component": "controls/tag-chip",
-      "reason": "Inspect lists the tags of Welcome and of the Action.",
+      "reason": "Inspect lists the tags of Welcome, of Details, and of the Action.",
       "viewports": ["desktop"],
       "only": [
         "design/canvas/inspect/frames",
@@ -386,9 +394,14 @@
         "design/canvas/inspect/selection/secondary",
         "design/canvas/inspect/selection/toolbar",
         "design/canvas/outcomes/added",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/component-set",
+        "design/canvas/stage/component-set/disabled",
         "design/canvas/stage/zoomed"
       ]
     },
@@ -401,20 +414,31 @@
     {
       "family": "canvas",
       "component": "controls/tag-chip",
-      "reason": "A phone draws Welcome's tags in the open panel sheet.",
+      "reason": "A phone draws the entry's tags in the open panel sheet.",
       "viewports": ["mobile"],
-      "only": ["design/canvas/inspect/props", "design/canvas/inspect/sections"]
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/stage/component-set/disabled"
+      ]
     },
     {
       "family": "canvas",
       "component": "canvas/selection",
-      "reason": "The selection states draw the selected instance on Mobile · Light.",
+      "reason": "The selection states draw the selected instance on its frame, or the selected frame of a variant set.",
       "only": [
         "design/canvas/inspect/sections",
         "design/canvas/inspect/selection",
         "design/canvas/inspect/selection/primary",
         "design/canvas/inspect/selection/secondary",
-        "design/canvas/inspect/selection/toolbar"
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary"
       ]
     },
     {
@@ -427,7 +451,13 @@
         "design/canvas/inspect/selection",
         "design/canvas/inspect/selection/primary",
         "design/canvas/inspect/selection/secondary",
-        "design/canvas/inspect/selection/toolbar"
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary"
       ]
     },
     {
@@ -440,7 +470,7 @@
     {
       "family": "canvas",
       "component": "inspector/prop-field",
-      "reason": "Inspect's Props section holds the field of Welcome's prop.",
+      "reason": "Inspect's Props section holds the field of Welcome's prop, and the fields of a variant set's chosen variant.",
       "viewports": ["desktop"],
       "only": [
         "design/canvas/inspect/frames",
@@ -452,6 +482,9 @@
         "design/canvas/inspect/selection/toolbar",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary",
         "design/canvas/stage/zoomed"
       ]
     },
@@ -460,7 +493,11 @@
       "component": "inspector/prop-field",
       "reason": "A phone draws the Props section in the open panel sheet.",
       "viewports": ["mobile"],
-      "only": ["design/canvas/inspect/props", "design/canvas/inspect/sections"]
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/stage/component-set/disabled"
+      ]
     },
     {
       "family": "canvas",

@@ -351,6 +351,30 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/outcomes/added/primary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/added"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/added/secondary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/added"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/added/toolbar",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/added"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/added/welcome",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/added"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/overview",
     "colorSchemes": ["light", "dark"]
   },
@@ -363,6 +387,30 @@
     "kind": "screen",
     "path": "design/canvas/stage/component-set",
     "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stage/component-set/disabled",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stage/component-set"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stage/component-set/toolbar",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stage/component-set"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stage/component-set/toolbar-primary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stage/component-set"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stage/component-set/toolbar-secondary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stage/component-set"
   },
   {
     "kind": "screen",
@@ -815,6 +863,12 @@
   {
     "kind": "component",
     "path": "design/library/canvas/selection/action",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/selection"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/selection/frame",
     "colorSchemes": ["light"],
     "variantOf": "design/library/canvas/selection"
   },

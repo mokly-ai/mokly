@@ -171,7 +171,7 @@ export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
  * sheets link from the fifty-three `design/components/**` screens, the controls
  * sheet from its twenty entries, the library sheet from no screen, the
  * inspector and workspace sheets from every design screen, and every shared
- * sheet from the library pages and their 102 saved variants.
+ * sheet from the library pages and their 103 saved variants.
  */
 export function scopeViolations(catalogue: ServedCatalogue): string[] {
   const linked = new Map<string, Set<string>>();
@@ -212,7 +212,7 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
       screens(/^design\//u),
     ],
   ];
-  const violations = variants === 102 ? [] : [`${variants} saved variants`];
+  const violations = variants === 103 ? [] : [`${variants} saved variants`];
   for (const [sheets, scope] of scopes)
     for (const sheet of sheets) {
       const expected = [...scope, ...library.map((entry) => entry.path)];

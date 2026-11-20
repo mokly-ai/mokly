@@ -18,6 +18,7 @@ const ALL_TARGETS: Readonly<Record<string, DesignDestination>> = {
   details: CANVAS_PAGES.added,
   profile: CANVAS_PAGES.unchanged,
   [COMPONENT_NAVIGATION.action.id]: CANVAS_PAGES.componentSet,
+  [COMPONENT_NAVIGATION.toolbar.id]: CANVAS_PAGES.componentSetToolbar,
   "payment-terms": CANVAS_PAGES.document,
 };
 

@@ -3,7 +3,6 @@ import {
   MetadataCode,
 } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { NoPropsPanel } from "../../components/controls/parts/limits.js";
-import { COMPONENTS } from "../../components/parts/metadata.js";
 import { PREVIOUS_PATHS } from "../../parts/entry_paths.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 import { SUBJECTS, type ScreenSubject } from "../../parts/subjects.js";
@@ -16,10 +15,10 @@ import {
   InspectHead,
   InspectRationale,
   InspectSelection,
-  InspectVariants,
   WrappingPath,
 } from "./inspect.js";
-import { ActionUsage, NoComponents, ScreenUsage } from "./inspect_folds.js";
+import { NoComponents, ScreenUsage } from "./inspect_folds.js";
+import { InspectVariants } from "./inspect_variants.js";
 
 /**
  * The Details rows of today's inspector that a depicted screen has, after
@@ -103,60 +102,6 @@ export function ProfileInspect() {
         <ScreenUsage />
       </InspectFold>
       <InspectFold count={0} name="components" title="Components">
-        <NoComponents />
-      </InspectFold>
-    </>
-  );
-}
-
-/**
- * Inspect for the Action component, which opens as its variant set: its
- * frames are its saved variants in each scheme, so none is checked.
- */
-export function ActionInspect() {
-  const component = COMPONENTS.action;
-  return (
-    <>
-      <InspectHead
-        description={component.description}
-        entry={CANVAS_ENTRIES.action}
-        rows={
-          <>
-            <MetaRow name="schemes" label="Schemes">
-              light, dark
-            </MetaRow>
-            <MetaRow name="tags" label="Tags">
-              <TagChips tags={["forms"]} />
-            </MetaRow>
-          </>
-        }
-        source={component.source}
-      />
-      <InspectVariants
-        variants={[
-          { label: "Default" },
-          { label: "Disabled" },
-          { label: "Secondary" },
-        ]}
-      />
-      <InspectFrames
-        count={6}
-        filter={{
-          viewports: false,
-          mobile: true,
-          desktop: true,
-          light: true,
-          dark: true,
-          highlight: false,
-          unavailable: "empty",
-        }}
-      />
-      <InspectSelection />
-      <InspectFold count={6} name="props" title="Props" />
-      <InspectFold count={2} name="usage" title="Usage">
-        <ActionUsage />
-      </InspectFold>
-      <InspectFold name="components" title="Components">
         <NoComponents />
       </InspectFold>
     </>

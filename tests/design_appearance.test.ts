@@ -111,6 +111,7 @@ const CANVAS_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["Canvas edge on surface", "--cv-border-strong", "--cv-surface", 3],
   ["Canvas edge on canvas", "--cv-border-strong", "--cv-background", 3],
   ["signal text on surface", "--cv-signal-deep", "--cv-surface", 4.5],
+  ["signal text on canvas", "--cv-signal-deep", "--cv-background", 4.5],
   ["signal text on soft signal", "--cv-signal-deep", "--cv-signal-soft", 4.5],
   ["Canvas ink on soft signal", "--cv-text", "--cv-signal-soft", 4.5],
   [

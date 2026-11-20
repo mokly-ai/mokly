@@ -144,7 +144,9 @@ export function MiniWelcome({
     ? "welcome-empty"
     : error
       ? "welcome-error"
-      : "welcome";
+      : revised
+        ? "welcome-revised"
+        : "welcome";
   return (
     <Shot compact={compact} restyled={restyled}>
       <div className="mbk-shot-nav">

@@ -72,7 +72,7 @@ export const designLibrary = [
     "frames-filter",
     ["screen", "component", "light-only", "dark-hidden"],
   ],
-  ["canvas", "selection", ["action", "toolbar", "small"]],
+  ["canvas", "selection", ["action", "toolbar", "small", "frame"]],
   ["inspector", "box-model", ["action", "toolbar"]],
   ["canvas", "swipe-divider", ["centred", "moved"]],
   ["panels", "change-stepper", ["first", "second"]],

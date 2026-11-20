@@ -37,33 +37,39 @@ function KindTag({ entry }: { entry: CanvasEntry }) {
   ) : null;
 }
 
+/** A glyph of the frame picker, which the picked frame's kind shows. */
+function PickerGlyph({ glyph }: { glyph: "component" | "desktop" | "mobile" }) {
+  return (
+    <span aria-hidden="true" className="cv-frame-pick-glyph" data-glyph={glyph}>
+      <CanvasGlyph name={glyph} size={13} />
+    </span>
+  );
+}
+
 /**
  * The frame picker of the compact form: a native select of the entry's
- * frames over a drawn pill, which shows the picked frame in place.
+ * frames over a drawn pill, which shows the picked frame in place, with the
+ * picked screen frame's viewport glyph, or a variant set's component glyph.
  */
 function FramePicker({
   frames,
+  kind,
   picked,
 }: {
   frames: readonly CanvasFrameSpec[];
+  kind: CanvasEntry["kind"];
   picked: string;
 }) {
   return (
     <label className="cv-frame-pick">
-      <span
-        aria-hidden="true"
-        className="cv-frame-pick-glyph"
-        data-glyph="mobile"
-      >
-        <CanvasGlyph name="mobile" size={13} />
-      </span>
-      <span
-        aria-hidden="true"
-        className="cv-frame-pick-glyph"
-        data-glyph="desktop"
-      >
-        <CanvasGlyph name="desktop" size={13} />
-      </span>
+      {kind === "component" ? (
+        <PickerGlyph glyph="component" />
+      ) : (
+        <>
+          <PickerGlyph glyph="mobile" />
+          <PickerGlyph glyph="desktop" />
+        </>
+      )}
       <select aria-label="Frame" data-cv-frame-pick="" defaultValue={picked}>
         {frames.map((frame) => (
           <option key={frame.id} value={frame.id}>
@@ -86,8 +92,14 @@ interface CanvasStageProps {
    * first row, Mobile · Light, as after selecting on it; centred otherwise.
    */
   pan?: "end" | "start" | undefined;
-  /** The frame that a screen's compact form picks. */
+  /**
+   * The frame that the compact form picks: a screen's phone frame by default,
+   * and a variant set's selected frame, which it then shows alone with the
+   * frame picker; a variant set without one shows the whole set.
+   */
   picked?: string | undefined;
+  /** The selected frame of a variant set, whose label takes the signal. */
+  selected?: string | undefined;
   /** The frames that the compact frame picker lists; every frame by default. */
   pickable?: readonly CanvasFrameSpec[] | undefined;
   /** What lies over a frame, by the frame's id, such as the selection. */
@@ -105,9 +117,10 @@ interface CanvasStageProps {
 /**
  * The selected entry on the canvas: the section box with its head and its
  * frames at one zoom, and, for the compact form, the entry bar with the
- * title, the status, and a screen's frame picker. A depicted view that the
- * shell highlights shows its highlight also where no switch is drawn, as in
- * the compact form while the panel sheet is closed.
+ * title, the status, and the frame picker of a screen, or of a variant set
+ * with a frame picked. A depicted view that the shell highlights shows its
+ * highlight also where no switch is drawn, as in the compact form while the
+ * panel sheet is closed.
  */
 export function CanvasStage({
   compare,
@@ -116,10 +129,12 @@ export function CanvasStage({
   overlays = {},
   pan,
   pickable = frames,
-  picked = "mobile-light",
+  picked: pick,
+  selected,
   view,
   zoom,
 }: CanvasStageProps) {
+  const picked = pick ?? (entry.kind === "screen" ? "mobile-light" : undefined);
   const section = (
     <div className="cv-section" data-cv-kind={entry.kind}>
       <div className="cv-section-head">
@@ -140,6 +155,7 @@ export function CanvasStage({
             frame={frame}
             key={frame.id}
             overlay={overlays[frame.id]}
+            selected={frame.id === selected}
             zoom={zoom}
           />
         ))}
@@ -154,9 +170,9 @@ export function CanvasStage({
           <KindTag entry={entry} />
           <EntryStatus entry={entry} name="entry-status" />
         </span>
-        {entry.kind === "screen" ? (
-          <FramePicker frames={pickable} picked={picked} />
-        ) : null}
+        {picked === undefined || entry.kind === "document" ? null : (
+          <FramePicker frames={pickable} kind={entry.kind} picked={picked} />
+        )}
       </div>
       <div
         className="cv-view"
@@ -178,11 +194,13 @@ function StageFrame({
   entry,
   frame,
   overlay,
+  selected,
   zoom,
 }: {
   entry: CanvasEntry;
   frame: CanvasFrameSpec;
   overlay: ReactNode;
+  selected: boolean;
   zoom: number;
 }) {
   return (
@@ -198,6 +216,8 @@ function StageFrame({
       {...optional("compare", frame.compare)}
       {...optional("side", frame.side)}
       {...optional("before", frame.before)}
+      {...optional("variant", frame.variant)}
+      {...(selected ? { selected } : {})}
       {...optional("overlay", overlay ?? undefined)}
     >
       {frame.content}

@@ -76,6 +76,14 @@ const SHELL_STATES: Readonly<
   // no switch.
   "design/canvas/inspect/frames": { desktop: AVAILABLE, mobile: undefined },
   "design/canvas/inspect/sections": AVAILABLE,
+  // A variant set: the Action renders no registered component, on a desktop
+  // and in a phone's open panel sheet; the Toolbar renders two Actions, so it
+  // can be highlighted, and its phone, with the sheet closed, draws no switch.
+  "design/canvas/stage/component-set/disabled": EMPTY,
+  "design/canvas/stage/component-set/toolbar": {
+    desktop: AVAILABLE,
+    mobile: undefined,
+  },
   // Component pages. Only Toolbar's example renders a registered component.
   "design/components/pages/toolbar": AVAILABLE,
   "design/components/overview": EMPTY,

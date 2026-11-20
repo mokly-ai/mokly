@@ -31,7 +31,10 @@ const SIDES: Record<NonNullable<CanvasFrameProps["side"]>, string> = {
  * side names its version in a tag before its label. The overlay, such as a
  * selection, lies over the document unclipped, so its marks can stand
  * outside the frame; the caller places it at the frame's scale, which the
- * frame gives as `--cv-frame-scale`.
+ * frame gives as `--cv-frame-scale`. A screen's frame is named by its
+ * viewport and scheme, and a component's frame by its saved variant and
+ * scheme, as the compact frame picker names them. A selected frame's label
+ * takes the signal.
  */
 export function CanvasFrameView({
   before,
@@ -43,7 +46,9 @@ export function CanvasFrameView({
   label,
   overlay,
   scheme,
+  selected,
   side,
+  variant,
   width,
   zoom,
 }: CanvasFrameProps) {
@@ -55,14 +60,15 @@ export function CanvasFrameView({
       ...(compare === "swipe" ? { "--cv-frame-split": `${SWIPE_SPLIT}%` } : {}),
     };
   const viewport = kind === "desktop" || kind === "mobile" ? kind : undefined;
+  const name =
+    viewport ?? (kind === "component" && variant ? variant : undefined);
   return (
     <figure
       className="cv-frame"
-      data-cv-frame={
-        viewport === undefined ? undefined : `${viewport}-${scheme}`
-      }
+      data-cv-frame={name === undefined ? undefined : `${name}-${scheme}`}
       data-cv-kind={kind}
       data-cv-scheme={scheme}
+      data-cv-selected={selected ? "" : undefined}
       data-cv-side={side}
       data-cv-viewport={viewport}
       data-preview-color-scheme={scheme}

@@ -188,40 +188,6 @@ export function InspectRationale({
   );
 }
 
-/** A saved variant in Inspect's list: the shown one, or a picture. */
-export interface InspectVariant {
-  label: string;
-  current?: boolean;
-}
-
-/**
- * The entry's saved variants as a radio list. A static artboard runs no
- * script, and no Canvas artboard shows another variant, so each row is a
- * picture of itself and the shown variant is checked.
- */
-export function InspectVariants({
-  variants,
-}: {
-  variants: readonly InspectVariant[];
-}) {
-  return (
-    <InspectSection count={variants.length} title="Variants">
-      <ul className="cv-variants">
-        {variants.map((variant) => (
-          <li
-            aria-current={variant.current ? "true" : undefined}
-            className="cv-variant"
-            key={variant.label}
-          >
-            <span aria-hidden="true" className="cv-variant-mark" />
-            {variant.label}
-          </li>
-        ))}
-      </ul>
-    </InspectSection>
-  );
-}
-
 /** The Frames section: the shown frames' count, and the Frames filter. */
 export function InspectFrames({
   count,

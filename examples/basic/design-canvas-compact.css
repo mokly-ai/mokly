@@ -148,6 +148,34 @@
     row-gap: 34px;
   }
 
+  /* A variant set with a frame picked, as after a selection on it, shows
+     that frame alone at full size; the picker swaps it in place. */
+  .cv-work:has([data-cv-frame-pick]) .cv-frames[data-cv-kind="component"] {
+    display: block;
+  }
+
+  .cv-work:has([data-cv-frame-pick])
+    .cv-frames[data-cv-kind="component"]
+    > .cv-frame {
+    --cv-zoom: 1;
+    display: none;
+  }
+
+  .cv-work:has(option[value="default-light"]:checked)
+    .cv-frame[data-cv-frame="default-light"],
+  .cv-work:has(option[value="default-dark"]:checked)
+    .cv-frame[data-cv-frame="default-dark"],
+  .cv-work:has(option[value="disabled-light"]:checked)
+    .cv-frame[data-cv-frame="disabled-light"],
+  .cv-work:has(option[value="disabled-dark"]:checked)
+    .cv-frame[data-cv-frame="disabled-dark"],
+  .cv-work:has(option[value="secondary-light"]:checked)
+    .cv-frame[data-cv-frame="secondary-light"],
+  .cv-work:has(option[value="secondary-dark"]:checked)
+    .cv-frame[data-cv-frame="secondary-dark"] {
+    display: block;
+  }
+
   /* A reading frame is responsive: on a phone it takes the canvas width and
      reflows its document instead of scaling it. */
   .cv-frame[data-cv-kind="document"] {

@@ -5,12 +5,18 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { WelcomeInspect } from "../parts/inspect_welcome.js";
+import {
+  WELCOME_INSTANCES,
+  type WelcomeInstanceId,
+} from "../parts/instance_records.js";
 import { canvasDesignMetadata } from "../parts/metadata.js";
 import { selectionOverlays } from "../parts/selection.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS, WELCOME_VIEW, welcomeFrames } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
-import { WELCOME_INSTANCES } from "../parts/welcome_instances.js";
+
+/** The View details Action, which this state keeps selected. */
+const SELECTED: WelcomeInstanceId = "details";
 
 /**
  * The selection of View details, with Inspect's Usage and Components
@@ -19,7 +25,7 @@ import { WELCOME_INSTANCES } from "../parts/welcome_instances.js";
  */
 function Sections({ viewport }: { viewport: ArtboardViewport }) {
   const entry = CANVAS_ENTRIES.welcome;
-  const instance = WELCOME_INSTANCES.details;
+  const instance = WELCOME_INSTANCES[SELECTED];
   return (
     <CanvasShell
       catalogue={{ filter: "all", activeKey: "welcome" }}
@@ -32,7 +38,7 @@ function Sections({ viewport }: { viewport: ArtboardViewport }) {
           design={CANVAS_PAGES.sections}
           initial="selection"
           open={["usage", "components"]}
-          selected={instance.id}
+          selected={SELECTED}
         />
       }
       sheet="panel"
