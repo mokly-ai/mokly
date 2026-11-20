@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mokly-cloud
+  {{- if eq .Values.database.mode "cloudsql" }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+  {{- end }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  {{- if eq .Values.database.mode "cloudsql" }}
+  ingress:
+    - from:
+        - ipBlock: { cidr: 130.211.0.0/22 }
+        - ipBlock: { cidr: 35.191.0.0/16 }
+      ports:
+        {{- range $name := list "api" "app" "catalogue" }}
+        {{- if (index $.Values $name).enabled }}
+        - { protocol: TCP, port: {{ (index $.Values $name).port }} }
+        {{- end }}
+        {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+        - ipBlock: { cidr: 169.254.20.10/32 }
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+    - to: [{ ipBlock: { cidr: 169.254.169.254/32 } }]
+      ports: [{ protocol: TCP, port: 80 }]
+    - to: [{ ipBlock: { cidr: 10.30.0.0/16 } }]
+      ports: [{ protocol: TCP, port: 3307 }]
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16]
+      ports: [{ protocol: TCP, port: 443 }]
+  {{- end }}

@@ -1,0 +1,121 @@
+/* The ruled documentation body, on-this-page list, and previous/next cards. */
+
+.site-docs-document {
+  max-width: var(--mk-layout-site-document);
+  padding: var(--mk-space-8) 0 var(--mk-space-12);
+}
+
+.site-pullquote {
+  border-left: 2px solid var(--mk-color-accent);
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  margin-top: var(--mk-space-2);
+  max-width: 46ch;
+  padding-left: var(--mk-space-4);
+}
+
+/* The on-this-page list sits below the lead on mobile and in a rail once the
+   widest composition has room for it. */
+
+.site-docs-rail {
+  display: none;
+}
+
+.site-docs-document > .site-onpage {
+  border-left: 1px solid var(--mk-color-border);
+  margin-bottom: var(--mk-space-10);
+  padding-left: var(--mk-space-4);
+}
+
+.site-onpage {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+
+.site-onpage ol {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-onpage li + li {
+  border-top: 1px solid var(--mk-color-border);
+}
+
+.site-onpage-link {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+  min-height: var(--mk-layout-control-min);
+  padding: var(--mk-space-1) 0;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-onpage-link--nested {
+  padding-left: var(--mk-space-3);
+}
+
+.site-onpage-link:hover {
+  color: var(--mk-color-text);
+  text-decoration: underline;
+}
+
+.site-pager {
+  border-top: 1px solid var(--mk-color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-space-4);
+  justify-content: space-between;
+  margin-top: var(--mk-space-10);
+  padding-top: var(--mk-space-6);
+}
+
+.site-pager-item {
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: grid;
+  font-size: var(--mk-type-small-size);
+  gap: var(--mk-space-1);
+  min-height: var(--mk-layout-control-min);
+  min-width: 200px;
+  padding: var(--mk-space-3) var(--mk-space-4);
+  text-decoration: none;
+  transition: border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-pager-item:hover {
+  border-color: var(--mk-color-border-strong);
+}
+
+.site-pager-item--next {
+  text-align: right;
+}
+
+.site-rubric {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.12em;
+  line-height: var(--mk-type-caption-line);
+  text-transform: uppercase;
+}
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-trail-sep {
+  padding: 0 var(--mk-space-2);
+}

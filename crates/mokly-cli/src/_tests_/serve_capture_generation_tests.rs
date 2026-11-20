@@ -193,6 +193,7 @@ impl StylesheetWorker for Threads {
             route: format!("styles/{}", root.path),
             css: String::new(),
             assets: Default::default(),
+            resolution_files: Default::default(),
             css_modules: Default::default(),
             inputs: Default::default(),
             imported_by: Default::default(),

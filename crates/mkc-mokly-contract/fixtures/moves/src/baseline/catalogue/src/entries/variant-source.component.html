@@ -1,0 +1,23 @@
+---
+title: "Source component"
+description: "Before move."
+element: "fixture-variant-source"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    {
+      "slug": "saved",
+      "title": "Moved variant",
+      "props": { "label": "Move me" },
+    },
+  ]
+---
+
+<p>{{ label }}</p>

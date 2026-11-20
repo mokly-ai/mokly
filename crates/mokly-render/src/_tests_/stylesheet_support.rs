@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
+use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::error::Result;
 use mokly_source_interface::read_evidence::{FileIdentity, ReadBaseline, ReadEvidence};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
@@ -13,6 +13,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_compiler::{Compilation, CompileRoot, RootCompiler};
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::StylesheetCache;
 
@@ -71,6 +72,7 @@ pub(super) fn bundle(root: &StylesheetRoot) -> Bundle {
         route: format!("styles/{}", root.path),
         css: format!(".{} {{}}\n{}", root.path, "a{color:red}\n".repeat(12_000)),
         assets: BTreeMap::new(),
+        resolution_files: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::from([(root.path.clone(), vec![b'a'; 160_000])]),
         imported_by: BTreeMap::new(),
@@ -156,7 +158,7 @@ pub(super) fn tree(calls: &Arc<Calls>, changed: &'static [&'static str]) -> Arc<
 }
 
 pub(super) fn attempt(
-    inner: Arc<dyn StylesheetBundler>,
+    inner: Arc<dyn RootCompiler>,
     tree: Arc<dyn SourceTree>,
     shared: &Arc<Mutex<StylesheetCache>>,
 ) -> CachedStylesheets {
@@ -170,13 +172,16 @@ pub(super) fn attempt(
 }
 
 /// An inner bundler that counts its bundles and answers with `bundle`.
-pub(super) fn bundler(calls: Arc<AtomicUsize>) -> Arc<dyn StylesheetBundler> {
+pub(super) fn bundler(calls: Arc<AtomicUsize>) -> Arc<dyn RootCompiler> {
     Arc::new(Unimock::new(
-        StylesheetBundlerMock::bundle
+        CompileRoot
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, root| {
                 calls.fetch_add(1, Ordering::SeqCst);
-                Ok(bundle(root))
+                Ok(Compilation {
+                    bundle: bundle(root),
+                    capture: Default::default(),
+                })
             })),
     ))
 }
@@ -195,7 +200,10 @@ pub(super) fn charges(tree: &Arc<dyn SourceTree>) -> (usize, usize) {
     let record = Record::new(
         tree.as_ref(),
         root,
-        bundle(&self::root("root-00.css")),
+        Compilation {
+            bundle: bundle(&self::root("root-00.css")),
+            capture: Default::default(),
+        },
         |digest, evidence| {
             Arc::new(ContextEvidence::with_base(
                 tree.as_ref(),
@@ -208,4 +216,12 @@ pub(super) fn charges(tree: &Arc<dyn SourceTree>) -> (usize, usize) {
     );
     let context = record.context.as_ref().map_or(0, |context| context.bytes);
     (record.bytes, context)
+}
+
+/// A fixture compilation without core reads. The individual cache tests supply their evidence.
+pub(super) fn compiled(bundle: Bundle) -> Compilation {
+    Compilation {
+        bundle,
+        capture: Default::default(),
+    }
 }

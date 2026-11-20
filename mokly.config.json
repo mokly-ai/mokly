@@ -1,0 +1,77 @@
+{
+  "$schema": "./node_modules/@mokly/mokly/config.schema.json",
+  "repoRoot": ".",
+  "roots": [
+    { "dir": "docs/mockups/src/entries", "files": ["**/*.mockup.{ts,tsx}"] }
+  ],
+  "renderer": "docs/mockups/src/render.tsx",
+  "colorSchemes": ["light", "dark"],
+  "moduleResolution": {
+    "aliases": { "react-native": "react-native-web" },
+    "conditions": ["react-native", "import", "module", "default"],
+    "loaders": { ".js": "jsx" },
+    "mainFields": ["react-native", "module", "main"],
+    "packageRoots": ["."],
+    "resolveExtensions": [
+      ".web.tsx",
+      ".web.ts",
+      ".web.js",
+      ".tsx",
+      ".ts",
+      ".jsx",
+      ".js",
+      ".json"
+    ]
+  },
+  "stylesheets": [
+    {
+      "match": "design/site/**/index.html",
+      "stylesheets": [
+        "docs/mockups/styles/site/base.css",
+        "docs/mockups/styles/site/chrome.css",
+        "docs/mockups/styles/site/menu.css",
+        "docs/mockups/styles/site/home.css",
+        "docs/mockups/styles/site/shell-frame.css",
+        "docs/mockups/styles/site/shell-tree.css",
+        "docs/mockups/styles/site/shell-stage.css",
+        "docs/mockups/styles/site/modules.css",
+        "docs/mockups/styles/site/closing.css",
+        "docs/mockups/styles/site/docs-tree.css",
+        "docs/mockups/styles/site/docs-document.css",
+        "docs/mockups/styles/site/changelog.css",
+        "docs/mockups/styles/site/policy.css",
+        "docs/mockups/styles/site/footer.css",
+        "docs/mockups/styles/site/responsive.css"
+      ]
+    },
+    {
+      "match": "design/email/**/index.html",
+      "stylesheets": [
+        "docs/mockups/styles/base.css",
+        "docs/mockups/styles/email/frame.css"
+      ]
+    },
+    {
+      "match": "product/{account,recovery,settings,viewer}/**/index.html",
+      "stylesheets": [
+        "docs/mockups/styles/base.css",
+        "docs/mockups/styles/components.css",
+        "docs/mockups/styles/controls.css",
+        "docs/mockups/styles/product/shared.css",
+        "docs/mockups/styles/product/chrome.css",
+        "docs/mockups/styles/product/folio.css",
+        "docs/mockups/styles/product/inventory.css"
+      ]
+    },
+    {
+      "match": "**/*.html",
+      "stylesheets": [
+        "docs/mockups/styles/base.css",
+        "docs/mockups/styles/components.css",
+        "docs/mockups/styles/illustrations/illustration.css",
+        "docs/mockups/styles/controls.css"
+      ]
+    }
+  ],
+  "review": { "base": "origin/main" }
+}

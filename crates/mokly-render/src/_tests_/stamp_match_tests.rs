@@ -168,6 +168,8 @@ fn tree(states: [State; ENTRIES]) -> MemoryTree {
 fn stamp_of(tree: &MemoryTree) -> InputStamp {
     InputStamp {
         memberships: BTreeMap::from([("/repo/src".into(), None)]),
+        unretained: BTreeMap::new(),
+        projections: BTreeMap::new(),
         files: FILES.into_iter().map(|path| (path.into(), None)).collect(),
         assets: BTreeMap::from([
             ("/repo/logo.svg".into(), None),

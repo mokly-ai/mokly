@@ -13,6 +13,8 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::input_stamp::InputStamp;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
+use crate::stylesheet_capture::Capture;
+use crate::stylesheet_compiler::Compilation;
 use crate::stylesheet_weight;
 
 /// The added module evidence of one PostCSS context.
@@ -33,6 +35,7 @@ pub(crate) struct Record {
     pub(crate) stamp: InputStamp,
     /// The bundle without the module evidence of its context.
     bundle: Bundle,
+    core_evidence: ReadEvidence,
     pub(crate) context: Option<Arc<ContextEvidence>>,
     consistent: bool,
     pub(crate) bytes: usize,
@@ -131,15 +134,25 @@ impl Record {
     pub(crate) fn new(
         tree: &dyn SourceTree,
         root: &Path,
-        mut bundle: Bundle,
+        compiled: Compilation,
         context: impl FnOnce(String, ReadEvidence) -> Arc<ContextEvidence>,
     ) -> Self {
+        let Compilation {
+            mut bundle,
+            capture:
+                Capture {
+                    mut stamp,
+                    evidence: core_evidence,
+                    consistent: captured_consistent,
+                },
+        } = compiled;
         let modules = module_evidence(&mut bundle.read_evidence);
         let context = (!modules.inputs.is_empty())
             .then(|| context(digest(format!("{:?}", modules.inputs).as_bytes()), modules));
-        let mut stamp = InputStamp::default();
         for path in bundle.inputs.keys().chain(bundle.dependency_digests.keys()) {
-            stamp.file(tree, root.join(path));
+            if !stamp.files.contains_key(&root.join(path)) {
+                stamp.file(tree, root.join(path));
+            }
         }
         for asset in bundle.assets.values() {
             for path in asset.input_paths() {
@@ -147,11 +160,17 @@ impl Record {
             }
         }
         stamp.directories(tree, root, &bundle.directories);
-        let consistent = stamp_evidence(tree, root, &bundle.read_evidence, &mut stamp);
-        let bytes = size_of::<Self>() + stylesheet_weight::bundle(&bundle) + stamp.retained_bytes();
+        let consistent = stamp_evidence(tree, root, &bundle.read_evidence, &mut stamp)
+            && captured_consistent
+            && stamp_evidence(tree, root, &core_evidence, &mut stamp);
+        let bytes = size_of::<Self>()
+            + stylesheet_weight::bundle(&bundle)
+            + stamp.retained_bytes()
+            + core_evidence.retained_bytes();
         Self {
             stamp,
             bundle,
+            core_evidence,
             context,
             consistent,
             bytes,
@@ -170,6 +189,11 @@ impl Record {
     /// The read evidence of the record's own inputs.
     pub(crate) fn evidence(&self) -> &ReadEvidence {
         &self.bundle.read_evidence
+    }
+
+    /// Exact successful core reads remain separate from context-wide module evidence.
+    pub(crate) fn core_evidence(&self) -> &ReadEvidence {
+        &self.core_evidence
     }
 
     /// The bundle with its complete read evidence, as the inner bundler returned it.
@@ -216,7 +240,14 @@ fn stamp_evidence(
         if let Some(first) = digests.next() {
             consistent &= digests.all(|other| other == first);
             consistent &= range_evidence::verify(tree, &absolute, versions, first);
-            stamp.files.insert(absolute, Some(first.into()));
+            let files = if stamp.unretained.contains_key(&absolute) {
+                &mut stamp.unretained
+            } else {
+                &mut stamp.files
+            };
+            if let Some(previous) = files.insert(absolute, Some(first.into())) {
+                consistent &= previous.as_deref() == Some(first);
+            }
         }
     }
     consistent

@@ -9,12 +9,13 @@ use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::read_evidence::ReadEvidence;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::stylesheet_compiler::{Compilation, RootCompiler};
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 /// One attempt's stylesheet bundler: an attempt-local store in front of the shared store.
 pub(crate) struct CachedStylesheets {
-    inner: Arc<dyn StylesheetBundler>,
+    inner: Arc<dyn RootCompiler>,
     tree: Arc<dyn SourceTree>,
     root: PathBuf,
     settings: String,
@@ -30,7 +31,7 @@ pub(crate) struct CachedStylesheets {
 
 impl CachedStylesheets {
     pub(crate) fn new(
-        inner: Arc<dyn StylesheetBundler>,
+        inner: Arc<dyn RootCompiler>,
         tree: Arc<dyn SourceTree>,
         root: PathBuf,
         settings: String,
@@ -133,13 +134,14 @@ impl CachedStylesheets {
     }
 
     #[tracing::instrument(name = "css.bundle", skip_all, err, fields(cache = miss.as_str()))]
-    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Bundle> {
-        self.inner.bundle(root)
+    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Compilation> {
+        self.inner.compile(root)
     }
 
     /// Replay a record's observations into this attempt's tree. Context evidence replays once.
     fn deliver(&self, record: &Record) -> Result<Bundle> {
         self.observe(record.evidence())?;
+        self.observe(record.core_evidence())?;
         if let Some(context) = &record.context {
             for entry in ContextEvidence::chain_arcs(context) {
                 let mut replayed = lock(&self.replayed);
@@ -149,7 +151,9 @@ impl CachedStylesheets {
                 }
             }
         }
-        Ok(record.complete())
+        let mut bundle = record.complete();
+        bundle.resolution_files = self.inner.watch_files(&bundle.resolution_files)?;
+        Ok(bundle)
     }
 
     fn observe(&self, evidence: &ReadEvidence) -> Result<()> {
@@ -202,6 +206,10 @@ mod stylesheet_cache_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_evidence_tests.rs"]
 mod stylesheet_evidence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_capture_tests.rs"]
+mod stylesheet_capture_tests;
 
 #[cfg(test)]
 #[path = "_tests_/stylesheet_miss_tests.rs"]

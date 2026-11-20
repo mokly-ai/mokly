@@ -30,6 +30,7 @@ pub(super) struct PlanInputs<'a> {
     directories: Cow<'a, [DirectoryDependency]>,
     resources: BTreeSet<String>,
     resolution: Option<Resolution<'a>>,
+    stylesheet_resolution: BTreeSet<String>,
 }
 
 impl<'a> PlanInputs<'a> {
@@ -41,6 +42,7 @@ impl<'a> PlanInputs<'a> {
             sources: Cow::Borrowed(&catalogue.model.sources),
             directories: Cow::Borrowed(prepared.generation.stylesheet_directories()),
             resources: prepared.generation.watch_files(),
+            stylesheet_resolution: prepared.generation.stylesheet_resolution_files(),
             resolution: catalogue.javascript.generation.as_ref().map(|generation| {
                 (
                     Cow::Borrowed(&generation.resolution_files),
@@ -58,12 +60,14 @@ impl<'a> PlanInputs<'a> {
             directories,
             resources,
             resolution,
+            stylesheet_resolution,
         } = self;
         PlanInputs {
             config: Cow::Owned(config.into_owned()),
             sources: Cow::Owned(sources.into_owned()),
             directories: Cow::Owned(directories.into_owned()),
             resources,
+            stylesheet_resolution,
             resolution: resolution.map(|(files, directories)| {
                 (
                     Cow::Owned(files.into_owned()),
@@ -94,6 +98,7 @@ impl PlanRecord {
         if let Some((files, directories)) = &inputs.resolution {
             plan.resolution(files, directories);
         }
+        plan.resolution(&inputs.stylesheet_resolution, &BTreeMap::new());
         let targets = plan.targets();
         Ok(Self {
             inputs: inputs.into_owned(),

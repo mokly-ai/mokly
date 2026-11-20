@@ -140,6 +140,7 @@ fn preparation_stops_before_the_next_stylesheet_root() {
                 route: "styles/a.css".into(),
                 css: "p {}".into(),
                 assets: Default::default(),
+                resolution_files: Default::default(),
                 css_modules: Default::default(),
                 inputs: Default::default(),
                 imported_by: Default::default(),

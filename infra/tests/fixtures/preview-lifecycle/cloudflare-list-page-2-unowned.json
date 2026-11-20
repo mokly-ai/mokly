@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "fedcba9876543210fedcba9876543210",
+      "type": "A",
+      "name": "*.pr-42.preview.catalogues.net",
+      "content": "192.0.2.42",
+      "proxied": false,
+      "ttl": 300,
+      "comment": "operator-owned"
+    }
+  ],
+  "result_info": {
+    "page": 2,
+    "per_page": 100,
+    "count": 1,
+    "total_count": 2,
+    "total_pages": 2
+  }
+}

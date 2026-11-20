@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "id": "0123456789abcdef0123456789abcdef",
+    "type": "A",
+    "name": "*.pr-42.preview.catalogues.net",
+    "content": "192.0.2.42",
+    "proxied": false,
+    "ttl": 300,
+    "comment": "mokly-preview:preview-pr-42"
+  }
+}

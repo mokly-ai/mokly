@@ -4,7 +4,7 @@ For repository development, use the tested Node.js version in
 [`.nvmrc`](../../.nvmrc), npm 11.21.0 (the `packageManager` version in
 `package.json`), the Bun version in [`.bun-version`](../../.bun-version) for
 the required type check, the Rust toolchain in
-[`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+[`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.98.1 with rustfmt and
 Clippy), Git 2.45.0 or later and Git LFS for the Rust tests, and Chromium for
 the browser suite. With nvm, run `nvm install` in the repository before the npm
 commands below. rustup reads the toolchain file and installs the pinned Rust

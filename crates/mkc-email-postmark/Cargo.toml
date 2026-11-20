@@ -1,0 +1,23 @@
+[package]
+name = "mkc-email-postmark"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mkc-email-interface.workspace = true
+mkc-email-templates.workspace = true
+internal-error.workspace = true
+reqwest = { version = "0.13.5", features = ["blocking", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+thiserror = "2.0.20"
+tracing = "0.1.44"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+serde_json = "1.0.151"

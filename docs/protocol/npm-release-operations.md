@@ -50,9 +50,8 @@ tarball and pack report, every registry verification result, the GitHub
 releases, the npm URLs, the provenance and signature results, and every
 clean-consumer smoke result. The checked package set and native archives stay available for 90 days. A
 manual retry supplies the first automatic run id and reuses its bytes.
-The preserved verification record identifies
-whether the workflow ran the complete gate or reused CI, and in evidence mode
-names the selected CI run, evidence commit, matching tree, and report count.
+The preserved verification record names the selected CI run, evidence commit,
+matching tree, and report count. Publication requires applicable evidence.
 Keep the workflow run and the protection read-backs. An interactive bootstrap
 publication has source, hash, and npm signature evidence, not OIDC provenance;
 trusted publications generate provenance automatically. Do not claim a

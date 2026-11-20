@@ -1,0 +1,63 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "id": 100,
+    "number": 42,
+    "title": "Update the catalogue",
+    "state": "open",
+    "merged": false,
+    "head": {
+      "ref": "feature/catalogue",
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "repo": {
+        "id": 1296269,
+        "full_name": "octocat/Hello-World",
+        "name": "Hello-World",
+        "owner": {
+          "id": 1,
+          "login": "octocat",
+          "type": "User",
+          "node_id": "MDQ6VXNlcjE="
+        },
+        "default_branch": "master",
+        "private": false,
+        "archived": false,
+        "disabled": false
+      }
+    },
+    "base": {
+      "ref": "master",
+      "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "repo": {
+        "id": 1296269,
+        "full_name": "octocat/Hello-World",
+        "name": "Hello-World",
+        "owner": {
+          "id": 1,
+          "login": "octocat",
+          "type": "User",
+          "node_id": "MDQ6VXNlcjE="
+        },
+        "default_branch": "master",
+        "private": false,
+        "archived": false,
+        "disabled": false
+      }
+    },
+    "user": {
+      "id": 1,
+      "login": "octocat",
+      "type": "User",
+      "node_id": "MDQ6VXNlcjE="
+    }
+  }
+}

@@ -245,6 +245,13 @@ impl RenderGeneration for BaseReader {
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.state.reuse.base.generation.stylesheet_directories()
     }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.state
+            .reuse
+            .base
+            .generation
+            .stylesheet_resolution_files()
+    }
     fn public_files(&self) -> BTreeSet<String> {
         self.state.reuse.base.generation.public_files()
     }

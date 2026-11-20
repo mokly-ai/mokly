@@ -35,6 +35,10 @@ test("every release derives a viewer tag from the shared CLI tag", () => {
     }),
     { cli: "v0.16.0", viewer: "viewer-v0.16.0" },
   );
+  assert.throws(
+    () => resolvePublishRefs({ eventName: "schedule" }),
+    /unsupported release event/,
+  );
   for (const tag of ["main", "latest", "v0.16.0; echo unsafe"])
     assert.throws(() =>
       resolvePublishRefs({
@@ -108,7 +112,7 @@ test("staged files and a different checkout cannot pass shared tag verification"
   await assert.rejects(verifyReleaseRefs(fixture.root, "v0.8.0"), /one commit/);
 });
 
-test("release selection preserves verification mode and no-release output", async (t) => {
+test("release selection preserves immutable refs and no-release output", async (t) => {
   const fixture = await bootstrapFixture(t);
   const outputs = async (env: Record<string, string>) => {
     const output = path.join(fixture.destination, `output-${randomUUID()}`);
@@ -128,17 +132,14 @@ test("release selection preserves verification mode and no-release output", asyn
     MANUAL_REF: "v0.16.0",
     RELEASE_TAG: "v0.16.0",
     RELEASE_CREATED: "true",
-    MANUAL_VERIFICATION: "complete",
   };
   assert.deepEqual(await outputs({ ...shared, RELEASE_EVENT: "push" }), {
     publish_ref: "v0.16.0",
-    verification: "evidence",
   });
   assert.deepEqual(
     await outputs({ ...shared, RELEASE_EVENT: "workflow_dispatch" }),
     {
       publish_ref: "v0.16.0",
-      verification: "complete",
     },
   );
   assert.deepEqual(
@@ -149,15 +150,6 @@ test("release selection preserves verification mode and no-release output", asyn
     }),
     {
       publish_ref: "",
-      verification: "evidence",
     },
-  );
-  await assert.rejects(
-    outputs({
-      ...shared,
-      RELEASE_EVENT: "workflow_dispatch",
-      MANUAL_VERIFICATION: "skip",
-    }),
-    /unsupported release verification mode/,
   );
 });

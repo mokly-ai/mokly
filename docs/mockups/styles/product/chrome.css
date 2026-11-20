@@ -1,0 +1,103 @@
+/* Shared chrome primitives: the wordmark, identity, inline rows and headings.
+   Control rendering itself always belongs to the Firna theme mapping. */
+.review-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-display);
+  font-size: 1.25rem;
+  line-height: 1.6rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.review-brand svg {
+  color: var(--mk-color-accent);
+}
+.review-period {
+  color: var(--mk-color-text);
+}
+.review-account {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  color: var(--mk-color-text);
+}
+.review-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-space-3);
+}
+.review-section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+  flex-wrap: wrap;
+}
+.fo-section-copy {
+  display: grid;
+  gap: var(--mk-space-1);
+  min-width: 0;
+}
+.review-section-heading h2 {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.006em;
+}
+.fo-section-detail,
+.review-date {
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-group-label {
+  display: block;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-label-size);
+  line-height: var(--mk-type-ui-label-line);
+  font-weight: var(--mk-type-ui-label-weight);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.fo-site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-1);
+  min-height: var(--mk-layout-row-min);
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+  text-decoration: none;
+}
+.fo-site-link:hover {
+  color: var(--mk-color-text);
+}
+.fo-site-link:hover > span {
+  text-decoration: underline;
+}
+/* The way back under a form's actions: an ink link, never a Firna Button. */
+.fo-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-row-min);
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+  text-decoration: none;
+}
+.fo-back-link:hover > span {
+  text-decoration: underline;
+}
+.numeric {
+  font-variant-numeric: tabular-nums;
+}

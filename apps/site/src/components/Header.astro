@@ -1,0 +1,58 @@
+---
+/**
+ * The shared header: the brand, the menu control, the navigation and Get
+ * started, inside a band aligned to the wide measure. Above the
+ * breakpoint the row lists every destination. Below it the row holds the
+ * brand and the menu control, and the menu lists the destinations. The
+ * documentation search control appears on documentation routes and nowhere
+ * else; below the breakpoint it takes the row beneath.
+ */
+import {
+  EXTERNAL_LINKS,
+  GET_STARTED_PATH,
+  SITE_PATHS,
+  currentPage,
+  isDocsRoute,
+} from "../navigation.js";
+
+import Brand from "./Brand.astro";
+import Menu from "./Menu.astro";
+import Search from "./docs/Search.tsx";
+
+interface Props {
+  readonly route: string;
+  readonly ruled?: boolean;
+}
+
+const { route, ruled = true } = Astro.props;
+---
+
+<div class={ruled ? "site-band site-band--ruled" : "site-band"}>
+  <header class="site-header">
+    <Brand route={route} />
+    <Menu route={route} />
+    {isDocsRoute(route) && <Search client:idle />}
+    <nav aria-label="Main" class="site-nav">
+      <a
+        aria-current={currentPage(route, SITE_PATHS.docs)}
+        class="site-nav-link"
+        href={SITE_PATHS.docs}
+      >
+        Docs
+      </a>
+      <a
+        aria-current={currentPage(route, SITE_PATHS.changelog)}
+        class="site-nav-link"
+        href={SITE_PATHS.changelog}
+      >
+        Changelog
+      </a>
+      <a class="site-nav-link" href={EXTERNAL_LINKS.github}>
+        GitHub
+      </a>
+      <a class="site-button site-button--secondary" href={GET_STARTED_PATH}>
+        Get started <span aria-hidden="true">&#8594;</span>
+      </a>
+    </nav>
+  </header>
+</div>
