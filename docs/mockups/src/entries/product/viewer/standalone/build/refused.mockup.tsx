@@ -20,7 +20,7 @@ export default defineScreen({
     "docs/protocol/cloud/folio-chrome.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "refused"],
+  tags: ["product", "canvas", "viewer", "refused"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -43,7 +43,7 @@ export default defineScreen({
         "docs/protocol/cloud/folio-chrome.md",
         "docs/protocol/cloud/product-mockups-viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "cancel"],
+      tags: ["product", "canvas", "viewer", "cancel"],
       props: { state: "cancel" },
     },
   ],

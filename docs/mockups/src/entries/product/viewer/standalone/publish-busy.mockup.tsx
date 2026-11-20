@@ -11,7 +11,7 @@ export default defineScreen({
     "docs/protocol/cloud/folio-chrome.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "pending"],
+  tags: ["product", "canvas", "viewer", "pending"],
   render: (_props, { viewport }) => (
     <ViewerPublishBusyScreen viewport={viewport} />
   ),

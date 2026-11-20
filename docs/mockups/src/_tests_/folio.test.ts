@@ -10,7 +10,12 @@ import { catalogueRoot, screenFile } from "./catalogue-paths";
 import { drawnPalette } from "./catalogue-reads";
 import { variantParent } from "./catalogue-variants";
 import { attribute, byClass, elements } from "./design-site-test-helpers";
-import { folioInventoryViolations, folioScreens } from "./folio-inventory";
+import {
+  canvasScreens,
+  folioInventoryViolations,
+  folioScreens,
+  permanentScreens,
+} from "./folio-inventory";
 
 /**
  * Whether a document draws the package's viewer shell. Every document also
@@ -21,10 +26,10 @@ function drawsViewerShell(html: string): boolean {
   return /class="(?:[^"]* )?mokly-viewer[ "]/.test(html);
 }
 
-test("Folio screens have permanent ids and folders, with all registered controls retained", () => {
+test("Folio and Canvas screens have permanent ids and folders, with all registered controls retained", () => {
   const entries = catalogueEntries();
   assert.deepEqual(folioInventoryViolations(entries, drawnPalette), []);
-  for (const { path: id } of folioScreens) {
+  for (const { path: id } of permanentScreens) {
     assert.ok(
       folioInventoryViolations(
         entries.filter((e) => e.path !== id),
@@ -50,6 +55,19 @@ test("Folio screens have permanent ids and folders, with all registered controls
       id,
     );
   }
+  // A viewer screen drawn in Folio, and a Folio screen drawn in Canvas, are
+  // both in the wrong palette.
+  for (const [screens, wrong] of [
+    [canvasScreens, "folio"],
+    [folioScreens, "canvas"],
+  ] as const)
+    for (const { path: id } of screens)
+      assert.ok(
+        folioInventoryViolations(entries, (path) =>
+          path === id ? wrong : drawnPalette(path),
+        ).length,
+        id + " " + wrong,
+      );
   assert.deepEqual(
     entries
       .filter((e) => e.kind === "component" && variantParent(e) === undefined)
@@ -136,12 +154,12 @@ test("retired product families stay absent while the Design site is present", ()
   assert.ok(!config.includes("marketing"));
 });
 
-test("all preserved Folio screens render both widths and schemes at permanent IDs", () => {
-  for (const { path: id } of folioScreens)
+test("all preserved Folio and Canvas screens render both widths and schemes at permanent IDs", () => {
+  for (const { path: id, palette } of permanentScreens)
     for (const viewport of ["mobile", "desktop"] as const)
       for (const scheme of ["light", "dark"] as const) {
         const html = readFileSync(screenFile(id, viewport, scheme), "utf8");
-        assert.ok(html.includes('class="folio-scope"'));
+        assert.ok(html.includes('class="' + palette + '-scope"'), id);
         assert.ok(html.includes('data-mkc-screen="' + id + '"'));
         assert.ok(!html.includes("<iframe"));
         assert.ok(!html.includes("explore-"));

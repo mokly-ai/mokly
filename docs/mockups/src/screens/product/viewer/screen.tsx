@@ -8,7 +8,7 @@ import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
 import { Action } from "../page-parts";
 
-import type { AccountLabel } from "./chrome";
+import type { AccountLabel } from "./account-trigger";
 import { ViewerChrome } from "./chrome";
 import type { PublishedSubject } from "./published-slots";
 
@@ -34,7 +34,7 @@ type ViewerScreenProps = {
   id: string;
   state: ScreenState;
   viewport: Viewport;
-  /** Who the bar calls the reader, when it is not their own display name. */
+  /** Who the bar calls the reader, when it is not Cal. */
   account?: AccountLabel;
   workspace?: string;
   project?: string;
@@ -138,7 +138,9 @@ export function ViewerScreen({
 /**
  * A viewer entry with one of its slots open: the panel is the subject, so it
  * takes the document's main landmark and heading and the viewer beneath is
- * inert, exactly as the settings dialog is hosted.
+ * inert, exactly as the settings dialog is hosted. The panel owns the
+ * screen's one filled action, so the bar's Share beneath it keeps the
+ * secondary tone.
  *
  * There is no skip link. Everything before the panel is the inert backdrop, so
  * there is nothing between the start of the document and the main landmark for
@@ -170,7 +172,7 @@ export function ViewerPanelScreen({
       data-mkc-screen={screen ?? stateScreenPath(id, state)}
     >
       <LayerBeneath className="fo-viewer-backdrop">
-        <ViewerChrome viewport={viewport} published />
+        <ViewerChrome viewport={viewport} published layered />
       </LayerBeneath>
       <div id="main" role="main" className="fo-viewer-surface">
         <Panel

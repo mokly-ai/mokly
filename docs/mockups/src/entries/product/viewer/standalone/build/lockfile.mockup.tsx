@@ -11,7 +11,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups-viewer.md",
     "docs/protocol/cloud/cloud-build-runner.md",
   ],
-  tags: ["product", "folio", "viewer", "lockfile"],
+  tags: ["product", "canvas", "viewer", "lockfile"],
   render: (_props, { viewport }) => (
     <ViewerBuildLockfileScreen viewport={viewport} />
   ),

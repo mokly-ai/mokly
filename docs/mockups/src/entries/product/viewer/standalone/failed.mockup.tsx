@@ -12,7 +12,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer.md",
     "docs/protocol/cloud/product-copy.md",
   ],
-  tags: ["product", "folio", "viewer", "failed"],
+  tags: ["product", "canvas", "viewer", "failed"],
   render: (_props, { viewport }) => (
     <ViewerStandaloneFailedScreen viewport={viewport} />
   ),

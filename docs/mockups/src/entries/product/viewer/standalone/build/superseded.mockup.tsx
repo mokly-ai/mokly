@@ -19,7 +19,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer-builds.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "superseded"],
+  tags: ["product", "canvas", "viewer", "superseded"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -37,7 +37,7 @@ export default defineScreen({
       title: "Build · Superseded · Cancelled",
       description:
         "Build — a member cancelled this build while it fetched; Try again requests a new build for the branch.",
-      tags: ["product", "folio", "viewer", "cancelled"],
+      tags: ["product", "canvas", "viewer", "cancelled"],
       props: { state: "cancelled" },
     },
   ],

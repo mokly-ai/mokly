@@ -23,7 +23,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -40,7 +40,7 @@ export default defineScreen({
       slug: "empty",
       title: "Projects · Empty",
       description: "Projects — a workspace with no project yet.",
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -48,14 +48,14 @@ export default defineScreen({
       title: "Projects · Loading",
       description:
         "Projects — the panel loads over the viewer: one workspace group with its name and accounts as bars, one placeholder row and its settings control as a placeholder, and Create project disabled.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
       slug: "error",
       title: "Projects · Error",
       description: "Projects — the list could not load and offers one retry.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
   ],

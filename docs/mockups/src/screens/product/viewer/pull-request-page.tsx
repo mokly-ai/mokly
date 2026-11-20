@@ -6,7 +6,8 @@ import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { pullRequest } from "../../../fixtures/publications";
 
-import type { AccountLabel } from "./chrome";
+import type { AccountLabel } from "./account-trigger";
+import { readyDetail } from "./pill";
 import { StageUnpublishedPullRequest } from "./pull-request-stage";
 import { ViewerScreen, isPublishedPath } from "./screen";
 import type { SlotMeta, SlotPullRequest } from "./slots";
@@ -16,7 +17,7 @@ import { stageBody } from "./stage";
 const meta = {
   default: {
     state: "ready",
-    detail: pullRequest.published,
+    detail: readyDetail(pullRequest.published),
     sha: pullRequest.sha,
   },
   empty: { state: "none", detail: "Not published" },
@@ -68,6 +69,7 @@ export function PullRequestPage({
           label: title,
           detail: pull.author + " · " + current.detail,
           sha: current.sha,
+          kind: "pullRequest",
           changes: true,
           github: true,
         }}

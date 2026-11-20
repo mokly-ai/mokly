@@ -29,6 +29,15 @@ export const viewerStageSituations = [
     name: "account",
     states: ["default"],
   },
+  // The account menu open under the avatar, and More open in its place on a
+  // narrow bar and on a phone.
+  {
+    path: "product/viewer/standalone/account-menu",
+    family: "viewer",
+    screen: "standalone",
+    name: "account-menu",
+    states: ["default"],
+  },
   {
     path: "product/viewer/standalone/failed",
     family: "viewer",

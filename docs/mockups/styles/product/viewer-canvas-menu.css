@@ -1,0 +1,83 @@
+/* The open account menu and the open More menu, which only the account
+   menu's drawing imports, so Mokly bundles this sheet into that entry's own
+   stylesheet and the application never loads it. Every rule is scoped to
+   the Canvas palette's wrapper and styles cloud elements only.
+
+   A desktop drawing opens each menu as a popover in a layer at the viewer's
+   root, as the live menu portals to the document root, because the bar's
+   slots clip their content. The layer's own composition class decides which
+   bar shows it, so no rule here sets its display. */
+.canvas-scope .fo-canvas-menu-layer {
+  position: absolute;
+  z-index: 2;
+  /* The trigger's bottom edge, a 30px control centred in the bar, then the
+     menu's 6px gutter. */
+  top: calc((var(--mk-layout-topbar) + 30px) / 2 + 6px);
+}
+.canvas-scope .fo-canvas-menu-layer.fo-full-bar-only {
+  inset-inline-end: var(--fo-canvas-bar-end);
+}
+.canvas-scope .fo-canvas-menu-layer.fo-compact-bar-only {
+  inset-inline-end: var(--fo-canvas-compact-end);
+}
+
+/* Who is signed in, above the Theme choice. */
+.canvas-scope .fo-canvas-menu-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-1) 0 var(--mk-space-3);
+}
+.canvas-scope .fo-canvas-menu-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.canvas-scope .fo-canvas-menu-name {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-semibold);
+}
+.canvas-scope .fo-canvas-menu-email {
+  overflow: hidden;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The Theme choice: its label, and the two options at their own width. */
+.canvas-scope .fo-canvas-menu-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-3);
+  padding-top: var(--mk-space-2);
+  border-top: 1px solid var(--mk-color-border);
+}
+.canvas-scope .fo-canvas-menu-label {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+}
+.canvas-scope .fo-canvas-menu-choice {
+  flex: none;
+}
+
+/* A row's leading glyph, muted, in a column of one width. */
+.canvas-scope .fo-canvas-menu-glyph {
+  display: flex;
+  justify-content: center;
+  width: 16px;
+  color: var(--mk-color-text-muted);
+}
+
+/* The hairline between More's own rows and the account rows. */
+.canvas-scope .fo-canvas-menu-rule {
+  display: block;
+  height: 1px;
+  margin: var(--mk-space-1) 0;
+  background: var(--mk-color-border);
+}

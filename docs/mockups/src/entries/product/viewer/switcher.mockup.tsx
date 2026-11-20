@@ -28,7 +28,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer-builds.md",
     "docs/protocol/cloud/viewer-build-navigation.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -52,7 +52,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -64,7 +64,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -76,7 +76,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -88,7 +88,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "no-branches"],
+      tags: ["product", "canvas", "viewer", "no-branches"],
       props: { state: "no-branches" },
     },
   ],

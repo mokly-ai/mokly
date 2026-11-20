@@ -2,55 +2,18 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
-import { StatusDot } from "../../../entries/design/status-dot.mockup";
+import "../../../../styles/product/viewer-canvas.css";
 import { sample } from "../../../fixtures/product";
-import type { PublicationState } from "../../../fixtures/publications";
-import { publicationTones } from "../../../fixtures/publications";
 import { Pending } from "../page-parts";
 import { StatePlaceholder } from "../placeholders";
 import { ViewerStage } from "../shell";
 
+import { defaultReader } from "./account-trigger";
+import type { AccountLabel } from "./account-trigger";
 import { ViewerBar } from "./bar";
-import type {
-  PublishedAccountLabel,
-  PublishedSubject,
-} from "./published-slots";
+import type { PublishedSubject } from "./published-slots";
 import { PublishedViewer } from "./published-viewer";
 import { StageCard } from "./stage-card";
-
-/** What the middle slot says about the publication the stage is showing. */
-export function PublicationMeta({
-  state,
-  detail,
-  sha,
-  children,
-}: {
-  state: PublicationState;
-  detail: string;
-  sha?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <span className="fo-top-state">
-      <StatusDot
-        moklyInstance={"viewer-state-" + state}
-        tone={publicationTones[state]}
-      />
-      <span className="fo-top-state-detail">{detail}</span>
-      {sha && <code className="mono-value">{sha}</code>}
-      {children}
-    </span>
-  );
-}
-
-/**
- * What the bar calls the reader. Every account is created by an email address,
- * so somebody who has not set a name is named by theirs; the whole address is
- * wider than the compact bar's first row, which is why that row keeps the part
- * that identifies them and the whole address stays the control's accessible
- * name and its tooltip.
- */
-export type AccountLabel = PublishedAccountLabel;
 
 /**
  * The two forms of the chrome. The published form draws the ready viewer,
@@ -61,7 +24,7 @@ export type AccountLabel = PublishedAccountLabel;
 type ViewerChromeProps = {
   viewport: Viewport;
   heading?: string;
-  /** Who the bar calls the reader, when it is not their own display name. */
+  /** Who the bar calls the reader, when it is not Cal. */
   account?: AccountLabel;
   workspace?: string;
   project?: string;
@@ -70,9 +33,16 @@ type ViewerChromeProps = {
   comparisonBlocked?: boolean;
   view?: "all" | "changes";
 } & (
-  | { published: true; publication?: never; waiting?: never }
+  | {
+      published: true;
+      /** Whether a panel or a sheet is open over the viewer. */
+      layered?: boolean;
+      publication?: never;
+      waiting?: never;
+    }
   | {
       published?: false;
+      layered?: never;
       publication: ReactNode;
       /** The project read the route still runs, which the frame waits for. */
       waiting?: string;
@@ -88,16 +58,21 @@ type ViewerChromeProps = {
  * controls wait over the stage's waiting card. The heading's own text is the
  * read's to give, so the heading holds the read's one name for screen
  * readers, and the card's title, which would repeat it, is a bar.
+ *
+ * Every viewer drawing renders this chrome, so its module carries the Canvas
+ * stylesheet of the drawings. The application links the Folio sheets and
+ * never loads it.
  */
 export function ViewerChrome({
   viewport,
   heading,
   publication,
-  account = { label: sample.viewer.name },
+  account = defaultReader,
   workspace = sample.workspace,
   project = sample.project,
   children,
   published = false,
+  layered = false,
   publishedSubject,
   comparisonBlocked = false,
   view = "all",
@@ -141,6 +116,7 @@ export function ViewerChrome({
           project={project}
           comparisonBlocked={comparisonBlocked}
           view={view}
+          layered={layered}
         />
       ) : (
         <ViewerStage

@@ -35,7 +35,7 @@ export function ViewerProjectLoadingScreen({
       state="loading"
       screen="product/viewer/standalone/project-loading"
       viewport={viewport}
-      publication={<SlotPlaceholder />}
+      publication={<SlotPlaceholder viewport={viewport} />}
       waiting="Opening your project"
     />
   );
