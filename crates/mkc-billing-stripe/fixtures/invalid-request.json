@@ -1,0 +1,14 @@
+{
+  "status": 400,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_invalid_fixture"
+  },
+  "body": {
+    "error": {
+      "type": "invalid_request_error",
+      "code": "parameter_invalid_integer",
+      "message": "Fixture raw validation detail"
+    }
+  }
+}

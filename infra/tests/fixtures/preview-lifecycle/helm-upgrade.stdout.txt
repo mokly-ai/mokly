@@ -1,0 +1,6 @@
+Release "mokly-cloud" has been upgraded. Happy Helming!
+NAME: mokly-cloud
+LAST DEPLOYED: Tue Sep 22 20:00:00 2026
+NAMESPACE: mkc-preview-pr-42
+STATUS: deployed
+REVISION: 8

@@ -1,0 +1,156 @@
+/* 3 -- Skip link, application band and header ---------------------------- */
+
+.site-skip {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: inline-flex;
+  left: -9999px;
+  padding: var(--mk-space-2) var(--mk-space-4);
+  position: absolute;
+  top: var(--mk-space-2);
+  z-index: 5;
+}
+
+.site-skip:focus {
+  left: var(--mk-space-4);
+}
+
+.site-band {
+  background: none;
+}
+
+.site-band--ruled {
+  border-bottom: 1px solid var(--mk-color-border);
+}
+
+.site-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-5);
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: var(--mk-space-2) var(--mk-layout-gutter-desktop);
+  width: 100%;
+}
+
+.site-brand {
+  align-items: center;
+  color: var(--mk-color-text);
+  display: inline-flex;
+  font-family: var(--mk-font-display);
+  font-size: 1.75rem;
+  gap: var(--mk-space-2);
+  text-decoration: none;
+  text-underline-offset: 6px;
+  white-space: nowrap;
+}
+
+.site-brand:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mk-color-accent);
+  text-decoration-thickness: 2px;
+}
+
+.site-brand svg {
+  color: var(--mk-color-accent);
+}
+
+.site-brand-dot {
+  color: var(--mk-color-accent);
+}
+
+.site-nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-5);
+}
+
+.site-nav-link {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-size: var(--mk-type-small-size);
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-nav-link:hover {
+  color: var(--mk-color-text);
+  text-decoration: underline;
+}
+
+.site-nav-link[aria-current="page"] {
+  color: var(--mk-color-text);
+}
+
+/* The location trail, set as the eyebrow line above a page title */
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-trail-step {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-trail .site-trail-step:last-child {
+  color: var(--mk-color-text);
+}
+
+.site-trail-sep,
+.site-crumb-sep {
+  padding: 0 var(--mk-space-2);
+}
+
+/* The published CLI version, shown as the quiet identity chip */
+
+.site-version {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-1) var(--mk-space-2);
+}
+
+.site-version-label {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-version-link {
+  align-items: center;
+  color: var(--mk-color-text);
+  display: inline-flex;
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-version-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mk-color-border-strong);
+}

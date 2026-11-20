@@ -151,8 +151,13 @@ test(
         assert.match(html, /mokly-slot:start id="r-\d+" instance="r-\d+"/);
         for (const sheet of [1, 2])
           assert.equal(html.includes(`shared-${sheet}.css`), i <= 2);
+        // The renderer returns Firna's DOM backend sheet as a style element,
+        // and the core collects it into the head.
         if (variant === "react")
-          assert.match(html, /\[stylesheet-group="[0-9]"\]/);
+          assert.match(
+            html.slice(0, html.indexOf("<body")),
+            /<style[^>]*>[^<]*\.firna-view\{/,
+          );
       }
       const first = await inventory(output);
       assert.equal(

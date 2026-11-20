@@ -1,0 +1,124 @@
+/* Foundations for the public site: the reset, the type roles from the Folio
+   type table, the shared measures and section rhythm, the focus ring, the
+   minimum target size, and the forced-colors and reduced-motion rules.
+
+   Every value here resolves from a semantic --mk-* property emitted by the
+   tokens workspace. Mobile is the default composition and the 768px
+   breakpoint raises the desktop roles. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--mk-color-background);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-body-size);
+  line-height: var(--mk-type-body-line);
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure,
+pre {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: var(--mk-type-heading1-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading1-line);
+}
+
+h2 {
+  font-size: var(--mk-type-heading2-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading2-line);
+}
+
+h3 {
+  font-size: var(--mk-type-heading3-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading3-line);
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+}
+
+/* The minimum target height. Inline links in prose keep their line box
+   because min-height does not apply to non-replaced inline boxes; every
+   link and control the chrome lays out is at least this tall. */
+
+a,
+button {
+  min-height: var(--mk-layout-control-min);
+}
+
+/* Shared text roles */
+
+.site-accent {
+  color: var(--mk-color-accent);
+  font-style: normal;
+}
+
+.site-eyebrow {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: var(--mk-layout-prose-max);
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

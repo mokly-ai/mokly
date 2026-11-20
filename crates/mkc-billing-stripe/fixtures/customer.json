@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_customer_fixture"
+  },
+  "body": {
+    "id": "cus_fixture",
+    "object": "customer",
+    "email": "owner@example.com",
+    "name": "Fixture Organization",
+    "metadata": {
+      "organization_id": "01998a00-0000-7000-8000-000000000001"
+    }
+  }
+}

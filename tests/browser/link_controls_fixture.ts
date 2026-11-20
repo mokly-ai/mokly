@@ -21,7 +21,7 @@ const metadata = {description: "Link controls", relatedDocs: []};
 export const home = defineScreen({...metadata, path: "home", title: "Home", useCasePaths: ["tour"], props: {}, render: () => <Controls/>});
 export const details = defineScreen({...metadata, path: "details", title: "Details", useCasePaths: ["tour"], props: {}, render: () => <main>Details</main>});
 export const tour = defineUseCase({...metadata, path: "tour", title: "Tour", steps: [{screenPath: "home"}, {screenPath: "details"}]});`,
-      "renderer.tsx": `import React from "react"; import {SharedUiThemeProvider} from "@firna/ui/theme"; export default function render(input) {return <SharedUiThemeProvider>{input.node}</SharedUiThemeProvider>;}`,
+      "renderer.tsx": `import React from "react"; import {domBackendCss} from "@firna/ui"; import {SharedUiThemeProvider} from "@firna/ui/theme"; export default function render(input) {return <><style>{domBackendCss}</style><SharedUiThemeProvider>{input.node}</SharedUiThemeProvider></>;}`,
     },
     {
       colorSchemes: ["light", "dark"],

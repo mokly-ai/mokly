@@ -1,0 +1,72 @@
+---
+/**
+ * The mobile header's menu: the control at the trailing edge of the header
+ * row and the panel it opens. The panel is a modal dialog that slides in from
+ * the right edge over a dimmed page, so the page is inert until the reader
+ * closes it. Its close control sits where the menu control was. Above the
+ * breakpoint the header row lists the same destinations and the control is
+ * not drawn.
+ */
+import {
+  EXTERNAL_LINKS,
+  GET_STARTED_PATH,
+  SITE_PATHS,
+  type SitePath,
+  currentPage,
+} from "../navigation.js";
+
+import Glyph from "./Glyph.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+
+/** The site routes the menu lists, in the header's reading order. */
+const pages: ReadonlyArray<readonly [SitePath, string]> = [
+  [SITE_PATHS.docs, "Docs"],
+  [SITE_PATHS.changelog, "Changelog"],
+];
+---
+
+<button
+  aria-controls="site-menu"
+  aria-expanded="false"
+  aria-haspopup="dialog"
+  aria-label="Menu"
+  class="site-menu-button"
+  type="button"
+>
+  <Glyph name="menu" />
+</button>
+<dialog aria-label="Menu" class="site-menu" closedby="any" id="site-menu">
+  <div class="site-menu-panel">
+    <div class="site-menu-head">
+      <button aria-label="Close menu" class="site-menu-close" type="button">
+        <Glyph name="close" />
+      </button>
+    </div>
+    <nav aria-label="Main" class="site-menu-nav">
+      {pages.map(([path, label]) => (
+        <a
+          aria-current={currentPage(route, path)}
+          class="site-menu-link"
+          href={path}
+        >
+          {label}
+        </a>
+      ))}
+      <a class="site-menu-link" href={EXTERNAL_LINKS.github}>
+        GitHub
+      </a>
+    </nav>
+    <div class="site-menu-actions">
+      <a class="site-button site-button--primary" href={GET_STARTED_PATH}>
+        Get started <span aria-hidden="true">&#8594;</span>
+      </a>
+    </div>
+  </div>
+</dialog>
+
+<script src="./menu-dialog.ts"></script>

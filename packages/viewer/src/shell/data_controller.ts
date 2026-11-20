@@ -8,7 +8,6 @@
 import type { LiveDescriptorV3 } from "@mokly/model";
 
 import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
-import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {
   withDetails,
@@ -16,24 +15,13 @@ import {
   withoutDetails,
   type ShellDataSnapshot,
 } from "./data_commit.js";
+import type { ShellDataHost } from "./data_controller_host.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
 import { DetailLoader } from "./data_detail_loader.js";
 import { staleAwareLiveSource } from "./data_live_transport.js";
 import { PublicationRefresh } from "./data_refresh.js";
 import { routeDetailRequests, type DetailOutcome } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
-import type { ShellRoute } from "./routes.js";
-
-/** What the controller asks of the shell that owns it. */
-export interface ShellDataHost {
-  /** Adopt one snapshot in one store commit. */
-  commit(next: ShellDataSnapshot): void;
-  /** The route on screen now. */
-  route(): ShellRoute;
-  versionError(error: MoklyVersionError): void;
-  /** A browser warning: live editing or live updates are unavailable. */
-  warn(message: string, cause?: unknown): void;
-}
 
 /** Fetch details under their fences and follow the publications of Serve. */
 export class ShellDataController {
@@ -41,6 +29,7 @@ export class ShellDataController {
   readonly #source: ShellDataSource | undefined;
   readonly #listeners = new Set<() => void>();
   #snapshot: ShellDataSnapshot;
+  #failure: { error: unknown } | undefined;
   #version = 0;
   readonly #details: DetailLoader;
   #replaced = false;
@@ -61,8 +50,9 @@ export class ShellDataController {
     this.#host = host;
     this.#details = new DetailLoader(source, {
       snapshot: () => this.#snapshot,
-      replaced: () => this.#replaced,
+      inactive: () => this.#replaced || this.#failure !== undefined,
       adopt: (request, outcome) => this.#adopt(request, outcome),
+      catalogueError: (error) => this.#fail(error),
       replace: () => this.#replace(),
       changed: () => this.#changed(),
     });
@@ -81,7 +71,8 @@ export class ShellDataController {
       index: () => this.#snapshot.index,
       route: () => host.route(),
       adopt: (index, details) =>
-        this.#commit(withIndex(this.#snapshot, index, details)),
+        this.#prepare(() => withIndex(this.#snapshot, index, details)),
+      catalogueError: (error) => this.#fail(error),
       deploymentChanged: () => this.#replace(),
       versionError: (error) => host.versionError(error),
       changed: () => this.#changed(),
@@ -90,6 +81,11 @@ export class ShellDataController {
 
   get snapshot(): ShellDataSnapshot {
     return this.#snapshot;
+  }
+
+  /** The loaded-document failure that the shell rethrows during rendering. */
+  get failure(): { error: unknown } | undefined {
+    return this.#failure;
   }
 
   /** The keys of the requested details whose last load failed. */
@@ -144,7 +140,7 @@ export class ShellDataController {
 
   /** Discard held route details and load them again under the same fences. */
   reload(requests: readonly DetailRequest[]): void {
-    if (this.#replaced || !this.#source) return;
+    if (this.#replaced || this.#failure || !this.#source) return;
     const wanted = new Set(
       routeDetailRequests(this.#snapshot.index, this.#host.route()).map(
         detailKey,
@@ -152,7 +148,7 @@ export class ShellDataController {
     );
     const keys = requests.map(detailKey).filter((key) => wanted.has(key));
     if (!keys.length) return;
-    this.#commit(withoutDetails(this.#snapshot, keys));
+    if (!this.#prepare(() => withoutDetails(this.#snapshot, keys))) return;
     this.#details.retry(keys);
   }
 
@@ -162,6 +158,7 @@ export class ShellDataController {
     if (
       this.#connected ||
       this.#replaced ||
+      this.#failure ||
       !live ||
       !this.#snapshot.index.live
     )
@@ -194,7 +191,7 @@ export class ShellDataController {
 
   /** Refresh the installed revision again after a failed refresh. */
   readonly retryRefresh = (): void => {
-    if (this.#replaced) return;
+    if (this.#replaced || this.#failure) return;
     this.#refresh.load(this.#snapshot.index.revision);
   };
 
@@ -207,23 +204,37 @@ export class ShellDataController {
     request: DetailRequest,
     outcome: Exclude<DetailOutcome, { kind: "failed" }>,
   ): void {
-    if (outcome.kind === "accepted") {
-      const current = this.#snapshot;
-      this.#commit(
-        outcome.index === current.index
-          ? withDetails(current, [[request, outcome.detail]])
-          : withIndex(current, outcome.index, [[request, outcome.detail]]),
-      );
-      return;
+    if (outcome.kind === "version")
+      return this.#host.versionError(outcome.error);
+    if (outcome.kind === "deployment") return this.#replace();
+    const current = this.#snapshot;
+    this.#prepare(() =>
+      outcome.index === current.index
+        ? withDetails(current, [[request, outcome.detail]])
+        : withIndex(current, outcome.index, [[request, outcome.detail]]),
+    );
+  }
+
+  #prepare(build: () => ShellDataSnapshot): boolean {
+    let next: ShellDataSnapshot;
+    let commit: () => void;
+    try {
+      next = build();
+      commit = this.#host.prepare(next);
+    } catch (error) {
+      this.#fail(error);
+      return false;
     }
-    if (outcome.kind === "version") {
-      this.#host.versionError(outcome.error);
-      return;
-    }
-    if (outcome.kind === "deployment") {
-      this.#replace();
-      return;
-    }
+    this.#commit(next, commit);
+    return true;
+  }
+
+  #fail(error: unknown): void {
+    if (this.#failure) return;
+    this.#failure = { error };
+    this.abortLoads();
+    this.#disconnect();
+    this.#changed();
   }
 
   /**
@@ -241,7 +252,7 @@ export class ShellDataController {
     this.#changed();
   }
 
-  #commit(next: ShellDataSnapshot): void {
+  #commit(next: ShellDataSnapshot, commit: () => void): void {
     const previous = this.#snapshot.index;
     this.#snapshot = next;
     if (next.index !== previous) this.abortLoads();
@@ -250,7 +261,7 @@ export class ShellDataController {
       next.index.live?.generation !== previous.live?.generation
     )
       this.#descriptor.load();
-    this.#host.commit(next);
+    commit();
     this.#changed();
   }
 
