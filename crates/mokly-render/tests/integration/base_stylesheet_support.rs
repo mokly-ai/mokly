@@ -199,7 +199,7 @@ pub(super) fn try_generation(
     let generation = trace.in_scope(|| {
         let tree = runtime.tree.clone();
         let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
-        let config = loader.load(head.root(), None).unwrap();
+        let config = loader.load(&head.repository(), None).unwrap();
         let builder: &dyn CatalogueBuilder = &Builder {
             tree: tree.clone(),
             discovery: Arc::new(Discoverer { tree }),
