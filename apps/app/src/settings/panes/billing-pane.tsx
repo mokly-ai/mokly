@@ -10,11 +10,6 @@ import {
   readBilling,
   startCheckout,
 } from "../../data/billing";
-import {
-  workspaceResourceScope,
-  projectResourceScope,
-  useInvalidateResources,
-} from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
 import {
   useAddressPathname,
@@ -26,6 +21,7 @@ import { alwaysSendable, nothingToDo, useWrite } from "../write";
 
 import { planSituation } from "./billing-facts";
 import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
+import { useReconcilePlan } from "./billing-reconcile";
 import {
   landingOf,
   openStripe,
@@ -88,21 +84,11 @@ export function BillingPane({
   const [confirmationRetry, setConfirmationRetry] = useState(0);
   // Taken apart rather than held as one value: the resource object is rebuilt
   // every render, and the confirming effect must not restart with it.
-  const { set } = billing;
-  const invalidate = useInvalidateResources();
-  // A read that reports Team invalidates the workspace and project
-  // resources before the pane settles, so switching panes or closing settings
-  // uses the reconciled plan without a page reload.
-  const acceptRead = useCallback(
-    (value: Billing) => {
-      set(value);
-      if (value.plan !== "team") return;
-      invalidate([
-        workspaceResourceScope(workspace.id),
-        ...(project ? [projectResourceScope(project.id)] : []),
-      ]);
-    },
-    [invalidate, workspace.id, project, set],
+  const { set: acceptRead } = billing;
+  useReconcilePlan(
+    billing.state.status === "ready" ? billing.state.value : undefined,
+    workspace.id,
+    project?.id,
   );
 
   const clearLanding = useCallback(() => {
