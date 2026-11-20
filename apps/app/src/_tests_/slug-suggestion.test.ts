@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { createRequestSequence } from "../data/request-sequence";
 import {
   blurSuggestedSlug,
   createSuggestedSlugValues,
-  createRequestSequence,
   editSuggestedSlug,
   focusSuggestedSlug,
   suggestedSlugValue,
