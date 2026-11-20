@@ -40,7 +40,8 @@
   approaches are real, because the item either restates the rule correctly or
   points to it.
 - **Wider fix:** B. A link cannot drift from the rule.
-- **Previous examples:** `plans/follow-ups/follow-up-line-pointer-drift.md`
+- **Previous examples:**
+  [follow-up-line-pointer-drift.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/a1d87a35656966bc5a09415a11e0895cff0b44b4/plans/follow-ups/follow-up-line-pointer-drift.md)
   records drift of other follow-up text after code moved.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the text is older than the
