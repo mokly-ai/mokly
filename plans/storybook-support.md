@@ -112,8 +112,8 @@ and 11 needed no decision, and Milestone 3 fixes them.
   Mokly reads `main.*` there for its `stories` field and its framework.
   Rejected: `mokly init --storybook`, A; the folder field alone, B;
   composition with the framework package, D. Reason: an existing Storybook
-  works with one root entry. Decision 20 below is open: it settles how the
-  `stories` field reaches discovery, and it blocks Milestone 20.
+  works with one root entry. Decision 20 below chose how the `stories` field
+  reaches discovery.
 - **12. Story setup: B.** Mokly awaits `story.load()`, runs `beforeAll` once,
   and warns about `sb.mock()` when the Vite adapter is off. Rejected: load
   only, A; a Mokly copy of `sb.mock()`, C. Reason: Storybook's own plugins
@@ -346,6 +346,14 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   computed entries, at the cost of Node and a base install before discovery.
 - **Action:** ask the user, because B adds a configuration error, and C
   changes the requirement that the core reads the configuration without Node.
+- **Answer:** C, chosen by the user on 2026-11-20, for roots that opt in. The
+  Node step runs only for a root that names a Storybook folder and has no
+  `dir`. A root with an explicit `dir` and every catalogue without such a
+  root keep configuration and discovery without Node. Reason: the user wants
+  full Storybook support, and the cost then falls only on projects that ask
+  for it. A Storybook project already needs Node and a base install to render
+  its stories, so C adds about one Node start for each side and moves the
+  base install before discovery.
 
 ### 21. Content inside a story component use
 
@@ -526,18 +534,18 @@ has merged into this branch, and when the open decisions that block it have
 answers. The ledger of the workspaces is in
 `.context/storybook-support/workspaces.md`.
 
-| Track                      | Milestones | Starts after                                     |
-| -------------------------- | ---------- | ------------------------------------------------ |
-| A. Mockups                 | 1          | Nothing                                          |
-| B. Story reading           | 2 to 8     | Nothing                                          |
-| C. Imported assets         | 9 to 12    | Nothing                                          |
-| D. Vite adapter            | 13 to 17   | Nothing                                          |
-| E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
-| F. Failed stories          | 23 to 25   | Tracks A and B                                   |
-| G. Storybook links         | 26 to 29   | Tracks A and E                                   |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                            |
-| I. Story component usage   | 34 to 36   | Tracks B and D                                   |
-| J. Spike for decision 18   | 37         | Nothing                                          |
+| Track                      | Milestones | Starts after          |
+| -------------------------- | ---------- | --------------------- |
+| A. Mockups                 | 1          | Nothing               |
+| B. Story reading           | 2 to 8     | Nothing               |
+| C. Imported assets         | 9 to 12    | Nothing               |
+| D. Vite adapter            | 13 to 17   | Nothing               |
+| E. Storybook folders       | 18 to 22   | Track B               |
+| F. Failed stories          | 23 to 25   | Tracks A and B        |
+| G. Storybook links         | 26 to 29   | Tracks A and E        |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J |
+| I. Story component usage   | 34 to 36   | Tracks B and D        |
+| J. Spike for decision 18   | 37         | Nothing               |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -812,8 +820,7 @@ Depends on: 8
 Track E. The protocol states the rules of decisions 4 and 9.
 
 - [ ] Add the rules for Storybook folders and `main.*` to
-      `docs/protocol/mokly-storybook.md`, without the rule that decision 20
-      settles.
+      `docs/protocol/mokly-storybook.md`, with the answer to decision 20.
 - [ ] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
       field.
 - [ ] Update `docs/protocol/mokly-rendering.md`: a story document links the
@@ -843,9 +850,20 @@ Monorepos keep the preview file of their own Storybook, as decision 9 says.
 
 ## Milestone 20: Roots from the `stories` field of `main.*`
 
-Depends on: 19, and the answer to decision 20
+Depends on: 19
 
-- [ ] Apply the answer to decision 20 on both sides of a comparison.
+- [ ] For a root that names a Storybook folder and has no `dir`, run its
+      `main.*` in the sidecar before discovery with Storybook's loader, as
+      decision 20 chose. Turn each `stories` entry into a root, and convert
+      Storybook's pattern syntax, such as `*.@(ts|tsx)`, to Mokly's globs.
+- [ ] On the base side, run the base commit's `main.*` after its extraction
+      and its install.
+- [ ] Watch `main.*` and its imports as configuration inputs, so that an edit
+      runs discovery again in Serve.
+- [ ] When `main.*` fails, fail discovery with a configuration error that
+      names the file.
+- [ ] Keep configuration and discovery free of Node for every other root and
+      catalogue.
 - [ ] Update `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-configuration.md`, and
       `docs/protocol/mokly-root-discovery.md` with that answer.
