@@ -76,8 +76,8 @@ it. Grants stay in the callback fragment.
 
 Product navigation and redirects to the public app origin load the same path,
 query and fragment from the bundle. Public site paths open in the system
-browser. Stripe Checkout and Stripe billing remain allowed round trips
-inside the window. GitHub navigation opens in the system browser. Every popup is denied. Public app popups open in the system
+browser. No third-party page loads in the window: GitHub and Stripe navigation
+opens in the system browser, and the app opens Stripe's pages as popups. Every popup is denied. Public app popups open in the system
 browser, including product paths. Desktop-origin popups load in the existing
 window. Other HTTP(S) popup targets open in the system browser. Other schemes
 are dropped.

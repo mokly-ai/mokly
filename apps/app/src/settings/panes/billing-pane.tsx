@@ -17,18 +17,21 @@ import {
 } from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
 import {
-  readQuery,
   useAddressPathname,
   useAddressSearch,
   writeAddress,
 } from "../../navigation/address";
+import { useShellFocus } from "../../navigation/shell-focus";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
 
 import { planSituation } from "./billing-facts";
 import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
-
-/** How the reader arrived back from a Stripe-hosted Checkout session. */
-type Landing = "success" | "cancelled";
+import {
+  landingOf,
+  openStripe,
+  opensStripeOutside,
+  withoutCheckout,
+} from "./billing-stripe";
 
 /** A successful Checkout return while its webhook catches up. */
 type Confirmation = { workspaceId: string } & (
@@ -40,19 +43,6 @@ const confirmWindowMs = 30_000;
 
 /** How often it asks again while it waits. */
 const confirmIntervalMs = 2_000;
-
-function landingOf(search: string): Landing | undefined {
-  const value = readQuery(search).checkout;
-  const one = Array.isArray(value) ? value[0] : value;
-  return one === "success" || one === "cancelled" ? one : undefined;
-}
-
-function withoutCheckout(pathname: string, search: string): string {
-  const query = new URLSearchParams(search);
-  query.delete("checkout");
-  const rest = query.toString();
-  return rest.length > 0 ? `${pathname}?${rest}` : pathname;
-}
 
 function pause(ms: number): Promise<void> {
   return new Promise((done) => setTimeout(done, ms));
@@ -195,21 +185,26 @@ export function BillingPane({
     [acceptRead, check, workspace.id],
   );
 
-  // A write that opens Stripe's own pages is done when the page leaves for
-  // them, so its control stays busy until then.
+  // A write that opens Stripe's own pages in this tab is done when the page
+  // leaves for them, so its control stays busy until then. The desktop app's
+  // window opens them in the system browser instead, so its control comes
+  // back to rest, and the window reads the plan again when it gets focus back.
+  const external = opensStripeOutside();
+  const { reload } = billing;
+  useShellFocus(reload);
   const checkout = useWrite(nothingToDo, alwaysSendable);
   const portal = useWrite(nothingToDo, alwaysSendable);
   const upgrade = useCallback(
     () =>
       void checkout.run(async () =>
-        checkout.leave(await startCheckout(workspace.id)),
+        openStripe(checkout, await startCheckout(workspace.id)),
       ),
     [checkout, workspace.id],
   );
   const manage = useCallback(
     () =>
       void portal.run(async () =>
-        portal.leave(await openBillingPortal(workspace.id)),
+        openStripe(portal, await openBillingPortal(workspace.id)),
       ),
     [portal, workspace.id],
   );
@@ -269,13 +264,19 @@ export function BillingPane({
   }
   const value = billing.state.value;
   return value.plan === "free" ? (
-    <FreePlan billing={value} checkout={checkout} onCheckout={upgrade} />
+    <FreePlan
+      billing={value}
+      checkout={checkout}
+      onCheckout={upgrade}
+      external={external}
+    />
   ) : (
     <TeamPlan
       billing={value}
       situation={planSituation(value)}
       portal={portal}
       onPortal={manage}
+      external={external}
     />
   );
 }

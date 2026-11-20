@@ -111,4 +111,21 @@ export const billingSituations = [
     states: ["default"],
     pending: true,
   },
+  // The pane in the desktop app's window, whose Stripe actions open the
+  // browser: Upgrade to Team on the free plan, and Manage billing on Team.
+  {
+    path: "product/settings/billing/desktop",
+    family: "settings",
+    screen: "billing",
+    name: "desktop",
+    states: ["default"],
+  },
+  {
+    path: "product/settings/billing/desktop/team",
+    family: "settings",
+    screen: "billing",
+    name: "team",
+    parent: "product/settings/billing/desktop",
+    states: ["default"],
+  },
 ] as const satisfies readonly ProductSituation[];
