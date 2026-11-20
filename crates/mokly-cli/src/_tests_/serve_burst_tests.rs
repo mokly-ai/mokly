@@ -131,6 +131,7 @@ async fn an_active_rebuild_and_a_burst_produce_exactly_two_actions() {
     ));
     let (warnings, _warning_terminal) = warning_scopes();
     let action = ManualRebuilds {
+        activity: None,
         warnings,
         watching: None,
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),

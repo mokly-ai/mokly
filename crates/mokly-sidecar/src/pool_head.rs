@@ -7,7 +7,8 @@ use std::sync::{Arc, Weak};
 use crate::methods::Call;
 use crate::pool::{Pool, ReturnWake};
 use crate::pool_requests::generation;
-use crate::pool_warmup::Warmups;
+use crate::pool_state::Slot;
+use crate::pool_warmup_state::Warmups;
 use crate::wire::MethodResult;
 use crate::workers::WorkerControl;
 
@@ -41,7 +42,13 @@ impl Head {
 }
 
 impl Pool {
-    pub(super) fn record_head(&self, index: usize, call: &Call, result: &MethodResult) {
+    pub(super) fn record_head(
+        &self,
+        index: usize,
+        slot: &Slot,
+        call: &Call,
+        result: &MethodResult,
+    ) {
         let mut state = self.lock();
         if state.stopped {
             return;
@@ -82,11 +89,42 @@ impl Pool {
             {
                 if let Some(warm) = &mut state.head.warm {
                     warm.index = index;
-                    warm.control = control;
+                    warm.control = control.clone();
+                }
+                if let Some(epoch) = generation(call)
+                    .and_then(|id| {
+                        slot.generations
+                            .get(id)
+                            .filter(|epoch| state.epochs.get(id) == Some(*epoch))
+                    })
+                    .copied()
+                {
+                    state.head.warmups.rendered(index, control, epoch);
                 }
                 state.head.warmups.record(call);
             }
             _ => {}
+        }
+    }
+
+    pub(super) fn record_stored_render(&self, source_root: &Path, call: Call) {
+        let mut state = self.lock();
+        if !state.stopped
+            && source_root == self.launch.repository
+            && matches!(
+                call,
+                Call::RenderScreen(_)
+                    | Call::RenderComponent(_)
+                    | Call::RenderStory(_)
+                    | Call::RenderPage(_)
+            )
+            && state.head.warm.as_ref().is_some_and(|warm| {
+                generation(&call) == Some(warm.generation.as_str())
+                    && state.epochs.contains_key(&warm.generation)
+            })
+        {
+            state.head.warmups.record_served(call);
+            state.head.notify();
         }
     }
 }

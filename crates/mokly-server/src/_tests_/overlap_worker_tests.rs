@@ -1,8 +1,11 @@
 //! An admitted handoff releases dispatch while stop still owns completion.
 
+use std::future::Future;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
+use std::task::{Context, Waker};
 
+use mokly_graph::write_activity::{WriteActivityMock, WriteLease};
 use tokio::sync::oneshot;
 use unimock::{MockFn, Unimock, matching};
 
@@ -11,6 +14,28 @@ use crate::background_capacity::FixedCapacity;
 use crate::background_stage::Stages;
 use crate::error::{InternalError, ServerError};
 use crate::work::{Work, Workers};
+
+#[derive(Default)]
+struct Activity {
+    entered: AtomicUsize,
+    released: AtomicUsize,
+}
+impl Activity {
+    fn state(&self) -> (usize, usize) {
+        (
+            self.entered.load(Ordering::SeqCst),
+            self.released.load(Ordering::SeqCst),
+        )
+    }
+}
+
+struct Lease(Arc<Activity>);
+impl WriteLease for Lease {}
+impl Drop for Lease {
+    fn drop(&mut self) {
+        self.0.released.fetch_add(1, Ordering::SeqCst);
+    }
+}
 
 struct Release(Arc<(Mutex<bool>, Condvar)>);
 impl Drop for Release {
@@ -131,11 +156,23 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
             })),
     );
     let documents = Arc::new(mock.clone());
-    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
+    let observed = Arc::new(Activity::default());
+    let activity = Unimock::new(WriteActivityMock::enter.each_call(matching!()).answers_arc(
+        Arc::new({
+            let observed = observed.clone();
+            move |_| {
+                observed.entered.fetch_add(1, Ordering::SeqCst);
+                Box::new(Lease(observed.clone()))
+            }
+        }),
+    ));
+    let work = Arc::new(
+        Workers::new(2, Arc::new(Unimock::new(()))).with_activity(Some(Arc::new(activity.clone()))),
+    );
     let stages = Stages::new(Arc::new(FixedCapacity(2)));
     let first_stage = stages.view("first");
     let second_stage = stages.view("second");
-    let first = tokio::spawn({
+    let mut first = Box::pin({
         let work = work.clone();
         let documents = documents.clone();
         let stage = first_stage.clone();
@@ -144,7 +181,23 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
                 .await
         }
     });
+    {
+        let _turn = work.turn.acquire().await.unwrap();
+        assert!(
+            first
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop()))
+                .is_pending()
+        );
+        assert_eq!(
+            observed.state(),
+            (1, 0),
+            "queued staged work must suppress writer admission before its fair turn"
+        );
+    }
+    let first = tokio::spawn(first);
     assert_eq!(received.recv().await.unwrap(), "first");
+    assert_eq!(observed.state(), (1, 0));
     let second = tokio::spawn({
         let work = work.clone();
         let documents = documents.clone();
@@ -159,12 +212,19 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
     assert!(!second_stage.handed_off());
     assert_eq!(work.workers.available_permits(), 1);
     assert_eq!(*stages.bytes.lock().unwrap(), 4 * 1024 * 1024);
+    assert_eq!(observed.state(), (2, 0));
     first.abort();
     assert!(first.await.unwrap_err().is_cancelled());
+    assert_eq!(
+        observed.state(),
+        (2, 0),
+        "cancelling the handoff waiter must retain both physical jobs' activity"
+    );
     assert_eq!(*stages.bytes.lock().unwrap(), 4 * 1024 * 1024);
     drop(cleanup);
     second.await.unwrap().unwrap();
     work.stop().await;
     assert_eq!(calls.load(Ordering::SeqCst), 2);
     assert_eq!(*stages.bytes.lock().unwrap(), 0);
+    assert_eq!(observed.state(), (2, 2));
 }

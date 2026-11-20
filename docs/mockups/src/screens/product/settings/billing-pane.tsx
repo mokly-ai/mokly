@@ -2,6 +2,7 @@ import type { Viewport } from "@mokly/mokly";
 
 import type { ScreenState } from "../../../fixtures/product-states";
 import { billing, failureReference } from "../../../fixtures/product-states";
+import type { Host } from "../host";
 import { Action, StateMessage } from "../page-parts";
 
 import type { Plan, Role } from "./billing-plans";
@@ -30,6 +31,7 @@ export function BillingPane({
   situation,
   writing,
   screen,
+  host = "browser",
 }: {
   state: ScreenState;
   viewport: Viewport;
@@ -43,6 +45,8 @@ export function BillingPane({
   writing?: BillingWrite;
   /** A pane drawing one of its own situations names that entry itself. */
   screen?: string;
+  /** Where the pane runs: a browser tab or the desktop app's window. */
+  host?: Host;
 }) {
   return (
     <SettingsSurface
@@ -97,9 +101,15 @@ export function BillingPane({
           verified={situation !== "unpriced"}
           role={role}
           opening={writing === "checkout"}
+          host={host}
         />
       ) : (
-        <TeamPlan plan={plan} role={role} opening={writing === "portal"} />
+        <TeamPlan
+          plan={plan}
+          role={role}
+          opening={writing === "portal"}
+          host={host}
+        />
       )}
     </SettingsSurface>
   );

@@ -18,7 +18,9 @@ use crate::expansion::Expansion;
 use crate::fragment::{FragmentRenderer, OwnedStyle};
 use crate::prepared_root::PreparedRoot;
 use crate::tree::Node;
-use crate::{assembly, component_root, error, links, raw_markers, regions, source_locations};
+use crate::{
+    assembly, component_root, error, links, raw_markers, regions, root_inputs, source_locations,
+};
 
 /// One effective document view. Pages ignore the axes.
 pub struct ComposeRequest<'a> {
@@ -71,6 +73,8 @@ pub trait Composer: Send + Sync {
     ) -> Result<Composed> {
         Err(error::InternalError::PreparedRootUnsupported.into())
     }
+    /// Record supported store-served inputs without composing or rendering them.
+    fn record_served(&self, _request: &ComposeRequest<'_>) {}
     /// Compose a screen, component, or authored page with no file writes.
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed>;
 }
@@ -101,6 +105,11 @@ pub(crate) struct Engine<'a> {
 impl Composer for HtmlComposer {
     fn can_prepare_root(&self, catalogue: &PreparedCatalogue, entry: &ModelEntry) -> bool {
         Start::eligible(catalogue, entry)
+    }
+    fn record_served(&self, request: &ComposeRequest<'_>) {
+        if let Ok(Some(request)) = root_inputs::stored_request(request) {
+            self.fragments.record_served(&request);
+        }
     }
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed> {
         self.compose_root(request, None)

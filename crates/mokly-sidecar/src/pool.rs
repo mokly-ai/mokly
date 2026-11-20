@@ -39,11 +39,13 @@ pub trait SidecarPool: Send + Sync {
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Apply the served-recipe write rule after the core directly reuses a live state.
     fn served_generation(&self, generation: &str, epoch: u64);
+    /// Record a store-served render without sending a call or starting a process.
+    fn record_served_render(&self, _source_root: &Path, _call: Call) {}
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
     /// Record one return pass without waiting for a process.
     fn schedule_head_return(&self) {}
-    /// Return one idle base process or warm up one returned process, returning whether work was taken.
+    /// Return one idle base process or warm one idle head process, returning whether work was taken.
     fn maintain_head_return(&self) -> Result<bool> {
         Ok(false)
     }

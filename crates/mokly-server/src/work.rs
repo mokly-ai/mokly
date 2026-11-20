@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_graph::write_activity::WriteActivity;
 use mokly_model::data::Props;
 use tokio::sync::Semaphore;
 
@@ -72,6 +73,7 @@ pub trait Work: Send + Sync {
 
 /// One bounded scheduler shared by foreground jobs and background generations.
 pub struct Workers {
+    pub(crate) activity: Option<Arc<dyn WriteActivity>>,
     pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     pub(crate) workers: Arc<Semaphore>,
@@ -87,7 +89,16 @@ pub struct Workers {
     pub(crate) background_jobs: Arc<ActiveJobs>,
 }
 
+#[cfg(test)]
+#[path = "_tests_/write_activity_tests.rs"]
+mod write_activity_tests;
+
 impl Workers {
+    /// Observe native jobs even when no sidecar is needed.
+    pub fn with_activity(mut self, activity: Option<Arc<dyn WriteActivity>>) -> Self {
+        self.activity = activity;
+        self
+    }
     /// Share whole-request priority with the command's sidecar admission.
     pub fn with_foreground(mut self, shared: Arc<dyn Foreground>) -> Self {
         self.priority = Arc::new(Priority::new(shared));
@@ -98,6 +109,7 @@ impl Workers {
     pub fn new(parallelism: u32, diagnostics: Arc<dyn Diagnostics>) -> Self {
         let parallelism = parallelism.max(1);
         Self {
+            activity: None,
             priority: Arc::new(Priority::default()),
             diagnostics,
             parallelism,
@@ -139,6 +151,7 @@ impl Work for Workers {
         self.asset_delivery(documents, route).await
     }
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return None;
@@ -148,6 +161,7 @@ impl Work for Workers {
             return None;
         }
         tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             let _guard = guard;
             let _permit = permit;
             let documents = documents;
@@ -188,6 +202,7 @@ impl Work for Workers {
         tokio::pin!(notified);
         notified.as_mut().enable();
         let job = async {
+            let activity = self.activity.as_ref().map(|activity| activity.enter());
             let guard = self.priority.enter(true);
             let (page_permit, permit) = {
                 let _queued = {
@@ -225,6 +240,7 @@ impl Work for Workers {
             let page_guard = page.clone();
             let parent = tracing::Span::current();
             let output = tokio::task::spawn_blocking(move || {
+                let _activity = activity;
                 parent.in_scope(|| {
                     let _guard = guard;
                     let _page = page_guard;

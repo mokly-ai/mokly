@@ -52,6 +52,7 @@ fn failed_catalogue_combines_pending_and_error_warnings_and_repair_reports_only_
         RebuildReporterMock::completed.next_call(matching!((summary, _) if summary.warnings == [warning("new")])).returns(()),
     ));
     let action = ManualRebuilds {
+        activity: None,
         warnings: scopes.clone(),
         watching: Some(Arc::new(mock.clone())),
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
@@ -85,6 +86,7 @@ fn a_retired_failed_candidate_still_sets_the_watch_retry_flag() {
         WatchInputsMock::failed.next_call(matching!()).returns(()),
     ));
     let action = ManualRebuilds {
+        activity: None,
         warnings: scopes.clone(),
         watching: Some(Arc::new(watch.clone())),
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
@@ -148,6 +150,7 @@ fn watched_recheck_keeps_first_pass_warnings_only_when_its_recheck_fails() {
             ))
         };
         let action = ManualRebuilds {
+            activity: None,
             warnings: scopes.clone(),
             watching: Some(Arc::new(mock.clone())),
             candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),

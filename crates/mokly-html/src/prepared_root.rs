@@ -6,7 +6,8 @@ use crate::compose_start::Start;
 use crate::composition::ComposeRequest;
 use crate::error::{HtmlError, Result};
 use crate::fragment::{Fragment, FragmentRenderer, FragmentRequest};
-use crate::{javascript_request, root_context_weight};
+use crate::javascript_request::{self, Invocation};
+use crate::root_context_weight;
 
 /// Opaque start state, exact request, and its one successful or failed response.
 /// Only HtmlComposer prepares or consumes this owner. It contains no parsed tree.
@@ -28,11 +29,15 @@ impl PreparedRoot {
             Ok(start) => start,
             Err(source) => return Err(attempt(source)),
         };
-        let fragment_request = match javascript_request::build(
+        let fragment_request = match javascript_request::request(
             request,
-            &start.parent,
-            start.kind.clone(),
-            &start.context,
+            Invocation {
+                path: &start.parent,
+                kind: start.kind.clone(),
+                props: &start.context.props,
+                ignore_enabled: start.context.ignore,
+                slots: start.context.slots.keys().map(String::as_str).collect(),
+            },
         ) {
             Ok(request) => request,
             Err(source) => return Err(attempt(source)),

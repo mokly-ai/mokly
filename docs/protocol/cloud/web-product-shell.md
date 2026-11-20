@@ -229,4 +229,6 @@ builds from what the API returns after a press, such as GitHub's authorization
 page, a Stripe page or the `mokly://` address of the desktop connect page's
 **Open Mokly**, is assigned by the flow that requested it. In the desktop
 shell, the GitHub actions open their web pages as popups instead, as
-[Desktop application](./desktop-app.md#web-setup) defines.
+[Desktop application](./desktop-app.md#web-setup) defines, and the billing
+actions open Stripe's page as a popup, as its [Billing](./desktop-app.md#billing)
+defines.

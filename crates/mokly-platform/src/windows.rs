@@ -22,6 +22,7 @@ use windows_sys::Win32::System::JobObjects::{
 };
 use windows_sys::Win32::System::Threading::{
     CREATE_NEW_PROCESS_GROUP, CREATE_SUSPENDED, OpenThread, ResumeThread, THREAD_SUSPEND_RESUME,
+    TerminateProcess,
 };
 
 use crate::error::{Error, IoResult, Result};
@@ -94,6 +95,16 @@ pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
         job,
         pid: child.id(),
     }))
+}
+
+/// An unattached child remains suspended, so it cannot have descendants.
+pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
+    // SAFETY: The borrowed Child keeps its own process handle valid. The child
+    // has not resumed before job attachment and cannot create a descendant.
+    if unsafe { TerminateProcess(child.as_raw_handle(), 1) } == 0 {
+        return Err(io::Error::last_os_error()).platform();
+    }
+    Ok(())
 }
 
 struct WindowsGroup {

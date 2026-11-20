@@ -62,11 +62,12 @@ Decision: keep evicted documents compact. Rejected: a larger bound that still th
 that reduces room for fitting catalogues, a scan-resistant order that still misses when the head exceeds
 the bound, and a Serve head capture read by the base, because it only serves Changes and adds a copy.
 
-Both sides share equal keys with no side warning. Serve reads the head from the cache, and a missing head
-document renders again on the head root. Each
+Both sides share equal keys with no side warning. Serve reads the head from the cache. A missing head
+document comes from the [render store](./mokly-render-store.md) or renders again on the head root. Each
 [capture](./mokly-comparison-serving.md#base-and-head-capture) has its own bound. The base extraction,
-dependency install, and bundle caches live in the operating system's cache directory, under a key derived
-from the repository path. Each has its own byte bound, and the terminal names that directory.
+dependency install, and bundle caches and the render store live in the operating system's cache
+directory, under a key derived from the repository path. Each has its own byte bound, and the terminal
+names that directory.
 
 ## Serve
 
@@ -235,9 +236,9 @@ commit point and never leave a partial output directory in place.
 ## No Writes
 
 No command writes into the repository except `build` into its output directory. Serve,
-Changes, live prop editing, and comparison generations keep every result in process
-memory. The [caches](./mokly-base-cache.md) outside the repository, compiled bundles
-included, are the only other files Mokly writes, and deleting them changes time only.
+Changes, live prop editing, and comparison generations keep every result in process memory.
+The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes.
+Deleting them changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
 
 ## Related Docs
 

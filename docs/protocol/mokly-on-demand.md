@@ -25,12 +25,13 @@ stub does not satisfy that target. No validation is skipped to meet it.
 ## Foreground Documents
 
 A request for `/static/mokly-generated/<route>` renders the document on first
-request. A JavaScript fragment renders through the
+request, unless the [render store](./mokly-render-store.md) holds it. A
+JavaScript fragment renders through the
 [sidecar](./mokly-sidecar.md) under its deadlines; an HTML screen or component
 renders without the sidecar. The finished document stays in the render cache
 until an input changes or it leaves the cache under the
 [cache bounds](./mokly-runtime.md#render-graph-and-cache). The next request for
-a document that left the cache renders it again.
+a document that left the cache reads it from the render store or renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render that has not started
@@ -57,13 +58,13 @@ including a view first rendered on demand. Repeated requests repeat no warning.
 Live prop edits of the [controls contract](./mokly-component-controls.md)
 render through this same path with the edited props. Their temporary documents
 and resources never replace a saved document and never enter the catalogue
-model.
+model or the render store.
 
 ## Background Work And Replacement
 
-After readiness, Serve renders every view in the background, which fills the
-render cache and the usage of every detail, then classifies Changes, which
-renders the base side under the
+After readiness, Serve renders every view in the background, or reads it from
+the render store, which fills the render cache and the usage of every detail,
+then classifies Changes, which renders the base side under the
 [comparison contract](./mokly-comparison.md#sides). This background pass
 holds its started views in two stages: the batch and the completion stage.
 The bound of each stage is the smaller of the worker count and the
@@ -82,9 +83,11 @@ and only after the entry's own fragment returns without failure, from the
 sidecar or from the render cache. That view holds a completion place while it
 builds its document: its tree, its final checks, its bytes, and its cache
 entry. Every other view takes no completion place: a view with an HTML
-template or saved slots, a Markdown view, and a view whose document the cache
-already holds. Such a view builds its document, or reads it from the cache,
-while it keeps its batch place and its worker. A view whose own fragment fails
+template or saved slots, a Markdown view, a view whose document the cache
+already holds, and a view whose document the
+[render store](./mokly-render-store.md#reads) may hold. Such a view builds its
+document, or reads it from the cache or the render store, while it keeps its
+batch place and its worker. A view whose own fragment fails
 ends with that failure and takes no completion place. A render for a link
 check of a view runs inside the render of that view and takes no other place
 and no other worker.

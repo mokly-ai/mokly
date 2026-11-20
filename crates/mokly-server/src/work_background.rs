@@ -57,6 +57,7 @@ impl Workers {
         route: String,
         stage: Option<Arc<Stage>>,
     ) -> Result<Vec<Warning>> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let Some(permit) = self.background_permit().await else {
             return Ok(Vec::new());
         };
@@ -71,6 +72,7 @@ impl Workers {
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
             let _active = active;
+            let _activity = activity;
             let _running = stage.as_ref().map(|stage| Running(stage.clone()));
             RenderClass::Background.in_scope(|| {
                 parent.in_scope(|| {

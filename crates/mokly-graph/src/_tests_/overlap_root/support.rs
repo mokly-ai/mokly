@@ -1,17 +1,19 @@
 //! A real HTML composer and memoized fragments with mocked source boundaries.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::discovery::Inventory;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderMethod, RenderSource};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::FragmentRenderer;
 use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::routes;
+use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
@@ -22,6 +24,7 @@ use crate::delivery_inputs::DeliveryInputs;
 use crate::fragments::MemoFragments;
 use crate::graph::Graph;
 use crate::key::NodeKey;
+use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::render_inputs::RenderKeys;
 use crate::requests::{MemoryRequests, Requests};
 use crate::session::{Session, SessionInput};
@@ -123,6 +126,61 @@ pub(super) fn session(
         ),
         flights,
     )
+}
+
+pub(super) fn persistent_catalogue() -> PreparedCatalogue {
+    let mut catalogue = catalogue();
+    catalogue.javascript.generation = Some(JavaScriptGeneration {
+        id: "background-generation".into(),
+        ..Default::default()
+    });
+    catalogue.javascript.entries.insert(
+        "caller".into(),
+        RenderSource {
+            handle: "caller.recipe#page".into(),
+            method: RenderMethod::Page,
+            ..Default::default()
+        },
+    );
+    catalogue
+}
+
+pub(super) fn observe_validation(
+    session: &mut Session,
+    in_worker: Arc<AtomicBool>,
+    events: Arc<Mutex<Vec<&'static str>>>,
+) {
+    let boundaries = Arc::new(
+        Unimock::new((
+            SourceTreeMock::project
+                .each_call(matching!(_))
+                .answers(&|_, _| {
+                    Ok(Some(Node {
+                        identity: "/repo/asset.bin".into(),
+                        lexical_kind: FileKind::File,
+                        kind: FileKind::File,
+                    }))
+                }),
+            SourceTreeMock::digest
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok("current-asset-digest".into())),
+            PublicPolicyMock::check
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, path| {
+                    assert_eq!(path, "asset.bin");
+                    assert!(in_worker.load(Ordering::SeqCst));
+                    events.lock().unwrap().push("validate");
+                    Ok(PublicFile {
+                        path: "asset.bin".into(),
+                        absolute: "/repo/asset.bin".into(),
+                    })
+                })),
+        ))
+        .no_verify_in_drop(),
+    );
+    let state = Arc::get_mut(&mut session.state).unwrap();
+    state.tree = boundaries.clone();
+    state.policy = boundaries;
 }
 
 #[derive(Default)]

@@ -19,7 +19,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{Fragment, FragmentRequest, RenderKind};
-use crate::javascript_request;
+use crate::javascript_request::{self, Invocation};
 use crate::tree::Node;
 use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
@@ -47,7 +47,16 @@ impl Engine<'_> {
         let (request, mut result) = match prepared {
             Some((request, result)) => (request, result?),
             None => {
-                let request = javascript_request::build(self.request, path, kind, &context)?;
+                let request = javascript_request::request(
+                    self.request,
+                    Invocation {
+                        path,
+                        kind,
+                        props: &context.props,
+                        ignore_enabled: context.ignore,
+                        slots: context.slots.keys().map(String::as_str).collect(),
+                    },
+                )?;
                 let result = self.fragments.render(&request)?;
                 (request, result)
             }

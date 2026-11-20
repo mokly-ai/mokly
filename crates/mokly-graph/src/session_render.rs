@@ -6,14 +6,33 @@ use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
-use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
+use crate::closure::{Closure, ClosureBuilder, ClosureObserver, Walker};
+use crate::document_store::ReadOutcome;
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
+use crate::session_persistence::DocumentLookup;
 use crate::types::DocumentPlan;
 use crate::workers::ArtifactWorker;
 use crate::{document_composition, resource_digests, validation};
 
 impl Session {
+    pub(crate) fn preview_walker(&self) -> Walker {
+        Walker {
+            observer: None,
+            ..self.walker()
+        }
+    }
+
+    pub(crate) fn walker(&self) -> Walker {
+        Walker {
+            observer: Some(Arc::new(self.clone())),
+            tree: self.state.tree.clone(),
+            policy: self.state.policy.clone(),
+            generated: Arc::new(self.clone()),
+            index: self.state.reference_index.clone(),
+        }
+    }
+
     #[tracing::instrument(
         name = "render.document",
         skip_all,
@@ -21,13 +40,14 @@ impl Session {
         err
     )]
     pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
-        self.raw_prepared(route, None)
+        self.raw_prepared(route, None, None)
     }
 
     pub(crate) fn raw_prepared(
         &self,
         route: &str,
         prepared: Option<PreparedRoot>,
+        lookup: Option<DocumentLookup>,
     ) -> Result<Arc<Artifact>> {
         let plan = self
             .state
@@ -40,10 +60,38 @@ impl Session {
             tracing::Span::current().record("cache_hit", true);
             return Ok(artifact);
         }
+        let (stored_key, read_store) = match lookup {
+            Some(DocumentLookup::Read(key)) => (key, true),
+            Some(DocumentLookup::Miss(key)) => (key, false),
+            None => (self.stored_key(route), true),
+        };
+        if let (Some(key), Some(persistence)) = (&stored_key, &self.state.inputs.persistence)
+            && read_store
+            && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
+                persistence.store.load(key)
+        {
+            self.state
+                .composer
+                .record_served(&document_composition::request(
+                    self,
+                    plan,
+                    &self.state.catalogue.model.entries[plan.entry],
+                ));
+            return Ok(artifact);
+        }
         let entry = &self.state.catalogue.model.entries[plan.entry];
         let result = document_composition::document(self, plan, entry, prepared);
         match result {
-            Ok(artifact) => Ok(artifact),
+            Ok(artifact) => {
+                if let Some(key) = stored_key {
+                    self.state
+                        .fresh
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner())
+                        .insert(plan.key.0.clone(), key);
+                }
+                Ok(artifact)
+            }
             Err(source) => Err(GraphError::Document {
                 entry: entry.metadata.path.clone(),
                 source: Box::new(source),
@@ -92,6 +140,7 @@ impl Session {
         for path in &closure.files {
             self.state.inputs.closures.record(key, path);
         }
+        self.offer_document(route);
         Ok(artifact)
     }
 }

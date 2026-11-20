@@ -8,6 +8,8 @@ use mokly_model::usage::{
 };
 use mokly_model::wire_props::ComponentWireValue;
 
+use crate::export_memory::{ExportBuffer, ExportObserver, Observation};
+
 /// Heap bytes of the logical owner, excluding its containing record.
 pub(crate) fn owner(owner: &ComponentInputOwner) -> usize {
     match owner {
@@ -17,7 +19,10 @@ pub(crate) fn owner(owner: &ComponentInputOwner) -> usize {
 }
 
 /// Conservative heap charge of complete usage, including nested wire props.
-pub(crate) fn usage(usage: &CatalogueUsage) -> usize {
+pub(crate) fn usage_observed(
+    usage: &CatalogueUsage,
+    observer: Option<&dyn ExportObserver>,
+) -> usize {
     let CatalogueUsage::Ready {
         instances,
         slots,
@@ -26,7 +31,7 @@ pub(crate) fn usage(usage: &CatalogueUsage) -> usize {
     else {
         return 0;
     };
-    let mut bytes = instance_records(instances)
+    let mut bytes = instance_records(instances, observer)
         + slot_records(slots)
         + ranges.capacity() * mem::size_of::<ComponentRangeRecord>();
     for range in ranges {
@@ -40,7 +45,10 @@ pub(crate) fn usage(usage: &CatalogueUsage) -> usize {
     bytes
 }
 
-pub(crate) fn instance_records(instances: &Vec<ComponentInstanceRecord>) -> usize {
+pub(crate) fn instance_records(
+    instances: &Vec<ComponentInstanceRecord>,
+    observer: Option<&dyn ExportObserver>,
+) -> usize {
     let mut bytes = instances.capacity() * mem::size_of::<ComponentInstanceRecord>();
     for instance in instances {
         bytes += instance.key.capacity()
@@ -53,7 +61,7 @@ pub(crate) fn instance_records(instances: &Vec<ComponentInstanceRecord>) -> usiz
             bytes += source.path.capacity();
         }
         for (key, value) in &instance.props {
-            bytes += 256 + key.capacity() + mem::size_of_val(value) + wire(value);
+            bytes += 256 + key.capacity() + mem::size_of_val(value) + wire(value, observer);
         }
     }
     bytes
@@ -71,10 +79,12 @@ pub(crate) fn slot_records(slots: &Vec<ComponentSlotRecord>) -> usize {
     bytes
 }
 
-fn wire(value: &ComponentWireValue) -> usize {
+fn wire(value: &ComponentWireValue, observer: Option<&dyn ExportObserver>) -> usize {
+    let memory = Observation::new(observer, ExportBuffer::Accounting);
     let mut pending = vec![value];
     let mut bytes = 0;
     while let Some(value) = pending.pop() {
+        memory.set(pending.capacity() * mem::size_of::<&ComponentWireValue>());
         match value {
             ComponentWireValue::Null(_) | ComponentWireValue::Boolean(_, _) => {}
             ComponentWireValue::Number(_, text) | ComponentWireValue::String(_, text) => {
@@ -93,5 +103,6 @@ fn wire(value: &ComponentWireValue) -> usize {
             }
         }
     }
+    memory.set(pending.capacity() * mem::size_of::<&ComponentWireValue>());
     bytes
 }

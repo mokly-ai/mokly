@@ -30,7 +30,7 @@ pub(crate) fn retained(value: &Fragment) -> usize {
                     }
             })
             .sum::<usize>()
-        + document_usage::instance_records(&value.instances)
+        + document_usage::instance_records(&value.instances, None)
         + document_usage::slot_records(&value.slots)
         + document_weight::warnings(&value.warnings)
         + document_weight::strings(&value.resources)

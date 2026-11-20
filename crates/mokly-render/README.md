@@ -89,9 +89,12 @@ Bundle reuse also reads the captured reuse evidence of the compiled recipe
 again through the injected `PhysicalInputs` reader, outside the side tree. A
 read error rejects reuse, also for a recorded absence. Incomplete evidence
 never permits reuse, with one exception in the Serve edit capture mode: a
-retained state with a toolchain identity whose evidence holds only the
+retained state with a toolchain identity whose evidence holds the
 `uncaptured` marker is reused while its module digests and metadata stamps
-stay current. A captured state is tried before a marked one.
+stay current. Its evidence can also hold the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The same reader checks them again, and one change rejects the reuse. A
+captured state is tried before a marked one.
 Each core `bundle` request runs in a `catalogue.bundle` span, which records the
 `cache` outcome that the pool sets on the result. The request carries the
 `capture` mode of the runtime: `full` by default, and `serveEdit` for each
@@ -331,6 +334,12 @@ view after the edit and counts real process starts and hello calls.
   origin. It is `None` in an original head. In a base, it holds a weak
   read-only reference to the stylesheet store of the original head, also
   when that reference is empty or expired.
+  `Runtime::with_document_store` gives the Serve runtime its render store, and
+  `Runtime::for_base` copies it, so the head and base graphs share one store.
+- [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
+  JavaScript part of a render store identity: the toolchain identity and the
+  metadata identity of a compilation with captured and durable reuse evidence,
+  or none.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
@@ -351,7 +360,14 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path.
+  same composition path. It gives the `Fragments` of each side that side's own
+  source root, so a base graph records nothing as head, also with an equal
+  generation id.
+- [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
+  adapter over the pool. Its `record_served` passes a store-served request to
+  `SidecarPool::record_served_render`.
+  [`src/render_call.rs`](./src/render_call.rs) builds the wire call once, for a
+  render and for a record.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
   isolates class maps across retained graphs. It sends the served-generation
   notice only at its direct return of a retained state. Its `BundleState`
@@ -413,6 +429,7 @@ view after the edit and counts real process starts and hello calls.
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
 - [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).

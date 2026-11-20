@@ -47,6 +47,12 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
     let (mut session, _) = session(catalogue(), Arc::new(provider.clone()), cache.clone());
     let actual = session.state.composer.clone();
     let custom = Unimock::new((
+        ComposerMock::can_prepare_root
+            .some_call(matching!(_, _))
+            .answers_arc(Arc::new({
+                let actual = actual.clone();
+                move |_, catalogue, entry| actual.can_prepare_root(catalogue, entry)
+            })),
         ComposerMock::prepare_root
             .some_call(matching!(_))
             .answers_arc(Arc::new({

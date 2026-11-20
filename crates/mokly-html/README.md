@@ -13,6 +13,8 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 - Attach instance, slot, root, and ignore regions as tree nodes.
 - Adapt catalogue controls and rewrite logical links to portable URLs.
 - Render Markdown and apply its independent final safety allowlist.
+- Rebuild the root JavaScript request of a store-served view without
+  composing it, through the same builders as a fresh render.
 
 ## What This Crate Does
 
@@ -37,8 +39,9 @@ fragment once. An opaque `PreparedRoot` keeps the start state, the exact
 `FragmentRequest`, and the one result, a fragment or an error, and no parsed
 tree. `Composer::compose_prepared` starts from that state and gives the kept
 result to the root call, so composition never requests that root again.
-`compose` and `prepare_root` share one start builder and one root request
-builder, so both paths send the same request.
+`compose` and `prepare_root` share one start builder. They and
+`Composer::record_served` share one root request builder, so each path builds
+the same request.
 
 `Composer::can_prepare_root` answers whether `prepare_root` can prepare one
 entry. Serve asks it before a background view starts, to choose the path of
@@ -207,21 +210,28 @@ aligned byte must equal its source byte or be an LF from a CR.
   `ComposeRequest` into a `Composed` document. `Composer::prepare_root` and
   `Composer::compose_prepared` split a Serve background view at its own root
   fragment. `Composer::can_prepare_root` answers, without a `ComposeRequest`,
-  whether `prepare_root` can prepare an entry.
+  whether `prepare_root` can prepare an entry. `Composer::record_served`
+  passes the root JavaScript request of a store-served view to the fragment
+  boundary without composing it. An HTML template entry records nothing.
 - [`src/prepared_root.rs`](./src/prepared_root.rs) defines `PreparedRoot`,
   the opaque start state, root request, and single result of one prepared
   root.
-- [`src/compose_start.rs`](./src/compose_start.rs) and
-  [`src/javascript_request.rs`](./src/javascript_request.rs) build the start
-  state and the root `FragmentRequest` that `compose` and `prepare_root`
-  share. The crate-private `Start::eligible` holds the one rule that
-  `HtmlComposer::can_prepare_root` and `PreparedRoot::prepare` apply.
+- [`src/compose_start.rs`](./src/compose_start.rs) defines the crate-private
+  `Start`, the start state that `compose` and `prepare_root` share. Its
+  `Start::eligible` holds the one rule that `HtmlComposer::can_prepare_root`
+  and `PreparedRoot::prepare` apply.
 - [`src/root_context_weight.rs`](./src/root_context_weight.rs) computes the
   capacity charge of the start state and the request that a `PreparedRoot`
   keeps.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
-  records.
+  records. `FragmentRenderer::record_served` records a request without a
+  render.
+- [`src/root_inputs.rs`](./src/root_inputs.rs) and
+  [`src/javascript_request.rs`](./src/javascript_request.rs) build the root
+  inputs and the `FragmentRequest` once, for a fresh render, a prepared root,
+  and a store-served record. A store-served record reads only the names of
+  the saved slots, and it parses no saved slot HTML.
 - [`src/tree.rs`](./src/tree.rs) defines `Node`, `Element`, and `Region`, the
   owned HTML5 tree with explicit composition regions.
 - [`src/parse.rs`](./src/parse.rs) provides `html`, which parses authored or

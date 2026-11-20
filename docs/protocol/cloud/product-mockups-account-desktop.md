@@ -1,13 +1,15 @@
 # Product Mockups: Desktop App
 
 This inventory is part of [Product mockups: account](./product-mockups-account.md).
-It lists the drawings of desktop sign-in and of the desktop app's web setup.
+It lists the drawings of desktop sign-in, of the desktop app's web setup and
+of its billing actions.
 Its paths match the current source and generated catalogue.
 
 ## Desktop App
 
-These drawings carry [Desktop sign-in](./desktop-sign-in.md) and the
-[web setup](./desktop-app.md#web-setup) of the desktop app. The window's entry
+These drawings carry [Desktop sign-in](./desktop-sign-in.md), the
+[web setup](./desktop-app.md#web-setup) and the
+[billing](./desktop-app.md#billing) of the desktop app. The window's entry
 and landing are signed out, so their header names nobody. The connect page is
 in the browser, so its header names the reader.
 
@@ -21,6 +23,8 @@ in the browser, so its header names the reader.
 | `product/settings/account/desktop`                | A variant of the account pane: **Connect GitHub** in the window, for a reader without GitHub                                                                  |
 | `product/settings/github/desktop`                 | A variant of the GitHub accounts pane: **Add GitHub account** in the window                                                                                   |
 | `product/account/install-app/desktop`             | A variant of the install step: **Install on GitHub** in the window                                                                                            |
+| `product/settings/billing/desktop`                | The Billing pane on the free plan: **Upgrade to Team** in the window                                                                                          |
+| `product/settings/billing/desktop/team`           | Its variant on Team: **Manage billing** in the window                                                                                                         |
 
 The two entry screens stand beside sign in and sign up, in their folders. The
 connect page is a standard screen. Its Empty variant draws the invalid link:
@@ -32,7 +36,8 @@ which reads **Try again**, with the reference beneath. Its fourth variant,
 redirect of a signed-out browser to sign in has no drawing.
 
 Every action that leaves its surface carries the external glyph:
-**Continue in browser**, **Open browser again**, **Open Mokly** and the three
-GitHub actions of the window variants. The connect situation of the install
+**Continue in browser**, **Open browser again**, **Open Mokly**, the three
+GitHub actions of the window variants and the two billing actions of the
+window drawings. The connect situation of the install
 screen has no window drawing, because only a GitHub return reaches it, and
 that return lands in the browser.

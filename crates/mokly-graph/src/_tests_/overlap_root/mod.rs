@@ -8,3 +8,6 @@ mod support;
 mod phase_tests;
 
 mod ineligible_tests;
+
+mod persistent_hit_tests;
+mod persistent_offer_tests;

@@ -3,21 +3,20 @@
 use std::mem;
 use std::sync::{Arc, Mutex};
 
-use mokly_html::composition::ComposeRequest;
 use mokly_html::error::HtmlError;
 use mokly_html::prepared_root::PreparedRoot;
-use mokly_model::axes::Viewport;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 
 use crate::background::Completion;
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder};
 use crate::error::{GraphError, InternalError, Result, invalid};
-use crate::fragment_weight;
 use crate::session::Session;
+use crate::session_persistence::DocumentLookup;
 use crate::session_render::record_axes;
 use crate::types::RenderGeneration;
 use crate::workers::ArtifactWorker;
+use crate::{document_composition, fragment_weight};
 
 impl Session {
     /// Classify dispatch from immutable metadata without preparing or reading the cache.
@@ -54,20 +53,23 @@ impl Session {
             .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
         record_axes(plan);
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let prepared = if self.state.cache.contains(&plan.key) || !preparation_allowed(entry) {
-            None
-        } else {
-            let request = ComposeRequest {
-                catalogue: &self.state.catalogue,
-                entry,
-                viewport: plan.viewport.unwrap_or(Viewport::Desktop),
-                color_scheme: plan.color_scheme,
-                stylesheets: plan.stylesheets.clone(),
+        let lookup =
+            if self.state.cache.contains(&plan.key) || !self.background_root_eligible(route) {
+                None
+            } else {
+                Some(self.background_lookup(route))
             };
+        let prepared = if lookup
+            .as_ref()
+            .is_some_and(DocumentLookup::allows_preparation)
+        {
+            let request = document_composition::request(self, plan, entry);
             match self.state.composer.prepare_root(&request) {
                 Ok(prepared) => prepared,
                 Err(source) => return Err(composition_error(route, &entry.metadata.path, source)),
             }
+        } else {
+            None
         };
         let prepared = match prepared {
             Some(prepared) => {
@@ -80,16 +82,17 @@ impl Session {
                 let bytes = prepared
                     .input_bytes()
                     .saturating_add(prepared.fragment().map_or(0, fragment_weight::retained))
+                    .saturating_add(lookup.as_ref().map_or(0, DocumentLookup::retained_bytes))
                     .saturating_add(mem::size_of::<BackgroundJob<'_>>())
                     .saturating_add(completion.metadata_bytes());
                 completion.handoff(bytes);
-                Some(Mutex::new(Some(prepared)))
+                Some(prepared)
             }
             None => None,
         };
         let job = BackgroundJob {
             session: self,
-            prepared,
+            attempt: Mutex::new(Some(BackgroundAttempt { prepared, lookup })),
         };
         self.state.workers.document(route, &job)
     }
@@ -101,22 +104,25 @@ fn preparation_allowed(entry: &ModelEntry) -> bool {
 
 struct BackgroundJob<'a> {
     session: &'a Session,
-    prepared: Option<Mutex<Option<PreparedRoot>>>,
+    attempt: Mutex<Option<BackgroundAttempt>>,
+}
+
+struct BackgroundAttempt {
+    prepared: Option<PreparedRoot>,
+    lookup: Option<DocumentLookup>,
 }
 
 impl ArtifactWorker for BackgroundJob<'_> {
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let prepared = match &self.prepared {
-            Some(prepared) => Some(
-                prepared
-                    .lock()
-                    .unwrap_or_else(|error| error.into_inner())
-                    .take()
-                    .ok_or(InternalError::PreparedRootConsumed)?,
-            ),
-            None => None,
-        };
-        let composed = self.session.raw_prepared(route, prepared)?;
+        let attempt = self
+            .attempt
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take()
+            .ok_or(InternalError::PreparedRootConsumed)?;
+        let composed = self
+            .session
+            .raw_prepared(route, attempt.prepared, attempt.lookup)?;
         self.session.finish_artifact(route, composed)
     }
     fn closure_job(&self, route: &str) -> Result<Closure> {

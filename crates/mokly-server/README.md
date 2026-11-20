@@ -14,6 +14,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 - Render generated documents on request through an injected graph adapter.
 - Read only reached authored resources through confined file handles.
 - Authenticate live prop edits and retain previews in bounded process memory.
+- Hold a write lease of the render store during render jobs, captures, and
+  Changes reference probes, so its writer stays paused while Serve works.
 - End client connections before ordered subsystem shutdown.
 
 ## What This Crate Does
@@ -65,81 +67,11 @@ publication's revision. The records drop paths that leave the catalogue. They
 hold no snapshot, generation, render backend, or history. A candidate copies
 them, so a rejected candidate leaves the live records unchanged.
 
-`UsagePass` and `ChangesPass` run the background work of the
-[on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
-usage first, then Changes classification against one pinned merge base. They
-yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. `UsagePass` keeps a sliding window bounded
-by its injected `dyn BackgroundCapacity`. It reads the bound before each
-view starts, so the same pass can grow when capacity recovers.
-It starts views in catalogue order and reports each
-view's warnings and failure once, in catalogue order, after every earlier
-render ends. The
-composition root supplies its current capacity. `Workers` admits queued background renders
-one at a time, in request order, whenever no foreground request is active.
-It runs each background document render in `RenderClass::Background`, so the
-sidecar calls of that render go after the other waiting head calls.
-
-Before each view starts, `UsagePass` asks `Documents::can_prepare_root`
-whether the view can prepare its own root fragment. The answer depends only on
-immutable catalogue metadata. The check reads no cache, prepares no root,
-performs no IO, takes no claim, and does not lock the per-route usage state. A
-view with the answer `false` takes the ordinary path: `Window::start` and
-`Work::background`, with no `Stage`. It keeps its window place and its worker
-permit until its render ends. A view with the answer `true` takes the staged
-path: `Stages::view`, `Window::start_staged`, and `Work::background_staged`.
-Each view gets its own answer, so one catalogue can use both paths.
-
-A staged view leaves the window's bound when it
-[hands off](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
-after its own root fragment returns. The `Window` then starts the next view,
-and it still reports in catalogue order. Each pass has its own `Window`, so the
-window bound counts only the views of the current pass. One `Stages` bound of
-the same size limits the views whose own root fragment returned without
-failure, while they build their documents. It serves every pass of the
-`UsagePass`, so the views of a replaced generation keep their completion
-places, and the bound counts them with the views of the current pass. Every
-other view takes no completion place and builds its document under its worker
-permit.
-
-A replaced view that has not handed off keeps its worker permit until it ends,
-and its active sidecar call keeps its claim. New starts can overlap such views
-only within the free workers and the sidecar capacity. HTTP requests share
-these worker permits, so the permits and the `Stages` bound give the
-[limit of the worker count plus the completion bound](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
-The `Stage` of a staged view owns its worker permit. After its own root
-fragment returns, the `Stage` also owns the view's completion place and, when
-the charge fits, its transient charge. A handoff releases the worker.
-`Workers::stop` takes every worker permit and then drains the background jobs
-that released theirs. The `Documents::can_prepare_root` default answers
-`false`, so an adapter that keeps it puts every view on the ordinary path. An
-adapter that answers `true` but keeps the default `background_staged` keeps
-the original background call. Its view takes no completion place and keeps its
-worker for the whole call.
-
-`Stages` also owns one fixed transient budget of 4 MiB for the
-[handoff charges](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
-of every pass. A handoff takes its charge from this budget without waiting,
-and the charge takes no room in the render cache. A charge that does not fit
-only enters the completion place, so the view keeps its worker and tries no
-second charge. The `Stage` returns its charge when its view ends, also on
-failure, cancellation, or a panic.
-
-Ready state installs the generation root, the base commit, Changes
-membership, moved paths, removed records, and per-view states, ignore ids, and
-evidence in one revision. Included details carry
-classification reasons and their base side even without a workspace.
-Workspace lists stay absent until all
-consumer usage is proven. One unavailable view keeps every Used by list absent
-until the next generation. Failed views publish unavailable usage without
-inventing empty consumers. `mokly-model` projects every status from retained
-model inputs. `mokly-compare` owns Changes membership, eligibility,
-workspaces, input changes, and removed metadata. Serve uses those shared
-functions and the shared snapshot route builders. Watched Serve polls `HEAD`
-and the base ref once per second. A changed merge base reuses the accepted
-current graph. A tip change with the same merge base keeps the published
-state. HTTP worker leases keep foreground priority for the whole request, and
-the CLI shares those leases with base-side sidecar admission.
+`UsagePass` and `ChangesPass` run the background work of Serve: current usage
+first, then Changes classification against one pinned merge base. The
+[background work](./background.md) page holds the guidance for their window,
+the ordinary and staged paths of each view, the `Stages` bound and budget, the
+ready state, and the write leases of the Changes reference probes.
 
 `MemoryComparisons` implements `dyn Comparisons`, the store of the
 [selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
@@ -298,7 +230,9 @@ generations.
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
   `UsagePass::fill_window` chooses the ordinary or the staged path of each
-  view before the view starts.
+  view before the view starts. `ChangesPass::activity` holds the render
+  store's activity, and the private `Reference` keeps a probe result together
+  with its lease.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   bounded batch of the current usage pass, which keeps catalogue order for
   starts, warnings, and failure reports. `Window::start` adds an ordinary view,
@@ -319,16 +253,27 @@ generations.
   render scheduler that HTTP and background renders share.
   `Work::background` renders one ordinary view. `Work::background_staged`
   renders one staged view with its `Stage`, and its default calls
-  `background`.
+  `background`. `Workers::with_activity` takes the `WriteActivity` of the
+  render store, and each queued or active job, native work included, holds a
+  lease of it. A file response holds its lease until the file opens, and its
+  body streams after that.
   [`src/work_background.rs`](./src/work_background.rs) admits one background
   render at a time and runs it in `RenderClass::Background`. The job of an
   ordinary view holds its worker permit until the render ends. The job of a
-  staged view attaches its worker permit to the view's `Stage`.
-  [`src/work_active.rs`](./src/work_active.rs) counts the blocking background
-  jobs, so `Workers::stop` also waits for a job that has already released its
-  worker permit.
+  staged view attaches its worker permit to the view's `Stage`. Each
+  background job, ordinary or staged, takes one `WriteActivity` lease before
+  it waits for its turn. Its blocking job keeps that lease after a handoff or a
+  cancellation of the async caller, until the job ends. The job first releases
+  its worker permit, or the completion place, the worker permit, and the charge
+  of its `Stage`. It then releases the lease, and last its count of
+  [`src/work_active.rs`](./src/work_active.rs). That module counts the
+  blocking background jobs, so `Workers::stop` also waits for a job that has
+  already released its worker permit, and it returns only after the lease
+  ends.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
+  `MemoryComparisons::with_activity` takes the same activity, and each queued
+  capture and its detached native work hold a lease.
 - [`src/render_request.rs`](./src/render_request.rs) and
   [`src/preview.rs`](./src/preview.rs) validate live prop requests and define
   `PreviewStore` and `MemoryPreviews`.
@@ -344,6 +289,7 @@ generations.
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Live controls](../../docs/protocol/mokly-component-controls.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).
