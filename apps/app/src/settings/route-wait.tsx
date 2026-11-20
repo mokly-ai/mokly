@@ -28,17 +28,18 @@ import { SettingsDialog } from "./surface";
  * The hand-over most often lands on a project's viewer, so the rail draws the
  * panes that an owner has there, the project's included, as the dialog's own
  * wait then does. Each leads to its own route by the slugs that the address
- * names, then by the scope's once it is read, and `onRoute` replaces the
- * route with it. A pane that needs a slug neither gives has no address yet,
- * and its entry waits disabled. A failed scope read says so in the dialog, as
- * the dialog does, and `onRetry` reads it again. `session` is nothing while
- * the session read runs. `discard` is the unsaved-work question, while it is
- * asked.
+ * names, then by the scope's once it is read, and keeps the route's full
+ * query. `onRoute` replaces the route with it. A pane whose required slug is
+ * still unknown has no address, and its entry waits disabled. A failed scope
+ * read says so in the dialog, and `onRetry` reads it again. `session` is
+ * nothing while the session read runs. `discard` is the unsaved-work question,
+ * while it is asked.
  */
 export function SettingsRouteWait({
   pane,
   session,
   slugs,
+  search,
   scope,
   onRetry,
   onRoute,
@@ -48,6 +49,7 @@ export function SettingsRouteWait({
   pane: SurfaceId;
   session: Session | undefined;
   slugs: SettingsScopeSlugs;
+  search: string;
   scope: Resource<SettingsScope>;
   onRetry: () => void;
   onRoute: (href: string) => void;
@@ -61,14 +63,15 @@ export function SettingsRouteWait({
     : scopePanes(true);
   const shown = failure ? "sections" : pane;
   const read = scopeSlugs(scope.status === "ready" ? scope.value : undefined);
-  const href = (target: SurfaceId) =>
-    paneRoute(target, {
+  const href = (target: SurfaceId) => {
+    const address = paneRoute(target, {
       workspaceSlug: slugs.workspaceSlug ?? read.workspaceSlug,
       projectSlug: slugs.projectSlug ?? read.projectSlug,
     });
+    return address === undefined ? undefined : address + search;
+  };
   // The drawn pane's own entry is where the reader already is, so pressing it
-  // changes nothing, and the route keeps its query, such as a Checkout
-  // return's, for the hand-over.
+  // changes nothing.
   const goToPane = (target: SurfaceId) => {
     const address = target === shown ? undefined : href(target);
     if (address !== undefined) onRoute(address);

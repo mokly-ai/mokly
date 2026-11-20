@@ -98,8 +98,13 @@ counts without owning the retention policy.
 
 Those cutoffs cover magic links, sessions, rate-limit counters, GitHub OAuth
 flows, terminal webhook deliveries, publication candidates, expired catalogue
-grants and collectible blobs. Publication candidates are unfinished attempts
-past their deadline and failed attempts past the age cutoff; ready and expired
+grants and collectible blobs. The magic link, desktop grant, session and
+counter deletes also take a `PruneBatch`, which bounds one delete statement
+by a row limit and a timeout. The store caps them at 1,000 rows and five
+seconds and applies the timeout only inside the current transaction. A
+statement that reaches the timeout returns `Error::Internal`. Publication
+candidates are unfinished attempts past their deadline and failed attempts
+past the age cutoff; ready and expired
 publications are never candidates. `PublicationEvents::dead_letter_count`
 counts only undelivered dead letters; operator recovery reuses that same store
 boundary without touching a provider.
@@ -178,6 +183,7 @@ service.
 - [error.rs](./src/error.rs) — `Error::Internal`, which keeps the source chain of a database, pool or decoding failure, and `SlugTaken`, the one handled write conflict.
 - [user.rs](./src/user.rs), [magic_link.rs](./src/magic_link.rs) and [rate_limit.rs](./src/rate_limit.rs) — `Users`, `MagicLinks` and `RateLimits`, the account, one-use link and admission-window records that `mkc-auth` owns.
 - [session.rs](./src/session.rs) — the `Sessions` queries, including `touch`, the conditional activity update that runs through `Store::autocommit`.
+- [auth_prune.rs](./src/auth_prune.rs) — `PruneBatch`, the row limit and statement timeout that bound one magic link, desktop grant, session or counter delete; the store caps them at 1,000 rows and five seconds.
 - [organization.rs](./src/organization.rs) — `Organizations` with `OrganizationLookup`, the slug-resolved read that reports a retired spelling, and `seat_counts`, the per-kind count of distinct billable users that the billing read and the seat worker share.
 - [project.rs](./src/project.rs), [member.rs](./src/member.rs), [grant.rs](./src/grant.rs) and [token.rs](./src/token.rs) — `Projects` with `ProjectLookup`, `Members`, `Grants` and `Tokens`, the project, membership, direct-grant and publishing-token records that the platform service in `mkc-api` owns.
 - [integration.rs](./src/integration.rs) and [github_installation.rs](./src/github_installation.rs) — `Integrations`, the persisted provider account of a user or organization, and `GitHubInstallations` with `InstallationState`.
