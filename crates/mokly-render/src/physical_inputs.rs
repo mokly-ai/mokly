@@ -111,11 +111,19 @@ fn real_path(path: &Path) -> io::Result<String> {
 }
 
 pub(crate) fn current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
-    evidence.captured()
-        && evidence
-            .inputs
-            .iter()
-            .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
+    evidence.captured() && entries_current(evidence, reader)
+}
+
+/// Compare eligible marked file observations without admitting them to full reuse.
+pub(crate) fn marked_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
+    evidence.serve_edit() && entries_current(evidence, reader)
+}
+
+fn entries_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
+    evidence
+        .inputs
+        .iter()
+        .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
 }
 
 #[cfg(test)]
