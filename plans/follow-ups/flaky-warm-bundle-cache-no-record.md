@@ -16,7 +16,7 @@
   `crates/mokly-sidecar/src/bundle_outcomes.rs:5` to line 19, and
   `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
 - **Reason:** The source stays unknown after 100 complete local runs with
-  failure diagnostics on 2026-11-20, so the user chooses the next step.
+  failure diagnostics on 2026-11-20, so the user chooses the eventual fix.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -240,6 +240,25 @@
       serialization, gate, or lint.
     - No run on macOS took part, because no local macOS machine was
       available.
+  - The diagnostic merge, accepted on 2026-11-20:
+    - The performance orchestrator accepted the diagnostics at commit
+      `662a5fcc4` of branch
+      `calummoore/fu-flaky-warm-bundle-cache-no-record-jbfp`. The acceptance
+      includes the wrapper entry `support/bundle_pool_sidecar.mjs`, under a
+      fail-stop condition.
+    - The user requires this stop: when `CaptureDurability`,
+      `captureRuntime`, or `CaptureVolumes` is missing from
+      `packages/mokly/dist/sidecar/`, the wrapper entry stops and names that
+      export. It never starts the sidecar without its observers. Its static
+      named ESM imports already do this.
+    - `crates/mokly-compare/tests/bundle_pool_sidecar_tests.rs` exercises the
+      actual wrapper entry in isolated fake module trees.
+    - A branch that renames one of these exports updates the wrapper entry
+      in the same branch.
+    - The follow-up orchestrator found that this merge needs no further user
+      decision, because it changes diagnostics only and keeps every
+      assertion.
+    - The cause stays unknown. The eventual fix stays the user's choice.
   - Suspected source: unknown. No local run or probe reproduced this mode,
     and no evidence shows a product defect.
 - **Problem:** The warm test failed once in macOS CI with the cache outcome
@@ -253,17 +272,17 @@
 - **Root question:** How does the warm bundle pool test prove its disk hit on
   every run, also on a macOS CI runner?
 - **Options:**
-  - **A.** Change nothing in the test files, which stay as at commit
-    `e272615f2`, without the diagnostics of 2026-11-20. Add each recurrence
-    with its failure text to this item. Cost: CI stays flaky, a later failure
-    prints only the flags of the first capture, and the source stays
-    unknown. Effort: Small.
+  - **A.** Change nothing after the diagnostics merge. Add each recurrence
+    with its failure text to this item. No fix follows without a new
+    decision. Cost: CI stays flaky, and each failure costs a rerun. Effort:
+    Small.
   - **B.** Make a later failure name its reason. The test-only diagnostics of
     2026-11-20, in the background, print the facts that the CI log lacked.
-    Merge them without a fixture or product fix, and keep this item open.
-    Add the trace of the next natural failure to this item. When the trace
-    names the cause, D follows. Keep every assertion. Cost: three more
-    test-support files to maintain, and the next failure can take many CI
+    They merge without a fixture or product fix, and without a user
+    decision, as the background says. Keep this item open. Add the trace of
+    the next natural failure to this item. When the trace names the cause, D
+    follows. Keep every assertion. Cost: three more test-support files and a
+    wrapper test file to maintain, and the next failure can take many CI
     runs. The wrapper entry `support/bundle_pool_sidecar.mjs` names internal
     modules and methods of the built sidecar. A rename there can fail these
     tests or silently drop an observation. Effort: Small.
@@ -309,5 +328,5 @@
   these diagnostics, and 100 local Linux runs did not reproduce this mode. C,
   more runs preferably on macOS, stays the step before any fixture or
   product fix. B replaces C, the recommendation of 2026-11-19.
-- **Action:** ask the user, because the 2026-11-20 runs did not reproduce the
-  failure or name its source, and the user asked to decide in that case.
+- **Action:** ask the user, because the 2026-11-20 runs named no source, and
+  the user asked to choose the eventual fix in that case.
