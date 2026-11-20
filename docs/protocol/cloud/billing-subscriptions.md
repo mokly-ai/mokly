@@ -77,6 +77,17 @@ thirty seconds ends with one retry. After a read that reports Team, switching
 panes or closing settings uses the reconciled plan without a page reload. The
 cancelled landing is the pane as it was.
 
+The desktop app's window opens Checkout in the system browser, so the return
+lands there, not in the window. The window's first focus after it opened
+Checkout re-reads billing every two seconds until a read reports Team or the
+same thirty seconds pass. It shows no confirming state, and a failed read ends
+the wait with the pane's ordinary read. Any other focus re-reads billing once.
+
+Decision: the window waits for the webhook on its next focus, because a reader
+who comes back first would read Free and could press **Upgrade to Team** again.
+A return from Stripe into the window was rejected, because it needs an API
+field, a second `mokly://` address and an operating-system prompt.
+
 `GET /v1/workspaces/{workspaceId}/billing` (owner, admin) returns the
 plan, both seat kinds' counts in use with their verified unit amounts, the
 subscription facts (status, trial end, the items' current period end, ending),

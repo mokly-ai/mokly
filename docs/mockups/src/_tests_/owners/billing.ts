@@ -92,4 +92,14 @@ export const billingOwners = {
     region: "pane",
     files: ["settings/panes/billing-plans.tsx"],
   },
+  // The plans in the desktop app's window, where each Stripe action carries
+  // the external glyph because it opens Stripe's pages in the browser.
+  "product/settings/billing/desktop": {
+    region: "pane",
+    files: ["settings/panes/billing-plans.tsx"],
+  },
+  "product/settings/billing/desktop/team": {
+    region: "pane",
+    files: ["settings/panes/billing-plans.tsx"],
+  },
 } as const satisfies Record<string, Owner>;

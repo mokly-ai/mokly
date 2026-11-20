@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { billing } from "../../../fixtures/product-states";
 import { site } from "../../../fixtures/site";
+import type { Host } from "../host";
 import {
   Action,
   ExternalLink,
@@ -21,6 +22,15 @@ export type Role = "owner" | "admin";
 /** Whether this reader may leave for Stripe's billing surfaces. */
 export function canManageBilling(role: Role): boolean {
   return role === "owner";
+}
+
+/**
+ * The glyph of an action that opens Stripe's own pages: none in a browser tab,
+ * which leaves for them, and the external glyph in the desktop app's window,
+ * which opens them in the browser.
+ */
+function stripeGlyph(host: Host): "external" | undefined {
+  return host === "window" ? "external" : undefined;
 }
 
 const planFact = {
@@ -55,17 +65,20 @@ function seatRows(plan: Plan): readonly (readonly [string, string])[] {
  * this page — nothing was pressed and nothing was refused — so it draws no
  * reference, and its one action replaces Manage billing rather than joining it.
  * Manage billing leaves for Stripe's own pages, so while its write runs, the
- * control stays busy until the page leaves.
+ * control stays busy until the page leaves. In the desktop app's window it
+ * opens them in the browser, so it carries the external glyph there.
  */
 export function TeamPlan({
   plan,
   role,
   opening = false,
+  host = "browser",
 }: {
   plan: Plan;
   role: Role;
   /** Manage billing's write is running. */
   opening?: boolean;
+  host?: Host;
 }) {
   const manageable = canManageBilling(role);
   return (
@@ -100,6 +113,7 @@ export function TeamPlan({
                 label={opening ? "Opening…" : "Manage billing"}
                 tone="primary"
                 size="md"
+                icon={stripeGlyph(host)}
                 busy={opening ? "Opening the billing portal" : undefined}
               />
             </div>
@@ -160,17 +174,20 @@ export function TeamPlanWait({ label }: { label: string }) {
  * Stripe would not charge is worse than no number, so the plans on the public
  * site are where the reader is sent for one. Upgrade to Team leaves for
  * Stripe's Checkout, so while its write runs, the control stays busy until the
- * page leaves.
+ * page leaves. In the desktop app's window it opens Checkout in the browser,
+ * so it carries the external glyph there.
  */
 export function FreePlan({
   verified = true,
   role,
   opening = false,
+  host = "browser",
 }: {
   verified?: boolean;
   role: Role;
   /** Upgrade to Team's write is running. */
   opening?: boolean;
+  host?: Host;
 }) {
   const manageable = canManageBilling(role);
   return (
@@ -194,6 +211,7 @@ export function FreePlan({
               label={opening ? "Opening…" : "Upgrade to Team"}
               tone="primary"
               size="md"
+              icon={stripeGlyph(host)}
               busy={opening ? "Opening checkout" : undefined}
             />
           </div>
