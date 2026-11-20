@@ -6,7 +6,6 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { cssModulePrefix } from "./css-modules.js";
 import type { ModulePaths } from "./module-paths.js";
-import type { ConsumerRequire } from "./paths.js";
 import {
   authoringModulePath,
   authoringModuleSource,
@@ -16,19 +15,21 @@ import {
 } from "./virtual-modules.js";
 import { viteExternal } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
-import { resolveViteImport } from "./vite-resolution.js";
+import type { VitePeers } from "./vite-react-peers.js";
+import type { ViteLookup } from "./vite-resolution.js";
 import type { ViteStyles } from "./vite-styles.js";
 import { viteCss, viteEntry, viteFile, viteId, viteJsx } from "./vite-urls.js";
 
 export interface ViteInputs {
   params: BundleParams;
   paths: ModulePaths;
-  require: ConsumerRequire;
   runtimeKey: string;
   entry: string;
   files: Map<string, Uint8Array>;
   cssModules: Set<string>;
   styles: ViteStyles;
+  lookup: ViteLookup;
+  peers: VitePeers;
   external: (
     source: string,
     importer: string | undefined,
@@ -43,7 +44,7 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
     name: "mokly",
     enforce: "pre",
     async resolveId(source, importer) {
-      const { params, paths, require, runtimeKey, styles } = current();
+      const { params, paths, runtimeKey, styles, lookup, peers } = current();
       source = viteId(source);
       if (source === viteEntry || source === viteJsx) return source;
       if (source === "@mokly/mokly")
@@ -74,18 +75,18 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
         };
       }
       if (source === "react/jsx-dev-runtime") return viteJsx;
-      if (/^(react|react-dom)(?:\/|$)/.test(source))
-        return viteExternal(await require.resolvePeer(source));
+      if (/^(react|react-dom)(?:\/|$)/.test(source)) {
+        const peer = peers[source];
+        return typeof peer === "string" ? viteExternal(peer) : null;
+      }
       const style = await styles.resolve(source, importer, (source, importer) =>
-        resolveViteImport(paths, this.resolve.bind(this), source, importer),
+        lookup
+          .resolve(source, importer)
+          .then((result) => result?.resolved ?? null),
       );
       if (style) return style;
-      const resolved = await resolveViteImport(
-        paths,
-        this.resolve.bind(this),
-        source,
-        importer,
-      );
+      const resolution = await lookup.resolve(source, importer);
+      const resolved = resolution?.resolved;
       if (!resolved) return null;
       const file = viteFile(resolved.id);
       if (!file) return resolved;

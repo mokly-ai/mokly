@@ -1209,6 +1209,9 @@ Depends on: 14
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/styles.md`.
 - [ ] Apply the answers to track D decisions 1 and 5.
+- [ ] Route Vite's stylesheet resolver through the Vite path's one lookup, so
+      that stylesheet imports also get the selected installation and the
+      package roots. Vite's stylesheet resolver does not call Mokly's plugin.
 - [ ] Keep each authored relative `url()` of a transformed stylesheet, so
       that Mokly delivers its asset as on the esbuild path. Vite rewrites
       such URLs, and Mokly rejects a root-absolute CSS URL.

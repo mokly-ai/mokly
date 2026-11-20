@@ -1,8 +1,9 @@
 import { pathToFileURL } from "node:url";
 
-import type { ModulePaths } from "./module-paths.js";
+import { externalType } from "./vite-external.js";
 import type { loadVite } from "./vite-peers.js";
 import { fetchViteImport } from "./vite-resolution.js";
+import type { ViteLookup } from "./vite-resolution.js";
 import { viteFile } from "./vite-urls.js";
 
 /** Match Vite's config runner while routing its external fetches through this side. */
@@ -10,7 +11,7 @@ export async function runViteConfig(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
   file: string,
-  paths: ModulePaths,
+  lookup: ViteLookup,
 ) {
   const config = await vite.resolveConfig(
     {
@@ -37,14 +38,25 @@ export async function runViteConfig(
     hot: false,
     runnerOptions: { hmr: false },
   });
+  lookup.bind(vite, environment);
   const fetch = environment.fetchModule.bind(environment);
   environment.fetchModule = async (...args) => {
-    const result = await fetchViteImport(paths, fetch, ...args);
+    const resolved = await lookup.resolve(args[0], args[1]);
+    const candidate = resolved && viteFile(resolved.resolved.id);
+    const result =
+      candidate &&
+      !lookup.paths.repositoryOwned(await lookup.paths.resolve(candidate))
+        ? {
+            externalize: pathToFileURL(await lookup.paths.resolve(candidate))
+              .href,
+            type: await externalType(await lookup.paths.resolve(candidate)),
+          }
+        : await fetchViteImport(lookup, fetch, ...args);
     if (!("externalize" in result)) return result;
     const file = viteFile(result.externalize);
     if (!file) return result;
-    const confined = await paths.resolve(file);
-    if (paths.repositoryOwned(confined))
+    const confined = await lookup.paths.resolve(file);
+    if (lookup.paths.repositoryOwned(confined))
       return fetch(confined, args[1], args[2]);
     return { ...result, externalize: pathToFileURL(confined).href };
   };

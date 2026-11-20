@@ -161,6 +161,23 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
 }
 
 #[test]
+fn a_vite_module_edit_moves_only_the_documents_that_import_it() {
+    let consumer = consumer();
+    consumer.replace(
+        "mokly.config.json",
+        "\"roots\":",
+        "\"vite\": true,\n  \"roots\":",
+    );
+    consumer.write(
+        "vite.config.ts",
+        "import react from '@vitejs/plugin-react'; export default { plugins: [react()] };\n",
+    );
+    let before = keys(&consumer);
+    append(&consumer, "specs/h.ts", "// edit\n");
+    assert_eq!(moved(&before, &keys(&consumer)), entries(&["s/s"]));
+}
+
+#[test]
 fn a_rebuild_renders_again_only_the_views_whose_render_inputs_moved() {
     let consumer = consumer();
     let render_all = |consumer: &Consumer| {

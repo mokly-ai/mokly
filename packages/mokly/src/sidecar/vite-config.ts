@@ -4,10 +4,10 @@ import path from "node:path";
 import type { ConfigEnv, UserConfig } from "vite";
 
 import { missingFile } from "./file-digests.js";
-import type { ModulePaths } from "./module-paths.js";
 import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { runViteConfig } from "./vite-config-runner.js";
 import type { loadVite } from "./vite-peers.js";
+import type { ViteLookup } from "./vite-resolution.js";
 
 export const viteConfigFiles = ["js", "mjs", "ts", "cjs", "mts", "cts"].map(
   (extension) => `vite.config.${extension}`,
@@ -17,7 +17,7 @@ export const viteConfigFiles = ["js", "mjs", "ts", "cjs", "mts", "cts"].map(
 export async function loadViteConfig(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
-  paths: ModulePaths,
+  lookup: ViteLookup,
 ) {
   const environment: ConfigEnv = {
     command: "serve",
@@ -25,19 +25,10 @@ export async function loadViteConfig(
     isSsrBuild: false,
     isPreview: false,
   };
-  return withViteConfigResolution(paths, async () => {
-    if (!paths.dependencyRoot || paths.dependencyRoot === paths.sourceRoot)
-      return vite.loadConfigFromFile(
-        environment,
-        undefined,
-        directory,
-        "silent",
-        undefined,
-        "runner",
-      );
+  return withViteConfigResolution(lookup, async () => {
     const file = await configFile(directory);
     if (!file) return null;
-    const loaded = await runViteConfig(vite, directory, file, paths);
+    const loaded = await runViteConfig(vite, directory, file, lookup);
     const exported = loaded.module.default;
     const config: unknown = await (typeof exported === "function"
       ? exported(environment)

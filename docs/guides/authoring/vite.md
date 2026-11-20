@@ -46,7 +46,9 @@ Aliases, plugins, and `import.meta.env` values from `.env` files apply to
 mockups, components, the renderer, and stories.
 Queries such as `?raw` work as in `vite dev`.
 SVGR's `?react` imports use the project's SVGR plugin.
-React and React DOM come from the project.
+A `react` or `react-dom` alias in `resolve.alias` selects the React
+installation that every module, dependency, and render uses.
+Without a matching alias, React and React DOM come from the project.
 
 ## Module settings
 
@@ -60,6 +62,11 @@ These `moduleResolution` fields do not apply to JavaScript:
 - `loaders`
 
 `packageRoots` still selects dependency roots.
+The project's Vite setup resolves imports first, including its aliases.
+If it cannot find a package, Mokly also checks `node_modules` under each
+configured `moduleResolution.packageRoots` directory.
+This lookup applies to Serve, `build`, and both sides of Changes.
+
 The `"empty"` loader choices for `.css` and `.module.css` still apply.
 See [configuration](/docs/authoring/config/).
 

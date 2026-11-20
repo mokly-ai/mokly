@@ -145,10 +145,9 @@ re-exports in source order, then its dynamic imports in source order, with
 stylesheets among them. Decision: dynamic imports come after static imports,
 because a module evaluates every static import first, as in the project's
 own Vite build. The esbuild path's interleaved order was rejected under the
-adapter. A file that a query selects,
-such as `?raw`, `?url`, or `?react`, counts as its file with its bytes. A
-plugin's virtual module is not a module of the graph. The files that it
-imports count as imports of its importer.
+adapter. A file that a query selects, such as `?raw`, `?url`, or `?react`,
+counts as its file with its bytes. A plugin's virtual module is not a module
+of the graph. The files that it imports count as imports of its importer.
 
 A dependency that the setup externalizes is a module of the graph with the
 digest of its resolved file and no imports. Node then loads it and its own
@@ -164,9 +163,12 @@ virtual module.
 `bundle` evaluates nothing. `describe` evaluates the virtual entry through
 Vite's module runner, after `cssModules` installed the class maps. Each module
 of a generation evaluates once. React and React DOM resolve from the side's
-configuration directory through its selected installation. Every module that
-Vite runs, and every dependency that Node loads for it, uses that one React
-runtime.
+configuration directory through the same lookup as any other import, so a
+setup alias of `react` or `react-dom` selects the side's one React runtime.
+Every module that Vite runs, every dependency that Node loads for it, the JSX
+development shim, and the render use that runtime. Decision: a setup alias
+selects React. Forcing the default React and ignoring the alias was rejected,
+because the esbuild path also lets the side's aliases select React.
 
 ## Recipes And Reuse
 
@@ -216,17 +218,17 @@ way.
 
 Under the adapter, the setup takes the place of the `postcss` module and of
 the `moduleResolution` fields `aliases`, `conditions`, `mainFields`,
-`resolveExtensions`, and `loaders`. The setup alone resolves imports, so
-Mokly's
+`resolveExtensions`, and `loaders`. The setup resolves imports, so Mokly's
 [tsconfig `paths` rule](./mokly-sidecar-modules.md#source-and-dependency-files)
-does not apply. `packageRoots` still names the dependency roots.
+does not apply. Decision: the setup replaces these settings, so Mokly keeps no
+copy of the project's setup. `packageRoots` still names the dependency roots.
+On both sides, the `node_modules` directories of the package roots supplement
+the setup's lookup as the last fallback, as on the
+[esbuild path](./mokly-configuration.md#module-resolution).
 
 Mokly's `"empty"` opt-outs for `.css` and `.module.css` still apply, and they
 cover every stylesheet language. `.css` skips every plain and module
 stylesheet. `.module.css` skips every module stylesheet.
-
-Decision: the setup replaces these settings, so Mokly keeps no copy of the
-project's setup.
 
 ## Stylesheet Transforms
 

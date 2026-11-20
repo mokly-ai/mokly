@@ -1,16 +1,18 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { ViteDevServer } from "vite";
 
-import { importerDirectory } from "./importer-resolution.js";
-import type { ModulePaths } from "./module-paths.js";
+import type { ViteExternalType } from "../generated/sidecar/ViteExternalType.js";
+
 import { packageName } from "./specifier.js";
 import type { loadVite } from "./vite-peers.js";
+import type { ViteLookup } from "./vite-resolution.js";
 import { viteFile } from "./vite-urls.js";
 
 const prefix = "\0mokly-external:";
 
-/** Keep Vite's resolved externals distinct from files that its runner transforms. */
+/** Keep native dependencies distinct from files that the runner transforms. */
 export function viteExternal(file: string): string {
   return prefix + Buffer.from(file).toString("base64url");
 }
@@ -21,54 +23,63 @@ export function viteExternalFile(id: string): string | undefined {
     : undefined;
 }
 
-/** Resolve default externals with Vite's server conditions at the selected importer. */
+/** Native loading uses the same lookup, including the chosen fallback package root. */
 export function viteExternalResolver(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   server: ViteDevServer,
-  paths: ModulePaths,
+  lookup: ViteLookup,
 ) {
-  const environment = server.environments.ssr!;
-  const options = environment.config.resolve;
-  const noExternal = options.noExternal;
+  const options = server.environments.ssr!.config.resolve;
   const filter =
-    typeof noExternal === "boolean"
+    typeof options.noExternal === "boolean"
       ? undefined
-      : vite.createFilter(undefined, noExternal, { resolve: false });
-  const resolve = vite.createIdResolver(server.config, {
-    ...options,
-    mainFields: ["main"],
-    conditions: options.externalConditions,
-    extensions: [".js", ".cjs", ".json"],
-    isBuild: true,
-    external: [],
-    noExternal: [],
-  });
+      : vite.createFilter(undefined, options.noExternal, { resolve: false });
   return async (source: string, importer: string | undefined) => {
-    const file = viteFile(importer ?? "");
-    if (!file) return;
-    const directory = path.dirname(file);
-    const selected = importerDirectory(paths, source, directory);
-    if (selected === directory) return;
     const explicit =
-      options.external !== true && options.external.includes(source);
-    const packageExternal =
       options.external !== true &&
-      options.external.includes(packageName(source));
+      (options.external.includes(source) ||
+        options.external.includes(packageName(source)));
     if (
       !explicit &&
-      !packageExternal &&
-      (noExternal === true || (filter && !filter(packageName(source))))
+      (options.noExternal === true || (filter && !filter(packageName(source))))
     )
       return;
-    const resolved = await resolve(
-      environment,
-      source,
-      path.join(selected, path.basename(file)),
-    );
-    if (
-      resolved &&
-      (!path.extname(resolved) || /\.(?:js|mjs|cjs)$/.test(resolved))
-    )
-      return resolved;
+    if (/[?#]/.test(source)) return;
+    const result = await lookup.resolve(source, importer);
+    const file = result && viteFile(result.resolved.id);
+    if (!file || (path.extname(file) && !/\.(?:js|mjs|cjs)$/.test(file)))
+      return;
+    const confined = await lookup.paths.resolve(file);
+    if (!lookup.paths.repositoryOwned(confined)) return confined;
   };
+}
+
+export async function externalType(file: string): Promise<ViteExternalType> {
+  if (/\.(mjs|mts)$/.test(file)) return "module";
+  if (/\.(cjs|cts)$/.test(file)) return "commonjs";
+  let directory = path.dirname(file);
+  for (;;) {
+    try {
+      const manifest: unknown = JSON.parse(
+        await fs.readFile(path.join(directory, "package.json"), "utf8"),
+      );
+      return manifest &&
+        typeof manifest === "object" &&
+        "type" in manifest &&
+        manifest.type === "module"
+        ? "module"
+        : "commonjs";
+    } catch (error) {
+      if (!(
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ))
+        throw error;
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) return "commonjs";
+    directory = parent;
+  }
 }

@@ -1,14 +1,11 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import type { ViteDevServer } from "vite";
 
-import type { ViteExternalType } from "../generated/sidecar/ViteExternalType.js";
 import type { ViteFetchResult } from "../generated/sidecar/ViteFetchResult.js";
 
 import { viteFailure } from "./vite-errors.js";
-import { viteExternalFile } from "./vite-external.js";
+import { externalType, viteExternalFile } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { fetchViteImport } from "./vite-resolution.js";
@@ -28,9 +25,6 @@ export function createViteFetch(
   retainedFiles: ReadonlyMap<string, Uint8Array> = new Map(),
 ): ViteFetch {
   const environment = server.environments.ssr!;
-  const mokly = new Set(
-    server.config.plugins.filter((plugin) => plugin.name === "mokly"),
-  );
   return async (url, importer) => {
     try {
       const id = viteId(url);
@@ -49,9 +43,7 @@ export function createViteFetch(
         /^(react|react-dom)(?:\/|$)/.test(id) &&
         id !== "react/jsx-dev-runtime"
       ) {
-        const file = await input.paths.resolve(
-          await input.require.resolvePeer(id),
-        );
+        const file = await input.paths.resolve(input.peers[id]!);
         await recordViteInput(input, file);
         return {
           externalize: pathToFileURL(file).href,
@@ -85,21 +77,30 @@ export function createViteFetch(
           id,
           importer,
           (source, importer) =>
-            environment.pluginContainer.resolveId(source, importer, {
-              skip: mokly,
-            }),
+            input.lookup
+              .resolve(source, importer)
+              .then((result) => result?.resolved ?? null),
         );
         if (typeof style === "string") requested = viteUrl(style);
       }
-      let result = await fetchViteImport(
-        input.paths,
-        environment.fetchModule.bind(environment),
-        requested,
-        importer,
-        {
-          cached: false,
-        },
-      );
+      const native =
+        requested === viteUrl(url)
+          ? await input.external(id, importer)
+          : undefined;
+      let result = native
+        ? {
+            externalize: pathToFileURL(native).href,
+            type: await externalType(native),
+          }
+        : await fetchViteImport(
+            input.lookup,
+            environment.fetchModule.bind(environment),
+            requested,
+            importer,
+            {
+              cached: false,
+            },
+          );
       if ("cache" in result)
         throw new Error("uncached Vite fetch returned no code");
       if ("externalize" in result) {
@@ -152,34 +153,4 @@ export function createViteFetch(
       throw viteFailure(error, input.paths, importer ?? url, version);
     }
   };
-}
-
-async function externalType(file: string): Promise<ViteExternalType> {
-  if (/\.(mjs|mts)$/.test(file)) return "module";
-  if (/\.(cjs|cts)$/.test(file)) return "commonjs";
-  let directory = path.dirname(file);
-  for (;;) {
-    try {
-      const manifest: unknown = JSON.parse(
-        await fs.readFile(path.join(directory, "package.json"), "utf8"),
-      );
-      return manifest &&
-        typeof manifest === "object" &&
-        "type" in manifest &&
-        manifest.type === "module"
-        ? "module"
-        : "commonjs";
-    } catch (error) {
-      if (!(
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ))
-        throw error;
-    }
-    const parent = path.dirname(directory);
-    if (parent === directory) return "commonjs";
-    directory = parent;
-  }
 }

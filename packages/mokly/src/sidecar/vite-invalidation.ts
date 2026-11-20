@@ -25,8 +25,8 @@ export async function snapshotViteInputs(
   return {
     files: new Map(input.files),
     metadata: Object.fromEntries(
-      Object.entries(metadata.inputs).filter(
-        ([file]) => !input.files.has(file),
+      Object.entries(metadata.inputs).filter(([file]) =>
+        Object.hasOwn(metadata.metadataInputs, input.paths.metadataName(file)),
       ),
     ),
     directories: new Map(

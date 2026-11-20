@@ -1,0 +1,31 @@
+# Keep module digests out of shared render inputs
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the branch `conductor/storybook-support-d-vite-adapter`, review round 1, finding 3.
+- **Location:** `crates/mokly-graph/src/render_inputs.rs:140`, `crates/mokly-sidecar/src/compiled.rs:134`, `packages/mokly/src/sidecar/vite-metadata.ts:14`, `packages/mokly/src/sidecar/bundle-recipe.ts:87`.
+- **Reason:** The fix changes the boundary between the sidecar and the core and adds a field that no rule covers, so the user decides it, and the branch that found the defect applied a direct fix in the sidecar.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Render input key:** the digest of one entry's inputs. A cached render is reused while its key stays equal.
+  - **metadataInputs:** the field of the compiled result of a `bundle` request that lists extra input files with their digests, such as `package.json`, `tsconfig.json`, and setup files.
+  - **Module graph:** the list of modules that a `bundle` request reports, each with the digest of its consumed bytes and its imports.
+- **Background:**
+  - The watch contract in `docs/protocol/mokly-watch.md` gives each entry module one render input key. The key moves when a module of its closure changes, and only then. A resolution file outside every closure directory, and each setup input, moves every key.
+  - The core builds the shared part of every key from each `metadataInputs` name that is on no closure directory chain, in `crates/mokly-graph/src/render_inputs.rs` near line 140. So the core trusts each compile path to keep module digests out of `metadataInputs`.
+  - On 2026-11-20 a review found that the Vite compile path put every consumed module into `metadataInputs`. One module edit then moved every render key. The branch fixed the producer: the Vite path keeps graph modules out of `metadataInputs`, and it keeps only setup files, resolution inputs, React manifests, Storybook preview candidates, and consumed files that the graph does not name.
+  - The esbuild path in `packages/mokly/src/sidecar/bundle-recipe.ts` sorts its inputs with its own code. Each new compile path must copy that rule again.
+- **Problem:** The rule that keeps module digests out of the shared part of every key lives in each producer, not in the core. A producer that puts a module digest into `metadataInputs` makes every edit render every entry again, and no check catches it.
+- **Impact if no action:** A future compile path, or a change to an existing one, can bring back the defect: each edit renders every JavaScript entry again, Serve reloads every frame, and the base side of Changes reuses no render.
+- **Root question:** Where does the rule live that keeps a module digest in the keys of its own closure only, for every compile path?
+- **Options:**
+  - **A.** Change nothing. Each producer keeps its own rule, and its tests check it. Effort: Small.
+  - **B.** Move the shared-input code of both compile paths into one sidecar function, so that the esbuild path and the Vite path sort their inputs with one rule. The esbuild path's compile identity can change once. Effort: Medium.
+  - **C.** Report the setup inputs in their own field of the compiled result. In the core, keep the digest of a graph module out of the shared part of every key, unless that field names it. Update the boundary type, its generated TypeScript, the Rust fixtures that build it, the core's key code, and `docs/protocol/mokly-sidecar-recipes.md`. Effort: Medium.
+- **Left out:** A core-only filter of module names: the core cannot tell a plain module from a setup file that an entry also imports, so a setup change would stop moving every key, which breaks the watch contract.
+- **Wider fix:** C. The core then keeps module digests per entry for every compile path.
+- **Previous examples:** The Vite compile path put module digests into `metadataInputs` on the branch `conductor/storybook-support-d-vite-adapter`, until its review round 1 fix.
+- **Recommendation:** C. One rule in the core protects every compile path. B is a smaller step that keeps the rule in the sidecar.
+- **Action:** ask the user, because C adds a field to the boundary between the sidecar and the core, which no rule covers.

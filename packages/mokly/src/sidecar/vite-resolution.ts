@@ -1,67 +1,171 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import type { DevEnvironment, Rollup } from "vite";
+import type { Alias, DevEnvironment, Rollup } from "vite";
 
-import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
-import { packageDirectory } from "./package-directory.js";
-import { inside } from "./path-scope.js";
+import { bareSpecifier } from "./specifier.js";
+import {
+  viteLookupImporters,
+  viteMissingImport,
+  viteSourceResolution,
+} from "./vite-lookup-paths.js";
+import type { loadVite } from "./vite-peers.js";
 import { viteFile } from "./vite-urls.js";
 
-/** Vite keeps source-side aliases before looking in the selected installation. */
-export async function resolveViteImport(
-  paths: ModulePaths,
-  resolve: Rollup.PluginContext["resolve"],
+type ViteResolve = (
   source: string,
-  importer: string | undefined,
-) {
-  const original = await resolve(source, importer, { skipSelf: true });
-  const file = viteFile(importer ?? "");
-  if (!file) return original;
-  const directory = path.dirname(file);
-  const selected = importerDirectory(paths, source, directory);
-  if (selected === directory) return original;
-  const resolved = original && viteFile(original.id);
-  if (resolved && inside(paths.sourceRoot, await fs.realpath(resolved)))
-    return original;
-  if (original && !resolved && !original.external) return original;
-  return resolve(
-    source,
-    path.join(await packageDirectory(paths, selected, source), "package.json"),
-    { skipSelf: true },
-  );
+  importer: string,
+) => Promise<Rollup.PartialResolvedId | null>;
+export interface ViteResolution {
+  resolved: Rollup.PartialResolvedId;
+  importer: string;
+  source: string;
 }
 
-/** Vite's runner externalizes bare imports before it calls plugin resolution. */
+/** The setup, modules, peers, and native packages share one lookup policy. */
+export class ViteLookup {
+  aliases: Alias[] = [];
+  private alias: (
+    source: string,
+    importer?: string,
+  ) => Promise<string | undefined> = async () => undefined;
+  private module: ViteResolve = async () => null;
+  private physical: ViteResolve = async () => null;
+
+  constructor(
+    public paths: ModulePaths,
+    readonly directory: string,
+  ) {}
+
+  updatePaths(paths: ModulePaths): void {
+    for (const file of this.paths.lookupFiles) paths.lookupFiles.add(file);
+    for (const directory of this.paths.lookupDirectories)
+      paths.lookupDirectories.add(directory);
+    this.paths = paths;
+  }
+
+  bind(
+    vite: Awaited<ReturnType<typeof loadVite>>["api"],
+    environment: DevEnvironment,
+  ): void {
+    const config = {
+      ...environment.getTopLevelConfig(),
+      ...environment.config,
+    };
+    const aliasEnvironment = {
+      name: environment.name,
+      logger: environment.logger,
+      getTopLevelConfig: () => environment.getTopLevelConfig(),
+      config: {
+        ...config,
+        resolve: { ...config.resolve, alias: this.aliases },
+      },
+    };
+    const alias = vite.createIdResolver(config);
+    this.alias = (source, importer) =>
+      alias(aliasEnvironment, source, importer, true);
+    const skip = new Set(
+      environment.plugins.filter((plugin) =>
+        ["mokly", "alias"].includes(plugin.name),
+      ),
+    );
+    this.module = (source, importer) =>
+      environment.pluginContainer.resolveId(source, importer, { skip });
+    const nativeEnvironment = {
+      ...aliasEnvironment,
+      config: { ...config, resolve: { ...config.resolve, alias: [] } },
+    };
+    const native = vite.createIdResolver(config, {
+      mainFields: config.resolve.mainFields,
+      conditions: config.resolve.conditions,
+      extensions: [".js", ".cjs", ".json"],
+      isBuild: true,
+      external: [],
+      noExternal: [],
+    });
+    this.physical = async (source, importer) => {
+      const id = await native(nativeEnvironment, source, importer);
+      return id ? { id } : null;
+    };
+  }
+
+  async resolve(
+    source: string,
+    importer?: string,
+  ): Promise<ViteResolution | null> {
+    const target = (await this.alias(source, importer)) ?? source;
+    const candidates = this.importers(target, importer);
+    for (const [index, candidate] of candidates.entries()) {
+      let resolved = await this.module(target, candidate);
+      if (resolved?.external && !viteFile(resolved.id)) {
+        const physical = await this.physical(target, candidate);
+        if (!physical) continue;
+        resolved = { ...resolved, id: physical.id };
+      }
+      if (!resolved || resolved.meta?.["vite:alias"]?.noResolved) continue;
+      const file = viteFile(resolved.id);
+      if (
+        index === 0 &&
+        candidates.length > 1 &&
+        file &&
+        this.paths.dependencyRoot &&
+        this.paths.dependencyRoot !== this.paths.sourceRoot &&
+        !viteSourceResolution(this.paths, file)
+      )
+        continue;
+      return { resolved, importer: candidate, source: target };
+    }
+    return null;
+  }
+
+  importers(source: string, importer?: string): string[] {
+    return viteLookupImporters(this.paths, this.directory, source, importer);
+  }
+
+  sync(
+    source: string,
+    importer: string,
+    resolve: (specifier: string, parent: string) => string,
+  ): string {
+    let failure: unknown;
+    const candidates = this.importers(source, importer);
+    for (const [index, candidate] of candidates.entries()) {
+      try {
+        const url = resolve(source, pathToFileURL(candidate).href);
+        if (!url.startsWith("file:")) return url;
+        const file = fileURLToPath(url);
+        if (
+          index === 0 &&
+          candidates.length > 1 &&
+          this.paths.dependencyRoot &&
+          this.paths.dependencyRoot !== this.paths.sourceRoot &&
+          !viteSourceResolution(this.paths, file)
+        )
+          continue;
+        return pathToFileURL(this.paths.resolveSync(file)).href;
+      } catch (error) {
+        if (!viteMissingImport(error)) throw error;
+        failure = error;
+      }
+    }
+    throw (
+      failure ??
+      Object.assign(new Error(`could not resolve ${source}`), {
+        code: "MODULE_NOT_FOUND",
+      })
+    );
+  }
+}
+
+/** Runner bare imports must use the same resolved file as plugin imports. */
 export async function fetchViteImport(
-  paths: ModulePaths,
+  lookup: ViteLookup,
   fetch: DevEnvironment["fetchModule"],
   ...args: Parameters<DevEnvironment["fetchModule"]>
 ) {
-  const [url, importer, options] = args;
-  const file = viteFile(importer ?? "");
-  const directory = file && path.dirname(file);
-  const selected = directory && importerDirectory(paths, url, directory);
-  if (!directory || selected === directory || !selected) return fetch(...args);
-  try {
-    const original = await fetch(...args);
-    if (!("externalize" in original)) return original;
-    const resolved = viteFile(original.externalize);
-    if (!resolved || inside(paths.sourceRoot, await fs.realpath(resolved)))
-      return original;
-  } catch (error) {
-    if (
-      !error ||
-      typeof error !== "object" ||
-      !("code" in error) ||
-      !["MODULE_NOT_FOUND", "ERR_MODULE_NOT_FOUND"].includes(String(error.code))
-    )
-      throw error;
-  }
-  return fetch(
-    url,
-    path.join(await packageDirectory(paths, selected, url), "package.json"),
-    options,
-  );
+  const [source, importer, options] = args;
+  if (!bareSpecifier(source)) return fetch(...args);
+  const result = await lookup.resolve(source, importer);
+  if (!result) return fetch(...args);
+  return fetch(result.resolved.id, result.importer, options);
 }

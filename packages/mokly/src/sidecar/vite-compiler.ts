@@ -26,6 +26,8 @@ import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
 import { moklyVitePlugin } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
+import { captureReactPeers } from "./vite-react-peers.js";
+import { ViteLookup } from "./vite-resolution.js";
 import { setupStamp, viteSetup } from "./vite-setup.js";
 import { ViteStyles } from "./vite-styles.js";
 import { viteToolchain } from "./vite-toolchain.js";
@@ -38,6 +40,7 @@ interface Setup {
   stamp: string;
   snapshot?: ViteSnapshot;
   styles: ViteStyles;
+  lookup: ViteLookup;
 }
 
 /** One app server belongs to this process and root; recipes outlive that server. */
@@ -68,13 +71,17 @@ export class ViteCompiler {
         const input: ViteInputs = {
           params,
           paths,
-          require,
           runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
           entry: entry.contents,
           files: new Map(),
           cssModules: new Set(),
           styles: new ViteStyles(),
           external: async () => undefined,
+          lookup: new ViteLookup(
+            paths,
+            path.resolve(paths.sourceRoot, params.configurationDirectory),
+          ),
+          peers: {},
         };
         this.input = input;
         const directory = path.resolve(
@@ -106,22 +113,31 @@ export class ViteCompiler {
             vite.api,
             directory,
             moklyVitePlugin(() => this.input!),
-            paths,
+            input.lookup,
+            () => this.input!.peers,
           );
           this.setup = {
             ...setup,
             key,
             stamp: await setupStamp(setup.files, directory),
             styles: input.styles,
+            lookup: input.lookup,
           };
         }
         input.styles = this.setup.styles;
+        input.lookup = this.setup.lookup;
+        input.lookup.updatePaths(paths);
+        input.lookup.bind(vite.api, this.setup.server.environments.ssr!);
         input.external = viteExternalResolver(
           vite.api,
           this.setup.server,
-          paths,
+          input.lookup,
         );
+        input.peers = await captureReactPeers(input.lookup);
         invalidateViteModules(this.setup.server, this.setup.snapshot, changed);
+        for (const [file, bytes] of this.setup.snapshot?.files ?? [])
+          if (this.setup.snapshot?.metadata[file] !== undefined)
+            input.files.set(file, bytes);
         const imports = new Map<string, string[]>();
         const fetch = createViteFetch(
           this.setup.server,
@@ -136,13 +152,23 @@ export class ViteCompiler {
           imports,
           version,
         );
-        const { modules } = viteGraph(recipe, children, paths, input.files);
+        const { modules, physical } = viteGraph(
+          recipe,
+          children,
+          paths,
+          input.files,
+        );
         await verifyViteInputs(input);
         if (
           this.setup.stamp !== (await setupStamp(this.setup.files, directory))
         )
           throw new Error("Vite setup changed during compilation");
-        const metadata = await viteMetadata(input, this.setup.files);
+        const graphFiles = new Set(physical.values());
+        const metadata = await viteMetadata(
+          input,
+          this.setup.files,
+          graphFiles,
+        );
         this.setup.snapshot = await snapshotViteInputs(input, metadata);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
@@ -177,7 +203,7 @@ export class ViteCompiler {
               Buffer.from(input.files.get(file) ?? []).toString("utf8"),
             ]),
           ),
-          peers: require.snapshot(),
+          peers: { ...require.snapshot(), ...input.peers },
           unmappedDependencyDirectories: [
             ...paths.dependencyUsage.unmapped,
           ].sort(),

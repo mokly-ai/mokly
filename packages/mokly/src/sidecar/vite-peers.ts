@@ -11,7 +11,6 @@ import { ModulePaths } from "./module-paths.js";
 import { consumerRequire } from "./paths.js";
 import type { ConsumerRequire } from "./paths.js";
 import { resolutionOptions } from "./resolution.js";
-import { captureReactPeers } from "./vite-react-peers.js";
 
 /** Keep the existing consumer peer resolver alive during the Vite compile. */
 export async function withVitePeers<T>(
@@ -63,7 +62,6 @@ export async function withVitePeers<T>(
                 await require.resolvePeer("vite");
                 await require.resolvePeer("vite/module-runner");
                 await require.resolvePeer("vite/package.json");
-                await captureReactPeers(require);
                 outcome = { value: await run(require) };
               } catch (error) {
                 outcome = { error };

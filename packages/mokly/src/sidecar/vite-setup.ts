@@ -3,19 +3,22 @@ import path from "node:path";
 import type { Plugin, UserConfig } from "vite";
 
 import { fileDigest } from "./file-digests.js";
-import type { ModulePaths } from "./module-paths.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { loadViteConfig, viteConfigFiles } from "./vite-config.js";
 import type { loadVite } from "./vite-peers.js";
+import { vitePeerPlugin } from "./vite-react-peers.js";
+import type { VitePeers } from "./vite-react-peers.js";
+import type { ViteLookup } from "./vite-resolution.js";
 
 /** App config loading uses Vite's runner loader, which writes no config bundle. */
 export async function viteSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
   plugin: Plugin,
-  paths: ModulePaths,
+  lookup: ViteLookup,
+  peers: () => VitePeers,
 ) {
-  const loaded = await loadViteConfig(vite, directory, paths);
+  const loaded = await loadViteConfig(vite, directory, lookup);
   const config = loaded?.config ?? {};
   const server = await vite.createServer({
     ...config,
@@ -31,8 +34,14 @@ export async function viteSetup(
       hmr: false,
       ws: false,
     },
-    plugins: [plugin, ...(config.plugins ?? []), noOptimizer()],
+    plugins: [
+      plugin,
+      ...(config.plugins ?? []),
+      noOptimizer(),
+      vitePeerPlugin(lookup, peers),
+    ],
   });
+  lookup.bind(vite, server.environments.ssr!);
   const envDirectory = server.config.envDir;
   const files = [
     ...viteConfigFiles.map((file) => path.join(directory, file)),

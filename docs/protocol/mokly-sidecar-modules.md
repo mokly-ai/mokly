@@ -103,7 +103,7 @@ source; a tsconfig `jsxImportSource` setting does not. Use the source pragma
 when a JSX library requires its own runtime. This parsing policy does not
 disable the source-side tsconfig path resolution described above. Under the
 [Vite adapter](./mokly-vite-adapter.md#moklys-plugin), the project's Vite
-setup decides these parse settings instead. That setup alone also
+setup decides these parse settings instead. That setup also
 [resolves imports](./mokly-vite-adapter.md#replaced-settings), so the
 source-side tsconfig path resolution does not apply.
 
