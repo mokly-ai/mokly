@@ -29,7 +29,7 @@ function Value({ team, value }: { team: boolean; value: PricingValue }) {
     return (
       <>
         <SiteIcon className="site-pricing-check" name="check" size={18} />
-        <span className="site-pricing-sr">Included</span>
+        <span className="site-visually-hidden">Included</span>
       </>
     );
   if (value === false)
@@ -38,7 +38,7 @@ function Value({ team, value }: { team: boolean; value: PricingValue }) {
         <span aria-hidden="true" className="site-pricing-dash">
           &#8212;
         </span>
-        <span className="site-pricing-sr">Not included</span>
+        <span className="site-visually-hidden">Not included</span>
       </>
     );
   if (typeof value === "string") return <>{value}</>;
@@ -73,7 +73,9 @@ export function PricingCompare() {
       <div className="site-pricing-props-frame">
         <SiteFrameLabel icon="component" name="Plan · props" />
         <table className="site-pricing-props" role="table">
-          <caption className="site-pricing-sr">What each plan includes</caption>
+          <caption className="site-visually-hidden">
+            What each plan includes
+          </caption>
           <thead role="rowgroup">
             <tr role="row">
               <th

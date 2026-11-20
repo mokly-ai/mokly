@@ -263,11 +263,3 @@
 [data-site-viewport="mobile"] .site-docs-sample-code .site-code-language--end {
   margin-left: auto;
 }
-
-[data-site-viewport="mobile"]
-  .site-docs-frame
-  .site-code--numbered
-  .site-code-line {
-  padding-left: 34px;
-  text-indent: -34px;
-}

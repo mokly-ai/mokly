@@ -153,6 +153,14 @@
   white-space: pre-wrap;
 }
 
+/* A line that wraps hangs under its code, clear of the prompt or of the
+   line number */
+
+.site-code--prompt .site-code-line {
+  padding-left: calc(30px + 1ch);
+  text-indent: calc(-12px - 1ch);
+}
+
 .site-code--prompt .site-code-line::before {
   color: var(--mk-color-signal);
   content: "$" / "";
@@ -160,7 +168,8 @@
 }
 
 .site-code--numbered .site-code-line {
-  padding-left: 0;
+  padding-left: 46px;
+  text-indent: -46px;
 }
 
 .site-code--numbered .site-code-line::before {
@@ -170,6 +179,7 @@
   display: inline-block;
   padding-right: 18px;
   text-align: right;
+  text-indent: 0;
   width: 46px;
 }
 
@@ -239,6 +249,11 @@
 [data-site-viewport="mobile"] .site-code-body {
   font-size: 0.78125rem;
   padding: 13px 0 15px;
+}
+
+[data-site-viewport="mobile"] .site-code--numbered .site-code-line {
+  padding-left: 34px;
+  text-indent: -34px;
 }
 
 [data-site-viewport="mobile"] .site-code--numbered .site-code-line::before {

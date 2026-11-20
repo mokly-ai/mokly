@@ -127,7 +127,10 @@
   min-height: var(--mk-layout-control-min);
 }
 
-[data-site-viewport="mobile"] .site-release-link::before {
+[data-site-viewport="mobile"] .site-release-link::before,
+[data-site-viewport="mobile"]
+  .site-release-more
+  > .site-release-summary::before {
   content: none;
 }
 
@@ -159,11 +162,65 @@
   left: -9px;
 }
 
-[data-site-viewport="mobile"] .site-release-notes li {
+[data-site-viewport="mobile"] .site-release-group > ul > li {
   display: block;
   font-size: 0.9375rem;
 }
 
 [data-site-viewport="mobile"] .site-release-refs {
   margin-left: 4px;
+}
+
+/* Earlier releases: a compact frame stacks its head, its chips, its link
+   and a full-width Show notes control */
+
+[data-site-viewport="mobile"] .site-changelog-earlier {
+  margin-top: 112px;
+  padding: 14px 12px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-earlier .site-section-box-meta {
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-release--compact {
+  gap: 10px 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 14px 16px;
+}
+
+[data-site-viewport="mobile"] .site-release--compact .site-release-counts,
+[data-site-viewport="mobile"] .site-release--compact .site-release-links {
+  grid-column: 1 / -1;
+  margin-right: 0;
+}
+
+[data-site-viewport="mobile"] .site-release-more > .site-release-summary {
+  justify-content: center;
+  min-height: var(--mk-layout-control-min);
+  position: static;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-release-more .site-release-notes {
+  margin: 14px -16px -14px;
+}
+
+/* Upgrade notes: the count leaves the summary, the topics take two lines
+   and the Read control is a 44px target */
+
+[data-site-viewport="mobile"] .site-release-upgrade-count {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-release-upgrade-topics {
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-release-toggle {
+  min-height: var(--mk-layout-control-min);
+}
+
+[data-site-viewport="mobile"] .site-release-upgrade-body {
+  padding: 8px 16px 22px;
 }

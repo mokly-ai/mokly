@@ -5,17 +5,25 @@ import {
   BREAKING_VERSIONS,
   RELEASE_ANCHORS,
   anchorTargets,
+  hasClass,
   only,
   tagged,
 } from "./design-site-changelog-helpers";
 import {
   attribute,
   byClass,
+  childElements,
   cssRules,
   label,
   siteDocument,
   siteStyles,
+  type Element,
 } from "./design-site-test-helpers";
+
+/** The children of an element that carry one class. */
+function children(node: Element, className: string): Element[] {
+  return childElements(node).filter((child) => hasClass(child, className));
+}
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: each depicted release is a frame labelled Mokly CLI and its version`, () => {
@@ -77,6 +85,144 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const href = attribute(chip, "href") ?? "";
       assert.equal(anchorTargets(document, href), 1, href);
     }
+  });
+
+  test(`${viewport}: the six newest releases stay full frames with their notes open`, () => {
+    const { document } = siteDocument("design/site/changelog", viewport);
+    const full = byClass(document, "site-release").filter(
+      (frame) => !hasClass(frame, "site-release--compact"),
+    );
+    assert.deepEqual(
+      full.map((frame) => "#" + attribute(frame, "id")),
+      RELEASE_ANCHORS.slice(0, 6),
+    );
+    for (const frame of full) {
+      assert.equal(children(frame, "site-release-notes").length, 1);
+      assert.equal(byClass(frame, "site-release-more").length, 0);
+    }
+  });
+
+  test(`${viewport}: the earlier releases are compact frames in one section`, () => {
+    const { document } = siteDocument("design/site/changelog", viewport);
+    const section = only(
+      byClass(document, "site-changelog-earlier"),
+      "earlier section",
+    );
+    const tag = only(byClass(section, "site-section-box-tag"), "tag");
+    assert.equal(label(tag), "Earlier releases");
+    assert.equal(attribute(section, "role"), "group");
+    assert.equal(attribute(section, "aria-labelledby"), attribute(tag, "id"));
+    assert.equal(
+      label(only(byClass(section, "site-section-box-meta"), "meta")),
+      "6 releases · 15 September to 8 October 2026",
+    );
+    const compact = byClass(section, "site-release");
+    assert.deepEqual(
+      compact.map((frame) => [
+        "#" + attribute(frame, "id"),
+        hasClass(frame, "site-release--compact"),
+        attribute(only(byClass(frame, "site-release-link"), "link"), "href"),
+      ]),
+      [
+        ["#release-0-14-0", true, "v0.13.0...v0.14.0"],
+        ["#release-0-13-0", true, "v0.12.0...v0.13.0"],
+        ["#release-0-12-0", true, "v0.11.0...v0.12.0"],
+        ["#release-0-11-0", true, "v0.10.0...v0.11.0"],
+        ["#release-0-10-0", true, "v0.9.0...v0.10.0"],
+        ["#release-0-9-0", true, "v0.8.0...v0.9.0"],
+      ].map(([anchor, isCompact, range]) => [
+        anchor,
+        isCompact,
+        "https://github.com/mokly-ai/mokly/compare/" + range,
+      ]),
+    );
+    assert.deepEqual(
+      byClass(compact[0]!, "site-release-count").map((chip) => [
+        label(chip),
+        attribute(chip, "href"),
+      ]),
+      [
+        ["Breaking 4", "#release-0-14-0-breaking"],
+        ["Features 8", "#release-0-14-0-features"],
+        ["Fixes 12", "#release-0-14-0-fixes"],
+        ["Performance 1", "#release-0-14-0-performance"],
+        ["Docs 1", "#release-0-14-0-docs"],
+        ["Dependencies 1", "#release-0-14-0-deps"],
+        ["Upgrade notes", "#release-0-14-0-upgrade"],
+      ],
+    );
+  });
+
+  test(`${viewport}: each compact frame holds its notes in a closed disclosure that counts them`, () => {
+    const { document } = siteDocument("design/site/changelog", viewport);
+    const compact = byClass(document, "site-release--compact");
+    const shows = compact.map((frame) => {
+      const id = attribute(frame, "id") ?? "";
+      const disclosure = only(children(frame, "site-release-more"), id);
+      assert.equal(disclosure.tagName, "details", id);
+      assert.equal(attribute(disclosure, "open"), undefined, id);
+      assert.equal(children(disclosure, "site-release-notes").length, 1, id);
+      const summary = only(children(disclosure, "site-release-summary"), id);
+      assert.equal(summary.tagName, "summary", id);
+      return label(only(byClass(summary, "site-release-when-closed"), "show"));
+    });
+    assert.deepEqual(shows, [
+      "Show 27 notes",
+      "Show 25 notes",
+      "Show 13 notes",
+      "Show 4 notes",
+      "Show 9 notes",
+      "Show 24 notes",
+    ]);
+  });
+
+  test(`${viewport}: each release with upgrade notes holds them in a closed row`, () => {
+    const { document } = siteDocument("design/site/changelog", viewport);
+    const groups = byClass(document, "site-release-group--upgrade");
+    assert.deepEqual(
+      groups.map((group) => {
+        const id = attribute(group, "id") ?? "";
+        const row = only(byClass(group, "site-release-upgrade"), id);
+        assert.equal(row.tagName, "details", id);
+        assert.equal(attribute(row, "open"), undefined, id);
+        return [
+          id,
+          label(only(byClass(row, "site-release-upgrade-name"), "name")),
+          label(only(byClass(row, "site-release-upgrade-count"), "count")),
+          label(only(byClass(row, "site-release-when-closed"), "toggle")),
+        ];
+      }),
+      [
+        [
+          "release-0-16-0-upgrade",
+          "Upgrade notes for 0.16.0",
+          "4 notes",
+          "Read",
+        ],
+        [
+          "release-0-15-0-upgrade",
+          "Upgrade notes for 0.15.0",
+          "4 notes",
+          "Read",
+        ],
+        [
+          "release-0-14-0-upgrade",
+          "Upgrade notes for 0.14.0",
+          "3 notes",
+          "Read",
+        ],
+        [
+          "release-0-13-0-upgrade",
+          "Upgrade notes for 0.13.0",
+          "5 notes",
+          "Read",
+        ],
+      ],
+    );
+    assert.equal(
+      label(only(byClass(groups[3]!, "site-release-upgrade-topics"), "topics")),
+      "Navigation Path Upgrade · Identity Upgrade · Comparison Baseline · Delta Publishing · Viewer Host API",
+    );
   });
 
   test(`${viewport}: the newest frame is selected with its note count`, () => {

@@ -63,11 +63,12 @@ export function DocsVersion() {
   );
 }
 
-/** The foot of the tree: the Changelog link. */
+/** The foot of the tree: the Changelog link, a row of the tree. */
 export function DocsTreeFoot() {
   return (
     <div className="site-doc-tree-foot">
       <SitePanelRow
+        className="site-doc-link"
         icon="history"
         to={SITE_SCREENS.changelog}
         trailing={<SiteIcon name="arrowRight" size={14} />}
@@ -84,8 +85,9 @@ function isCommand(title: string): boolean {
 }
 
 /**
- * Every section with its pages in order. A page that a mockup owns links
- * it; the page you are reading is the selected layer.
+ * Every section with its pages in order, each page a row of the tree. A
+ * page that a mockup owns links it; the page you are reading is the
+ * selected layer.
  */
 export function DocsTreeSections({ page }: { page: DocsPage }) {
   return (
@@ -102,6 +104,7 @@ export function DocsTreeSections({ page }: { page: DocsPage }) {
             {section.pages.map((title) => (
               <li key={title}>
                 <SitePanelRow
+                  className="site-doc-link"
                   current={
                     section.title === page.section && title === page.title
                       ? "page"

@@ -1,12 +1,15 @@
 /**
  * The changelog, read as the design file's version history: Version history
  * beside the release frames, the page title as a selected text layer, the
- * release timeline, the note filter, then one frame for each depicted
- * release, newest first. The newest release is the one in view: its frame is
- * selected, its row is current and the playhead stands on it. The mobile
- * composition has no panel.
+ * release timeline, the note filter, then a full frame for each of the six
+ * newest releases and the Earlier releases section of compact frames for the
+ * older ones. The newest release is the one in view: its frame is selected,
+ * its row is current and the playhead stands on it. The mobile composition
+ * has no panel.
  */
 
+import { ChangelogEarlier } from "./parts/changelog-earlier.js";
+import { FULL_FRAMES } from "./parts/changelog-facts.js";
 import { ChangelogFilter } from "./parts/changelog-filter.js";
 import { ChangelogHistory } from "./parts/changelog-history.js";
 import { ChangelogRelease } from "./parts/changelog-release.js";
@@ -62,7 +65,7 @@ function SiteChangelog({ viewport }: { viewport: "mobile" | "desktop" }) {
             />
             <ChangelogFilter releases={RELEASES} />
             <div className="site-releases">
-              {RELEASES.map((release) => (
+              {RELEASES.slice(0, FULL_FRAMES).map((release) => (
                 <ChangelogRelease
                   key={release.version}
                   latest={release.version === current}
@@ -71,6 +74,7 @@ function SiteChangelog({ viewport }: { viewport: "mobile" | "desktop" }) {
                 />
               ))}
             </div>
+            <ChangelogEarlier releases={RELEASES.slice(FULL_FRAMES)} />
           </div>
         </div>
       </main>

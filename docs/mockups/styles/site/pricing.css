@@ -12,17 +12,6 @@
   width: 100%;
 }
 
-/* Read by screen readers, not shown */
-
-.site-pricing-sr {
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
 /* The hero stands on the plan grid: the heading spans the first two
    tracks and the lead sits in the Team track, on the heading's last
    baseline. The redline measures the space under the heading, down to the

@@ -1,9 +1,8 @@
 /**
- * Release facts depicted on the changelog. Every version, date, note and
- * compare link is copied verbatim from the installed package's
+ * Release facts depicted on the changelog. Every version, date, note, upgrade
+ * note and compare link is copied verbatim from the installed package's
  * `CHANGELOG.md` at the time of authoring; the mockup never states a release
- * fact of its own. Upgrade notes, which are prose rather than notes, are
- * not depicted.
+ * fact of its own.
  */
 
 /** The kinds of note group that a release lists, in the changelog's order. */
@@ -35,5 +34,11 @@ export interface Release {
   /** The release date of the heading, as `YYYY-MM-DD`. */
   date: string;
   groups: readonly ReleaseGroup[];
+  /**
+   * The upgrade notes, when the release's section publishes them: the
+   * Markdown of each `####` or `#####` heading, paragraph and `- ` list item,
+   * in order, with its wrapped lines joined by single spaces.
+   */
+  upgrade?: readonly string[] | undefined;
   version: string;
 }

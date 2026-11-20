@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { RELEASES } from "../screens/design/site/parts/releases";
 
+import { only } from "./design-site-changelog-helpers";
 import {
   attribute,
   byClass,
@@ -30,6 +31,26 @@ function shownWords(note: string): string {
     .replace(/`([^`]+)`/g, "$1")
     .replace(/\(\[([^\]]+)\]\([^)\s]+\)\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1");
+}
+
+/** The upgrade notes of one release's own section, or nothing without them. */
+function publishedUpgrade(version: string): string | undefined {
+  const start = changelog.indexOf("## [" + version + "]");
+  assert.ok(start >= 0, version);
+  const next = changelog.indexOf("\n## [", start + 1);
+  const section = changelog.slice(start, next < 0 ? undefined : next);
+  return section.split("### Upgrade Notes")[1]?.split("\n### ")[0];
+}
+
+/**
+ * The words of upgrade notes as the page shows them: code spans and links as
+ * their text. A `**` inside a code span stays, so bold marks stay too.
+ */
+function shownProse(markdown: string): string {
+  return markdown
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1")
+    .replace(/\s+/g, " ");
 }
 
 test("depicted releases remain facts from the installed package changelog", () => {
@@ -101,5 +122,46 @@ test("depicted releases remain facts from the installed package changelog", () =
         where + " " + release.version,
       );
     }
+  }
+});
+
+test("depicted upgrade notes come word for word from their release's own section", () => {
+  const { document } = siteDocument("design/site/changelog", "desktop");
+  const published = RELEASES.map((release) => release.version).filter(
+    (version) => publishedUpgrade(version) !== undefined,
+  );
+  const frames = byClass(document, "site-release");
+  const frameOf = (version: string) =>
+    only(
+      frames.filter(
+        (frame) =>
+          attribute(frame, "id") === "release-" + version.replaceAll(".", "-"),
+      ),
+      version,
+    );
+  assert.deepEqual(
+    RELEASES.map((release) => release.version).filter(
+      (version) =>
+        byClass(frameOf(version), "site-release-upgrade-body").length > 0,
+    ),
+    published,
+  );
+  for (const version of published) {
+    const notes = publishedUpgrade(version) ?? "";
+    const body = only(
+      byClass(frameOf(version), "site-release-upgrade-body"),
+      version,
+    );
+    const blocks = elements(body, (node) =>
+      ["h4", "h5", "p", "li"].includes(node.tagName),
+    );
+    assert.deepEqual(
+      blocks.filter((block) => block.tagName === "h4").map(label),
+      [...notes.matchAll(/^#### (.+)$/gm)].map((match) => match[1]),
+      version,
+    );
+    const words = shownProse(notes);
+    for (const block of blocks)
+      assert.ok(words.includes(label(block)), version + ": " + label(block));
   }
 });

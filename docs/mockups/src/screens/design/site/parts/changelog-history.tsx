@@ -15,11 +15,15 @@ import {
   releaseMonths,
   shortDate,
 } from "./changelog-facts.js";
+import { classNames } from "./class-names.js";
 import { SiteIcon } from "./icons.js";
 import { SitePanel, SitePanelRow } from "./panel.js";
 import type { Release } from "./release.js";
 
-/** One row: the version, the breaking mark and the date. */
+/**
+ * One row, a link to its release's frame: the version, the breaking mark and
+ * the date. A patch release draws a smaller dot on the rail.
+ */
 function HistoryRow({
   current,
   release,
@@ -29,6 +33,11 @@ function HistoryRow({
 }) {
   return (
     <SitePanelRow
+      className={classNames(
+        "site-release-index-link",
+        current && "site-release-index-link--current",
+        isPatch(release) && "site-release-index-link--patch",
+      )}
       current={current ? "true" : undefined}
       href={`#${releaseId(release)}`}
       trailing={
@@ -37,19 +46,11 @@ function HistoryRow({
         </time>
       }
     >
-      <span
-        className={
-          isPatch(release)
-            ? "site-release-index-version site-release-index-version--patch"
-            : "site-release-index-version"
-        }
-      >
-        v{release.version}
-      </span>
+      <span className="site-release-index-version">v{release.version}</span>
       {isBreaking(release) ? (
         <span className="site-release-index-mark" title="Breaking changes">
           <SiteIcon name="alert" size={13} />
-          <span className="site-changelog-hidden">, breaking changes</span>
+          <span className="site-visually-hidden">, breaking changes</span>
         </span>
       ) : null}
     </SitePanelRow>

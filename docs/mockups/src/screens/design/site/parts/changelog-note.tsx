@@ -34,8 +34,11 @@ const PIECE = /`([^`]+)`|\[([^\]]+)\]\([^)\s]+\)/g;
 /** A short commit hash, the label of a commit link. */
 const COMMIT = /^[0-9a-f]{7}$/;
 
-/** The text of a note or an item: its code spans, and its links as text. */
-function NoteText({ text }: { text: string }) {
+/**
+ * The text of a note, an item or an upgrade note: its code spans, and its
+ * links as text, because no mockup owns their pages.
+ */
+export function NoteText({ text }: { text: string }) {
   const pieces: ReactNode[] = [];
   let at = 0;
   for (const match of text.matchAll(PIECE)) {
@@ -123,7 +126,7 @@ export function ReleaseNote({ markdown }: { markdown: string }) {
           <>
             <span className="site-release-scope">
               {scope}
-              <span className="site-changelog-hidden">:</span>
+              <span className="site-visually-hidden">:</span>
             </span>{" "}
           </>
         )}

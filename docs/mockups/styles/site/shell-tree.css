@@ -1,7 +1,7 @@
 /* The catalogue column of the depicted viewer: the All and Changes filter,
    the Specs and Components sections, and the rows of folders, screens,
    components and variants, with the open screen selected and a dot on each
-   changed or added entry. The acme account settings screen follows. */
+   changed or added entry. */
 
 .site-tree {
   background: var(--mk-color-surface-muted);
@@ -125,80 +125,4 @@
 
 .site-home-dot--added {
   background: var(--mk-color-signal-deep);
-}
-
-/* The acme account settings screen, dark, which only the spread draws:
-   the account menu, the profile, the notifications, the saved cards and
-   Close account */
-
-.site-acme-settings {
-  display: grid;
-  grid-template-columns: 264px minmax(0, 1fr);
-}
-
-.site-acme-settings-menu {
-  background: color-mix(in srgb, currentColor 4%, transparent);
-  border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  padding: 28px 18px;
-}
-
-.site-acme-settings-links {
-  display: grid;
-  gap: 4px;
-  margin-top: 38px;
-}
-
-.site-acme-settings-links > span {
-  align-items: center;
-  border-radius: 11px;
-  display: flex;
-  gap: 12px;
-  height: 46px;
-  padding: 0 12px;
-}
-
-.site-acme-settings-body {
-  padding: 46px 56px;
-}
-
-.site-acme-settings-grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 30px;
-}
-
-.site-acme-panel {
-  border-radius: 20px;
-  padding: 22px 24px;
-}
-
-.site-acme-panel-title {
-  font-size: 12.5px;
-  font-weight: 650;
-  letter-spacing: 0.07em;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-}
-
-.site-acme-panel .site-acme-toggle-row:last-child,
-.site-acme-saved:last-child {
-  border-bottom: 0;
-}
-
-.site-acme-profile {
-  margin-top: 14px;
-}
-
-.site-acme-saved {
-  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  padding: 14px 0;
-}
-
-.site-acme-saved .site-acme-link {
-  margin: 0;
-}
-
-.site-acme-close {
-  margin-top: 18px;
 }

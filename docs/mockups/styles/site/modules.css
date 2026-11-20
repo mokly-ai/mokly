@@ -1,7 +1,6 @@
 /* The depicted conversations of the feature modules: the comment thread of
    the Review frame, pinned to the PriceCard, and the Claude chat of the
-   Edit frame. The acme pricing pages that both conversations are about
-   follow. */
+   Edit frame. */
 
 .site-comment {
   background: var(--mk-color-surface);
@@ -188,69 +187,4 @@
 
 .site-home-agent-note {
   text-align: center;
-}
-
-/* The pricing pages: the phone and desktop navigation, the heading block,
-   the plan grid and the PriceCard with its two paddings */
-
-.site-acme-phone-nav,
-.site-acme-desktop-nav {
-  align-items: center;
-  display: flex;
-  height: 58px;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.site-acme-phone-nav-end,
-.site-acme-desktop-end {
-  align-items: center;
-  display: flex;
-  gap: 16px;
-}
-
-.site-acme-desktop-nav {
-  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  gap: 56px;
-  height: 78px;
-  justify-content: flex-start;
-  padding: 0 56px;
-}
-
-.site-acme-desktop-links {
-  display: flex;
-  font-size: 15px;
-  gap: 30px;
-}
-
-.site-acme-desktop-end {
-  gap: 22px;
-  margin-left: auto;
-}
-
-.site-acme-desktop-nav--plain {
-  justify-content: space-between;
-}
-
-.site-acme-pricing {
-  padding: 10px 20px 0;
-}
-
-.site-acme-pricing-desktop {
-  padding: 40px 92px 0;
-}
-
-.site-acme-pricing-head {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-}
-
-.site-acme-pricing-grid {
-  align-items: start;
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 34px;
 }

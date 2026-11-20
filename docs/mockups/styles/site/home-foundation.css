@@ -49,17 +49,6 @@
   z-index: 2;
 }
 
-/* Wrapped source lines hang under the code, clear of the line numbers */
-
-.site-home-source .site-code--numbered .site-code-line {
-  padding-left: 46px;
-  text-indent: -46px;
-}
-
-.site-home-source .site-code--numbered .site-code-line::before {
-  text-indent: 0;
-}
-
 .site-home-terminal {
   background: color-mix(in srgb, var(--mk-color-on-signal) 40%, transparent);
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);

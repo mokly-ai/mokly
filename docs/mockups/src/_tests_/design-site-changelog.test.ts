@@ -21,10 +21,11 @@ import {
 
 /** The changelog's controls, each of which promises a hover state. */
 const hoverClasses = [
-  "site-panel-row",
+  "site-release-index-link",
   "site-changelog-filter-option",
   "site-release-count",
   "site-release-ref",
+  "site-release-upgrade-summary",
 ];
 
 test("desktop: Version history lists each depicted release by month, linked to its frame", () => {
@@ -38,7 +39,11 @@ test("desktop: Version history lists each depicted release by month, linked to i
     "October 2026",
     "September 2026",
   ]);
-  const rows = tagged(panel, "a");
+  const rows = byClass(panel, "site-release-index-link");
+  assert.deepEqual(
+    rows.map((row) => row.tagName),
+    RELEASE_ANCHORS.map(() => "a"),
+  );
   const version = (row: Element) =>
     label(only(byClass(row, "site-release-index-version"), "version"));
   assert.deepEqual(
@@ -76,6 +81,12 @@ test("desktop: Version history lists each depicted release by month, linked to i
   assert.deepEqual(
     rows
       .filter((row) => attribute(row, "aria-current") === "true")
+      .map(version),
+    ["v0.19.0"],
+  );
+  assert.deepEqual(
+    rows
+      .filter((row) => hasClass(row, "site-release-index-link--current"))
       .map(version),
     ["v0.19.0"],
   );
@@ -150,18 +161,23 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.equal(filter.tagName, "fieldset");
     assert.equal(attribute(filter, "aria-label"), "Show notes");
     assert.deepEqual(
-      tagged(filter, "button").map((option) => [
-        attribute(option, "type"),
-        attribute(option, "aria-current"),
-        label(option),
+      tagged(filter, "input").map((input) => [
+        attribute(input, "type"),
+        attribute(input, "name"),
+        attribute(input, "value"),
+        attribute(input, "checked") !== undefined,
       ]),
       [
-        ["button", "true", "All 189"],
-        ["button", undefined, "Breaking 25"],
-        ["button", undefined, "Features 65"],
-        ["button", undefined, "Fixes 74"],
-        ["button", undefined, "Performance 18"],
+        ["radio", "site-changelog-filter", "all", true],
+        ["radio", "site-changelog-filter", "breaking", false],
+        ["radio", "site-changelog-filter", "features", false],
+        ["radio", "site-changelog-filter", "fixes", false],
+        ["radio", "site-changelog-filter", "performance", false],
       ],
+    );
+    assert.deepEqual(
+      byClass(filter, "site-changelog-filter-option").map(label),
+      ["All 189", "Breaking 25", "Features 65", "Fixes 74", "Performance 18"],
     );
     assert.equal(
       label(only(byClass(document, "site-changelog-filter-status"), "status")),

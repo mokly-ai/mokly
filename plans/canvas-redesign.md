@@ -49,21 +49,21 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
       a named palette, so that only the design mockups use it. Add the Geist
       faces to the mockup assets. The site, the app and the shell keep Folio
       until Milestone 3.
-- [ ] Redraw the site chrome: header, mobile menu and footer with the scheme
+- [x] Redraw the site chrome: header, mobile menu and footer with the scheme
       control. Update `design/site/home/menu`. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Redraw `design/site/home` with the copy of the user decisions and the
+- [x] Redraw `design/site/home` with the copy of the user decisions and the
       drawn demo app. The Browse demo shows the Swipe mode. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Redraw `design/site/docs` with the Layers panel, the page frame, the
+- [x] Redraw `design/site/docs` with the Layers panel, the page frame, the
       Inspect panel and the HTML sample fence (decision 10). Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Redraw `design/site/changelog` with Version history, the timeline, the
+- [x] Redraw `design/site/changelog` with Version history, the timeline, the
       filter and the release frames. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Redraw the four legal screens in the new chrome. Branch:
+- [x] Redraw the four legal screens in the new chrome. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Add `design/site/pricing` and add it to the tour. Branch:
+- [x] Add `design/site/pricing` and add it to the tour. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
 - [ ] Redraw the Browse shell mockups under `examples/basic/specs/design`:
       the canvas stage with four frames, zoom and Fit, the floating catalogue

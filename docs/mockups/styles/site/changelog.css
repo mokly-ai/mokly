@@ -1,8 +1,9 @@
 /* The changelog: the workspace that sets Version history beside the release
-   frames, the page title as a selected text layer with its lead, the rows of
-   Version history on their rail, and the note rows of a release.
-   changelog-timeline.css holds the timeline and the filter,
-   changelog-release.css the release frames and the breaking callout, and
+   frames, the page title as a selected text layer with its lead, and the
+   rows of Version history on their rail. changelog-timeline.css holds the
+   timeline and the filter, changelog-notes.css the note rows and the upgrade
+   notes, changelog-release.css the release frames and the breaking callout,
+   changelog-earlier.css the disclosures and the earlier releases, and
    changelog-responsive.css the mobile composition. Every hairline that the
    prototype draws darker than the border mixes a fifth of the strong border
    into it, because the strong border is the 3:1 boundary of a control. */
@@ -70,17 +71,6 @@
   text-wrap: pretty;
 }
 
-/* What only a screen reader reads, such as the colon after a scope */
-
-.site-changelog-hidden {
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
 /* Version history: the floating panel, sticky under the tool bar; its list
    scrolls inside it when the releases outgrow the window */
 
@@ -96,15 +86,44 @@
   padding: 4px 8px 8px;
 }
 
-/* A month and a release row share one rail: a hairline through every dot */
+.site-release-index-month {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 13px 0 7px 30px;
+  position: relative;
+  text-transform: uppercase;
+}
 
-.site-release-index-month,
-.site-release-index .site-panel-body > .site-panel-row {
+/* A row links its release: the shared panel row with the rail and a dot.
+   The current row keeps its version semibold and its date at the medium
+   weight, and keeps its fill under the pointer. */
+
+.site-release-index-link {
+  padding-left: 30px;
   position: relative;
 }
 
+.site-release-index-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-release-index-link--current {
+  font-weight: var(--mk-font-medium);
+}
+
+.site-release-index-link--current:hover {
+  background: var(--mk-color-signal-soft);
+}
+
+/* The rail: a hairline through every month and every dot */
+
 .site-release-index-month::before,
-.site-release-index .site-panel-body > .site-panel-row::before {
+.site-release-index-link::before {
   background: color-mix(
     in srgb,
     var(--mk-color-border-strong) 20%,
@@ -122,28 +141,13 @@
   top: 50%;
 }
 
-.site-release-index .site-panel-body > .site-panel-row:last-child::before {
+.site-release-index-link:last-child::before {
   bottom: 50%;
-}
-
-.site-release-index-month {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: 0.6875rem;
-  font-weight: var(--mk-font-medium);
-  letter-spacing: 0.04em;
-  line-height: 1;
-  padding: 13px 0 7px 30px;
-  text-transform: uppercase;
-}
-
-.site-release-index .site-panel-body > .site-panel-row {
-  padding-left: 30px;
 }
 
 /* The dot of a release: smaller for a patch, green for the release in view */
 
-.site-release-index .site-panel-body > .site-panel-row::after {
+.site-release-index-link::after {
   background: var(--mk-color-surface);
   border-radius: var(--mk-radius-pill);
   box-shadow: inset 0 0 0 1.5px var(--mk-color-text-muted);
@@ -155,18 +159,21 @@
   width: 9px;
 }
 
-.site-release-index
-  .site-panel-row:has(.site-release-index-version--patch)::after {
+.site-release-index-link--patch::after {
   height: 7px;
   left: 12px;
   top: calc(50% - 3.5px);
   width: 7px;
 }
 
-.site-release-index .site-panel-body > .site-panel-row--current::after {
+.site-release-index-link--current::after {
   background: var(--mk-color-signal);
   box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--mk-color-signal) 24%, transparent);
+}
+
+.site-release-index-link--current .site-release-index-version {
+  font-weight: var(--mk-font-semibold);
 }
 
 .site-release-index-version {
@@ -189,115 +196,4 @@
   font-family: var(--mk-font-sans);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
-}
-
-/* The notes of a release: one row each, the text at a reading measure and
-   its issue and commit links in a right-hand column, like a commit log */
-
-.site-release-notes ul {
-  list-style: none;
-  padding: 0;
-}
-
-.site-release-notes li {
-  align-items: baseline;
-  border-top: 1px solid var(--mk-color-border);
-  column-gap: 32px;
-  display: grid;
-  font-size: 0.96875rem;
-  grid-template-columns: minmax(0, 31em) max-content;
-  justify-content: space-between;
-  letter-spacing: -0.004em;
-  line-height: 1.55;
-  overflow-wrap: break-word;
-  padding: 11px 0 12px;
-}
-
-.site-release-notes li:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
-/* The scope of a note as a mono chip, and its code spans */
-
-.site-release-scope {
-  background: var(--mk-color-surface-muted);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 1px var(--mk-color-border);
-  color: var(--mk-color-text-secondary);
-  display: inline-block;
-  font-family: var(--mk-font-mono);
-  font-size: 0.75rem;
-  font-weight: var(--mk-font-medium);
-  line-height: 21px;
-  margin-right: 3px;
-  padding: 0 7px;
-  vertical-align: 1px;
-}
-
-.site-release-note-text code {
-  background: color-mix(in srgb, var(--mk-color-text) 5.5%, transparent);
-  border-radius: 4px;
-  font-family: var(--mk-font-mono);
-  font-size: 0.86em;
-  overflow-wrap: anywhere;
-  padding: 1px 4px;
-}
-
-/* The issue and commit links of a note */
-
-.site-release-refs {
-  display: inline-flex;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.site-release-ref {
-  align-items: center;
-  color: var(--mk-color-text-muted);
-  display: inline-flex;
-  font-family: var(--mk-font-mono);
-  font-size: 0.78125rem;
-  font-weight: var(--mk-font-medium);
-  gap: 4px;
-  line-height: 1;
-  position: relative;
-  text-decoration: none;
-  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-/* A link reaches a 44px target through a transparent band */
-
-.site-release-ref::before {
-  content: "";
-  inset: -16px -5px;
-  position: absolute;
-}
-
-.site-release-ref:hover {
-  color: var(--mk-color-signal-deep);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-/* Nested items, such as a workspace dependency bump, as a layer tree */
-
-.site-release-notes .site-release-tree {
-  border-left: 1px solid
-    color-mix(
-      in srgb,
-      var(--mk-color-border-strong) 20%,
-      var(--mk-color-border)
-    );
-  grid-column: 1;
-  margin: 8px 0 0 3px;
-  padding-left: 14px;
-}
-
-.site-release-notes .site-release-tree li {
-  border: 0;
-  color: var(--mk-color-text-secondary);
-  display: block;
-  font-size: 0.90625rem;
-  padding: 3px 0;
 }

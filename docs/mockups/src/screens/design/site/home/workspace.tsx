@@ -15,8 +15,7 @@ import { ReviewModule } from "./review.js";
 
 /**
  * The Specs panel: the page's sections, as in-page links. The hero, the
- * section in view at the top of the page, is current. The footer has no
- * anchor of its own, so its row is text.
+ * section in view at the top of the page, is current.
  */
 function SpecsPanel() {
   return (
@@ -44,7 +43,9 @@ function SpecsPanel() {
       <SitePanelRow href="#foundation" icon="frame">
         Open foundation
       </SitePanelRow>
-      <SitePanelRow icon="frame">Footer</SitePanelRow>
+      <SitePanelRow href="#footer" icon="frame">
+        Footer
+      </SitePanelRow>
     </SitePanel>
   );
 }

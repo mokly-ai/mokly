@@ -53,6 +53,9 @@ export const GROUP_ICONS: Readonly<Record<ReleaseGroupKind, SiteIconName>> = {
   deps: "cube",
 };
 
+/** How many of the newest releases draw as full frames; older ones are compact. */
+export const FULL_FRAMES = 6;
+
 /** The note groups that the filter offers after All. */
 export const FILTER_GROUPS: readonly ReleaseGroupKind[] = [
   "breaking",
@@ -72,9 +75,22 @@ export function releaseId(release: Release): string {
   return `release-${release.version.replaceAll(".", "-")}`;
 }
 
-/** The anchor of one note group of a release, such as `release-0-19-0-fixes`. */
-export function groupId(release: Release, kind: ReleaseGroupKind): string {
+/**
+ * The anchor of one note group of a release, such as `release-0-19-0-fixes`,
+ * or of its upgrade notes, such as `release-0-16-0-upgrade`.
+ */
+export function groupId(
+  release: Release,
+  kind: ReleaseGroupKind | "upgrade",
+): string {
   return `${releaseId(release)}-${kind}`;
+}
+
+/** The topics of a release's upgrade notes: the names of its `####` headings. */
+export function upgradeTopics(release: Release): string[] {
+  return (release.upgrade ?? [])
+    .filter((block) => block.startsWith("#### "))
+    .map((block) => block.slice("#### ".length));
 }
 
 /** A release date in full, such as `12 November 2026`. */
@@ -91,6 +107,16 @@ export function shortMonth(date: string): string {
 /** A release date in Version history, such as `12 Nov`. */
 export function shortDate(date: string): string {
   return `${dateParts(date).day} ${shortMonth(date)}`;
+}
+
+/**
+ * The span from one release date to a later one, such as `15 September to
+ * 8 October 2026`; the first date names its year only when the years differ.
+ */
+export function dateRange(from: string, to: string): string {
+  const start = dateParts(from);
+  const year = start.year === dateParts(to).year ? "" : ` ${start.year}`;
+  return `${start.day} ${start.month}${year} to ${readableDate(to)}`;
 }
 
 /** The month that a release falls in, such as `November 2026`. */

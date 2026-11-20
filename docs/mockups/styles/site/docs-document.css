@@ -98,23 +98,6 @@
   margin-block: 8px;
 }
 
-/* A code line that wraps hangs under its code, clear of the prompt and
-   of the line number */
-
-.site-docs-frame .site-code--prompt .site-code-line {
-  padding-left: calc(30px + 1ch);
-  text-indent: calc(-12px - 1ch);
-}
-
-.site-docs-frame .site-code--numbered .site-code-line {
-  padding-left: 46px;
-  text-indent: -46px;
-}
-
-.site-docs-frame .site-code--numbered .site-code-line::before {
-  text-indent: 0;
-}
-
 /* The index hangs in the margin beside its heading; the section in view,
    the first as the page opens, takes the signal green */
 

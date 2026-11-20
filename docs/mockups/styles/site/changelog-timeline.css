@@ -223,13 +223,10 @@
 
 .site-changelog-filter-option {
   align-items: center;
-  background: none;
-  border: 0;
   border-radius: 9px;
   color: var(--mk-color-text-secondary);
   cursor: pointer;
   display: inline-flex;
-  font-family: inherit;
   font-size: 0.84375rem;
   font-weight: var(--mk-font-medium);
   gap: 7px;
@@ -266,16 +263,21 @@
   color: var(--mk-color-text);
 }
 
-/* The chosen option takes the signal fill with its white label */
+/* The checked option takes the signal fill with its white label */
 
-.site-changelog-filter-option[aria-current="true"] {
+.site-changelog-filter-option:has(.site-changelog-filter-input:checked) {
   background: var(--mk-color-signal-fill);
   color: var(--mk-color-on-signal-fill);
 }
 
-.site-changelog-filter-option[aria-current="true"]
+.site-changelog-filter-option:has(.site-changelog-filter-input:checked)
   :is(svg, .site-changelog-filter-count) {
   color: var(--mk-color-on-signal-fill);
+}
+
+.site-changelog-filter-option:has(.site-changelog-filter-input:focus-visible) {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
 }
 
 /* The status, set off from the options by a divider */

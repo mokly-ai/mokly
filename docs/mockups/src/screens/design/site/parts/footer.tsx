@@ -67,10 +67,13 @@ function StatusBar({ active }: { active: SiteScreen }) {
   );
 }
 
-/** The footer frame and the status bar of the rendered page. */
+/**
+ * The footer frame and the status bar of the rendered page. Its `footer` id
+ * is the target of the home Specs panel's Footer row.
+ */
 export function SiteFooter({ active }: { active: SiteScreen }) {
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" id="footer">
       <div className="site-footer-inner">
         <SiteFrameLabel name="Footer" />
         <div className="site-footer-brand">

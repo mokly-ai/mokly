@@ -80,7 +80,8 @@
   grid-area: links;
 }
 
-.site-release-link {
+.site-release-link,
+.site-release-toggle {
   border-radius: 8px;
   font-size: 0.875rem;
   gap: 8px;
@@ -88,9 +89,11 @@
   padding: 0 13px;
 }
 
-/* The link reaches a 44px target through a transparent band */
+/* The link and the Show notes control reach a 44px target through a
+   transparent band */
 
-.site-release-link::before {
+.site-release-link::before,
+.site-release-more > .site-release-summary::before {
   content: "";
   inset: -4px 0;
   position: absolute;
@@ -244,7 +247,7 @@
   margin-top: 6px;
 }
 
-.site-release-group--breaking li {
+.site-release-group--breaking > ul > li {
   border-top-color: color-mix(
     in srgb,
     var(--mk-color-warning) 22%,

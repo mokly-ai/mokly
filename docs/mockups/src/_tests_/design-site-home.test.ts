@@ -198,7 +198,7 @@ test("the Specs panel lists the page sections on the desktop composition only", 
       ["02 Review", "#review"],
       ["03 Edit", "#edit"],
       ["Open foundation", "#foundation"],
-      ["Footer", undefined],
+      ["Footer", "#footer"],
     ],
   );
   const mobile = siteDocument("design/site/home", "mobile").document;

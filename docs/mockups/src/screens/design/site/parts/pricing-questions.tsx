@@ -30,7 +30,7 @@ function Thread({ question }: { question: PricingQuestion }) {
         </span>
         <span className="site-pricing-thread-resolved">
           <SiteIcon name="checkCircle" size={14} />
-          <span className="site-pricing-sr">Resolved</span>
+          <span className="site-visually-hidden">Resolved</span>
         </span>
       </p>
       <div className="site-pricing-message">

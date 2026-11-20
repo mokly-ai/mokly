@@ -1,0 +1,195 @@
+/* The depicted acme/storefront app, continued: the screens that only the
+   spread draws. The welcome art, the component sets with the toast, and
+   the account settings screen. */
+
+/* The acme screens that only the spread draws: the welcome art, the
+   account settings and the component sets with the toast */
+
+.site-acme-welcome-art {
+  background: currentColor;
+  height: 470px;
+  overflow: hidden;
+  position: relative;
+}
+
+.site-acme-welcome-art > .site-acme-status {
+  color: color-mix(in srgb, currentColor 14%, var(--mk-color-on-signal));
+}
+
+.site-acme-welcome-sun {
+  background: color-mix(
+    in srgb,
+    currentColor 70%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: var(--mk-radius-pill);
+  height: 300px;
+  left: 45px;
+  position: absolute;
+  top: 104px;
+  width: 300px;
+}
+
+.site-acme-welcome-bag {
+  position: absolute;
+  width: 116px;
+  z-index: 1;
+}
+
+.site-acme-welcome-bag--left {
+  bottom: 74px;
+  left: 38px;
+  transform: rotate(-9deg);
+}
+
+.site-acme-welcome-bag--centre {
+  bottom: 62px;
+  left: 116px;
+  width: 158px;
+  z-index: 2;
+}
+
+.site-acme-welcome-bag--right {
+  bottom: 78px;
+  right: 36px;
+  transform: rotate(8deg);
+}
+
+.site-acme-beans {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 3;
+}
+
+.site-acme-bean {
+  fill: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 30%,
+    var(--mk-color-on-signal)
+  );
+}
+
+.site-acme-bean-crease {
+  fill: none;
+  stroke: var(--mk-color-on-signal);
+  stroke-linecap: round;
+  stroke-width: 1.15;
+}
+
+.site-acme-welcome-body {
+  padding: 22px 24px 0;
+}
+
+.site-acme-set-row {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.site-acme-set-column {
+  width: 330px;
+}
+
+.site-acme-set-column .site-acme-field:first-child {
+  margin-top: 0;
+}
+
+.site-acme--bare > .site-acme-price-card {
+  width: 340px;
+}
+
+.site-acme-toast {
+  border-radius: 18px;
+  box-shadow: 0 18px 36px -18px
+    color-mix(in srgb, var(--mk-color-on-signal) 70%, transparent);
+  padding: 10px 18px 10px 10px;
+  width: 360px;
+}
+
+.site-acme-toast i {
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.site-acme-toast-undo {
+  flex: none;
+  font-weight: 650;
+}
+
+/* The acme account settings screen, dark, which only the spread draws:
+   the account menu, the profile, the notifications, the saved cards and
+   Close account */
+
+.site-acme-settings {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+
+.site-acme-settings-menu {
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 28px 18px;
+}
+
+.site-acme-settings-links {
+  display: grid;
+  gap: 4px;
+  margin-top: 38px;
+}
+
+.site-acme-settings-links > span {
+  align-items: center;
+  border-radius: 11px;
+  display: flex;
+  gap: 12px;
+  height: 46px;
+  padding: 0 12px;
+}
+
+.site-acme-settings-body {
+  padding: 46px 56px;
+}
+
+.site-acme-settings-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 30px;
+}
+
+.site-acme-panel {
+  border-radius: 20px;
+  padding: 22px 24px;
+}
+
+.site-acme-panel-title {
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.site-acme-panel .site-acme-toggle-row:last-child,
+.site-acme-saved:last-child {
+  border-bottom: 0;
+}
+
+.site-acme-profile {
+  margin-top: 14px;
+}
+
+.site-acme-saved {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 14px 0;
+}
+
+.site-acme-saved .site-acme-link {
+  margin: 0;
+}
+
+.site-acme-close {
+  margin-top: 18px;
+}

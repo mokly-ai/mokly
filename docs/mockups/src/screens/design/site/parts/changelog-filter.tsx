@@ -1,10 +1,8 @@
 /**
- * The note filter: one floating bar with a segment for all notes and for each
- * main note group, each with its count, then the status of what the page
- * shows. The segments are native buttons, and the chosen one carries
- * `aria-current`, as a segmented control marks its selected segment; the
- * site's script island applies the choice and moves the mark. The drawn
- * state shows every note, with All chosen.
+ * The note filter: one floating bar with a native radio for all notes and
+ * for each main note group, each with its count, then the status of what the
+ * page shows. Native radios give the group its keyboard behaviour; the
+ * site's script island applies the choice. The drawn state shows every note.
  */
 
 import {
@@ -17,32 +15,37 @@ import {
 import { SiteIcon, type SiteIconName } from "./icons.js";
 import type { Release } from "./release.js";
 
-/** One segment: its icon, its name and its count. */
+/** One option: a native radio, its icon, its name and its count. */
 function FilterOption({
+  checked,
   count,
-  current,
   icon,
   label,
+  value,
 }: {
+  checked: boolean;
   count: number;
-  current: boolean;
   icon: SiteIconName | undefined;
   label: string;
+  value: string;
 }) {
   return (
-    <button
-      aria-current={current ? "true" : undefined}
-      className="site-changelog-filter-option"
-      type="button"
-    >
+    <label className="site-changelog-filter-option">
+      <input
+        className="site-changelog-filter-input site-visually-hidden"
+        defaultChecked={checked}
+        name="site-changelog-filter"
+        type="radio"
+        value={value}
+      />
       {icon === undefined ? null : <SiteIcon name={icon} size={15} />}
       <span>{label}</span>{" "}
       <span className="site-changelog-filter-count">{count}</span>
-    </button>
+    </label>
   );
 }
 
-/** The filter bar over the depicted releases, with All chosen. */
+/** The filter bar over the depicted releases, with All checked. */
 export function ChangelogFilter({
   releases,
 }: {
@@ -52,18 +55,20 @@ export function ChangelogFilter({
     <div className="site-changelog-filterbar">
       <fieldset aria-label="Show notes" className="site-changelog-filter">
         <FilterOption
+          checked
           count={totalNotes(releases)}
-          current
           icon={undefined}
           label="All"
+          value="all"
         />
         {FILTER_GROUPS.map((kind) => (
           <FilterOption
+            checked={false}
             count={totalNotes(releases, kind)}
-            current={false}
             icon={GROUP_ICONS[kind]}
             key={kind}
             label={GROUP_NAMES[kind].short}
+            value={kind}
           />
         ))}
       </fieldset>

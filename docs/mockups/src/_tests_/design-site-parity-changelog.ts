@@ -10,6 +10,7 @@
 const MILESTONE = "Canvas changelog; Milestone 8 rebuilds the changelog";
 
 const HISTORY = `Version history is a floating panel of 44px rows on one rail, sticky beside the frames; ${MILESTONE}`;
+const ROW = `a Version history row is a shared panel row on the rail with a dot, the current row filled, not a bordered link; ${MILESTONE}`;
 const FRAME = `each release is a frame on the canvas with its anchor label, a large version and its date over the count chips; ${MILESTONE}`;
 const NOTES = `the note groups sit on a rail beside their notes, each note a row with its links in a right-hand column; ${MILESTONE}`;
 
@@ -18,6 +19,10 @@ export const CHANGELOG_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-release-index": HISTORY,
   ".site-release-index-date": HISTORY,
   ".site-release-index-version": HISTORY,
+  ".site-release-index-link": ROW,
+  ".site-release-index-link:hover": ROW,
+  ".site-release-index-link--current": ROW,
+  ".site-release-index-link--current:hover": ROW,
   ".site-releases": FRAME,
   ".site-release": FRAME,
   ".site-release-meta": FRAME,

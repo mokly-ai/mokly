@@ -2,8 +2,7 @@
    Specs panel floats beside the frames column, which holds the features
    intro, the stack of feature modules and the open foundation. A module
    pairs its copy with a labelled frame on the canvas. Then the artboard
-   part that the spread and every frame place, and the coffee bags and
-   tiles that the acme screens draw. */
+   part that the spread and every frame place. */
 
 .site-main {
   width: 100%;
@@ -160,91 +159,4 @@
   display: inline-block;
   height: 6px;
   width: 6px;
-}
-
-/* The coffee bags and their tiles: each part mixes the roast's hue */
-
-.site-acme-tile {
-  background: color-mix(
-    in srgb,
-    currentColor 24%,
-    var(--mk-color-on-signal-fill)
-  );
-  border-radius: 15px;
-  display: grid;
-  flex: none;
-  height: 64px;
-  place-items: center;
-  width: 64px;
-}
-
-.site-acme-tile--medium {
-  border-radius: 13px;
-  height: 58px;
-  width: 58px;
-}
-
-.site-acme-tile--small {
-  border-radius: 11px;
-  height: 42px;
-  width: 42px;
-}
-
-.site-acme-tile .site-acme-bag {
-  width: 58%;
-}
-
-.site-acme-bag {
-  display: block;
-  height: auto;
-}
-
-.site-acme-bag-body {
-  fill: currentColor;
-}
-
-.site-acme-bag-side,
-.site-acme-bag-top {
-  fill: color-mix(in srgb, currentColor 78%, var(--mk-color-on-signal));
-}
-
-.site-acme-bag-side {
-  opacity: 0.5;
-}
-
-.site-acme-bag-shine {
-  fill: var(--mk-color-on-signal-fill);
-  opacity: 0.16;
-}
-
-.site-acme-bag-fold {
-  fill: none;
-  stroke: var(--mk-color-on-signal);
-  stroke-opacity: 0.14;
-  stroke-width: 0.8;
-}
-
-.site-acme-bag-label {
-  fill: color-mix(in srgb, currentColor 5%, var(--mk-color-on-signal-fill));
-}
-
-.site-acme-bag-mark {
-  fill: none;
-  stroke: color-mix(in srgb, currentColor 22%, var(--mk-color-on-signal));
-  stroke-linecap: round;
-  stroke-width: 1.4;
-}
-
-.site-acme-bag-line {
-  fill: color-mix(in srgb, currentColor 22%, var(--mk-color-on-signal));
-  opacity: 0.78;
-}
-
-.site-acme-bag-line--soft {
-  opacity: 0.36;
-}
-
-.site-acme-bag-shadow {
-  fill: var(--mk-color-on-signal);
-  opacity: 0.14;
 }

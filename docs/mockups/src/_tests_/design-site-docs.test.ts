@@ -41,6 +41,7 @@ const hoverClasses = [
   "site-search",
   "site-version-link",
   "site-panel-row",
+  "site-doc-link",
   "site-onpage-link",
   "site-docs-edit",
   "site-docs-layers-toggle",
@@ -77,7 +78,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     for (const section of byClass(layers, "site-doc-section"))
       assert.equal(
         label(one(section, "site-docs-section-count")),
-        String(byClass(section, "site-panel-row").length),
+        String(byClass(section, "site-doc-link").length),
         label(section),
       );
     const current = elements(
@@ -86,6 +87,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.deepEqual(current.map(label), ["Install"]);
     assert.equal(attribute(current[0]!, "aria-current"), "page");
+    assert.match(attribute(current[0]!, "class") ?? "", /\bsite-doc-link\b/);
     // The pages that a mockup draws link it; every other page is plain text.
     assert.deepEqual(links(layers), [
       ["Mokly CLI" + installedVersion(), "design/site/changelog"],
@@ -93,7 +95,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ["Your first screen", "design/site/docs/first-screen"],
       ["Changelog", "design/site/changelog"],
     ]);
-    assert.equal(label(one(layers, "site-doc-tree-foot")), "Changelog");
+    assert.equal(
+      label(one(one(layers, "site-doc-tree-foot"), "site-doc-link")),
+      "Changelog",
+    );
   });
 
   test(`${viewport}: documentation search sits with the tree, not in the tool bar`, () => {

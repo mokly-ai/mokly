@@ -106,6 +106,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const { document } = siteDocument(id, viewport);
       const footer = byClass(document, "site-footer")[0];
       assert.ok(footer);
+      // The home Specs panel's Footer row links this target.
+      assert.equal(attribute(footer, "id"), "footer", id);
       const frameName = byClass(footer, "site-frame-name")[0];
       assert.ok(frameName, id);
       assert.equal(label(frameName), "Footer");
@@ -133,12 +135,21 @@ for (const viewport of ["mobile", "desktop"] as const) {
     for (const id of siteScreens)
       for (const scheme of ["light", "dark"] as const) {
         const { document } = siteDocument(id, viewport, scheme);
+        // The scheme control's radios share one name. A page's own control,
+        // such as the changelog filter, may hold radios of its own.
         const radios = elements(
           document,
           (node) =>
-            node.tagName === "input" && attribute(node, "type") === "radio",
+            node.tagName === "input" &&
+            attribute(node, "type") === "radio" &&
+            attribute(node, "name") === "site-scheme",
         );
         assert.equal(radios.length, 2, `${id} ${scheme}`);
+        assert.equal(
+          byClass(document, "site-scheme").length,
+          1,
+          `${id} ${scheme}: the page holds one scheme control`,
+        );
         const brand = byClass(document, "site-footer-brand")[0];
         assert.ok(brand, id);
         const groups = byClass(brand, "site-scheme");

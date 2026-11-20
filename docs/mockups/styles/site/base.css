@@ -90,6 +90,19 @@
   line-height: var(--mk-type-small-line);
 }
 
+/* Text that only a screen reader reads, such as the name of an icon, a
+   table caption or the colon after a scope; the site declares the same
+   rule */
+
+.site-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 /* The head of a depicted list, which the home's catalogue tree and the
    changelog's release index share */
 

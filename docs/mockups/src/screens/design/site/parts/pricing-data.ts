@@ -6,9 +6,6 @@
  * questions live in `pricing-questions-data.ts`.
  */
 
-/** The product screen that owns `/sign-up`, where both cloud plans start. */
-export const SIGN_UP_SCREEN = "product/account/sign-up";
-
 /** One of the three plans, in the order the page draws them. */
 export type PricingPlanKey = "openSource" | "free" | "team";
 

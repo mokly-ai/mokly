@@ -196,20 +196,32 @@
   font-size: 0.78125rem;
 }
 
-/* The foot: the Changelog link */
+/* The rows of the tree are the shared panel rows. The tree keeps 44px
+   rows; every row takes the row hover, because each page is a link on the
+   site; the page you are reading keeps the selected fill under the
+   pointer */
+
+.site-doc-link {
+  min-height: var(--mk-layout-control-min);
+}
+
+.site-doc-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-doc-link[aria-current="page"],
+.site-doc-link[aria-current="page"]:hover {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-text);
+}
+
+/* The foot: the Changelog link, with the medium weight of a destination */
 
 .site-doc-tree-foot {
   display: grid;
 }
 
-/* Text that names a control without showing, such as the name of an icon
-   or of a hidden radio */
-
-.site-visually-hidden {
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
+.site-doc-tree-foot .site-doc-link {
+  font-weight: var(--mk-font-medium);
 }

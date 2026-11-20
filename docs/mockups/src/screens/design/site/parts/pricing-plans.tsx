@@ -15,9 +15,9 @@ import { classNames } from "./class-names.js";
 import { SiteFrameLabel } from "./frame-label.js";
 import { SiteIcon } from "./icons.js";
 import { SiteSectionBox } from "./labels.js";
-import { GET_STARTED_SCREEN } from "./links.js";
+import { GET_STARTED_SCREEN, SIGN_UP_SCREEN } from "./links.js";
 import { SiteCursor } from "./people.js";
-import { SIGN_UP_SCREEN, TEAM_SEATS } from "./pricing-data.js";
+import { TEAM_SEATS } from "./pricing-data.js";
 import { SiteSelection } from "./selection.js";
 
 /** The size tag of the selected Team frame: its drawn size in each composition. */
@@ -109,7 +109,7 @@ function TeamPrice() {
           <span className="site-pricing-amount">{seat.amount}</span>{" "}
           <span className="site-pricing-seat-unit">
             per {seat.kind} a month
-            <span className="site-pricing-sr">. </span>
+            <span className="site-visually-hidden">. </span>
             <small>{seat.holders}</small>
           </span>
         </p>
@@ -125,7 +125,7 @@ export function PricingPlans({ viewport }: { viewport: "mobile" | "desktop" }) {
       aria-labelledby="pricing-plans-title"
       className="site-pricing-plans"
     >
-      <h2 className="site-pricing-sr" id="pricing-plans-title">
+      <h2 className="site-visually-hidden" id="pricing-plans-title">
         Plans
       </h2>
       <div className="site-pricing-plan-grid">

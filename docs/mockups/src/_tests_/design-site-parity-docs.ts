@@ -12,6 +12,8 @@ const WORKSPACE =
   "Canvas docs: the page frame sits on the canvas between the floating Layers and Inspect panels, and below the breakpoint fills the canvas under the sub-bar; Milestone 6 rebuilds the docs layout";
 const LAYERS =
   "Canvas docs: the tree is the Layers panel, with the search field and the CLI version row at its top, a page count on each section rubric and the Changelog link in its foot; Milestone 6 rebuilds the docs layout";
+const ROWS =
+  "Canvas docs: the tree rows are the shared 44px panel rows, which state here only what the tree adds: the canvas tone under the pointer, the signal-soft fill with ink text for the page you are reading, and a quiet Changelog link; Milestone 6 rebuilds the docs layout";
 const ON_THIS_PAGE =
   "Canvas docs: On this page is an indexed outline in the Inspect panel, and under the lead in a disclosure below the breakpoint; Milestone 6 rebuilds the docs layout";
 const PAGER =
@@ -27,6 +29,11 @@ export const DOCS_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-doc-tree-foot": LAYERS,
   ".site-doc-tree .site-version": LAYERS,
   ".site-doc-section-head": LAYERS,
+  ".site-doc-link": ROWS,
+  ".site-doc-link:hover": ROWS,
+  '.site-doc-link[aria-current="page"]': ROWS,
+  '.site-doc-link[aria-current="page"]:hover': ROWS,
+  ".site-doc-tree-foot .site-doc-link": ROWS,
   ".site-search": LAYERS,
   ".site-search:hover": LAYERS,
   ".site-version": LAYERS,

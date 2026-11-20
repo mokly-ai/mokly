@@ -68,10 +68,12 @@ export function SitePanel({
  * note, at least 44px tall. `to` links a catalogue entry through `MockLink`,
  * `href` links in the page or outside it, and a row with neither is plain
  * text, the rule for a destination that no mockup owns. `current` marks the
- * row with `aria-current` and the selected fill.
+ * row with `aria-current` and the selected fill. `className` adds an area's
+ * own class, such as the documentation tree's row class.
  */
 export function SitePanelRow({
   children,
+  className: areaClass,
   current,
   href,
   icon,
@@ -79,6 +81,7 @@ export function SitePanelRow({
   trailing,
 }: {
   children: ReactNode;
+  className?: string | undefined;
   current?: "location" | "page" | "true" | undefined;
   href?: string | undefined;
   icon?: SiteIconName | undefined;
@@ -88,6 +91,7 @@ export function SitePanelRow({
   const className = classNames(
     "site-panel-row",
     current !== undefined && "site-panel-row--current",
+    areaClass,
   );
   const content = (
     <>

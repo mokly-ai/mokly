@@ -59,6 +59,12 @@ export const SITE_PAGE_NAMES: Readonly<Record<SiteScreen, string>> = {
  */
 export const GET_STARTED_SCREEN = SITE_SCREENS.docs;
 
+/**
+ * Where Create an account and Start a 7-day trial go: the application's
+ * `/sign-up`, which the sign-up screen of the product mockups owns.
+ */
+export const SIGN_UP_SCREEN = "product/account/sign-up";
+
 /** Public destinations outside the site and application origins. */
 export const EXTERNAL_LINKS = openSource;
 
