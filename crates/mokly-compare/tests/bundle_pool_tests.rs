@@ -9,7 +9,10 @@ use mokly_sidecar::compiled::UncapturedEvidence;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_test_support::durable_fixture::{self, Owner};
 
-use self::bundle_pool::{Counts, bundle, capture_flags, edit, edit_fingerprint, pool};
+use self::bundle_pool::{
+    Counts, bundle, cache_snapshot, capture_flags, edit, edit_fingerprint, pool,
+};
+use self::bundle_pool_observations::first_evidence_difference;
 
 #[path = "../../../tests/rust/package_version.rs"]
 mod package_version;
@@ -22,6 +25,12 @@ mod support;
 
 #[path = "support/bundle_pool.rs"]
 mod bundle_pool;
+
+#[path = "support/bundle_pool_observations.rs"]
+mod bundle_pool_observations;
+
+#[path = "support/bundle_pool_trace.rs"]
+mod bundle_pool_trace;
 
 #[test]
 fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_equal_output() {
@@ -51,8 +60,14 @@ fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_
     assert_eq!(
         accepted.cache,
         Some(CacheOutcome::Hit),
-        "initial capture: {}",
-        capture_flags(&captured)
+        "initial capture: {}; warm capture: {}; first unequal captured input: {}; cache: {}",
+        capture_flags(&captured),
+        capture_flags(&accepted),
+        first_evidence_difference(
+            &captured.compiled.reuse_evidence,
+            &accepted.compiled.reuse_evidence
+        ),
+        cache_snapshot(&cache)
     );
     assert_eq!(accepted.compiled.runtime_key, captured.compiled.runtime_key);
     assert_eq!(accepted.plan, captured.plan);
@@ -112,9 +127,15 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
     assert_eq!(
         final_bundle.cache,
         Some(CacheOutcome::Hit),
-        "initial capture: {}, changed capture: {}",
+        "initial capture: {}; changed capture: {}; final capture: {}; first unequal captured input: {}; cache: {}",
         capture_flags(&original),
-        capture_flags(&changed)
+        capture_flags(&changed),
+        capture_flags(&final_bundle),
+        first_evidence_difference(
+            &changed.compiled.reuse_evidence,
+            &final_bundle.compiled.reuse_evidence
+        ),
+        cache_snapshot(&cache)
     );
     assert_eq!(
         final_bundle.compiled.runtime_key,
