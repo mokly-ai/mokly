@@ -122,10 +122,14 @@ export interface ColorReference {
   literal?: string;
 }
 
-/** Pulls the colour out of a declaration, whether tokenised or hardcoded. */
+/**
+ * Pulls the colour out of a declaration, whether tokenised or hardcoded. A
+ * token read with a fallback, such as a public accent override, names the
+ * token that it reads first.
+ */
 function colorReference(value: string | undefined): ColorReference | undefined {
   if (!value) return undefined;
-  const token = /var\((--[a-z0-9-]+)\)/u.exec(value)?.[1];
+  const token = /var\(\s*(--[a-z0-9-]+)\s*[,)]/u.exec(value)?.[1];
   if (token) return { token };
   const literal = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/u.exec(value)?.[0];
   return literal ? { literal } : undefined;
