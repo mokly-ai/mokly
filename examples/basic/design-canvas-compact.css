@@ -36,6 +36,33 @@
     display: none;
   }
 
+  /* An expanded sheet leaves a strip of the canvas above it. */
+  .cv-work[data-cv-sheet="expanded"] > .cv-float[data-sheet] {
+    height: 88%;
+  }
+
+  /* The pill that names the selection stands above the dock while no sheet
+     is open. */
+  .cv-pill-place {
+    bottom: 82px;
+    display: block;
+    left: 50%;
+    max-width: calc(100% - 32px);
+    position: absolute;
+    transform: translateX(-50%);
+    z-index: 19;
+  }
+
+  .cv-work:has(> .cv-float[data-sheet]) .cv-pill-place {
+    display: none;
+  }
+
+  /* While the shell highlights the view, the frame shows the highlight also
+     with the panel sheet closed, where no switch is drawn. */
+  .cv-view[data-cv-highlight="on"] .ce-highlight-layer {
+    display: block;
+  }
+
   /* The entry bar: the dark title tag and the status, and the frame
      picker, over the top of the canvas. */
   .cv-entry-bar {
@@ -62,7 +89,7 @@
 
   /* The stage: one frame, centred below the entry bar. */
   .cv-view,
-  .cv-view[data-cv-pan="start"] {
+  .cv-view[data-cv-pan] {
     align-items: flex-start;
     bottom: 0;
     justify-content: center;
@@ -72,9 +99,11 @@
   }
 
   .cv-section,
-  .cv-section[data-cv-kind="component"] {
+  .cv-section[data-cv-kind="component"],
+  .cv-view[data-cv-pan="end"] > .cv-section {
     background: none;
     box-shadow: none;
+    margin: 0;
     outline: 0;
     padding: 0;
   }

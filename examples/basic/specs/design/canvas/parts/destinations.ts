@@ -11,6 +11,13 @@ export const CANVAS_PAGES = {
   catalogue: "design/canvas/stage/catalogue",
   home: "design/canvas/stage/home",
   unchanged: "design/canvas/inspect/unchanged",
+  selection: "design/canvas/inspect/selection",
+  selectionToolbar: "design/canvas/inspect/selection/toolbar",
+  selectionPrimary: "design/canvas/inspect/selection/primary",
+  selectionSecondary: "design/canvas/inspect/selection/secondary",
+  sections: "design/canvas/inspect/sections",
+  props: "design/canvas/inspect/props",
+  frames: "design/canvas/inspect/frames",
 } as const;
 
 export type CanvasDestination =

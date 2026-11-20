@@ -18,6 +18,9 @@ const GLYPHS: Record<CanvasFrameProps["kind"], CanvasGlyphName> = {
  * frame's own scheme, so a dark frame's sketch reads the dark preview tokens.
  * A reading frame is responsive, so its label names no size. The entry's
  * slug leads the label where one frame stands for the entry, as on a phone.
+ * The overlay, such as a selection, lies over the document unclipped, so its
+ * marks can stand outside the frame; the caller places it at the frame's
+ * scale, which the frame gives as `--cv-frame-scale`.
  */
 export function CanvasFrameView({
   children,
@@ -25,6 +28,7 @@ export function CanvasFrameView({
   height,
   kind,
   label,
+  overlay,
   scheme,
   width,
   zoom,
@@ -64,6 +68,7 @@ export function CanvasFrameView({
       <div className="cv-frame-clip">
         <div className="cv-frame-scale">{children}</div>
       </div>
+      {overlay}
     </figure>
   );
 }

@@ -201,6 +201,18 @@
   grid-template-columns: auto;
 }
 
+/* A selection over a frame: the selected instance's box in the document,
+   at the frame's scale, above the document and unclipped by it. */
+.cv-sel-place {
+  height: calc(var(--cv-sel-h) * var(--cv-frame-scale) * 1px);
+  left: calc(var(--cv-sel-x) * var(--cv-frame-scale) * 1px);
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--cv-sel-y) * var(--cv-frame-scale) * 1px);
+  width: calc(var(--cv-sel-w) * var(--cv-frame-scale) * 1px);
+  z-index: 2;
+}
+
 /* The Action's document draws the button 24px from its top left. */
 .mbk-shot--action > .mbk-shot-pad {
   padding: 24px;

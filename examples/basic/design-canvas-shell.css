@@ -48,6 +48,21 @@
   padding: 24px 0 0 24px;
 }
 
+/* Panned onto the end of the first row, Mobile · Light at 100%, as after
+   selecting on that frame: the 390px frame, inside the section's 22px
+   padding, stands in the middle of the canvas, and the frames before it
+   continue under the catalogue. */
+.cv-view[data-cv-pan="end"] {
+  align-items: flex-start;
+  container-type: inline-size;
+  justify-content: flex-end;
+  padding: 24px 0 0;
+}
+
+.cv-view[data-cv-pan="end"] > .cv-section {
+  margin-right: calc(50cqw - 217px);
+}
+
 .cv-work:not(:has(> .cv-float[data-side="right"])) .cv-view {
   right: 0;
 }
@@ -83,6 +98,7 @@
 }
 
 .cv-dock-place,
+.cv-pill-place,
 .cv-entry-bar {
   display: none;
 }

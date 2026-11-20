@@ -22,6 +22,8 @@ export const libraryStyleFiles = {
   "panel-tabs": "design-library/panels/panel-tabs.css",
   "phone-dock": "design-library/panels/phone-dock.css",
   "frames-filter": "design-library/inspector/frames-filter.css",
+  selection: "design-library/canvas/selection.css",
+  "box-model": "design-library/inspector/box-model.css",
 } as const;
 
 export type LibraryStyle = keyof typeof libraryStyleFiles;

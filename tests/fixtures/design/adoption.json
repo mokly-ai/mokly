@@ -263,6 +263,8 @@
       "component": "panels/floating-panel",
       "reason": "A phone draws a panel only as the sheet that a state opens.",
       "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
         "design/canvas/inspect/unchanged",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/home"
@@ -285,7 +287,11 @@
       "family": "canvas",
       "component": "panels/panel-tabs",
       "reason": "A phone draws the right panel's tabs in the panel sheet.",
-      "only": ["design/canvas/inspect/unchanged"]
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged"
+      ]
     },
     {
       "family": "canvas",
@@ -298,7 +304,11 @@
       "family": "canvas",
       "component": "inspector/metadata-row",
       "reason": "A phone draws Inspect in the panel sheet.",
-      "only": ["design/canvas/inspect/unchanged"]
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged"
+      ]
     },
     {
       "family": "canvas",
@@ -311,13 +321,24 @@
       "family": "canvas",
       "component": "inspector/frames-filter",
       "reason": "A phone draws the Frames filter in the panel sheet.",
-      "only": ["design/canvas/inspect/unchanged"]
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged"
+      ]
     },
     {
       "family": "canvas",
       "component": "controls/change-status",
       "reason": "The states of Welcome, which the canonical branch changed.",
       "only": [
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/zoomed"
@@ -329,6 +350,13 @@
       "reason": "Inspect lists the tags of Welcome and of the Action.",
       "viewports": ["desktop"],
       "only": [
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/component-set",
@@ -340,6 +368,70 @@
       "component": "preview/empty-state",
       "reason": "Home shows the catalogue home's guidance on the canvas.",
       "only": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/tag-chip",
+      "reason": "A phone draws Welcome's tags in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": ["design/canvas/inspect/props", "design/canvas/inspect/sections"]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/selection",
+      "reason": "The selection states draw the selected instance on Mobile · Light.",
+      "only": [
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/box-model",
+      "reason": "Inspect's Selection section draws the selected instance's box model.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/box-model",
+      "reason": "A phone draws the Selection section in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": ["design/canvas/inspect/sections"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/prop-field",
+      "reason": "Inspect's Props section holds the field of Welcome's prop.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/prop-field",
+      "reason": "A phone draws the Props section in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": ["design/canvas/inspect/props", "design/canvas/inspect/sections"]
     }
   ]
 }

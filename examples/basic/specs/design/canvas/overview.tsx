@@ -5,7 +5,7 @@ import type { ArtboardViewport } from "../parts/shell.js";
 
 import { CANVAS_PAGES } from "./parts/destinations.js";
 import { CANVAS_ENTRIES } from "./parts/entries.js";
-import { WelcomeInspect } from "./parts/inspect_entries.js";
+import { WelcomeInspect } from "./parts/inspect_welcome.js";
 import { canvasDesignMetadata } from "./parts/metadata.js";
 import { CanvasShell } from "./parts/shell.js";
 import { FITS, WELCOME_VIEW, welcomeFrames } from "./parts/sketches.js";

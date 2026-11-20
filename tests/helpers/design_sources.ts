@@ -34,6 +34,8 @@ const LIBRARY_ROOTS: readonly (readonly string[])[] = [
   ["cv-ptabs"],
   ["cv-dock"],
   ["cv-ff-group"],
+  ["cv-sel"],
+  ["cv-boxm"],
 ];
 
 /** The end of the brace group that opens at `start`. */

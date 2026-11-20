@@ -272,6 +272,44 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/inspect/frames",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/props",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/sections",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/selection",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/selection/primary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/inspect/selection"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/selection/secondary",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/inspect/selection"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/inspect/selection/toolbar",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/inspect/selection"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/inspect/unchanged",
     "colorSchemes": ["light", "dark"]
   },
@@ -723,6 +761,29 @@
   },
   {
     "kind": "component",
+    "path": "design/library/canvas/selection",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/selection/action",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/selection"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/selection/small",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/selection"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/selection/toolbar",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/selection"
+  },
+  {
+    "kind": "component",
     "path": "design/library/canvas/zoom-pill",
     "colorSchemes": ["light"]
   },
@@ -1052,6 +1113,23 @@
     "path": "design/library/controls/view-controls/unavailable",
     "colorSchemes": ["light"],
     "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/box-model",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/box-model/action",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/box-model"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/box-model/toolbar",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/box-model"
   },
   {
     "kind": "component",

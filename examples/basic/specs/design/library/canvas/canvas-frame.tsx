@@ -22,7 +22,7 @@ const propSchema = {
     zoom: { type: "number", minimum: 0.05, maximum: 4 },
   },
 } as const;
-const slots = ["children"] as const;
+const slots = ["children", "overlay"] as const;
 export type CanvasFrameProps = LibraryProps<typeof propSchema, typeof slots>;
 
 const desktop = {

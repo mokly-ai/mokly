@@ -24,6 +24,8 @@ export const CANVAS_SAMPLES: ReadonlySet<string> = new Set<LibraryStyle>([
   "panel-tabs",
   "phone-dock",
   "frames-filter",
+  "selection",
+  "box-model",
 ]);
 
 /**

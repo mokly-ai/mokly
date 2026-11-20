@@ -18,6 +18,7 @@
 @import "./design-shots.css";
 @import "./design-canvas.css";
 @import "./design-canvas-inspect.css";
+@import "./design-canvas-sections.css";
 
 /* A mobile render draws the one-column details body at every width. Below the
    breakpoint the package stylesheet draws it on its own, as the shell does. */

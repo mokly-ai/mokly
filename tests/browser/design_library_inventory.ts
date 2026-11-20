@@ -65,4 +65,6 @@ export const designLibrary = [
     "frames-filter",
     ["screen", "component", "light-only", "dark-hidden"],
   ],
+  ["canvas", "selection", ["action", "toolbar", "small"]],
+  ["inspector", "box-model", ["action", "toolbar"]],
 ] as const;

@@ -1,0 +1,134 @@
+/* The selected instance on a frame: a 1.5px signal outline with eight square
+   handles, the name tag above the top-left corner, the size tag below the
+   centre, and the padding redline with its value outside the box. The
+   selection fills the box that its caller places, and lets the pointer
+   through. Its marks keep their size at every zoom; the redline's length is
+   the padding at the frame's scale, which a sample without a frame takes as
+   1. A handle takes the surface of the document under it. */
+.cv-sel {
+  box-shadow: 0 0 0 1.5px var(--cv-signal);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.cv-sel-handle {
+  background: var(--mbk-screen-bg);
+  border-radius: 1.5px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--cv-signal),
+    0 1px 2px color-mix(in srgb, var(--cv-shade) 18%, transparent);
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  position: absolute;
+  width: 8px;
+}
+
+.cv-sel-handle[data-at="nw"] {
+  left: 0;
+  top: 0;
+}
+
+.cv-sel-handle[data-at="n"] {
+  left: 50%;
+  top: 0;
+}
+
+.cv-sel-handle[data-at="ne"] {
+  left: 100%;
+  top: 0;
+}
+
+.cv-sel-handle[data-at="e"] {
+  left: 100%;
+  top: 50%;
+}
+
+.cv-sel-handle[data-at="se"] {
+  left: 100%;
+  top: 100%;
+}
+
+.cv-sel-handle[data-at="s"] {
+  left: 50%;
+  top: 100%;
+}
+
+.cv-sel-handle[data-at="sw"] {
+  left: 0;
+  top: 100%;
+}
+
+.cv-sel-handle[data-at="w"] {
+  left: 0;
+  top: 50%;
+}
+
+/* The name and size tags: signal fills with their text on the signal. */
+.cv-sel-name,
+.cv-sel-size {
+  align-items: center;
+  background: var(--cv-signal);
+  border-radius: 4px;
+  color: var(--cv-on-signal);
+  display: inline-flex;
+  font: 500 11px/1 var(--cv-mono);
+  height: 20px;
+  padding: 0 6px;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.cv-sel-name {
+  bottom: calc(100% + 6px);
+  gap: 4px;
+  left: -1px;
+}
+
+.cv-sel-size {
+  font-variant-numeric: tabular-nums;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+}
+
+/* The padding redline: a measure from the left edge to the content, with
+   ticks at both ends, and its value in a tag outside the box. */
+.cv-sel-pad {
+  background: var(--cv-signal);
+  height: 1px;
+  left: 0;
+  position: absolute;
+  top: min(22%, 46px);
+  width: calc(var(--cv-sel-pad) * var(--cv-frame-scale, 1) * 1px);
+}
+
+.cv-sel-pad::before,
+.cv-sel-pad::after {
+  background: var(--cv-signal);
+  content: "";
+  height: 9px;
+  position: absolute;
+  top: -4px;
+  width: 1px;
+}
+
+.cv-sel-pad::before {
+  left: 0;
+}
+
+.cv-sel-pad::after {
+  right: 0;
+}
+
+.cv-sel-pad > b {
+  background: var(--cv-signal);
+  border-radius: 3px;
+  color: var(--cv-on-signal);
+  font: 600 10px/1 var(--cv-mono);
+  padding: 3px 4px;
+  position: absolute;
+  right: calc(100% + 5px);
+  top: 50%;
+  transform: translateY(-50%);
+}

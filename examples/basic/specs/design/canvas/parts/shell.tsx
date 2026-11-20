@@ -37,6 +37,10 @@ interface CanvasShellProps {
   tab?: PanelTab | undefined;
   /** The sheet that the compact form shows open. */
   sheet?: CanvasSheet | undefined;
+  /** The open sheet takes its expanded height, as after a drag on its grabber. */
+  expanded?: boolean | undefined;
+  /** The pill above the dock that names the selection, in the compact form. */
+  pill?: ReactNode;
   /** The stage's zoom in percent, which the zoom pill shows. */
   zoom?: number | undefined;
   /** The compact form's zoom in percent, which the dock's Fit restores. */
@@ -122,7 +126,9 @@ function CanvasWork({
   compactZoom,
   design,
   entry,
+  expanded,
   panel,
+  pill,
   sheet,
   tab = "inspect",
   viewport,
@@ -133,7 +139,7 @@ function CanvasWork({
   const zoomInstance = useDesignInstance("zoom");
   const dockInstance = useDesignInstance("dock");
   return (
-    <div className="cv-work">
+    <div className="cv-work" data-cv-sheet={expanded ? "expanded" : undefined}>
       <div className="cv-canvas">{children}</div>
       {!compact && zoom !== undefined ? (
         <div className="cv-zoom-place">
@@ -165,6 +171,7 @@ function CanvasWork({
           {panel}
         </RightPanel>
       ) : null}
+      {pill === undefined ? null : <div className="cv-pill-place">{pill}</div>}
       <div className="cv-dock-place">
         <phoneDock.Component
           moklyInstance={dockInstance}

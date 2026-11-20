@@ -2,14 +2,14 @@
 
 ## Scope
 
-These twenty-two components render both Mokly's design artboards and
+These twenty-four components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library. Sixteen render the `@mokly/ui` component that the shipped shell
 uses: each view imports its component, and each component sheet imports the
 package stylesheets of the component and of each package component that it
 renders, each by its repository path under `packages/ui/src`, so each side of
-a comparison renders its own package files. The six parts of the Canvas
+a comparison renders its own package files. The eight parts of the Canvas
 viewer, which `@mokly/ui` does not provide yet, implement their own markup;
 [Canvas viewer parts](#canvas-viewer-parts) describes them. The Mokly browser
 shell itself remains in the package source.
@@ -195,22 +195,37 @@ is taller than the viewport.
 ## Canvas viewer parts
 
 The `canvas` group, the `panels` group, and the inspector's Frames filter
-draw the Canvas viewer that the `design/canvas/**` family depicts:
-`canvas/canvas-frame`, a bare frame with its mono label and size tag that
-holds a screen at its nominal size scaled by the zoom, in the frame's own
-scheme; `canvas/zoom-pill`, zoom out, the zoom level, zoom in and Fit, whose
-Fit-only form the dock holds; `panels/floating-panel`, the floating
-catalogue and right panel, and their bottom sheets with a grabber and a close
-control; `panels/panel-tabs`, the right panel's text tabs, Inspect and, on a
-changed entry, Changes; `panels/phone-dock`, the phone's dock with Catalogue,
-the current tab, and Fit; and `inspector/frames-filter`, the viewport and
-scheme toggles of Inspect with the Highlight components switch. The
+and box model draw the Canvas viewer that the `design/canvas/**` family
+depicts: `canvas/canvas-frame`, a bare frame with its mono label and size tag
+that holds a screen at its nominal size scaled by the zoom, in the frame's
+own scheme, and an unclipped overlay, such as a selection, that its caller
+places at the frame's scale; `canvas/zoom-pill`, zoom out, the zoom level,
+zoom in and Fit, whose Fit-only form the dock holds; `canvas/selection`, the
+selected instance's outline with eight handles, its name and size tags, and
+the redline of its padding, whose marks keep their size at every zoom;
+`panels/floating-panel`, the floating catalogue and right panel, and their
+bottom sheets with a grabber and a close control; `panels/panel-tabs`, the
+right panel's text tabs, Inspect and, on a changed entry, Changes;
+`panels/phone-dock`, the phone's dock with Catalogue, the current tab, and
+Fit; `inspector/frames-filter`, the viewport and scheme toggles of Inspect
+with the Highlight components switch; and `inspector/box-model`, the
+selected instance's padding on each side around its content size. The
 `CANVAS_SAMPLES` set of `metadata.ts` names them, and `LibraryHost` gives
 their sample root the Canvas palette scope that a Canvas artboard's root
 carries. A static artboard runs no script, so each control links to the
 Canvas artboard that shows its outcome, a control without one is a picture
 of itself, and the toggles, the switch, and the compact frame picker are
 native controls that the Canvas stylesheets read in place.
+
+Inspect's sections render the shipped parts of today's inspector tabs: the
+Selection section draws the selected instance's props in metadata rows and
+its box model; Props holds the entry's edit form with its prop fields; Usage
+draws the shipped usage list; and Components draws the shipped instance
+tree. The shipped tree draws an instance without an address as a button, so
+every instance of a depicted tree links to the artboard that shows it
+selected: the `selection` screen and its saved states select each of
+Welcome's four instances. A static artboard opens the panel scrolled to the
+section that its state is about, the selection or an unfolded section.
 
 The palette scope is `canvasScope` of `../parts/canvas_palette.ts`, the one
 module that maps the Canvas palette of `@mokly/ui`, imported by repository
@@ -224,14 +239,19 @@ such as the hover fill, the frame ring, and the shadows, mixes Canvas roles in
 The Canvas scaffolds live in `../canvas/parts/`: `CanvasShell` draws the top
 bar, the floating panels over the dot-grid canvas, the zoom pill, and the
 dock, and turns compact below the shell's breakpoint and in every mobile
-render, where only the sheet that a state opens is drawn; `CanvasStage` draws
-the selected entry's section with its frames, and the compact entry bar with
-the frame picker. They take the destination, the viewport, the catalogue's
-filter and row, the entry's title, path, and status, a render of each frame's
-sketch by viewport and scheme, and the Inspect body. Canvas links stay inside
-the Canvas family: `../canvas/parts/destinations.ts` names its artboards, and
-the `canvas` transitions of each artboard's navigation state name the
-artboards that its tabs, zoom controls, Fit, dock, and sheet close open.
+render, where only the sheet that a state opens is drawn, at its expanded
+height where the state asks, and where the pill above the dock names a
+selection; `CanvasStage` draws the selected entry's section with its frames,
+panned onto a frame where the state asks, with what lies over each frame,
+such as the selection, and the compact entry bar with the frame picker. They
+take the destination, the viewport, the catalogue's filter and row, the
+entry's title, path, and status, a render of each frame's sketch by viewport
+and scheme, and the Inspect body. A depicted view that the shell highlights
+shows its highlight in the compact form also while the panel sheet, which
+holds the switch, is closed. Canvas links stay inside the Canvas family:
+`../canvas/parts/destinations.ts` names its artboards, and the `canvas`
+transitions of each artboard's navigation state name the artboards that its
+tabs, zoom controls, Fit, dock, selection pill, and sheet close open.
 
 ## Authoring
 

@@ -1,3 +1,9 @@
+import type {
+  DepictedView,
+  HighlightRegion,
+  PreviewRegions,
+} from "../../parts/depicted_view.js";
+import type { DesignDestination } from "../../parts/destinations.js";
 import { MiniProfile } from "../../parts/mini_account.js";
 import { MiniAction } from "../../parts/mini_action.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
@@ -10,14 +16,17 @@ import {
   screenFrames,
   type FrameScheme,
 } from "./frames.js";
+import { WELCOME_INSTANCES } from "./welcome_instances.js";
 
 /**
- * The zoom in percent that fits each stage: Welcome's four frames, Profile's
- * two, the Action's variant set and a reading frame at full size, and, in
- * the compact form, a phone frame, a desktop frame, and a variant set.
+ * The zoom in percent that fits each stage: Welcome's four frames, its two
+ * Light frames once the Frames filter hides Dark, Profile's two, the Action's
+ * variant set and a reading frame at full size, and, in the compact form, a
+ * phone frame, a desktop frame, and a variant set.
  */
 export const FITS = {
   welcome: 38,
+  welcomeLight: 42,
   profile: 42,
   action: 100,
   document: 100,
@@ -38,6 +47,43 @@ export function welcomeFrames() {
 
 /** Welcome's depicted view, whose instances the highlight marks. */
 export const WELCOME_VIEW = miniView("welcome");
+
+/**
+ * The artboard that shows each instance of Welcome selected, by the shell's
+ * label of the instance: its component's title and its id.
+ */
+const SELECTED_BY_LABEL: Readonly<Record<string, DesignDestination>> =
+  Object.fromEntries(
+    Object.values(WELCOME_INSTANCES).map((instance) => [
+      `${instance.component} · ${instance.id}`,
+      instance.page,
+    ]),
+  );
+
+/** A view's regions, each label opening the artboard of its selection. */
+function linkedRegions(regions: PreviewRegions): PreviewRegions {
+  const link = (region: HighlightRegion): HighlightRegion => ({
+    ...region,
+    to: SELECTED_BY_LABEL[region.label],
+  });
+  const [first, ...rest] = regions;
+  return [link(first), ...rest.map(link)];
+}
+
+/**
+ * Welcome while the shell highlights it: the mask and the labels show, and a
+ * label opens the artboard that shows its instance selected.
+ */
+export function welcomeHighlighted(): DepictedView {
+  if (!("regions" in WELCOME_VIEW)) return WELCOME_VIEW;
+  return {
+    highlight: "on",
+    regions: {
+      desktop: linkedRegions(WELCOME_VIEW.regions.desktop),
+      mobile: linkedRegions(WELCOME_VIEW.regions.mobile),
+    },
+  };
+}
 
 /** Profile renders in Light only, so it has the Light row of frames. */
 export function profileFrames() {

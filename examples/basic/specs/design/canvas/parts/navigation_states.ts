@@ -23,7 +23,10 @@ export interface CanvasTransitions {
   fit?: CanvasDestination;
   /** The close control of the sheet that a compact artboard shows open. */
   close?: CanvasDestination;
-  /** The dock's current tab, which opens the right panel as a sheet. */
+  /**
+   * The dock's current tab, and the selection pill above the dock, which
+   * open the right panel as a sheet.
+   */
   panelSheet?: CanvasDestination;
 }
 
@@ -33,6 +36,9 @@ const welcome = { zoomIn: C.zoomed, fit: C.overview } as const;
 /**
  * Canonical states of the Canvas artboards. The catalogue filter of a
  * Welcome artboard opens the Changes filter, which keeps Welcome selected.
+ * While an instance is selected, the canvas is zoomed onto it, and no
+ * artboard shows another zoom with the selection, so the zoom controls are
+ * pictures there; the panel sheet with the selection is the sections state.
  */
 export const CANVAS_NAVIGATION_STATES = {
   [C.overview]: { changes: C.catalogue, canvas: welcome },
@@ -45,4 +51,14 @@ export const CANVAS_NAVIGATION_STATES = {
   },
   [C.home]: {},
   [C.unchanged]: { canvas: { fit: C.unchanged, panelSheet: C.unchanged } },
+  [C.selection]: { changes: C.catalogue, canvas: { panelSheet: C.sections } },
+  [C.selectionToolbar]: { changes: C.catalogue },
+  [C.selectionPrimary]: { changes: C.catalogue },
+  [C.selectionSecondary]: { changes: C.catalogue },
+  [C.sections]: { changes: C.catalogue, canvas: { close: C.selection } },
+  [C.props]: {
+    changes: C.catalogue,
+    canvas: { ...welcome, fit: C.props, close: C.overview },
+  },
+  [C.frames]: { changes: C.catalogue, canvas: { fit: C.frames } },
 } satisfies Record<CanvasDestination, NavigationState>;

@@ -92,10 +92,24 @@
   min-height: 0;
   padding: 0 4px;
 }
-.mbk-library[data-library-component="frames-filter"] .mbk-library-host {
+.mbk-library[data-library-component="frames-filter"] .mbk-library-host,
+.mbk-library[data-library-component="box-model"] .mbk-library-host {
   background: var(--cv-surface);
   max-width: 312px;
   padding: 14px;
+}
+.mbk-library[data-library-component="box-model"] .mbk-library-host {
+  min-height: 0;
+}
+/* A selection sample stands for a selected element of a document: the host
+   draws the element on the canvas, with room around it for the tags. */
+.mbk-library[data-library-component="selection"] .mbk-library-host {
+  background: var(--mbk-screen-bg);
+  box-shadow: 0 0 0 1px var(--cv-frame-ring);
+  height: 96px;
+  margin: 40px auto;
+  min-height: 0;
+  width: 240px;
 }
 .cv-float-sample {
   color: var(--cv-text-secondary);

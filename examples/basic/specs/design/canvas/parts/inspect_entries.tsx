@@ -2,6 +2,7 @@ import {
   MetadataChips,
   MetadataCode,
 } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { NoPropsPanel } from "../../components/controls/parts/limits.js";
 import { COMPONENTS } from "../../components/parts/metadata.js";
 import { PREVIOUS_PATHS } from "../../parts/entry_paths.js";
 import { MetaRow } from "../../parts/metadata_row.js";
@@ -18,13 +19,14 @@ import {
   InspectVariants,
   WrappingPath,
 } from "./inspect.js";
+import { NoComponents, ScreenUsage } from "./inspect_folds.js";
 
 /**
  * The Details rows of today's inspector that a depicted screen has, after
  * its path and source. A related entry would open a Browse artboard, and
  * Canvas links stay inside the Canvas family, so it is named as text.
  */
-function SubjectRows({ subject }: { subject: ScreenSubject }) {
+export function SubjectRows({ subject }: { subject: ScreenSubject }) {
   const metadata = SUBJECTS[subject];
   return (
     <>
@@ -55,44 +57,6 @@ function SubjectRows({ subject }: { subject: ScreenSubject }) {
           Example tour
         </MetaRow>
       ) : null}
-    </>
-  );
-}
-
-/** Inspect for Welcome: changed on the canonical branch, in both schemes. */
-export function WelcomeInspect() {
-  const subject = SUBJECTS.welcome;
-  return (
-    <>
-      <InspectHead
-        description={subject.description}
-        entry={CANVAS_ENTRIES.welcome}
-        rows={<SubjectRows subject="welcome" />}
-        source={subject.source}
-      />
-      <InspectRationale noun="screen" text={subject.rationale} />
-      <InspectVariants
-        variants={[
-          { label: "Welcome", current: true },
-          { label: "Empty workspace" },
-          { label: "Save failed" },
-        ]}
-      />
-      <InspectFrames
-        count={4}
-        filter={{
-          viewports: true,
-          mobile: true,
-          desktop: true,
-          light: true,
-          dark: true,
-          highlight: false,
-        }}
-      />
-      <InspectSelection />
-      <InspectFold count={1} name="props" title="Props" />
-      <InspectFold name="usage" title="Usage" />
-      <InspectFold count={2} name="components" title="Components" />
     </>
   );
 }
@@ -132,9 +96,15 @@ export function ProfileInspect() {
         }}
       />
       <InspectSelection />
-      <InspectFold name="props" title="Props" />
-      <InspectFold name="usage" title="Usage" />
-      <InspectFold count={0} name="components" title="Components" />
+      <InspectFold name="props" title="Props">
+        <NoPropsPanel />
+      </InspectFold>
+      <InspectFold name="usage" title="Usage">
+        <ScreenUsage />
+      </InspectFold>
+      <InspectFold count={0} name="components" title="Components">
+        <NoComponents />
+      </InspectFold>
     </>
   );
 }
@@ -184,7 +154,9 @@ export function ActionInspect() {
       <InspectSelection />
       <InspectFold count={6} name="props" title="Props" />
       <InspectFold count={2} name="usage" title="Usage" />
-      <InspectFold name="components" title="Components" />
+      <InspectFold name="components" title="Components">
+        <NoComponents />
+      </InspectFold>
     </>
   );
 }

@@ -112,6 +112,7 @@ const CANVAS_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["Canvas edge on canvas", "--cv-border-strong", "--cv-background", 3],
   ["signal text on surface", "--cv-signal-deep", "--cv-surface", 4.5],
   ["signal text on soft signal", "--cv-signal-deep", "--cv-signal-soft", 4.5],
+  ["selection tag text on the signal", "--cv-on-signal", "--cv-signal", 4.5],
   ["shell ink on surface", "--chrome-ink", "--chrome-surface", 4.5],
   ["shell ink on canvas", "--chrome-ink", "--chrome-bg", 4.5],
   ["shell secondary on surface", "--chrome-ink-2", "--chrome-surface", 4.5],

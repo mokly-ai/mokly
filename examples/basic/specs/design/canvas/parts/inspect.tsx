@@ -36,22 +36,36 @@ export function WrappingPath({ path }: { path: string }) {
   );
 }
 
+/**
+ * The class of a section, and of the section that the panel opens scrolled
+ * to, as it does after a selection or once a reader unfolds a section.
+ */
+function sectionClass(base: string, initial: boolean | undefined): string {
+  return initial ? `${base} cv-initial` : base;
+}
+
 /** One section of Inspect: its head, with a count where one is known. */
 export function InspectSection({
   children,
   count,
+  initial,
   title,
 }: {
   children: ReactNode;
   count?: number | undefined;
+  /** The panel opens scrolled to this section. */
+  initial?: boolean | undefined;
   title: string;
 }) {
   return (
-    <section aria-label={title} className="cv-sec">
+    <section aria-label={title} className={sectionClass("cv-sec", initial)}>
       <h3 className="cv-sec-head">
         {title}
         {count === undefined ? null : (
-          <span className="cv-sec-count">{count}</span>
+          <>
+            {" "}
+            <span className="cv-sec-count">{count}</span>
+          </>
         )}
       </h3>
       {children}
@@ -60,32 +74,47 @@ export function InspectSection({
 }
 
 /**
- * A folded section of Inspect: a native disclosure whose closed head names
- * the section and its count where one is known.
+ * A folded section of Inspect: a native disclosure whose head names the
+ * section and its count where one is known. An unfolded section starts open.
  */
 export function InspectFold({
   children,
   count,
+  initial,
   name,
+  open,
   title,
 }: {
   children?: ReactNode;
   count?: number | undefined;
+  /** The panel opens scrolled to this section. */
+  initial?: boolean | undefined;
   name: string;
+  /** The section starts unfolded. */
+  open?: boolean | undefined;
   title: string;
 }) {
   return (
-    <details className="cv-sec cv-fold" data-cv-section={name}>
+    <details
+      className={sectionClass("cv-sec cv-fold", initial)}
+      data-cv-section={name}
+      open={open}
+    >
       <summary className="cv-sec-head">
         <span className="cv-fold-title">
           {title}
           {count === undefined ? null : (
-            <span className="cv-sec-count">{count}</span>
+            <>
+              {" "}
+              <span className="cv-sec-count">{count}</span>
+            </>
           )}
         </span>
         <CanvasGlyph name="chevron" size={14} />
       </summary>
-      {children}
+      {children === undefined ? null : (
+        <div className="cv-fold-body">{children}</div>
+      )}
     </details>
   );
 }
@@ -197,12 +226,15 @@ export function InspectVariants({
 export function InspectFrames({
   count,
   filter,
+  initial,
 }: {
   count: number;
   filter: FramesFilterProps;
+  /** The panel opens scrolled to the Frames section. */
+  initial?: boolean | undefined;
 }) {
   return (
-    <InspectSection count={count} title="Frames">
+    <InspectSection count={count} initial={initial} title="Frames">
       <framesFilter.Component
         moklyInstance={useDesignInstance("frames")}
         viewports={filter.viewports}
