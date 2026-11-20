@@ -42,10 +42,12 @@ dependency or copied palette.
 The home stage is generated after the dogfood catalogue. It publishes the
 four mobile/desktop and light/dark documents of
 `product/account/project-created`, read from
-`mokly-static/static/mokly-generated/`, plus their local resources into
-`public/stage/`. The workspace `@mokly/viewer` public `readCatalogueIndex`
-reader checks the version of `mokly-static/mokly-viewer/index.json` and copies
-its content under the
+`mokly-static/static/mokly-generated/`, into `public/stage/`. Each document
+carries its stylesheets inline, in their original order, with their URLs
+rebased to that directory. The self-hosted font and the other local resources
+are copied beside the documents. The workspace `@mokly/viewer` public
+`readCatalogueIndex` reader checks the version of
+`mokly-static/mokly-viewer/index.json` and copies its content under the
 [reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#frame-boundary).
 The stage projects
 Specs and Components from that tree, with section-specific row ordering,
@@ -245,12 +247,13 @@ Pages project and attach the domain are in the
 - `src/changelog/` — the typed changelog parser, the release model, note rendering and the Atom feed.
 - `src/metadata.ts`, `src/og.ts` and `scripts/og.mjs` — per-page metadata, the social card drawn as SVG, and the pre-build step that rasterizes one PNG per route.
 - `scripts/brand-assets.mjs` and `public/brand/` — the canonical brand SVGs and the script that derives their PNGs and light-variant aliases (`brand:build` and `brand:check`).
-- `scripts/stage.mjs`, `scripts/stage/catalogue.ts`, `scripts/stage/tree.ts`, `scripts/stage/fragments.ts` and `src/stage.ts` — the home-stage publication: the fallback mockups build, the public index reader, section projection, document and resource rewriting, and stage manifest schema.
+- `scripts/stage.mjs`, `scripts/stage/catalogue.ts`, `scripts/stage/tree.ts`, `scripts/stage/fragments.ts`, `scripts/stage/stylesheets.ts` and `src/stage.ts` — the home-stage publication: the fallback mockups build, the public index reader, section projection, document rewriting with inline stylesheets (`rewriteStage`), rebased stylesheet references and the resources they name (`rebaseStylesheet` and `stylesheetResources`), resource copying, and stage manifest schema.
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
 - `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the Folio stylesheets (`base.css`, `chrome.css`, `menu.css`, `layout.css`, `footer.css` and the page sheets), each loaded once by a layout.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
+- `tests/stage_fragments.test.ts` and `tests/stage.test.ts` — the document rewriting rules with the inline stylesheets, and the staged screen, its catalogue rows, the manifest schema and the published stage output, which loads no external stylesheet.
 - `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.
 - `tests/stage_source.test.ts` — the stage's fallback mockups build and its catalogue-index error message.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.

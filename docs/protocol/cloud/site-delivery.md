@@ -99,11 +99,21 @@ declared site segments to Pages unchanged.
 The home stage embeds documents from this repository's dogfood catalogue. The
 stage build runs after the mockups build and publishes the
 `product/account/project-created` screen's mobile and desktop documents in
-light and dark into the site output, with every stylesheet they load copied
-beside them and their links rewritten to that directory. Catalogue
-destinations the site does not publish lose their `href`; an unresolvable
-stylesheet, script or image fails the build. The stage reads those documents
-from `static/mokly-generated/` in the `mokly-static/` build output.
+light and dark into the stage directory of the site output. A published stage
+document loads no external stylesheet. Each stylesheet that its source
+document links is inline, in the original order, with its URLs rebased to the
+stage directory. Every other local resource that the documents load, such as
+the self-hosted font, is copied beside them, and every reference to it is
+rewritten to that directory. Decision: the stage inlines its stylesheets, not
+copied external stylesheets and not one combined external stylesheet, because
+Chrome can lay out a stage document before an external stylesheet applies.
+Chrome then counts the styled layout as a layout shift, which fails the
+[performance budget](#performance-budget) although users never see the shift.
+Catalogue destinations the site does not publish lose their `href`; an
+unresolvable stylesheet, script or image fails the build.
+
+The stage reads those documents from `static/mokly-generated/` in the
+`mokly-static/` build output.
 It reads the screen's title, path, catalogue trail and
 navigation rows from the build's catalogue index, `mokly-viewer/index.json`.
 The site builds the Specs and Components rows itself from the
