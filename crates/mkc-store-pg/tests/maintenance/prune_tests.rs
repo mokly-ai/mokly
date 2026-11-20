@@ -1,6 +1,9 @@
 //! Inclusive expiry windows retain active credentials and replay diagnostics.
 
+use std::time;
+
 use chrono::{Duration, Utc};
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::magic_link::MagicLink;
 use mkc_store_interface::rate_limit::RateLimit;
 use mkc_store_interface::session::Session;
@@ -13,6 +16,11 @@ use super::fixtures::database;
 #[test]
 fn pruning_respects_link_session_idle_and_counter_windows() {
     let Some(db) = database() else { return };
+    let batch = PruneBatch {
+        limit: 2,
+        timeout: time::Duration::from_secs(5),
+    };
+    let counters = PruneBatch { limit: 1, ..batch };
     let now = Utc::now();
     let link_cutoff = now - Duration::days(7);
     let expiry_cutoff = now - Duration::days(1);
@@ -58,9 +66,12 @@ fn pruning_respects_link_session_idle_and_counter_windows() {
                     last_seen_at: idle_cutoff + Duration::seconds(delta),
                 })?;
             }
-            assert_eq!(q.prune_magic_links(link_cutoff)?, 4);
-            assert_eq!(q.prune_sessions(expiry_cutoff, idle_cutoff)?, 4);
-            assert_eq!(q.prune_rate_limits(expiry_cutoff)?, 2);
+            assert_eq!(q.prune_magic_links(link_cutoff, batch)?, 2);
+            assert_eq!(q.prune_magic_links(link_cutoff, batch)?, 2);
+            assert_eq!(q.prune_sessions(expiry_cutoff, idle_cutoff, batch)?, 2);
+            assert_eq!(q.prune_sessions(expiry_cutoff, idle_cutoff, batch)?, 2);
+            assert_eq!(q.prune_rate_limits(expiry_cutoff, counters)?, 1);
+            assert_eq!(q.prune_rate_limits(expiry_cutoff, counters)?, 1);
             for index in 0..4 {
                 assert_eq!(
                     q.magic_link(&format!("{:064x}", index * 2))?.is_some(),
@@ -77,9 +88,9 @@ fn pruning_respects_link_session_idle_and_counter_windows() {
                 );
                 assert_eq!(q.rate_limit(&index.to_string())?.is_some(), index >= 2);
             }
-            assert_eq!(q.prune_magic_links(link_cutoff)?, 0);
-            assert_eq!(q.prune_sessions(expiry_cutoff, idle_cutoff)?, 0);
-            assert_eq!(q.prune_rate_limits(expiry_cutoff)?, 0);
+            assert_eq!(q.prune_magic_links(link_cutoff, batch)?, 0);
+            assert_eq!(q.prune_sessions(expiry_cutoff, idle_cutoff, batch)?, 0);
+            assert_eq!(q.prune_rate_limits(expiry_cutoff, counters)?, 0);
             Ok(())
         }))
         .unwrap();
