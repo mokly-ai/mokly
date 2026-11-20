@@ -2,15 +2,54 @@ import path from "node:path";
 
 import type { Metafile } from "esbuild";
 
-type Selection =
-  { kind: "physical"; file: string } | { kind: "own" } | { kind: "unknown" };
+import { resolutionRequest } from "./resolution-request.js";
+import type { LookupRequest } from "./resolution-request.js";
+import { bareSpecifier } from "./specifier.js";
+
+export type SelectedImport =
+  { kind: "physical"; file: string } | { kind: "unknown" };
+type Selection = SelectedImport | { kind: "own" };
+
+export interface MetafileCursor {
+  input: number;
+  edge: number;
+}
+
+interface MetafileRequest extends MetafileCursor {
+  request: LookupRequest;
+  selected: string;
+  paths: boolean;
+  folder: boolean;
+  deferred: boolean;
+}
+
+function aliased(
+  original: string,
+  aliases: ReadonlyArray<readonly [string, string]>,
+): boolean {
+  for (let index = 0; index < aliases.length; index++) {
+    const key = aliases[index]![0];
+    if (
+      original === key ||
+      (original.startsWith(key) && original.charCodeAt(key.length) === 47)
+    )
+      return true;
+  }
+  return false;
+}
 
 /** Interpret physical modules and Mokly namespaces without resolving imports again. */
 export class MetafileEdges {
+  private readonly entry: string;
+  private requestInputs:
+    Array<[string, Metafile["inputs"][string]]> | undefined;
+
   constructor(
     private readonly metafile: Metafile,
     private readonly sourceRoot: string,
-  ) {}
+  ) {
+    this.entry = path.join(sourceRoot, "mokly-entry");
+  }
 
   own(file: string): boolean {
     return (
@@ -18,7 +57,8 @@ export class MetafileEdges {
       file.startsWith("mokly-jsx:") ||
       file.startsWith("mokly-style:") ||
       file === "mokly-entry" ||
-      path.normalize(file) === path.join(this.sourceRoot, "mokly-entry")
+      file === this.entry ||
+      (file.includes("mokly-entry") && path.normalize(file) === this.entry)
     );
   }
 
@@ -34,8 +74,9 @@ export class MetafileEdges {
 
   /** A style wrapper selects its first import, before any registry dependency. */
   selection(file: string): Selection {
-    const seen = new Set<string>();
+    let seen: Set<string> | undefined;
     while (file.startsWith("mokly-style:")) {
+      seen ??= new Set<string>();
       if (seen.has(file)) return { kind: "unknown" };
       seen.add(file);
       const first = this.metafile.inputs[file]?.imports[0];
@@ -47,6 +88,67 @@ export class MetafileEdges {
     return path.isAbsolute(file)
       ? { kind: "physical", file }
       : { kind: "unknown" };
+  }
+
+  /** Both marked recorders share request interpretation without retaining request results. */
+  *requests(
+    aliases: ReadonlyArray<readonly [string, string]>,
+    configuration: string,
+    start?: MetafileCursor,
+  ): Generator<MetafileRequest> {
+    this.requestInputs ??= Object.entries(this.metafile.inputs);
+    for (
+      let inputIndex = start?.input ?? 0;
+      inputIndex < this.requestInputs.length;
+      inputIndex++
+    ) {
+      const [file, input] = this.requestInputs[inputIndex]!;
+      if (!path.isAbsolute(file) || this.own(file)) continue;
+      let directory: string | undefined;
+      let dependency: boolean | undefined;
+      const first = start && inputIndex === start.input ? start.edge : 0;
+      for (
+        let edgeIndex = first;
+        edgeIndex < input.imports.length;
+        edgeIndex++
+      ) {
+        const edge = input.imports[edgeIndex]!;
+        if (edge.external || edge.original === undefined) continue;
+        const original = edge.original;
+        const bare = bareSpecifier(original);
+        if (!bare && !original.startsWith("#") && !aliased(original, aliases))
+          continue;
+        directory ??= path.dirname(file);
+        const request = resolutionRequest(
+          original,
+          directory,
+          aliases,
+          configuration,
+        );
+        if (request.kind !== "lookup") continue;
+        dependency ??= file.split(path.sep).includes("node_modules");
+        const effectiveBare = bareSpecifier(request.name);
+        const paths =
+          !dependency &&
+          bare &&
+          (effectiveBare || path.isAbsolute(request.name));
+        const folder = effectiveBare || request.name.startsWith("#");
+        if (!paths && !folder) continue;
+        yield {
+          input: inputIndex,
+          edge: edgeIndex,
+          request,
+          selected: edge.path,
+          paths,
+          folder,
+          deferred:
+            folder &&
+            (request.name.startsWith("#") ||
+              !bare ||
+              (dependency && request.directory !== directory)),
+        };
+      }
+    }
   }
 
   /** The graph retains every wrapper dependency, including a separate registry. */

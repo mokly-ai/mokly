@@ -269,3 +269,7 @@ mod runtime_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_reuse_tests.rs"]
 mod bundle_reuse_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_folder_reuse_tests.rs"]
+mod bundle_folder_reuse_tests;

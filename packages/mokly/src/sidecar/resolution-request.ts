@@ -1,8 +1,12 @@
 import { isBuiltin } from "node:module";
 
-type ResolutionRequest =
-  | { kind: "plugin" | "builtin" }
-  | { kind: "lookup"; name: string; directory: string };
+export interface LookupRequest {
+  kind: "lookup";
+  name: string;
+  directory: string;
+}
+
+type ResolutionRequest = { kind: "plugin" | "builtin" } | LookupRequest;
 
 /** Plugins claim written names; native built-ins follow the effective alias. */
 export function resolutionRequest(

@@ -1,5 +1,78 @@
 # Changelog
 
+## [0.20.0](https://github.com/mokly-ai/mokly/compare/v0.19.0...v0.20.0) (2026-11-20)
+
+
+### Features
+
+* **cache:** reuse compiled bundles across command processes ([#312](https://github.com/mokly-ai/mokly/issues/312)) ([e60c165](https://github.com/mokly-ai/mokly/commit/e60c165320bbe8c6f6afef6183ccf4bab496e9e5))
+* combine Mokly Cloud into the Mokly repository ([#350](https://github.com/mokly-ai/mokly/issues/350)) ([5cba4dc](https://github.com/mokly-ai/mokly/commit/5cba4dc4b9c8f37a1accca72a89263ab25cf05cd))
+* **desktop:** open Stripe pages in the system browser ([#405](https://github.com/mokly-ai/mokly/issues/405)) ([9ef0cde](https://github.com/mokly-ai/mokly/commit/9ef0cdec7f9b2859f181562baed3254dc4969cf5))
+* **ui:** use neutral Graphite greys for the dark theme ([#299](https://github.com/mokly-ai/mokly/issues/299)) ([d83859b](https://github.com/mokly-ai/mokly/commit/d83859b90e5c8eb72365d4cf45910152461a59bd))
+
+
+### Bug Fixes
+
+* **api:** name build dead letters in check status help ([#393](https://github.com/mokly-ai/mokly/issues/393)) ([e5acd1a](https://github.com/mokly-ai/mokly/commit/e5acd1a25355139eeaa4559b3fed0ade35afabee))
+* **app:** apply only the newest session read ([#377](https://github.com/mokly-ai/mokly/issues/377)) ([525b4d7](https://github.com/mokly-ai/mokly/commit/525b4d7e505c1ebc7a3c18cd6f2a58bcd3630b2d))
+* **app:** preserve Checkout query while settings routes wait ([#388](https://github.com/mokly-ai/mokly/issues/388)) ([904d1a3](https://github.com/mokly-ai/mokly/commit/904d1a3e93d1d08b289764a67540ba24450a8aac))
+* **app:** preserve GitHub flows after late answers ([#390](https://github.com/mokly-ai/mokly/issues/390)) ([3bf6e3c](https://github.com/mokly-ai/mokly/commit/3bf6e3c9a965c434a757f552d0a1fcb7b3f4eda8))
+* **auth:** bound prune deletes by batch and deadline ([#389](https://github.com/mokly-ai/mokly/issues/389)) ([be8a41a](https://github.com/mokly-ai/mokly/commit/be8a41a9cfc21ed1aeae1bd201614befde42aa73))
+* **catalogue:** one containment rule for a linked repository root ([#365](https://github.com/mokly-ai/mokly/issues/365)) ([ea5a7ef](https://github.com/mokly-ai/mokly/commit/ea5a7ef3d16d2e627cd71d8eee23b8130204065d))
+* **catalogue:** preserve chunk origins after empty end tags ([#391](https://github.com/mokly-ai/mokly/issues/391)) ([e272615](https://github.com/mokly-ai/mokly/commit/e272615f206e31c85bb435fae78c60f93cd178f4))
+* **cli:** install the latest release on every Node version ([#298](https://github.com/mokly-ai/mokly/issues/298)) ([f380e94](https://github.com/mokly-ai/mokly/commit/f380e94622413abb00c6d515fbb8a723c83f4e7d))
+* **cli:** print base diagnostic location lists on following lines ([#374](https://github.com/mokly-ai/mokly/issues/374)) ([162b797](https://github.com/mokly-ai/mokly/commit/162b7974a1412a8f6d7128c11f1a677be936bd83))
+* **cli:** print the full scripts recovery hint in rich errors ([#364](https://github.com/mokly-ai/mokly/issues/364)) ([38e574a](https://github.com/mokly-ai/mokly/commit/38e574a1938591a37e1c6a5bc57eec355b773336))
+* **compare:** bound install cleanup after the final stop signal ([#358](https://github.com/mokly-ai/mokly/issues/358)) ([44eda16](https://github.com/mokly-ai/mokly/commit/44eda16b8d6374bdacad3fe9b8f53e4a5934c6e7))
+* **config:** resolve configured renderer and PostCSS module paths once ([#338](https://github.com/mokly-ai/mokly/issues/338)) ([4614c4a](https://github.com/mokly-ai/mokly/commit/4614c4a90acb2e926269979508e652bd60a7ce9b))
+* **git:** find missing base objects before reading sizes on every Git version ([#382](https://github.com/mokly-ai/mokly/issues/382)) ([91e3a45](https://github.com/mokly-ai/mokly/commit/91e3a454d33ad6ddfa42bdfcf92edf979790a979))
+* **git:** own every process of tree reads in a partial clone ([#336](https://github.com/mokly-ai/mokly/issues/336)) ([e40ac84](https://github.com/mokly-ai/mokly/commit/e40ac84663bf34d257dcd27e499502fc6767e8a6))
+* **infra:** link the alert runbooks in this repository ([5cba4dc](https://github.com/mokly-ai/mokly/commit/5cba4dc4b9c8f37a1accca72a89263ab25cf05cd))
+* **model:** write related document references into catalogue output ([#333](https://github.com/mokly-ai/mokly/issues/333)) ([1496e47](https://github.com/mokly-ai/mokly/commit/1496e47bea2cef07b1d6836a2c64b1fffcdda3fc))
+* **platform:** keep the call site of each platform I/O error ([#321](https://github.com/mokly-ai/mokly/issues/321)) ([159231c](https://github.com/mokly-ai/mokly/commit/159231c31909fd9ef5fd90d3a14ce64f6ac14d78))
+* **render:** invalidate stylesheets when resolver inputs change ([#384](https://github.com/mokly-ai/mokly/issues/384)) ([940ddd7](https://github.com/mokly-ai/mokly/commit/940ddd7420520c0dbbb1ace89bc3803ddf50b740))
+* **render:** keep a hash character in definition module paths ([#329](https://github.com/mokly-ai/mokly/issues/329)) ([c2d4148](https://github.com/mokly-ai/mokly/commit/c2d4148c7642fd2a4664b0ad7a0fdf6ccbe64a37))
+* **sidecar:** bound default pool growth by available memory ([#330](https://github.com/mokly-ai/mokly/issues/330)) ([6238d46](https://github.com/mokly-ai/mokly/commit/6238d465cd29631f8371041f8ea94f96375098ac))
+* **sidecar:** classify bundle reuse from actual compiles ([#404](https://github.com/mokly-ai/mokly/issues/404)) ([a16a623](https://github.com/mokly-ai/mokly/commit/a16a623e670deca5256ef6a43044f9441abad313))
+* **sidecar:** invalidate reuse for earlier mapped import targets ([#343](https://github.com/mokly-ai/mokly/issues/343)) ([3063dd8](https://github.com/mokly-ai/mokly/commit/3063dd8d1d429d53ffe7378ab07f3bc61c8016b7))
+* **sidecar:** record literal export targets in reuse evidence ([#409](https://github.com/mokly-ai/mokly/issues/409)) ([70a565d](https://github.com/mokly-ai/mokly/commit/70a565d46eee9e35dabbc5a63ef4cd3b3dc135d3))
+* **sidecar:** stop the startup tree before reaping a partial start ([#406](https://github.com/mokly-ai/mokly/issues/406)) ([a1d87a3](https://github.com/mokly-ai/mokly/commit/a1d87a35656966bc5a09415a11e0895cff0b44b4))
+* **ui:** size the preview note by its own text, not the host root font ([#373](https://github.com/mokly-ai/mokly/issues/373)) ([6995b84](https://github.com/mokly-ai/mokly/commit/6995b84b75465f090ef41c6c0ddb768381b7fde8))
+* **viewer:** keep a working preview ready after an inspection error ([#331](https://github.com/mokly-ai/mokly/issues/331)) ([88b0147](https://github.com/mokly-ai/mokly/commit/88b014719ab47ccf73d09e18f3cb1594f5ba25cc))
+* **viewer:** keep the search when a listed row shows the destination ([#306](https://github.com/mokly-ai/mokly/issues/306)) ([760a2c2](https://github.com/mokly-ai/mokly/commit/760a2c2941a706a451e7d010eed8ed7aed5404a6))
+* **viewer:** route asynchronous document failures to the catalogue failure state ([#362](https://github.com/mokly-ai/mokly/issues/362)) ([c2fe4bf](https://github.com/mokly-ai/mokly/commit/c2fe4bf2a4043e315eb888b86542cb44ec93cce0))
+
+
+### Performance Improvements
+
+* **cache:** keep evicted documents compact in the render cache ([#291](https://github.com/mokly-ai/mokly/issues/291)) ([c42755b](https://github.com/mokly-ai/mokly/commit/c42755bcd71f3b157f96ed9ae84e39e38a3e3ec3))
+* **cli:** use mimalloc for the binary's Rust allocations ([#297](https://github.com/mokly-ai/mokly/issues/297)) ([6d0fcbb](https://github.com/mokly-ai/mokly/commit/6d0fcbb462751459f1300e8e4de4ceeba5afbdd9))
+* **compare:** memoize style scans and skip proven object checks ([#344](https://github.com/mokly-ai/mokly/issues/344)) ([3e62448](https://github.com/mokly-ai/mokly/commit/3e624480e5d68080b5188e1a097d0a43b74a6410))
+* **compare:** overlap view preparation with ordered comparison ([#296](https://github.com/mokly-ai/mokly/issues/296)) ([86b7d57](https://github.com/mokly-ai/mokly/commit/86b7d576598e2d12b039e1693343ad7d1c7d6441))
+* **compare:** read captured base usage without document restore ([#301](https://github.com/mokly-ai/mokly/issues/301)) ([ce654a9](https://github.com/mokly-ai/mokly/commit/ce654a90c0ad44a86166c195a40ea1236e23dda6))
+* **compare:** skip duplicate work for equal documents ([#355](https://github.com/mokly-ai/mokly/issues/355)) ([9fb9ad1](https://github.com/mokly-ai/mokly/commit/9fb9ad1f9ac769db5a929555d57e8e0aecafb828))
+* **css:** skip reference scans of text that cannot hold a reference ([#293](https://github.com/mokly-ai/mokly/issues/293)) ([331bf5d](https://github.com/mokly-ai/mokly/commit/331bf5d4386edebd8f224a96e557e3bd03fb9f77))
+* **git:** shorten completion waits for Serve base checks ([#356](https://github.com/mokly-ai/mokly/issues/356)) ([6e011ca](https://github.com/mokly-ai/mokly/commit/6e011ca50a3a0e4f74973b19e20fdb9ccfefdcdc))
+* **git:** start helper-free Git commands without forking the core ([#295](https://github.com/mokly-ai/mokly/issues/295)) ([0b82cf6](https://github.com/mokly-ai/mokly/commit/0b82cf6c0f6396d02db3a6066ed93e02f33183d6))
+* **graph:** build render input keys without repeating shared work ([#294](https://github.com/mokly-ai/mokly/issues/294)) ([20e09f7](https://github.com/mokly-ai/mokly/commit/20e09f70a8ebd9aa4db5bb351e7dfa0cbd3c58b3))
+* **graph:** calculate exporter render keys on render workers ([#303](https://github.com/mokly-ai/mokly/issues/303)) ([03bedb6](https://github.com/mokly-ai/mokly/commit/03bedb6ec19d0e51100e82507e00a5b05ecc5c5f))
+* **graph:** restore compact documents from binary tree records ([#300](https://github.com/mokly-ai/mokly/issues/300)) ([794b30a](https://github.com/mokly-ai/mokly/commit/794b30a9182fba0ac0bed818f18535f4181cb88d))
+* **graph:** share link checks within each generation ([#314](https://github.com/mokly-ai/mokly/issues/314)) ([bc858df](https://github.com/mokly-ai/mokly/commit/bc858df427b0ffe2cb53dbf3fe35a44e032475cc))
+* **render:** end the stamp check at the first changed input ([#341](https://github.com/mokly-ai/mokly/issues/341)) ([7e81903](https://github.com/mokly-ai/mokly/commit/7e81903a817dc593260cb88b6c92e6f3ab9a20a7))
+* **render:** reuse validated head stylesheets for the base ([#385](https://github.com/mokly-ai/mokly/issues/385)) ([c6d2fff](https://github.com/mokly-ai/mokly/commit/c6d2fffa4da42e7b5ff3d2999a301f7cb36e4120))
+* **serve:** reuse captured resolution plans on edits ([#316](https://github.com/mokly-ai/mokly/issues/316)) ([be242a6](https://github.com/mokly-ai/mokly/commit/be242a628db21c24212b105c5a1f7277de2e8a29))
+* **serve:** reuse proven view comparisons after edits ([#310](https://github.com/mokly-ai/mokly/issues/310)) ([f13a5d9](https://github.com/mokly-ai/mokly/commit/f13a5d9794a7d8531cb6a689d600f11df5797e8f))
+* **serve:** reuse rendered documents after a restart ([#394](https://github.com/mokly-ai/mokly/issues/394)) ([104123b](https://github.com/mokly-ai/mokly/commit/104123bb7242877c6d719b15096ac9c330b5e882))
+* **serve:** reuse the adopted watch plan when its inputs are equal ([#347](https://github.com/mokly-ai/mokly/issues/347)) ([6ae96ed](https://github.com/mokly-ai/mokly/commit/6ae96ed0852e20ec1b2f4b64a6b59cdac458e894))
+* **serve:** reuse the kept base across Changes classifications ([#307](https://github.com/mokly-ai/mokly/issues/307)) ([b881bff](https://github.com/mokly-ai/mokly/commit/b881bfffb7a8b8bbb273792a0cdce0b750368a70))
+* **server:** reuse equal detail publications across Serve phases ([#305](https://github.com/mokly-ai/mokly/issues/305)) ([f0c572b](https://github.com/mokly-ai/mokly/commit/f0c572b49a21ac6d6ff7ce21774ba1327bbfb0c5))
+* **sidecar:** cut JavaScript work in each bundle call ([#319](https://github.com/mokly-ai/mokly/issues/319)) ([a44e401](https://github.com/mokly-ai/mokly/commit/a44e40119476ffadd1414a62855a0ce75aacc4e6))
+* **sidecar:** keep head bundles on idle compiler processes ([#363](https://github.com/mokly-ai/mokly/issues/363)) ([3a9ca57](https://github.com/mokly-ai/mokly/commit/3a9ca57f37b5be004a68e8591926311f84ed059e))
+* **sidecar:** keep head workers ready after base work ([#313](https://github.com/mokly-ai/mokly/issues/313)) ([24b238c](https://github.com/mokly-ai/mokly/commit/24b238ca400e949684267636fff39785ddded399))
+* **sidecar:** prefer idle holders of the requested generation ([#315](https://github.com/mokly-ai/mokly/issues/315)) ([2e6bde9](https://github.com/mokly-ai/mokly/commit/2e6bde9c296e8bd12c16edeb2c23fbd2309b010b))
+* **sidecar:** reduce work in each bundle compile ([#311](https://github.com/mokly-ai/mokly/issues/311)) ([bc4f4cc](https://github.com/mokly-ai/mokly/commit/bc4f4cc401f871e2fb3f4fd3be65f2d6533f524f))
+* **sidecar:** warm up returned head processes while Serve is idle ([#351](https://github.com/mokly-ai/mokly/issues/351)) ([a2f61eb](https://github.com/mokly-ai/mokly/commit/a2f61eb53ddaa76f5ce08b60a30932207f5b6ebc))
+
 ## [0.19.0](https://github.com/mokly-ai/mokly/compare/v0.18.0...v0.19.0) (2026-11-12)
 
 

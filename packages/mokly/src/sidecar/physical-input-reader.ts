@@ -23,7 +23,7 @@ export type FilePathProbe =
   { kind: "file"; path: string } | { kind: "absent" } | { kind: "other" };
 
 /** Protected filesystem primitives of the one PhysicalInputs owner. */
-export abstract class PhysicalInputReader {
+export class PhysicalInputReader {
   complete = true;
   protected metadataBytes = 0;
   protected readonly pathKinds = new Map<string, CaptureKind | undefined>();
@@ -92,6 +92,15 @@ export abstract class PhysicalInputReader {
   protected realPath(file: string): string {
     this.durability?.path(file);
     return fs.realpathSync.native(file);
+  }
+
+  protected readDirectoryPath(
+    file: string,
+    known?: CaptureKind,
+  ): string | undefined {
+    return this.kind(file, known) === "directory"
+      ? this.realPath(file)
+      : undefined;
   }
 
   protected readFilePath(file: string, known?: CaptureKind): FilePathProbe {
@@ -190,7 +199,22 @@ export abstract class PhysicalInputReader {
 
   /** A check allocates at most its recorded directory bytes and bounded metadata. */
   current(evidence: ReuseEvidence): boolean {
-    if (!evidence.complete) return false;
+    return evidence.complete && this.entriesCurrent(evidence);
+  }
+
+  markedCurrent(evidence: ReuseEvidence): boolean {
+    return (
+      evidence.uncaptured === "serveEdit" &&
+      !evidence.complete &&
+      !evidence.durable &&
+      Object.values(evidence.inputs).every((value) =>
+        ["file", "absent", "link"].includes(value.kind),
+      ) &&
+      this.entriesCurrent(evidence)
+    );
+  }
+
+  private entriesCurrent(evidence: ReuseEvidence): boolean {
     try {
       return Object.entries(evidence.inputs).every(([file, expected]) => {
         switch (expected.kind) {
@@ -242,4 +266,9 @@ export abstract class PhysicalInputReader {
       return false;
     }
   }
+}
+
+/** Each check owns fresh bounded reads without capture caches. */
+export function currentEvidence(evidence: ReuseEvidence): boolean {
+  return new PhysicalInputReader().current(evidence);
 }

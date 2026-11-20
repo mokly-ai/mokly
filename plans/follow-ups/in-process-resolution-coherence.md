@@ -6,7 +6,7 @@
   bundle disk cache change on branch `calummoore/lisbon-h906`. The check put
   this in-process exposure outside the new functionality of that call and
   asked for a follow-up item.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:106`,
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:114`,
   `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143,
   `packages/mokly/src/sidecar/physical-inputs.ts:166`, and
   `crates/mokly-render/src/bundle.rs:63`.
@@ -44,7 +44,7 @@
     `packages/mokly/src/sidecar/physical-inputs.ts` owns every read. After
     the last attempt, `finish()` reads the whole evidence again. A
     difference makes the evidence incomplete.
-  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:106` accepts an
+  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:114` accepts an
     earlier compilation while its toolchain, settings, dependency roots,
     consumed file digests, consumed directory lists, and complete reuse
     evidence still match. The core's bundle fast path checks the same
@@ -109,6 +109,28 @@
     `values/value.js` although `values/value.ts` exists when it resolves
     `./values/value`. Nobody read the Go source of esbuild, so no other
     esbuild version or platform is checked.
+  - On 2026-11-20 the design investigation of marked folder coherence, on
+    the branch `calummoore/mokly-folder-export-evidence-7rox`, found a
+    folder variant of the cached-listing window. It comes from code reading,
+    and its confidence is Medium:
+    - An import can cache a folder candidate through the parent chain of
+      esbuild before any callback observes it. An exact export into
+      `lib/value/sub/` caches `lib/value` this way.
+    - If `lib/value/index.ts` then appears, the first observation includes
+      it, while the index step of esbuild uses the cached entries.
+    - The evidence is complete, so in-process reuse accepts the stale
+      result.
+    - If the change is at least 50 ms older than the observation, the
+      witnesses pass too. A plan record and a disk entry can then keep the
+      stale selection, past the disk boundary that this item states.
+    - A delete and re-create between the observation and the fresh
+      `loadAsFile` read of esbuild has the same effect in process.
+    - Two native attempts on 2026-11-20 gave no red result. A cache-window
+      proof stopped at a timeout in a setup deadlock. A resolve proof showed
+      that esbuild already selects the new `lib/value/index.ts` in the first
+      compile, so it could not show the stale selection. The attempt notes
+      say not to try another variant, so the variant stays unconfirmed.
+    - A fix of this variant needs a red native proof first.
   - On 2026-11-17, the bundle disk cache change closed a third window for
     every consumer. All attempts of one `bundle()` call now share one
     evidence owner, so a lasting change between attempts makes the evidence
@@ -261,6 +283,10 @@
   whether the durable check needs each ancestor witness of an absent lookup.
   A narrower witness rule from it must still keep the stale selections of
   this item out of the bundle cache.
+  [marked-post-build-coherence.md](./marked-post-build-coherence.md) is the
+  marked side of the same class. Its option B extends option D of this item
+  to folder obligations, and it closes the folder variant above. Each item
+  can merge alone.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to
