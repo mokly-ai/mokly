@@ -110,7 +110,7 @@ pub struct BundleRequest {
 }
 
 /// Preview colour scheme.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum ColorScheme {
     /// Light appearance.
@@ -120,7 +120,7 @@ pub enum ColorScheme {
 }
 
 /// Enclosing material-ignore scope at a component invocation.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum IgnoreScope {
     /// Ignore pairs inside this scope are active.
@@ -180,7 +180,7 @@ pub struct RenderStory {
 }
 
 /// Render a synchronous complete page document.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[ts(rename = "RenderPageParams")]
 pub struct RenderPage {
     /// Loaded bundle generation.

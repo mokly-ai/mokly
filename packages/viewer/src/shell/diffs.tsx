@@ -5,7 +5,7 @@
  * `@mokly/ui/comparison-toolbar` its band.
  */
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { ComparisonFailure, ComparisonStage } from "@mokly/ui/comparison-stage";
@@ -19,6 +19,7 @@ import {
   selectedComparisonViews,
 } from "./comparison_selection.js";
 import { ComparisonViews } from "./comparison_views.js";
+import { focusThen } from "./retry_focus.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
@@ -60,6 +61,9 @@ export function ControlledDiffScreen({
     selectedComparisonDocuments(views),
   );
   const together = useScrollTogether();
+  // The stage shows that the comparison loads and then its sections, so
+  // Try again focuses the stage.
+  const stage = useRef<HTMLDivElement>(null);
   const current = comparison.mode === "current";
   const failure =
     comparison.failure ??
@@ -72,7 +76,10 @@ export function ControlledDiffScreen({
       entryId={entryId}
       stage={
         failure ? (
-          <ComparisonFailure details={failure} onRetry={comparison.retry} />
+          <ComparisonFailure
+            details={failure}
+            onRetry={focusThen(stage, comparison.retry)}
+          />
         ) : comparison.presentation && documents.status === "ready" ? (
           <ComparisonViews
             entryId={entryId}
@@ -84,6 +91,7 @@ export function ControlledDiffScreen({
           />
         ) : undefined
       }
+      stageRef={stage}
       toolbar={
         <ComparisonToolbar
           current={current}

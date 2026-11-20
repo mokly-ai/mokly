@@ -8,9 +8,9 @@
   cold exception. This item then changed from the capture work of that pull
   request to the cold cost that remains.
 - **Location:** `packages/mokly/src/sidecar/physical-inputs.ts:41` to line
-  70, `packages/mokly/src/sidecar/physical-inputs.ts:215` to line 227,
-  `packages/mokly/src/sidecar/bundle-recipe.ts:117`,
-  `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58,
+  70, `packages/mokly/src/sidecar/physical-inputs.ts:221` to line 233,
+  `packages/mokly/src/sidecar/bundle-recipe.ts:129`,
+  `packages/mokly/src/sidecar/resolution-evidence.ts:47` to line 48,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:111` to line 123, and
   `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145.
 - **Reason:** The orchestrator accepted the cold cost for PR #312, and work
@@ -51,7 +51,7 @@
     attempts of one call, and it finishes once after the last attempt.
   - The esbuild plugin `mokly-reuse-evidence` awaits `record()` in its
     `onResolve` callback, at
-    `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58. So the
+    `packages/mokly/src/sidecar/resolution-evidence.ts:47` to line 48. So the
     observations and the witnesses of a path exist before esbuild resolves
     the import that reads that path. This order keeps stored evidence
     coherent with the files that esbuild selected.
@@ -75,13 +75,13 @@
     exceeded evidence bound clears `complete`. An exceeded witness or
     preflight bound clears only `durable`.
   - After the last attempt, `PhysicalInputs.finish`, at
-    `packages/mokly/src/sidecar/physical-inputs.ts:215` to line 227, waits for
-    the queue. It runs the physical finish check at line 224, and it finishes
-    the witnesses at line 225. The check reads with synchronous calls, in
+    `packages/mokly/src/sidecar/physical-inputs.ts:221` to line 233, waits for
+    the queue. It runs the physical finish check at line 230, and it finishes
+    the witnesses at line 231. The check reads with synchronous calls, in
     `current` at `packages/mokly/src/sidecar/physical-input-reader.ts:192`.
     `bundleRecipe` awaits the finish at
-    `packages/mokly/src/sidecar/bundle-recipe.ts:117`. Then it computes the
-    identity, which depends on completeness at line 132, and the sidecar
+    `packages/mokly/src/sidecar/bundle-recipe.ts:129`. Then it computes the
+    identity, which depends on completeness at line 144, and the sidecar
     returns the result.
   - In the pool, `complete_bundle` makes the recipe save of a `full` request
     at `crates/mokly-sidecar/src/pool_bundle_cache.rs:111` to line 123.
@@ -215,7 +215,7 @@
       state of a compilation whose check has not ended, for reuse, for
       storage, and for its identity.
     - The identity depends on completeness today, at
-      `packages/mokly/src/sidecar/bundle-recipe.ts:132`. C must keep the rule
+      `packages/mokly/src/sidecar/bundle-recipe.ts:144`. C must keep the rule
       that an incomplete compilation gets a fresh identity, or record a new
       identity rule first.
     - The save waits for the finished check. It uses the writer of option E

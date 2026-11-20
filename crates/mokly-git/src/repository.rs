@@ -106,6 +106,8 @@ pub struct GitRepositories {
 
 pub(crate) struct GitRepository {
     pub(crate) fetch_lock: Mutex<()>,
+    /// Promisor remote names sampled once after checkout-root validation.
+    pub(crate) promisor_remotes: Vec<String>,
     pub(crate) unavailable: Mutex<BTreeMap<String, String>>,
     /// Files whose own conversion reached its deadline: commit, blob, and path.
     pub(crate) timed_out: Mutex<BTreeSet<(ObjectId, ObjectId, RepoPath)>>,
@@ -120,8 +122,9 @@ impl Repositories for GitRepositories {
     /// a subdirectory or another checkout fails with both paths.
     fn open(&self, root: &Path) -> Result<Arc<dyn Repository>> {
         let configured = self.disk.canonicalize(root)?;
-        let repository = GitRepository {
+        let mut repository = GitRepository {
             fetch_lock: Mutex::new(()),
+            promisor_remotes: Vec::new(),
             unavailable: Mutex::new(BTreeMap::new()),
             timed_out: Mutex::new(BTreeSet::new()),
             directory: configured.clone(),
@@ -140,6 +143,7 @@ impl Repositories for GitRepositories {
         if configured != actual {
             return Err(Error::RootMismatch { configured, actual });
         }
+        repository.promisor_remotes = repository.read_promisor_remotes()?;
         Ok(Arc::new(repository))
     }
 }
@@ -147,6 +151,10 @@ impl Repositories for GitRepositories {
 #[cfg(test)]
 #[path = "_tests_/repository_tests.rs"]
 mod repository_tests;
+
+#[cfg(test)]
+#[path = "_tests_/tree_requests_tests.rs"]
+mod tree_requests_tests;
 
 impl fmt::Debug for dyn Repository + '_ {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

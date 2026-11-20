@@ -1,0 +1,184 @@
+/* Page layout for the public site: the home's full-measure main, the
+   centered document column and its ruled intro, and the home hero type.
+   Kept in parity with the promoted mockups under docs/mockups/styles/site/;
+   the mobile composition is the default and 768px raises the desktop one. */
+
+.site-main {
+  width: 100%;
+}
+
+.site-document {
+  min-width: 0;
+  padding: var(--mk-space-8) var(--mk-layout-gutter-mobile) var(--mk-space-12);
+  width: 100%;
+}
+
+/* Documents that span the wide measure keep the content measure for the
+   intro, so the changelog and the documentation align with the header. */
+
+.site-document--wide {
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding-left: var(--mk-layout-gutter-mobile);
+  padding-right: var(--mk-layout-gutter-mobile);
+}
+
+.site-document--wide .site-document-intro {
+  max-width: var(--mk-layout-content-max);
+}
+
+.site-policy {
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-policy);
+}
+
+.site-document-intro {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: grid;
+  gap: var(--mk-space-4);
+  margin-bottom: var(--mk-space-10);
+  padding-bottom: var(--mk-space-8);
+}
+
+.site-document-intro h1 {
+  font-size: var(--mk-type-heading1-size);
+  font-weight: var(--mk-font-bold);
+  letter-spacing: -0.045em;
+  line-height: var(--mk-type-heading1-line);
+}
+
+/* Markdown documents share one readable body across docs and legal pages. */
+
+.site-document-body {
+  display: grid;
+  gap: var(--mk-space-8);
+}
+
+/* Each part of the body is a grid item. Letting one shrink below its longest
+   word, and breaking that word, keeps a published path or URL inside the
+   column at the narrowest width the design contract supports. */
+
+.site-document-body > * {
+  margin: 0;
+  max-width: var(--mk-layout-prose-max);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.site-document-body h2 {
+  border-top: 1px solid var(--mk-color-border);
+  font-size: var(--mk-type-heading3-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading3-line);
+  padding-top: var(--mk-space-8);
+  scroll-margin-top: var(--mk-space-6);
+}
+
+.site-document-body h2:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.site-document-body h3 {
+  font-size: var(--mk-type-body-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-body-line);
+  scroll-margin-top: var(--mk-space-6);
+}
+
+.site-document-body p,
+.site-document-body li {
+  color: var(--mk-color-text-muted);
+}
+
+.site-document-body ul,
+.site-document-body ol {
+  display: grid;
+  gap: var(--mk-space-2);
+  padding-left: var(--mk-space-5);
+}
+
+.site-document-body li {
+  min-width: 0;
+}
+
+.site-document-body a {
+  color: var(--mk-color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-document-body a:hover {
+  color: var(--mk-color-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-document-body code {
+  background: var(--mk-color-surface-muted);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 0.875em;
+  padding: 1px var(--mk-space-1);
+}
+
+.site-document-body table {
+  border-collapse: collapse;
+  display: block;
+  font-size: var(--mk-type-small-size);
+  overflow-x: auto;
+  width: 100%;
+}
+
+.site-document-body th,
+.site-document-body td {
+  border-bottom: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+  padding: var(--mk-space-2) var(--mk-space-4) var(--mk-space-2) 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.site-document-body th {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-document-body blockquote {
+  border-left: 2px solid var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+  padding-left: var(--mk-space-4);
+}
+
+.site-hero {
+  display: grid;
+  gap: var(--mk-space-4);
+  justify-items: start;
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: var(--mk-space-10) var(--mk-layout-gutter-mobile) var(--mk-space-8);
+  text-align: left;
+  width: 100%;
+}
+
+.site-hero h1 {
+  font-size: var(--mk-type-hero-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.05em;
+  line-height: var(--mk-type-hero-line);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-document {
+    padding: var(--mk-space-12);
+  }
+
+  .site-hero {
+    gap: var(--mk-space-5);
+    justify-items: center;
+    padding: var(--mk-space-20) var(--mk-layout-gutter-desktop)
+      var(--mk-space-12);
+    text-align: center;
+  }
+}

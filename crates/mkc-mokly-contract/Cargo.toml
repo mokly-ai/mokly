@@ -1,0 +1,37 @@
+[package]
+name = "mkc-mokly-contract"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+openapi = ["dep:utoipa"]
+
+[dependencies]
+utoipa = { workspace = true, optional = true }
+bytes = "1.12.1"
+chrono = { version = "0.4.45", default-features = false, features = ["std"] }
+flate2 = "1.1.10"
+internal-error.workspace = true
+mkc-domain = { workspace = true }
+mkc-upload-memory-interface = { workspace = true }
+semver = "1.0.28"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["raw_value", "unbounded_depth"] }
+sha2 = "0.11.0"
+tar = { version = "0.4.46", default-features = false }
+thiserror = "2.0.20"
+unimock = "0.6.8"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-upload-memory = { workspace = true }
+ryu-js = "1.0.3"
+serde_json = { version = "1.0.151", features = ["raw_value"] }
+stats_alloc = "0.1.10"
+unimock = "0.6.8"

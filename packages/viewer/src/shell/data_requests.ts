@@ -123,24 +123,25 @@ async function loadDetailPair(
   request: DetailRequest,
   signal: AbortSignal,
 ): Promise<DetailOutcome> {
-  try {
-    const detail = await source.loadDetail(request, index, signal);
-    let fence = fenceDetail(index, request, detail);
-    let installed = index;
-    if (fence.kind === "revision") {
-      installed = await source.loadIndex(signal);
-      if (installed.deploymentId !== index.deploymentId)
-        return { kind: "deployment" };
-      fence = fenceDetail(installed, request, detail);
-      if (fence.kind === "revision") return { kind: "failed" };
-    }
-    if (fence.kind === "deployment") return { kind: "deployment" };
-    if (fence.kind === "rejected") return { kind: "failed" };
-    return { kind: "accepted", detail: fence.detail, index: installed };
-  } catch (error) {
-    if (error instanceof MoklyVersionError) return { kind: "version", error };
-    return { kind: "failed" };
+  const loaded = await loadTransport(() =>
+    source.loadDetail(request, index, signal),
+  );
+  if (loaded.kind !== "loaded") return loaded;
+  const detail = loaded.value;
+  let fence = fenceDetail(index, request, detail);
+  let installed = index;
+  if (fence.kind === "revision") {
+    const retry = await loadTransport(() => source.loadIndex(signal));
+    if (retry.kind !== "loaded") return retry;
+    installed = retry.value;
+    if (installed.deploymentId !== index.deploymentId)
+      return { kind: "deployment" };
+    fence = fenceDetail(installed, request, detail);
+    if (fence.kind === "revision") return { kind: "failed" };
   }
+  if (fence.kind === "deployment") return { kind: "deployment" };
+  if (fence.kind === "rejected") return { kind: "failed" };
+  return { kind: "accepted", detail: fence.detail, index: installed };
 }
 
 /** The outcome of one publication refresh. */
@@ -166,38 +167,55 @@ export async function loadRefresh(
   revision: number,
   signal: AbortSignal,
 ): Promise<RefreshOutcome> {
-  try {
-    let restarts = 0;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const index = await source.loadIndex(signal);
-      if (index.deploymentId !== installed.deploymentId)
-        return { kind: "deployment" };
-      const requested = routeKey(route());
-      const requests = routeDetailRequests(index, route());
-      const details = await Promise.all(
+  let restarts = 0;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const loaded = await loadTransport(() => source.loadIndex(signal));
+    if (loaded.kind !== "loaded") return loaded;
+    const index = loaded.value;
+    if (index.deploymentId !== installed.deploymentId)
+      return { kind: "deployment" };
+    const requested = routeKey(route());
+    const requests = routeDetailRequests(index, route());
+    const loadedDetails = await loadTransport(() =>
+      Promise.all(
         requests.map((request) => source.loadDetail(request, index, signal)),
-      );
-      if (routeKey(route()) !== requested && restarts < 4) {
-        restarts += 1;
-        attempt -= 1;
-        continue;
-      }
-      const fences = requests.map((request, at) =>
-        fenceDetail(index, request, details[at]!),
-      );
-      if (fences.some((fence) => fence.kind === "deployment"))
-        return { kind: "deployment" };
-      if (
-        index.revision >= revision &&
-        fences.every((fence) => fence.kind === "accepted")
-      )
-        return {
-          kind: "accepted",
-          index,
-          details: requests.map((request, at) => [request, details[at]!]),
-        };
+      ),
+    );
+    if (loadedDetails.kind !== "loaded") return loadedDetails;
+    const details = loadedDetails.value;
+    if (routeKey(route()) !== requested && restarts < 4) {
+      restarts += 1;
+      attempt -= 1;
+      continue;
     }
-    return { kind: "failed" };
+    const fences = requests.map((request, at) =>
+      fenceDetail(index, request, details[at]!),
+    );
+    if (fences.some((fence) => fence.kind === "deployment"))
+      return { kind: "deployment" };
+    if (
+      index.revision >= revision &&
+      fences.every((fence) => fence.kind === "accepted")
+    )
+      return {
+        kind: "accepted",
+        index,
+        details: requests.map((request, at) => [request, details[at]!]),
+      };
+  }
+  return { kind: "failed" };
+}
+
+/** Classify only source failures; processing a loaded document can still throw. */
+async function loadTransport<T>(
+  load: () => Promise<T>,
+): Promise<
+  | { kind: "loaded"; value: T }
+  | { kind: "failed" }
+  | { kind: "version"; error: MoklyVersionError }
+> {
+  try {
+    return { kind: "loaded", value: await load() };
   } catch (error) {
     if (error instanceof MoklyVersionError) return { kind: "version", error };
     return { kind: "failed" };

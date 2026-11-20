@@ -7,10 +7,18 @@ use mokly_html::composition::Composed;
 use mokly_html::links::Reference;
 
 use crate::document_usage;
+use crate::export_memory::ExportObserver;
 
 /// Charge Rust metadata that stays outside the compressed tree payload.
 pub(crate) fn metadata(document: &Composed) -> usize {
-    document_usage::usage(&document.usage)
+    metadata_observed(document, None)
+}
+
+pub(crate) fn metadata_observed(
+    document: &Composed,
+    observer: Option<&dyn ExportObserver>,
+) -> usize {
+    document_usage::usage_observed(&document.usage, observer)
         + warnings(&document.warnings)
         + strings(&document.resources)
         + strings(&document.components)
@@ -26,12 +34,12 @@ pub(crate) fn metadata(document: &Composed) -> usize {
             .sum::<usize>()
 }
 
-fn strings(strings: &Vec<String>) -> usize {
+pub(crate) fn strings(strings: &Vec<String>) -> usize {
     strings.capacity() * mem::size_of::<String>()
         + strings.iter().map(String::capacity).sum::<usize>()
 }
 
-fn warnings(warnings: &Vec<Warning>) -> usize {
+pub(crate) fn warnings(warnings: &Vec<Warning>) -> usize {
     warnings.capacity() * mem::size_of::<Warning>()
         + warnings
             .iter()

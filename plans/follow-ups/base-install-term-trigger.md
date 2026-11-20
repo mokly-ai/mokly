@@ -24,15 +24,15 @@
     in its **Terms**. The words are: "the private install of the base
     commit's dependencies that Changes runs when the base lockfile differs
     from the working tree."
-  - `crates/mokly-cli/src/changes_base.rs:98` to line 102 sets the flag
+  - `crates/mokly-cli/src/changes_base.rs:99` to line 103 sets the flag
     `needs_sidecar`, which says whether the base needs JavaScript rendering.
     The flag reads the base configuration and the base catalogue. It is true
     when the configuration names PostCSS or a renderer. It is also true when
     the catalogue has an entry module or a stories file that is not
     excluded.
-  - Lines 103 to 114 prepare the base dependencies only when `needs_sidecar`
+  - Lines 104 to 115 prepare the base dependencies only when `needs_sidecar`
     is true. Only that path can start a package manager.
-  - Otherwise, lines 115 to 129 call `html_dependencies` of
+  - Otherwise, lines 116 to 130 call `html_dependencies` of
     `crates/mokly-cli/src/changes_freshness.rs`. It compares only
     the manifests and the lockfiles that govern the `node_modules`
     directories of the head. When they differ, it gives the warning "Base
@@ -47,8 +47,11 @@
     dependency inputs. They hold every tracked package manifest and
     lockfile. With pnpm or Yarn lockfiles, they also hold
     `pnpm-workspace.yaml`, `.yarnrc.yml`, `.yarnrc`, and `.npmrc`.
-  - `plans/follow-ups/install-pipe-wait-after-stop.md` already holds the
-    corrected term, with the conditions in its **Background**.
+  - On 2026-11-19, a smoke test met both conditions of the **Base install**
+    term above, on macOS and on Linux. In each case, the base had a
+    `.mockup.ts` entry module and a local dependency, and the working tree
+    dropped that dependency. Mokly then started Yarn Classic to install the
+    base dependencies.
 - **Problem:** The two items say that a lockfile difference alone starts
   a base install. An HTML-only base never starts one. A change to a manifest
   or to a manager configuration file can also start one.

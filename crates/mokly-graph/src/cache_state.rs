@@ -23,6 +23,8 @@ pub(crate) struct State {
     pub(crate) stats: CacheStats,
     /// Wrapping sequence of public reads and writes.
     pub(crate) operations: u128,
+    /// Active writer scratch and non-promoting export reservations.
+    pub(crate) exporting: usize,
     retained: usize,
 }
 
@@ -38,6 +40,7 @@ impl State {
             encoders: EncoderPool::new(workspace),
             stats: CacheStats::default(),
             operations: 0,
+            exporting: 0,
             retained,
         }
     }
@@ -128,7 +131,7 @@ impl State {
         entry: Evicted<Artifact>,
     ) -> Option<Transit<'a>> {
         let charge = entry.cost.checked_mul(3);
-        let headroom = self.transit.bound - self.transit.bytes - self.encoders.bytes;
+        let headroom = self.headroom();
         if self.compact.bound > 0
             && entry.value.document.is_some()
             && let Some(charge) = charge.filter(|charge| *charge <= headroom)
@@ -140,5 +143,14 @@ impl State {
         }
         self.stats.evictions = self.stats.evictions.saturating_add(1);
         None
+    }
+
+    /// Free fixed headroom after transit, writer work, and encoder allocations.
+    pub(crate) fn headroom(&self) -> usize {
+        self.transit
+            .bound
+            .saturating_sub(self.transit.bytes)
+            .saturating_sub(self.encoders.bytes)
+            .saturating_sub(self.exporting)
     }
 }

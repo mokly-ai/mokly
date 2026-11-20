@@ -1,0 +1,1005 @@
+---
+# Source: mokly-cloud/templates/network-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mokly-cloud
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: api }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: mkc-preview-system }
+      ports: [{ protocol: TCP, port: 8080 }]
+    - from:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: catalogue }
+      ports: [{ protocol: TCP, port: 8080 }]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: app }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: mkc-preview-system }
+      ports: [{ protocol: TCP, port: 8080 }]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: catalogue
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: catalogue }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: mkc-preview-system }
+      ports: [{ protocol: TCP, port: 8080 }]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: api }
+      ports: [{ protocol: TCP, port: 8080 }]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: postgres }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [api, catalogue, maintenance]
+      ports: [{ protocol: TCP, port: 5432 }]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-clients
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [api, catalogue, maintenance]
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: postgres }
+      ports: [{ protocol: TCP, port: 5432 }]
+
+---
+# Source: mokly-cloud/templates/network-preview.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: workloads
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [api, catalogue, app, maintenance]
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+        - ipBlock: { cidr: 169.254.20.10/32 }
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+    - to: [{ ipBlock: { cidr: 169.254.169.254/32 } }]
+      ports: [{ protocol: TCP, port: 80 }]
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 127.0.0.0/8, 100.64.0.0/10]
+        - ipBlock:
+            cidr: "::/0"
+            except: ["fc00::/7", "fe80::/10", "::1/128", "::/128"]
+      ports: [{ protocol: TCP, port: 443 }]
+
+---
+# Source: mokly-cloud/templates/bootstrap.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api
+automountServiceAccountToken: false
+
+---
+# Source: mokly-cloud/templates/bootstrap.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: catalogue
+automountServiceAccountToken: false
+
+---
+# Source: mokly-cloud/templates/bootstrap.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app
+automountServiceAccountToken: false
+
+---
+# Source: mokly-cloud/templates/postgres.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: postgres }
+  ports:
+    - { name: postgres, port: 5432, targetPort: postgres }
+
+---
+# Source: mokly-cloud/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: api }
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+
+---
+# Source: mokly-cloud/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: app }
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+
+---
+# Source: mokly-cloud/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalogue
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: catalogue }
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+
+---
+# Source: mokly-cloud/templates/workloads.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels: { app.kubernetes.io/name: api }
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: api }
+    spec:
+      serviceAccountName: api
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app.kubernetes.io/name: api }
+      initContainers:
+        - name: wait-for-postgres
+          image: "docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67"
+          command: [timeout, "300", bash, -ec]
+          args:
+            - |
+              until pg_isready -d "$MKC_DATABASE_URL" >/dev/null 2>&1; do
+                sleep 2
+              done
+          env:
+            - name: MKC_DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: postgres-credentials, key: url }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+        - name: migrate
+          image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          args: [migrate]
+          env:
+            - name: MKC_DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: postgres-credentials, key: url }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      containers:
+        - name: api
+          image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          args: [serve]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: MKC_BIND
+              value: "0.0.0.0:8080"
+            - name: MKC_ENV
+              value: preview
+            - name: MKC_DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: postgres-credentials, key: url }
+            - name: MKC_APP_ORIGIN
+              value: "https://pr-42.preview.example.invalid"
+            - name: MKC_DESKTOP_CLIENT
+              value: "false"
+            - name: MKC_API_ORIGIN
+              value: "https://pr-42.preview.api.example.invalid"
+            - name: MKC_TRUSTED_PROXY_HOPS
+              value: "2"
+            - name: MKC_TRUSTED_PROXY_CIDRS
+              value: "10.24.0.0/14,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,104.16.0.0/13,104.24.0.0/14,108.162.192.0/18,131.0.72.0/22,141.101.64.0/18,162.158.0.0/15,172.64.0.0/13,173.245.48.0/20,188.114.96.0/20,190.93.240.0/20,197.234.240.0/22,198.41.128.0/17,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
+            - name: MKC_INGEST_WORKERS
+              value: "8"
+            - name: MKC_UPLOAD_MEMORY_BYTES
+              value: "536870912"
+            - name: MKC_UPLOAD_BLOB_GZIP
+              value: "false"
+            - name: MKC_CATALOGUE_ORIGIN
+              value: "https://pr-42.preview.catalogues.invalid"
+            - name: MKC_FILE_STORE
+              value: gcs
+            - name: MKC_GCS_BUCKET
+              value: "mokly-508518-preview-blobs"
+            - name: MKC_GCS_PREFIX
+              value: "pr-42"
+            - name: MKC_MAILER
+              value: log
+            - name: MKC_PREVIEW_SIGN_IN_EMAIL
+              value: "preview@mokly.ai"
+            - name: MKC_PREVIEW_SIGN_IN_PLAN
+              value: "team"
+          readinessProbe:
+            httpGet: { path: "/v1/health", port: http }
+            timeoutSeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet: { path: "/v1/health", port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 20
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: secrets, mountPath: /var/run/mokly-secrets, readOnly: true }
+      volumes:
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: catalogue-signing-key
+                  items:
+                    - { key: catalogue-signing-key, path: catalogue-signing-key }
+              - secret:
+                  name: preview-sign-in
+                  items:
+                    - { key: preview-sign-in, path: preview-sign-in }
+
+---
+# Source: mokly-cloud/templates/workloads.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels: { app.kubernetes.io/name: app }
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: app }
+    spec:
+      serviceAccountName: app
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app.kubernetes.io/name: app }
+      containers:
+        - name: app
+          image: "us-central1-docker.pkg.dev/mokly-508518/mokly/app@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: EXPO_PUBLIC_MKC_API_ORIGIN
+              value: "https://pr-42.preview.api.example.invalid"
+            - name: EXPO_PUBLIC_MKC_APP_ORIGIN
+              value: "https://pr-42.preview.example.invalid"
+            - name: MKC_EXPECTED_REVISION
+              value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet: { path: "/_health", port: http }
+            timeoutSeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet: { path: "/_health", port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 20
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+
+---
+# Source: mokly-cloud/templates/workloads.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels: { app.kubernetes.io/name: catalogue }
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: catalogue }
+    spec:
+      serviceAccountName: catalogue
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app.kubernetes.io/name: catalogue }
+      initContainers:
+        - name: wait-for-api
+          image: "us-central1-docker.pkg.dev/mokly-508518/mokly/app@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          command: [node, --input-type=module, -e]
+          args:
+            - |
+              const deadline = performance.now() + 600_000;
+              let ready = false;
+              while (performance.now() < deadline) {
+                try {
+                  const timeout = Math.max(
+                    1,
+                    Math.ceil(Math.min(5_000, deadline - performance.now())),
+                  );
+                  const response = await fetch("http://api:8080/v1/health", {
+                    signal: AbortSignal.timeout(timeout),
+                  });
+                  const health = await response.json();
+                  if (
+                    response.ok &&
+                    health.status === "ok" &&
+                    health.migrations === "current" &&
+                    health.revision === process.env.MKC_EXPECTED_REVISION &&
+                    performance.now() < deadline
+                  ) {
+                    ready = true;
+                    break;
+                  }
+                } catch {
+                  // Readiness, transport and response errors are retried within the deadline.
+                }
+                const delay = Math.min(2_000, deadline - performance.now());
+                if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+              }
+              if (!ready) {
+                console.error("API readiness timed out for the intended revision.");
+                process.exit(1);
+              }
+          env:
+            - name: MKC_EXPECTED_REVISION
+              value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+      containers:
+        - name: catalogue
+          image: "us-central1-docker.pkg.dev/mokly-508518/mokly/catalogue@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: MKC_DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: postgres-credentials, key: url }
+            - name: MKC_CATALOGUE_ORIGIN
+              value: "https://pr-42.preview.catalogues.invalid"
+            - name: MKC_FILE_STORE
+              value: gcs
+            - name: MKC_GCS_BUCKET
+              value: "mokly-508518-preview-blobs"
+            - name: MKC_GCS_PREFIX
+              value: "pr-42"
+            - name: MKC_ENV
+              value: preview
+            - name: MKC_CATALOGUE_BIND
+              value: "0.0.0.0:8080"
+            - name: MKC_APP_ORIGIN
+              value: "https://pr-42.preview.example.invalid"
+            - name: MKC_CATALOGUE_HOT_CACHE_BYTES
+              value: "134217728"
+            - name: MKC_DESKTOP_CLIENT
+              value: "false"
+          readinessProbe:
+            httpGet: { path: "/_health", port: http }
+            timeoutSeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet: { path: "/_health", port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 20
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: secrets, mountPath: /var/run/mokly-secrets, readOnly: true }
+      volumes:
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: catalogue-signing-key
+                  items:
+                    - { key: catalogue-signing-key, path: catalogue-signing-key }
+
+---
+# Source: mokly-cloud/templates/postgres.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels: { app.kubernetes.io/name: postgres }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: postgres }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: postgres
+          image: "docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - { name: postgres, containerPort: 5432 }
+          env:
+            - { name: POSTGRES_USER, value: mokly }
+            - { name: POSTGRES_DB, value: mokly }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres-credentials, key: password }
+          startupProbe:
+            exec:
+              command: [pg_isready, -U, mokly, -d, mokly]
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, mokly, -d, mokly]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, mokly, -d, mokly]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+            - { name: tmp, mountPath: /tmp }
+            - { name: run, mountPath: /var/run/postgresql }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 2Gi
+
+---
+# Source: mokly-cloud/templates/maintenance.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: auth-prune
+spec:
+  schedule: "17 * * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 0
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: maintenance }
+        spec:
+          restartPolicy: Never
+          serviceAccountName: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: maintenance
+              image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              args: [prune]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: MKC_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef: { name: postgres-credentials, key: url }
+                - name: MKC_AUTH_LINK_RETENTION_SECONDS
+                  value: "604800"
+                - name: MKC_AUTH_SESSION_RETENTION_SECONDS
+                  value: "86400"
+                - name: MKC_AUTH_RATE_RETENTION_SECONDS
+                  value: "86400"
+                - name: MKC_BUILD_RETENTION_SECONDS
+                  value: "2592000"
+              resources:
+                limits:
+                  memory: 1Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+
+---
+# Source: mokly-cloud/templates/maintenance.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: github-prune
+spec:
+  schedule: "31 2 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 0
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: maintenance }
+        spec:
+          restartPolicy: Never
+          serviceAccountName: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: maintenance
+              image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              args: [prune-github]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: MKC_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef: { name: postgres-credentials, key: url }
+                - name: MKC_GITHUB_OAUTH_RETENTION_SECONDS
+                  value: "86400"
+                - name: MKC_GITHUB_DELIVERY_RETENTION_SECONDS
+                  value: "2592000"
+              resources:
+                limits:
+                  memory: 1Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+
+---
+# Source: mokly-cloud/templates/maintenance.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: publication-check-status
+spec:
+  schedule: "*/5 * * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 0
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: maintenance }
+        spec:
+          restartPolicy: Never
+          serviceAccountName: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: maintenance
+              image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              args: [publication-check-status]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: MKC_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef: { name: postgres-credentials, key: url }
+              resources:
+                limits:
+                  memory: 1Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+
+---
+# Source: mokly-cloud/templates/preview-seed.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: preview-seed
+spec:
+  # Kubernetes requires a schedule. The release script alone starts seed Jobs.
+  schedule: "0 0 * * *"
+  timeZone: Etc/UTC
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1200
+      backoffLimit: 0
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: maintenance }
+        spec:
+          restartPolicy: Never
+          serviceAccountName: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: api
+              image: "us-central1-docker.pkg.dev/mokly-508518/mokly/fixture@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              args: [preview-seed]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              env:
+                - name: MKC_BIND
+                  value: "0.0.0.0:8080"
+                - name: MKC_ENV
+                  value: preview
+                - name: MKC_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef: { name: postgres-credentials, key: url }
+                - name: MKC_APP_ORIGIN
+                  value: "https://pr-42.preview.example.invalid"
+                - name: MKC_DESKTOP_CLIENT
+                  value: "false"
+                - name: MKC_API_ORIGIN
+                  value: "https://pr-42.preview.api.example.invalid"
+                - name: MKC_TRUSTED_PROXY_HOPS
+                  value: "2"
+                - name: MKC_TRUSTED_PROXY_CIDRS
+                  value: "10.24.0.0/14,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,104.16.0.0/13,104.24.0.0/14,108.162.192.0/18,131.0.72.0/22,141.101.64.0/18,162.158.0.0/15,172.64.0.0/13,173.245.48.0/20,188.114.96.0/20,190.93.240.0/20,197.234.240.0/22,198.41.128.0/17,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
+                - name: MKC_INGEST_WORKERS
+                  value: "8"
+                - name: MKC_UPLOAD_MEMORY_BYTES
+                  value: "536870912"
+                - name: MKC_UPLOAD_BLOB_GZIP
+                  value: "false"
+                - name: MKC_CATALOGUE_ORIGIN
+                  value: "https://pr-42.preview.catalogues.invalid"
+                - name: MKC_FILE_STORE
+                  value: gcs
+                - name: MKC_GCS_BUCKET
+                  value: "mokly-508518-preview-blobs"
+                - name: MKC_GCS_PREFIX
+                  value: "pr-42"
+                - name: MKC_MAILER
+                  value: log
+                - name: MKC_PREVIEW_SIGN_IN_EMAIL
+                  value: "preview@mokly.ai"
+                - name: MKC_PREVIEW_SIGN_IN_PLAN
+                  value: "team"
+              resources:
+                limits:
+                  memory: 1Gi
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+              volumeMounts:
+                - { name: tmp, mountPath: /tmp }
+                - { name: secrets, mountPath: /var/run/mokly-secrets, readOnly: true }
+          volumes:
+            - name: tmp
+              emptyDir: { sizeLimit: 64Mi }
+            - name: secrets
+              projected:
+                sources:
+                  - secret:
+                      name: catalogue-signing-key
+                      items:
+                        - { key: catalogue-signing-key, path: catalogue-signing-key }
+                  - secret:
+                      name: preview-sign-in
+                      items:
+                        - { key: preview-sign-in, path: preview-sign-in }
+
+---
+# Source: mokly-cloud/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mokly-cloud
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+spec:
+  ingressClassName: mkc-preview
+  tls:
+    - secretName: catalogue-tls
+      hosts:
+        - "*.pr-42.preview.catalogues.invalid"
+  rules:
+    - host: "pr-42.preview.api.example.invalid"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: { name: http }
+    - host: "app-origin-pr-42.preview.example.invalid"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port: { name: http }
+    - host: "*.pr-42.preview.catalogues.invalid"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: catalogue
+                port: { name: http }
+
+---
+# Source: mokly-cloud/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: catalogue-tls
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  secretName: catalogue-tls
+  secretTemplate:
+    annotations:
+      helm.sh/resource-policy: keep
+  dnsNames:
+    - "*.pr-42.preview.catalogues.invalid"
+  issuerRef:
+    name: mkc-preview-letsencrypt
+    kind: ClusterIssuer
+    group: cert-manager.io
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  duration: 2160h
+  renewBefore: 720h

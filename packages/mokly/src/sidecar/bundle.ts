@@ -19,6 +19,7 @@ import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { bundleRecipe } from "./bundle-recipe.js";
 import type { CaptureDurability } from "./capture-durability.js";
+import { configuredFiles } from "./configured-files.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
@@ -30,6 +31,7 @@ import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionOptions } from "./resolution.js";
+import { ServeEditImports } from "./serve-edit-imports.js";
 
 export interface Generation {
   modules: Module[];
@@ -77,6 +79,7 @@ interface BundleCaptureState {
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
   plan?: ReadonlyMap<string, PlannedImport>;
+  editImports?: ServeEditImports;
 }
 
 /**
@@ -189,6 +192,8 @@ async function bundleAttempt(
       capture.evidence = evidence;
     }
     const { evidence } = capture;
+    if (capture.mode === "serveEdit")
+      capture.editImports ??= new ServeEditImports(params, paths);
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
@@ -235,7 +240,9 @@ async function bundleAttempt(
         ? { logOverride: nativeLogOverride }
         : {}),
       plugins: [
+        configuredFiles(params, paths, preview, resolution),
         ...(evidence ? [evidence.plugin] : []),
+        ...(capture.editImports ? [capture.editImports.plugin] : []),
         ...consumerPlugins(
           params,
           inputs,
@@ -278,7 +285,7 @@ async function bundleAttempt(
         preview,
         runtimeKey,
         evidence,
-        capture: capture.mode,
+        editImports: capture.editImports,
         plan: capture.plan,
       },
       measurements,

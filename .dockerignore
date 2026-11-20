@@ -1,0 +1,14 @@
+.git
+.context
+.conductor
+target
+**/node_modules
+**/.terraform
+**/*.tfstate*
+**/*.tfplan
+.env*
+gha-creds-*.json
+docs
+apps
+packages/app
+packages/desktop

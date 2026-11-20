@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite.config` field is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+Status: The `vite.config` field is not available yet. The [Storybook setup on Vite milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
@@ -79,6 +79,14 @@ the spelling and never follows a link first. Following the link was
 rejected, because one field must have one meaning in the core, in the
 sidecar, and on both sides of a comparison.
 
+After that lexical step, the `renderer` and `postcss` modules each have one
+resolved path: the repository-relative path of the file that the path
+reaches, with symbolic links resolved. After configuration validation, each
+use of the module and each message that names it gives the resolved path.
+Keeping the link path was rejected, because the sidecar's module graph names
+each module by its resolved path, so a link path would miss the module and
+its stylesheets.
+
 `roots[].files` globs are relative to their root; `watch.rules[].paths` are
 repository-relative POSIX globs; a stylesheet `match` matches catalogue
 entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
@@ -118,15 +126,18 @@ has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
 - path traversal: a `dir`, `renderer`, `postcss`, `vite.config`, package
-  root, or local stylesheet that resolves outside `repoRoot`, including
-  through symlinks;
-  `..` segments that resolve inside `repoRoot` are accepted;
+  root, or local stylesheet whose lexical path or real path is outside the
+  real path of `repoRoot`; `..` segments that resolve inside it are accepted;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
   [module resolution rules](#module-resolution) below.
+
+Path traversal uses one limit for every field. A second limit at the lexical
+path of `repoRoot` was rejected, because a directory could then pass for one
+field and fail for another.
 
 Additional watch rules cannot override the package-owned classifications: the
 rebuild of configured sources and modules, the reload for configured and

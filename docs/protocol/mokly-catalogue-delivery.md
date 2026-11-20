@@ -1,7 +1,5 @@
 # Catalogue Projection And Delivery
 
-Status: Follow-up work remains in the [related documents item](../../plans/follow-ups/related-docs-generation.md).
-
 Continuation of the [public catalogue contract](./mokly-catalogue.md).
 
 ## Projection And Privacy

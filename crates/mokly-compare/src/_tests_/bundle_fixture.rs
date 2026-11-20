@@ -28,6 +28,7 @@ pub(crate) fn restore() -> RestoreGeneration {
         modules: vec![],
         compiled: Arc::new(CompiledGeneration {
             toolchain: "toolchain".into(),
+            metadata_identity: None,
             reuse_evidence: Arc::new(ReuseEvidence {
                 uncaptured: None,
                 durable: true,

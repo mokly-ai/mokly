@@ -25,13 +25,13 @@ export interface NavLeafNode {
    */
   index?: true;
   /**
-   * A retained baseline page or document: a flat Changes row that All and
-   * search hide, as removed screens are not.
+   * A retained baseline page or document: a flat Changes row. Like every
+   * removed row, All and search hide it.
    */
   removedPage?: boolean;
   /**
-   * A retained baseline variant placed under its surviving parent. Like a
-   * removed page it is a Changes row: All hides it, Changes shows it.
+   * A retained baseline variant placed under its surviving parent. Like every
+   * removed row it is a Changes row: All hides it, Changes shows it.
    */
   removedVariant?: boolean;
   /**

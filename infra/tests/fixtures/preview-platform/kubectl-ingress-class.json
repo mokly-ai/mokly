@@ -1,0 +1,10 @@
+{
+  "apiVersion": "networking.k8s.io/v1",
+  "kind": "IngressClass",
+  "metadata": {
+    "name": "mkc-preview"
+  },
+  "spec": {
+    "controller": "mokly.ai/preview-ingress-nginx"
+  }
+}

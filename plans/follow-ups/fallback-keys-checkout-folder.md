@@ -7,12 +7,12 @@
   finding: that branch applied option D, and this item holds option A.
 - **Location:** `crates/mokly-graph/src/render_inputs.rs:155`,
   `crates/mokly-render/src/graph.rs:126`,
-  `packages/mokly/src/sidecar/bundle-recipe.ts:109`,
+  `packages/mokly/src/sidecar/bundle-recipe.ts:157`,
   `crates/mokly-graph/src/graph.rs:268`,
   `crates/mokly-render/src/side.rs:87`, `docs/protocol/mokly-sidecar.md:89`,
   and `docs/protocol/mokly-shell-delivery.md:78`.
-- **Reason:** A linked preview or renderer is a rare setup, and option A
-  changes graph identity code outside the diff of the branch that found it.
+- **Reason:** A linked preview is a rare setup, and option A changes graph
+  identity code outside the diff of the branch that found it.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -57,17 +57,22 @@
     `an_edit_to_a_linked_preview_moves_only_the_story_keys`, at
     `crates/mokly-render/tests/integration/key_fallback_tests.rs:50`, builds
     this setup.
-  - A renderer configured through a symbolic-link directory, such as
-    `link/renderer.tsx`, is also unnamed, as
-    `plans/follow-ups/linked-renderer-stylesheet-root.md` describes. Then
-    every entry module that is not a stories file uses the fallback key.
+  - When this item was added, a renderer configured through a symbolic-link
+    directory, such as `link/renderer.tsx`, was also unnamed. Then every
+    entry module that is not a stories file used the fallback key. The fix
+    of the linked-renderer item, which the **Related** line names, removed
+    that trigger. Configuration load now names the configured renderer and
+    PostCSS module by the repository-relative path of the file that the
+    configured path reaches through symbolic links. The module graph names a
+    linked renderer by that path, so a linked renderer no longer sends entry
+    modules to the fallback key.
   - `crates/mokly-render/src/graph.rs:126` to line 134 builds the fallback
     key from `generation.id`, the class maps digest, and the binding table.
     Line 145 passes it to `RenderKeys::build`.
   - `generationId`, at `packages/mokly/src/sidecar/compiled.ts:24`, hashes
     the compilation identity and the evaluation digest. The compilation
-    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:107` to line
-    120, hashes `params.sourceRoot`, the dependency roots, and the
+    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:155` to line
+    168, hashes `params.sourceRoot`, the dependency roots, and the
     repository roots. These are physical paths.
   - The live generation key, at `crates/mokly-graph/src/graph.rs:267` to
     line 269, also hashes `RenderKeys::fallback`. Decision 5 A of PR #227,
@@ -94,12 +99,14 @@
 - **Problem:** A module that uses the fallback key gets a document key that
   holds the generation id, and that id hashes the physical source root. Two
   checkouts of one commit with a linked preview therefore publish different
-  story document keys and different `deploymentId` values. A linked renderer
-  does the same for every other JavaScript document.
-- **Impact if no action:** Equivalent checkouts with a linked preview or a
-  linked renderer keep different document keys and `deploymentId` values.
-  The folder rule of `docs/protocol/mokly-shell-delivery.md` stays
-  unimplemented for them, and the page keeps its status line.
+  story document keys and different `deploymentId` values. Every other
+  module that uses the fallback key has the same folder dependency, such as
+  an entry module when the module graph does not name the configured
+  renderer.
+- **Impact if no action:** Equivalent checkouts with a linked preview keep
+  different document keys and `deploymentId` values. The folder rule of
+  `docs/protocol/mokly-shell-delivery.md` stays unimplemented for them, and
+  the page keeps its status line.
 - **Root question:** How does every published document key, and so the
   `deploymentId`, leave out the checkout folder, also when the module graph
   does not name the renderer or the preview, while each key still moves with
@@ -134,8 +141,9 @@
     `RenderKeys::build` keys their closures under those names. This needs a
     new bundle result field on both sides of the sidecar boundary, new text
     for `docs/protocol/mokly-watch.md:80-82`, and new fallback tests. The
-    fallback key stays folder-dependent for any later unnamed case. Effort:
-    Medium.
+    fallback key stays folder-dependent for any later unnamed case.
+    Configuration load already names a linked renderer by its resolved path,
+    so only the preview still needs this name. Effort: Medium.
   - **D.** Defer the fix. In the branch that found it, add this item and one
     status line below the title of `docs/protocol/mokly-shell-delivery.md`
     that links it. The page keeps the folder rule as the intended behaviour.
@@ -164,12 +172,13 @@
   folder-independent. No later commit removes the folder from the fallback
   key.
 - **Related:**
-  - [linked-renderer-stylesheet-root.md](./linked-renderer-stylesheet-root.md)
-    has the same cause for a linked renderer: the module graph names the
-    real path, not the configured link path. Its option C gives configured
-    module paths one resolved form, which would remove the renderer trigger
-    of this fallback. It covers neither the linked preview nor the folder in
-    the fallback key, so the two items stay apart.
+  - [linked-renderer-stylesheet-root.md at its last version on `main`](https://github.com/mokly-ai/mokly/blob/337e619f20d76d3df11b00d5df4172ba8649d7f9/plans/follow-ups/linked-renderer-stylesheet-root.md)
+    had the same cause for a linked renderer: the module graph names the
+    real path, not the configured link path. Its fix applied its option C:
+    configuration load gives every configured module path, the renderer and
+    the PostCSS module, one resolved form. That fix removed the renderer
+    trigger of this fallback. It covers neither the linked preview nor the
+    folder in the fallback key, so this item stays open.
 - **Recommendation:** A, with the three conditions. It is the only Medium
   option that removes the folder from the fallback key for every trigger. B
   is wider but Large, and C leaves any later unnamed case folder-dependent.

@@ -12,11 +12,12 @@ import type { ShellDataSource } from "./data_source.js";
 
 interface DetailLoaderHost {
   snapshot(): ShellDataSnapshot;
-  replaced(): boolean;
+  inactive(): boolean;
   adopt(
     request: DetailRequest,
     outcome: Exclude<DetailOutcome, { kind: "failed" }>,
   ): void;
+  catalogueError(error: unknown): void;
   replace(): void;
   changed(): void;
 }
@@ -43,7 +44,7 @@ export class DetailLoader {
   request(requests: readonly DetailRequest[]): void {
     this.#wanted = requests;
     const source = this.#source;
-    if (!source || this.#host.replaced()) return;
+    if (!source || this.#host.inactive()) return;
     const keys = requests.map(detailKey);
     const pageChanged =
       this.#previousKeys !== undefined && !sameKeys(this.#previousKeys, keys);
@@ -73,6 +74,7 @@ export class DetailLoader {
     if (deploymentRequest)
       void deploymentRequest.promise.then((deployment) => {
         if (
+          !deploymentRequest.controller.signal.aborted &&
           deployment !== undefined &&
           deployment.deploymentId !== this.#host.snapshot().index.deploymentId
         )
@@ -88,15 +90,22 @@ export class DetailLoader {
         request,
         controller.signal,
         deploymentRequest?.promise,
-      ).then((outcome) => {
-        if (controller.signal.aborted) return;
-        this.#loading.delete(key);
-        if (outcome.kind === "failed") {
-          source.detailFailed?.(request);
-          this.#failed = new Set(this.#failed).add(key);
-          this.#host.changed();
-        } else this.#host.adopt(request, outcome);
-      });
+      ).then(
+        (outcome) => {
+          if (controller.signal.aborted) return;
+          this.#loading.delete(key);
+          if (outcome.kind === "failed") {
+            source.detailFailed?.(request);
+            this.#failed = new Set(this.#failed).add(key);
+            this.#host.changed();
+          } else this.#host.adopt(request, outcome);
+        },
+        (error: unknown) => {
+          if (controller.signal.aborted) return;
+          this.#loading.delete(key);
+          this.#host.catalogueError(error);
+        },
+      );
     }
   }
 

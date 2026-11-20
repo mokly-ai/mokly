@@ -19,6 +19,7 @@ fn fixture() -> (TempDir, ResolvedConfig) {
         input: Config::default(),
         file: root.join("mokly.config.json"),
         repo_root: root.clone(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![ResolvedRoot {
             input: RootConfig {

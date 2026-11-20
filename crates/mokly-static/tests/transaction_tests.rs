@@ -5,7 +5,8 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_platform::rename::{Rename, SystemRename};
 use mokly_static::error::Error;
 use mokly_static::filesystem::SystemFiles;
@@ -37,15 +38,9 @@ fn boundary(root: &Path) -> Boundary {
     }
 }
 fn artifact(output: &Path, bytes: &'static [u8]) -> Artifact {
-    Artifact::finalize(
-        output.into(),
-        vec![File {
-            path: "index.html".into(),
-            bytes: bytes.into(),
-        }],
-        None,
-    )
-    .unwrap()
+    let mut files = Inventory::default();
+    files.insert("index.html".into(), bytes.into()).unwrap();
+    Artifact::finalize(output.into(), files, None).unwrap()
 }
 fn install(root: &Path, bytes: &'static [u8]) {
     let factory: &dyn Transactions = &factory(Arc::new(SystemRename));

@@ -38,8 +38,8 @@ is package-owned identity and ignores these consumer accent overrides.
 ## Package-Owned Tokens
 
 The shell chrome supports Light and Dark independently of the preview's color
-scheme. Light uses the neutral/sage family; Dark uses Mokly Cloud's warm
-Folio neutrals with sage accents. The
+scheme. Light uses the neutral/sage family; Dark uses Mokly Cloud's Folio
+neutrals, the neutral Graphite greys, with sage accents. The
 [semantic palette](./mokly-viewer-palette.md#swatches) holds the value of every
 token in both appearances and their recorded contrast.
 

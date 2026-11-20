@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type { FrameAdapter, FrameEvent } from "@mokly/frame";
+import type { FrameAdapter, FrameErrorCode, FrameEvent } from "@mokly/frame";
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
@@ -42,9 +42,13 @@ interface MountedFrameInput {
   usage: CatalogueUsage;
 }
 
-/** Mount one frame and adopt evidence without replacing its DOM element. */
+/**
+ * Mount one frame and adopt evidence without replacing its DOM element.
+ * `retry` mounts the same element again, such as after a failed load.
+ */
 export function useMountedShellFrame(input: MountedFrameInput): {
   frameRef: RefObject<HTMLIFrameElement | null>;
+  retry(): void;
   status: ShellFrameStatus;
 } {
   const registry = useOptionalShellFrameRegistry();
@@ -103,7 +107,10 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     setStatus("loading");
     const receive = (event: FrameEvent) => {
       if (controller.signal.aborted) return;
-      if (event.type === "error") {
+      if (
+        event.type === "error" &&
+        isFrameFailure(event.code, session.status === "loading")
+      ) {
         session.status = "error";
         setStatus("error");
         registry.changed();
@@ -188,7 +195,28 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         : undefined);
   }, [input.identity, input.layout, input.sources, input.usage, registry]);
 
-  return { frameRef, status };
+  return { frameRef, retry: replace, status };
+}
+
+/**
+ * Whether an error event means that the frame failed to load or mount. An
+ * inspection error, such as `limit`, leaves the loaded preview usable, so the
+ * frame keeps its status. Every error event still reaches the listeners.
+ */
+function isFrameFailure(code: FrameErrorCode, loading: boolean): boolean {
+  switch (code) {
+    case "disposed":
+    case "origin":
+    case "timeout":
+      return true;
+    case "unavailable":
+      return loading;
+    case "invalid-boundary":
+    case "invalid-message":
+    case "limit":
+    case "missing-instance":
+      return false;
+  }
 }
 
 function sameFrameIdentity(

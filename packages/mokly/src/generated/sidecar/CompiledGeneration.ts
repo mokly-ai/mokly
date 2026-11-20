@@ -14,6 +14,10 @@ vite?: ViteRecipe,
  */
 toolchain: string,
 /**
+ * Stable compilation metadata absent from per-document render keys.
+ */
+metadataIdentity?: string,
+/**
  * Cache-only physical inputs, never exported as render or watch inputs.
  */
 reuseEvidence: ReuseEvidence,

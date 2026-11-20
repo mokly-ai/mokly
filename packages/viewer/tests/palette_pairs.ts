@@ -19,7 +19,12 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
   ["muted on hover", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
   ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
-  ["accent on surface", "--mokly-accent", "--chrome-surface", 4.5],
+  [
+    "accent on surface",
+    "--_mokly-private-accent-default",
+    "--chrome-surface",
+    4.5,
+  ],
   ["deep accent on surface", "--mbk-accent-deep", "--chrome-surface", 4.5],
   [
     "deep accent on accent surface",
@@ -29,8 +34,8 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
   ],
   [
     "accent contrast on accent",
-    "--mokly-accent-contrast",
-    "--mokly-accent",
+    "--_mokly-private-accent-contrast-default",
+    "--_mokly-private-accent-default",
     4.5,
   ],
   [

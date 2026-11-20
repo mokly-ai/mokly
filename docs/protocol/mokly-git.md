@@ -43,6 +43,46 @@ promisor remote fetches every missing base object in one bounded request before
 the converted read starts. A failed fetch names a recovery `git fetch`
 command. Missing objects without a promisor remote retain a typed fetch error.
 
+## File Listings
+
+Mokly lists working-tree files with `git ls-files` for the
+[working dependency inputs](./mokly-base-dependencies.md#dependency-identity)
+and for the untracked [changed paths](#repository-and-history). Both listings
+run with `core.fsmonitor=false`, so Git starts no file system monitor hook or
+daemon for them. No other Git command changes the monitor setting.
+
+With the monitor disabled and without a promisor remote, a listing starts no
+helper and owns a plain group. With a promisor remote, a listing keeps the full
+process tree. A listing can read the trees of a sparse index. Mokly disables
+lazy fetch for a listing. A Git build that ignores that setting can still fetch
+a missing tree.
+
+Decision: disable the monitor for these two listings only. Rejected: the full
+process tree with the monitor, because its Unix setup forks the Mokly process,
+and the monitor saves these listings no work. Rejected: the override for every
+command, because a command that attaches the untracked cache, such as
+`git status`, uses the monitor to skip directory reads.
+
+Evidence from the Git 2.49.0 source:
+
+- `ls-files` [starts its directory walk from `DIR_INIT`](https://github.com/git/git/blob/v2.49.0/builtin/ls-files.c#L574).
+  [`DIR_INIT` is all zeros](https://github.com/git/git/blob/v2.49.0/dir.h#L360),
+  so the walk has no untracked cache.
+- `ls-files` [calls `fill_directory`](https://github.com/git/git/blob/v2.49.0/builtin/ls-files.c#L405)
+  and never attaches the untracked cache of the index to the walk.
+- [`validate_untracked_cache` returns no cache](https://github.com/git/git/blob/v2.49.0/dir.c#L2930-L2931)
+  for such a walk. The walk then reads every directory, with or without the
+  monitor.
+- [`git status` attaches the cache](https://github.com/git/git/blob/v2.49.0/wt-status.c#L801).
+  With the cache, the monitor lets Git skip reads of unchanged directories.
+
+A one-time Linux check with Git 2.49.0 used 100,000 untracked files in 1,000
+directories, a warmed untracked cache, and a monitor hook. With and without the
+monitor, the listing read the same 1,002 directories with 2,004 `getdents64`
+calls. Both returned the same 2,700,012 bytes. Over six pairs, the mean time
+was 77.84 ms with the monitor and 73.77 ms without it, with a broad spread.
+`git status` with the same cache and hook read no directory.
+
 ## Repository And History
 
 Before other reads, the configured repository directory must be the Git

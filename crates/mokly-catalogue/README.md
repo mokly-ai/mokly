@@ -20,29 +20,43 @@ definition provider boundary.
 
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
-Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+Filesystem checks resolve symlinks and keep local inputs inside the resolved
+`repoRoot`.
 Some source trees, such as the base Git tree, report symlinks without
 resolving them. In such a tree, a root or package root through a symlink
 fails its check, and the `config-invalid` message names the symlink.
-Config-relative parent segments are accepted when their lexical and physical
-targets stay inside `repoRoot`. PostCSS path, suffix, and regular-file checks
-use the catalogued `config-invalid` diagnostics before a sidecar starts. Git
-root validation belongs to the Git boundary. The [configuration contract](../../docs/protocol/mokly-configuration.md)
+Config-relative parent segments are accepted when their normalized lexical
+paths and physical targets stay inside the resolved `repoRoot`. PostCSS path,
+suffix, and regular-file checks use the catalogued `config-invalid` diagnostics
+before a sidecar starts. Git root validation belongs to the Git boundary.
+The [configuration contract](../../docs/protocol/mokly-configuration.md)
 owns the accepted fields, the path rules, and the stylesheet matcher warnings.
 
 `ResolvedConfig::repository_path` returns the repository-relative POSIX path
 that a config-relative value names, without `.`, `..`, or empty segments. The
-repository root is empty. `ResolvedConfig::renderer`,
-`ResolvedConfig::postcss`, and `ResolvedConfig::package_roots` give that form
-for their fields. The file policy, the static output boundary, the sidecar
-settings, and base dependency selection read package roots in this form, so a
-working tree and a Git tree name the same package root. A symbolic link
-before `..` does not change that root, and the manifest check reads only it.
+repository root is empty. `ResolvedConfig::package_roots` gives that form for
+its field. The file policy, the static output boundary, the sidecar settings,
+and base dependency selection read package roots in this form, so a working
+tree and a Git tree name the same package root. A symbolic link before `..`
+does not change that root, and the manifest check reads only it.
 
-`mokly-render` and `mokly-graph` read the renderer, the PostCSS module, and
-stylesheets in the same form. Bundle requests, render input keys, stylesheet
-roots and links, the declared stylesheet check, and every PostCSS request use
-that form.
+Loading gives each configured module, the renderer and the PostCSS module,
+one resolved form. It removes `.`, `..`, and empty segments first, as
+`repository_path` does. The source tree then resolves that path, and the
+resolved form is the repository-relative path of the file that it reaches.
+The working tree follows symbolic links, so `link/renderer.tsx` gives
+`real/renderer.tsx` when `link` points to `real`. A Git tree resolves no
+links, so a module path that it accepts keeps its lexical form.
+`ResolvedConfig::renderer` and `ResolvedConfig::postcss` return the resolved
+form. Validation messages still repeat the authored values, and the authored
+inputs still hold both the lexical and the physical path of each module.
+
+`mokly-render` and `mokly-graph` read the renderer and the PostCSS module in
+the resolved form, which is the form in which the module graph names each
+module. Bundle requests, render input keys, the renderer's stylesheet root
+and link, and the module that each PostCSS request names use that form.
+Configured and declared stylesheets keep the form of `repository_path`. Their
+stylesheet roots and links and the declared stylesheet check use it.
 
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
@@ -121,6 +135,12 @@ token and span types, and it is the only html5gum user: other code must not
 construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
 the html5ever tree builder for any `DriverSink`: the token checks pass a sink
 that records tokens, and `mokly-html` passes its tree arena.
+`html_driver::drive_with_observer` runs the same pass and gives each original
+token to a `TokenObserver` before the tree builder reads it. One pass can then
+build a tree and keep the source evidence that the tree loses, such as
+duplicate-attribute errors. The observer gets tokens without the
+authored-input filter of `html_tokens::parse`, so a consumer of authored-HTML
+tokens still calls that function.
 Each text token and each attribute value is a `Spanned` with a `SourceMap`.
 The map gives the source byte of each decoded byte, and its `span` is the
 source interval that the tokenizer consumed for the value. The map anchors at
@@ -202,13 +222,19 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/config.rs`](./src/config.rs) defines `ConfigLoader` and `Loader`,
   which find and load the configuration into a `ResolvedConfig`.
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
-  shape and the `ResolvedConfig` that later stages read. `ViteConfig` is the
+  shape and the `ResolvedConfig` that later stages read. `ResolvedModules`
+  holds the resolved renderer and PostCSS module paths. `ViteConfig` is the
   `vite` switch: `true`, `false`, or `ViteOptions`, an object without fields.
   `ResolvedConfig::vite` tells whether a side compiles JavaScript through its
   project's Vite setup.
-- [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
-  gives `ResolvedConfig::repository_path`, the one resolver of
-  config-relative paths, with `renderer`, `postcss`, and `package_roots`.
+- [`src/config_inputs.rs`](./src/config_inputs.rs) confines local inputs at
+  load and resolves the renderer and the PostCSS module.
+- [`src/config_paths.rs`](./src/config_paths.rs) gives
+  `ResolvedConfig::repository_path`, the lexical resolver of config-relative
+  paths, and `package_roots` in that form. Its `renderer` and `postcss`
+  accessors return the resolved module paths. The shared
+  `confined_to_repository` predicate checks configured input paths against the
+  resolved repository root.
 - [`src/config_links.rs`](./src/config_links.rs) provides `link_error`, which
   names the symlink that keeps a failed root or package root from resolving.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
@@ -229,7 +255,8 @@ The property test of the source maps over the vendored HTML corpus lives in
   boundary for authored and delivered HTML.
 - [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
   `DriverSink`, which run html5gum under the html5ever tree builder for the
-  checks and for the tree.
+  checks and for the tree. `drive_with_observer` and `TokenObserver` add a
+  reader of the original tokens to the same pass.
 - [`src/html_driver_emitter.rs`](./src/html_driver_emitter.rs) defines
   `DriverEmitter`, which forwards the html5gum emitter calls to the driver and
   records the source position of each emitted chunk.

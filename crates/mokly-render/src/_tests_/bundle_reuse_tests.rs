@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::{
@@ -24,7 +24,7 @@ use crate::physical_inputs::PhysicalInputsMock;
 use crate::runtime::Runtime;
 use crate::{bundle_inputs, render_environment};
 
-fn definitions() -> Definitions {
+pub(super) fn definitions() -> Definitions {
     Definitions {
         screens: vec![],
         pages: vec![],
@@ -42,10 +42,12 @@ fn fresh() -> results::Bundle {
         generation: "fresh".into(),
         epoch: 9,
         cache: None,
+        compile_count: 1,
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: Arc::new(evidence("captured")),
             identity: "fresh".into(),
             code: String::new(),
@@ -77,7 +79,7 @@ fn evidence(kind: &str) -> ReuseEvidence {
     }
 }
 
-fn pool(capture: BundleCapture, expected: &str) -> Unimock {
+pub(super) fn pool(capture: BundleCapture, expected: &str) -> Unimock {
     let release = PoolMock::release_generation
         .each_call(matching!(_, _))
         .returns(());
@@ -167,19 +169,22 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
             "fresh",
         ),
     ] {
-        let tree = Arc::new(Unimock::new((
-            SourceTreeMock::digest
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(hash.into()))),
-            SourceTreeMock::children
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| {
-                    Ok(vec![Child {
-                        name: member.into(),
-                        kind: FileKind::File,
-                    }])
-                })),
-        )));
+        let digests = SourceTreeMock::digest
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| Ok(hash.into())));
+        let listings = SourceTreeMock::children
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                Ok(vec![Child {
+                    name: member.into(),
+                    kind: FileKind::File,
+                }])
+            }));
+        let tree = Arc::new(if hash == "source" {
+            Unimock::new((digests, listings))
+        } else {
+            Unimock::new(digests)
+        });
         let reader = if hash == "source" && member == "entry.ts" {
             Unimock::new(
                 PhysicalInputsMock::matches
@@ -211,6 +216,10 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
             },
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: ResolvedModules {
+                renderer: Some("renderer.tsx".into()),
+                ..Default::default()
+            },
             authored_inputs: vec![],
             roots: vec![],
         };
@@ -247,6 +256,7 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
                     )]),
                     ..InputStamp::default()
                 },
+                persistence_identity: (kind == "captured").then(|| "captured-build".into()),
                 toolchain: if kind == "edit" {
                     edit_toolchain.into()
                 } else {
@@ -264,9 +274,13 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
                 .insert(state.lease.id.clone(), Arc::downgrade(state));
         }
         let described = runtime.describe(&config, &[]).unwrap();
+        let generation = described.generation.unwrap();
         assert_eq!(
-            described.generation.unwrap().id,
-            expected,
+            generation.persistence_identity.as_deref(),
+            (expected == "z-captured").then_some("captured-build")
+        );
+        assert_eq!(
+            generation.id, expected,
             "capture={capture:?}, physical={physical}, hash={hash}, member={member}, toolchain={edit_toolchain}"
         );
     }

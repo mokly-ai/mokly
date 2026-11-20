@@ -2,20 +2,17 @@
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete repository and release gate. The local
+`cargo xtask check` is the complete repository gate. The local
 executor runs the local suites sequentially in one checkout. Native runs only
 when selected. The local gate starts with the live workspace dependency audit.
 [Baseline auditing](./dependency-audit-baseline.md#xtask-and-ci-selection)
 owns the `--dependency-audit` modes and their selection in CLI and CI. The
 complete gate can instead run on Testboxes under the
-[remote verification contract](./remote-verification.md). Only active reviewed
-path exceptions cover findings.
+[remote verification contract](./remote-verification.md). Only active reviewed exceptions cover findings.
 [Dependency security](./dependency-security.md) defines their UTC expiry and
-31-day limit. A selected suite is partial evidence and never claims a complete
-pass. CI's validated aggregate is complete evidence for its exact tree.
+31-day limit. A selected suite is partial evidence. CI's validated aggregate is complete
+evidence for its exact tree.
 [Release evidence](./npm-release-evidence.md) defines reuse.
-
-The CLI is:
 
 ```bash
 cargo xtask check
@@ -27,9 +24,9 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/4
 ```
 
-`--shard INDEX/TOTAL` is valid only with `browser`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `browser` and `cloud-app`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
-`INDEX` must not exceed `TOTAL`. A shard runs one weighted whole-file
+`INDEX` must not exceed `TOTAL`. A Mokly browser shard runs one weighted whole-file
 partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
 not Playwright's count-based `--shard` selection. Omitting `--shard` runs the
 complete selected suite. Unknown suites, malformed shards, missing values, and
@@ -40,18 +37,24 @@ starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                      |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                                                             |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order, and the [boundary check](./repository-layout.md#boundary).                                                                                                                                                                  |
 | Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                               |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                     |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                                                     |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                  |
+| Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                  |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, of both native platforms, and of every cloud job. Validate the viewer and browser report evidence.                                                                 |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
 In-process auditors fail like subprocesses.
 The local Repository and Viewer suites cover the native build and Rust checks
 once. The selected Native suite repeats those checks on the hosted macOS and
-Windows runners. Required CI requires both native jobs.
+Windows runners, for the `mokly-*` crates and `xtask` only. On Linux, the
+Native suite also selects only the Mokly crates and `xtask`. The cloud Rust
+suite covers cloud crates. Required CI requires both native jobs.
+The cloud contract tests of `xtask` run on Linux only.
+Decision: the macOS and Windows runs leave out the `mkc-` crates, because
+those crates use Diesel with Postgres, which needs `libpq`.
 
 Viewer and Browser build the binary and viewer bundle first through
 `npm run build`. Native builds the host binary through
@@ -89,10 +92,51 @@ browser shard, and fail when the build output is missing. The Viewer and
 Browser suites run their Node and Playwright tests only through the strict
 runners.
 
+## Cloud Suites
+
+The complete gate runs every cloud suite. `--suite` selects one. CI uses Linux.
+Seven remote workers cover Rust and desktop, four app shards, web, and infrastructure.
+Each worker attempts every assigned suite and reports each failure.
+
+| Suite                  | Required checks                                                           |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `cloud-rust`           | Clippy, the workspace Mokly build, and tests of every `mkc-` crate        |
+| `cloud-migrations`     | SQL pairs, migration checksums, and the append-only base lock             |
+| `cloud-typecheck`      | Type checks of every cloud npm project                                    |
+| `cloud-app`            | App logic, web export, and browser tests                                  |
+| `cloud-mockups`        | Mockup build, compilation, determinism, policy, browser smoke, and types  |
+| `cloud-site`           | Mockup build, site build, types, unit tests, links, and browser checks    |
+| `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
+| `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
+| `cloud-emails`         | Email template drift and mutation tests                                   |
+| `cloud-openapi-lint`   | API error reasons, protocol reason mentions, and GitHub delivery fixtures |
+| `cloud-terraform`      | Terraform formatting, validation, and mock-provider tests                 |
+| `cloud-origin-router`  | Cloudflare Worker types and tests                                         |
+| `cloud-helm`           | Helm lint, golden renders, rejected values, and setting parity            |
+| `cloud-infrastructure` | Infrastructure contracts, BuildKit storage evidence, and workload images  |
+| `cloud-desktop`        | Electron logic, bundled export, and real-API smoke                        |
+| `cloud-toolchain-pins` | Protocol pins, manifests, images, and installed tool versions             |
+
+Repository formats and length-checks every Rust crate. Its Clippy and tests
+cover `mokly-*` and `xtask`. Whitespace, Prettier, ESLint, and ast-grep run once
+in Repository. The whole-repository Markdown link check runs once in Viewer.
+
+Cloud Rust, app, and desktop create a database per invocation (role: `CREATEDB`).
+`MKC_TEST_DATABASE_URL` selects the server. Cloud Rust needs `libpq`; missing tools and skips fail.
+
+`cloud-app --shard INDEX/TOTAL` builds an independent web export and runs
+that browser shard. Shard 1 also runs app logic tests. Without `--shard`, it
+runs all logic and browser tests. An inherited app shard cannot restrict an
+unsharded run.
+
+The fixtures suite compares bytes from the workspace Mokly build;
+`cargo xtask mokly-fixtures` regenerates them. Fixed placeholder versions keep
+release numbers out of fixture drift. Published CLI consumers use npm `latest`.
+
 ## Deterministic Test Repository Inputs
 
-The [test repository contract](./ci-test-repository-inputs.md) defines
-fixture-owned Git state, checked-out lockfiles, and remote-state protection.
+The [test repository contract](./ci-test-repository-inputs.md) defines fixture
+Git state, checked-out lockfiles, and remote-state protection.
 
 ## Pull Request Title Contract
 
@@ -197,9 +241,9 @@ within that event's runtime profile; individual reports are partial evidence.
 Release publication accepts only the dual-runtime Release Please profile, then
 applies the additional tree, live Node test inventory, and live Playwright
 inventory checks in the [release evidence contract](./npm-release-evidence.md).
-The ordinary five-report profile cannot skip the complete publish gate. Reports
-are kept for 14 days, which bounds their release reuse; missing or expired
-evidence falls back to the complete gate.
+The ordinary five-report profile cannot authorize publication. Reports stay
+available for 14 days. Missing or expired evidence stops release preparation.
+Re-run qualifying CI on the release commit, then retry the release.
 
 The cache and audit continuation is
 [Dependency Cache And Security](./ci-verification-security.md).

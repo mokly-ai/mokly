@@ -1,0 +1,25 @@
+---
+/**
+ * One release note, rendered from the typed segments the changelog parser
+ * produced so the page never inserts raw Markdown or unchecked markup.
+ */
+import type { NoteSegment } from "../changelog/notes.js";
+
+interface Props {
+  readonly segments: readonly NoteSegment[];
+}
+
+const { segments } = Astro.props;
+---
+
+{segments.map((segment) =>
+  segment.kind === "link" ? (
+    <a href={segment.href}>{segment.text}</a>
+  ) : segment.kind === "code" ? (
+    <code>{segment.value}</code>
+  ) : segment.kind === "strong" ? (
+    <strong>{segment.value}</strong>
+  ) : (
+    <Fragment>{segment.value}</Fragment>
+  ),
+)}

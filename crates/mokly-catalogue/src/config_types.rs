@@ -7,7 +7,7 @@ use mokly_model::axes::ColorScheme;
 use serde::{Deserialize, Serialize};
 
 /// Data-only JSON configuration, validated before resolution.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Config {
     /// Editor schema reference; never fetched or executed.
@@ -37,7 +37,7 @@ pub struct Config {
 }
 
 /// One root's authored selection and identity rules.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct RootConfig {
     /// Config-relative existing directory.
@@ -51,7 +51,7 @@ pub struct RootConfig {
 }
 
 /// The opt-in Vite adapter switch or its currently empty options.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum ViteConfig {
     /// Explicitly enable or disable the adapter.
@@ -61,7 +61,7 @@ pub enum ViteConfig {
 }
 
 /// Reserved adapter options, with no authored fields yet.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ViteOptions {}
 
@@ -70,7 +70,7 @@ fn vite_disabled(value: &Option<ViteConfig>) -> bool {
 }
 
 /// Consumer module resolution options.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ModuleResolution {
     /// Bare package aliases.
@@ -88,7 +88,7 @@ pub struct ModuleResolution {
 }
 
 /// Supported sidecar loaders. CSS is owned by the core.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ModuleLoader {
     /// Base64 string.
@@ -116,7 +116,7 @@ pub enum ModuleLoader {
 }
 
 /// Route-to-stylesheet rule, in authored order.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StylesheetRule {
     /// Catalogue route matcher.
@@ -130,7 +130,7 @@ pub struct StylesheetRule {
 }
 
 /// Comparison configuration.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReviewConfig {
     /// Git base ref, default origin/main.
@@ -141,7 +141,7 @@ pub struct ReviewConfig {
 }
 
 /// Additional watched authored inputs.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WatchConfig {
     /// Nonnegative debounce interval, default 75.
@@ -151,7 +151,7 @@ pub struct WatchConfig {
 }
 
 /// One additional watch classification.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct WatchRule {
     /// Desired classification, below package-owned classifications.
@@ -161,7 +161,7 @@ pub struct WatchRule {
 }
 
 /// Authored additional watch action.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum WatchAction {
     /// Ignore unrelated matching files.
@@ -173,7 +173,7 @@ pub enum WatchAction {
 }
 
 /// Configuration paths resolved through one source-tree identity pass.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ResolvedConfig {
     /// Authored settings, with schemes and ordered lists normalized.
     pub input: Config,
@@ -181,6 +181,8 @@ pub struct ResolvedConfig {
     pub file: PathBuf,
     /// Canonical repository identity.
     pub repo_root: PathBuf,
+    /// Configured modules under their resolved repository-relative source identities.
+    pub modules: ResolvedModules,
     /// Confined config, module, and local stylesheet sources, with physical aliases.
     pub authored_inputs: Vec<PathBuf>,
     /// Root definitions with their lexical and physical directories.
@@ -194,8 +196,17 @@ impl ResolvedConfig {
     }
 }
 
+/// Configured module identities after lexical normalization and source-tree projection.
+#[derive(Clone, Debug, PartialEq, Default, Serialize)]
+pub struct ResolvedModules {
+    /// Renderer module's repository-relative POSIX identity.
+    pub renderer: Option<String>,
+    /// PostCSS module's repository-relative POSIX identity.
+    pub postcss: Option<String>,
+}
+
 /// One root with its projected physical identity.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ResolvedRoot {
     /// Authored root fields.
     pub input: RootConfig,

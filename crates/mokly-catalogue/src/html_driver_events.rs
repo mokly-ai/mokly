@@ -12,7 +12,7 @@ use html5ever::{Attribute, QualName};
 use html5gum::State;
 use html5gum::emitters::callback::{Callback, CallbackEvent};
 
-use crate::html_driver::DriverSink;
+use crate::html_driver::{DriverSink, TokenObserver};
 use crate::html_source_map::{Recorder, SourceMap};
 use crate::html_token_types::{Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token};
 
@@ -37,6 +37,7 @@ pub(crate) struct EventSink<'a, Sink: DriverSink> {
     pub(crate) next_state: Option<State>,
     /// Source origins collected before events combine emitted chunks.
     pub(crate) recorder: Recorder<'a>,
+    observer: Option<&'a dyn TokenObserver>,
 }
 
 impl<'a, Sink: DriverSink> EventSink<'a, Sink> {
@@ -45,6 +46,7 @@ impl<'a, Sink: DriverSink> EventSink<'a, Sink> {
         builder: &'a TreeBuilder<Sink::Handle, Sink>,
         source: &'a str,
         offset: usize,
+        observer: Option<&'a dyn TokenObserver>,
     ) -> Self {
         Self {
             builder,
@@ -52,6 +54,7 @@ impl<'a, Sink: DriverSink> EventSink<'a, Sink> {
             tag: OpenTag::default(),
             next_state: None,
             recorder: Recorder::new(source, offset),
+            observer,
         }
     }
 }
@@ -65,6 +68,9 @@ impl<Sink: DriverSink> EventSink<'_, Sink> {
     }
 
     fn send(&mut self, token: &Token, tree_tokens: Vec<tokenizer::Token>) {
+        if let Some(observer) = self.observer {
+            observer.observe(token);
+        }
         self.builder.sink.before_token(token);
         for tree_token in tree_tokens {
             let result = self.builder.process_token(tree_token, 1);

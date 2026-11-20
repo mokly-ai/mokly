@@ -173,18 +173,11 @@ the packed contents of the package.
   `define*` helpers that turn authored input into catalogue definitions.
 - [`config.schema.json`](./config.schema.json) is the configuration schema,
   which the binary embeds and enforces.
-- [`src/sidecar.ts`](./src/sidecar.ts) is the sidecar process entry, which
-  reads framed requests from the binary and writes one response for each.
-- [`src/sidecar`](./src/sidecar/README.md) holds the request methods of the
-  sidecar: the esbuild and Vite compile paths, compiled recipes and their
-  reuse, evaluation, rendering, style collection, and PostCSS. Its README
-  lists their entry points.
-- [`src/generated/sidecar`](./src/generated/sidecar) holds the request and
-  result types that `cargo xtask generate-types` writes from the Rust types.
+- The [render sidecar README](./src/sidecar/README.md#key-code) names the key
+  code of the Node process that compiles catalogue modules with esbuild or
+  Vite, describes and renders them, and processes styles.
 - [`scripts/build.mjs`](./scripts/build.mjs) builds `dist/` and copies the
   guides, the protocol documents, and the root changelog into the package.
-- The [Rust sidecar pool](../../crates/mokly-sidecar/README.md) starts and
-  stops the sidecar processes.
 
 ## License
 

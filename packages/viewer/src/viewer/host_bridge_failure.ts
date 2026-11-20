@@ -51,7 +51,10 @@ export function registerHostBridgeFailureBarrier(
   };
 }
 
-/** Wait for replacement ownership, bounded by the adapter mount timeout. */
+/**
+ * Wait for replacement ownership for at most five seconds, because a frame's
+ * document may load without a time limit.
+ */
 export async function awaitHostBridgeFailureBarrier(
   owner: object,
 ): Promise<void> {

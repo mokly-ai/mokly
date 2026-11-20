@@ -1,0 +1,2 @@
+DROP INDEX publications_viewer_pr_attempt;
+DROP INDEX publications_viewer_branch_attempt;

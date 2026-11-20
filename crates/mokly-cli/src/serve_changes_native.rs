@@ -213,6 +213,7 @@ impl Source {
             .collect();
         ReuseFence::new(&(
             &self.config.input,
+            &self.config.modules,
             &self.config.file,
             &self.config.repo_root,
             &self.config.authored_inputs,
@@ -245,3 +246,7 @@ mod serve_references_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_capture_generation_tests.rs"]
 mod serve_capture_generation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_steps_integration_tests.rs"]
+mod serve_steps_integration_tests;

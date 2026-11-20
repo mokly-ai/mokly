@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "api" in pod "api-6c9fd6f8d7-first" not found

@@ -42,6 +42,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: Arc::new(ReuseEvidence {
                 uncaptured: None,
                 durable: true,
@@ -97,6 +98,7 @@ fn fixture() -> (State, Slot) {
         contexts: Default::default(),
         renders: 0,
         requests: 0,
+        last_compilation: None,
     };
     (state, slot)
 }

@@ -6,18 +6,17 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
+use mokly_git::control::ClockMock;
 use mokly_git::identity::RepoPath;
-use mokly_platform::locks::FileLock;
 use mokly_sidecar::methods::ModuleResolution;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::cache_types::{CacheMock, Lease, StorageMock};
+use crate::cache_types::{CacheMock, Lease};
 use crate::commands::CommandsMock;
 use crate::dependencies::{Dependencies, DependencyTiers};
 use crate::dependency_types::{Fallback, Request, Tier};
 use crate::error::Error;
 use crate::inputs::Inputs;
-use mokly_git::control::ClockMock;
 
 pub(super) fn request() -> Request {
     let inputs = Inputs {
@@ -50,6 +49,7 @@ pub(super) fn request() -> Request {
 
 fn working_tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
     DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(cache),
         commands: Arc::new(commands),
         storage: Arc::new(Unimock::new(())),
@@ -91,37 +91,6 @@ fn identical_inputs_use_head_without_cache_or_package_manager() {
 }
 
 #[test]
-fn differing_inputs_acquire_the_content_addressed_install() {
-    let mut request = request();
-    request.head.files.clear();
-    let guard: Box<dyn FileLock> = Box::new(Unimock::new(()));
-    let cache = Unimock::new(
-        CacheMock::get
-            .next_call(matching!((_, actual, _) if actual.len() == 64))
-            .returns(Ok(Lease {
-                directory: "/cache/deps".into(),
-                guard,
-            })),
-    );
-    let commands = Unimock::new(
-        CommandsMock::run
-            .next_call(matching!((command) if command.args == vec![OsString::from("--version")]))
-            .returns(Ok(b"11.0.0\n".to_vec())),
-    );
-    let result = tiers(cache, commands).resolve(&request).unwrap();
-    assert_eq!(result.tier, Tier::Installed);
-    assert_eq!(
-        result.node_modules,
-        PathBuf::from("/cache/deps/node_modules")
-    );
-    assert!(result.lease.is_some());
-    assert_eq!(
-        result.repository_roots,
-        [PathBuf::from("/repo"), PathBuf::from("/cache/deps")]
-    );
-}
-
-#[test]
 fn failed_or_unsupported_install_warns_but_cancellation_propagates() {
     let mut request = request();
     request.head.files.clear();
@@ -160,36 +129,6 @@ fn cancellation_never_becomes_a_fallback_warning() {
         tiers(Unimock::new(()), commands).resolve(&request),
         Err(Error::Cancelled)
     ));
-}
-
-#[test]
-fn installer_copies_private_sources_and_captures_script_deadline_and_size_options() {
-    let mut request = request();
-    request.head.files.clear();
-    let boundaries = Unimock::new((
-        CommandsMock::run.next_call(matching!((command) if command.args == vec![OsString::from("--version")])).returns(Ok(b"11.0.0\n".to_vec())),
-        CacheMock::get.next_call(matching!(_, _, _)).answers(&|_, _, _, builder| {
-            builder.build(Path::new("/install"))?;
-            Ok(Lease { directory: "/install".into(), guard: Box::new(Unimock::new(())) })
-        }),
-        StorageMock::copy.next_call(matching!((source, target, 10000) if source.ends_with("base") && target.ends_with("install"))).returns(Ok(())),
-        CommandsMock::run.next_call(matching!((command) if command.directory == Path::new("/install") && command.timeout == Duration::from_secs(120) && command.byte_limit == Some(10000) && command.args.iter().any(|arg| arg == "--ignore-scripts") && command.args.first().unwrap() == "ci" && command.args.iter().any(|arg| arg == "--logs-dir") && Path::new(command.args.last().unwrap()) == Path::new("/install"))).returns(Ok(vec![])),
-        StorageMock::remove.next_call(matching!((path) if *path == Path::new("/install/.npm-cache"))).returns(Ok(())),
-    ));
-    let tiers = DependencyTiers {
-        cache: Arc::new(boundaries.clone()),
-        commands: Arc::new(boundaries.clone()),
-        storage: Arc::new(boundaries),
-        clock: Arc::new(Unimock::new(
-            ClockMock::now
-                .some_call(matching!())
-                .returns(Duration::ZERO)
-                .at_least_times(0),
-        )),
-        timeout: Duration::from_secs(120),
-        install_bytes: 10000,
-    };
-    assert_eq!(tiers.resolve(&request).unwrap().tier, Tier::Installed);
 }
 
 #[test]

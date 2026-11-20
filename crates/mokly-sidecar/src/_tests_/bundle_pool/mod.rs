@@ -2,8 +2,10 @@
 
 mod order_tests;
 mod plan_tests;
+mod provenance_tests;
 mod recovery_tests;
 mod restore_tests;
+mod sharing_tests;
 mod write_tests;
 
 use std::collections::BTreeMap;
@@ -47,12 +49,13 @@ fn compilation(id: &str, complete: bool) -> CompiledGeneration {
     value
 }
 
-fn answer(id: &str) -> MethodResult {
+fn answer(id: &str, compile_count: u64) -> MethodResult {
     MethodResult::Bundle(Box::new(results::Bundle {
         plan: None,
         generation: id.into(),
         compiled: Arc::new(compilation(id, true)),
         cache: None,
+        compile_count,
         epoch: 0,
         modules: vec![],
         unmapped_dependency_directories: None,
@@ -74,7 +77,7 @@ fn hit(id: &str) -> ReadOutcome {
     }
 }
 
-fn worker(events: Events, result: &str) -> Unimock {
+fn worker(events: Events, result: &str, compile_count: u64) -> Unimock {
     let result = result.to_owned();
     Unimock::new((
         WorkerMock::request
@@ -89,7 +92,7 @@ fn worker(events: Events, result: &str) -> Unimock {
                 };
                 events.lock().unwrap().push(event);
                 Ok(if matches!(request.call, Call::Bundle(_)) {
-                    answer(&result)
+                    answer(&result, compile_count)
                 } else {
                     MethodResult::Empty
                 })
@@ -133,6 +136,7 @@ fn pool(store: Unimock, worker: Unimock) -> Arc<Pool> {
                 contexts: Default::default(),
                 renders: 0,
                 requests: 1,
+                last_compilation: None,
             }));
         }
         state.available.extend([0, 1]);

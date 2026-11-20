@@ -2,6 +2,9 @@
 
 #![cfg(unix)]
 
+#[path = "process_support/cache.rs"]
+mod cache;
+
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -11,6 +14,8 @@ use std::time::Duration;
 use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 use tokio::process::Command;
+
+use cache::Cache;
 
 async fn marker(path: &Path) -> String {
     tokio::time::timeout(Duration::from_secs(15), async {
@@ -76,9 +81,11 @@ async fn shutdown_kills_ignoring_git_and_its_pipe_holding_child_before_exit() {
     fs::set_permissions(&git, fs::Permissions::from_mode(0o755)).unwrap();
     let pid_file = root.path().join("git-pid");
     let child_file = root.path().join("child-pid");
+    let cache = Cache::new();
     let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--port", "0", "--no-watch"])
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("PATH", root.path().join("bin"))
         .env("MOKLY_OUTPUT", "rich")
         .env("NO_COLOR", "1")

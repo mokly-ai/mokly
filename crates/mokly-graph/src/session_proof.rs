@@ -13,6 +13,7 @@ pub(crate) fn policy(input: &SessionInput) -> Option<ContentIdentity> {
         .collect();
     let encoded = serde_json::to_vec(&(
         &input.config.input,
+        &input.config.modules,
         &input.config.file,
         &input.config.repo_root,
         &input.config.authored_inputs,

@@ -13,6 +13,8 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 - Attach instance, slot, root, and ignore regions as tree nodes.
 - Adapt catalogue controls and rewrite logical links to portable URLs.
 - Render Markdown and apply its independent final safety allowlist.
+- Rebuild the root JavaScript request of a store-served view without
+  composing it, through the same builders as a fresh render.
 
 ## What This Crate Does
 
@@ -29,6 +31,34 @@ id.
 Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
+
+`Composer::prepare_root` prepares the own root of a Serve background view whose
+lookup missed, before any tree work. `HtmlComposer` prepares only a screen, component, or
+page without an HTML template or saved slot fragments. It requests that root
+fragment once. An opaque `PreparedRoot` keeps the start state, the exact
+`FragmentRequest`, and the one result, a fragment or an error, and no parsed
+tree. `Composer::compose_prepared` starts from that state and gives the kept
+result to the root call, so composition never requests that root again.
+`compose` and `prepare_root` share one start builder. They and
+`Composer::record_served` share one root request builder, so each path builds
+the same request.
+
+`Composer::can_prepare_root` answers whether `prepare_root` can prepare one
+entry. Serve asks it when the lookup of a background view misses, to decide
+whether that miss prepares its own root and can hand off. It reads only the
+prepared catalogue and the entry. It takes no
+`ComposeRequest`, requests no fragment, and performs no IO. `HtmlComposer`
+applies the same pure rule that `prepare_root` checks first. So `prepare_root`
+prepares nothing for an entry that answers `false`.
+
+The trait default of `can_prepare_root` answers `false`, so the misses of a
+custom composer render without a prepared root and never hand off, unless it
+overrides that method. The trait
+default of `prepare_root` prepares nothing. The trait default of
+`compose_prepared` returns an internal error, because only `HtmlComposer`
+builds a `PreparedRoot`. `PreparedRoot::into_ready` returns a failed root's
+composition error. `PreparedRoot::input_bytes` and `PreparedRoot::fragment`
+give the capacities of the kept state for its charge.
 
 `parse::html` reads HTML through the catalogue's shared HTML driver with
 scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
@@ -98,7 +128,9 @@ for the attributes that it removes, once per page and attribute, with the
 page's `entry` subject. The
 [HTML screens contract](../../docs/protocol/mokly-html-screens.md#links-and-markers)
 defines which wrapper the message names. Composition reports these warnings
-before the page and source checks run, so a later failure keeps them. Unknown
+before the page and source checks run, so a later failure keeps them. Those
+checks read the first driver pass of the callback HTML. The plaintext repair
+pass does not feed them. Unknown
 attribute values are not evaluated. Strict builds fail on these warnings.
 Reserved navigation names are not unknown attributes: composition keeps them,
 as the authored parse does, and reserved navigation metadata keeps its
@@ -177,17 +209,47 @@ aligned byte must equal its source byte or be an LF from a CR.
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
   `HtmlComposer`, which compose a screen, component, or page from a
-  `ComposeRequest` into a `Composed` document.
+  `ComposeRequest` into a `Composed` document. `Composer::prepare_root` and
+  `Composer::compose_prepared` split a Serve background view at its own root
+  fragment. `Composer::can_prepare_root` answers, without a `ComposeRequest`,
+  whether `prepare_root` can prepare an entry. `Composer::record_served`
+  passes the root JavaScript request of a store-served view to the fragment
+  boundary without composing it. An HTML template entry records nothing.
+- [`src/prepared_root.rs`](./src/prepared_root.rs) defines `PreparedRoot`,
+  the opaque start state, root request, and single result of one prepared
+  root.
+- [`src/compose_start.rs`](./src/compose_start.rs) defines the crate-private
+  `Start`, the start state that `compose` and `prepare_root` share. Its
+  `Start::eligible` holds the one rule that `HtmlComposer::can_prepare_root`
+  and `PreparedRoot::prepare` apply.
+- [`src/root_context_weight.rs`](./src/root_context_weight.rs) computes the
+  capacity charge of the start state and the request that a `PreparedRoot`
+  keeps.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
-  records.
+  records. `FragmentRenderer::record_served` records a request without a
+  render.
+- [`src/root_inputs.rs`](./src/root_inputs.rs) and
+  [`src/javascript_request.rs`](./src/javascript_request.rs) build the root
+  inputs and the `FragmentRequest` once, for a fresh render, a prepared root,
+  and a store-served record. A store-served record reads only the names of
+  the saved slots, and it parses no saved slot HTML.
 - [`src/tree.rs`](./src/tree.rs) defines `Node`, `Element`, and `Region`, the
   owned HTML5 tree with explicit composition regions.
 - [`src/parse.rs`](./src/parse.rs) provides `html`, which parses authored or
   delivered HTML through the catalogue's shared driver with scripting disabled.
-  The input type chooses the parse.
+  The input type chooses the parse. Its crate-private `consumer` parses
+  callback HTML once and returns the tree with the `SourceChecks` of that pass.
 - [`src/pipeline/runner.rs`](./src/pipeline/runner.rs) runs that driver with
-  the tree arena and applies the plaintext repair.
+  the tree arena and applies the plaintext repair. It gives an optional token
+  observer the original input only, so the repair pass cannot replace the
+  source evidence.
+- [`src/source_checks.rs`](./src/source_checks.rs) defines `SourceChecks`, the
+  token observer that keeps the page tag counts and the first
+  reserved-navigation or duplicate-attribute violation of callback HTML. Its
+  `validate` reports a page structure failure before that violation. The
+  public `validate` and `page` functions run the same checks over their own
+  token pass.
 - [`src/html_sink.rs`](./src/html_sink.rs) implements the html5ever
   `TreeSink` and the `DriverSink` hooks for the tree arena.
 - [`src/serialize.rs`](./src/serialize.rs) provides `html`, which writes

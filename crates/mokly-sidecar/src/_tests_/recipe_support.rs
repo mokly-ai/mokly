@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
 use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
+use crate::fixture_leases::FixtureLeases;
 use crate::methods::{Bundle, BundleCapture, BundleRequest, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -37,6 +38,7 @@ fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
     let captured = capture == BundleCapture::Full;
     CompiledGeneration {
         toolchain: "fixture".into(),
+        metadata_identity: None,
         reuse_evidence: Arc::new(ReuseEvidence {
             uncaptured: (!captured).then_some(UncapturedEvidence::ServeEdit),
             durable: captured,
@@ -66,6 +68,7 @@ pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
 pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleCapture) -> usize {
     codec::encode(&Request {
         id: 1,
+        quiet: false,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),
@@ -114,6 +117,7 @@ impl Fixture {
                                 )),
                                 epoch: 0,
                                 cache: None,
+                                compile_count: 1,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
                             }))
@@ -134,7 +138,7 @@ impl Fixture {
                 capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
-                repository: "/repo".into(),
+                repository: "/head".into(),
                 version: "test".into(),
             },
             PoolOptions {
@@ -157,6 +161,7 @@ impl Fixture {
                     contexts: Default::default(),
                     renders: 0,
                     requests: 1,
+                    last_compilation: None,
                 }));
                 state.available.push_back(index);
             }
@@ -171,12 +176,6 @@ impl Fixture {
 
     pub(super) fn retained(&self) -> usize {
         self.pool.lock().recipes.len()
-    }
-
-    pub(super) fn select(&self, slot: usize) {
-        let mut state = self.pool.lock();
-        state.available.retain(|index| *index != slot);
-        state.available.push_front(slot);
     }
 
     pub(super) fn bundle(&self, entry: &str, id: &str) -> results::Bundle {
@@ -221,7 +220,7 @@ impl Fixture {
         slot: usize,
         capture: BundleCapture,
     ) -> Vec<String> {
-        self.select(slot);
+        let _leases = FixtureLeases::only(&self.pool, slot);
         self.calls.lock().unwrap().clear();
         let probe = self.bundle_with_capture(entry, id, capture);
         let restored = self

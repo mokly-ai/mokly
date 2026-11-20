@@ -5,7 +5,7 @@
 - **Added:** 2026-10-29, from PR #222 and its completed plan, which put the
   problem outside the scope of its first review.
 - **Location:** `crates/mokly-graph/src/session_render.rs:137`,
-  `crates/mokly-cli/src/serve_watch.rs:269`, and
+  `crates/mokly-cli/src/serve_watch.rs:266`, and
   `crates/mokly-cli/src/serve_watch_events.rs:17` and line 52.
 - **Reason:** The gap exists on `origin/main` outside the diff of PR #222,
   whose new file-time check covers only the inputs of a preparation.
@@ -23,7 +23,7 @@
     `crates/mokly-graph/src/session_render.rs:137` reads and digests the
     file. It records the digest under the document's resource key.
   - It then reports the path to the watch layer. `WatchedInputs::observe`
-    in `crates/mokly-cli/src/serve_watch.rs:269` queues the path.
+    in `crates/mokly-cli/src/serve_watch.rs:266` queues the path.
   - Later, `drain` in `crates/mokly-cli/src/serve_watch_events.rs:17` adds
     the queued paths to the watch plan. At line 52 it attaches the native
     watcher to their directories.
@@ -31,7 +31,7 @@
     of a preparation. After the candidate's watcher attaches, Serve replays
     a change for each such file whose modification time falls after the
     preparation start. `changed` in
-    `crates/mokly-cli/src/serve_watch_files.rs:64` implements it. The
+    `crates/mokly-cli/src/serve_watch_files.rs:55` implements it. The
     check does not run for a resource that a render reaches later.
 - **Problem:** An edit to the resource between the digest and the directory
   attachment makes no native event. Serve keeps the old digest and the old
@@ -64,7 +64,7 @@
   before its first read, so no gap remains.
 - **Previous examples:** PR #222 fixed the same class for the exact input
   files of a preparation on 2026-10-28, through the file-time check in
-  `crates/mokly-cli/src/serve_watch_files.rs:64`.
+  `crates/mokly-cli/src/serve_watch_files.rs:55`.
 - **Related:** The
   [native watch event recovery item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/native-watch-event-recovery.md)
   covered events that the native watcher lost on macOS and Windows in a

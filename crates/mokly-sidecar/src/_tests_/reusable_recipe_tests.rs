@@ -64,12 +64,26 @@ fn an_uncaptured_marker_cannot_become_durable_when_flags_are_forged() {
 
 #[test]
 fn live_only_admission_requires_the_exact_marker_and_a_toolchain() {
-    for (complete, durable, nonempty, toolchain, expected) in [
-        (false, false, false, "fixture", Some("generation")),
-        (true, false, false, "fixture", None),
-        (false, true, false, "fixture", None),
-        (false, false, true, "fixture", None),
-        (false, false, false, "", None),
+    for (complete, durable, input, toolchain, expected) in [
+        (false, false, None, "fixture", Some("generation")),
+        (true, false, None, "fixture", None),
+        (false, true, None, "fixture", None),
+        (
+            false,
+            false,
+            Some(PhysicalInput::Absent),
+            "fixture",
+            Some("generation"),
+        ),
+        (false, false, Some(PhysicalInput::FilePath), "fixture", None),
+        (
+            false,
+            false,
+            Some(PhysicalInput::Directory { entries: vec![] }),
+            "fixture",
+            None,
+        ),
+        (false, false, None, "", None),
     ] {
         let mut compiled = compiled("identity");
         compiled.toolchain = toolchain.into();
@@ -77,10 +91,8 @@ fn live_only_admission_requires_the_exact_marker_and_a_toolchain() {
         evidence.complete = complete;
         evidence.durable = durable;
         evidence.uncaptured = Some(UncapturedEvidence::ServeEdit);
-        if nonempty {
-            evidence
-                .inputs
-                .insert("/repo/config.json".into(), PhysicalInput::Absent);
+        if let Some(input) = input {
+            evidence.inputs.insert("/repo/config.json".into(), input);
         }
         let recipe = ReusableRecipe::new("generation".into(), params(), vec![], Arc::new(compiled));
         assert_eq!(recipe.as_ref().map(ReusableRecipe::generation), expected);

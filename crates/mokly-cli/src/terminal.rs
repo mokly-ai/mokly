@@ -6,6 +6,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg_attr(test, unimock::unimock(api = TerminalMock))]
 pub(super) trait Terminal: Send + Sync {
     fn stdout(&self, text: &str);
+    /// A cache notice can wait for the terminal owner's startup handoff.
+    fn cache_notice(&self, text: &str) {
+        self.stdout(text);
+    }
     fn stderr(&self, text: &str);
     fn raw_mode(&self, enabled: bool);
 }

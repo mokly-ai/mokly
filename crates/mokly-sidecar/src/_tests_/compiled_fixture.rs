@@ -8,6 +8,7 @@ use crate::compiled::{CompiledGeneration, ReuseEvidence};
 pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
     CompiledGeneration {
         toolchain: "fixture".into(),
+        metadata_identity: None,
         reuse_evidence: Arc::new(ReuseEvidence {
             uncaptured: None,
             durable: true,

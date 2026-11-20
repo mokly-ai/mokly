@@ -97,5 +97,5 @@ fn a_changed_module_file_makes_every_record_of_its_context_miss_with_stamp_misma
     for root in roots(3) {
         assert_eq!(second.lookup(&key(&root)).err(), Some(Miss::StampMismatch));
     }
-    assert_eq!(Calls::count(&calls.module_digests), MODULES);
+    assert_eq!(Calls::count(&calls.module_digests), 1);
 }

@@ -1,0 +1,16 @@
+id: prefer-imports-over-crate-paths
+language: Rust
+severity: error
+message: Import the item at module scope instead of using an inline crate/std/core path.
+# Cloud style rule. The Mokly crates keep their own import style.
+files:
+  - crates/mkc-*/**
+rule:
+  regex: "^(::)?(crate|std|core)::"
+  any:
+    - kind: scoped_identifier
+    - kind: scoped_type_identifier
+  not:
+    inside:
+      kind: use_declaration
+      stopBy: end

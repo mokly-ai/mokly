@@ -1,0 +1,29 @@
+[package]
+name = "mkc-build-sandbox"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+async-trait = "0.1.92"
+chrono = "0.4.45"
+futures-util = "0.3.34"
+internal-error.workspace = true
+mkc-build-interface.workspace = true
+sandbox-interface.workspace = true
+semver = "1.0.28"
+thiserror = "2.0.21"
+tokio = { version = "1.53.2", features = ["rt", "macros", "sync", "time"] }
+tracing = "0.1.44"
+unimock = "0.6.8"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-domain.workspace = true
+tokio = { version = "1.53.2", features = ["macros", "rt", "test-util", "time", "sync"] }
+uuid = "1.27.0"

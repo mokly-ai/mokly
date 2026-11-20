@@ -1,0 +1,17 @@
+{
+  "status": 201,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "id": 90,
+    "html_url": "https://github.com/octocat/Hello-World/pull/42#discussion_r90",
+    "body": "Looks good."
+  }
+}

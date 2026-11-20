@@ -1,6 +1,7 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -11,12 +12,14 @@ use mokly_html::composition::Composer;
 use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::background::BackgroundRead;
 use crate::cache::{Artifact, RenderCache};
-use crate::closure::{Closure, Walker};
+use crate::closure::Closure;
 use crate::collection::ComparisonCollector;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
+use crate::document_store::StoreKey;
 use crate::error::Result;
 use crate::graph::Graph;
 use crate::link_index::LinkIndex;
@@ -39,12 +42,15 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
+    pub(crate) fresh: Mutex<BTreeMap<String, StoreKey>>,
     pub(crate) anchor_flights: Arc<dyn Requests>,
     pub(crate) link_results: Arc<dyn LinkResults>,
     pub(crate) link_index: LinkIndex,
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
+    pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) generation_key: String,
     pub(crate) document_keys: BTreeSet<String>,
     pub(crate) matchers: Arc<styles::Matchers>,
@@ -64,6 +70,8 @@ pub(crate) struct State {
 }
 
 pub(crate) struct SessionInput {
+    pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) config: ResolvedConfig,
     pub(crate) catalogue: PreparedCatalogue,
@@ -89,6 +97,7 @@ impl Session {
             .collect();
         Self {
             state: Arc::new(State {
+                fresh: Mutex::new(BTreeMap::new()),
                 anchor_flights: Arc::new(MemoryRequests::default()),
                 link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
                 link_index,
@@ -104,9 +113,13 @@ impl Session {
                 observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
+                stylesheet_resolution_files: input.stylesheet_resolution_files,
+                stylesheet_resolution_roots: input.stylesheet_resolution_roots,
                 document_keys,
                 matchers: Arc::new(input.matchers),
-                reference_index: Arc::new(MemoryReferenceIndex::default()),
+                reference_index: Arc::new(MemoryReferenceIndex::new(
+                    graph.inputs.style_references.clone(),
+                )),
                 inputs: graph.inputs.clone(),
                 config: Arc::new(input.config),
                 catalogue: Arc::new(input.catalogue),
@@ -122,26 +135,12 @@ impl Session {
             }),
         }
     }
-
-    pub(crate) fn preview_walker(&self) -> Walker {
-        Walker {
-            observer: None,
-            ..self.walker()
-        }
-    }
-
-    pub(crate) fn walker(&self) -> Walker {
-        Walker {
-            observer: Some(Arc::new(self.clone())),
-            tree: self.state.tree.clone(),
-            policy: self.state.policy.clone(),
-            generated: Arc::new(self.clone()),
-            index: self.state.reference_index.clone(),
-        }
-    }
 }
 
 impl RenderGeneration for Session {
+    fn read_background(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background_document(route).map(Some)
+    }
     fn comparison_identity(
         &self,
         read: ComparisonRead,
@@ -216,13 +215,23 @@ impl RenderGeneration for Session {
         for result in results {
             summary.record(result);
         }
-        summary.finish(self).map(|(summary, _)| summary)
+        let (summary, _) = summary.finish(self)?;
+        for route in &routes {
+            self.offer_document(route);
+        }
+        Ok(summary)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         self.collect_validated(collector)
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         &self.state.directories
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.state.stylesheet_resolution_files.clone()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.state.stylesheet_resolution_roots.clone()
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()

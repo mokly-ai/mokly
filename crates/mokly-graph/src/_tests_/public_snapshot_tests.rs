@@ -92,6 +92,7 @@ fn planning_reuses_digests_without_pinning_resource_bytes() {
         input: Default::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };

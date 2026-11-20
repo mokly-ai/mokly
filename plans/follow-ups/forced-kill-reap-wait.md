@@ -75,10 +75,14 @@
   pending. A longer graceful period, because the wait follows a forced kill,
   and more time does not end a process that ignores SIGKILL.
 - **Wider fix:** B. One bounded rule covers every caller of the forced reap.
-- **Previous examples:**
-  [install-pipe-wait-after-stop.md](./install-pipe-wait-after-stop.md): a
-  stopped base install also waits without a bound, for output pipes that its
-  descendants hold.
+- **Previous examples:** A stopped base install waited without a bound for
+  output pipes that its descendants held. Its fix bounds that wait. After the
+  last stop signal, the install waits up to a short grace period for the
+  manager to exit and its pipes to close. Then it ends with the result that
+  the stop gives, also when the manager has not exited. The section
+  [Bounds And Stops](../../docs/protocol/mokly-base-install-processes.md#bounds-and-stops)
+  of the base install processes contract states that rule. The fix does not
+  change the sidecar code of this item.
 - **Related:**
   - [root-switch-reap-wait.md](./root-switch-reap-wait.md): its shared
     end-and-reap step would inherit this wait.

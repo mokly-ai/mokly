@@ -95,6 +95,18 @@ same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
 
+Each bundle starts from a virtual entry. The virtual entry imports each
+configured entry module, stories file, and renderer, and the selected
+Storybook preview, and each import loads that file. TypeScript `paths` never
+apply to these imports, in any attempt of a compile.
+Decision: the imports of the virtual entry never follow `paths`, also when a
+`paths` key matches the path of a configured file. Imports that follow `paths`
+were rejected, because the
+[marker rule](./mokly-sidecar-recipes.md#capture-modes) would then have to
+count them. Every Serve edit compile would then lose its marker whenever the
+sidecar cannot tell whether a key matches, as with a package `extends` such as
+`expo/tsconfig.base`.
+
 ## Authoring And Evaluation
 
 Bundle parsing ignores each module's package `type` and `tsconfig.json` parse

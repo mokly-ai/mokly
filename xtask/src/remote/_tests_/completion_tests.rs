@@ -97,6 +97,13 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
         "browser-3-of-4",
         "browser-4-of-4",
         "static-delivery",
+        "cloud-rust",
+        "cloud-app-1-of-4",
+        "cloud-app-2-of-4",
+        "cloud-app-3-of-4",
+        "cloud-app-4-of-4",
+        "cloud-web",
+        "cloud-infrastructure",
     ]
     .into_iter()
     .map(|name| format!("tbx_{name}"))
@@ -126,7 +133,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 DependencyAudit::Baseline,
             )
             .len(),
-        7
+        14
     );
     assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();
