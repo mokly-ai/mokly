@@ -603,15 +603,24 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answers to decisions B1, B3, and B4 to the protocol pages.
-      The proposed edits of other pages are in
+- [ ] Apply the answer to decision B3, option C, to the other protocol
+      pages: replace each stale Storybook sentence with a link to
+      `docs/protocol/mokly-storybook.md`, and keep only the exceptions that a
+      page needs. The proposed edits are in
       `.context/storybook-support/b-out-of-scope-doc-edits.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Link each missing behaviour in the status line of
+      `docs/protocol/mokly-storybook.md` to the heading of the milestone
+      that owns it, as the `documentation` skill now asks.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Apply the answers to decisions B1 and B4 to the protocol pages.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
-Track B raised four decisions on 2026-11-18, while it wrote these docs. They
-are open. B1 blocks Milestone 6, B2 blocks the `beforeAll` rules of
-Milestone 5, B3 blocks the edits of other protocol pages, and B4 blocks the
-rule for malformed `mokly` parameter values in Milestone 7.
+Track B raised four decisions on 2026-11-18, while it wrote these docs. The
+orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
+call. B1, B2, and B4 are open. B1 blocks Milestone 6, B2 blocks the
+`beforeAll` rules of Milestone 5, and B4 blocks the rule for malformed
+`mokly` parameter values in Milestone 7.
 
 ### B1. Stories inherit the first story's args
 
@@ -748,6 +757,9 @@ rule for malformed `mokly` parameter values in Milestone 7.
   track brief forbids.
 
 ### B3. Other protocol pages restate old Storybook rules
+
+Answered on 2026-11-20: C. The orchestrator of this plan made this scope
+call, because no other active track edits these eight pages.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation.
