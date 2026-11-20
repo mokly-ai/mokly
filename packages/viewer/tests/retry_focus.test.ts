@@ -54,7 +54,7 @@ test("Try again focuses the status, then the first element of the content", () =
   focus.content(second);
   assert.deepEqual([first.focused, second.focused], [1, 0]);
   // A later content commit takes no focus.
-  first.ownerDocument.activeElement = document.body;
+  document.activeElement = document.body;
   focus.content(first);
   assert.equal(first.focused, 1);
 });
