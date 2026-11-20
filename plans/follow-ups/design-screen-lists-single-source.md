@@ -44,7 +44,7 @@
   - Mokly's example catalogue under `examples/basic` holds design mockups of
     Mokly's own screens. Its design library holds the shared mockup
     components, under `design/library/`.
-  - The 69 saved variants are the library components that have a variant
+  - The 70 saved variants are the library components that have a variant
     parent. The top bar is the library component
     `design/library/chrome/top-bar`.
   - The protocol docs list the approved design entries, for example
@@ -76,7 +76,7 @@
       consumers" reads it.
     - `scopeViolations` in `design_catalogue_checks.ts` pins two counts at
       line 231, now `"56,20"`. They are the screens under `design/components/`
-      and under `design/components/controls/`. It also pins the 69 saved
+      and under `design/components/controls/`. It also pins the 70 saved
       variants at line 215. The test "shared design stylesheets keep their
       route scopes" runs it.
   - The Playwright specs use three lists:
@@ -110,8 +110,8 @@
     - `design_support/scopes.rs` loads `tests/fixtures/design/inventory.json`
       at lines 49 to 52. It compares the design screens with that list at
       line 59. Then line 65 pins the `design/components/` count again, now 56.
-    - `scopes.rs:72` pins the 20 controls screens, and line 39 pins the 69
-      saved variants.
+    - `scopes.rs:72` pins the 20 controls screens. Line 39 still pins 69
+      saved variants, one fewer than the library holds.
     - Two `insta` snapshots in `design_support/snapshots/` list the design
       screens that draw the top bar. They hold lines such as
       `design/library/chrome/top-bar -> design/components/states/removed`.
@@ -235,7 +235,11 @@
     test that asserts the words of a protocol page.
 - **Wider fix:** D. One list that every runner reads removes the screen lists
   and counts that go stale.
-- **Previous examples:** None found.
+- **Previous examples:** On 2026-11-19, commit `3e09c615` on `main` added
+  the saved variant `design/library/preview/device-frame/failed`. It updated
+  the Node count to 70 and the browser inventory. It did not update
+  `crates/mokly-cli/tests/design_support/scopes.rs:39`, which still pins 69.
+  So the nightly test fails at its first scope check.
 - **Related:** `plans/follow-ups/design-external-link-check.md`, same code.
   That item says that the browser link checks run only on the entries of
   `browser-inventory.json`. D deletes that file, so the branch that applies D
