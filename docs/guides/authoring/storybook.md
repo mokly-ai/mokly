@@ -19,6 +19,10 @@ import { Button } from "./button.js";
 const meta = {
   title: "Controls/Button",
   component: Button,
+  tags: ["forms"],
+  parameters: {
+    docs: { description: { component: "Buttons trigger actions." } },
+  },
   args: { label: "Continue", disabled: false },
   argTypes: {
     label: { name: "Button label", options: ["Continue", "Save"] },
@@ -27,6 +31,7 @@ const meta = {
 
 export default meta;
 export const Disabled: StoryObj<typeof meta> = {
+  name: "Disabled button",
   args: { disabled: true },
 };
 ```
@@ -37,9 +42,13 @@ The example has paths `components/Button` and `components/Button/Disabled`
 under the default `specs` root. The meta title supplies the display title's
 last segment. It does not change the path.
 
-The default-export meta can omit `title`. Mokly then uses the component's
+The meta can omit `title`. Mokly then uses the component's
 `displayName`, else its `name`, else the file name without the stories
 extension.
+
+Each variant's title is its story's `name`, else its `storyName`, else
+Storybook's start case of the export name. For example, `LargeButton` shows as
+`Large Button`. Its slug stays `LargeButton`.
 
 ## Story formats
 
@@ -77,7 +86,41 @@ export const Disabled = meta.story({ args: { disabled: true } });
 ```
 
 Mokly gets the meta and preview of a factories file from its stories.
-The preview's decorators wrap each story.
+The preview's decorators wrap each story. An untitled factories meta uses the
+same component and file name fallback.
+
+## Tags and descriptions
+
+Mokly adds its default tag, `mokly`, to Storybook's default `dev` and `test`
+tags. Tags combine from the preview, the meta, and the story, in that order.
+Mokly includes a story when its combined tags keep both `dev` and `mokly`.
+
+`!dev` hides a story from both Storybook's sidebar and Mokly. Use `!mokly` to
+leave it out of Mokly only:
+
+```tsx
+export const StorybookOnly: StoryObj<typeof meta> = {
+  tags: ["!mokly"],
+  args: { label: "Preview only" },
+};
+```
+
+Put either exclusion tag on the preview, meta, or story. A later tag can add
+a removed tag again. Storybook's `includeStories` and `excludeStories` filters
+also apply. A file with no included stories gives no entry and no warning.
+
+Custom tags use lowercase kebab-case, such as `forms` or `empty-state`.
+The entry gets the custom tags of its first included story in source order.
+Each variant gets the custom tags of its own story. Search for `tag:forms` in
+the catalogue to filter by that tag. See [Folders and tags](/docs/authoring/collections-and-tags/).
+
+Mokly drops its own `mokly` tag and Storybook's built-in tags, such as `dev`,
+`test`, `autodocs`, and `play-fn`. It also drops tags that do not match the tag
+grammar, without a warning.
+
+Set `parameters.docs.description.component` to a string for the entry's
+description, as in the first example. Mokly uses the value from the first
+included story. Each variant keeps that description.
 
 ## Props and controls
 
@@ -89,11 +132,15 @@ Each story keeps the meta's select choices and number bounds, even for an
 entry prop that the story does not set. A story's own `argTypes` can override
 these hints.
 
+Mokly uses the story's composed `argTypes`, including the types Storybook
+infers from arg values. A callback such as `onClick: fn()` stays outside the
+data props and schema without a warning. It needs no annotation.
+
 An arg with `control: false`, `table.disable: true`, an `action`, or a
-function type stays outside the data props and schema. Its file value remains
-available to the story. Use these annotations for callbacks.
-A function arg without an annotation is excluded with a `props-not-data`
-warning.
+function type also stays outside the data props and schema without a warning.
+React element args and arrays of React elements do too. Their file values
+remain available to the story. Other non-data args, such as a `Map`, still
+give a `props-not-data` warning.
 
 Saved states use Storybook's composed args. Live data props overlay those args.
 Non-data args keep the values the file defines.

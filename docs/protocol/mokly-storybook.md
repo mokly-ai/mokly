@@ -1,6 +1,6 @@
 # Storybook Stories
 
-Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 4](../../plans/storybook-support.md#milestone-4-story-args-names-tags-and-descriptions) adds the arg rules for inferred argTypes and React elements, Storybook story names, tags, the description, and the tag filter. [Milestone 5](../../plans/storybook-support.md#milestone-5-story-setup-before-render) adds loaders, `beforeEach`, and `beforeAll` before a render. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
+Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 5](../../plans/storybook-support.md#milestone-5-story-setup-before-render) adds loaders, `beforeEach`, and `beforeAll` before a render. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
 
 ## Stories Files
 

@@ -950,7 +950,8 @@ decision 5.
 - [x] Test that Storybook's Button template passes `--strict`, and test the
       names, the tags, the description, and the skipped stories.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 5: Story setup before render
 
