@@ -19,7 +19,7 @@ The daily scheduled workflow audits `main` strictly and maintains the
 fixes, pinned-parent overrides, and reviewed exceptions land there.
 
 Release preparation runs the strict live audit under the
-[release evidence contract](./npm-release-evidence.md#verification-modes) and
+[release evidence contract](./npm-release-evidence.md#verification-requirement) and
 never reuses an earlier audit as time-sensitive security evidence. The other
 CI jobs start without waiting for the CI repository job's audit, and
 `Required CI` fails unless it passes. An audit gate before those jobs was
@@ -68,22 +68,19 @@ replaces the live advisory check.
 
 ## Reviewed Workspace Exceptions
 
-`scripts/verification/dependency-audit-exceptions.json` is a JSON array. It is
-empty while no risk is accepted. Each record has exactly these six required
-fields, with no unknown keys. This example shows the shape only; it is not a
-current exception:
+`scripts/verification/dependency-audit-exceptions.json` is a JSON array.
+Each record requires `advisory`, `package`, `path`, `until`, `reason`, and
+`tracking`. Only private-app records add `kind`, with the exact value
+`"private-app"`. Other keys and kinds fail. The explicit kind prevents silent scope changes.
+This dev-only example is not a current exception:
 
 ```json
 {
   "advisory": "GHSA-vfj7-8cjw-p6xm",
   "package": "braces",
-  "path": [
-    "node_modules/metro-file-map",
-    "node_modules/micromatch",
-    "node_modules/braces"
-  ],
+  "path": ["node_modules/tool", "node_modules/braces"],
   "until": "2026-11-03",
-  "reason": "Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.",
+  "reason": "Dev-only tool reads repository patterns. No patched release is available.",
   "tracking": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
 }
 ```
@@ -91,44 +88,57 @@ current exception:
 `advisory` must be a GHSA identifier. `package` must be an npm package name.
 `reason` must be non-empty text. `tracking` must be an absolute HTTPS URL.
 `until` must be a real calendar date in exact `YYYY-MM-DD` form.
-`path` must contain at least two distinct normalized relative lockfile install
-locations. Use forward slashes and npm package names after `node_modules`.
+`path` must contain at least two distinct normalized relative locations.
+Use forward slashes and npm package names after `node_modules`.
 Absolute paths, empty segments, dot segments, backslashes, and a final package
 that differs from `package` are invalid. Records with the same advisory,
 package, and path are duplicates, even if their dates or review text differ.
 The script, declarations, and exception data remain outside the packed package.
 
 An exception covers only the advisory whose GHSA identifier comes from its
-GitHub advisory URL and whose vulnerable package matches `package`. Its reported
-`vulnerabilities[package].nodes` must contain exactly one install location: the
-last path element. All path entries must exist in the lockfile and have
-`dev: true`; `devOptional: true` or a missing development flag means production
-and rejects the exception.
+GitHub advisory URL and whose vulnerable package matches `package`.
+The final path element must be a reported vulnerable install location.
+An advisory with several install locations passes only when every location has
+one valid record for that advisory and package. An uncovered location fails.
+Several records for the same advisory, package, and location fail, even with different paths.
 
-For every path element after the first, the preceding element must be its only
-dependent. The evaluator reads `dependencies`, `optionalDependencies`, and
-`peerDependencies` from every lockfile package, including the root (`""`) and
-workspace entries such as `packages/viewer`. It also checks `devDependencies`,
-so a new direct development dependency cannot bypass the sole-dependent rule.
-Lockfile entry locations must be normalized and relative. It resolves names through
-Node's nearest-`node_modules` search, with scoped and nested packages included.
-A new dependent of an inner path package or a second vulnerable install
-location rejects coverage. The first element is the reviewed path boundary;
-its own dependents can differ, but it must remain dev-only.
+A record without `kind` is dev-only. Every path entry must be a lockfile
+install location with `dev: true`. A missing development flag or
+`devOptional: true` rejects it. Each entry after the first must have only the
+preceding entry as its dependent. All dependency scopes count, including
+`devDependencies`, so a new direct development edge rejects coverage.
+The first entry is the reviewed boundary. Its dependents may differ.
+
+A private-app path starts at a private workspace directly under `apps/`.
+Its actual `package.json` must have `"private": true`. Each later entry must
+be an installed package reached by a real lockfile dependency edge.
+Development, production, optional, and peer edges can form this path.
+It need not have sole dependents or development-only install flags.
+Each edge resolves through the nearest `node_modules`, including scoped and
+nested packages. Workspace links resolve through their local package entries.
+Missing entries, missing edges, and changed resolutions reject the record.
+
+The vulnerable location must be absent from the production dependency closure
+of every published workspace. Published means its actual manifest does not
+have `"private": true`. This closure includes `dependencies`,
+`optionalDependencies`, and `peerDependencies`, including edges through
+workspace links. It excludes development edges.
+Every audit reads the local package manifests to check privacy and published
+reach again. Baseline comparison includes these manifest bytes.
+A new published production edge to the vulnerable location rejects coverage.
 
 The UTC end date is inclusive. `2026-11-03` passes through that day's last
 millisecond and expires at `2026-11-04T00:00:00Z`. An end date more than 31
-calendar days after the current UTC date fails. Thus `2026-10-03` through
-`2026-11-03` is the maximum window. Renew only with a new risk review and a new
-end date in a reviewed change. Never extend a record automatically.
+calendar days after the current UTC date fails. Renew only with a new risk
+review and a new end date in a reviewed change. Never extend a record automatically.
 
-Both modes evaluate every record with the same validity, expiry, and use
-rules. Baseline mode can inherit only an identical issue from the comparison
-commit; it does not relax exception coverage. An expired record remains an
-issue even when its advisory is gone. A stale record with no current finding
-also remains an issue; remove it when the risk disappears. Any other advisory, including a
-second advisory on the same package, fails. A changed path or production path
-fails. Malformed JSON, fields, dates, paths, and duplicate records fail.
+Both modes apply the same validity, expiry, and use rules to every record.
+Baseline mode can inherit only an identical issue from the comparison commit.
+It does not relax coverage. An expired record remains an issue when its
+advisory is gone. A stale record with no current finding also fails.
+Remove a record when its risk disappears. Another advisory on the same package
+needs its own reviewed record. Invalid paths, JSON, fields, dates, and
+duplicate records fail.
 
 The report must have `auditReportVersion: 2` and a `vulnerabilities` object with
 valid package names, severities, install locations, and non-empty `via` arrays.
@@ -185,19 +195,12 @@ uses it.
 
 The current maintenance choices are:
 
-- `wrangler` 4.151.0 is an exact development pin for preview deployment and
-  the Cloudflare local static-host checks. It resolves prerelease Miniflare
-  `5.20261012.0-beta` and adds 29 development packages, including workerd and
-  sharp/libvips. Miniflare's exact `undici` pin is overridden, as the next
-  item says. Update the pin in a reviewed tooling change after static URL,
-  header, preview cleanup, and live dependency-audit checks pass. Remove the
-  pin when previews stop using Cloudflare.
-
-- `undici` 7.30.1 is an override scoped to `miniflare`, which pins `undici`
-  7.29.1. That release has GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, and
-  GHSA-xjj6-f33q-929c, and 7.30.1 patches all three. A parent update does not
-  help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
-  override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
+- `wrangler` 4.164.0 is an exact development pin for preview deployment, the
+  Cloudflare local static-host checks, the cloud site, and the cloud origin
+  router. It resolves prerelease Miniflare `5.20261117.0-beta`, which pins
+  `undici` 7.30.1. `@cloudflare/vitest-plugin` 1.8.4 pins the same Wrangler.
+  Update the pin in a reviewed tooling change after static URL, header,
+  preview cleanup, origin-router tests, and live dependency-audit checks pass.
 
 - `minimatch` 11.0.3 is an override scoped to `eslint`,
   `@typescript-eslint/typescript-estree`, `@google-automations/git-file-utils`,
@@ -208,10 +211,11 @@ The current maintenance choices are:
   11, but `code-suggester` never loads `glob`. Remove a scope when, without
   it, every `minimatch` under its parent resolves to 11.0.1 or newer.
 
-- `eslint-plugin-import-x` keeps `minimatch` 10.2.6 through a reviewed
-  exception for GHSA-g3hv-75wg-m249. The plugin fails to load with `minimatch`
-  11, which removed the `makeRe` export that the plugin imports. Remove the
-  exception when a plugin release accepts `minimatch` 11.0.1 or newer.
+- `eslint-plugin-import-x` shares hoisted `minimatch` 10.2.6 with private
+  cloud tools. A private-app exception covers GHSA-g3hv-75wg-m249 at this
+  location. The plugin cannot load `minimatch` 11, which removed its imported
+  `makeRe` export. Remove this record only after every affected parent accepts
+  a fixed release or the vulnerable install disappears.
 
 - `release-please` 17.6.0 is an exact development pin. The repository's
   release configuration checks use its real manifest parser, changelog

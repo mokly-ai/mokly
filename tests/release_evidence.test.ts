@@ -6,7 +6,6 @@ import test from "node:test";
 import { runReleaseEvidence } from "../scripts/release/evidence.mjs";
 import {
   classifyEvidence,
-  resolveVerificationMode,
   selectCandidateRuns,
 } from "../scripts/release/evidence_contract.mjs";
 import { validateCiReports } from "../scripts/verification/aggregate.mjs";
@@ -27,43 +26,6 @@ import {
   githubFixture,
   temporaryRoot,
 } from "./helpers/release_evidence_runtime.js";
-
-test("release verification mode is evidence by default and complete only by dispatch", () => {
-  assert.equal(
-    resolveVerificationMode({ eventName: "push", manualVerification: "" }),
-    "evidence",
-  );
-  assert.equal(
-    resolveVerificationMode({
-      eventName: "workflow_dispatch",
-      manualVerification: "",
-    }),
-    "evidence",
-  );
-  assert.equal(
-    resolveVerificationMode({
-      eventName: "workflow_dispatch",
-      manualVerification: "complete",
-    }),
-    "complete",
-  );
-  assert.throws(
-    () =>
-      resolveVerificationMode({
-        eventName: "workflow_dispatch",
-        manualVerification: "skip",
-      }),
-    /unsupported release verification mode/,
-  );
-  assert.throws(
-    () =>
-      resolveVerificationMode({
-        eventName: "schedule",
-        manualVerification: "",
-      }),
-    /unsupported release event/,
-  );
-});
 
 test("candidate runs put the tag push before newest same-repository PR evidence", () => {
   const pull = {
@@ -223,7 +185,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
   assert.equal(await fs.readFile(output, "utf8"), "mode=evidence\n");
 });
 
-test("invalid evidence records complete output and exits non-zero", async (t) => {
+test("invalid evidence records its failure and exits non-zero", async (t) => {
   const cases: Array<{
     mutate: (reports: ReturnType<typeof releaseReports>) => void;
     name: string;
@@ -270,27 +232,67 @@ test("invalid evidence records complete output and exits non-zero", async (t) =>
           "utf8",
         ),
       ) as { mode: string; outcome: string };
-      assert.equal(record.mode, "complete");
+      assert.equal(record.mode, "evidence");
       assert.equal(record.outcome, "invalid");
     });
 });
 
-test("complete mode performs no GitHub requests", async (t) => {
-  const root = await temporaryRoot(t);
-  let created = false;
-  const record = await runReleaseEvidence({
-    env: {
-      RELEASE_VERIFICATION: "complete",
-      GITHUB_OUTPUT: path.join(root, "github-output"),
+test("absent CI evidence stops release preparation with recovery instructions", async (t) => {
+  const run = releaseRun();
+  const providers = {
+    "unavailable candidate listing": {
+      ...githubFixture(run),
+      listPulls: async () => ({
+        outcome: "absent" as const,
+        reason: "CI listing unavailable",
+      }),
     },
-    repositoryRoot: root,
-    execute: gitExecutor(),
-    createGithub: () => {
-      created = true;
-      throw new Error("unexpected GitHub client");
+    "no eligible run": {
+      ...githubFixture(run),
+      listRuns: async () => ({ outcome: "applicable" as const, value: [] }),
     },
-  });
-  assert.equal(created, false);
-  assert.equal(record.mode, "complete");
-  assert.equal(record.outcome, "complete");
+    "missing artifacts": {
+      ...githubFixture(run),
+      listArtifacts: async () => ({
+        outcome: "applicable" as const,
+        value: [],
+      }),
+    },
+    "unrelated tree": {
+      ...githubFixture(run),
+      readCommitTree: async () => ({
+        outcome: "applicable" as const,
+        value: "d".repeat(40),
+      }),
+    },
+  };
+  for (const [name, github] of Object.entries(providers))
+    await t.test(name, async (t) => {
+      const root = await temporaryRoot(t);
+      const reports = releaseReports(
+        name === "unrelated tree" ? "c".repeat(40) : TAG_COMMIT,
+      );
+      await assert.rejects(
+        runReleaseEvidence({
+          env: evidenceEnvironment(path.join(root, "github-output")),
+          repositoryRoot: root,
+          execute: gitExecutor(),
+          createGithub: () => github,
+          readReports: async () => reports,
+          discoverNodeFiles: async () => nodeInventory(reports),
+          discoverBrowserFiles: async () => browserInventory(reports),
+        }),
+        new RegExp(
+          `Re-run CI on release commit ${TAG_COMMIT}\\. Retry the release after CI passes\\.`,
+        ),
+      );
+      const record = JSON.parse(
+        await fs.readFile(
+          path.join(root, ".context/release-evidence/record.json"),
+          "utf8",
+        ),
+      );
+      assert.equal(record.outcome, "absent");
+      assert.equal(record.taggedCommit, TAG_COMMIT);
+    });
 });

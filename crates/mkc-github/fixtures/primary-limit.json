@@ -1,0 +1,17 @@
+{
+  "status": 403,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "0",
+    "x-ratelimit-used": "5000",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "message": "API rate limit exceeded for installation ID 1.",
+    "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting",
+    "status": "403"
+  }
+}

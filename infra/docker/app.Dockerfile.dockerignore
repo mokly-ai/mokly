@@ -1,0 +1,16 @@
+.git
+.context
+.conductor
+target
+**/node_modules
+**/.terraform
+**/*.tfstate*
+**/*.tfplan
+**/.env*
+gha-creds-*.json
+**/dist
+apps/app/public/folio
+
+apps/desktop/bundle
+apps/desktop/release
+apps/desktop/.expo

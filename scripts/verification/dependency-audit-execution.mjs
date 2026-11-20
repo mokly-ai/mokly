@@ -6,6 +6,11 @@ import {
   auditEvaluation,
   auditIssue,
 } from "./dependency-audit-issues.mjs";
+import {
+  isRecord,
+  lockfileErrors,
+  workspaceLocations,
+} from "./dependency-audit-lockfile.mjs";
 
 /** Inputs needed to prove equality or evaluate a comparison tree. */
 export const AUDIT_INPUT_FILES = [
@@ -13,6 +18,21 @@ export const AUDIT_INPUT_FILES = [
   "package-lock.json",
   "scripts/verification/dependency-audit-exceptions.json",
 ];
+
+/** Private-app reviews require the real manifests of every local package. */
+export function auditWorkspaceFiles(lockfile, exceptions) {
+  if (
+    !Array.isArray(exceptions) ||
+    !exceptions.some(
+      (record) => isRecord(record) && record.kind === "private-app",
+    ) ||
+    lockfileErrors(lockfile).length
+  )
+    return [];
+  return workspaceLocations(lockfile.packages).map(
+    (location) => `${location}/package.json`,
+  );
+}
 
 function parseJson(contents, source, kind) {
   try {
@@ -77,16 +97,40 @@ export async function runAuditTree({ command, runCommand, readFile, now }) {
     readJson(readFile, AUDIT_INPUT_FILES[1], files),
     readJson(readFile, AUDIT_INPUT_FILES[2], files),
   ]);
+  const workspaces = {};
+  const workspaceIssues = [];
+  await Promise.all(
+    auditWorkspaceFiles(lockfile.value, exceptions.value).map(async (file) => {
+      const manifest = await readJson(readFile, file, files);
+      workspaceIssues.push(...manifest.issues);
+      if (
+        !isRecord(manifest.value) ||
+        (manifest.value.private !== undefined &&
+          typeof manifest.value.private !== "boolean")
+      ) {
+        workspaceIssues.push(
+          auditIssue(
+            "input",
+            `Invalid workspace manifest ${file}. Restore an object with a boolean private flag or no flag.`,
+          ),
+        );
+        return;
+      }
+      workspaces[file.slice(0, -"/package.json".length)] = manifest.value;
+    }),
+  );
   const evaluation = evaluateDependencyAudit(
     parsed.value,
     lockfile.value,
     exceptions.value,
     now,
+    workspaces,
   );
   evaluation.issues.push(
     ...parsed.issues,
     ...lockfile.issues,
     ...exceptions.issues,
+    ...workspaceIssues,
   );
   if (outcome.signal || (outcome.exitCode !== 0 && outcome.exitCode !== 1)) {
     evaluation.issues.push(

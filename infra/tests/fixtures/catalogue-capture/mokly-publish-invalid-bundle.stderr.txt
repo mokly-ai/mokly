@@ -1,0 +1,1 @@
+[mokly/upload-invalid-bundle] The catalogue upload is invalid. Rebuild the catalogue and retry.

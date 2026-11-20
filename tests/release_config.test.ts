@@ -18,6 +18,46 @@ const json = async (file: string) =>
 /** Fixed release inputs: after the 0.15.0 release, a breaking release is 0.16.0. */
 const FIXED_MANIFEST = { ".": "0.15.0", "packages/viewer": "0.6.0" };
 
+test("cloud changes do not create a published package release", async () => {
+  const cloudCrates = (
+    await fs.readdir(path.join(repositoryRoot, "crates"))
+  ).filter((name) => name.startsWith("mkc-"));
+  const cloudPaths = new Map([
+    ["apps", "apps/app/src/index.ts"],
+    ...cloudCrates.map((name): [string, string] => [
+      `crates/${name}`,
+      `crates/${name}/src/lib.rs`,
+    ]),
+    ["packages/tokens", "packages/tokens/src/tokens.ts"],
+    ["infra", "infra/terraform/modules/github/main.tf"],
+    ["scripts/cloud", "scripts/cloud/site/cleanup.sh"],
+    ["docs/protocol/cloud", "docs/protocol/cloud/rest-api.md"],
+    ["docs/mockups", "docs/mockups/src/index.ts"],
+    ["docs/ops", "docs/ops/deploy.md"],
+    ["docs/api", "docs/api/openapi.json"],
+    ["fixtures", "fixtures/desktop-origin.json"],
+    ["rules", "rules/rust/no-inline-use.yml"],
+  ]);
+  const exclusions: unknown = (await json("release-please-config.json"))
+    .packages["."]["exclude-paths"];
+  assert.ok(Array.isArray(exclusions));
+  for (const [cloudPath, file] of cloudPaths) {
+    assert.ok(exclusions.includes(cloudPath), `${cloudPath} must be excluded`);
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      FIXED_MANIFEST,
+    );
+    assert.deepEqual([...updates], [], file);
+  }
+  const updates = await releaseUpdates(
+    repositoryRoot,
+    [...cloudPaths.values()],
+    FIXED_MANIFEST,
+  );
+  assert.deepEqual([...updates], []);
+});
+
 test("the private workspace releases the CLI, UI, model, frame, and viewer packages with one root version", async () => {
   await verifyPackageVersions(repositoryRoot);
   const [manifest, config, versions] = await Promise.all([
@@ -83,6 +123,38 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       /Shared release version: 0\.16\.0/,
     );
     const updates = await releaseUpdates(repositoryRoot, changed);
+    const lock = JSON.parse(updates.get("package-lock.json") ?? "null");
+    assert.ok(lock);
+    for (const file of [
+      ...["app", "desktop", "mockups", "site", "worker"].map(
+        (project) => `apps/${project}/package.json`,
+      ),
+      "packages/tokens/package.json",
+    ]) {
+      const content = updates.get(file);
+      const before = await json(file);
+      const after = content ? JSON.parse(content) : before;
+      if (content) assert.equal(after.version, before.version, file);
+      const directory = path.posix.dirname(file);
+      assert.equal(lock.packages[directory].version, before.version, file);
+      for (const group of ["dependencies", "devDependencies"]) {
+        for (const name of Object.keys(before[group] ?? {})) {
+          if (!name.startsWith("@mokly/")) continue;
+          assert.equal(after[group][name], next, `${file} ${name}`);
+          assert.equal(
+            lock.packages[directory][group][name],
+            next,
+            `package-lock.json ${directory} ${name}`,
+          );
+        }
+      }
+    }
+    assert.equal(
+      [...updates.keys()].some((file) =>
+        /^(?:apps|crates\/mkc-|packages\/tokens).*CHANGELOG/.test(file),
+      ),
+      false,
+    );
     assert.ok(updates.has("packages/mokly/package.json"));
     assert.ok(updates.has("packages/viewer/package.json"));
     assert.ok(updates.has("packages/ui/package.json"));

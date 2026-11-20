@@ -1,0 +1,14 @@
+{
+  "moklyVersion": "0.0.0",
+  "files": {
+    "catalogue-v9.json": "c46d55f8193aba30424d0ee5d78ab34f35a635be14975cb6394bc2308b4a959c",
+    "cli-errors.json": "44fa80f5ebadffc97828af82df9c93a79ff2da025373401cc38135d29ff0ab4b",
+    "dogfood.tar.gz": "07e16612af8441eaa95f9aef1fa314578ebc157a563190d55ef741e9fbc5eab3",
+    "export-ownership-v3.json": "3f9d7fed25844c93670cf05891b6acef12e750d4fab38d7994f74247be9b375d",
+    "index-v9.json": "8ece55eac74b03148e890e2830dbd6bb5fe5214232bfe46a6a835d586d33cece",
+    "inventory.json": "4783bf7cedcc1e8ce2c067ce5409d13e3fda7ac336c5c61d5d813af6bc20f10a",
+    "mokly-upload.json": "177ec4b6958762b065060775201308fa95e195394a8f139c8ee0b7991d9ce205",
+    "plan.tar.gz": "4007a7412f192e045a7f5c260999b7234ef63443beab0fd7effdb04c381ff15a",
+    "upload-plan-v1.json": "e260ed994ba4c77d52646996de6a06f25a997d683b99cf3c36effa7560c89065"
+  }
+}

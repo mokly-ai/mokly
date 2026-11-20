@@ -1,0 +1,49 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mokly-cloud
+  annotations:
+    {{- if eq .Values.database.mode "namespace" }}
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    {{- else }}
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: {{ printf "mkc-%s" (include "mkc.environment" .) | quote }}
+    kubernetes.io/ingress.allow-http: "false"
+    {{- end }}
+spec:
+  {{- if eq .Values.database.mode "namespace" }}
+  ingressClassName: mkc-preview
+  {{- if .Values.catalogue.enabled }}
+  tls:
+    - secretName: catalogue-tls
+      hosts:
+        - {{ printf "*.%s" (include "mkc.catalogueDomain" .) | quote }}
+  {{- end }}
+  {{- else }}
+  tls:
+    - secretName: {{ .Values.ingress.tlsSecret }}
+      hosts:
+        {{- range $name := list "api" "app" "catalogue" }}
+        {{- if (index $.Values $name).enabled }}
+        - {{ printf "%s%s" (ternary "*." "" (eq $name "catalogue")) (include "mkc.host" (dict "root" $ "kind" $name)) | quote }}
+        {{- end }}
+        {{- end }}
+  {{- end }}
+  rules:
+    {{- range $name := list "api" "app" "catalogue" }}
+    {{- if (index $.Values $name).enabled }}
+    - host: {{ printf "%s%s" (ternary "*." "" (eq $name "catalogue")) (include "mkc.host" (dict "root" $ "kind" $name)) | quote }}
+      http:
+        paths:
+          - path: {{ ternary "/" "/*" (eq $.Values.database.mode "namespace") }}
+            pathType: {{ ternary "Prefix" "ImplementationSpecific" (eq $.Values.database.mode "namespace") }}
+            backend:
+              service:
+                name: {{ $name }}
+                port: { name: http }
+    {{- end }}
+    {{- end }}
+{{- end }}

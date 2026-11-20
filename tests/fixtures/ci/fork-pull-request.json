@@ -1,0 +1,19 @@
+{
+  "action": "synchronize",
+  "number": 37,
+  "repository": {
+    "full_name": "mokly-ai/mokly",
+    "default_branch": "main",
+    "private": false
+  },
+  "pull_request": {
+    "number": 37,
+    "head": {
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ref": "feature/public-ci",
+      "repo": { "full_name": "contributor/mokly", "fork": true }
+    },
+    "base": { "ref": "main", "repo": { "full_name": "mokly-ai/mokly" } },
+    "labels": [{ "name": "preview" }]
+  }
+}

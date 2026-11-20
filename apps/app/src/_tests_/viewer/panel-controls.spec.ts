@@ -1,0 +1,105 @@
+import { projectPathFor } from "../addresses";
+import { installedAccount } from "../database-fixture";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { appOrigin } from "../origins";
+import { createProject } from "../project-setup";
+
+import { publishedViewerReady, publishedProject } from "./support";
+
+test("the projects panel lists what the reader can open and creates the next", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "projects");
+  await open(page, made.publicationPath);
+  await publishedViewerReady(page);
+  await page.getByTestId("viewer-project").click();
+  const panel = page.getByTestId("viewer-panel-projects");
+  await expect(panel).toBeVisible();
+  // The workspace is named with the GitHub accounts it connects, which the
+  // installation list answers for every workspace at once.
+  await expect(panel.locator(".fo-ref-head .fo-ref-detail")).toHaveText(
+    installedAccount,
+  );
+  await expect(panel.getByText("Current")).toBeVisible();
+  await expect(
+    panel.getByText(new URL(appOrigin).host + made.projectPath),
+  ).toBeVisible();
+  await panel.getByTestId("projects-create").click();
+  await expect(page).toHaveURL((url) => /^\/[^/]+\/-\/new$/.test(url.pathname));
+});
+
+test("one overlay is one entry, however the reader reached it", async ({
+  page,
+}) => {
+  await signIn(page, freshEmail("one-entry"));
+  const projectId = await createProject(page, "One Entry Org");
+  const here = await projectPathFor(page, projectId);
+  await open(page, here);
+
+  // A panel opened from a panel replaces it, so closing lands on the page
+  // rather than on the panel the reader came through.
+  await page.getByTestId("viewer-history").click();
+  await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
+  await page.getByTestId("history-choose-publication").click();
+  await expect(page.getByTestId("viewer-panel-switcher")).toBeVisible();
+  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+  await page.getByTestId("close-switcher").click();
+  await expect(page.getByTestId("viewer-panel-switcher")).toHaveCount(0);
+  await expect(page.getByTestId("viewer-panel-history")).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === here);
+
+  // And the settings dialog obeys the same rule the panels do: one entry,
+  // undone on close, so one press of Back leaves the page.
+  await page.getByTestId("viewer-settings").click();
+  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await page.getByTestId("close-settings").click();
+  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === here);
+  await page.goBack();
+  await expect(page).not.toHaveURL((url) => url.pathname === here);
+});
+
+test("a trigger says which overlay it opens, and whether it is open", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "announced");
+  const path = made.publicationPath;
+  await open(page, path);
+  await publishedViewerReady(page);
+
+  // Every bar trigger opens one overlay, and says so before it is pressed.
+  for (const slot of [
+    "viewer-project",
+    "viewer-publication",
+    "viewer-history",
+    "viewer-share",
+    "viewer-settings",
+    "viewer-account",
+  ]) {
+    await expect(page.getByTestId(slot)).toHaveAttribute(
+      "aria-haspopup",
+      "dialog",
+    );
+    await expect(page.getByTestId(slot)).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  }
+
+  // Exactly the open one reports itself expanded, for a panel and for each
+  // settings pane, so a reader who cannot see the overlay is still told.
+  const open_ = async (address: string, expanded: string, shut: string) => {
+    await open(page, `${path}${address}`);
+    await expect(page.getByTestId(expanded)).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(page.getByTestId(shut)).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  };
+  await open_("?panel=history", "viewer-history", "viewer-share");
+  await open_("?settings=", "viewer-settings", "viewer-account");
+  await open_("?settings=account", "viewer-account", "viewer-settings");
+});

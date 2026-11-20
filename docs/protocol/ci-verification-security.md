@@ -94,7 +94,8 @@ The Testbox workflow uses no secrets and has only `contents: read` permission.
 Its full-history checkout sets `persist-credentials: false`.
 The repository is public. Boxes fetch pushed commits without a token.
 Send source files and verification inputs, not the local org key or credential
-files. Write only the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, and the
+files. Write only the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, the cloud Node
+binary directory `MOKLY_CLOUD_NODE_BIN`, and the
 workflow `env` entries for Testbox sessions in `/etc/environment`. Do not
 forward the caller's environment.
 

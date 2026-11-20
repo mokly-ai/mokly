@@ -1,0 +1,31 @@
+---
+title: "Zero container"
+description: "After move."
+element: "fixture-zero-container"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    { "slug": "zero", "title": "Zero", "props": { "label": "Zero" } },
+    {
+      "slug": "one",
+      "title": "First moved",
+      "movedFrom": "zero-container/zero/one",
+      "props": { "label": "First" },
+    },
+    {
+      "slug": "two",
+      "title": "Second moved",
+      "movedFrom": "zero-container/zero/two",
+      "props": { "label": "Second" },
+    },
+  ]
+---
+
+<p>{{ label }}</p>

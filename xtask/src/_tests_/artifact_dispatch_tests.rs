@@ -19,6 +19,7 @@ fn application_dispatches_native_build_and_type_generation() {
     )));
     let unused = Arc::new(Unimock::new(()));
     let application = Application {
+        policy: Arc::new(Unimock::new(())),
         artifacts,
         selector: unused.clone(),
         check_runner: unused.clone(),

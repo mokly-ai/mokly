@@ -1,0 +1,34 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "types": ["node", "react", "react-dom"],
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "paths": {
+      "react": ["../../node_modules/@types/react/index.d.ts"],
+      "react/*": ["../../node_modules/@types/react/*"],
+      "react-dom/*": ["../../node_modules/@types/react-dom/*"],
+      "react-native": ["../../node_modules/react-native/types/index.d.ts"],
+      "react-native-web": [
+        "../../node_modules/@types/react-native-web/index.d.ts"
+      ],
+      "@firna/ui/theme": ["../../node_modules/@firna/ui/dist/node/theme.d.ts"],
+      "@firna/ui/*": ["../../node_modules/@firna/ui/dist/node/*/index.d.ts"],
+      "@mokly-cloud/tokens/*": ["../../packages/tokens/src/*.ts"],
+      "@mokly/mokly": ["../../node_modules/@mokly/mokly/dist/index.d.ts"],
+      "lucide-react-native": [
+        "../../node_modules/lucide-react-native/dist/lucide-react-native.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "index.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": ["dist", ".expo", "node_modules"]
+}
