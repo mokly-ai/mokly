@@ -1,5 +1,7 @@
 # Startup Diagnostics And Scale Fixtures
 
+Status: Writer resumes do not emit the required store state record yet. The [writer resume state item](../../plans/follow-ups/render-store-resume-state-record.md) adds it.
+
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -15,9 +17,10 @@ interleave with the JSON-lines contract.
 
 Each record has `schemaVersion: 1`, a process-local `session`, `pid`, `role`,
 `stage`, numeric `id`, optional `parentId`, and monotonic `elapsedMs` since
-the session began. `event` is `start`, `end`, or `counts`. Span ends add
-`durationMs` and `status` (`ok` or `error`). Counts carry named numeric
-totals. `role` is `core` for the Mokly binary and `sidecar` for a sidecar
+the session began. `event` is `start`, `end`, `counts`, or `state`. Span ends
+add `durationMs` and `status` (`ok` or `error`). Counts carry named numeric
+totals, and a `state` record carries the current state of the render store.
+`role` is `core` for the Mokly binary and `sidecar` for a sidecar
 process; the core forwards sidecar records on the same stderr stream
 unchanged. The stage names and available counts are diagnostic details, not a
 stable public API. No documents, props, file contents, environment values, or
@@ -44,6 +47,10 @@ its files are installed. Its Serve duration includes queue time.
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
 | `render.fragment`                                | the wait for one sidecar render, or an HTML component render in the core                                                             |
+| `render.store.read`                              | one render store lookup after a render cache miss                                                                                    |
+| `render.store.write`                             | one segment publication of the render store writer                                                                                   |
+| `render.store.identity`                          | the read of the native build identity of the render store                                                                            |
+| `render.store.initialize`                        | the render store preparation on its writer: the native build identity and the index                                                  |
 | `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module; carries `cache`                      |
 | `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                             |
 | `serve.ready`                                    | command start to the listening URL                                                                                                   |
@@ -54,7 +61,7 @@ its files are installed. Its Serve duration includes queue time.
 | `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
-| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
+| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `admittedViews`, `unchanged`, `changed`, and `ignoredOnly`                 |
 | `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                           |
 | `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included                        |
@@ -127,6 +134,25 @@ Decision: one counts record for each phase. Fields on each phase's own
 counts record were rejected, because they would rename `cacheHits` and lose
 the counts of a failed review phase.
 
+In Serve, each change of the [render store](./mokly-render-store.md) writes a
+`render.store` record with `event: "state"` and no `parentId`: the preparation,
+each lookup, each admitted or dropped offer, each writer batch, the resume of
+the writes, and the stop. `sequence` orders these records. `hits` and `misses`
+count the store lookups that did and did not serve a document, and `faults`
+counts the rejected entries. `writes` and `bytes` count the documents and the
+bytes that the writer published. `drops` counts the offered documents that the
+store did not keep. `queued` and `active` give the keys that wait and the keys
+of the active batch. The memory fields `memory_queue_peak`,
+`memory_segment_peak`, `memory_export_peak`, `memory_codec_peak`,
+`memory_known`, `memory_known_peak`, `queue_bookkeeping_charge`, and
+`codec_charge_peak` follow the
+[writer memory rule](./mokly-render-store.md#writes). The totals cover the
+whole process. A stored read is a
+render cache miss, so `render.cache` never counts it as a hit.
+Decision: the render store writes its own state records. Store fields in
+`render.cache` were rejected, because store writes run after the phases that
+`render.cache` covers.
+
 ## Review Spans
 
 [Review timing records](./mokly-review-timings.md) define the parent context,
@@ -164,7 +190,9 @@ constant and other heavy work idle:
    real preview content in a browser, measured cold and then in a fresh
    server and browser context for an OS-warm restart; `changesReadyMs`
    waits for delivered Changes in Browse. "Cold" means application-cold,
-   not a flushed page cache.
+   with no documents in the [render store](./mokly-render-store.md), not a
+   flushed page cache. The warm restart keeps the documents that the cold run
+   stored.
 3. Changes: the `changes.classify` duration and the CSS share, cold and warm.
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.
@@ -190,6 +218,8 @@ CI's small correctness fixtures have
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
 | bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
+| render store namespace             | 128 MiB (134,217,728 bytes) per repository, complete and staged entries together                                               |
+| render store writer                | 4 MiB (4,194,304 bytes) for the batch and the segment buffer of the [render store](./mokly-render-store.md#writes) writer      |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

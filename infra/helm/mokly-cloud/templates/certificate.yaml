@@ -1,0 +1,25 @@
+{{- if and (eq .Values.database.mode "namespace") .Values.ingress.enabled .Values.catalogue.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: catalogue-tls
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  secretName: catalogue-tls
+  secretTemplate:
+    annotations:
+      helm.sh/resource-policy: keep
+  dnsNames:
+    - {{ printf "*.%s" (include "mkc.catalogueDomain" .) | quote }}
+  issuerRef:
+    name: mkc-preview-letsencrypt
+    kind: ClusterIssuer
+    group: cert-manager.io
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  duration: 2160h
+  renewBefore: 720h
+{{- end }}

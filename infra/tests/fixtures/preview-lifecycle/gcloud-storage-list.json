@@ -1,0 +1,50 @@
+[
+{
+  "url": "gs://mokly-508518-preview-blobs/pr-42/sha256/aa/first#1790194920102844",
+  "type": "cloud_object",
+  "metadata": {
+    "bucket": "mokly-508518-preview-blobs",
+    "contentType": "application/octet-stream",
+    "crc32c": "/pKTgQ==",
+    "etag": "CLy3quLDhZcDEAE=",
+    "generation": "1790194920102844",
+    "id": "mokly-508518-preview-blobs/pr-42/sha256/aa/first/1790194920102844",
+    "kind": "storage#object",
+    "md5Hash": "z+pHYhxdJaKvJju7mbiF1g==",
+    "mediaLink": "https://storage.googleapis.com/download/storage/v1/b/mokly-508518-preview-blobs/o/pr-42%2Fsha256%2Faa%2Ffirst?generation=1790194920102844&alt=media",
+    "metageneration": "1",
+    "name": "pr-42/sha256/aa/first",
+    "selfLink": "https://www.googleapis.com/storage/v1/b/mokly-508518-preview-blobs/o/pr-42%2Fsha256%2Faa%2Ffirst",
+    "size": "499",
+    "storageClass": "STANDARD",
+    "timeCreated": "2026-09-23T20:22:00.110000+00:00",
+    "timeFinalized": "2026-09-23T20:22:00.110000+00:00",
+    "timeStorageClassUpdated": "2026-09-23T20:22:00.110000+00:00",
+    "updated": "2026-09-23T20:22:00.110000+00:00"
+  }
+},
+{
+  "url": "gs://mokly-508518-preview-blobs/pr-42/sha256/bb/second#1790180600109778",
+  "type": "cloud_object",
+  "metadata": {
+    "bucket": "mokly-508518-preview-blobs",
+    "contentType": "application/octet-stream",
+    "crc32c": "Btd0kg==",
+    "etag": "CNK1g7aOhZcDEAE=",
+    "generation": "1790180600109778",
+    "id": "mokly-508518-preview-blobs/pr-42/sha256/bb/second/1790180600109778",
+    "kind": "storage#object",
+    "md5Hash": "GYBgT51eoqI1/S1doewS/w==",
+    "mediaLink": "https://storage.googleapis.com/download/storage/v1/b/mokly-508518-preview-blobs/o/pr-42%2Fsha256%2Fbb%2Fsecond?generation=1790180600109778&alt=media",
+    "metageneration": "1",
+    "name": "pr-42/sha256/bb/second",
+    "selfLink": "https://www.googleapis.com/storage/v1/b/mokly-508518-preview-blobs/o/pr-42%2Fsha256%2Fbb%2Fsecond",
+    "size": "499",
+    "storageClass": "STANDARD",
+    "timeCreated": "2026-09-23T16:23:20.118000+00:00",
+    "timeFinalized": "2026-09-23T16:23:20.118000+00:00",
+    "timeStorageClassUpdated": "2026-09-23T16:23:20.118000+00:00",
+    "updated": "2026-09-23T16:23:20.118000+00:00"
+  }
+}
+]

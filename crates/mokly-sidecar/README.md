@@ -84,12 +84,18 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-Ties and calls without a generation keep queue order. A call can use another
-available slot while the worker that holds its generation is busy. The launch
-root is the head root.
+A head bundle prefers the idle head worker that compiled last, then older
+compilers, under the
+[head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity).
+A successful head bundle counts as a compile unless its `cache` field is
+`memory` or `hit`. A new process starts without a compile. Ties and other
+calls without a generation keep queue order. A call can use another available
+slot while the worker that holds its generation is busy. The launch root is
+the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
-after a successful render. The pool bound covers all roots.
+after a successful render request. A warm-up replay does not move it. The pool
+bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
 event. PostCSS context affinity prevents duplicate workers. A busy affine
 request does not block independent work on another available slot. Returning
@@ -115,12 +121,37 @@ remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
 
+The pool keeps the last 30 successful render requests of the newest head
+generation, and no replay. `SidecarPool::record_served_render` also adds a
+store-served request without a call, when its source root is the launch
+repository and its generation is the newest head generation. An equal
+store-origin request already in the window adds no copy, and normal renders
+keep their order and their duplicates. The window and every warm-up share each
+call through an `Arc`. After the return pass starts a head worker, the next
+steps warm it up while no request waits and Serve holds no claim. The start of
+a return pass also enrolls each existing head worker without a successful
+render or replay of the newest generation's epoch, with one attempt for each
+epoch. A warm-up sends the
+missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
+then replays the recorded renders, one call at a time, and discards each
+result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
+console and output writes of the code that the call runs, and its timing
+records still appear. `Request::quiet` has no default, so each request builder
+chooses it. A request takes the worker after the call in flight, and the warm-up
+continues later. A newer head generation, a stop, a failed call, or another
+loaded head generation ends it. A failed call keeps or replaces the worker as
+a failed request does. The
+[return warm-up contract](../../docs/protocol/mokly-sidecar-return-warmup.md)
+owns these rules.
+
 After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
 and directory lists in a bounded memory store. Captured evidence is complete
 and carries no marker. The pool also keeps a Serve edit generation with a
-toolchain identity whose evidence holds only the `uncaptured` marker. The
-final release of an unmarked incomplete generation removes the older entry
+toolchain identity whose evidence holds the `uncaptured` marker and no inputs
+except the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The final release of an unmarked incomplete generation removes the older entry
 with equal settings and keeps nothing. The
 [compiled recipes contract](../../docs/protocol/mokly-sidecar-recipes.md)
 owns the retention rule and the bound. Each entry costs the bytes of its
@@ -167,8 +198,9 @@ of each outcome maps it once to its `Effects`: the `cache` value of the timing
 record, at most one entry warning and one directory warning, and the
 `StoreState`. `ReusableRecipe::new` accepts a compilation with captured reuse
 evidence. It also accepts a Serve edit compilation with a toolchain identity
-whose evidence holds only the `uncaptured` marker, with `complete` and
-`durable` false and no inputs. `DurableRecipe::new` accepts only a recipe
+whose evidence holds the `uncaptured` marker, with `complete` and `durable`
+false. Its inputs can hold only the file, absent, or link entries of its
+private folder files. `DurableRecipe::new` accepts only a recipe
 whose evidence is captured and durable, with no marker, so no store caller
 can write or read a compilation without a stable capture.
 `DurableRecipe::with_plan` keeps the optional `ResolutionPlan` of the
@@ -192,11 +224,13 @@ restores the entry with `disk_seed_request` under a private `disk:` seed id
 before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
-`damaged`, or `unavailable` when that removal finds the store unusable. After
-a successful `bundle` call, the pool compares the runtime key of the result
-with the keys of the seeds and of the generations that the worker already
-holds. It sets the `cache` field of the result, which never
-crosses the wire, to `memory` or `hit` for a reused compilation, or else to
+`damaged`, or `unavailable` when that removal finds the store unusable. A
+worker records the count of `esbuild` operation events of each `bundle`
+request in a result field that never crosses the wire. After a successful
+`bundle` call, the pool uses that count to set the `cache` field of the
+result, which also never crosses the wire. A count of zero gives `hit` when
+the runtime key of the result equals the key of the disk seed of the
+request. Otherwise, a count of zero gives `memory`. A positive count gives
 the reason why the sidecar compiled. When the result holds the restored
 stored compilation, the pool also adds the stored plan of that entry to the
 result. A `Full` call then offers the served recipe, with the plan of the
@@ -243,7 +277,13 @@ standard error. It returns `SpawnFailure::NotStarted` for a failure before the
 Node process exists. Examples are a missing sidecar entry or source directory,
 and a Node executable that cannot start. It returns `SpawnFailure::Started`
 when a later step fails, for example when it cannot take whole-tree ownership
-or start a pipe task. Shutdown wakes queued callers and sends shutdown to each
+or start a pipe task. Startup cleanup keeps tree ownership through direct-child
+reaping. Unix cleanup stops descendants before reaping the direct child.
+Windows retains the attached kill-on-close job until startup cleanup ends.
+Cleanup errors go to tracing and preserve the startup error.
+`NodeFactory::with_threads` injects `dyn PipeThreads` for pipe and completion
+task creation. The default uses named host threads.
+Shutdown wakes queued callers and sends shutdown to each
 process. All processes share one grace deadline. Survivors are killed and
 reaped. The [lifecycle contract](../../docs/protocol/mokly-sidecar-lifecycle.md)
 owns stderr drainage at that deadline.
@@ -338,12 +378,22 @@ Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
-inputs, and preserve binding updates across workers. Generation affinity tests
+inputs, and preserve binding updates across workers. Head bundle affinity
+tests check that a head bundle takes the newest idle compiler, or the next
+newest while that one is busy. Base bundles keep FIFO order. Memory reuse
+neither creates nor raises a compile rank, and a disk hit creates none. After
+a recycle, a root switch, or a reap, the new process has no rank. A retired
+compiler leaves the surviving compiler preferred. Generation affinity tests
 check that a worker with every input that a call needs comes before other
 holders and non-holders, with FIFO ties. Stale epochs and missing records
-never win the rank. Calls without a generation keep FIFO order, and context
+never win the rank. Calls without a generation keep FIFO order while no worker
+has a compile, and context
 affinity and the pass preference still come first. Parallel renders use every
-available slot and start no process. Recipe store tests
+available slot and start no process. Return warm-up tests check the order of
+the preparation and the replays, the bound of 30 calls, the handover to a
+waiting request, the pause for a claim, the quiet flag of warm-up calls, the
+render count of replays, the warm head after replays, and each end of a
+warm-up. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -363,7 +413,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, with `served_generation` for a core
-  reuse and `request_claimed` for a call that holds a `CallClaim`, and
+  reuse, `request_claimed` for a call that holds a `CallClaim`, and
+  `record_served_render` for a store-served record, and
   `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
@@ -374,14 +425,26 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs. Growth reuses a free slot before it adds
-  a new one.
+  generation state that a call needs. For a `bundle` call, it then prefers the
+  newest `Slot::last_compilation`, the epoch that `Pool::execute` records
+  after a head compile. Growth reuses a free slot before it adds a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
-  warm head worker, the candidates of the return pass, and the
-  `return_disabled` flag, and `Pool::record_head`, which records each
-  successful head bundle and render.
+  warm head worker, the candidates of the return pass, the
+  `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
+  records each successful head bundle and render request.
+  `Pool::record_stored_render` checks the head root, the newest generation,
+  and the render kind of a store-served record.
+- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines
+  `Pool::maintain_warmup`, which runs one warm-up step when no return step
+  can run. [`src/pool_warmup_state.rs`](./src/pool_warmup_state.rs) defines
+  `Warmups`: the recent window of shared calls with their store-origin flags,
+  the pending warm-ups, and the render proofs and attempts of each slot and
+  epoch. [`src/pool_render_equality.rs`](./src/pool_render_equality.rs)
+  compares two render calls exactly, signed zero included, without
+  serializing them.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
-  runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
+  runs one step in `Pool::maintain_return`. The start of a pass enrolls the
+  existing head workers that need a warm-up. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,
   it adds the slot to the retired set, sets `return_disabled`, and returns
   `Error::HeadReturnDisabled` with the original failure. Only the return pass
@@ -417,11 +480,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `Prerequisites` gives the inputs that each generation call needs, for
   replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
-  call from the bundle store, keeps the request-local provenance of its
-  seeds, sets the `cache` outcome of its result, and offers the served recipe
+  call from the bundle store, keeps the request-local provenance of its disk
+  seed, sets the `cache` outcome of its result, and offers the served recipe
   of each `Full` call to the store. The provenance keeps the runtime key and
   the plan of a restored stored compilation. A result with that runtime key
-  reports `hit` and carries that plan.
+  carries that plan. It reports `hit` when its count of `esbuild` events is
+  zero.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -460,6 +524,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `CaptureHint` in `hello` when the launch asks for capture durability. Its
   `spawn` decides whether each failure is `SpawnFailure::NotStarted` or
   `SpawnFailure::Started`.
+- [`src/process_threads.rs`](./src/process_threads.rs) defines the `PipeThreads`
+  boundary and its `SystemPipeThreads` host implementation.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
   environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,

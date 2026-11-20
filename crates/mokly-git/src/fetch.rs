@@ -20,11 +20,30 @@ impl Cancellation for Active {
 }
 
 impl GitRepository {
+    /// Read names and modes before a promisor fetch, without asking Git for
+    /// missing blob sizes. The sized request runs after the fetch completes.
+    pub(crate) fn initial_tree_listing(&self, request: &Request) -> Result<Vec<u8>> {
+        let mut request = request.clone();
+        if !self.promisor_remotes.is_empty()
+            && let Some(index) = request
+                .args
+                .iter()
+                .take_while(|argument| argument.as_os_str() != "--")
+                .position(|argument| argument == "-l")
+        {
+            request.args.remove(index);
+        }
+        Ok(self.runner.run(&request)?.stdout)
+    }
+
     /// Fetches every missing blob of `entries` from a promisor remote in one
     /// `fetch --stdin` request; checkout reads pass their attribute files too.
     /// The fetch lock serializes this step, so parallel conversion reads never
     /// start competing fetches. Returns whether a fetch ran.
-    pub(crate) fn ensure_objects(&self, entries: &[Entry]) -> Result<bool> {
+    /// The depth-limited walk reads direct entries of the root and parent trees.
+    /// Filtering provided tips keeps reused trees independent of their depth.
+    /// Only requested missing ids enter the fetch.
+    pub(crate) fn ensure_objects(&self, commit: &ObjectId, entries: &[Entry]) -> Result<bool> {
         let ids: BTreeSet<_> = entries
             .iter()
             .filter(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
@@ -37,11 +56,15 @@ impl GitRepository {
             .fetch_lock
             .lock()
             .unwrap_or_else(|error| error.into_inner());
-        let input = ids
+        let trees: BTreeSet<_> = entries
             .iter()
-            .map(|id| format!("{id}\n"))
-            .collect::<String>()
-            .into_bytes();
+            .filter(|entry| entry.mode == Mode::Directory)
+            .map(|entry| entry.object.as_str())
+            .collect();
+        let mut input = format!("{commit}^{{tree}}\n").into_bytes();
+        for tree in trees {
+            input.extend_from_slice(format!("{tree}\n").as_bytes());
+        }
         let output = self.command_with_mode(
             ProcessMode::PlainGroup,
             &[
@@ -49,6 +72,9 @@ impl GitRepository {
                 "--objects",
                 "--no-object-names",
                 "--missing=print",
+                "--no-walk",
+                "--filter=tree:2",
+                "--filter-provided-objects",
                 "--stdin",
             ],
             input,
@@ -57,7 +83,10 @@ impl GitRepository {
         let mut missing = BTreeSet::new();
         for line in text(&output)?.lines() {
             if let Some(id) = line.strip_prefix('?') {
-                missing.insert(ObjectId::parse(id)?);
+                let id = ObjectId::parse(id)?;
+                if ids.contains(&id) {
+                    missing.insert(id);
+                }
             } else {
                 ObjectId::parse(line)?;
             }

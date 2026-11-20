@@ -1,0 +1,34 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_product_prices_page_fixture"
+  },
+  "body": {
+    "object": "list",
+    "url": "/v1/prices",
+    "has_more": true,
+    "data": [
+      {
+        "id": "price_legacy_editor_fixture",
+        "object": "price",
+        "created": 1790380800,
+        "active": true,
+        "currency": "usd",
+        "lookup_key": null,
+        "metadata": {
+          "mokly_seat_kind": "editor"
+        },
+        "nickname": "Legacy Editor seat",
+        "product": "prod_team_fixture",
+        "recurring": {
+          "interval": "month",
+          "interval_count": 1,
+          "usage_type": "licensed"
+        },
+        "tax_behavior": "exclusive",
+        "unit_amount": 2000
+      }
+    ]
+  }
+}

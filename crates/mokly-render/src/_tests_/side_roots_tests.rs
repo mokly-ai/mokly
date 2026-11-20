@@ -51,6 +51,7 @@ fn a_working_tier_base_selects_the_same_package_roots_as_the_head() {
         },
     };
     let tiers: &dyn Dependencies = &DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(Unimock::new(())),
         commands: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(())),

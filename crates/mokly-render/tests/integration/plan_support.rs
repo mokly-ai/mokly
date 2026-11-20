@@ -14,10 +14,12 @@ use mokly_graph::cache::MemoryCache;
 use mokly_graph::workers::ThreadWorkers;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
-use mokly_sidecar::methods::{BundleCapture, Call};
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
+use mokly_test_support::durable_fixture::{self, Owner};
 use tempfile::TempDir;
 
+use super::plan_capture::InitialCapture;
 use super::plan_results::{Counts, Results};
 use super::support::package_version;
 
@@ -35,12 +37,18 @@ pub(super) struct Fixture {
 
 impl Fixture {
     pub(super) fn new() -> Self {
-        Self::in_parent(Path::new(env!("CARGO_TARGET_TMPDIR")))
+        let guard = FIXTURE.lock().unwrap_or_else(|error| error.into_inner());
+        let directory = durable_fixture::create(Owner::RenderPlanCandidates).unwrap();
+        Self::in_directory(directory, guard)
     }
 
     pub(super) fn in_parent(parent: &Path) -> Self {
         let guard = FIXTURE.lock().unwrap_or_else(|error| error.into_inner());
         let directory = tempfile::tempdir_in(parent).unwrap();
+        Self::in_directory(directory, guard)
+    }
+
+    fn in_directory(directory: TempDir, guard: MutexGuard<'static, ()>) -> Self {
         let root = dunce::canonicalize(directory.path()).unwrap();
         let counts = Arc::new(Counts::default());
         let pool = Arc::new(Results::new(&root, counts.clone()));
@@ -130,18 +138,10 @@ impl Fixture {
         self.counts.0.load(Ordering::SeqCst)
     }
     pub(super) fn sent_plan(&self) -> bool {
-        self.pool
-            .inner
-            .calls
-            .lock()
-            .unwrap()
-            .iter()
-            .rev()
-            .find_map(|call| match call {
-                Call::Bundle(request) => Some(request.plan.is_some()),
-                _ => None,
-            })
-            .unwrap()
+        self.pool.inner.sent_plan()
+    }
+    pub(super) fn initial_capture(&self) -> Option<InitialCapture> {
+        self.pool.inner.initial_capture()
     }
 }
 

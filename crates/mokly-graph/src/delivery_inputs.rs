@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
 use mokly_css::types::StylesheetRoot;
 
+use crate::document_store::Persistence;
 use crate::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use crate::render_inputs::RenderKeys;
 use crate::resource_inputs::{MemoryResourceInputs, ResourceInputs};
@@ -19,6 +20,8 @@ pub const STYLE_REFERENCE_BYTES: usize = 4 * 1024 * 1024;
 /// that related generations share.
 #[derive(Clone, Debug)]
 pub struct DeliveryInputs {
+    /// Serve-only document reuse. Direct and one-shot callers leave it absent.
+    pub persistence: Option<Persistence>,
     /// Lazy resource dependencies shared by related graph generations.
     pub resources: Arc<dyn ResourceInputs>,
     /// Authored closure files shared by equal document keys across generations.
@@ -40,6 +43,7 @@ pub struct DeliveryInputs {
 impl Default for DeliveryInputs {
     fn default() -> Self {
         Self {
+            persistence: None,
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             style_references: Arc::new(MemoryReferenceCache::new(STYLE_REFERENCE_BYTES)),

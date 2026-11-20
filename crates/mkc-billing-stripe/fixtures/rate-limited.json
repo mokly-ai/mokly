@@ -1,0 +1,15 @@
+{
+  "status": 429,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_rate_fixture",
+    "retry-after": "2"
+  },
+  "body": {
+    "error": {
+      "type": "api_error",
+      "code": "rate_limit",
+      "message": "Too many requests"
+    }
+  }
+}

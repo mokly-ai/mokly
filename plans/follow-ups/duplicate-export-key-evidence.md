@@ -55,7 +55,6 @@ The options check read those pinned upstream sources. It ran no owner reproducti
 - **Left out:** Changing only plan candidate names cannot repair compiled or stored evidence. Rejecting the build adds a new user-visible error. Rewriting dependencies does not solve capture's reader mismatch.
 - **Shared assumptions:** Exact output, current bounds, and disk-cache rules stay. Source: the reuse contracts in `docs/protocol/mokly-sidecar-recipes.md` and `docs/protocol/mokly-base-cache.md`. The assumption that a parsed object matches native metadata is a code choice. B and C remove it.
 - **Wider fix:** C removes the reader mismatch. It requires proof that the other metadata readers use compatible ordering too.
-- **Previous examples:** [self-package-folder-export-evidence.md](./self-package-folder-export-evidence.md) records a different missing export-target observation with reproduced stale compiled output.
-- **Related:** [self-package-folder-export-evidence.md](./self-package-folder-export-evidence.md), the same export capture owner. A folder expansion repair does not prove duplicate-key handling.
+- **Previous examples:** Main commit `a9859a574` of 2026-11-20 repaired a different missing export-target observation. A self-package folder export kept a stale index module in compiled reuse, the bundle cache, and a strict build after a preferred sibling file appeared.
 - **Recommendation:** A. The source mismatch is confirmed, but current memberships may already prevent stale output.
 - **Action:** fix after merge, apply A. Decide on a capture repair after the owner probes establish its need.

@@ -68,6 +68,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
         .unwrap();
     let request = wire::Request {
         id: 0,
+        quiet: false,
         call: Call::Hello(Hello::default()),
     };
     let mut transport = Unimock::new((

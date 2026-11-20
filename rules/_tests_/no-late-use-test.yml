@@ -1,0 +1,58 @@
+id: no-late-use
+valid:
+  - |
+    //! Module documentation.
+    #![allow(dead_code)]
+
+    extern crate alloc;
+
+    // Module declarations stay with the import prelude.
+    #[cfg(unix)]
+    mod sibling;
+
+    use sibling::Thing;
+
+    fn run(_: Thing) {}
+  - |
+    fn outside_module() {}
+
+    mod tests {
+        use super::run;
+
+        fn calls_run() {
+            run();
+        }
+    }
+  - |
+    use crate::runner::run;
+
+    fn execute() {
+        run();
+    }
+
+    #[cfg(test)]
+    #[path = "_tests_/execute_tests.rs"]
+    mod execute_tests;
+  - |
+    fn execute() {
+        let ready = true;
+        use crate::runner::run;
+        run(ready);
+    }
+invalid:
+  - |
+    fn run() {}
+
+    use crate::runner::Runner;
+  - |
+    mod tests {
+        fn a() {}
+
+        use crate::runner::Runner;
+    }
+  - |
+    fn run() {}
+
+    mod sibling;
+
+    use sibling::Runner;

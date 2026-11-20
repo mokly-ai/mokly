@@ -90,6 +90,7 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
                 publications: publications.clone(),
                 comparisons: Arc::new(store.clone()),
                 diagnostics: Arc::new(Unimock::new(())),
+                activity: None,
                 watching: false,
             });
             pass.run(Arc::new(origin), stopping).await;

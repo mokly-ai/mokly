@@ -16,6 +16,7 @@ use crate::bundle_storage;
 use crate::cache_types::{Receipt, Record, Storage};
 use crate::durability::{publish_receipt, read_receipt, rename, sync_directory, sync_tree};
 use crate::error::{Error, InternalError, IoResult, Result};
+use crate::render_sequence;
 use crate::storage_tree::{check, copy_tree, remove, retire, size, validate_directory, vanished};
 
 /// Host storage composed with a canonical namespace root and cancellation.
@@ -29,6 +30,9 @@ pub struct SystemStorage {
 }
 
 impl Storage for SystemStorage {
+    fn render_sequence(&self, namespace: &Path, floor: u64) -> Result<Option<u64>> {
+        render_sequence::next(self, namespace, floor)
+    }
     fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead> {
         bundle_storage::compilation(self, entry)
     }

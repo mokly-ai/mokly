@@ -44,15 +44,19 @@
     reach the lookup.
   - `packages/viewer/docs/concepts/README.md:19` tells hosts to supply
     Mokly's files unchanged. Released indexes meet that rule. Mokly Cloud
-    also shows retained publications through one pinned viewer. Its
-    `ts/app/package.json` pins `@mokly/viewer` to `0.19.0`.
+    also shows retained publications through one viewer. Its
+    `packages/app/package.json` names `@mokly/viewer` `0.19.0`, the version of
+    the workspace package, so the cloud runs `packages/viewer` of this
+    repository.
 - **Problem:** The viewer retains a live source-path lookup that duplicates
   the new Rust resolver. The documents protocol says every value without a
   reference stays a display label. The format protocol says no stored-state
   converter or fallback exists at any boundary.
 - **Impact if no action:** New output shows the correct links. Older
   version-9 indexes still turn raw paths into links, contrary to the stated
-  rule. The shared producer resolver does not retire the viewer's second
+  rule. Mokly Cloud runs the workspace viewer, so its stored version-9
+  publications keep these links now, and option A would remove them at
+  once. The shared producer resolver does not retire the viewer's second
   matching rule. The viewer protocol identifies duplicate calculations as
   a drift risk in `docs/protocol/mokly-viewer.md:55`.
 - **Root question:** Must a newer viewer keep related-document links for
@@ -62,7 +66,9 @@
     current-document test name. Give that test the projected `mock:`
     reference for its current document. Keep every removed-entry and
     unmatched-label assertion. Older catalogues then show raw paths as
-    labels until rebuilt. Remove the documents status line when the rule
+    labels until rebuilt. Mokly Cloud runs the workspace viewer, so A also
+    removes the related-document links of its stored version-9
+    publications at once. Remove the documents status line when the rule
     is implemented. This removes live functionality and needs approval.
     Effort: Small.
   - **B.** Keep the lookup as an explicit compatibility rule. Update the

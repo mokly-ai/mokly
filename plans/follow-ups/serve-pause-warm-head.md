@@ -10,7 +10,7 @@
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:62`,
   `crates/mokly-sidecar/src/pool_exchange.rs:36`,
   `crates/mokly-sidecar/src/pool_shutdown.rs:7`,
-  `packages/mokly/src/sidecar.ts:59` to line 67, and
+  `packages/mokly/src/sidecar.ts:55` to line 66 (the request loop), and
   `docs/protocol/mokly-base-cache.md:67` to line 68.
 - **Reason:** The orchestrator kept C4 out of PR #312, because it adds
   cancellation, scheduling, and storage rules. On 2026-11-18 it also kept C4
@@ -75,7 +75,7 @@
       `crates/mokly-sidecar/src/pool_exchange.rs:36` stops the whole pool
       through `cancel_busy` at `crates/mokly-sidecar/src/pool_shutdown.rs:7`.
       The sidecar reads no frame during a request, at
-      `packages/mokly/src/sidecar.ts:59` to line 67. esbuild runs `build`,
+      `packages/mokly/src/sidecar.ts:55` to line 66. esbuild runs `build`,
       with no cancellable `BuildContext`. So C4 needs a request cancellation
       that kills only its worker, keeps the pool, and restores live
       generations as required.

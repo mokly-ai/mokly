@@ -25,6 +25,12 @@ test(
       const records = timings(running.output.stderr).filter(
         (record) => record.role === "core",
       );
+      assert.ok(
+        records.some(
+          (record) =>
+            record.stage === "render.store" && record.event === "state",
+        ),
+      );
       const captured = records.filter(
         (record) => record.stage === "review.capture-side",
       );

@@ -19,6 +19,8 @@ use crate::terminal::Terminal;
 #[cfg_attr(test, unimock::unimock(api = ProgressMock))]
 #[async_trait]
 pub(super) trait Progress: Send + Sync {
+    /// Write readiness before releasing the one shared startup cache notice.
+    fn ready(&self, layout: &str);
     fn begin(&self, label: &str, cancel: Arc<dyn ChangeCancellation>) -> Box<dyn ChangeRun>;
     /// Show `step` beside the label that `cancel` began, while that label owns the line.
     fn step(&self, cancel: &Arc<dyn ChangeCancellation>, step: Step);
@@ -37,6 +39,8 @@ struct State {
     next: u64,
     label: Option<Label>,
     closed: bool,
+    ready: bool,
+    cache_notice: Option<String>,
 }
 
 pub(super) struct ServeProgress {
@@ -70,10 +74,13 @@ impl ServeProgress {
         })
     }
     fn write(&self, text: &str, error: bool) {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        self.output(&state, text, error);
+    }
+    fn output(&self, state: &State, text: &str, error: bool) {
         if text.is_empty() {
             return;
         }
-        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.animate && state.label.is_some() {
             self.terminal.stdout("\r\x1b[2K");
         }
@@ -105,6 +112,16 @@ impl Terminal for ServeProgress {
     fn stdout(&self, text: &str) {
         self.write(text, false);
     }
+    fn cache_notice(&self, text: &str) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.closed || self.cancellation.requested() {
+            state.cache_notice = None;
+        } else if state.ready {
+            self.output(&state, text, false);
+        } else {
+            state.cache_notice.get_or_insert_with(|| text.into());
+        }
+    }
     fn stderr(&self, text: &str) {
         self.write(text, true);
     }
@@ -116,6 +133,18 @@ impl Terminal for ServeProgress {
 
 #[async_trait]
 impl Progress for ServeProgress {
+    fn ready(&self, layout: &str) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.closed || self.cancellation.requested() {
+            state.cache_notice = None;
+            return;
+        }
+        self.output(&state, layout, false);
+        state.ready = true;
+        if let Some(notice) = state.cache_notice.take() {
+            self.output(&state, &notice, false);
+        }
+    }
     fn begin(&self, label: &str, cancel: Arc<dyn ChangeCancellation>) -> Box<dyn ChangeRun> {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.style.mode == Mode::Plain
@@ -250,3 +279,7 @@ impl Diagnostics for ServeDiagnostics {
 #[cfg(test)]
 #[path = "_tests_/serve_progress_tests.rs"]
 mod serve_progress_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_progress_cache_tests.rs"]
+mod serve_progress_cache_tests;

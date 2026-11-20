@@ -7,25 +7,31 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import { previewCandidates } from "./bundle-entry.js";
 import type { CaptureDurability } from "./capture-durability.js";
 import { ConfigInputs } from "./config-inputs.js";
-import { jsonObject } from "./config-json.js";
-import { importerDirectory } from "./importer-resolution.js";
 import { mappedPaths } from "./mapped-paths.js";
 import type { ModulePaths } from "./module-paths.js";
-import { substitution } from "./path-pattern.js";
+import type { PackageJson } from "./package-json.js";
+import { nearestPackage, packageDirectories } from "./package-lookup.js";
+import {
+  packageFolderCandidates,
+  packageMainTargets,
+  packageMapTargets,
+  packageTarget,
+} from "./package-map.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { PlanCandidates } from "./plan-candidates.js";
+import { PnpInputs } from "./pnp-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
-import { resolutionOptions } from "./resolution.js";
 import { bareSpecifier, packageName } from "./specifier.js";
 
 /** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
   readonly physical: PhysicalInputs;
+  readonly candidates: PlanCandidates;
   private readonly configs: ConfigInputs;
   private readonly packages = new Set<string>();
   private readonly aliases: Array<[string, string]>;
   private readonly aliasDirectory: string;
-  readonly candidates: PlanCandidates;
+  private readonly pnp: PnpInputs;
 
   constructor(
     private readonly params: BundleParams,
@@ -41,6 +47,12 @@ export class ResolutionEvidence {
     this.aliasDirectory = path.resolve(
       params.sourceRoot,
       params.configurationDirectory,
+    );
+    this.pnp = new PnpInputs(
+      this.physical,
+      this.aliasDirectory,
+      paths,
+      this.configs,
     );
   }
 
@@ -82,16 +94,13 @@ export class ResolutionEvidence {
     for (const [name, file] of Object.entries(peers)) {
       if (!file) continue;
       const boundary = path.join("node_modules", packageName(name));
-      const manifests: string[] = [];
       for (let directory = path.dirname(file); this.physical.complete;) {
         const manifest = path.join(directory, "package.json");
-        const json = this.physical.json(manifest);
-        if (json) manifests.push(manifest);
+        const json = this.physical.json(manifest, true);
         if (
           json?.name === packageName(name) ||
           directory.endsWith(path.sep + boundary)
         ) {
-          for (const file of manifests) this.physical.file(file, true);
           break;
         }
         const parent = path.dirname(directory);
@@ -161,119 +170,59 @@ export class ResolutionEvidence {
       return;
     }
     if (config.baseUrl) this.candidate(path.resolve(config.baseUrl, name));
-    for (let current = directory; ;) {
-      const manifest = this.physical.json(path.join(current, "package.json"));
-      if (manifest) {
-        if (manifest.name === packageName(name))
-          this.targets(current, name, manifest);
-        break;
-      }
-      const parent = path.dirname(current);
-      if (parent === current || !this.physical.complete) break;
-      current = parent;
-    }
-    const selected = importerDirectory(this.paths, name, directory);
-    const roots = new Set<string>();
-    for (let start of new Set([directory, selected])) {
-      for (;;) {
-        if (path.basename(start) !== "node_modules")
-          roots.add(path.join(start, "node_modules"));
-        const parent = path.dirname(start);
-        if (parent === start) break;
-        start = parent;
-      }
-    }
-    for (const root of resolutionOptions(
-      this.params.sourceRoot,
-      this.paths.settings,
-    ).nodePaths)
-      roots.add(root);
-    for (const root of roots) {
+    const own = nearestPackage(this.physical, directory);
+    if (own?.manifest.values("name").includes(packageName(name)))
+      this.targets(own.directory, name, own.manifest);
+    this.pnp.capture(name, directory, (pkg, manifest) =>
+      this.targets(pkg, name, manifest),
+    );
+    for (const pkg of packageDirectories(this.paths, name, directory)) {
       if (!this.physical.complete) break;
-      this.package(root, name);
+      this.package(pkg, name);
     }
   }
 
-  private package(root: string, name: string): void {
-    const pkg = path.join(root, packageName(name));
+  private package(pkg: string, name: string): void {
     this.candidate(pkg);
-    this.candidate(path.join(root, name));
+    this.candidate(path.join(pkg, name.slice(packageName(name).length)));
     const key = JSON.stringify([pkg, name]);
     if (this.packages.has(key) || !this.physical.complete) return;
     this.packages.add(key);
-    const manifest = this.physical.json(path.join(pkg, "package.json"));
+    const manifest = this.physical.packageJson(path.join(pkg, "package.json"));
     if (!manifest) return;
     this.targets(pkg, name, manifest);
   }
 
-  private targets(
-    pkg: string,
-    name: string,
-    manifest: Record<string, unknown>,
-  ): void {
-    for (const field of new Set([
-      "main",
-      "module",
-      ...this.paths.settings.mainFields,
-    ])) {
-      const target = manifest[field];
-      if (typeof target === "string" && target)
-        this.candidate(path.resolve(pkg, target));
-    }
-    const subpath = name.slice(packageName(name).length);
-    this.exports(
+  private targets(pkg: string, name: string, manifest: PackageJson): void {
+    for (const target of packageMainTargets(
       pkg,
-      manifest.exports,
-      subpath ? "." + subpath : ".",
-      undefined,
-      0,
-    );
-  }
-
-  private exports(
-    pkg: string,
-    value: unknown,
-    requested: string,
-    matched: string | undefined,
-    depth: number,
-  ): void {
-    if (!this.physical.complete) return;
-    if (depth > 32) throw new Error("package export evidence limit");
-    if (typeof value === "string") {
-      if (value.includes("*") && matched === undefined)
-        throw new Error("unmapped export pattern");
-      this.candidate(path.resolve(pkg, value.replaceAll("*", matched ?? "")));
-    } else if (Array.isArray(value)) {
-      for (const item of value)
-        this.exports(pkg, item, requested, matched, depth + 1);
-    } else if (jsonObject(value)) {
-      const exact =
-        !requested.endsWith("/") &&
-        !requested.includes("*") &&
-        Object.hasOwn(value, requested);
-      for (const [key, target] of Object.entries(value)) {
-        if (key.startsWith(".")) {
-          if (
-            key.startsWith("./") &&
-            key.endsWith("/") &&
-            !key.includes("*") &&
-            requested.startsWith(key) &&
-            !exact
-          )
-            this.candidates.unproved();
-          if (key.split("*").length > 2)
-            throw new Error("unsupported export pattern");
-          const match = substitution(key, requested);
-          if (match !== undefined)
-            this.exports(pkg, target, requested, match, depth + 1);
-        } else this.exports(pkg, target, requested, matched, depth + 1);
+      manifest,
+      this.paths.settings.mainFields,
+    ))
+      this.candidate(target);
+    const subpath = name.slice(packageName(name).length);
+    for (const value of manifest.values("exports"))
+      for (const { target, folder } of packageMapTargets(
+        value,
+        subpath ? "." + subpath : ".",
+      )) {
+        const base = packageTarget(pkg, target);
+        if (folder) {
+          this.candidates.unproved();
+          this.pnp.covered(pkg);
+          for (const candidate of packageFolderCandidates(
+            base,
+            this.physical,
+            this.paths.settings.mainFields,
+          ))
+            this.candidate(candidate);
+        } else this.candidate(base);
       }
-    } else if (value !== undefined && value !== null)
-      throw new Error("unsupported package exports");
   }
 
   finish(metafile: Metafile) {
     this.candidates.metafile(metafile);
+    this.pnp.finish(metafile, this.aliases);
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file)) continue;
       for (const edge of input.imports) {

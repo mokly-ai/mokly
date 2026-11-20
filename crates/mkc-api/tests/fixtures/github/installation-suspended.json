@@ -1,0 +1,36 @@
+{
+  "action": "suspend",
+  "installation": {
+    "id": 1,
+    "app_id": 123,
+    "account": {
+      "id": 1,
+      "login": "octocat",
+      "type": "User",
+      "node_id": "MDQ6VXNlcjE="
+    },
+    "html_url": "https://github.com/settings/installations/1",
+    "suspended_at": "2026-09-16T12:30:00Z",
+    "repository_selection": "selected",
+    "permissions": {
+      "checks": "write",
+      "contents": "read",
+      "metadata": "read",
+      "pull_requests": "write"
+    },
+    "events": [
+      "installation",
+      "installation_repositories",
+      "pull_request",
+      "push",
+      "check_suite",
+      "check_run"
+    ]
+  },
+  "sender": {
+    "id": 1,
+    "login": "octocat",
+    "type": "User",
+    "node_id": "MDQ6VXNlcjE="
+  }
+}

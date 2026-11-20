@@ -20,6 +20,7 @@ use mokly_sidecar::workers::Diagnostics;
 use serde_json::Value;
 use unimock::{MockFn, Unimock, matching};
 
+use super::plan_capture::PlanPool;
 use super::support::{CapturedPool, package_version, workspace};
 
 #[derive(Default)]
@@ -37,7 +38,7 @@ impl Diagnostics for Counts {
 }
 
 pub(super) struct Results {
-    pub(super) inner: Arc<CapturedPool>,
+    pub(super) inner: Arc<PlanPool>,
     last: Mutex<Option<std::result::Result<Bundle, String>>>,
 }
 
@@ -81,16 +82,17 @@ impl Results {
             pool
         };
         Self {
-            inner: Arc::new(CapturedPool {
+            inner: Arc::new(PlanPool::new(CapturedPool {
                 calls: Mutex::new(vec![]),
                 inner: Arc::new(pool),
-            }),
+            })),
             last: Mutex::new(None),
         }
     }
 
     pub(super) fn assert_native(&self, root: &Path) {
         let mut request = self
+            .inner
             .inner
             .calls
             .lock()

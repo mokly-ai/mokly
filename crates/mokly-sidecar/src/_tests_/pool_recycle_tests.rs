@@ -52,6 +52,7 @@ fn seed(pool: &Pool, worker: Unimock) {
         contexts: BTreeSet::new(),
         renders: 0,
         requests: 1,
+        last_compilation: None,
     }));
     state.available.push_back(0);
     state.controls.insert(0, control);

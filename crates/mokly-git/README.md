@@ -35,22 +35,33 @@ keep their own category.
 
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
-`rev-list` with lazy fetch disabled, read-only `config`, `check-attr`, and
-`ls-tree` in a repository without a promisor remote. The runner sets
-`GIT_NO_LAZY_FETCH=1` for ordinary commands.
+`rev-list` with lazy fetch disabled, read-only `config`, `check-attr`,
+`ls-tree`, and the two `ls-files` listings. `ls-tree` and the listings select
+it only in a repository without a promisor remote.
 
-A Git build that ignores it can
-fetch a missing blob while `ls-tree -l` reads its size. So `ls-tree` keeps
-`FullTree` when the repository has a promisor remote. `GitRepositories::open`
-reads `remote.*.promisor` and `extensions.partialClone` with one plain
-`config` command. The opened repository keeps the promisor remotes for its
-tree reads and its object fetches.
+The two listings are the working-path candidates and the untracked changed
+paths. Both pass `-c core.fsmonitor=false`, so Git starts no file system
+monitor hook or daemon for them. One listing request builds both, so the
+override and the mode stay together. The
+[file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
+reason and the Git source evidence.
+
+The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
+first list metadata without blob sizes. They fetch missing requested blobs and
+attribute files before listing sizes. A Git build that ignores the lazy-fetch
+control can still fetch a missing tree during a tree query or sparse-index
+listing. So `ls-tree` and both listings keep `FullTree` when the repository has
+a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
+`extensions.partialClone` with one plain `config` command. The opened
+repository keeps the promisor remotes for its tree reads, its listings, and its
+object fetches.
 
 On Unix, the plain group avoids the exec hook that forces a fork of the core.
 Every other call keeps the session and Linux subreaper setup, including
-filters, fetches, diffs, and working-path queries. Windows uses the same job
-setup for both modes. The runner selects setup from the field without parsing
-arguments. Both modes keep the same ownership guard and supervision.
+filters, fetches, diffs, working-file hashes, and listings in a repository with
+a promisor remote. Windows uses the same job setup for both modes. The runner
+selects setup from the field without parsing arguments. Both modes keep the
+same ownership guard and supervision.
 
 Path batching uses default budgets of 128 path arguments and 16 KiB of
 conservative encoded argument cost. A path too large

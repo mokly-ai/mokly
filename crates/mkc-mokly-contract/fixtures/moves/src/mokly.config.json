@@ -1,0 +1,19 @@
+{
+  "repoRoot": ".",
+  "roots": [
+    {
+      "dir": "catalogue/src/entries",
+      "files": [
+        "**/*.screen.html",
+        "**/*.component.html",
+        "**/*.page.html",
+        "**/*.use-case.yaml",
+        "**/*.md"
+      ]
+    }
+  ],
+  "colorSchemes": ["light", "dark"],
+  "review": {
+    "base": "HEAD~1"
+  }
+}

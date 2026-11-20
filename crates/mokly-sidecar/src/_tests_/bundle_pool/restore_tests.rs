@@ -50,7 +50,7 @@ fn rejected_restore_retires_only_its_token_then_bundles_once() {
                 }
                 Call::Bundle(_) => {
                     requested.lock().unwrap().push("bundle");
-                    Ok(answer("fresh"))
+                    Ok(answer("fresh", 1))
                 }
                 _ => panic!("unexpected call"),
             })),
@@ -123,7 +123,7 @@ fn disk_transport_failure_uses_existing_recovery_without_loading_the_seed_again(
                         .answers_arc(Arc::new(move |_, request, _| {
                             assert!(matches!(request.call, Call::Bundle(_)));
                             captured.lock().unwrap().push("bundle");
-                            Ok(answer("seed"))
+                            Ok(answer("seed", 1))
                         })),
                     WorkerMock::resident_bytes
                         .some_call(matching!())
@@ -186,7 +186,7 @@ fn a_restore_retirement_store_fault_reports_unavailable_for_an_incomplete_result
                     message: "rejected".into(),
                 }),
                 Call::Bundle(_) => {
-                    let mut result = answer("partial");
+                    let mut result = answer("partial", 1);
                     if let MethodResult::Bundle(bundle) = &mut result {
                         let compiled = Arc::make_mut(&mut bundle.compiled);
                         Arc::make_mut(&mut compiled.reuse_evidence).complete = false;

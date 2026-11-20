@@ -47,8 +47,11 @@
     dependency inputs. They hold every tracked package manifest and
     lockfile. With pnpm or Yarn lockfiles, they also hold
     `pnpm-workspace.yaml`, `.yarnrc.yml`, `.yarnrc`, and `.npmrc`.
-  - `plans/follow-ups/install-pipe-wait-after-stop.md` already holds the
-    corrected term, with the conditions in its **Background**.
+  - On 2026-11-19, a smoke test met both conditions of the **Base install**
+    term above, on macOS and on Linux. In each case, the base had a
+    `.mockup.ts` entry module and a local dependency, and the working tree
+    dropped that dependency. Mokly then started Yarn Classic to install the
+    base dependencies.
 - **Problem:** The two items say that a lockfile difference alone starts
   a base install. An HTML-only base never starts one. A change to a manifest
   or to a manager configuration file can also start one.

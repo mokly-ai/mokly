@@ -1,0 +1,12 @@
+id: no-inline-use
+language: Rust
+severity: error
+message: Move imports to the top of the module.
+# Cloud style rule. The Mokly crates keep their own import style.
+files:
+  - crates/mkc-*/**
+rule:
+  kind: use_declaration
+  inside:
+    kind: block
+    stopBy: end

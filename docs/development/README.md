@@ -4,12 +4,17 @@ For repository development, use the tested Node.js version in
 [`.nvmrc`](../../.nvmrc), npm 11.21.0 (the `packageManager` version in
 `package.json`), the Bun version in [`.bun-version`](../../.bun-version) for
 the required type check, the Rust toolchain in
-[`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
-Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
-the repository before the npm commands below. rustup reads the toolchain file
-and installs the pinned Rust the first time `cargo` runs in the repository.
-The Bun install command below reads `.bun-version`. Run it again when that file
-changes.
+[`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.98.1 with rustfmt and
+Clippy), Git 2.45.0 or later and Git LFS for the Rust tests, and Chromium for
+the browser suite. With nvm, run `nvm install` in the repository before the npm
+commands below. rustup reads the toolchain file and installs the pinned Rust
+the first time `cargo` runs in the repository. The Bun install command below
+reads `.bun-version`. Run it again when that file changes.
+
+The Rust tests run real Git commands in temporary repositories. The tests that
+read Git LFS files need the `git lfs` command. Their errors do not give a Git
+LFS install hint. Check both tools with
+`git --version` and `git lfs version` before you run `cargo xtask check`.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

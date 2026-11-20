@@ -84,7 +84,8 @@ fn overlap(first: &'static str, second: &'static str) -> (usize, bool, Vec<Strin
         timed_out: AtomicBool::new(false),
     });
     let processor = Arc::new(postcss(calls.clone(), gate.clone()));
-    let background = processor.clone();
+    let root = processor.for_root(processor.tree.clone(), Arc::new(Unimock::new(())));
+    let background = root.clone();
     let waiting = thread::spawn(move || {
         background
             .process(first, ".a {}", &BTreeSet::new())
@@ -102,8 +103,7 @@ fn overlap(first: &'static str, second: &'static str) -> (usize, bool, Vec<Strin
         gate.release.send(()).unwrap();
         result
     } else {
-        processor
-            .process(second, ".a {}", &BTreeSet::new())
+        root.process(second, ".a {}", &BTreeSet::new())
             .unwrap()
             .text
     };
@@ -153,18 +153,19 @@ fn a_cached_result_returns_while_another_input_waits_for_the_sidecar() {
             .each_call(matching!("context"))
             .returns(()),
     )));
-    let processor = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
-    let process = |processor: &PostCss, path: &str| {
+    let shared = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
+    let processor = shared.for_root(shared.tree.clone(), Arc::new(Unimock::new(())));
+    let process = |processor: &dyn CssProcessor, path: &str| {
         processor
             .process(path, ".a {}", &BTreeSet::new())
             .unwrap()
             .text
     };
-    assert_eq!(process(&processor, "fast.css"), "a{}");
+    assert_eq!(process(processor.as_ref(), "fast.css"), "a{}");
     let background = processor.clone();
-    let slow = thread::spawn(move || process(&background, "slow.css"));
+    let slow = thread::spawn(move || process(background.as_ref(), "slow.css"));
     called.recv_timeout(DEADLINE).unwrap();
-    assert_eq!(process(&processor, "fast.css"), "a{}");
+    assert_eq!(process(processor.as_ref(), "fast.css"), "a{}");
     finish.send(()).unwrap();
     assert_eq!(slow.join().unwrap(), "a{}");
     assert!(!timed_out.load(Ordering::SeqCst));
@@ -174,6 +175,7 @@ fn a_cached_result_returns_while_another_input_waits_for_the_sidecar() {
 fn a_request_that_waited_for_its_turn_reuses_the_result_that_arrived_meanwhile() {
     let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(()));
     let processor = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
+    let root = processor.for_root(processor.tree.clone(), Arc::new(Unimock::new(())));
     let arrived = |text: &str| CssRecord {
         result: Css {
             read_evidence: Evidence::default(),
@@ -190,7 +192,7 @@ fn a_request_that_waited_for_its_turn_reuses_the_result_that_arrived_meanwhile()
     }
     let waiting = {
         let _turn = processor.turns.queue.lock().unwrap();
-        let background = processor.clone();
+        let background = root.clone();
         let waiting = thread::spawn(move || {
             background
                 .process("a.css", ".a {}", &BTreeSet::new())

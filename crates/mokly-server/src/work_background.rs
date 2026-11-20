@@ -18,6 +18,7 @@ impl Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Vec<Warning>> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let permit = {
             let Ok(_turn) = self.turn.acquire().await else {
                 return Ok(Vec::new());
@@ -40,6 +41,7 @@ impl Workers {
         let guard = self.priority.enter(false);
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             RenderClass::Background.in_scope(|| {
                 parent.in_scope(|| {
                     let _guard = guard;

@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { GitWorkspace } from "./ratchets/git.mjs";
 import {
+  isGeneratedSource,
   lengthFinding,
   parseProtocolCapTable,
 } from "./ratchets/length-policy.mjs";
@@ -27,6 +28,7 @@ if (process.argv.slice(2).some((argument) => argument !== "--all")) {
   const files = all ? trackedAndUntracked(root) : changedFiles(root);
   const violations = [...new Set(files)]
     .filter((file) => code.test(file) || protocol.test(file))
+    .filter((file) => !isGeneratedSource(file))
     .sort()
     .flatMap((file) => {
       const absolute = path.join(root, file);

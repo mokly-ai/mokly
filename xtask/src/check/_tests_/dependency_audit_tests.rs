@@ -82,6 +82,9 @@ fn rust_advisory_failure_stops_both_audit_modes_before_other_checks() {
                 })
                 .returns(Ok(())),
             CommandRunnerRunMock
+                .next_call(matching!((command) if command.display() == "npm ci"))
+                .returns(Ok(())),
+            CommandRunnerRunMock
                 .next_call(
                     matching!((command) if command.display() == "npm run dependencies:check:rust"),
                 )

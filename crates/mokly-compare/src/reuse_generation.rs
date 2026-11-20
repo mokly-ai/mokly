@@ -1,6 +1,7 @@
 //! A per-view generation wrapper records every comparison input read.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -8,7 +9,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
-use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::ComparisonRead;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -42,6 +43,15 @@ impl GeneratedResources for RecordingGeneration<'_> {
     }
 }
 impl RenderGeneration for RecordingGeneration<'_> {
+    fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
+        let evidence = self.inner.retained_document_evidence(route)?;
+        self.recorder
+            .record(self.inner, self.side, ComparisonRead::Document, route);
+        self.recorder
+            .record(self.inner, self.side, ComparisonRead::Closure, route);
+        Some(evidence)
+    }
+
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         let document = self.inner.comparison_document(route)?;
         self.recorder
@@ -108,6 +118,12 @@ impl RenderGeneration for RecordingGeneration<'_> {
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.inner.stylesheet_directories()
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.inner.stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.inner.stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.inner.public_files()

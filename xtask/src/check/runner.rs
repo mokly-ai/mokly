@@ -9,12 +9,15 @@ use crate::rust_file_length::RustFileLengthAuditor;
 
 use super::commands::{browser_test_command, commands_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::tasks::{Task, task_commands};
 
 /// Runs complete or selected repository verification.
-#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerSourceFileLengthMock]))]
+#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerTaskMock, CheckRunnerSourceFileLengthMock]))]
 pub(crate) trait CheckRunner: Send + Sync {
     /// Execute the validated request in dependency order.
     fn run(&self, request: CheckRequest) -> Result<()>;
+    /// Execute deliberate generation or a cloud operator subprocess.
+    fn task(&self, task: Task) -> Result<()>;
     /// Audit changed source/protocol files or every scoped file.
     fn source_file_length(&self, all: bool) -> Result<()>;
 }
@@ -49,7 +52,16 @@ impl DefaultCheckRunner {
         shard: Option<Shard>,
         dependency_audit: DependencyAudit,
     ) -> Result<()> {
-        for command in commands_for(suite, shard, dependency_audit) {
+        let mut commands = commands_for(suite, shard, dependency_audit);
+        if matches!(
+            suite,
+            VerificationSuite::CloudRust
+                | VerificationSuite::CloudApp
+                | VerificationSuite::CloudDesktop
+        ) {
+            commands = vec![CommandSpec::isolated_database(suite.as_str(), commands)];
+        }
+        for command in commands {
             self.run_command(command)?;
         }
         if suite == VerificationSuite::Repository {
@@ -65,6 +77,13 @@ impl DefaultCheckRunner {
 }
 
 impl CheckRunner for DefaultCheckRunner {
+    fn task(&self, task: Task) -> Result<()> {
+        for command in task_commands(task) {
+            self.run_command(command)?;
+        }
+        Ok(())
+    }
+
     fn source_file_length(&self, all: bool) -> Result<()> {
         let mut command =
             CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]);
@@ -81,7 +100,7 @@ impl CheckRunner for DefaultCheckRunner {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard, request.dependency_audit);
         }
-        for suite in VerificationSuite::LOCAL {
+        for suite in VerificationSuite::local() {
             if suite == VerificationSuite::Browser {
                 self.run_command(browser_test_command(None))?;
                 self.run_command(CommandSpec::new("npm").args(["run", "test:delivery:prepared"]))?;

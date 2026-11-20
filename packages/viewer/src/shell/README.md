@@ -1,6 +1,6 @@
 # Shared Browse shell
 
-Status: Some host content cleanup errors reach `CatalogueBoundary` as catalogue failures. The [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. Some asynchronous document failures never reach the catalogue failure state. The [asynchronous catalogue failures item](../../../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
+Status: Some host content cleanup errors reach `CatalogueBoundary` as catalogue failures. The [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
 
 Serve, the static build, and React hosts render this same tree in the
 browser.
@@ -79,8 +79,8 @@ current parent the lookup resolves, including a moved or case-renamed parent,
 as a Removed row. `nav_removed_variants.ts` records actual attachment before
 removing the row from flat fallback, so a former parent that is now a variant
 or another kind cannot make its historical child disappear and every removed
-entry remains represented once. A removed page or document is a flat row
-that only Changes shows; All and search hide it. Current section nodes use the
+entry remains represented once. A removed page or document is a flat row.
+Only Changes shows removed rows of any kind; All and search hide them. Current section nodes use the
 shared folder-first comparator. Flat removed rows keep `removedEntries` order,
 with each removed parent's variants directly after it, under the
 [serialization contract](../../../../docs/protocol/mokly-catalogue-serialization.md#canonical-bytes).
@@ -476,11 +476,16 @@ shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
 through Inspector sizing props and the refs of its handles and workspace
 panes. `root_context.tsx` shares the root ref, drag state, focus targets,
 host slots, and named scroll regions. Containers use package refs for focus
-and measurement. Frame sessions carry their source choices, stage refs,
+and measurement. `focus_after.ts` moves focus after a recovery action of the
+component controls. `retry_focus.ts` moves focus after each other Try again,
+first to the status that replaces the button and then to the content, under
+the [recovery focus rule](../../../../docs/protocol/mokly-viewer.md#package-and-props).
+Frame sessions carry their source choices, stage refs,
 and expanded state, so geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
+mounts it again when the reader presses Try again after a failed load, and
 `frame_session_usage.ts` adopts changed usage. A mount reports ready in the same
 step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and

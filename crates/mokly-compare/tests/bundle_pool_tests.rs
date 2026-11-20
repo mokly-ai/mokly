@@ -1,24 +1,18 @@
 //! New pools and real sidecars reuse one temporary disk entry across source changes.
 
 use std::fs;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering;
 
-use mokly_compare::bundle_store::CachedBundles;
-use mokly_platform::processes::SystemProcessGroups;
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
 use mokly_sidecar::compiled::UncapturedEvidence;
-use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
-use mokly_sidecar::operations::Operation;
-use mokly_sidecar::pool::{Pool, SidecarPool};
-use mokly_sidecar::pool_options::{Launch, PoolOptions};
-use mokly_sidecar::process_clock::SystemClock;
-use mokly_sidecar::process_factory::NodeFactory;
-use mokly_sidecar::process_memory::SystemMemory;
-use mokly_sidecar::resolution_plan::ResolutionPlan;
-use mokly_sidecar::results;
-use mokly_sidecar::workers::Diagnostics;
+use mokly_sidecar::pool::SidecarPool;
+use mokly_test_support::durable_fixture::{self, Owner};
+
+use self::bundle_pool::{
+    Counts, bundle, cache_snapshot, capture_flags, edit, edit_fingerprint, pool,
+};
+use self::bundle_pool_observations::first_evidence_difference;
 
 #[path = "../../../tests/rust/package_version.rs"]
 mod package_version;
@@ -29,101 +23,18 @@ mod package_version;
 )]
 mod support;
 
-#[derive(Default)]
-struct Counts(AtomicUsize);
-impl Diagnostics for Counts {
-    fn emit(&self, message: &str) {
-        eprintln!("{message}");
-    }
-    fn operation(&self, operation: Operation, _: u32) {
-        if operation == Operation::Esbuild {
-            self.0.fetch_add(1, Ordering::SeqCst);
-        }
-    }
-}
+#[path = "support/bundle_pool.rs"]
+mod bundle_pool;
 
-fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
-    let clock = Arc::new(SystemClock::new());
-    let workspace =
-        dunce::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap();
-    Pool::new(
-        Arc::new(NodeFactory::new(
-            Arc::new(SystemProcessGroups),
-            clock.clone(),
-            counts,
-            Arc::new(SystemMemory),
-        )),
-        clock,
-        Launch {
-            capture_durability: false,
-            node: "node".into(),
-            entry: workspace.join("packages/mokly/dist/sidecar.js"),
-            repository: source.into(),
-            version: package_version::read(),
-        },
-        PoolOptions {
-            size: 1.try_into().unwrap(),
-            timeout_ms: None,
-        },
-    )
-    .with_bundle_store(Arc::new(CachedBundles::new(
-        Arc::new(support::cache(cache.into(), 1)),
-        package_version::read(),
-    )))
-}
+#[path = "support/bundle_pool_observations.rs"]
+mod bundle_pool_observations;
 
-fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
-    pool.request(Call::Bundle(BundleRequest {
-        plan: None,
-        params: Bundle {
-            evaluation: None,
-            entry_files: vec!["entry.ts".into()],
-            renderer: None,
-            stories_files: vec![],
-            source_root: source.to_string_lossy().into_owned(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
-            module_resolution: Default::default(),
-        },
-        capture: None,
-    }))
-    .unwrap()
-    .into_bundle()
-}
-
-fn edit(pool: &Pool, source: &Path, plan: Option<Arc<ResolutionPlan>>) -> results::Bundle {
-    pool.request(Call::Bundle(BundleRequest {
-        plan,
-        capture: Some(BundleCapture::ServeEdit),
-        params: Bundle {
-            evaluation: None,
-            entry_files: vec!["entry.ts".into()],
-            renderer: None,
-            stories_files: vec![],
-            source_root: source.to_string_lossy().into_owned(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
-            module_resolution: Default::default(),
-        },
-    }))
-    .unwrap()
-    .into_bundle()
-}
-
-fn edit_fingerprint(mut result: results::Bundle) -> Vec<u8> {
-    result.generation = "fresh edit".into();
-    let compiled = Arc::make_mut(&mut result.compiled);
-    compiled.code = compiled
-        .code
-        .replace(&compiled.runtime_key, "mokly:runtime");
-    compiled.runtime_key = "mokly:runtime".into();
-    compiled.identity = "fresh edit".into();
-    serde_json::to_vec(&result).unwrap()
-}
+#[path = "support/bundle_pool_trace.rs"]
+mod bundle_pool_trace;
 
 #[test]
 fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_equal_output() {
-    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let temporary = durable_fixture::create(Owner::CompareWarmPlan).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");
@@ -146,7 +57,18 @@ fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_
     let counts = Arc::new(Counts::default());
     let warm = pool(&source, &cache, counts.clone());
     let accepted = bundle(&warm, &source);
-    assert_eq!(accepted.cache, Some(CacheOutcome::Hit));
+    assert_eq!(
+        accepted.cache,
+        Some(CacheOutcome::Hit),
+        "initial capture: {}; warm capture: {}; first unequal captured input: {}; cache: {}",
+        capture_flags(&captured),
+        capture_flags(&accepted),
+        first_evidence_difference(
+            &captured.compiled.reuse_evidence,
+            &accepted.compiled.reuse_evidence
+        ),
+        cache_snapshot(&cache)
+    );
     assert_eq!(accepted.compiled.runtime_key, captured.compiled.runtime_key);
     assert_eq!(accepted.plan, captured.plan);
     assert_eq!(counts.0.load(Ordering::SeqCst), 0);
@@ -169,7 +91,7 @@ fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_
 
 #[test]
 fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
-    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let temporary = durable_fixture::create(Owner::CompareRecipeReplacement).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");
@@ -202,7 +124,19 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
     let final_counts = Arc::new(Counts::default());
     let final_pool = pool(&source, &cache, final_counts.clone());
     let final_bundle = bundle(&final_pool, &source);
-    assert_eq!(final_bundle.cache, Some(CacheOutcome::Hit));
+    assert_eq!(
+        final_bundle.cache,
+        Some(CacheOutcome::Hit),
+        "initial capture: {}; changed capture: {}; final capture: {}; first unequal captured input: {}; cache: {}",
+        capture_flags(&original),
+        capture_flags(&changed),
+        capture_flags(&final_bundle),
+        first_evidence_difference(
+            &changed.compiled.reuse_evidence,
+            &final_bundle.compiled.reuse_evidence
+        ),
+        cache_snapshot(&cache)
+    );
     assert_eq!(
         final_bundle.compiled.runtime_key,
         changed.compiled.runtime_key
@@ -226,9 +160,7 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
 
 #[test]
 fn restarted_disk_recipes_reject_an_added_earlier_absolute_paths_target() {
-    let scratch = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.context");
-    fs::create_dir_all(&scratch).unwrap();
-    let temporary = tempfile::tempdir_in(scratch).unwrap();
+    let temporary = durable_fixture::create(Owner::CompareAbsolutePaths).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");

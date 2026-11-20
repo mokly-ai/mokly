@@ -1,0 +1,9 @@
+DROP TABLE github_check_runs;
+DROP TABLE github_branches;
+DROP TABLE github_pull_requests;
+DROP TABLE github_oauth_flows;
+DROP TABLE github_user_identities;
+DROP TABLE github_webhook_deliveries;
+DROP TABLE github_project_repositories;
+DROP TABLE github_repositories;
+DROP TABLE github_installations;

@@ -16,9 +16,15 @@ use tokio::process::{Child, Command};
 use tokio::sync::Notify;
 use tokio::task::JoinHandle;
 
+#[path = "../process_support/cache.rs"]
+mod cache;
+
+use cache::Cache;
+
 pub(super) struct Serve {
     pub(super) root: TempDir,
     pub(super) child: Child,
+    _cache: Cache,
     pub(super) host: String,
     input: File,
     pub(super) lines: Arc<Mutex<Vec<String>>>,
@@ -60,9 +66,11 @@ impl Serve {
         configure(root.path(), &package);
         let (output, writer) = std::os::unix::net::UnixStream::pair().unwrap();
         output.set_nonblocking(true).unwrap();
+        let cache = Cache::new();
         let child = Command::new(env!("CARGO_BIN_EXE_mokly"))
             .args(["serve", "--port", "0", "--sidecars", sidecars])
             .current_dir(root.path())
+            .envs(cache.environment())
             .env("MOKLY_PACKAGE_ROOT", package)
             .env("MOKLY_VIEWER_DIST", workspace.join("packages/viewer/dist"))
             .env("MOKLY_OUTPUT", mode)
@@ -86,6 +94,7 @@ impl Serve {
         Self {
             root,
             child,
+            _cache: cache,
             host: String::new(),
             input,
             lines,
