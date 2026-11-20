@@ -36,8 +36,19 @@ A session state is `loading`, `signed-in`, `signed-out` or `error`. Only
 `unauthenticated` and `session-expired` sign the reader out; any other failure
 stays an error state with a retry, because a flaky network must not lose their
 place. In the desktop app, a session read on window focus that fails for any
-other reason keeps the current state, for the same reason. A start-up read that lands after a sign-in exchange has adopted a
-session never sends the reader who just signed in back to the entry screen.
+other reason keeps the current state, for the same reason. While the state is
+still `loading`, such a failure has the outcome of a failed start-up read
+instead. Otherwise the state could stay `loading`, because the start-up answer
+no longer applies.
+
+A session read's answer changes the session state or the CSRF token only when
+no later session read has started. This rule covers the start-up read, each
+focus read and each read that a screen asks for, such as a retry. An answer from a
+read that started before a sign-in adoption or a successful sign-out changes
+neither session state nor CSRF token. So a start-up read never
+sends a reader who just signed in back to the entry screen. Session reads do
+not wait for each other, because a slow read would otherwise hold back a later
+one.
 
 GitHub starts keep state and the PKCE verifier in tab-scoped session storage,
 then the provider-specific landings compare and consume them before an
