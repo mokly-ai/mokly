@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache_types::{CacheMock, Lease, StorageMock};
 use crate::commands::CommandsMock;
+use crate::comparison_steps::{Step, StepsMock};
 use crate::dependencies::{Dependencies, DependencyTiers};
 use crate::dependency_types::Tier;
 
@@ -31,6 +32,7 @@ fn a_scripts_on_install_uses_the_probed_executable() {
             builder.build(Path::new("/install"))?;
             Ok(Lease { directory: "/install".into(), guard: Box::new(Unimock::new(())) })
         }),
+        StepsMock::step.next_call(matching!(Step::Installing)).returns(()),
         StorageMock::copy.next_call(matching!(_, _, _)).returns(Ok(())),
         CommandsMock::run.next_call(matching!(_)).answers(&|_, command| {
             let executable = if cfg!(windows) { "C:/node/node.exe" } else { "/node/bin/node" };
@@ -42,6 +44,7 @@ fn a_scripts_on_install_uses_the_probed_executable() {
     ));
     let defaults = tiers(boundaries.clone(), boundaries.clone());
     let owner = DependencyTiers {
+        steps: Arc::new(boundaries.clone()),
         storage: Arc::new(boundaries),
         ..defaults
     };
