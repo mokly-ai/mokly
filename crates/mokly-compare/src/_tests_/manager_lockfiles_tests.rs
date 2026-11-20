@@ -116,6 +116,7 @@ fn outside_lockfile_sources_start_no_process_and_read_no_storage() {
         used_directories: Vec::new(),
     };
     let tiers = DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(Unimock::new(())),
         commands: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(())),

@@ -282,6 +282,13 @@ the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
 viewer's styles test holds both stylesheets to that.
 
+Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
+`rem`. A `rem` length follows the root font size of the page. A host page that
+embeds the viewer sets that size, so a `rem` width can change from host to
+host. An `em` width follows the element's own font size instead. The
+[device chrome contract](../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
+requires the navigation drawer's `max-width: 20rem`, so that width uses `rem`.
+
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
 class, the shared controls, the components, then the layout and its
