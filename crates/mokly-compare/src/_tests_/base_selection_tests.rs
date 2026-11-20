@@ -66,6 +66,7 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: vec![],
+        modules: Default::default(),
         authored_inputs: vec![],
     };
     assert!(matches!(
@@ -132,6 +133,7 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: vec![],
+        modules: Default::default(),
         authored_inputs: vec![],
     };
     let result: Result<_> = service.classify(&config, None, Arc::new(Unimock::new(())), None);
@@ -201,6 +203,7 @@ fn install_scripts_override_takes_precedence_over_the_working_setting() {
             repo_root: "/repo".into(),
             file: "/repo/mokly.config.json".into(),
             roots: vec![],
+            modules: Default::default(),
             authored_inputs: vec![],
         };
         assert!(matches!(

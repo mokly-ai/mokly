@@ -123,6 +123,9 @@ impl HtmlError {
 /// Internal failures without stringified source wrappers.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// A custom composer cannot consume another composer's prepared root.
+    #[error("prepared root is unsupported by this composer")]
+    PreparedRootUnsupported,
     /// A prepared visual entry lost its admitted prop validator.
     #[error("prepared prop validator is missing for {entry}")]
     MissingPropValidator {

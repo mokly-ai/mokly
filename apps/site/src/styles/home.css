@@ -1,0 +1,203 @@
+/* The home page below the header: the rest of the hero, the three numbered
+   feature modules with their framed details of the catalogue shell, and the
+   open-foundation closing. Kept in parity with the promoted mockups under
+   docs/mockups/styles/site/; the mobile composition is the default
+   and 768px raises the desktop one. */
+
+.site-hero-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: 52ch;
+}
+
+.site-hero .site-actions {
+  justify-content: flex-start;
+  margin-top: var(--mk-space-2);
+}
+
+/* Feature modules */
+
+.site-modules {
+  border-top: 1px solid var(--mk-color-border);
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: var(--mk-layout-section-mobile) var(--mk-layout-gutter-mobile);
+  width: 100%;
+}
+
+.site-section-head {
+  display: grid;
+  gap: var(--mk-space-4);
+  margin-bottom: var(--mk-space-12);
+}
+
+.site-section-head h2 {
+  font-size: var(--mk-type-heading2-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading2-line);
+}
+
+.site-section-head p {
+  color: var(--mk-color-text-muted);
+  max-width: 42ch;
+}
+
+.site-module-grid {
+  display: grid;
+  gap: var(--mk-space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-module {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  display: grid;
+  gap: var(--mk-space-3);
+  overflow: hidden;
+  padding: 0 var(--mk-space-6) var(--mk-space-6);
+  scroll-margin-top: var(--mk-space-6);
+}
+
+.site-module-detail {
+  align-items: center;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at center,
+    var(--mk-color-border) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  justify-content: center;
+  margin: 0 calc(-1 * var(--mk-space-6)) var(--mk-space-5);
+  min-height: 176px;
+  padding: var(--mk-space-4);
+}
+
+.site-module-eyebrow {
+  align-items: baseline;
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-small-size);
+  gap: var(--mk-space-2);
+}
+
+.site-module-number {
+  color: var(--mk-color-accent);
+}
+
+.site-feature-label {
+  color: var(--mk-color-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.site-module h3 {
+  font-size: var(--mk-type-lead-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-lead-line);
+}
+
+.site-module-body {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-small-size);
+  line-height: 1.6;
+}
+
+/* The closing */
+
+.site-closing {
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: 0 var(--mk-layout-gutter-mobile) var(--mk-layout-section-mobile);
+  scroll-margin-top: var(--mk-space-6);
+  width: 100%;
+}
+
+.site-closing-panel {
+  background: var(--mk-color-surface-muted);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  display: grid;
+  gap: var(--mk-space-10);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--mk-space-10) var(--mk-space-5);
+}
+
+.site-closing-copy {
+  align-content: start;
+  display: grid;
+  gap: var(--mk-space-5);
+}
+
+.site-closing-copy h2 {
+  font-size: var(--mk-type-heading2-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-heading2-line);
+}
+
+.site-closing-copy p {
+  color: var(--mk-color-text-muted);
+  max-width: 46ch;
+}
+
+.site-steps {
+  display: grid;
+  gap: var(--mk-space-6);
+  list-style: none;
+  padding: 0;
+}
+
+.site-step {
+  border-top: 1px solid var(--mk-color-border-strong);
+  display: grid;
+  gap: var(--mk-space-1);
+  padding-top: var(--mk-space-4);
+}
+
+.site-step-number {
+  color: var(--mk-color-accent);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-small-size);
+}
+
+.site-step h3 {
+  font-size: var(--mk-type-lead-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-lead-line);
+}
+
+.site-step p {
+  color: var(--mk-color-text-muted);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-hero .site-actions {
+    justify-content: center;
+  }
+
+  .site-module-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .site-modules {
+    padding: var(--mk-layout-section-desktop) var(--mk-layout-gutter-desktop);
+  }
+
+  .site-module-detail {
+    padding: var(--mk-space-5);
+  }
+
+  .site-closing-panel {
+    gap: var(--mk-space-16);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: var(--mk-space-16) var(--mk-space-12);
+  }
+
+  .site-closing {
+    padding: 0 var(--mk-layout-gutter-desktop) var(--mk-layout-section-desktop);
+  }
+}

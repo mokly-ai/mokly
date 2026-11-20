@@ -5,6 +5,8 @@
  * not captured. A failed request offers one retry.
  */
 
+import type { Ref } from "react";
+
 import {
   EmptyState,
   type EmptyStateButton,
@@ -12,8 +14,13 @@ import {
 import { Stage } from "../stage/stage.js";
 
 /** The routed stage while the entry's details load. */
-export function StageLoading() {
-  return <EmptyState body="Loading preview…" busy stage />;
+export function StageLoading({
+  focusRef,
+}: {
+  /** Receives the state, which the host focuses after Try again. */
+  focusRef?: Ref<HTMLDivElement> | undefined;
+} = {}) {
+  return <EmptyState body="Loading preview…" busy focusRef={focusRef} stage />;
 }
 
 /**

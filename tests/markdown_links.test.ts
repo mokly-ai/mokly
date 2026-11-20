@@ -7,6 +7,7 @@ import test from "node:test";
 import { Marked, type Token } from "marked";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { siteContent, siteRoutes } from "./helpers/site_routes.js";
 
 const listed = execFileSync(
   "git",
@@ -15,13 +16,17 @@ const listed = execFileSync(
 )
   .split("\0")
   .filter(Boolean);
+/** The cloud license paths. Their Markdown includes the site pages. */
+const cloud =
+  /^(?:apps\/|crates\/mkc-|infra\/|packages\/(?:app|desktop|tokens)\/|scripts\/cloud\/)/;
 const markdown = listed.filter(
   (file) =>
     file.endsWith(".md") &&
     (file === "AGENTS.md" ||
       file.startsWith("docs/") ||
       file.startsWith("plans/") ||
-      path.basename(file) === "README.md"),
+      path.basename(file) === "README.md" ||
+      cloud.test(file)),
 );
 const parser = new Marked({ gfm: true });
 const contents = new Map<string, string>();
@@ -82,30 +87,43 @@ test("a Markdown parser decides which text is a link", () => {
   assert.deepEqual(links("[m][ref]\n\n[ref]: m.md"), ["m.md"]);
 });
 
-test("local documentation and plan links resolve and anchors match GitHub headings", async () => {
+test("local links and site routes resolve and anchors match GitHub headings", async () => {
   const failures: string[] = [];
+  const routes = siteRoutes(new Set(listed));
   let protocolLinks = 0;
   let planLinks = 0;
+  let routeLinks = 0;
   for (const source of markdown) {
     for (const destination of links(await read(source))) {
       if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(destination)) continue;
       const [relative, hash] = destination.split("#", 2);
       if (!relative && !hash) continue;
-      const candidate = relative
-        ? path.resolve(
-            repositoryRoot,
-            path.dirname(source),
-            decodeURIComponent(relative),
-          )
-        : path.join(repositoryRoot, source);
-      let target = path
-        .relative(repositoryRoot, candidate)
-        .split(path.sep)
-        .join("/");
-      if (target.startsWith("..")) continue;
-      if ((await fs.stat(candidate).catch(() => undefined))?.isDirectory()) {
-        if (!hash) continue;
-        target = path.posix.join(target, "README.md");
+      let target: string;
+      if (source.startsWith(siteContent) && relative?.startsWith("/")) {
+        routeLinks++;
+        const route = routes.get(decodeURIComponent(relative.split("?")[0]!));
+        if (!route) {
+          failures.push(`${source} -> ${destination}: missing site route`);
+          continue;
+        }
+        target = route;
+      } else {
+        const candidate = relative
+          ? path.resolve(
+              repositoryRoot,
+              path.dirname(source),
+              decodeURIComponent(relative),
+            )
+          : path.join(repositoryRoot, source);
+        target = path
+          .relative(repositoryRoot, candidate)
+          .split(path.sep)
+          .join("/");
+        if (target.startsWith("..")) continue;
+        if ((await fs.stat(candidate).catch(() => undefined))?.isDirectory()) {
+          if (!hash) continue;
+          target = path.posix.join(target, "README.md");
+        }
       }
       if (target.startsWith("docs/protocol/")) protocolLinks++;
       if (source.startsWith("plans/")) planLinks++;
@@ -129,5 +147,6 @@ test("local documentation and plan links resolve and anchors match GitHub headin
     `only ${protocolLinks} protocol links checked`,
   );
   assert.ok(planLinks > 0, `only ${planLinks} plan links checked`);
+  assert.ok(routeLinks > 0, `only ${routeLinks} site route links checked`);
   assert.deepEqual(failures, []);
 });

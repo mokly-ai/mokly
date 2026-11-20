@@ -18,7 +18,7 @@ use crate::error::{Result, invalid};
 use crate::policy::PublicPolicy;
 use crate::public_denial::PublicDenial;
 use crate::reference_index::ReferenceIndex;
-use crate::references::{ResourceReference, collect};
+use crate::references::{ResourceReference, collect_with};
 use crate::resource_reach::ResourceReach;
 use crate::urls::local_target;
 
@@ -78,14 +78,16 @@ impl ClosureBuilder for Walker {
     fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure> {
         let mut result = Closure::default();
         let source = namespace::generated(route);
-        let mut queue: VecDeque<_> = collect(tree)
-            .into_iter()
+        let references = collect_with(tree, &|css| self.index.style_references(css));
+        let mut queue: VecDeque<_> = references
+            .iter()
+            .cloned()
             .map(|reference| (source.clone(), reference))
             .collect();
         let (seeded, warnings) = closure_seeds::queue(route, seeds);
         queue.extend(seeded);
         result.warnings.extend(warnings);
-        closure_prefetch::prefetch(self, &source, &collect(tree))?;
+        closure_prefetch::prefetch(self, &source, &references)?;
         let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
         let mut visited = BTreeSet::new();
         let mut evidence = BTreeMap::new();

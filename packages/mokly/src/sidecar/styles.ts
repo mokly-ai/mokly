@@ -6,6 +6,7 @@ import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 import type { Generation } from "./bundle.js";
 import { emotionOwners } from "./emotion-ownership.js";
 import type { EmotionCache } from "./emotion-ownership.js";
+import { HtmlInput } from "./html_input.js";
 import { registryStyles } from "./registry-styles.js";
 import type { InlineAttribution } from "./style-ownership.js";
 import { styledOwners } from "./styled-ownership.js";
@@ -18,7 +19,7 @@ export function collectStyles(
   node: ReactNode,
   entryOwner?: string,
 ): {
-  html: string;
+  input: HtmlInput;
   styles: CollectedStyle[];
   inlineAttribution: InlineAttribution;
 } {
@@ -125,9 +126,9 @@ export function collectStyles(
       { value: capture },
       node,
     );
-    const html = render(node);
+    const input = new HtmlInput(render(node));
     if (emotionServer && emotionCapture) {
-      const extracted = emotionServer.extractCritical(html);
+      const extracted = emotionServer.extractCritical(input.html);
       if (extracted.css)
         styles.push({
           css: extracted.css,
@@ -146,12 +147,12 @@ export function collectStyles(
           });
       }
     }
-    const registry = registryStyles(nativeSheet(), html);
+    const registry = registryStyles(nativeSheet(), input);
     if (registry) styles.push({ css: registry, owners: [] });
     const emotionInline = emotionCapture?.inlineAttribution();
     const styledInline = styledCapture?.inlineAttribution();
     return {
-      html,
+      input,
       styles,
       inlineAttribution(css, attributes) {
         const emotionToken = attributes.find(

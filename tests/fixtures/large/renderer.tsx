@@ -1,3 +1,4 @@
+import { domBackendCss } from "@firna/ui";
 import { createSharedUiTheme, SharedUiThemeProvider } from "@firna/ui/theme";
 
 import type { RenderInput } from "@mokly/mokly";
@@ -10,8 +11,11 @@ const themes = {
 };
 export default function render(input: RenderInput) {
   return (
-    <SharedUiThemeProvider theme={themes[input.colorScheme]}>
-      {input.node}
-    </SharedUiThemeProvider>
+    <>
+      <style>{domBackendCss}</style>
+      <SharedUiThemeProvider theme={themes[input.colorScheme]}>
+        {input.node}
+      </SharedUiThemeProvider>
+    </>
   );
 }

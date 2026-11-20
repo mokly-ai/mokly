@@ -4,7 +4,6 @@ use std::path::Path;
 
 use crate::access::WorkingFile;
 use crate::changes::Change;
-use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
@@ -39,25 +38,10 @@ impl Repository for GitRepository {
         if let Some(root) = root {
             args.push(root.as_str());
         }
-        let entries = tree::parse(
-            &self.command_with_mode(
-                ProcessMode::PlainGroup,
-                &args,
-                vec![],
-                DEFAULT_OUTPUT_LIMIT,
-            )?,
-            limits,
-        )?;
-        if self.ensure_checkout_objects(commit, &entries)? {
-            return tree::parse(
-                &self.command_with_mode(
-                    ProcessMode::PlainGroup,
-                    &args,
-                    vec![],
-                    DEFAULT_OUTPUT_LIMIT,
-                )?,
-                limits,
-            );
+        let request = self.tree_request(&args);
+        let entries = tree::parse(&self.initial_tree_listing(&request)?, limits)?;
+        if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+            return tree::parse(&self.runner.run(&request)?.stdout, limits);
         }
         Ok(entries)
     }

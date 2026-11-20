@@ -17,6 +17,7 @@ fn clean_hashes_batch_and_quote_unusual_paths() {
     let object = ObjectId::parse(&"a".repeat(40)).unwrap();
     let repository = GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
+        promisor_remotes: Vec::new(),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
@@ -33,6 +34,7 @@ fn clean_hashes_batch_and_quote_unusual_paths() {
 fn empty_or_nonregular_hash_candidates_start_no_git_process() {
     let repository = GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
+        promisor_remotes: Vec::new(),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),

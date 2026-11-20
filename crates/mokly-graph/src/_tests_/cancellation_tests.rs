@@ -26,6 +26,7 @@ fn config() -> ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     }
@@ -139,6 +140,8 @@ fn preparation_stops_before_the_next_stylesheet_root() {
                 route: "styles/a.css".into(),
                 css: "p {}".into(),
                 assets: Default::default(),
+                resolution_files: Default::default(),
+                resolution_roots: Default::default(),
                 css_modules: Default::default(),
                 inputs: Default::default(),
                 imported_by: Default::default(),

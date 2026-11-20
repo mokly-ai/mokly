@@ -5,7 +5,8 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_platform::rename::{Rename, SystemRename};
 use mokly_static::error::Error;
 use mokly_static::filesystem::SystemFiles;
@@ -42,15 +43,11 @@ fn a_captured_symlink_is_retained_and_never_restored_as_a_directory() {
     let temporary = TempDir::new().unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let output = root.join("site");
-    let old = Artifact::finalize(
-        output.clone(),
-        vec![File {
-            path: "index.html".into(),
-            bytes: b"old".as_slice().into(),
-        }],
-        None,
-    )
-    .unwrap();
+    let mut files = Inventory::default();
+    files
+        .insert("index.html".into(), b"old".as_slice().into())
+        .unwrap();
+    let old = Artifact::finalize(output.clone(), files, None).unwrap();
     fs::create_dir(&output).unwrap();
     for file in &old.files {
         fs::write(output.join(&file.path), &file.bytes).unwrap();

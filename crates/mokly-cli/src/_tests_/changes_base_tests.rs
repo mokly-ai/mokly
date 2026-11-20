@@ -3,7 +3,7 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_cli::cancellation::BuildCancellation;
 use mokly_compare::base_freshness::DependencySelection;
 use mokly_compare::base_render::{
@@ -156,6 +156,10 @@ fn prepare(
         freshness: Some(Arc::new(Unimock::new(()))),
     };
     let config = ResolvedConfig {
+        modules: ResolvedModules {
+            renderer: input.renderer.clone(),
+            postcss: input.postcss.clone(),
+        },
         input,
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),

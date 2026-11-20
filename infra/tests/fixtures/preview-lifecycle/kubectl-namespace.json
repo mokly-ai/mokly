@@ -1,0 +1,15 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "name": "mkc-preview-pr-42",
+    "labels": {
+      "kubernetes.io/metadata.name": "mkc-preview-pr-42"
+    },
+    "resourceVersion": "4815162342",
+    "uid": "12345678-1234-4234-8234-123456789abc"
+  },
+  "status": {
+    "phase": "Active"
+  }
+}

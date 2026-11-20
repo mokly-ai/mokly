@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { evaluateDependencyAudit } from "../scripts/verification/dependency-audit-evaluation.mjs";
+import { auditWorkspaceFiles } from "../scripts/verification/dependency-audit-execution.mjs";
 
 import {
   exceptionAuditInput,
@@ -26,6 +27,20 @@ test("the committed exceptions are valid with the real lockfile", async () => {
     "node scripts/verification/dependency-audit.mjs",
   );
   const { report, today } = exceptionAuditInput(exceptions);
-  const result = evaluateDependencyAudit(report, lockfile, exceptions, today);
+  const workspaces = Object.fromEntries(
+    await Promise.all(
+      auditWorkspaceFiles(lockfile, exceptions).map(async (file) => [
+        file.slice(0, -"/package.json".length),
+        JSON.parse(await fs.readFile(new URL(file, root), "utf8")),
+      ]),
+    ),
+  );
+  const result = evaluateDependencyAudit(
+    report,
+    lockfile,
+    exceptions,
+    today,
+    workspaces,
+  );
   assert.equal(result.ok, true, issueMessages(result));
 });

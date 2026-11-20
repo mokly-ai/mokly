@@ -28,7 +28,7 @@ fn disk_restores_before_bundle_and_a_hit_keeps_its_existing_record() {
             .some_call(matching!(_))
             .returns(WriteOutcome::Unchanged),
     ));
-    let pool = pool(store, worker(events.clone(), "seed"));
+    let pool = pool(store, worker(events.clone(), "seed", 0));
     let result = bundle(&pool);
     assert_eq!(result.cache, Some(CacheOutcome::Hit));
     assert_eq!(result.generation, "seed");
@@ -46,7 +46,7 @@ fn complete_memory_is_selected_before_newest_epoch_and_installed_keys_count_as_m
             .some_call(matching!(_))
             .returns(WriteOutcome::StoreFault),
     );
-    let pool = pool(store, worker(events.clone(), "old"));
+    let pool = pool(store, worker(events.clone(), "old", 0));
     live(&pool, "old", 1, true, true);
     live(&pool, "complete", 2, true, false);
     live(&pool, "incomplete", 3, false, false);
@@ -62,7 +62,7 @@ fn complete_memory_is_selected_before_newest_epoch_and_installed_keys_count_as_m
 #[test]
 fn incomplete_memory_allows_disk_fallback_and_explicit_old_lease_restoration() {
     let events = Arc::new(Mutex::new(vec![]));
-    let pool = pool(unchanged_hit(), worker(events.clone(), "seed"));
+    let pool = pool(unchanged_hit(), worker(events.clone(), "seed", 0));
     live(&pool, "incomplete", 3, false, false);
     assert_eq!(bundle(&pool).cache, Some(CacheOutcome::Hit));
     pool.request(Call::CssModules(CssModules {
@@ -89,7 +89,7 @@ fn incomplete_memory_allows_disk_fallback_and_explicit_old_lease_restoration() {
 #[test]
 fn an_incomplete_final_release_removes_the_older_complete_recipe_before_disk_fallback() {
     let events = Arc::new(Mutex::new(vec![]));
-    let pool = pool(unchanged_hit(), worker(events.clone(), "seed"));
+    let pool = pool(unchanged_hit(), worker(events.clone(), "seed", 0));
     for (id, epoch, complete) in [("complete", 1, true), ("partial", 2, false)] {
         live(&pool, id, epoch, complete, false);
         pool.release_generation(id, epoch);
@@ -120,7 +120,7 @@ fn a_final_lease_release_during_restore_preserves_memory_provenance() {
                         .release_generation("live", 1);
                     Ok(MethodResult::Empty)
                 }
-                Call::Bundle(_) => Ok(answer("live")),
+                Call::Bundle(_) => Ok(answer("live", 0)),
                 _ => panic!("unexpected request"),
             })),
         WorkerMock::resident_bytes

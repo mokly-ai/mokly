@@ -127,16 +127,19 @@ data instead.
 
 `renderer.tsx` is the reference
 [renderer module](../../docs/protocol/mokly-rendering.md#renderer-module) for a
-React Native Web component library. It returns the entry's React node inside
-the `@firna/ui` theme for the view's colour scheme, with the tokens in
-`theme.ts`. The sidecar collects React Native Web's styles, and the Rust core
-writes the document head. The collected styles come before the configured
-stylesheets, so `styles.css`, and `styles-dark.css` in dark views, colour the
-plain HTML around the components. The renderer also places each design library
-component in `LibraryHost`, which gives the standalone sample its frame. The
-`moduleResolution` settings give
-the bundle the `react-native-web` alias, the `react-native` conditions and
-fields, the `.web.*` extensions, and the JSX loader for `.js` files. A
+React Native component library on the web. It returns the entry's React node
+inside the `@firna/ui` theme for the view's colour scheme, with the tokens in
+`theme.ts`. Firna's web controls write inline styles. The renderer also
+returns Firna's `domBackendCss` stylesheet, which holds the element resets and
+the focus rules, as a `style` element. The sidecar collects it, and the Rust
+core writes it in the document head. The collected styles come before the
+configured stylesheets, so `styles.css`, and `styles-dark.css` in dark views,
+colour the plain HTML around the components. The renderer also places each
+design library component in `LibraryHost`, which gives the standalone sample
+its frame. The `moduleResolution` settings give the bundle the
+`react-native-web` alias, the `react-native` conditions and fields, the
+`.web.*` extensions, and the JSX loader for `.js` files. Through them, the
+bundle reads Firna's `react-native` build and selects its `.web.*` files. A
 consumer that renders plain React DOM needs none of these settings.
 
 ## The design catalogue

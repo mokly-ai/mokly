@@ -1,0 +1,25 @@
+[package]
+name = "mkc-billing"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mkc-auth = { workspace = true }
+mkc-billing-interface = { workspace = true }
+mkc-domain = { workspace = true }
+mkc-store-interface = { workspace = true }
+internal-error = { workspace = true }
+thiserror = "2.0.20"
+unimock = "0.6.8"
+chrono = "0.4.45"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tracing = "0.1.44"
+uuid = { version = "1.26.1", features = ["v7"] }
+
+[lints]
+workspace = true

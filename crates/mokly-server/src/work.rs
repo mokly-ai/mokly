@@ -7,12 +7,14 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_graph::write_activity::WriteActivity;
 use mokly_model::data::Props;
 use tokio::sync::Semaphore;
 
 use crate::asset_streams::AssetResult;
 use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
+use crate::background_dispatch::Dispatch;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::foreground::Foreground;
@@ -20,6 +22,7 @@ use crate::priority::Priority;
 use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
+use crate::work_active::ActiveJobs;
 use crate::work_page::Page;
 
 /// Bound native HTTP and render scheduling to available machine parallelism.
@@ -30,12 +33,17 @@ pub fn parallelism(available: usize) -> u32 {
 #[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
 pub trait Work: Send + Sync {
+    /// Fixed native worker maximum; reading it performs no admission work.
+    fn parallelism(&self) -> usize {
+        1
+    }
     /// Render one background document only when foreground admission is idle, and
     /// return its warnings unreported.
     async fn background(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>>;
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
@@ -61,6 +69,7 @@ pub trait Work: Send + Sync {
 
 /// One bounded scheduler shared by foreground jobs and background generations.
 pub struct Workers {
+    pub(crate) activity: Option<Arc<dyn WriteActivity>>,
     pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     pub(crate) workers: Arc<Semaphore>,
@@ -73,9 +82,19 @@ pub struct Workers {
     pages: Mutex<BTreeMap<String, Weak<Page>>>,
     pub(crate) closed: AtomicBool,
     parallelism: u32,
+    pub(crate) background_jobs: Arc<ActiveJobs>,
 }
 
+#[cfg(test)]
+#[path = "_tests_/write_activity_tests.rs"]
+mod write_activity_tests;
+
 impl Workers {
+    /// Observe native jobs even when no sidecar is needed.
+    pub fn with_activity(mut self, activity: Option<Arc<dyn WriteActivity>>) -> Self {
+        self.activity = activity;
+        self
+    }
     /// Share whole-request priority with the command's sidecar admission.
     pub fn with_foreground(mut self, shared: Arc<dyn Foreground>) -> Self {
         self.priority = Arc::new(Priority::new(shared));
@@ -86,9 +105,11 @@ impl Workers {
     pub fn new(parallelism: u32, diagnostics: Arc<dyn Diagnostics>) -> Self {
         let parallelism = parallelism.max(1);
         Self {
+            activity: None,
             priority: Arc::new(Priority::default()),
             diagnostics,
             parallelism,
+            background_jobs: Arc::new(ActiveJobs::default()),
             workers: Arc::new(Semaphore::new(parallelism as usize)),
             turn: Semaphore::new(1),
             queued: Arc::new(Semaphore::new(8)),
@@ -100,12 +121,16 @@ impl Workers {
 
 #[async_trait]
 impl Work for Workers {
+    fn parallelism(&self) -> usize {
+        self.parallelism as usize
+    }
     async fn background(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>> {
-        self.background_render(documents, route).await
+        self.background_render(documents, route, dispatch).await
     }
     async fn generated(
         &self,
@@ -118,6 +143,7 @@ impl Work for Workers {
         self.asset_delivery(documents, route).await
     }
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return None;
@@ -127,6 +153,7 @@ impl Work for Workers {
             return None;
         }
         tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             let _guard = guard;
             let _permit = permit;
             let documents = documents;
@@ -167,6 +194,7 @@ impl Work for Workers {
         tokio::pin!(notified);
         notified.as_mut().enable();
         let job = async {
+            let activity = self.activity.as_ref().map(|activity| activity.enter());
             let guard = self.priority.enter(true);
             let (page_permit, permit) = {
                 let _queued = {
@@ -204,6 +232,7 @@ impl Work for Workers {
             let page_guard = page.clone();
             let parent = tracing::Span::current();
             let output = tokio::task::spawn_blocking(move || {
+                let _activity = activity;
                 parent.in_scope(|| {
                     let _guard = guard;
                     let _page = page_guard;
@@ -246,6 +275,7 @@ impl Work for Workers {
             .clone()
             .acquire_many_owned(self.parallelism)
             .await;
+        self.background_jobs.drain().await;
         self.pages
             .lock()
             .unwrap_or_else(|error| error.into_inner())

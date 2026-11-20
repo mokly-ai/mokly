@@ -23,7 +23,7 @@
 
 .mbk-chip.flow svg {
   flex-shrink: 0;
-  color: var(--mokly-accent);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 .mbk-chip.screen svg {
@@ -45,19 +45,28 @@
 /* The hover fill marks a resting link or button, so a selected chip keeps the
    accent under the pointer. */
 .mbk-chip.tag:is(a, button):not(.active):hover {
-  background: var(--mokly-accent-soft);
+  background: var(
+    --mokly-accent-soft,
+    var(--_mokly-private-accent-soft-default)
+  );
 }
 
 /* The selection draws on every form of the chip: a link, a toggle button, and
    the picture of a static depiction. */
 .mbk-chip.tag.active {
-  background: var(--mokly-accent);
-  border-color: var(--mokly-accent);
-  color: var(--mokly-accent-contrast);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
+  border-color: var(--mokly-accent, var(--_mokly-private-accent-default));
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
 }
 
 .mbk-chip.tag.active svg {
-  color: var(--mokly-accent-contrast);
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
 }
 
 .mbk-chip.tag:is(a, button):active {

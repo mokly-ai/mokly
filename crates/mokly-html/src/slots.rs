@@ -7,7 +7,7 @@ use mokly_catalogue::template_types::RegisteredElement;
 use mokly_model::material::slot_key;
 use mokly_model::usage::ComponentSlotRecord;
 
-use crate::composition::Engine;
+use crate::composition::{ComposeRequest, Engine};
 use crate::context::{Context, Slot};
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
@@ -87,37 +87,6 @@ impl Engine<'_> {
         Ok(slots)
     }
 
-    pub(crate) fn saved_slots(&self, context: &mut Context) -> Result<()> {
-        let supplier = Arc::new(context.clone());
-        if let Some(supplied) = self
-            .request
-            .catalogue
-            .slot_fragments
-            .get(&self.request.entry.metadata.path)
-        {
-            for (name, body) in supplied {
-                if !context.declared_slots.contains(name) {
-                    return Err(invalid(Code::HtmlSlot, format!("undeclared slot {name}")));
-                }
-                context.slots.insert(
-                    name.clone(),
-                    Slot {
-                        nodes: Arc::new(source_locations::slot(
-                            body,
-                            &self.request.entry.metadata.path,
-                            name,
-                        )),
-                        supplier: supplier.clone(),
-                        origin_key: None,
-                        key: None,
-                        instance_key: None,
-                    },
-                );
-            }
-        }
-        Ok(())
-    }
-
     pub(crate) fn slot(&mut self, element: Element, context: Arc<Context>) -> Result<Expansion> {
         let name = element.get("name").unwrap_or("children");
         if !context.declared_slots.iter().any(|slot| slot == name) {
@@ -190,4 +159,34 @@ impl Engine<'_> {
         }
         Ok(expansion)
     }
+}
+
+pub(crate) fn saved(request: &ComposeRequest<'_>, context: &mut Context) -> Result<()> {
+    let supplier = Arc::new(context.clone());
+    if let Some(supplied) = request
+        .catalogue
+        .slot_fragments
+        .get(&request.entry.metadata.path)
+    {
+        for (name, body) in supplied {
+            if !context.declared_slots.contains(name) {
+                return Err(invalid(Code::HtmlSlot, format!("undeclared slot {name}")));
+            }
+            context.slots.insert(
+                name.clone(),
+                Slot {
+                    nodes: Arc::new(source_locations::slot(
+                        body,
+                        &request.entry.metadata.path,
+                        name,
+                    )),
+                    supplier: supplier.clone(),
+                    origin_key: None,
+                    key: None,
+                    instance_key: None,
+                },
+            );
+        }
+    }
+    Ok(())
 }

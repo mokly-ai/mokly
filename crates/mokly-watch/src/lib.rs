@@ -4,11 +4,13 @@ pub mod backend;
 pub mod error;
 pub mod event;
 pub mod native;
+mod native_attachment;
 mod native_events;
 mod native_scan;
 pub mod observer;
 mod pattern;
 pub mod plan;
+mod stylesheet_inputs;
 
 #[cfg(test)]
 #[path = "_tests_/observer_tests.rs"]

@@ -5,7 +5,7 @@
  * is not available, or the failure with Try again.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { EmptyAction } from "../empty-state/empty-state.js";
 
@@ -21,6 +21,7 @@ export function ComparisonStage({
   current,
   entryId,
   stage,
+  stageRef,
   toolbar,
 }: {
   /** Whether the comparison or its documents load. */
@@ -35,6 +36,11 @@ export function ComparisonStage({
   entryId: string;
   /** The sections of the comparison, or its failure. */
   stage?: ReactNode;
+  /**
+   * Receives the comparison stage, which shows that it loads and then the
+   * sections, and which the host focuses after Try again.
+   */
+  stageRef?: Ref<HTMLDivElement> | undefined;
   /** The band of the comparison toolbar. */
   toolbar?: ReactNode;
 }) {
@@ -58,6 +64,8 @@ export function ComparisonStage({
         className="mbk-diff-stage mbk-reset"
         data-diff-stage=""
         hidden={current}
+        ref={stageRef}
+        tabIndex={stageRef === undefined ? undefined : -1}
       >
         {stage ?? "Loading comparison…"}
       </div>

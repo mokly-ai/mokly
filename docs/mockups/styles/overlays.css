@@ -1,0 +1,76 @@
+/* Registered overlay pieces that component previews and product pages share.
+   The panel frame is the viewer's overlay, a settings confirmation and a row
+   menu's compact sheet: a centered modal on desktop, a bottom sheet on mobile. */
+.fo-viewer-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  box-shadow: var(--mk-shadow-large);
+}
+.fo-viewer-modal {
+  max-width: 480px;
+  max-height: 76vh;
+  border-radius: var(--mk-radius-medium);
+}
+.fo-viewer-sheet {
+  max-height: 84vh;
+  border-bottom: 0;
+  border-radius: var(--mk-radius-large) var(--mk-radius-large) 0 0;
+}
+.fo-viewer-panel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+  flex-shrink: 0;
+  padding: var(--mk-space-4) var(--mk-space-5) var(--mk-space-3);
+  border-bottom: 1px solid var(--mk-color-border);
+}
+.fo-viewer-panel-heading {
+  min-width: 0;
+}
+.fo-viewer-panel-title {
+  display: block;
+  font-size: var(--mk-type-pane-title-size);
+  line-height: var(--mk-type-pane-title-line);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.018em;
+}
+.fo-viewer-panel-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  overflow-wrap: anywhere;
+}
+.fo-viewer-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--mk-space-5);
+}
+@media (max-width: 767px) {
+  .fo-viewer-panel-body {
+    padding: var(--mk-space-5) var(--mk-layout-gutter-mobile) var(--mk-space-10);
+  }
+}
+/* A row gathers its own actions behind one three-dot trigger. */
+.fo-row-menu {
+  position: relative;
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+}
+/* The compact menu portals to the document root, so it covers the surface. */
+.fo-menu-sheet-layer {
+  position: fixed;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: color-mix(in srgb, var(--mk-color-text) 30%, transparent);
+}

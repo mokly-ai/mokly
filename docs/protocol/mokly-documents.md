@@ -1,6 +1,6 @@
 # Markdown Documents
 
-Status: Follow-up work remains in the [related documents item](../../plans/follow-ups/related-docs-generation.md).
+Status: Follow-up work remains in the [related documents viewer item](../../plans/follow-ups/related-docs-viewer-compatibility.md).
 
 ## Discovery
 

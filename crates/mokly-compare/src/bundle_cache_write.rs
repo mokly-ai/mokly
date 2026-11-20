@@ -17,22 +17,31 @@ impl DiskCache {
         bytes: &[u8],
         runtime_digest: [u8; 32],
     ) -> Result<Mutation> {
+        self.raw_replace(key, bytes, runtime_digest, Kind::Bundles, CAPACITY)
+    }
+
+    pub(crate) fn raw_replace(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        runtime_digest: [u8; 32],
+        kind: Kind,
+        capacity: u64,
+    ) -> Result<Mutation> {
         self.check()?;
         let needed = (bytes.len() as u64).saturating_add(RECEIPT_BYTES);
-        if needed > CAPACITY {
+        if needed > capacity {
             return Ok(Mutation::Skipped(SkipReason::Capacity));
         }
-        let namespace = self.bundle_namespace(key)?;
-        let Some(_entry) =
-            self.bundle_lock(&entry_lock_path(&namespace, Kind::Bundles, key), false)?
-        else {
+        let namespace = self.raw_namespace(key, kind)?;
+        let Some(_entry) = self.bundle_lock(&entry_lock_path(&namespace, kind, key), false)? else {
             return Ok(Mutation::Skipped(SkipReason::Contended));
         };
         let mut receipt = {
             let Some(_state) = self.bundle_lock(&namespace.join("state.lock"), false)? else {
                 return Ok(Mutation::Skipped(SkipReason::Contended));
             };
-            match self.bundle_reserve(&namespace, key, needed, runtime_digest)? {
+            match self.raw_reserve(&namespace, key, needed, runtime_digest, kind, capacity)? {
                 Reservation::Ready(receipt) => receipt,
                 Reservation::Skipped(reason) => return Ok(Mutation::Skipped(reason)),
             }
@@ -45,7 +54,7 @@ impl DiskCache {
             let Some(_state) = self.bundle_lock(&namespace.join("state.lock"), false)? else {
                 return Ok(Mutation::Skipped(SkipReason::Contended));
             };
-            let Some(used) = self.bundle_next_used(&namespace)? else {
+            let Some(used) = self.raw_next_used(&namespace, kind, capacity)? else {
                 return Ok(Mutation::Skipped(SkipReason::SequenceExhausted));
             };
             receipt.used = used;

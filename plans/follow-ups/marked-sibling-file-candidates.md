@@ -1,0 +1,41 @@
+# Marked reuse misses sibling file candidates
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-19, from the marked folder-map options check on branch `calummoore/mokly-folder-export-evidence-7rox`.
+- **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:52` and `packages/mokly/src/sidecar/serve-edit-paths.ts`.
+- **Reason:** The approved marked rule changes only package folder-map selections. Relative imports and legacy package subpaths need a separate rule decision.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Marked compile:** A Serve edit compile with `uncaptured: "serveEdit"` that records no full reuse evidence.
+  - **Live checks:** Consumed file digests, metadata digests, and folder file names that protect marked reuse.
+  - **Legacy package subpath:** A package import that resolves without an `exports` mapping, such as `chosen/sub/value` in a package without `exports`.
+- **Background:**
+  - `resolutionInputs` records the folder of each consumed module. It records ancestor manifests, but not every ancestor's file names.
+  - `ServeEditPaths` adds candidate parent folders for readable TypeScript `paths` lookups. An ordinary relative import does not enter that pass.
+  - esbuild tries a file and its extensions before a folder's index file.
+  - A marked compile can therefore consume `sub/value/index.js` while its live lists omit `sub`.
+  - The package folder-map fix of 2026-11-19 adds candidate folders only for `exports` and `imports` folder-map selections.
+- **Problem:**
+  - By code reading, `entry.mjs` can import `./sub/value` and select `sub/value/index.js`.
+  - If no consumed file is directly in `sub`, the live lists hold the source root and `sub/value`, but omit `sub`.
+  - Adding `sub/value.ts` then changes native selection without changing those lists or the old consumed file.
+  - A legacy package subpath has the same shape when no package folder mapping selects it.
+  - This form was not reproduced during the folder-map options check. Reproduce it before implementation.
+- **Impact if no action:** Serve can reuse an old index module after a preferred sibling file appears. A restart or another changed live input ends the stale result.
+- **Root question:** How can marked reuse keep native selection when a preferred sibling file appears outside its listed folders?
+- **Options:**
+  - **A.** Add the candidate parent folders for relative and legacy package subpath imports to the live checks. Keep the existing list format. Effort: Medium.
+  - **B.** Withhold the marker for these folder selections. This removes marked reuse for affected modules and can slow edits. Effort: Medium.
+  - **C.** Extend one shared lookup-candidate description across full capture, marked checks, and mapped imports. This covers sibling files and directory entry fields together. Effort: Large.
+- **Left out:** Changing nothing keeps stale output. Capturing full evidence on each edit reverses the edit-speed decision. Resolving every hit again breaks the reuse contract.
+- **Shared assumptions:** Native output stays authoritative. The existing bounds and list format remain. A change outside folder-map selections needs the performance orchestrator's rule decision.
+- **Wider fix:** C. One candidate description prevents the observation sets from drifting across lookup routes.
+- **Previous examples:** `plans/follow-ups/marked-package-entry-targets.md` records missed earlier manifest targets and index fallback. `plans/follow-ups/marked-reuse-link-retarget.md` records another limit of marked live checks.
+- **Related:**
+  - [marked-package-entry-targets.md](./marked-package-entry-targets.md): the same wider candidate description can cover both classes. Its direct cases depend on manifest entry fields.
+  - [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md): another missing live observation with the same bounded-input requirements.
+- **Recommendation:** C. It gives the strongest protection against another mismatch between full capture and marked checks.
+- **Action:** ask the user, because this changes the marked live-check rule outside the package folder-map scope approved on 2026-11-19. The performance orchestrator owns that rule decision.

@@ -69,6 +69,7 @@ fn hash_in_module_path_keeps_its_stylesheet_root_and_reports_route_error() {
     );
     let config = ResolvedConfig {
         input: Default::default(),
+        modules: Default::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         authored_inputs: Vec::new(),

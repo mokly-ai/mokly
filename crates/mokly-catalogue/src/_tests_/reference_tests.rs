@@ -95,6 +95,7 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
             })),
     )));
     let config = ResolvedConfig {
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),

@@ -198,6 +198,7 @@ pub(super) fn run(
                 reporter.clone(),
                 !options.no_watch,
                 services.sidecars.clone(),
+                &services,
             );
             let publications = delivery.publications;
             let background = delivery.background;
@@ -218,7 +219,7 @@ pub(super) fn run(
             );
             if *receiver.borrow()
                 || !phase.serve(&|| {
-                    terminal.stdout(&layout);
+                    progress.ready(&layout);
                     attempt.finish(&summary.warnings, false, &|warnings| {
                         terminal.stderr(&build_output::warnings(style, warnings, &redactor));
                         terminal.stdout(&serve_output::catalogue(
@@ -250,6 +251,7 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                activity: Some(services.activity()),
                 warnings: warnings.clone(),
                 watching,
                 candidates: candidates.clone(),

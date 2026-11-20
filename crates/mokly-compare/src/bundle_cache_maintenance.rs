@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use mokly_platform::locks::FileLock;
 use mokly_sidecar::bundle_outcomes::SkipReason;
 
-use crate::bundle_cache_types::{BundleReceipt, CAPACITY};
+use crate::bundle_cache_types::BundleReceipt;
 use crate::cache::DiskCache;
 use crate::cache_lock::entry_lock_path;
 use crate::cache_types::Kind;
@@ -26,8 +26,14 @@ impl StripeGuards {
         }
     }
 
-    fn acquire(&mut self, cache: &DiskCache, namespace: &Path, key: &str) -> Result<bool> {
-        let path = entry_lock_path(namespace, Kind::Bundles, key);
+    fn acquire(
+        &mut self,
+        cache: &DiskCache,
+        namespace: &Path,
+        kind: Kind,
+        key: &str,
+    ) -> Result<bool> {
+        let path = entry_lock_path(namespace, kind, key);
         if let Some(acquired) = self.attempted.get(&path) {
             return Ok(*acquired);
         }
@@ -47,14 +53,14 @@ pub(crate) enum Reservation {
 }
 
 impl DiskCache {
-    pub(crate) fn bundle_clean_trash(&self, namespace: &Path) -> Result<bool> {
+    pub(crate) fn raw_clean_trash(&self, namespace: &Path, capacity: u64) -> Result<bool> {
         let mut cleaned = true;
         for record in self
             .storage
-            .bundle_records(&namespace.join("trash"), CAPACITY)?
+            .bundle_records(&namespace.join("trash"), capacity)?
         {
             self.check()?;
-            if record.bytes > CAPACITY {
+            if record.bytes > capacity {
                 cleaned = false;
             } else {
                 self.storage
@@ -64,35 +70,37 @@ impl DiskCache {
         Ok(cleaned)
     }
 
-    pub(crate) fn bundle_reserve(
+    pub(crate) fn raw_reserve(
         &self,
         namespace: &Path,
         key: &str,
         needed: u64,
         runtime_digest: [u8; 32],
+        kind: Kind,
+        capacity: u64,
     ) -> Result<Reservation> {
-        let mut guards = StripeGuards::new(entry_lock_path(namespace, Kind::Bundles, key));
+        let mut guards = StripeGuards::new(entry_lock_path(namespace, kind, key));
         for record in self
             .storage
-            .bundle_records(&namespace.join("staging"), CAPACITY)?
+            .bundle_records(&namespace.join("staging"), capacity)?
         {
-            if guards.acquire(self, namespace, &record.key)? {
+            if guards.acquire(self, namespace, kind, &record.key)? {
                 self.storage.bundle_retire(
                     &namespace.join("staging").join(record.key),
                     &namespace.join("trash"),
                 )?;
             }
         }
-        if !self.bundle_clean_trash(namespace)? {
+        if !self.raw_clean_trash(namespace, capacity)? {
             return Ok(Reservation::Skipped(SkipReason::Capacity));
         }
-        let Some(used) = self.bundle_next_used(namespace)? else {
+        let Some(used) = self.raw_next_used(namespace, kind, capacity)? else {
             return Ok(Reservation::Skipped(SkipReason::SequenceExhausted));
         };
         let mut entries = self
             .storage
-            .bundle_records(&namespace.join("entries"), CAPACITY)?;
-        if entries.iter().any(|record| record.bytes > CAPACITY) {
+            .bundle_records(&namespace.join("entries"), capacity)?;
+        if entries.iter().any(|record| record.bytes > capacity) {
             return Ok(Reservation::Skipped(SkipReason::Capacity));
         }
         if entries.iter().any(|record| record.key == key) {
@@ -100,19 +108,19 @@ impl DiskCache {
                 &namespace.join("entries").join(key),
                 &namespace.join("trash"),
             )?;
-            if !self.bundle_clean_trash(namespace)? {
+            if !self.raw_clean_trash(namespace, capacity)? {
                 return Ok(Reservation::Skipped(SkipReason::Capacity));
             }
             entries.retain(|record| record.key != key);
         }
         let stages = self
             .storage
-            .bundle_records(&namespace.join("staging"), CAPACITY)?;
+            .bundle_records(&namespace.join("staging"), capacity)?;
         let staged = stages.iter().fold(0u64, |total, record| {
             total.saturating_add(if record.receipt.is_some() {
                 record.bytes
             } else {
-                CAPACITY
+                capacity
             })
         });
         let mut total = entries
@@ -131,21 +139,21 @@ impl DiskCache {
                 ))
         });
         for record in entries {
-            if total <= CAPACITY {
+            if total <= capacity {
                 break;
             }
-            if guards.acquire(self, namespace, &record.key)? {
+            if guards.acquire(self, namespace, kind, &record.key)? {
                 self.storage.bundle_retire(
                     &namespace.join("entries").join(record.key),
                     &namespace.join("trash"),
                 )?;
-                if !self.bundle_clean_trash(namespace)? {
+                if !self.raw_clean_trash(namespace, capacity)? {
                     return Ok(Reservation::Skipped(SkipReason::Capacity));
                 }
                 total = total.saturating_sub(record.bytes);
             }
         }
-        if total > CAPACITY {
+        if total > capacity {
             return Ok(Reservation::Skipped(SkipReason::Capacity));
         }
         let receipt = BundleReceipt {

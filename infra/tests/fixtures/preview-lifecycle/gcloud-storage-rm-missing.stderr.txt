@@ -1,0 +1,5 @@
+Removing objects:
+
+.........
+ERROR: (gcloud.storage.rm) The following URLs matched no objects or files:
+gs://mokly-508518-preview-blobs/pr-42/sha256/bb/second#1790180600109778

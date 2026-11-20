@@ -1,8 +1,9 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { DESTINATIONS } from "../../parts/destinations.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { flag, text, type LibraryProps } from "../schemas.js";
+import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
 import { DeviceFrameView } from "./device-frame.view.js";
 
@@ -17,6 +18,7 @@ const propSchema = {
     small: flag,
     expandable: flag,
     address: text,
+    retryDestination: destination,
   },
 } as const;
 const slots = ["children"] as const;
@@ -73,6 +75,12 @@ export const deviceFrame = defineComponent({
       title: "Light only",
       props: { ...sample, lightOnly: true },
       slots: sampleSlots,
+    },
+    {
+      slug: "failed",
+      title: "Failed to load",
+      props: { ...sample, retryDestination: DESTINATIONS.welcome },
+      slots: { children: null },
     },
   ],
 });

@@ -18,7 +18,7 @@ pub(crate) fn describe(
     config: &ResolvedConfig,
     files: &[SourceFile],
 ) -> Result<Definitions> {
-    if files.is_empty() && config.input.renderer.is_none() {
+    if files.is_empty() && config.modules.renderer.is_none() {
         return Ok(Definitions::default());
     }
     let (mut generation, described) = bundle::describe(runtime, config, files)?;

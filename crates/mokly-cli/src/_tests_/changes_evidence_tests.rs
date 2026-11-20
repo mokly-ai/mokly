@@ -46,6 +46,7 @@ fn config() -> ResolvedConfig {
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     }
 }

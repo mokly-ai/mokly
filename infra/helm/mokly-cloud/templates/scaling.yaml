@@ -1,0 +1,31 @@
+{{- if eq .Values.database.mode "cloudsql" }}
+{{- range $name := list "api" "app" "catalogue" }}
+{{- if (index $.Values $name).enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: {{ $name }} }
+  minReplicas: {{ $.Values.scaling.minReplicas }}
+  maxReplicas: {{ $.Values.scaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: {{ $.Values.scaling.cpuUtilization }} }
+{{- if $.Values.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}
+spec:
+  maxUnavailable: {{ $.Values.pdb.maxUnavailable }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: {{ $name }} }
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

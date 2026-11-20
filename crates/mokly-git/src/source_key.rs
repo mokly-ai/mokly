@@ -5,8 +5,7 @@ use sha2::{Digest, Sha256};
 use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{IoResult, Result};
 use crate::identity::ObjectId;
-use crate::repository::{GitRepository, Repository};
-use crate::tree::Limits;
+use crate::repository::GitRepository;
 
 /// Effective conversion settings for one pinned commit, without a preparation salt.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -30,7 +29,7 @@ impl GitRepository {
             vec![],
             DEFAULT_OUTPUT_LIMIT,
         )?;
-        let entries = self.list(commit, None, Limits::default())?;
+        let entries = self.settings_listing(commit)?;
         let mut input = Vec::new();
         for entry in entries.iter().filter(|entry| entry.mode.regular()) {
             input.extend_from_slice(entry.path.as_str().as_bytes());
@@ -91,3 +90,7 @@ fn hex(hash: Sha256) -> String {
 #[cfg(test)]
 #[path = "_tests_/source_key_tests.rs"]
 mod source_key_tests;
+
+#[cfg(test)]
+#[path = "_tests_/settings_listing_tests.rs"]
+mod settings_listing_tests;

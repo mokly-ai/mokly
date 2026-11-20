@@ -49,6 +49,17 @@ another build. Unit tests in
 every platform that closed or failed input ends the key reader and does not
 stop Serve.
 
+Each process test that starts Serve gives its child a temporary home through
+`Cache` in [`process_support/cache.rs`](./process_support/cache.rs). It sets
+`HOME`, `XDG_CACHE_HOME`, and `LOCALAPPDATA` on the child command only, outside
+the fixture repository. So the render store and the other Mokly caches stay out
+of the host cache and out of the watched catalogue on macOS, Linux, and
+Windows. The test keeps that owner alive until the child stops. These tests
+keep their exact output checks: a Serve start that fails before it listens
+writes no stdout, and the listening line is the first line that they parse.
+[`process_support/html.rs`](./process_support/html.rs) holds the shared HTML
+fixture writes and the complete native-process shutdown.
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
