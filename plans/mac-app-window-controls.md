@@ -187,6 +187,12 @@ Contract owners:
 - **Action:** ask the user, because the recommended option changes the
   Navigation requirement of Desktop application, and no recorded decision
   covers that change.
+- **Resolved:** On 2026-11-20, `main` merged PR #405, which the user merged.
+  It opens Stripe Checkout and the Customer Portal in the system browser, as
+  option E proposes, and the Billing section of
+  [Desktop application](../docs/protocol/cloud/desktop-app.md) now requires it.
+  No page that the cloud does not own loads in the window, so the problem is
+  gone, and this branch applies no answer of its own.
 
 ### 3. Package surfaces over the bar do not take clicks
 
@@ -431,7 +437,8 @@ The shell creates the Mac window without the native title bar.
 
 - [x] Give the macOS window the Electron options of the design calls, and
       keep the Linux window unchanged.
-- [ ] Apply the answer of decision 2 to the Stripe pages.
+- [x] Apply the answer of decision 2 to the Stripe pages. PR #405 on `main`
+      opens every Stripe page in the system browser, so nothing is left to do.
 - [x] Test the window options for macOS and Linux in the window logic tests.
 - [x] Add the Mac window to the responsibilities and the key code of the
       desktop README.
