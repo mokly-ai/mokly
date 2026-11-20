@@ -29,9 +29,17 @@ struct LookupJob {
     documents: Arc<dyn Documents>,
     route: String,
     parent: tracing::Span,
+    worker: HeldWorker,
+    lifetime: Lifetime,
+}
+
+/// The worker permit and the priority guard of a lookup job. The job returns them, and the
+/// render's task frees the worker after the join, in the poll that queues its miss. So a
+/// later render cannot use the freed worker for its lookup and its resumed job first. The
+/// permit drops before the guard, so the worker is free when the guard wakes the waiters.
+struct HeldWorker {
     _permit: OwnedSemaphorePermit,
     _guard: Guard,
-    lifetime: Lifetime,
 }
 
 struct ResumeJob {
@@ -44,12 +52,12 @@ struct ResumeJob {
 }
 
 impl LookupJob {
-    fn run(self) -> (Result<Option<BackgroundRead>>, Lifetime) {
+    fn run(self) -> (Result<Option<BackgroundRead>>, Lifetime, HeldWorker) {
         let read = RenderClass::Background.in_scope(|| {
             self.parent
                 .in_scope(|| self.documents.background_read(&self.route))
         });
-        (read, self.lifetime)
+        (read, self.lifetime, self.worker)
     }
 }
 
@@ -94,15 +102,17 @@ impl Workers {
             documents,
             route: route.clone(),
             parent: tracing::Span::current(),
-            _permit: permit,
-            _guard: self.priority.enter(false),
+            worker: HeldWorker {
+                _permit: permit,
+                _guard: self.priority.enter(false),
+            },
             lifetime: Lifetime {
                 _activity: activity,
                 _active: self.background_jobs.start(),
             },
         };
         let (read, lifetime) = match tokio::task::spawn_blocking(move || lookup.run()).await {
-            Ok(value) => value,
+            Ok((read, lifetime, _worker)) => (read, lifetime),
             Err(source) => return Err(InternalError::Task { source }.into()),
         };
         let miss = match read? {
