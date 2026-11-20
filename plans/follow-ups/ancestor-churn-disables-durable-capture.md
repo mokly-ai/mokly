@@ -82,10 +82,10 @@
       inode, change time, or modify time changed, at line 185 to line 211.
       Each rejection makes the evidence not durable. Before the compile,
       `prepare` waits once, for at most 50 ms, when a stamp is recent.
-  - Controlled evidence, from the Rust test
+  - Controlled Rust evidence, from the test
     `serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes`
     in `crates/mokly-render/tests/integration/plan_invalidation_tests.rs`, on
-    2026-11-19:
+    2026-11-19, before the shared fixture helpers:
     - A local diagnostic paused the sidecar after its durability `prepare`
       step. A controller then created and removed one folder directly in one
       ancestor folder of the fixture. Then the sidecar went on. The
@@ -112,35 +112,96 @@
       diagnostic runs were durable.
     - These runs show the mechanism. They do not show the cause of any
       earlier natural failure.
+  - Node evidence, from the strict build tests `tests/static_config_dir.test.ts`
+    and `tests/static_absolute_paths.test.ts`, on 2026-11-19, before the
+    shared fixture helpers:
+    - The same kind of controller changed `/tmp` during the first capture of
+      the configDir test. The first rejection was `observe:mature` at `/tmp`,
+      with a witness age of 2,298,203 ns against the limit of 50,000,000 ns.
+      The unchanged second build then compiled once instead of zero times, at
+      line 57 of the test at commit `76386b810`.
+    - A change directly in `.context` failed the absolute paths test in the
+      same way. Its first rejection was `observe:mature` at `.context`, with a
+      witness age of 1,347,471 ns.
+    - In both runs, the first capture had `complete: true`, `durable: false`,
+      no `uncaptured` marker, a toolchain identity, and no plan. The first CLI
+      load found no record, and the pool skipped the save. The unchanged
+      build found no record again and compiled once.
+    - A natural run, with no controller change, failed the configDir test in
+      the same way. Its first rejection was `finish:sameCaptureStat` at
+      `/tmp`. The change and modify times of `/tmp` went from
+      1795125558060731481 to 1795125559061722230 ns during the capture. Its
+      device, inode, and size stayed equal. Nobody identified the writer.
+    - A second natural run of the same test passed. These natural runs were
+      local test runs, not real use.
+    - The configDir test also failed naturally three times on 2026-11-19,
+      with no trace. The runs were a local complete gate, CI run 44578048802,
+      and the complete gate of the branch
+      `calummoore/fu-config-repository-root-symlink-v8zb`. Each time, the
+      unchanged build compiled once at line 57. After each of the two gate
+      failures, one isolated run of the test passed. After the CI failure,
+      attempt 2 of the run reran the failed jobs, and its full Node suite
+      passed all 3130 tests.
   - Test isolation and its limit:
-    - The nine-case test creates its fixtures in one private folder directly
-      in the `target` folder of the checkout, also when `CARGO_TARGET_DIR`
-      points elsewhere.
-    - Controlled runs of this layout made one change directly in `.context`
-      and three changes in `target/tmp`. In each run, all nine first captures
-      stayed durable, with plans and the required saves. An idle run passed
-      too. A change inside a fixture root was still rejected, at
-      `finish:sameCaptureStat`.
-    - With this layout, the complete test binary passed 10 of 10 runs, with
-      103 tests each. No test failed, was ignored, or was filtered. This
-      result does not trace the natural failure of this test on 2026-11-18,
-      when its "existing import" edit sent no plan.
-    - This isolation holds only while nothing but the test changes the
-      `target` folder. A source audit found no other direct writer of
-      `target` in that test binary, and no Cargo build runs beside the tests.
-      The checkout folder, the home folder, and `/` stay shared and
-      witnessed.
+    - Two shared helpers give eight tests their own owner folders under
+      `target/durable-capture-fixtures` in the checkout.
+      `durable_fixture::create(Owner)` in
+      `crates/mokly-test-support/src/durable_fixture.rs` serves six Rust
+      tests, the nine-case test included. `durableRoot(context, owner)` in
+      `tests/helpers/durable_fixture.ts` serves the two Node tests above.
+    - Each helper creates the `rust` and `node` folders and every owner folder
+      of its runtime before it returns a fixture. Only the owner test creates
+      or removes entries in its folder. Each scoped child goes after use, and
+      the empty owner folders stay. The anchor is the `target` folder of the
+      checkout, also when `CARGO_TARGET_DIR` names another folder.
+    - Matching controls with the helpers passed. A change in `target/tmp`
+      came during a capture of two `bundle_pool_tests` tests of
+      `mokly-compare`. A change in `/tmp` came during the configDir test, and
+      a change in `.context` during the absolute paths test. Each capture
+      stayed durable, with its plan. The four idle runs passed too.
+    - A change inside each source root was still rejected at
+      `finish:sameCaptureStat`. Late helper calls changed no active ancestor.
+      Four probes made and dropped a fixture of another owner during a
+      capture, with the same and the other runtime. During a Rust capture, the
+      Node owner folders grew from 0 to 2. During a Node capture, the Rust
+      owner folders grew from 0 to 6. Both captures kept their ancestors.
+    - With the helpers, the three complete Rust test binaries passed 10 of 10
+      runs each. Their tests passed in total: 30 in `bundle_pool_tests`, 10 in
+      `config_dir_pool_tests`, and 1030 in `integration_tests` of
+      `mokly-render`. Ten paired runs of the two Node test files passed all 20
+      tests. No test failed, was ignored or filtered, or was skipped or
+      cancelled.
+    - The performance orchestrator accepted this mechanism as the reason for
+      the fixture isolation. It did not accept it as a trace of the earlier
+      natural failures.
+    - Before these helpers, the nine-case test used one private folder
+      directly in `target`. Controlled runs of that layout made one change
+      directly in `.context` and three changes in `target/tmp`. In each run,
+      all nine first captures stayed durable, with plans and the required
+      saves. An idle run passed too. A change inside a fixture root was still
+      rejected, at `finish:sameCaptureStat`.
+    - With that layout, the complete test binary passed 10 of 10 runs, with
+      103 tests each. No test failed, was ignored, or was filtered. A source
+      audit then found no other direct writer of `target` in that test
+      binary, and no Cargo build ran beside the tests. This result does not
+      trace the natural failure of this test on 2026-11-18, when its "existing
+      import" edit sent no plan.
+    - The helpers isolate only the changes that fixtures make. Another writer
+      can still make a capture not durable. It can write in `target` or in a
+      folder above it, such as the checkout folder, the home folder, or `/`.
     - A checkout or worktree inside a `.context` folder still has that
       `.context` folder and its task folder as ancestors of `target`. Agents
-      run many worktrees there. The test cannot isolate those ancestors
+      run many worktrees there. The helpers cannot isolate those ancestors
       without a product hook, and no such hook exists. CI and a normal
       checkout do not have such an ancestor.
   - Real use, not measured: a real repository has the same shared ancestor
     folders, such as the home folder. Another program can add or remove an
     entry there during or just before a captured compile. Then the evidence
     is not durable, the bundle cache stores nothing, and Serve edits of those
-    settings start with the native attempt. Nobody has seen this in real use
-    or measured how often it happens.
+    settings start with the native attempt. The natural configDir run above
+    shows that a shared ancestor can change during a capture with no
+    controller. Nobody has seen this in real use or measured how often it
+    happens.
 - **Task:**
   1. Reproduce and trace on a real repository with a Mokly catalogue. Run
      Serve with a bundle cache, once idle and once with controlled changes in
@@ -179,11 +240,6 @@
   coherence evaluation, and the performance orchestrator has answered
   whether a durability requirement changes.
 - **Related:**
-  - [flaky-static-config-dir-unchanged-reuse.md](./flaky-static-config-dir-unchanged-reuse.md):
-    one suspected source of that flaky test is a change in `/tmp`, an
-    ancestor of its fixture. That source would be a case of this rule, but
-    nobody confirmed it. A trace of either item can inform the other. Each
-    item can merge alone.
   - [serve-plan-editor-invalidation.md](./serve-plan-editor-invalidation.md):
     another cause of the same native-attempt fallback. There, a kept record
     goes stale at the edit check. Here, the first capture keeps no record.

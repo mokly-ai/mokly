@@ -1,16 +1,14 @@
 //! Real filesystem changes permit direct plans only while resolution facts match.
 
-use std::fs;
+use mokly_test_support::durable_fixture::{self, Owner};
 
 use super::plan_capture::InitialCapture;
 use super::plan_support::Fixture;
-use super::support::{link_directory, unlink_directory, workspace};
+use super::support::{link_directory, unlink_directory};
 
 #[test]
 fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes() {
-    let target = workspace().join("target");
-    fs::create_dir_all(&target).unwrap();
-    let directory = tempfile::tempdir_in(target).unwrap();
+    let directory = durable_fixture::create(Owner::RenderPlanChanges).unwrap();
     for name in [
         "content",
         "existing import",
@@ -143,9 +141,7 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
 
 #[test]
 fn serve_plans_reject_an_added_earlier_absolute_paths_target() {
-    let scratch = workspace().join(".context");
-    fs::create_dir_all(&scratch).unwrap();
-    let directory = tempfile::tempdir_in(scratch).unwrap();
+    let directory = durable_fixture::create(Owner::RenderAbsolutePaths).unwrap();
     let mut fixture = Fixture::in_parent(directory.path());
     let written = fixture
         .root()

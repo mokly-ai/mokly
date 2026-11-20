@@ -1,14 +1,16 @@
 # mokly-test-support
 
-`mokly-test-support` gives the Rust tests of the workspace one shared way to
-capture `tracing` spans and events. Depend on it as a dev-dependency when a
-test checks a span, an event, or their fields. The crate is internal. Its
-manifest sets `publish = false`, and no production code depends on it. It
-depends only on `tracing` and `tracing-subscriber`.
+`mokly-test-support` gives the Rust tests of the workspace two shared tools. It
+captures `tracing` spans and events, and it creates private fixture folders for
+tests that need a durable capture. Depend on it as a dev-dependency. The crate
+is internal. Its manifest sets `publish = false`, and no production code
+depends on it. It depends on `tracing`, `tracing-subscriber`, and `tempfile`.
 
 The tests of `mokly-cli`, `mokly-render`, `mokly-compare`, `mokly-sidecar`,
-`mokly-graph`, and `mokly-server` use it. Production subscribers, such as the
-Serve timing layer of `mokly-cli`, stay in their own crates.
+`mokly-graph`, and `mokly-server` use the trace capture. Six tests of
+`mokly-compare` and `mokly-render` use the durable fixture. Production
+subscribers, such as the Serve timing layer of `mokly-cli`, stay in their own
+crates.
 
 ## Responsibilities
 
@@ -17,8 +19,12 @@ Serve timing layer of `mokly-cli`, stay in their own crates.
 - Keep each capture apart from the captures of parallel tests.
 - Give a test the dispatcher of its capture for the threads that it owns.
 - Install the guard before a scoped subscriber that a test builds itself.
+- Give each test that needs a durable capture its own owner folder. Then no
+  other fixture changes the folders above its inputs during a capture.
 
 ## What This Crate Does
+
+### Trace capture
 
 A callsite is one span or event macro in the code. `tracing-core` caches the
 interest of each callsite: whether it is enabled. While one scoped subscriber
@@ -74,6 +80,64 @@ installs the guard and then calls `tracing::subscriber::with_default` with the
 subscriber unchanged. So `Dispatch::downcast_ref` still finds the subscriber
 and its layers. The helper keeps no reference to the dispatcher after the scope.
 
+### Durable fixtures
+
+A full capture of the sidecar records a witness for each folder on the path to
+each recorded input, up to the file system root. When a witness is too new or
+changes during the compile, the evidence is not durable. Then the bundle cache
+stores nothing, and the core of a Serve head keeps no plan record. The
+[Stable Capture](../../docs/protocol/mokly-base-cache.md#stable-capture) rule
+allows this refusal. Some tests assert a disk hit, an unchanged build with no
+compile, or a saved plan. Such a test needs fixture ancestors that no other
+fixture changes during its captures.
+
+`durable_fixture::create(owner)` returns an `io::Result<TempDir>`. First it
+creates `target/durable-capture-fixtures/rust` and
+`target/durable-capture-fixtures/node` in the checkout. Then it creates the
+folder of every Rust owner under `rust`. Last, it creates the scoped `TempDir`
+in the folder of the given owner. `Owner` is a closed list of six tests:
+
+| Owner                      | Folder                       | Test                                               |
+| -------------------------- | ---------------------------- | -------------------------------------------------- |
+| `CompareWarmPlan`          | `compare-warm-plan`          | The warm edit plan test of `bundle_pool_tests`     |
+| `CompareRecipeReplacement` | `compare-recipe-replacement` | The recipe replacement test of `bundle_pool_tests` |
+| `CompareAbsolutePaths`     | `compare-absolute-paths`     | The absolute paths test of `bundle_pool_tests`     |
+| `CompareConfigDir`         | `compare-config-dir`         | The test of `config_dir_pool_tests`                |
+| `RenderPlanChanges`        | `render-plan-changes`        | The nine-case Serve plan test of `mokly-render`    |
+| `RenderAbsolutePaths`      | `render-absolute-paths`      | The absolute paths Serve plan test                 |
+
+`durableRoot(context, owner)` in `tests/helpers/durable_fixture.ts` applies
+the same rule to two Node CLI tests, with the owners `static-config-dir` and
+`static-absolute-paths`. It creates the same two runtime folders and both Node
+owner folders. Then it returns a scoped child of the owner folder.
+
+The fixtures follow these rules:
+
+- Each concurrent test uses its own owner. Only that test creates or removes
+  entries in its owner folder. The sequential cases of one test share its
+  owner.
+- Each helper creates both runtime folders and every owner folder of its
+  runtime before it returns a fixture. So a later fixture does not change a
+  folder above the capture of another test.
+- A Rust child goes when its `TempDir` drops. A Node child goes when its test
+  ends. The fixture root, the two runtime folders, and the eight owner folders
+  stay, empty.
+- The anchor is the `target` folder of the checkout, also when
+  `CARGO_TARGET_DIR` names another folder. The helpers make no folder for each
+  process and keep no pool of free slots.
+
+The fixtures have these limits:
+
+- They isolate only the changes that fixtures make. Another writer can still
+  make a capture not durable. It can write in `target` or in a folder above
+  it, such as the checkout folder, the home folder, or `/`.
+- A checkout inside a `.context` folder keeps that `.context` folder and its
+  task folder above `target`. Many agent worktrees use such paths. The
+  fixtures cannot isolate those folders, and the product has no hook for it.
+- Two concurrent users of one owner share its folder, so neither is private.
+- The fixtures change only where tests put their files. They change no product
+  rule.
+
 ## Quick Start
 
 Add the crate to the dev-dependencies of the crate under test:
@@ -116,10 +180,25 @@ fn a_worker_event_reaches_the_capture_through_its_dispatcher() {
 }
 ```
 
-Run the regression test of the guard:
+Create the private fixture of one owner. The warm edit plan test of
+`crates/mokly-compare/tests/bundle_pool_tests.rs` starts like this:
+
+```rust
+use mokly_test_support::durable_fixture::{self, Owner};
+
+let temporary = durable_fixture::create(Owner::CompareWarmPlan).unwrap();
+let root = dunce::canonicalize(temporary.path()).unwrap();
+let source = root.join("source");
+let cache = root.join("cache");
+```
+
+Run the regression test of the guard and the tests that use the fixtures:
 
 ```bash
 cargo test -p mokly-sidecar --lib trace_capture
+cargo test -p mokly-compare --test bundle_pool_tests
+cargo test -p mokly-compare --test config_dir_pool_tests
+cargo test -p mokly-render --test integration_tests plan_invalidation_tests
 ```
 
 ## Development
@@ -133,7 +212,8 @@ through real production callsites. The sidecar test
 `a_callsite_first_registered_without_a_capture_still_reaches_the_capture`
 protects the guard. It uses channels to make a thread without a capture
 register a callsite first. Then it checks that the capture still sees the span.
-It asserts no elapsed time.
+It asserts no elapsed time. The durable fixture tests use real Node sidecars,
+real file system evidence, and real disk caches.
 
 Follow these rules when you add a capture:
 
@@ -144,6 +224,16 @@ Follow these rules when you add a capture:
   `tracing::dispatcher::with_default` for one closure, or
   `tracing::dispatcher::set_default` in the thread-start hook of a test
   runtime.
+
+Follow these rules when you add a durable fixture:
+
+- Give each new Rust test its own `Owner` variant, folder name, and entry in
+  `OWNERS`. Give each new Node test its own entry in the `owners` list of
+  `tests/helpers/durable_fixture.ts`.
+- Keep the fixture root and the two runtime folder names equal in both
+  helpers.
+- Keep every assertion of the test. The fixture changes only where the test
+  puts its files.
 
 ### Key Code
 
@@ -159,6 +249,16 @@ Follow these rules when you add a capture:
 - [`src/capture_layer.rs`](./src/capture_layer.rs) and
   [`src/fields.rs`](./src/fields.rs) record capture ids, parents, fields, and
   events from Registry callbacks.
+- [`src/durable_fixture.rs`](./src/durable_fixture.rs) defines `Owner` and
+  `create`, which make the shared folders and every Rust owner folder before a
+  scoped `TempDir`.
+- [`../../tests/helpers/durable_fixture.ts`](../../tests/helpers/durable_fixture.ts)
+  defines `durableRoot`, the Node helper with the same ownership rule.
+- [`../mokly-compare/tests/bundle_pool_tests.rs`](../mokly-compare/tests/bundle_pool_tests.rs),
+  [`../mokly-compare/tests/config_dir_pool_tests.rs`](../mokly-compare/tests/config_dir_pool_tests.rs),
+  and
+  [`../mokly-render/tests/integration/plan_invalidation_tests.rs`](../mokly-render/tests/integration/plan_invalidation_tests.rs)
+  hold the six Rust fixture owners.
 - [`../mokly-sidecar/src/_tests_/trace_capture_tests.rs`](../mokly-sidecar/src/_tests_/trace_capture_tests.rs)
   holds the first-registration regression test of the guard.
 - [`../mokly-server/src/_tests_/changes_trace_support.rs`](../mokly-server/src/_tests_/changes_trace_support.rs)
@@ -168,3 +268,5 @@ Follow these rules when you add a capture:
 
 - [Rust core architecture](../../docs/architecture/rust-core.md).
 - [CI test timing](../../docs/protocol/ci-test-timing.md).
+- [Stable Capture](../../docs/protocol/mokly-base-cache.md#stable-capture), the
+  rule that makes a capture not durable.
