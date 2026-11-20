@@ -4,8 +4,19 @@ import { test } from "node:test";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 
+import { unexpectedError } from "../../api/errors";
+import type { Connection } from "../../api/types";
+import {
+  consumeGitHubCallback,
+  githubFlowKeys,
+} from "../../navigation/github-flow";
 import { useLeavePage } from "../../navigation/leave-page";
-import { tabAt, withWindow } from "../page-window";
+import {
+  memoryStorage,
+  tabAt,
+  withWindow,
+  withWindowAsync,
+} from "../page-window";
 
 /** Where the screen in these tests leaves for. */
 const trip = "https://github.com/login/oauth/authorize";
@@ -22,6 +33,7 @@ function screen() {
       ...tabAt(),
       assign: (url: string) => void seen.push("leave " + url),
     },
+    sessionStorage: memoryStorage(),
     stop: () => void seen.push("stop"),
     // React DOM reads these two of the page while it commits.
     event: undefined,
@@ -36,21 +48,31 @@ function screen() {
     textContent: "",
     firstChild: null,
   });
-  let leave: (url: string) => boolean = () => false;
+  let leave: ReturnType<typeof useLeavePage> = () => false;
   function Screen() {
     leave = useLeavePage(() => void seen.push("restored"));
     return null;
   }
   const root = createRoot(fragment as unknown as DocumentFragment);
+  let screens = 0;
+  const mount = () => {
+    act(() => root.render(createElement(Screen, { key: ++screens })));
+    return leave;
+  };
+  const unmount = () => act(() => root.unmount());
   return {
     seen,
     page,
+    mount,
+    unmount,
     /** Draw the screen, run `steps` while it is shown, then unmount it. */
-    run(steps: (leave: (url: string) => boolean) => void) {
+    run(steps: (leave: ReturnType<typeof useLeavePage>) => void) {
       withWindow(page, () => {
-        act(() => root.render(createElement(Screen)));
-        steps(leave);
-        act(() => root.unmount());
+        try {
+          steps(mount());
+        } finally {
+          unmount();
+        }
       });
     },
   };
@@ -82,4 +104,72 @@ test("a screen that unmounts after its page was restored calls nothing off", () 
     page.dispatchEvent(restoredPage());
   });
   assert.deepEqual(seen, ["leave " + trip, "restored"]);
+});
+
+test("a late GitHub answer preserves the newer screen's flow and callback", async () => {
+  const { seen, page, mount, unmount } = screen();
+  const older = Promise.withResolvers<Connection>();
+  await withWindowAsync(page, async () => {
+    try {
+      const oldLeave = mount();
+      let olderAnswered = false;
+      const pending = older.promise.then((connection) => {
+        const left = oldLeave("sign-in", connection);
+        olderAnswered = true;
+        return left;
+      });
+      const newLeave = mount();
+      assert.equal(
+        newLeave("install-authorize", {
+          authorizeUrl: trip + "?newer",
+          state: "c".repeat(64),
+          codeVerifier: "d".repeat(64),
+        }),
+        true,
+      );
+      assert.equal(olderAnswered, false);
+
+      older.resolve({
+        authorizeUrl: trip + "?older",
+        state: "a".repeat(64),
+        codeVerifier: "b".repeat(64),
+      });
+      assert.equal(await pending, false);
+      assert.equal(olderAnswered, true);
+      const abandoned = page.sessionStorage.getItem(githubFlowKeys["sign-in"]);
+      assert.deepEqual(
+        consumeGitHubCallback(
+          new URLSearchParams(`code=provider-code&state=${"c".repeat(64)}`),
+        ),
+        {
+          status: "valid",
+          purpose: "install-authorize",
+          code: "provider-code",
+          state: "c".repeat(64),
+          codeVerifier: "d".repeat(64),
+        },
+      );
+      assert.equal(abandoned, null);
+      assert.deepEqual(seen, ["leave " + trip + "?newer"]);
+    } finally {
+      unmount();
+    }
+  });
+});
+
+test("a GitHub trip with unavailable tab storage fails before leaving", () => {
+  const { seen, page, run } = screen();
+  page.sessionStorage = memoryStorage(true);
+  run((leave) => {
+    assert.throws(
+      () =>
+        leave("sign-in", {
+          authorizeUrl: trip,
+          state: "a".repeat(64),
+          codeVerifier: "b".repeat(64),
+        }),
+      unexpectedError(),
+    );
+  });
+  assert.deepEqual(seen, []);
 });

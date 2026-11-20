@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
-import { unexpectedError } from "../../api/errors";
 import { Action } from "../../components/action";
 import { AppLink } from "../../components/app-link";
 import { Field } from "../../components/field";
@@ -10,7 +9,6 @@ import { formFailure } from "../../components/form-failure";
 import { Pending } from "../../components/page-parts";
 import { sendMagicLink, startGitHubSignIn } from "../../data/auth";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { storeGitHubFlow } from "../../navigation/github-flow";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
 
 import { AccountShell } from "./account-shell";
@@ -158,8 +156,7 @@ function BrowserEntry({
     () =>
       github.run(async () => {
         const connection = await startGitHubSignIn(returnTo);
-        if (!storeGitHubFlow("sign-in", connection)) throw unexpectedError();
-        github.leave(connection.authorizeUrl);
+        github.leave("sign-in", connection);
       }),
     [github, returnTo],
   );
