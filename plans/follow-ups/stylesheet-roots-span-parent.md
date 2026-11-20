@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-17, from the options check of the parallel render input
   keys plan, on branch `calummoore/mokly-parallel-render-keys-6m85`.
-- **Location:** `crates/mokly-render/src/stylesheets.rs:91`,
+- **Location:** `crates/mokly-render/src/stylesheets.rs:92`,
   `crates/mokly-render/src/graph.rs:46`, line 61, and line 183,
   `crates/mokly-render/src/bundle.rs:232`,
   `crates/mokly-graph/src/graph.rs:51`, and
@@ -23,7 +23,7 @@
     allows. It takes the `parentId` of a record from the nearest enclosing
     timed span.
 - **Background:**
-  - `roots` in `crates/mokly-render/src/stylesheets.rs:91` finds the
+  - `roots` in `crates/mokly-render/src/stylesheets.rs:92` finds the
     stylesheet roots of a JavaScript catalogue. It carries
     `#[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]`.
   - The prefix of the name puts the stage under `graph.prepare`.

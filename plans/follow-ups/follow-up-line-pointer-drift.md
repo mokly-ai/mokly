@@ -6,7 +6,9 @@
   `calummoore/mokly-parallel-view-comparison-n4kr`, finding 1, which listed
   this class under its new problems. Updated on 2026-11-19 with the
   pointers that the round-2 review of the branch
-  `calummoore/mokly-return-warmup` and its checks found wrong.
+  `calummoore/mokly-return-warmup` and its checks found wrong. Updated on
+  2026-11-20 with the two pointers that the round-2 docs work of the branch
+  `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` found wrong.
 - **Location:** `plans/follow-ups/isolated-git-in-every-test-helper.md:60`,
   `plans/follow-ups/base-read-cause-unknown.md:12` and line 89,
   `plans/follow-ups/root-switch-reap-wait.md:12` and line 41,
@@ -14,9 +16,10 @@
   `plans/follow-ups/bundle-cache-request-cost.md:37`,
   `plans/follow-ups/sequential-evidence-capture-cost.md:15` and line 88,
   `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, line 40, line 72,
-  line 106, line 213, and line 216, and
+  line 106, line 213, and line 216,
   `plans/follow-ups/sidecar-queue-steering-fixtures.md:7`, line 58, line 59,
-  and line 77.
+  and line 77, and `plans/follow-ups/stylesheet-roots-span-parent.md:9` and
+  line 36.
 - **Reason:** All these pointers were already wrong on `origin/main`, so a
   separate branch fixes them, and the search rule lives in the shared skills
   repository.
@@ -98,6 +101,14 @@
       cite `crates/mokly-sidecar/src/_tests_/recipe_support.rs`.
       `Fixture::select` is at line 175, `Fixture::probe` at line 212, and the
       idle setup is not at line 141.
+  - On 2026-11-20, the round-2 docs work of the branch
+    `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` found two more
+    pointers that were already wrong on `origin/main` at `a2f61eb53`:
+    - `stylesheet-roots-span-parent.md:9` cites
+      `crates/mokly-render/src/bundle.rs:232`, and its line 36 says that
+      `class_maps` calls `stylesheets::roots` at line 232. On `origin/main`
+      and on that branch, line 232 is `fn maps_digest`. The call is at
+      line 249.
 - **Problem:** Line pointers in follow-up items go stale when lines above them
   change or a symbol moves to another file. The stale-reference search names
   removals and renames only, so no rule asks the change to update such
@@ -156,7 +167,10 @@
   moved seven pointers that were right on `origin/main`, and its round-2
   review found five of them. It re-anchored all seven with a symbol beside
   each, after a diff-based comparison of every pointer into each changed
-  file.
+  file. On 2026-11-20, the branch
+  `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` re-anchored the
+  two pointers of `stylesheet-roots-span-parent.md` that its change moved,
+  from `crates/mokly-render/src/stylesheets.rs:91` to line 92.
 - **Related:**
   - `plans/follow-ups/isolated-git-in-every-test-helper.md`: it holds the
     wrong pointer at line 60. Fix that pointer with option A or B of this
