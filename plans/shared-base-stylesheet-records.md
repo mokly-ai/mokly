@@ -44,6 +44,24 @@ On 2026-11-20, the performance orchestrator reported step 2 merged into `main` a
 
 On 2026-11-20, workspace 130 took ownership of the correctness branch. The local CSS cost report was sent to that workspace and the performance orchestrator. This branch integrated its later alias watch correction at `079b465e15d009bfa286ecfdca92c0f93b063da6`. Both branches contain `main` at `a2f61eb53`. The merge kept every prerequisite change without a conflict. The performance orchestrator dropped the proposed historical evidence reduction. Head capture and base validation and replay stay complete.
 
+On 2026-11-20, the performance orchestrator reduced the remaining local measurement scope. Run one interleaved warm pair on `examples/basic`, large HTML, and large React. Record time and whole-tree memory as smoke evidence. Do not run the planned 72-startup and 36 ten-edit local matrix. The accepted six-round Mokly Cloud measurement at `76c797ccb` is the acceptance evidence. The strict 44,025-file byte proof settles output equality.
+
+The orchestrator will confirm the final integration against `main` after the correctness fix merges. This avoids repeating the accepted performance work. Record this call in the pull request body.
+
+After the fix merges, merge `origin/main` once. Send the resulting SHA for confirmation. Open the pull request.
+
+The performance orchestrator added basic PostCSS coverage on 2026-11-20 after a high single smoke sample. Compare prerequisite `e63a48c9b` with `ac905b8d9` in three interleaved warm pairs. Give every measured process a fresh-cache Serve primer, excluded from the means. Report separate head and base catalogue cache outcomes, the first Changes, base preparation, CSS spans, and peak memory.
+
+The first set used `/tmp` caches and included one missing warm base record. On 2026-11-20, the orchestrator requested a quiet-cache repeat under the checkout target. Keep all earlier samples. Change no durability rule or product code. The known ancestor-churn mechanism can skip a complete capture whose witnesses are not durable. The exact old rejected witness is not present in the logs.
+
+On 2026-11-20, the orchestrator accepted the quiet basic speed result. Every measured catalogue was a hit. The parent treated the memory pattern as known single-peak noise, with different main commits as another confound. It chose no further basic memory chase. Preserve the measured memory uncertainty in the pull request body. The final common-main check includes six interleaved Cloud rounds and two cold ten-edit sessions per arm.
+
+On 2026-11-20 at 06:57 UTC, the orchestrator reported PR #384 merged at `940ddd742`. It instructed this branch to merge `origin/main` once and send the resulting SHA. Open this pull request against `main` only after the final confirming result. Then wait for CI. This replaces the earlier instruction to target the open correctness branch.
+
+On 2026-11-20, the orchestrator accepted the final common-main check of `709635cd7` against `940ddd742`. It accepted speed and memory, including the cold ten-edit sessions. It instructed this workspace to open the pull request against `main` and wait for CI. The orchestrator holds the merge. Site Lighthouse is known and outside Required CI.
+
+Evidence: `.context/shared-base-stylesheets/evidence/cloud-709635-confirmation.md` records the final confirmation. `post-merge-repository.log` records the successful repository suite after integration.
+
 ## Contract owners
 
 - [Base preparation](../docs/protocol/mokly-base-preparation.md).
@@ -175,13 +193,16 @@ The later checked prerequisite `e63a48c9b` is integrated. Its Serve-only watch o
 
 Depends on: 3
 
-- [ ] Build release binaries from the last merged `main` and this branch in separate checkouts and target directories. Build Cargo serially with incremental and dev debug disabled.
+- [x] Build release binaries from the last merged `main` and this branch in separate checkouts and target directories. Build Cargo serially with incremental and dev debug disabled.
 - [x] Send the prerequisite fix's initial `css.bundle` count and time before and after on the example and both large fixtures. Report a cost above about five percent.
-- [ ] Check strict `examples/basic` output and large HTML and React fixture output from `scripts/large/` for exact byte equality.
-- [ ] Measure first Changes and base preparation in at least six interleaved warm and cold rounds on `examples/basic` and both large fixtures.
-- [ ] Count base `css.bundle` spans and cache outcomes. Keep their existing meaning.
-- [ ] Measure whole-tree cgroup anonymous memory plus swap at startup and during a ten-edit session. Require no increase above two percent.
-- [ ] Push the implementation and send its SHA and dist build commit to the performance orchestrator at once. Obtain the Mokly Cloud measurements.
+- [x] Check strict `examples/basic` output and large HTML and React fixture output from `scripts/large/` for exact byte equality.
+- [x] Run one interleaved warm pair on `examples/basic` and both large fixtures as a time and memory smoke check. Use the accepted six-round Mokly Cloud measurement for acceptance, under the orchestrator's reduced scope.
+- [x] Count base `css.bundle` spans and cache outcomes. Keep their existing meaning.
+- [x] Run the three requested warm basic pairs against the prerequisite, with excluded cold Serve primers. Preserve their different cache outcomes.
+- [x] Repeat the three basic pairs with quiet target caches. Report speed and memory without suppressing the remaining uncertainty.
+- [x] Inspect the missing cache record read-only. Keep the existing ancestor-churn rule and make no product change.
+- [x] Record whole-tree cgroup anonymous memory plus swap in the warm smoke pairs. Use the accepted Mokly Cloud startup and ten-edit sessions for the two-percent acceptance bound. Do not repeat the waived local ten-edit matrix.
+- [x] Push the implementation and send its SHA and dist build commit to the performance orchestrator at once. Obtain the Mokly Cloud measurements.
 - [x] Confirm the Mokly Cloud plain-CSS goal: no equal-input base `no-record` spans, at least 0.15 seconds less base preparation, and at least 0.15 seconds earlier first Changes.
 
 Evidence: `.context/shared-base-stylesheets/evidence/` holds the raw runs, byte comparisons, and before-and-after report.
@@ -197,12 +218,14 @@ Depends on: 1, 2, 3, 4
 - [x] Reconcile the final render README and public runtime comment with the combined source. Keep default-off watching and the independent origin.
 - [x] Update the live source pointers that this change moves in inherited follow-up items. Preserve every outcome.
 - [x] Integrate current `main` at `525b4d7e5` for final pull request preparation. Preserve its comparison channels, UI sizing, diagnostics, and session reads. Use that commit for the final local control.
-- [ ] Send the final combined SHA for the performance orchestrator's confirming check before the pull request. The initial Cloud result is accepted.
+- [x] After the correctness pull request merges, merge `origin/main` once with the `git-merge` skill. Preserve its additions before the confirming check.
+- [x] Send the final combined SHA for the performance orchestrator's confirming check before the pull request. The initial Cloud result is accepted.
+- [x] Obtain the final common-main confirmation, including startup memory and two cold ten-edit sessions per arm. Wait for it before opening this pull request.
 - [x] Separate cache origin from the new Serve watch option. Prove non-watching heads, no-extraction bases, and expired original-head references.
 - [x] Run targeted tests and each new asynchronous test ten times. Record test costs and assertion-failure proofs.
 - [x] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate. Use Git 2.45 or later, Git LFS, pinned Bun, and locked Cargo dependencies.
 - [x] Merge current `origin/main` with the `git-merge` skill before the final pull request. It now holds step 2. Target the fix branch until its pull request merges, then target `main`.
-- [ ] Commit with Conventional Commits and push this branch. Send the implementation SHA to the performance orchestrator.
-- [ ] Review the complete local diff against the stacked base with the `implementation-review` skill after the push. Fix confirmed `fix now` findings, record follow-ups for the rest, and re-review. Use at most two fix rounds.
+- [x] Commit with Conventional Commits and push this branch. Send the implementation SHA to the performance orchestrator.
+- [x] Review the complete local diff against the stacked base with the `implementation-review` skill after the push. Fix confirmed `fix now` findings, record follow-ups for the rest, and re-review. Use at most two fix rounds.
 - [ ] Delete this plan when every earlier TODO is complete and the review rounds are done.
 - [ ] Open the stacked pull request without merging. Preserve this plan's dated calls and permalink in its description. Watch the last commit's CI with the finish-work skill's `scripts/ci-wait.sh`. Send the complete report to the performance orchestrator.
