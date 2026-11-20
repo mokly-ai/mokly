@@ -21,6 +21,7 @@ import {
   COMPONENT_ENTRY_BY_STATE,
   type ComponentEntryMetadata,
 } from "./metadata.js";
+import { StoryProps } from "./story_props.js";
 
 /** The Action entry a page shows: a saved variant or the parent's own entry. */
 export function actionEntryOf(entry: ComponentEntryMetadata): ActionEntry {
@@ -71,11 +72,13 @@ const COMPARING: ReadonlySet<ComponentPageState> = new Set([
  * The Props tab of a component page in place, as the shell shows it: the
  * saved props of a removed variant and of a component without declared
  * controls read-only, a comparison's saved props read-only with Switch to
- * Current, and otherwise the shown entry's controls.
+ * Current, and otherwise the shown entry's controls. A Storybook story's
+ * controls come from its data args.
  */
 export function ComponentProps({ state }: { state: ComponentPageState }) {
   const entry = COMPONENT_ENTRY_BY_STATE[state];
   if (state === "removed") return <RemovedPanel />;
+  if (entry.component === "menu") return <StoryProps state={state} />;
   if (entry.component !== "action")
     return (
       <ReadOnlyPanel title={entry.title} values={SUPPLIED_PROPS[state] ?? []} />

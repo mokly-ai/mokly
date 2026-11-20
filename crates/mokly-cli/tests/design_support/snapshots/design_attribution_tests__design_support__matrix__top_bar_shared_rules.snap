@@ -135,5 +135,8 @@ design/library/chrome/top-bar -> design/components/states/shared-impact/affected
 design/library/chrome/top-bar -> design/components/states/shared-impact/shared-impact
 design/library/chrome/top-bar -> design/components/states/shared-impact/style-changed
 design/library/chrome/top-bar -> design/components/states/shared-impact/style-outside
+design/library/chrome/top-bar -> design/components/states/stories/story-failed
+design/library/chrome/top-bar -> design/components/states/stories/story-failed-changes
+design/library/chrome/top-bar -> design/components/states/stories/storybook-link
 design/library/chrome/top-bar -> design/components/states/unavailable
 design/library/chrome/top-bar -> design/components/states/unused

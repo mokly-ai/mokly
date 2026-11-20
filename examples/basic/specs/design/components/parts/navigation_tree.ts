@@ -12,6 +12,7 @@ import {
   type ComponentDesignDestination,
 } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
+import { storyRowsInAll, type StoryScenario } from "./story_navigation.js";
 import {
   isStyleScenario,
   styleScenarioRows,
@@ -26,9 +27,13 @@ export type ChangeScenario =
   | "removed"
   | "added"
   | "checklist"
-  | StyleScenario;
+  | StyleScenario
+  | StoryScenario;
 
-/** Scenarios whose Changes hold one component outside Action's story. */
+/**
+ * Scenarios whose Changes hold one component outside Action's story, by the
+ * navigation identity of that component.
+ */
 export const SOLE_CHANGES = {
   added: { key: "badge", label: "Badge", to: COMPONENT_PAGES.added },
   checklist: {
@@ -36,7 +41,19 @@ export const SOLE_CHANGES = {
     label: "Checklist",
     to: COMPONENT_PAGES["overlay-tall"],
   },
+  stories: {
+    key: "menu",
+    label: "Menu",
+    to: COMPONENT_PAGES["story-failed-changes"],
+  },
 } as const;
+
+/** Whether a scenario's Changes hold one component outside Action's story. */
+export function isSoleChange(
+  scenario: ChangeScenario,
+): scenario is keyof typeof SOLE_CHANGES {
+  return Object.hasOwn(SOLE_CHANGES, scenario);
+}
 
 /**
  * The explorer's catalogue is one tree under the Example folder, so Example
@@ -68,7 +85,7 @@ export function explorerNodes(
             to: DESTINATIONS.exampleOverview,
           },
         ]
-      : scenario === "styles-all"
+      : scenario === "styles-all" || scenario === "stories-all"
         ? [
             {
               key: "example-overview",
@@ -83,9 +100,11 @@ export function explorerNodes(
           exampleMembers("all", active, design, activeKey),
           design,
         )
-      : isStyleScenario(scenario)
-        ? styleScenarioRows(scenario)
-        : exampleMembers(scenario, active, design, activeKey)
+      : scenario === "stories-all"
+        ? storyRowsInAll(exampleMembers("all", active, design, activeKey))
+        : isStyleScenario(scenario)
+          ? styleScenarioRows(scenario)
+          : exampleMembers(scenario, active, design, activeKey)
     ).map((row) => ({
       ...row,
       depth: row.depth + 1,
@@ -95,7 +114,7 @@ export function explorerNodes(
 
 /** Example's Screens and Components folders for one scenario, from depth 0. */
 function exampleMembers(
-  scenario: Exclude<ChangeScenario, StyleScenario>,
+  scenario: Exclude<ChangeScenario, StyleScenario | "stories-all">,
   active: CatalogueIdentity,
   design: ComponentDesignDestination,
   activeKey?: string,
@@ -130,9 +149,8 @@ function exampleMembers(
     },
     ...linkedVariants(variants, variantDestination),
   ];
-  if (scenario === "added" || scenario === "checklist") {
-    const identity = scenario === "added" ? "badge" : "checklist";
-    const { to } = SOLE_CHANGES[scenario];
+  if (isSoleChange(scenario)) {
+    const { key: identity, to } = SOLE_CHANGES[scenario];
     const variants = componentVariantRows(identity, 2);
     return [
       {

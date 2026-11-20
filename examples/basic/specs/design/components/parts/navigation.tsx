@@ -9,9 +9,11 @@ import type { ComponentDesignDestination } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
 import {
   explorerNodes,
+  isSoleChange,
   SOLE_CHANGES,
   type ChangeScenario,
 } from "./navigation_tree.js";
+import { STORY_CHANGES } from "./story_navigation.js";
 import { isStyleScenario, STYLE_CHANGES } from "./style_navigation.js";
 
 /** Existing shell and navigation composed around the component design scenario. */
@@ -30,13 +32,18 @@ export function ExplorerShell({
   scenario?: ChangeScenario;
   viewport: ArtboardViewport;
 }) {
-  const style = isStyleScenario(scenario) ? STYLE_CHANGES[scenario] : undefined;
+  // A story of its own counts its own Changes, also under All.
+  const own = isStyleScenario(scenario)
+    ? STYLE_CHANGES[scenario]
+    : scenario === "stories-all"
+      ? STORY_CHANGES
+      : undefined;
   // The shell below provides the artboard's DesignNavigation, so the
   // shortcuts compare with the artboard directly.
   const current = (to: string) => (to === design ? "page" : undefined);
-  const changes = style
-    ? style.to
-    : scenario === "added" || scenario === "checklist"
+  const changes = own
+    ? own.to
+    : isSoleChange(scenario)
       ? SOLE_CHANGES[scenario].to
       : scenario === "removed"
         ? "design/components/states/removed"
@@ -46,13 +53,16 @@ export function ExplorerShell({
   const navProps = {
     activeDestination: design,
     changedCount:
-      style?.count ??
+      own?.count ??
       (scenario === "all"
         ? 0
         : scenario === "screen" || scenario === "removed"
           ? 2
           : 1),
-    changedOnly: scenario !== "all" && scenario !== "styles-all",
+    changedOnly:
+      scenario !== "all" &&
+      scenario !== "styles-all" &&
+      scenario !== "stories-all",
     nodes: explorerNodes(scenario, active, design, activeKey),
     ...(activeKey === undefined ? {} : { activeKey }),
   };

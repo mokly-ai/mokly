@@ -9,6 +9,17 @@ import {
 import type { ComponentPageState } from "./component_details.js";
 import type { ComponentDesignDestination } from "./destinations.js";
 import { componentUses, usageViews } from "./fixtures.js";
+import { COMPONENT_ENTRY_BY_STATE, type ComponentId } from "./metadata.js";
+
+/**
+ * The depicted components that no screen uses: Badge, the Checklist, and the
+ * Menu, whose stories no screen renders.
+ */
+const UNUSED: ReadonlySet<ComponentId> = new Set([
+  "badge",
+  "checklist",
+  "menu",
+]);
 
 /** The Usage tab while the entry's detail loads, or after its load failed. */
 export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
@@ -35,8 +46,7 @@ function usageRow(
 
 /** The consumers of the shown component, as its Usage tab lists them. */
 function usedByRows(state: ComponentPageState): UsageRow[] {
-  if (state === "unused" || state === "added" || state === "overlay-tall")
-    return [];
+  if (UNUSED.has(COMPONENT_ENTRY_BY_STATE[state].component)) return [];
   if (state === "toolbar" || state === "hidden")
     return [
       usageRow(

@@ -427,6 +427,225 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Action:** ask the user, because A adds a new case of a build error.
 - **Answer:** A, chosen by the user on 2026-11-19.
 
+The mockups of Milestone 1 raised decisions 23 to 27 on 2026-11-18. The
+options check of the same day rewrote the root questions of decisions 24, 25,
+and 27, added option F to decision 23, option E to decisions 24 and 25, and
+options C and D to decision 27. It also showed that rules in force settle two
+more questions, which became design calls 26 and 27.
+
+### 23. A new story has no published Storybook page
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, with option F from the options check.
+- **Category:** Docs or spec.
+- **Location:** `examples/basic/specs/design/components/parts/component_info.tsx`.
+- **Background:**
+  - Decision 15 gives each story page a link to the same story in the
+    published Storybook.
+  - Many teams publish Storybook from the main branch.
+  - The mockups show the link on every story page, also in Changes.
+- **Problem:** A story that the branch adds is not in the published Storybook
+  yet, so its link opens Storybook's missing-story page. The link of a changed
+  story opens the main branch's version.
+- **Impact if no action:** Reviewers of a branch that adds stories meet dead
+  links in Changes.
+- **Root question:** Where does a story page link when the published
+  Storybook does not hold the shown version of the story?
+- **Options:**
+  - **A.** Change nothing. The link of an added story opens a missing page.
+    Effort: Small.
+  - **B.** Leave the link out of the page of an added entry. A changed story
+    keeps its link. While Changes is not ready, and in a build without
+    Changes, every story page shows its link. Effort: Small.
+  - **C.** Keep every link, and name its target, for example "Open published
+    story". The link of an added story still fails. Effort: Small.
+  - **D.** Let a build give the Storybook URL of the branch, for example
+    through a command-line option for pull request previews. Each link then
+    opens the branch's own Storybook. Effort: Medium.
+  - **F.** The viewer reads the story index of the published Storybook once
+    in each session, and shows the link only for a story that the index
+    holds. The build stays offline. The Storybook host must allow
+    cross-origin reads, and the shell contacts it on each visit. Effort:
+    Medium.
+- **Left out:** E, a check of the story index at build time, makes the read
+  model depend on the network. Two builds of one commit could then give
+  different deployment ids, which the delivery rules forbid.
+- **Wider fix:** None, because the item is one design choice, not a class of
+  defect.
+- **Previous examples:** None found.
+- **Related:** Milestones 26 to 28 wait for this answer.
+- **Recommendation:** B. One condition removes the dead link where Changes
+  knows that the entry is new. F is the only option that is also right
+  without Changes, at Medium effort.
+- **Action:** ask the user, because the option narrows decision 15, a
+  decision in force, and no user decision covers that change.
+
+### 24. Failed edits claim the last valid props
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation, with option E and the root question from the
+  options check.
+- **Category:** UX wording.
+- **Location:** `examples/basic/specs/design/components/controls/parts/copy.ts:51`
+  and `:54`.
+- **Background:**
+  - In Serve, the Props tab edits props and renders the preview again.
+  - When an edit fails or is invalid, the shell keeps the shown preview and
+    says "The preview shows the last valid props."
+  - The mockups let the reader edit the props of the failed Expanded story.
+- **Problem:** When no edit has rendered and the saved props failed, the
+  preview shows the saved view, here the error document. "The last valid
+  props" is then false. This holds for every entry whose saved render fails,
+  not only for stories.
+- **Impact if no action:** The shell gives a false sentence after a failed
+  edit of a story that cannot render.
+- **Root question:** How does the Props tab say truthfully what the preview
+  shows after an edit fails or is invalid, also when the saved props never
+  rendered?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Change both sentences to one that is true in every case, for
+    example "Your edits are kept. Reset to go back to the saved props."
+    Effort: Small.
+  - **C.** A failed live render of a story returns its error document, as the
+    build does, so the preview shows the reason of each failed edit. The live
+    route then gives a reason, which its rules keep generic today. Effort:
+    Medium.
+  - **D.** Make the props of a failed story read-only. The reader then cannot
+    try props that render, such as `open: false`. Effort: Medium.
+  - **E.** Choose the sentence from the preview that the frame shows. Until an
+    edit has rendered, it reads "Your edits are kept. The preview shows the
+    saved props.", the settled sentence of an expired preview. After an edit
+    has rendered, it keeps "the last valid props". Effort: Small.
+- **Left out:** None.
+- **Wider fix:** E. The copy follows the real state of the frame, so it stays
+  true when the cause changes.
+- **Previous examples:** None found.
+- **Related:** B and E change the viewer, and track F has no UI milestone yet.
+  The answer adds one.
+- **Recommendation:** E. Each sentence then matches the frame, with no new
+  copy.
+- **Action:** ask the user, because the option changes which settled sentence
+  the shell shows, a user-visible change that no decision covers.
+
+### 25. The first story's name never shows
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation, with option E and the root question from the
+  options check.
+- **Category:** Mockup.
+- **Location:** `examples/basic/specs/design/components/parts/metadata.ts`.
+- **Background:**
+  - Decision 3 makes the first story the parent page, and decision 14 keeps
+    Storybook's story names.
+  - In the mockups, the Menu page renders the Collapsed story. Its title, its
+    tree row, and its variant bar say "Menu".
+  - The read model holds no story name today.
+- **Problem:** No part of the catalogue names the Collapsed story. Its
+  Storybook link opens a story called Collapsed, and a search for Collapsed
+  finds nothing.
+- **Impact if no action:** Readers cannot find the first story of a stories
+  file by its Storybook name.
+- **Root question:** How does a reader who knows a story's Storybook name
+  recognize and find the page that renders it?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** The Details of a stories entry name the shown story in a Story
+    row, for example "Collapsed". It needs a new read-model field. Effort:
+    Medium.
+  - **C.** The variant bar labels the parent's own option with the first
+    story's name, so that it reads "Collapsed, Expanded". Effort: Medium.
+  - **D.** Search also finds a parent page by its first story's name. Effort:
+    Medium.
+  - **E.** B and D on one read-model field: Details show the story's name, and
+    search matches it. A common name, such as Default, then matches many
+    parents, as in Storybook's own search. Effort: Medium.
+- **Left out:** A first story that is a variant of its own reverses decision
+  3, which stays.
+- **Wider fix:** None, because the item is one design choice.
+- **Previous examples:** None found.
+- **Related:** Milestones 26 to 28 wait for this answer. D and E change the
+  search rule in `docs/protocol/mokly-folders.md`.
+- **Recommendation:** E. One field lets the reader both see and find the
+  story. B is the smaller option if search may skip the name.
+- **Action:** ask the user, because the option adds a Details row and changes
+  the search rule, and no user decision covers either.
+
+### 26. Error document styles in dark views
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `examples/basic/design-component-view.css`.
+- **Background:**
+  - Each view renders in a color scheme. The stylesheet rules of the
+    configuration link the project's stylesheets into each view of a
+    matching route.
+  - The component design mockups are light only, so they show only the light
+    error document.
+- **Problem:** No rule says which styles the error document carries, or
+  whether a dark view gets a dark error document. Project CSS, such as a
+  reset, can change its layout.
+- **Impact if no action:** A dark view can show a light error document,
+  project CSS can break it, and an edit of project CSS can mark a failed view
+  as changed.
+- **Root question:** How does the error document look right in every project
+  and in every scheme?
+- **Options:**
+  - **A.** The document carries only its own styles, with system colors that
+    follow the view's scheme. Effort: Small.
+  - **B.** The document carries only its own styles, and is always light.
+    Effort: Small.
+  - **C.** The document carries its own styles and the project stylesheets of
+    the view. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because one rule covers every failed view.
+- **Previous examples:** None found.
+- **Related:** Milestone 23 waits for this answer.
+- **Recommendation:** A. The document reads the same in every project,
+  matches its frame, and stays out of Changes when project CSS changes.
+- **Action:** ask the user, because the option makes the stylesheet rules
+  skip a failed view, and no decision covers that.
+
+### 27. The Storybook link leaves the catalogue
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation, with options C and D and the root question from
+  the options check.
+- **Category:** Docs or spec.
+- **Location:** `examples/basic/specs/design/components/parts/component_info.tsx`.
+- **Background:**
+  - The shell's metadata link opens in the same tab. The mockups draw the
+    Storybook link as a picture without an address, because a design link
+    opens a design entry.
+  - In Serve, leaving the page discards the reader's prop edits.
+  - A React host that embeds the viewer also leaves its own page.
+- **Problem:** No rule says where the published Storybook opens.
+- **Impact if no action:** A reader who opens Storybook loses their place and
+  their prop edits.
+- **Root question:** How does a reader open the story in the published
+  Storybook without losing their place or their prop edits?
+- **Options:**
+  - **A.** Open it in the same tab, as the shell's metadata link does.
+    Effort: Small.
+  - **B.** Open it in a new tab, with `rel="noreferrer"`, and with an icon and
+    a screen-reader label that say so. Effort: Small.
+  - **C.** Keep the same tab, and keep the edits in the tab's session storage,
+    so that Back restores them. This changes the rule that edits are
+    temporary. Effort: Medium.
+  - **D.** Keep the same tab, and ask the browser to confirm a page exit while
+    edits are unsaved. The dialog interrupts each exit. Effort: Small.
+- **Left out:** A frame of the published story inside the shell replaces the
+  link that decision 15 chose.
+- **Wider fix:** None. If B is chosen, one package component for links that
+  leave the catalogue keeps later links the same.
+- **Previous examples:** None found.
+- **Related:** Milestones 26 and 28 wait for this answer.
+- **Recommendation:** B. It keeps the catalogue, the edits, and the host page,
+  with the smallest change.
+- **Action:** ask the user, because the option adds link behaviour that no
+  requirement covers.
+
 ## Design calls
 
 These calls are mine, made on 2026-11-06 unless a call gives another date.
@@ -525,6 +744,28 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     isolation, and said that they review each finding there. One
     documentation milestone for every track would let only the mockups
     start.
+26. Made on 2026-11-18 in track A. The reason in an error document holds no
+    absolute path. A path inside the repository or the base cache reads
+    relative to the repository root, and the reason leaves out other
+    absolute paths. Reason: identical inputs give identical bytes, and the
+    checkout folder is not an input, so one failure gives one document on
+    both sides and on every machine.
+27. Made on 2026-11-18 in track A. A view whose story could not render has an
+    explicit empty usage record with an empty root region, and the error
+    document lies outside that region. Highlight components then reads "No
+    registered components are used in this view.", as the mockups show, and
+    every Used by and Affected list stays complete. Reason: a null render is
+    already an empty region, and a view without usage would remove every
+    workspace list of the catalogue while one story fails.
+28. Made on 2026-11-18 in track A. The mockups of Milestone 1 settle the look
+    of both states. The error document starts where the story would render.
+    It names only the story, gives the `!mokly` tag as its one action, and
+    gives the reason last, under "Reason". Changes shows a failed story as an
+    ordinary changed variant. The Storybook link is a Details row,
+    "Storybook", directly below Source, with the text "Open in Storybook".
+    The mockups draw it as a picture without an address. Reason: the page
+    around the document already names the component, the shell does not
+    change for failed stories, and a design link opens a design entry.
 
 ## Tracks
 
@@ -534,18 +775,18 @@ has merged into this branch, and when the open decisions that block it have
 answers. The ledger of the workspaces is in
 `.context/storybook-support/workspaces.md`.
 
-| Track                      | Milestones | Starts after          |
-| -------------------------- | ---------- | --------------------- |
-| A. Mockups                 | 1          | Nothing               |
-| B. Story reading           | 2 to 8     | Nothing               |
-| C. Imported assets         | 9 to 12    | Nothing               |
-| D. Vite adapter            | 13 to 17   | Nothing               |
-| E. Storybook folders       | 18 to 22   | Track B               |
-| F. Failed stories          | 23 to 25   | Tracks A and B        |
-| G. Storybook links         | 26 to 29   | Tracks A and E        |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J |
-| I. Story component usage   | 34 to 36   | Tracks B and D        |
-| J. Spike for decision 18   | 37         | Nothing               |
+| Track                      | Milestones | Starts after                                 |
+| -------------------------- | ---------- | -------------------------------------------- |
+| A. Mockups                 | 1          | Nothing                                      |
+| B. Story reading           | 2 to 8     | Nothing                                      |
+| C. Imported assets         | 9 to 12    | Nothing                                      |
+| D. Vite adapter            | 13 to 17   | Nothing                                      |
+| E. Storybook folders       | 18 to 22   | Track B                                      |
+| F. Failed stories          | 23 to 25   | Tracks A and B, and decisions 24 and 26      |
+| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23, 25, and 27 |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                        |
+| I. Story component usage   | 34 to 36   | Tracks B and D                               |
+| J. Spike for decision 18   | 37         | Nothing                                      |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -564,24 +805,32 @@ document in its preview, on its component page and in Changes. The
 component page of a stories entry links to the same story in a published
 Storybook.
 
-- [ ] Add the state of a story that could not render to the component design
+- [x] Add the state of a story that could not render to the component design
       pages under `examples/basic/specs/design/components/states`, desktop
       and mobile, as a child page when the states page would pass five
       mockups. The error document names the story, says that it could not
       render, gives the reason in a secondary place, and gives the `!mokly`
       tag as the way to leave the story out. Add its row to
-      `docs/protocol/mokly-component-design-inventory.md`.
-- [ ] Add the Storybook link to the component page of a stories entry,
+      `docs/protocol/mokly-component-design-inventory.md`. Branch:
+      `conductor/storybook-support-a-mockups`.
+- [x] Add the Storybook link to the component page of a stories entry,
       desktop and mobile, beside the entry's source details. Add its row to
-      the design inventory.
-- [ ] Follow the copy rules and the forbidden patterns of the `product-ui`
-      skill.
-- [ ] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
-      pages through `npm run dev`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
-- [ ] Commit, push, review against this branch, give the findings to the
+      the design inventory. Branch: `conductor/storybook-support-a-mockups`.
+- [x] Follow the copy rules and the forbidden patterns of the `product-ui`
+      skill. Branch: `conductor/storybook-support-a-mockups`.
+- [x] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
+      pages through `npm run dev`. Branch:
+      `conductor/storybook-support-a-mockups`.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. Branch: `conductor/storybook-support-a-mockups`.
+- [ ] Update the mockups for the answers to decisions 25 and 27. Branch:
+      `conductor/storybook-support-a-mockups`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `conductor/storybook-support-a-mockups`.
+
+Evidence: `.context/storybook-support/evidence/` holds the mockup check, the
+Serve smoke test, the complete gate, and the screenshots.
 
 ## Milestone 2: Story reading documentation
 
@@ -896,11 +1145,13 @@ Depends on: 18, 19, 20, 21
 
 ## Milestone 23: Failed stories documentation
 
-Depends on: 1, 8
+Depends on: 1, 8, and the answers to decisions 24 and 26
 
 Track F. The protocol states the failure rules of decision 5.
 
 - [ ] Add the render failure rules to `docs/protocol/mokly-storybook.md`.
+- [ ] State there the reason rule of design call 26, the usage rule of
+      design call 27, and the answers to decisions 24 and 26.
 - [ ] Update `docs/protocol/mokly-build-warnings.md` with
       `story-render-failed`. In `docs/protocol/mokly-sidecar.md`, update the
       `render-failed` row and the rule that there is no fallback render, for
@@ -922,6 +1173,9 @@ A story that cannot render no longer stops the build, as decision 5 says.
       so that the catalogue shows the story and the reason.
 - [ ] Test that a portal story gives the warning and the error document, that
       the other stories render, and that `--strict` fails.
+- [ ] Test that a reason with a path in the repository gives the same error
+      document on both sides, and that a failed story keeps every Used by
+      and Affected list, as design calls 26 and 27 say.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 25: Failed stories verification, review, and pull request
@@ -935,11 +1189,12 @@ Depends on: 23, 24
 
 ## Milestone 26: Storybook links documentation
 
-Depends on: 1, 22
+Depends on: 1, 22, and the answers to decisions 23, 25, and 27
 
 Track G. The protocol states the link rules of decision 15.
 
 - [ ] Add the Storybook link rule to `docs/protocol/mokly-storybook.md`.
+- [ ] State there the answers to decisions 23, 25, and 27.
 - [ ] Update `docs/protocol/mokly-component-design.md` with the Storybook
       link of Milestone 1.
 - [ ] Add the status lines, and run `npm run format:check` and
@@ -967,7 +1222,9 @@ Depends on: 27
 - [ ] Add the link to `@mokly/ui` as the mockup shows, and render it from
       the viewer container for entries with a Storybook URL.
 - [ ] Render the package component in the design library, as `AGENTS.md`
-      requires.
+      requires. Give it a form without an address there, as the mockups draw
+      it, because a design link opens a design entry and the design library
+      checks reject an external address.
 - [ ] Add tests under `packages/ui/tests` and `packages/viewer/tests`, and a
       browser spec.
 

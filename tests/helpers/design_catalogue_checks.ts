@@ -168,7 +168,7 @@ export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
 
 /**
  * The shared design sheets keep their route scopes: the component design
- * sheets link from the fifty-three `design/components/**` screens, the controls
+ * sheets link from the fifty-six `design/components/**` screens, the controls
  * sheet from its twenty entries, the library sheet from no screen, the
  * inspector and workspace sheets from every design screen, and every shared
  * sheet from the library pages and their 70 saved variants.
@@ -228,6 +228,6 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
     screens(/^design\/components\//u).length,
     screens(/^design\/components\/controls\//u).length,
   ];
-  if (pins.join() !== "53,20") violations.push(`scopes pin ${pins.join(", ")}`);
+  if (pins.join() !== "56,20") violations.push(`scopes pin ${pins.join(", ")}`);
   return violations;
 }
