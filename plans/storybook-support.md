@@ -45,6 +45,9 @@ Contract owners:
 - [Imported CSS Configuration](../docs/protocol/mokly-configuration-imported-styles.md)
   and [Imported Stylesheet Assets](../docs/protocol/mokly-imported-styles-assets.md):
   stylesheet transforms and asset delivery.
+- [JavaScript Asset Imports](../docs/protocol/mokly-imported-assets.md): the
+  files that JavaScript imports as assets, their tokens, their URLs in
+  documents, and their delivery.
 - [Mokly Build Warnings](../docs/protocol/mokly-build-warnings.md): the new
   warnings.
 - [Component Instance Identity](../docs/protocol/mokly-instances.md) and
@@ -908,15 +911,17 @@ Components that import images render them, as decision 6 says.
 - [ ] Replace the `file` loader error and the `dataurl` advice, as "Replaced
       ways" says, with the answer to decision C1. Also update the `file`
       loader sentences of `docs/protocol/mokly-imported-styles-modules.md`,
-      `docs/protocol/mokly-configuration-imported-styles.md`, and
-      `docs/guides/authoring/config.md`.
+      `docs/protocol/mokly-configuration-imported-styles.md`,
+      `docs/guides/authoring/config.md`, and
+      `docs/guides/authoring/styles.md`.
 - [ ] Name the asset delivery default in
       `docs/protocol/mokly-configuration.md`, and the imported assets under
       `static/mokly-generated/` in `docs/protocol/mokly-artifact-paths.md`.
 - [ ] Apply the answer to decision C2 to the loader choice of the bundle.
 - [ ] Test that a component that imports a PNG and an SVG renders them in
       Serve and `build`, and that Changes shows an edited image.
-- [ ] Update `docs/guides/authoring/styles.md`.
+- [x] Update `docs/guides/authoring/styles.md`. Branch:
+      conductor/storybook-support-c-imported-assets
 
 ## Milestone 11: Imported assets in collected styles
 
