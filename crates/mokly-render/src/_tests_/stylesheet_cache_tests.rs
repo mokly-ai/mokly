@@ -18,6 +18,7 @@ fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
         css: "a {color:red}".into(),
         assets: BTreeMap::new(),
         resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::new(),
         imported_by: BTreeMap::new(),

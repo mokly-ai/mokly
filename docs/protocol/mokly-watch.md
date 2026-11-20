@@ -124,6 +124,13 @@ repository and never watched.
   discovery cannot accept it.
   A required ancestor's move or removal invalidates its required descendants.
   Each confined ancestor remains observed so directory repairs are visible.
+  An exact input inside a
+  [selected dependency root](./mokly-sidecar-modules.md#source-and-dependency-files)
+  is confined to that root, also outside the repository. The same holds for
+  a nested `node_modules` directory that package lookup reaches. The cache
+  directory rule above and the escaped-target rule for public watch inputs
+  below still apply. When Serve cannot resolve the cache directory, it
+  watches no such input outside the repository.
 - Package source under `node_modules` or an npx cache is never consumer
   source.
 

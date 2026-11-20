@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
+use mokly_compare::locations::{Locations, SystemLocations};
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_server::error::Result;
 use mokly_watch::observer::Observer;
@@ -31,6 +32,9 @@ pub(super) struct PlanInputs<'a> {
     resources: BTreeSet<String>,
     resolution: Option<Resolution<'a>>,
     stylesheet_resolution: BTreeSet<String>,
+    stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
+    cache_root: Option<PathBuf>,
+    cache_namespace: Option<PathBuf>,
 }
 
 impl<'a> PlanInputs<'a> {
@@ -43,6 +47,9 @@ impl<'a> PlanInputs<'a> {
             directories: Cow::Borrowed(prepared.generation.stylesheet_directories()),
             resources: prepared.generation.watch_files(),
             stylesheet_resolution: prepared.generation.stylesheet_resolution_files(),
+            stylesheet_resolution_roots: prepared.generation.stylesheet_resolution_roots(),
+            cache_root: SystemLocations.cache_root().ok().flatten(),
+            cache_namespace: SystemLocations.repository(&prepared.config.repo_root).ok(),
             resolution: catalogue.javascript.generation.as_ref().map(|generation| {
                 (
                     Cow::Borrowed(&generation.resolution_files),
@@ -61,6 +68,9 @@ impl<'a> PlanInputs<'a> {
             resources,
             resolution,
             stylesheet_resolution,
+            stylesheet_resolution_roots,
+            cache_root,
+            cache_namespace,
         } = self;
         PlanInputs {
             config: Cow::Owned(config.into_owned()),
@@ -68,6 +78,9 @@ impl<'a> PlanInputs<'a> {
             directories: Cow::Owned(directories.into_owned()),
             resources,
             stylesheet_resolution,
+            stylesheet_resolution_roots,
+            cache_root,
+            cache_namespace,
             resolution: resolution.map(|(files, directories)| {
                 (
                     Cow::Owned(files.into_owned()),
@@ -98,7 +111,12 @@ impl PlanRecord {
         if let Some((files, directories)) = &inputs.resolution {
             plan.resolution(files, directories);
         }
-        plan.resolution(&inputs.stylesheet_resolution, &BTreeMap::new());
+        plan.stylesheet_resolution(
+            &inputs.stylesheet_resolution,
+            &inputs.stylesheet_resolution_roots,
+            inputs.cache_root.as_deref(),
+            inputs.cache_namespace.as_deref(),
+        );
         let targets = plan.targets();
         Ok(Self {
             inputs: inputs.into_owned(),

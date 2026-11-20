@@ -1,8 +1,11 @@
 //! Head stylesheet records invalidate when resolution selects a different source.
 
 use std::fs;
+use std::path::Path;
+use std::sync::Arc;
 use std::time::Instant;
 
+use mokly_graph::types::GraphFactory;
 use mokly_test_support::capture::Trace;
 
 use super::support::{Consumer, link_directory, unlink_directory};
@@ -153,7 +156,8 @@ fn postcss_stylesheet_reselects_new_earlier_candidate() {
 
 #[test]
 fn resolution_watch_files_map_missing_virtual_candidates_to_the_selected_root() {
-    let consumer = consumer("@import 'fixture-theme/tokens';\n");
+    let mut consumer = consumer("@import 'fixture-theme/tokens';\n");
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
     consumer.replace(
         "mokly.config.json",
         "\"resolveExtensions\":",
@@ -215,5 +219,48 @@ fn resolution_watch_files_map_missing_virtual_candidates_to_the_selected_root() 
     assert!(
         !switched.iter().any(|path| path.contains(".store/one/")),
         "{switched:?}"
+    );
+}
+
+fn rejected_candidate(path: &Path) {
+    #[cfg(unix)]
+    std::os::unix::fs::symlink("tokens.preferred.css", path).unwrap();
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_file("tokens.preferred.css", path).unwrap();
+}
+
+#[test]
+fn a_rejected_dependency_candidate_keeps_valid_css_and_its_repair_watch_path() {
+    let mut consumer = consumer("@import 'fixture-theme/tokens';\n");
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
+    consumer.write("node_modules/fixture-theme/package.json", "{}");
+    consumer.write("node_modules/fixture-theme/tokens.css", BEFORE);
+    rejected_candidate(
+        &consumer
+            .root()
+            .join("node_modules/fixture-theme/tokens.preferred.css"),
+    );
+    let config = consumer.config();
+    let prepared = consumer.prepare().unwrap();
+    let factory: &dyn GraphFactory = consumer.runtime.as_ref();
+    let result = factory
+        .create(&config)
+        .unwrap()
+        .prepare(config, prepared, None);
+    let actual = result
+        .as_ref()
+        .map(|generation| {
+            (
+                String::from_utf8(generation.resource("styles/theme.css").unwrap().unwrap())
+                    .unwrap(),
+                generation.stylesheet_resolution_files(),
+            )
+        })
+        .map_err(ToString::to_string);
+    assert_eq!(actual.as_ref().map(|(css, _)| css.as_str()), Ok(BEFORE));
+    let (_, files) = actual.unwrap();
+    assert!(
+        files.contains("node_modules/fixture-theme/tokens.preferred.css"),
+        "{files:?}"
     );
 }

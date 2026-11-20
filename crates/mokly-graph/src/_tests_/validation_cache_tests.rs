@@ -180,6 +180,7 @@ pub(super) fn configured_probe(retain: bool, missing_dark_mobile: bool, bound: u
         &graph,
         SessionInput {
             stylesheet_resolution_files: Default::default(),
+            stylesheet_resolution_roots: Default::default(),
             config,
             catalogue,
             plans,

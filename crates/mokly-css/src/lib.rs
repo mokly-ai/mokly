@@ -12,6 +12,7 @@ pub mod resolution;
 pub mod resolver;
 pub mod syntax;
 pub mod types;
+pub mod watch_inputs;
 
 mod delivery;
 mod module_checks;

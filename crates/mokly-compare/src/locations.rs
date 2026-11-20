@@ -21,6 +21,8 @@ use crate::error::{Error, InternalError, IoResult, Result};
 /// Operating-system cache-location boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = LocationsMock))]
 pub trait Locations: Send + Sync {
+    /// Canonical OS cache directory, absent when the host has no home-directory mapping.
+    fn cache_root(&self) -> Result<Option<PathBuf>>;
     /// Return the external cache root for the canonical repository identity.
     fn repository(&self, repository: &Path) -> Result<PathBuf>;
 }
@@ -29,6 +31,20 @@ pub trait Locations: Send + Sync {
 pub struct SystemLocations;
 
 impl Locations for SystemLocations {
+    fn cache_root(&self) -> Result<Option<PathBuf>> {
+        let Some(base) = BaseDirs::new() else {
+            return Ok(None);
+        };
+        #[cfg(windows)]
+        let local = env::var_os("LOCALAPPDATA").map(PathBuf::from);
+        #[cfg(not(windows))]
+        let local: Option<PathBuf> = None;
+        Ok(Some(project_cache_root(cache_directory(
+            base.cache_dir(),
+            local.as_deref(),
+        ))?))
+    }
+
     fn repository(&self, repository: &Path) -> Result<PathBuf> {
         let repository = dunce::canonicalize(repository).base()?;
         let Some(base) = BaseDirs::new() else {

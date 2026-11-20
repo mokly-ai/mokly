@@ -73,6 +73,7 @@ pub(super) fn bundle(root: &StylesheetRoot) -> Bundle {
         css: format!(".{} {{}}\n{}", root.path, "a{color:red}\n".repeat(12_000)),
         assets: BTreeMap::new(),
         resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::from([(root.path.clone(), vec![b'a'; 160_000])]),
         imported_by: BTreeMap::new(),

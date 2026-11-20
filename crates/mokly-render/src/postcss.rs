@@ -33,7 +33,6 @@ pub(crate) struct PostCss {
     pub(crate) side: SideInputs,
     pub(crate) module: String,
     pub(crate) cache: Arc<Mutex<CssCache>>,
-    pub(crate) resolver: Arc<dyn ImportResolver>,
     /// One sidecar request of this context at a time, held outside the shared cache lock.
     pub(crate) turns: Turns,
     pub(crate) module_digests: ModuleDigests,
@@ -53,23 +52,6 @@ impl CssProcessor for RootPostCss {
         excluded: &BTreeSet<String>,
     ) -> mokly_css::error::Result<ProcessedCss> {
         self.shared.process_with(
-            path,
-            source,
-            excluded,
-            self.tree.as_ref(),
-            self.resolver.as_ref(),
-        )
-    }
-}
-
-impl CssProcessor for PostCss {
-    fn process(
-        &self,
-        path: &str,
-        source: &str,
-        excluded: &BTreeSet<String>,
-    ) -> mokly_css::error::Result<ProcessedCss> {
-        self.process_with(
             path,
             source,
             excluded,
