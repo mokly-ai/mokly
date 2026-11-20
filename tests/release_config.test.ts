@@ -135,9 +135,12 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       fixed.get("packages/viewer/CHANGELOG.md") ?? "",
       /Shared release version: 0\.16\.0/,
     );
-    const updates = await releaseUpdates(repositoryRoot, changed, undefined, [
-      ".",
-    ]);
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      changed,
+      await json(".release-please-manifest.json"),
+      ["."],
+    );
     const lock = JSON.parse(updates.get("package-lock.json") ?? "null");
     assert.ok(lock);
     for (const file of [
@@ -224,7 +227,10 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
   }
 });
 
-test("the desktop release covers its bundle and starts at 0.1.0", async () => {
+/** After the first desktop release, a breaking release stays on 0.x. */
+const DESKTOP_MANIFEST = { packages: "0.1.0" };
+
+test("the desktop release covers its bundle and stays on the 0.x minor stream", async () => {
   const config = (await json("release-please-config.json")).packages.packages;
   assert.equal(
     (await json("release-please-config.json"))["separate-pull-requests"],
@@ -243,9 +249,12 @@ test("the desktop release covers its bundle and starts at 0.1.0", async () => {
     "packages/model/src/index.ts",
     "packages/frame/src/index.ts",
   ]) {
-    const updates = await releaseUpdates(repositoryRoot, [file], undefined, [
-      "packages",
-    ]);
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      DESKTOP_MANIFEST,
+      ["packages"],
+    );
     assert.deepEqual(
       [...updates.keys()].sort(),
       [
@@ -257,10 +266,13 @@ test("the desktop release covers its bundle and starts at 0.1.0", async () => {
       file,
     );
     const after = JSON.parse(updates.get("packages/desktop/package.json")!);
-    assert.deepEqual(after, { ...desktop, version: "0.1.0" }, file);
+    assert.deepEqual(after, { ...desktop, version: "0.2.0" }, file);
     const lock = JSON.parse(updates.get("package-lock.json")!);
-    assert.equal(lock.packages["packages/desktop"].version, "0.1.0", file);
-    assert.match(updates.get("packages/desktop/CHANGELOG.md")!, /## 0\.1\.0/);
+    assert.equal(lock.packages["packages/desktop"].version, "0.2.0", file);
+    assert.match(
+      updates.get("packages/desktop/CHANGELOG.md")!,
+      /## \[0\.2\.0\]/,
+    );
   }
   for (const file of [
     "packages/mokly/src/index.ts",
@@ -268,9 +280,12 @@ test("the desktop release covers its bundle and starts at 0.1.0", async () => {
     "apps/site/src/home.ts",
     "crates/mokly-css/src/compiler.rs",
   ]) {
-    const updates = await releaseUpdates(repositoryRoot, [file], undefined, [
-      "packages",
-    ]);
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      DESKTOP_MANIFEST,
+      ["packages"],
+    );
     assert.deepEqual([...updates], [], file);
   }
 });

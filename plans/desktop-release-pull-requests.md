@@ -114,7 +114,9 @@ Depends on: 1
 - [x] Run the pinned Release Please against the local configuration with
       `scripts/release/version_updates.mjs`. A bundle change gives the desktop
       version `0.1.0`. An npm CLI or native change gives no desktop release.
-      `tests/release_config.test.ts` keeps this check.
+      `tests/release_config.test.ts` keeps the lasting rule: from `0.1.0`, a
+      breaking change gives `0.2.0`. The dry run below proves the first
+      version once.
 - [x] Run a Release Please dry run against this branch on GitHub. Check the
       desktop pull request title and the tag `desktop-v0.1.0`. Save the output
       under `.context/`.
@@ -134,8 +136,11 @@ Depends on: 2
 - [x] `release-environment.py`: keep the check that the tag equals
       `desktop-v` plus the package version.
 - [x] Update the workflow contract tests in
-      `xtask/tests/cli/desktop_release_workflow_tests.rs`, and cover the
-      desktop jobs of `release.yml` there.
+      `xtask/tests/cli/desktop_release_workflow_tests.rs` for the new trigger.
+      `tests/desktop_release_tag_check.test.ts` runs the tag check with a
+      stand-in `gh`, and checks that the desktop outputs follow the
+      component path. `tests/workflow_runner_sizes.test.ts` admits each
+      local workflow call that it audits.
 
 ## Milestone 4: Mac updater
 

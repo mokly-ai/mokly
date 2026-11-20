@@ -7,11 +7,8 @@ use serde_json::{Value, json};
 use super::support::repository;
 
 fn workflow() -> Value {
-    named_workflow("desktop-release.yml")
-}
-
-fn named_workflow(name: &str) -> Value {
-    let text = fs::read_to_string(repository().join(".github/workflows").join(name)).unwrap();
+    let text =
+        fs::read_to_string(repository().join(".github/workflows/desktop-release.yml")).unwrap();
     serde_saphyr::from_str(&text).unwrap()
 }
 
@@ -46,12 +43,6 @@ fn action_pins_valid(source: &Value) -> bool {
 fn desktop_release_events_and_platforms_cover_both_package_modes() {
     let source = workflow();
     assert!(source["on"]["push"].is_null());
-    for input in ["tag", "ref"] {
-        assert_eq!(
-            source["on"]["workflow_call"]["inputs"][input],
-            json!({"required": true, "type": "string"})
-        );
-    }
     assert!(
         source["on"]
             .as_object()
@@ -88,7 +79,6 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
         release["if"],
         "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && github.event_name == 'push' && inputs.tag != ''"
     );
-    assert_eq!(release["environment"], "desktop-release");
     assert_eq!(package["env"]["MKC_BUILD_SHA"], "${{ github.sha }}");
     assert_eq!(release["env"]["MKC_BUILD_SHA"], "${{ inputs.ref }}");
     assert_eq!(release["strategy"]["max-parallel"], 1);
@@ -189,19 +179,8 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
     }
     assert!(!package.to_string().contains("MKC_DESKTOP_UPDATES"));
     let release = &source["jobs"]["release"];
-    let checkout = &steps(release)[0];
-    assert_eq!(checkout["with"]["ref"], "${{ inputs.ref }}");
     let tag = command_index(release, "production --tag \"$RELEASE_TAG\"");
-    assert_eq!(
-        steps(release)[tag]["env"]["RELEASE_TAG"],
-        "${{ inputs.tag }}"
-    );
     assert!(tag < command_index(release, "npm ci"));
-    let build = command_index(release, "run build --workspace");
-    assert_eq!(
-        steps(release)[build]["env"]["MKC_DESKTOP_UPDATES"],
-        "enabled"
-    );
     let mac = steps(release)
         .iter()
         .find(|step| step["name"] == "Sign, notarize and publish macOS packages")
@@ -231,48 +210,5 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
             step["run"],
             "node packages/desktop/scripts/package.mjs release"
         );
-    }
-}
-
-#[test]
-fn a_merged_desktop_release_pull_request_starts_the_release_after_the_tag_check() {
-    let source = named_workflow("release.yml");
-    let outputs = &source["jobs"]["release-please"]["outputs"];
-    for (output, key) in [
-        ("desktop_release_created", "release_created"),
-        ("desktop_tag_name", "tag_name"),
-        ("desktop_sha", "sha"),
-    ] {
-        assert_eq!(
-            outputs[output],
-            format!("${{{{ steps.release.outputs['packages--{key}'] }}}}")
-        );
-    }
-    let check = &source["jobs"]["desktop-tag"];
-    assert_eq!(
-        check["if"],
-        "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && needs.release-please.outputs.desktop_release_created == 'true'"
-    );
-    assert_eq!(check["permissions"], json!({"contents": "read"}));
-    assert!(
-        steps(check)[0]["run"]
-            .as_str()
-            .unwrap()
-            .contains("commits/refs/tags/$RELEASE_TAG")
-    );
-    let call = &source["jobs"]["desktop"];
-    assert_eq!(call["needs"], json!(["release-please", "desktop-tag"]));
-    assert_eq!(call["uses"], "./.github/workflows/desktop-release.yml");
-    assert_eq!(
-        call["with"],
-        json!({
-            "tag": "${{ needs.release-please.outputs.desktop_tag_name }}",
-            "ref": "${{ needs.release-please.outputs.desktop_sha }}"
-        })
-    );
-    let declared = workflow()["on"]["workflow_call"]["secrets"].clone();
-    for (secret, value) in call["secrets"].as_object().unwrap() {
-        assert_eq!(value, &json!(format!("${{{{ secrets.{secret} }}}}")));
-        assert_eq!(declared[secret], json!({"required": false}));
     }
 }

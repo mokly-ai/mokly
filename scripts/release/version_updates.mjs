@@ -8,12 +8,13 @@ const MANIFEST = ".release-please-manifest.json";
 const CONFIG = "release-please-config.json";
 
 /**
- * Compute the updates of one breaking release from `root`. A `fixedManifest`
- * replaces the release manifest everywhere Release Please reads it, including
- * the previous release tags derived from it. `paths` keeps only those release
- * components, so a test can follow one product.
+ * Compute the updates of one breaking release from `root`. `versions` replaces
+ * the release manifest everywhere Release Please reads it, including the
+ * previous release tags derived from it. A caller always names the versions,
+ * so a test never depends on the live manifest by accident. `paths` keeps only
+ * those release components, so a test can follow one product.
  */
-export async function releaseUpdates(root, changedFiles, fixedManifest, paths) {
+export async function releaseUpdates(root, changedFiles, versions, paths) {
   const only = (entries) =>
     paths
       ? Object.fromEntries(
@@ -21,8 +22,8 @@ export async function releaseUpdates(root, changedFiles, fixedManifest, paths) {
         )
       : entries;
   const source = async (file) =>
-    file === MANIFEST && fixedManifest
-      ? `${JSON.stringify(fixedManifest, null, 2)}\n`
+    file === MANIFEST
+      ? `${JSON.stringify(versions, null, 2)}\n`
       : await fs.readFile(path.join(root, file), "utf8");
   const read = async (file) => {
     const content = await source(file);
@@ -32,7 +33,7 @@ export async function releaseUpdates(root, changedFiles, fixedManifest, paths) {
     const config = JSON.parse(content);
     return `${JSON.stringify({ ...config, packages: only(config.packages) })}\n`;
   };
-  const versions = JSON.parse(await read(MANIFEST));
+  const released = JSON.parse(await read(MANIFEST));
   const config = JSON.parse(await read(CONFIG));
   const previous = "a".repeat(40);
   const github = {
@@ -47,7 +48,7 @@ export async function releaseUpdates(root, changedFiles, fixedManifest, paths) {
       };
     },
     async *releaseIterator() {
-      for (const [component, version] of Object.entries(versions)) {
+      for (const [component, version] of Object.entries(released)) {
         const entry = config.packages[component];
         // A manifest entry without a component, or a component that never
         // released, has no release tag.
