@@ -33,8 +33,8 @@ test("an inspection error keeps a frame, and a reported failure recovers with Tr
     const adapter: FrameAdapter = {
       async mount(frame) {
         // On its first mount, the hidden desktop frame reports an inspection
-        // limit. Then the shown mobile frame reports a failure, so its line
-        // renders after the limit was handled.
+        // limit. Then the shown mobile frame reports a session timeout, a
+        // failure after load, so its line renders after the limit was handled.
         state.mounts++;
         const first = !mounted.has(frame);
         mounted.add(frame);
@@ -46,7 +46,7 @@ test("an inspection error keeps a frame, and a reported failure recovers with Tr
           subscribe(listener) {
             if (first && mobile)
               void limitDelivered.then(() =>
-                listener({ type: "error", code: "unavailable" }),
+                listener({ type: "error", code: "timeout" }),
               );
             else if (first)
               queueMicrotask(() => {
