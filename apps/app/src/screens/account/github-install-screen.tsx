@@ -8,10 +8,7 @@ import { Pending, StateMessage } from "../../components/page-parts";
 import { StatePlaceholder } from "../../components/placeholders";
 import { completeGitHubInstallation } from "../../data/auth";
 import { takeCallbackInput } from "../../navigation/callback-input";
-import {
-  consumeGitHubInstallation,
-  storeGitHubFlow,
-} from "../../navigation/github-flow";
+import { consumeGitHubInstallation } from "../../navigation/github-flow";
 import type { GitHubInstallationAttempt } from "../../navigation/github-flow";
 import { useLeavePage } from "../../navigation/leave-page";
 import { installPath } from "../../navigation/paths";
@@ -99,10 +96,7 @@ export function GitHubInstallScreen() {
       codeVerifier: attempt.codeVerifier,
     })
       .then((connection) => {
-        if (!storeGitHubFlow("install-authorize", connection)) {
-          throw unexpectedError();
-        }
-        leave(connection.authorizeUrl);
+        leave("install-authorize", connection);
       })
       .catch((caught: unknown) => {
         setError(asApiError(caught) ?? unexpectedError());

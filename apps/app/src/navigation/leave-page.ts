@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
+import { unexpectedError } from "../api/errors";
+import type { Connection } from "../api/types";
+
+import { storeGitHubFlow } from "./github-flow";
+import type { GitHubFlowPurpose } from "./github-flow";
+
+/** A hosted page's URL, or the purpose and API answer for one GitHub trip. */
+export type PageTrip =
+  [url: string] | [purpose: GitHubFlowPurpose, connection: Connection];
+
 /**
  * How a screen hands this tab to another site at the end of a write, as
  * GitHub's authorization and Stripe's hosted pages need: Write in progress in
@@ -16,8 +26,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
  * of the trip. A page the browser brings back from its back-forward cache never
  * unloaded: it returns with the state it had when it left, so `restored` runs
  * and the screen returns to rest.
+ *
+ * A GitHub trip stores its record after the shown check, in the same step as
+ * leaving. An abandoned screen's late answer cannot replace a newer record.
  */
-export function useLeavePage(restored: () => void): (url: string) => boolean {
+export function useLeavePage(
+  restored: () => void,
+): (...trip: PageTrip) => boolean {
   const shown = useRef(false);
   // Whether a trip that this screen started is under way: the page is leaving
   // and has not come back from the back-forward cache.
@@ -57,8 +72,12 @@ export function useLeavePage(restored: () => void): (url: string) => boolean {
   );
 
   return useCallback(
-    (url: string) => {
+    (...trip: PageTrip) => {
       if (!shown.current) return false;
+      if (trip.length === 2 && !storeGitHubFlow(trip[0], trip[1])) {
+        throw unexpectedError();
+      }
+      const url = trip.length === 1 ? trip[0] : trip[1].authorizeUrl;
       window.location.assign(url);
       leaving.current = true;
       stopListening();
