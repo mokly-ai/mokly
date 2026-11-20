@@ -4,8 +4,10 @@ import path from "node:path";
 import type { ConfigEnv, UserConfig } from "vite";
 
 import { missingFile } from "./file-digests.js";
+import { bundleViteConfig } from "./vite-config-bundle.js";
+import { viteConfigError } from "./vite-config-errors.js";
 import { withViteConfigResolution } from "./vite-config-resolution.js";
-import { runViteConfig } from "./vite-config-runner.js";
+import { viteFailure } from "./vite-errors.js";
 import type { loadVite } from "./vite-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
 
@@ -13,7 +15,7 @@ export const viteConfigFiles = ["js", "mjs", "ts", "cjs", "mts", "cts"].map(
   (extension) => `vite.config.${extension}`,
 );
 
-/** The runner's default externalizer cannot find packages beside an extraction. */
+/** Bundle local setup modules in memory and resolve installed packages for this side. */
 export async function loadViteConfig(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,
@@ -28,14 +30,20 @@ export async function loadViteConfig(
   return withViteConfigResolution(lookup, async () => {
     const file = await configFile(directory);
     if (!file) return null;
-    const loaded = await runViteConfig(vite, directory, file, lookup);
-    const exported = loaded.module.default;
-    const config: unknown = await (typeof exported === "function"
-      ? exported(environment)
-      : exported);
-    if (!isConfig(config))
-      throw new Error("config must export or return an object.");
-    return { config, dependencies: loaded.dependencies };
+    let locate = (error: unknown) => viteConfigError(error, file);
+    try {
+      const loaded = await bundleViteConfig(vite, directory, file, lookup);
+      locate = loaded.locate;
+      const exported = loaded.exported;
+      const config: unknown = await (typeof exported === "function"
+        ? exported(environment)
+        : exported);
+      if (!isConfig(config))
+        throw new Error("config must export or return an object.");
+      return { config, dependencies: loaded.dependencies };
+    } catch (error) {
+      throw viteFailure(locate(error), lookup.paths, file, vite.version);
+    }
   });
 }
 

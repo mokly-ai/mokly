@@ -7,6 +7,7 @@ import type { ViteFetchResult } from "../generated/sidecar/ViteFetchResult.js";
 import { viteFailure } from "./vite-errors.js";
 import { externalType, viteExternalFile } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
+import { recordVitePluginInputs } from "./vite-plugin-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { fetchViteImport } from "./vite-resolution.js";
 import { viteFile, viteId, viteJsx, viteUrl } from "./vite-urls.js";
@@ -76,10 +77,8 @@ export function createViteFetch(
         const style = await input.styles.resolve(
           id,
           importer,
-          (source, importer) =>
-            input.lookup
-              .resolve(source, importer)
-              .then((result) => result?.resolved ?? null),
+          input.lookup,
+          input.external,
         );
         if (typeof style === "string") requested = viteUrl(style);
       }
@@ -137,6 +136,12 @@ export function createViteFetch(
           ...(transformed?.deps ?? []),
           ...(transformed?.dynamicDeps ?? []),
         ]);
+        await recordVitePluginInputs(
+          input,
+          environment,
+          result.id,
+          imports.get(result.id)!,
+        );
         if (
           file &&
           physical &&

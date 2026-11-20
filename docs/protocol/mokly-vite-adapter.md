@@ -1,6 +1,6 @@
 # Vite Adapter
 
-Status: Storybook's merged setup and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
+Status: The Vite stylesheet transform, Storybook's merged setup, and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
 
 This page extends the [sidecar bundling contract](./mokly-sidecar.md#bundling)
 and the [module source rules](./mokly-sidecar-modules.md). It defines the Vite
@@ -65,7 +65,9 @@ folder, Mokly loads Storybook's merged Vite setup for every JavaScript entry.
 Without a Storybook folder, Mokly loads the app setup for every JavaScript
 entry. The app setup comes from the first Vite config file that Vite's own
 lookup finds in the configuration directory. The lookup uses Vite's file names
-and order. Without such a file, Vite's defaults apply.
+and order. Without such a file, Vite's defaults apply. Mokly loads every
+config file that Vite's default config loader accepts, in ES module or
+CommonJS form.
 
 Decision: one setup compiles every JavaScript entry, and a Storybook folder
 selects Storybook's merged setup. Stories then match Storybook, and each module
@@ -155,8 +157,9 @@ imports at evaluation. Files outside the source root and the selected
 dependency roots fail closed under the
 [confinement rules](./mokly-sidecar-modules.md#source-and-dependency-files).
 The diagnostic of a transform or resolution failure names the logical module,
-the plugin, and the plugin's message. It never shows an absolute path or a
-virtual module.
+the plugin, and the plugin's message. A failure to load the setup names the
+Vite config file or the config import that failed. No Vite diagnostic or
+`diagnostic` event shows an absolute path or a virtual module.
 
 ## Evaluation And One React Runtime
 
@@ -189,30 +192,8 @@ esbuild call emits `esbuild`.
 
 ## Inputs And Serve
 
-These files are inputs of a Vite compile, present or absent:
-
-- the Vite config file, the optional file, and the files that they import;
-- the env files that Vite reads.
-
-A change to one of them causes a rebuild, reloads the setup, and moves every
-render input key. In Serve, Mokly's watcher drives every rebuild. A `bundle`
-request never uses a transform of older bytes than the bytes that the graph
-reports.
-
-A file that a plugin of the setup writes is a watched change like any other
-edit. Decision: Mokly makes no exception for these writes. The plugins of the
-setup keep the consumer build's trust, as PostCSS plugins do.
-
-## The Base Side
-
-The base side compiles JavaScript and transforms stylesheets with the base
-commit's setup in its extraction. That setup comes from the base
-configuration's own `vite` field, optional file, Vite config file, and env
-files, all from the base commit. `vite` resolves through the base side's
-selected installation, under the
-[dependency tiers](./mokly-comparison.md#sides). The imports of installed
-packages in the setup and every bare import of a base module resolve the same
-way.
+The [Vite adapter input rules](./mokly-vite-adapter-inputs.md) define the
+inputs of a Vite compile, how Serve rebuilds, and the setup of the base side.
 
 ## Replaced Settings
 
@@ -237,6 +218,7 @@ the setup transforms each local stylesheet.
 
 ## Related Docs
 
+- [Vite adapter inputs](./mokly-vite-adapter-inputs.md)
 - [Vite adapter stylesheets](./mokly-vite-adapter-styles.md)
 - [Render sidecar](./mokly-sidecar.md) and
   [sidecar module sources](./mokly-sidecar-modules.md)

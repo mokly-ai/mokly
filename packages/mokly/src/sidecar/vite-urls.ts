@@ -29,7 +29,10 @@ export function viteFile(id: string): string | undefined {
   if (id.startsWith("\0mokly-css:"))
     return Buffer.from(id.slice("\0mokly-css:".length), "base64url").toString();
   if (id.startsWith("file://")) return fileURLToPath(new URL(id));
-  if (id.startsWith("/@fs/")) id = id.slice("/@fs/".length);
+  if (id.startsWith("/@fs/")) {
+    id = id.slice("/@fs/".length);
+    if (!path.isAbsolute(id)) id = "/" + id;
+  }
   const file = id.replace(/[?#].*$/, "");
   return path.isAbsolute(file) && !id.startsWith("\0") ? file : undefined;
 }

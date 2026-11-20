@@ -1,6 +1,8 @@
 import { realpathSync } from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 
+import { missingFile } from "./file-digests.js";
 import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
@@ -42,4 +44,31 @@ export function viteMissingImport(error: unknown): boolean {
     "code" in error &&
     ["MODULE_NOT_FOUND", "ERR_MODULE_NOT_FOUND"].includes(String(error.code))
   );
+}
+
+export async function viteExistingImporter(
+  file: string,
+): Promise<string | undefined> {
+  try {
+    if ((await fs.stat(file)).isFile()) return file;
+  } catch (error) {
+    if (!missingFile(error)) throw error;
+  }
+  let directory = path.dirname(file);
+  for (;;) {
+    try {
+      const entries = await fs.readdir(directory, { withFileTypes: true });
+      const selected = entries
+        .filter((entry) => entry.isFile())
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const anchor =
+        selected.find((entry) => entry.name === "package.json") ?? selected[0];
+      if (anchor) return path.join(directory, anchor.name);
+    } catch (error) {
+      if (!missingFile(error)) throw error;
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) return;
+    directory = parent;
+  }
 }

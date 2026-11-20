@@ -54,7 +54,7 @@ export async function captureReactPeers(
 ): Promise<VitePeers> {
   const peers: VitePeers = {};
   for (const name of ["react", "react-dom"]) {
-    const root = await lookup.resolve(name);
+    const root = await lookup.nodeEntry(name);
     const file = root && viteFile(root.resolved.id);
     peers[name] = file ? await lookup.paths.resolve(file) : null;
     if (!file) continue;
@@ -79,7 +79,7 @@ export async function captureReactPeers(
         if (key.startsWith("./")) names.add(name + key.slice(1));
     for (const specifier of names) {
       if (specifier.endsWith("/package.json")) continue;
-      const result = await lookup.resolve(specifier, manifestFile);
+      const result = await lookup.nodeEntry(specifier, manifestFile);
       const file = result && viteFile(result.resolved.id);
       peers[specifier] = file ? await lookup.paths.resolve(file) : null;
     }

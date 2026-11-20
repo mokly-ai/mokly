@@ -1,9 +1,9 @@
-# Keep module digests out of shared render inputs
+# Report input roles and module dependencies to the core
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-20, from the branch `conductor/storybook-support-d-vite-adapter`, review round 1, finding 3.
-- **Location:** `crates/mokly-graph/src/render_inputs.rs:140`, `crates/mokly-sidecar/src/compiled.rs:134`, `packages/mokly/src/sidecar/vite-metadata.ts:14`, `packages/mokly/src/sidecar/bundle-recipe.ts:87`.
+- **Added:** 2026-11-20, from the branch `conductor/storybook-support-d-vite-adapter`, review round 1, finding 3, and review round 2, finding 5.
+- **Location:** `crates/mokly-graph/src/render_inputs.rs:140`, `crates/mokly-sidecar/src/compiled.rs:134`, `crates/mokly-sidecar/src/results.rs:1`, `packages/mokly/src/sidecar/vite-metadata.ts:14`, `packages/mokly/src/sidecar/bundle-recipe.ts:87`.
 - **Reason:** The fix changes the boundary between the sidecar and the core and adds a field that no rule covers, so the user decides it, and the branch that found the defect applied a direct fix in the sidecar.
 
 - **Source:** Review.
@@ -17,15 +17,16 @@
   - The core builds the shared part of every key from each `metadataInputs` name that is on no closure directory chain, in `crates/mokly-graph/src/render_inputs.rs` near line 140. So the core trusts each compile path to keep module digests out of `metadataInputs`.
   - On 2026-11-20 a review found that the Vite compile path put every consumed module into `metadataInputs`. One module edit then moved every render key. The branch fixed the producer: the Vite path keeps graph modules out of `metadataInputs`, and it keeps only setup files, resolution inputs, React manifests, Storybook preview candidates, and consumed files that the graph does not name.
   - The esbuild path in `packages/mokly/src/sidecar/bundle-recipe.ts` sorts its inputs with its own code. Each new compile path must copy that rule again.
-- **Problem:** The rule that keeps module digests out of the shared part of every key lives in each producer, not in the core. A producer that puts a module digest into `metadataInputs` makes every edit render every entry again, and no check catches it.
+  - A Vite plugin can load a file with `this.load` or report one with `this.addWatchFile` while it transforms a module. The module graph has no edge for that link. On 2026-11-20 the branch made each such file a shared input of every key, also when a normal import makes it a graph module. So an edit of such a file renders every entry again, although only the module that the plugin transformed uses it.
+- **Problem:** The core learns neither the role of each input nor the dependency of a module on a file that a plugin used. So the rule that keeps module digests out of the shared part of every key lives in each producer, and a file that a plugin used moves every key instead of the keys of its users.
 - **Impact if no action:** A future compile path, or a change to an existing one, can bring back the defect: each edit renders every JavaScript entry again, Serve reloads every frame, and the base side of Changes reuses no render.
-- **Root question:** Where does the rule live that keeps a module digest in the keys of its own closure only, for every compile path?
+- **Root question:** How does the core give each input only the render keys that depend on it, for every compile path and every route by which a module depends on a file?
 - **Options:**
   - **A.** Change nothing. Each producer keeps its own rule, and its tests check it. Effort: Small.
   - **B.** Move the shared-input code of both compile paths into one sidecar function, so that the esbuild path and the Vite path sort their inputs with one rule. The esbuild path's compile identity can change once. Effort: Medium.
-  - **C.** Report the setup inputs in their own field of the compiled result. In the core, keep the digest of a graph module out of the shared part of every key, unless that field names it. Update the boundary type, its generated TypeScript, the Rust fixtures that build it, the core's key code, and `docs/protocol/mokly-sidecar-recipes.md`. Effort: Medium.
+  - **C.** Report the setup inputs in their own field of the compiled result. In the core, keep the digest of a graph module out of the shared part of every key, unless that field names it. Also report, for each module, the files that a plugin loaded or reported during its transform, in a list beside its imports. The core adds that list to the module's closure, and its stylesheet walk keeps reading the imports only. Update the boundary types, their generated TypeScript, the Rust fixtures that build them, the core's key and closure code, the "Module Graph" section of `docs/protocol/mokly-vite-adapter.md`, the plugin input bullet of `docs/protocol/mokly-vite-adapter-inputs.md`, and `docs/protocol/mokly-sidecar-recipes.md`. Effort: Large.
 - **Left out:** A core-only filter of module names: the core cannot tell a plain module from a setup file that an entry also imports, so a setup change would stop moving every key, which breaks the watch contract.
 - **Wider fix:** C. The core then keeps module digests per entry for every compile path.
 - **Previous examples:** The Vite compile path put module digests into `metadataInputs` on the branch `conductor/storybook-support-d-vite-adapter`, until its review round 1 fix.
-- **Recommendation:** C. One rule in the core protects every compile path. B is a smaller step that keeps the rule in the sidecar.
-- **Action:** ask the user, because C adds a field to the boundary between the sidecar and the core, which no rule covers.
+- **Recommendation:** C. One rule in the core protects every compile path, and each plugin dependency then moves only the keys of its users. B is a smaller step that keeps the rule in the sidecar.
+- **Action:** ask the user, because C adds fields to the boundary between the sidecar and the core, which no rule covers.

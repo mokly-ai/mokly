@@ -812,6 +812,12 @@ own lines of this plan.
 - D15. A file that a plugin of the setup writes is a watched change like any
   other edit. Reason: the setup's plugins keep the consumer build's trust,
   as PostCSS plugins do.
+- D16. Made on 2026-11-20. Every Vite message follows the module sources rule
+  for diagnostics: a failure names the logical module, a setup load failure
+  names the Vite config file or the config import that failed, and no Vite
+  diagnostic or `diagnostic` event shows an absolute path or a virtual
+  module. Reason: the module sources contract already keeps other checkouts
+  and implementation paths out of every diagnostic.
 
 Open decisions of track D. They wait for the user, with decision 22.
 
@@ -901,8 +907,8 @@ Open decisions of track D. They wait for the user, with decision 22.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/mokly-vite-adapter.md:178-192`,
-  `crates/mokly-render/src/postcss_read_inventory.rs:182-193`.
+- **Location:** `docs/protocol/mokly-vite-adapter-inputs.md`, "Inputs And
+  Serve", `crates/mokly-render/src/postcss_read_inventory.rs:182-193`.
 - **Background:** The inputs of a Vite compile are the Vite config file, the
   optional file, the files that they import, the env files, the modules of
   the graph, and the files that a transform reports as dependencies. Vite and
@@ -951,7 +957,7 @@ Open decisions of track D. They wait for the user, with decision 22.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/mokly-vite-adapter.md:194-203`.
+- **Location:** `docs/protocol/mokly-vite-adapter-inputs.md`, "The Base Side".
 - **Background:** Vite reads env files, such as `.env` and `.env.local`, into
   `import.meta.env`. Design call D6 makes them inputs. The base side reads
   its env files from the base commit. Projects often keep `.env.local` and

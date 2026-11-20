@@ -48,6 +48,9 @@ export class ViteCompiler {
   private setup: Setup | undefined;
   private input: ViteInputs | undefined;
 
+  /** `diagnostic` sends one sidecar diagnostic event, such as a skipped plugin report. */
+  constructor(private readonly diagnostic: (line: string) => void) {}
+
   async bundle(
     params: BundleParams,
     compile: typeof build,
@@ -74,6 +77,8 @@ export class ViteCompiler {
           runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
           entry: entry.contents,
           files: new Map(),
+          pluginInputs: new Set(),
+          diagnostic: this.diagnostic,
           cssModules: new Set(),
           styles: new ViteStyles(),
           external: async () => undefined,
@@ -217,9 +222,7 @@ export class ViteCompiler {
       throw viteFailure(
         error,
         paths,
-        params.entryFiles[0]
-          ? path.join(paths.sourceRoot, params.entryFiles[0])
-          : "",
+        path.resolve(paths.sourceRoot, params.configurationDirectory),
         version,
       );
     }

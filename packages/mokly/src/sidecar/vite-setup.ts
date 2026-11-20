@@ -10,7 +10,7 @@ import { vitePeerPlugin } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
 
-/** App config loading uses Vite's runner loader, which writes no config bundle. */
+/** Load the app setup without writing a config bundle or starting a watcher. */
 export async function viteSetup(
   vite: Awaited<ReturnType<typeof loadVite>>["api"],
   directory: string,

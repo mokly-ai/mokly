@@ -45,7 +45,7 @@ export function viteExternalResolver(
     )
       return;
     if (/[?#]/.test(source)) return;
-    const result = await lookup.resolve(source, importer);
+    const result = await lookup.nodeEntry(source, importer);
     const file = result && viteFile(result.resolved.id);
     if (!file || (path.extname(file) && !/\.(?:js|mjs|cjs)$/.test(file)))
       return;

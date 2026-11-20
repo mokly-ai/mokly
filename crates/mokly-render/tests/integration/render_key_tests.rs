@@ -178,6 +178,45 @@ fn a_vite_module_edit_moves_only_the_documents_that_import_it() {
 }
 
 #[test]
+fn vite_sides_with_different_plugin_inputs_move_every_javascript_key() {
+    let head = consumer();
+    let base = consumer();
+    for side in [&head, &base] {
+        side.replace(
+            "mokly.config.json",
+            "\"roots\":",
+            "\"vite\": true,\n  \"roots\":",
+        );
+        side.replace(
+            "specs/t/t.mockup.tsx",
+            "<main>T</main>",
+            "<main>{\"__PLUGIN__\"}</main>",
+        );
+        side.write(
+            "vite.config.ts",
+            include_str!("../../../../tests/fixtures/vite_render_key_config.ts"),
+        );
+    }
+    let before = keys(&base);
+    assert_eq!(keys(&head), before);
+    head.replace("specs/h.ts", "Hello", "After");
+    assert_eq!(
+        moved(&before, &keys(&head)),
+        entries(&[
+            "c",
+            "c/filled",
+            "html",
+            "label",
+            "label/Primary",
+            "p",
+            "s/s",
+            "t/t",
+            "u/u"
+        ])
+    );
+}
+
+#[test]
 fn a_rebuild_renders_again_only_the_views_whose_render_inputs_moved() {
     let consumer = consumer();
     let render_all = |consumer: &Consumer| {

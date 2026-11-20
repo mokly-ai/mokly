@@ -25,6 +25,8 @@ export async function viteMetadata(
       metadataInputs[paths.metadataName(file)] = inputs[file];
   }
   for (const file of setupFiles) await record(await paths.metadata(file));
+  for (const file of input.pluginInputs)
+    await record(file, input.files.get(file));
   for (const file of params.storiesFiles.length ? previewCandidates : [])
     await record(path.resolve(params.sourceRoot, file));
   for (const name of ["react/package.json", "react-dom/package.json"]) {

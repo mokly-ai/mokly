@@ -26,7 +26,7 @@ export class Session {
   private capture: CaptureHint | undefined;
   private generations = new Map<string, Generation>();
   private workers: PostcssWorkers;
-  private vite = new ViteCompiler();
+  private vite: ViteCompiler;
 
   constructor(
     private readonly version: string,
@@ -37,6 +37,7 @@ export class Session {
     phase: (line: string) => void = () => {},
   ) {
     this.workers = new PostcssWorkers(diagnostic, operation, undefined, phase);
+    this.vite = new ViteCompiler(phase);
   }
 
   async call(request: Request): Promise<unknown> {

@@ -121,29 +121,54 @@ path.
   classifies each volume by its Linux file system type or by the hint.
 - [`vite-compiler.ts`](./vite-compiler.ts) holds `ViteCompiler`, which
   compiles a `bundle` request with `vite` into a compiled recipe with a
-  `ViteRecipe` and empty, incomplete reuse evidence. It keeps one Vite server
-  and replaces it when the roots, the peers, or the setup stamp change.
+  `ViteRecipe` and empty, incomplete reuse evidence. It keeps one Vite server,
+  and it replaces the server when the roots, the peers, or the setup stamp
+  change, or when a metadata input changes.
   [`vite-setup.ts`](./vite-setup.ts) holds `viteSetup`, which loads the app's
   `vite.config.*` and starts the server with no HTTP server, watcher, hot
   reload, or dependency pre-bundling. Its `setupStamp` digests the config
   files, their imports, the env files, and the file list of the configuration
   directory.
-- [`vite-config.ts`](./vite-config.ts) holds `loadViteConfig`, which runs the
-  app's `vite.config.*` in Vite's module runner through `runViteConfig` in
-  [`vite-config-runner.ts`](./vite-config-runner.ts), on both sides. Each
-  import of the config resolves through `ViteLookup`, also a synchronous Node
-  import that [`vite-config-resolution.ts`](./vite-config-resolution.ts)
-  hooks.
+- [`vite-config.ts`](./vite-config.ts) holds `loadViteConfig`, which finds
+  the app's `vite.config.*` and loads it in memory with the semantics of
+  Vite's default config loader, on both sides. A function export receives the
+  command `serve` and the mode `development`.
+  [`vite-config-bundle.ts`](./vite-config-bundle.ts) holds
+  `bundleViteConfig`, which bundles the config and its local imports with
+  esbuild, writes no file, and runs the result as an ES module or as
+  CommonJS, as the module type of the config file selects. Each installed
+  package that the config imports resolves through `ViteLookup` to the file
+  that Node loads, and stays external.
+  [`vite-config-resolution.ts`](./vite-config-resolution.ts) hooks Node's
+  module resolution while the config loads, so that each bare import that
+  Node resolves also uses `ViteLookup`.
+  [`vite-config-source.ts`](./vite-config-source.ts) gives each bundled
+  module its own `__dirname`, `__filename`, and `import.meta` file values.
+  Through [`vite-config-context.ts`](./vite-config-context.ts), each
+  `require` and `import()` that esbuild cannot follow resolves from the file
+  of its own module.
+  [`vite-config-errors.ts`](./vite-config-errors.ts) holds
+  `viteConfigError`, which reads esbuild's error location or the source map of
+  the bundle, so that a load error names the config file or the config import
+  that failed.
 - [`vite-resolution.ts`](./vite-resolution.ts) holds `ViteLookup`, the one
   lookup of a Vite compile, which applies the setup's aliases and then runs the
   setup's resolver from each importer candidate of `viteLookupImporters`.
   Setup loading, `moklyVitePlugin`, the runner fetches, the React peer table,
-  and `viteExternalResolver` all resolve through it, on both sides.
+  and `viteExternalResolver` all resolve through it, on both sides. Its
+  Node-entry step, `nodeEntry`, fetches a bare import through Vite's server
+  environment from each importer candidate and returns the file that Vite
+  externalizes, so that Node loads the package entry that Vite selects. The
+  React peer table, `viteExternalResolver`, and the config bundle use this
+  step, and `resolve` uses it when the setup's resolver returns an external
+  import without a file.
 - [`vite-lookup-paths.ts`](./vite-lookup-paths.ts) holds
   `viteLookupImporters`, which lists the importer candidates of a bare import
   in lookup order: the importer, its mapped path in the base side's selected
   installation, and the `node_modules` directory of each package root last. It
-  records each package root candidate as a resolution input.
+  records each package root candidate as a resolution input. Its
+  `viteExistingImporter` gives the Node-entry step an existing file at or
+  above each candidate as the importer of its fetch.
 - [`vite-peers.ts`](./vite-peers.ts) holds `withVitePeers`, which runs the
   Vite compile inside one esbuild call, so that the consumer peer resolver of
   the esbuild path resolves `vite` and the peers other than React. Its
@@ -160,7 +185,16 @@ path.
   rewrites it.
 - [`vite-external.ts`](./vite-external.ts) holds `viteExternalResolver`,
   which decides through `ViteLookup` whether Node loads a resolved package
-  file, also a file that a setup alias selects.
+  file, also a file that a setup alias selects. Its `externalType` tells
+  whether Node loads a file as an ES module or as CommonJS, from the file
+  extension or the `type` of the nearest `package.json`.
+- [`vite-styles.ts`](./vite-styles.ts) holds `ViteStyles`, which wraps each
+  import of `styled-components`, `react-native-web`, or `@emotion/react`, so
+  that the render collects styles from the registry of the package copy that
+  the import loads.
+  A wrapper resolves through `viteExternalResolver` first, and it keeps the
+  importer's CommonJS default-import interop under the
+  [module source rules](../../../../docs/protocol/mokly-sidecar-modules.md#authoring-and-evaluation).
 - [`vite-graph.ts`](./vite-graph.ts) holds `walkVite`, which records every
   module fetch from the virtual entry in the `ViteRecipe` before any
   evaluation. Its `viteGraph` builds the module graph from these fetches.
@@ -170,10 +204,41 @@ path.
   `moklyVitePlugin`, the `mokly` plugin, which runs before the plugins of the
   setup. It handles Mokly's virtual modules, React, the style library
   wrappers, the stylesheet stubs, and the confinement of each resolved file.
+- [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) holds
+  `trackVitePluginInputs`, which `moklyVitePlugin` runs in each load and
+  transform: it makes each `this.load` of a plugin also call
+  `this.addWatchFile`, and it skips an `addWatchFile` report outside the source
+  and dependency roots with a sidecar `diagnostic` event. After each fetch,
+  its `recordVitePluginInputs` records each watched file that is not a code
+  import of the module as a plugin input, also when the module graph names the
+  file.
+- [`vite-inputs.ts`](./vite-inputs.ts) holds `recordViteInput`, which keeps
+  the bytes of each file that a Vite compile consumes and fails when two reads
+  of one file differ. Its `verifyViteInputs` fails the compile when a kept
+  file changes on the disk during the compile.
+  [`vite-metadata.ts`](./vite-metadata.ts) holds `viteMetadata`, which builds
+  the input digests and the `metadataInputs` of a Vite recipe. Its
+  `metadataInputs` hold the setup files, the plugin inputs, the React
+  manifests, the Storybook preview candidates, the `package.json` and
+  `tsconfig.json` candidates of resolution, and each consumed file that the
+  module graph does not name.
+  [`vite-invalidation.ts`](./vite-invalidation.ts) holds `snapshotViteInputs`
+  and `changedViteInputs`, which keep the inputs of the last compile and
+  compare them with the disk. Its `invalidateViteModules` then invalidates, in
+  the kept server, each virtual module and each module whose file changed or
+  is not in the snapshot, or every module when a directory list changed.
 - [`vite-evaluate.ts`](./vite-evaluate.ts) holds `evaluateVite`, which
   evaluates a Vite generation once through Vite's module runner. The runner
   reads only the recorded fetches of the `ViteRecipe`, so a restored recipe
   needs no source read and no transform.
+- [`vite-urls.ts`](./vite-urls.ts) converts between Vite's URLs and ids, also
+  for query variants and Mokly's virtual modules. Its `viteFile` gives the
+  file of an id, and its `viteName` gives the logical name of that file.
+  [`vite-errors.ts`](./vite-errors.ts) holds `viteFailure`, which turns a
+  Vite, plugin, or setup error into a `bundle-failed` error that names the
+  logical module, the plugin, and, after Vite loads, the installed Vite
+  version and the tested range. It shows each absolute path of the message as
+  a logical name, and each virtual module as "entry module".
 - [`virtual-modules.ts`](./virtual-modules.ts) builds the authoring facade,
   the JSX development shim, and the CSS Modules stub for both compile paths.
   It also limits the reserved runtime imports to Mokly's own virtual modules.

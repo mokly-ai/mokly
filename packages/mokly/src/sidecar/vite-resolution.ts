@@ -1,11 +1,14 @@
+import fs from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import type { Alias, DevEnvironment, Rollup } from "vite";
 
+import { missingFile } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
 import { bareSpecifier } from "./specifier.js";
 import {
   viteLookupImporters,
+  viteExistingImporter,
   viteMissingImport,
   viteSourceResolution,
 } from "./vite-lookup-paths.js";
@@ -30,7 +33,7 @@ export class ViteLookup {
     importer?: string,
   ) => Promise<string | undefined> = async () => undefined;
   private module: ViteResolve = async () => null;
-  private physical: ViteResolve = async () => null;
+  private fetch: DevEnvironment["fetchModule"] | undefined;
 
   constructor(
     public paths: ModulePaths,
@@ -71,22 +74,7 @@ export class ViteLookup {
     );
     this.module = (source, importer) =>
       environment.pluginContainer.resolveId(source, importer, { skip });
-    const nativeEnvironment = {
-      ...aliasEnvironment,
-      config: { ...config, resolve: { ...config.resolve, alias: [] } },
-    };
-    const native = vite.createIdResolver(config, {
-      mainFields: config.resolve.mainFields,
-      conditions: config.resolve.conditions,
-      extensions: [".js", ".cjs", ".json"],
-      isBuild: true,
-      external: [],
-      noExternal: [],
-    });
-    this.physical = async (source, importer) => {
-      const id = await native(nativeEnvironment, source, importer);
-      return id ? { id } : null;
-    };
+    this.fetch = environment.fetchModule.bind(environment);
   }
 
   async resolve(
@@ -98,9 +86,9 @@ export class ViteLookup {
     for (const [index, candidate] of candidates.entries()) {
       let resolved = await this.module(target, candidate);
       if (resolved?.external && !viteFile(resolved.id)) {
-        const physical = await this.physical(target, candidate);
+        const physical = await this.nodeEntry(source, importer);
         if (!physical) continue;
-        resolved = { ...resolved, id: physical.id };
+        resolved = { ...resolved, id: physical.resolved.id };
       }
       if (!resolved || resolved.meta?.["vite:alias"]?.noResolved) continue;
       const file = viteFile(resolved.id);
@@ -120,6 +108,63 @@ export class ViteLookup {
 
   importers(source: string, importer?: string): string[] {
     return viteLookupImporters(this.paths, this.directory, source, importer);
+  }
+
+  async nodeEntry(
+    source: string,
+    importer?: string,
+  ): Promise<ViteResolution | null> {
+    const target = (await this.alias(source, importer)) ?? source;
+    const file = viteFile(target);
+    if (file) {
+      const info = await fs.stat(file).catch((error: unknown) => {
+        if (!missingFile(error)) throw error;
+        return null;
+      });
+      if (info?.isFile())
+        return {
+          resolved: { id: file, external: true },
+          source: target,
+          importer: importer ?? file,
+        };
+      const resolved = await this.module(target, importer ?? file);
+      return resolved
+        ? {
+            resolved: { ...resolved, external: true },
+            source: target,
+            importer: importer ?? file,
+          }
+        : null;
+    }
+    if (!this.fetch || !bareSpecifier(target) || target.includes("\0"))
+      return null;
+    const candidates = this.importers(target, importer);
+    for (const [index, candidate] of candidates.entries()) {
+      const anchor = await viteExistingImporter(candidate);
+      if (!anchor) continue;
+      try {
+        const result = await this.fetch(target, anchor, { cached: false });
+        if (!("externalize" in result)) continue;
+        const file = viteFile(result.externalize);
+        if (!file) continue;
+        if (
+          index === 0 &&
+          candidates.length > 1 &&
+          this.paths.dependencyRoot &&
+          this.paths.dependencyRoot !== this.paths.sourceRoot &&
+          !viteSourceResolution(this.paths, file)
+        )
+          continue;
+        return {
+          resolved: { id: file, external: true },
+          importer: anchor,
+          source: target,
+        };
+      } catch (error) {
+        if (!viteMissingImport(error)) throw error;
+      }
+    }
+    return null;
   }
 
   sync(

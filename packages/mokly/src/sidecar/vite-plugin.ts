@@ -15,6 +15,7 @@ import {
 } from "./virtual-modules.js";
 import { viteExternal } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
+import { trackVitePluginInputs } from "./vite-plugin-inputs.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
 import type { ViteStyles } from "./vite-styles.js";
@@ -26,6 +27,8 @@ export interface ViteInputs {
   runtimeKey: string;
   entry: string;
   files: Map<string, Uint8Array>;
+  pluginInputs: Set<string>;
+  diagnostic: (line: string) => void;
   cssModules: Set<string>;
   styles: ViteStyles;
   lookup: ViteLookup;
@@ -79,10 +82,11 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
         const peer = peers[source];
         return typeof peer === "string" ? viteExternal(peer) : null;
       }
-      const style = await styles.resolve(source, importer, (source, importer) =>
-        lookup
-          .resolve(source, importer)
-          .then((result) => result?.resolved ?? null),
+      const style = await styles.resolve(
+        source,
+        importer,
+        lookup,
+        current().external,
       );
       if (style) return style;
       const resolution = await lookup.resolve(source, importer);
@@ -115,6 +119,7 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
     },
     async load(id) {
       const input = current();
+      trackVitePluginInputs(this, input);
       const { params, paths } = input;
       if (id === viteEntry) return input.entry;
       if (id === viteJsx)
@@ -151,6 +156,9 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
         `import runtime from "mokly:runtime";\n` +
         cssModuleSource(name, "runtime")
       );
+    },
+    transform() {
+      trackVitePluginInputs(this, current());
     },
   };
 }

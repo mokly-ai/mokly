@@ -2,18 +2,18 @@ import { createHash } from "node:crypto";
 
 import type { Rollup } from "vite";
 
+import { externalType } from "./vite-external.js";
+import type { ViteLookup } from "./vite-resolution.js";
+import { viteFile } from "./vite-urls.js";
+
 interface Wrapper {
   file: string;
   registry: string;
   adapter: "styled" | "native" | "emotion";
+  commonjsDefault: boolean;
 }
 
 type StyleModule = Pick<Rollup.PartialResolvedId, "id" | "external">;
-type StyleResolve = (
-  source: string,
-  importer: string | undefined,
-  options: { skipSelf: boolean },
-) => Promise<StyleModule | null>;
 
 /** Capture each style library's own registry through the same Vite resolution. */
 export class ViteStyles {
@@ -30,7 +30,11 @@ export class ViteStyles {
   async resolve(
     source: string,
     importer: string | undefined,
-    resolve: StyleResolve,
+    lookup: ViteLookup,
+    external: (
+      source: string,
+      importer?: string,
+    ) => Promise<string | undefined>,
   ): Promise<string | StyleModule | undefined> {
     if (source.startsWith("mokly:style-source:")) {
       return this.original(source, importer);
@@ -40,12 +44,16 @@ export class ViteStyles {
         source,
       )?.[1];
     if (!library) return;
-    const resolved = await resolve(source, importer, { skipSelf: true });
+    const resolve = async (source: string, importer?: string) => {
+      const node = await external(source, importer);
+      return node
+        ? { id: node, external: true }
+        : (await lookup.resolve(source, importer))?.resolved;
+    };
+    const resolved = await resolve(source, importer);
     if (!resolved) return;
     const registry =
-      source === library
-        ? resolved
-        : await resolve(library, resolved.id, { skipSelf: true });
+      source === library ? resolved : await resolve(library, resolved.id);
     if (!registry) throw new Error(`could not resolve ${library}`);
     this.originals.set(resolved.id, resolved);
     this.originals.set(registry.id, registry);
@@ -57,6 +65,9 @@ export class ViteStyles {
     this.wrappers.set(id, {
       file: resolved.id,
       registry: registry.id,
+      commonjsDefault:
+        !/\.(mjs|mts)$/.test(viteFile(importer ?? "") ?? "") &&
+        (await externalType(resolved.id)) === "commonjs",
       adapter:
         library === "styled-components"
           ? "styled"
@@ -73,7 +84,7 @@ export class ViteStyles {
     const original = JSON.stringify(`mokly:style-source:${wrapper.file}`);
     const registry = JSON.stringify(`mokly:style-source:${wrapper.registry}`);
     return [
-      `import * as original from ${original}; export * from ${original}; export default original.default;`,
+      `import * as original from ${original}; export * from ${original}; export default ${wrapper.commonjsDefault ? "(original.default?.__esModule ? original.default.default : original.default)" : "original.default"};`,
       ...(wrapper.file === wrapper.registry
         ? []
         : [`import * as registry from ${registry};`]),

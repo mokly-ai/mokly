@@ -1,0 +1,33 @@
+# Load in Node only what Vite loads in Node
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-20, from the branch `conductor/storybook-support-d-vite-adapter`, review round 2, finding 4.
+- **Location:** `packages/mokly/src/sidecar/vite-plugin.ts:101`, `packages/mokly/src/sidecar/vite-fetch.ts:86`, `packages/mokly/src/sidecar/vite-external.ts:38`.
+- **Reason:** The branch fixed the common failure with a smaller change in its last review fix round, and the remaining cases need rare setups and a Large change.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Vite adapter:** the optional compile path that compiles JavaScript through the project's own Vite setup, turned on with `"vite": true`.
+  - **Server environment:** the Vite environment in which Mokly's module runner runs modules. Vite decides there which imports Node loads directly and which imports its runner transforms.
+  - **External package:** a package that Node loads directly instead of Vite's runner.
+- **Background:**
+  - The protocol page `docs/protocol/mokly-vite-adapter.md`, section "Module Graph", says that a dependency that the setup externalizes is loaded by Node at evaluation, with its own imports.
+  - Vite's runner cannot run a CommonJS file, so Mokly also gives Node each CommonJS file that a setup alias selects.
+  - On 2026-11-20 the branch made Node load the package entry that Vite's own external branch selects, so React Native Web loads its CommonJS build, as in `vite dev`.
+  - Mokly still decides in its own code which imports reach Node, in `vite-plugin.ts`, `vite-fetch.ts`, and `vite-external.ts`. That copy differs from Vite in two cases:
+    - A setup alias to an ES module file inside an installed package, such as `inline-style-prefixer/es/index.js`, reaches Node, but Vite's server environment transforms it in its runner. Node can then fail on the file's extensionless imports.
+    - For the runner's `/@fs/` URLs, the external check takes an empty package name, so Node loads a package that the setup keeps in Vite with `ssr.noExternal`.
+- **Problem:** Mokly's own rule for which imports Node loads differs from Vite's rule, so some setups that run in `vite dev` fail under the adapter.
+- **Impact if no action:** A project with an alias to an ES module file inside a package, or with `ssr.noExternal` for a package that a runner URL reaches, fails at evaluation under the adapter.
+- **Root question:** How does Node load exactly the imports that Vite's server environment loads in Node, plus only the CommonJS files that Vite's runner cannot run?
+- **Options:**
+  - **A.** Change nothing, and state the two limits in `docs/guides/authoring/vite.md`. Effort: Small.
+  - **B.** Fix the two cases one by one: send an alias target that is an ES module file to the runner, and read the package name of a `/@fs/` URL from its path for the `noExternal` check. Effort: Medium.
+  - **C.** Make Node load only what the server environment loads in Node. A bare import that the setup externalizes loads its Vite external entry, with `external` and `noExternal` applied. Every other import goes through the runner, except a CommonJS file, which Node loads. The CommonJS check reads the file's syntax, because some packages keep ES module files in a package of the CommonJS type. State the rule in the "Module Graph" section of the protocol page and in `packages/mokly/src/sidecar/README.md`. Effort: Large.
+- **Left out:** Transforming every package in the runner: Vite's runner cannot run CommonJS.
+- **Wider fix:** C. One rule then decides each import, as Vite decides it.
+- **Previous examples:** The branch's review round 2 found that Mokly gave Node the transform entry of React Native Web instead of its external entry.
+- **Recommendation:** C. It removes the copy of Vite's rule instead of patching each difference.
+- **Action:** fix after merge, apply C, because the remaining cases need rare setups, and the change is Large.

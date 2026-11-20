@@ -72,6 +72,7 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Sidecar Render Records](./mokly-sidecar-render-records.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
 - [Vite Adapter](./mokly-vite-adapter.md)
+- [Vite Adapter Inputs](./mokly-vite-adapter-inputs.md)
 - [Vite Adapter Stylesheets](./mokly-vite-adapter-styles.md)
 
 ## Comparison And Changes
