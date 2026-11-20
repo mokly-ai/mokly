@@ -33,7 +33,12 @@ its requests and results. The paths below are relative to the package root.
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` keys each planned import by importer,
   specifier, and import kind, and it reports whether the native compile is
-  exact. A failed native compile compiles again with full resolution. The
+  exact. An uncaptured native Serve edit leaves relative imports to esbuild
+  through a fixed filter. A skipped relative external edge makes its native
+  result inexact, so its fresh plan drives the complete planned compile.
+  Captured native attempts keep the broad consumer filter because the evidence
+  callback already needs the Go/Node packet. A failed native compile compiles
+  again with full resolution. The
   resolve callback of `consumerPlugins` in
   [`src/sidecar/plugins.ts`](./plugins.ts) applies the resolution
   mode of
@@ -61,7 +66,10 @@ its requests and results. The paths below are relative to the package root.
   The resolve callback of `consumerPlugins` takes every other specifier. Its
   filter comes from `specifierFilter` in
   [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts), which builds a
-  bounded trie of the safe specifiers. The filter matches every specifier
+  bounded trie of the safe specifiers. It keeps one cached filter keyed by the
+  freshly classified safe strings. Every request still checks the target parse
+  settings and side-effect flags. The cache keeps no plan or filesystem facts.
+  The filter matches every specifier
   except those. An unsafe specifier, a specifier outside the plan, and a safe
   specifier that the bound leaves out keep the callback. So an edit that adds
   a new specifier, such as `./new-file`, resolves it with the full resolver in

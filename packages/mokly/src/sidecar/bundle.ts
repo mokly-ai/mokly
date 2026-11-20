@@ -24,6 +24,7 @@ import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative } from "./native-plan.js";
+import { nativeResolveFilter } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { PlannedRelative } from "./planned-relative.js";
@@ -219,6 +220,8 @@ async function bundleAttempt(
         : capture.editImports;
     const retryPlanned = () =>
       bundleAttempt(params, compile, measurements, resolution, capture, true);
+    const nativeRelatives =
+      capture.mode === "serveEdit" && resolution.mode === "native";
     const options = bundleOptions({
       params,
       paths,
@@ -231,7 +234,7 @@ async function bundleAttempt(
       preview,
       evidence,
       editImports,
-      resolveFilter: relative?.filter,
+      resolveFilter: nativeRelatives ? nativeResolveFilter : relative?.filter,
     });
     let compiled: BuildResult<typeof options>;
     try {
@@ -251,7 +254,9 @@ async function bundleAttempt(
     if (resolution.mode === "native") {
       const { metafile } = compiled;
       const plan = await measurements
-        .run("sidecar.bundle.classify", () => planNative(metafile, paths))
+        .run("sidecar.bundle.classify", () =>
+          planNative(metafile, paths, nativeRelatives),
+        )
         .catch(() => undefined);
       if (!plan) return {};
       if (capture.mode === "full") capture.plan = plan.imports;

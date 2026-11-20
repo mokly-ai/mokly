@@ -7,6 +7,7 @@ import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import {
   assertFullPathResult,
   countedCompile,
+  editFingerprint,
   link,
   moduleNames,
   nativeParams,
@@ -18,6 +19,7 @@ import {
 test("dependency imports need no resolver round trip at one and four times the size", async (context) => {
   const root = await nativeRoot(context);
   const observed: number[][] = [];
+  const callbacks: number[][] = [];
   for (const size of [3, 12]) {
     const head = path.join(root, String(size));
     const indexes = Array.from({ length: size }, (_, index) => index);
@@ -47,6 +49,40 @@ test("dependency imports need no resolver round trip at one and four times the s
     const counted = countedCompile();
     const { result } = await bundle(params, counted.compile);
     await assertFullPathResult(params, result);
+    const edited = countedCompile();
+    const edit = await bundle(
+      params,
+      edited.compile,
+      undefined,
+      undefined,
+      "serveEdit",
+    );
+    assert.deepEqual(
+      editFingerprint(edit.result),
+      editFingerprint({
+        ...result,
+        compiled: {
+          ...result.compiled,
+          reuseEvidence: {
+            complete: false,
+            durable: false,
+            inputs: {},
+            uncaptured: "serveEdit",
+          },
+        },
+      }),
+    );
+    assert.equal(edit.result.plan, undefined);
+    const relativeCalls = (counter: ReturnType<typeof countedCompile>) =>
+      indexes.reduce(
+        (sum, index) => sum + counter.consumerCallbacks(`./part-${index}.mjs`),
+        0,
+      );
+    callbacks.push([
+      relativeCalls(counted),
+      relativeCalls(edited),
+      edited.counts.compilations,
+    ]);
     assert.deepEqual(
       moduleNames(result),
       [
@@ -62,6 +98,10 @@ test("dependency imports need no resolver round trip at one and four times the s
   assert.deepEqual(observed, [
     [1, 1],
     [1, 1],
+  ]);
+  assert.deepEqual(callbacks, [
+    [3, 0, 1],
+    [12, 0, 1],
   ]);
 });
 

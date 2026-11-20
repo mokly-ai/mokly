@@ -6,7 +6,11 @@ import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
-import { nativeImport, planKey } from "./native-resolution.js";
+import {
+  nativeImport,
+  nativeResolveFilter,
+  planKey,
+} from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 
 interface Target extends PlannedImport {
@@ -28,10 +32,12 @@ export interface NativePlan {
  * which a resolve callback result never carries. Only then does the native
  * result stand, so only then are the native imports' dependency lookups
  * recorded. An import that may have taken a fallback path stays unplanned.
+ * A relative external edge skipped by the hook makes the result inexact.
  */
 export async function planNative(
   metafile: Metafile,
   paths: ModulePaths,
+  skippedRelatives = false,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
   const targets = new Map<string, Promise<Target | undefined>>();
@@ -56,6 +62,12 @@ export async function planNative(
     if (!path.isAbsolute(file)) continue;
     const directory = path.dirname(file);
     for (const edge of input.imports) {
+      if (
+        skippedRelatives &&
+        edge.external &&
+        !nativeResolveFilter.test(edge.path)
+      )
+        exact = false;
       if (edge.external || !path.isAbsolute(edge.path)) continue;
       if (edge.original === undefined) exact = false;
       else if (nativeImport(paths, edge.original, directory))

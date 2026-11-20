@@ -152,16 +152,20 @@ This milestone includes documentation first, then the planned compile. No screen
 Depends on: 1
 
 - [x] Audit the narrower native filter against the same exceptional cases. The checked choice D needs no protocol change.
-- [ ] Write red tests, implement the narrower native hook, and preserve the full-path fallback.
-- [ ] Run targeted tests and repeat the published-byte proof. Also compare real uncaptured native Serve edit results, because static builds keep the captured path.
+- [x] Write red tests, implement the narrower native hook, and preserve the full-path fallback.
+- [x] Run targeted tests and repeat the published-byte proof. Also compare real uncaptured native Serve edit results, because static builds keep the captured path.
+
+Implementation evidence: `.context/native-relative-resolution/milestone2-implementation-report.md`.
+
+Differential evidence: `.context/native-relative-resolution/captured-cloud-differential.json` and `captured-cloud-native-differential.json`.
 
 ## Milestone 3: Verification and pull request
 
 Depends on: 1, 2
 
-- [ ] Run local edit A/B on `examples/basic` and large React. Include an added relative import.
+- [x] Run local edit A/B on `examples/basic` and large React. Include an added relative import.
 - [ ] Give the orchestrator the candidate SHA for Mokly Cloud performance and memory measurements.
-- [ ] Integrate current `origin/main` once with the `git-merge` skill. Cal changed the order on 2026-11-20. Do not wait for workspaces 54 and 100.
+- [x] Integrate current `origin/main` once with the `git-merge` skill. Cal changed the order on 2026-11-20. Do not wait for workspaces 54 and 100.
 - [ ] Run the repository suite and complete gate. Use one heavy job and check disk and memory before Cargo builds.
 - [ ] Commit with Conventional Commits and push this workspace branch.
 - [ ] Review the full branch against `origin/main` with the `implementation-review` skill. Apply its finding checks and fix rounds.
