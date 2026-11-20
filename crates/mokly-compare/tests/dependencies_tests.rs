@@ -135,6 +135,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         10 * 1024 * 1024,
     ));
     let extraction: &dyn Extraction = &CachedExtraction {
+        steps: Arc::new(support::IgnoredSteps),
         repository,
         cache: Arc::clone(&cache),
         files: Limits::default().files,
@@ -145,6 +146,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         b"<p>Base</p>"
     );
     let tiers: &dyn Dependencies = &DependencyTiers {
+        steps: Arc::new(support::IgnoredSteps),
         clock: clock.clone(),
         cache,
         commands,

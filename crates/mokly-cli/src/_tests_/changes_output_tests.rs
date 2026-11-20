@@ -1,7 +1,11 @@
 //! Changes uses identical counts, omits zero segments, and preserves the plain contract.
 
+use mokly_catalogue::diagnostic::{Code, Issue};
+use mokly_catalogue::error::CatalogueError;
 use mokly_compare::comparison_types::ComparisonCounts;
+use mokly_compare::error::Error;
 
+use crate::changes_diagnostics;
 use crate::changes_output::ready;
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
@@ -97,4 +101,48 @@ fn warning_formatting_preserves_existing_bytes_at_every_width() {
         }
     }
     insta::assert_snapshot!(rows.join("\n"));
+}
+
+#[test]
+fn base_catalogue_diagnostics_keep_location_lines_and_escape_authored_controls() {
+    let error = Error::Base {
+        commit: "0123456789012345678901234567890123456789".into(),
+        scripts_off: false,
+        source: Box::new(Error::Catalogue {
+            source: CatalogueError::Invalid {
+                issues: vec![
+                    Issue::new(
+                        Code::DuplicatePath,
+                        "path home is defined twice:\n  specs/first\u{1b}\u{85}.html\n  specs/secret-token.html",
+                    ),
+                    Issue::new(
+                        Code::InvalidMetadata,
+                        "invalid title secret-token\nforged\t\u{1b}",
+                    ),
+                ],
+                warnings: Vec::new(),
+            },
+        }),
+    };
+    let changes = changes_diagnostics::unavailable(&error, "origin/main")
+        .expect("invalid base must make Changes unavailable");
+    let redactor = Redactor::collect(&[], Some("secret-token"));
+    for (mode, indent) in [(Mode::Plain, ""), (Mode::Rich, "  ")] {
+        let style = Style {
+            mode,
+            color: false,
+            ascii: false,
+            columns: 80,
+        };
+        assert_eq!(
+            changes_output::diagnostics(&style, &changes, &redactor),
+            format!(
+                "{indent}base 0123456789012345678901234567890123456789: [mokly/build-invalid] [mokly/duplicate-path] path home is defined twice:\n\
+                 {indent}  specs/first\\u001b\\u0085.html\n\
+                 {indent}  specs/[redacted].html\n\
+                 {indent}base 0123456789012345678901234567890123456789: [mokly/build-invalid] [mokly/invalid-metadata] invalid title [redacted]\\u000aforged\\u0009\\u001b\n"
+            ),
+            "{mode:?}"
+        );
+    }
 }
