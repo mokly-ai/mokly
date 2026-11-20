@@ -20,6 +20,7 @@ import {
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
+import { focusThen, useRetryContent } from "./retry_focus.js";
 import { useShellRoot } from "./root_context.js";
 import { documentLightOnly, schemeValue } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
@@ -81,13 +82,14 @@ export function DocumentStageFrame({
     Boolean(store.interactive && registry),
     generation,
   );
+  useRetryContent(mounted.frameRef);
   return (
     <>
       {documentLightOnly(entry, hasDarkFragments) ? <LightOnlyBand /> : null}
       <DocumentFrame
         error={mounted.status === "error"}
         ref={stage}
-        retry={{ onClick: mounted.retry }}
+        retry={{ onClick: focusThen(mounted.frameRef, mounted.retry) }}
         scheme={scheme}
       >
         {source ? (

@@ -4,7 +4,7 @@
  * the tab shows no props, and the tab's state while its data loads.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { MetadataRow } from "../metadata-row/metadata-row.js";
 import { TextButton } from "../text-button/text-button.js";
@@ -123,10 +123,13 @@ export interface PropsStatusWording {
 
 /** The Props tab while its data loads, or after the load failed, with Try again. */
 export function PropsStatus({
+  focusRef,
   onRetry,
   status,
   wording,
 }: {
+  /** Receives the loading status, which the host focuses after Try again. */
+  focusRef?: Ref<HTMLParagraphElement> | undefined;
   /** Receives each press of Try again. */
   onRetry?: (() => void) | undefined;
   status: "failed" | "loading";
@@ -146,7 +149,12 @@ export function PropsStatus({
           <TextButton onClick={onRetry}>{wording.retry}</TextButton>
         </>
       ) : (
-        <p className="mbk-reset" role="status">
+        <p
+          className="mbk-reset"
+          ref={focusRef}
+          role="status"
+          tabIndex={focusRef === undefined ? undefined : -1}
+        >
           {wording.loading}
         </p>
       )}

@@ -106,6 +106,26 @@ Try again mounts that frame again and keeps the rest of the shell as it is. An
 inspection error, such as the box limit, leaves the preview usable and shows no
 such line.
 
+Try again leaves the page when the reader presses it, so focus moves on. It
+moves to the status that replaces the button, and then to the content that
+replaces the status. When the reader moved focus to another element in the
+meantime, focus stays there. An element that shows both the load and the
+content takes focus at once.
+
+| Try again of     | Status                                    | Content                   |
+| ---------------- | ----------------------------------------- | ------------------------- |
+| The catalogue    | `Loading catalogue…`                      | The main region           |
+| A preview frame  | Its `<iframe>`, busy while it loads       | The same `<iframe>`       |
+| The comparison   | The comparison stage, busy while it loads | The same stage            |
+| The routed stage | `Loading preview…`                        | The first preview frame   |
+| Props            | `Loading props…`                          | The panel heading         |
+| Usage            | `Loading usage…`                          | The first section heading |
+
+Decision (2026-11-20): one rule covers each Try again of the shell, so a
+keyboard or screen-reader reader always finds the recovery. Focus that stays
+where the browser puts it was rejected, because the browser moves it to the
+page body.
+
 ## Selection, Events And Imperative Use
 
 The [viewer selection contract](./mokly-viewer-selection.md) defines

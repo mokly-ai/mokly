@@ -180,6 +180,11 @@ host's scroll controller through refs. `VariantBar` draws a component's saved
 variants. The host supplies the wording of its copy modules, such as the
 unavailable previous version and the comparison's state labels.
 
+A state that a host focuses after Try again takes a ref: `focusRef` on
+`StageLoading`, `PropsStatus`, `UsageStatus`, `UsageList`, and the loading
+`RootState`, and `stageRef` on `ComparisonStage`. Each element then takes
+`tabindex="-1"`, so that a script can focus it and Tab skips it.
+
 `ShellLayout` draws the standalone shell's root, which states its appearance
 and its preview scheme: the skip link, the top bar, and the body with the
 navigation and the `MainRegion`, and the `RouteStatus` that announces each

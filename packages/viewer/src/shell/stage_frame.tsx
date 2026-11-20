@@ -27,6 +27,7 @@ import {
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
 import { BrowserFrame } from "./frames.js";
+import { focusThen, useRetryContent } from "./retry_focus.js";
 import { schemeValue } from "./scheme_fallback.js";
 import {
   frameSource,
@@ -136,6 +137,7 @@ export function StageFrame({
     temporary || Boolean(store.interactive && registry),
     generation,
   );
+  useRetryContent(mounted.frameRef);
   const component = entry.kind === "component";
   const fallback = hasDarkFragments && !previewDark && !dark;
   const frame = source ? (
@@ -173,7 +175,7 @@ export function StageFrame({
           ? { kind: "flow" }
           : { kind: component ? "canvas" : "frame", viewport }
       }
-      retry={{ onClick: mounted.retry }}
+      retry={{ onClick: focusThen(mounted.frameRef, mounted.retry) }}
       scheme={preview?.colorScheme ?? selected?.colorScheme ?? "light"}
     >
       {framed}

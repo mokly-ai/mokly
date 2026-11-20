@@ -476,7 +476,11 @@ shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
 through Inspector sizing props and the refs of its handles and workspace
 panes. `root_context.tsx` shares the root ref, drag state, focus targets,
 host slots, and named scroll regions. Containers use package refs for focus
-and measurement. Frame sessions carry their source choices, stage refs,
+and measurement. `focus_after.ts` moves focus after a recovery action of the
+component controls. `retry_focus.ts` moves focus after each other Try again,
+first to the status that replaces the button and then to the content, under
+the [recovery focus rule](../../../../docs/protocol/mokly-viewer.md#package-and-props).
+Frame sessions carry their source choices, stage refs,
 and expanded state, so geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an

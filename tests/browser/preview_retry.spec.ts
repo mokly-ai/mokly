@@ -47,9 +47,12 @@ for (const [kind, route, documents, count] of [
     });
     await expect(line).toHaveCount(count);
     succeed();
+    // The lines and the frames share their order, and each Try again focuses
+    // the frame that it loads again.
     for (let left = count; left > 0; left--) {
       await line.first().getByRole("button", { name: "Try again" }).click();
       await expect(line).toHaveCount(left - 1);
+      await expect(frames.nth(count - left)).toBeFocused();
     }
     for (const frame of await frames.all())
       await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
