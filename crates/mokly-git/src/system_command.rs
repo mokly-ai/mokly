@@ -33,5 +33,10 @@ pub(crate) fn git_command(request: &Request, environment: &[(&str, OsString)]) -
     for (name, value) in environment {
         command.env(name, value);
     }
+    command.env("GIT_OPTIONAL_LOCKS", "0");
     command
 }
+
+#[cfg(test)]
+#[path = "_tests_/system_command_tests.rs"]
+mod system_command_tests;
