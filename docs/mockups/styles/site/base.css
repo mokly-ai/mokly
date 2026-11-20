@@ -1,0 +1,293 @@
+/* Layout for the public site mockups.
+
+   The catalogue shell is the site's principal image: a compact copy block
+   sits above a full-width frame that redraws the Mokly shell — top bar,
+   catalogue navigation, screen header and stage — from the Folio tokens. The
+   same chrome cues carry the rest of the site: a white application band with
+   a hairline, 6px controls, quiet filled current states and the green accent.
+
+   Every color comes from the workspace's semantic --mk-* properties; this
+   sheet holds no literal color or token declaration. The depicted viewport
+   is selected by data-site-viewport on the root, which the site implements
+   as the 768px breakpoint.
+
+   Contents
+      1  Foundations and scale
+      2  Shared text, badges and controls
+      3  Skip link, application band, header and menu
+      4  Home hero
+      5  The catalogue frame
+      6  Feature modules and their shell details
+      7  Closing
+      8  Documentation
+      9  Changelog
+     10  Policy documents
+     11  Footer
+     12  Mobile composition and narrow widths */
+
+/* 1 -- Foundations and scale --------------------------------------------- */
+
+/* The document root: the renderer's wrapper, which carries the colour
+   scheme, the viewport and the palette scope. */
+:where([data-color-scheme]) {
+  background: var(--mk-color-background);
+}
+
+.site-root *,
+.site-root *::before,
+.site-root *::after {
+  box-sizing: border-box;
+}
+
+.site-root {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-body-size);
+  line-height: var(--mk-type-body-line);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.site-root h1,
+.site-root h2,
+.site-root h3,
+.site-root p,
+.site-root ul,
+.site-root ol,
+.site-root pre,
+.site-root figure {
+  margin: 0;
+}
+
+.site-root h1,
+.site-root h2,
+.site-root h3 {
+  letter-spacing: -0.02em;
+}
+
+.site-root :focus-visible {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+}
+
+.site-main {
+  width: 100%;
+}
+
+/* 2 -- Shared text, badges and controls ---------------------------------- */
+
+.site-accent {
+  color: var(--mk-color-accent);
+  font-style: normal;
+}
+
+.site-eyebrow {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: var(--mk-layout-prose-max);
+}
+
+/* The rubric: the small mono label the tree, the rail and the pager share */
+
+.site-rubric {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.12em;
+  line-height: var(--mk-type-caption-line);
+  text-transform: uppercase;
+}
+
+.site-link {
+  align-items: center;
+  color: var(--mk-color-accent);
+  display: inline-flex;
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-link:hover {
+  color: var(--mk-color-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-link span {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.site-badge {
+  align-items: center;
+  border-radius: var(--mk-radius-pill);
+  display: inline-flex;
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-medium);
+  gap: var(--mk-space-2);
+  line-height: var(--mk-type-caption-line);
+  padding: var(--mk-space-1) var(--mk-space-3);
+}
+
+.site-badge--success {
+  background: var(--mk-color-success-soft);
+  color: var(--mk-color-success);
+}
+
+.site-badge--neutral {
+  background: var(--mk-color-surface-muted);
+  color: var(--mk-color-text);
+}
+
+.site-badge-dot {
+  background: var(--mk-color-success);
+  border-radius: var(--mk-radius-pill);
+  height: 6px;
+  width: 6px;
+}
+
+.site-button {
+  align-items: center;
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  display: inline-flex;
+  font-size: var(--mk-type-small-size);
+  font-weight: var(--mk-font-medium);
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-4);
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-button--primary {
+  background: var(--mk-color-accent-solid);
+  border-color: var(--mk-color-accent-solid);
+  color: var(--mk-color-on-accent);
+}
+
+.site-button--primary:hover {
+  background: var(--mk-color-accent-hover);
+  border-color: var(--mk-color-accent-hover);
+}
+
+.site-button--primary:active {
+  background: var(--mk-color-accent-active);
+  border-color: var(--mk-color-accent-active);
+}
+
+.site-button--secondary {
+  color: var(--mk-color-text);
+}
+
+.site-button--quiet {
+  border-color: var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+.site-button--secondary:hover,
+.site-button--quiet:hover {
+  background: var(--mk-color-surface-muted);
+  border-color: var(--mk-color-border-strong);
+}
+
+.site-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+}
+
+.site-search {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  flex: 0 1 320px;
+  font: inherit;
+  font-size: var(--mk-type-small-size);
+  gap: var(--mk-space-2);
+  justify-content: flex-start;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-3);
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-search:hover {
+  background: var(--mk-color-surface);
+  border-color: var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+/* The code panel with its language label and copy control */
+
+.site-code {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-small);
+  overflow: hidden;
+  width: 100%;
+}
+
+.site-code-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: var(--mk-space-3);
+  justify-content: space-between;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-3);
+}
+
+.site-code-language {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+}
+
+.site-code-copy {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  font: inherit;
+  font-size: var(--mk-type-caption-size);
+  min-height: var(--mk-layout-control-min);
+  min-width: 76px;
+  padding: 0 var(--mk-space-3);
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-code-copy:hover {
+  background: var(--mk-color-surface-muted);
+  border-color: var(--mk-color-border-strong);
+}
+
+.site-code-body {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+  overflow-x: auto;
+  padding: var(--mk-space-4) var(--mk-space-5);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

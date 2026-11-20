@@ -14,7 +14,6 @@ import {
   classifyEvidence,
   errorMessage,
   findEvidenceCommit,
-  resolveVerificationMode,
   selectCandidateRuns,
 } from "./evidence_contract.mjs";
 import { createEvidenceGithub } from "./evidence_github.mjs";
@@ -32,23 +31,6 @@ export async function runReleaseEvidence(options = {}) {
   const execute = options.execute ?? defaultExecute;
   const write = options.write ?? writeReleaseFile;
   const identity = await readGitIdentity(repositoryRoot, execute);
-  if (!env.RELEASE_VERIFICATION)
-    throw new Error("RELEASE_VERIFICATION must be evidence or complete");
-  const mode = resolveVerificationMode({
-    eventName: "workflow_dispatch",
-    manualVerification: env.RELEASE_VERIFICATION,
-  });
-  if (mode === "complete")
-    return await finishEvidence(
-      {
-        outcome: "complete",
-        reason: "complete verification was explicitly requested",
-      },
-      identity,
-      undefined,
-      { env, repositoryRoot, write, writeOutput: options.writeOutput },
-    );
-
   if (!env.GITHUB_TOKEN)
     throw new Error("GITHUB_TOKEN is required in evidence mode");
   if (!env.GITHUB_REPOSITORY)
@@ -100,14 +82,12 @@ export async function runReleaseEvidence(options = {}) {
     last = result;
     if (result.outcome === "invalid") break;
   }
-  const record = await finishEvidence(last, identity, selected, {
+  return await finishEvidence(last, identity, selected, {
     env,
     repositoryRoot,
     write,
     writeOutput: options.writeOutput,
   });
-  if (last.outcome === "invalid") throw new Error(last.reason);
-  return record;
 }
 
 async function loadCandidates(github, tagCommit, repository) {
@@ -201,4 +181,7 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
 )
-  await runReleaseEvidence();
+  await runReleaseEvidence().catch((error) => {
+    process.stderr.write(`${errorMessage(error)}\n`);
+    process.exitCode = 1;
+  });

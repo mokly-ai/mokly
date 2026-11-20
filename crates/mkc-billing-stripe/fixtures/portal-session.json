@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_portal_fixture"
+  },
+  "body": {
+    "id": "bps_fixture",
+    "object": "billing_portal.session",
+    "created": 1789992000,
+    "url": "https://billing.stripe.test/session/bps_fixture"
+  }
+}

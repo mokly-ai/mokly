@@ -1,0 +1,16 @@
+[package]
+name = "mkc-test-pg"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+diesel = { version = "2.3.13", features = ["postgres"] }
+url = "2.5.8"
+uuid = { version = "1.26.1", features = ["v7"] }
+
+[lints]
+workspace = true

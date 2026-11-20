@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_checkout_fixture"
+  },
+  "body": {
+    "id": "cs_test_fixture",
+    "object": "checkout.session",
+    "mode": "subscription",
+    "status": "open",
+    "url": "https://checkout.stripe.test/c/pay/cs_test_fixture"
+  }
+}

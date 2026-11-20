@@ -1,0 +1,78 @@
+{{- if eq .Values.database.mode "namespace" }}
+{{- range $name := list "api" "app" "catalogue" }}
+{{- if (index $.Values $name).enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: {{ $name }} }
+  policyTypes: [Ingress{{ if eq $name "catalogue" }}, Egress{{ end }}]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: mkc-preview-system }
+      ports: [{ protocol: TCP, port: {{ (index $.Values $name).port }} }]
+    {{- if eq $name "api" }}
+    - from:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: catalogue }
+      ports: [{ protocol: TCP, port: {{ $.Values.api.port }} }]
+    {{- end }}
+  {{- if eq $name "catalogue" }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: api }
+      ports: [{ protocol: TCP, port: {{ $.Values.api.port }} }]
+  {{- end }}
+{{- end }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: postgres }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            {{- include "mkc.databaseClients" . | nindent 12 }}
+      ports: [{ protocol: TCP, port: 5432 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-clients
+spec:
+  podSelector:
+    {{- include "mkc.databaseClients" . | nindent 4 }}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: postgres }
+      ports: [{ protocol: TCP, port: 5432 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: workloads
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [api, catalogue, app, maintenance]
+  policyTypes: [Egress]
+  egress:
+    {{- include "mkc.previewDnsEgress" . | nindent 4 }}
+    - to: [{ ipBlock: { cidr: 169.254.169.254/32 } }]
+      ports: [{ protocol: TCP, port: 80 }]
+    {{- include "mkc.previewHttpsEgress" . | nindent 4 }}
+{{- end }}

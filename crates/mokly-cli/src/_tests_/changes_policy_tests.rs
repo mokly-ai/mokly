@@ -9,6 +9,7 @@ use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 
 use crate::build::BuildChanges;
 use crate::changes_diagnostics;
+use crate::output::Mode;
 
 #[test]
 fn every_runtime_category_has_an_explicit_historical_outcome() {
@@ -59,7 +60,8 @@ fn every_runtime_category_has_an_explicit_historical_outcome() {
                 changes_diagnostics::unavailable(&error, "fixture-base"),
             ) {
                 (None, None) => assert!(
-                    changes_diagnostics::failure_detail(&error).ends_with("authored diagnostic")
+                    changes_diagnostics::failure_detail(&error, Mode::Plain)
+                        .ends_with("authored diagnostic")
                 ),
                 (
                     Some(expected),
@@ -112,5 +114,5 @@ fn a_fatal_runtime_failure_takes_precedence_over_historical_validation() {
         }),
     };
     assert!(changes_diagnostics::unavailable(&error, "fixture-base").is_none());
-    assert!(changes_diagnostics::failure_detail(&error).contains("bad frame"));
+    assert!(changes_diagnostics::failure_detail(&error, Mode::Plain).contains("bad frame"));
 }

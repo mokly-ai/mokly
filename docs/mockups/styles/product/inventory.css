@@ -1,0 +1,156 @@
+@import "account.css";
+@import "builds.css";
+@import "entry.css";
+@import "records.css";
+@import "recovery.css";
+@import "settings.css";
+@import "viewer.css";
+.fo-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-8);
+  align-content: start;
+}
+.fo-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-5);
+  max-width: 460px;
+}
+.fo-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-4);
+  padding-top: var(--mk-space-8);
+  border-top: 1px solid var(--mk-color-border);
+}
+.fo-stack > .fo-section:first-child,
+.fo-section-flush {
+  padding-top: 0;
+  border-top: 0;
+}
+.fo-two-columns > .fo-section {
+  padding-top: 0;
+  border-top: 0;
+}
+.fo-stack > * + .fo-two-columns {
+  padding-top: var(--mk-space-8);
+  border-top: 1px solid var(--mk-color-border);
+}
+.fo-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-12) var(--mk-space-6);
+  text-align: center;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+}
+.fo-state-glyph {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--mk-radius-medium);
+  background: var(--mk-color-surface-muted);
+  color: var(--mk-color-text-muted);
+}
+.fo-state-problem .fo-state-glyph {
+  background: var(--mk-color-danger-soft);
+  color: var(--mk-color-danger);
+}
+.fo-state-title {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-state-detail {
+  max-width: 40ch;
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-state-action {
+  margin-top: var(--mk-space-1);
+}
+/* A state card centers what it holds, so a control with its guide and a
+   refusal around them are centered with the title above. */
+.fo-state-action .fo-control-guide {
+  justify-content: center;
+}
+.fo-state-action > .fo-write-failure {
+  justify-items: center;
+}
+.fo-state > .fo-error-details {
+  justify-self: center;
+}
+.fo-note {
+  display: grid;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-5);
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+}
+.fo-note-danger {
+  border-color: color-mix(
+    in srgb,
+    var(--mk-color-danger) 34%,
+    var(--mk-color-border)
+  );
+}
+.fo-note-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2);
+}
+.fo-note-title {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-note-detail {
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  color: var(--mk-color-text-muted);
+}
+/* One muted line of copy, in the two places a surface writes one: the cause
+   the write-failure fragment announces, and the notice a surface says about a
+   control that is not a refusal of it — flush, because the panel it sits in is
+   already the only frame it gets. They are one declaration because they are one
+   line style; what tells a reader which is which is the control's own label and
+   whether a reference is disclosed beneath it. */
+.fo-copy,
+.fo-notice {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  color: var(--mk-color-text-muted);
+  max-width: 62ch;
+}
+.fo-address-preview {
+  display: grid;
+  gap: 2px;
+  margin: calc(var(--mk-space-3) * -1) 0 0;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-address-preview code {
+  color: var(--mk-color-text);
+  font: inherit;
+  font-weight: var(--mk-font-medium);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .fo-stack {
+    gap: var(--mk-space-6);
+  }
+  .fo-section {
+    padding-top: var(--mk-space-6);
+  }
+  .fo-state {
+    padding: var(--mk-space-10) var(--mk-space-5);
+  }
+}

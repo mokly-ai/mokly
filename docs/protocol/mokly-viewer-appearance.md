@@ -154,10 +154,10 @@ change handler is ever shown. Persisted overrides need the bundle.
 The [shared UI package](./mokly-ui-package.md#theme-and-host-pages) owns the
 one semantic palette, which supplies both the standalone shell stylesheet and
 the embedded stylesheet. Dark interface backgrounds, text and boundaries align
-with Mokly Cloud's warm neutral Folio palette, with sage reserved for accents
-and status. The [semantic palette](./mokly-viewer-palette.md#cloud-alignment)
+with Mokly Cloud's Folio palette, whose dark neutrals are the neutral Graphite
+greys, with sage reserved for accents and status. The [semantic palette](./mokly-viewer-palette.md#cloud-alignment)
 records the role mapping, the approved swatches and their recorded contrast;
-the cloud repository is a design reference, not a runtime dependency.
+Mokly Cloud is a design reference, not a runtime dependency.
 
 Provide Light and Dark values for these responsibilities:
 

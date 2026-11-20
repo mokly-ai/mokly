@@ -1,0 +1,181 @@
+"""Local regression checks for the candidate assertion; no provider access."""
+
+import importlib.util
+import os
+import re
+from pathlib import Path
+from types import SimpleNamespace
+import subprocess
+import unittest
+from unittest.mock import MagicMock, patch
+
+from support import ROOT
+
+
+SCRIPT = ROOT / "infra/e2b/tests/assert_build_template.py"
+SPEC = importlib.util.spec_from_file_location("assert_build_template", SCRIPT)
+ASSERTION = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(ASSERTION)
+VERSION = (ROOT / ".nvmrc").read_text().strip()
+
+
+def pinned_base_images(dockerfile):
+    bases = re.findall(r"^\s*FROM\s+(?:--platform=\S+\s+)?(\S+)", dockerfile,
+                       re.MULTILINE | re.IGNORECASE)
+    return bool(bases) and all(re.fullmatch(
+        r"e2bdev/base:[A-Za-z0-9_.-]+@sha256:[0-9a-f]{64}", base) for base in bases)
+
+
+class BuildTemplatePinTests(unittest.TestCase):
+    def test_checked_in_base_uses_a_tag_and_immutable_digest(self):
+        self.assertTrue(pinned_base_images(
+            (ROOT / "infra/e2b/build/e2b.Dockerfile").read_text()))
+
+    def test_unpinned_and_malformed_base_fixtures_fail(self):
+        valid = "FROM e2bdev/base:latest@sha256:" + "a" * 64 + "\n"
+        self.assertTrue(pinned_base_images(valid))
+        for fixture in ("FROM e2bdev/base\n", "FROM e2bdev/base:latest\n",
+                        valid.replace(":latest", ""), valid.replace("a" * 64, "short"),
+                        valid.replace("a" * 64, "g" * 64),
+                        valid + "FROM e2bdev/base:latest\n", "FROM $BASE\n", ""):
+            with self.subTest(fixture=fixture):
+                self.assertFalse(pinned_base_images(fixture))
+
+
+class BuildTemplateTests(unittest.TestCase):
+    def setUp(self):
+        self.environment = {
+            "PATH": ASSERTION.TEMPLATE_PATH, "HOME": ASSERTION.TEMPLATE_HOME,
+            ASSERTION.PROBE_KEY: ASSERTION.PROBE_VALUE,
+        }
+        self.account = SimpleNamespace(pw_name="user", pw_dir="/home/user")
+        patches = (
+            patch.dict(os.environ, self.environment, clear=True),
+            patch.object(ASSERTION.os, "getuid", return_value=1000),
+            patch.object(ASSERTION.os, "geteuid", return_value=1000),
+            patch.object(ASSERTION.pwd, "getpwuid", return_value=self.account),
+            patch.object(ASSERTION.os, "access", return_value=True),
+            patch.object(ASSERTION.os, "confstr", return_value="glibc 2.28"),
+            patch.object(Path, "is_dir", return_value=True),
+            patch.object(Path, "is_file", return_value=True),
+            patch.object(Path, "stat", return_value=SimpleNamespace(st_uid=1000)),
+            patch.object(Path, "exists", return_value=False),
+            patch.object(Path, "is_symlink", return_value=False),
+            patch.object(ASSERTION.tempfile, "TemporaryFile", return_value=MagicMock()),
+            patch.object(ASSERTION.shutil, "which", return_value="/usr/local/bin/tool"),
+            patch.object(ASSERTION.subprocess, "run", side_effect=self.run_command),
+        )
+        self.mocks = [item.start() for item in patches]
+        for item in patches:
+            self.addCleanup(item.stop)
+
+    def run_command(self, argv, **kwargs):
+        self.assertNotIn("env", kwargs)
+        self.assertNotIn("shell", kwargs)
+        self.assertEqual(kwargs["timeout"], 10)
+        output = "v" + VERSION if argv[0] == "node" else "shell-ok"
+        return SimpleNamespace(returncode=0, stdout=output)
+
+    def test_complete_template_passes_with_one_added_entry(self):
+        ASSERTION.verify(VERSION)
+        self.assertEqual(self.mocks[-1].call_count, 8)
+
+    def test_native_cli_requires_glibc_2_28_or_newer(self):
+        cases = [("glibc 2.27", False), ("glibc 2.28", True),
+                 ("glibc 2.40", True), ("glibc 3.0", True),
+                 ("musl 1.2", False), (None, False)]
+        for library, accepted in cases:
+            with self.subTest(library=library), patch.object(
+                ASSERTION.os, "confstr", return_value=library
+            ):
+                if accepted:
+                    ASSERTION.verify(VERSION)
+                else:
+                    with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "glibc 2.28"):
+                        ASSERTION.verify(VERSION)
+
+    def test_replaced_or_changed_process_environment_fails(self):
+        for key, value in (("PATH", None), ("HOME", None), ("PATH", "/bin"),
+                           ("HOME", "/root"), (ASSERTION.PROBE_KEY, None),
+                           (ASSERTION.PROBE_KEY, "wrong")):
+            with self.subTest(key=key, value=value), patch.dict(os.environ, clear=False):
+                if value is None:
+                    os.environ.pop(key)
+                else:
+                    os.environ[key] = value
+                with self.assertRaises(ASSERTION.TemplateAssertionError):
+                    ASSERTION.verify(VERSION)
+
+    def test_wrong_user_uid_home_or_effective_uid_fails(self):
+        for module, name, value in ((ASSERTION.os, "getuid", 0),
+                                    (ASSERTION.os, "geteuid", 0),
+                                    (ASSERTION.pwd, "getpwuid", SimpleNamespace(pw_name="root", pw_dir="/root")),
+                                    (ASSERTION.pwd, "getpwuid", SimpleNamespace(pw_name="user", pw_dir="/other"))):
+            with self.subTest(name=name, value=value), patch.object(module, name, return_value=value):
+                with self.assertRaises(ASSERTION.TemplateAssertionError):
+                    ASSERTION.verify(VERSION)
+
+    def test_workspace_must_exist_belong_to_user_and_allow_writes(self):
+        for name, kwargs in (("is_dir", {"return_value": False}),
+                             ("stat", {"return_value": SimpleNamespace(st_uid=0)})):
+            with self.subTest(name=name), patch.object(Path, name, **kwargs):
+                with self.assertRaises(ASSERTION.TemplateAssertionError):
+                    ASSERTION.verify(VERSION)
+        with patch.object(ASSERTION.tempfile, "TemporaryFile", side_effect=PermissionError):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "not writable"):
+                ASSERTION.verify(VERSION)
+
+    def test_tools_shell_and_exact_node_version_are_required(self):
+        with patch.object(ASSERTION.shutil, "which", return_value=None):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "missing from PATH"):
+                ASSERTION.verify(VERSION)
+        with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "Node release differs"):
+            ASSERTION.verify("0.0.0")
+        for name in ("is_file",):
+            with patch.object(Path, name, return_value=False):
+                with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "/bin/sh"):
+                    ASSERTION.verify(VERSION)
+
+    def test_nonzero_missing_and_timed_out_tools_fail_without_command_output(self):
+        failures = (SimpleNamespace(returncode=1, stdout="secret"), OSError("secret"),
+                    subprocess.TimeoutExpired("secret", 10))
+        for failure in failures:
+            kwargs = {"side_effect": failure} if isinstance(failure, Exception) else {"return_value": failure}
+            with self.subTest(failure=failure), patch.object(ASSERTION.subprocess, "run", **kwargs):
+                with self.assertRaises(ASSERTION.TemplateAssertionError) as caught:
+                    ASSERTION.verify(VERSION)
+                self.assertNotIn("secret", str(caught.exception))
+
+    def test_every_credential_environment_key_is_rejected_even_if_empty(self):
+        for key in ASSERTION.SECRET_KEYS:
+            with self.subTest(key=key), patch.dict(os.environ, {key: ""}):
+                with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "credential environment"):
+                    ASSERTION.verify(VERSION)
+
+    def test_credential_files_and_symlinks_are_rejected(self):
+        for relative in ASSERTION.CREDENTIAL_FILES:
+            for method in ("exists", "is_symlink"):
+                with self.subTest(relative=relative, method=method):
+                    with patch.object(Path, method, lambda path: path == Path("/home/user") / relative):
+                        with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "credential file"):
+                            ASSERTION.verify(VERSION)
+        with patch.object(Path, "exists", lambda path: str(path) == "/var/run/mokly-secrets"):
+            with self.assertRaisesRegex(ASSERTION.TemplateAssertionError, "cloud secret mount"):
+                ASSERTION.verify(VERSION)
+
+    def test_definition_and_assertion_use_the_same_template_environment(self):
+        docker = (ROOT / "infra/e2b/build/e2b.Dockerfile").read_text()
+        definition = (ROOT / "infra/e2b/build/e2b.toml").read_text()
+        self.assertIn("cpu_count = 2\n", definition)
+        self.assertIn("memory_mb = 4096\n", definition)
+        self.assertRegex(definition, r'template_name = "mokly-build-v[1-9][0-9]*"')
+        self.assertNotIn("template_id", definition)
+        self.assertIn("ENV HOME=" + ASSERTION.TEMPLATE_HOME, docker)
+        self.assertIn("ENV PATH=" + ASSERTION.TEMPLATE_PATH, docker)
+        self.assertIn("sha256sum --check --strict", docker)
+        self.assertEqual((ROOT / "infra/e2b/build/.dockerignore").read_text().splitlines(),
+                         ["*", "!e2b.Dockerfile"])
+
+
+if __name__ == "__main__":
+    unittest.main()
