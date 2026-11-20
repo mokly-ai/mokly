@@ -56,7 +56,7 @@ My calls, 2026-11-20:
   `initial-version: 0.1.0`. Reason: Release Please keeps the pre-release part
   when it bumps `0.1.0-alpha.2`, so it would give `0.1.1-alpha.2`. The first
   changelog then lists the releasable bundle commits since the bootstrap
-  commit, about 50.
+  commit. The dry run of 2026-11-20 listed 86.
 - The Mac app offers "Restart now" only after the macOS update framework
   accepts the download, as Conductive does. Reason: before that, Restart now
   can wait for ever.
@@ -115,7 +115,7 @@ Depends on: 1
       `scripts/release/version_updates.mjs`. A bundle change gives the desktop
       version `0.1.0`. An npm CLI or native change gives no desktop release.
       `tests/release_config.test.ts` keeps this check.
-- [ ] Run a Release Please dry run against this branch on GitHub. Check the
+- [x] Run a Release Please dry run against this branch on GitHub. Check the
       desktop pull request title and the tag `desktop-v0.1.0`. Save the output
       under `.context/`.
 - [x] `scripts/verification/ratchets/public-exports.mjs`: skip a component
@@ -133,8 +133,9 @@ Depends on: 2
       check job and a job that calls `desktop-release.yml`.
 - [x] `release-environment.py`: keep the check that the tag equals
       `desktop-v` plus the package version.
-- [x] Update the workflow tests under `tests/` that read these files, and add
-      `tests/desktop_release_workflow.test.ts`.
+- [x] Update the workflow contract tests in
+      `xtask/tests/cli/desktop_release_workflow_tests.rs`, and cover the
+      desktop jobs of `release.yml` there.
 
 ## Milestone 4: Mac updater
 

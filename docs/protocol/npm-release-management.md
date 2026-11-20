@@ -28,13 +28,14 @@ says. The root component excludes the cloud folders, so a cloud-only change
 never selects an npm release. Each component has its own release PR
 (`separate-pull-requests: true`), so the npm packages and the desktop shell
 release at separate times. One combined release PR was rejected, because each
-merge would then release both products. The npm release PR title names its
-component, for example `chore(main): release mokly 0.20.0`.
+merge would then release both products. The npm release PR keeps its title,
+for example `chore(main): release 0.20.0`, and the desktop release PR names its
+component, for example `chore(main): release desktop 0.1.0`.
 
 The [Pull Request Title Contract](./ci-verification.md#pull-request-title-contract)
 checks every proposed squash title before merge because release-please reads
 that title from `main`. It accepts generated release titles such as
-`chore(main): release mokly 0.20.0` and `chore(main): release desktop 0.1.0`.
+`chore(main): release 0.20.0` and `chore(main): release desktop 0.1.0`.
 A breaking change uses a title such as
 `feat(publish)!: upload catalogue content deltas` and retains its explanatory
 `BREAKING CHANGE:` footer in the squash body; the title check does not replace
