@@ -5,7 +5,8 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use flate2::read::GzDecoder;
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
 use mokly_model::output::validation::{INDEX, MANIFEST, MARKER, digest};
@@ -23,35 +24,28 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
         base_ref: "origin/main".to_owned(),
         base_sha: "b".repeat(40),
     });
-    let mut files = vec![
-        File {
-            path: "index.html".to_owned(),
-            bytes: b"shell".as_slice().into(),
-        },
-        File {
-            path: "404.html".to_owned(),
-            bytes: b"shell".as_slice().into(),
-        },
-        File {
-            path: "static/shared.txt".to_owned(),
-            bytes: b"\0\xff\x80shared".as_slice().into(),
-        },
-        File {
-            path: "static/alias.txt".to_owned(),
-            bytes: b"\0\xff\x80shared".as_slice().into(),
-        },
-    ];
-    files.push(File {
-        path: INDEX.to_owned(),
-        bytes: match &comparison {
-            Some(comparison) => format!(
-                "{{\"schemaVersion\":9,\"base\":\"{}\",\"baseCommit\":\"{}\"}}",
-                comparison.base_ref, comparison.base_sha
-            ),
-            None => "{\"schemaVersion\":9}".to_owned(),
-        }
-        .into(),
-    });
+    let mut files = Inventory::default();
+    for (path, bytes) in [
+        ("index.html", b"shell".as_slice()),
+        ("404.html", b"shell".as_slice()),
+        ("static/shared.txt", b"\0\xff\x80shared".as_slice()),
+        ("static/alias.txt", b"\0\xff\x80shared".as_slice()),
+    ] {
+        files.insert(path.into(), bytes.into()).unwrap();
+    }
+    files
+        .insert(
+            INDEX.into(),
+            match &comparison {
+                Some(comparison) => format!(
+                    "{{\"schemaVersion\":9,\"base\":\"{}\",\"baseCommit\":\"{}\"}}",
+                    comparison.base_ref, comparison.base_sha
+                ),
+                None => "{\"schemaVersion\":9}".to_owned(),
+            }
+            .into(),
+        )
+        .unwrap();
     Artifact::finalize(
         directory,
         files,

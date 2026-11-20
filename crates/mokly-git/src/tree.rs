@@ -87,10 +87,12 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         let metadata = text(&record[..tab])?
             .split_ascii_whitespace()
             .collect::<Vec<_>>();
-        let [mode, kind, object, size] = metadata.as_slice() else {
-            return Err(Error::MalformedOutput);
+        let (mode, kind, object, size) = match metadata.as_slice() {
+            [mode, kind, object] => (*mode, *kind, *object, "-"),
+            [mode, kind, object, size] => (*mode, *kind, *object, *size),
+            _ => return Err(Error::MalformedOutput),
         };
-        let mode = match (*mode, *kind) {
+        let mode = match (mode, kind) {
             ("040000", "tree") => Mode::Directory,
             ("100644", "blob") => Mode::File,
             ("100755", "blob") => Mode::Executable,
@@ -109,7 +111,7 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         let size = if matches!(mode, Mode::Submodule | Mode::Directory) {
             0
         } else {
-            if matches!(*size, "-" | "BAD") {
+            if matches!(size, "-" | "BAD") {
                 0
             } else {
                 match size.parse() {
@@ -136,6 +138,29 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         return Err(Error::MalformedOutput);
     }
     Ok(entries)
+}
+
+/// Whether each blob record of a `ls-tree -l -z` listing has a decimal size. Git prints a
+/// size only for a blob that the object store holds, and `BAD` for a missing blob. A record
+/// of another kind, such as a tree or a submodule, needs no size.
+pub(crate) fn sizes_every_blob(listing: &[u8]) -> bool {
+    listing
+        .split(|byte| *byte == 0)
+        .filter(|record| !record.is_empty())
+        .all(|record| {
+            let metadata = record.split(|byte| *byte == b'\t').next().unwrap_or(record);
+            let fields: Vec<&[u8]> = metadata
+                .split(u8::is_ascii_whitespace)
+                .filter(|field| !field.is_empty())
+                .collect();
+            match fields.as_slice() {
+                [_, kind, _, size] if *kind == b"blob" => {
+                    !size.is_empty() && size.iter().all(u8::is_ascii_digit)
+                }
+                [_, _, _, _] => true,
+                _ => false,
+            }
+        })
 }
 
 pub(crate) fn text(bytes: &[u8]) -> Result<&str> {

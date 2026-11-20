@@ -71,6 +71,17 @@ export function disclosurePath(
   return [];
 }
 
+/** The row of one current entry, wherever a folder or member list holds it. */
+export function navEntryRow(
+  sections: readonly NavSectionNode[],
+  path: string,
+): NavLeafNode | undefined {
+  return sectionEntryRow(
+    sections.flatMap(({ children }) => children),
+    `entry:${path}`,
+  );
+}
+
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
   leaf: NavLeafNode,
@@ -127,6 +138,21 @@ export function navigationFiltering(selection: ViewerSelection): boolean {
     selection.view === "changes" ||
     queryConstrains({ freeText: selection.search, tags: selection.tags })
   );
+}
+
+function sectionEntryRow(
+  nodes: readonly NavNode[],
+  key: string,
+): NavLeafNode | undefined {
+  for (const node of nodes) {
+    if (node.kind === "leaf" && node.key === key) return node;
+    const found = sectionEntryRow(
+      node.kind === "group" ? node.children : (node.members ?? []),
+      key,
+    );
+    if (found) return found;
+  }
+  return undefined;
 }
 
 function collectDefaults(

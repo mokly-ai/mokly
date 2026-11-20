@@ -1,0 +1,49 @@
+/* Document-level Folio defaults shared by every product surface. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: var(--mk-space-2);
+  padding: var(--mk-space-2) var(--mk-space-4);
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-chrome);
+  z-index: 5;
+}
+.skip-link:focus {
+  left: var(--mk-space-4);
+}
+/* The product chrome root: `ui` is the document default and tabular numerals
+   are on throughout; `.numeric` and `.mono-value` carry them outside it. */
+.folio-root {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+  min-height: 100vh;
+  position: relative;
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv05" 1;
+}
+.folio-root p {
+  max-width: none;
+}
+/* Visually hidden, read by assistive technology: the document `h1` the viewer
+   chrome carries, and a state's hidden announcement. */
+.fo-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.mono-value {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-ui-small-size);
+  font-variant-numeric: tabular-nums;
+}
+.folio-root .mono-value {
+  overflow-wrap: anywhere;
+}

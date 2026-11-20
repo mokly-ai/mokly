@@ -5,7 +5,7 @@ use std::io::Cursor;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
+use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_model::material::digest;
 use mokly_source_interface::error::SourceError;
 use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
@@ -15,9 +15,10 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_compiler::{Compilation, CompileRoot};
 use crate::stylesheet_store::StylesheetCache;
 
-fn bundle() -> Bundle {
+pub(super) fn bundle() -> Bundle {
     let mut evidence = ReadEvidence::default();
     evidence.insert(
         "tokens.txt".into(),
@@ -28,6 +29,8 @@ fn bundle() -> Bundle {
         route: "styles/main.css".into(),
         css: "a{color:red}".into(),
         assets: BTreeMap::new(),
+        resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::new(),
         imported_by: BTreeMap::new(),
@@ -79,11 +82,12 @@ fn local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transf
     )));
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = CachedStylesheets::new(
-        Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
-                .next_call(matching!(_))
-                .returns(Ok(own_bundle())),
-        )),
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: own_bundle(),
+                capture: Default::default(),
+            }),
+        ))),
         tree.clone(),
         "/repo".into(),
         "same".into(),
@@ -115,11 +119,12 @@ fn conflicting_observed_and_late_versions_cannot_seed_cross_generation_reuse() {
         .insert("tokens.txt".into(), ReadBaseline::Late("new".into()));
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = CachedStylesheets::new(
-        Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
-                .next_call(matching!(_))
-                .returns(Ok(old)),
-        )),
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: old,
+                capture: Default::default(),
+            }),
+        ))),
         Arc::new(Unimock::new(())),
         "/repo".into(),
         "same".into(),
@@ -128,11 +133,12 @@ fn conflicting_observed_and_late_versions_cannot_seed_cross_generation_reuse() {
     let mut fresh = bundle();
     fresh.css = "a{color:blue}".into();
     let second = CachedStylesheets::new(
-        Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
-                .next_call(matching!(_))
-                .returns(Ok(fresh)),
-        )),
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: fresh,
+                capture: Default::default(),
+            }),
+        ))),
         Arc::new(Unimock::new(())),
         "/repo".into(),
         "same".into(),
@@ -177,11 +183,12 @@ fn ranged_cache_results_keep_their_late_whole_file_stamp_and_original_ranges() {
     )));
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = CachedStylesheets::new(
-        Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
-                .next_call(matching!(_))
-                .returns(Ok(observed.clone())),
-        )),
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: observed.clone(),
+                capture: Default::default(),
+            }),
+        ))),
         tree.clone(),
         "/repo".into(),
         "same".into(),
@@ -206,11 +213,12 @@ fn ranged_cache_results_keep_their_late_whole_file_stamp_and_original_ranges() {
 fn finding_3_failed_context_observation_remains_failed_on_a_local_hit() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let compiler = CachedStylesheets::new(
-        Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
-                .next_call(matching!(_))
-                .returns(Ok(bundle())),
-        )),
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: bundle(),
+                capture: Default::default(),
+            }),
+        ))),
         Arc::new(Unimock::new(
             SourceTreeMock::observe_inputs
                 .each_call(matching!(_, _))

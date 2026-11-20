@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Mutex, OnceLock};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_sidecar::error::{Error, ProtocolError};
 use mokly_sidecar::pool::PoolMock;
@@ -26,6 +26,7 @@ fn description_and_runtime_clones_hold_the_same_lock_at_the_io_boundary() {
                 }))
                 .n_times(2),
         )),
+        Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(
             PoolMock::request
                 .each_call(matching!(_))
@@ -46,6 +47,10 @@ fn description_and_runtime_clones_hold_the_same_lock_at_the_io_boundary() {
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: vec![],
+        modules: ResolvedModules {
+            renderer: Some("renderer.ts".into()),
+            ..Default::default()
+        },
         authored_inputs: vec![],
     };
     let cloned = runtime.with_tree(Arc::new(Unimock::new(())));

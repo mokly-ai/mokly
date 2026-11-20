@@ -20,6 +20,7 @@ fn pool(mock: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(mock),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),
@@ -51,6 +52,7 @@ fn seed(pool: &Pool, worker: Unimock) {
         contexts: BTreeSet::new(),
         renders: 0,
         requests: 1,
+        last_compilation: None,
     }));
     state.available.push_back(0);
     state.controls.insert(0, control);

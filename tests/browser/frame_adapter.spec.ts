@@ -7,6 +7,7 @@ import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -83,7 +84,9 @@ test("cross-origin hover, click, scrolling and Escape produce bounded events", a
       (window as unknown as FrameTestWindow).mounted.highlight([key], "pick"),
     key,
   );
-  await frame.getByRole("button", { name: "Visible", exact: true }).hover();
+  await waitForFrameEvent(page, "hover", () =>
+    frame.getByRole("button", { name: "Visible", exact: true }).hover(),
+  );
   await expect
     .poll(async () =>
       (await state()).some(
@@ -91,7 +94,9 @@ test("cross-origin hover, click, scrolling and Escape produce bounded events", a
       ),
     )
     .toBe(true);
-  await frame.getByRole("button", { name: "Visible", exact: true }).click();
+  await waitForFrameEvent(page, "click", () =>
+    frame.getByRole("button", { name: "Visible", exact: true }).click(),
+  );
   await expect
     .poll(async () =>
       (await state()).some(
@@ -99,14 +104,16 @@ test("cross-origin hover, click, scrolling and Escape produce bounded events", a
       ),
     )
     .toBe(true);
-  await page.keyboard.press("Escape");
+  await waitForFrameEvent(page, "pick-end", () =>
+    page.keyboard.press("Escape"),
+  );
   await expect
     .poll(async () =>
       (await state()).some((event) => event.type === "pick-end"),
     )
     .toBe(true);
   await expect(frame.locator("[data-mokly-overlay]")).toHaveCount(0);
-  await page.mouse.move(700, 500);
+  await waitForFrameEvent(page, "hover", () => page.mouse.move(700, 500));
   await expect
     .poll(async () =>
       (await state()).some(
@@ -117,9 +124,11 @@ test("cross-origin hover, click, scrolling and Escape produce bounded events", a
   const scrollKey = fixture.usage.instances.find(
     (item) => item.id === "scroll",
   )!.key;
-  await page.evaluate(
-    (key) => (window as unknown as FrameTestWindow).mounted.scrollTo(key),
-    scrollKey,
+  await waitForFrameEvent(page, "geometry", () =>
+    page.evaluate(
+      (key) => (window as unknown as FrameTestWindow).mounted.scrollTo(key),
+      scrollKey,
+    ),
   );
   await expect(
     frame.getByRole("button", { name: "Scroll", exact: true }),
@@ -136,7 +145,9 @@ test("logical navigation is host-owned and restores native activation after unsu
 }) => {
   await mountCrossFrame(page, fixture);
   const frame = page.frameLocator("#frame");
-  await frame.getByRole("link", { name: "Open Action" }).click();
+  await waitForFrameEvent(page, "navigation", () =>
+    frame.getByRole("link", { name: "Open Action" }).click(),
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>

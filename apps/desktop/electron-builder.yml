@@ -1,0 +1,36 @@
+appId: ai.mokly.desktop
+productName: Mokly
+artifactName: Mokly-${version}-${os}-${arch}.${ext}
+directories:
+  output: release
+files:
+  - dist/**
+  - bundle/**
+  - package.json
+protocols:
+  - name: Mokly sign-in
+    schemes: [mokly]
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icons/1024x1024.png
+  hardenedRuntime: true
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+linux:
+  executableName: mokly
+  icon: build/icons
+  category: Development
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+publish:
+  provider: github
+  owner: mokly-ai
+  repo: mokly-desktop
+  releaseType: prerelease
+  tagNamePrefix: v

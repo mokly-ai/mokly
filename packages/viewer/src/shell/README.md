@@ -1,6 +1,6 @@
 # Shared Browse shell
 
-Status: Some host content cleanup errors reach `CatalogueBoundary` as catalogue failures. The [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. Some asynchronous document failures never reach the catalogue failure state. The [asynchronous catalogue failures item](../../../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
+Status: Some host content cleanup errors reach `CatalogueBoundary` as catalogue failures. The [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
 
 Serve, the static build, and React hosts render this same tree in the
 browser.

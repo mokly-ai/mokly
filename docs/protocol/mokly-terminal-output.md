@@ -52,10 +52,11 @@ Rich lines are bounded by stdout's positive `columns` value, or 80 columns
 when unavailable. Mokly counts display columns, preserves complete ANSI
 sequences, and truncates with one ellipsis where possible. A shortened styled
 line ends with a full reset. Authored paths are repository-relative when possible.
-Recovery paths are the exception: each backup, reservation, or retained private
-output path has its own detail line and is never truncated. These paths are
-relative to the current directory when inside it, otherwise absolute. Control
-escaping and token redaction still apply.
+Recovery lines are never truncated, so that the user can act on them: the hint
+line of each [rich error](./mokly-terminal-errors.md#rich-errors), and each
+backup, reservation, or retained private output path, on its own detail line.
+These paths are relative to the current directory when inside it, otherwise
+absolute. Control escaping and token redaction still apply.
 
 ## Spinner Lifecycle
 
@@ -168,8 +169,7 @@ lines, so consumer output cannot corrupt a spinner.
 
 ## Cache Directory
 
-The [cache directory line](./mokly-terminal-cache.md#cache-directory) names the
-first cache opened by the process in both output modes.
+The [cache output contract](./mokly-terminal-cache.md) owns the directory line and the cache warnings.
 
 ## One-Shot Commands
 

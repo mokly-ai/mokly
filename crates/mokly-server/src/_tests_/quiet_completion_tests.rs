@@ -28,7 +28,9 @@ fn equal_ready_or_unavailable_usage_is_recorded_without_a_publication() {
         );
         let pending = snapshot(2, Arc::new(documents.clone()));
         let updates = vec![("screen-0/index.mobile.html".into(), usage.clone())];
-        let published = evidence::complete(&pending, &updates, &EncodedDetails).unwrap();
+        let published = evidence::complete(&pending, &updates, &EncodedDetails)
+            .unwrap()
+            .unwrap();
         let mut origin = (*published).clone();
         origin.completed.clear();
         let mut shared = SharedPublication::new(Arc::new(origin.clone()));
@@ -176,6 +178,7 @@ fn equal_completion_is_recorded_at_the_revision_limit() {
         &[("screen-0/index.mobile.html".into(), ready())],
         &EncodedDetails,
     )
+    .unwrap()
     .unwrap();
     assert_eq!(next.index.revision, u64::MAX);
     assert!(next.completed.contains_key("screen-0/index.mobile.html"));
@@ -196,7 +199,7 @@ fn equal_usage_publishes_once_when_it_proves_a_workspace() {
         Arc::make_mut(detail).workspace = None;
         origin.files.insert(
             format!("mokly-viewer/entries/{path}.json"),
-            EncodedDetails.encode(detail),
+            EncodedDetails.encode(Arc::make_mut(detail)).unwrap(),
         );
     }
     let origin = Arc::new(origin);

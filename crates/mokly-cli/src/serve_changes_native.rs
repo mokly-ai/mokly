@@ -4,11 +4,15 @@ use std::sync::Arc;
 
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::serial_stylesheets::SerialStylesheets;
+use mokly_compare::base_freshness::{Freshness, FreshnessChecks};
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
 use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::comparison::Engine;
+use mokly_compare::comparison_reuse::{ReuseAttempt, ReuseFence};
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::install_inputs::SystemInstallInputs;
 use mokly_compare::moves::Detector;
+use mokly_compare::working_inputs::SystemWorkingInputs;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{ProcessMode, Request};
 use mokly_git::disk::SystemDisk;
@@ -20,6 +24,8 @@ use mokly_server::error::{Result, ServerError};
 
 use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
+use crate::serve_base::ServeBase;
+use crate::serve_base_cancel::{BaseLifetime, PreparingBase};
 use crate::serve_changes::Source;
 use crate::serve_changes_base::{
     AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
@@ -101,6 +107,7 @@ impl Source {
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
     ) -> Result<ComparisonResult> {
+        let comparison = self.comparison_attempt();
         self.pending
             .lock()
             .unwrap_or_else(|error| error.into_inner())
@@ -110,11 +117,18 @@ impl Source {
             command: self.services.cancellation.clone(),
             generation: cancel.clone(),
         });
-        let runtime = self.classification_runtime(cancellation.clone());
+        let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::new(cancellation.clone()));
+        let runtime = self.classification_runtime(lifetime.clone());
+        let freshness: Arc<dyn Freshness> = Arc::new(FreshnessChecks {
+            working: Arc::new(SystemWorkingInputs),
+            installs: Arc::new(SystemInstallInputs {
+                cancellation: cancellation.clone(),
+            }),
+        });
         let changes: &dyn ChangesService = &Changes {
             lookup: Arc::new(GitBaseLookup {
                 repositories: Arc::new(GitRepositories {
-                    runner: self.services.git.runner(cancellation.clone()),
+                    runner: self.services.git.runner(lifetime.clone()),
                     disk: Arc::new(SystemDisk),
                 }),
             }),
@@ -124,32 +138,38 @@ impl Source {
                 batch_bytes: 48 * 1024 * 1024,
                 snapshots: self.services.extraction_snapshots.clone(),
             }),
-            provider: Arc::new(AttemptBase {
-                warnings: self.pending.clone(),
-                inner: Arc::new(NativeBase {
-                    runtime,
-                    cancellation: cancellation.clone(),
-                    dependencies: Arc::new(PreparingDependencies {
-                        progress: progress.clone(),
-                        inner: Arc::new(NativeDependencies {
-                            cancellation,
-                            reporter: Arc::new(CacheNotice {
-                                announced: self.services.cache_announced.clone(),
-                                warnings: self.warnings.clone(),
-                                terminal: self.services.terminal.clone(),
-                                style: self.services.style.clone(),
-                                redactor: self.services.redactor.clone(),
-                                cancel: cancel.clone(),
+            provider: Arc::new(ServeBase {
+                slot: Arc::downgrade(&self.services.kept_base),
+                runtime: runtime.clone(),
+                freshness: freshness.clone(),
+                reader: cancellation,
+                origin: cancel.clone(),
+                lifetime: lifetime.clone(),
+                inner: Arc::new(AttemptBase {
+                    warnings: self.pending.clone(),
+                    inner: Arc::new(NativeBase {
+                        runtime,
+                        cancellation: lifetime.clone(),
+                        freshness: Some(freshness),
+                        dependencies: Arc::new(PreparingDependencies {
+                            progress: progress.clone(),
+                            inner: Arc::new(NativeDependencies {
+                                cancellation: lifetime,
+                                reporter: Arc::new(CacheNotice {
+                                    announced: self.services.cache_announced.clone(),
+                                    warnings: self.warnings.clone(),
+                                    terminal: self.services.terminal.clone(),
+                                    style: self.services.style.clone(),
+                                    redactor: self.services.redactor.clone(),
+                                    cancel: cancel.clone(),
+                                }),
                             }),
                         }),
                     }),
+                    progress,
                 }),
-                progress,
             }),
-            comparison: Arc::new(Engine {
-                moves: Arc::new(Detector),
-                css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
-            }),
+            comparison,
             steps: Arc::new(RunSteps {
                 progress: self.services.progress.clone(),
                 cancel: cancel.clone(),
@@ -169,7 +189,44 @@ impl Source {
         }
     }
 
-    fn classification_runtime(&self, cancellation: Arc<CombinedCancel>) -> Arc<Runtime> {
+    pub(super) fn comparison_attempt(&self) -> Arc<dyn ReuseAttempt> {
+        let comparison = self.services.reuse.begin(
+            Engine {
+                moves: Arc::new(Detector),
+                css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
+            },
+            self.comparison_fence(),
+        );
+        *self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) = Some(comparison.clone());
+        comparison
+    }
+
+    pub(super) fn comparison_fence(&self) -> Option<ReuseFence> {
+        let roots: Vec<_> = self
+            .config
+            .roots
+            .iter()
+            .map(|root| (&root.input, &root.directory, &root.identity))
+            .collect();
+        ReuseFence::new(&(
+            &self.config.input,
+            &self.config.modules,
+            &self.config.file,
+            &self.config.repo_root,
+            &self.config.authored_inputs,
+            roots,
+            self.services.install_scripts,
+        ))
+    }
+
+    /// Keep base pool admission and workers on the same detachable lifetime.
+    pub(super) fn classification_runtime(
+        &self,
+        cancellation: Arc<dyn BaseLifetime>,
+    ) -> Arc<Runtime> {
         let mut runtime = (*self.services.runtime).clone();
         runtime.workers = Arc::new(CancellableWorkers {
             inner: Arc::new(SerialStylesheets {
@@ -189,3 +246,7 @@ mod serve_references_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_capture_generation_tests.rs"]
 mod serve_capture_generation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_steps_integration_tests.rs"]
+mod serve_steps_integration_tests;

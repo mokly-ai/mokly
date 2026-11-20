@@ -5,6 +5,8 @@ use mokly_html::tree::{Attribute, Region, RegionKind};
 use mokly_model::usage::ComponentInputOwner;
 use serde::{Deserialize, Serialize};
 
+use crate::document_records::OwnerRecord;
+
 #[derive(Deserialize, Serialize)]
 /// Private attribute codec record.
 pub(crate) struct AttributeRecord {
@@ -21,6 +23,12 @@ impl From<&Attribute> for AttributeRecord {
     }
 }
 
+impl AttributeRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.name.capacity() + self.value.capacity()
+    }
+}
+
 impl From<AttributeRecord> for Attribute {
     fn from(value: AttributeRecord) -> Self {
         Self {
@@ -30,7 +38,7 @@ impl From<AttributeRecord> for Attribute {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 /// Private authenticated logical-link record.
 pub(crate) struct ReferenceRecord {
     source_route: String,
@@ -45,6 +53,14 @@ impl From<&Reference> for ReferenceRecord {
             target: value.target.clone(),
             fragment: value.fragment.clone(),
         }
+    }
+}
+
+impl ReferenceRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.source_route.capacity()
+            + self.target.capacity()
+            + self.fragment.as_ref().map_or(0, String::capacity)
     }
 }
 
@@ -80,7 +96,7 @@ enum RegionKindRecord {
         key: String,
         instance_key: String,
         name: String,
-        owner: ComponentInputOwner,
+        owner: OwnerRecord,
     },
     Ignore {
         id: String,
@@ -112,7 +128,7 @@ impl From<&Region> for RegionRecord {
                 key: key.clone(),
                 instance_key: instance_key.clone(),
                 name: name.clone(),
-                owner: owner.clone(),
+                owner: OwnerRecord::from(owner),
             },
             RegionKind::Ignore { id, material_key } => RegionKindRecord::Ignore {
                 id: id.clone(),
@@ -123,6 +139,32 @@ impl From<&Region> for RegionRecord {
             id: value.id.clone(),
             kind,
         }
+    }
+}
+
+impl RegionRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.id.capacity()
+            + match &self.kind {
+                RegionKindRecord::Root { path } => path.capacity(),
+                RegionKindRecord::Instance {
+                    path,
+                    key,
+                    local_id,
+                    props_key,
+                } => path.capacity() + key.capacity() + local_id.capacity() + props_key.capacity(),
+                RegionKindRecord::Slot {
+                    key,
+                    instance_key,
+                    name,
+                    owner,
+                } => {
+                    key.capacity() + instance_key.capacity() + name.capacity() + owner.known_bytes()
+                }
+                RegionKindRecord::Ignore { id, material_key } => {
+                    id.capacity() + material_key.as_ref().map_or(0, String::capacity)
+                }
+            }
     }
 }
 
@@ -150,7 +192,7 @@ impl From<RegionRecord> for Region {
                 key,
                 instance_key,
                 name,
-                owner,
+                owner: ComponentInputOwner::from(owner),
             },
             RegionKindRecord::Ignore { id, material_key } => {
                 RegionKind::Ignore { id, material_key }

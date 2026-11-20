@@ -37,6 +37,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
                 .returns(Ok(PreparedBase {
                     generation: graph,
                     scripts_off: true,
+                    freshness: None,
                 })),
         );
         let progress = Unimock::new(

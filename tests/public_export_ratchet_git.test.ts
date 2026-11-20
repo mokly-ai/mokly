@@ -244,6 +244,7 @@ test("the repository public surface has complete release notes", async () => {
   assert.deepEqual(result.findings, []);
   for (const [directory, prefix] of [
     ["packages/mokly", "v"],
+    ["packages/ui", "v"],
     ["packages/viewer", "viewer-v"],
   ] as const) {
     const { name, version } = JSON.parse(

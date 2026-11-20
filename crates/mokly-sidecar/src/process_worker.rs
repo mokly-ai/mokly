@@ -1,11 +1,12 @@
 //! Concrete client session with one deadline shared by all diagnostic frames.
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use crate::client::{Events, SidecarClient};
 use crate::error::Result;
 use crate::methods::Call;
+use crate::operations::Operation;
 use crate::postcss_phase::PhaseState;
 use crate::process_clock::Wait;
 use crate::process_memory::ResidentMemory;
@@ -17,10 +18,11 @@ pub(super) struct ProcessWorker {
     pub(super) diagnostics: Arc<dyn Diagnostics>,
     pub(super) client: Box<dyn SidecarClient>,
     pub(super) clock: Arc<dyn Wait>,
-    pub(super) memory: Box<dyn ResidentMemory>,
-    pub(super) discover_memory: AtomicBool,
+    pub(super) memory: Arc<dyn ResidentMemory>,
+    pub(super) discover_memory: Arc<AtomicBool>,
     pub(super) deadlines: Arc<Deadlines>,
     pub(super) phases: PhaseState,
+    pub(super) compile_count: Arc<AtomicU64>,
 }
 
 impl ProcessWorker {
@@ -41,11 +43,15 @@ impl Worker for ProcessWorker {
 
     fn request(&mut self, request: &Request, deadline_ms: u64) -> Result<MethodResult> {
         self.deadline(deadline_ms);
+        self.compile_count.store(0, Ordering::Relaxed);
         if matches!(&request.call, Call::ProcessCss(_)) {
             self.phases.reset_stylesheet();
             self.discover_memory.store(true, Ordering::Relaxed);
         }
-        let result = self.client.request(request);
+        let mut result = self.client.request(request);
+        if let Ok(MethodResult::Bundle(bundle)) = &mut result {
+            bundle.compile_count = self.compile_count.load(Ordering::Relaxed);
+        }
         if matches!(&request.call, Call::ProcessCss(_))
             && let Err(crate::error::Error::Timeout { deadline_ms, .. }) = &result
             && let Some(phase) = self.phases.summary()
@@ -70,6 +76,7 @@ impl Worker for ProcessWorker {
 pub(super) struct ForwardEvents {
     pub(super) diagnostics: Arc<dyn Diagnostics>,
     pub(super) phases: PhaseState,
+    pub(super) compile_count: Arc<AtomicU64>,
 }
 
 impl Events for ForwardEvents {
@@ -80,7 +87,12 @@ impl Events for ForwardEvents {
                     self.diagnostics.emit(&message);
                 }
             }
-            Event::Operation { operation, pid } => self.diagnostics.operation(operation, pid),
+            Event::Operation { operation, pid } => {
+                if operation == Operation::Esbuild {
+                    self.compile_count.fetch_add(1, Ordering::Relaxed);
+                }
+                self.diagnostics.operation(operation, pid);
+            }
         }
     }
 }
@@ -88,3 +100,7 @@ impl Events for ForwardEvents {
 #[cfg(test)]
 #[path = "_tests_/process_worker_tests.rs"]
 mod process_worker_tests;
+
+#[cfg(test)]
+#[path = "_tests_/process_bundle_tests.rs"]
+mod process_bundle_tests;

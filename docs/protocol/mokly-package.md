@@ -14,11 +14,11 @@ screens may exist only under examples and test fixtures.
 
 ## Packages
 
-| Package                  | Contents                                                                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@mokly/mokly`           | the Node shim that resolves and runs the `mokly` binary, the render sidecar entry, the JavaScript authoring API, the guides, and the protocol documents |
-| `@mokly/native-<target>` | one `mokly` binary per platform: `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, and `win32-x64-msvc`                                 |
-| `@mokly/viewer`          | the Browse shell, rendered in the browser, and the readers of the catalogue index and entry detail                                                      |
+| Package                  | Contents                                                                                                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@mokly/mokly`           | the Node shim that resolves and runs the `mokly` binary, the render sidecar entry, the JavaScript authoring API, the guides, and the Mokly protocol documents; cloud protocols are excluded |
+| `@mokly/native-<target>` | one `mokly` binary per platform: `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, and `win32-x64-msvc`                                                                     |
+| `@mokly/viewer`          | the Browse shell, rendered in the browser, and the readers of the catalogue index and entry detail                                                                                          |
 
 `@mokly/mokly` lists the five platform packages as exact optional
 dependencies and depends on the exact coordinated `@mokly/viewer` version. It
@@ -48,6 +48,11 @@ JavaScript can handle an error. The upstream
 [`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
 shipped in Node 24.19.0. The shim and sidecar run on the consumer's Node, so
 the shim rejects affected versions before it resolves the binary.
+
+The published `engines` range is `>=22.14.0`, the lowest floor of any earlier
+release. The shim's rejection names the Node version to install. The exact
+range is rejected for `engines`: npm installs the newest release whose `engines`
+accept the running Node, so it would install an older Mokly without an error.
 
 ## Package Identity
 

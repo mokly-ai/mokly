@@ -5,6 +5,8 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { writeWindowsManagerNode } from "./base_manager_node.js";
+import { preserveGitPrograms } from "./base_manager_programs.js";
 import { write } from "./static_changes.js";
 
 const execute = promisify(execFile);
@@ -105,6 +107,7 @@ export async function managerPath(
   root: string,
   manager: Manager,
   missing: boolean,
+  originalPath = process.env.PATH ?? "",
 ) {
   const bin = path.join(path.dirname(root), "bin");
   await fs.mkdir(bin, { recursive: true });
@@ -113,7 +116,7 @@ export async function managerPath(
     process.platform === "win32" ? "node.exe" : "node",
   );
   if (process.platform === "win32") {
-    await fs.copyFile(process.execPath, node);
+    await writeWindowsManagerNode(root, node);
   } else {
     // Inject the probe through a node wrapper. Mokly's install environment
     // allow list drops NODE_OPTIONS from the manager child, so the probe can
@@ -147,7 +150,8 @@ export async function managerPath(
       await fs.symlink(cli(manager), path.join(bin, name));
     }
   }
-  const original = (process.env.PATH ?? "").split(path.delimiter);
+  const original = originalPath.split(path.delimiter);
+  await preserveGitPrograms(bin, original);
   const safe: string[] = [bin];
   for (const directory of original) {
     if (!path.isAbsolute(directory)) continue;

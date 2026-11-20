@@ -114,6 +114,12 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// The operating system could not supply a fresh publication identity.
+    #[error("publication randomness failed: {source}")]
+    Entropy {
+        /// Original random-source failure.
+        source: getrandom::Error,
+    },
     /// JSON decoding failed.
     #[error("JSON encoding failed: {source}")]
     Json {

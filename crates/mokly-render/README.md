@@ -17,8 +17,8 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 ## What This Crate Does
 
 `Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
-its source readers, sidecar pool, worker scheduler, and byte-bounded render
-cache. Construction starts no sidecar. Description is serialized across clones of one
+its source readers, physical input reader, sidecar pool, worker scheduler, and
+byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
 runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has
 no bundle, class-map exchange, description, or render request. A configured
 renderer is bundled and inventoried even without JavaScript entries. Consumer PostCSS can run
@@ -32,8 +32,8 @@ The adapter preserves control and prop declaration order for the entry detail.
 Non-data inference warnings use the final entry path. Props diagnostics carry
 their detail separately from the module-and-export location, so Rust prints
 one location before the diagnostic code. Bundle requests name the renderer by
-`ResolvedConfig::renderer`, the repository-relative path without `.`, `..`, or
-empty segments. The render input keys and the stylesheet roots use the same
+`ResolvedConfig::renderer`, the resolved repository-relative path under which
+the module graph names it. Render input keys and stylesheet roots use the same
 renderer path. PostCSS requests carry logical stylesheet paths; the worker
 resolves their physical input on the chosen side. Each PostCSS request names
 the PostCSS module by `ResolvedConfig::postcss`, in the same form as the
@@ -85,12 +85,67 @@ cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
+Bundle reuse also reads the captured reuse evidence of the compiled recipe
+again through the injected `PhysicalInputs` reader, outside the side tree. A
+read error rejects reuse, also for a recorded absence. Incomplete evidence
+never permits reuse, with one exception in the Serve edit capture mode: a
+retained state with a toolchain identity whose evidence holds the
+`uncaptured` marker is reused while its module digests and metadata stamps
+stay current. Its evidence can also hold the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The same reader checks them again, and one change rejects the reuse. A
+captured state is tried before a marked one.
+Each core `bundle` request runs in a `catalogue.bundle` span, which records the
+`cache` outcome that the pool sets on the result. The request carries the
+`capture` mode of the runtime: `full` by default, and `serveEdit` for each
+Serve head preparation after the first published state. A `BundleLease` owns
+the lifetime epoch of each result from its return. When the core serves a
+retained evaluated state without a `bundle` request in the `full` mode, it
+sends the pool the served-generation notice with the id and the epoch of that
+state. The pool can then store that compilation in the bundle cache. Only that
+direct return of a retained state sends the notice. The `serveEdit` mode sends
+no notice. The head runtime of Serve also keeps the plan records of the
+[Serve edit plan rules](../../docs/protocol/mokly-sidecar-plans.md). It keeps
+a record from a `full` result, and it sends the plan of a current record with
+each `serveEdit` request.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
-identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
+identities, plugin dependency digests, directory-glob membership, and the
+captured results of its compilation. Empty directory recipes observe later
+additions.
+Each stylesheet root compiles through its own recording tree, resolver, and
+compiler, so roots that compile in parallel never share captured results.
+The recording tree keeps each read, digest, unretained digest, and projection
+of the core CSS compiler, its resolver, and the nested-import check of
+PostCSS. A read keeps the digest of the returned bytes, so a `package.json`
+read covers every field of that file. A projection keeps the returned node. A
+read or a projection that finds nothing keeps that absence. Projections
+include resolver candidates that find no file, each path part that the
+confinement walk checks, and the alias check of each source and asset. The
+stamp checks each captured result again before reuse. A changed package entry
+or an earlier candidate that appears therefore prevents reuse. Delivery
+replays the captured read results beside the PostCSS read evidence. The
+capture adds digests and nodes, not file bytes. The store charges them under
+its existing bound.
+Serve watches each captured path as an exact input, including resolution
+files and absent candidates, within the
+[watch denial rules](../../docs/protocol/mokly-watch.md#denial-rules). An
+edit to only a package's `style` or `exports` entry therefore starts a
+rebuild, which compiles each affected stylesheet again. A record keeps these
+paths as logical paths. Physical watch mapping is off by default.
+`Runtime::with_stylesheet_watching` turns it on for a runtime without a
+`BaseSide`, and Serve calls it for its working side. In that runtime, each
+delivery, also a cache hit, maps the logical paths to their current lexical,
+physical, and canonical paths. Each dependency candidate also carries the
+folder that admits it: the selected dependency root, or the first
+`node_modules` directory of its repository path. Mapping keeps a candidate
+only inside the repository or inside that folder. A failed projection or
+physical lookup skips only its candidate. A cancellation still fails the
+delivery. Every other runtime, such as one for a static build or a base
+preparation, maps no watch paths.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
@@ -127,6 +182,45 @@ Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
+
+A stylesheet record key holds the stylesheet root, the configuration input,
+the resolved modules, and the module resolution settings. It holds the
+physical paths of the selected dependency roots and of the repository roots
+of its side. It also holds the effective CSS resolver settings, which the
+resolver of the side uses: the configuration directory, aliases, dependency
+aliases, conditions, main fields, logical dependency roots, and extensions. A
+PostCSS record comes from a configuration with a PostCSS module. Its key also
+holds the physical source root of its side, so only a preparation on that
+root can reuse it. A plain CSS record comes from a configuration without a
+PostCSS module. Its key omits that root. Its stamp names each read, candidate
+probe, and absence that selected its inputs by logical path.
+
+`Runtime::for_base` gives each base runtime its own stylesheet store and a
+weak read-only reference to the stylesheet store of the original head
+runtime. An original head lends its store whether or not it maps watch
+paths. A base runtime that `for_base` makes from another base runtime keeps
+that reference, also when it is empty or expired, so a base never reads the
+store of another base. A runtime that `Runtime::new` builds with a
+`BaseSide` has an empty reference, so it finds no head candidate. The
+reference does not keep the head store alive. A base lookup checks its
+attempt-local store, the shared store of the base runtime, and then the head
+store. The base keeps no index of head records. A head candidate must pass
+the same stamp and context-entry checks as a candidate of the base store, in
+the base side tree. Delivery then replays its observations into the base
+tree in the same way as for a record of the base. A hit keeps the same
+immutable `Arc<Record>` in the attempt-local store, so it shares the storage
+of the head record. That store charges the record under its own bound. The
+shared store of the base runtime keeps only the records that the base
+compiles. The base never writes to the head store, so it never inserts,
+evicts, or rejects a record there. Its misses and rejections stay in its own
+stores. When the head store is gone, the base finds no head candidate. A
+base never finds a head PostCSS record, because the key of each base PostCSS
+record holds the source root of the base extraction. It keeps its own
+PostCSS contexts, processes, and bundle states. A hit makes no `css.bundle`
+span. Each real bundle keeps its span. A candidate that fails its checks,
+from either store, gives the miss reason `stamp-mismatch`. A miss without a
+candidate reports the reason that the shared store of the base runtime keeps
+for the key.
 
 `BaseSide` takes the shared source lease and the complete dependency selection
 from `mokly-compare`. The base source reader holds the same lease. Bundle
@@ -175,6 +269,7 @@ use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::types::GraphFactory;
 use mokly_graph::workers::RenderWorkers;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
@@ -189,6 +284,7 @@ fn services(
     let runtime = Arc::new(Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(SystemPhysicalInputs),
         pool,
         cache,
         workers,
@@ -225,7 +321,37 @@ view after the edit and counts real process starts and hello calls.
 
 - [`src/runtime.rs`](./src/runtime.rs) defines `Runtime`, which implements
   `DefinitionProvider` and `GraphFactory` over the injected source readers,
-  sidecar pool, workers, and render cache.
+  physical input reader, sidecar pool, workers, and render cache. Its
+  `bundle_capture` field holds the `BundleCapture` of each core `bundle`
+  request: `Full` by default, and `ServeEdit` when Serve prepares its head
+  after the first published state. `Runtime::with_serve_edit_plans` gives
+  the head runtime of Serve its plan record owner. A base runtime never gets
+  one. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
+  mapping for a runtime without a `BaseSide`. Serve calls it for its working
+  side. `Runtime::for_base` builds the runtime of one base preparation, which
+  shares the services and the style memo of the head runtime. It starts its
+  own stores and keeps watch mapping off. The `head_styles` field marks the
+  origin. It is `None` in an original head. In a base, it holds a weak
+  read-only reference to the stylesheet store of the original head, also
+  when that reference is empty or expired.
+  `Runtime::with_document_store` gives the Serve runtime its render store, and
+  `Runtime::for_base` copies it, so the head and base graphs share one store.
+- [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
+  JavaScript part of a render store identity: the toolchain identity and the
+  metadata identity of a compilation with captured and durable reuse evidence,
+  or none.
+- [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
+  record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
+  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
+  captured and durable evidence, replaces the record of equal settings, and
+  removes the oldest records to keep the serialized total within
+  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
+  place.
+- [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
+  `PhysicalInputs`, the reader that checks the captured reuse evidence of a
+  compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
+  filesystem implementation. Its `current` check rejects marked evidence. It
+  does not read the `durable` flag of the evidence.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -234,9 +360,27 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path.
+  same composition path. It gives the `Fragments` of each side that side's own
+  source root, so a base graph records nothing as head, also with an equal
+  generation id.
+- [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
+  adapter over the pool. Its `record_served` passes a store-served request to
+  `SidecarPool::record_served_render`.
+  [`src/render_call.rs`](./src/render_call.rs) builds the wire call once, for a
+  render and for a record.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
-  isolates class maps across retained graphs.
+  isolates class maps across retained graphs. It sends the served-generation
+  notice only at its direct return of a retained state. Its `BundleState`
+  shares the reuse evidence of the actual result through an `Arc` and keeps
+  its toolchain identity. It tries retained states with captured evidence
+  first, and it admits a marked state only in the `ServeEdit` mode.
+- [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
+  request with the `capture` mode of the runtime in its `catalogue.bundle`
+  span, gives each result's lifetime epoch to a `BundleLease`, and sends the
+  served-generation notice after a core reuse, only in the `Full` mode.
+  Before a `ServeEdit` request of a head runtime, it sends the plan of a
+  record whose evidence `physical_inputs::current` accepts. It offers each
+  `Full` result with a plan and a toolchain identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -244,19 +388,53 @@ view after the edit and counts real process starts and hello calls.
   props, controls, owners, and source coordinates into catalogue records.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
+- [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler
+  of one side and the key of its records, and lists the stylesheet roots of a
+  module graph. It passes the head store reference of the runtime to
+  `CachedStylesheets::with_head`. Only a base runtime has one.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
-  attempt-local store and the shared store, and times each real bundle as
-  `css.bundle` with its miss reason.
+  attempt-local store, the shared store of its runtime, and, in a base
+  runtime, the head store that `CachedStylesheets::with_head` adds as the
+  last read-only source. It times each real bundle as `css.bundle` with its
+  miss reason.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
+- [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) defines
+  `RootCompiler`, which compiles one stylesheet root, and `CapturingCompiler`.
+  For each root, `CapturingCompiler` makes a new recording tree, resolver, and
+  compiler, and returns a `Compilation`: the bundle and its `Capture`. With
+  PostCSS, it uses `PostCss::for_root`, whose nested-import check reads
+  through that root's tree and resolver. The root still shares the PostCSS
+  state of its attempt.
+- [`src/stylesheet_capture.rs`](./src/stylesheet_capture.rs) defines
+  `RecordingTree`, the source tree of one compilation, which keeps each read
+  digest and projection. It also defines `Capture`, the stamp entries and the
+  read evidence that the tree returns.
+- [`src/stylesheet_watch.rs`](./src/stylesheet_watch.rs) maps the logical
+  paths that a record captured to the exact lexical, physical, and canonical
+  paths that Serve watches on the current side. It returns `WatchInputs`,
+  which also holds the admitting folder of each dependency candidate.
+  `SideInputs::watch_candidates` lists the candidates of one path, and
+  [`watch_candidate::optional`](./src/watch_candidate.rs) ignores a failed
+  projection, but it still returns a cancellation. Each delivery, also a
+  cache hit, reaches it through `CapturingCompiler::watch_files`. Without
+  watch mapping, that method returns no paths.
+- [`src/input_stamp.rs`](./src/input_stamp.rs) defines `InputStamp`, the
+  recorded input results that `InputStamp::matches` checks again before a
+  record is reused.
 
 ### Related Docs
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
+- [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
+- [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
+- [Stylesheet dependency retention](../../docs/protocol/mokly-imported-styles-postcss.md#dependency-retention).
+- [Timing records](../../docs/protocol/mokly-timings.md#core-spans).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

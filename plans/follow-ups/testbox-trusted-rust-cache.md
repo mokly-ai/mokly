@@ -1,0 +1,36 @@
+# Testboxes get no fresh Rust cache
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the branch `calummoore/ci-provider`, review finding 1. This item holds its blocked wider fix.
+- **Location:** the step "Restore Rust build cache" in `.github/workflows/blacksmith-testbox.yml`, and the Rust build cache rules in `docs/protocol/ci-verification-security.md` and `docs/protocol/remote-verification-testbox.md`.
+- **Reason:** The fix changes the protocol rule that Testboxes never save a cache, and only the user can change that rule.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Testbox:** a Blacksmith remote machine. The remote run of `cargo xtask check` prepares it with `.github/workflows/blacksmith-testbox.yml`, and it runs one suite command of the complete gate.
+  - **Rust build cache:** the saved Cargo registry and the builds of crates.io dependencies. `Swatinem/rust-cache` restores and saves it.
+- **Background:**
+  - On 2026-11-18 the user moved every CI, release, and nightly job to GitHub-hosted runners. Only the Testbox job stays on Blacksmith, because Testboxes exist only there.
+  - On a Blacksmith runner, cache actions read and write Blacksmith's own store. On a GitHub-hosted runner, they use GitHub's store.
+  - Only CI runs on `main` save a Rust build cache. CI now saves into GitHub's store. The Testbox job restores from Blacksmith's store and never saves, because boxes run unreviewed local trees.
+  - The two runners also give different cache keys and entry versions. The images hold different extra Rust versions, and the work paths differ. So a shared store alone would still miss.
+  - Blacksmith evicts an entry 7 days after its last access. After that, each box builds Rust dependencies without a cache.
+  - A cold build costs about 75 seconds more per box. The viewer jobs of runs 44366055696 and 44362973486 show about 1 minute 51 seconds cold against 37 seconds warm, for the cache restore and the dependency build.
+  - No Testbox ran from 2026-11-06 to 2026-11-18.
+- **Problem:** No trusted job writes the cache that a Testbox restores, so the restore step finds nothing once the old entries expire.
+- **Impact if no action:** Each remote gate box spends about 75 seconds more on dependency builds. That time is billed by Blacksmith, and it comes out of the 30-minute Testbox job guard.
+- **Root question:** Where do Testboxes get trusted Rust dependency builds when no trusted job builds on their provider, and is that reuse worth its cost?
+- **Options:**
+  - **A.** Keep the current state. The restore step stays, and boxes build without a cache. Effort: Small.
+  - **B.** Remove the Testbox restore step and its alignment-test assertions, and say in the docs that boxes build without a cache. This deletes live functionality, so it needs the user. Effort: Small.
+  - **C.** Add a trusted seeding job on `blacksmith-4vcpu-ubuntu-2404`. It runs on pushes to `main` that change Rust build inputs, and weekly. It builds with `cargo xtask build-native` and saves the cache. This adds a second Blacksmith job and a small Blacksmith bill. Effort: Medium.
+  - **D.** Let the Testbox job save its own cache on `main` runs, after `cargo xtask build-native` and before it accepts a synced tree. This changes the rule that Testboxes never save. The trust then depends on Blacksmith's order, in which a box is ready before any sync. Effort: Medium.
+- **Left out:**
+  - Moving CI back to Blacksmith. The user rejected that on 2026-11-18.
+  - Letting a box save after it runs a synced tree. That breaks the rule that only reviewed trees write a cache.
+- **Wider fix:** D. The reader writes its own trusted entry, so a later change of the CI runner, image, or work path cannot split the cache again.
+- **Previous examples:** None found.
+- **Recommendation:** A while CI stays on GitHub-hosted runners, because the reuse saves only about 75 seconds per box. D best protects the remote gate if Testboxes see regular use.
+- **Action:** ask the user, because D changes the never-save rule, and the value depends on how often the remote gate runs.

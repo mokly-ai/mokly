@@ -4,8 +4,8 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::compiled::CompiledGeneration;
-use crate::methods::{Bundle, Call};
+use crate::compiled::{CompiledGeneration, ReuseEvidence};
+use crate::methods::{Bundle, BundleRequest, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::results;
@@ -27,13 +27,24 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     *next += 1;
                     next.to_string()
                 };
-                Ok(MethodResult::Bundle(results::Bundle {
+                Ok(MethodResult::Bundle(Box::new(results::Bundle {
+                    plan: None,
                     unmapped_dependency_directories: Some(vec![id.clone()]),
                     epoch: 0,
+                    cache: None,
+                    compile_count: 1,
                     generation: id.clone(),
                     modules: vec![],
 
-                    compiled: CompiledGeneration {
+                    compiled: Arc::new(CompiledGeneration {
+                        toolchain: "fixture".into(),
+                        metadata_identity: None,
+                        reuse_evidence: Arc::new(ReuseEvidence {
+                            uncaptured: None,
+                            durable: true,
+                            complete: true,
+                            inputs: Default::default(),
+                        }),
                         unmapped_dependency_directories: Some(vec![id]),
                         identity: "same".into(),
                         code: "code".into(),
@@ -46,8 +57,8 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         metadata_inputs: Default::default(),
                         input_directories: Default::default(),
                         metadata_directories: Default::default(),
-                    },
-                }))
+                    }),
+                })))
             }))
             .n_times(2),
         WorkerMock::resident_bytes
@@ -69,6 +80,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
         )),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar".into(),
             repository: "/repo".into(),
@@ -80,15 +92,19 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
         },
     );
     for evaluation in ["first", "second"] {
-        pool.request(Call::Bundle(Bundle {
-            evaluation: Some(evaluation.into()),
-            entry_files: vec![],
-            renderer: None,
-            stories_files: vec![],
-            module_resolution: Default::default(),
-            source_root: "/repo".into(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
+        pool.request(Call::Bundle(BundleRequest {
+            plan: None,
+            params: Bundle {
+                evaluation: Some(evaluation.into()),
+                entry_files: vec![],
+                renderer: None,
+                stories_files: vec![],
+                module_resolution: Default::default(),
+                source_root: "/repo".into(),
+                configuration_directory: ".".into(),
+                repository_roots: vec![],
+            },
+            capture: None,
         }))
         .unwrap();
     }

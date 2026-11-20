@@ -3,7 +3,7 @@
 use std::sync::mpsc;
 use std::thread;
 
-use super::Trace;
+use mokly_test_support::capture::Trace;
 
 /// One callsite that no other test uses, so this test controls its first registration.
 fn probe() {
@@ -18,7 +18,7 @@ fn a_callsite_first_registered_without_a_capture_still_reaches_the_capture() {
     let capture = thread::spawn({
         let trace = trace.clone();
         move || {
-            tracing::subscriber::with_default(trace, || {
+            trace.in_scope(|| {
                 scoped.send(()).unwrap();
                 first.recv().unwrap();
                 probe();

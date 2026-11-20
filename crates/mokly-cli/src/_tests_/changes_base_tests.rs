@@ -3,8 +3,9 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_cli::cancellation::BuildCancellation;
+use mokly_compare::base_freshness::DependencySelection;
 use mokly_compare::base_render::{
     BasePreparationError, BaseProvider, BaseRequest, HistoricalSources,
 };
@@ -14,6 +15,8 @@ use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::error::Error;
 use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
+use mokly_git::repository::RepositoryMock;
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::error::ProtocolError;
@@ -24,6 +27,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
 use crate::changes_base::NativeBase;
+use crate::changes_freshness::PreparedDependencies;
 
 type Events = Arc<Mutex<Vec<&'static str>>>;
 
@@ -100,25 +104,28 @@ fn lease() -> Arc<Lease> {
     })
 }
 
-fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
+fn side(sources: Arc<Lease>) -> PreparedDependencies {
     side_with_tier(sources, Tier::Working)
 }
 
-fn side_with_tier(sources: Arc<Lease>, tier: Tier) -> Arc<BaseSide> {
-    Arc::new(BaseSide {
-        working_root: "/repo".into(),
-        sources,
-        dependencies: Resolved {
-            tier,
-            node_modules: "/deps/node_modules".into(),
-            module_resolution: ModuleResolution::default(),
-            warning: None,
-            lease: None,
-            repository_roots: Vec::new(),
-        },
-        cache_namespace: None,
-        identity: "commit".into(),
-    })
+fn side_with_tier(sources: Arc<Lease>, tier: Tier) -> PreparedDependencies {
+    PreparedDependencies {
+        selection: Some(DependencySelection::default()),
+        side: Arc::new(BaseSide {
+            working_root: "/repo".into(),
+            sources,
+            dependencies: Resolved {
+                tier,
+                node_modules: "/deps/node_modules".into(),
+                module_resolution: ModuleResolution::default(),
+                warning: None,
+                lease: None,
+                repository_roots: Vec::new(),
+            },
+            cache_namespace: None,
+            identity: "commit".into(),
+        }),
+    }
 }
 
 /// Runs a base preparation whose bundle fails with a protocol handshake error.
@@ -132,8 +139,9 @@ fn prepare(
 ) -> BasePreparationError {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(PoolMock::request.next_call(matching!((call) if matches!(call,
-            Call::Bundle(bundle) if bundle.source_root == "/base" && bundle.entry_files == ["specs/card.mockup.ts"]
+            Call::Bundle(bundle) if bundle.params.source_root == "/base" && bundle.params.entry_files == ["specs/card.mockup.ts"]
         ))).returns(Err(mokly_sidecar::error::Error::Protocol(ProtocolError::Handshake))))),
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())), "test".into(), None,
     ));
@@ -145,8 +153,13 @@ fn prepare(
         runtime: head,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         dependencies: Arc::new(dependencies),
+        freshness: Some(Arc::new(Unimock::new(()))),
     };
     let config = ResolvedConfig {
+        modules: ResolvedModules {
+            renderer: input.renderer.clone(),
+            postcss: input.postcss.clone(),
+        },
         input,
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
@@ -156,7 +169,14 @@ fn prepare(
     base.prepare(&BaseRequest {
         head: &Unimock::new(()),
         working_config: &config,
-        repository: Arc::new(Unimock::new(())),
+        repository: Arc::new(Unimock::new(
+            RepositoryMock::checkout_identity
+                .some_call(matching!(_))
+                .returns(Ok(CheckoutIdentity {
+                    digest: "checkout".into(),
+                    filtered: false,
+                })),
+        )),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
         install_scripts,
         sources: HistoricalSources {
@@ -175,7 +195,7 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
     let events = Events::default();
     let dependencies = Unimock::new(
         BaseDependenciesMock::prepare
-            .next_call(matching!((_, _, directories, unmapped, early) if *directories == [String::from("node_modules")] && unmapped.is_empty() && early.is_none()))
+            .next_call(matching!((_, _, selection, early) if selection.directories == [String::from("node_modules")] && selection.unmapped.is_empty() && early.is_none()))
             .returns(Ok(side(lease()))),
     );
     let error = prepare(
@@ -201,7 +221,7 @@ fn native_base_reports_scripts_off_after_a_tier_two_install() {
         let events = Events::default();
         let dependencies = Unimock::new(
             BaseDependenciesMock::prepare
-                .next_call(matching!(_, _, _, _, _))
+                .next_call(matching!(_, _, _, _))
                 .returns(Ok(side_with_tier(lease(), tier))),
         );
         let error = prepare(
@@ -225,8 +245,8 @@ fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configura
             .next_call(matching!(_))
             .returns(Ok(Some(early.clone()))),
         BaseDependenciesMock::prepare
-            .next_call(matching!((_, _, _, _, early) if early.as_ref().is_some_and(|lease| lease.directory == Path::new("/base"))))
-            .answers_arc(Arc::new(move |_, _, _, _, _, early| Ok(side(early.unwrap())))),
+            .next_call(matching!((_, _, _, early) if early.as_ref().is_some_and(|lease| lease.directory == Path::new("/base"))))
+            .answers_arc(Arc::new(move |_, _, _, _, early| Ok(side(early.unwrap())))),
     ));
     let error = prepare(
         Config {
@@ -256,7 +276,7 @@ fn a_failed_early_lookup_keeps_the_base_reads_on_git() {
                 path: "/cache".into(),
             })),
         BaseDependenciesMock::prepare
-            .next_call(matching!((_, _, _, _, early) if early.is_none()))
+            .next_call(matching!((_, _, _, early) if early.is_none()))
             .returns(Ok(side(lease()))),
     ));
     let error = prepare(

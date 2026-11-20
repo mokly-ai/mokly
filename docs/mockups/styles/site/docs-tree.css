@@ -1,0 +1,129 @@
+/* 8 -- Documentation ----------------------------------------------------- */
+
+/* The tree sits on the page canvas rather than in a filled panel. A single
+   vertical hairline separates it from the document, and the on-this-page
+   rail hangs from a hairline of its own at the outer edge. */
+
+.site-docs {
+  display: grid;
+  grid-template-columns:
+    var(--mk-layout-site-sidebar)
+    minmax(0, 1fr)
+    var(--mk-layout-site-on-page);
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: 0 var(--mk-layout-gutter-desktop);
+  width: 100%;
+}
+
+.site-docs-side {
+  align-self: stretch;
+  border-right: 1px solid var(--mk-color-border);
+  display: block;
+  padding-right: var(--mk-space-6);
+}
+
+.site-doc-tree {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
+  padding: var(--mk-space-6) 0 var(--mk-space-5);
+  position: sticky;
+  top: 0;
+}
+
+.site-doc-tree-scroll {
+  display: grid;
+  gap: var(--mk-space-5);
+  margin: var(--mk-space-4) 0;
+  overflow-y: auto;
+  padding-right: var(--mk-space-2);
+  scrollbar-color: var(--mk-color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.site-doc-tree .site-version {
+  background: none;
+  border: 0;
+  padding: 0 var(--mk-space-3);
+}
+
+.site-doc-section-head {
+  padding: 0 var(--mk-space-3) var(--mk-space-2);
+}
+
+.site-doc-section ul {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-doc-link {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+  min-height: var(--mk-layout-control-min);
+  padding: var(--mk-space-1) var(--mk-space-3);
+  text-decoration: none;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-doc-link:hover {
+  background: var(--mk-color-surface-muted);
+  color: var(--mk-color-text);
+}
+
+.site-doc-link--current,
+.site-doc-link--current:hover {
+  background: var(--mk-color-accent-soft);
+  color: var(--mk-color-accent);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-doc-tree-foot {
+  border-top: 1px solid var(--mk-color-border);
+  display: grid;
+  padding-top: var(--mk-space-3);
+}
+
+.site-doc-tree-foot .site-doc-link {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-doc-disclosure {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  margin-top: var(--mk-space-6);
+  padding: 0 var(--mk-space-2);
+}
+
+.site-doc-disclosure > summary {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--mk-type-small-size);
+  font-weight: var(--mk-font-medium);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-2);
+}
+
+.site-doc-disclosure > summary:hover {
+  background: var(--mk-color-surface-muted);
+}
+
+.site-doc-disclosure .site-doc-tree {
+  height: auto;
+  padding-top: 0;
+  position: static;
+}
+
+.site-doc-disclosure .site-doc-tree-scroll {
+  overflow: visible;
+}

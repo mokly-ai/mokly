@@ -1,0 +1,1921 @@
+{
+  "base": "HEAD~1",
+  "baseCommit": "8735278748f261faa7e843074c2b60b8b6b8fa38",
+  "changesStatus": "ready",
+  "comparisonUrl": "mokly-viewer/diffs/generations/7f39f27fedba785f2bba4165593a65766cf901f012a7ca52cc16ef39af74d898/",
+  "components": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "added",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "added",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "cab46fe8a076f63b1da02a5d47b493781676707483ba3bb9e25dbde342a2ea0e",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/container.component.html"
+      },
+      "kind": "component",
+      "path": "container",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Parent"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Current container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "56aa5b786cdc55c87d34153cf70b99e97e23c99a30ae331e366d97fa611f5544",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "1e9ba54553d298d2ebbe9ab3af51391314b2f95b468245bc2a230c270df6be3a",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "de21f36360bce56a525c00b9e7d4530131774dde74f54f9de4342246226a3bf8",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "7a4c91cbc14e5af06f367e24f57774915f213a0f36ef64ad5f0dfab00a7ace34",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "6148a0e353c208158c393f0e6b9d6a78a3d10bba433a8eedf1446c36bdcd9c3d",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/container.component.html"
+      },
+      "kind": "component",
+      "path": "container/adopted",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Adopted"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Adopted",
+      "variantOf": "container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "55258cb4483cb5e0083b13d79a02667361e8df2c22fc53d540c7fba083826959",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "85c0538fa297128ca7151fd32a76aa4853cc9212584e719a3072b87f1f5683b7",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "d80177939f40555c3640674c4859afee0f4eb82dc45363d277480ba98609a432",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "f9440004ec5aa66de43995a575b94505b08cdaf57dee8cc598590fa3ad7846c6",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "expanded": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "03cc324fad1900e83b06f3072bf074704a55796b285e6755059f57335b3ae54a",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/promote/entry.component.html"
+      },
+      "kind": "component",
+      "path": "promote/entry",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expanded": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Parent"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Promoted",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "ea41c024879d96112fe15e3ea606e47bd9fa2cc7e10c57f12bad16970042d3cc",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "c2ad57a22493c70cdc7aad0cd093d8aa6f37364df8cead8adbee92cb27fe9373",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "e22858f2ea3e62c8a40e6698f0f1477cc16c7fe2da1c64035660134a76c8d84b",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "9b34d30939c61bf8ff0bed29039aa5abdf5bce39358e191848f23c98dfbcc82e",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "added",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "added",
+        "status": "ready"
+      },
+      "controls": {
+        "expanded": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "af4d0c8908ba6a40372cc28516f904edb1db75b1d80439c8767f5fc69866f13b",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/promote/entry.component.html"
+      },
+      "kind": "component",
+      "path": "promote/entry/saved",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expanded": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Current saved"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Current saved",
+      "variantOf": "promote/entry",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "00d476d0d271bab78c01ef511d6b88f5f0e5ad78609b0984ca30680950b42cfc",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "029df3c04faa25297999a47891cf9ac0de22e289f5c3a4144d8cddf5364b23c2",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "72f0d48607c2948c20462d9dd047448dc55e59aadf53073107d7f9bf5101222b",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "185911d1907e79c3b03085c25d9373cc7b080f37131c873c132ed801e0e24985",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "added",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "added",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "ready": {
+          "kind": "boolean"
+        }
+      },
+      "detailId": "8e6947c009f91c801e3a5ddf35843bc56337ef277b878f7ee9818521eaeeeaaf",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/variant-target.component.html"
+      },
+      "kind": "component",
+      "path": "variant-target",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Parent"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Target component",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "bad15433941a8a7f2ba73d93960a013e3d1f2792842379b7b763727583b9dddb",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "7fe7d18dabf613f7e3634750257dbc11c84af1fb781440d006404ee5aed92762",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "c1e7e74166ebe16f8490c798c219c1c8537f695892bd1ba208877d5139939aa6",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "de9bdef6e4b968bafa2f7f61048557c5ca8e9c557b3021fb1c709f9ea5bf68fe",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "ready": {
+          "kind": "boolean"
+        }
+      },
+      "detailId": "d74dde8811a1edcec6f2a57ba9131f44a900c13fcc3f1003eb1ce39fed59bfc9",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/variant-target.component.html"
+      },
+      "kind": "component",
+      "path": "variant-target/saved",
+      "previousPath": "variant-source/saved",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Move me"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Moved variant",
+      "variantOf": "variant-target",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "588eb38e1e1bc5e24c643c15e14c644b1cf443064f1ec0268d875dd00dbb800b",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "56858d8660e582114722e0fd84cb804a7ab83eb4246ef29f1622cd4eb8004ffe",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "1d72bae3dcf1430b7be8b7602379847d9d130e32e543372c69f9bbc446f6bc2c",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "6c29529f35e0e37a70597bde1052fbdbc1dbe089f10a423d591ff0da9aeb01a0",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "added",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "added",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "e42e45b653c5be6ddca1b947732a2726256b08ba16a6712af2f6b6141138020e",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/zero-container.component.html"
+      },
+      "kind": "component",
+      "path": "zero-container",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Parent"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Zero container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "acd08c26609eed06a2677167be8dcc9eed8fdf66c068646d8a03097b5a9eecdf",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "e0e5cb94fabb492a5a8c02b851be0afff3b861e2f39d5ed0baf3787dc88a9faa",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "f9b5631ce9f9401a3ca9a0784c23e5266b40c800ae53d8b3734336fa68f91f23",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "added",
+            "status": "ready"
+          },
+          "documentKey": "3991935da8a8db3ae2922642d849d9d78881aa33ba3265ba955dd29380ad2016",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "cfa79426f7ef9b3a9c7a910b84025fddab1c5f5f59a51d213976689be5023ee5",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/zero-container.component.html"
+      },
+      "kind": "component",
+      "path": "zero-container/zero",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Zero"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Zero",
+      "variantOf": "zero-container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "1f745927ecfdda4a3ce987ee832c41fba6447351f3d20665a8593b55dc029a05",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "2486cc13d17edbf046b2b17390945aebda5d899b7b3156097fd57514693a59f6",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "6286be140eb1a051f870cc6620e87f7966aab73edd4ac38281d1241126e1a63b",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "c309257b6723611ef3a09c8f6c8fd6965d53c89ab600d6dca1c18813630fb1e9",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "6f64720c762cd409993946387d29e15ca7ea3cdd31503c6a7e888e3c65584f9e",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/zero-container.component.html"
+      },
+      "kind": "component",
+      "path": "zero-container/one",
+      "previousPath": "zero-container/zero/one",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "First"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "First moved",
+      "variantOf": "zero-container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "1300f3f1538a8b6044621dad1e7c3b0ce66d2a6bd9227ef825630c1d1cedabf2",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "460484456409ba0995c6315c9dd5e616700f2784ddf008f16acf43213f470713",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "8d5220cdcd05dc6e8fbbfe3d58c2ff1775f88ccbe58eed0a2eac3c071570c55b",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "44e33d0a0ad2211fb43adc1e02c5dbd783840009dcbbf8e36769f0d11c1b7adf",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "eligible": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "ba9cb7bdae910bbefc35507bb014352b477a76daf8e6cb8dcc4b095a7ffe7e37",
+      "details": {
+        "description": "After move.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/zero-container.component.html"
+      },
+      "kind": "component",
+      "path": "zero-container/two",
+      "previousPath": "zero-container/zero/two",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Second"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Second moved",
+      "variantOf": "zero-container",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "52ddfd55014bc099e285f28d1c933e5625306c2d6512c930d0f4d3beea1dd1e9",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "e882955eb70efeee1e010d5791bb05298b7790cc57b2f228939203f65ae7fe3e",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "65bf7f67e48f594f412907dbcbc13d2f8c869125e9ce80cd004e40270d7980ba",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "75f2cb2d322f5ac01fe245bcd21c40aa7dc3efe3353388a4ca8546ca15ec0cee",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "deploymentId": "082b3351edf8aed76f0e4f1b97d5c3eba1dd3918d05fa123ec667944f969d625",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "pages": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "added",
+        "status": "ready"
+      },
+      "detailId": "b1c293bae5234960efa7a4ab8c28f3ed01a55423a770e5f1cd2bf210e9198949",
+      "details": {
+        "description": "A retained page example.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/reused.page.html"
+      },
+      "documentKey": "e50c3baef68306afa1246ecc59399a811248140c6532cd24b2e82b40aa7750a1",
+      "kind": "page",
+      "path": "reused",
+      "tags": [],
+      "title": "Reused page"
+    }
+  ],
+  "removedEntries": [
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "comparison": {
+          "eligible": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "controls": {
+          "label": {
+            "kind": "text"
+          }
+        },
+        "detailId": "88d4d3c0afba137c9945e802e53383bb4ee9590361fdae7421c25c5f15e7f9da",
+        "details": {
+          "description": "Before move.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/container/adopted.component.html"
+        },
+        "kind": "component",
+        "path": "container/adopted/left",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Left"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Baseline left",
+        "variantOf": "container/adopted",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "a4817f606692185fd4a6e47f7415412df7360ebf86aa2dad7cebd39785cc5ed5",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "a527358489c02da91e70e592e167a28643627d8b2861857437a17877ce19fe49",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "cfb3db9c614869f3986c91e520d0660bbe26bac2ddacdc4d3af56cad13a272ea",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "0905e0ac430615b0f4e371578d04c393ca9649ea4119de216d188e6cf63775e4",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [
+        "Container"
+      ],
+      "parentTitle": "Adopted",
+      "snapshotId": "1b4f64ded8054ab183af7ad0f8309e45ee47be99c4654790e30d23ac89561eec"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "comparison": {
+          "eligible": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "controls": {
+          "label": {
+            "kind": "text"
+          }
+        },
+        "detailId": "a97ca533ca4067b313f85b875d00fc89c3ba4372615ed928e62039f908f963b0",
+        "details": {
+          "description": "Before move.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/container/adopted.component.html"
+        },
+        "kind": "component",
+        "path": "container/adopted/right",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Right"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Baseline right",
+        "variantOf": "container/adopted",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "e957d189c67f28cec756cfba1eb6b138552862fc9665a9a8ca43cd873436d3c2",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "7a5df432ab614cad5844c486424e59b8a5b0f01dfc0e8dc41f056860d62135bc",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "2d3c4b99b6dcf932419066c1c9f6a48be104c4638be8f3fdf9eb4221f6826cf1",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "a63f88d852e1f91de11f8a130bbc8431e4bc5df96d1e489ddddda7006aff63c9",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [
+        "Container"
+      ],
+      "parentTitle": "Adopted",
+      "snapshotId": "fd35a5890fcda533d20555b0ff00b418c148d2dcb0a98a4b57e253e439146d75"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "comparison": {
+          "eligible": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "controls": {
+          "label": {
+            "kind": "text"
+          }
+        },
+        "detailId": "e24e7db94a21575df9f96c524a4f8037c193c287ad1cb5ac0a725514d79090db",
+        "details": {
+          "description": "Before move.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/promote.component.html"
+        },
+        "kind": "component",
+        "path": "promote",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Parent"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Previous parent",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "f7bdd7f7864878cb08e0b43309bd62bcb62d5bcfbdb9df10d48338e93a484bb3",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "9620b490eb2f622a59f65eb91005923e54050b9f54c49fe9e3eccfedb7a07087",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "4f86645f5da023cd0ac1b47a31d3ef1c78e2520739011603cfa77a00891b784d",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "2a74b390f40af64cbdd061161c799e3fa657f865e5d07f591ce8e41cf4ad9637",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [],
+      "snapshotId": "17a572ae6db9b4d66c23405db839ba787a2c3a601be458b5e1a7c77bb099e686"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "comparison": {
+          "eligible": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "controls": {
+          "label": {
+            "kind": "text"
+          }
+        },
+        "detailId": "87635bf94afdeac7488c7c66f0a2084ccadfa31a1b2040abb178f755823e46eb",
+        "details": {
+          "description": "Before move.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/variant-source.component.html"
+        },
+        "kind": "component",
+        "path": "variant-source",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Parent"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Source component",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "82ea1a22e58d0cb32c038524955c25036974f60ca17785f1015569df2bc4150e",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "0657f29bfbdffd6b9453ebfdb5adb541e8f4f7504cf4ac484fc9edf079c1d3f3",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "d023c8410f11770cbcb338724d20e48a2d6772c927438a36255978447d78a0fe",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": true,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "2c8684d0979e6ca1fa8142d82afc37c734bb6b37d01161c072795169530dc250",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [],
+      "snapshotId": "e1d0c32484a89877e7b6dec2c66ea211f598cdeb157639746a00f072b535116a"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "detailId": "c2921b4fc7ee98f860ea0693172ca785e8216f38a9c7c549e3b4e0ab647da15f",
+        "details": {
+          "description": "",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/removed-guide.md"
+        },
+        "documentKeys": [
+          {
+            "colorScheme": "light",
+            "documentKey": "94486affae904e674c2fad94d3d7e9f3d589abbc624981a39d24318f9e150b73"
+          },
+          {
+            "colorScheme": "dark",
+            "documentKey": "e28883d64d46d1635b6051e91110d12e5522d2f9d5004563c613c37d419caea4"
+          }
+        ],
+        "kind": "document",
+        "path": "removed-guide",
+        "tags": [],
+        "title": "Removed guide"
+      },
+      "folderTitles": [],
+      "preview": {
+        "kind": "document"
+      },
+      "snapshotId": "1a8f6f49ef6696d216bb883d4beae85629db1ba264a850fd944b4a1e66ce28e1"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "detailId": "b0879340434e9529b809e595c2622ab485a5d049323453f268202d00d014db10",
+        "details": {
+          "description": "A retained page example.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/removed-page.page.html"
+        },
+        "documentKey": "377e2781805a28e83aa064084622471b9c885f01edf088570cc51c24731d978c",
+        "kind": "page",
+        "path": "removed-page",
+        "tags": [],
+        "title": "Removed page"
+      },
+      "folderTitles": [],
+      "preview": {
+        "kind": "page"
+      },
+      "snapshotId": "0f25ca7778f8c3894a57d338860f3494bfc4027e97ae7039a1982edf0432d2e5"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "controls": {},
+        "detailId": "aca0a9e40340d8fd30180e3d1656963784005d2601c63aa4d833b4f4df6fe4b0",
+        "details": {
+          "description": "A retained comparison example.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/Account/Gone.screen.html"
+        },
+        "kind": "screen",
+        "path": "Account/Gone",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "props": {},
+        "tags": [],
+        "title": "Removed sibling",
+        "useCasePaths": [],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "55deec821c1a8fd11de3418f4afc5cb0e6046b602e687c7ee960d38dc2037e3f",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "534416386f19b3037a33b682e356485ec0e0f72905c99dd929a9ae52226550c9",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "ba132cb00e14ae7e5bbb4cb28b89028454c46378f2737eb2d918fed2435479ec",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "53b8ef95f7be08ccf50a38f588835d9dc7109054d8d3803b7278c2ac1b497f1a",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [
+        "Account"
+      ],
+      "preview": {
+        "kind": "screen"
+      },
+      "snapshotId": "0a44bf4a768c8166411491a80d788998f9eb7c903eea1a641803e129af93d700"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light",
+          "dark"
+        ],
+        "controls": {},
+        "detailId": "9536c871e290ed2957f64375d649e36256c2ad014f2d5fadeb9a21cbfc4ee01c",
+        "details": {
+          "description": "A retained comparison example.",
+          "relatedDocs": [],
+          "sourcePath": "catalogue/src/entries/removed.screen.html"
+        },
+        "kind": "screen",
+        "path": "removed",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "props": {},
+        "tags": [],
+        "title": "Removed screen",
+        "useCasePaths": [],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "ffedd2ada9a94fd6963fb10916a2d163787c7759669daa96e95e06a4e7045bc5",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "3c9e66f10b2fe824393d3ce086fcc66eb80fa3ff7f2211425336466458456d92",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "6fe081c324cef92c9e8639a928f14a2c342699e47a4332b794a404519274555a",
+            "viewport": "desktop"
+          },
+          {
+            "colorScheme": "dark",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "documentKey": "6ddba72476d76704a4f9fe8c746be70b136ca01f3af4124999968d6c64457ddb",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "folderTitles": [],
+      "preview": {
+        "kind": "screen"
+      },
+      "snapshotId": "9932021b6674f1fe0607aef54e4e01735988cddbb2ed66d18b6f224be676cacf"
+    }
+  ],
+  "revision": 0,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {},
+      "detailId": "f0678b455957ce1bbbe03f88aa97df3e19cadeac3d285b2ab49ecf00f7b5fb19",
+      "details": {
+        "description": "A retained comparison example.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/account/kept.screen.html"
+      },
+      "kind": "screen",
+      "path": "account/kept",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Kept screen",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "fa4eccc5c9fe5e43c00d051b335aebff056b309802eae0dc2ecf25d1e2d33617",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "f7357f356a8d0003dc7b596ab7893333d167271f3fbad2a2c089dcd1aa360928",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "5b234ff1fbbd3d555fa472390115a3c261f7a3959c569ddbf237f1dfd4442f7d",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "1422e13e4867f5957809696afdeb7d22264c2bb8400d2094596d82d56e7b770b",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {},
+      "detailId": "0d89b5998399565f15a88eed40b96b76d2d11a3f6c0dc96cd08db4481a7c484d",
+      "details": {
+        "description": "A retained comparison example.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/move-after.screen.html"
+      },
+      "kind": "screen",
+      "path": "move-after",
+      "previousPath": "move-before",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Moved screen",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "5e1ca27440544e46d6bb01559f1990ac41e296b330c4d285ff9a021d9e029a08",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "f9d9860c93ad04f0399f8032b6eed83ebfffad175ea8a6ba10c96d60e156097b",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "6f55b89cf75a6fba1033a575244df1e564e2b9a5f870dab0a0e113fa47826ce2",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "0332fd6f241e492ac50f32abedd430a757e73c473fb7913a6b277d1ddfa419d9",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {},
+      "detailId": "343884f1bbc57babfd3e0b2b010693eec3d8c28efe026ebc0be2cf5d67238770",
+      "details": {
+        "description": "A retained comparison example.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/reuse-after.screen.html"
+      },
+      "kind": "screen",
+      "path": "reuse-after",
+      "previousPath": "reused",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Reused move",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "ff8a47404df503a27e08954ccda850166347e863c5e70d0bac35a037963104ae",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "0a06001eb557c9b2676e0b5e21dd50a5035676badadd54c592550c9bd49ab7bd",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "796ea4a94ccbc71bfecb8f311d8f04739187b4e51e5bd160fa9de36cd34ddf3d",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "e42bc53ffd598c1c0cb5e210f61debb0b4ab9b6827f9ff812ca58a4ab8fed0cf",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "account/kept"
+        }
+      ],
+      "kind": "folder",
+      "path": "account",
+      "title": "Account"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "kind": "entry",
+              "path": "promote/entry/saved"
+            }
+          ],
+          "kind": "entry",
+          "path": "promote/entry"
+        }
+      ],
+      "kind": "folder",
+      "path": "promote",
+      "title": "Promote"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "container/adopted"
+        }
+      ],
+      "kind": "entry",
+      "path": "container"
+    },
+    {
+      "kind": "entry",
+      "path": "move-after"
+    },
+    {
+      "kind": "entry",
+      "path": "reuse-after"
+    },
+    {
+      "kind": "entry",
+      "path": "reused"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "variant-target/saved"
+        }
+      ],
+      "kind": "entry",
+      "path": "variant-target"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "zero-container/zero"
+        },
+        {
+          "kind": "entry",
+          "path": "zero-container/one"
+        },
+        {
+          "kind": "entry",
+          "path": "zero-container/two"
+        }
+      ],
+      "kind": "entry",
+      "path": "zero-container"
+    }
+  ],
+  "useCases": []
+}

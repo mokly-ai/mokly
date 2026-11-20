@@ -2,11 +2,12 @@
 
 use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGeneration;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::routes;
 
+use crate::admission::AdmissionResult;
 use crate::error::{Error, InternalError, Result};
-use crate::inventory::Inventory;
 use crate::resource_bytes;
 use crate::transaction::Cancellation;
 
@@ -37,10 +38,12 @@ pub(crate) fn side(
     for plan in generation.plans().values() {
         checkpoint(cancellation)?;
         let artifact = graph(generation.render(&plan.route))?;
-        inventory.insert(
-            routes::comparison_snapshot(side, &format!("mokly-generated/{}", plan.route)),
-            artifact.bytes.clone().into(),
-        )?;
+        inventory
+            .insert(
+                routes::comparison_snapshot(side, &format!("mokly-generated/{}", plan.route)),
+                artifact.bytes.clone().into(),
+            )
+            .admit()?;
     }
     for route in generation.resource_routes() {
         checkpoint(cancellation)?;
@@ -50,14 +53,16 @@ pub(crate) fn side(
                 path: route.clone(),
             }
         })?;
-        inventory.insert(path, bytes.into())?;
+        inventory.insert(path, bytes.into()).admit()?;
     }
     for path in generation.public_files() {
         checkpoint(cancellation)?;
         let route = format!("static/{path}");
         let bytes = graph(generation.resource_bytes(&route))?
             .ok_or_else(|| Error::Invalid { path: route })?;
-        inventory.insert(routes::comparison_snapshot(side, &path), bytes.into())?;
+        inventory
+            .insert(routes::comparison_snapshot(side, &path), bytes.into())
+            .admit()?;
     }
     Ok(())
 }

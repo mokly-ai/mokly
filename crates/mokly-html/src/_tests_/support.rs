@@ -266,6 +266,7 @@ fn prepare(
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: vec![ResolvedRoot {
             input: RootConfig {

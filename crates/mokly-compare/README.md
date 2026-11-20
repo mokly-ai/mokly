@@ -5,21 +5,32 @@ its traits to prepare a Git base, compare annotated documents, attribute
 component impact, and retain the review result and the change snapshot. Its
 base preparation also leases extracted sources and selects sidecar
 dependencies. `mokly-git` owns Git IO. `mokly-platform` owns locks and process
-groups. `mokly-sidecar` owns the bundle settings type. `mokly-render` renders
-both sides. `mokly-server` and `mokly-static` publish the retained result.
+groups. `mokly-sidecar` owns the bundle settings type and the bundle store
+boundary, which this crate implements. `mokly-render` renders both sides. `mokly-server` and `mokly-static` publish the retained result.
 
 ## Responsibilities
 
 - Project a commit-pinned `dyn SourceTree` with bounded batched blob reads.
 - Compare canonical trees, paired ignores, caller inputs, and component regions.
+- Share the document work of an unmoved paired view whose base and head
+  codec inputs are equal.
 - Pair moves, keep removed metadata, and resolve branch-point references.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
+- Reuse the proven view comparisons of one accepted Serve classification
+  under a fixed byte bound.
 - Produce the typed review result, the private change snapshot, and
   affected-consumer chains.
+- Let a base provider keep one captured base between classifications, and
+  compare a reuse through a reader with its own cancellation.
+- Record the checkout and dependency evidence of a prepared base, and check
+  whether that evidence is still current.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
-- Store source and dependency caches outside the repository.
+- Store source, dependency, bundle, and render caches outside the repository.
+- Implement the sidecar's bundle store over the bounded `bundles` kind.
+- Implement the render store of `mokly-graph` over the bounded render kind,
+  with one writer outside the render path.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
 - Install base dependencies with scripts disabled by default, a deadline, and a
@@ -56,15 +67,90 @@ needs files on disk. Its `review.base-extraction` span times the source key,
 the cache lookup, and a build, and records `action`: `reuse` for a complete
 entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
 lease a complete entry without a build, so base preparation can read an
-earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source and dependency namespaces
-under the directory that `SystemLocations` selects, with OS locks for
-namespace mutation and entry leases. When `SystemLocations` checks that the
+earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, bundle, and
+render namespaces under the directory that `SystemLocations` selects, with OS locks
+for namespace mutation and entry leases. When `SystemLocations` checks that the
 cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
 location, the byte bounds, the receipts, the leases, and eviction. The CLI
-shares one `OnceReporter` across both namespaces and uses `plain_line` for the
-exact cache announcement.
+shares one cache announcement across the namespaces that it opens. `build`
+and `publish` share it through one `OnceReporter`. The CLI uses `plain_line`
+for the exact cache announcement.
+
+`CachedBundles` implements the `BundleStore` of `mokly-sidecar` over a
+`dyn BundleCache`. `CachedBundles::new` takes that cache and the running Mokly
+version, and `settings_key` gives the entry key of one set of bundle settings.
+`DiskCache` implements `BundleCache` for the `bundles` kind of the same
+namespace. Each entry streams as one file through `BundleInput` and
+`RawEntry`, with bounded receipt and inventory values. The codec writes a
+versioned header line and a typed payload, hashes the payload while it
+streams, and checks the size of the whole file and of the exact
+`restoreGeneration` request against their limits. The payload can keep the
+optional plan of the compilation beside the recipe. When the file with the
+plan would pass its limit, the codec writes the entry without the plan. A
+`load` hit attaches a stored plan through `DurableRecipe::with_plan`, which
+drops a plan above the record bound. The inventory, storage, and
+receipt code confines every path, bounds each scan, writes durable receipts,
+and draws the publication nonce. Each bundle receipt also holds
+`runtimeDigest`, the 32-byte SHA-256 digest of the runtime key of its
+compilation. `BundleCache::replace` takes that digest for the new receipt, and
+access-order updates keep the digest and the nonce. Source and dependency
+receipts hold neither field. `save` takes a `DurableRecipe`, and a `load` hit
+returns one. Before `save` encodes a recipe,
+`BundleCache::compilation` reads only the receipt of the entry, with one
+nonblocking shared stripe attempt, through `Storage::bundle_compilation`. An
+equal digest returns `Unchanged`, and a held stripe skips the write. In every
+other case, `save` replaces the entry. A damaged or unreadable receipt makes
+the result `WriteOutcome::EntryFault`, which adds that entry fault to the
+effects of the write. A `load` hit also checks that the receipt digest matches
+the decoded recipe, or it rejects the entry as damaged. A payload whose recipe
+lacks captured and durable reuse evidence, or carries the `uncaptured` marker,
+is damaged too, because the decoder accepts only a `DurableRecipe`. The CLI
+adds this store to the sidecar pool of each command when `SystemLocations`
+gives a cache location. The
+[bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+owns the entry format, the fault classes, the locks, and the bound.
+
+`RenderDisk` implements `SegmentCache` over the `renders` kind of the same
+namespace. It shares the receipts, the durable publication, the stripes, and
+the eviction of the bundle kind, under its own fixed bound,
+`render_store::CAPACITY`. `CachedDocuments` implements `DocumentBackend` over
+it. Each entry is one segment of at most 64 documents and 2 MiB, keyed by the
+digest of its bytes. A process inventories the kind once, checks each whole
+segment, and indexes at most 16,384 documents, from the most recently used
+segment down. Each read then checks the identity of its segment and the digest
+of its document. An access counter under the namespace lock orders the
+segments, so a read scans no entries. Only a segment publication scans the
+kind, to make room under the bound.
+`DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
+only keys, under the bounds of `WriterLimits`. `DocumentWriter::activity` gives
+the `WriteActivity` whose leases Serve work holds while it runs, and
+`DocumentWriter::bind_readiness` takes the `WriteReadiness` of the current
+Changes result. Its one writer thread starts a new export or save only while
+that readiness holds and no lease is held, and work that already started
+finishes. Each batch builds its segment in place in one `SegmentBuffer`, whose
+fixed capacity with its owner stays within 4 MiB inside the workspace of the
+render cache, and saves the `BuiltSegment` through the unchanged storage path.
+The state records carry the known capacities and the charges of the writer's
+buffers in `StoreMemory`.
+`DocumentWriter::prepared` starts that thread with its writes paused. The
+thread first prepares the native identity of its `Startup` and the index, and
+`resume` then releases the writes. `ImageIdentity` reads the identity once
+through `SystemImage`. On Linux, it digests the embedded build nonce and the
+running image through `/proc/self/exe`, and it gives no identity when the image
+changes during the read. On other targets, it digests the nonce alone.
+The [render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the entry format, the fault classes, and the bound.
+
+`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file in
+one place. The bundle and render kinds use 256 fixed stripes, selected by the
+first byte of the key. The source and dependency kinds keep one lock file for
+each key, because their callers wait for locks and hold long leases. A shared
+stripe there could make a build wait for an unrelated lease, or for its own. The
+stripe layout is fixed for the `bundles` and `renders` directories, because
+every release must use the same lock file for an entry. A later layout needs a
+new directory.
 
 `DependencyTiers` implements `dyn Dependencies`. `InputReader` and
 `WorkingInputs` read manifests and lockfiles from the base blobs and from the
@@ -109,12 +195,17 @@ An uncaptured fallback uses the source generation, so a summary that exceeds
 the capture bound does not start another pass. The capture keeps exact document
 bytes, generated CSS, and trusted annotations in compressed form. It encodes
 documents with `mokly_graph::document_codec::EncodedView`, the codec that the
-compact tier of the render cache also uses. Inputs that do not fit the capture
-budget, and kept views that fail to restore, read from their side's source.
-Serve head reads use the bounded render cache and render again on the head
-root only when neither cache tier holds the document. Build head reads use the
-head capture. Each result holds at most one base capture, and a build result
-also holds one head capture. The
+compact tier of the render cache also uses. Each kept view also keeps the
+32-byte identity of its codec input from `EncodedView::encode_identified`,
+and the capture budget charges it. The render cache keeps no identity. Inputs
+that do not fit the capture budget, and kept views that fail to restore, read
+from their side's source.
+A usage read of a kept view returns its retained usage without a restore, so
+it needs no source fallback. Serve head reads use the bounded render cache and
+render again on the head root only when neither cache tier holds the document.
+Build head reads use the head capture. Each result holds at most one base
+capture, and a build result also holds one head capture. A result that reuses
+a kept base reads that capture and adds no second base capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -131,7 +222,28 @@ A task reads the head side and the base input that
 `retained_comparison_input` returns. It makes no base source read and no base
 sidecar call. The base capture answers that lookup from its kept views. A kept
 view that fails to restore returns a deferred source read, so classification
-restores it once.
+restores it once. The reader of a kept base checks its own cancellation, then
+forwards the lookup to the kept capture. Through that reader, a failed restore
+returns no retained input, and the ordered pass reads the view through the
+reader, with its cancellation and failure checks.
+
+`Pairing::preserves_document_paths` holds when no entry moved and every
+paired entry keeps its exact path spelling. Then a paired view whose two
+routes are equal asks the base for `retained_document_evidence` before any
+restore. The reader of a kept base checks its own cancellation before it
+forwards this request too. The task reads the checked head document once and
+hashes it with `EncodedView::comparison_identity`. An equal identity proves
+equal bytes, trees, annotations, and retained metadata. This codec identity
+differs from the `comparison_identity` proofs of view comparison reuse, which
+a prepared generation derives from plan keys.
+
+With an equal identity, the view uses the head document for both sides, with
+the base's own kept closure, and restores no base document. It builds one
+matching tree and skips the canonical and in-document style comparisons,
+because equal inputs give no difference. Usage that is not ready still gives
+conservative input signals. Both sides' closures, every resource comparison,
+the recorded proof reads, and the memo calls stay as in a full comparison.
+Without equal evidence, the task restores the retained base input.
 
 A view with a base route whose input is deferred or not retained gets all
 of its reads in the ordered pass, after every earlier view. An ordered failure
@@ -139,6 +251,22 @@ stops new views, and the comparison waits for the views that already started.
 The comparison checks both generations for cancellation before each task and
 each ordered view. Results, warnings, the first error, `resource_work`, and the
 parsed CSS cache counts do not depend on the worker count.
+
+`MemoryComparisons` implements `dyn ComparisonReuse` for one Serve process.
+`MemoryComparisons::new` takes the fixed byte bound. `begin` takes an
+`Engine` and an optional `ReuseFence` of the adopted settings, and returns a
+`dyn ReuseAttempt`. `Changes` calls the attempt as its `dyn Comparison`.
+Without a fence, the attempt reuses and keeps nothing. Admission finds the
+kept view of each route. The worker of that view then checks its read set
+before preparation, through `comparison_identity` and the head's
+`comparison_document_proof`, with no base source read. A proven view skips
+preparation and takes its current head usage from that proof. The ordered
+pass adds its shared evidence, its warnings, and the current usage of both
+sides. Call
+`ReuseAttempt::accept` after the Ready publication and `discard` after a
+failure. `ReuseWork` returns the work and the charges of the timing span. The
+[reuse rules](../../docs/protocol/mokly-comparison-serving.md#view-comparison-reuse)
+own the admission, the invalidation, and the bound.
 
 The [comparison contract](../../docs/protocol/mokly-comparison.md) owns
 materiality, style ownership, resources, and Changes membership. Both sides
@@ -151,9 +279,10 @@ shared document codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. Serve retains the
-original cached head generation and one bounded base capture. Build retains the
-captured head and the bounded base capture. Both
+Removed previews read the same pinned base generation, through the reader when
+the result reuses a kept base. Serve retains the original cached head
+generation and one bounded base capture, its own or a kept one. Build retains
+the captured head and the bounded base capture. Both
 results keep view states, reasons, ownership records, and immutable historical
 metadata.
 
@@ -174,11 +303,60 @@ and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
 sidecar pool, and cancellation.
 
+`BaseProvider` can also keep one captured base between classifications. After
+the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
+with a `BaseRetentionRequest`: the `PinnedBase`, the working configuration,
+the head, and the effective install-scripts setting. A hit returns a
+`BaseReuse`, and `Changes` compares through a per-classification reader. It
+prepares and captures no base. A miss prepares and captures a fresh base, and
+offers it to `BaseProvider::keep` as a `KeptBase` with its source-failure
+record, its scripts-off flag, and its freshness evidence. When `keep` returns a
+`BaseReuse`, that classification also compares through a reader. The reader
+checks the reuse's own cancellation before each call. Its first failed read,
+while that cancellation is not set, releases that exact `KeptBase` through
+the `BaseRelease` of the reuse. The reader keeps only its `BaseReuse`, not the
+provider. A reused base that fails this way gets one fresh preparation in the
+same classification. A reused base with a recorded source failure is
+released, and the classification fails with `Error::Base`. A head
+failure or a cancelled reader keeps the base. `review.base-tree` records
+`action`, `reuse` or `prepare`. The default methods keep nothing, so `build`,
+`publish`, and a provider without retention prepare and capture the base in
+each classification. The
+[Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime)
+owns what a provider may keep, the freshness checks, and the release events.
+
+Only a provider that can keep a base records freshness evidence while it
+prepares one. In the CLI, only the Serve provider has a `Freshness`, so `build`
+and `publish` take no checkout sample and record no evidence. The Serve
+provider records none after a dependency fallback that a later attempt can
+fix. It also records none when the checkout sample or `Freshness::record`
+fails for a reason other than cancellation, and that preparation continues. A
+cancellation stops the preparation.
+
+`Freshness::record` returns `PreparationInputs` with the checkout sample that
+the provider took before its first base read, and the `DependencySelection` of
+working manifests, lockfiles, and dependency directories. A base that reads
+the working install also records the install state of each working
+`node_modules` root and the installed-module digests of its bundle. A tier-two
+base reads its own install, so it passes no working roots. `record` returns
+`None` when a file has a `filter` attribute or the install state of a root is
+not available.
+
+A provider must not keep a base without evidence. `PreparedBase` and
+`KeptBase` carry the evidence of the preparation unchanged.
+`Freshness::current` says whether that evidence still holds for the current
+checkout identity, dependency directories, working inputs, install records,
+and head bundle. The
+[freshness checks rule](../../docs/protocol/mokly-base-preparation.md#freshness-checks)
+owns what the checks cover and what they miss.
+
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
 announces reading and comparing, and the base provider announces rendering.
-`StepCache` wraps a `dyn Cache` and announces a source build as extracting and
-a dependency build as installing. A complete entry announces nothing.
+`CachedExtraction` and `DependencyTiers` each take a required `dyn Steps`.
+`CachedExtraction` announces extracting when a source build starts.
+`DependencyTiers` announces installing when a dependency build starts. A
+complete entry announces nothing.
 
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
@@ -190,8 +368,13 @@ component's base side, for current and removed details. These records carry
 every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent. An absent list stays absent until the caller
-proves usage.
+It reads base usage through `RenderGeneration::comparison_usage`, so a kept
+base view needs no document restore. The reader of a kept base checks its own
+cancellation, then forwards this read to the kept capture. When the forwarded
+read fails or returns no usage, the reader falls back to its own checked
+`comparison_document`, with its failure checks and its release of an owned
+failure. An absent workspace stays absent. An absent list stays absent until
+the caller proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file
@@ -213,7 +396,10 @@ Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 the comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection. Pass one cancellation token to the caches, the
-Git runner, and the install supervisor. Then run the crate tests:
+Git runner, and the install supervisor of one preparation. A provider that
+keeps a base detaches it from that token in `keep`. It gives each `BaseReuse`
+its own token and a `BaseRelease` that holds no preparation service and no
+status callback. Then run the crate tests:
 
 ```bash
 cargo test -p mokly-compare
@@ -256,13 +442,50 @@ development dependencies, and no test uses the internet.
   boundary and its retained output.
 - [`src/comparison.rs`](./src/comparison.rs) defines `Engine`, the one
   catalogue-wide comparison for build, Serve, and static projection.
+- [`src/comparison_preparation.rs`](./src/comparison_preparation.rs) defines
+  `Preparation`, which reads the inputs of one paired view. It admits an equal
+  document through the base's retained evidence. The private
+  `comparison_documents` and `equal_material` modules build the shared
+  matching tree and the material of that view.
+- [`src/comparison_reuse.rs`](./src/comparison_reuse.rs) defines
+  `ComparisonReuse`, `ReuseAttempt`, `MemoryComparisons`, `ReuseFence`, and
+  `ReuseWork`, the bounded view comparison reuse of Serve. The private
+  `reuse_*.rs` modules record proof reads, charge the bound, and collect the
+  candidate.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
-  with lifecycle scripts off, and compare it with the head.
-- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
-  `Steps`, and `StepCache`, the comparison steps that a command shows while
-  Changes runs.
+  with lifecycle scripts off, carry its freshness evidence, and compare it with
+  the head. The default `BaseProvider::find_kept`, `keep`, and `release`
+  methods keep nothing.
+- [`src/base_retention.rs`](./src/base_retention.rs) defines
+  `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
+  inputs of the kept base's key and freshness checks, the kept capture with
+  its source-failure record, scripts-off flag, and freshness evidence, one
+  classification's access to it with its own cancellation, and the
+  release-only capability that frees that exact base.
+- [`src/base_freshness.rs`](./src/base_freshness.rs) defines `Freshness`,
+  `FreshnessChecks`, `PreparationInputs`, `DependencySelection`,
+  `FreshnessRequest`, and `InstallInputs`: the evidence of one preparation and
+  the check that says whether a kept base is still current.
+- [`src/install_inputs.rs`](./src/install_inputs.rs) defines
+  `SystemInstallInputs`, the host reader that digests the install records and
+  the package entries of one working `node_modules` root, without package
+  file contents.
+- [`src/base_classification.rs`](./src/base_classification.rs) holds the
+  classification path of `Changes`: one kept base or one fresh capture, the
+  `review.base-tree` action, and the single fresh preparation after a failed
+  reuse.
+- [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
+  per-classification reader of a kept base. It keeps only its `BaseReuse`,
+  checks its cancellation before each call, and forwards retained inputs,
+  retained document evidence, and captured usage to the kept capture after
+  that check. It releases the base through its `BaseRelease` after its own
+  first failed read. Its `comparison_identity` forwards only
+  `ProofMode::Retained` proofs to the kept base generation, between two
+  cancellation checks. A failed reader proves nothing.
+- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step` and
+  `Steps`, the comparison steps that a command shows while Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
   base.
@@ -273,8 +496,62 @@ development dependencies, and no test uses the internet.
   `CachedExtraction`, the on-demand commit extraction.
 - [`src/cache.rs`](./src/cache.rs) and
   [`src/locations.rs`](./src/locations.rs) define `DiskCache`, the leased
-  source and dependency caches, and `SystemLocations`, which selects their
-  directory.
+  source and dependency caches and the `BundleCache` of the bundle kind, and
+  `SystemLocations`, which selects their directory.
+  [`src/cache_lock.rs`](./src/cache_lock.rs) holds the one lock-path mapping
+  of every kind.
+- [`src/bundle_store.rs`](./src/bundle_store.rs) defines `CachedBundles`, the
+  `BundleStore` implementation, which checks the receipt digest before it
+  encodes a recipe, and `settings_key`, the entry key of one set of bundle
+  settings.
+- [`src/bundle_cache_types.rs`](./src/bundle_cache_types.rs) defines
+  `BundleCache`, with `compilation`, the receipt-only read that returns a
+  `CompilationRead`, the streaming `BundleInput` and `RawEntry`, and the
+  bounded receipt and inventory values. `DiskCache` implements `BundleCache` in the
+  private [`src/bundle_cache.rs`](./src/bundle_cache.rs) module and its read,
+  write, and maintenance modules.
+- [`src/bundle_codec.rs`](./src/bundle_codec.rs) and its read and write
+  modules encode the versioned header and the typed payload, stream the
+  hashes, and check the file and request sizes. They write and decode only a
+  `DurableRecipe`. The payload's `StoredGeneration` keeps an optional
+  `ResolutionPlan` beside the restore fields. `Codec::encode` writes again
+  without the plan when the file with it would not fit.
+- [`src/bundle_inventory.rs`](./src/bundle_inventory.rs),
+  [`src/bundle_storage.rs`](./src/bundle_storage.rs), and
+  [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
+  the bounded scans, and the durable receipts with their publication nonce and
+  compilation digest.
+- [`src/render_store.rs`](./src/render_store.rs) defines `RenderDisk`,
+  `SegmentCache`, `CachedDocuments`, `DocumentBackend`, `WriteOutcome`, and
+  `CAPACITY`, the render kind and its document backend. The private
+  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory, and the
+  `render_store_*.rs` modules hold the index, the reads, and the writes.
+- [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
+  segment: the prefix, the bounded header, and the digests.
+  [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines
+  `SegmentBuffer` and `BuiltSegment`, the fixed buffer in which a batch builds
+  its segment, and the private
+  [`src/render_segment_header.rs`](./src/render_segment_header.rs) writes the
+  bounded header into it.
+  [`src/render_sequence.rs`](./src/render_sequence.rs) advances the access
+  counter.
+- [`src/render_writer.rs`](./src/render_writer.rs) defines `DocumentWriter` and
+  `WriterLimits`, the bounded key admission and the one writer.
+  [`src/render_batch.rs`](./src/render_batch.rs) builds one batch inside its
+  workspace. [`src/render_pending.rs`](./src/render_pending.rs) defines
+  `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`. The private
+  [`src/render_admission.rs`](./src/render_admission.rs) holds the admission
+  state that implements `WriteActivity`, and
+  [`src/render_memory.rs`](./src/render_memory.rs) updates the `StoreMemory` of
+  the state records.
+- [`src/render_writer_control.rs`](./src/render_writer_control.rs) defines
+  `Startup` and `DocumentWriter::prepared`, the paused writer start that
+  prepares the identity and the index, and `DocumentWriter::activity` and
+  `DocumentWriter::bind_readiness`.
+- [`src/render_identity.rs`](./src/render_identity.rs) defines
+  `NativeIdentity`, the native build identity that the writer prepares, and
+  [`src/render_image.rs`](./src/render_image.rs) defines `ImageIdentity`,
+  `ImageSource`, and `SystemImage`, its implementation.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency
@@ -303,9 +580,12 @@ development dependencies, and no test uses the internet.
 ### Related Docs
 
 - [Comparison](../../docs/protocol/mokly-comparison.md).
-- [Comparison serving](../../docs/protocol/mokly-comparison-serving.md).
+- [Comparison serving](../../docs/protocol/mokly-comparison-serving.md) and
+  [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
+  [render store](../../docs/protocol/mokly-render-store.md),
+  [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),
   [dependency installation](../../docs/protocol/mokly-base-dependencies.md),
   and [install processes](../../docs/protocol/mokly-base-install-processes.md).
 - [Package selection](../../docs/protocol/mokly-comparison-packages.md).

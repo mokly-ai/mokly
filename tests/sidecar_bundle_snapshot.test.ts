@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import nodeFs from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -22,17 +23,15 @@ test("bundling hashes the source snapshot that esbuild compiles", async (context
   const code = (value: string) =>
     `import {definePage} from "@mokly/mokly"; export default definePage({title:"Snapshot",description:"Snapshot",relatedDocs:[],render:()=>${JSON.stringify(value)}});`;
   await fs.writeFile(entry, "export default incomplete =>");
-  const original = fs.readFile;
-  fs.readFile = ((
-    file: Parameters<typeof fs.readFile>[0],
-    ...args: unknown[]
-  ) =>
-    String(file) === entry
-      ? Promise.resolve(Buffer.from(code("selected snapshot")))
-      : Reflect.apply(original, fs, [file, ...args])) as typeof fs.readFile;
-  context.after(() => {
-    fs.readFile = original;
-  });
+  const original = nodeFs.readFileSync;
+  const reads = context.mock.method(
+    nodeFs,
+    "readFileSync",
+    (file: Parameters<typeof nodeFs.readFileSync>[0], ...args: unknown[]) => {
+      if (String(file) === entry) return Buffer.from(code("selected snapshot"));
+      return Reflect.apply(original, nodeFs, [file, ...args]);
+    },
+  );
   const built = await bundle(
     bundleParams({
       sourceRoot: root,
@@ -42,7 +41,7 @@ test("bundling hashes the source snapshot that esbuild compiles", async (context
     }),
     build,
   );
-  fs.readFile = original;
+  reads.mock.restore();
   built.generation.maps = {};
   await describe(built.generation);
   const data = definitionData(

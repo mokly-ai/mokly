@@ -35,31 +35,18 @@ use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
 use crate::changes_static::StaticBase;
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the composition root passes independent runtime seams"
-)]
 pub(super) fn service(
     runtime: Arc<Runtime>,
     inputs: Arc<dyn InputTree>,
     cancellation: Arc<dyn Cancellation>,
     pinned: Option<Arc<PinnedBase>>,
-    style: Style,
-    redactor: Arc<Redactor>,
+    reporter: Arc<dyn Reporter>,
     phases: Arc<dyn Phases>,
     install_scripts: Option<bool>,
 ) -> Arc<dyn ChangesService> {
     let token: Arc<dyn control::Cancellation> = Arc::new(GitCancellation {
         command: cancellation.clone(),
         token: Token::default(),
-    });
-    let reporter: Arc<dyn Reporter> = Arc::new(OnceReporter {
-        announced: false.into(),
-        reporter: Arc::new(CacheReporter {
-            phases: phases.clone(),
-            style,
-            redactor,
-        }),
     });
     let changes = Arc::new(Changes {
         lookup: Arc::new(GitBaseLookup {
@@ -76,6 +63,7 @@ pub(super) fn service(
             inner: Arc::new(NativeBase {
                 runtime,
                 cancellation,
+                freshness: None,
                 dependencies: Arc::new(NativeDependencies {
                     cancellation: token,
                     reporter,
@@ -182,6 +170,22 @@ struct CacheReporter {
     phases: Arc<dyn Phases>,
     style: Style,
     redactor: Arc<Redactor>,
+}
+
+/// Share one announcement across JavaScript bundles and the base caches.
+pub(super) fn reporter(
+    phases: Arc<dyn Phases>,
+    style: Style,
+    redactor: Arc<Redactor>,
+) -> Arc<dyn Reporter> {
+    Arc::new(OnceReporter {
+        announced: false.into(),
+        reporter: Arc::new(CacheReporter {
+            phases,
+            style,
+            redactor,
+        }),
+    })
 }
 impl Reporter for CacheReporter {
     fn opened(&self, directory: &Path) {

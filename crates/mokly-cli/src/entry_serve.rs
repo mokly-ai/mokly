@@ -15,17 +15,16 @@ use mokly_cli::{serve_errors, serve_output};
 use mokly_server::entropy::{Entropy, RandomEntropy};
 use mokly_server::error::{InternalError, ServerError};
 use mokly_server::runtime::{ServerRuntime, TokioServer};
-use mokly_server::work::parallelism;
 use tokio::sync::{mpsc, watch};
 
 use crate::serve_candidates::{CandidateWork, ManualCandidates};
 use crate::serve_delivery::{self, StateInputs};
 use crate::serve_git::{ServeGit, SystemRunners};
-use crate::serve_lifecycle::ServeLifecycle;
+use crate::serve_lifecycle::{self, ServeLifecycle};
 use crate::serve_progress::{Progress, ServeProgress};
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
-use crate::serve_services::ServeServices;
+use crate::serve_services::{ServeOutput, ServeServices};
 use crate::serve_timing::ServeTiming;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use crate::serve_watch::{WatchInputs, WatchedInputs};
@@ -41,15 +40,14 @@ pub(super) fn run(
 ) -> ExitCode {
     let entropy: Arc<dyn Entropy> = Arc::new(RandomEntropy);
     let cache = render_runtime::cache();
-    let started = ServeTiming::start(
+    let Some(mut timing) = ServeTiming::start(
         common,
         style,
         &redactor,
         &terminal,
         entropy.as_ref(),
         cache.clone(),
-    );
-    let Some(mut timing) = started else {
+    ) else {
         return ExitCode::FAILURE;
     };
     let cwd = match env::current_dir() {
@@ -85,8 +83,18 @@ pub(super) fn run(
         style: style.clone(),
         redactor: redactor.clone(),
     });
-    let services = match ServeServices::new(&cwd, common, diagnostics, cancellation.clone(), cache)
-    {
+    let services = match ServeServices::new(
+        &cwd,
+        common,
+        diagnostics,
+        cancellation.clone(),
+        cache,
+        ServeOutput {
+            terminal: terminal.clone(),
+            style: style.clone(),
+            redactor: redactor.clone(),
+        },
+    ) {
         Ok(services) => services,
         Err(error) => {
             reporter.preparation_failed(attempt.as_ref(), &error);
@@ -95,12 +103,7 @@ pub(super) fn run(
     };
     let tree = services.tree.clone();
     let preparation = services.preparation.clone();
-    let workers = parallelism(std::thread::available_parallelism().map_or(1, usize::from));
-    let runtime = match tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(workers as usize)
-        .enable_all()
-        .build()
-    {
+    let (workers, runtime) = match serve_lifecycle::runtime() {
         Ok(runtime) => runtime,
         Err(error) => {
             terminal.stderr(&style.error(Code::ServerFailed, &error.to_string(), &redactor));
@@ -113,13 +116,7 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
-        let animation = {
-            let progress = progress.clone();
-            let stopped = receiver.clone();
-            tokio::spawn(async move {
-                progress.animate(stopped).await;
-            })
-        };
+        let animation = serve_lifecycle::animate(progress.clone(), receiver.clone());
         let phase = Arc::new(serve_shutdown::Phase::default());
         let git = Arc::new(ServeGit::new(Arc::new(SystemRunners)));
         let lifecycle = Arc::new(ServeLifecycle {
@@ -201,6 +198,7 @@ pub(super) fn run(
                 reporter.clone(),
                 !options.no_watch,
                 services.sidecars.clone(),
+                &services,
             );
             let publications = delivery.publications;
             let background = delivery.background;
@@ -221,7 +219,7 @@ pub(super) fn run(
             );
             if *receiver.borrow()
                 || !phase.serve(&|| {
-                    terminal.stdout(&layout);
+                    progress.ready(&layout);
                     attempt.finish(&summary.warnings, false, &|warnings| {
                         terminal.stderr(&build_output::warnings(style, warnings, &redactor));
                         terminal.stdout(&serve_output::catalogue(
@@ -235,6 +233,7 @@ pub(super) fn run(
                 reserved = Some(server);
                 return Ok(ExitCode::SUCCESS);
             }
+            services.head_published();
             timing.ready();
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
@@ -252,6 +251,7 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                activity: Some(services.activity()),
                 warnings: warnings.clone(),
                 watching,
                 candidates: candidates.clone(),

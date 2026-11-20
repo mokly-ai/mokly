@@ -1,0 +1,34 @@
+# Each bundle response is serialized twice
+
+- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`. It is the wider fix of the size-check item of that change.
+- **Location:** `packages/mokly/src/sidecar/recipe-size.ts`, `packages/mokly/src/sidecar.ts:26` (`send`), `packages/mokly/src/sidecar/transport.ts:38`, and `packages/mokly/src/sidecar/json.ts:2`.
+- **Reason:** One shared text changes which code owns the response encoding, and the bundle change kept its size check local.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Sidecar:** Mokly's Node process under `packages/mokly/src/sidecar` that bundles catalogue modules with esbuild.
+  - **Recipe:** the compiled bundle result, its `compiled` member and its `modules` graph, which the core can install again later with `restoreGeneration`.
+  - **`jsonText`:** the transport encoder in `json.ts`. It sorts object keys in UTF-16 order and writes negative zero as `-0`.
+- **Background:**
+  - Each bundle response and each `restoreGeneration` request must fit the 64 MiB frame limit of `docs/protocol/mokly-sidecar.md`. `docs/protocol/mokly-sidecar-recipes.md` requires the rejection before the sidecar installs the generation. `checkRecipeSize` in `recipe-size.ts` checks both envelopes.
+  - Since 2026-11-18, the check serializes the compiled recipe and the module graph once each with `JSON.stringify` and counts their bytes. The recipe types hold no numbers, so these counts equal the `jsonText` bytes.
+  - After the check, `send` in `sidecar.ts:26` encodes the whole response again with `encodeFrame` and `jsonText`.
+  - On 2026-11-18, on a synthetic result with the `mokly-cloud` head bundle shape, the check took about 11 ms. The shape is 2.58 MB of code, 4,638 modules, and 15,251 import edges. The `jsonText` send pass took 20 to 34 ms for a Serve edit bundle and 48 to 94 ms with full reuse evidence. `JSON.stringify` of the whole result took about 20 ms and 23 ms.
+  - The check also runs when the sidecar reuses an earlier compilation, in the `bundle` case of `session.ts`.
+  - `bundleRecipe` in `bundle-recipe.ts` can change the identity and the generation id after the check. A shared text must come after that change.
+- **Problem:** Every bundle response pays for two serializations of the same recipe: one to count its bytes and one to send it.
+- **Impact if no action:** Each bundle keeps about 11 ms of counting work beside the send pass.
+- **Root question:** How can the sidecar size and send one bundle response with one serialization, with the same accepted limit and rejection text?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Encode each shared member once with `jsonText`, count both envelopes from those texts, and send a frame built from the same texts. The wire bytes stay the same. The result must carry its texts to `send`, also on reuse. Effort: Medium (estimate).
+  - **C.** As B, but with `JSON.stringify` texts. This also removes the slower `jsonText` pass. Bundle frames then lose the sorted key order that the transport gives every other frame. Effort: Medium (estimate).
+- **Left out:** Removing the check, because an oversized frame would then fail after the sidecar installs the generation. A byte counter inside the transport encoder, because B shares the text itself and needs no second pass.
+- **Wider fix:** B. The count then measures the text that the transport sends, so the two cannot drift.
+- **Previous examples:** #312 replaced the sorted copies of the check with `JSON.stringify`. The bundle change of 2026-11-18 counts the shared members once.
+- **Related:** `plans/follow-ups/sidecar-boot-and-encoding.md` proposes a faster byte-identical encoder for every response. A faster `jsonText` makes B cheaper, and C needs no faster encoder.
+- **Recommendation:** B. It removes one serialization and keeps the wire bytes. C is faster, but it changes the bytes of one frame kind.
+- **Action:** fix after merge, apply B, because it moves the response encoding between the session and the transport, outside the local cut of the bundle change.

@@ -5,18 +5,31 @@ use sha2::{Digest, Sha256};
 use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{IoResult, Result};
 use crate::identity::ObjectId;
-use crate::repository::{GitRepository, Repository};
-use crate::tree::Limits;
+use crate::repository::GitRepository;
+
+/// Effective conversion settings for one pinned commit, without a preparation salt.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckoutIdentity {
+    /// Digest of the commit, effective Git configuration, and file attributes.
+    pub digest: String,
+    /// A filter attribute makes converted bytes private to one preparation.
+    pub filtered: bool,
+}
+
+struct CheckoutSettings {
+    hash: Sha256,
+    filtered: bool,
+}
 
 impl GitRepository {
-    pub(crate) fn checkout_key(&self, commit: &ObjectId) -> Result<String> {
+    fn checkout_settings(&self, commit: &ObjectId) -> Result<CheckoutSettings> {
         let config = self.command_with_mode(
             ProcessMode::PlainGroup,
             &["config", "--null", "--list", "--includes"],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
         )?;
-        let entries = self.list(commit, None, Limits::default())?;
+        let entries = self.settings_listing(commit)?;
         let mut input = Vec::new();
         for entry in entries.iter().filter(|entry| entry.mode.regular()) {
             input.extend_from_slice(entry.path.as_str().as_bytes());
@@ -39,22 +52,45 @@ impl GitRepository {
         hash.update(commit.as_str().as_bytes());
         hash.update(config);
         hash.update(&attributes);
-        if attributes
+        let filtered = attributes
             .split(|byte| *byte == 0)
-            .collect::<Vec<_>>()
-            .chunks_exact(3)
-            .any(|record| record[1] == b"filter")
-        {
+            .enumerate()
+            .any(|(index, field)| index % 3 == 1 && field == b"filter");
+        Ok(CheckoutSettings { hash, filtered })
+    }
+
+    pub(crate) fn checkout_settings_identity(&self, commit: &ObjectId) -> Result<CheckoutIdentity> {
+        let settings = self.checkout_settings(commit)?;
+        Ok(CheckoutIdentity {
+            digest: hex(settings.hash),
+            filtered: settings.filtered,
+        })
+    }
+
+    pub(crate) fn checkout_key(&self, commit: &ObjectId) -> Result<String> {
+        let CheckoutSettings { mut hash, filtered } = self.checkout_settings(commit)?;
+        if filtered {
             let salt = tempfile::Builder::new()
                 .prefix("mokly-filter-generation-")
                 .tempdir()
                 .git()?;
             hash.update(salt.path().as_os_str().as_encoded_bytes());
         }
-        Ok(hash
-            .finalize()
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect())
+        Ok(hex(hash))
     }
 }
+
+fn hex(hash: Sha256) -> String {
+    hash.finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+#[cfg(test)]
+#[path = "_tests_/source_key_tests.rs"]
+mod source_key_tests;
+
+#[cfg(test)]
+#[path = "_tests_/settings_listing_tests.rs"]
+mod settings_listing_tests;

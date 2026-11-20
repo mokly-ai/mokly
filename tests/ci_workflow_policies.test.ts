@@ -8,6 +8,7 @@ import { parse } from "yaml";
 
 import {
   assertNodeVersion,
+  NODE_ENGINE_RANGE,
   SUPPORTED_NODE_RANGE,
   TESTED_NODE_VERSIONS,
 } from "../packages/mokly/src/version.mjs";
@@ -145,14 +146,23 @@ test("Node version files agree with the package engines and README", async () =>
     engines: { node: string };
   };
   const lock = JSON.parse(lockSource) as {
-    packages: { "": { engines: { node: string } } };
+    packages: Record<"" | "packages/mokly", { engines: { node: string } }>;
   };
   assert.equal(nvmrc.trim(), TESTED_NODE_VERSIONS.at(-1));
   assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
   const cli = JSON.parse(await readText("packages/mokly/package.json"));
-  assert.equal(cli.engines.node, SUPPORTED_NODE_RANGE);
+  assert.equal(cli.engines.node, NODE_ENGINE_RANGE);
+  assert.equal(
+    lock.packages["packages/mokly"].engines.node,
+    NODE_ENGINE_RANGE,
+    "the lockfile CLI engines must match packages/mokly/package.json",
+  );
   for (const version of TESTED_NODE_VERSIONS) assertNodeVersion(version);
-  const { satisfies } = await import("semver");
+  const { satisfies, subset } = await import("semver");
+  assert.ok(
+    subset(SUPPORTED_NODE_RANGE, NODE_ENGINE_RANGE),
+    "the published engines must accept every supported Node version",
+  );
   assert.ok(
     satisfies(nvmrc.trim(), manifest.engines.node),
     ".nvmrc must select a supported Node version",

@@ -26,6 +26,7 @@ use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
 
 use super::serve_rebuild_tests::{initial, warning_scopes};
+use crate::warning_support::record;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
@@ -36,6 +37,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             input: Config::default(),
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         },
@@ -81,6 +83,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                         input: Config::default(),
                         file: "/repo/mokly.config.json".into(),
                         repo_root: "/repo".into(),
+                        modules: Default::default(),
                         authored_inputs: vec![],
                         roots: vec![],
                     })
@@ -185,9 +188,9 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| {
                 Ok(CandidateWatch {
-                    plan: plan.clone(),
                     observer: Arc::new(Unimock::new(())),
                     recheck: false,
+                    record: record(),
                 })
             })),
         WatchInputsMock::adopt
@@ -195,8 +198,10 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .returns(())
             .n_times(2),
     ));
+    let (writer_activity, writer_busy, _writer_finished) = super::serve_activity_tests::activity();
     let (warnings, _warning_terminal) = warning_scopes();
     let action = ManualRebuilds {
+        activity: Some(Arc::new(writer_activity.clone())),
         warnings,
         watching: Some(Arc::new(observer.clone())),
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
@@ -226,6 +231,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .await
     });
     entered.notified().await;
+    let writer_busy_during_candidate = writer_busy.load(Ordering::SeqCst);
     for index in 0..8 {
         pending.lock().unwrap().insert(
             Event {
@@ -247,6 +253,8 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
         ready.notify_one();
     }
     task.await.unwrap().unwrap();
+    assert_eq!(writer_busy_during_candidate, 1);
+    assert_eq!(writer_busy.load(Ordering::SeqCst), 0);
     assert_eq!(count.load(Ordering::SeqCst), 2);
     assert_eq!(reported.load(Ordering::SeqCst), 2);
     assert_eq!(current.lock().unwrap().index.revision, 3);

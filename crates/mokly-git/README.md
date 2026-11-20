@@ -14,9 +14,11 @@ the checkout with it.
 - Bound captured output on both streams.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
-- Validate checkout identity before resolving a merge base.
+- Validate the checkout root before resolving a merge base.
 - Read changed paths, tree metadata, and checkout-converted regular source files.
 - Extract exact commit sources with the pinned commit's checkout attributes.
+- Identify the effective checkout settings of a commit for source cache keys
+  and base freshness checks.
 
 ## What This Crate Does
 
@@ -33,13 +35,33 @@ keep their own category.
 
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
-`ls-tree`, `rev-list` with lazy fetch disabled, read-only `config`, and
-`check-attr`. The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands.
+`rev-list` with lazy fetch disabled, read-only `config`, `check-attr`,
+`ls-tree`, and the two `ls-files` listings. `ls-tree` and the listings select
+it only in a repository without a promisor remote.
+
+The two listings are the working-path candidates and the untracked changed
+paths. Both pass `-c core.fsmonitor=false`, so Git starts no file system
+monitor hook or daemon for them. One listing request builds both, so the
+override and the mode stay together. The
+[file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
+reason and the Git source evidence.
+
+The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
+first list metadata without blob sizes. They fetch missing requested blobs and
+attribute files before listing sizes. A Git build that ignores the lazy-fetch
+control can still fetch a missing tree during a tree query or sparse-index
+listing. So `ls-tree` and both listings keep `FullTree` when the repository has
+a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
+`extensions.partialClone` with one plain `config` command. The opened
+repository keeps the promisor remotes for its tree reads, its listings, and its
+object fetches.
+
 On Unix, the plain group avoids the exec hook that forces a fork of the core.
 Every other call keeps the session and Linux subreaper setup, including
-filters, fetches, diffs, and working-path queries. Windows uses the same job
-setup for both modes. The runner selects setup from the field without parsing
-arguments. Both modes keep the same ownership guard and supervision.
+filters, fetches, diffs, working-file hashes, and listings in a repository with
+a promisor remote. Windows uses the same job setup for both modes. The runner
+selects setup from the field without parsing arguments. Both modes keep the
+same ownership guard and supervision.
 
 Path batching uses default budgets of 128 path arguments and 16 KiB of
 conservative encoded argument cost. A path too large
@@ -91,6 +113,28 @@ convert its files again one at a time. A deadline and process-tree
 cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
+
+`Repository::source_key` and `Repository::checkout_identity` hash the
+effective checkout settings of one commit: the commit, the effective Git
+configuration, and the effective attributes of each regular file of the
+commit. `source_key` is the source cache key. When a file has a `filter`
+attribute, it adds a new salt in each call, so each preparation gets its own
+converted files. `checkout_identity` returns a `CheckoutIdentity` without
+that salt, so two samples stay equal while the settings stay equal. Without a
+`filter` attribute, its `digest` equals the source key. Its `filtered` field
+is true when a file has a `filter` attribute. Equal samples of such a commit
+do not prove equal bytes, because an external filter can give other bytes
+later. A configuration write that converts no file differently, such as a new
+upstream, also changes the digest. The
+[base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
+owns the source identity and the filter rule.
+
+The settings read of `source_key` and `checkout_identity` lists the whole tree
+with blob sizes. Git prints a size only for a blob that the object store
+holds, and `BAD` for a missing blob. So when each blob record has a decimal
+size, the read skips the missing-object preflight, because the preflight
+could find nothing missing. Any other size runs the preflight, as
+`Repository::list` does.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
@@ -174,8 +218,13 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
+  [`src/repository_access.rs`](./src/repository_access.rs) implements
+  `Repository` for the checkout that `GitRepositories::open` returns.
+- [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and
+  derives the source key and the checkout identity from one hash of the
+  checkout settings.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk`, its host type `SystemDisk`,
-  and `Archive`, the filesystem boundary for checkout identity, working reads,
+  and `Archive`, the filesystem boundary for the checkout root, working reads,
   confined digests, and extraction.
 - [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
   and hashes the converted files of an extraction, with Git for the files
@@ -201,4 +250,5 @@ extraction cleanup after cancellation during a streamed copy.
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Base cache](../../docs/protocol/mokly-base-cache.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

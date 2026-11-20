@@ -34,10 +34,12 @@ impl Configuration {
                 .and_then(Option::as_deref)
                 .or_else(|| {
                     tokens
-                        .chunks_exact(2)
+                        .as_chunks::<2>()
+                        .0
+                        .iter()
                         .rev()
-                        .find(|pair| pair[0] == "yarn-offline-mirror")
-                        .map(|pair| pair[1].as_str())
+                        .find(|[key, _]| key == "yarn-offline-mirror")
+                        .map(|[_, value]| value.as_str())
                 });
             if let Some(mirror) = mirror {
                 return Ok(Self {

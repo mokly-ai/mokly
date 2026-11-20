@@ -2,7 +2,20 @@
 
 #![warn(unreachable_pub)]
 
+mod bundle_cache;
+mod bundle_cache_maintenance;
+mod bundle_cache_read;
+pub mod bundle_cache_types;
+mod bundle_cache_write;
+mod bundle_codec;
+mod bundle_codec_read;
+mod bundle_codec_write;
+mod bundle_inventory;
+mod bundle_receipts;
+mod bundle_storage;
+pub mod bundle_store;
 pub mod cache;
+mod cache_lock;
 pub mod cache_types;
 pub mod commands;
 pub mod dependencies;
@@ -14,6 +27,23 @@ pub mod git_tree;
 pub mod inputs;
 pub mod locations;
 pub mod process;
+mod render_admission;
+mod render_batch;
+mod render_disk;
+pub mod render_identity;
+pub mod render_image;
+mod render_memory;
+pub mod render_pending;
+mod render_segment;
+pub mod render_segment_buffer;
+mod render_segment_header;
+mod render_sequence;
+pub mod render_store;
+mod render_store_read;
+mod render_store_state;
+mod render_store_write;
+pub mod render_writer;
+pub mod render_writer_control;
 mod source_cache;
 mod source_index;
 pub mod sources;
@@ -66,6 +96,7 @@ mod capture_restore;
 mod capture_styles;
 mod comparison_capture;
 mod comparison_consumer;
+mod comparison_documents;
 mod comparison_error;
 mod comparison_pipeline;
 mod comparison_preparation;
@@ -73,9 +104,11 @@ mod comparison_routes;
 mod comparison_slots;
 
 mod comparison_resources;
+pub mod comparison_reuse;
 pub mod comparison_steps;
 pub mod comparison_types;
 mod entry_metadata;
+mod equal_material;
 mod move_lines;
 mod move_text;
 mod rendered_moves;
@@ -90,9 +123,14 @@ mod review_projection;
 mod snapshots;
 
 pub mod ancestor_roots;
+mod base_classification;
+pub mod base_freshness;
+mod base_reader;
 pub mod base_render;
+pub mod base_retention;
 pub mod base_selection;
 pub mod comparison;
+pub mod install_inputs;
 
 pub mod lookup;
 
@@ -212,5 +250,20 @@ mod capture_producer;
 mod capture_collection;
 
 #[cfg(test)]
+#[path = "_tests_/bundle_fixture.rs"]
+mod bundle_fixture;
+
+#[cfg(test)]
 #[path = "_tests_/scheduling/mod.rs"]
 mod scheduling_tests;
+
+mod reuse_budget;
+mod reuse_collection;
+mod reuse_digest;
+mod reuse_generation;
+mod reuse_memo;
+mod reuse_probes;
+mod reuse_reads;
+mod reuse_usage;
+mod reuse_weight;
+mod rule_weight;

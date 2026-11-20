@@ -1,0 +1,35 @@
+# CLI smoke cleanup has no capture test
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-29, from [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77), review finding 3.
+- **Location:** `scripts/cloud/publication_smoke_cli.py:143-200` and `scripts/cloud/_tests_/publication_smoke_cli_tests.py:159-166`.
+- **Reason:** Findings about missing tests wait for the user under the review-fix rule.
+- **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. The runtime collision stays fixed. The unit test reaches the `finally` block, but no test enters the directory body or asserts the DELETE call.
+- **Category:** Test.
+
+- **Terms:**
+  - **`project_and_token`:** A helper in `scripts/cloud/publication_smoke_support.py` that creates a workspace, a project and a publishing token through the API.
+  - **`_prepare_isolated_checkout`:** A helper at `scripts/cloud/publication_smoke_cli.py:77` that copies the frozen fixture into a scratch directory.
+- **Background:**
+  - The CLI smoke `cli_smoke` creates a workspace, publishes from a temporary checkout, and deletes the workspace in a `finally` block.
+  - On the PR #77 branch, commit `ecb05f4e` renamed the local `org` to `workspace`. The temporary directory's `with ... as workspace` then shadowed it, and the cleanup indexed a path string.
+  - A gate run on that branch caught the `TypeError`. Commit `6235e16e` then renamed the directory target to `scratch`.
+  - The unit test `test_temporary_directory_creates_workspace_context` makes the `TemporaryDirectory` constructor raise. The `finally` block then runs, but the test asserts no DELETE call.
+  - No unit test enters the directory body.
+- **Problem:** The fix in `6235e16e` has no test that captures the failure. The always-on rules ask for the test first, then the fix. The same file still names the path parameter of `_prepare_isolated_checkout` `workspace`, which is the bare product term. That parameter never collided.
+- **Impact if no action:** A later edit can bring the collision back. Only the gate's end-to-end smoke would catch it, and that smoke needs Postgres and the Mokly CLI. The unit tests stay silent.
+- **Root question:** How does a later edit of a smoke script keep its workspace cleanup correct?
+- **Options:**
+  - **A.** Add a unit test that drives `cli_smoke` with a stubbed `TemporaryDirectory`, a `project_and_token` stub and a failing `_prepare_isolated_checkout`. Assert that the cleanup calls `api.call("DELETE", "/v1/workspaces/<id>", ...)` with the stubbed workspace. Cost: one test. Effort: Small.
+  - **B.** Option A, and rename the `workspace` parameter of `_prepare_isolated_checkout` to `scratch`. This removes the last scratch-directory name that uses the product term in the smoke scripts. Cost: three lines in one script. Effort: Small.
+  - **C.** Option B, and an ast-grep or Python check that rejects `workspace` as a path or directory name under `scripts/` and `infra/`. Cost: a new lint, which the review-fix rule blocks. Effort: Medium.
+  - **D.** Option B, and rename the five `workspace` scratch names in `scripts/cloud/_tests_/publication_smoke_cli_tests.py` to `scratch`. Rename the test `test_temporary_directory_creates_workspace_context` to `test_temporary_directory_is_created_under_context`. Test-only edits. Effort: Small.
+  - **E.** Options A and B, and one context manager `smoke_workspace(api, owner, name)` in `scripts/cloud/publication_smoke_support.py`. It calls `project_and_token`, yields the three records and deletes the workspace in its own `finally`. `cli_smoke`, `smoke_publications.smoke` and `smoke_viewer_reads.smoke` use it. The cleanup then leaves every smoke body, so no later local can shadow the record. Cost: four script files, about 40 lines. Effort: Medium.
+    - `scripts/cloud/publication_smoke_ownership.py:24` also calls `project_and_token`, and E does not name it.
+- **Left out:** Not recorded.
+- **Wider fix:** E. It is the structural fix, because the cleanup leaves the smoke bodies. B is a direct fix. C is a detection fix, and it stays blocked because it adds a lint.
+- **Previous examples:** Commit `6235e16e` on the PR #77 branch is the shadowing bug itself. PR #77 also renamed the browser helper `workspace()` to `publishedProject()` and the mockup fixture `workspace` to `sample` for the same class. `scripts/cloud/_tests_/publication_smoke_cli_tests.py:61` still names a directory `workspace`.
+- **Related:** `plans/follow-ups/smoke-refusals-skip-recorded-capture.md`, same code in `publication_smoke_cli.py`. Its re-land changes `cli_smoke` and moves these unit tests to a new file. A capture test then needs the fixed CLI version or the patch that its test-isolation choice gives.
+- **Recommendation:** E. It moves the cleanup that failed in `6235e16e` out of the smoke bodies that E names, and it still lands the capture test. The first pass recommended B, which renames a parameter that never collided.
+- **Action:** ask the user, because condition 6 holds: findings about missing tests wait for the user.

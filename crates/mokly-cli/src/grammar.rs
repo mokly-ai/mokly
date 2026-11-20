@@ -50,12 +50,25 @@ pub struct Common {
     /// Sidecar count; defaults to MOKLY_SIDECARS or the core count.
     #[arg(long, value_parser = positive)]
     pub sidecars: Option<usize>,
+    /// Count provenance retained before CLI option normalization.
+    #[arg(skip)]
+    pub sidecar_source: SidecarSource,
     /// Validated environment override for every sidecar request deadline.
     #[arg(skip)]
     pub sidecar_timeout_ms: Option<u64>,
     /// Write timing JSON to stderr and select plain output.
     #[arg(long, global = true)]
     pub debug_timings: bool,
+}
+
+/// Whether a normalized sidecar count is exact or uses memory admission.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum SidecarSource {
+    /// The command or environment supplies an exact count.
+    #[default]
+    Explicit,
+    /// The core count supplies an upper bound for memory admission.
+    Default,
 }
 
 /// Serve-only options; watch is enabled unless --no-watch is supplied.

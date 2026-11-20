@@ -13,19 +13,13 @@ on:
         description: Original main-push run that holds the checked release archives
         required: true
         type: string
-      verification:
-        description: Reuse exact-tree CI evidence or run complete verification
-        required: true
-        type: choice
-        options:
-          - evidence
-          - complete
-        default: evidence
 permissions:
   contents: read
 concurrency:
   group: npm-release
   cancel-in-progress: false
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 jobs:
   release-please:
     if: github.event_name == 'push'
@@ -57,7 +51,6 @@ jobs:
       artifact_run_id: ${{ steps.artifacts.outputs.artifact_run_id }}
       artifact_name: ${{ steps.artifacts.outputs.artifact_name }}
       publish_ref: ${{ steps.select.outputs.publish_ref }}
-      verification: ${{ steps.select.outputs.verification }}
     steps:
       - name: Check out workflow scripts
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -67,7 +60,6 @@ jobs:
           MANUAL_REF: ${{ inputs.publish_ref }}
           RELEASE_CREATED: ${{ needs.release-please.outputs.cli_release_created }}
           RELEASE_TAG: ${{ needs.release-please.outputs.cli_tag_name }}
-          MANUAL_VERIFICATION: ${{ inputs.verification }}
           RELEASE_EVENT: ${{ github.event_name }}
         run: node scripts/release/resolve-ref.mjs
       - name: Select checked release archives
@@ -132,13 +124,13 @@ jobs:
             runner: ubuntu-24.04
           - target: linux-arm64-gnu
             triple: aarch64-unknown-linux-gnu
-            runner: blacksmith-2vcpu-ubuntu-2404-arm
+            runner: ubuntu-24.04-arm
           - target: darwin-arm64
             triple: aarch64-apple-darwin
-            runner: blacksmith-6vcpu-macos-26
+            runner: macos-26
           - target: win32-x64-msvc
             triple: x86_64-pc-windows-msvc
-            runner: blacksmith-2vcpu-windows-2025
+            runner: windows-2025
           - target: darwin-x64
             triple: x86_64-apple-darwin
             runner: macos-26-intel
@@ -151,14 +143,6 @@ jobs:
         shell: bash
     steps:
       - name: Check out immutable native release
-        if: startsWith(matrix.runner, 'blacksmith-')
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.select-release.outputs.publish_ref }}
-          persist-credentials: false
-      - name: Check out immutable native release on a GitHub-hosted runner
-        if: "!startsWith(matrix.runner, 'blacksmith-')"
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
@@ -208,7 +192,6 @@ jobs:
     uses: ./.github/workflows/release-prepare.yml
     with:
       publish_ref: ${{ needs.select-release.outputs.publish_ref }}
-      verification: ${{ needs.select-release.outputs.verification }}
       artifact_run_id: ${{ needs.select-release.outputs.artifact_run_id }}
   publish:
     if: always() && needs.select-release.result == 'success' && needs.prepare-release.result == 'success' && needs.select-release.outputs.publish_ref != ''

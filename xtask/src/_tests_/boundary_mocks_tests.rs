@@ -68,6 +68,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
         .unwrap();
     let request = wire::Request {
         id: 0,
+        quiet: false,
         call: Call::Hello(Hello::default()),
     };
     let mut transport = Unimock::new((
@@ -76,7 +77,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: serde_json::Value::Null,
+                result: serde_json::value::to_raw_value(&()).unwrap(),
             }))),
     ));
     let transport: &mut dyn Transport = &mut transport;

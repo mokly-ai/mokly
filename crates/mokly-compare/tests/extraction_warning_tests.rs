@@ -41,6 +41,7 @@ fn partial_extraction_warns_and_a_new_generation_can_recover() {
     let repository = factory.open(&root).unwrap();
     let cache = Arc::new(support::cache(temporary.path().join("cache"), 10000));
     let extraction: &dyn Extraction = &CachedExtraction {
+        steps: Arc::new(support::IgnoredSteps),
         repository: repository.clone(),
         cache: cache.clone(),
         files: 100,
@@ -68,6 +69,7 @@ fn partial_extraction_warns_and_a_new_generation_can_recover() {
     support::git(&root, &["config", "filter.bad.smudge", "cat"]);
     let repository = factory.open(&root).unwrap();
     let extraction: &dyn Extraction = &CachedExtraction {
+        steps: Arc::new(support::IgnoredSteps),
         repository: repository.clone(),
         cache,
         files: 100,

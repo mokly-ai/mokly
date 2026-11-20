@@ -19,12 +19,21 @@ pub enum CodecError {
 /// Internal failures retain the original error type.
 #[derive(Debug, Error)]
 pub enum CodecInternalError {
-    /// The flat tree records could not be serialized or decoded.
-    #[error("document serialization failed: {source}")]
-    Json {
-        /// Original serialization failure.
+    /// Retained metadata could not be serialized or decoded.
+    #[error("document metadata serialization failed: {source}")]
+    Metadata {
+        /// Original typed metadata serialization or decoding failure.
         source: serde_json::Error,
     },
+    /// The flat tree records could not be serialized or decoded.
+    #[error("document serialization failed: {source}")]
+    Binary {
+        /// Original serialization failure.
+        source: postcard::Error,
+    },
+    /// The encoded tree length and restored stream differ.
+    #[error("document tree length differs from its encoded bound")]
+    InvalidLength,
     /// The compressed bytes could not be written or read.
     #[error("document compression failed: {source}")]
     Io {
@@ -42,11 +51,11 @@ pub(crate) trait CodecResult<T> {
     fn codec(self) -> Result<T>;
 }
 
-impl<T> CodecResult<T> for serde_json::Result<T> {
+impl<T> CodecResult<T> for postcard::Result<T> {
     fn codec(self) -> Result<T> {
         match self {
             Ok(value) => Ok(value),
-            Err(source) => Err(CodecInternalError::Json { source }.into()),
+            Err(source) => Err(CodecInternalError::Binary { source }.into()),
         }
     }
 }
@@ -56,6 +65,15 @@ impl<T> CodecResult<T> for io::Result<T> {
         match self {
             Ok(value) => Ok(value),
             Err(source) => Err(CodecInternalError::Io { source }.into()),
+        }
+    }
+}
+
+impl<T> CodecResult<T> for serde_json::Result<T> {
+    fn codec(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(CodecInternalError::Metadata { source }.into()),
         }
     }
 }

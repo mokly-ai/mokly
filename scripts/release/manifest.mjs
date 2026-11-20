@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
-import { SUPPORTED_NODE_RANGE } from "../../packages/mokly/src/version.mjs";
+import { NODE_ENGINE_RANGE } from "../../packages/mokly/src/version.mjs";
 
 import { NATIVE_TARGETS, nativeTarget } from "./targets.mjs";
 
@@ -221,7 +221,7 @@ function validateCliOrNative(metadata, name) {
   assert.deepEqual(metadata.bugs, {
     url: "https://github.com/mokly-ai/mokly/issues",
   });
-  assert.equal(metadata.engines?.node, SUPPORTED_NODE_RANGE);
+  assert.equal(metadata.engines?.node, NODE_ENGINE_RANGE);
   assert.deepEqual(metadata.bin, { mokly: "./bin/mokly.mjs" });
   assert.equal(metadata.types, "./dist/index.d.ts");
   assert.deepEqual(metadata.exports, {
@@ -251,6 +251,7 @@ function validateCliOrNative(metadata, name) {
       "README.md",
       "docs/guides",
       "docs/protocol",
+      "!docs/protocol/cloud/**",
     ].sort(),
   );
 }

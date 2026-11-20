@@ -14,6 +14,39 @@ export interface FrameTestWindow extends Window {
   wire: Record<string, unknown>[];
   unsubscribe: () => void;
 }
+export async function waitForFrameEvent<T>(
+  page: Page,
+  type: FrameEvent["type"],
+  action: () => Promise<T>,
+): Promise<T> {
+  const pending = await page.evaluateHandle((type) => {
+    let unsubscribe = () => {};
+    const event = new Promise<FrameEvent>((resolve) => {
+      unsubscribe = (window as unknown as FrameTestWindow).mounted.subscribe(
+        (event) => {
+          if (event.type !== type) return;
+          unsubscribe();
+          resolve(event);
+        },
+      );
+    });
+    return { event, unsubscribe: () => unsubscribe() };
+  }, type);
+  try {
+    const result = await action();
+    const event = await page.waitForFunction(({ event }) => event, pending, {
+      timeout: 10_000,
+    });
+    await event.dispose();
+    return result;
+  } finally {
+    try {
+      await pending.evaluate(({ unsubscribe }) => unsubscribe());
+    } finally {
+      await pending.dispose();
+    }
+  }
+}
 export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,

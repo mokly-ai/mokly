@@ -8,8 +8,11 @@ use mokly_git::control::{Cancellation, Clock};
 use mokly_platform::error;
 use mokly_platform::locks::{FileLock, Locks};
 
+use crate::bundle_cache_types::CAPACITY;
+use crate::cache_lock::entry_lock_path;
 use crate::cache_types::{Builder, Cache, Kind, Lease, Receipt, Reporter, Storage};
 use crate::error::{Error, InternalError, Result};
+use crate::render_store;
 use crate::storage::valid_key;
 
 /// Persistent cache coordinator with separate data and lease ownership.
@@ -57,8 +60,8 @@ impl DiskCache {
         }
     }
 
-    fn hit(&self, namespace: &Path, key: &str, limit: u64) -> Result<Option<Lease>> {
-        let guard = self.lock(&namespace.join("locks").join(format!("{key}.lock")), true)?;
+    fn hit(&self, namespace: &Path, kind: Kind, key: &str, limit: u64) -> Result<Option<Lease>> {
+        let guard = self.lock(&entry_lock_path(namespace, kind, key), true)?;
         let target = namespace.join("entries").join(key);
         let Some(mut receipt) = self.storage.inspect(&target, limit)? else {
             return Ok(None);
@@ -66,7 +69,7 @@ impl DiskCache {
         {
             let _namespace = self.lock(&namespace.join("state.lock"), false)?;
             let records = self.storage.records(&namespace.join("entries"))?;
-            self.evict(namespace, &records, key, receipt.bytes, limit)?;
+            self.evict(namespace, kind, &records, key, receipt.bytes, limit)?;
             receipt.used = records
                 .iter()
                 .map(|record| record.receipt.used)
@@ -97,10 +100,7 @@ impl DiskCache {
     ) -> Result<Option<Lease>> {
         let limit = self.capacity(kind);
         self.check()?;
-        let _entry = match self
-            .locks
-            .try_lock(&namespace.join("locks").join(format!("{key}.lock")))
-        {
+        let _entry = match self.locks.try_lock(&entry_lock_path(namespace, kind, key)) {
             Ok(guard) => guard,
             Err(error::Error::Locked { .. }) => {
                 self.clock.pause(Duration::from_millis(5));
@@ -114,12 +114,13 @@ impl DiskCache {
         }
         {
             let _namespace = self.lock(&namespace.join("state.lock"), false)?;
-            self.clean_stages(namespace, key)?;
+            self.clean_stages(namespace, kind, key)?;
         }
         self.storage.remove(&target)?;
         let stage = match kind {
             Kind::Sources => namespace.join("staging").join(key),
             Kind::Dependencies => target.clone(),
+            Kind::Bundles | Kind::Renders => return Err(Error::UnsafeCache { path: target }),
         };
         self.storage.remove(&stage)?;
         self.storage.prepare(&stage)?;
@@ -139,7 +140,7 @@ impl DiskCache {
             self.storage.synchronize(&stage.join("data"))?;
             let _namespace = self.lock(&namespace.join("state.lock"), false)?;
             let records = self.storage.records(&namespace.join("entries"))?;
-            self.evict(namespace, &records, key, bytes, limit)?;
+            self.evict(namespace, kind, &records, key, bytes, limit)?;
             let used = records
                 .iter()
                 .map(|record| record.receipt.used)
@@ -165,11 +166,13 @@ impl Cache for DiskCache {
         match kind {
             Kind::Sources => self.source_bytes,
             Kind::Dependencies => self.dependency_bytes,
+            Kind::Bundles => CAPACITY,
+            Kind::Renders => render_store::CAPACITY,
         }
     }
 
     fn get(&self, kind: Kind, key: &str, builder: &dyn Builder) -> Result<Lease> {
-        if !valid_key(key) {
+        if matches!(kind, Kind::Bundles | Kind::Renders) || !valid_key(key) {
             return Err(Error::UnsafeCache {
                 path: self.root.join(key),
             });
@@ -186,7 +189,7 @@ impl Cache for DiskCache {
         self.reporter.opened(&self.root);
         loop {
             self.clean_trash(&namespace)?;
-            if let Some(lease) = self.hit(&namespace, key, self.capacity(kind))? {
+            if let Some(lease) = self.hit(&namespace, kind, key, self.capacity(kind))? {
                 return Ok(lease);
             }
             if let Some(lease) = self.build(&namespace, kind, key, builder)? {
@@ -197,7 +200,7 @@ impl Cache for DiskCache {
 
     /// Creates no directory, and reports the cache only when it leases an entry.
     fn lease(&self, kind: Kind, key: &str) -> Result<Option<Lease>> {
-        if !valid_key(key) {
+        if matches!(kind, Kind::Bundles | Kind::Renders) || !valid_key(key) {
             return Err(Error::UnsafeCache {
                 path: self.root.join(key),
             });
@@ -208,7 +211,7 @@ impl Cache for DiskCache {
         {
             return Ok(None);
         }
-        let lease = self.hit(&namespace, key, self.capacity(kind))?;
+        let lease = self.hit(&namespace, kind, key, self.capacity(kind))?;
         if lease.is_some() {
             self.reporter.opened(&self.root);
         }

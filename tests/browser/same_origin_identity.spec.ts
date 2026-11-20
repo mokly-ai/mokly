@@ -6,6 +6,7 @@ import type { MountedFrame } from "../../packages/frame/dist/frame_adapter.js";
 import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -108,7 +109,9 @@ test("an unowned same-origin document gains no navigation privilege during hando
       const state = window as unknown as IdentityTestWindow;
       state.mounted = await state.replacement;
     });
-    await frame.getByRole("link", { name: "Open Action" }).click();
+    await waitForFrameEvent(page, "navigation", () =>
+      frame.getByRole("link", { name: "Open Action" }).click(),
+    );
     await expect
       .poll(() =>
         page.evaluate(() =>
@@ -230,7 +233,9 @@ test("an unowned exact-resource document gains no navigation privilege during ha
       const state = window as unknown as IdentityTestWindow;
       state.mounted = await state.replacement;
     });
-    await frame.getByRole("link", { name: "Open Action" }).click();
+    await waitForFrameEvent(page, "navigation", () =>
+      frame.getByRole("link", { name: "Open Action" }).click(),
+    );
     await expect
       .poll(() =>
         page.evaluate(() =>

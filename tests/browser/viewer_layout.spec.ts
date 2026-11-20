@@ -1,8 +1,22 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
 import { expect } from "@playwright/test";
 
+import {
+  INDEX_PATH,
+  removedEntryDetailPath,
+} from "../../packages/viewer/src/catalogue/delivery_paths.js";
+import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
+import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import {
+  comparisonPaths,
+  copiedComparisonDirectory,
+} from "./comparison_test.js";
+import { comparisonViewerHost } from "./comparison_viewer_host.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -113,6 +127,12 @@ for (const width of [1440, 900, 390, 320]) {
         const target = await toggle.boundingBox();
         expect(target?.width).toBeGreaterThanOrEqual(30);
         expect(target?.height).toBeGreaterThanOrEqual(30);
+        const hostStart = await page
+          .getByRole("button", { name: "Host start" })
+          .elementHandle();
+        const hostEnd = await page
+          .getByRole("button", { name: "Host end" })
+          .elementHandle();
         await toggle.click();
         const search = page.getByRole("searchbox", {
           name: "Search catalogue",
@@ -120,6 +140,21 @@ for (const width of [1440, 900, 390, 320]) {
         await expect(search).toBeFocused();
         const input = await search.boundingBox();
         expect(input?.width).toBeGreaterThanOrEqual(160);
+        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
+          true,
+        );
+        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+        await search.press("Escape");
+        await expect(toggle).toBeVisible();
+
+        await toggle.click();
+        await expect(search).toBeVisible();
+        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
+          true,
+        );
+        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+        await page.getByRole("button", { name: "Close search" }).click();
+        await expect(toggle).toBeVisible();
       }
     });
   }
@@ -163,3 +198,88 @@ for (const rootFontSize of [10, 20]) {
     }
   });
 }
+
+test("an embedded missing-capture note keeps its width and wrapping at different root font sizes", async ({
+  page,
+}) => {
+  const source = await fs.mkdtemp(path.join(fixture.root, "preview-note-"));
+  let host: Awaited<ReturnType<typeof comparisonViewerHost>> | undefined;
+  try {
+    await fs.cp(copiedComparisonDirectory(), source, { recursive: true });
+    const indexFile = path.join(source, INDEX_PATH);
+    const index = readCatalogueIndex(
+      JSON.parse(await fs.readFile(indexFile, "utf8")),
+    );
+    const removed = index.removedEntries.find(
+      ({ entry }) => entry.path === comparisonPaths.removedScreen,
+    );
+    if (removed?.entry.kind !== "screen" || !index.comparisonUrl)
+      throw new Error("Missing removed screen comparison fixture");
+    const detailFile = path.join(
+      source,
+      removedEntryDetailPath(index.comparisonUrl, removed.entry.path),
+    );
+    const detail = readEntryDetail(
+      JSON.parse(await fs.readFile(detailFile, "utf8")),
+    );
+    // Both records describe a historical screen with no mobile capture.
+    removed.entry.views = removed.entry.views.filter(
+      ({ viewport }) => viewport !== "mobile",
+    );
+    detail.views = detail.views.filter(({ viewport }) => viewport !== "mobile");
+    await fs.writeFile(indexFile, JSON.stringify(index));
+    await fs.writeFile(detailFile, JSON.stringify(detail));
+    host = await comparisonViewerHost(source);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(
+      `${host.url}/viewer.html?adapter=same-origin&responsive=1&view=changes&entry=${removed.entry.path}&viewport=mobile`,
+    );
+    const note = page.getByRole("status").filter({
+      hasText: "No previous mobile version was captured.",
+    });
+    await expect(note).toHaveText(
+      "No previous mobile version was captured. Switch to Desktop to see it.",
+    );
+    await expect(note).toBeVisible();
+    await note.evaluate(async (element) => {
+      await element.ownerDocument.fonts.ready;
+    });
+
+    const layouts = [];
+    for (const rootFontSize of [10, 20]) {
+      await page.locator("html").evaluate((element, size) => {
+        element.style.fontSize = `${size}px`;
+      }, rootFontSize);
+      layouts.push(
+        await note.evaluate((element) => {
+          const lines = new Map<number, string>();
+          const texts = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+          );
+          const range = document.createRange();
+          for (let text = texts.nextNode(); text; text = texts.nextNode()) {
+            const value = text.textContent ?? "";
+            for (let offset = 0; offset < value.length; offset++) {
+              range.setStart(text, offset);
+              range.setEnd(text, offset + 1);
+              const top = range.getBoundingClientRect().top;
+              lines.set(top, (lines.get(top) ?? "") + value[offset]);
+            }
+          }
+          return {
+            width: element.getBoundingClientRect().width,
+            lines: [...lines.values()].map((line) => line.trim()),
+          };
+        }),
+      );
+    }
+    expect(layouts[0]!.width).toBeGreaterThan(0);
+    expect(layouts[0]!.lines.length).toBeGreaterThan(1);
+    expect(layouts[1]!.width).toBe(layouts[0]!.width);
+    expect(layouts[1]!.lines).toEqual(layouts[0]!.lines);
+  } finally {
+    await host?.close();
+    await fs.rm(source, { recursive: true, force: true });
+  }
+});

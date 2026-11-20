@@ -1,0 +1,122 @@
+environment: main-preview
+desktopClient: false
+prNumber: 0
+project: mokly-508518
+region: us-central1
+domain: ""
+catalogueBaseDomain: ""
+ingressAddress: ""
+revision: ""
+postmarkFrom: ""
+database:
+  mode: cloudsql
+resetDatabase: false
+postgres:
+  image: docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67
+  storageSize: 2Gi
+  storageClassName: standard-rwo
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1Gi }
+preview:
+  blobsBucket: mokly-508518-preview-blobs
+  signInEmail: ""
+github:
+  enabled: false
+  appId: ""
+  clientId: ""
+  appSlug: ""
+billing:
+  enabled: false
+builds:
+  enabled: false
+  template: ""
+  deploymentId: ""
+cloudflare:
+  # Shared by both proxy paths; see docs/ops/environment.md for provenance.
+  trustedProxyCidrs:
+    - 103.21.244.0/22
+    - 103.22.200.0/22
+    - 103.31.4.0/22
+    - 104.16.0.0/13
+    - 104.24.0.0/14
+    - 108.162.192.0/18
+    - 131.0.72.0/22
+    - 141.101.64.0/18
+    - 162.158.0.0/15
+    - 172.64.0.0/13
+    - 173.245.48.0/20
+    - 188.114.96.0/20
+    - 190.93.240.0/20
+    - 197.234.240.0/22
+    - 198.41.128.0/17
+    - 2400:cb00::/32
+    - 2606:4700::/32
+    - 2803:f800::/32
+    - 2405:b500::/32
+    - 2405:8100::/32
+    - 2a06:98c0::/29
+    - 2c0f:f248::/32
+api:
+  trustedProxyHops: 3
+  ingestWorkers: 8
+  uploadMemoryBytes: 536870912
+  uploadBlobGzip: false
+  # The helper appends Cloudflare ranges and the stable ingress IPv4 /32.
+  trustedProxyCidrs:
+    - 130.211.0.0/22
+    - 35.191.0.0/16
+  enabled: true
+  image: ""
+  port: 8080
+  healthPath: /v1/health
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1Gi }
+app:
+  enabled: true
+  image: ""
+  port: 8080
+  healthPath: /_health
+  env: {}
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1Gi }
+catalogue:
+  hotCacheBytes: 134217728
+  enabled: true
+  image: ""
+  port: 8080
+  healthPath: /_health
+  env: {}
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1Gi }
+sqlProxy:
+  image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4@sha256:88501f0a695a586988add1b8a206fdf3f29f9a1a3deeb9b45ef2b1481ea6be83
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { memory: 256Mi }
+scaling:
+  minReplicas: 2
+  maxReplicas: 6
+  cpuUtilization: 70
+pdb:
+  enabled: true
+  maxUnavailable: 1
+migration:
+  activeDeadlineSeconds: 600
+maintenance:
+  pruneSchedule: "17 * * * *"
+  githubPruneSchedule: "31 2 * * *"
+  checkStatusSchedule: "*/5 * * * *"
+  publicationSchedule: "47 2 * * *"
+  linkRetentionSeconds: 604800
+  sessionRetentionSeconds: 86400
+  rateRetentionSeconds: 86400
+  githubOauthRetentionSeconds: 86400
+  githubDeliveryRetentionSeconds: 2592000
+  buildRetentionSeconds: 2592000
+ingress:
+  enabled: true
+  tlsSecret: origin-tls

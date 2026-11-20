@@ -5,11 +5,15 @@ use mokly_html::links::Reference;
 use mokly_html::tree::{Attribute, Element, Node, Region};
 use mokly_model::catalogue::SourceLocation;
 use serde::{Deserialize, Serialize};
+use std::mem;
 
 use crate::document_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
 use crate::document_error::{CodecInternalError, Result};
+use crate::document_records::SourceRecord;
+use crate::export_memory::{ExportBuffer, ExportObserver};
 
 /// Flat trusted tree records avoid recursive tree serialization.
+/// Every nested public annotation must use a private record without public JSON rules.
 #[derive(Deserialize, Serialize)]
 pub(crate) enum FlatNode {
     Element {
@@ -17,7 +21,7 @@ pub(crate) enum FlatNode {
         style_attribution: Option<Vec<(String, Vec<String>)>>,
         origin: Option<String>,
         navigation: Option<ReferenceRecord>,
-        source: Option<SourceLocation>,
+        source: Option<SourceRecord>,
         name: String,
         namespace: String,
         attributes: Vec<AttributeRecord>,
@@ -34,45 +38,72 @@ pub(crate) enum FlatNode {
 
 /// Flatten a tree in authored order with explicit child counts.
 pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
+    flatten_observed(nodes, None)
+}
+
+pub(crate) fn flatten_observed(
+    nodes: &[Node],
+    observer: Option<&dyn ExportObserver>,
+) -> Vec<FlatNode> {
     let mut output = Vec::new();
-    let mut pending: Vec<_> = nodes.iter().rev().collect();
-    while let Some(node) = pending.pop() {
-        let record = match node {
-            Node::Element(element) => {
-                pending.extend(element.children.iter().rev());
-                FlatNode::Element {
-                    style_owners: element.style_owners.clone(),
-                    style_attribution: element.style_attribution.as_ref().map(|records| {
-                        records
+    let mut owned = 0;
+    {
+        let mut pending: Vec<_> = nodes.iter().rev().collect();
+        while let Some(node) = pending.pop() {
+            let record = match node {
+                Node::Element(element) => {
+                    pending.extend(element.children.iter().rev());
+                    FlatNode::Element {
+                        style_owners: element.style_owners.clone(),
+                        style_attribution: element.style_attribution.as_ref().map(|records| {
+                            records
+                                .iter()
+                                .map(|record| (record.css.clone(), record.owners.clone()))
+                                .collect()
+                        }),
+                        origin: element.origin.clone(),
+                        navigation: element.navigation.as_ref().map(ReferenceRecord::from),
+                        source: element.source.as_ref().map(SourceRecord::from),
+                        name: element.name.clone(),
+                        namespace: element.namespace.clone(),
+                        attributes: element
+                            .attributes
                             .iter()
-                            .map(|record| (record.css.clone(), record.owners.clone()))
-                            .collect()
-                    }),
-                    origin: element.origin.clone(),
-                    navigation: element.navigation.as_ref().map(ReferenceRecord::from),
-                    source: element.source.clone(),
-                    name: element.name.clone(),
-                    namespace: element.namespace.clone(),
-                    attributes: element
-                        .attributes
-                        .iter()
-                        .map(AttributeRecord::from)
-                        .collect(),
-                    children: element.children.len(),
+                            .map(AttributeRecord::from)
+                            .collect(),
+                        children: element.children.len(),
+                    }
                 }
-            }
-            Node::Region { region, children } => {
-                pending.extend(children.iter().rev());
-                FlatNode::Region {
-                    region: RegionRecord::from(region),
-                    children: children.len(),
+                Node::Region { region, children } => {
+                    pending.extend(children.iter().rev());
+                    FlatNode::Region {
+                        region: RegionRecord::from(region),
+                        children: children.len(),
+                    }
                 }
+                Node::Text(text) => FlatNode::Text(text.clone()),
+                Node::Comment(text) => FlatNode::Comment(text.clone()),
+                Node::Doctype(text) => FlatNode::Doctype(text.clone()),
+            };
+            if observer.is_some() {
+                owned += record.known_bytes();
             }
-            Node::Text(text) => FlatNode::Text(text.clone()),
-            Node::Comment(text) => FlatNode::Comment(text.clone()),
-            Node::Doctype(text) => FlatNode::Doctype(text.clone()),
-        };
-        output.push(record);
+            output.push(record);
+            if let Some(observer) = observer {
+                observer.bytes(
+                    ExportBuffer::Flatten,
+                    owned
+                        + output.capacity() * mem::size_of::<FlatNode>()
+                        + pending.capacity() * mem::size_of::<&Node>(),
+                );
+            }
+        }
+    }
+    if let Some(observer) = observer {
+        observer.bytes(
+            ExportBuffer::Flatten,
+            owned + output.capacity() * mem::size_of::<FlatNode>(),
+        );
     }
     output
 }
@@ -111,7 +142,7 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
                 }),
                 origin,
                 navigation: navigation.map(Reference::from),
-                source,
+                source: source.map(SourceLocation::from),
                 name,
                 namespace,
                 attributes: attributes.into_iter().map(Attribute::from).collect(),

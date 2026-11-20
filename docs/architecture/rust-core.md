@@ -1,5 +1,7 @@
 # Rust Core Architecture
 
+Status: The sidecar release thread and finite file response bodies do not tell the render store that Serve is busy yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
+
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered
@@ -44,7 +46,7 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-catalogue`        | Configuration, roots, discovery, front matter, paths, folders, variants, documents, and the catalogue model.          | `model`, `source-interface`                                                                                                                                 |
 | `mokly-html`             | HTML components and screens: parsing, substitution, slots, composition, markers, links, and document assembly.        | `model`, `catalogue`, `source-interface`                                                                                                                    |
 | `mokly-css`              | Stylesheet bundling, rule collection and diffing, selector matching, and attribution.                                 | `model`, `source-interface`                                                                                                                                 |
-| `mokly-graph`            | The content-addressed render graph, the render cache, and the referenced asset closure.                               | `model`, `catalogue`, `source-interface`, `html`, `css`                                                                                                     |
+| `mokly-graph`            | The content-addressed render graph, the render cache, the render store boundary, and the referenced asset closure.    | `model`, `catalogue`, `source-interface`, `html`, `css`                                                                                                     |
 | `mokly-render`           | JavaScript rendering through the sidecar: definitions, fragments, consumer PostCSS, and CSS Modules.                  | `catalogue`, `model`, `html`, `css`, `graph`, `sidecar`, `source-interface`, `compare`                                                                      |
 | `mokly-compare`          | Changes: base-side rendering, dependency tiers, tree comparison, materiality, moves, and affected consumers.          | `source-interface`, `model`, `catalogue`, `html`, `css`, `graph`, `git`, `platform`, `sidecar`                                                              |
 | `mokly-server`           | Serve over HTTP: the shell routes, documents and assets, live updates, on-demand comparison, and shutdown.            | `model`, `catalogue`, `graph`, `source-interface`, `compare`, `css`                                                                                         |
@@ -55,8 +57,9 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 
 `mokly-static` and `mokly-publish` share output shapes through `mokly-model`
 and never depend on each other. The CLI composes the crates for each command
-and turns a finished static output into one upload. Each crate's README names
-its entry points.
+and turns a finished static output into one upload. To decrease allocator CPU
+cost and peak memory, the CLI selects mimalloc as the global allocator for the
+binary's Rust allocations. Each crate's README names its entry points.
 
 ## npm Packages
 
@@ -110,11 +113,11 @@ composed documents, one per view, kept in the render cache
    fragment with its collected styles. The core grafts the fragments, places
    the styles, rewrites `mock:` links, and assembles the document under the
    [document safety rules](../protocol/mokly-document-safety.md).
-4. Serve reads composed documents from the render cache. `build` and `publish`
-   render and retain a bounded head capture during the build check. Changes,
-   static output, and comparison output read that capture. An uncaptured head
-   document uses the head source, which renders it again only after the
-   document leaves the render cache. The
+4. Serve reads composed documents from the render cache, then from the render
+   store. `build` and `publish` render and retain a bounded head capture during
+   the build check. Changes, static output, and comparison output read that
+   capture. An uncaptured head document uses the head source, which renders it
+   again only after the document leaves the render cache. The
    [comparison contract](../protocol/mokly-comparison.md) reads the ownership
    tree that composition keeps with each document.
 
@@ -146,13 +149,31 @@ owns the bound, the compact ceiling, and when a compact document returns to the
 full tier. Serve reads head documents from the render cache. `build` and
 `publish` capture the head during the build check under a separate 256 MiB
 bound, then Changes and output read that capture. The base side of Changes has
-its own 256 MiB capture bound. An uncaptured head document uses the head
-source, which renders it again only after the document leaves the render cache.
-The base-side extraction cache and the dependency install cache live outside the
-repository, in the operating system's cache directory under a key derived from
-the repository path. Each has its own byte bound. The terminal names that
+its own 256 MiB capture bound. Serve keeps one captured base, with its graph,
+sources, and leases, between classifications while the merge base and the base
+inputs stay the same. An uncaptured head document uses the head source, which
+renders it again only after the document leaves the render cache.
+The base-side extraction cache, the dependency install cache, the bundle
+cache of compiled JavaScript, and the render store live outside the repository,
+in the operating system's cache directory under a key derived from the
+repository path. Each has its own byte bound. The terminal names that
 directory, and deleting it is safe. `publish` builds into its own directory
 outside the repository and uploads.
+
+Serve also keeps composed documents in the
+[render store](../protocol/mokly-render-store.md), so a restart reuses them.
+Serve gives its head and base graphs one store. A graph reads the store after
+a render cache miss and offers each document that it renders. The graph sees
+only the store boundary. The cache implementation owns the entries, the
+receipts, the bound, and the pending writes, and no render waits for a write.
+A pending write takes its document from the render cache, so the render cache
+stays the one owner of document memory. Serve's requests, rebuilds, reference
+probes, captures, render worker jobs, and sidecar pool work tell the store when
+Serve is busy, and the publication tells it when the current Changes result is
+complete. The writer starts new work only while Serve is idle. A store hit of a
+head document also gives the sidecar pool its top-level JavaScript render
+request, without a call. The pool replays such requests to warm its head
+processes while Serve is idle. `build` and `publish` render without the store.
 
 ## Shell Delivery
 
@@ -190,13 +211,15 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in the core, outside the sidecar's JavaScript heap. A
   view's trees are discarded when its comparison ends. Each result holds at
   most one base capture, with its own byte budget, separate from the render
-  cache. A build result also holds one head capture with its own 256 MiB bound.
+  cache. Serve keeps at most one base capture between classifications. A
+  build result also holds one head capture with its own 256 MiB bound.
   Inputs above a side's budget read that side's sources: the pinned base
   sources for the base, and the head sources for the head.
-- Parsed CSS, the render cache, the base-side extraction cache, and the
-  dependency cache are bounded by bytes. The render cache keeps the documents
-  that its full tier evicts in a compact tier inside the same bound. A
-  dependency install has a time limit.
+- Parsed CSS, the render cache, the base-side extraction cache, the
+  dependency cache, the bundle cache, and the render store are bounded by
+  bytes. The render cache keeps the documents that its full tier evicts in a
+  compact tier inside the same bound, and render store writes stay inside it
+  too. A dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap. The fragment cache makes a recycle cheap.
   The [sidecar memory contract](../protocol/mokly-sidecar-memory.md) owns

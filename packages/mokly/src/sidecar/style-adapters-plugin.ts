@@ -14,6 +14,10 @@ interface Wrapper {
   commonjs: boolean;
 }
 
+const libraries = ["styled-components", "react-native-web", "@emotion/react"];
+const alternatives = (names: string[]) =>
+  names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+
 /** Capture the bundled registry while its consumer import evaluates. */
 export function styleAdaptersPlugin(
   params: BundleParams,
@@ -26,6 +30,18 @@ export function styleAdaptersPlugin(
   return {
     name: "mokly-style-adapters",
     setup(builder) {
+      const libraryPattern = new RegExp(`^(${alternatives(libraries)})(?:/|$)`);
+      const names = [
+        ...libraries,
+        ...aliases
+          .filter(
+            ([, target]) =>
+              libraryPattern.test(target) ||
+              libraries.some((library) => library.startsWith(`${target}/`)),
+          )
+          .map(([name]) => name),
+      ];
+      const filter = new RegExp(`^(?:${alternatives(names)})(?:/|$)`);
       builder.onResolve({ filter: /^mokly:style-source:/ }, (args) => {
         if (args.namespace !== "mokly-style")
           return {
@@ -33,7 +49,7 @@ export function styleAdaptersPlugin(
           };
         return { path: args.path.slice("mokly:style-source:".length) };
       });
-      builder.onResolve({ filter: /.*/ }, async (args) => {
+      builder.onResolve({ filter }, async (args) => {
         if (
           [
             "style-original",
@@ -49,10 +65,7 @@ export function styleAdaptersPlugin(
         const requested = alias
           ? alias[1] + args.path.slice(alias[0].length)
           : args.path;
-        const library =
-          /^(styled-components|react-native-web|@emotion\/react)(?:\/|$)/.exec(
-            requested,
-          )?.[1];
+        const library = libraryPattern.exec(requested)?.[1];
         if (!library) return;
         const resolved = await builder.resolve(args.path, {
           resolveDir: args.resolveDir,

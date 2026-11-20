@@ -4,6 +4,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_compare::cache_types::{CacheMock, Kind, Lease};
+use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::error::Error;
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_git::identity::ObjectId;
@@ -27,10 +28,15 @@ fn spans(records: &[Value]) -> Vec<&Value> {
         .collect()
 }
 
-fn acquire(repository: Unimock, cache: Unimock) -> mokly_compare::error::Result<Lease> {
+fn acquire(
+    repository: Unimock,
+    cache: Unimock,
+    steps: Unimock,
+) -> mokly_compare::error::Result<Lease> {
     let extraction: &dyn Extraction = &CachedExtraction {
         repository: Arc::new(repository),
         cache: Arc::new(cache),
+        steps: Arc::new(steps),
         files: 10,
     };
     extraction.acquire(&ObjectId::parse(&"c".repeat(40)).unwrap())
@@ -52,7 +58,7 @@ fn a_complete_cache_entry_records_reuse() {
                 .next_call(matching!(Kind::Sources, _, _))
                 .answers(&|_, _, _, _| Ok(lease())),
         ));
-        acquire(repository, cache).unwrap();
+        acquire(repository, cache, Unimock::new(())).unwrap();
     });
     let spans = spans(&records);
     assert_eq!(spans.len(), 2);
@@ -84,7 +90,16 @@ fn a_built_cache_entry_records_extract() {
                     Ok(lease())
                 }),
         ));
-        acquire(repository, cache).unwrap();
+        acquire(
+            repository,
+            cache,
+            Unimock::new(
+                StepsMock::step
+                    .next_call(matching!(Step::Extracting))
+                    .returns(()),
+            ),
+        )
+        .unwrap();
     });
     let spans = spans(&records);
     assert_eq!(spans.len(), 2);
@@ -108,7 +123,10 @@ fn a_failed_extraction_keeps_the_error_status_and_no_action() {
                 .next_call(matching!(Kind::Sources, _, _))
                 .answers(&|_, _, _, _| Err(Error::Cancelled)),
         ));
-        assert!(matches!(acquire(repository, cache), Err(Error::Cancelled)));
+        assert!(matches!(
+            acquire(repository, cache, Unimock::new(())),
+            Err(Error::Cancelled)
+        ));
     });
     let spans = spans(&records);
     assert_eq!(spans.len(), 2);
@@ -120,6 +138,7 @@ fn existing(repository: Unimock, cache: Unimock) -> mokly_compare::error::Result
     let extraction: &dyn Extraction = &CachedExtraction {
         repository: Arc::new(repository),
         cache: Arc::new(cache),
+        steps: Arc::new(Unimock::new(())),
         files: 10,
     };
     extraction.existing(&ObjectId::parse(&"c".repeat(40)).unwrap())

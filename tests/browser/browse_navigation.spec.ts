@@ -3,7 +3,9 @@ import { expect, type Page } from "@playwright/test";
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
+import { nestedScriptNotice } from "./navigation_error_allowances.js";
 import {
+  routeNavigationNestedFrame,
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
@@ -21,6 +23,11 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await navigation?.close();
+});
+
+test.beforeEach(async ({ page, allowBrowserError }) => {
+  allowBrowserError(nestedScriptNotice);
+  await routeNavigationNestedFrame(page);
 });
 
 async function actAndWaitForFrameLoad(
@@ -54,6 +61,10 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   // Changing the appearance reloads the frame, which is what this exercises.
   await actAndWaitForFrameLoad(page, ".mbk-frame-mobile iframe", () =>
     chooseScheme(page, "dark"),
+  );
+  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
   );
   const detailsPanel = page.locator("[data-workspace-inspector]");
   if ((await detailsPanel.getAttribute("data-open")) === "true") {

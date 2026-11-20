@@ -1,0 +1,332 @@
+@import "overlays.css";
+
+.card {
+  display: grid;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-6);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-large);
+  background: var(--mk-color-surface);
+}
+.card p {
+  color: var(--mk-color-text-muted);
+}
+.card-selected {
+  background: var(--mk-color-accent-soft);
+  border-color: var(--mk-color-accent);
+}
+.card-footer {
+  border-top: 1px solid var(--mk-color-border);
+  padding-top: var(--mk-space-4);
+}
+.page-frame {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: calc(
+    var(--mk-layout-content-max) + 2 * var(--mk-layout-gutter-desktop)
+  );
+  padding: 0 var(--mk-layout-gutter-desktop);
+  margin: auto;
+}
+.frame-wide {
+  max-width: none;
+}
+.page-content {
+  flex: 1;
+  min-width: 0;
+}
+.frame-sample {
+  border: 1px dashed var(--mk-color-border-strong);
+  padding: var(--mk-space-8);
+}
+.frame-sample p {
+  margin-top: var(--mk-space-4);
+}
+.site-header {
+  display: flex;
+  gap: var(--mk-space-8);
+  align-items: center;
+  min-height: var(--mk-space-24);
+  border-bottom: 1px solid var(--mk-color-border);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  color: var(--mk-color-text);
+  text-decoration: none;
+  min-height: var(--mk-layout-control-min);
+  font-size: var(--mk-type-heading3-size);
+  font-weight: var(--mk-font-bold);
+  letter-spacing: -0.04em;
+}
+.brand svg {
+  color: var(--mk-color-accent);
+}
+.site-header nav {
+  display: flex;
+  gap: var(--mk-space-6);
+  margin-left: auto;
+}
+.site-header nav a,
+.header-actions > .navigation-link,
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--mk-layout-control-min);
+  color: var(--mk-color-text-muted);
+  text-decoration: none;
+  font-size: var(--mk-type-small-size);
+}
+.site-header a[aria-current="page"],
+.site-footer a[aria-current="page"] {
+  color: var(--mk-color-accent);
+  text-decoration: underline;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-6);
+}
+.header-compact {
+  gap: var(--mk-space-4);
+}
+.header-compact .desktop-navigation {
+  display: none;
+}
+.site-footer {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--mk-space-6);
+  border-top: 1px solid var(--mk-color-border);
+  padding: var(--mk-space-8) 0;
+}
+.footer-brand {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+.footer-brand span {
+  font-size: var(--mk-type-small-size);
+  color: var(--mk-color-text-muted);
+}
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0 var(--mk-space-5);
+  max-width: 60%;
+}
+.comment-thread {
+  width: 100%;
+  min-width: 0;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-large);
+  padding: var(--mk-space-5);
+  font-size: var(--mk-type-small-size);
+}
+.comment-heading {
+  display: flex;
+  gap: var(--mk-space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: var(--mk-space-4);
+}
+.thread-status-layout {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  margin-left: auto;
+}
+.replies {
+  list-style: none;
+  border-left: 1px solid var(--mk-color-border);
+  padding-left: var(--mk-space-4);
+  margin: var(--mk-space-4) 0 0 var(--mk-space-4);
+}
+.replies li {
+  display: grid;
+  gap: var(--mk-space-1);
+}
+@media (max-width: 767px) {
+  .page-frame {
+    padding: 0 var(--mk-layout-gutter-mobile);
+  }
+  .site-header {
+    gap: var(--mk-space-4);
+    min-height: var(--mk-space-20);
+    flex-wrap: wrap;
+  }
+  .site-header nav,
+  .header-actions {
+    gap: var(--mk-space-3);
+  }
+  .site-header .desktop-navigation {
+    display: none;
+  }
+  .site-footer {
+    display: grid;
+  }
+  .site-footer nav {
+    max-width: none;
+    justify-content: start;
+  }
+  .component-document .site-header {
+    padding-bottom: var(--mk-space-4);
+  }
+}
+
+/* Registered failure fragment: the cause above the control that made the write,
+   then the reference a report quotes. It adds no surface of its own, because it
+   sits inside the form or card that owns the control. */
+.fo-write-failure {
+  display: grid;
+  justify-items: start;
+  gap: var(--mk-space-3);
+}
+/* A write control and its secondary guide in one row that wraps, so the guide
+   stays beside the control or moves immediately beneath it. It shrinks with
+   whatever holds it, at rest or in the failure fragment's control slot. */
+.fo-control-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-space-3);
+  min-width: 0;
+}
+/* This stylesheet is the disclosure's only owner: it is synced into the app,
+   so a second declaration there would render the same composition twice and
+   differently. The summary keeps its `list-item` marker — a flex box would
+   remove the triangle that says it opens — and clears the 44px target. */
+.fo-error-details {
+  margin-top: var(--mk-space-3);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-error-details > summary {
+  width: fit-content;
+  min-height: var(--mk-layout-row-min);
+  align-content: center;
+  cursor: pointer;
+}
+.fo-error-details > p {
+  margin-top: var(--mk-space-1);
+}
+/* Registered settings frames: the desktop dialog and the mobile layer. */
+.fo-dialog {
+  display: grid;
+  grid-template-columns: var(--mk-layout-rail) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  max-width: var(--mk-layout-dialog-max);
+  min-height: min(700px, 90dvh);
+  max-height: 90dvh;
+  overflow: hidden;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  box-shadow: var(--mk-shadow-large);
+}
+.fo-dialog-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-space-5);
+  padding: var(--mk-space-5) var(--mk-space-3);
+  background: var(--mk-color-surface-muted);
+  border-right: 1px solid var(--mk-color-border);
+  overflow: auto;
+}
+.fo-dialog-sections {
+  display: grid;
+  align-content: start;
+  gap: var(--mk-space-5);
+}
+.fo-dialog-sections .fo-group-label {
+  padding: 0 var(--mk-space-2);
+}
+.fo-dialog-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 90dvh;
+}
+.fo-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+  flex-shrink: 0;
+  padding: var(--mk-space-5) var(--mk-space-6) var(--mk-space-4);
+  border-bottom: 1px solid var(--mk-color-border);
+}
+.fo-dialog-heading {
+  min-width: 0;
+}
+.fo-dialog-title {
+  display: block;
+  font-size: var(--mk-type-pane-title-size);
+  line-height: var(--mk-type-pane-title-line);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.018em;
+}
+.fo-dialog-body {
+  display: grid;
+  align-content: start;
+  gap: var(--mk-space-8);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--mk-space-6) var(--mk-space-6) var(--mk-space-10);
+}
+.fo-layer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--mk-color-background);
+}
+.fo-layer-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+  background: var(--mk-color-background);
+  border-bottom: 1px solid var(--mk-color-border);
+  padding: var(--mk-space-2) var(--mk-layout-gutter-mobile);
+}
+.fo-layer-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-1);
+  min-height: var(--mk-layout-control-min);
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  text-decoration: none;
+}
+.fo-layer-body {
+  display: grid;
+  align-content: start;
+  gap: var(--mk-space-6);
+  padding: var(--mk-space-5) var(--mk-layout-gutter-mobile) var(--mk-space-16);
+}
+.fo-layer-heading {
+  min-width: 0;
+}
+@media (max-width: 767px) {
+  .fo-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    max-height: none;
+  }
+  .fo-dialog-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--mk-color-border);
+  }
+}

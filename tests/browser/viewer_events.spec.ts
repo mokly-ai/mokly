@@ -10,6 +10,7 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
+import { startViewerPick } from "./viewer_pick.js";
 import { chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -117,13 +118,16 @@ test("Escape and navigation end active picks exactly once", async ({
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  await page.evaluate(async () => {
-    await window.viewerHarness.get("one").ref.current.startPick();
-  });
+  await startViewerPick(page);
   await page.keyboard.press("Escape");
-  await page.evaluate(async () => {
+  await page.waitForFunction(() =>
+    window.viewerHarness
+      .get("one")
+      .events.some((event) => event.name === "pick-end"),
+  );
+  await startViewerPick(page);
+  await page.evaluate(() => {
     const host = window.viewerHarness.get("one");
-    await host.ref.current.startPick();
     host.ref.current.select({ screenPath: "action" });
     host.ref.current.cancelPick();
   });

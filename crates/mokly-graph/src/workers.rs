@@ -18,7 +18,7 @@ use crate::error::{GraphError, InternalError, Result};
 use crate::types::ComparisonDocument;
 use crate::worker_context::WorkerContext;
 
-/// Indexed comparison work with caller-owned results and cancellation checks.
+/// Indexed preparation or comparison work with caller-owned results and checks.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonTaskMock))]
 pub trait ComparisonTask: Send + Sync {
     /// Complete one index. Scheduling must call every index exactly once.
@@ -101,7 +101,8 @@ impl fmt::Debug for dyn StylesheetWorker + '_ {
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
     /// Complete the bounded indexed batch before returning. Results and errors
-    /// remain with the supplied task, including cancellation checks.
+    /// remain with the supplied task, including cancellation checks. Pure preparation
+    /// jobs can submit all indexes when they retain only finished results.
     fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         for index in 0..count {
             task.run(index);

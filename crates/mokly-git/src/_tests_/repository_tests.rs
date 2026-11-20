@@ -26,6 +26,7 @@ fn output(bytes: &[u8]) -> Result<Output> {
 fn repository(mock: Unimock) -> GitRepository {
     GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
+        promisor_remotes: Vec::new(),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
@@ -94,7 +95,7 @@ fn changes_preserve_renames_and_add_untracked_paths() {
             .returns(output(b"R100\0old\0new\0M\0edit\0")),
         RunnerMock::run
             .next_call(
-                matching!((request) if request.process_mode == ProcessMode::FullTree && request.args.iter().any(|arg| arg == "--exclude-standard")),
+                matching!((request) if request.process_mode == ProcessMode::PlainGroup && request.args.iter().any(|arg| arg == "--exclude-standard")),
             )
             .returns(output(b"untracked\0edit\0")),
     )));

@@ -34,6 +34,14 @@ pub enum Error {
     /// The command cancelled its pending and queued sidecar work.
     #[error("[mokly-sidecar/cancelled] sidecar pool is shut down")]
     Cancelled,
+    /// A failed reap ended background head returns for this pool's lifetime.
+    #[error(
+        "[mokly-sidecar/head-return-disabled] background sidecar preparation disabled: {source}"
+    )]
+    HeadReturnDisabled {
+        /// The original process termination failure.
+        source: Box<Error>,
+    },
     /// Node, the sidecar entry, or its source directory is unavailable.
     #[error("[mokly-sidecar/sidecar-unavailable] {part} is unavailable")]
     Unavailable {

@@ -3,6 +3,9 @@ name: Preview
 on:
   push:
     branches: [main]
+  pull_request_target:
+    types: [labeled, unlabeled, synchronize, reopened, closed]
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
@@ -11,16 +14,17 @@ permissions:
 
 concurrency:
   group: preview-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
   CLOUDFLARE_PROJECT_NAME: mokabook
   MOKLY_COMMENT_MARKER: "<!-- mokly-preview -->"
 
 jobs:
   deploy-main:
     name: Deploy Main Preview
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
     timeout-minutes: 20
     runs-on: ubuntu-24.04
     steps:
@@ -35,6 +39,7 @@ jobs:
           node-version: 24.21.0
           package-manager-cache: false
       - name: Validate Cloudflare configuration
+        id: credentials
         run: |
           missing=0
           if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
@@ -44,6 +49,11 @@ jobs:
           if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
             echo "::error title=Missing Cloudflare API token::Set repository secret CLOUDFLARE_PAGES_API_TOKEN or CLOUDFLARE_API_TOKEN."
             missing=1
+          fi
+          if [[ "$missing" == 0 ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
           fi
           exit "${missing}"
         env:
@@ -72,6 +82,7 @@ jobs:
       pull-requests: write
     name: Deploy PR Preview
     if: >-
+      vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' &&
       github.event_name == 'pull_request' &&
       github.event.action != 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -95,6 +106,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Validate Cloudflare configuration
+        id: credentials
         run: |
           missing=0
           if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
@@ -104,6 +116,11 @@ jobs:
           if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
             echo "::error title=Missing Cloudflare API token::Set repository secret CLOUDFLARE_PAGES_API_TOKEN or CLOUDFLARE_API_TOKEN."
             missing=1
+          fi
+          if [[ "$missing" == 0 ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
           fi
           exit "${missing}"
         env:
@@ -123,13 +140,14 @@ jobs:
       - name: Deploy Mokly preview
         id: deploy
         run: |
-          branch="pr-${{ github.event.pull_request.number }}"
+          branch="$PREVIEW_BRANCH"
           npx --no-install wrangler pages deploy .context/mokly-preview-deploy \
             --project-name "${CLOUDFLARE_PROJECT_NAME}" \
             --branch "${branch}"
           echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
           echo "url=https://${branch}.${CLOUDFLARE_PROJECT_NAME}.pages.dev" >> "${GITHUB_OUTPUT}"
         env:
+          PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       - name: Comment on pull request
@@ -181,12 +199,23 @@ jobs:
       pull-requests: write
     name: Close PR Preview
     if: >-
+      vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' &&
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 20
     runs-on: ubuntu-24.04
     steps:
+      - name: Gate Pages cleanup credentials
+        id: credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [[ -n "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
       - name: Delete Cloudflare Pages PR deployments
         id: cleanup
         env:
@@ -267,3 +296,377 @@ jobs:
                 body,
               });
             }
+
+  prepare:
+    timeout-minutes: 10
+    name: Choose preview lifecycle action
+    runs-on: ubuntu-24.04
+    outputs:
+      action: ${{ steps.event.outputs.action }}
+      environment: ${{ steps.event.outputs.environment }}
+      revision: ${{ steps.event.outputs.revision }}
+      repository_private: ${{ steps.event.outputs.repository_private }}
+    steps:
+      - name: Check out trusted event policy
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the event
+        id: event
+        env:
+          CUTOVER_ENABLED: ${{ vars.MKC_CLOUD_CUTOVER_ENABLED }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != pull_request_target || "$CUTOVER_ENABLED" != true ]]; then
+            echo 'action=skip' >> "$GITHUB_OUTPUT"
+          else
+            python3 infra/scripts/preview-event.py "$GITHUB_EVENT_PATH" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Explain skipped previews
+        if: steps.event.outputs.action == 'skip'
+        run: echo 'SKIP preview — requires a same-repository PR with the preview label or a cleanup event'
+  build:
+    name: Build unprivileged PR images
+    needs: [prepare]
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.prepare.outputs.action == 'deploy')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out trusted build tools
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install BuildKit and crane
+        run: bash infra/scripts/install-build-tools.sh
+      - name: Start standalone BuildKit
+        run: bash infra/scripts/start-buildkit.sh
+      - name: Check out the requested revision
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ needs.prepare.outputs.revision }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build workload images without cloud credentials
+        working-directory: source
+        env:
+          MKC_REVISION: ${{ needs.prepare.outputs.revision }}
+          MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+          MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+          ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+        run: bash infra/scripts/build-release.sh "$ENVIRONMENT"
+      - name: Transfer the built images
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: workload-images
+          path: source/.context/images/*.tar
+          retention-days: 1
+          if-no-files-found: error
+
+  capture:
+    name: Capture unprivileged PR catalogue
+    needs: [prepare]
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.prepare.outputs.action == 'deploy')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the requested revision with full history
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ needs.prepare.outputs.revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Node without a package cache
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Install npm
+        run: npm install --global npm@11.21.0
+      - name: Install Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Build workspace packages
+        run: npm run build
+      - name: Capture the catalogue without cloud credentials
+        env:
+          ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          MKC_REVISION: ${{ needs.prepare.outputs.revision }}
+          CAPTURE_REPOSITORY: ${{ github.repository }}
+        run: python3 infra/scripts/capture-catalogue.py "$ENVIRONMENT" --checkout . --branch "$HEAD_REF" --repository "$CAPTURE_REPOSITORY"
+      - name: Transfer the captured catalogue
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seed-catalogue
+          path: .context/seed/catalogue
+          retention-days: 1
+          if-no-files-found: error
+
+  release:
+    name: Deploy or remove preview workloads
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (always() && needs.prepare.result == 'success' && needs.prepare.outputs.action != 'skip')
+    needs: [prepare, build, capture]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: preview
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    outputs:
+      cloud: ${{ steps.credentials.outputs.enabled }}
+      smoke: ${{ steps.deploy.outcome }}
+      evidence: ${{ steps.evidence.outcome }}
+      seed: ${{ steps.seed.outcome }}
+      seed_evidence: ${{ steps.seed_evidence.outcome }}
+      cleanup: ${{ steps.destroy.outcome }}
+      comment: ${{ steps.comment.outcome }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_PREVIEW_INGRESS_IP: ${{ vars.MKC_PREVIEW_INGRESS_IP }}
+      MKC_PREVIEW_BLOBS_BUCKET: ${{ vars.MKC_PREVIEW_BLOBS_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_CONFIG: ${{ vars.MKC_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ needs.prepare.outputs.revision }}
+      ENVIRONMENT: ${{ needs.prepare.outputs.environment }}
+      PREVIEW_ACTION: ${{ needs.prepare.outputs.action }}
+      REPOSITORY_PRIVATE: ${{ needs.prepare.outputs.repository_private }}
+      PREVIEW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare running comment
+        if: env.PREVIEW_ACTION == 'deploy'
+        run: |
+          mkdir -p .context
+          python3 infra/scripts/preview-comment.py --state running --environment "$ENVIRONMENT" \
+            --revision "$MKC_REVISION" --domain "$MKC_DOMAIN" \
+            --catalogue-domain "$MKC_CATALOGUE_BASE_DOMAIN" --run-url "$PREVIEW_RUN_URL" \
+            --repository-private "$REPOSITORY_PRIVATE" \
+            > .context/preview-comment.md
+      - name: Publish running comment
+        if: env.PREVIEW_ACTION == 'deploy'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
+            const marker = '<!-- mokly-preview -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number, body,
+              });
+            }
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+          install_components: gke-gcloud-auth-plugin,kubectl
+      - name: Install infrastructure and image tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          bash infra/scripts/install-tools.sh
+          bash infra/scripts/install-build-tools.sh
+      - name: Download the unprivileged image
+        if: steps.credentials.outputs.enabled == 'true' && env.PREVIEW_ACTION == 'deploy' && needs.build.result == 'success'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: workload-images
+          path: .context/images
+      - name: Download the captured catalogue
+        if: steps.credentials.outputs.enabled == 'true' && env.PREVIEW_ACTION == 'deploy' && needs.build.result == 'success' && needs.capture.result == 'success'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: seed-catalogue
+          path: .context/seed/catalogue
+      - name: Push workloads and deploy preview
+        id: deploy
+        if: steps.credentials.outputs.enabled == 'true' && env.PREVIEW_ACTION == 'deploy' && needs.build.result == 'success'
+        run: |
+          bash infra/scripts/push-images.sh "$ENVIRONMENT"
+          export MKC_API_IMAGE="$(cat .context/api-image-ref.txt)"
+          export MKC_CATALOGUE_IMAGE="$(cat .context/catalogue-image-ref.txt)"
+          export MKC_APP_IMAGE="$(cat ".context/app-$ENVIRONMENT-image-ref.txt")"
+          bash infra/scripts/preview-deploy.sh "$ENVIRONMENT"
+      - name: Require deploy evidence
+        id: evidence
+        if: steps.deploy.outcome == 'success'
+        run: test -s .context/deployment-smoke.json
+      - name: Seed the preview sample project
+        id: seed
+        if: steps.deploy.outcome == 'success' && steps.evidence.outcome == 'success'
+        env:
+          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
+          PREVIEW_SEED_RUN: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          source infra/scripts/preview-common.sh
+          preview_initialize "$ENVIRONMENT"
+          preview_create_temporary
+          trap 'rm -rf "$preview_temporary"' EXIT
+          preview_select_cluster
+          rm -f "$PREVIEW_SECRET_FILE"
+          preview_kubectl --namespace "$namespace" get secret preview-sign-in -o json \
+            | python3 infra/scripts/preview-lifecycle.py extract-preview "$PREVIEW_SECRET_FILE"
+          preview_secret=$(<"$PREVIEW_SECRET_FILE")
+          echo "::add-mask::$preview_secret"
+          unset preview_secret
+          catalogue_args=()
+          [[ ! -d .context/seed/catalogue ]] || catalogue_args+=(--catalogue .context/seed/catalogue)
+          python3 infra/scripts/preview-seed-job.py "$ENVIRONMENT" \
+            --run "$PREVIEW_SEED_RUN" "${catalogue_args[@]}"
+      - name: Require seed evidence
+        id: seed_evidence
+        if: steps.seed.outcome == 'success'
+        run: python3 infra/scripts/preview-seed-job.py "$ENVIRONMENT" --validate-evidence
+      - name: Remove closed or unlabelled preview workloads
+        id: destroy
+        if: steps.credentials.outputs.enabled == 'true' && env.PREVIEW_ACTION == 'destroy'
+        run: bash infra/scripts/preview-destroy.sh "$ENVIRONMENT"
+      - name: Retain available preview evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-evidence-pr-${{ github.event.number }}
+          path: |
+            .context/deployment-smoke.json
+            .context/seed-status.json
+            .context/seed-proof.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Prepare final comment
+        id: comment-body
+        if: ${{ always() }}
+        env:
+          DEPLOY_RESULT: ${{ steps.deploy.outcome }}
+          EVIDENCE_RESULT: ${{ steps.evidence.outcome }}
+          CAPTURE_RESULT: ${{ needs.capture.result }}
+          SEED_RESULT: ${{ steps.seed.outcome }}
+          SEED_EVIDENCE_RESULT: ${{ steps.seed_evidence.outcome }}
+          CLEANUP_RESULT: ${{ steps.destroy.outcome }}
+          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
+        run: |
+          mkdir -p .context
+          state=failed
+          if [[ "$PREVIEW_ACTION" == destroy ]]; then
+            state=cleanup-failed
+            [[ "$CLEANUP_RESULT" != success ]] || state=removed
+          elif [[ "$DEPLOY_RESULT" == success && "$EVIDENCE_RESULT" == success && \
+                  "$CAPTURE_RESULT" == success && "$SEED_RESULT" == success && \
+                  "$SEED_EVIDENCE_RESULT" == success ]]; then
+            state=success
+          fi
+          comment_args=(--state "$state" --environment "$ENVIRONMENT" \
+            --revision "$MKC_REVISION" --domain "$MKC_DOMAIN" \
+            --catalogue-domain "$MKC_CATALOGUE_BASE_DOMAIN" --run-url "$PREVIEW_RUN_URL" \
+            --repository-private "$REPOSITORY_PRIVATE")
+          if [[ "$DEPLOY_RESULT" == success ]]; then
+            [[ ! -f "$PREVIEW_SECRET_FILE" ]] || comment_args+=(--secret-file "$PREVIEW_SECRET_FILE")
+            [[ ! -s .context/seed-status.json ]] || comment_args+=(--seed-status .context/seed-status.json)
+            [[ ! -s .context/seed-proof.json ]] || comment_args+=(--seed-proof .context/seed-proof.json)
+          fi
+          python3 infra/scripts/preview-comment.py "${comment_args[@]}" \
+            > .context/preview-comment.md
+      - name: Publish final comment
+        id: comment
+        if: ${{ always() && steps.comment-body.outcome == 'success' }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
+            const marker = '<!-- mokly-preview -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number, body,
+              });
+            }
+      - name: Remove the private preview credential file
+        if: ${{ always() }}
+        env:
+          PREVIEW_SECRET_FILE: ${{ runner.temp }}/mokly-preview-sign-in
+        run: rm -f "$PREVIEW_SECRET_FILE"
+  required:
+    timeout-minutes: 10
+    name: Preview required
+    if: ${{ always() }}
+    needs: [prepare, build, capture, release]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require the requested lifecycle action
+        env:
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          CAPTURE_RESULT: ${{ needs.capture.result }}
+          RELEASE_RESULT: ${{ needs.release.result }}
+          CLOUD_ENABLED: ${{ needs.release.outputs.cloud }}
+          SMOKE_RESULT: ${{ needs.release.outputs.smoke }}
+          EVIDENCE_RESULT: ${{ needs.release.outputs.evidence }}
+          SEED_RESULT: ${{ needs.release.outputs.seed }}
+          SEED_EVIDENCE_RESULT: ${{ needs.release.outputs.seed_evidence }}
+          CLEANUP_RESULT: ${{ needs.release.outputs.cleanup }}
+          COMMENT_RESULT: ${{ needs.release.outputs.comment }}
+          PREVIEW_ACTION: ${{ needs.prepare.outputs.action }}
+        run: |
+          test "$PREPARE_RESULT" = success
+          case "$PREVIEW_ACTION" in
+            deploy) test "$BUILD_RESULT" = success && test "$CAPTURE_RESULT" = success && \
+              test "$RELEASE_RESULT" = success && \
+              test "$CLOUD_ENABLED" = true && test "$SMOKE_RESULT" = success && \
+              test "$EVIDENCE_RESULT" = success && test "$SEED_RESULT" = success && \
+              test "$SEED_EVIDENCE_RESULT" = success && test "$COMMENT_RESULT" = success ;;
+            destroy) test "$BUILD_RESULT" = skipped && test "$CAPTURE_RESULT" = skipped && \
+              test "$RELEASE_RESULT" = success && \
+              test "$CLOUD_ENABLED" = true && test "$CLEANUP_RESULT" = success && \
+              test "$COMMENT_RESULT" = success ;;
+            skip) test "$BUILD_RESULT" = skipped && test "$CAPTURE_RESULT" = skipped && \
+              test "$RELEASE_RESULT" = skipped ;;
+            *) exit 1 ;;
+          esac

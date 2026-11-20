@@ -17,7 +17,8 @@ use crate::assets::File;
 use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
-use crate::detail_encoding::{DetailEncoder, EncodedDetails, detail_id};
+use crate::detail_encoding::DetailEncoder;
+use crate::detail_publication::PublicationKind;
 use crate::error::{Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
@@ -120,6 +121,8 @@ pub trait ChangeSource: Send + Sync {
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
     ) -> Result<ComparisonResult>;
+    /// Release unaccepted staging when an execution ends, without terminal output.
+    fn discarded(&self) {}
     /// Report only the accepted result, with preparation warnings before readiness.
     fn finished(
         &self,
@@ -145,6 +148,7 @@ pub(crate) fn project(
     current: &Snapshot,
     status: ChangesStatus,
     accepted: Option<Arc<Accepted>>,
+    encoder: &dyn DetailEncoder,
 ) -> Result<Arc<Snapshot>> {
     let mut next = current.clone();
     next.index.revision += 1;
@@ -180,18 +184,20 @@ pub(crate) fn project(
         next.index.comparison_url = Nullable(Some(routes::comparison_generation(&accepted.id)));
     }
     changes_detail::apply(&mut next)?;
+    let kind = if next.changes.is_some() {
+        PublicationKind::ChangesEvidence
+    } else {
+        PublicationKind::ChangesStatus
+    };
     for (path, detail) in &mut next.details {
-        let detail = Arc::make_mut(detail);
-        detail.detail_id = detail_id(detail);
+        Arc::make_mut(detail).revision = Some(next.index.revision);
+        let route = viewer(&format!("entries/{path}.json"));
+        let adjacent = current.details.get(path).zip(current.files.get(&route));
+        let file = next
+            .recent_details
+            .publish(kind, detail, adjacent, encoder)?;
         projection::set_detail_id(&mut next.index, path, &detail.detail_id);
-        detail.revision = Some(next.index.revision);
-    }
-    for (path, detail) in &mut next.details {
-        let detail = Arc::make_mut(detail);
-        next.files.insert(
-            viewer(&format!("entries/{path}.json")),
-            EncodedDetails.encode(detail),
-        );
+        next.files.insert(route, file);
     }
     next.files.insert(
         viewer("index.json"),
@@ -229,3 +235,7 @@ pub trait ChangeRun: Send {
     /// Clear only this attempt's progress line.
     fn finish(&self);
 }
+
+#[cfg(test)]
+#[path = "_tests_/reuse_oracle/mod.rs"]
+mod reuse_oracle;

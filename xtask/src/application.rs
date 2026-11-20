@@ -6,9 +6,11 @@ use std::sync::Arc;
 use crate::artifacts::Artifacts;
 use crate::check::request::CheckRequest;
 use crate::check::runner::CheckRunner;
+use crate::check::tasks::Task;
 use crate::cli::Command;
 use crate::error::{Error, Result};
 use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
+use crate::policy::runner::PolicyChecks;
 use crate::remote::availability::Selector;
 use crate::remote::contracts::{Environment, Interrupt, Reporter};
 use crate::remote::error;
@@ -24,6 +26,8 @@ pub(crate) trait Xtask: Send + Sync {
 
 /// Application dependencies created by the CLI composition root.
 pub(crate) struct Application {
+    /// Shared repository file and artifact policy dispatcher.
+    pub(crate) policy: Arc<dyn PolicyChecks>,
     /// Native and shared-type artifact builder.
     pub(crate) artifacts: Arc<dyn Artifacts>,
     /// Ordered availability selector.
@@ -47,6 +51,16 @@ pub(crate) struct Application {
 impl Xtask for Application {
     fn run(&self, command: Command) -> Result<()> {
         match command {
+            Command::Policy(command) => self.policy.run(command),
+            Command::MoklyFixtures { check } => {
+                self.check_runner.task(Task::MoklyFixtures { check })
+            }
+            Command::EmailTemplates { check } => {
+                self.check_runner.task(Task::EmailTemplates { check })
+            }
+            Command::StripeCatalogue { args } => {
+                self.check_runner.task(Task::StripeCatalogue { args })
+            }
             Command::BuildNative => self.artifacts.build_native(),
             Command::GenerateTypes => self.artifacts.generate_types(),
             Command::CheckGeneratedTypes => self.artifacts.check_generated_types(),

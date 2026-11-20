@@ -5,11 +5,11 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_css::types::StylesheetRoot;
 use mokly_graph::cache::MemoryCache;
-use mokly_sidecar::compiled::CompiledGeneration;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::PoolMock;
@@ -67,10 +67,21 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
             .each_call(matching!(_))
             .answers(&|_, call| {
                 Ok(match call {
-                    Call::Bundle(_) => MethodResult::Bundle(Bundle {
+                    Call::Bundle(_) => MethodResult::Bundle(Box::new(Bundle {
+                        plan: None,
+                        cache: None,
+                        compile_count: 1,
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: CompiledGeneration {
+                        compiled: Arc::new(CompiledGeneration {
+                            toolchain: "fixture".into(),
+                            metadata_identity: None,
+                            reuse_evidence: Arc::new(ReuseEvidence {
+                                uncaptured: None,
+                                durable: true,
+                                complete: true,
+                                inputs: Default::default(),
+                            }),
                             identity: "bundle".into(),
                             code: "module.exports={}".into(),
                             runtime_key: "fixture-runtime".into(),
@@ -83,7 +94,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                             input_directories: BTreeMap::new(),
                             metadata_directories: BTreeMap::new(),
                             unmapped_dependency_directories: None,
-                        },
+                        }),
                         generation: "bundle".into(),
 
                         modules: vec![
@@ -98,7 +109,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                                 digest: Some("css".into()),
                             },
                         ],
-                    }),
+                    })),
                     Call::CssModules(_) | Call::Dispose(_) => MethodResult::Empty,
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: vec![],
@@ -116,6 +127,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
     let mut runtime = Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(Unimock::new(())),
         pool,
         Arc::new(MemoryCache::new(0, 0)),
         Arc::new(Unimock::new(())),
@@ -131,6 +143,10 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: vec![],
+        modules: ResolvedModules {
+            renderer: Some("renderer.tsx".into()),
+            ..Default::default()
+        },
         authored_inputs: vec![],
     };
     let provider: &dyn DefinitionProvider = &runtime;

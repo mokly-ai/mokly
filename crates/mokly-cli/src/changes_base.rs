@@ -3,30 +3,29 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config::{ConfigLoader, Loader, relative};
+use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
-use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::{Discoverer, Discovery, Inventory, SourceKind};
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
+use mokly_compare::base_freshness::Freshness;
 use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
 use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::Step;
-use mokly_compare::dependency_paths;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
-use mokly_compare::inputs::{InputReader, SourceInputs};
-use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
-use mokly_git::tree::Limits;
-use mokly_graph::types::{GraphFactory, RenderGeneration};
+use mokly_git::error;
+use mokly_git::source_key::CheckoutIdentity;
+use mokly_graph::types::GraphFactory;
 use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::BaseDependencies;
+use crate::changes_freshness::{SelectionRequest, html_dependencies, reusable, working_roots};
 
 /// Prepare the base generation through a second `Runtime` over the base tree. It reuses
 /// the head runtime's pool, render cache, and workers. A base that needs a sidecar gets a
@@ -35,16 +34,27 @@ pub(super) struct NativeBase {
     pub(super) runtime: Arc<Runtime>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) dependencies: Arc<dyn BaseDependencies>,
+    pub(super) freshness: Option<Arc<dyn Freshness>>,
 }
 
 impl BaseProvider for NativeBase {
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
         let mut scripts_off = false;
-        match self.prepare_generation(request, &mut scripts_off) {
-            Ok(generation) => Ok(PreparedBase {
-                generation,
-                scripts_off,
-            }),
+        let checkout = match &self.freshness {
+            Some(_) => match request.repository.checkout_identity(&request.commit) {
+                Ok(checkout) => Some(checkout),
+                Err(error::Error::Cancelled) => {
+                    return Err(BasePreparationError::new(false, Error::Cancelled));
+                }
+                Err(error) => {
+                    tracing::debug!(%error, "base checkout evidence is unavailable");
+                    None
+                }
+            },
+            None => None,
+        };
+        match self.prepare_generation(request, &mut scripts_off, checkout) {
+            Ok(prepared) => Ok(prepared),
             Err(source) => Err(BasePreparationError::new(scripts_off, source)),
         }
     }
@@ -55,7 +65,8 @@ impl NativeBase {
         &self,
         request: &BaseRequest<'_>,
         scripts_off: &mut bool,
-    ) -> Result<Arc<dyn RenderGeneration>> {
+        checkout: Option<CheckoutIdentity>,
+    ) -> Result<PreparedBase> {
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
@@ -70,6 +81,7 @@ impl NativeBase {
             ResolvedConfig {
                 input: Config::default(),
                 roots: Vec::new(),
+                modules: Default::default(),
                 authored_inputs: Vec::new(),
                 ..request.working_config.clone()
             }
@@ -84,32 +96,25 @@ impl NativeBase {
             Ok(inventory) => inventory,
             Err(source) => return Err(Error::Catalogue { source }),
         };
-        let needs_sidecar = config.input.postcss.is_some()
-            || config.input.renderer.is_some()
+        let needs_sidecar = config.modules.postcss.is_some()
+            || config.modules.renderer.is_some()
             || inventory.files.iter().any(|file| {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
-        let base = if needs_sidecar {
-            Some(self.dependencies.prepare(
+        let (base, selection, warning) = if needs_sidecar {
+            let prepared = self.dependencies.prepare(
                 request,
                 &config,
-                &self.runtime.dependency_usage.directories(),
-                &self.runtime.dependency_usage.unmapped_directories(),
+                &SelectionRequest {
+                    directories: &self.runtime.dependency_usage.directories(),
+                    unmapped: &self.runtime.dependency_usage.unmapped_directories(),
+                    record: checkout.is_some(),
+                },
                 early,
-            )?)
+            )?;
+            (Some(prepared.side), prepared.selection, None)
         } else {
-            None
-        };
-        *scripts_off = base.as_ref().is_some_and(|base| {
-            base.dependencies.tier == Tier::Installed && !request.install_scripts
-        });
-        if let Some(base) = &base {
-            request.sources.sources.attach(base.sources.clone())?;
-        }
-        let warning = if needs_sidecar {
-            None
-        } else {
-            html_dependencies(
+            let (warning, selection) = html_dependencies(
                 request,
                 &config,
                 &request
@@ -119,21 +124,24 @@ impl NativeBase {
                     .iter()
                     .cloned()
                     .collect::<Vec<_>>(),
-            )?
+                checkout.is_some(),
+            )?;
+            (None, selection, warning)
         };
+        *scripts_off = base.as_ref().is_some_and(|base| {
+            base.dependencies.tier == Tier::Installed && !request.install_scripts
+        });
+        if let Some(base) = &base {
+            request.sources.sources.attach(base.sources.clone())?;
+        }
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
         request.steps.step(Step::Rendering);
-        let runtime = Arc::new(Runtime::new(
-            tree.clone(),
-            self.runtime.dependency_tree.clone(),
-            self.runtime.pool.clone(),
-            self.runtime.cache.clone(),
-            self.runtime.workers.clone(),
-            VERSION.into(),
-            base,
-        ));
+        let runtime = Arc::new(
+            self.runtime
+                .for_base(tree.clone(), VERSION.into(), base.clone()),
+        );
         let builder: &dyn CatalogueBuilder = &Builder {
             tree,
             discovery: Arc::new(Discovered(inventory)),
@@ -152,10 +160,54 @@ impl NativeBase {
             Ok(graph) => graph,
             Err(source) => return Err(Error::Graph { source }),
         };
-        match graph.prepare(config, catalogue, None) {
-            Ok(generation) => Ok(generation),
-            Err(source) => Err(Error::Graph { source }),
-        }
+        let roots = if checkout.is_some() && reusable(base.as_ref()) {
+            working_roots(
+                base.as_ref(),
+                &config,
+                runtime.dependency_usage.directories().into_iter(),
+            )
+        } else {
+            None
+        };
+        let generation = match graph.prepare(config, catalogue, None) {
+            Ok(generation) => generation,
+            Err(source) => return Err(Error::Graph { source }),
+        };
+        let roots = roots.map(|mut roots| {
+            roots.extend(
+                generation
+                    .catalogue()
+                    .dependency_directories
+                    .iter()
+                    .map(|directory| request.working_config.repo_root.join(directory)),
+            );
+            roots.sort();
+            roots.dedup();
+            roots
+        });
+        let freshness = match (&self.freshness, checkout, selection) {
+            (Some(freshness), Some(checkout), Some(selection)) if reusable(base.as_ref()) => {
+                match freshness.record(
+                    checkout,
+                    selection,
+                    roots.as_deref(),
+                    generation.catalogue(),
+                ) {
+                    Ok(inputs) => inputs,
+                    Err(Error::Cancelled) => return Err(Error::Cancelled),
+                    Err(error) => {
+                        tracing::debug!(%error, "base freshness evidence is unavailable");
+                        None
+                    }
+                }
+            }
+            _ => None,
+        };
+        Ok(PreparedBase {
+            generation,
+            scripts_off: *scripts_off,
+            freshness,
+        })
     }
 
     /// Before the base configuration loads, leases an existing complete extraction
@@ -163,8 +215,8 @@ impl NativeBase {
     /// renderer or PostCSS. This optional step never builds an extraction, and a
     /// failure other than cancellation leaves the base reads on Git.
     fn early_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
-        let input = &request.working_config.input;
-        if input.renderer.is_none() && input.postcss.is_none() {
+        let modules = &request.working_config.modules;
+        if modules.renderer.is_none() && modules.postcss.is_none() {
             return Ok(None);
         }
         let attached = self
@@ -188,34 +240,6 @@ impl NativeBase {
     }
 }
 
-/// Compare the governing manifests and lockfiles of the used dependency directories on
-/// both sides. It reads only those exact paths, with no tree listing, so an HTML-only
-/// base needs no extraction. A difference gives one `base-dependencies` warning.
-fn html_dependencies(
-    request: &BaseRequest<'_>,
-    config: &ResolvedConfig,
-    used: &[String],
-) -> Result<Option<Warning>> {
-    let paths = dependency_paths::governing(used)?;
-    if paths.is_empty() {
-        return Ok(None);
-    }
-    let reader: &dyn InputReader = &SourceInputs;
-    let base = reader.read_paths(request.sources.sources.as_ref(), &paths, Limits::default())?;
-    let working: &dyn WorkingInputs = &SystemWorkingInputs;
-    let head = working.read_paths(
-        request.repository.as_ref(),
-        &base,
-        &paths,
-        Limits::default(),
-    )?;
-    Ok((base != head).then(|| Warning {
-        code: "base-dependencies",
-        subject: WarningSubject::Configuration(relative(&config.file, &config.repo_root)),
-        message: "Base dependencies differ. HTML comparison uses working-tree dependencies.".into(),
-    }))
-}
-
 struct Discovered(Inventory);
 impl Discovery for Discovered {
     fn discover(
@@ -234,3 +258,11 @@ mod changes_base_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_base_success_tests.rs"]
 mod changes_base_success_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_freshness_tests.rs"]
+mod changes_freshness_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_evidence_tests.rs"]
+mod changes_evidence_tests;

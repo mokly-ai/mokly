@@ -20,6 +20,7 @@ use tokio::sync::Notify;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporterMock;
+use crate::warning_support::record;
 
 use super::{CandidateWatch, State, WatchInputs, WatchedInputs};
 use crate::serve_watch_files::ObserversMock;
@@ -29,6 +30,7 @@ fn config(dir: &str) -> ResolvedConfig {
         input: Config::default(),
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![ResolvedRoot {
             directory: format!("/repo/{dir}").into(),
@@ -90,6 +92,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
             attach_reported: false,
             closed: false,
             started: SystemTime::UNIX_EPOCH,
+            record: None,
         })),
     })
 }
@@ -194,9 +197,9 @@ async fn adoption_replays_events_and_subscribes_before_copying_resources() {
     let prepared = prepared("next", generation);
     watch.clone().adopt(
         CandidateWatch {
-            plan: plan("next"),
             observer: Arc::new(next.clone()),
             recheck: true,
+            record: record(),
         },
         &prepared,
     );

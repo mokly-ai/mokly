@@ -7,10 +7,16 @@ use std::sync::Arc;
 
 use mokly_git::control::Cancellation;
 use mokly_platform::flush::Flush;
+use mokly_sidecar::bundle_store::RecordToken;
 
+use crate::bundle_cache_types::{BundleReceipt, BundleRecord, CompilationRead, OpenBundle};
+use crate::bundle_inventory;
+use crate::bundle_receipts;
+use crate::bundle_storage;
 use crate::cache_types::{Receipt, Record, Storage};
 use crate::durability::{publish_receipt, read_receipt, rename, sync_directory, sync_tree};
 use crate::error::{Error, InternalError, IoResult, Result};
+use crate::render_sequence;
 use crate::storage_tree::{check, copy_tree, remove, retire, size, validate_directory, vanished};
 
 /// Host storage composed with a canonical namespace root and cancellation.
@@ -24,6 +30,39 @@ pub struct SystemStorage {
 }
 
 impl Storage for SystemStorage {
+    fn render_sequence(&self, namespace: &Path, floor: u64) -> Result<Option<u64>> {
+        render_sequence::next(self, namespace, floor)
+    }
+    fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead> {
+        bundle_storage::compilation(self, entry)
+    }
+    fn bundle_open(&self, entry: &Path) -> Result<OpenBundle> {
+        bundle_storage::open(self, entry)
+    }
+
+    fn bundle_records(&self, directory: &Path, limit: u64) -> Result<Vec<BundleRecord>> {
+        bundle_inventory::records(self, directory, limit)
+    }
+
+    fn bundle_receipt(&self, entry: &Path, receipt: &BundleReceipt, durable: bool) -> Result<()> {
+        check(self.cancellation.as_ref())?;
+        validate_directory(&self.root, entry)?;
+        bundle_receipts::publish(entry, receipt, durable)
+    }
+
+    fn bundle_nonce(&self) -> Result<RecordToken> {
+        check(self.cancellation.as_ref())?;
+        let mut bytes = [0; 32];
+        match getrandom::fill(&mut bytes) {
+            Ok(()) => Ok(RecordToken::new(bytes)),
+            Err(source) => Err(InternalError::Entropy { source }.into()),
+        }
+    }
+
+    fn bundle_retire(&self, path: &Path, trash: &Path) -> Result<()> {
+        bundle_storage::retire(self, path, trash)
+    }
+
     fn write(&self, path: &Path, bytes: &[u8]) -> Result<()> {
         check(self.cancellation.as_ref())?;
         validate_directory(&self.root, path.parent().unwrap_or(path))?;

@@ -27,11 +27,13 @@ flate2 = "1.1.10"
 yaml-rust2 = "0.13.0"
 percent-encoding = "2.3.2"
 dunce = "1.0.5"
+getrandom = "0.4.3"
 
 [features]
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 unimock = "0.6.8"
