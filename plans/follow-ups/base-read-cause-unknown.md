@@ -9,7 +9,8 @@
   `crates/mokly-catalogue/src/config.rs:47` to line 63, in `Loader::load`,
   `crates/mokly-compare/src/git_failures.rs:15` to line 55,
   `crates/mokly-cli/src/changes_diagnostics.rs:28` to line 33, and
-  `crates/mokly-compare/tests/engine_support/mod.rs:157` to line 159.
+  `crates/mokly-compare/tests/engine_support/mod.rs:175` to line 177, in
+  `prepare`.
 - **Reason:** The code is older than the branch that found it, and the fix
   changes a diagnostic that a protocol page specifies.
 
@@ -87,9 +88,9 @@
   - `crates/mokly-cli/src/build_output.rs:206` to line 212 prints a
     `config-invalid` issue of the head build. Head reads use the working tree,
     so no base read reaches that output.
-  - The test fixture at `crates/mokly-compare/tests/engine_support/mod.rs:157`
-    to line 159 loads a base `GitTree` without its stored failure. So a Git
-    failure in a compare test shows only "unknown".
+  - The test fixture at `crates/mokly-compare/tests/engine_support/mod.rs:175`
+    to line 177, in `prepare`, loads a base `GitTree` without its stored
+    failure. So a Git failure in a compare test shows only "unknown".
   - The macOS CI of commit `3960484b` showed this in the test
     `referenced_resource_edits_stay_ready_and_missing_targets_fail`. Its log
     held this error:
