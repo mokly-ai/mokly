@@ -1,7 +1,8 @@
 /**
  * The tag button at the end of the catalogue search. It is a control of the
  * shell, a link to an address that a static depiction gives, or a picture of
- * itself in a depiction that runs no script.
+ * itself in a depiction that runs no script, which carries the picture
+ * marker.
  */
 
 import type { Ref } from "react";
@@ -44,7 +45,7 @@ export function TagPickerToggle({
     return (
       <span
         aria-label={name}
-        className="mbk-search-tag mbk-reset"
+        className="mbk-search-tag mbk-picture mbk-reset"
         data-mokly-tag-toggle=""
         role="img"
       >

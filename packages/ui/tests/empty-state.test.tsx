@@ -146,7 +146,7 @@ test("a static state draws an action without an address as a picture", () => {
         title="Unavailable"
       />,
     ),
-    '<div class="mbk-empty mbk-reset"><h2 class="mbk-reset">Unavailable</h2><span class="mbk-empty-link mbk-reset" data-mokly-preview-retry="">Retry</span></div>',
+    '<div class="mbk-empty mbk-reset"><h2 class="mbk-reset">Unavailable</h2><span class="mbk-empty-link mbk-picture mbk-reset" data-mokly-preview-retry="">Retry</span></div>',
   );
   // A link stays a link.
   assert.equal(

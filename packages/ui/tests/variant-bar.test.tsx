@@ -83,7 +83,7 @@ test("a variant without an address is a picture that keeps its mark", () => {
   ];
   assert.equal(
     renderToString(<VariantBar variants={variants} />),
-    '<nav aria-label="Saved variants" class="mbk-selection-bar mbk-reset"><span class="mbk-reset">Variant</span><a aria-current="page" class="mbk-reset" data-workspace-variant="c/a" href="../a/">A</a><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/b">B</span><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/c">C<!-- --> · Removed</span><span class="mbk-variant-status mbk-reset" data-workspace-variant-status="" hidden=""></span></nav>',
+    '<nav aria-label="Saved variants" class="mbk-selection-bar mbk-reset"><span class="mbk-reset">Variant</span><a aria-current="page" class="mbk-reset" data-workspace-variant="c/a" href="../a/">A</a><span class="mbk-variant-option mbk-picture mbk-reset" data-workspace-variant="c/b">B</span><span class="mbk-variant-option mbk-picture mbk-reset" data-workspace-variant="c/c">C<!-- --> · Removed</span><span class="mbk-variant-status mbk-reset" data-workspace-variant-status="" hidden=""></span></nav>',
   );
   render(
     <VariantBar

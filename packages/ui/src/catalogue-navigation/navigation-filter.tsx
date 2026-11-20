@@ -43,7 +43,8 @@ const FILTER_NAMES = { all: "all", changes: "changed" } as const;
  * One filter. A filter with an address is a link. A filter without one is a
  * toggle button that reports its view, or text when the column is not
  * operable. A link or text names the shown filter as the current page,
- * because each filter of a static depiction is its own page.
+ * because each filter of a static depiction is its own page. The text is a
+ * picture of the filter, so it carries the picture marker.
  */
 function FilterOption({
   children,
@@ -60,11 +61,10 @@ function FilterOption({
   shown: boolean;
   view: "all" | "changes";
 }) {
+  const active = shown ? " active" : "";
   const depicted = {
     "aria-current": shown ? ("page" as const) : undefined,
-    className: shown
-      ? "mbk-nav-filter-opt active mbk-reset"
-      : "mbk-nav-filter-opt mbk-reset",
+    className: `mbk-nav-filter-opt${active} mbk-reset`,
     "data-filter": FILTER_NAMES[view],
   };
   if (href !== undefined)
@@ -73,7 +73,15 @@ function FilterOption({
         {children}
       </a>
     );
-  if (!operable) return <span {...depicted}>{children}</span>;
+  if (!operable)
+    return (
+      <span
+        {...depicted}
+        className={`mbk-nav-filter-opt${active} mbk-picture mbk-reset`}
+      >
+        {children}
+      </span>
+    );
   return (
     <button
       aria-pressed={shown}

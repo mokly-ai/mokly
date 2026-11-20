@@ -34,3 +34,16 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The picture marker, mbk-picture. A component puts it on each picture form,
+   the element that a static depiction draws for a control that has no
+   address: it looks like the control and does nothing. The marker takes the
+   picture and its content out of hit testing, so no hover, press, or tooltip
+   reaches it, and it gives the picture the arrow. Both declarations are
+   important, so they override the normal rules of a control and an ordinary
+   inline style in any stylesheet order. A more specific important rule still
+   wins: the drag rules of a shell root keep the cursor of a drag. */
+.mbk-picture {
+  pointer-events: none !important;
+  cursor: default !important;
+}

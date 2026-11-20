@@ -18,13 +18,13 @@ test("a static bar is a picture whose toggle names what it would do", () => {
     renderToStaticMarkup(
       <BrowserBar address="example.test/welcome" interactive={false} />,
     ),
-    `<div class="browser-bar mbk-reset" data-browser-static=""><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-reset"><span class="address-url mbk-reset">example.test/welcome</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span><span aria-label="Expand to a wider viewport" class="browser-expand mbk-reset" role="img" title="Expand to a wider viewport">${GLYPHS}</span></div>`,
+    `<div class="browser-bar mbk-reset"><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-picture mbk-reset"><span class="address-url mbk-reset">example.test/welcome</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span><span aria-label="Expand to a wider viewport" class="browser-expand mbk-picture mbk-reset" role="img" title="Expand to a wider viewport">${GLYPHS}</span></div>`,
   );
   assert.equal(
     renderToStaticMarkup(
       <BrowserBar address="/a" expandable={false} interactive={false} />,
     ),
-    `<div class="browser-bar mbk-reset" data-browser-static=""><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-reset"><span class="address-url mbk-reset">/a</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span></div>`,
+    `<div class="browser-bar mbk-reset"><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-picture mbk-reset"><span class="address-url mbk-reset">/a</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span></div>`,
   );
 });
 
@@ -59,7 +59,7 @@ test("a static browser window draws its bar as a picture", () => {
   );
   assert.match(
     markup,
-    /^<div class="browser-frame mbk-reset"><div class="browser-bar mbk-reset" data-browser-static="">/u,
+    /^<div class="browser-frame mbk-reset"><div class="browser-bar mbk-reset">/u,
   );
   assert.match(
     markup,

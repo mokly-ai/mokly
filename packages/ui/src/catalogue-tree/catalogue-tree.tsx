@@ -21,6 +21,7 @@ import type {
   NavigationRow,
   NavigationSection,
 } from "./tree-records.js";
+import { ListToggle } from "./tree-toggle.js";
 
 export type {
   NavigationDisclosure,
@@ -91,10 +92,10 @@ function Folder({
 }
 
 /**
- * An entry row. An entry with a list pairs its link with a chevron button,
+ * An entry row. An entry with a list pairs its link with a chevron toggle,
  * because a row cannot be both a link and a `<summary>`, and the list follows
  * the row: the variants, then the other members. The list is a `div` closed by
- * `hidden`, and the button's `aria-expanded` follows it.
+ * `hidden`, and the toggle's open state follows it.
  */
 function Leaf({
   actions,
@@ -111,24 +112,11 @@ function Leaf({
     return (
       <RowLink currentRef={currentRowRef} link={leaf.link} variant={false} />
     );
-  const noun = list.rows.length > 0 ? "contents" : "variants";
   return (
     <>
       <div className="mbk-nav-leaf mbk-reset" hidden={list.hidden}>
         <RowLink currentRef={currentRowRef} link={leaf.link} variant={false} />
-        <button
-          aria-controls={list.id}
-          aria-expanded={list.open ? "true" : "false"}
-          aria-label={`${list.open ? "Hide" : "Show"} ${noun} of ${list.title}`}
-          className="mbk-nav-variants-toggle mbk-reset"
-          data-nav-variants-label={list.title}
-          data-nav-variants-noun={noun}
-          data-nav-variants-toggle={list.id}
-          onClick={() => actions.onDisclosure?.(list.disclosure, !list.open)}
-          type="button"
-        >
-          <ChevronIcon size={16} />
-        </button>
+        <ListToggle actions={actions} list={list} />
       </div>
       <div
         className="mbk-nav-variants mbk-reset"
@@ -224,7 +212,9 @@ function Section({
 /**
  * Every section of the tree. Section and folder summaries report a choice
  * through `onDisclosure` only while the tree is interactive; otherwise each
- * `<details>` keeps its native toggle. An entry's toggle always reports.
+ * `<details>` keeps its native toggle. An entry's toggle reports whenever
+ * the host gives `onDisclosure`. A tree that is not interactive and has no
+ * callback runs no script, so it draws each entry's toggle as a picture.
  */
 export function CatalogueTree({
   currentRowRef,

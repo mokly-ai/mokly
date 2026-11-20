@@ -57,7 +57,7 @@ const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
   [
-    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
+    ".browser-expand:hover:where(.mbk-reset)",
     "the user kept the shipped border on 2026-10-31",
   ],
 ]);
@@ -110,7 +110,7 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
-  "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
+  "packages/ui/src/browser-bar/browser-bar.css .browser-expand:hover:where(.mbk-reset)",
   "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",

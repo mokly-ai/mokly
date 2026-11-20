@@ -141,8 +141,9 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   const css = flatCss(STANDALONE_CSS);
   assert.match(
     STANDALONE_CSS,
-    /\.mbk-chip\.tag:is\(a, button\) \{[^}]*font: inherit;[^}]*cursor: pointer;/,
+    /\.mbk-chip\.tag:is\(a, button\) \{[^}]*font: inherit;/,
   );
+  assert.match(STANDALONE_CSS, /\.mbk-chip\.tag \{[^}]*cursor: pointer;/);
   assert.ok(
     css.includes(
       ".mbk-chip.tag svg { flex-shrink: 0; color: var(--chrome-muted); }",
@@ -150,7 +151,7 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      `.mbk-chip.tag:is(a, button):not(.active):hover { background: ${ACCENT_SOFT}; }`,
+      `.mbk-chip.tag:not(.active):hover { background: ${ACCENT_SOFT}; }`,
     ),
   );
   assert.ok(
@@ -165,7 +166,7 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):active { " +
+      ".mbk-chip.tag:active { " +
         "box-shadow: var(--chrome-shadow-press); transform: translateY(1px); }",
     ),
   );
@@ -184,10 +185,10 @@ test("the tag picker drops from the field and sheets under the bar", () => {
     STANDALONE_CSS,
     /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;/,
   );
-  assert.ok(css.includes(".mbk-search-tag:is(a, button) { cursor: pointer; }"));
+  assert.match(STANDALONE_CSS, /\.mbk-search-tag \{[^}]*cursor: pointer;/);
   assert.ok(
     css.includes(
-      ".mbk-search-tag:is(a, button):hover { background: var(--chrome-border); " +
+      ".mbk-search-tag:hover { background: var(--chrome-border); " +
         "color: var(--chrome-ink-2); }",
     ),
   );

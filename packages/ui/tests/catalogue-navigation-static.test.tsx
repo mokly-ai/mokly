@@ -101,7 +101,10 @@ test("a column that is not operable draws Collapse all, the shown filter, and th
   const changes = filter.querySelector('[data-filter="changed"]');
   assert.equal(changes?.tagName, "SPAN");
   assert.equal(changes?.getAttribute("aria-current"), "page");
-  assert.equal(changes?.className, "mbk-nav-filter-opt active mbk-reset");
+  assert.equal(
+    changes?.className,
+    "mbk-nav-filter-opt active mbk-picture mbk-reset",
+  );
   // The count slot keeps the spinner that names the detection at work.
   assert.ok(
     within(filter).getByRole("status", { name: "Checking for changes" }),
@@ -109,7 +112,7 @@ test("a column that is not operable draws Collapse all, the shown filter, and th
 
   const grip = container.querySelector("[data-mokly-nav-resize]");
   assert.ok(grip);
-  assert.equal(grip.className, "mbk-nav-resize mbk-reset");
+  assert.equal(grip.className, "mbk-nav-resize mbk-picture mbk-reset");
   assert.equal(grip.getAttribute("aria-hidden"), "true");
   assert.equal(grip.getAttribute("tabindex"), null);
   assert.equal(grip.getAttribute("role"), null);
@@ -137,8 +140,8 @@ test("a filter without an address in a column that is not operable is text", () 
       option.className,
     ]),
     [
-      ["SPAN", "page", "mbk-nav-filter-opt active mbk-reset"],
-      ["SPAN", null, "mbk-nav-filter-opt mbk-reset"],
+      ["SPAN", "page", "mbk-nav-filter-opt active mbk-picture mbk-reset"],
+      ["SPAN", null, "mbk-nav-filter-opt mbk-picture mbk-reset"],
     ],
   );
 });
@@ -165,12 +168,12 @@ test("a row without an address is a picture of the row with every row mark", () 
   assert.equal(picture.getAttribute("href"), null);
   for (const name of [
     "aria-current",
-    "class",
     "data-changed",
     "data-entry-kind",
     "style",
   ])
     assert.equal(picture.getAttribute(name), row.getAttribute(name), name);
+  assert.equal(picture.className, "mbk-nav-row mbk-picture mbk-reset");
   assert.equal(picture.getAttribute("aria-current"), "page");
   // The picture holds exactly what the link holds, the changed wording too.
   assert.equal(picture.innerHTML, row.innerHTML);

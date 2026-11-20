@@ -65,7 +65,9 @@ export function CatalogueNavigation({
   id: string;
   /**
    * Whether section and folder summaries report their choices through
-   * `onDisclosure` instead of their native toggle.
+   * `onDisclosure` instead of their native toggle. A column that is not
+   * interactive and has no `onDisclosure` draws each entry's list toggle as a
+   * picture of itself.
    */
   interactive: boolean;
   /** The widest column, in pixels. */
@@ -135,7 +137,10 @@ export function CatalogueNavigation({
             Collapse all
           </button>
         ) : (
-          <span className="mbk-nav-collapse mbk-reset" data-mokly-collapse="">
+          <span
+            className="mbk-nav-collapse mbk-picture mbk-reset"
+            data-mokly-collapse=""
+          >
             Collapse all
           </span>
         )}

@@ -71,16 +71,11 @@
 }
 
 /* A static depiction draws Collapse all as text and a filter as a link or
-   text. Each takes the line box that a button has by default, and text acts
-   on nothing. */
+   text. Each takes the line box that a button has by default. The text is a
+   picture, whose marker keeps the pointer off it. */
 span.mbk-nav-collapse,
 .mbk-nav-filter > :is(a, span) {
   line-height: normal;
-}
-
-span.mbk-nav-collapse,
-span.mbk-nav-filter-opt {
-  cursor: default;
 }
 
 .mbk-nav-filter-count {
@@ -197,7 +192,9 @@ span.mbk-nav-filter-opt {
 
 /* The resize separator: absent from the drawer and until a script makes the
    column resizable. Its grip turns accent while hovered, focused, or dragged.
-   The resizing class marks the shell root during a drag. */
+   The resizing class marks the shell root during a drag. The picture of the
+   grip carries the picture marker, so neither its cursor nor its hover glow
+   reaches the reader. */
 .mbk-nav-resize {
   position: absolute;
   z-index: 2;

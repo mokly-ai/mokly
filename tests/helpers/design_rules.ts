@@ -98,9 +98,9 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
 }
 
 /**
- * Keyboard stops that open nothing: on design screens outside the component
- * explorer designs, which depict its interactive controls, only the depicted
- * variant disclosure is an enabled button, and only a link takes a tab stop.
+ * Keyboard stops that open nothing on design screens outside the component
+ * explorer designs. The check keeps its exception for entry disclosure
+ * buttons and otherwise permits only a link to declare a tab stop.
  */
 export function keyboardStopViolations(catalogue: ServedCatalogue): string[] {
   const violations: string[] = [];

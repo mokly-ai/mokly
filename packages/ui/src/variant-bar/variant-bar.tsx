@@ -2,7 +2,8 @@
  * The bar of a component's saved variants above its preview: a link to each
  * variant, the shown one marked as the current page, and the change status
  * of the shown variant. A static depiction that runs no script draws a
- * variant without an address as a picture of its link.
+ * variant without an address as a picture of its link, which carries the
+ * picture marker.
  */
 
 /** One saved variant of the component. */
@@ -45,7 +46,7 @@ export function VariantBar({
         return variant.href === undefined ? (
           <span
             aria-current={variant.current ? "page" : undefined}
-            className="mbk-variant-option mbk-reset"
+            className="mbk-variant-option mbk-picture mbk-reset"
             data-workspace-variant={variant.path}
             key={variant.path}
           >

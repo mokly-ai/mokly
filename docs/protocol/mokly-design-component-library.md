@@ -81,8 +81,9 @@ below use text, boolean, number and primitive enum selections only.
    leaf one depth below its parent while that list is open; it never counts as a
    folder child. Its icon overlaps two outlines of `variantParentKind`, so
    screen and component variants remain distinct and muted. A parent carrying a variant list adds a trailing 16px
-   chevron disclosure button with its own expanded state and accessible name;
-   the row link is unchanged. The changed mark is a trailing dot, never an edge or
+   chevron, and the row link is unchanged. The chevron is a picture of the
+   shell's disclosure button: it keeps the button's accessible name and open
+   appearance, and it does not act. The changed mark is a trailing dot, never an edge or
    rail. A moved row's label ends in `· Moved` and, like a Removed row, it takes
    no changed mark; its disclosure keeps the entry's own title as its name. The
    sections are `Specs` and `Components`, one tree filtered by kind. Pending and preparing

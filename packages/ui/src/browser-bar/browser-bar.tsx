@@ -3,7 +3,8 @@
  * that copies its address, and the toggle that expands the window over the
  * page. A press on the address asks the host to copy it and shows "URL
  * copied" for a moment. The host owns which window is expanded. A static
- * depiction that runs no script draws the bar as a picture of itself.
+ * depiction that runs no script draws the bar as a picture of itself, whose
+ * address and toggle carry the picture marker.
  */
 
 import { useEffect, useState } from "react";
@@ -60,17 +61,16 @@ export function BrowserBar({
   }, [copied]);
   const toggle = expanded ? "Collapse viewport" : "Expand to a wider viewport";
   return (
-    <div
-      className="browser-bar mbk-reset"
-      data-browser-static={interactive ? undefined : ""}
-    >
+    <div className="browser-bar mbk-reset">
       <span className="lights mbk-reset">
         <i className="mbk-reset" />
         <i className="mbk-reset" />
         <i className="mbk-reset" />
       </span>
       <span
-        className="address mbk-reset"
+        className={
+          interactive ? "address mbk-reset" : "address mbk-picture mbk-reset"
+        }
         onClick={
           interactive
             ? () => {
@@ -102,7 +102,7 @@ export function BrowserBar({
       ) : (
         <span
           aria-label={toggle}
-          className="browser-expand mbk-reset"
+          className="browser-expand mbk-picture mbk-reset"
           role="img"
           title={toggle}
         >
