@@ -9,16 +9,28 @@ import type {
   SharedUiTheme,
 } from "@firna/ui/theme";
 
-import { documentPalettes, paletteColors } from "./palettes";
+import {
+  canvasColors,
+  documentPalettes,
+  paletteColors,
+  paletteFonts,
+} from "./palettes";
 import type { DocumentPalette, PaletteRoles } from "./palettes";
 import { tokens } from "./tokens";
 
-/** Every Firna color comes from the matching canonical surface family. */
+/**
+ * Every Firna color comes from the matching canonical surface family. The
+ * canvas family also takes its accent roles from the Canvas palette, so its
+ * solid fill is the signal green of a filled button.
+ */
 export function sharedUiColors(
   scheme: SharedUiScheme,
   palette: PaletteRoles = "paper",
 ): SharedUiColors {
-  const color = tokens.color[scheme];
+  const color =
+    palette === "canvas"
+      ? { ...tokens.color[scheme], ...canvasColors(scheme) }
+      : tokens.color[scheme];
   const roles = paletteColors(scheme, palette);
   return {
     amber: color.warning,
@@ -64,18 +76,21 @@ export const sharedUiRadii = {
 };
 
 /**
- * Control geometry derived from shared radii. The Folio scope takes the chrome
- * radius for a control and the medium radius for a surface, so a control is
- * 8px and a surface 10px, as the radius contract assigns by component class.
+ * Control geometry derived from shared radii. The Folio and canvas scopes take
+ * the chrome radius for a control and the medium radius for a surface, so a
+ * control is 8px and a surface 10px, as the radius contract assigns by
+ * component class.
  */
+const chromeRadii = {
+  sm: parseFloat(tokens.radius.small),
+  md: parseFloat(tokens.radius.chrome),
+  lg: parseFloat(tokens.radius.medium),
+};
 const paletteRadii: Record<DocumentPalette, Partial<typeof sharedUiRadii>> = {
   default: {},
   paper: {},
-  folio: {
-    sm: parseFloat(tokens.radius.small),
-    md: parseFloat(tokens.radius.chrome),
-    lg: parseFloat(tokens.radius.medium),
-  },
+  folio: chromeRadii,
+  canvas: chromeRadii,
 };
 
 /**
@@ -84,10 +99,11 @@ const paletteRadii: Record<DocumentPalette, Partial<typeof sharedUiRadii>> = {
  * not a dark theme.
  */
 function theme(scheme: SharedUiScheme, palette: PaletteRoles): SharedUiTheme {
+  const fonts = paletteFonts(palette);
   return createSharedUiTheme(
     {
       colors: sharedUiColors(scheme, palette),
-      fonts: { sans: tokens.font.sans, mono: tokens.font.mono },
+      fonts: { sans: fonts.sans, mono: fonts.mono },
       radii: sharedUiRadii,
     },
     scheme === "dark" ? darkSharedUiTheme : defaultSharedUiTheme,
@@ -100,7 +116,7 @@ export const sharedUiThemes = {
   dark: theme("dark", "paper"),
 };
 
-/** One document palette's complete control theme: its surfaces and geometry. */
+/** One document palette's complete control theme: its colors, type and geometry. */
 export function paletteUiTheme(
   scheme: SharedUiScheme,
   palette: DocumentPalette,

@@ -7,6 +7,8 @@ import { documentPalettes, paletteColors } from "@mokly-cloud/tokens/palettes";
 import { responsiveTokenCss, tokenCss } from "@mokly-cloud/tokens/token-css";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 
+import { palettes } from "@mokly/ui/palette";
+
 import { contrast } from "./color-metrics";
 
 test("prescribed text, status, control and focus combinations meet contrast requirements", () => {
@@ -135,7 +137,9 @@ test("CSS is derived from canonical tokens without stylesheet color copies", () 
 
 test("every document family keeps text, focus and boundaries legible", () => {
   for (const scheme of ["light", "dark"] as const)
-    for (const { roles, scope } of Object.values(documentPalettes)) {
+    for (const [palette, { roles, scope }] of Object.entries(
+      documentPalettes,
+    )) {
       const colors = paletteColors(scheme, roles);
       const status = tokens.color[scheme];
       for (const background of [
@@ -154,11 +158,48 @@ test("every document family keeps text, focus and boundaries legible", () => {
             scope + ": " + foreground + " on " + background,
           );
       }
+      // Every document carries the paper and Folio scopes; only a canvas
+      // document carries the canvas scope.
+      const document = palette === "canvas" ? "canvas" : "default";
       assert.ok(
-        tokenCss(scheme, "desktop").includes(
+        tokenCss(scheme, "desktop", document).includes(
           "." + scope + "{--mk-color-background:" + colors.background,
         ),
+        scope,
       );
+    }
+});
+
+test("only a canvas document carries the canvas scope, with the Canvas roles and type", () => {
+  for (const scheme of ["light", "dark"] as const)
+    for (const viewport of ["mobile", "desktop"] as const) {
+      const shared = tokenCss(scheme, viewport);
+      for (const palette of ["default", "paper", "folio"] as const)
+        assert.equal(tokenCss(scheme, viewport, palette), shared, palette);
+      assert.ok(!shared.includes(".canvas-scope"), scheme + " " + viewport);
+      const document = tokenCss(scheme, viewport, "canvas");
+      assert.ok(document.startsWith(shared), scheme + " " + viewport);
+      const scope = document.slice(shared.length);
+      const canvas = palettes.canvas[scheme];
+      for (const [property, value] of [
+        ["--mk-color-background", canvas.background],
+        ["--mk-color-surface-muted", canvas.surfaceMuted],
+        ["--mk-color-border-strong", canvas.borderStrong],
+        ["--mk-color-accent", canvas.signalDeep],
+        ["--mk-color-accent-solid", canvas.signalFill],
+        ["--mk-color-on-accent", canvas.onSignalFill],
+        ["--mk-color-dot", canvas.dot],
+        ["--mk-color-signal", canvas.signal],
+        ["--mk-color-text-secondary", canvas.textSecondary],
+        ["--mk-color-people-orange-ink", canvas.people.orange.ink],
+        ["--mk-font-sans", palettes.canvas.fonts.sans],
+        ["--mk-font-mono", palettes.canvas.fonts.mono],
+      ])
+        assert.ok(
+          scope.includes(property + ":" + value + ";"),
+          scheme + " " + property,
+        );
+      assert.match(scope, /^\.canvas-scope\{[^{}]*\}$/);
     }
 });
 

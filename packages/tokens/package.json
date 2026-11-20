@@ -26,7 +26,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@firna/ui": "4.0.0"
+    "@firna/ui": "4.0.0",
+    "@mokly/ui": "0.19.0"
   },
   "devDependencies": {
     "@gorhom/bottom-sheet": "5.2.14",

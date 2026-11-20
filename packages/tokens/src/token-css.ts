@@ -1,5 +1,10 @@
-import { paletteColors } from "./palettes";
-import type { PaletteRoles } from "./palettes";
+import {
+  canvasColors,
+  documentPalettes,
+  paletteColors,
+  paletteFonts,
+} from "./palettes";
+import type { DocumentPalette, PaletteRoles } from "./palettes";
 import { tokens } from "./tokens";
 import type { TokenColorScheme, TokenViewport } from "./tokens";
 
@@ -54,10 +59,32 @@ function scopeCss(scheme: TokenColorScheme, root?: string): string {
     .join("");
 }
 
-/** Viewport and theme values belong to the document, not duplicated screen trees. */
+/**
+ * The scope rule of a canvas document: the Canvas surfaces, its accent and
+ * its own roles, and its font stacks. Only a canvas document carries it, so
+ * the token CSS of every other document stays the same.
+ */
+function canvasScopeCss(scheme: TokenColorScheme): string {
+  return (
+    "." +
+    documentPalettes.canvas.scope +
+    "{" +
+    cssVariables({
+      color: { ...paletteColors(scheme, "canvas"), ...canvasColors(scheme) },
+      font: paletteFonts("canvas"),
+    }) +
+    "}"
+  );
+}
+
+/**
+ * Viewport and theme values belong to the document, not duplicated screen
+ * trees. A document of the canvas palette also carries the canvas scope.
+ */
 export function tokenCss(
   scheme: TokenColorScheme,
   viewport: TokenViewport,
+  palette: DocumentPalette = "default",
 ): string {
   return (
     ":root{" +
@@ -76,7 +103,8 @@ export function tokenCss(
     "color-scheme:" +
     scheme +
     ";}" +
-    scopeCss(scheme)
+    scopeCss(scheme) +
+    (palette === "canvas" ? canvasScopeCss(scheme) : "")
   );
 }
 

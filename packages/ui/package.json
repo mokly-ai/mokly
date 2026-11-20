@@ -104,6 +104,10 @@
       "types": "./dist/metadata-row/metadata-row.d.ts",
       "import": "./dist/metadata-row/metadata-row.js"
     },
+    "./palette": {
+      "types": "./dist/palette/palette.d.ts",
+      "import": "./dist/palette/palette.js"
+    },
     "./preview-frame": {
       "types": "./dist/preview-frame/preview-frame.d.ts",
       "import": "./dist/preview-frame/preview-frame.js"

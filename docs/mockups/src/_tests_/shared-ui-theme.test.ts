@@ -15,11 +15,20 @@ import {
 } from "@mokly-cloud/tokens/shared-ui-theme";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 
+import { palettes } from "@mokly/ui/palette";
+
 import { contrast } from "./color-metrics";
 
 const paletteRoles = [
   ...new Set(Object.values(documentPalettes).map((palette) => palette.roles)),
 ];
+
+/**
+ * The surface families whose values the token table holds. The canvas
+ * family reads the Canvas palette of `@mokly/ui` instead, so its own test
+ * below holds its mapping.
+ */
+const tokenFamilies = paletteRoles.filter((roles) => roles !== "canvas");
 
 test("all Firna color roles follow the documented mapping in both schemes", () => {
   // The mapping table lives in the tokens README, the home of the theme's
@@ -33,7 +42,7 @@ test("all Firna color roles follow the documented mapping in both schemes", () =
     ...mapping.matchAll(/\| (`(?:\w+)`(?:, `\w+`)*)\s*\| `(\w+)`\s*\|/g),
   ];
   for (const scheme of ["light", "dark"] as const)
-    for (const palette of paletteRoles) {
+    for (const palette of tokenFamilies) {
       const colors = sharedUiColors(scheme, palette);
       const checked: string[] = [];
       for (const [, roles, token] of rows) {
@@ -58,6 +67,38 @@ test("all Firna color roles follow the documented mapping in both schemes", () =
       assert.deepEqual(Object.keys(colors).sort(), checked);
     }
   assert.deepEqual(sharedUiColors("light"), sharedUiColors("light", "paper"));
+});
+
+test("canvas controls take their surfaces and accent from the Canvas palette", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    const canvas = palettes.canvas[scheme];
+    const shared = tokens.color[scheme];
+    assert.deepEqual(sharedUiColors(scheme, "canvas"), {
+      amber: shared.warning,
+      amberDeep: shared.warning,
+      amberSoft: shared.warningSoft,
+      bg: canvas.background,
+      bg2: canvas.surfaceMuted,
+      border: canvas.border,
+      border2: canvas.border,
+      controlBorder: canvas.borderStrong,
+      faint: canvas.textMuted,
+      ink: canvas.text,
+      ink2: canvas.text,
+      muted: canvas.textMuted,
+      onSolid: canvas.onSignalFill,
+      placeholder: canvas.textMuted,
+      primary: canvas.signalFill,
+      primaryBorder: canvas.signalSoft,
+      primaryDeep: canvas.signalDeep,
+      primarySoft: canvas.signalSoft,
+      rose: shared.danger,
+      roseDeep: shared.danger,
+      roseSoft: shared.dangerSoft,
+      soft: canvas.surfaceMuted,
+      surface: canvas.surface,
+    });
+  }
 });
 
 test("every palette's controls retain readable text, state colors and boundaries", () => {
@@ -120,7 +161,12 @@ test("dark presets, type roles, static focus and header radius survive theme der
 });
 
 test("each retained palette derives its surfaces and control geometry", () => {
-  const expected = { paper: 10, folio: 8 };
+  const expected = { paper: 10, folio: 8, canvas: 8 };
+  const sans = {
+    paper: tokens.font.sans,
+    folio: tokens.font.sans,
+    canvas: palettes.canvas.fonts.sans,
+  };
   for (const scheme of ["light", "dark"] as const)
     for (const [palette, { roles }] of Object.entries(documentPalettes)) {
       const derived = paletteUiTheme(scheme, palette as "paper");
@@ -132,7 +178,7 @@ test("each retained palette derives its surfaces and control geometry", () => {
         derived.radii.md,
         expected[palette as keyof typeof expected] ?? 10,
       );
-      assert.equal(derived.fonts.sans, tokens.font.sans);
+      assert.equal(derived.fonts.sans, sans[palette as keyof typeof sans]);
       assert.equal(derived.scheme, scheme);
     }
 });

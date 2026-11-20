@@ -44,7 +44,7 @@ design mockups import the shipped theme. So the mockups read Canvas from a
 named palette in `@mokly/ui` (decision 1), and the site and the app keep
 Folio until Milestone 3. The first TODO lands before the other TODOs start.
 
-- [ ] Add the Canvas light and dark values as a named, non-default palette
+- [x] Add the Canvas light and dark values as a named, non-default palette
       in a palette module of `@mokly/ui`. Expose it to `packages/tokens` as
       a named palette, so that only the design mockups use it. Add the Geist
       faces to the mockup assets. The site, the app and the shell keep Folio

@@ -1,12 +1,13 @@
 # @mokly/ui
 
 `@mokly/ui` holds every element and every stylesheet of the Mokly Browse
-shell: its components, its theme, and its layout. `@mokly/viewer` composes
-them into the shell that Serve, the static build, and React hosts render, and
-the design mockup catalogue under `examples/basic` renders the same
+shell: its components, its theme, and its layout. It also holds the named
+palettes of the Mokly design language as typed data. `@mokly/viewer` composes
+the components into the shell that Serve, the static build, and React hosts
+render, and the design mockup catalogue under `examples/basic` renders the same
 components. Depend on this package only when you render one of its components
-yourself; a host that embeds a catalogue uses `@mokly/viewer`, which depends
-on this package at the exact shared version.
+or read a palette yourself; a host that embeds a catalogue uses
+`@mokly/viewer`, which depends on this package at the exact shared version.
 
 ## Responsibilities
 
@@ -20,6 +21,9 @@ on this package at the exact shared version.
   all.
 - The highlight mask that marks component instances over a preview, drawn from
   the boxes that the viewer's frame adapters return.
+- The named palettes: the colours of the light and dark schemes and the font
+  stacks of each palette, as data that applies nothing. No component and no
+  stylesheet of the shell reads them yet.
 - Nothing else. A component reads no store, no context, no catalogue read
   model type, no network, and no history. It renders the `<iframe>` element of
   a preview but never reads the frame's document. React and React DOM are the
@@ -28,8 +32,8 @@ on this package at the exact shared version.
 ## What This Package Does
 
 Each component is a subpath export, such as `@mokly/ui/appearance-selector`,
-and `@mokly/ui/styles.css` is the only stylesheet subpath. The package has no
-root entry.
+and `@mokly/ui/styles.css` is the only stylesheet subpath. `@mokly/ui/palette`
+is the one subpath that is not a component. The package has no root entry.
 `styles.css` holds the rules of every component; a component's own stylesheet
 leaves out the components it renders, such as the change mark of the
 appearance selector. The viewer bundles `styles.css` into its own `shell.css`
@@ -48,6 +52,29 @@ reader's reduced motion, and resets links and text blocks. No rule reaches the
 host page or host slot content. A host that renders a component outside a
 viewer root puts it inside an element with the viewer root class, or declares
 the tokens itself, as the design catalogue's `examples/basic/design.css` does.
+
+`@mokly/ui/palette` exports `palettes`, each named palette by its name, with
+its types. A palette gives the `PaletteColors` of its `light` and `dark`
+schemes, and its `fonts`: the `sans` and `mono` stacks. Each colour is an
+opaque `#rrggbb` value: the surfaces `background`, `surface`,
+`surfaceRaised`, and `surfaceMuted`, the grid's `dot`, the inks `text`,
+`textSecondary`, and `textMuted`, the lines `border` and `borderStrong`, the
+signal roles `signal`, `onSignal`, `signalSoft`, and `signalDeep`, the button
+pair `signalFill` and `onSignalFill`, and in `people` the `fill` and `ink` of
+each person colour. The inks and `signalDeep` read at 4.5:1 on every surface,
+as do the labels on `signal` and on each person colour; `borderStrong` and the
+button label reach 3:1. A test holds each pair. `canvas`, the look of a design
+file, is the only palette. It names Geist and Geist Mono but ships no font
+file, so a page that draws in it loads the faces itself, as
+`examples/basic/design-fonts/geist.css` does for the design catalogue. The
+module applies nothing: a consumer declares the values in its own terms, such
+as the custom properties of a stylesheet.
+
+```ts
+import { palettes } from "@mokly/ui/palette";
+
+const { background, text, signalFill } = palettes.canvas.light;
+```
 
 ## Quick Start
 
@@ -269,10 +296,11 @@ therefore also changes their design mockups, so run the mockup check of
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpath in the `exports` map is `./<name>`, with `types` and
 `import` targets in `dist/<name>/`. The build copies
-`<name>.css` beside the JavaScript. Each stylesheet keeps its rules outside
-every cascade layer, so neither an element reset nor a host layer overrides a
-component rule, and a host rule competes with them by specificity and order; a
-test holds the rule.
+`<name>.css` beside the JavaScript. The palette module keeps the same layout
+without a stylesheet: `src/palette/palette.ts` under the `./palette` subpath.
+Each stylesheet keeps its rules outside every cascade layer, so neither an
+element reset nor a host layer overrides a component rule, and a host rule
+competes with them by specificity and order; a test holds the rule.
 
 A component's own rules name its `mbk-` classes, so they match only its
 elements. A rule whose selector names only generic class names, such as
@@ -306,6 +334,9 @@ override the desktop layout rules.
   through the system appearance, and the stub page's own rules
 - [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
   sizing, the reader's reduced motion, and the link and text block resets
+- [`src/palette/palette.ts`](./src/palette/palette.ts) — `palettes`, the named
+  palettes, with the `PaletteColors`, `PaletteFonts`, and `Palette` types;
+  `canvas` is the only palette
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
   workspace control icons, with `IconSvg` as their frame
 - [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —
