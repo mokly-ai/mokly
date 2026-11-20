@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { asApiError, unexpectedError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 
+import { createRequestSequence } from "./request-sequence";
 import {
   resourceInvalidationVersion,
   useResourceInvalidationVersions,
@@ -74,6 +75,7 @@ export function useResource<T>(
     state: { status: "loading" },
   });
   const [attempt, setAttempt] = useState(0);
+  const [sequence] = useState(createRequestSequence);
   const completed = useRef<
     { key: string; attempt: number; invalidation: number } | undefined
   >(undefined);
@@ -112,7 +114,7 @@ export function useResource<T>(
       last.invalidation === invalidation
     )
       return;
-    let live = true;
+    const isLatest = sequence.next();
     completed.current = undefined;
     const sameKey = readFor.current === key;
     setHeld((current) => ({
@@ -122,7 +124,7 @@ export function useResource<T>(
     latest
       .current()
       .then((value) => {
-        if (!live) return;
+        if (!isLatest()) return;
         const configured = latestScopes.current;
         activeScopes.current =
           typeof configured === "function" ? configured(value) : configured;
@@ -131,7 +133,7 @@ export function useResource<T>(
         setHeld({ key, state: { status: "ready", value } });
       })
       .catch((caught: unknown) => {
-        if (!live) return;
+        if (!isLatest()) return;
         completed.current = { key, attempt, invalidation };
         setHeld({
           key,
@@ -141,22 +143,24 @@ export function useResource<T>(
           },
         });
       });
-    return () => {
-      live = false;
-    };
-  }, [attempt, key, enabled, invalidation, reloadOnEnable]);
+    return () => sequence.invalidate();
+  }, [attempt, key, enabled, invalidation, reloadOnEnable, sequence]);
 
   const reload = useCallback(() => setAttempt((count) => count + 1), []);
-  const set = useCallback((value: T) => {
-    const configured = latestScopes.current;
-    activeScopes.current =
-      typeof configured === "function" ? configured(value) : configured;
-    // Another key's manual value replaces the held settled read.
-    if (completed.current?.key !== latestKey.current) {
-      completed.current = undefined;
-    }
-    readFor.current = latestKey.current;
-    setHeld({ key: latestKey.current, state: { status: "ready", value } });
-  }, []);
+  const set = useCallback(
+    (value: T) => {
+      sequence.invalidate();
+      const configured = latestScopes.current;
+      activeScopes.current =
+        typeof configured === "function" ? configured(value) : configured;
+      // Another key's manual value replaces the held settled read.
+      if (completed.current?.key !== latestKey.current) {
+        completed.current = undefined;
+      }
+      readFor.current = latestKey.current;
+      setHeld({ key: latestKey.current, state: { status: "ready", value } });
+    },
+    [sequence],
+  );
   return { key: held.key, state: resourceForKey(key, held), reload, set };
 }
