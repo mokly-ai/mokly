@@ -62,7 +62,7 @@ export function AutomaticBuilds({ project }: { project: Project }) {
             <Toggle
               label="Automatic builds"
               value={write.working ? asked : project.automaticBuilds}
-              disabled={!project.canAdmin || write.disabled}
+              disabled={!project.canAdmin || !write.sendable}
               working={write.working ? "Saving…" : undefined}
               onChange={change}
               testID="automatic-builds"

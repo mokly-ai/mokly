@@ -217,7 +217,6 @@ export function CreateWorkspaceScreen({
             block
             write={write}
             operation="Creating workspace"
-            disabled={write.disabled}
             onPress={() => void submit()}
             testID="create-workspace"
           />

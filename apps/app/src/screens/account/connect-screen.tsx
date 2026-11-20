@@ -174,7 +174,6 @@ function Destination({
             block
             write={write}
             operation="Connecting a GitHub account"
-            disabled={write.disabled}
             onPress={() =>
               onWeb
                 ? openOnWeb(

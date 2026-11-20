@@ -106,7 +106,6 @@ export function InviteForm({
             size="md"
             write={sending}
             operation="Sending invitation"
-            disabled={sending.disabled}
             onPress={() => void invite()}
             testID="send-invitation"
           />
