@@ -9,6 +9,7 @@ import type { TestContext } from "node:test";
 import { build } from "esbuild";
 
 import { definitionData } from "../packages/mokly/src/authoring/runtime.js";
+import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import {
   assetExtensions,
   assetModule,
@@ -18,7 +19,7 @@ import {
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { describe } from "../packages/mokly/src/sidecar/describe.js";
 
-import { bundleParams } from "./helpers/sidecar.js";
+import { bundleParams, startSidecar } from "./helpers/sidecar.js";
 
 async function fixture(context: TestContext) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-asset-import-"));
@@ -73,9 +74,14 @@ test("asset defaults export stable logical tokens and digest their original byte
     ["logo.png", png],
     ["logo.svg", svg],
   ] as const) {
-    assert.equal(
-      before.result.modules.find((module) => module.path === file)?.digest,
-      createHash("sha256").update(bytes).digest("hex"),
+    assert.deepEqual(
+      before.result.modules.find((module) => module.path === file),
+      {
+        path: file,
+        imports: [],
+        digest: createHash("sha256").update(bytes).digest("hex"),
+        importedAsset: true,
+      },
     );
   }
   const edited = Buffer.from([1, 255, 10, 128]);
@@ -157,7 +163,55 @@ test("consumer suffixes and explicit attributes precede the asset default", asyn
       scenario.loaders,
     );
     assert.deepEqual(built.value, scenario.expected, JSON.stringify(scenario));
+    const module = built.result.modules.find(
+      (module) => module.path === scenario.file,
+    );
+    assert.ok(module, JSON.stringify(scenario));
+    assert.equal(module.importedAsset, undefined, JSON.stringify(scenario));
   }
+});
+
+test("a restored asset compilation reuses the captured module records", async (context) => {
+  const root = await fixture(context);
+  await fs.writeFile(path.join(root, "logo.png"), Buffer.from([0, 255, 128]));
+  await fs.writeFile(
+    path.join(root, "entry.mjs"),
+    'export { default } from "./logo.png";',
+  );
+  const params = bundleParams({
+    sourceRoot: root,
+    entryFiles: ["entry.mjs"],
+    renderer: null,
+    storiesFiles: [],
+  });
+  const first = startSidecar(context);
+  await first.call("hello");
+  const original = await first.call<BundleResult>("bundle", params);
+  await first.call("shutdown");
+
+  const restored = startSidecar(context);
+  await restored.call("hello");
+  await restored.call("restoreGeneration", {
+    params,
+    generation: original.generation,
+    compiled: original.compiled,
+    modules: original.modules,
+  });
+  const reused = await restored.call<BundleResult>("bundle", {
+    ...params,
+    evaluation: "reused",
+  });
+  assert.deepEqual(reused.modules, original.modules);
+  assert.equal(
+    reused.modules.find((module) => module.path === "logo.png")?.importedAsset,
+    true,
+  );
+  assert.equal(
+    restored.operations.filter(({ operation }) => operation === "esbuild")
+      .length,
+    0,
+  );
+  await restored.call("shutdown");
 });
 
 test("file suffixes keep the existing error and unsupported types fail bundling", async (context) => {

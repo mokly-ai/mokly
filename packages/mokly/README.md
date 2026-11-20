@@ -114,9 +114,10 @@ sidecar.
 
 The sidecar turns supported image, font, and media imports into closed
 `mokly-asset:[logical/path]` tokens. Consumer loaders and import attributes
-take precedence over the asset default. It records the original asset bytes
-for module digests and keeps the imported paths with each compile. The current
-Rust adapter does not transfer that asset list to document delivery yet.
+take precedence over the asset default. The sidecar marks each asset-default
+load with `importedAsset` in its module record. It uses the original bytes for
+the module digest. The core delivers these files under the shared generated
+asset routes.
 
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and

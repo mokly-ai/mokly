@@ -102,11 +102,13 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                                 path: "renderer.tsx".into(),
                                 imports: vec!["main.css".into()],
                                 digest: Some("source".into()),
+                                imported_asset: None,
                             },
                             Module {
                                 path: "main.css".into(),
                                 imports: vec![],
                                 digest: Some("css".into()),
+                                imported_asset: None,
                             },
                         ],
                     })),

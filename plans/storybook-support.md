@@ -907,26 +907,36 @@ track D edits the same configuration pages.
 
 Depends on: 9
 
-Components that import images render them, as decision 6 says.
+Components that import images render them, as decision 6 says. The
+delegate reports, the watch smoke test, and the gate logs are in
+`.context/storybook-support/track-c/reports/`.
 
-- [ ] Load the asset types of design call 16 as delivered files.
-- [ ] Give each asset import a token. The core replaces it with a
+- [x] Load the asset types of design call 16 as delivered files. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Give each asset import a token. The core replaces it with a
       document-relative URL in each attribute value and in the text of a
       composed document, as track C design call 5 says. The core delivers
-      the file under the generated assets route.
-- [ ] Add asset bytes to the watch inputs and the render keys.
+      the file under the generated assets route. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Add asset bytes to the watch inputs and the render keys. Branch:
+      conductor/storybook-support-c-imported-assets
 - [ ] Replace the `file` loader error and the `dataurl` advice, as "Replaced
       ways" says, with the answer to decision C1. Also update the `file`
       loader sentences of `docs/protocol/mokly-imported-styles-modules.md`,
       `docs/protocol/mokly-configuration-imported-styles.md`,
       `docs/guides/authoring/config.md`, and
-      `docs/guides/authoring/styles.md`.
-- [ ] Name the asset delivery default in
+      `docs/guides/authoring/styles.md`. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Name the asset delivery default in
       `docs/protocol/mokly-configuration.md`, and the imported assets under
       `static/mokly-generated/` in `docs/protocol/mokly-artifact-paths.md`.
+      Branch:
+      conductor/storybook-support-c-imported-assets
 - [ ] Apply the answer to decision C2 to the loader choice of the bundle.
-- [ ] Test that a component that imports a PNG and an SVG renders them in
-      Serve and `build`, and that Changes shows an edited image.
+      Branch: conductor/storybook-support-c-imported-assets
+- [x] Test that a component that imports a PNG and an SVG renders them in
+      Serve and `build`, and that Changes shows an edited image. Branch:
+      conductor/storybook-support-c-imported-assets
 - [x] Update `docs/guides/authoring/styles.md`. Branch:
       conductor/storybook-support-c-imported-assets
 

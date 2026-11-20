@@ -105,7 +105,7 @@ was rejected, because the base would render every unchanged view again.
 define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,
-and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
+and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. It marks each module that gives an [asset token](./mokly-imported-assets.md#asset-tokens). A file inside
 a selected dependency root, a `node_modules` directory, is a dependency on
 both sides. JavaScript and CSS imports from it are allowed and use stable
 logical names relative to that root, such as `node_modules/pkg/style.css`.

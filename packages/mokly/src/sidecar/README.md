@@ -52,9 +52,9 @@ its requests and results. The paths below are relative to the package root.
   a regular preview file.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
-  graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. An incomplete recipe gets a fresh identity, also
-  when `checkRecipeSize` in
+  graph with asset-default flags, the input digests, the reuse evidence, the
+  toolchain identity, and the compilation identity. An incomplete recipe gets
+  a fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
   result before it drops the evidence. A `serveEdit` compile gets incomplete

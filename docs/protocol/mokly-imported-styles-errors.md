@@ -1,7 +1,5 @@
 # Imported Stylesheet Diagnostics
 
-Status: The Build row "Non-portable JavaScript asset route" is not implemented yet. [Milestone 10 of the Storybook support plan](../../plans/storybook-support.md#milestone-10-imported-assets-in-documents) adds it.
-
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, `{directory}`, and

@@ -33,6 +33,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         vec![Module {
             digest: Some("digest".into()),
+            imported_asset: None,
             path: "entry.ts".into(),
             imports: vec!["shared.ts".into()],
         }],

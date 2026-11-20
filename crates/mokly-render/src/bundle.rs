@@ -1,6 +1,6 @@
 //! Bundle only changed JavaScript and isolate class maps across retained graphs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
@@ -34,6 +34,7 @@ pub(crate) struct BundleState {
     pub(crate) definitions: Definitions,
     pub(crate) modules: BTreeMap<String, Vec<String>>,
     pub(crate) module_digests: BTreeMap<String, Option<String>>,
+    pub(crate) imported_assets: BTreeSet<String>,
     pub(crate) render: RenderEnvironment,
     pub(crate) stamp: InputStamp,
     pub(crate) toolchain: String,
@@ -129,6 +130,12 @@ pub(crate) fn describe(
         .iter()
         .map(|module| (module.path.clone(), module.digest.clone()))
         .collect();
+    let imported_assets = result
+        .modules
+        .iter()
+        .filter(|module| module.imported_asset == Some(true))
+        .map(|module| module.path.clone())
+        .collect();
     if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
         let existing = Arc::new(BundleState {
             persistence_identity: persistent_identity::compilation(&result.compiled),
@@ -139,6 +146,7 @@ pub(crate) fn describe(
             definitions: existing.definitions.clone(),
             modules,
             module_digests,
+            imported_assets,
             render,
             stamp,
             toolchain: result.compiled.toolchain.clone(),
@@ -169,6 +177,7 @@ pub(crate) fn describe(
         definitions,
         modules,
         module_digests,
+        imported_assets,
         render,
         stamp,
         toolchain: result.compiled.toolchain.clone(),
