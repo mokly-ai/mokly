@@ -8,7 +8,7 @@ use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
 use super::git_command;
 
 #[test]
-fn git_commands_disable_optional_locks() {
+fn caller_override_cannot_enable_optional_locks() {
     let request = Request {
         process_mode: Default::default(),
         directory: PathBuf::from("/checkout"),
@@ -17,7 +17,7 @@ fn git_commands_disable_optional_locks() {
         output_limit: DEFAULT_OUTPUT_LIMIT,
         stderr_limit: DEFAULT_STDERR_LIMIT,
     };
-    let command = git_command(&request, &[]);
+    let command = git_command(&request, &[("GIT_OPTIONAL_LOCKS", "1".into())]);
     assert_eq!(
         command
             .get_envs()
