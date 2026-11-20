@@ -68,12 +68,13 @@
   surface on a route change, also later ones.
 - **Previous examples:** `withRoute` already closes the drawer and the tag
   picker on a route change, at `store_filters.ts:57` and line 62.
-- **Related:** [compact-search-focus-test.md](compact-search-focus-test.md)
-  asks for a browser test that the host slots of the same control stay
-  mounted while it is open, and that Close or Escape shows the control
-  again. A package test already covers the state and the focus return after
-  Close and Escape. The test from that item can also cover the option chosen
-  here.
+- **Related:** The 390px and 320px cases of
+  `tests/browser/viewer_layout.spec.ts` test the compact search in a browser.
+  They check that both host top-bar slots stay mounted while the search is
+  open. They also check that Close or Escape shows the search control again.
+  A package test in `packages/ui/tests/top-bar.test.tsx` already covers the
+  state and the focus return after Close and Escape. The browser test can
+  also cover the option that the user chooses here.
 - **Recommendation:** D. It matches the drawer and the tag
   picker, and it covers every route change, not only one row type.
 - **Action:** ask the user, because A, B, and D add compact search behaviour
