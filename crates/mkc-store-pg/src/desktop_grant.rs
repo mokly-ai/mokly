@@ -2,11 +2,14 @@
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use diesel::sql_types::{BigInt, Timestamptz};
 use mkc_db::schema::desktop_grant::desktop_grants;
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::desktop_grant::{DesktopGrant, DesktopGrants};
 use mkc_store_interface::error::{ErrorResultExt, Result};
 use uuid::Uuid;
 
+use crate::auth_prune::configure_batch;
 use crate::queries::PgQueries;
 
 #[derive(Queryable, Selectable, Insertable)]
@@ -77,8 +80,11 @@ impl DesktopGrants for PgQueries<'_> {
         Ok(changed == 1)
     }
 
-    fn prune_desktop_grants(&mut self, before: DateTime<Utc>) -> Result<usize> {
-        diesel::delete(desktop_grants::table.filter(desktop_grants::expires_at.le(before)))
+    fn prune_desktop_grants(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize> {
+        let limit = configure_batch(self.connection, batch)?;
+        diesel::sql_query(include_str!("desktop_grant_retention.sql"))
+            .bind::<Timestamptz, _>(before)
+            .bind::<BigInt, _>(limit)
             .execute(self.connection)
             .context("prune desktop grants")
     }

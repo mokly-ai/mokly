@@ -2,6 +2,7 @@
 
 use chrono::{DateTime, Utc};
 
+use crate::auth_prune::PruneBatch;
 use crate::error::Result;
 
 /// Persisted magic link data; secret-bearing records are never serialized.
@@ -22,8 +23,8 @@ pub struct MagicLink {
 /// Queries for magic links within the caller's transaction.
 #[unimock::unimock(api = MagicLinksMock)]
 pub trait MagicLinks {
-    /// Remove links at or before the retained expiry cutoff, including used links.
-    fn prune_magic_links(&mut self, before: DateTime<Utc>) -> Result<usize>;
+    /// Remove one bounded batch at or before the cutoff, including used links.
+    fn prune_magic_links(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize>;
     /// Execute the magic link query.
     fn magic_link(&mut self, token_hash: &str) -> Result<Option<MagicLink>>;
     /// Execute the insert magic link query.
