@@ -15,9 +15,9 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        let entries = self.lookup_metadata(commit, paths, limits, false)?;
+        let entries = self.lookup_metadata(commit, paths, limits, false, false)?;
         if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
-            return self.lookup_metadata(commit, paths, limits, true);
+            return self.lookup_metadata(commit, paths, limits, true, false);
         }
         Ok(entries)
     }
@@ -28,9 +28,14 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
         with_sizes: bool,
+        include_trees: bool,
     ) -> Result<Vec<Entry>> {
-        let mut request =
-            self.tree_request(&["ls-tree", "-l", "-z", "--full-tree", commit.as_str(), "--"]);
+        let mut arguments = vec!["ls-tree", "-l"];
+        if include_trees {
+            arguments.push("-t");
+        }
+        arguments.extend(["-z", "--full-tree", commit.as_str(), "--"]);
+        let mut request = self.tree_request(&arguments);
         let paths: Vec<_> = paths
             .iter()
             .map(|path| OsString::from(path.as_str()))

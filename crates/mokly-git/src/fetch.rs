@@ -4,7 +4,6 @@ use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::time::Duration;
 
-use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
 use crate::command::{
     Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request,
 };
@@ -41,14 +40,15 @@ impl GitRepository {
     /// `fetch --stdin` request; checkout reads pass their attribute files too.
     /// The fetch lock serializes this step, so parallel conversion reads never
     /// start competing fetches. Returns whether a fetch ran.
-    /// The walk starts at the commit's tree so no missing blob is an input tip.
-    /// Literal paths and the requested ids keep the query and fetch scoped.
+    /// The depth-limited walk reads direct entries of the root and parent trees.
+    /// Filtering provided tips keeps reused trees independent of their depth.
+    /// Only requested missing ids enter the fetch.
     pub(crate) fn ensure_objects(&self, commit: &ObjectId, entries: &[Entry]) -> Result<bool> {
-        let entries: Vec<_> = entries
+        let ids: BTreeSet<_> = entries
             .iter()
             .filter(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
+            .map(|entry| entry.object.clone())
             .collect();
-        let ids: BTreeSet<_> = entries.iter().map(|entry| entry.object.clone()).collect();
         if ids.is_empty() {
             return Ok(false);
         }
@@ -56,34 +56,39 @@ impl GitRepository {
             .fetch_lock
             .lock()
             .unwrap_or_else(|error| error.into_inner());
-        let tree = format!("{commit}^{{tree}}");
-        let mut request = self.tree_request(&[
-            "rev-list",
-            "--objects",
-            "--no-object-names",
-            "--missing=print",
-            "--no-walk",
-            &tree,
-            "--",
-        ]);
-        request.process_mode = ProcessMode::PlainGroup;
-        let paths: Vec<_> = entries
+        let trees: BTreeSet<_> = entries
             .iter()
-            .map(|entry| OsString::from(entry.path.as_str()))
+            .filter(|entry| entry.mode == Mode::Directory)
+            .map(|entry| entry.object.as_str())
             .collect();
+        let mut input = format!("{commit}^{{tree}}\n").into_bytes();
+        for tree in trees {
+            input.extend_from_slice(format!("{tree}\n").as_bytes());
+        }
+        let output = self.command_with_mode(
+            ProcessMode::PlainGroup,
+            &[
+                "rev-list",
+                "--objects",
+                "--no-object-names",
+                "--missing=print",
+                "--no-walk",
+                "--filter=tree:2",
+                "--filter-provided-objects",
+                "--stdin",
+            ],
+            input,
+            DEFAULT_OUTPUT_LIMIT,
+        )?;
         let mut missing = BTreeSet::new();
-        for args in batches::split(&request.args, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
-            request.args = args;
-            let output = self.runner.run(&request)?.stdout;
-            for line in text(&output)?.lines() {
-                if let Some(id) = line.strip_prefix('?') {
-                    let id = ObjectId::parse(id)?;
-                    if ids.contains(&id) {
-                        missing.insert(id);
-                    }
-                } else {
-                    ObjectId::parse(line)?;
+        for line in text(&output)?.lines() {
+            if let Some(id) = line.strip_prefix('?') {
+                let id = ObjectId::parse(id)?;
+                if ids.contains(&id) {
+                    missing.insert(id);
                 }
+            } else {
+                ObjectId::parse(line)?;
             }
         }
         let Some(object) = missing.first().map(ToString::to_string) else {

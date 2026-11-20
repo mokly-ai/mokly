@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
-use crate::tree::{self, Entry, Limits};
+use crate::tree::{self, Entry, Limits, Mode};
 
 impl GitRepository {
     fn checkout_entries(
@@ -27,10 +27,11 @@ impl GitRepository {
             &attributes.into_iter().collect::<Vec<_>>(),
             Limits::default(),
             false,
+            true,
         )?;
         let mut indexed: BTreeMap<_, _> = attrs
             .into_iter()
-            .filter(|entry| entry.mode.regular())
+            .filter(|entry| entry.mode.regular() || entry.mode == Mode::Directory)
             .map(|entry| (entry.path.clone(), entry))
             .collect();
         indexed.extend(

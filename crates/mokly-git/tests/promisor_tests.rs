@@ -48,8 +48,13 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     source.write(".gitattributes", b"*.txt text eol=crlf\n-l text eol=crlf\n");
     let paths: Vec<_> = (0..8)
         .map(|index| {
-            if index == 0 {
-                return RepoPath::parse("-l").unwrap();
+            match index {
+                0 => return RepoPath::parse("-l").unwrap(),
+                1 => return RepoPath::parse("a/x.txt").unwrap(),
+                2 => return RepoPath::parse("b/y.txt").unwrap(),
+                6 => return RepoPath::parse("x/s/m.txt").unwrap(),
+                7 => return RepoPath::parse("z/n.txt").unwrap(),
+                _ => {}
             }
             let line = if cfg!(windows) { "" } else { "\n" };
             RepoPath::parse(&format!("base/{index}[literal]{line}.txt")).unwrap()
@@ -58,8 +63,27 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     for (index, path) in paths.iter().enumerate() {
         source.write(path.as_str(), format!("file {index}\n").as_bytes());
     }
-    source.write("base/unrequested.txt", b"leave this blob missing\n");
+    for (path, index) in [
+        ("a/y.txt", 2),
+        ("b/x.txt", 1),
+        ("x/s/n.txt", 7),
+        ("z/m.txt", 6),
+    ] {
+        source.write(path, format!("file {index}\n").as_bytes());
+    }
+    for directory in ["base", "a", "b", "x/s", "z"] {
+        source.write(
+            &format!("{directory}/unrequested.txt"),
+            b"leave this blob missing\n",
+        );
+    }
     let base = source.commit();
+    for (left, right) in [("HEAD:a", "HEAD:b"), ("HEAD:x/s", "HEAD:z")] {
+        let ids = String::from_utf8(source.git(&["rev-parse", left, right])).unwrap();
+        let ids: Vec<_> = ids.lines().collect();
+        assert_eq!(ids.len(), 2);
+        assert_eq!(ids[0], ids[1], "{left} and {right} must share a tree");
+    }
     let unrequested = String::from_utf8(source.git(&["rev-parse", "HEAD:base/unrequested.txt"]))
         .unwrap()
         .trim()
@@ -94,6 +118,16 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     assert_eq!(missing.len(), 9);
     let entries = repository.lookup(&base, &paths, Limits::default()).unwrap();
     assert_eq!(entries.len(), 8);
+    {
+        let requests = recorded.requests.lock().unwrap();
+        assert_eq!(
+            requests
+                .iter()
+                .filter(|request| request.args.iter().any(|arg| arg == "rev-list"))
+                .count(),
+            1
+        );
+    }
     std::thread::scope(|scope| {
         let workers: Vec<_> = entries
             .iter()
