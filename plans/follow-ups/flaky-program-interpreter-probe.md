@@ -62,6 +62,12 @@
   - One isolated rerun of that unchanged after binary passed with exit 0, one passed test, and six filtered out.
   - Thus two untraced interpreter failures each have a passing unchanged isolated rerun.
   - Neither failed interpreter run has a process trace or its child panic text. The source remains unknown.
+  - A new investigation on 2026-11-20 started from `45b81ed87f231d971e7574ddc1c1769cca5b6d4f`, then current `origin/main`.
+  - The machine is `box-node-e93efe54ff5665a6`, with Linux 6.8.0-117-generic, four CPUs, and Rust 1.98.1.
+  - The test profile includes debug information. `RUST_TEST_THREADS` is unset.
+  - The archived unchanged `program_tests` binary passed all 1,000 whole-binary runs with default parallel threads and no concurrent workspace test run.
+  - This batch had zero interpreter failures and zero hangs. The source is still unknown.
+  - Isolated parent repetitions and traced repetitions under concurrent workspace test execution are pending.
 - **Problem:** The trusted interpreter child failed twice under parallel process activity. Each unchanged binary passed its isolated rerun. Its failure output does not show the child's panic or an OS error.
 - **Impact if no action:** The required Rust suite can fail on unchanged code, and the failure does not identify its cause.
 - **Root question:** How does the interpreter probe select and run trusted Node reliably on every test run?
