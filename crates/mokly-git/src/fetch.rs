@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::time::Duration;
 
+use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
 use crate::command::{
     Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request,
 };
@@ -20,16 +21,34 @@ impl Cancellation for Active {
 }
 
 impl GitRepository {
+    /// Read names and modes before a promisor fetch, without asking Git for
+    /// missing blob sizes. The sized request runs after the fetch completes.
+    pub(crate) fn initial_tree_listing(&self, request: &Request) -> Result<Vec<u8>> {
+        let mut request = request.clone();
+        if !self.promisor_remotes.is_empty()
+            && let Some(index) = request
+                .args
+                .iter()
+                .take_while(|argument| argument.as_os_str() != "--")
+                .position(|argument| argument == "-l")
+        {
+            request.args.remove(index);
+        }
+        Ok(self.runner.run(&request)?.stdout)
+    }
+
     /// Fetches every missing blob of `entries` from a promisor remote in one
     /// `fetch --stdin` request; checkout reads pass their attribute files too.
     /// The fetch lock serializes this step, so parallel conversion reads never
     /// start competing fetches. Returns whether a fetch ran.
-    pub(crate) fn ensure_objects(&self, entries: &[Entry]) -> Result<bool> {
-        let ids: BTreeSet<_> = entries
+    /// The walk starts at the commit's tree so no missing blob is an input tip.
+    /// Literal paths and the requested ids keep the query and fetch scoped.
+    pub(crate) fn ensure_objects(&self, commit: &ObjectId, entries: &[Entry]) -> Result<bool> {
+        let entries: Vec<_> = entries
             .iter()
             .filter(|entry| entry.mode.regular() || entry.mode == Mode::Symlink)
-            .map(|entry| entry.object.clone())
             .collect();
+        let ids: BTreeSet<_> = entries.iter().map(|entry| entry.object.clone()).collect();
         if ids.is_empty() {
             return Ok(false);
         }
@@ -37,29 +56,34 @@ impl GitRepository {
             .fetch_lock
             .lock()
             .unwrap_or_else(|error| error.into_inner());
-        let input = ids
+        let tree = format!("{commit}^{{tree}}");
+        let mut request = self.tree_request(&[
+            "rev-list",
+            "--objects",
+            "--no-object-names",
+            "--missing=print",
+            "--no-walk",
+            &tree,
+            "--",
+        ]);
+        request.process_mode = ProcessMode::PlainGroup;
+        let paths: Vec<_> = entries
             .iter()
-            .map(|id| format!("{id}\n"))
-            .collect::<String>()
-            .into_bytes();
-        let output = self.command_with_mode(
-            ProcessMode::PlainGroup,
-            &[
-                "rev-list",
-                "--objects",
-                "--no-object-names",
-                "--missing=print",
-                "--stdin",
-            ],
-            input,
-            DEFAULT_OUTPUT_LIMIT,
-        )?;
+            .map(|entry| OsString::from(entry.path.as_str()))
+            .collect();
         let mut missing = BTreeSet::new();
-        for line in text(&output)?.lines() {
-            if let Some(id) = line.strip_prefix('?') {
-                missing.insert(ObjectId::parse(id)?);
-            } else {
-                ObjectId::parse(line)?;
+        for args in batches::split(&request.args, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
+            request.args = args;
+            let output = self.runner.run(&request)?.stdout;
+            for line in text(&output)?.lines() {
+                if let Some(id) = line.strip_prefix('?') {
+                    let id = ObjectId::parse(id)?;
+                    if ids.contains(&id) {
+                        missing.insert(id);
+                    }
+                } else {
+                    ObjectId::parse(line)?;
+                }
             }
         }
         let Some(object) = missing.first().map(ToString::to_string) else {
