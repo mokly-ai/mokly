@@ -1,7 +1,7 @@
 # Warm bundle cache test finds no disk record
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix now.
 - **Added:** 2026-11-19, on branch `calummoore/mokly-flaky-saved-plan-test-5sod`
   at commit `76386b810`, from a macOS CI failure of PR #356.
 - **Location:** `crates/mokly-compare/tests/bundle_pool_tests.rs:36` to line
@@ -15,8 +15,9 @@
   `crates/mokly-compare/src/bundle_store.rs:73` and line 138,
   `crates/mokly-sidecar/src/bundle_outcomes.rs:5` to line 19, and
   `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
-- **Reason:** The source stays unknown after 100 complete local runs with
-  failure diagnostics on 2026-11-20, so the user chooses the eventual fix.
+- **Reason:** A natural recurrence on 2026-11-20 named a contended save.
+  The performance orchestrator authorized a controlled trace of the lock
+  holder, then a fix that keeps every assertion and adds no request wait.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -259,12 +260,51 @@
       decision, because it changes diagnostics only and keeps every
       assertion.
     - The cause stays unknown. The eventual fix stays the user's choice.
-  - Suspected source: unknown. No local run or probe reproduced this mode,
-    and no evidence shows a product defect.
-- **Problem:** The warm test failed once in macOS CI with the cache outcome
-  `NoRecord` instead of `Hit`, after its first capture returned a durable
-  plan. No local run or probe reproduced this mode, and the CI log does not
-  show why the warm pool found no disk record.
+  - Natural recurrence on 2026-11-20, after the diagnostic merge:
+    - The macOS CI job 136411016758 of run 44771759675 tested PR #424 at
+      commit `06f5cbbc3`. That unrelated change left `crates/mokly-sidecar`
+      and `crates/mokly-compare` equal to `main` at `78b08fdf8`.
+    - The warm test failed at `bundle_pool_tests.rs:60`. Its assertion
+      expected `Some(Hit)` and got `Some(NoRecord)`.
+    - The diagnostics printed the first load as `Miss(Absent)` and the
+      first save as `Skipped(Contended)`. The first capture had
+      `complete=true`, `durable=true`, and `plan_imports=Some(2)`.
+    - The warm load was `Miss(Absent)`. Its later save was `Written`.
+      The first unequal captured input was `None`.
+    - The initial runtime key was
+      `277167f79db304d1abe78b7c0416c4e35a135745849fe4dc`.
+      The warm runtime key was
+      `9611ac63aac08e0393fa9706f0d8474b80d0f16c8ef71295`.
+    - The other two tests of `bundle_pool_tests` passed.
+    - Failed job:
+      https://github.com/mokly-ai/mokly/actions/runs/44771759675/job/136411016758
+    - `CachedBundles::save` in `crates/mokly-compare/src/bundle_store.rs`
+      returns `Skipped(Contended)` when the compilation lookup is contended.
+      `crates/mokly-compare/src/bundle_cache_read.rs` reports that outcome
+      when another caller holds the entry's lock stripe.
+    - This trace names the cause class. It does not name the lock holder.
+  - Recorded decision on 2026-11-20: the performance orchestrator holds
+    the user's delegation for speed and reliability. It authorized these
+    steps without another user decision:
+    - Record and push this recurrence before the fix.
+    - Name the lock holder with a deterministic interleaving, an existing
+      test seam, or a controlled lock. Keep temporary trace evidence under
+      `.context/`.
+    - If the holder can finish without writing the record, preserve the
+      skipped record through the lock owner or the existing writer. Add a
+      regression test that fails before the fix. Add no request wait,
+      retry loop, or timeout change.
+    - If the holder always writes an equal record, keep the correct skip.
+      Make the test deterministic for that ordering. Keep every assertion.
+    - Keep the diagnostics and `support/bundle_pool_sidecar.mjs`.
+    - Stop and report the evidence when the trace does not name the holder.
+    - Before opening a pull request with a save-path change, send its commit
+      to the performance orchestrator for warm-restart checks on Mokly Cloud.
+      Wait for its result.
+- **Problem:** The warm test failed again in macOS CI with `NoRecord`
+  instead of `Hit`, after a durable capture returned a plan. The natural
+  trace shows that its first save skipped a held lock stripe. The holder
+  is not yet known.
 - **Impact if no action:** CI can fail at random on this test, and each
   failure costs a rerun. The failed macOS job took about 23 minutes. If
   the source is in product code, a durable compilation can miss the disk
@@ -319,14 +359,14 @@
   - A hold of the class fix until a natural trace of this mode. The
     performance orchestrator rejected it on 2026-11-19, because the wait
     would delay the reproduced class fix.
-- **Wider fix:** None yet, because the defect class is unknown until a trace
-  names the cause.
+- **Wider fix:** D, after a controlled trace names the lock holder.
+  Preserve a record when the holder can finish without writing it.
 - **Previous examples:** The replacement test of the same binary failed in the
   same CI run, and a controlled probe reproduced its chain, as the background
   says. The class fix covers that test. Its chain does not explain this mode.
-- **Recommendation:** B. Each later macOS CI run then repeats the test with
-  these diagnostics, and 100 local Linux runs did not reproduce this mode. C,
-  more runs preferably on macOS, stays the step before any fixture or
-  product fix. B replaces C, the recommendation of 2026-11-19.
-- **Action:** ask the user, because the 2026-11-20 runs named no source, and
-  the user asked to choose the eventual fix in that case.
+- **Recommendation:** C, then D under the recorded decision of 2026-11-20.
+  Name the lock holder before changing the save path or the test ordering.
+- **Action:** fix now, apply C, then D when the trace names the holder.
+  The natural recurrence and the performance orchestrator's decision of
+  2026-11-20 replace the earlier request for a user decision. Stop and ask
+  when the controlled trace cannot name the holder.
