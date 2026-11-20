@@ -83,14 +83,29 @@ its requests and results. The paths below are relative to the package root.
   inner resolution that a plugin requests. After the compile,
   `PlannedRelative.verify` checks each internal relative edge between physical
   files whose key the callback did not answer. When its key has a plan entry,
-  its target must equal the planned path. That is enough when the trie holds
-  its specifier. Every other edge, also one without a plan entry, needs
+  its target must equal the planned path. When the trie holds its specifier,
+  preparation already proved the parse settings and side-effect flag of that
+  target. Every other edge, also one without a plan entry, needs
   `classifyNativeTarget`, which `planNative` also uses. Its target must map to
   itself, with no distinct parse settings and no module fallback, and a
   planned edge must keep its planned side-effect flag. So an omitted safe
   specifier can pass, while a target with distinct parse settings or another
-  side-effect flag fails, even at the planned path. That proof needs no
-  esbuild call. A failed proof discards the guarded result. Each external edge
+  side-effect flag fails, even at the planned path. The metadata facts behind
+  these checks must also stay unchanged from before preparation until the end
+  of the proof. After its last metadata read, `MetadataProof` in
+  [`src/sidecar/metadata-proof.ts`](./metadata-proof.ts) stats each
+  `package.json`, `tsconfig.json`, and `jsconfig.json` that gave such a fact.
+  It also checks the directories and links that locate those facts.
+  Each must pass `mature`, the age guard of
+  [`src/sidecar/capture-runtime.ts`](./capture-runtime.ts), against a start
+  time. The sidecar takes that time before `PlannedRelative.create` reads any
+  fact. So a change after that start fails the proof, also when a later write
+  restores the old bytes. A change within the age guard before that start
+  fails it too. The same rule proves a file or directory that only the proof
+  reads, after the compile. A file or directory that the proof cannot stat
+  also fails the proof. The whole proof needs no esbuild call and never waits.
+  It creates no `CaptureDurability` and keeps no stamp after the request. A
+  failed proof discards the guarded result. Each external edge
   whose specifier the trie holds also discards it, because such an edge has no
   target. Examples are a relative `require.resolve` and a failed relative
   `require` inside `try`. An external relative `require.resolve` or

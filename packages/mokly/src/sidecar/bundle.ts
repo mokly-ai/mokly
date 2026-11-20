@@ -22,6 +22,7 @@ import type { CaptureDurability } from "./capture-durability.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
+import { metadataRuntime } from "./metadata-proof.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative } from "./native-plan.js";
 import { nativeResolveFilter } from "./native-resolution.js";
@@ -71,6 +72,7 @@ interface NativeOutcome {
 }
 
 interface BundleCaptureState {
+  started: bigint;
   mode: BundleCapture;
   reads: Map<string, Uint8Array>;
   durability?: CaptureDurability | undefined;
@@ -94,6 +96,7 @@ export async function bundle(
   requestedPlan?: BundleResult["plan"],
 ): Promise<Bundled> {
   const capture: BundleCaptureState = {
+    started: metadataRuntime.now(),
     mode: captureMode,
     reads: new Map(),
     ...(captureMode === "full" ? { durability } : {}),
@@ -147,6 +150,7 @@ export async function bundleWith(
   resolution: Resolution,
 ): Promise<Bundled | NativeOutcome> {
   return bundleAttempt(params, compile, measurements, resolution, {
+    started: metadataRuntime.now(),
     mode: "full",
     reads: new Map(),
   });
@@ -212,7 +216,9 @@ async function bundleAttempt(
       capture.mode === "serveEdit" &&
       resolution.mode === "planned" &&
       !completePlan
-        ? await PlannedRelative.create(resolution.plan).catch(() => undefined)
+        ? await PlannedRelative.create(resolution.plan, capture.started).catch(
+            () => undefined,
+          )
         : undefined;
     const editImports =
       relative && capture.mode === "serveEdit"

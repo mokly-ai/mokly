@@ -8,6 +8,7 @@ import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
 import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 
+import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
   countedCompile,
   editFingerprint,
@@ -20,6 +21,7 @@ import {
 } from "./helpers/native_resolution.js";
 
 test("safe planned relative imports remove callbacks as the graph grows and keep edit evidence", async (context) => {
+  matureMetadata(context);
   const root = await nativeRoot(context);
   const observed: number[][] = [];
   for (const size of [3, 12]) {
@@ -177,6 +179,7 @@ for (const [name, source] of [
   });
 
 test("new strings keep the full callback and a safe string from a new importer is proved in one compile", async (context) => {
+  matureMetadata(context);
   const root = await nativeRoot(context);
   const entry = path.join(root, "entry.mjs");
   await write(

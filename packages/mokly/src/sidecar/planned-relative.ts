@@ -4,6 +4,7 @@ import type { Metafile } from "esbuild";
 
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 
+import { MetadataProof, metadataRuntime } from "./metadata-proof.js";
 import type { ModulePaths } from "./module-paths.js";
 import { classifyNativeTarget } from "./native-plan.js";
 import { planKey } from "./native-resolution.js";
@@ -19,10 +20,12 @@ export class PlannedRelative {
     private readonly skipped: ReadonlySet<string>,
     private readonly plan: ReadonlyMap<string, PlannedImport>,
     private readonly scope: PackageScope,
+    private readonly metadata: MetadataProof,
   ) {}
 
   static async create(
     plan: ReadonlyMap<string, PlannedImport>,
+    started = metadataRuntime.now(),
   ): Promise<PlannedRelative | undefined> {
     const candidates = new Map<string, PlannedImport[]>();
     for (const [key, target] of plan) {
@@ -62,7 +65,13 @@ export class PlannedRelative {
     }
     const { filters, skipped } = specifierFilter(safe);
     return skipped.size
-      ? new PlannedRelative(filters, skipped, plan, scope)
+      ? new PlannedRelative(
+          filters,
+          skipped,
+          plan,
+          scope,
+          new MetadataProof(started),
+        )
       : undefined;
   }
 
@@ -71,6 +80,7 @@ export class PlannedRelative {
     const observed: Array<{ name: string; directory: string; file: string }> =
       [];
     const targets = new Map<string, ReturnType<typeof classifyNativeTarget>>();
+    const directories = new Set<string>();
     for (const [importer, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(importer)) continue;
       const directory = path.dirname(importer);
@@ -109,8 +119,12 @@ export class PlannedRelative {
             return false;
         }
         observed.push({ name: edge.original, directory, file: edge.path });
+        directories.add(path.dirname(edge.path));
       }
     }
+    for (const directory of directories)
+      this.metadata.use(await this.scope.metadata(directory));
+    if (!this.metadata.current()) return false;
     for (const { name, directory, file } of observed) {
       paths.observe(file);
       await paths.dependencyUsage.resolved(name, directory, file);

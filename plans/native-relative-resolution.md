@@ -164,6 +164,37 @@ Shared assumptions: output, evidence, and watch inputs stay equal, from Cal's ta
 
 Probe evidence: `.context/native-relative-resolution/memory-node/`. The fresh options check and its 4F model and 4H clarification are saved in `memory-node/options-check.md`. H enforces the existing proof requirement. It adds no boundary error or new attempt. Do not accept an unsafe planned target merely because its path matches after a filter defect.
 
+## 5. Reject stale parse facts
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** product bug.
+- **Location:** `packages/mokly/src/sidecar/planned-relative.ts` and `package-scope.ts`.
+- **Background:** Filter preparation reads package and parsing settings before esbuild starts. A known admitted edge later proves only its saved path.
+- **Problem:** A package can change to `type: module` between preparation and compilation. Equal paths then hide different interop code and a different default import.
+- **Impact if no action:** A guarded result can publish unproved parsing despite the approved equality rule.
+- **Root question:** How can a guarded edit prove equal parsing and side effects for every file esbuild resolved itself?
+- **Options:**
+  - **A.** Reclassify parsing and side effects after compilation with a fresh package scope. Cache each target within that proof. This adds another metadata-read pass. A change followed by restoration can still escape a value-only comparison. Effort: Small.
+  - **B.** Witness the metadata facts used by preparation and recheck them before accepting the result. Reuse existing file stats where possible. Include missing candidates and their parent directories. Keep witnesses within the request and fall back when they changed or cannot be proved. Measure the cost. Effort: Small.
+  - **C.** Give esbuild explicit parsing settings independent of its resolver, or an immutable metadata view. This needs capabilities absent from its current plugin API or a new resolver integration. Effort: Large.
+  - **D.** After the last proof read, require each used metadata file and scope directory to be mature before the request started. Reuse `capture-runtime.ts` and take the start before preparation. This also proves old scopes first seen after compilation. A young or unproved fact uses the complete fallback. Preserve the test assertions with a controlled metadata runtime. Effort: Medium.
+  - **E.** Use B for prepared facts and D for first postcompile reads. This keeps old unknown scopes fast, but combines two proof rules. Prepared fine-tick changes still need D's guard. Effort: Medium.
+  - **F.** Witness lexical relative target scopes before callback resolution. Prove that no native or plugin resolution read each scope earlier. This needs load-order records and confirmation of esbuild's cache behavior. Effort: Medium.
+- **Left out:** Cached preflight facts do not prove what esbuild used. Returning every import to the callback misses the speed goal. Re-reading values alone cannot prove a change-and-restoration interval.
+- **Wider fix:** C would remove the resolver's implicit parsing input. B proves stability for the current integration without changing the protocol or retaining filesystem facts across requests.
+- **Previous examples:** The package-type audit found the same Node-mode flag difference. The new controlled in-flight probe shows that preflight alone does not prevent it.
+- **Recommendation:** D, changed from B. The check recommends sealed B, but records a fine-tick hole and permanent fallback for unknown scopes. D closes both with one age rule. It preserves the existing assertions through an explicit clock boundary.
+- **Action:** Fix now, apply D. Enforce the existing parsing proof with the authorized complete planned fallback. Add no boundary error, third compile, full capture owner, or protocol field.
+
+Shared assumptions: keep the parsing and byte-equality requirements, from Cal's task and the module-source protocol. Keep the complete fallback, from Cal's approval. Keep persistent filter caching free of filesystem facts, from Cal's cache decision. New witnesses would live only during one request. Measure latency and memory against the accepted split before pushing.
+
+Evidence: `.context/native-relative-resolution/parse-race-probe/report.md` and `result.json`. The probe changed a dependency manifest immediately before the first build. It observed zero relative callbacks and an accepted result different from the complete planned result.
+
+Orchestrator design call, 2026-11-20: choose D after the fresh options check. Sealed B would weaken an existing one-compile assertion and still permits two changes in one fine timestamp tick. D uses the existing maturity guard without waiting. Keep every assertion. Reject young facts through the existing complete fallback. Measure its cost before pushing. The check and its F addendum are saved in `parse-race-probe/options-check.md`.
+
+Cal accepted D on 2026-11-20. On the real Cloud request, a `sed -i` source save and a save with sibling swap/probe churn must each keep one compile. An equal-content dependency manifest touch must fall back. Prove only the package scopes that accepted bypassed edges use. Keep repository source-directory churn outside that set. The 150 ms performance floor stays.
+
 ## Milestone 1: Guarded planned compilation
 
 Depends on: none
@@ -201,10 +232,12 @@ Depends on: 1, 2
 Cal put the pull request on hold on 2026-11-20. The Cloud run confirms the speed gain but exceeds the memory bound. Cal then chose split filters after the memory investigation. Source changes must go to the performance orchestrator for new Cloud measurements before the pull request. Evidence: `.context/native-relative-resolution/memory-node/`.
 
 - [x] Measure Node heap and RSS on the captured edit. Isolate filter preparation, the cache, verification, and replay.
+- [x] Close the confirmed stale parsing-fact proof gap. Observe the red regression, validate metadata stability, and measure the added cost before pushing.
 - [x] Implement the measured exact split with red routing tests and the callback ownership proof. Keep the filter cache free of plan and filesystem facts.
-- [ ] Repeat targeted tests and strict published-byte proof on the final memory variant. Send its pushed SHA for Cloud A/B and memory sessions.
+- [x] Repeat targeted tests and strict published-byte proof on the final memory variant.
+- [ ] Send its pushed SHA for Cloud A/B and memory sessions.
 - [ ] Select and validate a memory mitigation before the pull request. Preserve published bytes and the two-percent bound.
-- [ ] Commit the tested split, then integrate `origin/main` once more with the `git-merge` skill. Cal authorized this order on 2026-11-20 after main advanced. Preserve the render store, literal export-target evidence, and compiled generation fields. Repeat combined checks and all four fixture byte proofs before pushing the integrated SHA.
+- [x] Commit the tested split, then integrate `origin/main` once more with the `git-merge` skill. Cal authorized this order on 2026-11-20 after main advanced. Preserve the render store, literal export-target evidence, and compiled generation fields. Repeat combined checks and all four fixture byte proofs before pushing the integrated SHA.
 - [x] Run local edit A/B on `examples/basic` and large React. Include an added relative import.
 - [x] Give the orchestrator the candidate SHA for Mokly Cloud performance and memory measurements.
 - [x] Integrate current `origin/main` once with the `git-merge` skill. Cal changed the order on 2026-11-20. Do not wait for workspaces 54 and 100.

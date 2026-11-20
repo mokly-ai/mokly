@@ -7,6 +7,7 @@ import type { build } from "esbuild";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 
+import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
   countedCompile,
   fullPathError,
@@ -50,6 +51,7 @@ function missFirstAnswer(name: string, innerImporter?: string) {
 }
 
 test("an unanswered unsafe relative edge retries despite a matching plan path and an inner callback", async (context) => {
+  matureMetadata(context);
   const root = await nativeRoot(context);
   const entry = path.join(root, "entry.mjs");
   await write(
@@ -84,6 +86,7 @@ test("an unanswered unsafe relative edge retries despite a matching plan path an
 });
 
 test("an erased relative type import needs no consumer callback ownership", async (context) => {
+  matureMetadata(context);
   const root = await nativeRoot(context);
   const entry = path.join(root, "entry.ts");
   await write(
@@ -123,6 +126,7 @@ for (const [name, source] of [
   ],
 ] as const)
   test(`an unanswered unknown relative ${name} retries before its external edge publishes`, async (context) => {
+    matureMetadata(context);
     const root = await nativeRoot(context);
     const entry = path.join(root, "entry.mjs");
     await write(entry, 'export { value } from "./safe.mjs";\n' + source);
