@@ -31,7 +31,7 @@ export default tseslint.config(
       // The API client that the OpenAPI generator writes, and the frozen
       // catalogues of the cloud contract fixtures, whose bytes the golden
       // files record.
-      "apps/app/src/api/generated/**",
+      "packages/app/src/api/generated/**",
       "crates/mkc-mokly-contract/fixtures/**/src/**",
       "target/**",
     ],

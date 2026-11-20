@@ -41,10 +41,10 @@ fn npm_ci_stage_rejects_manifest_lock_disagreement() {
     success(fixture.run("npm", &["ci"]));
     fixture.write(
         "package.json",
-        r#"{"name":"fixture","version":"1.0.0","private":true,"workspaces":["apps/app"]}"#,
+        r#"{"name":"fixture","version":"1.0.0","private":true,"workspaces":["packages/app"]}"#,
     );
     fixture.write(
-        "apps/app/package.json",
+        "packages/app/package.json",
         r#"{"name":"missing-workspace","version":"1.0.0"}"#,
     );
     failure(fixture.run("npm", &["ci"]), "Missing:");
@@ -74,9 +74,9 @@ fn eslint_stage_rejects_unused_typescript() {
     fixture.copy("rules/eslint/cloud-rules.mjs");
     fixture.copy_tree("scripts/eslint");
     fixture.tools();
-    fixture.write("apps/app/src/index.ts", "export const ready = true;\n");
+    fixture.write("packages/app/src/index.ts", "export const ready = true;\n");
     success(fixture.run("npm", &["run", "lint"]));
-    fixture.write("apps/app/src/failure.ts", "const unused = 1;\n");
+    fixture.write("packages/app/src/failure.ts", "const unused = 1;\n");
     failure(
         fixture.run("npm", &["run", "lint"]),
         "@typescript-eslint/no-unused-vars",
@@ -88,8 +88,8 @@ fn typecheck_stage_rejects_invalid_types_in_every_workspace() {
     let fixture = TemporaryFixtures.create();
     let workspaces = [
         "packages/tokens",
-        "apps/app",
-        "apps/desktop",
+        "packages/app",
+        "packages/desktop",
         "apps/mockups",
         "apps/site",
         "apps/worker",
@@ -166,10 +166,10 @@ fn desktop_stage_propagates_a_real_shell_test_failure() {
     fixture.tools();
     fixture.write(
         "package.json",
-        r#"{"private":true,"workspaces":["apps/desktop"]}"#,
+        r#"{"private":true,"workspaces":["packages/desktop"]}"#,
     );
-    fixture.copy("apps/desktop/package.json");
-    fixture.write("apps/desktop/src/_tests_/failure.test.ts", "import assert from 'node:assert/strict';\nimport test from 'node:test';\ntest('desktop rejection fixture', () => assert.equal(1, 2));\n");
+    fixture.copy("packages/desktop/package.json");
+    fixture.write("packages/desktop/src/_tests_/failure.test.ts", "import assert from 'node:assert/strict';\nimport test from 'node:test';\ntest('desktop rejection fixture', () => assert.equal(1, 2));\n");
     failure(
         fixture.run("npm", &["test", "--workspace", "@mokly-cloud/desktop"]),
         "desktop rejection fixture",

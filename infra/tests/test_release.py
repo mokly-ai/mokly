@@ -322,7 +322,7 @@ class ReleaseTests(unittest.TestCase):
         docker = (ROOT / "infra/docker/app.Dockerfile").read_text()
         for contract in ["npm ci", "build:web --workspace @mokly-cloud/app", "EXPO_PUBLIC_MKC_API_ORIGIN",
                          "EXPO_PUBLIC_MKC_APP_ORIGIN", "MKC_CATALOGUE_BASE_DOMAIN",
-                         "COPY --from=build /build/apps/app/dist", "COPY --from=build /build/build-config.json",
+                         "COPY --from=build /build/packages/app/dist", "COPY --from=build /build/build-config.json",
                          "COPY infra/docker/app-server.mjs", "USER 65532:65532", "STOPSIGNAL SIGINT"]:
             self.assertIn(contract, docker)
         self.assertNotIn("crates/mkc-domain/src/app_paths.rs", docker)
@@ -330,7 +330,7 @@ class ReleaseTests(unittest.TestCase):
         server = (ROOT / "infra/docker/app-server.mjs").read_text()
         self.assertIn('response.setHeader("Content-Security-Policy", contentSecurityPolicy)', server)
         self.assertIn("config.catalogueBaseDomain", server)
-        document = (ROOT / "apps/app/public/index.html").read_text()
+        document = (ROOT / "packages/app/public/index.html").read_text()
         self.assertIn('<meta name="robots" content="noindex" />', document)
         for script in ["build-api.sh", "build-catalogue.sh", "build-app.sh"]:
             self.assertIn(script, (ROOT / "infra/scripts/check-image.sh").read_text())

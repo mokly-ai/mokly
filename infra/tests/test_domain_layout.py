@@ -234,7 +234,7 @@ def collect_expo_first_segments(directory, segments):
 
 
 def expo_static_first_segments(routes=None):
-    routes = ROOT / "apps/app/app" if routes is None else routes
+    routes = ROOT / "packages/app/app" if routes is None else routes
     segments = set()
     collect_expo_first_segments(routes, segments)
     return sorted(segments)

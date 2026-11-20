@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-02, from Decision 10 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01, and an options check added options D and E.
-- **Location:** `docs/protocol/cloud/viewer-host.md`, section "Sources", `apps/app/src/viewer/access.ts:94`, and `crates/mkc-catalogue-server/src/response.rs:180`.
+- **Location:** `docs/protocol/cloud/viewer-host.md`, section "Sources", `packages/app/src/viewer/access.ts:94`, and `crates/mkc-catalogue-server/src/response.rs:180`.
 - **Reason:** On 2026-11-02 the user deferred the choice. `origin/main` had the same limit before the upgrade.
 - **Category:** Product bug.
 

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 4 of the Milestone 26 review TODO in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/cloud/viewer-builds.md:15-19` and `:210-220`, `docs/protocol/cloud/viewer.md:87-94`, `apps/app/src/screens/viewer/viewer-build.ts:26-38` and `apps/app/src/viewer/stage-view-decision.ts:95-102`.
+- **Location:** `docs/protocol/cloud/viewer-builds.md:15-19` and `:210-220`, `docs/protocol/cloud/viewer.md:87-94`, `packages/app/src/screens/viewer/viewer-build.ts:26-38` and `packages/app/src/viewer/stage-view-decision.ts:95-102`.
 - **Reason:** PR #45 merged with this requirement choice open, and no user answer is recorded.
 - **Checked:** 2026-10-31, at commit `f568853e`. Rule 7 now names the ordinary reviewer cards. The remaining protocol and app disagreement still needs a user decision.
 - **Category:** Docs or spec.

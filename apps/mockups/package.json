@@ -24,9 +24,9 @@
   "devDependencies": {
     "@firna/ui": "4.0.0",
     "@gorhom/bottom-sheet": "5.2.14",
-    "@mokly/mokly": "0.20.0",
-    "@mokly/ui": "0.20.0",
-    "@mokly/viewer": "0.20.0",
+    "@mokly/mokly": "0.21.0",
+    "@mokly/ui": "0.21.0",
+    "@mokly/viewer": "0.21.0",
     "@playwright/test": "1.61.1",
     "@types/node": "26.6.4",
     "@types/react": "19.3.0",

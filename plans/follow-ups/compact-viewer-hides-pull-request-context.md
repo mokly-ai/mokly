@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from the new-problem check of review finding 5 on `conductor/follow-ups-hosted-viewer-layout`.
-- **Location:** `apps/app/src/screens/viewer/slots.tsx`, `PublicationMeta` in `apps/app/src/viewer/chrome.tsx`, and the compact metadata rule in `docs/mockups/styles/product/viewer-bar.css`.
+- **Location:** `packages/app/src/screens/viewer/slots.tsx`, `PublicationMeta` in `packages/app/src/viewer/chrome.tsx`, and the compact metadata rule in `docs/mockups/styles/product/viewer-bar.css`.
 - **Reason:** The compact composition hides context required by the publication identity contract, and the recorded own-width choice does not settle its placement.
 - **Category:** Product bug.
 - **Terms:**
