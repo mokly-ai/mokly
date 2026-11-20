@@ -17,7 +17,7 @@ export function candidateDirectories(
   plan: ResolutionPlan,
   evidence: ReuseEvidence,
   source: CandidateSource,
-): ResolutionPlan | undefined {
+): ResolutionPlan {
   for (const directory in evidence.inputs) {
     const input = evidence.inputs[directory]!;
     if (
@@ -32,36 +32,39 @@ export function candidateDirectories(
   const blocked = new Set<string>();
   for (const [lexical, names] of source.names) {
     const canonical = source.canonical(lexical);
+    if (evidence.inputs[canonical]?.kind !== "directory") continue;
     let members = merged.get(canonical);
     if (!members) {
-      if (!source.retain(canonical, 4)) return undefined;
+      if (!source.retain(canonical, 4)) return plan;
       members = new Set();
       merged.set(canonical, members);
     }
     if (source.blocked.has(lexical) && !blocked.has(canonical)) {
-      if (!source.retain(canonical, 1)) return undefined;
+      if (!source.retain(canonical, 1)) return plan;
       blocked.add(canonical);
     }
     for (const name of names) {
       if (members.has(name)) continue;
-      if (!source.retain(name, 1)) return undefined;
+      if (!source.retain(name, 1)) return plan;
       members.add(name);
     }
   }
   for (const file of source.selected) {
     const directory = source.canonical(path.dirname(file));
+    if (evidence.inputs[directory]?.kind !== "directory") continue;
     if (
       !merged.get(directory)?.has(path.basename(file).toLowerCase()) &&
       !blocked.has(directory)
     ) {
-      if (!source.retain(directory, 1)) return undefined;
+      if (!source.retain(directory, 1)) return plan;
       blocked.add(directory);
     }
   }
-  if (!source.reserve(plan.paths.length * 8 + 2)) return undefined;
+  if (!source.reserve(plan.paths.length * 8 + 2)) return plan;
   const paths = new Map<string, number>();
   plan.paths.forEach((file, index) => paths.set(file, index));
   const candidates: NonNullable<ResolutionPlan["candidates"]> = [];
+  const addedPaths: string[] = [];
   for (const directory in evidence.inputs) {
     const input = evidence.inputs[directory]!;
     if (input.kind !== "directory") continue;
@@ -74,7 +77,7 @@ export function candidateDirectories(
         unsafe = true;
         break;
       }
-      if (!source.retain(name, 1)) return undefined;
+      if (!source.retain(name, 1)) return plan;
       const folded = name.toLowerCase();
       if (seen.has(folded)) {
         unsafe = true;
@@ -83,16 +86,19 @@ export function candidateDirectories(
       seen.add(folded);
     }
     if (unsafe) continue;
-    if (!source.reserve(4 + names.size * 8)) return undefined;
+    if (!source.reserve(4 + names.size * 8)) return plan;
     let index = paths.get(directory);
     if (index === undefined) {
-      if (!source.retain(directory, 9)) return undefined;
-      index = plan.paths.length;
+      if (!source.retain(directory, 9)) return plan;
+      index = plan.paths.length + addedPaths.length;
       paths.set(directory, index);
-      plan.paths.push(directory);
+      addedPaths.push(directory);
     }
     candidates.push([index, [...names].sort()]);
   }
-  if (candidates.length) plan.candidates = candidates;
+  if (candidates.length) {
+    for (const directory of addedPaths) plan.paths.push(directory);
+    plan.candidates = candidates;
+  }
   return plan;
 }

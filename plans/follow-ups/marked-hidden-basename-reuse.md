@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-19, from the independent check of review finding 1 on branch `calummoore/mokly-plan-reuse-editor-files-6dni` at `51c4a8d6b`.
-- **Location:** `packages/mokly/src/sidecar/mapped-selection.ts:32`.
+- **Location:** `packages/mokly/src/sidecar/mapped-selection.ts:26`.
 - **Reason:** The marked mapping scan is unchanged by the Serve plan candidate work. Its safe reuse miss needs a separate correction.
 
 - **Source:** Review.

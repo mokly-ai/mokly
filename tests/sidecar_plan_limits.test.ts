@@ -7,6 +7,7 @@ import { build } from "esbuild";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../packages/mokly/src/generated/sidecar/CompiledGeneration.js";
 import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
+import type { ReuseEvidence } from "../packages/mokly/src/generated/sidecar/ReuseEvidence.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { capturedPlan } from "../packages/mokly/src/sidecar/captured-plan.js";
 import { checkRecipeSize } from "../packages/mokly/src/sidecar/recipe-size.js";
@@ -113,4 +114,75 @@ test("a failed native attempt returns no captured plan after full resolution suc
   assert.equal(attempts, 2);
   assert.equal(captured.result.plan, undefined);
   assert.equal(captured.result.compiled.reuseEvidence.complete, true);
+});
+
+test("pair overflow removes candidate names and added path rows before rejecting an oversized bare plan", async (context) => {
+  const root = await nativeRoot(context);
+  await write(
+    path.join(root, "entry.mjs"),
+    'export {value} from "./value.js";',
+  );
+  await write(path.join(root, "value.js"), "export const value=1;");
+  const bare: ResolutionPlan = {
+    paths: [
+      path.join(root, "mokly-entry"),
+      path.join(root, "entry.mjs"),
+      path.join(root, "value.js"),
+    ],
+    imports: [
+      [0, path.join(root, "entry.mjs"), "import-statement", 1, true],
+      [1, "./value.js", "import-statement", 2, true],
+    ],
+  };
+  const evidence: ReuseEvidence = {
+    complete: true,
+    durable: true,
+    inputs: {
+      [root]: { kind: "directory", entries: [] },
+      "": { kind: "absent" },
+    },
+  };
+  const padding = "x".repeat(
+    8 * 1024 * 1024 - Buffer.byteLength(JSON.stringify([bare, evidence])),
+  );
+  delete evidence.inputs[""];
+  evidence.inputs[padding] = { kind: "absent" };
+  context.mock.method(
+    ResolutionEvidence.prototype,
+    "finish",
+    async () => evidence,
+  );
+  const params = nativeParams(root);
+  const captured = await bundle(params, build, undefined, planCapture(root));
+  const plan = captured.result.plan;
+  assert.ok(plan, "the pair bound must retain a fitting bare plan");
+  assert.equal(plan.candidates, undefined);
+  assert.deepEqual([...plan.paths].sort(), [...bare.paths].sort());
+  assert.deepEqual(
+    plan.imports
+      .map(([importer, name, kind, target, sideEffects]) => [
+        plan.paths[importer],
+        name,
+        kind,
+        plan.paths[target],
+        sideEffects,
+      ])
+      .sort(),
+    [
+      [bare.paths[0], bare.paths[1], "import-statement", bare.paths[1], true],
+      [bare.paths[1], "./value.js", "import-statement", bare.paths[2], true],
+    ].sort(),
+  );
+  assert.equal(
+    Buffer.byteLength(JSON.stringify([plan, evidence])),
+    8 * 1024 * 1024,
+  );
+  delete evidence.inputs[padding];
+  evidence.inputs[padding + "x"] = { kind: "absent" };
+  const oversized = await bundle(params, build, undefined, planCapture(root));
+  assert.equal(
+    oversized.result.plan,
+    undefined,
+    "an oversized bare pair must still be rejected",
+  );
 });

@@ -28,8 +28,7 @@ dropped plan changes neither the reuse nor the storage of a compilation.
 
 The plan and the reuse evidence of one record use at most 8 MiB together,
 counted in serialized bytes. The count includes the path table and the
-candidate names of the plan. A compile whose plan does not fit this bound
-returns no plan. When a `bundle` response would pass the
+candidate names of the plan. When a `bundle` response would pass the
 [frame limit](./mokly-sidecar.md#transport), the sidecar drops the plan
 before it drops the reuse evidence. A dropped plan changes no other field of
 the result.
@@ -38,6 +37,14 @@ cache. A plan inside the compiled recipe was rejected, because each
 `restoreGeneration` would carry it. A separate durable plan entry was
 rejected, because it needs its own publication rules. A separate 8 MiB plan
 allowance was rejected, because one record could then use 16 MiB.
+
+A plan with candidate names that does not fit this bound loses its candidate
+names and the path table rows that only those names added. The compile then
+counts the plan again. A compile whose plan still does not fit returns no
+plan.
+Decision: candidate names are an optional layer of the plan, so the bound
+removes that layer before it drops the plan. A drop of the whole plan was
+rejected, because the same plan without candidate names can fit.
 
 ## Plan Format
 

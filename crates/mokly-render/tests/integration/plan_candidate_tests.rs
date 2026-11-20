@@ -42,13 +42,14 @@ fn editor_changes(remove: bool) {
 
 #[test]
 fn selectable_and_hidden_preferred_candidates_reject_plans_and_match_native_results() {
-    for (name, specifier, initial, target, expected) in [
+    for (name, specifier, initial, target, expected, manifest) in [
         (
             "extension",
             "./value",
             "value.ts",
             "value.tsx",
             ["entry.ts", "value.tsx"],
+            None,
         ),
         (
             "hidden directory",
@@ -56,6 +57,7 @@ fn selectable_and_hidden_preferred_candidates_reject_plans_and_match_native_resu
             "lib/item/index.js",
             "lib/item.ts",
             ["entry.ts", "lib/item.ts"],
+            None,
         ),
         (
             "extension-only file",
@@ -63,6 +65,7 @@ fn selectable_and_hidden_preferred_candidates_reject_plans_and_match_native_resu
             ".tsx",
             ".ts",
             [".ts", "entry.ts"],
+            None,
         ),
         (
             "extension-only directory",
@@ -70,11 +73,24 @@ fn selectable_and_hidden_preferred_candidates_reject_plans_and_match_native_resu
             ".js/index.ts",
             ".ts",
             [".ts", "entry.ts"],
+            None,
+        ),
+        (
+            "duplicate relative main",
+            "./choice",
+            "choice/first/index.js",
+            "choice/first.ts",
+            ["choice/first.ts", "entry.ts"],
+            Some(r#"{"main":"./first","main":"./second"}"#),
         ),
     ] {
         let mut fixture = Fixture::new();
         fixture.write("entry.ts", &format!("export {{value}} from {specifier:?};"));
         fixture.write(initial, "export const value='original';");
+        if let Some(manifest) = manifest {
+            fixture.write("choice/package.json", manifest);
+            fixture.write("choice/second/index.js", "export const value='second';");
+        }
         fixture.prepare();
         fixture.edit();
         fixture.write(target, "export const value='preferred';");

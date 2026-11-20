@@ -174,8 +174,7 @@ export class PlanCandidates implements PhysicalInputObserver {
     plan: ResolutionPlan | undefined,
     evidence: ReuseEvidence,
   ): ResolutionPlan | undefined {
-    if (!plan || this.overflow) return undefined;
-    if (!this.proved) return plan;
+    if (!plan || this.overflow || !this.proved) return plan;
     return candidateDirectories(plan, evidence, {
       names: this.names,
       blocked: this.blocked,

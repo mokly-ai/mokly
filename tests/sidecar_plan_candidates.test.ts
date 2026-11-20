@@ -4,10 +4,13 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
+import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { PlanCandidates } from "../packages/mokly/src/sidecar/plan-candidates.js";
 
 import {
+  countedCompile,
+  fingerprint,
   nativeParams,
   nativeRoot,
   write,
@@ -212,30 +215,54 @@ test("matching absolute paths mappings keep whole comparisons when target proven
   );
 });
 
-test("candidate retention overflow drops only the optional plan", async (context) => {
+test("candidate retention overflow keeps the bare plan and its exact edit result", async (context) => {
   const root = await nativeRoot(context);
   await write(
     path.join(root, "entry.mjs"),
     'export {value} from "./value.js";',
   );
   await write(path.join(root, "value.js"), "export const value=1;");
-  const captured = await bundle(
-    nativeParams(
-      root,
-      {},
-      {
-        resolveExtensions: ["." + "x".repeat(8 * 1024 * 1024)],
-      },
-    ),
-    build,
-    undefined,
-    planCapture(root),
+  const params = nativeParams(
+    root,
+    {},
+    {
+      resolveExtensions: ["." + "x".repeat(8 * 1024 * 1024)],
+    },
   );
-  assert.equal(captured.result.plan, undefined);
+  const captured = await bundle(params, build, undefined, planCapture(root));
+  const plan = captured.result.plan;
+  assert.ok(plan, "collector overflow must keep the native plan");
+  assert.equal(plan.candidates, undefined);
+  assert.deepEqual(
+    [...plan.paths].sort(),
+    [
+      path.join(root, "entry.mjs"),
+      path.join(root, "mokly-entry"),
+      path.join(root, "value.js"),
+    ].sort(),
+  );
   assert.equal(captured.result.compiled.reuseEvidence.complete, true);
   assert.equal(captured.result.compiled.reuseEvidence.durable, true);
   assert.deepEqual(
     captured.result.modules.map((module) => module.path),
     ["entry.mjs", "value.js"],
   );
+  await write(path.join(root, "value.js"), "export const value=2;");
+  const counted = countedCompile();
+  const planned = await bundle(
+    params,
+    counted.compile,
+    undefined,
+    undefined,
+    "serveEdit",
+    plan,
+  );
+  const native = await bundle(params, build, undefined, undefined, "serveEdit");
+  const normalized = (result: BundleResult) =>
+    fingerprint({
+      ...result,
+      compiled: { ...result.compiled, identity: "fresh edit identity" },
+    });
+  assert.equal(counted.counts.compilations, 1);
+  assert.deepEqual(normalized(planned.result), normalized(native.result));
 });

@@ -7,9 +7,9 @@
   listed this gap outside the plan, and from a read-only source check of the
   gap on the same date. The check read the source at `be242a628` and
   esbuild 0.28.2, and it ran nothing.
-- **Location:** `packages/mokly/src/sidecar/resolution-evidence.ts:126` to
-  line 140, `packages/mokly/src/sidecar/physical-inputs.ts:101` to line 109
-  and line 122 to line 135, and the section "Reuse And Identity" of
+- **Location:** `packages/mokly/src/sidecar/resolution-evidence.ts:135` to
+  line 149, `packages/mokly/src/sidecar/physical-path-inputs.ts:39` to line 58
+  and line 91 to line 104, and the section "Reuse And Identity" of
   `docs/protocol/mokly-sidecar-recipes.md`.
 - **Reason:** The gap predates the exact Serve plan change, which keeps the
   current comparisons of recorded inputs, and nobody has reproduced a
@@ -29,13 +29,13 @@
     up a directory entry. esbuild makes it with Go `strings.ToLower` on
     every platform.
 - **Background:**
-  - `candidate` at `packages/mokly/src/sidecar/resolution-evidence.ts:126`
-    to line 140 skips the directory capture of a base when the base is an
+  - `candidate` at `packages/mokly/src/sidecar/resolution-evidence.ts:135`
+    to line 149 skips the directory capture of a base when the base is an
     existing file with an extension other than `.js`, `.jsx`, `.mjs`, or
     `.cjs`.
   - `exactFile` and `canonicalFile` at
-    `packages/mokly/src/sidecar/physical-inputs.ts:101` to line 109 call
-    `capturePath` at line 122 to line 135. They record the canonical path
+    `packages/mokly/src/sidecar/physical-path-inputs.ts:39` to line 58 call
+    `capturePath` at line 91 to line 104. They record the canonical path
     as a `filePath` observation, and the lexical links on its path. They save
     no listing of the parent directory.
   - esbuild 0.28.2 looks up directory entries by their folded key. The

@@ -8,8 +8,8 @@
   gap on the same date. The check read the source at `be242a628` and
   esbuild 0.28.2, and it ran nothing.
 - **Location:** `crates/mokly-sidecar/src/compiled.rs:51` to line 60,
-  `packages/mokly/src/sidecar/physical-input-reader.ts:164` to line 176,
-  line 214 to line 218, and line 219 to line 237, and
+  `packages/mokly/src/sidecar/physical-input-reader.ts:173` to line 185,
+  line 238 to line 242, and line 243 to line 261, and
   `crates/mokly-render/src/physical_inputs.rs:95` to line 131, and
   `crates/mokly-render/src/plan_directory.rs:32` to line 65.
 - **Reason:** The gap predates the exact Serve plan change, which keeps the
@@ -32,12 +32,12 @@
     links, and the canonical target of a link. It keeps no followed kind.
   - `readDirectory` in `packages/mokly/src/sidecar/physical-input-reader.ts`
     records a link member as `kind: "link"` with its canonical target, at
-    line 164 to line 176. It does not record whether the target is a file or
+    line 173 to line 185. It does not record whether the target is a file or
     a directory.
   - The TypeScript check `current` in the same file compares a recorded
     directory by name, kind without following links, and target, at line
-    219 to line 237. Its check of a standalone link, at line 214 to line
-    218, compares only that the path is a link with the same canonical
+    243 to line 261. Its check of a standalone link, at line 238 to line
+    242, compares only that the path is a link with the same canonical
     target.
   - The Rust check in `crates/mokly-render/src/physical_inputs.rs` reads the
     kind of each member with `file_type`, which does not follow a link, at

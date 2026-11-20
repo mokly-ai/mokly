@@ -1,4 +1,4 @@
-# Reuse evidence omits ancestor Plug'n'Play manifests
+# Ordinary imports omit ancestor Plug'n'Play manifests
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
@@ -6,12 +6,15 @@
   change on branch `calummoore/mokly-plan-reuse-editor-files-6dni`, which
   listed this gap outside the plan, and from a read-only source check of the
   gap on the same date. The check read the source at `be242a628` and
-  esbuild 0.28.2, and it ran nothing.
+  esbuild 0.28.2, and it ran nothing. Narrowed on 2026-11-20 to compiles
+  without a package folder mapping, after main commit `a9859a574` (#413).
 - **Location:** `packages/mokly/src/sidecar/bundle.ts:214` to line 217,
-  `packages/mokly/src/sidecar/config-inputs.ts:47` to line 115,
+  `packages/mokly/src/sidecar/config-inputs.ts:50` to line 118,
   `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 83,
-  `packages/mokly/src/sidecar/physical-inputs.ts:211` to line 234, and the
-  section "Reuse And Identity" of `docs/protocol/mokly-sidecar-recipes.md`.
+  `packages/mokly/src/sidecar/physical-path-inputs.ts:116` to line 142,
+  `PnpInputs.discover` and `PnpInputs.covered` in
+  `packages/mokly/src/sidecar/pnp-inputs.ts`, and the section "Reuse And
+  Identity" of `docs/protocol/mokly-sidecar-recipes.md`.
 - **Reason:** The gap predates the exact Serve plan change, which keeps the
   current comparisons of recorded inputs, and nobody has reproduced a
   changed output.
@@ -41,14 +44,26 @@
       `.pnp.data.json`, then `.pnp.cjs`, then `.pnp.js`, each as a file.
     - Line 2402 to line 2455 resolve package imports through an active
       manifest, and report its errors.
-  - The capture records no manifest name:
-    - `manifest` at `packages/mokly/src/sidecar/config-inputs.ts:47` records
-      `package.json` candidates. `configuration` at line 65 and
-      `candidateInputs` at line 100 record `tsconfig.json` and `jsconfig.json`
+  - Since main commit `a9859a574` (#413) of 2026-11-20, the capture records
+    the manifest chain for a package folder mapping only:
+    - `PnpInputs.discover` in `packages/mokly/src/sidecar/pnp-inputs.ts`
+      records each manifest candidate from the working directory up to the
+      first present manifest, through `pnpFiles` in
+      `packages/mokly/src/sidecar/pnp-files.ts`. An absent candidate becomes
+      an absent input.
+    - It runs when the package step finds a folder target, through
+      `PnpInputs.covered`, or when a matching Plug'n'Play root is not
+      reachable.
+    - `PnpLocations.read` in `packages/mokly/src/sidecar/pnp-locations.ts`
+      finds the present manifest with a stat that records nothing.
+  - Without a package folder mapping, the capture records no manifest name:
+    - `manifest` at `packages/mokly/src/sidecar/config-inputs.ts:50` records
+      `package.json` candidates. `configuration` at line 68 and
+      `candidateInputs` at line 103 record `tsconfig.json` and `jsconfig.json`
       candidates.
-    - `pathLinks` at `packages/mokly/src/sidecar/physical-inputs.ts:211` to
-      line 234 walks the parent paths for link and durability observations.
-      It saves no listing of each parent.
+    - `pathLinks` at `packages/mokly/src/sidecar/physical-path-inputs.ts:116`
+      to line 142 walks the parent paths for link and durability
+      observations. It saves no listing of each parent.
     - `resolutionInputs` at
       `packages/mokly/src/sidecar/resolution-inputs.ts:49` to line 83 saves
       the listings of consumed-module directories and lookup directories. On
@@ -85,12 +100,13 @@
     of each recorded directory, in the section "Candidate Names" of
     `docs/protocol/mokly-sidecar-plans.md`. It adds no observation for an
     ancestor without a listing. So its plan check has the same gap.
-- **Problem:** The reuse evidence holds no observation of a Plug'n'Play
-  manifest in an unrecorded ancestor of the esbuild working directory. A
-  manifest that appears there after the capture cannot reject reuse.
+- **Problem:** For a compile without a package folder mapping, the reuse
+  evidence holds no observation of a Plug'n'Play manifest in an unrecorded
+  ancestor of the esbuild working directory. A manifest that appears there
+  after the capture cannot reject reuse.
 - **Impact if no action:** Rarely, Serve, a build, or a later process could
-  reuse a compilation that a fresh compile would resolve or report in
-  another way. Nobody has shown such a case.
+  reuse a compilation without a package folder mapping that a fresh compile
+  would resolve or report in another way. Nobody has shown such a case.
 - **Root question:** How does the reuse evidence observe each Plug'n'Play
   manifest that esbuild can select for a compile?
 - **Options:**
@@ -99,7 +115,8 @@
     capture, and compare the reused result with a fresh compile. Record
     which inputs stay equal. Then record the three manifest names in each
     directory that esbuild searches, from the working directory up to the
-    first manifest or the filesystem root. Cover presence, priority,
+    first manifest or the filesystem root. `PnpInputs.discover` already
+    records this chain for a package folder mapping. Cover presence, priority,
     content, kind, and links only as the reproduction needs. Add the
     manifests to the evidence list of
     `docs/protocol/mokly-sidecar-recipes.md`. Effort: Medium.

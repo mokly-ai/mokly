@@ -1,6 +1,6 @@
 # Preserve exact Serve plans after unrelated file additions
 
-Status: Active. On branch `calummoore/mokly-plan-reuse-editor-files-6dni`, no pull request yet. The completing pull request deletes this plan.
+Status: Active. On branch `calummoore/mokly-plan-reuse-editor-files-2-4oor`, no pull request yet. It continues branch `calummoore/mokly-plan-reuse-editor-files-6dni` from `d1a000b03`. The completing pull request deletes this plan.
 
 Mokly compiles catalogue JavaScript in a Node sidecar. Serve can reuse a captured import plan on later edits.
 A swap file or backup file changes a recorded directory listing and defeats that reuse.
@@ -146,6 +146,56 @@ Suffix matching includes extension-only basenames. A capture-time check keeps wh
 It uses the native attempt's metafile and adds no resolver operation or physical read. Each allocation stays inside the existing capture budget.
 Portable case fixtures preserve every case-rule assertion. Literal collision evidence and a single-spelling contrast replace a host-dependent Node fixture.
 The marked-scan rewrite omission and the self-package folder capture gap predate G and get separate follow-ups.
+On 2026-11-20 main #413 (`a9859a574`) repaired the self-package folder capture gap and the repeated-key reader of the shared capture. The main merge `01181fbd7` removed the self-package follow-up.
+
+### 4. Collector overflow discards a usable plan
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/plan-candidates.ts`, `plan-candidate-directories.ts`, and `bundle-recipe.ts`.
+- **Terms:**
+  - **Collector:** `PlanCandidates`, which collects candidate names under an 8 MiB charge budget.
+  - **Pair bound:** The 8 MiB bound of one plan and its evidence together.
+- **Background:** The performance orchestrator measured `d1a000b03` on mokly-cloud on 2026-11-19 with an instrumented dist.
+  The head collector reached 7,947,986 of 8,388,608 bytes, or 94.7%. Its pair was 3,965,184 + 2,382,445 = 6,347,629 B, a 1.95 MiB margin.
+  The base collector reached 8,388,602 bytes and overflowed. The base kept 4,869,857 B of evidence and no plan.
+- **Problem:** An overflow of the collector or of an attachment charge drops the whole plan, not only its names. A plan whose names fail the pair bound is dropped, although the same plan without names can fit.
+- **Impact if no action:** The real base keeps no plan. A catalogue about 5% larger than mokly-cloud loses the head plan, and every edit loses plan reuse.
+- **Root question:** How can Serve edits keep exact plan reuse when the candidate names of a plan do not fit a bound that the plan must pass? The check of 2026-11-20 widened the question from the capture to each bound.
+- **Options:** Workspace 54 wrote A to C. The fresh Opus check of 2026-11-19 added D to F, and the fresh Opus check of 2026-11-20 added G to I. The original words of A to C and of the first root question were not recovered.
+  - **A.** After a collector or attachment overflow, keep the plan without names and with its original paths. Stage new table rows until every charge succeeds. Effort: Small.
+  - **B.** Make the collector cheaper, for example with no charge for listing entries that are only iterated, and with selected targets as path positions. Effort: Medium.
+  - **C.** The check records that C keeps names after an overflow more widely than F and gives up the single attachment pass. The check of 2026-11-20 found that nobody can choose C as written. H is one concrete form of it.
+  - **D.** A, plus attachment for listed directories only. A compile that fits today keeps the same plan bytes. Effort: Small.
+  - **E.** A, plus the same fallback at the pair bound: remove the names and their added rows, then count again. Effort: Small.
+  - **F.** A, plus the rows that the listing loop finished before an overflow. Effort: Small.
+  - **G.** Give the plan type one strip operation that removes the names and the trailing path rows that no import uses. `capturedPlan`, `checkRecipeSize`, and `Records::insert` call it before they drop a plan. It helps only responses near 64 MiB and pairs within the settings' bytes of 8 MiB. It changes the frame-limit and kept-record rules. Effort: Medium.
+  - **H.** At each overflow, free the names of dependency directories first and keep the project directory names. The plan without names applies only when project directories alone overflow. A linked workspace package that the capture reaches through `node_modules` loses its names with the dependencies. Effort: Medium.
+  - **I.** Leave the seven fixed names out of each collected and stored set, and let the Rust plan check add them back. The stored names change meaning, so the Rust check, the protocol wording, and the cache payload version change. Effort: Medium.
+- **Left out:** Names keyed by canonical directory during capture need a real-path read. A split collector budget drops names earlier. A lower charge for a live entry can let retained memory pass the budget, because the charge already undercounts heap.
+  The check of 2026-11-20 added these. Change nothing leaves the measured base without a plan. A larger budget or bound breaks the bounds that the user fixed. Names for project directories only, at all times, fail decision 1's goal when the names fit. A run-time 1 MiB margin drops names that the record can hold. Names that the Rust check derives at each edit add manifest reads to each edit.
+- **Shared assumptions:** The collector budget, both record bounds, exact results, the disk rules, and no edit capture stay. The charge model counts JSON bytes plus a small container charge.
+  The check of 2026-11-20 named four more. All names or none comes from A and the call on F, and H drops it. Only the capture's pair bound removes names first, and G drops that. Each name is a full string, also each of the seven fixed names, and I drops that. The 1 MiB margins are measurement conditions, not run-time rules.
+- **Wider fix:** G, which replaces E. E replaced B, and it is the direct fix for one bound. G is deferred, because its frame-limit and kept-record rules need a new call, and it helps only edge cases outside the measured goal. `plans/follow-ups/plan-names-first-at-every-bound.md` holds it. B and D only move the overflow point.
+- **Previous examples:** None found.
+- **Recommendation:** A, with the called D and E, kept by both checks. A keeps every usable plan after a collector overflow and needs no protocol change. G, H, and I are optional wider approaches, not current actions.
+- **Action:** Apply the performance orchestrator's calls of 2026-11-19 below.
+
+The performance orchestrator's calls of 2026-11-19, under the user's delegation, after the fresh check:
+
+- A with the staged commit is required.
+- E: yes. Names become an optional layer, so a bound removes that layer before it drops the plan. The plan protocol records this rule for plans with names. Plans on main carry no names, so it overrides nothing there.
+- D: yes. The check estimates that about 22 more bytes of repository root path would cost the head its names. D skips only directories that cannot get names. With E, D cannot cost the base its plan.
+- F: no. Coverage would follow the sorted path order, which users cannot predict.
+- B goes to the measured follow-up `plans/follow-ups/plan-candidate-collector-cost.md`, with the four measurements that the check names.
+
+The same calls relax the base. It must keep a plan, with or without names, with at least 1 MiB under both record bounds. The head must keep names with at least 1 MiB under both.
+For the base, the pair and the kept record that it actually retains must each leave at least 1 MiB spare. No capture strips names at run time to create that margin. This reading is the user's instruction that the base may keep a plan without names. It adds no requirement.
+E reopens part of decision 2 option D, which the call of 2026-11-18 kept out. E acts only when the names cannot fit, so it loses no name that the record could hold.
+On 2026-11-20 the user's request replaced the synthetic capacity gate with the performance orchestrator's instrumented check of the real head and base.
+The check report and the calls stay in `.context/serve-plan-editor-invalidation/collector-overflow-options-check.md`.
+A fresh Opus check of 2026-11-20 kept A with the called D and E. Its G, H, and I need a new call, so the follow-ups hold them. The report stays in `.context/serve-plan-editor-invalidation/2026-11-20-options-check.md`.
 
 ## Implementation design
 
@@ -153,6 +203,14 @@ Full captured resolution evidence stays unchanged. Candidate names live with the
 Only the Rust plan reader applies names to directory comparisons. A directory without proved names keeps its whole comparison.
 Compiled-result reuse, TypeScript evidence checks, input stamps, and bundle disk admission keep their current rules.
 Capture durability still observes whole directories and path identities. Stored evidence stays full-listing evidence.
+
+Candidate names are an optional plan layer, under the calls of decision 4. A collector or attachment overflow keeps the plan without names and with its original paths.
+Attachment adds new table rows only after every charge, and it skips canonical directories that the evidence does not list.
+When the plan with names fails the pair bound, `bundleRecipe` removes the names and their added rows and counts again.
+
+A root probe of 2026-11-20 confirmed a plan-only bug. A relative folder manifest held `{"main":"./first","main":"./second"}`.
+esbuild selected the first target, but the names held only the second target's names. An added `first.ts` left the plan replay stale. Shared compiled and disk evidence did not change.
+The root orchestrator's design call of 2026-11-20: plan metadata uses the existing ordered package reader, because exact candidate names must include earlier repeated `main` values without another read or parser.
 
 Narrow only for audited esbuild 0.28.2. Every other version keeps whole comparisons without rejecting a build.
 Record exact bases and effective configured extensions, or esbuild defaults. Include extension rewrites and index names.
@@ -232,9 +290,8 @@ Source proof: `.context/serve-plan-editor-invalidation/candidate-preflight.md`.
 - [x] Cover metadata and PnP, traversed children, rewrites, index names, suffix prefixes, links, configured extensions, and case fallback.
 - [x] Compare output, recorded inputs, and errors with native-first. Preserve other reuse-owner tests unchanged.
 - [x] Update the approved new-module count. Keep output assertions and add a stale-candidate contrast.
-- [ ] Measure pair and retained-key bytes on examples/basic, large React, and the cloud-shaped synthetic catalogue.
-- [ ] Confirm about 4,400 modules, 13,000 imports, 23,000 inputs, and icon directories of about 1,800 and 1,600 files. Include a used Babel runtime helper and its unused folder export in both captures. Calibrate path lengths and compare the old pair with the real 8,102,796-byte pair.
-- [ ] Confirm both bounds fit, with at least 1 MiB margin on that shape. Require actual selectors on both head and base records. Ask the performance orchestrator if they fail.
+
+On 2026-11-20 the real head and base check in Milestone 5 replaced three synthetic capacity TODOs. See decision 4.
 
 Evidence: `.context/serve-plan-editor-invalidation/code-milestone-4-report.md`.
 
@@ -243,17 +300,30 @@ Evidence: `.context/serve-plan-editor-invalidation/code-milestone-4-report.md`.
 Depends on: 1a, 2, 3, 4
 
 Evidence: `.context/serve-plan-editor-invalidation/2026-11-19-main-code-integration-report.md`.
+Main merge `01181fbd7` of 2026-11-20, with main `cc0750d36`: `code-merge-report.md`, `docs-merge-report.md`, and `merge-audit.txt` in the same folder.
+Decision 4 code: `.context/serve-plan-editor-invalidation/aed-implementation-report.md`. Docs and pointers: `aed-docs-report.md`.
+Repeated `main` fix: `.context/serve-plan-editor-invalidation/duplicate-main-fix-report.md`.
 
 - [x] Preserve current main's mapped-path capture, configured files, stamp checks, style memo, and watch-plan reuse. Recheck G after integration.
 - [x] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
 - [x] Align the final owner README, protocol status lines, and follow-up pointers. Remove the item resolved by main #343.
-- [ ] Smoke-test examples/basic. Measure alternating release main and branch in separate checkouts, targets, and matching dists.
+- [x] Smoke-test examples/basic through `npm run dev`. The performance orchestrator owns the release timings against main.
 - [x] Extract the merged 303-line bundle owner without changing runtime behavior. Recheck the file cap.
 - [x] Run `cargo xtask check --suite repository` and complete `cargo xtask check` with Git 2.45+, Git LFS, and pinned Bun.
 - [x] Correct hidden-basename rewrite candidates. Add the checked native-selection fallback. Apply the checked portable case fixtures and preserve every assertion.
-- [ ] Apply checked option D for unused folder exports, with exact-key priority. Cover matched conservative forms. Keep whole comparisons for unproved encoded bare requests. Repeat the failed editor measurement.
+- [x] Apply checked option D for unused folder exports, with exact-key priority. Cover matched conservative forms. Keep whole comparisons for unproved encoded bare requests. Repeat the failed editor measurement.
+- [x] Apply A red-first. A capture whose collector overflows keeps its plan without names, its original paths, and an exact edit result.
+- [x] Apply E red-first. A plan whose names fail the pair bound loses the names and their added rows, and it is counted again.
+- [x] Apply D red-first. A collected but unlisted directory adds no charge and changes no plan bytes.
+- [x] Fix the repeated `main` plan bug red-first with a real-core row: adding the first target's preferred file rejects the plan. Read plan metadata with the ordered package reader.
+- [x] Record E in the plan protocol, A and D in the sidecar README, and B as a measured follow-up. Move the pointers that the 2026-11-20 merge left stale.
+- [x] Run the targeted candidate, attachment, limit, export, package-folder, and saved-plan Node tests. Run each new asynchronous test ten times.
+- [x] Run the Rust plan tests of `mokly-render`, `mokly-sidecar`, and `mokly-compare`.
+- [ ] Run `cargo xtask check --suite repository`, then the complete `cargo xtask check`.
 - [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
-- [ ] Obtain real mokly-cloud measurements and sizes for head and base records, with selectors present. Audit rejected real manifests. Require at least 1 MiB margin in both bounds and resolve failed conditions.
+- [ ] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud. Audit rejected real manifests. Apply the margins of decision 4 and resolve failed conditions with it.
+- [ ] Prove strict published output byte for byte against main `cc0750d36`: examples/basic, the full default large HTML and large React fixtures, and the cloud mockups of the root `mokly.config.json`.
 - [ ] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
 - [ ] Delete this plan and the resolved editor-invalidation item after other TODOs and reviews. Update live references.
-- [ ] Open the pull request into `main`. Preserve dated calls and a plan permalink. Wait for CI with `ci-wait.sh`. Report to the performance orchestrator. Do not merge.
+- [ ] Open the pull request into `main`. Say that it continues workspace 54's branch. Preserve dated calls and a plan permalink.
+- [ ] Wait for CI with `scripts/ci-wait.sh`. Fix each failure that the branch causes. Rerun Site Lighthouse at most once and record it as unrelated. Report to the performance orchestrator. Do not merge.

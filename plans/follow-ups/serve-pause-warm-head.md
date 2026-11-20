@@ -8,7 +8,7 @@
   plan reuse work.
 - **Location:** `crates/mokly-cli/src/serve_rebuild.rs:91`,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:62`,
-  `crates/mokly-sidecar/src/pool_exchange.rs:36`,
+  `crates/mokly-sidecar/src/pool_exchange.rs:39`,
   `crates/mokly-sidecar/src/pool_shutdown.rs:7`,
   `packages/mokly/src/sidecar.ts:55` to line 66 (the request loop), and
   `docs/protocol/mokly-base-cache.md:67` to line 68.
@@ -72,7 +72,7 @@
       needs approval to let the cache store that bounded, complete, and
       durable result.
     - Worker-only cancellation: `cancel_requests` at
-      `crates/mokly-sidecar/src/pool_exchange.rs:36` stops the whole pool
+      `crates/mokly-sidecar/src/pool_exchange.rs:39` stops the whole pool
       through `cancel_busy` at `crates/mokly-sidecar/src/pool_shutdown.rs:7`.
       The sidecar reads no frame during a request, at
       `packages/mokly/src/sidecar.ts:55` to line 66. esbuild runs `build`,

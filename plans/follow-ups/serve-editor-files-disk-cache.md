@@ -6,12 +6,12 @@
   exact Serve plan change, on branch
   `calummoore/mokly-plan-reuse-editor-files-6dni`. The call asked for this
   item for the restart misses that the change leaves.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:150` to line 157,
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:155` to line 166,
   `packages/mokly/src/sidecar/resolution-inputs.ts:76` to line 84,
-  `packages/mokly/src/sidecar/physical-input-reader.ts:219` to line 237,
+  `packages/mokly/src/sidecar/physical-input-reader.ts:243` to line 261,
   `crates/mokly-render/src/bundle_attempt.rs:112` to line 124,
-  `crates/mokly-render/src/input_stamp.rs:109` to line 123,
-  `crates/mokly-render/src/bundle.rs:62`, and the section "Reuse And Identity"
+  `crates/mokly-render/src/input_stamp.rs:125` to line 147,
+  `crates/mokly-render/src/bundle.rs:65`, and the section "Reuse And Identity"
   of `docs/protocol/mokly-sidecar-recipes.md`.
 - **Reason:** On 2026-11-18 the performance orchestrator limited candidate
   names to the plan check of a Serve edit, and it left compiled and stored
@@ -41,8 +41,8 @@
 - **Background:**
   - A restart of Serve tries to reuse the head entry. The pool restores the
     stored compilation with `restoreGeneration`. Then `reuse()` in
-    `packages/mokly/src/sidecar/compiled.ts` checks it. Line 150 to line 155
-    compare the `inputDirectories` lists, and line 156 to line 157 check the
+    `packages/mokly/src/sidecar/compiled.ts` checks it. Line 155 to line 160
+    compare the `inputDirectories` lists, and line 161 to line 166 check the
     captured reuse evidence. A difference makes the head compile with
     capture. The new compilation then replaces the head entry.
   - Three kinds of check compare whole directories:
@@ -50,7 +50,7 @@
       the section "Reuse And Identity" of
       `docs/protocol/mokly-sidecar-recipes.md` requires. `current` in
       `packages/mokly/src/sidecar/physical-input-reader.ts` compares whole
-      directories at line 219 to line 237. The Rust check
+      directories at line 243 to line 261. The Rust check
       `physical_inputs::current` in `crates/mokly-render/src/physical_inputs.rs`
       does the same.
     - `resolutionInputs` at
@@ -64,8 +64,8 @@
     - `stamp` at `crates/mokly-render/src/bundle_attempt.rs:112` to line
       124 turns `metadataDirectories` into `InputStamp` memberships. The core
       reuses a retained state only while `InputStamp::matches` at
-      `crates/mokly-render/src/input_stamp.rs:109` to line 123 lists the same
-      names. The check is at `crates/mokly-render/src/bundle.rs:62`.
+      `crates/mokly-render/src/input_stamp.rs:125` to line 147 lists the same
+      names. The check is at `crates/mokly-render/src/bundle.rs:65`.
   - The measured editor case ran on 2026-11-18. It used the release binary
     of `main` at `be242a628` with its matching sidecar dist, on a copy of
     `examples/basic`:

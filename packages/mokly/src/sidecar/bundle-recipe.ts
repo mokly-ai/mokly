@@ -200,13 +200,17 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(
-    generation,
-    capturedPlan(
-      evidence ? evidence.candidates.attach(plan, reuseEvidence) : plan,
-      reuseEvidence,
-    ),
-  );
+  const originalPathCount = plan?.paths.length ?? 0;
+  const namedPlan = evidence
+    ? evidence.candidates.attach(plan, reuseEvidence)
+    : plan;
+  let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  if (!retainedPlan && namedPlan?.candidates) {
+    namedPlan.paths.length = originalPathCount;
+    delete namedPlan.candidates;
+    retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  }
+  const result = bundleResult(generation, retainedPlan);
   if (reusable && !compilation.reuseEvidence.complete) {
     delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")

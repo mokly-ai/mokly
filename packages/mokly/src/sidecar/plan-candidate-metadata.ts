@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { jsonObject, parseJson } from "./config-json.js";
+import { PackageJson, parsePackageJson } from "./package-json.js";
 
 /** Interpret already-read manifests without keeping another metadata snapshot. */
 export function candidateMetadata(
@@ -11,14 +11,15 @@ export function candidateMetadata(
 ): boolean {
   if (path.basename(file) !== "package.json") return true;
   try {
-    const json = parseJson(bytes.toString("utf8"));
-    if (!jsonObject(json) || !ordinaryExports(json.exports)) return false;
-    for (const field of new Set(["main", "module", ...fields])) {
-      const target = json[field];
-      if (typeof target !== "string" || !target) continue;
-      if (/[%*?#\\]/.test(target)) return false;
-      candidate(path.dirname(file), target);
-    }
+    const manifest = parsePackageJson(bytes.toString("utf8"));
+    if (!manifest.values("exports").every((value) => ordinaryExports(value)))
+      return false;
+    for (const field of new Set(["main", "module", ...fields]))
+      for (const target of manifest.values(field)) {
+        if (typeof target !== "string" || !target) continue;
+        if (/[%*?#\\]/.test(target)) return false;
+        candidate(path.dirname(file), target);
+      }
     return true;
   } catch {
     return false;
@@ -30,8 +31,8 @@ function ordinaryExports(value: unknown, depth = 0): boolean {
   if (typeof value === "string") return !/[%?#\\]/.test(value);
   if (Array.isArray(value))
     return value.every((item) => ordinaryExports(item, depth + 1));
-  if (jsonObject(value))
-    return Object.entries(value).every(
+  if (value instanceof PackageJson)
+    return value.entries.every(
       ([key, item]) =>
         !(
           key.startsWith(".") &&
