@@ -9,6 +9,8 @@ use crate::build::BuildChanges;
 use crate::build_output::issue_text;
 use crate::changes_output::ChangeDiagnostic;
 use crate::codes::Code;
+use crate::output::{Mode, Style};
+use crate::redaction::Redactor;
 use crate::{changes_policy, render_errors};
 
 const SCRIPTS_HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`.";
@@ -23,6 +25,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             .map(|issue| ChangeDiagnostic {
                 code: Code::BuildInvalid,
                 message: issue_text(issue, Code::BuildInvalid),
+                catalogue_code: Some(issue.code),
             })
             .collect(),
         Error::Catalogue {
@@ -30,6 +33,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
         } => vec![ChangeDiagnostic {
             code: Code::ConfigInvalid,
             message: issue_text(issue, Code::ConfigInvalid),
+            catalogue_code: Some(issue.code),
         }],
         Error::Catalogue {
             source: CatalogueError::Runtime { source },
@@ -38,6 +42,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             vec![ChangeDiagnostic {
                 code: diagnostic.code,
                 message: diagnostic.message,
+                catalogue_code: None,
             }]
         }
         Error::Graph { source } => render_errors::diagnostics(source)
@@ -45,11 +50,13 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             .map(|diagnostic| ChangeDiagnostic {
                 code: diagnostic.code,
                 message: diagnostic.message,
+                catalogue_code: None,
             })
             .collect(),
         _ => vec![ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: error.to_string(),
+            catalogue_code: None,
         }],
     };
     append_scripts_hint(error, &mut diagnostics);
@@ -79,6 +86,7 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
         let mut diagnostics = vec![ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: detail,
+            catalogue_code: None,
         }];
         append_scripts_hint(error, &mut diagnostics);
         return Some(BuildChanges::Unavailable {
@@ -127,7 +135,21 @@ fn plain(message: &str) -> &str {
         .unwrap_or(message)
 }
 
-pub(crate) fn failure_detail(error: &Error) -> String {
+/// Render a comparison failure with its recovery separate from rich detail.
+pub(crate) fn failure(style: &Style, error: &Error, prefix: &str, redactor: &Redactor) -> String {
+    let code = failure_code(error);
+    let message = format!("{prefix}{}", failure_detail(error, style.mode));
+    if style.mode == Mode::Rich
+        && let Some(hint) = scripts_hint(error)
+    {
+        style.error_with_recovery(code, &message, hint, redactor)
+    } else {
+        style.error(code, &message, redactor)
+    }
+}
+
+/// Keep the historical plain detail and omit recovery text from rich detail.
+pub(crate) fn failure_detail(error: &Error, mode: Mode) -> String {
     let detail = match error {
         Error::Git {
             source: error::Error::CommandFailed { status, stderr },
@@ -143,8 +165,10 @@ pub(crate) fn failure_detail(error: &Error) -> String {
             }
         }
         Error::Git { source } => plain(&source.to_string()).into(),
-        Error::Base { commit, source, .. } => format!("base {commit}: {}", failure_detail(source)),
-        Error::SourceFailure { source } => failure_detail(source),
+        Error::Base { commit, source, .. } => {
+            format!("base {commit}: {}", failure_detail(source, mode))
+        }
+        Error::SourceFailure { source } => failure_detail(source, mode),
         Error::Catalogue {
             source: CatalogueError::Runtime { source },
         } => source.message.clone(),
@@ -156,7 +180,11 @@ pub(crate) fn failure_detail(error: &Error) -> String {
         Error::Cancelled => "build cancelled".into(),
         _ => error.to_string(),
     };
-    with_scripts_hint(error, detail)
+    if mode == Mode::Plain {
+        with_scripts_hint(error, detail)
+    } else {
+        detail
+    }
 }
 
 fn append_scripts_hint(error: &Error, diagnostics: &mut Vec<ChangeDiagnostic>) {
@@ -164,6 +192,7 @@ fn append_scripts_hint(error: &Error, diagnostics: &mut Vec<ChangeDiagnostic>) {
         diagnostics.push(ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: SCRIPTS_HINT.into(),
+            catalogue_code: None,
         });
     }
 }
@@ -189,3 +218,7 @@ fn with_scripts_hint(error: &Error, detail: String) -> String {
     };
     format!("{detail}{separator}{hint}")
 }
+
+#[cfg(test)]
+#[path = "_tests_/scripts_hint_tests.rs"]
+mod scripts_hint_tests;

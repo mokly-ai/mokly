@@ -5,7 +5,7 @@
 - **Added:** 2026-11-17, from the options check of the parallel render input
   keys plan, on branch `calummoore/mokly-parallel-render-keys-6m85`.
 - **Location:** `crates/mokly-css/src/delivery.rs:41`,
-  `crates/mokly-cli/src/serial_stylesheets.rs:19`,
+  `crates/mokly-cli/src/serial_stylesheets.rs:20`,
   `crates/mokly-render/src/bundle.rs:240` and line 255,
   `crates/mokly-graph/src/evaluation.rs:33`, and `src/bundler.rs:476` of the
   `lightningcss` 1.0.0-alpha.72 dependency.
@@ -52,7 +52,7 @@
     `RenderWorkers::stylesheets`, at `crates/mokly-graph/src/graph.rs:123`.
     `ThreadWorkers::stylesheets` runs each root inside the render pool. So the
     parallel import loads of `lightningcss` stay on that pool.
-  - `SerialStylesheets` in `crates/mokly-cli/src/serial_stylesheets.rs:19`
+  - `SerialStylesheets` in `crates/mokly-cli/src/serial_stylesheets.rs:20`
     wraps the render workers for Serve's background base work, at
     `crates/mokly-cli/src/serve_changes_native.rs:175`. It does not override
     `stylesheets`, so the trait default bundles each base root on the calling

@@ -14,6 +14,7 @@ use crate::error::CatalogueError;
 
 fn config() -> ResolvedConfig {
     ResolvedConfig {
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),

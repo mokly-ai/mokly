@@ -1,0 +1,22 @@
+id: one-form-words-its-own-field
+valid:
+  # Ownership without a sentence: the field draws the shared copy, which is
+  # what every form but one does.
+  - 'const a = { "validation-failed": "email" };'
+  - 'const a = { "validation-failed": "repository", "duplicate-project": "repository" };'
+  - 'const a = { "validation-failed": { field: "email" } };'
+  # A `says` that is not a field's sentence. The pair means nothing on its own;
+  # it is the field beside it that makes it one.
+  - 'const a = { says: "Good morning.", tone: "greeting" };'
+  - 'const a = { field: "email" };'
+invalid:
+  - 'const a = { "validation-failed": { field: "email", says: "Enter a complete email address." } };'
+  # The same object with its two keys the other way round. TypeScript sees one
+  # type and the runtime sees one value, so the rule has to see one shape.
+  - 'const a = { "validation-failed": { says: "Enter a complete email address.", field: "email" } };'
+  # A sentence the object does not spell out: a template, a constant, a call.
+  - 'const a = { "validation-failed": { field: "email", says: `Enter a complete ${kind}.` } };'
+  - 'const a = { "validation-failed": { field: "email", says: SENTENCE } };'
+  - 'const a = { "validation-failed": { says: sentenceFor(kind), field: "email" } };'
+  # An unquoted reason key reads the same way.
+  - 'const a = { unavailable: { field: "name", says: "Try a different name." } };'

@@ -1,0 +1,99 @@
+/* Screen header and stage */
+
+.site-screen-head {
+  background: var(--mk-color-surface);
+  border-bottom: 1px solid var(--mk-color-border);
+  flex-shrink: 0;
+  padding: var(--mk-space-3) var(--mk-space-6);
+}
+
+.site-crumbs {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--mk-type-ui-label-size);
+}
+
+.site-crumb {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-screen-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+  margin-top: var(--mk-space-1);
+}
+
+.site-screen-title {
+  font-size: 1.1875rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.01em;
+}
+
+.site-idchip {
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-ui-label-size);
+  padding: 2px var(--mk-space-2);
+}
+
+.site-stage {
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at center,
+    var(--mk-color-border) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--mk-space-5) var(--mk-space-6) 0;
+}
+
+.site-stage-label {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-label-size);
+  font-weight: var(--mk-font-bold);
+  letter-spacing: 0.06em;
+  margin-bottom: var(--mk-space-3);
+  text-transform: uppercase;
+}
+
+.site-stage-frame {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  flex: 1;
+  margin: 0 auto;
+  max-width: 940px;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.site-stage-screen {
+  background: var(--mk-color-surface);
+  border: 0;
+  height: 133.3334%;
+  inset: 0;
+  position: absolute;
+  transform: scale(0.75);
+  transform-origin: top left;
+  width: 133.3334%;
+}
+
+[data-color-scheme="light"] .site-stage-screen--dark,
+[data-color-scheme="dark"] .site-stage-screen--light {
+  display: none;
+}

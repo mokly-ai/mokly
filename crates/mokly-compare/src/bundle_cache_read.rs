@@ -25,10 +25,18 @@ impl DiskCache {
             .bundle_compilation(&namespace.join("entries").join(key))
     }
     pub(crate) fn bundle_read(&self, key: &str) -> Result<RawRead> {
-        let namespace = self.bundle_namespace(key)?;
-        let Some(guard) =
-            self.bundle_lock(&entry_lock_path(&namespace, Kind::Bundles, key), true)?
-        else {
+        self.raw_read(key, Kind::Bundles, CAPACITY, true)
+    }
+
+    pub(crate) fn raw_read(
+        &self,
+        key: &str,
+        kind: Kind,
+        capacity: u64,
+        touch: bool,
+    ) -> Result<RawRead> {
+        let namespace = self.raw_namespace(key, kind)?;
+        let Some(guard) = self.bundle_lock(&entry_lock_path(&namespace, kind, key), true)? else {
             return Ok(RawRead::Contended);
         };
         let target = namespace.join("entries").join(key);
@@ -39,8 +47,11 @@ impl DiskCache {
                 mut receipt,
             } => {
                 let maintenance = (|| {
+                    if !touch {
+                        return Ok(());
+                    }
                     if let Some(_state) = self.bundle_lock(&namespace.join("state.lock"), false)?
-                        && let Some(used) = self.bundle_next_used(&namespace)?
+                        && let Some(used) = self.raw_next_used(&namespace, kind, capacity)?
                     {
                         receipt.used = used;
                         self.storage.bundle_receipt(&target, &receipt, false)?;
@@ -63,13 +74,21 @@ impl DiskCache {
         }
     }
 
-    pub(crate) fn bundle_next_used(&self, namespace: &Path) -> Result<Option<u64>> {
+    pub(crate) fn raw_next_used(
+        &self,
+        namespace: &Path,
+        kind: Kind,
+        capacity: u64,
+    ) -> Result<Option<u64>> {
+        if kind == Kind::Renders {
+            return self.storage.render_sequence(namespace, 0);
+        }
         let entries = self
             .storage
-            .bundle_records(&namespace.join("entries"), CAPACITY)?;
+            .bundle_records(&namespace.join("entries"), capacity)?;
         let stages = self
             .storage
-            .bundle_records(&namespace.join("staging"), CAPACITY)?;
+            .bundle_records(&namespace.join("staging"), capacity)?;
         Ok(entries
             .iter()
             .chain(stages.iter())
@@ -85,10 +104,18 @@ impl DiskCache {
         key: &str,
         token: Option<RecordToken>,
     ) -> Result<Mutation> {
-        let namespace = self.bundle_namespace(key)?;
-        let Some(_entry) =
-            self.bundle_lock(&entry_lock_path(&namespace, Kind::Bundles, key), false)?
-        else {
+        self.raw_invalidate(key, token, Kind::Bundles, CAPACITY)
+    }
+
+    pub(crate) fn raw_invalidate(
+        &self,
+        key: &str,
+        token: Option<RecordToken>,
+        kind: Kind,
+        capacity: u64,
+    ) -> Result<Mutation> {
+        let namespace = self.raw_namespace(key, kind)?;
+        let Some(_entry) = self.bundle_lock(&entry_lock_path(&namespace, kind, key), false)? else {
             return Ok(Mutation::Skipped(SkipReason::Contended));
         };
         let Some(_state) = self.bundle_lock(&namespace.join("state.lock"), false)? else {
@@ -110,7 +137,7 @@ impl DiskCache {
         }
         self.storage
             .bundle_retire(&target, &namespace.join("trash"))?;
-        self.bundle_clean_trash(&namespace)?;
+        self.raw_clean_trash(&namespace, capacity)?;
         Ok(Mutation::Invalidated)
     }
 }

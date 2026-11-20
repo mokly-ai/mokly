@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use bytes::Bytes;
 
 use crate::output::error::{FormatError, Result};
+use crate::output::inventory::Inventory;
 use crate::output::ownership::{Entry, Ownership};
 use crate::output::upload::UploadMetadata;
 use crate::output::validation::{FILE_LIMIT, MANIFEST, MARKER, digest};
@@ -33,14 +34,15 @@ pub struct Artifact {
 }
 
 impl Artifact {
-    /// Add optional publication metadata, then write the shared ownership marker.
+    /// Consume admitted ordinary files, add publication metadata, and write the marker.
     /// Plain builds pass None. Publication builds pass their validated envelope.
     /// This pure writer performs no archive compression or upload preparation.
     pub fn finalize(
         directory: PathBuf,
-        mut files: Vec<File>,
+        inventory: Inventory,
         metadata: Option<UploadMetadata>,
     ) -> Result<Self> {
+        let mut files = inventory.into_files();
         if let Some(metadata) = &metadata {
             files.push(File {
                 path: MANIFEST.to_owned(),

@@ -38,7 +38,12 @@ for (const directory of ["guides", "protocol"]) {
   await fs.cp(
     new URL(`../../../docs/${directory}`, import.meta.url),
     new URL(`docs/${directory}`, root),
-    { recursive: true },
+    {
+      recursive: true,
+      filter: (source) =>
+        source !==
+        fileURLToPath(new URL("../../../docs/protocol/cloud", import.meta.url)),
+    },
   );
 }
 for (const file of [

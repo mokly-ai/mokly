@@ -11,15 +11,16 @@ workflow file only. A branch push must match both filters. Tag pushes do not
 start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
-Run one job on the runner of the CI suite jobs, `blacksmith-4vcpu-ubuntu-2404`.
+Run one job on `blacksmith-4vcpu-ubuntu-2404`, which has the 4 vCPUs of the CI Linux runners.
 Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.
 
-The job matches the CI suite jobs in runner, Cargo settings, and Rust build
-cache, so each command takes about the time and runner cost of its CI job.
-One job serves all seven commands. The repository command therefore restores
-the cache of the other suites, not the cache of the CI repository job.
+The job matches the CI suite jobs in Cargo settings and Rust cache options, but
+not in runner. CI saves its cache on GitHub-hosted runners, so no job refreshes
+the cache that a box restores. One job serves all fourteen commands. The
+repository command uses the cache options of the other suites, not those of its
+CI job.
 
 Run the steps in this order:
 
@@ -28,24 +29,24 @@ Run the steps in this order:
    The public repository lets boxes fetch pushed commits without a token.
 2. Run `useblacksmith/begin-testbox` with `testbox_id: ${{ inputs.testbox_id }}`.
    An empty input uses validation mode, including on push runs.
-3. Install Node 22.15.0 with `actions/setup-node` and npm's download cache.
-   Use `cache: npm` and `cache-dependency-path: package-lock.json`.
-   Set `package-manager-cache: false`. Then install npm 11.21.0.
-4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
+3. Install cloud Node from `.nvmrc` and npm 11.21.0. Record its binary
+   directory in `MOKLY_CLOUD_NODE_BIN`. Then install Node 22.15.0 and npm
+   11.21.0 with the root lockfile cache and `package-manager-cache: false`.
+4. Run `rustup toolchain install` in the checkout. It installs Rust 1.98.1 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Restore the Rust build cache that the CI viewer, browser, and
-   static-delivery jobs share, with the same action and options. Set
-   `save-if: false`. Boxes run unreviewed local trees, so they never save.
+5. Restore the Rust build cache with the action and options that the CI viewer,
+   browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
+   unreviewed local trees, so they never save.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
    Create the stamp directory if needed. Write the stamp only after both
    installation and the native build succeed.
-9. Run `npx playwright install --with-deps chromium`.
-10. Write the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, and each workflow
-    `env` entry to `/etc/environment`. Replace previous entries for those
+9. Install Chromium and the [cloud tools](./ci-workflow-cloud.md#cloud-testbox-tools).
+10. Write the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, `MOKLY_CLOUD_NODE_BIN`,
+    and each workflow `env` entry to `/etc/environment`. Replace those
     names. Preserve other entries. New Testbox SSH sessions must use
     Node 22.15.0, Chromium, and the CI Cargo settings.
 11. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
@@ -97,6 +98,9 @@ example through static HTTP and file URLs. Both modes must pass.
 These selected delivery checks do not replace any of the five suite reports.
 No browser shard runs delivery after its ordinary specs. Browser work and portable
 delivery use separate 30-minute Testbox job guards.
+
+Seven cloud commands run on their own boxes, as the
+[cloud Testbox tools](./ci-workflow-cloud.md#cloud-testbox-tools) say.
 
 ## Readiness And Sync Probe
 

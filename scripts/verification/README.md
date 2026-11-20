@@ -48,8 +48,9 @@ Public test commands and strict evidence rules live in the
 Run `actionlint` without arguments from the repository root to check every
 GitHub Actions workflow. It automatically reads
 [`.github/actionlint.yaml`](../../.github/actionlint.yaml), which lists the
-exact Blacksmith runner labels used by the workflows. Keep this list aligned
-with the workflow runners. Use no runner-label ignore pattern or alternate
+Blacksmith Testbox runner label. All other jobs use GitHub-hosted standard
+runners under the [runner rule](../../docs/protocol/ci-workflow.md#job-execution).
+Use no runner-label ignore pattern or alternate
 configuration file. This is a separate manual check.
 
 ## Rust advisory audit
@@ -183,8 +184,9 @@ controlled inputs and asserts the written files. The environment run redirects
 `/etc/environment` to a temporary file and stubs `sudo`. It also requires the
 environment step to write every workflow `env` entry.
 [`tests/ci_testbox_alignment.test.ts`](../../tests/ci_testbox_alignment.test.ts)
-keeps the Testbox runner, workflow `env`, and Rust cache options equal to those
-of the CI suite jobs, and requires the Testbox cache to never save. Step order
+keeps the Testbox workflow `env` equal to the CI workflow `env`. It keeps the
+Testbox Rust cache options equal to those of the CI viewer, browser, and
+static-delivery jobs, and requires the Testbox cache to never save. Step order
 and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.

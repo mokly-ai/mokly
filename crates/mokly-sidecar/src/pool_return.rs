@@ -27,6 +27,27 @@ impl Pool {
             })
             .map(|(index, _)| (*index, pass))
             .collect();
+        if let Some(epoch) = state
+            .head
+            .warm
+            .as_ref()
+            .and_then(|warm| state.epochs.get(&warm.generation))
+            .copied()
+        {
+            let cold = state
+                .controls
+                .iter()
+                .filter(|(index, control)| {
+                    !state.retired.contains(index)
+                        && state.source_roots.get(index) == Some(&self.launch.repository)
+                        && state.head.warmups.needs_render(**index, control, epoch)
+                })
+                .map(|(index, control)| (*index, control.clone()))
+                .collect::<Vec<_>>();
+            for (index, control) in cold {
+                state.head.warmups.start(index, &control, epoch);
+            }
+        }
         state.head.notify();
     }
 
@@ -38,7 +59,7 @@ impl Pool {
 
     pub(super) fn maintain_return(&self) -> Result<bool> {
         let Some((index, pass, slot)) = self.claim_return() else {
-            return Ok(false);
+            return Ok(self.maintain_warmup());
         };
         let outcome = self.return_slot(index, &slot);
         match outcome {
@@ -127,6 +148,7 @@ impl Pool {
             state.retired.insert(index);
             state.head.return_disabled = true;
             state.head.candidates.clear();
+            state.head.warmups.reset();
             if state.retired.len() == self.options.size.get() {
                 state.stopped = true;
                 state.recipes.clear();
@@ -153,6 +175,16 @@ impl Pool {
                 }
                 state.head.active = None;
                 if slot.is_some() || !state.controls.contains_key(&index) {
+                    if let Some(started) = &slot
+                        && let Some(epoch) = state
+                            .head
+                            .warm
+                            .as_ref()
+                            .and_then(|warm| state.epochs.get(&warm.generation))
+                            .copied()
+                    {
+                        state.head.warmups.start(index, &started.control, epoch);
+                    }
                     state.slots[index] = slot;
                     state.available.push_back(index);
                 }

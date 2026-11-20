@@ -33,7 +33,7 @@ fn a_changed_disk_seed_and_each_valid_fast_path_revert_reach_the_store() {
                 WriteOutcome::Written
             })),
     ));
-    let pool = pool(store, worker(Arc::default(), "new"));
+    let pool = pool(store, worker(Arc::default(), "new", 1));
     live(&pool, "old", 1, false, false);
     assert_eq!(bundle(&pool).cache, Some(CacheOutcome::StampMismatch));
     live(&pool, "old", 1, true, false);
@@ -66,7 +66,7 @@ fn incomplete_or_unverified_bundles_and_direct_serves_never_write() {
             WorkerMock::request
                 .some_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, _, _| {
-                    let mut result = answer("partial");
+                    let mut result = answer("partial", 1);
                     if let MethodResult::Bundle(bundle) = &mut result {
                         let compiled = Arc::make_mut(&mut bundle.compiled);
                         let evidence = Arc::make_mut(&mut compiled.reuse_evidence);
@@ -184,7 +184,7 @@ fn edit_requests_never_offer_even_captured_results_and_full_requests_still_offer
                 WriteOutcome::Written
             })),
     );
-    let pool = pool(store, worker(Arc::default(), "captured"));
+    let pool = pool(store, worker(Arc::default(), "captured", 1));
     live(&pool, "old", 1, true, false);
     let edited = pool
         .request(Call::Bundle(BundleRequest {

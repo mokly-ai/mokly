@@ -46,6 +46,10 @@ impl ProcessGroups for CapturingGroups {
     fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>> {
         self.inner.attach(child)
     }
+
+    fn kill_unattached(&self, child: &Child) -> Result<()> {
+        self.inner.kill_unattached(child)
+    }
 }
 
 #[test]

@@ -49,6 +49,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
         let groups = Arc::new(SystemProcessGroups);
         let commands: Arc<dyn Commands> = Arc::new(TimedCommands {
             spawner: Arc::new(SystemSpawner {
+                clock: clock.clone(),
                 groups: groups.clone(),
             }),
             clock: clock.clone(),
@@ -133,12 +134,14 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             10 * 1024 * 1024,
         ));
         let extraction = mokly_compare::extraction::CachedExtraction {
+            steps: Arc::new(support::IgnoredSteps),
             repository,
             cache: cache.clone(),
             files: 10000,
         };
         let sources = mokly_compare::extraction::Extraction::acquire(&extraction, &commit).unwrap();
         let tiers: &dyn Dependencies = &DependencyTiers {
+            steps: Arc::new(support::IgnoredSteps),
             cache: cache.clone(),
             storage: storage(temporary.path()),
             clock,

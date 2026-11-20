@@ -112,6 +112,8 @@ test("a failed URL index source can retry", async ({
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
   ).toBeVisible();
+  // The loading state took focus, then the main region of the shell.
+  await expect(page.locator("#one main")).toBeFocused();
   await expect(page.locator("#one .mokly-viewer")).toHaveAttribute(
     "data-mokly-theme",
     "dark",

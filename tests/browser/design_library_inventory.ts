@@ -43,7 +43,11 @@ export const designLibrary = [
     "prop-field",
     ["text", "boolean", "invalid-number", "select", "optional-unset"],
   ],
-  ["preview", "device-frame", ["phone", "browser", "dark", "light-only"]],
+  [
+    "preview",
+    "device-frame",
+    ["phone", "browser", "dark", "light-only", "failed"],
+  ],
   [
     "preview",
     "comparison-pane",

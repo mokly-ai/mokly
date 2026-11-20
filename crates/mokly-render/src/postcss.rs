@@ -33,20 +33,57 @@ pub(crate) struct PostCss {
     pub(crate) side: SideInputs,
     pub(crate) module: String,
     pub(crate) cache: Arc<Mutex<CssCache>>,
-    pub(crate) resolver: Arc<dyn ImportResolver>,
     /// One sidecar request of this context at a time, held outside the shared cache lock.
     pub(crate) turns: Turns,
     pub(crate) module_digests: ModuleDigests,
 }
 
-impl CssProcessor for PostCss {
+struct RootPostCss {
+    shared: Arc<PostCss>,
+    tree: Arc<dyn SourceTree>,
+    resolver: Arc<dyn ImportResolver>,
+}
+
+impl CssProcessor for RootPostCss {
     fn process(
         &self,
         path: &str,
         source: &str,
         excluded: &BTreeSet<String>,
     ) -> mokly_css::error::Result<ProcessedCss> {
-        match self.process_input(path, source, excluded) {
+        self.shared.process_with(
+            path,
+            source,
+            excluded,
+            self.tree.as_ref(),
+            self.resolver.as_ref(),
+        )
+    }
+}
+
+impl PostCss {
+    /// Root-local validation shares the attempt's context, turns, failures, and module memo.
+    pub(crate) fn for_root(
+        self: &Arc<Self>,
+        tree: Arc<dyn SourceTree>,
+        resolver: Arc<dyn ImportResolver>,
+    ) -> Arc<dyn CssProcessor> {
+        Arc::new(RootPostCss {
+            shared: self.clone(),
+            tree,
+            resolver,
+        })
+    }
+
+    fn process_with(
+        &self,
+        path: &str,
+        source: &str,
+        excluded: &BTreeSet<String>,
+        tree: &dyn SourceTree,
+        resolver: &dyn ImportResolver,
+    ) -> mokly_css::error::Result<ProcessedCss> {
+        match self.process_input(path, source, excluded, tree, resolver) {
             Ok(processed) => Ok(processed),
             Err(source) => match source.diagnostic() {
                 Some(source) => Err(CssError::Runtime { source }),
@@ -56,14 +93,13 @@ impl CssProcessor for PostCss {
             },
         }
     }
-}
-
-impl PostCss {
     fn process_input(
         &self,
         path: &str,
         source: &str,
         excluded: &BTreeSet<String>,
+        tree: &dyn SourceTree,
+        resolver: &dyn ImportResolver,
     ) -> Result<ProcessedCss> {
         let key = format!("{}:{path}:{}", self.side.context, digest(source.as_bytes()));
         let mut record = match self.cached(&key) {
@@ -71,9 +107,9 @@ impl PostCss {
             None => self.request(&key, path, source)?,
         };
         postcss_nested::validate(&postcss_nested::Input {
-            tree: self.tree.as_ref(),
+            tree,
             sources: self.inventory_tree.as_ref(),
-            resolver: self.resolver.as_ref(),
+            resolver,
             root: &self.root,
             side: &self.side,
             path,

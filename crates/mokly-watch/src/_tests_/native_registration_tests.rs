@@ -31,6 +31,7 @@ pub(super) fn config() -> ResolvedConfig {
         input: Config::default(),
         file: path("/repo/mokly.config.json"),
         repo_root: path("/repo"),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![ResolvedRoot {
             directory: path("/repo/specs"),

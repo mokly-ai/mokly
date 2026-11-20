@@ -1,0 +1,17 @@
+---
+title: "Current container"
+description: "After move."
+element: "fixture-container"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [{ "slug": "adopted", "title": "Adopted", "props": { "label": "Adopted" } }]
+---
+
+<p>{{ label }}</p>

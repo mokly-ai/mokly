@@ -104,10 +104,13 @@
   request goes through, so a new plain call site cannot start the monitor. C
   is the launcher-wide fix of the class.
 - **Related:**
-  - `plans/follow-ups/plain-git-promisor-tree-reads.md`: the same cause, a
-    plain command that a configuration or a Git build makes start a process.
-    Both fixes live in the request construction of `mokly-git` and do not
-    conflict.
+  - A second case of the same cause is fixed and has no item. A Git setting
+    or build let a plain command start a process. In a partial
+    clone, a Git build that ignores `GIT_NO_LAZY_FETCH=1` let a plain
+    `ls-tree -l` start `git fetch`. `tree_request` in
+    `crates/mokly-git/src/repository_command.rs` gives `ls-tree` the full tree
+    when `GitRepositories::open` finds a promisor remote. Both fixes live in
+    the request construction of `mokly-git` and do not conflict.
   - `plans/follow-ups/managed-child-spawn-trampoline.md`: option C.
   - `plans/follow-ups/git-helpers-outlive-commands.md`: helpers that start
     their own session, after a normal finish, in both modes.

@@ -93,6 +93,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
     ));
     let shutdown = Request {
         id: 1,
+        quiet: false,
         call: Call::Shutdown(Empty {}),
     };
     client.handshake().unwrap();
@@ -145,6 +146,7 @@ fn wrong_versions_and_first_events_fail() {
 fn invalid_result_payload_fails_json_decoding() {
     let request = Request {
         id: 7,
+        quiet: false,
         call: Call::Hello(Hello::default()),
     };
     let response = Response::Success {

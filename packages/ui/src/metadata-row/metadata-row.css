@@ -37,7 +37,7 @@
 }
 
 .mbk-meta-v a {
-  color: var(--mokly-accent);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
   font-weight: 600;
   text-decoration: none;
 }

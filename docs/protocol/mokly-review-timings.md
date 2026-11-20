@@ -29,6 +29,11 @@ Only a completed comparison emits these counts. `review.base-extraction`,
 record `ok` only after successful work. A `review.base-extraction` lookup
 without a build that finds no complete entry ends without an `action`.
 
+In Serve, `build`, and `publish`, the `counts` and `end` records of
+`review.compare-views` also carry `admittedViews`. It counts the compared
+views that the comparison prepared from one document, after it proved equal
+bytes and equal comparison metadata on both sides. Reused views do not count.
+
 Only in Serve, `review.compare-views` also records the work of
 [view comparison reuse](./mokly-comparison-serving.md#view-comparison-reuse).
 Its `end` record carries the fields below, also with status `error`, and so

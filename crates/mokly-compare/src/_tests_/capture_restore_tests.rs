@@ -7,7 +7,6 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_input::RetainedComparisonInput;
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_error::{CodecError, CodecInternalError};
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
 use unimock::{MockFn, Unimock, matching};
@@ -32,10 +31,7 @@ fn a_failed_capture_restore_reads_its_side_source_instead_of_returning_an_error(
         )),
         views: BTreeMap::from([(
             "base/index.html".into(),
-            CapturedView {
-                document: EncodedView::encode(&source).unwrap(),
-                closure: Closure::default(),
-            },
+            CapturedView::encode(&source, Closure::default()).unwrap(),
         )]),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),
@@ -75,13 +71,14 @@ fn retained_restore_failure_defers_one_source_document_and_keeps_the_captured_cl
         )),
         views: BTreeMap::from([(
             "base/index.html".into(),
-            CapturedView {
-                document: EncodedView::encode(&source).unwrap(),
-                closure: Closure {
+            CapturedView::encode(
+                &source,
+                Closure {
                     files: ["captured.svg".into()].into(),
                     ..Default::default()
                 },
-            },
+            )
+            .unwrap(),
         )]),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),

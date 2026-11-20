@@ -33,7 +33,7 @@
   - Composition runs `source_checks::validate` on each body, in
     `source_locations::template` at
     `crates/mokly-html/src/source_locations.rs:10-13`. It also runs it on
-    callback output, at `crates/mokly-html/src/javascript.rs:130`.
+    callback output, at `crates/mokly-html/src/javascript.rs:132`.
   - `source_locations::slot` at lines 15-20 parses a saved slot without
     this check. Catalogue validation does not check duplicate attributes.
   - The same function also rejects each start tag with a reserved navigation

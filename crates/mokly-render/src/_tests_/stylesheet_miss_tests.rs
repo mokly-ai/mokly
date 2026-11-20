@@ -2,11 +2,13 @@
 
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{StylesheetBundler, StylesheetBundlerMock};
+use mokly_css::types::StylesheetBundler;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use unimock::{MockFn, Unimock, matching};
 
+use super::stylesheet_support::compiled;
 use super::stylesheet_support::{attempt, bundle, charges, fill, key, module, root, roots, tree};
+use crate::stylesheet_compiler::CompileRoot;
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 fn unchanged(shared: &Arc<Mutex<StylesheetCache>>) -> crate::stylesheet_cache::CachedStylesheets {
@@ -66,9 +68,9 @@ fn a_record_with_disagreeing_evidence_misses_with_inconsistent_evidence() {
         .insert(module(0), ReadBaseline::Late("1".repeat(64)));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(disagreeing)),
+                .returns(Ok(compiled(disagreeing))),
         )),
         tree(&Arc::default(), &[]),
         &shared,

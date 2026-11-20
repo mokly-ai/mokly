@@ -145,7 +145,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
     details,
     selection: { screenPath: "components/action/default" },
   });
-  assert.match(html, /<h3 class="mbk-reset">Used by<\/h3>/);
+  assert.match(html, /<h3 class="mbk-reset" tabindex="-1">Used by<\/h3>/);
   assert.match(html, /data-usage-section="used-by"[\s\S]*>Welcome<\/a>/);
 });
 

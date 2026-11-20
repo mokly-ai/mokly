@@ -1,0 +1,43 @@
+/* 10 -- Policy documents ------------------------------------------------- */
+
+.site-policy {
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-policy);
+}
+
+.site-policy-body {
+  gap: var(--mk-space-8);
+  margin-bottom: var(--mk-space-10);
+}
+
+.site-policy-body section {
+  border-top: 1px solid var(--mk-color-border);
+  padding-top: var(--mk-space-8);
+}
+
+.site-policy-date {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-policy-links {
+  border-top: 1px solid var(--mk-color-border);
+  display: grid;
+  gap: var(--mk-space-3);
+  justify-items: start;
+  padding-top: var(--mk-space-6);
+}
+
+.site-policy-links-title {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-small-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-small-line);
+}
+
+.site-policy-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2) var(--mk-space-5);
+}

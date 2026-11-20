@@ -81,6 +81,7 @@ impl NativeBase {
             ResolvedConfig {
                 input: Config::default(),
                 roots: Vec::new(),
+                modules: Default::default(),
                 authored_inputs: Vec::new(),
                 ..request.working_config.clone()
             }
@@ -95,8 +96,8 @@ impl NativeBase {
             Ok(inventory) => inventory,
             Err(source) => return Err(Error::Catalogue { source }),
         };
-        let needs_sidecar = config.input.postcss.is_some()
-            || config.input.renderer.is_some()
+        let needs_sidecar = config.modules.postcss.is_some()
+            || config.modules.renderer.is_some()
             || inventory.files.iter().any(|file| {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
@@ -137,16 +138,10 @@ impl NativeBase {
             return Err(Error::Cancelled);
         }
         request.steps.step(Step::Rendering);
-        let runtime = Arc::new(Runtime::new(
-            tree.clone(),
-            self.runtime.dependency_tree.clone(),
-            self.runtime.physical_inputs.clone(),
-            self.runtime.pool.clone(),
-            self.runtime.cache.clone(),
-            self.runtime.workers.clone(),
-            VERSION.into(),
-            base.clone(),
-        ));
+        let runtime = Arc::new(
+            self.runtime
+                .for_base(tree.clone(), VERSION.into(), base.clone()),
+        );
         let builder: &dyn CatalogueBuilder = &Builder {
             tree,
             discovery: Arc::new(Discovered(inventory)),
@@ -220,8 +215,8 @@ impl NativeBase {
     /// renderer or PostCSS. This optional step never builds an extraction, and a
     /// failure other than cancellation leaves the base reads on Git.
     fn early_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
-        let input = &request.working_config.input;
-        if input.renderer.is_none() && input.postcss.is_none() {
+        let modules = &request.working_config.modules;
+        if modules.renderer.is_none() && modules.postcss.is_none() {
             return Ok(None);
         }
         let attached = self

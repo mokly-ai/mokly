@@ -84,6 +84,10 @@ export function validateCliReport(report) {
     assert.ok(files.includes(file), `CLI package is missing ${file}`);
   for (const file of files) {
     assert.ok(
+      !file.startsWith("docs/protocol/cloud/"),
+      `CLI contains cloud documentation: ${file}`,
+    );
+    assert.ok(
       METADATA.includes(file) ||
         file === "CHANGELOG.md" ||
         file === "config.schema.json" ||

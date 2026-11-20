@@ -2,23 +2,25 @@
 
 #![cfg(unix)]
 
-use std::fs;
 use std::path::Path;
 use std::process::Stdio;
 use std::time::Duration;
 
 use tempfile::TempDir;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, ChildStderr, Command};
 
-fn write(root: &Path, path: &str, text: &str) {
-    let path = root.join(path);
-    fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(path, text).unwrap();
-}
+#[path = "process_support/cache.rs"]
+mod cache;
+#[path = "process_support/html.rs"]
+mod html;
+
+use cache::Cache;
+use html::{close, write};
 
 struct Running {
     child: Child,
+    _cache: Cache,
     root: TempDir,
     url: String,
     errors: BufReader<ChildStderr>,
@@ -58,10 +60,12 @@ async fn start(extra: &[&str]) -> Running {
     ] {
         write(root.path(), path, "");
     }
+    let cache = Cache::new();
     let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--no-watch", "--port", "0"])
         .args(extra)
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("MOKLY_OUTPUT", "plain")
         .env("PATH", "")
         .env(
@@ -109,31 +113,12 @@ async fn start(extra: &[&str]) -> Running {
     .unwrap();
     Running {
         child,
+        _cache: cache,
         root,
         url,
         errors,
         prefix,
     }
-}
-
-async fn close(mut running: Running, signal: &str) -> (String, String) {
-    let pid = running.child.id().unwrap().to_string();
-    let mut request = std::process::Command::new("kill");
-    request.arg(signal).arg(&pid);
-    if signal == "-INT" {
-        request.arg(&pid);
-    }
-    assert!(request.status().unwrap().success());
-    let status = tokio::time::timeout(Duration::from_secs(15), running.child.wait())
-        .await
-        .unwrap()
-        .unwrap();
-    let mut stderr = running.prefix;
-    running.errors.read_to_string(&mut stderr).await.unwrap();
-    assert_eq!(status.code(), Some(0), "{stderr}");
-    assert!(!running.root.path().join("mokly-static").exists());
-    assert!(!running.root.path().join("mokly-generated").exists());
-    (running.url, stderr)
 }
 
 #[tokio::test]
@@ -278,9 +263,11 @@ async fn a_configured_renderer_without_node_fails_before_listening() {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<h1>Home</h1>",
     );
+    let cache = Cache::new();
     let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--no-watch", "--port", "0"])
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("MOKLY_OUTPUT", "plain")
         .env("PATH", "")
         .env(

@@ -12,6 +12,7 @@ use std::time::Duration;
 use mokly_compare::commands::{Command, Spawner};
 use mokly_compare::error::Error;
 use mokly_compare::process::SystemSpawner;
+use mokly_git::control::SystemClock;
 use mokly_platform::processes::SystemProcessGroups;
 
 #[test]
@@ -32,6 +33,7 @@ fn manager_path_probe() {
         fs::set_permissions(file, fs::Permissions::from_mode(0o755)).unwrap();
     }
     let spawner: &dyn Spawner = &SystemSpawner {
+        clock: Arc::new(SystemClock::default()),
         groups: Arc::new(SystemProcessGroups),
     };
     let request = Command {

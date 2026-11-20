@@ -1,0 +1,72 @@
+{{- $jobs := list (dict "name" "auth-prune" "command" "prune" "schedule" .Values.maintenance.pruneSchedule) (dict "name" "github-prune" "command" "prune-github" "schedule" .Values.maintenance.githubPruneSchedule) (dict "name" "publication-check-status" "command" "publication-check-status" "schedule" .Values.maintenance.checkStatusSchedule) }}
+{{- if .Values.billing.enabled }}
+{{- $jobs = append $jobs (dict "name" "billing-delivery-status" "command" "billing-delivery-status" "schedule" .Values.maintenance.checkStatusSchedule) }}
+{{- end }}
+{{- if ne .Values.environment "preview-pr" }}
+{{- $jobs = append $jobs (dict "name" "publication-maintenance" "command" "maintain-publications" "schedule" .Values.maintenance.publicationSchedule) }}
+{{- end }}
+{{- range $job := $jobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $job.name }}
+spec:
+  schedule: {{ $job.schedule | quote }}
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 0
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: maintenance }
+        spec:
+          restartPolicy: Never
+          serviceAccountName: api
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+          {{- if eq $.Values.database.mode "cloudsql" }}
+          initContainers:
+            {{- include "mkc.proxy" $ | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: maintenance
+              image: {{ $.Values.api.image | quote }}
+              args: [{{ $job.command }}]
+              securityContext:
+                {{- include "mkc.security" $ | nindent 16 }}
+              env:
+                {{- include "mkc.databaseEnv" (dict "root" $ "identity" "api") | nindent 16 }}
+                {{- if eq $job.command "prune" }}
+                - name: MKC_AUTH_LINK_RETENTION_SECONDS
+                  value: {{ $.Values.maintenance.linkRetentionSeconds | quote }}
+                - name: MKC_AUTH_SESSION_RETENTION_SECONDS
+                  value: {{ $.Values.maintenance.sessionRetentionSeconds | quote }}
+                - name: MKC_AUTH_RATE_RETENTION_SECONDS
+                  value: {{ $.Values.maintenance.rateRetentionSeconds | quote }}
+                - name: MKC_BUILD_RETENTION_SECONDS
+                  value: {{ printf "%d" (int64 $.Values.maintenance.buildRetentionSeconds) | quote }}
+                {{- end }}
+                {{- if eq $job.command "prune-github" }}
+                - name: MKC_GITHUB_OAUTH_RETENTION_SECONDS
+                  value: {{ printf "%d" (int64 $.Values.maintenance.githubOauthRetentionSeconds) | quote }}
+                - name: MKC_GITHUB_DELIVERY_RETENTION_SECONDS
+                  value: {{ printf "%d" (int64 $.Values.maintenance.githubDeliveryRetentionSeconds) | quote }}
+                {{- end }}
+                {{- if eq $job.command "maintain-publications" }}
+                - name: MKC_ENV
+                  value: production
+                {{- include "mkc.storageEnv" $ | nindent 16 }}
+                {{- end }}
+              resources:
+                {{- toYaml $.Values.api.resources | nindent 16 }}
+{{- end }}

@@ -12,6 +12,7 @@ fn pool_setting_changes_request_restart_and_ordinary_config_changes_pass() {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     };
@@ -32,5 +33,6 @@ fn pool_setting_changes_request_restart_and_ordinary_config_changes_pass() {
     );
     let mut config = original;
     config.input.renderer = Some("renderer.tsx".into());
+    config.modules.renderer = Some("renderer.tsx".into());
     settings.validate(&config).unwrap();
 }

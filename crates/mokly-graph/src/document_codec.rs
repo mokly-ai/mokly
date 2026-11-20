@@ -1,45 +1,37 @@
 //! Lossless compressed documents shared by render-cache eviction and comparison capture.
 
-use std::io::{BufWriter, Read, Write};
+use std::io::{self, BufWriter, Read, Write};
 use std::mem;
 
 use flate2::Compression;
 use flate2::bufread::ZlibDecoder;
 use flate2::write::ZlibEncoder;
-use mokly_catalogue::diagnostic::Warning;
-use mokly_html::composition::Composed;
-use mokly_html::links::Reference;
 use mokly_model::usage::CatalogueUsage;
 use serde::Serialize;
 
 use crate::cache::Artifact;
+use crate::comparison_proof::ContentIdentity;
 use crate::document_error::{CodecInternalError, CodecResult, Result};
+use crate::document_identity::IdentityWriter;
+use crate::document_metadata::Metadata;
 use crate::document_nodes::{self, FlatNode};
 use crate::document_weight;
 use crate::document_writer::TreeWriter;
+use crate::export_memory::{ExportBuffer, ExportObserver};
 
 #[derive(Serialize)]
-struct Payload {
-    tree: Vec<FlatNode>,
-}
-
-struct Metadata {
-    usage: CatalogueUsage,
-    resources: Vec<String>,
-    components: Vec<String>,
-    links: Vec<Reference>,
+pub(crate) struct Payload {
+    pub(crate) tree: Vec<FlatNode>,
 }
 
 /// Immutable compressed tree/bytes with Rust metadata outside the codec.
 pub struct EncodedView {
-    payload: Box<[u8]>,
-    bytes_len: usize,
-    tree_len: usize,
-    record_count: usize,
-    warnings: Vec<Warning>,
-    content_type: String,
-    metadata: Option<Metadata>,
-    metadata_bytes: usize,
+    pub(crate) payload: Box<[u8]>,
+    pub(crate) bytes_len: usize,
+    pub(crate) tree_len: usize,
+    pub(crate) record_count: usize,
+    pub(crate) metadata: Metadata,
+    pub(crate) metadata_bytes: usize,
 }
 
 impl EncodedView {
@@ -52,10 +44,50 @@ impl EncodedView {
         };
         Ok(Self::from_payload(
             artifact,
+            Metadata::capture(artifact),
             encoder.finish().codec()?,
             tree_len,
             record_count,
+            None,
         ))
+    }
+
+    /// Encode and hash exact bytes, annotated flat records, and all retained metadata.
+    /// Only the caller retains the identity; ordinary cache encoding adds no digest.
+    pub fn encode_identified(artifact: &Artifact) -> Result<(Self, ContentIdentity)> {
+        let metadata = Metadata::capture(artifact);
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
+        let (tree_len, record_count, identity) = {
+            let mut writer = IdentityWriter::new(&mut encoder, artifact.bytes.len());
+            let (tree_len, record_count) = {
+                let mut buffered = BufWriter::new(&mut writer);
+                Self::write_payload(artifact, &mut buffered)?
+            };
+            (tree_len, record_count, writer.finish(tree_len, &metadata)?)
+        };
+        Ok((
+            Self::from_payload(
+                artifact,
+                metadata,
+                encoder.finish().codec()?,
+                tree_len,
+                record_count,
+                None,
+            ),
+            identity,
+        ))
+    }
+
+    /// Hash a checked artifact through the same lossless codec input as capture.
+    pub fn comparison_identity(artifact: &Artifact) -> Result<ContentIdentity> {
+        let metadata = Metadata::capture(artifact);
+        let mut sink = io::sink();
+        let mut writer = IdentityWriter::new(&mut sink, artifact.bytes.len());
+        let (tree_len, _) = {
+            let mut buffered = BufWriter::new(&mut writer);
+            Self::write_payload(artifact, &mut buffered)?
+        };
+        writer.finish(tree_len, &metadata)
     }
 
     /// Reuse a charged cache encoder, including its serialization buffer.
@@ -71,9 +103,11 @@ impl EncodedView {
         let (tree_len, record_count) = result?;
         Ok(Self::from_payload(
             artifact,
+            Metadata::capture(artifact),
             payload,
             tree_len,
             record_count,
+            None,
         ))
     }
 
@@ -94,33 +128,27 @@ impl EncodedView {
         Ok((tree_len, payload.tree.len()))
     }
 
-    fn from_payload(
+    pub(crate) fn from_payload(
         artifact: &Artifact,
+        metadata: Metadata,
         payload: Vec<u8>,
         tree_len: usize,
         record_count: usize,
+        observer: Option<&dyn ExportObserver>,
     ) -> Self {
-        let metadata = artifact.document.as_ref().map(|document| Metadata {
-            usage: document.usage.clone(),
-            resources: document.resources.clone(),
-            components: document.components.clone(),
-            links: document.links.clone(),
-        });
+        let payload = payload.into_boxed_slice();
+        if let Some(observer) = observer {
+            observer.bytes(ExportBuffer::Compressed, payload.len());
+        }
         Self {
-            payload: payload.into_boxed_slice(),
+            payload,
             bytes_len: artifact.bytes.len(),
             tree_len,
             record_count,
-            warnings: artifact
-                .document
-                .as_ref()
-                .map_or_else(Vec::new, |document| document.warnings.clone()),
-            content_type: artifact.content_type.clone(),
             metadata,
-            metadata_bytes: artifact
-                .document
-                .as_ref()
-                .map_or(0, document_weight::metadata),
+            metadata_bytes: artifact.document.as_ref().map_or(0, |document| {
+                document_weight::metadata_observed(document, observer)
+            }),
         }
     }
 
@@ -131,14 +159,17 @@ impl EncodedView {
 
     /// Read retained usage without restoring document bytes or the tree.
     pub fn usage(&self) -> Option<&CatalogueUsage> {
-        self.metadata.as_ref().map(|metadata| &metadata.usage)
+        self.metadata
+            .document
+            .as_ref()
+            .map(|metadata| &metadata.usage)
     }
 
     /// Conservative charge for payload, metadata, and container storage.
     pub fn retained_bytes(&self) -> usize {
         mem::size_of::<Self>()
             + self.payload.len()
-            + self.content_type.capacity()
+            + self.metadata.content_type.capacity()
             + self.metadata_bytes
     }
 
@@ -172,16 +203,9 @@ impl EncodedView {
         let tree = document_nodes::restore(records)?;
         Ok(Artifact {
             bytes,
-            content_type: self.content_type.clone(),
+            content_type: self.metadata.content_type.clone(),
             fragment: None,
-            document: self.metadata.as_ref().map(|metadata| Composed {
-                tree,
-                usage: metadata.usage.clone(),
-                warnings: self.warnings.clone(),
-                resources: metadata.resources.clone(),
-                components: metadata.components.clone(),
-                links: metadata.links.clone(),
-            }),
+            document: self.metadata.restore(tree),
         })
     }
 }
@@ -197,3 +221,11 @@ mod document_damage_tests;
 #[cfg(test)]
 #[path = "_tests_/document_optional_tests.rs"]
 mod document_optional_tests;
+
+#[cfg(test)]
+#[path = "_tests_/document_identity_tests.rs"]
+mod document_identity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/document_persistence_tests.rs"]
+mod document_persistence_tests;

@@ -155,7 +155,9 @@ catalogue, and the controls' wording, which the design catalogue shares.
 `Stage` draws the dotted stage of a preview. `PreviewFrame` draws one frame on
 it: the wrapper that records the scheme of the shown render, the viewport's
 label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
-preview that is unavailable or that failed to load. `DocumentFrame` hosts a
+preview that is unavailable or that failed to load. The failed line shows Try
+again when the host passes `retry`: a callback, or an address in a static
+depiction. `DocumentFrame` hosts a
 whole document, and `PreviewIframe` is the `<iframe>` element itself, always
 sandboxed without scripts. The host passes the frame's `ref`, its `src` or
 `srcDoc`, its `key`, and its data attributes in their order, and it loads and
@@ -177,6 +179,11 @@ and `ComparisonViewport` and `ComparisonSurface` pass their elements to the
 host's scroll controller through refs. `VariantBar` draws a component's saved
 variants. The host supplies the wording of its copy modules, such as the
 unavailable previous version and the comparison's state labels.
+
+A state that a host focuses after Try again takes a ref: `focusRef` on
+`StageLoading`, `PropsStatus`, `UsageStatus`, `UsageList`, and the loading
+`RootState`, and `stageRef` on `ComparisonStage`. Each element then takes
+`tabindex="-1"`, so that a script can focus it and Tab skips it.
 
 `ShellLayout` draws the standalone shell's root, which states its appearance
 and its preview scheme: the skip link, the top bar, and the body with the
@@ -281,6 +288,13 @@ rule then weighs the same and still never matches a host element that carries
 the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
 viewer's styles test holds both stylesheets to that.
+
+Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
+`rem`. A `rem` length follows the root font size of the page. A host page that
+embeds the viewer sets that size, so a `rem` width can change from host to
+host. An `em` width follows the element's own font size instead. The
+[device chrome contract](../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
+requires the navigation drawer's `max-width: 20rem`, so that width uses `rem`.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset

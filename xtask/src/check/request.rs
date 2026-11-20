@@ -47,11 +47,67 @@ pub(crate) enum VerificationSuite {
     Native,
     /// Playwright checks of the served example and viewer hosts.
     Browser,
+    /// Clippy and tests for the cloud Rust crates.
+    CloudRust,
+    /// Append-only cloud migration checks.
+    CloudMigrations,
+    /// Typecheck every cloud npm project.
+    CloudTypecheck,
+    /// Cloud application logic, export, and browser tests.
+    CloudApp,
+    /// Cloud mockup compilation, policy, smoke, and type checks.
+    CloudMockups,
+    /// Marketing site build, types, links, and browser tests.
+    CloudSite,
+    /// Rust-owned OpenAPI document and client drift.
+    CloudOpenapi,
+    /// Workspace-built Mokly contract fixture drift.
+    CloudFixtures,
+    /// Committed email template drift and mutation tests.
+    CloudEmails,
+    /// OpenAPI reason, prose, and GitHub fixture contracts.
+    CloudOpenapiLint,
+    /// Terraform formatting, validation, and mock-provider tests.
+    CloudTerraform,
+    /// Cloudflare origin-router types and tests.
+    CloudOriginRouter,
+    /// Helm lint, golden renders, and rejected values.
+    CloudHelm,
+    /// Infrastructure contracts, BuildKit storage, and workload images.
+    CloudInfrastructure,
+    /// Electron shell logic, bundled export, and real-API smoke.
+    CloudDesktop,
+    /// Protocol and installed cloud toolchain pin agreement.
+    CloudToolchainPins,
 }
 
 impl VerificationSuite {
     /// Local coverage without repeating the native build and workspace tests.
-    pub(crate) const LOCAL: [Self; 3] = [Self::Repository, Self::Viewer, Self::Browser];
+    pub(crate) fn local() -> impl Iterator<Item = Self> {
+        [Self::Repository, Self::Viewer, Self::Browser]
+            .into_iter()
+            .chain(Self::CLOUD)
+    }
+
+    /// Cloud suites used by the complete local and remote gates.
+    pub(crate) const CLOUD: [Self; 16] = [
+        Self::CloudToolchainPins,
+        Self::CloudRust,
+        Self::CloudMigrations,
+        Self::CloudTypecheck,
+        Self::CloudApp,
+        Self::CloudMockups,
+        Self::CloudSite,
+        Self::CloudOpenapi,
+        Self::CloudFixtures,
+        Self::CloudEmails,
+        Self::CloudOpenapiLint,
+        Self::CloudTerraform,
+        Self::CloudOriginRouter,
+        Self::CloudHelm,
+        Self::CloudInfrastructure,
+        Self::CloudDesktop,
+    ];
 
     /// Stable CLI name for the suite.
     pub(crate) const fn as_str(self) -> &'static str {
@@ -60,11 +116,27 @@ impl VerificationSuite {
             Self::Viewer => "viewer",
             Self::Native => "native",
             Self::Browser => "browser",
+            Self::CloudRust => "cloud-rust",
+            Self::CloudMigrations => "cloud-migrations",
+            Self::CloudTypecheck => "cloud-typecheck",
+            Self::CloudApp => "cloud-app",
+            Self::CloudMockups => "cloud-mockups",
+            Self::CloudSite => "cloud-site",
+            Self::CloudOpenapi => "cloud-openapi",
+            Self::CloudFixtures => "cloud-fixtures",
+            Self::CloudEmails => "cloud-emails",
+            Self::CloudOpenapiLint => "cloud-openapi-lint",
+            Self::CloudTerraform => "cloud-terraform",
+            Self::CloudOriginRouter => "cloud-origin-router",
+            Self::CloudHelm => "cloud-helm",
+            Self::CloudInfrastructure => "cloud-infrastructure",
+            Self::CloudDesktop => "cloud-desktop",
+            Self::CloudToolchainPins => "cloud-toolchain-pins",
         }
     }
 
     fn supports_shards(self) -> bool {
-        self == Self::Browser
+        matches!(self, Self::Browser | Self::CloudApp)
     }
 }
 
@@ -79,6 +151,13 @@ impl fmt::Display for VerificationSuite {
 pub(crate) struct Shard {
     index: u64,
     total: u64,
+}
+
+impl Shard {
+    /// Whether this shard owns non-browser logic tests.
+    pub(super) fn is_first(self) -> bool {
+        self.index == 1
+    }
 }
 
 impl fmt::Display for Shard {
@@ -120,7 +199,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional whole-file Playwright shard.
+    /// Optional browser or cloud application shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,
