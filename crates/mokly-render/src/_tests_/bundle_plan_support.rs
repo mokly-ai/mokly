@@ -13,6 +13,7 @@ use mokly_sidecar::results;
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::runtime::Runtime;
 
 pub(super) fn params() -> Bundle {
@@ -110,7 +111,7 @@ pub(super) fn runtime(
                     let Call::Bundle(request) = call else {
                         panic!("unexpected request")
                     };
-                    calls.lock().unwrap().push(request);
+                    lock_calls(&calls).push(request);
                     Ok(MethodResult::Bundle(Box::new(
                         replies.lock().unwrap().pop_front().unwrap_or_else(marked),
                     )))

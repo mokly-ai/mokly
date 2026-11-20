@@ -10,6 +10,8 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_graph::types::GraphFactory;
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::render_key_tests::consumer;
 use super::support::Consumer;
 
@@ -80,11 +82,7 @@ fn a_renderer_named_through_a_parent_segment_keeps_per_entry_keys() {
         .map(|(route, _)| route.rsplit_once("/index.").unwrap().0)
         .collect();
     assert_eq!(moved, BTreeSet::from(["s/s"]));
-    let renderers: BTreeSet<_> = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let renderers: BTreeSet<_> = lock_calls(&consumer.pool.calls)
         .iter()
         .filter_map(|call| match call {
             Call::Bundle(request) => Some(request.params.renderer.clone()),

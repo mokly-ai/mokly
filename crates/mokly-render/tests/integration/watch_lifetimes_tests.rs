@@ -7,6 +7,8 @@ use mokly_sidecar::methods::{Call, Generation, ProcessCss};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::SidecarPool;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -51,11 +53,7 @@ fn changed_class_maps_reuse_compiled_code_and_failed_candidates_release_once() {
         starts + 1,
         "equal stylesheet results need no new context"
     );
-    let releases = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let releases = lock_calls(&consumer.pool.calls)
         .iter()
         .filter(|call| matches!(call, Call::Dispose(_)))
         .count();
@@ -153,11 +151,7 @@ fn failed_used_context_and_shutdown_release_each_lifetime_once() {
     consumer.processes.wait_for(Operation::PostcssStop, 1);
     consumer.pool.shutdown().unwrap();
     drop(original);
-    let releases: Vec<_> = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let releases: Vec<_> = lock_calls(&consumer.pool.calls)
         .iter()
         .filter_map(|call| match call {
             Call::DisposeContext(params) => Some(params.context.clone()),

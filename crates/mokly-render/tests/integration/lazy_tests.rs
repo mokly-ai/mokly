@@ -4,6 +4,8 @@ use std::fs;
 
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -21,11 +23,11 @@ fn html_catalogues_start_no_sidecar_and_css_only_needs_no_bundle() {
     .unwrap();
     let generation = consumer.generation(consumer.prepare().unwrap());
     assert_eq!(generation.render_all().unwrap().documents, 2);
-    assert!(consumer.pool.calls.lock().unwrap().is_empty());
+    assert!(lock_calls(&consumer.pool.calls).is_empty());
     fs::write(consumer.root().join("mokly.config.json"), r#"{"roots":[{"dir":"specs","files":["**/*.screen.html"]}],"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["shared.css"]}]}"#).unwrap();
     let generation = consumer.generation(consumer.prepare().unwrap());
     assert_eq!(generation.render_all().unwrap().documents, 2);
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     assert_eq!(calls.len(), 1);
     assert!(matches!(calls[0], Call::ProcessCss(_)));
 }

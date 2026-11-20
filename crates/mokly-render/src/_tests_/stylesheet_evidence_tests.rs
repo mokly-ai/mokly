@@ -13,6 +13,7 @@ use mokly_source_interface::stream::{OpenedSource, SourceStream};
 use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_cache::CachedStylesheets;
 use crate::stylesheet_compiler::{Compilation, CompileRoot};
@@ -69,7 +70,7 @@ fn local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transf
         SourceTreeMock::observe_inputs
             .each_call(matching!(_, _))
             .answers_arc(Arc::new(move |_, path, baselines| {
-                recorded.lock().unwrap().extend(
+                lock_calls(&recorded).extend(
                     baselines
                         .iter()
                         .map(|baseline| (path.to_owned(), baseline.clone())),
@@ -105,7 +106,7 @@ fn local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transf
         assert_eq!(result.css, "a{color:red}");
         assert_eq!(result.read_evidence, own_bundle().read_evidence);
     }
-    let records = witnesses.lock().unwrap();
+    let records = lock_calls(&witnesses);
     assert_eq!(records.len(), 3);
     assert!(records.iter().all(|(path, baseline)| path
         == Path::new("/repo/node_modules/.mokly-roots/source/tokens.txt")

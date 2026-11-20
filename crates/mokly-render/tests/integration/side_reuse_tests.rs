@@ -15,6 +15,8 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use unimock::Unimock;
 
+use crate::recorded_calls::lock_calls;
+
 use super::render_key_tests::{consumer, dependency, render_calls};
 use super::support::{Consumer, link_directory, package_version, workspace};
 
@@ -145,10 +147,10 @@ fn an_unchanged_base_reuses_head_renders_and_a_changed_entry_renders_on_its_side
         .map(|(route, _)| route)
         .collect();
     assert_eq!(moved, ["u/u/index.desktop.html", "u/u/index.mobile.html"]);
-    let before = head.pool.calls.lock().unwrap().len();
+    let before = lock_calls(&head.pool.calls).len();
     let document = changed.render("u/u/index.mobile.html").unwrap();
     assert!(String::from_utf8_lossy(&document.bytes).contains("U base"));
-    let renders: Vec<_> = head.pool.calls.lock().unwrap()[before..]
+    let renders: Vec<_> = lock_calls(&head.pool.calls)[before..]
         .iter()
         .filter_map(|call| match call {
             Call::RenderScreen(render) => Some(render.generation.clone()),

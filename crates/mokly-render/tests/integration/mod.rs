@@ -10,6 +10,7 @@ mod base_stylesheet_support;
 mod base_stylesheet_symlink_tests;
 mod base_tests;
 mod cache_tests;
+mod captured_pool_tests;
 mod config_path_tests;
 mod containment_tests;
 mod declaration_alias_tests;

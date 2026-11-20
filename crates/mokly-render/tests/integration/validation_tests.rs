@@ -6,6 +6,8 @@ use mokly_catalogue::diagnostic::{Code, WarningSubject};
 use mokly_catalogue::error::CatalogueError;
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -25,11 +27,7 @@ fn rust_validates_raw_component_schemas_before_rendering() {
             .any(|issue| issue.code == Code::ComponentSchema)
     );
     assert!(
-        !consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        !lock_calls(&consumer.pool.calls)
             .iter()
             .any(|call| matches!(call, Call::RenderComponent(_) | Call::RenderScreen(_)))
     );

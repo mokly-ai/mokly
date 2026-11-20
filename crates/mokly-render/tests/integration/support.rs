@@ -26,6 +26,8 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 use tempfile::TempDir;
 
+use crate::recorded_calls::lock_calls;
+
 use super::process_counts::{CountedFactory, ProcessCounts};
 
 #[path = "../../../../tests/rust/package_version.rs"]
@@ -56,16 +58,13 @@ impl SidecarPool for CapturedPool {
         self.inner.served_generation(generation, epoch);
     }
     fn release_generation(&self, generation: &str, epoch: u64) {
-        self.calls
-            .lock()
-            .unwrap()
-            .push(Call::Dispose(mokly_sidecar::methods::Generation {
-                generation: generation.into(),
-            }));
+        lock_calls(&self.calls).push(Call::Dispose(mokly_sidecar::methods::Generation {
+            generation: generation.into(),
+        }));
         self.inner.release_generation(generation, epoch);
     }
     fn release_context(&self, context: &str) {
-        self.calls.lock().unwrap().push(Call::DisposeContext(
+        lock_calls(&self.calls).push(Call::DisposeContext(
             mokly_sidecar::bindings::DisposeContext {
                 context: context.into(),
             },
@@ -77,7 +76,7 @@ impl SidecarPool for CapturedPool {
     }
 
     fn request(&self, call: Call) -> mokly_sidecar::error::Result<MethodResult> {
-        self.calls.lock().unwrap().push(call.clone());
+        lock_calls(&self.calls).push(call.clone());
         self.inner.request(call)
     }
     fn abort(&self) -> mokly_sidecar::error::Result<()> {

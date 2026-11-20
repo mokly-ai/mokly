@@ -24,6 +24,7 @@ use mokly_source_interface::tree::SourceTreeMock;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::runtime::Runtime;
 use crate::side::BaseSide;
 
@@ -44,7 +45,7 @@ fn a_base_store_hit_with_the_head_generation_keeps_its_extraction_root() {
                     assert_eq!(serde_json::to_value(call).unwrap(), json!({
                         "method":"renderPage","params":{"generation":"g","handle":"entry.tsx#Entry"}
                     }));
-                    captured.lock().unwrap().push(root.to_path_buf());
+                    lock_calls(&captured).push(root.to_path_buf());
                 })),
         ));
         let saved = Arc::new(Artifact {
@@ -197,7 +198,7 @@ fn a_base_store_hit_with_the_head_generation_keeps_its_extraction_root() {
         );
     }
     assert_eq!(
-        *roots.lock().unwrap(),
+        *lock_calls(&roots),
         [
             std::path::PathBuf::from("/head"),
             std::path::PathBuf::from("/cache/base")

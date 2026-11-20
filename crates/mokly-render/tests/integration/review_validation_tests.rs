@@ -5,6 +5,8 @@ use std::fs;
 use mokly_model::data::Props;
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -20,11 +22,7 @@ fn returned_instance_props_must_satisfy_the_component_schema() {
         let error = generation.render("screen/index.mobile.html").unwrap_err();
         assert!(error.to_string().contains("component-props"), "{error}");
         assert!(
-            consumer
-                .pool
-                .calls
-                .lock()
-                .unwrap()
+            lock_calls(&consumer.pool.calls)
                 .iter()
                 .any(|call| { matches!(call, Call::RenderScreen(_)) })
         );
@@ -42,10 +40,10 @@ fn temporary_props_obey_control_bounds_before_a_sidecar_render() {
     let generation = consumer.generation(consumer.prepare().unwrap());
     let route = "components/chip/index.mobile.html";
     let saved = generation.render(route).unwrap();
-    let count = consumer.pool.calls.lock().unwrap().len();
+    let count = lock_calls(&consumer.pool.calls).len();
     let invalid: Props = serde_json::from_str(r#"{"label":"Too long"}"#).unwrap();
     assert!(generation.render_props(route, &invalid).is_err());
-    assert_eq!(consumer.pool.calls.lock().unwrap().len(), count);
+    assert_eq!(lock_calls(&consumer.pool.calls).len(), count);
     let valid: Props = serde_json::from_str(r#"{"label":"Short"}"#).unwrap();
     assert!(generation.render_props(route, &valid).is_ok());
     assert_eq!(generation.render(route).unwrap().bytes, saved.bytes);

@@ -11,6 +11,7 @@ use mokly_source_interface::read_evidence::{FileIdentity, ReadBaseline, ReadEvid
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_cache::CachedStylesheets;
 use crate::stylesheet_compiler::{Compilation, CompileRoot, RootCompiler};
@@ -120,7 +121,7 @@ impl SourceTree for CountedTree {
         Ok(Some(OBJECT.into()))
     }
     fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
-        let mut observed = self.calls.observed.lock().unwrap();
+        let mut observed = lock_calls(&self.calls.observed);
         observed.push((path.into(), baselines.clone()));
         Ok(())
     }

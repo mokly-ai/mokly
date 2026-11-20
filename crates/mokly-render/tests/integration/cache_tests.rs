@@ -7,6 +7,8 @@ use mokly_graph::cache::MemoryCache;
 use mokly_model::data::Props;
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -40,22 +42,14 @@ fn temporary_props_reuse_fragments_without_changing_saved_documents() {
             .contains("Edited")
     );
     assert!(edited.closure.files.contains("assets/banner.svg"));
-    let count = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let count = lock_calls(&consumer.pool.calls)
         .iter()
         .filter(|call| matches!(call, Call::RenderScreen(_)))
         .count();
     let repeated = generation.render_props(route, &props).unwrap();
     assert_eq!(edited.artifact.bytes, repeated.artifact.bytes);
     assert_eq!(
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::RenderScreen(_)))
             .count(),
@@ -65,11 +59,7 @@ fn temporary_props_reuse_fragments_without_changing_saved_documents() {
     let invalid: Props = serde_json::from_str(r#"{"label":false}"#).unwrap();
     assert!(generation.render_props(route, &invalid).is_err());
     assert_eq!(
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::RenderScreen(_)))
             .count(),
@@ -90,7 +80,7 @@ fn repeated_describe_reuses_maps_and_changed_postcss_maps_replay_the_bundle() {
         generation.id
     );
     {
-        let calls = consumer.pool.calls.lock().unwrap();
+        let calls = lock_calls(&consumer.pool.calls);
         assert_eq!(
             calls
                 .iter()
@@ -116,7 +106,7 @@ fn repeated_describe_reuses_maps_and_changed_postcss_maps_replay_the_bundle() {
             .unwrap()
             .bytes
     );
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     assert_eq!(
         calls
             .iter()
@@ -133,11 +123,7 @@ fn html_rebuild_keeps_one_bundle_and_releases_the_last_generation() {
     let first = consumer.generation(consumer.prepare().unwrap());
     let second = consumer.generation(consumer.prepare().unwrap());
     let count = |dispose| {
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .filter(|call| {
                 if dispose {
@@ -154,11 +140,7 @@ fn html_rebuild_keeps_one_bundle_and_releases_the_last_generation() {
     drop(second);
     assert_eq!(count(true), 1);
     assert!(
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .any(|call| matches!(call, Call::DisposeContext(_)))
     );

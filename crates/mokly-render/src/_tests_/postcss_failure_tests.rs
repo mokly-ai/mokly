@@ -15,6 +15,8 @@ use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::postcss_failure::PostcssFailure;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
+
 use super::postcss_support::{DEADLINE, css, processor};
 
 #[test]
@@ -66,7 +68,7 @@ fn waiting_requests_receive_a_lost_child_and_a_later_request_starts_again() {
                     Call::ProcessCss(params) => params.source_path.clone(),
                     _ => String::new(),
                 };
-                recorded.lock().unwrap().push(path.clone());
+                lock_calls(&recorded).push(path.clone());
                 if path == "a.css" {
                     calling.send(()).unwrap();
                     finished.lock().unwrap().recv_timeout(DEADLINE).unwrap();
@@ -102,5 +104,5 @@ fn waiting_requests_receive_a_lost_child_and_a_later_request_starts_again() {
     assert!(lost.contains("exceeded 60000ms"), "{lost}");
     assert_eq!(waiting.join().unwrap(), lost);
     assert_eq!(process(root.as_ref(), "b.css").unwrap(), "a{}");
-    assert_eq!(*requests.lock().unwrap(), ["a.css", "b.css"]);
+    assert_eq!(*lock_calls(&requests), ["a.css", "b.css"]);
 }

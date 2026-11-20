@@ -8,6 +8,7 @@ use mokly_css::types::StylesheetBundler;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_compiler::CompileRoot;
 use crate::stylesheet_store::{Miss, StylesheetCache};
@@ -45,7 +46,7 @@ fn head_hits_share_payload_validate_context_once_and_replay_original_evidence() 
     ));
     assert!(own.lock().unwrap().record(&key(&roots[0])).is_none());
     assert_eq!(Calls::count(&calls.module_digests), MODULES);
-    let observed = calls.observed.lock().unwrap();
+    let observed = lock_calls(&calls.observed);
     let path = Path::new("/repo").join(module(0));
     assert_eq!(
         observed

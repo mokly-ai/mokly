@@ -49,6 +49,10 @@ mod transport_values;
 mod watch_candidate;
 
 #[cfg(test)]
+#[path = "_tests_/recorded_calls.rs"]
+mod recorded_calls;
+
+#[cfg(test)]
 #[path = "_tests_/nested_tests.rs"]
 mod nested_tests;
 #[cfg(test)]

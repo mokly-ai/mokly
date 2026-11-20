@@ -9,6 +9,7 @@ use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::input_stamp::InputStamp;
+use crate::recorded_calls::lock_calls;
 
 use self::State::{Missing, New, Old};
 
@@ -74,7 +75,7 @@ impl SourceTree for MemoryTree {
         Err(missing(path))
     }
     fn digest(&self, path: &Path) -> Result<String> {
-        self.digested.lock().unwrap().push(path.into());
+        lock_calls(&self.digested).push(path.into());
         self.digests.get(path).cloned().ok_or_else(|| missing(path))
     }
     fn digest_unretained(&self, path: &Path) -> Result<String> {
@@ -231,7 +232,7 @@ fn a_changed_repository_file_ends_the_check_before_any_dependency_file_is_read()
     let checked = tree(states);
     assert!(!stamp.matches(&checked));
     assert_eq!(
-        *checked.digested.lock().unwrap(),
+        *lock_calls(&checked.digested),
         [
             PathBuf::from("/repo/src/app.ts"),
             PathBuf::from("/repo/src/view.ts")
