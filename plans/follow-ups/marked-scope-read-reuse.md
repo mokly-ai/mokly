@@ -7,12 +7,12 @@
 - **Added:** 2026-11-18, from the performance orchestrator's acceptance of the
   post-compile reads of marked Serve edit compiles, on branch
   `calummoore/mokly-absolute-paths-evidence-fix-zqzl`.
-- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:61` to line 65,
-  `packages/mokly/src/sidecar/serve-edit-imports.ts:60`,
-  `packages/mokly/src/sidecar/serve-edit-paths.ts:38` and line 142 to line
-  154, `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45 and line
-  128, `packages/mokly/src/sidecar/physical-inputs.ts:97`,
-  `packages/mokly/src/sidecar/mapped-selection.ts:24`, and
+- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:58` to line 62,
+  `packages/mokly/src/sidecar/serve-edit-imports.ts:61`,
+  `packages/mokly/src/sidecar/serve-edit-paths.ts:41` and line 104 to line
+  116, `packages/mokly/src/sidecar/config-inputs.ts:34` to line 48 and line
+  131, `packages/mokly/src/sidecar/physical-path-inputs.ts:35`,
+  `packages/mokly/src/sidecar/mapped-selection.ts:46`, and
   `packages/mokly/src/sidecar/measurements.ts:5`.
 - **Reason:** The performance orchestrator accepted these reads on each edit
   as a correctness cost of about 1.5%, so a reuse across edits waits for a
@@ -33,28 +33,29 @@
   - Since the absolute paths fix of 2026-11-18, `bundleRecipe` runs
     `ServeEditImports.record` after each marked compile, in the timing phase
     `sidecar.bundle.mapped-lookups`, at
-    `packages/mokly/src/sidecar/bundle-recipe.ts:61` to line 65. It calls
-    `ServeEditPaths.record`, at
-    `packages/mokly/src/sidecar/serve-edit-paths.ts:38`. That pass reads the
-    edges of the compile's metafile. For each authored bare import, it reads
-    the configuration chain of the importer's folder, places the selected
-    module among the mapped candidates, and stages the earlier candidate
-    folders and `package.json` candidates as live inputs.
+    `packages/mokly/src/sidecar/bundle-recipe.ts:58` to line 62. It calls
+    `serveEditLookups` in `packages/mokly/src/sidecar/serve-edit-lookups.ts`,
+    which reads the edges of the compile's metafile once. For each authored
+    bare import, `ServeEditPaths.accept`, at
+    `packages/mokly/src/sidecar/serve-edit-paths.ts:41`, reads the
+    configuration chain of the importer's folder, places the selected module
+    among the mapped candidates, and stages the earlier candidate folders and
+    `package.json` candidates as live inputs.
   - One pass makes these reads:
     - `lstat` of each component of each configuration path;
     - a read, a hash, and a parse of each `tsconfig.json` and `jsconfig.json`
       candidate and of each relative `extends` base;
     - the canonical path of each defining configuration file, through
       `PhysicalInputs.canonicalFile` at
-      `packages/mokly/src/sidecar/physical-inputs.ts:97`;
+      `packages/mokly/src/sidecar/physical-path-inputs.ts:35`;
     - `realpath` probes of each candidate target, each extension candidate,
       and each TypeScript rewrite candidate, such as `.ts` for `.js`, in
-      `mappedSelection` at `packages/mokly/src/sidecar/mapped-selection.ts:24`;
+      `mappedSelection` at `packages/mokly/src/sidecar/mapped-selection.ts:46`;
     - `stat` of each staged `package.json` candidate.
   - Each pass starts empty. `ServeEditPaths` keeps one scope map and one
-    reader for one compile, at lines 142 to 154 of its file. `ConfigInputs`
+    reader for one compile, at lines 104 to 116 of its file. `ConfigInputs`
     caches a scope only inside its reader, at
-    `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45. So each edit
+    `packages/mokly/src/sidecar/config-inputs.ts:34` to line 48. So each edit
     repeats every read. A metadata read stays within 1 MiB for each file, the
     retained observations within 8 MiB, and the staged paths within the 8 MiB
     `EVIDENCE_LIMIT`.
@@ -106,3 +107,8 @@
 - **Done when:** A recorded measurement compares the span for each edit
   before and after the candidate change, and the performance orchestrator
   ships one approach or records that the cost stays.
+- **Related:**
+  - [marked-request-walk-allocation.md](./marked-request-walk-allocation.md):
+    the same mapped span. That item covers the shared request walk and the
+    folder classification. Its no-new-cache rule conflicts with the cache of
+    this task.
