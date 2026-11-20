@@ -1,7 +1,5 @@
 # Publication Index And Changes
 
-Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
-
 This is the catalogue index sub-contract of
 [upload validation](./publication-upload-validation.md). Mokly's
 [catalogue](../mokly-catalogue.md), [catalogue changes](../mokly-catalogue-changes.md),
@@ -95,19 +93,24 @@ listing, its order, its bounds and its availability.
 
 ## Reader Conformance And Cloud Checks
 
+The [content check](#content-check) runs the core's own index and detail
+readers, so the receiver keeps no copy of their rules. The cloud's own index
+reader applies the version gate, the path limits and the case-insensitive path
+rule of this page. It reads only the index fields that the cloud's features
+use: the plan checks, the Changes count, the check links and the screens.
+
 An authored index Changes-count corpus beside the contract fixtures runs
-through the cloud reader and through the public `readCatalogueIndex` of
-`@mokly/viewer`, on the same exact bytes. The
+through the cloud's index reader and through the public `readCatalogueIndex`
+of `@mokly/viewer`, on the same exact bytes. The
 [fixture guide](../../../crates/mkc-mokly-contract/fixtures/README.md) describes
-the corpus. Each case that the cloud accepts must also pass
-`readCatalogueIndex`. Both harnesses must derive the changed,
-added, removed and moved counts that the case records. A case
-that the cloud refuses names its rejection kind. The public
-reader receives parsed objects and cannot detect duplicate keys, so
-duplicate-key rejection is always a cloud-only verdict. The
-public reader checks the index version and copies content without validation.
-The corpus records its version-only verdict separately from each cloud
-content rejection.
+the corpus. Each case that the cloud's reader accepts must also pass
+`readCatalogueIndex`. Both harnesses must derive the changed, added, removed
+and moved counts that the case records. A case that the cloud's reader refuses
+names its rejection kind. The public reader receives parsed objects and cannot
+detect duplicate keys, so duplicate-key rejection is always a cloud-only
+verdict. The public reader checks the index version and copies content without
+validation. The corpus records that version-only verdict separately from each
+rejection of the cloud's reader.
 
 The received index cannot prove source authenticity. The receiver retains its
 exact bytes and serves them under the ordinary hosting, authorization and

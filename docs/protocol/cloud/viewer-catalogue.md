@@ -1,7 +1,5 @@
 # Viewer Catalogue
 
-Status: The receiver does not run the content check yet, so the app can load an index or an entry detail that the core readers refuse. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
-
 This is the public-catalogue sub-contract of [Viewer](./viewer.md).
 The app reads the catalogue index v9 and the entry details v4 that
 the Mokly CLI publishes, and the workspace `@mokly/viewer` reads both

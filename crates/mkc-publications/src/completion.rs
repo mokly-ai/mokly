@@ -1,10 +1,9 @@
 //! Completion requests, resolved in the released order before the ready transaction.
 
 use mkc_domain::ids::PublicationId;
-use mkc_mokly_contract::index::{CatalogueIndex, INDEX_PATH};
-use mkc_mokly_contract::limits::Limits;
 use mkc_store_interface::publication::{Publication, PublicationFailure};
 
+use crate::catalogue_content::ContentCheck;
 use crate::completion_outcome::{self, Outcome, StoredIndex, ingested};
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::ingest::{Ingested, PublicationIngest, UploadAuthorization};
@@ -21,9 +20,8 @@ pub(crate) trait CompleteUpload {
 }
 
 impl CompleteUpload for PublicationIngest {
-    /// An authorization or deadline outcome found after the fast check closes
-    /// the upload; an internal or unavailable failure leaves it validating so
-    /// the CLI's retry can complete it before the deadline.
+    /// Content, authorization and deadline rejections close the upload.
+    /// Internal or unavailable failures leave it validating for retries before its deadline.
     fn complete_upload(
         &self,
         authorization: UploadAuthorization,
@@ -55,12 +53,17 @@ impl CompleteUpload for PublicationIngest {
         if !pending.is_empty() {
             return Err(Error::Incomplete);
         }
-        let index = self.index(&attempt)?;
-        let result = self.finish(&authorization, &attempt, &metadata, &index);
+        let result = self
+            .content(&attempt)
+            .and_then(|index| self.finish(&authorization, &attempt, &metadata, &index));
         if let Err(error) = &result
             && matches!(
                 error,
-                Error::Expired | Error::Unauthorized | Error::Forbidden | Error::PlanRequired
+                Error::InvalidBundle { .. }
+                    | Error::Expired
+                    | Error::Unauthorized
+                    | Error::Forbidden
+                    | Error::PlanRequired
             )
             && let Err(cleanup) = self.fail(attempt.id, error.failure())
         {
@@ -76,7 +79,6 @@ trait CompletionSteps {
         authorization: &UploadAuthorization,
         upload: PublicationId,
     ) -> Result<(Publication, Outcome)>;
-    fn index(&self, attempt: &Publication) -> Result<StoredIndex>;
 }
 
 impl CompletionSteps for PublicationIngest {
@@ -108,33 +110,5 @@ impl CompletionSteps for PublicationIngest {
             Ok(())
         })?;
         resolution.ok_or(Error::NotFound)
-    }
-
-    /// Reload the stored index of every attempt that might publish.
-    ///
-    /// A missing reference or object is reported, not raised: another request
-    /// may have closed the upload and released its references meanwhile.
-    fn index(&self, attempt: &Publication) -> Result<StoredIndex> {
-        let mut file = None;
-        self.transactions.run(true, &mut |queries| {
-            file = queries
-                .publication_file(attempt.id, INDEX_PATH)
-                .context("read stored catalogue index reference")?;
-            Ok(())
-        })?;
-        let Some(file) = file else {
-            return Ok(StoredIndex::Missing);
-        };
-        let Some(bytes) = self
-            .files
-            .get(&file.key)
-            .context("read stored catalogue index")?
-        else {
-            return Ok(StoredIndex::Missing);
-        };
-        Ok(StoredIndex::Loaded(Box::new(
-            CatalogueIndex::parse(&bytes, Limits::default())
-                .context("decode stored catalogue index")?,
-        )))
     }
 }

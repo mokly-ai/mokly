@@ -17,20 +17,34 @@ use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 use crate::ingest::Ingest;
-use crate::tests::index_fixture::{empty, record};
 use crate::tests::support::{PROJECT, PUBLICATION, publication};
 
 use super::{authorization, service_with_files};
 
 #[test]
 fn stored_index_counts_and_comparison_screen_selections_are_persisted() {
-    let mut unavailable = empty();
+    let mut unavailable: Value = serde_json::from_slice(include_bytes!(
+        "../../../../mkc-mokly-contract/fixtures/index-v9.json"
+    ))
+    .unwrap();
     unavailable.as_object_mut().unwrap().remove("baseCommit");
     unavailable["comparisonUrl"] = Value::Null;
     unavailable["changesStatus"] = json!("unavailable");
-    let mut screen = record("current", "Current", "added");
-    screen["changes"] = json!({ "status": "unavailable" });
-    unavailable["screens"] = json!([screen]);
+    unavailable["removedEntries"] = json!([]);
+    for kind in ["components", "documents", "pages", "screens", "useCases"] {
+        for record in unavailable[kind].as_array_mut().unwrap() {
+            record["changes"] = json!({"status": "unavailable"});
+            record.as_object_mut().unwrap().remove("previousPath");
+            if record.get("comparison").is_some() {
+                record["comparison"] = json!({"status": "unavailable"});
+            }
+            if let Some(views) = record.get_mut("views").and_then(Value::as_array_mut) {
+                for view in views {
+                    view["comparison"] = json!({"status": "unavailable"});
+                }
+            }
+        }
+    }
     let counts = Changes::Available(Counts {
         changed: 7,
         added: 0,
@@ -86,7 +100,10 @@ fn stored_index_counts_and_comparison_screen_selections_are_persisted() {
                 .n_times(2),
             BlobsMock::publication_file
                 .next_call(matching!((_, path) if *path == INDEX_PATH))
-                .returns(Ok(Some(reference))),
+                .returns(Ok(Some(reference.clone()))),
+            BlobsMock::publication_files
+                .some_call(matching!(&PUBLICATION))
+                .returns(Ok(vec![reference])),
             PublicationScreensMock::insert_publication_screen_views
                 .next_call(matching!(&PUBLICATION, _))
                 .answers_arc(Arc::new(move |_, _, views| {

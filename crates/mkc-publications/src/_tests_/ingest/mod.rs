@@ -15,6 +15,7 @@ use super::support::{PROJECT, bearer, clock, project, runtime, token, transactio
 mod admission_tests;
 mod blob_tests;
 mod completion_tests;
+mod content_tests;
 mod index_observation_tests;
 mod plan_tests;
 mod replay_success_tests;

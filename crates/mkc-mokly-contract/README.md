@@ -2,17 +2,22 @@
 
 `mkc-mokly-contract` validates the Mokly upload artifacts for a receiver: the
 plan archive, the upload envelope, the ownership marker and the catalogue
-index. Depend on it when accepting `mokly publish` plan requests or checking
-compatibility with the workspace Mokly packages. It never touches HTTP, the
-database or the filesystem and does not depend on Mokly internals;
-`mkc-publications` owns idempotency and storage, and `mkc-api` owns
-authentication, repository authorization and request deadlines.
+index. Before completion publishes an upload, it also checks the content of
+the index and of every entry detail. Depend on it when accepting
+`mokly publish` plan requests and completions or checking compatibility with
+the workspace Mokly packages. It never touches HTTP, the database or the
+filesystem. It uses the public readers of the workspace `mokly-model` crate
+and does not depend on Mokly internals; `mkc-publications` owns idempotency
+and storage, and `mkc-api` owns authentication, repository authorization and
+request deadlines.
 
 ## Responsibilities
 
 - Decode bounded single-member gzip and USTAR/PAX streams without extraction.
 - Type and validate upload envelope 3, ownership marker 3 and the index 9
   fields that publication consumers read.
+- Check the index and every entry detail of an upload with the lenient
+  readers of `mokly-model` before completion publishes it.
 - Validate a plan archive against the catalogue its marker declares: exact
   artifact set, declared digests, hosting policy and comparison generation.
 - Return shared, reservation-backed artifact bytes and typed HTTP rejection
@@ -43,10 +48,13 @@ envelope, marker and index take the same `Limits`, so lowered quotas apply to
 every artifact and path. Marker parsing alone is a shape check; the hosting
 policy and the reserved roots apply at plan validation, so upstream valid
 marker cases stay valid marker shapes. Marker and index unknown fields are
-ignored. Envelope unknown fields are rejected. The index reader checks only
-the fields that the receiver reads: the base fields, the record paths and
-titles, `changes`, and the screen view axes. It does not validate the
-catalogue tree, details, usage, resource evidence or producer attribution.
+ignored. Envelope unknown fields are rejected. `CatalogueIndex::parse` checks
+only the fields that the receiver reads: the base fields, the record paths and
+titles, `changes`, and the screen view axes. Its version gate takes the index
+number from `mokly_model::versions::CATALOGUE_INDEX`. The Plan and the
+consumers of a stored publication use it. The content check below applies the
+complete lenient readers of `mokly-model` to the index and to every entry
+detail. Changes attribution and CSS matches stay producer checks.
 
 `PlanBundle::index()` returns the validated index facts. `index_bytes()`
 returns its exact, digest-checked bytes. `artifacts()` returns the envelope,
@@ -59,6 +67,34 @@ pages, screens and use cases, then removed records. Each record keeps its
 path and title. `current_screens()` returns current screens and variants with
 the axes of each view in index order. No consumer needs to validate these
 facts again. The reader has no review types or derived snapshot list.
+
+`content::CatalogueContent` is the content check that completion runs after
+every reserved Blob is durable. `CatalogueContent::parse(bytes, limits)` is
+the receiver entry point for raw index bytes. It runs `CatalogueIndex::parse`
+first, so the quotas, the 426 version gate and the case-insensitive path rule
+apply before the content rules. Then it calls `from_index`. A core reader that
+refuses the index or a detail gives an invalid bundle, `Rejection::Index` or
+`Rejection::Detail`, which answers 400.
+
+`CatalogueContent::from_index(index, bytes)` takes a `CatalogueIndex` that the
+caller already parsed and the exact bytes of that index. It reads the bytes
+with `readers::index_lenient` and does not run `CatalogueIndex::parse` again.
+Completion in `mkc-publications` parses the stored index first and then calls
+`from_index`. So a stored index that no longer parses stays an internal
+failure, and only a refusal by a core reader answers 400. `into_index()`
+returns the `CatalogueIndex` after every check passes.
+
+`details()` returns the `DetailContent` of one upload. Its one `UsageSchemas`
+compiles each used component schema once for all the details of the upload.
+`DetailContent::source(path)` returns `DetailSource::Current` for a `.json`
+path under `mokly-viewer/entries/`, `DetailSource::Removed` for a `.json` path
+under `entries/` of the index's comparison generation, and `None` for any other
+path. `validate(bytes, source)` reads one detail with `readers::detail_lenient`
+and checks a current detail against the index with
+`detail_context::validate_with`. A removed detail gets only the reader's rules,
+because an upload carries no base catalogue. `mkc-publications` checks every
+detail path that the ownership marker lists, including a Blob that an earlier
+upload stored, and it holds one detail in memory at a time.
 
 `error::Error` maps invalid bundles to 400, limits to 413, unsupported
 envelope, marker or index versions to 426, upload-memory exhaustion to 503
@@ -93,6 +129,37 @@ fails. This is producer input, never authorization: check the token, repository
 and config path before using its head identity. Errors and accepted bytes are
 the same as `validate`; a malformed or not-yet-read envelope leaves the output
 empty.
+
+Before you complete an upload, check its index and each declared detail. Read
+one detail at a time:
+
+```rust
+use mkc_mokly_contract::content::CatalogueContent;
+use mkc_mokly_contract::error::Result;
+use mkc_mokly_contract::index::CatalogueIndex;
+use mkc_mokly_contract::limits::Limits;
+
+fn check(
+    index: &[u8],
+    declared: &[&str],
+    read: impl Fn(&str) -> Vec<u8>,
+) -> Result<CatalogueIndex> {
+    let content = CatalogueContent::parse(index, Limits::default())?;
+    {
+        let mut details = content.details();
+        for &path in declared {
+            if let Some(source) = details.source(path) {
+                details.validate(&read(path), source)?;
+            }
+        }
+    }
+    Ok(content.into_index())
+}
+```
+
+For a stored index that you already parsed with `CatalogueIndex::parse`, as
+completion does, call `CatalogueContent::from_index(index, bytes)` in place of
+`parse`.
 
 Run the real fixture as a smoke test:
 
@@ -139,8 +206,10 @@ is in `checksums.json`. The publications worker tests its typed mappings
 against these observed codes; the `cloud-fixtures` suite regenerates and
 rejects byte drift.
 
-The cloud uses the workspace `@mokly/mokly` and `@mokly/viewer` packages, so
-a Mokly change reaches this crate in the same commit. When a change touches
+The cloud uses the workspace `@mokly/mokly` and `@mokly/viewer` packages and
+the workspace `mokly-model` crate, so a Mokly change reaches this crate in the
+same commit. A change of the `mokly-model` readers changes which uploads the
+content check accepts. When a change touches
 the upload artifacts or the viewer readers: update the Mokly protocol docs,
 run `npm run build` and `cargo xtask mokly-fixtures`, review the fixture
 metadata and content changes as compatibility input, update this crate and
@@ -162,6 +231,7 @@ a failing decoder.
 - [manifest.rs](./src/manifest.rs), [inventory.rs](./src/inventory.rs) and [index.rs](./src/index.rs) — `UploadManifest`, `Inventory` and `CatalogueIndex`, each with its version probe and `parse`.
 - [index_records.rs](./src/index_records.rs) and [index_values.rs](./src/index_values.rs) — the validated record, count, screen and view-axis types for publication consumers.
 - [index_validation.rs](./src/index_validation.rs) and [index_projection.rs](./src/index_projection.rs) — the documented read-field checks and the ordered publication facts.
+- [content.rs](./src/content.rs) — `CatalogueContent`, with `parse` for raw index bytes and `from_index` for an index that the caller already parsed, and `DetailContent` and `DetailSource`: the completion content check that runs the lenient index and detail readers of `mokly-model` with one `UsageSchemas` per upload.
 - [json_guard.rs](./src/json_guard.rs) — the streaming JSON preflight that bounds nodes, retained key digests and depth (`JSON_DEPTH`, 256 levels) and rejects duplicate keys before typed decoding.
 - [json.rs](./src/json.rs) — the strict typed decoding helpers and the version probe shared by the three artifacts.
 - [limits.rs](./src/limits.rs) — `Quotas` and `Limits::lowered`, the clamped receiver quotas.
@@ -173,6 +243,7 @@ a failing decoder.
 
 - [Publication upload](../../docs/protocol/cloud/publication-upload.md), its [validation](../../docs/protocol/cloud/publication-upload-validation.md) and [Publication index](../../docs/protocol/cloud/publication-review.md)
 - [Upload exchange](../../docs/protocol/cloud/publication-upload-exchange.md)
+- [Catalogue Content](../../docs/protocol/mokly-upload-validation.md#catalogue-content), the content check requirement, and the [`mokly-model` readers](../mokly-model/README.md)
 - [Artifact compatibility](../../docs/protocol/cloud/mokly-artifact-compatibility.md) and [fixture regeneration](../../docs/protocol/cloud/mokly-fixture-regeneration.md)
 - [Upload memory interface](../mkc-upload-memory-interface/README.md)
 - [Architecture](../../docs/architecture/cloud.md) — the components, their boundaries, and the data flows this crate takes part in.

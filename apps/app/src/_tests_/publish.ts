@@ -4,7 +4,9 @@ import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
 
 import { installedRepository } from "./database-fixture";
+import { legacyPublication } from "./legacy-publication";
 import { apiOrigin } from "./origins";
+import { repack } from "./publish-repack";
 
 /** The release-owned contract fixture every publishing test uploads. */
 export const fixture = resolve(
@@ -37,74 +39,14 @@ export interface PublishInput {
    */
   repository?: string;
   /**
-   * Store every current entry detail with this version, which the pinned
-   * viewer refuses. The receiver validates only the index, so a detail is
-   * where a reader meets a version failure.
+   * Seed a legacy copy with this detail version after a valid upload.
+   * The current receiver refuses these details, but an earlier publication
+   * can still need a viewer version that the app does not support.
    */
   detailVersion?: 3;
   /** A CLI-built retained-evidence export; absent uses the frozen contract. */
   fixture?: string;
 }
-
-// The shared publication fixture is repacked rather than regenerated: the bytes
-// are the pinned contract artifact, and only the envelope naming the branch,
-// head and pull request changes, which is exactly what a second publication of
-// the same work differs by. The ownership marker is rebuilt to declare the new
-// envelope, as `mokly publish` does, and the script answers with the Plan
-// archive of envelope, marker and index, plus every file's bytes by digest for
-// the blob requests. A current-only upload disables the index's Changes the
-// way `scripts/cloud/publication_exchange.py` does.
-const repack = `
-import base64, hashlib, io, json, sys, tarfile
-source, branch, head, pull, corrupt, current, detail_version, repository = sys.argv[1:9]
-with tarfile.open(source, mode="r:gz") as archive:
-    files = {item.name: archive.extractfile(item).read()
-             for item in archive if item.isfile()}
-marker = ".mokly-export-artifact"
-envelope_path = "mokly-upload.json"
-index_path = "mokly-viewer/index.json"
-envelope = json.loads(files[envelope_path])
-owner, name = repository.split("/")
-envelope["repository"] = {"host": "github.com", "owner": owner, "name": name}
-envelope["branch"] = branch
-envelope["headSha"] = head
-envelope["pullRequest"] = int(pull) if pull else None
-if current == "yes":
-    files = {path: data for path, data in files.items()
-             if not path.startswith("mokly-viewer/diffs/")}
-    envelope.update(baseRef=None, baseSha=None)
-    index = json.loads(files[index_path])
-    index.pop("baseCommit", None)
-    index.update(comparisonUrl=None, changesStatus="disabled", removedEntries=[])
-    for kind in ["components", "documents", "pages", "screens", "useCases"]:
-        for record in index[kind]:
-            record["changes"] = {"status": "disabled"}
-            record.pop("previousPath", None)
-    files[index_path] = json.dumps(index).encode()
-if detail_version:
-    for path in [path for path in files if path.startswith("mokly-viewer/entries/")]:
-        detail = json.loads(files[path])
-        detail["schemaVersion"] = int(detail_version)
-        files[path] = json.dumps(detail).encode()
-files[envelope_path] = json.dumps(envelope).encode()
-digest = lambda data: hashlib.sha256(data).hexdigest()
-files[marker] = json.dumps({"schemaVersion": 3, "files": [
-    {"path": path, "sha256": digest(data), "size": len(data)}
-    for path, data in sorted(files.items()) if path != marker]}).encode()
-if corrupt == "yes":
-    files[marker] = json.dumps({"schemaVersion": 3, "files": [
-        {"path": "missing.html", "sha256": "0" * 64, "size": 1}]}).encode()
-names = [envelope_path, marker, index_path]
-buffer = io.BytesIO()
-with tarfile.open(fileobj=buffer, mode="w:gz", format=tarfile.USTAR_FORMAT) as out:
-    for name in names:
-        info = tarfile.TarInfo(name)
-        info.size = len(files[name])
-        out.addfile(info, io.BytesIO(files[name]))
-json.dump({"plan": base64.b64encode(buffer.getvalue()).decode(),
-           "blobs": {digest(data): base64.b64encode(data).decode()
-                     for data in files.values()}}, sys.stdout)
-`;
 
 /** A 40-character head identity that is this test's alone. */
 export function headSha(label: string): string {
@@ -137,6 +79,7 @@ export function publicationBody(input: PublishInput = {}): PublicationExport {
       input.currentOnly ? "yes" : "no",
       input.detailVersion === undefined ? "" : String(input.detailVersion),
       input.repository ?? installedRepository,
+      resolve(process.cwd(), "../../scripts/cloud"),
     ],
     { maxBuffer: 64 * 1024 * 1024 },
   );
@@ -209,11 +152,18 @@ export async function publish(
   projectId: string,
   input: PublishInput = {},
 ): Promise<Published> {
-  const uploaded = await uploadBody(token, projectId, publicationBody(input));
+  const uploaded = await uploadBody(
+    token,
+    projectId,
+    publicationBody({ ...input, detailVersion: undefined }),
+  );
   if (!input.corrupt && uploaded.status >= 400) {
     throw new Error(`publish failed: ${uploaded.status}`);
   }
-  return { id: uploaded.id, catalogueUrl: uploaded.catalogueUrl };
+  const publication = { id: uploaded.id, catalogueUrl: uploaded.catalogueUrl };
+  return input.detailVersion && !input.corrupt
+    ? legacyPublication(publication, input.detailVersion)
+    : publication;
 }
 
 /** The plan's answer: an attempt and the files this project still needs. */

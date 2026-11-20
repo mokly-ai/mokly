@@ -1,5 +1,7 @@
 //! Bounded index 9 reader and immutable facts used by publication consumers.
 
+use mokly_model::versions;
+
 use crate::error::{ArtifactKind, Error, Rejection, Result, invalid};
 use crate::index_document::Document;
 use crate::index_records::{ChangesCount, CountedRecord, Screen};
@@ -27,7 +29,7 @@ impl CatalogueIndex {
     /// Check quotas and index 9 before decoding the receiver's read fields.
     pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self> {
         limits.check_file(bytes.len() as u64, Some(ArtifactKind::Index))?;
-        match json::schema_version(bytes, 9)? {
+        match json::schema_version(bytes, u64::from(versions::CATALOGUE_INDEX))? {
             SchemaVersion::Missing => return Err(invalid(Rejection::Index)),
             SchemaVersion::Unsupported(version) => {
                 return Err(Error::UnsupportedVersion {

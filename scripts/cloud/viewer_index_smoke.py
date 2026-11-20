@@ -23,6 +23,19 @@ def publish_index(api, project, token, files, index, head, branch):
     return "/v1/projects/" + project["id"] + "/publications/" + publication["id"]
 
 
+def single_screen_files(files, index, source_path):
+    """Match the tree and retained detail to the screen under test."""
+    screen = index["screens"][0]
+    index["tree"] = [{"kind": "entry", "path": screen["path"]}]
+    index.pop("treeOrder", None)
+    changed = {path: data for path, data in files.items() if not path.startswith("mokly-viewer/entries/")}
+    detail_path = "mokly-viewer/entries/" + source_path + ".json"
+    detail = json.loads(files[detail_path])
+    detail["entry"]["path"] = screen["path"]
+    changed[detail_path] = json.dumps(detail).encode()
+    return changed
+
+
 def index_screens(api, project, token, _files):
     files = files_from_tar((ROOT / "crates/mkc-mokly-contract/fixtures/moves-export.tar.gz").read_bytes())
     index = json.loads(files[INDEX])
@@ -57,7 +70,8 @@ def moved_paths(api, project, token, files, index):
     for kind in ["components", "documents", "pages", "useCases", "removedEntries"]:
         comparison[kind] = []
     comparison["screens"] = [screen]
-    root = publish_index(api, project, token, files, comparison, "8" * 40, "viewer-move")
+    selected = single_screen_files(files, comparison, screen["path"])
+    root = publish_index(api, project, token, selected, comparison, "8" * 40, "viewer-move")
     published, _ = api.call("GET", root)
     assert published["changes"] == {"state": "available", "added": 0, "changed": 1, "removed": 0}
     listed, _ = api.call("GET", root + "/screens")
@@ -82,12 +96,14 @@ def identity_boundaries(api, project, token, files, index):
     assert share_path_limit() == 2048
     comparison = copy.deepcopy(index)
     screen = copy.deepcopy(index["screens"][0])
+    source_path = screen["path"]
     identity = "a" * PATH_LIMIT
     screen["path"] = identity
     for kind in ["components", "documents", "pages", "useCases", "removedEntries"]:
         comparison[kind] = []
     comparison["screens"] = [screen]
-    root = publish_index(api, project, token, files, comparison, "a1" * 20, "viewer-identity")
+    selected = single_screen_files(files, comparison, source_path)
+    root = publish_index(api, project, token, selected, comparison, "a1" * 20, "viewer-identity")
     listed, _ = api.call("GET", root + "/screens?limit=1")
     assert [row["path"] for row in listed["items"]] == [identity] and listed["nextCursor"] is None
     publication = root.rsplit("/", 1)[1]

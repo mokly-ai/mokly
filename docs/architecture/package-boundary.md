@@ -1,7 +1,5 @@
 # Package And Consumer Boundary
 
-Status: No receiver checks the catalogue content of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
-
 ## Rule
 
 Mokly owns the mechanics shared by any mockup catalogue. A consumer owns

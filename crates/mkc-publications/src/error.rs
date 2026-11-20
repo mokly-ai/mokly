@@ -102,6 +102,26 @@ pub(crate) enum DurabilityFailure {
         /// Attempt whose plan stored the index.
         publication: PublicationId,
     },
+    /// Completion could not reload an ownership-listed detail of a live upload.
+    #[error("[mkc-publications/error] publication {publication} lost stored detail {path}")]
+    StoredDetailMissing {
+        /// Attempt whose marker declared the detail.
+        publication: PublicationId,
+        /// Export-relative detail path.
+        path: String,
+    },
+    /// Verified stored bytes no longer match the reserved file size.
+    #[error(
+        "[mkc-publications/error] stored artifact {path} has {actual} bytes, expected {expected}"
+    )]
+    StoredArtifactSize {
+        /// Export-relative artifact path.
+        path: String,
+        /// Accepted declaration for the stored object.
+        expected: i64,
+        /// Length read from storage.
+        actual: usize,
+    },
     /// A ready transition observed references without confirmed bytes.
     #[error("[mkc-publications/error] publication {publication} has {count} pending durable blobs")]
     PendingPublicationBlobs {

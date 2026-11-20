@@ -5,6 +5,7 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::http::StatusCode;
 use chrono::{TimeZone, Utc};
+use mkc_mokly_contract::error::Rejection;
 use mkc_publications::error::{self, Error};
 use mkc_publications::ingest::{IngestMock, Ingested};
 use mkc_store_interface::publication::{Publication, PublicationState};
@@ -100,7 +101,16 @@ async fn a_superseded_attempt_answers_ok_with_the_winner() {
 
 #[tokio::test]
 async fn completion_failures_keep_their_released_statuses() {
-    let failures: [Case<error::Result<Ingested>>; 3] = [
+    let failures: [Case<error::Result<Ingested>>; 4] = [
+        (
+            || {
+                Err(Error::InvalidBundle {
+                    reason: Rejection::Detail,
+                })
+            },
+            StatusCode::BAD_REQUEST,
+            "upload-invalid-bundle",
+        ),
         (
             || Err(Error::Incomplete),
             StatusCode::CONFLICT,

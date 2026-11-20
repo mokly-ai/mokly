@@ -1,7 +1,5 @@
 # Catalogue Upload Validation v3
 
-Status: No receiver runs the catalogue content check yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds it to Mokly Cloud.
-
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
 categories, upload limits, and receiver validation.

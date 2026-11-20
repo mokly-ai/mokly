@@ -88,10 +88,19 @@ impl Completion for PublicationIngest {
                     completion_outcome::ingested(authorization, ready, true)
                 }
                 Outcome::Publish => {
-                    if let StoredIndex::Missing = index {
-                        return Err(Error::internal(DurabilityFailure::StoredIndexMissing {
-                            publication: attempt.id,
-                        }));
+                    match index {
+                        StoredIndex::Missing => {
+                            return Err(Error::internal(DurabilityFailure::StoredIndexMissing {
+                                publication: attempt.id,
+                            }));
+                        }
+                        StoredIndex::MissingDetail(path) => {
+                            return Err(Error::internal(DurabilityFailure::StoredDetailMissing {
+                                publication: attempt.id,
+                                path: path.clone(),
+                            }));
+                        }
+                        StoredIndex::Loaded(_) => {}
                     }
                     finish_ready(
                         queries,

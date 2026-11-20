@@ -35,12 +35,16 @@ attempt fails. Its failure check can then name the head. Metadata uses
 `blob_target` resolves one blob request's reservation before its body is read,
 and `store_blob` stores bytes only when the server-computed digest and length
 match it. `complete` resolves ready, superseded and expired attempts before
-checking durability, then loads the stored catalogue index before it commits
-ready after reauthorizing; the ready commit
+checking durability. It then runs the content check on the stored catalogue
+index and on every declared entry detail before it commits ready after
+reauthorizing; the ready commit
 atomically retains the Changes totals or an explicit no-comparison observation
-plus the validated screen and view selections for sharing. A missing index
-reference or object fails only if the ready transaction still chooses to
-publish. A failed read or invalid index fails immediately.
+plus the validated screen and view selections for sharing. A missing index or
+detail reference or object fails only if the ready transaction still chooses to
+publish. A failed read, a stored size mismatch or an index that no longer
+passes the plan checks fails immediately as an internal failure. A refusal of
+the core readers is an invalid bundle that fails the attempt, as a refused
+plan does.
 The first upload of
 `(project, head SHA, config path)` to complete wins and later completions of
 that identity return it. Blob reservations are per project: equal bytes in
@@ -252,7 +256,8 @@ preview-seed exchanges.
 - [ingest.rs](./src/ingest.rs) — `Ingest`, the trait the HTTP boundary calls (`authorize`, `preflight`, `blob_target`, `store_blob` and `complete`), `PublicationIngest`, its composition-root implementation, and `ATTEMPT_MINUTES`, the sixty-minute attempt lifetime.
 - [preflight.rs](./src/preflight.rs) — the plan request: admits the attempt, validates the archive, reserves every declared file, stores the artifacts and emits the `publication upload planned` trace event.
 - [blob_upload.rs](./src/blob_upload.rs) — the blob request: resolves the reservation before the body is read and stores only a body whose digest and length match it.
-- [completion.rs](./src/completion.rs) — the completion request: resolves the attempt in the released order, checks pending blobs, reloads the stored catalogue index and runs the ready transaction.
+- [completion.rs](./src/completion.rs) — the completion request: resolves the attempt in the released order, checks pending blobs, runs the content check and runs the ready transaction.
+- [catalogue_content.rs](./src/catalogue_content.rs) — `ContentCheck`, which reloads the stored index and every declared entry detail, one detail at a time, and checks them with `mkc_mokly_contract::content` before the ready transaction.
 - [completion_outcome.rs](./src/completion_outcome.rs) — `Outcome` and `decide`, the one decision the fast check and the ready transaction both take from the attempt's own row, so a repeated completion never treats its own upload as another winner.
 - [reservation/reserve.rs](./src/reservation/reserve.rs) — the reservation transaction: authorizes the envelope, finds the ready winner of a replay, and reserves blob rows and paths in canonical hash-then-path order.
 - [reservation/finish.rs](./src/reservation/finish.rs) — the ready transaction: rereads the attempt, requires every referenced blob to be durable, and commits the state, Changes totals, screen selections, branch alias and ready event together.

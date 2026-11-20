@@ -33,8 +33,8 @@
   - Release 0.18.0 is the first release that holds PR #224. It reached
     GitHub and npm on 2026-11-01. Its `CHANGELOG.md` entry carries the
     breaking-change note of index version 9 and entry detail version 4.
-  - The cloud receiver reads index version 9 only, in
-    `crates/mkc-mokly-contract/src/index.rs:30-36`.
+  - The cloud receiver reads index version 9 only, in `CatalogueIndex::parse`
+    of `crates/mkc-mokly-contract/src/index.rs`.
   - Mokly Cloud accepts index version 9 in production. Facts checked on
     2026-11-18 at the Cloud `main` commit `767be7b2`:
     - On 2026-11-03, Cloud commit `908484d2` adopted 0.18.0 and index
@@ -68,8 +68,8 @@
   the recorded digest count and bytes are close to the local build pair.
 - **Related:**
   - [receiver-read-model-validation.md](./receiver-read-model-validation.md)
-    checks each reused detail Blob again against the index of each new
-    upload.
+    deploys the receiver's content check. That check reads each reused
+    detail Blob again against the index of each new upload.
   - [cloud-gzip-measurement.md](./cloud-gzip-measurement.md) measures a
     first and a repeated publication too. One pair of publications can
     serve both tasks.

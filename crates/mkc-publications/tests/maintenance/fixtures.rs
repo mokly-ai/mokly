@@ -182,6 +182,14 @@ pub(super) fn current_index() -> Vec<u8> {
         for record in index[kind].as_array_mut().unwrap() {
             record["changes"] = json!({"status":"disabled"});
             record.as_object_mut().unwrap().remove("previousPath");
+            if record.get("comparison").is_some() {
+                record["comparison"] = json!({"status":"disabled"});
+            }
+            if let Some(views) = record.get_mut("views").and_then(Value::as_array_mut) {
+                for view in views {
+                    view["comparison"] = json!({"status":"disabled"});
+                }
+            }
         }
     }
     serde_json::to_vec(&index).unwrap()

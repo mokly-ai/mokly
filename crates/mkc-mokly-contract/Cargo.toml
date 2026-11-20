@@ -17,6 +17,7 @@ chrono = { version = "0.4.45", default-features = false, features = ["std"] }
 flate2 = "1.1.10"
 internal-error.workspace = true
 mkc-domain = { workspace = true }
+mokly-model = { workspace = true }
 mkc-upload-memory-interface = { workspace = true }
 semver = "1.0.28"
 serde = { version = "1.0.229", features = ["derive"] }

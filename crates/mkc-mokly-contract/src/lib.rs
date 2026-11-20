@@ -7,6 +7,7 @@ pub mod archive;
 mod budget;
 pub mod bundle;
 mod bundle_validation;
+pub mod content;
 pub mod error;
 pub mod index;
 mod index_document;

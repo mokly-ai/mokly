@@ -81,6 +81,8 @@ pub enum Rejection {
     ComparisonMetadata,
     /// Invalid index read fields or their relationships.
     Index,
+    /// Invalid entry detail content or current-index relationships.
+    Detail,
 }
 
 /// Independently versioned public artifact whose schema is unsupported.

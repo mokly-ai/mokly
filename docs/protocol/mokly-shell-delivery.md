@@ -1,6 +1,6 @@
 # Shell Delivery And Read Model Routes
 
-Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md), and no receiver checks the placement of the workspace lists yet, until the [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
 
 ## Purpose And Boundary
 

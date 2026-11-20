@@ -1,7 +1,5 @@
 # Mokly Artifact Compatibility
 
-Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
-
 The cloud uses the public artifacts and documented exports of the workspace
 packages `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui` together. The
 receiver, the app, the mockups, the site and the tooling implement these
@@ -215,7 +213,8 @@ from the workspace build, `--check` fails on any byte or filename drift, and
 the `cloud-fixtures` suite
 runs check mode unconditionally. Neither mode publishes a catalogue or edits the product
 catalogue. Check mode also runs one authored index Changes-count corpus
-through the Rust reader and the public `readCatalogueIndex` of the viewer.
+through the cloud's index reader and the public `readCatalogueIndex` of the
+viewer.
 The rule for that corpus is in
 [Publication index](./publication-review.md#reader-conformance-and-cloud-checks).
 The [fixture procedure](./mokly-fixture-regeneration.md) defines the frozen
