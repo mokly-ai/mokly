@@ -167,6 +167,10 @@ also fails when that exception no longer differs.
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
+- [`src/watch_inputs.rs`](./src/watch_inputs.rs) defines `WatchInputs`, the
+  exact watch paths of stylesheet and JavaScript resolution inputs that Serve
+  gives to its watch plan. Each path in a dependency directory keeps that
+  directory, which confines its watch registration.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
   `SourceResolver`, which resolve imports through the injected source tree.
 - [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the

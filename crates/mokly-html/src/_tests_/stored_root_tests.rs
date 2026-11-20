@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use mokly_catalogue::render_sources::{RenderMethod, RenderSource};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
+use mokly_model::data::Props;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
@@ -171,7 +172,7 @@ fn stored_root_kind_selection_records_screens_stories_and_pages_but_no_html_body
     );
     assert_eq!(
         actual[0].props,
-        serde_json::from_value(json!({"label":"Saved"})).unwrap()
+        serde_json::from_value::<Props>(json!({"label":"Saved"})).unwrap()
     );
     assert_eq!(actual[2].props, BTreeMap::new());
 }

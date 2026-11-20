@@ -79,7 +79,7 @@ pub(crate) fn compiler(
                 resolution,
                 postcss,
                 watch_sources: runtime
-                    .watch_stylesheets
+                    .watch_resolution
                     .then(|| runtime.inventory_tree.clone()),
                 side: side.clone(),
             }),

@@ -7,11 +7,12 @@ use std::time::Duration;
 use globset::GlobSet;
 use mokly_catalogue::config_types::{ResolvedConfig, WatchAction};
 use mokly_css::dependencies::DirectoryDependency;
+use mokly_css::watch_inputs::WatchInputs;
 
 use crate::error::Result;
 use crate::event::{Action, Event, Kind};
 use crate::pattern::{self, DEFAULT_GLOBS};
-use crate::stylesheet_inputs;
+use crate::resolution_inputs;
 
 /// Resolved watch inputs and precomputed ancestor lookup for one catalogue state.
 #[derive(Clone)]
@@ -27,7 +28,7 @@ pub struct Plan {
     /// Effective recursive roots, including empty PostCSS directories.
     pub roots: BTreeSet<PathBuf>,
     pub(crate) dependency_roots: BTreeMap<PathBuf, PathBuf>,
-    resolution_directories: BTreeMap<PathBuf, BTreeSet<String>>,
+    pub(crate) resolution_directories: BTreeMap<PathBuf, BTreeSet<String>>,
     root_index: HashSet<PathBuf>,
     waypoints: HashSet<PathBuf>,
     source_roots: Vec<(PathBuf, GlobSet)>,
@@ -128,33 +129,29 @@ impl Plan {
         Ok(plan)
     }
 
-    /// Resolution metadata and direct file membership extend exact observation only.
+    /// Resolution candidates and direct membership retain each input's dependency bound.
     pub fn resolution(
         &mut self,
-        files: &BTreeSet<String>,
+        inputs: &WatchInputs,
         directories: &BTreeMap<String, BTreeSet<String>>,
-    ) {
-        for file in files {
-            self.required(self.repository.join(file), Action::Rebuild);
-        }
-        for (directory, names) in directories {
-            self.resolution_directories
-                .insert(self.repository.join(directory), names.clone());
-        }
-    }
-
-    /// Exact stylesheet candidates retain only their own admitting dependency folder.
-    pub fn stylesheet_resolution(
-        &mut self,
-        files: &BTreeSet<String>,
-        roots: &BTreeMap<String, PathBuf>,
         cache: Option<&Path>,
         namespace: Option<&Path>,
     ) {
-        for (path, root) in
-            stylesheet_inputs::admitted(&self.repository, files, roots, cache, namespace)
-        {
-            self.required(path.clone(), Action::Rebuild);
+        let mut files = inputs.files.clone();
+        files.extend(directories.keys().cloned());
+        for (file, path, root) in resolution_inputs::admitted(
+            &self.repository,
+            &files,
+            &inputs.dependency_roots,
+            cache,
+            namespace,
+        ) {
+            if let Some(names) = directories.get(&file) {
+                self.resolution_directories
+                    .insert(path.clone(), names.clone());
+            } else {
+                self.required(path.clone(), Action::Rebuild);
+            }
             if let Some(root) = root {
                 self.dependency_roots.insert(path, root);
             }
@@ -226,6 +223,9 @@ impl Plan {
         }
         if let Some(action) = self.ancestors.get(&event.path) {
             return Some(*action);
+        }
+        if self.resolution_directories.contains_key(&event.path) {
+            return Some(Action::Rebuild);
         }
         if let Some(names) = event
             .path

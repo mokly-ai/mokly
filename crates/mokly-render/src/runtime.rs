@@ -67,7 +67,7 @@ pub struct Runtime {
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     /// None marks an original head. Some marks a base, including an empty or expired source.
     pub(crate) head_styles: Option<Weak<Mutex<StylesheetCache>>>,
-    pub(crate) watch_stylesheets: bool,
+    pub(crate) watch_resolution: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
     pub(crate) describing: Arc<Mutex<()>>,
@@ -83,10 +83,10 @@ impl Runtime {
         self
     }
 
-    /// Enable physical stylesheet watch mapping for the working side of Serve.
-    pub fn with_stylesheet_watching(mut self) -> Self {
-        if self.base.is_none() {
-            self.watch_stylesheets = true;
+    /// Enable physical JavaScript and stylesheet watch mapping for the working side of Serve.
+    pub fn with_resolution_watching(mut self) -> Self {
+        if self.head_styles.is_none() {
+            self.watch_resolution = true;
         }
         self
     }
@@ -166,7 +166,7 @@ impl Runtime {
             self.style_references.clone(),
         );
         runtime.document_store = self.document_store.clone();
-        runtime.watch_stylesheets = false;
+        runtime.watch_resolution = false;
         runtime.head_styles = Some(match &self.head_styles {
             Some(head) => head.clone(),
             None => Arc::downgrade(&self.styles),
@@ -201,7 +201,7 @@ impl Runtime {
             cache,
             workers,
             version,
-            watch_stylesheets: false,
+            watch_resolution: false,
             head_styles: base.as_ref().map(|_| Weak::new()),
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),

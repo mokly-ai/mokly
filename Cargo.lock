@@ -3043,6 +3043,7 @@ dependencies = [
  "insta",
  "jsonschema 0.58.6",
  "libc",
+ "mokly-css",
  "mokly-model",
  "mokly-source-interface",
  "pulldown-cmark",

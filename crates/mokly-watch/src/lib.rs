@@ -10,7 +10,7 @@ mod native_scan;
 pub mod observer;
 mod pattern;
 pub mod plan;
-mod stylesheet_inputs;
+mod resolution_inputs;
 
 #[cfg(test)]
 #[path = "_tests_/observer_tests.rs"]

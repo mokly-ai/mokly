@@ -5,12 +5,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use mokly_css::watch_inputs::WatchInputs;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{DirectoryWatch, DirectoryWatchMock, WatchFactoryMock};
 use crate::error::Error;
-use crate::event::{Event, Kind};
+use crate::event::{Action, Event, Kind};
 use crate::native::NativeObserver;
 use crate::observer::Observer;
 use crate::plan::Plan;
@@ -52,6 +53,7 @@ fn plan() -> Plan {
         "/shared/install/theme/tokens.css",
         "/shared/mokly/base/cache.css",
         "/outside/escaped.svg",
+        "/lookup/node_modules",
     ]
     .map(str::to_owned)
     .into();
@@ -74,10 +76,14 @@ fn plan() -> Plan {
             path("/shared/install"),
         ),
         ("/shared/mokly/base/cache.css".into(), path("/shared/mokly")),
+        ("/lookup/node_modules".into(), path("/lookup/node_modules")),
     ]);
-    plan.stylesheet_resolution(
-        &files,
-        &roots,
+    plan.resolution(
+        &WatchInputs {
+            files,
+            dependency_roots: roots,
+        },
+        &BTreeMap::from([("/lookup/node_modules".into(), BTreeSet::new())]),
         Some(&path("/cache")),
         Some(&path("/shared/mokly")),
     );
@@ -123,6 +129,7 @@ fn external_registrations_are_confined_per_input_and_refresh_changed_boundaries(
             "/nested/node_modules/pkg",
             "/shared/install",
             "/shared/install/theme",
+            "/lookup/node_modules",
         ])
     );
     assert_eq!(*walks.lock().unwrap(), paths(&["/repo/specs"]));
@@ -144,18 +151,21 @@ fn external_registrations_are_confined_per_input_and_refresh_changed_boundaries(
         "/deps/node_modules/theme/tokens.css".into(),
         "/deps/node_modules/theme/alias/child.css".into(),
     ]);
-    plan.stylesheet_resolution(
-        &files,
-        &BTreeMap::from([
-            (
-                "/deps/node_modules/theme/tokens.css".into(),
-                path("/deps/node_modules/theme"),
-            ),
-            (
-                "/deps/node_modules/theme/alias/child.css".into(),
-                path("/deps/node_modules/theme"),
-            ),
-        ]),
+    plan.resolution(
+        &WatchInputs {
+            files,
+            dependency_roots: BTreeMap::from([
+                (
+                    "/deps/node_modules/theme/tokens.css".into(),
+                    path("/deps/node_modules/theme"),
+                ),
+                (
+                    "/deps/node_modules/theme/alias/child.css".into(),
+                    path("/deps/node_modules/theme"),
+                ),
+            ]),
+        },
+        &BTreeMap::new(),
         Some(Path::new("/cache")),
         None,
     );
@@ -166,6 +176,45 @@ fn external_registrations_are_confined_per_input_and_refresh_changed_boundaries(
     );
     assert!(!observer.observes(&path("/deps/node_modules")));
     assert!(observer.observes(&path("/deps/node_modules/theme")));
+    plan.resolution(
+        &WatchInputs {
+            files: BTreeSet::from([
+                "/deps/node_modules/outer/node_modules".into(),
+                "/nested-installation/inner/index.js".into(),
+            ]),
+            dependency_roots: BTreeMap::from([
+                (
+                    "/deps/node_modules/outer/node_modules".into(),
+                    path("/deps/node_modules"),
+                ),
+                (
+                    "/nested-installation/inner/index.js".into(),
+                    path("/nested-installation"),
+                ),
+            ]),
+        },
+        &BTreeMap::new(),
+        Some(Path::new("/cache")),
+        None,
+    );
+    observer.replace(&plan).unwrap();
+    assert_eq!(
+        calls.lock().unwrap().last().unwrap().0,
+        paths(&[
+            "/deps/node_modules",
+            "/deps/node_modules/outer",
+            "/nested-installation",
+            "/nested-installation/inner",
+        ])
+    );
+    assert_eq!(
+        plan.classify(&Event {
+            path: path("/deps/node_modules/outer/node_modules"),
+            kind: Kind::Rename,
+        }),
+        Some(Action::Rebuild)
+    );
+    assert_eq!(*walks.lock().unwrap(), paths(&["/repo/specs"]));
     observer.close();
 }
 

@@ -1,6 +1,7 @@
 //! Bundle reuse includes resolved React metadata and absent Storybook preview candidates.
 
 use std::fs;
+use std::sync::Arc;
 
 use mokly_sidecar::operations::Operation;
 
@@ -62,7 +63,8 @@ fn resolved_react_manifest_digest_invalidates_an_html_only_rebuild() {
 #[test]
 fn ancestor_manifests_and_tsconfig_creation_changes_and_removal_invalidate_reuse() {
     for name in ["package.json", "tsconfig.json"] {
-        let consumer = Consumer::single();
+        let mut consumer = Consumer::single();
+        consumer.runtime = Arc::new((*consumer.runtime).clone().with_resolution_watching());
         let original = consumer.prepare().unwrap();
         let initial = original.javascript.generation.as_ref().unwrap().id.clone();
         let path = consumer.root().join("specs").join(name);
@@ -76,7 +78,8 @@ fn ancestor_manifests_and_tsconfig_creation_changes_and_removal_invalidate_reuse
                 .generation
                 .as_ref()
                 .unwrap()
-                .resolution_files
+                .resolution_inputs
+                .files
                 .contains(&format!("specs/{name}"))
         );
         fs::write(&path, r#"{"compilerOptions":{},"name":"fixture"}"#).unwrap();

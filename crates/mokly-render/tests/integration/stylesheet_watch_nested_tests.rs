@@ -36,7 +36,7 @@ fn name(path: &Path) -> String {
 #[test]
 fn cached_nested_dependency_watch_inputs_follow_relinked_external_installations() {
     let mut consumer = Consumer::single();
-    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_resolution_watching());
     consumer.without_installation();
     fs::create_dir(consumer.root().join("node_modules")).unwrap();
     consumer.write(

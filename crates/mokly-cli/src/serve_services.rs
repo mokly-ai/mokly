@@ -131,7 +131,7 @@ impl ServeServices {
             .clone()
             .with_serve_edit_plans()
             .with_document_store(documents.clone())
-            .with_stylesheet_watching();
+            .with_resolution_watching();
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
         let head_published = Arc::new(AtomicBool::new(false));

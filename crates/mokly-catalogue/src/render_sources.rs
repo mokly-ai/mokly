@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use mokly_css::watch_inputs::WatchInputs;
 use mokly_model::prop_schema::Primitive;
 use serde_json::Number;
 
@@ -25,8 +26,8 @@ pub struct JavaScriptGeneration {
     pub class_maps_digest: String,
     /// Consumer stylesheet context retained for the graph preparation.
     pub css_context: String,
-    /// Resolution metadata and missing candidates that must remain observable.
-    pub resolution_files: BTreeSet<String>,
+    /// Delivered module and resolution candidates with their per-path dependency bounds.
+    pub resolution_inputs: WatchInputs,
     /// Consumed-module directories whose file membership can change resolution.
     pub resolution_directories: BTreeMap<String, BTreeSet<String>>,
     /// Exact consumed-byte digests; a missing digest remains explicit for static validation.

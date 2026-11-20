@@ -19,6 +19,16 @@ pub(crate) fn input_parents(tree: &dyn SourceTree, path: &Path, plan: &Plan) -> 
     if let Some(root) = plan.dependency_roots.get(path) {
         result.extend(parents(tree, path, root));
     }
+    if plan.resolution_directories.contains_key(path)
+        && (path.starts_with(&plan.repository)
+            || plan
+                .dependency_roots
+                .get(path)
+                .is_some_and(|root| path.starts_with(root)))
+        && matches!(tree.project(path), Ok(Some(node)) if node.kind == FileKind::Directory && node.identity == path)
+    {
+        result.insert(path.into());
+    }
     result
 }
 

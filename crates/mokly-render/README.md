@@ -133,16 +133,20 @@ files and absent candidates, within the
 edit to only a package's `style` or `exports` entry therefore starts a
 rebuild, which compiles each affected stylesheet again. A record keeps these
 paths as logical paths. Physical watch mapping is off by default.
-`Runtime::with_stylesheet_watching` turns it on for a runtime without a
-`BaseSide`, and Serve calls it for its working side. In that runtime, each
-delivery, also a cache hit, maps the logical paths to their current lexical,
-physical, and canonical paths. Each dependency candidate also carries the
-folder that admits it: the selected dependency root, or the first
-`node_modules` directory of its repository path. Mapping keeps a candidate
-only inside the repository or inside that folder. A failed projection or
-physical lookup skips only its candidate. A cancellation still fails the
-delivery. Every other runtime, such as one for a static build or a base
-preparation, maps no watch paths.
+`Runtime::with_resolution_watching` turns it on only for an original head,
+which is a runtime that `Runtime::new` builds without a `BaseSide`. Serve
+calls it for its working side. In that runtime, each delivery, also a cache
+hit, maps the logical paths to their current lexical, physical, and
+canonical paths. Each dependency candidate also carries the folder that
+admits it. That folder is the deepest `node_modules` directory below its
+dependency root that holds the candidate, or else that root. The dependency
+root is the selected dependency root, or the first `node_modules` directory
+of its repository path. Mapping keeps a candidate only inside the repository
+or inside that folder. A failed projection or physical lookup skips only its
+candidate. A cancellation still fails the delivery. Each JavaScript bundle
+delivery, also of a retained bundle, maps its watch paths by the same rules.
+Every other runtime, such as one for a static build or a base preparation,
+maps no watch paths.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
@@ -323,14 +327,15 @@ view after the edit and counts real process starts and hello calls.
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
   the head runtime of Serve its plan record owner. A base runtime never gets
-  one. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
-  mapping for a runtime without a `BaseSide`. Serve calls it for its working
-  side. `Runtime::for_base` builds the runtime of one base preparation, which
-  shares the services and the style memo of the head runtime. It starts its
-  own stores and keeps watch mapping off. The `head_styles` field marks the
-  origin. It is `None` in an original head. In a base, it holds a weak
-  read-only reference to the stylesheet store of the original head, also
-  when that reference is empty or expired.
+  one. `Runtime::with_resolution_watching` turns on the physical watch
+  mapping of JavaScript and stylesheet resolution inputs, but only in an
+  original head. Serve calls it for its working side. `Runtime::for_base`
+  builds the runtime of one base preparation, which shares the services and
+  the style memo of the head runtime. It starts its own stores and keeps
+  watch mapping off. The `head_styles` field marks the origin. It is `None`
+  in an original head. In a base, it holds a weak read-only reference to the
+  stylesheet store of the original head, also when that reference is empty
+  or expired.
   `Runtime::with_document_store` gives the Serve runtime its render store, and
   `Runtime::for_base` copies it, so the head and base graphs share one store.
 - [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
@@ -409,15 +414,19 @@ view after the edit and counts real process starts and hello calls.
   `RecordingTree`, the source tree of one compilation, which keeps each read
   digest and projection. It also defines `Capture`, the stamp entries and the
   read evidence that the tree returns.
-- [`src/stylesheet_watch.rs`](./src/stylesheet_watch.rs) maps the logical
-  paths that a record captured to the exact lexical, physical, and canonical
-  paths that Serve watches on the current side. It returns `WatchInputs`,
-  which also holds the admitting folder of each dependency candidate.
-  `SideInputs::watch_candidates` lists the candidates of one path, and
-  [`watch_candidate::optional`](./src/watch_candidate.rs) ignores a failed
-  projection, but it still returns a cancellation. Each delivery, also a
-  cache hit, reaches it through `CapturingCompiler::watch_files`. Without
-  watch mapping, that method returns no paths.
+- [`src/resolution_watch.rs`](./src/resolution_watch.rs) maps the logical
+  paths that a stylesheet record or a JavaScript bundle captured to the exact
+  lexical, physical, and canonical paths that Serve watches on the current
+  side. Its `inputs` function gives the `WatchInputs` and the mapped paths of
+  each logical path. `WatchInputs` also holds the admitting folder of each
+  dependency candidate. `SideInputs::watch_candidates` lists the candidates
+  of one path, and [`watch_candidate::optional`](./src/watch_candidate.rs)
+  ignores a failed projection, but it still returns a cancellation. Each
+  stylesheet delivery, also a cache hit, reaches it through
+  `CapturingCompiler::watch_files`. Each JavaScript bundle delivery, also of
+  a retained bundle, reaches it through
+  [`bundle_watch::inputs`](./src/bundle_watch.rs), which also maps the
+  consumed-module directories. Without watch mapping, both return no paths.
 - [`src/input_stamp.rs`](./src/input_stamp.rs) defines `InputStamp`, the
   recorded input results that `InputStamp::matches` checks again before a
   record is reused.
