@@ -4,7 +4,7 @@
     "advisory": "GHSA-vcc3-ghjq-m6fr",
     "package": "decode-uri-component",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo-router",
       "node_modules/query-string",
       "node_modules/decode-uri-component"
@@ -18,7 +18,7 @@
     "advisory": "GHSA-qr28-fpjm-wq7f",
     "package": "decode-uri-component",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo-router",
       "node_modules/query-string",
       "node_modules/decode-uri-component"
@@ -32,7 +32,7 @@
     "advisory": "GHSA-3g3m-2fjr-6pw4",
     "package": "glob",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/@expo/config-plugins",
       "node_modules/@expo/config-plugins/node_modules/glob"
@@ -46,7 +46,7 @@
     "advisory": "GHSA-3g3m-2fjr-6pw4",
     "package": "glob",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/@expo/config",
       "node_modules/@expo/config/node_modules/glob"
@@ -60,7 +60,7 @@
     "advisory": "GHSA-3g3m-2fjr-6pw4",
     "package": "glob",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/@expo/fingerprint",
       "node_modules/@expo/fingerprint/node_modules/glob"
@@ -74,7 +74,7 @@
     "advisory": "GHSA-3g3m-2fjr-6pw4",
     "package": "glob",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/@expo/metro-config",
       "node_modules/@expo/metro-config/node_modules/glob"
@@ -88,7 +88,7 @@
     "advisory": "GHSA-3g3m-2fjr-6pw4",
     "package": "glob",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/expo/node_modules/@expo/cli",
       "node_modules/expo/node_modules/glob"
@@ -102,7 +102,7 @@
     "advisory": "GHSA-g3hv-75wg-m249",
     "package": "minimatch",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/@expo/fingerprint",
       "node_modules/minimatch"
@@ -127,7 +127,7 @@
     "advisory": "GHSA-mrhx-c7xc-m3w5",
     "package": "zod",
     "path": [
-      "apps/app",
+      "packages/app",
       "node_modules/expo",
       "node_modules/expo/node_modules/@expo/cli",
       "node_modules/expo/node_modules/zod"

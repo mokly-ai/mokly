@@ -11,7 +11,7 @@ use crate::policy::environment::Environment;
 /// Committed OpenAPI document, relative to the repository root.
 pub(super) const DOCUMENT: &str = "docs/api/openapi.json";
 /// Committed TypeScript client, relative to the repository root.
-pub(super) const GENERATED: &str = "apps/app/src/api/generated/schema.ts";
+pub(super) const GENERATED: &str = "packages/app/src/api/generated/schema.ts";
 
 /// Generates both API artifacts from Rust, optionally comparing without writing.
 pub(super) trait OpenapiGenerator {

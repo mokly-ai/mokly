@@ -12,7 +12,7 @@
   - **Parity suite:** The mockup tests in `docs/mockups/src/_tests_/app-parity.test.ts`, which compare the drawn labels and state titles with the app's.
   - **Allowance:** One entry in `docs/mockups/src/_tests_/app-parity-allowances.ts` that lets one known difference pass until a follow-up item removes it.
   - **`write-failure` fragment:** The registered catalogue fragment that reports a refused write beside the control that made it.
-- **Background:** `product/account/magic-link` is the "Check your email" screen after a sign-in or sign-up email. The app screen is `apps/app/src/screens/account/magic-link-screen.tsx`. The app now reports a refused resend beside Resend link, through the `write-failure` fragment. The control itself is the way back. The screen keeps the address that the link went to. The mockup still draws the older composition.
+- **Background:** `product/account/magic-link` is the "Check your email" screen after a sign-in or sign-up email. The app screen is `packages/app/src/screens/account/magic-link-screen.tsx`. The app now reports a refused resend beside Resend link, through the `write-failure` fragment. The control itself is the way back. The screen keeps the address that the link went to. The mockup still draws the older composition.
 - **Problem:** The mockup and the app disagree in three states.
   - The `error` variant draws a refused resend as a state body: "We couldn’t send your link" with "Request another link" beneath it. The app writes neither label.
   - The `loading` variant draws a body in place of the control. The app keeps the control, which reads "Sending…", with the pending line "Sending sign-in link" above it.

@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Common. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestones 12L and 12M of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/error.rs:29-36`, `crates/mkc-api/src/error_mapping.rs:51-55`, `crates/mkc-api/src/error_data.rs:38-52`, `apps/app/src/api/form-error.ts:114-125`, `apps/app/src/screens/account/cli-form-screen.tsx:118-125`, `apps/app/src/screens/account/choose-repository-screen.tsx:154-161` and `docs/protocol/cloud/rest-api.md:62`.
+- **Location:** `crates/mkc-api/src/error.rs:29-36`, `crates/mkc-api/src/error_mapping.rs:51-55`, `crates/mkc-api/src/error_data.rs:38-52`, `packages/app/src/api/form-error.ts:114-125`, `packages/app/src/screens/account/cli-form-screen.tsx:118-125`, `packages/app/src/screens/account/choose-repository-screen.tsx:154-161` and `docs/protocol/cloud/rest-api.md:62`.
 - **Reason:** The fix changes the API and the app together, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. `ValidationFailed` still carries no data, and both account forms still report it above the controls.
 - **Category:** Product bug.

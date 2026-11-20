@@ -62,7 +62,7 @@ and resume behavior live in
 
 Rust owns every API boundary type, as [REST API](./rest-api.md#contract-source)
 requires. `utoipa` derives the OpenAPI document at `docs/api/openapi.json`.
-`openapi-typescript` generates `apps/app/src/api/generated/schema.ts` from that
+`openapi-typescript` generates `packages/app/src/api/generated/schema.ts` from that
 document, and `openapi-fetch` uses its types. The frontend imports generated
 types for backend data and never hand-writes equivalent types.
 The [generator pins](./repository-layout.md#pinned-toolchains) are exact.

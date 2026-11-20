@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the fix of review findings 41 and 81 on `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `apps/app/src/_tests_/viewer/stage-drawings.test.ts` and the parity rule in `docs/protocol/cloud/mockup-verification.md`.
+- **Location:** `packages/app/src/_tests_/viewer/stage-drawings.test.ts` and the parity rule in `docs/protocol/cloud/mockup-verification.md`.
 - **Reason:** The fix adds a check and changes the parity rule, which the user decides.
 - **Category:** Test.
 
@@ -19,7 +19,7 @@
   - **B.** Add a `busyDrawings` map keyed by `RequestControl`, as `refusalDrawings` is, and name busy drawings in the parity rule. Effort: Small.
 - **Left out:** A lint. Option B gives the same result as a compile error.
 - **Wider fix:** B.
-- **Related:** `apps/app/src/components/action.tsx` takes the write's refusal from its binding. This item covers the separate mapping to catalogue drawings.
+- **Related:** `packages/app/src/components/action.tsx` takes the write's refusal from its binding. This item covers the separate mapping to catalogue drawings.
 - **Previous examples:** `refusalDrawings` in the same test.
 - **Recommendation:** B. It reuses the existing map shape.
 - **Action:** ask the user, because B adds a check and changes the parity rule.

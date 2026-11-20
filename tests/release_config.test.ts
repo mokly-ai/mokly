@@ -23,7 +23,9 @@ test("cloud changes do not create a published package release", async () => {
     await fs.readdir(path.join(repositoryRoot, "crates"))
   ).filter((name) => name.startsWith("mkc-"));
   const cloudPaths = new Map([
-    ["apps", "apps/app/src/index.ts"],
+    ["apps", "apps/site/src/home.ts"],
+    ["packages/app", "packages/app/src/index.ts"],
+    ["packages/desktop", "packages/desktop/src/main.ts"],
     ...cloudCrates.map((name): [string, string] => [
       `crates/${name}`,
       `crates/${name}/src/lib.rs`,
@@ -126,10 +128,12 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     const lock = JSON.parse(updates.get("package-lock.json") ?? "null");
     assert.ok(lock);
     for (const file of [
-      ...["app", "desktop", "mockups", "site", "worker"].map(
+      ...["mockups", "site", "worker"].map(
         (project) => `apps/${project}/package.json`,
       ),
-      "packages/tokens/package.json",
+      ...["app", "desktop", "tokens"].map(
+        (project) => `packages/${project}/package.json`,
+      ),
     ]) {
       const content = updates.get(file);
       const before = await json(file);
@@ -151,7 +155,9 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     }
     assert.equal(
       [...updates.keys()].some((file) =>
-        /^(?:apps|crates\/mkc-|packages\/tokens).*CHANGELOG/.test(file),
+        /^(?:apps|crates\/mkc-|packages\/(?:app|desktop|tokens)\/).*CHANGELOG/.test(
+          file,
+        ),
       ),
       false,
     );

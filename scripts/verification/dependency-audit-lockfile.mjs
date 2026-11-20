@@ -18,6 +18,16 @@ export function installPackageName(location) {
   return location.match(/(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)$/u)?.[1];
 }
 
+/** Accept a Cloud app workspace: a project under `apps/`, `packages/app`, or `packages/desktop`. */
+export function isCloudAppLocation(value) {
+  return (
+    typeof value === "string" &&
+    /^(?:apps\/[a-zA-Z0-9_-][a-zA-Z0-9_.-]*|packages\/(?:app|desktop))$/u.test(
+      value,
+    )
+  );
+}
+
 /** Accept canonical relative lockfile install locations. */
 export function isInstallLocation(value) {
   return (

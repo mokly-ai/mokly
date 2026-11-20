@@ -16,7 +16,7 @@
   - The Repository suite runs the checks of the repository gate list in `docs/protocol/ci-verification-repository.md`. Before the move, the old cloud runner ran 25 stages, and its stage 7 ran ast-grep.
   - No suite and no configuration file lints Python.
   - On 2026-11-17 the repository tracks 122 Python files, and 119 of them are under `scripts/cloud/` and `infra/`.
-  - The Repository suite tests the ast-grep rules and scans `crates/`, `xtask/`, `packages/` and `apps/`, at `xtask/src/check/commands.rs:60-62`. The `files` list of each rule limits it: the Rust rules to `crates/mkc-*` and the TypeScript rules to `apps/app/src`.
+  - The Repository suite tests the ast-grep rules and scans `crates/`, `xtask/`, `packages/` and `apps/`, at `xtask/src/check/commands.rs:60-62`. The `files` list of each rule limits it: the Rust rules to `crates/mkc-*` and the TypeScript rules to `packages/app/src`.
   - Three of those rules already check Rust imports, for example `rules/rust/no-late-use.yml`.
   - The gate already needs `python3`, because the `cloud-helm` and `cloud-infrastructure` suites run Python scripts.
   - Each lint option changes the repository gate list of `docs/protocol/ci-verification-repository.md`, a protocol doc.
@@ -26,7 +26,7 @@
 - **Root question:** How do the Python scripts and tests stay free of unused imports?
 - **Options:**
   - **A.** Change nothing. Reviews keep finding unused imports by hand. Each case gets its own deletion. It adds no check, but the class can return with each edit. Effort: Small.
-  - **B.** Add an ast-grep rule `rules/python/no-unused-import.yml` and a test file under `rules/_tests_/`. Add `rules/python` to `sgconfig.yml`. Make the ast-grep scan of the Repository suite also read `scripts/` and `infra/`, and limit the rule to `scripts/cloud/`, `infra/` and `apps/desktop/scripts/` with its `files` list. It adds no dependency. The rule compares names, not scopes, so an unused import passes when a local name in the module equals it. Effort: Medium (estimate).
+  - **B.** Add an ast-grep rule `rules/python/no-unused-import.yml` and a test file under `rules/_tests_/`. Add `rules/python` to `sgconfig.yml`. Make the ast-grep scan of the Repository suite also read `scripts/` and `infra/`, and limit the rule to `scripts/cloud/`, `infra/` and `packages/desktop/scripts/` with its `files` list. It adds no dependency. The rule compares names, not scopes, so an unused import passes when a local name in the module equals it. Effort: Medium (estimate).
   - **C.** Add a check that uses the standard `ast` module of Python, as a new check of the Repository suite, for example `xtask/scripts/python-unused-imports.py`. It adds no dependency, because the gate already needs `python3`. It adds a check and a script that the repository must keep and test with failing fixtures. Effort: Medium (estimate).
   - **D.** Add Ruff with rule F401 as a check of the Repository suite for `scripts/cloud/` and `infra/`. Ruff resolves scopes. Its `ruff check --fix` command can delete an unused import. It adds the first Python package to the toolchain. It needs a pin in `infra/toolchains.json` and in the pin table at `docs/protocol/cloud/repository-layout.md:60-72`, and an install step in `.github/workflows/ci.yml`. Effort: Large.
 - **Left out:**

@@ -164,7 +164,8 @@ On macOS and Windows, the Native suite builds and tests only the `mokly-*`
 crates and `xtask`. The same selection applies on Linux; `cloud-rust` covers
 the cloud crates.
 
-Each cloud project under `apps/` and `packages/tokens/` runs its own tests with
+Each cloud project under `apps/`, and `packages/app/`, `packages/desktop/`, and
+`packages/tokens/`, runs its own tests with
 `npm run <script> --workspace <package>`, as its README says. Such a run, like
 a selected crate test, is partial verification. The
 [cloud suites](./ci-verification.md#cloud-suites) run every cloud check in the

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from Milestone 3 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`, as the wider fix of two hidden headings.
-- **Location:** `docs/mockups/src/_tests_/document-policy.ts` (`documentViolations`, the "one primary heading required" check) and `apps/app/src/_tests_/document-policy.ts`.
+- **Location:** `docs/mockups/src/_tests_/document-policy.ts` (`documentViolations`, the "one primary heading required" check) and `packages/app/src/_tests_/document-policy.ts`.
 - **Reason:** The fix is a stricter check, and the always-on rules leave a new or stricter check to the user.
 - **Category:** Test.
 
