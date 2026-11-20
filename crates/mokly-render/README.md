@@ -89,9 +89,12 @@ Bundle reuse also reads the captured reuse evidence of the compiled recipe
 again through the injected `PhysicalInputs` reader, outside the side tree. A
 read error rejects reuse, also for a recorded absence. Incomplete evidence
 never permits reuse, with one exception in the Serve edit capture mode: a
-retained state with a toolchain identity whose evidence holds only the
+retained state with a toolchain identity whose evidence holds the
 `uncaptured` marker is reused while its module digests and metadata stamps
-stay current. A captured state is tried before a marked one.
+stay current. Its evidence can also hold the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The same reader checks them again, and one change rejects the reuse. A
+captured state is tried before a marked one.
 Each core `bundle` request runs in a `catalogue.bundle` span, which records the
 `cache` outcome that the pool sets on the result. The request carries the
 `capture` mode of the runtime: `full` by default, and `serveEdit` for each

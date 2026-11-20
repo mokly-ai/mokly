@@ -56,14 +56,14 @@
       `wait_with_output` reads the output, so a large input cannot cause a
       pipe deadlock. Twelve test files of `mokly-compare` include
       `mod support;`.
-    - Local helpers at
-      `crates/mokly-compare/tests/engine_support/mod.rs:214`,
+    - The local helper `git` at
+      `crates/mokly-compare/tests/engine_support/mod.rs:232` is private, and it
+      sends no input. Other local helpers are at
       `crates/mokly-compare/tests/deep_tree_tests.rs:44`,
       `crates/mokly-cli/tests/changes_failures_tests.rs:9`,
       `crates/mokly-cli/tests/changes_support/mod.rs:15`,
       `crates/mokly-git/tests/support/mod.rs:38`, and
-      `xtask/src/remote/_tests_/git_test_runner.rs:25`. The helper of
-      `engine_support` is private, and it sends no input.
+      `xtask/src/remote/_tests_/git_test_runner.rs:25`.
     - The `xtask` runner also removes the Git repository variables and the
       secret variables, and it points `GIT_CONFIG_GLOBAL` at a file of its
       own.

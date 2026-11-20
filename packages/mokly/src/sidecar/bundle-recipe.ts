@@ -4,7 +4,6 @@ import path from "node:path";
 
 import type { BuildResult } from "esbuild";
 
-import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
@@ -35,7 +34,6 @@ export interface CompiledBundle {
   preview: string | null | undefined;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
-  capture: BundleCapture;
   editImports: ServeEditImports | undefined;
   plan: ReadonlyMap<string, PlannedImport> | undefined;
 }
@@ -52,17 +50,16 @@ export async function bundleRecipe(
     preview,
     runtimeKey,
     evidence,
-    capture,
     editImports,
     plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
-  const editReusable = editImports
+  const folderEvidence = editImports
     ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
         editImports.record(compiled.metafile!, paths),
       )
-    : false;
+    : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
     "sidecar.bundle.graph",
@@ -127,14 +124,11 @@ export async function bundleRecipe(
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence
     ? await evidence.finish(compiled.metafile!)
-    : {
+    : (folderEvidence ?? {
         complete: false,
         durable: false,
         inputs: {},
-        ...(capture === "serveEdit" && editReusable
-          ? { uncaptured: "serveEdit" as const }
-          : {}),
-      };
+      });
   const toolchain = await toolchainIdentity();
   if (!toolchain) {
     reuseEvidence.complete = false;

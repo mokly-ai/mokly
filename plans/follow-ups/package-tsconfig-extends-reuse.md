@@ -8,11 +8,11 @@
   from design item 4 of the absolute paths reuse evidence plan on branch
   `calummoore/mokly-absolute-paths-evidence-fix-zqzl` and from the options
   check of this item, with the remaining risk of marked Serve edit compiles.
-- **Location:** `packages/mokly/src/sidecar/config-inputs.ts:145` to line 146,
-  `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45,
-  `packages/mokly/src/sidecar/resolution-evidence.ts:192` to line 256,
-  `packages/mokly/src/sidecar/serve-edit-paths.ts:88` to line 89, and
-  `packages/mokly/src/sidecar/serve-edit-paths.ts:142` to line 154.
+- **Location:** `packages/mokly/src/sidecar/config-inputs.ts:148` to line 149,
+  `packages/mokly/src/sidecar/config-inputs.ts:34` to line 48,
+  `packages/mokly/src/sidecar/resolution-evidence.ts:183` to line 218,
+  `packages/mokly/src/sidecar/serve-edit-paths.ts:43` to line 44, and
+  `packages/mokly/src/sidecar/serve-edit-paths.ts:104` to line 116.
 - **Reason:** The bundle disk cache change records only relative `extends`
   targets and keeps the safe fallback for other forms, so wider support is
   new work after its merge. The absolute paths fix keeps the marker of a
@@ -47,8 +47,8 @@
     includes each file that a tsconfig `extends` chain names, under the
     section "Compiled Recipes And Release" of
     `docs/protocol/mokly-sidecar-modules.md`.
-  - `readConfig` in `packages/mokly/src/sidecar/config-inputs.ts:145` to line
-    146 accepts only an `extends` value that starts with `.`. A package name
+  - `readConfig` in `packages/mokly/src/sidecar/config-inputs.ts:148` to line
+    149 accepts only an `extends` value that starts with `.`. A package name
     or an absolute path throws "unsupported configuration extends". It
     throws before it reads the local `compilerOptions`, so the sidecar reads
     no setting of such a chain, local or inherited.
@@ -93,8 +93,9 @@
     target, esbuild falls back to that written path, and they cover every
     target. Section "Reuse And Identity" of
     `docs/protocol/mokly-sidecar-recipes.md` holds this rule.
-    `ServeEditPaths.record` in `packages/mokly/src/sidecar/serve-edit-paths.ts`
-    adds these folders after the compile.
+    `ServeEditPaths.accept` and `finish` in
+    `packages/mokly/src/sidecar/serve-edit-paths.ts` add these folders after
+    the compile.
   - The sidecar adds these folders only when it can read the whole
     configuration chain that defines the mapping and its base folder. In
     native esbuild, a local `paths` map replaces the inherited map as a

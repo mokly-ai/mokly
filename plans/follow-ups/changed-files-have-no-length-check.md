@@ -24,9 +24,9 @@
   - **B.** Extend the changed-file length audit to changed Markdown outside `docs/protocol/`. Architecture docs get the 250-line target of protocol docs. READMEs, runbooks, and guides get the 300-line split limit of the always-on rules, and `AGENTS.md` states it. An exact-cap table, like `xtask/protocol-document-caps.json`, holds each file that passes its limit today and can only shrink. It is a new gate rule. Effort: Medium.
 - **Left out:** A check of every file on each run with no caps. Many files already pass their targets, so it would fail at once.
 - **Wider fix:** B. It covers every later file of the class.
-- **Previous examples:** `plans/follow-ups/mockups-readme-passes-300-lines.md`, `plans/follow-ups/app-readme-passes-300-lines.md`, `plans/follow-ups/operator-docs-pass-300-lines.md`, and `plans/follow-ups/shell-readme-length.md`.
+- **Previous examples:** `plans/follow-ups/mockups-readme-passes-300-lines.md`, `plans/follow-ups/operator-docs-pass-300-lines.md`, and `plans/follow-ups/shell-readme-length.md`. The deleted item [`plans/follow-ups/app-readme-passes-300-lines.md`](https://github.com/mokly-ai/mokly/blob/4eb342907e52dced1a8ad696ca2096de02227460/plans/follow-ups/app-readme-passes-300-lines.md) was a case too, until a split moved the long topics of `packages/app/README.md` to linked pages beside it.
 - **Related:** The list below gives the links.
-  - The four items under Previous examples are current cases of the class.
+  - The three open items under Previous examples are current cases of the class.
   - `plans/follow-ups/operator-docs-pass-300-lines.md` asks whether to split four long runbooks. Option B here would turn that choice into a gate rule.
   - [`plans/follow-ups/viewer-stage-mockup-passes-300-lines.md`](https://github.com/mokly-ai/mokly-cloud/blob/164d73db2601d451392a3bfb13b0f918345807b6/plans/follow-ups/viewer-stage-mockup-passes-300-lines.md), a long source file of the old cloud repository. The changed-file length audit now covers that class.
 - **Recommendation:** B. It reports a long doc in the change that grows it, as the audit already does for code and protocol docs.
