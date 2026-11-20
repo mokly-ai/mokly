@@ -37,6 +37,7 @@ fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
     let captured = capture == BundleCapture::Full;
     CompiledGeneration {
         toolchain: "fixture".into(),
+        metadata_identity: None,
         reuse_evidence: Arc::new(ReuseEvidence {
             uncaptured: (!captured).then_some(UncapturedEvidence::ServeEdit),
             durable: captured,
@@ -114,6 +115,7 @@ impl Fixture {
                                 )),
                                 epoch: 0,
                                 cache: None,
+                                compile_count: 1,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
                             }))

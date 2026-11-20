@@ -1,6 +1,7 @@
 //! Render sidecar calls into the authenticated fragment contract.
 
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_html::error::{HtmlError, InternalError};
@@ -9,24 +10,28 @@ use mokly_html::fragment::{
     Fragment, FragmentMarker, FragmentMarkerKind, FragmentRenderer, FragmentRequest, OwnedStyle,
     RenderKind,
 };
-use mokly_model::axes::ColorScheme;
 use mokly_model::usage::{ComponentInstanceRecord, ComponentSlotRecord};
-use mokly_sidecar::bindings::{EntryBinding, SlotInput};
-use mokly_sidecar::methods::{self, Call, IgnoreScope};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::render_records::MarkerPayload;
 use mokly_sidecar::results::Render;
 
 use crate::error::{RenderError, Result};
-use crate::transport_values;
+use crate::{render_call, transport_values};
 
 pub(crate) struct Fragments {
     pub(crate) _lease: Option<std::sync::Arc<dyn mokly_catalogue::render_sources::GenerationLease>>,
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) generation: String,
+    pub(crate) source_root: PathBuf,
 }
 
 impl FragmentRenderer for Fragments {
+    fn record_served(&self, request: &FragmentRequest) {
+        self.pool.record_served_render(
+            &self.source_root,
+            render_call::call(&self.generation, request),
+        );
+    }
     #[tracing::instrument(name = "render.fragment", skip_all, fields(status = "error"))]
     fn render(&self, request: &FragmentRequest) -> mokly_html::error::Result<Fragment> {
         match self.render_fragment(request) {
@@ -46,66 +51,7 @@ impl FragmentRenderer for Fragments {
 
 impl Fragments {
     fn render_fragment(&self, request: &FragmentRequest) -> Result<Fragment> {
-        let params = methods::Render {
-            generation: self.generation.clone(),
-            handle: request.handle.clone(),
-            entry: EntryBinding {
-                path: request.entry_path.clone(),
-                title: request.entry_title.clone(),
-            },
-            props: transport_values::plain_props(&request.props),
-            viewport: match request.viewport {
-                mokly_model::axes::Viewport::Mobile => "mobile",
-                mokly_model::axes::Viewport::Desktop => "desktop",
-            }
-            .into(),
-            color_scheme: match request.color_scheme {
-                ColorScheme::Light => methods::ColorScheme::Light,
-                ColorScheme::Dark => methods::ColorScheme::Dark,
-            },
-        };
-        let call = match request.kind {
-            RenderKind::Screen => Call::RenderScreen(params),
-            RenderKind::Component => Call::RenderComponent(methods::RenderComponent {
-                render: params,
-                slots: request
-                    .slots
-                    .iter()
-                    .map(|(name, token)| {
-                        (
-                            name.clone(),
-                            SlotInput::Placeholder {
-                                token: token.clone(),
-                            },
-                        )
-                    })
-                    .chain(request.saved_slots.iter().map(|(name, handle)| {
-                        (
-                            name.clone(),
-                            SlotInput::Saved {
-                                handle: handle.clone(),
-                            },
-                        )
-                    }))
-                    .collect(),
-                ignore_scope: if request.ignore_enabled {
-                    IgnoreScope::Enabled
-                } else {
-                    IgnoreScope::Disabled
-                },
-            }),
-            RenderKind::Story => Call::RenderStory(methods::RenderStory {
-                generation: params.generation,
-                story_id: params.handle,
-                props: params.props,
-                viewport: params.viewport,
-                color_scheme: params.color_scheme,
-            }),
-            RenderKind::Page => Call::RenderPage(methods::RenderPage {
-                generation: params.generation,
-                handle: params.handle,
-            }),
-        };
+        let call = render_call::call(&self.generation, request);
         let result = match self.pool.request(call) {
             Ok(result) => result,
             Err(source) => return Err(RenderError::Sidecar { source }),

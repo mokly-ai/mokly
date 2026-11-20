@@ -21,7 +21,7 @@ impl Reporter for ServeDirectory {
     fn opened(&self, directory: &Path) {
         if !self.announced.swap(true, Ordering::AcqRel) {
             self.terminal
-                .stdout(&cache_line(directory, &self.style, &self.redactor));
+                .cache_notice(&cache_line(directory, &self.style, &self.redactor));
         }
     }
 }

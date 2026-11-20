@@ -9,6 +9,16 @@ These rules belong to the `bundle` and `restoreGeneration` requests of the
 Every private `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests, logical metadata
 digests, reuse evidence, the toolchain identity, and the compilation identity.
+A compilation with complete reuse evidence also carries the optional
+`metadataIdentity`. It digests the compilation identity files that no render
+input key covers: the `jsconfig.json` candidates, the `extends` targets, the
+resolved peer manifests, and the `tsconfig.json` and `package.json` candidates
+above the source root. Each file counts by its path relative to the source
+root and by its content or its absence. The
+[render store](./mokly-render-store.md#identity) uses `metadataIdentity` with
+the toolchain identity, and only when the reuse evidence is also stable and the
+toolchain identity is known. Without them, the render store neither reads nor
+writes the documents that depend on that compilation.
 `restoreGeneration` installs that recipe with its original parameters, module
 graph, and evaluated generation id. The bundle result carries the graph once. It
 reads no current source file and invokes no compiler. Peer packages retain the

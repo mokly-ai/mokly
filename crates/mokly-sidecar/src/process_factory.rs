@@ -160,6 +160,7 @@ impl NodeFactory {
         let diagnostics = Arc::clone(&self.diagnostics);
         let timings = self.timings;
         let phases = PhaseState::default();
+        let compile_count = Arc::new(AtomicU64::new(0));
         let diagnostic_phases = phases.clone();
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
@@ -195,6 +196,7 @@ impl NodeFactory {
             Box::new(ForwardEvents {
                 diagnostics: Arc::clone(&self.diagnostics),
                 phases: phases.clone(),
+                compile_count: compile_count.clone(),
             }),
             launch.version.clone(),
         )
@@ -214,6 +216,7 @@ impl NodeFactory {
                 discover_memory,
                 deadlines,
                 phases,
+                compile_count,
             }),
             control,
         })

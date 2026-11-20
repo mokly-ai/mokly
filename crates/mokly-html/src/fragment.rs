@@ -10,7 +10,7 @@ use mokly_model::usage::{ComponentInstanceRecord, ComponentSlotRecord};
 use crate::error::{HtmlError, Result};
 
 /// A definition's render method, before document composition.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RenderKind {
     /// Screen fragment.
     Screen,
@@ -23,7 +23,7 @@ pub enum RenderKind {
 }
 
 /// Fully resolved inputs of one memoizable JavaScript render.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FragmentRequest {
     /// Definition source and export name, or story id.
     pub handle: String,
@@ -127,6 +127,8 @@ pub struct StyleAttribution {
 /// Object-safe JavaScript render boundary, with a cacheable request.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = FragmentRendererMock))]
 pub trait FragmentRenderer: Send + Sync {
+    /// Record a store-served input without rendering, looking it up, or evaluating code.
+    fn record_served(&self, _request: &FragmentRequest) {}
     /// Render the named definition without assembling a document.
     fn render(&self, request: &FragmentRequest) -> Result<Fragment>;
 }

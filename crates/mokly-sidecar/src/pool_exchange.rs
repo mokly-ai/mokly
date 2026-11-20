@@ -1,5 +1,6 @@
 //! Request execution, retries, recycling, and release publication.
 
+use std::path::Path;
 use std::sync::Weak;
 
 use crate::error::{Error, FailureKind, Result};
@@ -11,6 +12,9 @@ use crate::pool_releases::Release;
 use crate::wire::MethodResult;
 
 impl SidecarPool for Pool {
+    fn record_served_render(&self, source_root: &Path, call: Call) {
+        self.record_stored_render(source_root, call);
+    }
     fn served_generation(&self, generation: &str, epoch: u64) {
         self.served(generation, epoch);
     }
@@ -93,7 +97,7 @@ impl Pool {
             };
             outcome = self.execute(&mut current, &call, deadline, &mut bundle_attempt);
             if let Ok(result) = &outcome {
-                self.record_head(index, &call, result);
+                self.record_head(index, &current, &call, result);
             }
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
             if outcome.as_ref().is_err_and(|error| !reusable(error)) {
