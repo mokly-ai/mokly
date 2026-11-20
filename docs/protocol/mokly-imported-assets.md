@@ -1,6 +1,6 @@
 # JavaScript Asset Imports
 
-Status: Not implemented yet. [Milestone 10 of the Storybook support plan](../../plans/storybook-support.md#milestone-10-imported-assets-in-documents) adds the asset imports, their URLs in documents, and their delivery. [Milestone 11](../../plans/storybook-support.md#milestone-11-imported-assets-in-collected-styles) adds their URLs in collected styles.
+Status: The core does not deliver imported assets yet, so their URLs name missing files. [Milestone 10 of the Storybook support plan](../../plans/storybook-support.md#milestone-10-imported-assets-in-documents) adds the delivery.
 
 This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each

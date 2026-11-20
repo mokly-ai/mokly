@@ -934,9 +934,11 @@ Components that import images render them, as decision 6 says.
 
 Depends on: 10
 
-- [ ] Rewrite asset tokens in the CSS-in-JS styles that the sidecar collects,
-      such as Emotion and styled-components `url()` values.
-- [ ] Test an Emotion style with an imported background image.
+- [x] Rewrite asset tokens in the CSS-in-JS styles that the sidecar collects,
+      such as Emotion and styled-components `url()` values. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Test an Emotion style with an imported background image. Branch:
+      conductor/storybook-support-c-imported-assets
 
 ## Milestone 12: Imported assets verification, review, and pull request
 

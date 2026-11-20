@@ -119,8 +119,8 @@ consumer renderer wrappers. Only instance and slot markers reach served bytes.
 by the graph. The crate performs no direct filesystem access or writes.
 The graph rewrites closed asset tokens whose paths are portable. It uses
 document-relative URLs in the final tree. Replacement does not depend on the
-generation's asset membership. Comments, tokens with non-portable paths,
-and collected stylesheet text stay unchanged.
+generation's asset membership. Collected style text and attribution records
+receive the same URLs. Comments and tokens with non-portable paths stay unchanged.
 
 ## Quick Start
 

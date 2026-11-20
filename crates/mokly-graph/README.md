@@ -277,8 +277,9 @@ at the same logical path. Each input supplies its confined source identity,
 digest, aliases, and importing module. Each comparison side uses its own inputs.
 Final document composition rewrites asset tokens whose paths are portable.
 It creates document-relative URLs beside logical links before URL and closure
-checks. Replacement does not depend on asset membership. A reference to an
-undelivered asset fails the existing
+checks. Collected style text and attribution records receive the same URLs.
+Rule ownership stays unchanged. Replacement does not depend on asset membership.
+A reference to an undelivered asset fails the existing
 closure check as a missing target. Asset membership does not enter document
 keys, so equal render inputs share cached documents across generations and sides.
 `open_asset` supplies a `dyn AssetRead` stream. Its checked copy fails with
@@ -334,7 +335,8 @@ retention disabled.
 - [`src/imported_assets.rs`](./src/imported_assets.rs) checks imported route
   portability and registers shared asset plans and protected source inputs.
 - [`src/asset_tokens.rs`](./src/asset_tokens.rs) rewrites portable asset
-  tokens for each document route with the shared stylesheet path rule.
+  tokens for each document route with the shared stylesheet path rule. It
+  keeps rule text equal between collected CSS and its attribution records.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,

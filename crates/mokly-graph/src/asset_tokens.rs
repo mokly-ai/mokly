@@ -15,9 +15,12 @@ pub(crate) fn rewrite(nodes: &mut [Node], route: &str) {
                 for attribute in &mut element.attributes {
                     replace(&mut attribute.value, route);
                 }
-                if element.style_owners.is_none() {
-                    pending.extend(element.children.iter_mut().rev());
+                if let Some(records) = &mut element.style_attribution {
+                    for record in records {
+                        replace(&mut record.css, route);
+                    }
                 }
+                pending.extend(element.children.iter_mut().rev());
             }
             Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
             Node::Text(value) => replace(value, route),
