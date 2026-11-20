@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { act, createElement } from "react";
-import { createRoot } from "react-dom/client";
-
 import { unexpectedError } from "../../api/errors";
 import type { Connection } from "../../api/types";
 import {
@@ -13,58 +10,25 @@ import {
 import { useLeavePage } from "../../navigation/leave-page";
 import {
   memoryStorage,
-  tabAt,
+  shellPage,
   withWindow,
   withWindowAsync,
 } from "../page-window";
+import type { TestLocation } from "../page-window";
+
+import { leaveScreen, restoredPage } from "./leave-screen";
 
 /** Where the screen in these tests leaves for. */
 const trip = "https://github.com/login/oauth/authorize";
 
-/**
- * One screen that uses `useLeavePage`, rendered by React DOM in this Node
- * process, with the page it runs in. The page records each trip it is sent on,
- * each trip it calls off and each restore the screen hears, in order.
- */
-function screen() {
-  const seen: string[] = [];
-  const page = Object.assign(new EventTarget(), {
-    location: {
-      ...tabAt(),
-      assign: (url: string) => void seen.push("leave " + url),
-    },
-    sessionStorage: memoryStorage(),
-    stop: () => void seen.push("stop"),
-    // React DOM reads these two of the page while it commits.
-    event: undefined,
-    HTMLIFrameElement: class {},
-  });
-  // Node has no DOM. A screen that renders nothing needs only these fields
-  // of the fragment that React DOM renders it into.
-  const fragment = Object.assign(new EventTarget(), {
-    nodeType: 11,
-    nodeName: "#document-fragment",
-    ownerDocument: new EventTarget(),
-    textContent: "",
-    firstChild: null,
-  });
-  let leave: ReturnType<typeof useLeavePage> = () => false;
-  function Screen() {
-    leave = useLeavePage(() => void seen.push("restored"));
-    return null;
-  }
-  const root = createRoot(fragment as unknown as DocumentFragment);
-  let screens = 0;
-  const mount = () => {
-    act(() => root.render(createElement(Screen, { key: ++screens })));
-    return leave;
-  };
-  const unmount = () => act(() => root.unmount());
+function screen(location?: TestLocation) {
+  const subject = leaveScreen(
+    (seen) => useLeavePage(() => void seen.push("restored")),
+    location,
+  );
+  const { page, mount, unmount } = subject;
   return {
-    seen,
-    page,
-    mount,
-    unmount,
+    ...subject,
     /** Draw the screen, run `steps` while it is shown, then unmount it. */
     run(steps: (leave: ReturnType<typeof useLeavePage>) => void) {
       withWindow(page, () => {
@@ -76,11 +40,6 @@ function screen() {
       });
     },
   };
-}
-
-/** The event the browser sends when it restores a page from its cache. */
-function restoredPage(): Event {
-  return Object.assign(new Event("pageshow"), { persisted: true });
 }
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -107,7 +66,7 @@ test("a screen that unmounts after its page was restored calls nothing off", () 
 });
 
 test("a late GitHub answer preserves the newer screen's flow and callback", async () => {
-  const { seen, page, mount, unmount } = screen();
+  const { seen, opened, page, mount, unmount } = screen(shellPage());
   const older = Promise.withResolvers<Connection>();
   await withWindowAsync(page, async () => {
     try {
@@ -151,6 +110,7 @@ test("a late GitHub answer preserves the newer screen's flow and callback", asyn
       );
       assert.equal(abandoned, null);
       assert.deepEqual(seen, ["leave " + trip + "?newer"]);
+      assert.deepEqual(opened, []);
     } finally {
       unmount();
     }
