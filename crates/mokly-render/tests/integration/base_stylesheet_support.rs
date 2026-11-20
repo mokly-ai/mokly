@@ -53,6 +53,7 @@ impl Fixture {
 
     pub(super) fn with_setup(files: &[(&str, &str)], setup: &dyn Fn(&Consumer)) -> Self {
         let head = Consumer::single();
+        head.write(".gitattributes", "* text=auto eol=lf\n");
         head.write(".gitignore", "node_modules/\n");
         head.write("mokly.config.json", r#"{"roots":[{"dir":"specs","files":["**/*.screen.html"]}],"stylesheets":[{"match":"**","stylesheets":["main.css"]}]}"#);
         head.write(
