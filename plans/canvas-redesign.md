@@ -28,9 +28,8 @@ presence.
 
 ## Design record
 
-The [design record](./canvas-redesign-design.md) gives the design source,
-Cal's decisions in force with their dates, my design calls, the contract
-owners and the replaced ways. Read it before you start a milestone.
+Read the [design record](./canvas-redesign-design.md) before each milestone.
+It holds the dated decisions, design calls, contract owners and replaced ways.
 
 ## Milestone 1: Mockups
 
@@ -101,19 +100,16 @@ a status line that links its milestone.
       panel, dark code panels, the mobile tree sheet and the sample fence.
 - [ ] `site-delivery.md`: the script islands for the scheme control, the
       changelog filter, the scroll spies, the home demos and the sample fence.
-- [ ] `site-mockups.md` and `marketing-site.md`: the pricing entry, the route
-      table and the app links.
-- [ ] `design-tokens.md` and `design-tokens-color.md`: the Canvas values, and
-      `@mokly/ui` as their source.
-- [ ] `mokly-viewer-palette.md` and `mokly-viewer-appearance.md`: the palette
-      source and the Canvas look.
+- [ ] `site-mockups.md`, `marketing-site.md`: pricing, routes, app links.
+- [ ] The token and palette docs (`design-tokens*.md`, `mokly-viewer-palette.md`,
+      `mokly-viewer-appearance.md`): Canvas values from `@mokly/ui`.
 - [ ] `mokly-shell-design.md` and `mokly-shell-device-chrome.md`: the canvas
       stage, frame labels, size tags, pan, zoom, Fit, floating panels and the
       phone dock.
 - [ ] `mokly-component-inspector-design.md`, `mokly-viewer-selection.md` and
       the frame probe docs: the right panel, the selection and the box model.
-- [ ] `mokly-comparison-panes.md`: the Swipe mode and compare on every frame.
-- [ ] `mokly-guides.md`: the HTML sample fence.
+- [ ] `mokly-comparison-panes.md` (Swipe, compare on every frame) and
+      `mokly-guides.md` (the HTML sample fence).
 - [ ] The cloud viewer docs: the bar, the account menu and the check slot.
 - [ ] Update the site, UI package and mockups README files.
 
