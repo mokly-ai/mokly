@@ -17,8 +17,10 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     let reads = current.clone();
     let physical = Unimock::new(
         PhysicalInputsMock::matches
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, _, _| Ok(reads.load(Ordering::Acquire)))),
+            .each_call(matching!(_, _, _))
+            .answers_arc(Arc::new(
+                move |_, _, _, _| Ok(reads.load(Ordering::Acquire)),
+            )),
     );
     let calls = Arc::new(Mutex::new(vec![]));
     let evidence = evidence();
@@ -63,8 +65,8 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
     let mut runtime = runtime(
         Unimock::new(
             PhysicalInputsMock::matches
-                .each_call(matching!(_, _))
-                .answers(&|_, _, _| Ok(true)),
+                .each_call(matching!(_, _, _))
+                .answers(&|_, _, _, _| Ok(true)),
         ),
         vec![result(Some(plan()), evidence())],
         calls.clone(),

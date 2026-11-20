@@ -54,6 +54,22 @@ both modes was rejected, because a change of an inactive manifest or PnP state
 would then change shared render keys. A new result field was rejected,
 because it changes the wire format.
 
+The table also records each link at a candidate path that esbuild tries
+before the selection. The entry of a link that resolves records its canonical
+target. The entry of a dangling link, whose real path fails, records its
+lexical final target. That target is the first path in its chain of links
+that is not a link, with each link target resolved as text against the folder
+of its link. The table then also records that target as absent. A link entry
+matches only a link at its path. When that link resolves, its canonical target
+must equal the recorded target. When its real path fails, its lexical final
+target must equal the recorded target, and the table must record that target
+as absent. The sidecar and the binary apply this rule alike.
+Decision of the performance orchestrator on 2026-11-20: the table pins a
+dangling candidate link by its lexical final target, so the compilation keeps
+the marker and edit reuse, and a change that lets esbuild select the candidate
+ends the reuse. Withholding the marker for such a link was rejected, because
+it removes working edit reuse.
+
 ## Metadata Bounds
 
 The sidecar reads the package metadata of the importer's own package and of

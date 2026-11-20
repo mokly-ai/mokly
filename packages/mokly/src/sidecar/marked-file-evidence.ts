@@ -10,8 +10,18 @@ import type { PhysicalInputs } from "./physical-inputs.js";
 export function markedFileEvidence(
   reader: PhysicalInputs,
   files: Iterable<string>,
+  links: Iterable<string> = [],
 ): ReuseEvidence | undefined {
   const selected = new Map<string, PhysicalInput>();
+  for (const file of links) {
+    reader.retainLinks(file);
+    if (!reader.complete) return undefined;
+    for (let current = file; ; current = path.dirname(current)) {
+      const link = reader.inputs.get(current);
+      if (link?.kind === "link") selected.set(current, link);
+      if (current === path.dirname(current)) break;
+    }
+  }
   for (const file of files) {
     const value = reader.file(file);
     if (!reader.complete || !value) return undefined;

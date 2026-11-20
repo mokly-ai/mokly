@@ -1,9 +1,11 @@
 //! Read cache-only filesystem observations outside the logical source tree.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::{self, ErrorKind};
 use std::path::Path;
 
+use mokly_catalogue::config::normalize;
 use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput, ReuseEvidence};
 use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::stream::{OpenedSource, SourceStream};
@@ -12,15 +14,26 @@ use mokly_source_interface::stream::{OpenedSource, SourceStream};
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PhysicalInputsMock))]
 pub trait PhysicalInputs: Send + Sync {
     /// Compare one observation. Read errors must reject reuse, including recorded absence.
-    fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool>;
+    /// The adjacent inputs authorize the lexical target of a dangling link.
+    fn matches(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        inputs: &BTreeMap<String, PhysicalInput>,
+    ) -> Result<bool>;
 }
 
 /// Native filesystem reader. File content checks retain one 64 KiB streaming buffer.
 pub struct SystemPhysicalInputs;
 
 impl PhysicalInputs for SystemPhysicalInputs {
-    fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool> {
-        match self.read(path, expected) {
+    fn matches(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        inputs: &BTreeMap<String, PhysicalInput>,
+    ) -> Result<bool> {
+        match self.read(path, expected, inputs) {
             Ok(matches) => Ok(matches),
             Err(source) => Err(SourceError::Io {
                 operation: "check physical compilation input",
@@ -32,7 +45,12 @@ impl PhysicalInputs for SystemPhysicalInputs {
 }
 
 impl SystemPhysicalInputs {
-    fn read(&self, path: &Path, expected: &PhysicalInput) -> io::Result<bool> {
+    fn read(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        inputs: &BTreeMap<String, PhysicalInput>,
+    ) -> io::Result<bool> {
         match expected {
             PhysicalInput::FilePath => {
                 Ok(fs::metadata(path)?.is_file() && Path::new(&real_path(path)?) == path)
@@ -95,10 +113,52 @@ impl SystemPhysicalInputs {
                 Ok(&actual == entries && Path::new(&real_path(path)?) == path)
             }
             PhysicalInput::Link { target } => {
-                Ok(fs::symlink_metadata(path)?.file_type().is_symlink()
-                    && real_path(path)? == *target)
+                if !fs::symlink_metadata(path)?.file_type().is_symlink() {
+                    return Ok(false);
+                }
+                match real_path(path) {
+                    Ok(actual) => Ok(actual == *target),
+                    Err(error)
+                        if matches!(
+                            error.kind(),
+                            ErrorKind::NotFound | ErrorKind::NotADirectory
+                        ) =>
+                    {
+                        Ok(matches!(inputs.get(target), Some(PhysicalInput::Absent))
+                            && lexical_link_target(path)? == *target)
+                    }
+                    Err(error) => Err(error),
+                }
             }
         }
+    }
+}
+
+fn lexical_link_target(path: &Path) -> io::Result<String> {
+    let mut current = path.to_owned();
+    let mut seen = BTreeSet::new();
+    loop {
+        if !seen.insert(current.clone()) {
+            return Err(io::Error::from(ErrorKind::InvalidData));
+        }
+        match fs::symlink_metadata(&current) {
+            Ok(metadata) if metadata.file_type().is_symlink() => {
+                let target = fs::read_link(&current)?;
+                current = normalize(&current.parent().unwrap_or(&current).join(target));
+                current = dunce::simplified(&current).to_owned();
+            }
+            Ok(_) => break,
+            Err(error)
+                if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) =>
+            {
+                break;
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    match current.into_os_string().into_string() {
+        Ok(target) => Ok(target),
+        Err(_) => Err(io::Error::from(ErrorKind::InvalidData)),
     }
 }
 
@@ -120,10 +180,11 @@ pub(crate) fn marked_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInpu
 }
 
 fn entries_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
-    evidence
-        .inputs
-        .iter()
-        .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
+    evidence.inputs.iter().all(|(path, expected)| {
+        reader
+            .matches(Path::new(path), expected, &evidence.inputs)
+            .unwrap_or(false)
+    })
 }
 
 #[cfg(test)]

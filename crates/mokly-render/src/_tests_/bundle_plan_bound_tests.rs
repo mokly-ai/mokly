@@ -26,8 +26,8 @@ fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previ
     let mut runtime = runtime(
         Unimock::new(
             PhysicalInputsMock::matches
-                .each_call(matching!(_, _))
-                .answers(&|_, _, _| Ok(true)),
+                .each_call(matching!(_, _, _))
+                .answers(&|_, _, _, _| Ok(true)),
         ),
         vec![
             result(Some(large.clone()), evidence()),
@@ -117,8 +117,8 @@ fn an_ineligible_later_capture_keeps_the_older_plan_and_checks_its_own_evidence(
         let mut runtime = runtime(
             Unimock::new(
                 PhysicalInputsMock::matches
-                    .each_call(matching!(_, _))
-                    .answers_arc(Arc::new(move |_, path, expected| {
+                    .each_call(matching!(_, _, _))
+                    .answers_arc(Arc::new(move |_, path, expected, _| {
                         assert_eq!(path, Path::new("/physical/config.json"));
                         assert_eq!(expected, &PhysicalInput::Absent);
                         Ok(reads.load(Ordering::Acquire))

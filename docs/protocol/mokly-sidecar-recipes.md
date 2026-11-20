@@ -104,7 +104,10 @@ each file and directory that can change how a bundled import or a peer resolves:
 
 A recorded directory keeps every entry, the kind of each entry, and the real
 target of each link. An absent file or directory is recorded as absent. A
-candidate that cannot be read never matches a recorded absence. When the sidecar
+candidate that cannot be read never matches a recorded absence. A link entry
+that is not part of a recorded directory matches by the shared link rule of the
+[private folder files](./mokly-sidecar-folder-reuse.md#private-folder-files).
+That rule looks for the absent entry in the same evidence. When the sidecar
 cannot record the evidence of an import completely in a `full` request, the
 compilation is never reused and never stored. When the binary reuses a bundle
 result without a `bundle` request, it checks the same evidence. Reuse evidence

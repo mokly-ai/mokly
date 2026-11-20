@@ -19,7 +19,7 @@ fn read_errors_reject_recorded_absence_and_incomplete_records_never_read() {
     };
     let reader = Unimock::new(
         PhysicalInputsMock::matches
-            .some_call(matching!(_, _))
+            .some_call(matching!(_, _, _))
             .returns(Err(SourceError::Io {
                 operation: "read",
                 path: "/outside/jsconfig.json".into(),
@@ -41,7 +41,7 @@ fn folder_files_in_a_marked_record_use_the_same_physical_matcher() {
     };
     let reader = Unimock::new(
         PhysicalInputsMock::matches
-            .some_call(matching!(_, _))
+            .some_call(matching!(_, _, _))
             .returns(Ok(true)),
     );
     assert!(marked_current(&evidence, &reader));

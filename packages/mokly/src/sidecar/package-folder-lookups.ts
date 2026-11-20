@@ -13,6 +13,7 @@ import { PackageFolders } from "./package-folders.js";
 import { packageFolderFiles } from "./package-map.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
+import { lexicalLinkTarget } from "./physical-link-target.js";
 import { pnpFiles } from "./pnp-files.js";
 import { PnpLocations } from "./pnp-locations.js";
 import type { LookupRequest } from "./resolution-request.js";
@@ -45,6 +46,7 @@ export class PackageFolderLookups {
   private readonly folders: PackageFolders;
   private readonly directories = new Set<string>();
   private readonly files = new Set<string>();
+  private readonly links = new Set<string>();
   private bytes = 0;
   private folder = false;
 
@@ -66,7 +68,11 @@ export class PackageFolderLookups {
 
   private stage(set: Set<string>, file: string): void {
     if (set.has(file)) return;
-    if (!this.directories.has(file) && !this.files.has(file)) {
+    if (
+      !this.directories.has(file) &&
+      !this.files.has(file) &&
+      !this.links.has(file)
+    ) {
       this.bytes += folderRowBytes(file);
       if (this.bytes > EVIDENCE_LIMIT)
         throw new Error("package folder lookup limit");
@@ -93,18 +99,11 @@ export class PackageFolderLookups {
           base,
           this.paths.settings.resolveExtensions,
         ))
-          if (brokenLink(file)) {
-            const seen = new Set([file]);
-            let target = file;
-            do {
-              target = path.resolve(
-                path.dirname(target),
-                fs.readlinkSync(target),
-              );
-              if (seen.has(target)) throw new Error("candidate link cycle");
-              seen.add(target);
-              if (!link(target)) this.stage(this.files, target);
-            } while (link(target));
+          if (link(file)) {
+            const target = lexicalLinkTarget(file, (candidate) =>
+              this.stage(this.links, candidate),
+            );
+            if (brokenLink(file)) this.stage(this.files, target);
           }
       }
       for (const manifest of found.manifests) this.stage(this.files, manifest);
@@ -125,7 +124,7 @@ export class PackageFolderLookups {
     } catch {
       return undefined;
     }
-    const evidence = markedFileEvidence(this.inputs, this.files);
+    const evidence = markedFileEvidence(this.inputs, this.files, this.links);
     if (!evidence) return undefined;
     for (const directory of this.directories)
       this.paths.lookupDirectories.add(directory);

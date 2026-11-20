@@ -13,6 +13,6 @@ digest: string, } | { "kind": "directory",
  */
 entries: Array<PhysicalEntry>, } | { "kind": "link",
 /**
- * The canonical filesystem target of the lexical link.
+ * The canonical target, or lexical final target beside its recorded absence.
  */
 target: string, };

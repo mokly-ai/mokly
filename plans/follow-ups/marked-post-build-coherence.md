@@ -136,12 +136,12 @@
     - Exempt a name only when the snapshot proves that it is no file for
       esbuild. Withhold the marker when a needed listing is missing.
       Evaluate on the listings that `resolutionInputs` returns.
+      A dangling candidate link can keep its exemption while its private
+      link pin matches the same lexical final target beside its recorded
+      absence.
   - Limits of option A:
     - Target parity fails when a manifest changes during the compile. See
       [marked-metadata-owner-timing.md](./marked-metadata-owner-timing.md).
-    - A dangling candidate link is a listed name that the snapshot cannot
-      prove is no file. See
-      [dangling-candidate-link-pin.md](./dangling-candidate-link-pin.md).
 - **Problem:** A marked compilation records its checks after the compile. A
   preferred candidate that appears between the read of esbuild and the
   recording enters the recorded listing. The checks then match the new disk,
@@ -213,9 +213,6 @@
     the `full` side of the same class. Its option D ranks each winner among
     the captured candidates, and B here extends that rank to folder
     obligations. Each item can merge alone.
-  - [dangling-candidate-link-pin.md](./dangling-candidate-link-pin.md):
-    decides whether option A keeps its exemption for a dangling candidate
-    link.
   - [marked-metadata-owner-timing.md](./marked-metadata-owner-timing.md):
     holds the target-parity residual of option A.
   - [marked-sibling-file-candidates.md](./marked-sibling-file-candidates.md):

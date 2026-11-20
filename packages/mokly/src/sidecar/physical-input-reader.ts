@@ -10,6 +10,7 @@ import type { CaptureDurability } from "./capture-durability.js";
 import { captureKind } from "./capture-kind.js";
 import type { CaptureKind } from "./capture-kind.js";
 import { missingFile } from "./file-digests.js";
+import { lexicalLinkTarget } from "./physical-link-target.js";
 
 export const EVIDENCE_LIMIT = 8 * 1024 * 1024;
 const METADATA_FILE_LIMIT = 1024 * 1024;
@@ -127,7 +128,12 @@ export class PhysicalInputReader {
       if (stat.isDirectory()) this.durability?.observe(file, stat, false);
       if (stat.isSymbolicLink()) {
         this.durability?.target(file);
-        return this.realPath(file);
+        try {
+          return this.realPath(file);
+        } catch (error) {
+          if (!missingFile(error)) throw error;
+          return lexicalLinkTarget(file);
+        }
       }
     } catch (error) {
       if (!missingFile(error)) throw error;
@@ -236,10 +242,16 @@ export class PhysicalInputReader {
             return actual.kind === "file" && actual.digest === expected.digest;
           }
           case "link":
-            return (
-              fs.lstatSync(file).isSymbolicLink() &&
-              this.realPath(file) === expected.target
-            );
+            if (!fs.lstatSync(file).isSymbolicLink()) return false;
+            try {
+              return this.realPath(file) === expected.target;
+            } catch (error) {
+              if (!missingFile(error)) throw error;
+              return (
+                evidence.inputs[expected.target]?.kind === "absent" &&
+                lexicalLinkTarget(file) === expected.target
+              );
+            }
           case "directory": {
             const actual = this.readDirectory(
               file,
