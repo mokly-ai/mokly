@@ -17,6 +17,7 @@ import { catalogueEntries, viewUsage } from "./catalogue-index";
 const outbound = {
   "Continue in browser": [
     "product/account/sign-in/desktop",
+    "product/account/sign-in/mac-app",
     "product/account/sign-up/desktop",
   ],
   "Open browser again": [

@@ -1,5 +1,7 @@
 import type { Viewport } from "@mokly/mokly";
 
+import { MacWindowLinks } from "../mac-window";
+
 import { DesktopEntryPage } from "./desktop-entry";
 import { EntryPage } from "./entry-page";
 
@@ -34,6 +36,27 @@ export function SignInGitHubOpensSoonScreen(_props: { viewport: Viewport }) {
 
 export function SignInAddressRefusedScreen(_props: { viewport: Viewport }) {
   return <EntryPage mode="sign-in" situation="address-refused" />;
+}
+
+const macAppPath = "product/account/sign-in/mac-app";
+
+/**
+ * Sign in in the Mac app: the desktop app's entry in a window without a title
+ * bar. The window buttons sit over the empty start of the account header, and
+ * the panel stays where it is.
+ */
+export function SignInMacAppScreen(_props: { viewport: Viewport }) {
+  return (
+    <>
+      <DesktopEntryPage
+        mode="sign-in"
+        state="default"
+        screen={macAppPath}
+        macApp
+      />
+      <MacWindowLinks current={macAppPath} />
+    </>
+  );
 }
 
 /** The desktop app's window: one action that opens the connect page. */

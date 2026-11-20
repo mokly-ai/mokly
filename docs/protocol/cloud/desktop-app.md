@@ -52,8 +52,8 @@ ignore these three variables and use the app server's production CSP unchanged.
 
 [Desktop bundle and origin](./desktop-bundle.md) defines the privileged
 `mokly-app` scheme and the **desktop origin**, `mokly-app://desktop`, from
-which the shell serves the export, its renderer settings and its window
-lifecycle.
+which the shell serves the export, its renderer settings, its window
+lifecycle and the [Mac window](./desktop-bundle.md#mac-window).
 
 ## Current Viewer Limit
 
