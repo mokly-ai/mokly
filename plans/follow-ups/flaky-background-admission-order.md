@@ -30,5 +30,6 @@
 - **Left out:** A retry, a sleep, or a longer timeout. The testing rules forbid them for a flaky test.
 - **Wider fix:** B, when request order is the contract, because the pool then cannot admit out of order for any caller.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/flaky-held-failure-replacement-hang.md`, the same change and the same kind of timing dependence in the background work. One cause in the pool can explain both.
 - **Recommendation:** C, then B or A. The flaky-test rule asks for a reproduction with pass counts before the fix, and the evidence shows which side is wrong.
 - **Action:** fix after merge, apply C, because the test is outside the scope of the site change that met it, and one fix in its own branch reaches every open branch.
