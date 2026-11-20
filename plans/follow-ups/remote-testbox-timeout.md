@@ -27,9 +27,9 @@
   - On 2026-10-20 one remote run passed both delivery modes, 645 cases each,
     in 17.70 command minutes, without preparation.
   - Hosted CI gives the static delivery job 60 minutes.
-  - Since 2026-11-01 the Testbox job runs on `blacksmith-4vcpu-ubuntu-2404`,
-    the runner of the Linux CI suite jobs. It ran on 8 vCPUs from 2026-10-27
-    and on 2 vCPUs before that.
+  - Since 2026-11-01 the Testbox job runs on `blacksmith-4vcpu-ubuntu-2404`.
+    It ran on 8 vCPUs from 2026-10-27 and on 2 vCPUs before that. The Linux
+    CI suite jobs run on GitHub-hosted `ubuntu-24.04`.
   - On 2026-11-01 one remote gate on 4 vCPUs passed. Its longest command took
     8.6 minutes, and its longest box ran for 10.3 minutes.
 - **Problem:** During the CI release checks of the rebuild, the 30-minute

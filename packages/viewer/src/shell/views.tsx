@@ -24,6 +24,7 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { useRetryContent } from "./retry_focus.js";
 import { useShellRoot } from "./root_context.js";
 import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
@@ -124,6 +125,8 @@ export function ShellMain(props: {
 }) {
   const elements = useShellRoot()?.elements;
   const mainId = useShellIdentifier("mb-main");
+  // After a Try again of the catalogue, the main region takes focus.
+  useRetryContent(elements?.main);
   return (
     <MainRegion id={mainId} ref={elements?.main}>
       {props.view.kind === "home" ? (

@@ -68,6 +68,7 @@ fn classify(
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     };
     service.classify(&config, None, generation(), None)

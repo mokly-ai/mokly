@@ -17,7 +17,6 @@ import { readTestboxWorkflow } from "./helpers/testbox_workflow.js";
 
 const execute = promisify(execFile);
 const PROFILE_SELECTOR = "Select Node verification profile";
-const RELEASE_GATE = "Run complete verification";
 const SELECTOR_OUTPUTS = ["node-matrix", "verification-runtimes"];
 
 interface CiStep {
@@ -122,52 +121,53 @@ test("Testbox sessions receive only the job PATH, Chromium, and the workflow env
     PATH: process.env.PATH,
     UNEXPORTED_SECRET: "must-not-leak",
     MOKLY_TESTBOX_ENVIRONMENT: file,
+    MOKLY_CLOUD_NODE_BIN: "/fixture/cloud-node/bin",
   });
   assert.equal(output.stdout, "");
   assert.equal(output.stderr, "");
   assert.equal(
     await fs.readFile(file, "utf8"),
-    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n` +
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\nMOKLY_CLOUD_NODE_BIN=/fixture/cloud-node/bin\n` +
       workflowEnv.map(([name, value]) => `${name}=${value}\n`).join(""),
   );
 });
 
-test("the release complete gate verifies the checked-out tag commit", async (context) => {
-  const { run } = (await workflowStep("release-prepare.yml", RELEASE_GATE))
-    .step;
-  assert.ok(run, `"${RELEASE_GATE}" must run a shell script`);
-  if (process.platform === "win32") return;
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-release-gate-"));
+test("release preparation rejects absent evidence returned by older tag scripts", async (context) => {
+  const { step } = await workflowStep(
+    "release-prepare.yml",
+    "Select verification evidence",
+  );
+  assert.ok(step.run);
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-release-evidence-"),
+  );
   context.after(() => fs.rm(root, { recursive: true, force: true }));
-  const git = (...args: string[]) => execute("git", args, { cwd: root });
-  await git("init", "-q");
-  await git(
-    "-c",
-    "user.name=Fixture",
-    "-c",
-    "user.email=fixture@example.test",
-    "commit",
-    "-q",
-    "--allow-empty",
-    "-m",
-    "chore: release",
-  );
-  const tagCommit = (await git("rev-parse", "HEAD")).stdout.trim();
-  const bin = path.join(root, "bin");
-  await fs.mkdir(bin);
+  await fs.mkdir(path.join(root, "scripts/release"), { recursive: true });
   await fs.writeFile(
-    path.join(bin, "cargo"),
-    '#!/bin/sh\nprintf %s "$GITHUB_SHA" > "$GATE_COMMIT"\n',
-    { mode: 0o755 },
+    path.join(root, "scripts/release/evidence.mjs"),
+    "// Legacy selection returns without a failure.\n",
   );
-  const record = path.join(root, "gate-commit");
-  await runBash(run, root, {
-    PATH: `${bin}${path.delimiter}${process.env.PATH ?? ""}`,
-    HOME: root,
-    GITHUB_SHA: "f".repeat(40),
-    GATE_COMMIT: record,
-  });
-  assert.equal(await fs.readFile(record, "utf8"), tagCommit);
+  const directory = path.join(root, ".context/release-evidence");
+  await fs.mkdir(directory, { recursive: true });
+  const commit = "a".repeat(40);
+  await fs.writeFile(
+    path.join(directory, "record.json"),
+    JSON.stringify({
+      mode: "complete",
+      outcome: "absent",
+      taggedCommit: commit,
+      taggedTree: "b".repeat(40),
+      selectedRunId: null,
+      selectedRunUrl: null,
+      evidenceCommit: null,
+      reportCount: 0,
+      reason: "no matching CI run",
+    }),
+  );
+  await assert.rejects(
+    runBash(step.run, root, {}),
+    new RegExp(`Re-run CI on release commit ${commit}`),
+  );
 });
 
 async function workflowStep(

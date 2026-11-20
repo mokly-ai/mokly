@@ -23,6 +23,7 @@ export interface PublicationRefreshHost {
     index: CatalogueReadModel,
     details: readonly (readonly [DetailRequest, EntryDetailV4])[],
   ): void;
+  catalogueError(error: unknown): void;
   /** Another deployment answered the refresh. */
   deploymentChanged(): void;
   versionError(error: MoklyVersionError): void;
@@ -68,20 +69,28 @@ export class PublicationRefresh {
       () => this.#host.route(),
       revision,
       controller.signal,
-    ).then((outcome) => {
-      if (controller.signal.aborted) return;
-      this.#loading = undefined;
-      if (outcome.kind === "accepted") {
-        this.#failed = undefined;
-        this.#host.adopt(outcome.index, outcome.details);
-      } else if (outcome.kind === "deployment") this.#host.deploymentChanged();
-      else if (outcome.kind === "version")
-        this.#host.versionError(outcome.error);
-      else {
-        this.#failed = routeKey(this.#host.route());
-        this.#host.changed();
-      }
-    });
+    ).then(
+      (outcome) => {
+        if (controller.signal.aborted) return;
+        this.#loading = undefined;
+        if (outcome.kind === "accepted") {
+          this.#failed = undefined;
+          this.#host.adopt(outcome.index, outcome.details);
+        } else if (outcome.kind === "deployment")
+          this.#host.deploymentChanged();
+        else if (outcome.kind === "version")
+          this.#host.versionError(outcome.error);
+        else {
+          this.#failed = routeKey(this.#host.route());
+          this.#host.changed();
+        }
+      },
+      (error: unknown) => {
+        if (controller.signal.aborted) return;
+        this.#loading = undefined;
+        this.#host.catalogueError(error);
+      },
+    );
   }
 
   /** Abort the refresh that loads. */

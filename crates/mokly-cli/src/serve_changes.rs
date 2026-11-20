@@ -193,13 +193,16 @@ impl ChangeSource for Source {
                         .terminal
                         .stdout(&serve_output::changes_unavailable(
                             &self.services.style,
-                            &serve_errors::changes_reason(error),
+                            &serve_errors::changes_reason(error, self.services.style.mode),
                             &self.services.redactor,
                         ));
                 }
             }
         });
         self.services.sidecars.base_finished();
+        if let Some(store) = &self.services.runtime.document_store {
+            store.resume();
+        }
     }
     fn discarded(&self) {
         if let Some(staging) = self

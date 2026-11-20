@@ -1,0 +1,17 @@
+---
+import Policy from "../components/Policy.astro";
+import Site from "../layouts/Site.astro";
+import { PAGE_METADATA } from "../metadata.js";
+import { SITE_PATHS } from "../navigation.js";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.security];
+---
+
+<Site
+  description={description}
+  main="site-document site-policy"
+  route={SITE_PATHS.security}
+  title={title}
+>
+  <Policy id="security" />
+</Site>

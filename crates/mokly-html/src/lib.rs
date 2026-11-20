@@ -1,12 +1,15 @@
 //! Annotated HTML trees and catalogue document composition.
 #![warn(unreachable_pub)]
 
+mod compose_start;
 pub mod composition;
 pub mod controls;
 pub mod diagnostic_code;
 pub mod error;
 pub mod fragment;
 pub mod links;
+pub mod prepared_root;
+mod root_context_weight;
 
 #[cfg(test)]
 #[path = "_tests_/author_navigation_tests.rs"]
@@ -41,6 +44,7 @@ mod html_arena;
 mod html_sink;
 mod ignore_checks;
 mod javascript;
+mod javascript_request;
 mod link_destination;
 mod link_targets;
 mod marker_auth;
@@ -58,6 +62,7 @@ mod placeholders;
 mod raw_markers;
 mod regions;
 mod relative_links;
+mod root_inputs;
 mod slots;
 mod source_locations;
 mod text_mode;
@@ -109,6 +114,9 @@ mod raw_text_context_tests;
 #[path = "_tests_/safety_tests.rs"]
 mod safety_tests;
 #[cfg(test)]
+#[path = "_tests_/stored_root_tests.rs"]
+mod stored_root_tests;
+#[cfg(test)]
 #[path = "_tests_/substitution_tests.rs"]
 mod substitution_tests;
 #[cfg(test)]
@@ -152,3 +160,7 @@ mod pipeline_tests;
 #[cfg(test)]
 #[path = "_tests_/token_tree_agreement_tests.rs"]
 mod token_tree_agreement_tests;
+
+#[cfg(test)]
+#[path = "_tests_/completion_admission_tests.rs"]
+mod completion_admission_tests;

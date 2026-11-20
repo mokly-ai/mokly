@@ -36,7 +36,7 @@ impl Builder {
             })
             .cloned()
             .collect();
-        if !javascript.is_empty() || config.input.renderer.is_some() {
+        if !javascript.is_empty() || config.modules.renderer.is_some() {
             let described = self.definitions.describe(config, &javascript)?;
             prepared.model.folders.extend(described.folders);
             prepared.javascript.generation = described.generation;

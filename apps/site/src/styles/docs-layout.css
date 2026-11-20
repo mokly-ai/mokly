@@ -1,0 +1,149 @@
+/* The documentation layout: the section tree on the page canvas behind one
+   vertical hairline, the ruled document column, the on-this-page rail hung
+   from its own hairline, the previous and next cards, the code panel and the
+   search dialog. Kept in parity with the promoted mockups under
+   docs/mockups/styles/site/; the mobile composition is the default,
+   768px raises the desktop one and 1100px hangs the rail. */
+
+.site-docs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: 0 var(--mk-layout-gutter-mobile);
+  width: 100%;
+}
+
+/* The tree: a version chip, every section expanded, the changelog at the foot */
+
+.site-docs-side {
+  display: none;
+}
+
+.site-doc-tree {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.site-doc-tree-scroll {
+  display: grid;
+  gap: var(--mk-space-5);
+  margin: var(--mk-space-4) 0;
+  padding-right: var(--mk-space-2);
+  scrollbar-color: var(--mk-color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.site-doc-tree .site-version {
+  background: none;
+  border: 0;
+  padding: 0 var(--mk-space-3);
+}
+
+.site-version {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-1) var(--mk-space-2);
+}
+
+.site-version-label {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-version-link {
+  align-items: center;
+  color: var(--mk-color-text);
+  display: inline-flex;
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-version-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mk-color-border-strong);
+}
+
+.site-doc-section-head {
+  padding: 0 var(--mk-space-3) var(--mk-space-2);
+}
+
+.site-doc-section ul {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-doc-link {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+  min-height: var(--mk-layout-control-min);
+  padding: var(--mk-space-1) var(--mk-space-3);
+  text-decoration: none;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-doc-link:hover {
+  background: var(--mk-color-surface-muted);
+  color: var(--mk-color-text);
+}
+
+.site-doc-link[aria-current="page"],
+.site-doc-link[aria-current="page"]:hover {
+  background: var(--mk-color-accent-soft);
+  color: var(--mk-color-accent);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-doc-tree-foot {
+  border-top: 1px solid var(--mk-color-border);
+  display: grid;
+  padding-top: var(--mk-space-3);
+}
+
+.site-doc-tree-foot .site-doc-link {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}
+
+/* Below the breakpoint the tree is a native disclosure above the document */
+
+.site-doc-disclosure {
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  margin-top: var(--mk-space-6);
+  padding: 0 var(--mk-space-2);
+}
+
+.site-doc-disclosure > summary {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--mk-type-small-size);
+  font-weight: var(--mk-font-medium);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-2);
+}
+
+.site-doc-disclosure > summary:hover {
+  background: var(--mk-color-surface-muted);
+}

@@ -2,21 +2,23 @@
 
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
+use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::read_evidence::ReadBaseline;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::stylesheet_compiler::{CompileRoot, RootCompiler};
 use crate::stylesheet_record::ContextEvidence;
 use crate::stylesheet_store::StylesheetCache;
 
 use super::stylesheet_chain_support::module_bundle;
+use super::stylesheet_support::compiled;
 use super::stylesheet_support::{Calls, DIGEST, attempt, key, module, roots, tree};
 
-fn inner(bundle: Bundle) -> Arc<dyn StylesheetBundler> {
+fn inner(bundle: Bundle) -> Arc<dyn RootCompiler> {
     Arc::new(Unimock::new(
-        StylesheetBundlerMock::bundle
+        CompileRoot
             .next_call(matching!(_))
-            .returns(Ok(bundle)),
+            .returns(Ok(compiled(bundle))),
     ))
 }
 

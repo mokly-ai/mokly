@@ -63,7 +63,7 @@ fn check_value(name: &str, source: &str, text: &Spanned, attribute: bool) {
         "{name}: {text:?}"
     );
     let raw = &source.as_bytes()[range.start..range.end];
-    let plain = !raw.iter().any(|byte| [b'&', b'\r', 0].contains(byte));
+    let plain = raw == text.value.as_slice();
     let mut previous = range.start;
     for (decoded, byte) in text.value.iter().enumerate() {
         let offset = text.source_offset(decoded);

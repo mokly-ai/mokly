@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import { test } from "node:test";
 
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -85,6 +85,32 @@ test("a frame without content is unavailable, and a failed load adds its status"
     "This preview could not be loaded.",
   );
   assert.equal(screen.queryAllByText("This preview is unavailable.").length, 0);
+});
+
+test("a failed load offers Try again, as a button or as a depicted link", () => {
+  let retries = 0;
+  render(
+    <DocumentFrame error retry={{ onClick: () => retries++ }} scheme="light">
+      <i>document</i>
+    </DocumentFrame>,
+  );
+  const line = screen.getByRole("status");
+  assert.equal(line.textContent, "This preview could not be loaded. Try again");
+  fireEvent.click(within(line).getByRole("button", { name: "Try again" }));
+  assert.equal(retries, 1);
+  assert.equal(
+    renderToStaticMarkup(
+      <PreviewFrame
+        error
+        placement={{ kind: "flow" }}
+        retry={{ href: "../loading/" }}
+        scheme="light"
+      >
+        <i />
+      </PreviewFrame>,
+    ),
+    '<div class="mbk-flow-screen mbk-reset" data-preview-color-scheme="light"><i></i><p class="mbk-frame-error mbk-reset" role="status">This preview could not be loaded. <a class="mbk-empty-link mbk-reset" href="../loading/">Try again</a></p></div>',
+  );
 });
 
 test("a whole document fills the stage, which keeps its scroll as embed", () => {

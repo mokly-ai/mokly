@@ -1,0 +1,6 @@
+terraform_data.retired: Refreshing state... [id=a0e28f4e-b0ae-392c-b5d8-c99306ab7893]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.

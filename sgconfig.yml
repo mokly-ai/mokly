@@ -1,0 +1,5 @@
+ruleDirs:
+  - rules/rust
+  - rules/typescript
+testConfigs:
+  - testDir: rules/_tests_

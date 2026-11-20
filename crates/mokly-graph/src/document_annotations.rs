@@ -23,6 +23,12 @@ impl From<&Attribute> for AttributeRecord {
     }
 }
 
+impl AttributeRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.name.capacity() + self.value.capacity()
+    }
+}
+
 impl From<AttributeRecord> for Attribute {
     fn from(value: AttributeRecord) -> Self {
         Self {
@@ -32,7 +38,7 @@ impl From<AttributeRecord> for Attribute {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 /// Private authenticated logical-link record.
 pub(crate) struct ReferenceRecord {
     source_route: String,
@@ -47,6 +53,14 @@ impl From<&Reference> for ReferenceRecord {
             target: value.target.clone(),
             fragment: value.fragment.clone(),
         }
+    }
+}
+
+impl ReferenceRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.source_route.capacity()
+            + self.target.capacity()
+            + self.fragment.as_ref().map_or(0, String::capacity)
     }
 }
 
@@ -125,6 +139,32 @@ impl From<&Region> for RegionRecord {
             id: value.id.clone(),
             kind,
         }
+    }
+}
+
+impl RegionRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.id.capacity()
+            + match &self.kind {
+                RegionKindRecord::Root { path } => path.capacity(),
+                RegionKindRecord::Instance {
+                    path,
+                    key,
+                    local_id,
+                    props_key,
+                } => path.capacity() + key.capacity() + local_id.capacity() + props_key.capacity(),
+                RegionKindRecord::Slot {
+                    key,
+                    instance_key,
+                    name,
+                    owner,
+                } => {
+                    key.capacity() + instance_key.capacity() + name.capacity() + owner.known_bytes()
+                }
+                RegionKindRecord::Ignore { id, material_key } => {
+                    id.capacity() + material_key.as_ref().map_or(0, String::capacity)
+                }
+            }
     }
 }
 

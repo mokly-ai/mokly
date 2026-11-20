@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use mokly_css::parsed_cache::MemoryParsedCss;
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::GraphError;
 use mokly_graph::key::{NodeKind, key};
 use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
@@ -214,10 +213,7 @@ pub(super) fn captured(
             .map(|&index| {
                 (
                     route(index),
-                    CapturedView {
-                        document: EncodedView::encode(&artifact(index)).unwrap(),
-                        closure: closure(index),
-                    },
+                    CapturedView::encode(&artifact(index), closure(index)).unwrap(),
                 )
             })
             .collect(),

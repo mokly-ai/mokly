@@ -34,7 +34,7 @@ pub struct Engine {
 }
 
 impl Comparison for Engine {
-    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
+    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, admitted_views = 0u64, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
     fn compare_prepared(
         &self,
         request: &ComparisonRequest,
@@ -91,7 +91,7 @@ impl Engine {
             reuse.paths = reuse_digest::digest(&paths);
         }
         let pairs = comparison_views::collect(
-            &pairing.entries,
+            &pairing,
             before.clone(),
             after.clone(),
             &paths,

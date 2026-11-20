@@ -128,6 +128,7 @@ fn exact_frame_limit_is_accepted_and_excess_is_rejected_before_buffering() {
     ));
     let request = Request {
         id: 1,
+        quiet: false,
         call: Call::Describe(Generation {
             generation: "x".repeat(MAX_FRAME_BYTES - envelope.len() + 1),
         }),
@@ -144,6 +145,7 @@ fn exact_frame_limit_is_accepted_and_excess_is_rejected_before_buffering() {
 fn hello_encoding_and_method_deadlines_match_the_contract() {
     let request = Request {
         id: 0,
+        quiet: false,
         call: Call::Hello(Hello::default()),
     };
     assert_eq!(

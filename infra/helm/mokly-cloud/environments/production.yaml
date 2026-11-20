@@ -1,0 +1,4 @@
+environment: production
+desktopClient: true
+database:
+  mode: cloudsql

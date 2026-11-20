@@ -1,0 +1,67 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@mokly-cloud/tokens/*": ["../../packages/tokens/src/*.ts"],
+      "@mokly/mokly": ["../../node_modules/@mokly/mokly/dist/index.js"],
+      "@mokly/viewer": ["../../node_modules/@mokly/viewer/dist/index.js"],
+      "@mokly/viewer/data": ["../../node_modules/@mokly/viewer/dist/data.js"],
+      "@mokly/ui/catalogue-navigation": [
+        "../../node_modules/@mokly/ui/dist/catalogue-navigation/catalogue-navigation.js"
+      ],
+      "@mokly/ui/catalogue-tree": [
+        "../../node_modules/@mokly/ui/dist/catalogue-tree/catalogue-tree.js"
+      ],
+      "@mokly/ui/change-status": [
+        "../../node_modules/@mokly/ui/dist/change-status/change-status.js"
+      ],
+      "@mokly/ui/comparison-stage": [
+        "../../node_modules/@mokly/ui/dist/comparison-stage/comparison-stage.js"
+      ],
+      "@mokly/ui/comparison-toolbar": [
+        "../../node_modules/@mokly/ui/dist/comparison-toolbar/comparison-toolbar.js"
+      ],
+      "@mokly/ui/device-frame": [
+        "../../node_modules/@mokly/ui/dist/device-frame/device-frame.js"
+      ],
+      "@mokly/ui/embedded-layout": [
+        "../../node_modules/@mokly/ui/dist/embedded-layout/embedded-layout.js"
+      ],
+      "@mokly/ui/preview-frame": [
+        "../../node_modules/@mokly/ui/dist/preview-frame/preview-frame.js"
+      ],
+      "@mokly/ui/screen-header": [
+        "../../node_modules/@mokly/ui/dist/screen-header/screen-header.js"
+      ],
+      "@mokly/ui/shell-layout": [
+        "../../node_modules/@mokly/ui/dist/shell-layout/shell-layout.js"
+      ],
+      "@mokly/ui/stage": ["../../node_modules/@mokly/ui/dist/stage/stage.js"],
+      "@mokly/ui/top-bar": [
+        "../../node_modules/@mokly/ui/dist/top-bar/top-bar.js"
+      ],
+      "@mokly/ui/view-controls": [
+        "../../node_modules/@mokly/ui/dist/view-controls/view-controls.js"
+      ],
+      "@mokly/ui/workspace-layout": [
+        "../../node_modules/@mokly/ui/dist/workspace-layout/workspace-layout.js"
+      ],
+      "react": ["../../node_modules/react/index.js"],
+      "react/*": ["../../node_modules/react/*.js"],
+      "react-dom/*": ["../../node_modules/react-dom/*.js"],
+      "@playwright/test": ["../../node_modules/@playwright/test/index.mjs"],
+      "parse5": ["../../node_modules/parse5/dist/index.js"],
+      "typescript": ["../../node_modules/typescript/lib/typescript.js"],
+      "@firna/ui": ["../../node_modules/@firna/ui/dist/node/index.js"],
+      "@firna/ui/theme": ["../../node_modules/@firna/ui/dist/node/theme.js"],
+      "@firna/ui/*": ["../../node_modules/@firna/ui/dist/node/*/index.js"],
+      "lucide-react-native": [
+        "../../node_modules/lucide-react-native/dist/esm/lucide-react-native.js"
+      ],
+      "react-native": ["../../node_modules/react-native-web/dist/cjs/index.js"],
+      "react-native-web": [
+        "../../node_modules/react-native-web/dist/cjs/index.js"
+      ]
+    }
+  }
+}

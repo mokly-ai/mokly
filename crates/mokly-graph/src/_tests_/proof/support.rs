@@ -21,6 +21,7 @@ pub(super) fn config() -> ResolvedConfig {
         input: Default::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     }
@@ -64,6 +65,8 @@ pub(super) fn session(
     Session::new(
         &graph,
         SessionInput {
+            stylesheet_resolution_files: Default::default(),
+            stylesheet_resolution_roots: Default::default(),
             matchers: Matchers::new(&config).unwrap(),
             config,
             catalogue,

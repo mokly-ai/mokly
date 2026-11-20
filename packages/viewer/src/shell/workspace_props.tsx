@@ -26,6 +26,7 @@ import { viewHref } from "../navigation/routes.js";
 import { CONTROLS_COPY } from "./component_controls_copy.js";
 import type { ControlTarget } from "./control_values.js";
 import type { DetailDelivery } from "./data_requests.js";
+import type { RetryFocus } from "./retry_focus.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
@@ -87,14 +88,18 @@ export function WorkspacePropsTab({
   controls,
   data,
   delivery,
+  focus,
   instance,
   target,
   usage,
 }: {
+  /** The editable props, whose heading ends the recovery of `focus`. */
   controls: ReactNode;
   data: WorkspaceData;
   /** The route's details. The routed entry's own detail carries the fields' order. */
   delivery: DetailDelivery;
+  /** The focus of Try again, which moves to the loading status first. */
+  focus: RetryFocus;
   instance: ComponentInstanceRecord | undefined;
   target: ControlTarget | undefined;
   usage: ComponentViewRecord | undefined;
@@ -107,6 +112,7 @@ export function WorkspacePropsTab({
       />
     );
   // The fields wait for the detail, so they never move from name order.
+  // After Try again, focus moves to the loading status, then to the panel.
   if (target && (target.kind === "component" || ownProps(target)))
     return delivery.status === "ready" ? (
       controls
@@ -114,7 +120,10 @@ export function WorkspacePropsTab({
       // A replaced catalogue brings new details, so the fields keep waiting
       // for them.
       <PropsStatus
-        onRetry={delivery.status === "failed" ? delivery.retry : undefined}
+        focusRef={focus.status}
+        onRetry={
+          delivery.status === "failed" ? focus.retry(delivery.retry) : undefined
+        }
         status={delivery.status === "failed" ? "failed" : "loading"}
         wording={{
           failed: CONTROLS_COPY.loadFailed,

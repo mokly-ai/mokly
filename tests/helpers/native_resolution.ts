@@ -49,9 +49,12 @@ export function countedCompile() {
 }
 
 /** A real temporary root, so that native and mapped paths compare equal. */
-export async function nativeRoot(context: TestContext): Promise<string> {
+export async function nativeRoot(
+  context: TestContext,
+  parent = os.tmpdir(),
+): Promise<string> {
   const root = await fs.realpath(
-    await fs.mkdtemp(path.join(os.tmpdir(), "mokly-native-")),
+    await fs.mkdtemp(path.join(parent, "mokly-native-")),
   );
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   return root;

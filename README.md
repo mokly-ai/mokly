@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@mokly/mokly"><img src="https://img.shields.io/npm/v/%40mokly%2Fmokly?color=4f7864&amp;label=npm" alt="npm version"></a>
   <a href="https://github.com/mokly-ai/mokly/actions/workflows/ci.yml"><img src="https://github.com/mokly-ai/mokly/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-4f7864" alt="MIT license"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT%20and%20AGPL--3.0-4f7864" alt="MIT and AGPL-3.0 licenses"></a>
 </p>
 
 <p align="center">
@@ -32,6 +32,11 @@ Run Mokly locally while you build, write the same catalogue as static files,
 or embed its viewer in another React application. Mokly owns the catalogue;
 your repository keeps ownership of its UI, data, styling, and rendering
 context.
+
+This repository also holds [Mokly Cloud](#mokly-cloud), the hosted companion
+of the open-source packages. It publishes the catalogue of each branch, posts
+a GitHub check with the Changes count, and hosts the viewer for the branches
+and pull requests of each project.
 
 > Mokly is pre-1.0. The package is
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) and the
@@ -245,6 +250,39 @@ authentication, or discussion experience. Embedded viewer roots accept `theme`
 independently from the preview colour scheme; see the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md).
 
+## Mokly Cloud
+
+Mokly Cloud is the hosted companion of the packages above:
+
+- **Per-branch catalogues.** `mokly publish` uploads only the files that the
+  project has not stored yet. Every publication gets a permanent address, and
+  each branch gets an alias to its latest publication.
+- **Cloud builds.** With the GitHub App installed and Automatic builds on, the
+  cloud builds and publishes the default branch and same-repository pull
+  requests in a one-shot sandbox.
+- **Changes check.** A `Mokly` check on each pull request counts the changed,
+  added, and removed entries and links into the hosted Changes view.
+- **Hosted viewer and desktop app.** The app hosts the viewer with branch and
+  pull request switching, history, and sharing. An Electron app for macOS and
+  Linux opens the same product from its bundled web export.
+
+Its Rust API, catalogue server, and stores are the `mkc-*` crates under
+`crates/`. Its Expo app, Electron desktop shell, and design tokens are under
+`packages/app`, `packages/desktop`, and `packages/tokens`. Its Astro site,
+Cloudflare origin router, and mockup tooling are under `apps/`. Its Terraform,
+workload images, and Helm charts are under `infra/`. The cloud uses the
+workspace packages and crates of this repository directly, so a Mokly change
+reaches the cloud without a release.
+The cloud deploys from this repository while its
+[cutover switch](./docs/protocol/ci-workflow-cloud.md#forks-and-protection) is
+on. Mokly never depends on the cloud.
+[Repository layout](./docs/protocol/repository-layout.md) defines the paths,
+the licenses, and this boundary.
+
+The cloud architecture is in `docs/architecture/cloud.md`, its protocol docs
+are under `docs/protocol/cloud/`, and its operations runbooks are under
+`docs/ops/`.
+
 ## Documentation
 
 - [Getting started](./docs/guides/start/install.md)
@@ -256,6 +294,8 @@ independently from the preview colour scheme; see the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Rust core architecture](./docs/architecture/rust-core.md)
 - [Package and consumer boundary](./docs/architecture/package-boundary.md)
+- [Repository layout](./docs/protocol/repository-layout.md), the paths,
+  licenses, and boundary of Mokly and Mokly Cloud
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
 
@@ -264,7 +304,7 @@ receiver fixtures, and a copy of the root changelog. The protocol documents
 keep the Rust core, the sidecar, the viewer, and the tests aligned. Release
 Please maintains the changelog history in the root `CHANGELOG.md`.
 
-## Develop Mokly
+## Develop
 
 Use the tested Node version in [`.nvmrc`](./.nvmrc). Follow the
 [development guide](./docs/development/README.md) to install the pinned tools.
@@ -272,11 +312,23 @@ Then install dependencies with `npm ci`, build with `npm run build`, and run
 `cargo xtask check` for complete verification. `npm run dev` installs and
 builds when needed, then serves the example catalogue with watching.
 
+The complete gate also runs the cloud suites. They need more tools, such as
+Postgres, Terraform, and Helm, and they fail when a tool is missing. The cloud
+crates need `libpq` to build. The pinned cloud toolchains are in
+`docs/protocol/cloud/repository-layout.md`.
+
 ### Key code
 
 The [development guide](./docs/development/README.md#key-code) lists the Rust,
-viewer, verification, and release entry points.
+viewer, verification, and release entry points. The README of each cloud crate
+and cloud project names its own entry points.
 
 ## License
 
-Mokly is available under the [MIT License](./LICENSE).
+Mokly is available under the [MIT License](./LICENSE). Mokly Cloud is
+available under the GNU Affero General Public License, version 3 only. Its
+paths are `apps/`, `packages/app/`, `packages/desktop/`, `packages/tokens/`,
+the `mkc-` crates, `docs/mockups/`, `infra/`, and `scripts/cloud/`.
+[`LICENSE`](./LICENSE) names these paths, and
+[`LICENSES/AGPL-3.0-only.txt`](./LICENSES/AGPL-3.0-only.txt) holds the AGPL
+text.

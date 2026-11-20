@@ -14,8 +14,8 @@ Appearance selector for the interface and the previews together. See the
 [appearance contract](../../../../docs/protocol/mokly-viewer-appearance.md) and the
 [semantic palette](../../../../docs/protocol/mokly-viewer-palette.md).
 
-Dark uses Mokly Cloud's warm Folio neutrals for backgrounds, panels, text, and
-borders, with sage accents. The palette and the fonts are packaged locally, and
+Dark uses Mokly Cloud's Folio neutrals, the neutral Graphite greys, for
+backgrounds, panels, text, and borders, with sage accents. The palette and the fonts are packaged locally, and
 the colours authored inside each preview are preserved.
 
 Import the packaged stylesheet once, then override the supported custom

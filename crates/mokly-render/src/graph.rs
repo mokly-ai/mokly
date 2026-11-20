@@ -7,6 +7,7 @@ use std::sync::{Arc, Weak};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_graph::delivery_inputs::DeliveryInputs;
+use mokly_graph::document_store::Persistence;
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
@@ -37,7 +38,7 @@ impl RenderGraph for JavaScriptGraph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> mokly_graph::error::Result<Arc<dyn RenderGeneration>> {
-        if (config.input.postcss.is_some() || catalogue.javascript.generation.is_some())
+        if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)
         {
@@ -76,10 +77,16 @@ impl JavaScriptGraph {
     ) -> Result<Arc<dyn RenderGraph>> {
         let mut side = self.runtime.side(config);
         let mut inputs = DeliveryInputs {
+            persistence: None,
             resources: self.runtime.resources.clone(),
             closures: self.runtime.closures.clone(),
+            style_references: self.runtime.style_references.clone(),
             dependency_aliases: side.dependency_aliases.clone(),
-            ..Default::default()
+            render_keys: None,
+            stylesheet_roots: Vec::new(),
+            imported_assets: Vec::new(),
+            component_stylesheets: BTreeMap::new(),
+            entry_modules: BTreeMap::new(),
         };
         let mut compiler = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;
@@ -154,6 +161,7 @@ impl JavaScriptGraph {
                 Arc::new(Fragments {
                     pool: self.runtime.pool.clone(),
                     generation: generation.id.clone(),
+                    source_root: side.source_root.clone(),
                     _lease: generation.lease.clone(),
                 }),
                 self.runtime.cache.clone(),
@@ -171,8 +179,10 @@ impl JavaScriptGraph {
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
             inputs = DeliveryInputs {
+                persistence: None,
                 resources: self.runtime.resources.clone(),
                 closures: self.runtime.closures.clone(),
+                style_references: self.runtime.style_references.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
                 stylesheet_roots: stylesheets::roots(
@@ -186,6 +196,18 @@ impl JavaScriptGraph {
                 entry_modules,
             };
         }
+        inputs.persistence = self
+            .runtime
+            .document_store
+            .as_ref()
+            .map(|store| Persistence {
+                store: store.clone(),
+                javascript: catalogue
+                    .javascript
+                    .generation
+                    .as_ref()
+                    .and_then(|generation| generation.persistence_identity.clone()),
+            });
         Ok(Arc::new(Graph {
             inputs,
             tree: Arc::new(LeasedTree {

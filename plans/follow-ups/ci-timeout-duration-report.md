@@ -1,0 +1,34 @@
+# Job guards drift below three-times headroom
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the branch `calummoore/ci-provider`. It holds the wider fix of review finding 3.
+- **Location:** the `timeout-minutes` values in `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `.github/workflows/release-check.yml`, `.github/workflows/native-bootstrap.yml`, and `.github/workflows/design-attribution.yml`, and the three-times rule in `docs/protocol/ci-test-timing.md`.
+- **Reason:** The fix adds a new workflow and a new protocol requirement, and only the user can add those.
+
+- **Source:** Review.
+- **Category:** Process.
+- **Terms:**
+  - **Job guard:** the `timeout-minutes` limit that stops a whole job, including setup, builds, and tests.
+  - **Three-times rule:** the rule in `docs/protocol/ci-workflow.md` and `docs/protocol/ci-test-timing.md` that each job guard allows at least three times the typical duration of its job.
+- **Background:**
+  - A job's duration changes when its runner, its cache, its suite, or its workflow changes. Nothing checks a guard against real durations. People check the rule by hand when they notice a slow job.
+  - The class keeps coming back:
+    - On 2026-10-21 the user raised the Repository and Viewer guards to three times their measured medians, 75 and 40 minutes.
+    - `plans/follow-ups/remote-testbox-timeout.md` records a healthy Testbox run that its 30-minute guard stopped.
+    - After the move to GitHub-hosted runners on 2026-11-18, the CI native jobs took 22.5 and 28.2 minutes against a 60-minute guard. `plans/follow-ups/native-ci-timeout-headroom.md` holds that case.
+    - The `darwin-x64` release rows on `macos-26-intel` took 14.5 to 27.3 minutes in eight release-check and native bootstrap runs, with a median of about 22.7 minutes. Their 60-minute guard gives about 2.65 times that.
+  - `tests/ci_timing_policy.test.ts` copies the guard values of `ci.yml` and reads no duration, so it cannot find this class.
+- **Problem:** Job guards fall below three times their typical duration without notice, and each case needs a manual audit.
+- **Impact if no action:** A slow but healthy job can hit its guard and fail a required check. Each case needs a rerun and a manual fix.
+- **Root question:** How do we keep every job guard at three times its typical duration as runners and suites change?
+- **Options:**
+  - **A.** Keep the manual checks. Measure the durations at each runner or suite change, as the runner moves did. Effort: Small.
+  - **B.** Add a scheduled duration report. A script reads recent successful runs through the GitHub API, takes each job's median duration, and reports each guard that is below three times that median. A test runs the script on fixture data. The workflow needs `actions: read`, and the rule needs a new protocol section. Effort: Medium.
+  - **C.** Add a silence guard to the xtask executor. It stops a suite command that prints nothing for a set time. Job guards can then stay generous, because a hung test still fails fast. It does not cover setup steps or the release scripts. Effort: Medium.
+- **Left out:** A guard that fails a pull request when a job runs long fails, because the duration of one run is not the typical duration.
+- **Wider fix:** B. It finds each case of the class, whatever changed the duration.
+- **Previous examples:** The four cases in the background.
+- **Related:** `plans/follow-ups/native-ci-timeout-headroom.md` is one case of this class, and lists B as its option H.
+- **Recommendation:** B, in a branch of its own. The class came back four times in a month, and the report runs free on GitHub-hosted runners.
+- **Action:** ask the user, because B adds a new workflow and a new protocol requirement.

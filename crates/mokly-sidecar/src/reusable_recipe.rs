@@ -63,6 +63,7 @@ impl ReusableRecipe {
 pub fn disk_seed_request(recipe: &DurableRecipe) -> Request {
     Request {
         id: 1,
+        quiet: false,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: format!("disk:{}", recipe.generation),
             params: recipe.params.clone(),

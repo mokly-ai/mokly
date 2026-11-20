@@ -1,0 +1,180 @@
+.toggle-layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-6);
+  width: 100%;
+}
+/* A setting whose write runs: its working word beside its label, in the
+   setting's own row, wrapping beneath the label only at enlarged text. */
+.toggle-working {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--mk-space-2);
+  min-width: 0;
+}
+.loading-layout {
+  width: 100%;
+  min-width: 0;
+}
+.content-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-1) var(--mk-space-4);
+  padding-right: var(--mk-space-4);
+}
+.content-list-row > :first-child {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.list-destination {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--mk-layout-row-min);
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  font-weight: var(--mk-font-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.list-destination:hover {
+  color: var(--mk-color-text);
+}
+.list-destination:hover > span {
+  text-decoration: underline;
+}
+.component-example > .loading-layout,
+.component-example > .toggle-layout {
+  width: 100%;
+}
+.component-example > .fo-wait-field {
+  width: 100%;
+  max-width: var(--mk-layout-form-max);
+}
+@media (max-width: 767px) {
+  .content-list-row {
+    padding-right: var(--mk-space-5);
+  }
+}
+/* A wait: the waiting region draws the layout it waits for, so it lays out
+   what it wraps with its parent's gap and adds no box of its own. */
+.fo-wait {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: inherit;
+  align-content: start;
+}
+/* A text that the answer supplies: one line box of the text it stands for,
+   from the element it sits in or its own class, holding a bar whose height
+   follows that text's size. */
+.fo-wait-text {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: top;
+  height: 1lh;
+}
+/* A grid of text bars bounds its column by its own width, because a bar,
+   unlike text, cannot wrap to fit a column that grows to its content. */
+.fo-wait-state,
+.fo-wait-lines {
+  grid-template-columns: minmax(0, 1fr);
+}
+.fo-wait-mark {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  height: 0.8em;
+}
+/* A wait's name shown in a text place takes that place's own type. */
+.fo-pending-label.fo-wait-name {
+  font: inherit;
+  color: inherit;
+}
+.fo-wait-control,
+.fo-wait-avatar {
+  display: flex;
+}
+/* The glyph tile keeps its box; its placeholder is its only fill. */
+.fo-state-glyph.fo-wait-glyph {
+  background: none;
+}
+/* A field's waiting form: its own frame, read only, holding a bar or the
+   wait's name where its value would be, muted like a placeholder. */
+.fo-wait-field {
+  position: relative;
+}
+/* A text field holds it in its frame's own leading slot, which is as wide as
+   what it holds, so the hold measures itself against the field's width. */
+.fo-wait-input {
+  width: 100%;
+  container-type: inline-size;
+}
+.fo-wait-hold {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.fo-wait-hold .fo-wait-name {
+  overflow: hidden;
+  color: var(--mk-color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A fact that waits names its read in its value's place, muted like the
+   name a waiting field holds. */
+.fo-facts dd > .fo-wait-name {
+  color: var(--mk-color-text-muted);
+}
+/* A selector's trigger is the field's last part, so its hold lies over it. */
+.fo-wait-over {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+/* The Design page of the placeholder forms stacks them on the form column,
+   lays the state card out as the product's State card does, and hides a
+   screen-reader name, because Design pages load no product stylesheet. */
+.loading-layout .fo-wait {
+  gap: var(--mk-space-5);
+  max-width: var(--mk-layout-form-max);
+}
+.loading-layout .fo-wait-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--mk-space-3);
+}
+.loading-layout .fo-state-title {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  font-weight: var(--mk-font-semibold);
+}
+.loading-layout .fo-state-detail {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+}
+.loading-layout .fo-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+}
+.loading-layout .fo-facts dd {
+  margin: 0;
+}
+.loading-layout .fo-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

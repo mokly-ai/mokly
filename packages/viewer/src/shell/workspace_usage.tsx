@@ -10,6 +10,7 @@ import { UsageList, UsageStatus, type UsageRow } from "@mokly/ui/usage-list";
 import { viewHref } from "../navigation/routes.js";
 
 import type { DetailDelivery } from "./data_requests.js";
+import { useRetryFocus } from "./retry_focus.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** The Usage sections: current uses, and the consumers a change affects. */
@@ -42,10 +43,15 @@ export function WorkspaceUsage({
   data: WorkspaceData;
   delivery: DetailDelivery;
 }) {
+  // After Try again, focus moves to the loading status, then to the list.
+  const focus = useRetryFocus();
   if (delivery.status !== "ready")
     return (
       <UsageStatus
-        onRetry={delivery.status === "failed" ? delivery.retry : undefined}
+        focusRef={focus.status}
+        onRetry={
+          delivery.status === "failed" ? focus.retry(delivery.retry) : undefined
+        }
         status={delivery.status === "failed" ? "failed" : "loading"}
       />
     );
@@ -53,6 +59,7 @@ export function WorkspaceUsage({
   return (
     <UsageList
       affected={sectionRows(data.affected, "affected")}
+      focusRef={focus.content}
       usedBy={sectionRows(data.usedBy, "used-by")}
     />
   );

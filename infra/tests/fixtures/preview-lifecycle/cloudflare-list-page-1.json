@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "type": "A",
+      "name": "other.preview.catalogues.net",
+      "content": "192.0.2.10",
+      "proxied": false,
+      "ttl": 300,
+      "comment": "another owner"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 100,
+    "count": 1,
+    "total_count": 1,
+    "total_pages": 2
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "total_count": 1,
+    "repositories": [
+      {
+        "id": 1296270,
+        "full_name": "fixture-org/Catalogue",
+        "name": "Catalogue",
+        "owner": {
+          "id": 2,
+          "login": "fixture-org",
+          "type": "Organization",
+          "node_id": "MDEyOk9yZ2FuaXphdGlvbjI="
+        },
+        "default_branch": "master",
+        "private": false,
+        "archived": false,
+        "disabled": false,
+        "html_url": "https://github.com/fixture-org/Catalogue"
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+[package]
+name = "mkc-api"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+live-build-template = ["sandbox-e2b/live-e2b"]
+
+[[test]]
+name = "build_template_tests"
+path = "tests/build_template/mod.rs"
+
+[[example]]
+name = "fake-build-api"
+path = "tests/browser_build/example.rs"
+
+[dependencies]
+utoipa = { workspace = true }
+mkc-file-store-gcs = { workspace = true }
+mkc-file-store-local = { workspace = true }
+mkc-file-store-interface = { workspace = true }
+mkc-upload-memory-interface = { workspace = true }
+mkc-upload-memory = { workspace = true }
+mkc-mokly-contract = { workspace = true, features = ["openapi"] }
+mkc-publications = { workspace = true }
+mkc-build-interface = { workspace = true }
+mkc-build-sandbox = { workspace = true }
+sandbox-interface = { workspace = true }
+sandbox-e2b = { workspace = true }
+mkc-billing = { workspace = true }
+mkc-billing-interface = { workspace = true }
+mkc-billing-stripe = { workspace = true }
+mkc-domain = { workspace = true, features = ["openapi"] }
+mkc-store-interface.workspace = true
+mkc-store-pg.workspace = true
+mkc-db.workspace = true
+mkc-config.workspace = true
+mkc-auth.workspace = true
+mkc-github-interface.workspace = true
+mkc-github.workspace = true
+mkc-email-interface.workspace = true
+mkc-email-postmark.workspace = true
+internal-error.workspace = true
+axum = "0.8.9"
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }
+tower-http = { version = "0.7.1", features = ["cors", "request-id", "set-header"] }
+clap = { version = "4.6.7", features = ["derive"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+chrono = { version = "0.4.45", features = ["serde"] }
+uuid = { version = "1.26.1", features = ["serde", "v7"] }
+thiserror = "2.0.20"
+url = "2.5.8"
+rpc-error = { workspace = true }
+http-body-util = "0.1.5"
+bytes = "1.12.1"
+subtle = "2.6.1"
+unimock = "0.6.8"
+flate2 = "1.1.10"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-publications = { workspace = true, features = ["test-support"] }
+mkc-test-pg = { workspace = true }
+mkc-db = { workspace = true, features = ["unimock"] }
+mkc-github-double = { workspace = true }
+diesel = { version = "2.3.13", features = ["postgres"] }
+hmac = "0.13.0"
+reqwest = { version = "0.13.5", features = ["blocking", "json"] }
+sha2 = "0.11.0"
+tiny_http = "0.12.0"
+unimock = "0.6.8"
+tower = { version = "0.5.3", features = ["util"] }
+http-body = "1.1.0"
+futures-util = "0.3.34"
+tokio = { version = "1.53.1", features = ["test-util"] }
+regex = "1.13.1"
+jsonschema = { version = "0.59.0", default-features = false }
+tempfile = "3.27.0"

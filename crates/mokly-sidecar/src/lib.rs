@@ -38,6 +38,7 @@ pub mod pool_options;
 mod pool_preparation;
 mod pool_recipes;
 mod pool_releases;
+mod pool_render_equality;
 mod pool_requests;
 mod pool_return;
 mod pool_return_spawn;
@@ -46,6 +47,8 @@ mod pool_sources;
 mod pool_start;
 mod pool_state;
 mod pool_timing;
+mod pool_warmup;
+mod pool_warmup_state;
 pub mod postcss_evidence;
 pub mod postcss_failure;
 mod postcss_phase;
@@ -60,6 +63,7 @@ pub mod process_memory;
 mod process_parent;
 mod process_reaper;
 mod process_startup;
+pub mod process_threads;
 mod process_transport;
 mod process_worker;
 pub mod render_records;
@@ -89,3 +93,7 @@ mod trace_capture;
 #[cfg(test)]
 #[path = "_tests_/compiled_fixture.rs"]
 mod compiled_fixture;
+
+#[cfg(test)]
+#[path = "_tests_/fixture_leases.rs"]
+mod fixture_leases;

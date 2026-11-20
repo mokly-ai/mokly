@@ -99,6 +99,11 @@ owns the published evidence.
 `MemoryParsedCss` shares equal bytes across paths and sides. Its eviction
 changes work only. Evidence retains each source's public route.
 
+`MemoryReferenceCache` keeps the `syntax::references` result of each distinct
+text, keyed by its SHA-256 digest, within a byte bound. Each result equals a
+direct scan. A text that cannot hold a reference returns an empty list without
+a lookup. Its eviction changes work only.
+
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
@@ -184,6 +189,9 @@ also fails when that exception no longer differs.
   reduces page observations into an `Attribution` with rule evidence.
 - [`src/parsed_cache.rs`](./src/parsed_cache.rs) defines `ParsedCssCache` and
   `MemoryParsedCss`, the byte-bounded parsed sheet cache.
+- [`src/reference_cache.rs`](./src/reference_cache.rs) defines
+  `ReferenceCache` and `MemoryReferenceCache`, the byte-bounded cache of
+  reference scans.
 - [`src/error.rs`](./src/error.rs) defines `CssError`, the typed stylesheet
   failure with authored diagnostics.
 

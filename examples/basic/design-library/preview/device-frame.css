@@ -1,7 +1,8 @@
 /* The shipped frame of a preview: the @mokly/ui stylesheets of the frame, its
-   Light-only note, the browser bar, and the device chrome, in the package's
-   order, then the mockup's flags. */
+   Light-only note, the Try again of a failed load, the browser bar, and the
+   device chrome, in the package's order, then the mockup's flags. */
 @import "../../../../packages/ui/src/scheme-fallback/scheme-fallback.css";
+@import "../../../../packages/ui/src/empty-state/empty-state.css";
 @import "../../../../packages/ui/src/preview-frame/preview-frame.css";
 @import "../../../../packages/ui/src/browser-bar/browser-bar.css";
 @import "../../../../packages/ui/src/device-frame/device-frame.css";

@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "environment",
+    "desktopClient",
+    "domain",
+    "project",
+    "database",
+    "builds",
+    "maintenance"
+  ],
+  "properties": {
+    "desktopClient": {
+      "type": "boolean"
+    },
+    "database": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "enum": ["cloudsql", "namespace"]
+        }
+      }
+    },
+    "resetDatabase": {
+      "type": "boolean"
+    },
+    "postgres": {
+      "type": "object",
+      "required": ["image", "storageSize", "storageClassName"],
+      "properties": {
+        "image": {
+          "type": "string",
+          "pattern": "^docker\\.io/library/postgres:[a-z0-9.-]+@sha256:[a-f0-9]{64}$"
+        },
+        "storageSize": {
+          "const": "2Gi"
+        },
+        "storageClassName": {
+          "const": "standard-rwo"
+        }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "required": ["blobsBucket", "signInEmail"],
+      "properties": {
+        "blobsBucket": {
+          "const": "mokly-508518-preview-blobs"
+        },
+        "signInEmail": {
+          "enum": ["", "preview@mokly.ai"]
+        }
+      }
+    },
+    "environment": {
+      "enum": ["production", "main-preview", "preview-pr"]
+    },
+    "prNumber": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 999999999
+    },
+    "project": {
+      "const": "mokly-508518"
+    },
+    "github": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "appSlug": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": ["appId", "clientId", "appSlug"],
+            "properties": {
+              "appId": {
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "clientId": {
+                "minLength": 1
+              },
+              "appSlug": {
+                "pattern": "^[A-Za-z0-9-]+$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "appId": {
+                "maxLength": 0
+              },
+              "clientId": {
+                "maxLength": 0
+              },
+              "appSlug": {
+                "maxLength": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "billing": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "builds": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "template": { "type": "string" },
+        "deploymentId": { "type": "string" },
+        "perProcess": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "deniedDestinations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "enabled": { "const": true } } },
+          "then": {
+            "required": ["template", "deploymentId"],
+            "properties": {
+              "template": { "minLength": 1 },
+              "deploymentId": { "pattern": "^[a-z0-9-]{1,63}$" }
+            }
+          },
+          "else": {
+            "properties": {
+              "template": { "maxLength": 0 },
+              "deploymentId": { "maxLength": 0 }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["perProcess"] },
+                { "required": ["deniedDestinations"] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "maintenance": {
+      "type": "object",
+      "required": [
+        "pruneSchedule",
+        "githubPruneSchedule",
+        "checkStatusSchedule",
+        "publicationSchedule",
+        "linkRetentionSeconds",
+        "sessionRetentionSeconds",
+        "rateRetentionSeconds",
+        "githubOauthRetentionSeconds",
+        "githubDeliveryRetentionSeconds",
+        "buildRetentionSeconds"
+      ],
+      "properties": {
+        "pruneSchedule": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S+(\\s+\\S+){4}$"
+        },
+        "githubPruneSchedule": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S+(\\s+\\S+){4}$"
+        },
+        "checkStatusSchedule": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S+(\\s+\\S+){4}$"
+        },
+        "publicationSchedule": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S+(\\s+\\S+){4}$"
+        },
+        "linkRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "sessionRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "rateRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "githubOauthRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "githubDeliveryRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        },
+        "buildRetentionSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31536000
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "required": ["ingestWorkers", "uploadMemoryBytes", "uploadBlobGzip"],
+      "properties": {
+        "ingestWorkers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "uploadMemoryBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "uploadBlobGzip": {
+          "type": "boolean"
+        }
+      }
+    },
+    "catalogue": {
+      "type": "object",
+      "required": ["hotCacheBytes"],
+      "properties": {
+        "hotCacheBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "scaling": {
+      "type": "object",
+      "properties": {
+        "minReplicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cpuUtilization": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

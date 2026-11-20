@@ -26,6 +26,13 @@ test("changed and untracked source/protocol files enforce their separate limits"
     path.join(root, "docs/protocol/new.md"),
     "x\n".repeat(251),
   );
+  const generated = "packages/app/src/api/generated/schema.ts";
+  const authored = "packages/app/src/api/generated/reader.ts";
+  await fs.mkdir(path.join(root, "packages/app/src/api/generated"), {
+    recursive: true,
+  });
+  for (const file of [generated, authored])
+    await fs.writeFile(path.join(root, file), "x\n".repeat(301));
   const check = (args: string[]) =>
     spawnSync(process.execPath, [script, ...args], {
       cwd: root,
@@ -39,9 +46,13 @@ test("changed and untracked source/protocol files enforce their separate limits"
     /docs\/protocol\/new.md: 251 lines \(limit 250\)/,
   );
   assert.doesNotMatch(changed.stderr, /untouched.ts/);
+  assert.ok(!changed.stderr.includes(generated), changed.stderr);
+  assert.ok(changed.stderr.includes(`${authored}: 301 lines`));
   const audit = check(["--all"]);
   assert.equal(audit.status, 1);
   assert.match(audit.stderr, /src\/untouched.ts: 310 lines \(limit 300\)/);
+  assert.ok(!audit.stderr.includes(generated), audit.stderr);
+  assert.ok(audit.stderr.includes(`${authored}: 301 lines`));
 });
 
 test("clean committed branch changes are audited against origin/main", async (context) => {

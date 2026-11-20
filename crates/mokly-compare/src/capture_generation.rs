@@ -1,6 +1,7 @@
 //! Replay captured views and forward scheduling through the original generation.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -9,7 +10,7 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
-use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode, content_identity};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
@@ -60,6 +61,17 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
+        if !self.restorer.proves_restore() {
+            return None;
+        }
+        let view = self.views.get(route)?;
+        Some(RetainedDocumentEvidence {
+            identity: view.identity,
+            closure: view.closure.clone(),
+        })
+    }
+
     fn comparison_identity(
         &self,
         read: ComparisonRead,
@@ -205,6 +217,12 @@ impl RenderGeneration for CapturedGeneration {
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.source.stylesheet_directories()
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.source.stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.source.stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.source.public_files()

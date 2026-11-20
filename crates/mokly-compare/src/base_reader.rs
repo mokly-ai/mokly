@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -11,7 +12,7 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
-use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
@@ -119,6 +120,15 @@ impl GeneratedResources for BaseReader {
 }
 
 impl RenderGeneration for BaseReader {
+    fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
+        self.state.check_cancelled().ok()?;
+        self.state
+            .reuse
+            .base
+            .generation
+            .retained_document_evidence(route)
+    }
+
     fn comparison_identity(
         &self,
         read: ComparisonRead,
@@ -244,6 +254,20 @@ impl RenderGeneration for BaseReader {
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.state.reuse.base.generation.stylesheet_directories()
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.state
+            .reuse
+            .base
+            .generation
+            .stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.state
+            .reuse
+            .base
+            .generation
+            .stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.state.reuse.base.generation.public_files()

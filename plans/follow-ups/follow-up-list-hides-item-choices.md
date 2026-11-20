@@ -1,0 +1,38 @@
+# Follow-up list hides choices and option grades
+
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, from the review of the branch `calummoore/reland-follow-ups`, finding 1, as its wider fix. Findings 7 and 8 of round 2 added cases.
+- **Location:** None in this repository. The change is in the shared `plans` skill of `futex-ai/skills`: `scripts/follow-ups.sh` and `references/follow-up-items.md`.
+- **Reason:** The fix changes rules that every repository shares, in another repository, so the user decides.
+- **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. The shared `follow-ups.sh` still prints only the first-line grades and the kind, and it does not read the effort of the recommended option. Record cleanups in this repository do not complete this proposal.
+- **Category:** Process.
+
+- **Terms:**
+  - **`follow-ups.sh`:** The script of the shared `plans` skill that lists the open follow-up items by priority score, with their severity, title and kind.
+  - **Priority score:** The score from 0 to 10 that `follow-ups.sh` adds up from the grades on the first line of an item.
+- **Background:** The list below gives the facts.
+  - The `plans` skill gives each open review finding, each deferred finding and each problem outside a review its own item.
+  - Each item has one kind, and `follow-ups.sh` prints that kind.
+  - `references/follow-up-items.md` gives its own item only to the blocked wider fix of a fixed finding.
+  - The score reads the effort from the first line of the item, not from the option that the **Recommendation** line names.
+- **Problem:** The list below gives the three cases that the review of the branch `calummoore/reland-follow-ups` found on 2026-10-30.
+  - Its first version folded 13 open review findings into 9 parent items, and the listing did not show them.
+  - Its doc-fixes item held the split-audit choice as a closing paragraph, outside its options and its **Action** line.
+  - Two items graded their first-line effort Small while their recommended options were Medium, so both scored too high.
+- **Impact if no action:** An open choice inside an item stays out of the follow-up count, and a branch that deletes the item can lose it. A wrong first-line grade moves an item up or down the list.
+- **Root question:** How does the follow-up list show every open choice, and rank each item by the work that it recommends?
+- **Options:**
+  - **A.** Change nothing in the skill, and let reviews catch these cases, as the review of this branch did. Effort: Small.
+  - **B.** Make `follow-ups.sh` print the outcome of each item's **Action** line beside its kind. Effort: Small.
+  - **C.** Do B. In `references/follow-up-items.md`, require that each open choice in an item is one of its lettered options or its own item, whatever the item's kind. Tell the branch that fixes an item to move each open choice to its own item first. Effort: Small.
+  - **D.** Do C. Also make `follow-ups.sh` score the effort of the option that the **Recommendation** line names. Mark an item whose first-line effort differs, as the script marks a missing grade. Change "The priority score" in `references/follow-up-items.md` to match. Effort: Small.
+- **Left out:** A check in this repository that reads `plans/follow-ups/`. The `testing` skill puts plans on its list of what never gets a test.
+- **Wider fix:** D. It closes the gaps in the rules, and the listing then shows each open choice and ranks each item by its recommended work.
+- **Previous examples:** Commit `c39ac5c9` on the branch `calummoore/reland-follow-ups` folded the open findings. The deleted [OpenAPI plan](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/openapi-from-rust.md?plain=1#L312-L317) kept a post-merge task outside the follow-up list. It is now `plans/follow-ups/query-parsers-bypass-contract-types.md`.
+- **Related:** The list below gives the links.
+  - The deleted item `merged-plans-still-say-active.md` had the same class: live content that the follow-up list did not count. The plans migration of 2026-10-30 moved that content into follow-up items.
+  - `plans/follow-ups/doc-splits-have-no-removal-audit.md`, the split-audit choice that the doc-fixes item first held as a paragraph.
+  - `plans/follow-ups/query-parsers-bypass-contract-types.md`, same class. Its task stayed outside the follow-up list until the plans migration, as the previous examples above say.
+- **Recommendation:** D. It fixes the rules and the score where every repository reads them.
+- **Action:** ask the user, because condition 6 holds: the item is about process, and the change lives in the shared skills repository.
