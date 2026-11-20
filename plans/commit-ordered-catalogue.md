@@ -79,6 +79,8 @@ Every item shares these assumptions. Each one is a contract in force.
 | A pull request address resolves, and View latest then polls the head branch                                         | 3             |
 | A merge-commit upload from the default pull request checkout, which is never a tip                                  | 1 and 6       |
 | Existing publications with no evidence at deploy                                                                    | 1, 4, 6 and 8 |
+| A source needs data before ordered targets at deploy, such as compare answers or a first commit fetch               | 1, 6 and 8    |
+| Two rows hold one head, and a build refusal or a check must name one of them                                        | 2             |
 | A rollback to the earlier application                                                                               | 8             |
 
 Replaced ways:
@@ -95,12 +97,15 @@ Replaced ways:
   - The app readers at `apps/app/src/viewer/entry.ts:193-194`, `resolution.ts:100-113`, `latest.ts:21-29` and `panels/switcher.tsx:44` and `:52`. They follow `latestPublicationId`. Milestone 5 confirms that they need no change. Milestone 6 moves them only when an answer changes the viewer.
 - Admission-order newest attempt in reference rows → the order of item 1, only under option D of item 4. Consumers: the queries at `crates/mkc-store-pg/src/viewer/branches.sql:37-43` and `crates/mkc-store-pg/src/viewer/pull_requests.sql:14-20`, and the rule text at `docs/protocol/cloud/viewer-read-model.md:67-75`. Moved in Milestones 2 and 5.
 - One ready publication for each project, head and config path → a ready identity that also holds the reference, only under option F of item 2. The reference is the branch and the pull request number. Each publication row stays immutable. Consumers:
-  - The store identity query `publication_by_identity` at `crates/mkc-store-pg/src/publication.rs:109-127`, and the unique index `publications_ready_identity` at `crates/mkc-db/migrations/202609162000_publications/up.sql:34`. Moved in Milestones 3 and 5.
+  - The store identity query `publication_by_identity` at `crates/mkc-store-pg/src/publication.rs:109-127`, with its trait method at `crates/mkc-store-interface/src/publication.rs:171`, its mocks and its tests, such as `crates/mkc-publications/tests/maintenance/lifecycle_tests.rs:38`. Also the unique index `publications_ready_identity` at `crates/mkc-db/migrations/202609162000_publications/up.sql:34`. Moved in Milestones 3 and 5.
   - The reservation replay at `crates/mkc-publications/src/reservation/reserve.rs:68-85`, and the completion replay at `crates/mkc-publications/src/completion_outcome.rs:56-104`. Moved in Milestone 5.
-  - The build duplicate checks at `crates/mkc-publications/src/build_scheduler.rs:84-93`. They keep today's rule unless the user answers the build question of F. Moved in Milestone 5 only after that answer.
+  - The build duplicate checks of the scheduler at `crates/mkc-publications/src/build_scheduler.rs:84-93`, and of the member build request at `crates/mkc-api/src/builds/scheduling.rs:109-128`. Both use `publication_by_identity` and `active_build`, whose trait method is at `crates/mkc-store-interface/src/build.rs:108`. Their tests are under `crates/mkc-publications/src/_tests_/build_scheduler/` and `crates/mkc-api/tests/github/build_api/`. They keep today's global duplicate policy unless the user answers the build question of F. Keeping that policy still needs both checks, their mocks and their tests adapted to the changed upload identity. Moved in Milestone 5.
+  - The `build-already-published` refusal of the member build request, which names one publication row. The app opens that row at `apps/app/src/viewer/build-target.ts:26-29`. Moved in Milestone 5 under the row rule that the user settles.
+  - The active-build key `(project, head SHA)` of both checks, and its unique index `builds_active_head` at `crates/mkc-db/migrations/202610100900_cloud_builds/up.sql:45`. They move only under a build answer that lets a second reference build the head. Moved in Milestones 3 and 5 after that answer.
   - The receipt `replay` flag at `crates/mkc-publications/src/completion_outcome.rs:106-119`, and the CLI message for a published commit. Moved in Milestone 5.
   - The check of a head, whose runs `github_check_runs` keys by head at `crates/mkc-db/migrations/202609161530_github_app/up.sql:96-105`. Moved in Milestone 5 under the check rule that the user settles.
   - The rule text at `docs/protocol/cloud/publication-upload.md:106-110` and `docs/protocol/cloud/publication-ingest.md:150-156`. Moved in Milestone 2.
+  - The build rule text at `docs/protocol/cloud/cloud-builds.md:80-85`, and `docs/protocol/cloud/cloud-build-api.md:165` and `:187`. Moved in Milestone 2, as the build answers of F say.
 
 ## Decisions
 
@@ -112,6 +117,8 @@ A plan review of 2026-11-20 added option E of item 2, and it corrected the text 
 
 A final options check of 2026-11-20 added option F of item 2 and option H of item 6. It raised the effort of E of item 2, and of D and G of item 6, to Large. Its report is `.context/commit-ordered-catalogue/options-check-after-review.md`.
 
+A second plan review of 2026-11-20 named every build consumer of option F of item 2. It also added the capability table above item 1. Its findings are in the same findings file.
+
 | No. | Title                                        | Source | Severity | Effort | Proposed   |
 | --- | -------------------------------------------- | ------ | -------- | ------ | ---------- |
 | 1   | Uploads, not commits, set the target         | Design | High     | Large  | B          |
@@ -122,6 +129,19 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 | 6   | No rule when commit order is unknown         | Design | Medium   | Large  | G, first B |
 | 7   | No home for the target under concurrency     | Design | Medium   | Small  | A          |
 | 8   | Existing catalogues have no order evidence   | Design | Low      | Small  | A          |
+
+The capability table states what each order source of item 1 can supply, by the text of its option. It adds no requirement. Other items cite its columns, not lists of letters.
+
+| Source            | Places commits on a reference   | Ancestry                  | Knows dropped commits    | Time line                | Extra network reads                | Data before ordered targets at deploy                               |
+| ----------------- | ------------------------------- | ------------------------- | ------------------------ | ------------------------ | ---------------------------------- | ------------------------------------------------------------------- |
+| A, exact tip      | The stored tip only             | No                        | No                       | No                       | None                               | The stored tips, which exist                                        |
+| B, tip history    | Each commit stored as a tip     | No                        | No                       | Observation times        | None                               | A seed of tips, as item 8 gives                                     |
+| C, ancestry       | The tip and its ancestors       | Yes, by compare reads     | Yes                      | No                       | Compare reads and a refresh worker | Compare answers for existing catalogues                             |
+| D, ledger         | Each commit that an event lists | Partial, from event lists | Only with a compare read | No, event positions only | Provider, repair and compare reads | Events, kept webhook bodies or provider reads                       |
+| E, producer facts | No commit of another upload     | No                        | No                       | No                       | None                               | Generation numbers from new uploads. Existing catalogues have none. |
+| F, commit history | The tip and its ancestors       | Yes, computed locally     | Yes                      | No                       | A commit fetch worker              | The first commit fetch of each repository                           |
+
+Prefetching is a rollout choice. Until the chosen source has its data, the rule of item 6 applies.
 
 ### 1. Uploads, not commits, set the target
 
@@ -163,10 +183,11 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 - **Previous examples:** Decision 1 of the earlier proposal, option A, used ancestry through the App installation. Its Decision 4, option A, ranked ancestors by distance, then by full SHA. Its code at `b40c9863` ranked in SQL triggers. Upload replay already decides by identity, not arrival, at `crates/mkc-publications/src/reservation/reserve.rs:68-85`.
 - **Related:**
   - Item 4, work that waits for the answer. Under option A here, item 4 decides what shows when the stored tip has no catalogue. So it decides how stale the target gets.
-  - Item 5, work that waits for the answer. Options A and B here cannot drop discarded commits. D here needs a compare read for that.
+  - Item 5, work that waits for the answer. Its option B needs a source that knows dropped commits. Its option C needs a source with ancestry. The capability table shows both columns.
+  - Item 5, options that conflict. A source with ancestry excludes a commit that the reference no longer holds. Option A of item 5 keeps such a commit as the last target. "Implementation Order" holds this pair as an open question.
   - Item 6, work that waits for the answer. Every option needs the rule for unknown order. Under E, a catalogue from an older CLI or from before the release has no generation number.
-  - Item 7, work that waits for the answer. Options C, D and F here read the network, so their evidence needs a worker.
-  - Item 8, work that waits for the answer. Under option A here, the stored tips already exist at deploy, so every rollout can move targets.
+  - Item 7, work that waits for the answer. A source with extra network reads, as the capability table shows, needs a worker for its evidence.
+  - Item 8, work that waits for the answer. Under option A here, the stored tips already exist at deploy, so every rollout can move targets. The capability table gives the data that each source needs before ordered targets.
 - **Recommendation:** B, proposed on 2026-11-20. It covers the common cases with data that the worker already reads, and it adds no GitHub read. Under B, a commit that was the tip only between two observations stays hidden behind an older catalogue. C shows that commit, and C protects the codebase best.
 - **Action:** ask the user, because the options trade the projects and commits that they cover against cost, and no option is clearly best.
 
@@ -186,17 +207,17 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
   - Assumption 2, the ready identity rule, is a contract in force, not a user decision. Its reason is safe retries and re-runs, and a key that also holds the reference keeps that reason. F proposes to replace it.
   - A pull request upload counts for its head branch. Source: `crates/mkc-store-pg/src/publication.rs:144-149` and `docs/protocol/cloud/viewer-read-model.md:61-62`. Kept.
   - One catalogue's comparison serves every reference that shows it. Source: `docs/protocol/cloud/publication-ingest.md:150-156`. D keeps it and hides a catalogue whose base does not suit the reference. F drops it.
-  - Membership comes only from the reference's own upload, a replay or the order source of item 1. Source: the text of the options. Under option E of item 1, C and D then give only what A gives, and E gives only what B gives. Kept.
+  - Membership comes only from the reference's own upload, a replay or the order source of item 1. Source: the text of the options. Under a source that places no commit of another upload, C and D then give only what A gives. E then gives only what B gives. Kept.
   - Pull request rows follow the repository binding, so a project without a repository link has none. Source: `docs/protocol/cloud/viewer-read-model.md:79-80`. Kept, because only GitHub supplies pull request data, so the facts below concern the branches of such a project.
 - **Options:**
   - **A.** Only catalogues whose own upload named the reference, as today. A catalogue with evidence counts on that condition. A catalogue without evidence counts on the same condition, under the rule of item 6. Effort: Small.
   - **B.** Link the first catalogue to each reference whose upload or build replays it. The validated envelope of the replay gives the branch, the pull request number and the head, so the link needs no provider read. A linked catalogue with evidence counts like an own upload. A linked catalogue without evidence counts under the rule of item 6. Push CI replays the new tip, so B misses a fast-forward only when no CI upload runs. Today a replay keeps its branch, pull request number, head and admission time only on its own failed row, at `crates/mkc-publications/src/reservation/reserve.rs:59-85` and `crates/mkc-publications/src/reservation/finish.rs:86-88`.
 
-    Cleanup deletes that row 30 days after admission, and build retention can delete it sooner, at `docs/protocol/cloud/retention.md:21-29`. So B needs a link store of its own. A link where the build scheduler skips a published head would come from the stored tip, not from a replay. Outside option E of item 1, C has evidence in the same cases, so such a link does not widen B. It changes the pull request target rule. Effort: Medium.
+    Cleanup deletes that row 30 days after admission, and build retention can delete it sooner, at `docs/protocol/cloud/retention.md:21-29`. So B needs a link store of its own. A link where the build scheduler skips a published head would come from the stored tip, not from a replay. Under each source that places commits on a reference, C has evidence in the same cases, so such a link does not widen B. It changes the pull request target rule. Effort: Medium.
 
   - **C.** Any ready catalogue of a commit that the order source of item 1 places on the reference. A catalogue with that evidence counts, whoever uploaded it. A catalogue without evidence counts only when its own upload named the reference, as under A. A generation number of option E of item 1 orders a reference's own uploads, but it places no other upload's commit on the reference. Register a catalogue branch host for each such branch. The tip writer `DatabaseBuildHeadRecorder` in `crates/mkc-publications/src/build_head.rs` serves webhooks, member build requests and project setup.
 
-    So the host writer can sit beside it, with no new crate boundary. Under option C of item 1, the merge base on `main` becomes a candidate of a new branch. It changes the pull request target rule. Effort: Medium.
+    So the host writer can sit beside it, with no new crate boundary. Under a source with ancestry, also local ancestry, the merge base on `main` becomes a candidate of a new branch. It changes the pull request target rule. Effort: Medium.
 
   - **D.** Do C, but show another upload's catalogue only when its comparison base suits the reference. A catalogue with evidence counts as under C, after the base rule. A catalogue without evidence counts only when its own upload named the reference, as under A. A pull request then never shows a current-only push catalogue in place of its own comparison. It also never gets its own comparison for that head, because its own upload replays the first row and builds skip a published head. So it keeps an older catalogue or an empty target until its head moves.
 
@@ -221,7 +242,7 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
   - Item 6, work that waits for the answer. Under its option C, no option here gives a reference without evidence a target. Under its other options, B and E can give such a reference the catalogue that its own replay names. Option E of item 6 is an exception in a project with live App access.
   - Item 6, work that waits for the answer. While its upload order applies, and under its option H, B and E need a rank time for each replay link. "Implementation Order" holds that question.
   - Item 8, work that waits for the answer. Under B or E, a seed of replay links at deploy reaches back only to the replay rows that cleanup kept.
-- **Recommendation:** C, proposed on 2026-11-20. C covers all three examples of the problem for a reference with evidence. It needs no new store and no change to the identity rule. C, D, E and F are the options for a branch whose new tip gets no upload and no build. They need an order source that places the commit on the reference. Option E of item 1 supplies none.
+- **Recommendation:** C, proposed on 2026-11-20. C covers all three examples of the problem for a reference with evidence. It needs no new store and no change to the identity rule. C, D, E and F are the options for a branch whose new tip gets no upload and no build. They need a source that places commits on a reference, as the capability table shows.
 
   E adds only replays of references without evidence, and only where item 6 lets such a catalogue become a target. F best protects the codebase, because the first upload then no longer decides the comparison or the context of another reference.
 
@@ -286,7 +307,7 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 - **Related:**
   - Item 1, work that waits for the answer. Under its option A, options A, C and D here need a stored last target.
   - Item 6, work that waits for the answer. Item 6 decides each reference that has no stored tip, or whose stored tip it does not accept. Examples are a project without a repository link and a deleted branch. Under D, E and G of item 6, a stored tip counts only with the App access that item 6 settles. Under A, C, F and H, every stored tip counts. B with C of item 6 takes no target from upload order.
-  - Item 6, options that conflict. Take a reference that has a stored tip while another of its catalogues has no evidence. B shows the stage, but option A of item 6 uses upload order. If B wins, an upload that arrives during a gap stays hidden until the stored tip names its commit. If A wins, B has almost no effect under option A, B or E of item 1. The fallback of A can then stay in force permanently.
+  - Item 6, options that conflict. Take a reference that has a stored tip while another of its catalogues has no evidence. B shows the stage, but option A of item 6 uses upload order. If B wins, an upload that arrives during a gap stays hidden until the stored tip names its commit. If A wins, B has almost no effect under a source without ancestry. The fallback of A can then stay in force permanently.
 
     Option H of item 6 joins the same pair. "Implementation Order" holds both pairs as open questions.
 
@@ -311,19 +332,20 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
   Assumption 1 keeps every catalogue reachable by its exact address.
 
 - **Options:**
-  - **A.** Follow moves to published commits. Until the new tip publishes, keep the last target, also when the reference no longer holds that commit. It needs no ancestry. Under option C of item 1, it conflicts with the rule that selects the nearest ancestor. Effort: Small.
-  - **B.** Follow every move, and drop the commits that the reference no longer holds. It needs option C of item 1, or option D of item 1 with a compare read. A push payload does not list the commits that a forced push dropped. After a rebase, B can leave an empty target until the new tip publishes. So B needs the stage card for an empty target, with its mockup. Effort: Medium.
-  - **C.** Forward only. A member resets the target by hand. It needs ancestry, a new action and mockups. Effort: Large.
+  - **A.** Follow moves to published commits. Until the new tip publishes, keep the last target, also when the reference no longer holds that commit. It needs no ancestry. Under a source with ancestry, it conflicts with selection that excludes commits through ancestry. Effort: Small.
+  - **B.** Follow every move, and drop the commits that the reference no longer holds. It needs a source that knows dropped commits, as the capability table shows. That includes the local ancestry of option F of item 1. A push payload does not list the commits that a forced push dropped. After a rebase, B can leave an empty target until the new tip publishes. So B needs the stage card for an empty target, with its mockup. Effort: Medium.
+  - **C.** Forward only. A member resets the target by hand. It needs a source with ancestry, such as the local ancestry of option F of item 1. It also needs a new action and mockups. Effort: Large.
   - **D.** Do A, and end the order at a deletion. A recreated branch ranks only commits observed after it was created again. It shows its stage until one of them publishes. Item 1 must keep the deletion time. Effort: Medium.
   - **E.** Do A, and end the order at a forced push. Store the `forced` flag of each push event, and drop the ranks of the commits before it. It covers branches only, and a lost delivery loses the flag. The options check found no `forced` flag on pull request events, but it did not confirm that with GitHub. After an amended commit, the branch shows no target until its new tip publishes. Effort: Medium.
 - **Left out:** Ignore moves and keep admission order. It fails the goal.
 - **Wider fix:** None. This is a product choice.
 - **Previous examples:** Decision 5 of the earlier proposal preferred option A, which follows both directions and excludes removed commits, over descendants only with a reset action.
 - **Related:**
-  - Item 1, work that waits for the answer. It sets which options here are possible. B needs its option C, or its option D with a compare read.
+  - Item 1, work that waits for the answer. Its capability table sets which options here are possible. B needs a source that knows dropped commits. C needs a source with ancestry.
+  - Item 1, options that conflict. Option A here keeps the last target, but a source with ancestry excludes a commit that the reference no longer holds. "Implementation Order" holds this pair as an open question.
   - Item 4, options that conflict. Option A here keeps the last target until the new tip publishes, but option B of item 4 shows the stage in that period. "Implementation Order" holds this pair as an open question.
   - Item 4, the same code. Its stage card for an empty target also serves B, D and E here. Each of them needs that card and its mockup.
-- **Recommendation:** A, proposed on 2026-11-20. With option B of item 1, it follows the common reset to a published commit. D is a cheap addition if a recreated branch must not show the old branch's content. B is the complete rule, and it needs option C of item 1.
+- **Recommendation:** A, proposed on 2026-11-20. With option B of item 1, it follows the common reset to a published commit. D is a cheap addition if a recreated branch must not show the old branch's content. B is the complete rule, and it needs a source that knows dropped commits.
 - **Action:** ask the user, because the best option depends on the open answer to item 1.
 
 ### 6. No rule when commit order is unknown
@@ -369,14 +391,14 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 
   - **H.** Admission time ranks a catalogue without evidence. Under option B of item 1, such a catalogue takes its admission time as its rank, on the time line of the observations. No reference switches to upload order as a whole, and the rule reads no access state. A project that loses access keeps fresh targets, because its new uploads rank above its old evidence. When access returns, new observations rank above the uploads of the gap, so no target moves back. A late upload of a commit that was never observed ranks above each catalogue observed before it, also the current tip's catalogue.
 
-    It keeps that place until a commit observed after it has a catalogue. Under option A of item 8, an older catalogue admitted after the seeded tip's observation outranks the tip at deploy. H fits only option B of item 1, because the other order sources give no time line. Effort: Small.
+    It keeps that place until a commit observed after it has a catalogue. Under option A of item 8, an older catalogue admitted after the seeded tip's observation outranks the tip at deploy. H needs the time line of the capability table, which only option B of item 1 has. Effort: Small.
 - **Left out:**
   - Reject uploads without evidence. Projects without a repository link could not publish, which breaks assumption 8.
   - Use upload order for a catalogue without evidence only for a fixed period. When the period ends, a target can move back with no new event, so this fails the goal.
 - **Wider fix:** None. Option E of item 1 gives evidence only to uploads from a new Mokly release with full history.
 - **Previous examples:** Decision 2 of the earlier proposal preferred option B, admission order until GitHub answers, over holding the last verified target or rejecting uploads without proof. Its Decision 7, option B, used commit order only with App access.
 - **Related:**
-  - Item 1, work that waits for the answer. Option A here can keep upload order permanently under every order source. Under options A, B and E of item 1, more catalogues stay without evidence. H here fits only option B of item 1.
+  - Item 1, work that waits for the answer. Option A here can keep upload order permanently under every order source. Under a source without ancestry, more catalogues stay without evidence. H here needs the time line of the capability table.
   - Item 2, work that waits for the answer. Under option C here, no option of item 2 gives a reference without evidence a target. Under the other options here, B and E of item 2 can give such a reference the catalogue that its own replay names. Option E here is an exception in a project with live App access. Under H, their replay links need a place on its time line.
   - Item 4, options that conflict. Option B of item 4 shows the stage while a stored tip has no catalogue. Options A and H here can rank another catalogue first. "Implementation Order" holds both pairs as open questions.
   - Item 8, work that waits for the answer. Options C and E here remove at deploy the target of each reference that has no ready catalogue with evidence. Option A here can keep upload order after every rollout. H here with option E of item 8 keeps today's targets at deploy, but with option A it can move a target back.
@@ -406,7 +428,7 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 - **Wider fix:** A, but only when one shared SQL definition replaces the three copies. One rule then serves every consumer and cannot go stale.
 - **Previous examples:** The earlier proposal stored one projection for each reference, with generations and a refresh worker.
 - **Related:**
-  - Item 1, work that waits for the answer. Its options C, D and F need a worker for their evidence. A here can still compute the target from that evidence.
+  - Item 1, work that waits for the answer. A source with extra network reads, as the capability table shows, needs a worker for its evidence. A here can still compute the target from that evidence.
   - Item 4, work that waits for the answer. Under option A of item 1, options A, C and D of item 4 need a stored last target. That is state that A here does not have.
 - **Recommendation:** A, proposed on 2026-11-20. With option B of item 1, it adds no lock and no state that can go stale. Option A of item 1 with option A, C or D of item 4 still needs a stored last target.
 - **Action:** ask the user, because the user asked that every design choice of this plan stays open.
@@ -426,8 +448,8 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
   A lost delivery or a disconnection can leave a tip stale, so E drops this assumption.
 
 - **Options:**
-  - **A.** Switch at deploy. Seed the evidence from the stored tips, and apply item 6 to the rest. A stale stored tip can move a target back to older content at deploy. It seeds only options A and B of item 1. Effort: Small.
-  - **B.** Add a one-time job that reads each reference with live App access from GitHub before the switch. Option C of item 1 needs this option. Effort: Medium.
+  - **A.** Switch at deploy. Seed the evidence from the stored tips, and apply item 6 to the rest. A stale stored tip can move a target back to older content at deploy. It seeds only the sources whose deploy data is stored tips, as the capability table shows. Effort: Small.
+  - **B.** Add a one-time job that reads each reference with live App access from GitHub before the switch. It can prefetch the deploy data of the capability table. Examples are the compare answers of option C and the first fetch of option F of item 1. Without it, the rule of item 6 applies until that data exists. Effort: Medium.
   - **C.** Seed as A, compute the new target beside the old one, compare them for a period, and switch later. Effort: Medium.
   - **D.** Seed from the kept webhook bodies. The cloud keeps terminal deliveries for 30 days, at `docs/protocol/cloud/persistence-transactions.md:81-82`. Each push gives its `after` commit and its receipt time. D trusts payload heads, which the build path does not trust today. Effort: Medium.
   - **E.** Switch with no seed. Item 6 applies to every existing catalogue. The Related line gives its effects at deploy. Effort: Small.
@@ -437,12 +459,12 @@ A final options check of 2026-11-20 added option F of item 2 and option H of ite
 - **Previous examples:** Commit `d09ab4b3` of the earlier proposal removed a shadow selector, a feature flag and a bulk backfill.
 - **Related:**
   - Item 6, work that waits for the answer. Some answers never let a catalogue without evidence become a target. At deploy, such an answer removes the target of each reference that has no ready catalogue with evidence. Today these answers are C, for every project, and E, for projects with live App access.
-  - Item 6, work that waits for the answer. One answer keeps upload order while any catalogue has no evidence. Today this is A. Under option A, B or E of item 1, it keeps upload order after every rollout. This holds for each reference that keeps an existing catalogue without evidence.
-  - Item 1, work that waits for the answer. An answer that selects by the stored tip, today A, can move targets at deploy under every rollout. A stale stored tip can move a target back to older content.
+  - Item 6, work that waits for the answer. One answer keeps upload order while any catalogue has no evidence. Today this is A. Under a source without ancestry, it keeps upload order after every rollout. This holds for each reference that keeps an existing catalogue without evidence.
+  - Item 1, work that waits for the answer. An answer that selects by the stored tip, today A, can move targets at deploy under every rollout. A stale stored tip can move a target back to older content. A source whose deploy data needs a read, as the capability table shows, uses the rule of item 6 until that data exists.
   - Item 4, work that waits for the answer. An answer that shows only the exact tip, today B, reads the stored tip. So under every rollout, a reference whose stored tip has no ready catalogue can show its stage at deploy.
   - Item 6, work that waits for the answer. Under option H of item 6, E here keeps today's targets at deploy. A here can then move a target back at deploy.
   - Item 2, work that waits for the answer. Under option B or E of item 2, a seed links only the replays whose rows cleanup kept. No rollout restores older replay history.
-- **Recommendation:** A, proposed on 2026-11-20. It needs no new GitHub read, and it seeds options A and B of item 1. A stale stored tip can still move a target back at deploy, and a rollback restores the ordering defect. Option C of item 1 needs option B here.
+- **Recommendation:** A, proposed on 2026-11-20. It needs no new GitHub read, and it seeds the sources whose deploy data is stored tips. A stale stored tip can still move a target back at deploy, and a rollback restores the ordering defect. Under a source whose deploy data needs a read, B here can prefetch it, or the rule of item 6 applies until it exists.
 - **Action:** ask the user, because the user asked that every design choice of this plan stays open.
 
 ## Implementation Order
@@ -460,6 +482,8 @@ Conditional questions, each for a chosen option:
 - Under option B or E of item 2, the retain-or-delete rule of the replay link. `docs/protocol/cloud/retention.md:54-56` requires one for each new relationship to a publication.
 - Under option D of item 2, the base rule for branches.
 - Under option F of item 2, whether a build may publish a head that another reference published. Also under F, which row the check of a head with two rows names. The build question changes the build triggers that assumption 9 keeps.
+- Under option F of item 2, which row the `build-already-published` refusal names when two rows hold one head.
+- Under a build answer of F that lets a second reference build the head, whether the active-build key and `builds_active_head` also hold the reference.
 - Under option A of item 6, whether an answer that puts a commit off the reference counts as evidence. If it counts, the permanent fallback ends for merge-commit uploads under option C, D or F of item 1.
 - Under option G or D of item 6, which state stops old evidence from counting when access returns. It can be a stored time when access began, or a mark on the evidence when access ends.
 - Under option D, E or G of item 6, whether access means "Live App access", or only an active installation and repository. Either answer leaves out the build configuration of the build access rule.
@@ -470,6 +494,7 @@ Conflicting combinations, each for a chosen pair:
 - Under option B of item 4 and option A of item 6, which rule wins while a reference has a stored tip.
 - Under option B of item 4 and option H of item 6, which rule wins while a reference has a stored tip.
 - Under option B of item 4 and option A of item 5, which rule wins until the new tip publishes after a reset.
+- Under option A of item 5 and a source with ancestry, which rule wins after a reset. Options C and F of item 1 have ancestry.
 - Each other pair that a Related line names as options that conflict.
 
 UI rule: keep Milestones 1 and 6 when the answers change a reader state, navigation, the chrome or the reference context. Otherwise delete both. The agent that updates this plan judges each answer against this rule. These known examples are not a complete list:
@@ -506,6 +531,7 @@ Write the chosen requirements before any code changes.
 - [ ] Under options B to F of item 2, name the writer of the new branch hosts. It can sit beside `DatabaseBuildHeadRecorder` in `mkc-publications`.
 - [ ] Under option B or E of item 2, state the replay link, its rank time and its retention rule. The retention rule goes in `retention.md`.
 - [ ] Under option F of item 2, change the identity and replay rules of `publication-upload.md` and `publication-ingest.md`. Also state the receipt and the check rule for a head with two rows.
+- [ ] Under option F of item 2, state the build rule of `cloud-builds.md:80-85` and `cloud-build-api.md:165` and `:187`. If the answer keeps today's policy, state it beside the new upload identity.
 - [ ] Under option D, E or G of item 6, state the access rule that the user settles. Under G or D, also state the access-return state.
 - [ ] Under any option of item 3 except A, change the address rule at `viewer-address-state.md:22-26` and the poll rule at `:158-161`.
 - [ ] Under option D of item 4, change the newest-attempt rule at `viewer-read-model.md:67-75`.
@@ -531,15 +557,17 @@ Store the evidence that the answers need, and seed it as item 8 says. Nothing re
   - [ ] Option C: the compare operation in `mkc-github-interface` and `mkc-github`, the stored answers and the refresh path.
   - [ ] Option D: the stored event fields, the repair read and the compare read for dropped commits.
   - [ ] Option E: plan this TODO only after the user settles how envelope 4 relates to envelope 3.
-  - [ ] Option F: the commit fetch worker, its storage and its Git dependency, under the settled retention rule.
+  - [ ] Option F: the commit fetch worker, its storage and its Git dependency, under the settled retention rule. Its first fetch of each repository is the deploy data of the capability table.
 - [ ] Under option B or E of item 2, store each replay link from validated upload metadata, with no provider read. The link store must outlive the replay row.
 - [ ] Under option F of item 2, migrate the ready identity index and key to add the reference. The reference is the branch and the pull request number.
+- [ ] Under a build answer of F that lets a second reference build the head, migrate `builds_active_head` as that answer says.
 - [ ] Under option G or D of item 6, add the access-return state with a migration. Add a writer wherever access changes.
 - [ ] Under option D of item 5, keep the deletion time of each branch.
 - [ ] Under option E of item 5, store the `forced` flag of each push event.
 - [ ] Under option D of item 6, add the repair read for catalogues that become ready without evidence.
 - [ ] Prepare the cutover evidence of item 8. Under its option B, add the one-time job. Under its option D, read the kept webhook bodies. Keep the old selection until Milestone 5 moves its consumers.
 - [ ] Under option B or E of item 2, seed links only from the replay rows that cleanup kept.
+- [ ] For the chosen source, prepare the deploy data of the capability table. Otherwise the rule of item 6 applies until that data exists.
 - [ ] Test each evidence write once, at the lowest level that fails without it.
 - [ ] Prove each migration up, down and up once. Save the output under `.context/commit-ordered-catalogue/`.
 - [ ] Update the README of each changed crate.
@@ -570,8 +598,10 @@ Move each consumer under "Replaced ways" to the rule. No consumer keeps the admi
 - [ ] Under option D of item 4, move the newest-attempt order at `branches.sql:37-43` and `pull_requests.sql:14-20`.
 - [ ] Move `branch_alias` and the catalogue branch host to the rule.
 - [ ] Under options B to F of item 2, register hosts for branches that show another upload's catalogue. Use the writer that Milestone 2 names.
-- [ ] Under option F of item 2, move its consumers under "Replaced ways" to the new key. They are the identity query, both replays, the receipt and the head check.
-- [ ] Under option F of item 2, keep today's build duplicate check unless the user answers its build question.
+- [ ] Under option F of item 2, move its consumers under "Replaced ways" to the new key. They are the identity query, both replays, the receipt and the head check, with their mocks and tests.
+- [ ] Under option F of item 2, adapt both build duplicate checks and their tests to the new upload identity. Their mocks change with them. Keep today's policy unless the user answers the build question.
+- [ ] Under option F of item 2, make the `build-already-published` refusal name the row that the user settles.
+- [ ] Under a build answer of F that lets a second reference build the head, move the active-build key. Both checks use it.
 - [ ] Move the default-branch choice at `branches.sql:5-11` when item 6 orders projects with no known default branch.
 - [ ] Replace the admission-order rule of `latest_publication`. Remove the method, its trait method and its mocks only when the chosen design leaves them unused.
 - [ ] Move each test of the old rule to the new rule with every assertion. Remove a test instead only under the removal rule of the `testing` skill.
