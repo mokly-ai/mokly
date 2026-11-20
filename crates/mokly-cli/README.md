@@ -88,8 +88,8 @@ the store while Serve starts. `serve_changes` calls `resume` after each
 completed Changes result, so the store writes nothing before the first one.
 `render_store_runtime::bind` gives the writer the Changes status of the current
 publication as its `WriteReadiness`. The sidecar gate and pool, the rebuilds,
-the head-return worker, and the server's work and captures each hold a lease of
-the writer's `WriteActivity` while they run. So the writer starts new work only
+the head-return worker, and the server's work, captures, and Changes reference
+probes each hold a lease of the writer's `WriteActivity` while they run. So the writer starts new work only
 while Serve is idle. The writer prints the cache warnings through the command's
 diagnostics, and its state reaches `--debug-timings` as `render.store` records.
 `build` and `publish` compose no render store.
@@ -361,7 +361,8 @@ changed.
   provider and its cancellations. Its `Source::comparison_attempt` begins one
   fenced reuse attempt.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
-  `comparison_reuse::MemoryComparisons` service.
+  `comparison_reuse::MemoryComparisons` service. It gives the writer's
+  `WriteActivity` to `Workers`, `MemoryComparisons`, and `ChangesPass`.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

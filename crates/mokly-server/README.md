@@ -14,8 +14,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 - Render generated documents on request through an injected graph adapter.
 - Read only reached authored resources through confined file handles.
 - Authenticate live prop edits and retain previews in bounded process memory.
-- Hold a write lease of the render store during render jobs and captures, so
-  its writer stays paused while Serve works.
+- Hold a write lease of the render store during render jobs, captures, and
+  Changes reference probes, so its writer stays paused while Serve works.
 - End client connections before ordered subsystem shutdown.
 
 ## What This Crate Does
@@ -92,7 +92,12 @@ inventing empty consumers. `mokly-model` projects every status from retained
 model inputs. `mokly-compare` owns Changes membership, eligibility,
 workspaces, input changes, and removed metadata. Serve uses those shared
 functions and the shared snapshot route builders. Watched Serve polls `HEAD`
-and the base ref once per second. A changed merge base reuses the accepted
+and the base ref once per second. `ChangesPass` takes the render store's
+`WriteActivity`. Each reference probe takes its lease before its blocking job
+is queued, and the blocking job owns it, also after a cancellation of the
+async owner. A probe that finds moved refs keeps its lease through the queued
+refresh until the refreshed classification ends. An unchanged probe releases
+its lease before the next idle wait. A changed merge base reuses the accepted
 current graph. A tip change with the same merge base keeps the published
 state. HTTP worker leases keep foreground priority for the whole request, and
 the CLI shares those leases with base-side sidecar admission.
@@ -245,6 +250,8 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+  `ChangesPass::activity` holds the render store's activity, and the private
+  `Reference` keeps a probe result together with its lease.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   usage pass's bounded batch, which keeps catalogue order for starts, warnings,
   and failure reports.
@@ -253,7 +260,9 @@ generations.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
   `Workers::with_activity` takes the `WriteActivity` of the render store, and
-  each queued or active job, native work included, holds a lease of it.
+  each queued or active job, native work included, holds a lease of it. A
+  file response holds its lease until the file opens, and its body streams
+  after that.
   [`src/work_background.rs`](./src/work_background.rs) admits one background
   render at a time and runs it in `RenderClass::Background`.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`

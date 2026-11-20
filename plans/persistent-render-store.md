@@ -511,6 +511,12 @@ still block the pull request.
       foreground preparation and state-ordering defects with assertion-red
       regressions. Preserve the render and memory boundaries.
 - [ ] Check the combined fixes, commit and push, then run the fresh re-review.
+- [x] Pause new writer units across reference probes and the hand-off to a refreshed
+      classification. Apply the checked owner-level lease, keep it with blocking
+      work, and prove suppression and release with deterministic barriers.
+- [x] Record broader Git default enrollment, pool-release calls, and finite
+      response streams as one follow-up class. Keep its missing behavior
+      explicit in the protocol status, and include it in the final review.
 
 Evidence: `.context/reviews/calummoore/mokly-first-changes-5-render-store-p3o6/`
 holds the independent reports, checks, decisions, and fix-round record.
@@ -601,7 +607,7 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
       performance orchestrator for `mokly-cloud` measurement immediately.
 - [x] Commit and push a measurement candidate after its targeted and required
       gate checks. This lets the cloud measurement run before final acceptance.
-- [ ] Confirm the cloud goals: at least four seconds sooner on warm restart,
+- [x] Confirm the cloud goals: at least four seconds sooner on warm restart,
       cold startup no more than 2% slower, memory peak no more than 2% higher.
       Run the parent confirming series on the one SHA with all fixes before
       opening the pull request. Include three cold ten-edit sessions per arm.
@@ -611,6 +617,8 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
       Record any machine blocker and each suite that ran.
 
 Evidence: `.context/persistent-render-store/` holds all logs and reports.
+`cloud-final-acceptance-0ccd.md` records the accepted final cloud series and its CPU and timing limits.
+The performance orchestrator requires no further main merge unless a conflict or CI needs it.
 
 ## Milestone 5: Commit, review, and pull request
 

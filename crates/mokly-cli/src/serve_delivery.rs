@@ -118,7 +118,7 @@ pub(super) fn create(
             publications.clone(),
             diagnostics.clone(),
         )
-        .with_activity(activity),
+        .with_activity(activity.clone()),
     );
     let background: Arc<dyn Background> = Arc::new(UsagePass {
         capacity,
@@ -126,6 +126,7 @@ pub(super) fn create(
             publications: publications.clone(),
             comparisons: comparisons.clone(),
             diagnostics: diagnostics.clone(),
+            activity,
             watching,
         })),
         publications: publications.clone(),

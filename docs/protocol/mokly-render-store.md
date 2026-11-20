@@ -1,6 +1,6 @@
 # Render Store
 
-Status: The byte bound of the store is provisional. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
+Status: The sidecar release thread and finite file response bodies do not pause the writer yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them. The byte bound of the store is provisional, and [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
 
 The render store keeps the complete documents that `mokly serve` renders, so
 that a later Serve process reuses them instead of rendering them again. It is
