@@ -112,8 +112,8 @@ and 11 needed no decision, and Milestone 3 fixes them.
   Mokly reads `main.*` there for its `stories` field and its framework.
   Rejected: `mokly init --storybook`, A; the folder field alone, B;
   composition with the framework package, D. Reason: an existing Storybook
-  works with one root entry. Decision 20 below is open: it settles how the
-  `stories` field reaches discovery, and it blocks Milestone 20.
+  works with one root entry. Decision 20 below chose how the `stories` field
+  reaches discovery.
 - **12. Story setup: B.** Mokly awaits `story.load()`, runs `beforeAll` once,
   and warns about `sb.mock()` when the Vite adapter is off. Rejected: load
   only, A; a Mokly copy of `sb.mock()`, C. Reason: Storybook's own plugins
@@ -121,8 +121,8 @@ and 11 needed no decision, and Milestone 3 fixes them.
 - **13. Usage of story components: C.** A screen's use of a stories meta's
   `component` records an instance of that stories entry. Rejected: no change,
   A; a `fromStories` helper, B. Reason: projects get usage evidence with no
-  change to their screens. Decisions 19 and 21 below are open and block
-  Milestone 34.
+  change to their screens. Decision 19 below chose how uses get names, and
+  decision 21 below chose how Changes keeps their content.
 - **14. The catalogue and the Storybook sidebar: A.** Storybook story names,
   custom tags, the docs description, and the `dev` tag filter. Paths stay
   file-derived. Rejected: title paths, B; auto titles, C. Reason: no path
@@ -511,77 +511,89 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 ### 19. Ids of story component uses
 
 - **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design, with options E and F from the options check.
+- **Source:** Design, with options E and F from the options check, and G to
+  M from the user's messages of 2026-11-19.
 - **Category:** Docs or spec.
 - **Location:** `docs/protocol/mokly-instances.md:28-41`,
   `docs/protocol/mokly-instances.md:66-86`.
 - **Background:**
-  - An instance id is the `moklyInstance` prop of a wrapper or the
-    `mokly-instance` attribute of a component element. Without one, the id
-    defaults to the last segment of the component's path.
-  - Duplicate ids in one scope and placement are build errors.
-  - The instance rules keep an id when siblings move, when data props
-    change, and when source lines move. They also record a decision: never
-    repair a collision with a positional suffix, because that breaks
-    stability under reordering.
-  - Changes pairs the uses of two commits only by equal scoped ids.
-  - Decision 13 records a use whenever a screen renders the component of a
-    stories meta. That component is a plain product component, often used
-    many times in one screen, and `moklyInstance` is not in its type.
-- **Problem:** Repeated uses of a story component in one scope get the same
-  default id, which the current rule rejects. Each automatic id breaks one of
-  the stability rules.
+  - Two instances with the same id in one place of a page fail the build.
+    Without an explicit name, the id is the last part of the component's path.
+  - The instance rules keep an id when uses move, when props change, and when
+    source lines move. They also record a decision: never repair a collision
+    with a positional suffix, because that breaks stability under reordering.
+  - Changes pairs each use in the base commit with the use that has the same
+    id in the branch, and then compares the props of the two uses.
+  - Decision 13 records a use whenever a story component, such as `Button`,
+    renders under a Mokly page: in stories files, in Mokly screens, and in
+    product components.
+  - React reserves `key` and never passes it on. `moklyInstance` is an
+    ordinary prop outside Mokly's own wrappers, so on a product component it
+    fails TypeScript and can reach the product's markup.
+  - On 2026-11-19 the user said that authors, most often AI agents, should
+    normally add the names themselves.
+- **Problem:** Repeated uses of a story component get the same default id,
+  which the build rejects, unless an author names each one.
 - **Impact if no action:** Decision 13 fails the build for most screens that
   render a story component twice.
-- **Root question:** How does Mokly tell each use of a story component apart,
-  in one view and across commits, with no edit to screens or product
-  components?
+- **Root question:** How does each use of a story component get a stable
+  name, when authors, often AI agents, name most uses themselves? The first
+  version asked for no edit to screens or product components. The user's
+  message of 2026-11-19 dropped that.
 - **Options:**
-  - **A.** Keep the current rule, and let the JSX shim strip a
-    `moklyInstance` prop from any matched component. Repeated uses without an
-    id fail the build. Effort: Small.
-  - **B.** Number repeated uses in render order within each scope, such as
-    `button`, `button-2`, and `button-3`. A `moklyInstance` prop wins. A
-    React `key` wins when it matches the id grammar, after the component's
-    path segment, such as `button-save`. An automatic number skips an id
-    that an explicit one takes. Inserting a use renumbers the later ones, so
-    Changes shows them as moved. This reverses the recorded decision
-    against positional suffixes, and it changes the duplicate rule and the
-    stability rule of `docs/protocol/mokly-instances.md`. Effort: Medium.
-  - **C.** Derive the id from the source location of the use. One call site
-    that renders several uses, such as a `.map()`, still needs B's numbers,
-    and a `createElement` call has no location. An edit above a use changes
-    its id. This breaks the rule that a moved source line keeps an id.
+  - **A.** Require a name. Repeated uses without one fail the build. Effort:
+    Small.
+  - **B.** Number repeated uses in render order, such as `button-2`. A
+    `moklyInstance` prop or a `key` wins. An insertion shifts the numbers, so
+    Changes can pair the wrong uses. Effort: Medium.
+  - **C.** Derive the name from the source line. A loop still needs numbers,
+    and an edit above a use changes its name. Effort: Medium.
+  - **D.** Record the uses without names. The "Used by" list works, but
+    nobody can compare one use. Effort: Medium.
+  - **E.** Derive the name from all props and text. Every props edit then
+    looks like a removed use and an added use. Effort: Large.
+  - **F.** Do B, and let Changes match numbered uses by their props. Effort:
+    Large.
+  - **G.** Do B, and warn about every numbered use. Effort: Medium.
+  - **H.** Do B, and show a caution in Changes where a wrong pair is possible.
+    Effort: Large.
+  - **I.** Do B, and add a notice that `--strict` does not count. Effort:
+    Medium.
+  - **J.** Do B, and warn only about numbered uses in catalogue files. Effort:
+    Medium.
+  - **K.** Take the name from the first naming prop, in the order `key`, `id`,
+    `name`, `data-testid`, `aria-label`, and let a configuration field change
+    that list. The id is the component's path segment plus the value, such as
+    `button-save`. Fall back to the numbers of B and the warning of J.
     Effort: Medium.
-  - **D.** Record these uses without instance keys. Pages list the screens
-    that use the component, but nobody can select or compare one use, and an
-    edit of the component stays a direct change of each consuming screen.
-    It changes no instance rule. Effort: Medium.
-  - **E.** Derive the default id from the content of the use: the path
-    segment and a short digest of its data props and text children. Equal
-    uses become placements of one logical instance. An insertion or a
-    reorder keeps every other id. A props edit shows as one removed and one
-    added use, which breaks the rule that a data props edit keeps an id, and
-    the ids are hard to read. Effort: Large.
-  - **F.** Do B, and let the comparison pair the automatic ids of one
-    component in one scope by aligning their props digests. An insertion
-    then shows as one added use. This changes the record-only resolution and
-    the pairing by scoped id. It can follow B after the merge. Effort: Large.
+  - **L.** Do K, with an explicit name as the expected path. The warning
+    covers every numbered use, also in product components, and tells the
+    author which prop to add: a `key` on a product component, or
+    `moklyInstance` on a Mokly wrapper. The guide states this rule, so an
+    agent can follow it. Mokly's strict CI then fails when a product change
+    adds a repeated use without a name, until someone adds the key. Effort:
+    Medium.
+  - **M.** Do L, but use `moklyInstance` everywhere, with a TypeScript
+    declaration that lets every JSX element take it. The prop still reaches
+    product components in the product's own builds. Effort: Medium.
 - **Left out:** Record only the uses that catalogue files write: a screen that
   renders a product page would record none of the uses inside that page.
-- **Wider fix:** None, because each option that gives every use a key
-  breaks a stability rule, and D gives no keys.
-- **Previous examples:** React keys repeated children by position when no
-  `key` is given. The instance rules reject that for Mokly.
-- **Related:** Decisions 13 and 21. With D, decision 21 needs no new rule.
-  Milestone 34 waits for this answer.
-- **Recommendation:** D, changed from B on 2026-11-19. The component page
-  then lists every screen that uses a story component, with no wrong pairs
-  and no change to the instance rules. B gives each use a selection and a
-  comparison, but it reverses the recorded decision against positional
-  suffixes, whose reason still holds.
-- **Action:** ask the user, because D records less than decision 13 says,
-  and every other option except A changes a stability rule.
+- **Wider fix:** L. Every use ends up with a stable name, and the warning keeps
+  it that way.
+- **Previous examples:** Testing Library finds elements by `data-testid` and
+  accessible names, because those names stay stable when the layout changes.
+  React keys repeated children by position when no `key` is given, and the
+  instance rules reject that for Mokly.
+- **Related:** Decisions 13 and 21. With L, decision 21 needs option A, so
+  that content passed into a component stays visible in Changes.
+- **Recommendation:** L. It makes an explicit name the normal path, the
+  warning tells the author or the agent exactly what to add, and a `key` never
+  reaches the product's markup.
+- **Action:** ask the user, because every option except A and D changes the
+  instance rules, and L lets Mokly's CI fail on product code.
+- **Answer:** L, chosen by the user on 2026-11-19. It reverses the recorded
+  decision against positional suffixes for the fallback only, and it changes
+  the stability rule for naming props. Milestone 34 states both changes.
 
 ### 20. Roots from the `stories` field of `main.*`
 
@@ -627,6 +639,14 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   computed entries, at the cost of Node and a base install before discovery.
 - **Action:** ask the user, because B adds a configuration error, and C
   changes the requirement that the core reads the configuration without Node.
+- **Answer:** C, chosen by the user on 2026-11-20, for roots that opt in. The
+  Node step runs only for a root that names a Storybook folder and has no
+  `dir`. A root with an explicit `dir` and every catalogue without such a
+  root keep configuration and discovery without Node. Reason: the user wants
+  full Storybook support, and the cost then falls only on projects that ask
+  for it. A Storybook project already needs Node and a base install to render
+  its stories, so C adds about one Node start for each side and moves the
+  base install before discovery.
 
 ### 21. Content inside a story component use
 
@@ -661,13 +681,14 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   files then need edits that only Mokly reads, and A covers the same content.
 - **Wider fix:** A. Every input that a screen gives stays visible.
 - **Previous examples:** None found.
-- **Related:** Decisions 13 and 19. With 19 = D, a use has no region of its
-  own, so its content stays in the screen's comparison. Milestone 34 waits
-  for this answer.
-- **Recommendation:** B, changed from A on 2026-11-19 to match decision 19.
-  With 19 = D, the content already stays in the screen's comparison, and
-  Changes needs no new rule. When decision 19 is B, C, E, or F, choose A.
+- **Related:** Decisions 13 and 19. Decision 19 chose L, so each use has a
+  region of its own, and its content needs option A to stay visible.
+  Milestone 34 waits for this answer.
+- **Recommendation:** A, changed from B on 2026-11-19, because decision 19
+  chose L. Each use then has its own region, so without A a text edit inside
+  a story component would drop out of Changes.
 - **Action:** ask the user, because A adds a rule to the Changes contract.
+- **Answer:** A, chosen by the user on 2026-11-19.
 
 ### 22. The Vite adapter without Vite
 
@@ -833,18 +854,18 @@ has merged into this branch, and when the open decisions that block it have
 answers. The ledger of the workspaces is in
 `.context/storybook-support/workspaces.md`.
 
-| Track                      | Milestones | Starts after                                     |
-| -------------------------- | ---------- | ------------------------------------------------ |
-| A. Mockups                 | 1          | Nothing                                          |
-| B. Story reading           | 2 to 8     | Nothing                                          |
-| C. Imported assets         | 9 to 12    | Nothing                                          |
-| D. Vite adapter            | 13 to 17   | Nothing                                          |
-| E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
-| F. Failed stories          | 23 to 25   | Tracks A and B                                   |
-| G. Storybook links         | 26 to 29   | Tracks A and E                                   |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d  |
-| I. Story component usage   | 34 to 36   | Tracks B and D, and decisions 19 and 21          |
-| J. Spike for decision 18   | 37         | Nothing                                          |
+| Track                      | Milestones | Starts after                                    |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| A. Mockups                 | 1          | Nothing                                         |
+| B. Story reading           | 2 to 8     | Nothing                                         |
+| C. Imported assets         | 9 to 12    | Nothing                                         |
+| D. Vite adapter            | 13 to 17   | Nothing                                         |
+| E. Storybook folders       | 18 to 22   | Track B                                         |
+| F. Failed stories          | 23 to 25   | Tracks A and B                                  |
+| G. Storybook links         | 26 to 29   | Tracks A and E                                  |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d |
+| I. Story component usage   | 34 to 36   | Tracks B and D                                  |
+| J. Spike for decision 18   | 37         | Nothing                                         |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -1119,8 +1140,7 @@ Depends on: 8
 Track E. The protocol states the rules of decisions 4 and 9.
 
 - [ ] Add the rules for Storybook folders and `main.*` to
-      `docs/protocol/mokly-storybook.md`, without the rule that decision 20
-      settles.
+      `docs/protocol/mokly-storybook.md`, with the answer to decision 20.
 - [ ] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
       field.
 - [ ] Update `docs/protocol/mokly-rendering.md`: a story document links the
@@ -1150,9 +1170,20 @@ Monorepos keep the preview file of their own Storybook, as decision 9 says.
 
 ## Milestone 20: Roots from the `stories` field of `main.*`
 
-Depends on: 19, and the answer to decision 20
+Depends on: 19
 
-- [ ] Apply the answer to decision 20 on both sides of a comparison.
+- [ ] For a root that names a Storybook folder and has no `dir`, run its
+      `main.*` in the sidecar before discovery with Storybook's loader, as
+      decision 20 chose. Turn each `stories` entry into a root, and convert
+      Storybook's pattern syntax, such as `*.@(ts|tsx)`, to Mokly's globs.
+- [ ] On the base side, run the base commit's `main.*` after its extraction
+      and its install.
+- [ ] Watch `main.*` and its imports as configuration inputs, so that an edit
+      runs discovery again in Serve.
+- [ ] When `main.*` fails, fail discovery with a configuration error that
+      names the file.
+- [ ] Keep configuration and discovery free of Node for every other root and
+      catalogue.
 - [ ] Update `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-configuration.md`, and
       `docs/protocol/mokly-root-discovery.md` with that answer.
@@ -1378,13 +1409,18 @@ Depends on: 30, 31, 32
 
 ## Milestone 34: Story component usage documentation
 
-Depends on: 8, 17, and the answers to decisions 19 and 21
+Depends on: 8, 17
 
 Track I. The protocol states the usage rules of decision 13, with the
 answers to decisions 19 and 21.
 
 - [ ] Update `docs/protocol/mokly-instances.md` and
-      `docs/protocol/mokly-component-changes.md` with those answers.
+      `docs/protocol/mokly-component-changes.md` with those answers. Under
+      decision 19, option L: names from `moklyInstance`, `key`, and the
+      naming props, numbers as the fallback, and the changed stability rule.
+- [ ] Add the warning for numbered uses to
+      `docs/protocol/mokly-build-warnings.md`, and the naming props field to
+      `docs/protocol/mokly-configuration.md`.
 - [ ] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
@@ -1397,10 +1433,14 @@ Screens that render a story component record its use, as decision 13 says.
 - [ ] Record an instance of a stories entry in the JSX development shim when
       a screen renders its meta's `component`, or a `memo` or `forwardRef`
       wrapper of it, on both compile paths.
-- [ ] Give each such use the id that decision 19 chooses.
-- [ ] Keep the content of each use in Changes as decision 21 chooses.
-- [ ] Record option F of decision 19 as a follow-up item when the answer is
-      B.
+- [ ] Give each such use the id that decision 19 chose: an explicit
+      `moklyInstance` or `key`, then the first naming prop, then a number.
+- [ ] Warn about each numbered use, with the prop to add: a `key` on a
+      product component, or `moklyInstance` on a Mokly wrapper.
+- [ ] Add the configuration field that changes the list of naming props.
+- [ ] Keep the content of each use in Changes, as decision 21 chose:
+      `children` and each prop that holds React content become implicit
+      slots, and function props stay out of the props digest.
 - [ ] Test repeated uses, a wrapped component, an edit of a use's children,
       and a changed component that affects a screen, on esbuild and on the
       Vite adapter.
