@@ -3,88 +3,33 @@
 use std::mem::size_of;
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{StylesheetBundler, StylesheetBundlerMock};
+use mokly_css::types::StylesheetBundler;
 use mokly_source_interface::read_evidence::ReadBaseline;
-use tracing::span::{Attributes, Id, Record};
-use tracing::{Event, Metadata, Subscriber};
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
-use super::stylesheet_support::{attempt, bundle, bundler, fill, key, module, root, roots, tree};
+use crate::stylesheet_compiler::{CompileRoot, RootCompiler};
 use crate::stylesheet_store::StylesheetCache;
 
-struct Capture {
-    spans: Mutex<Vec<Option<String>>>,
-    next: Mutex<u64>,
-}
-
-impl Default for Capture {
-    fn default() -> Self {
-        Self {
-            spans: Mutex::default(),
-            next: Mutex::new(1),
-        }
-    }
-}
-
-impl Capture {
-    fn spans(&self) -> Vec<Option<String>> {
-        self.spans.lock().unwrap().clone()
-    }
-}
-
-struct Fields<'a> {
-    cache: &'a mut Option<String>,
-}
-
-impl tracing::field::Visit for Fields<'_> {
-    fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
-        if field.name() == "cache" {
-            *self.cache = Some(value.to_owned());
-        }
-    }
-
-    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
-        if field.name() == "cache" {
-            *self.cache = Some(format!("{value:?}"));
-        }
-    }
-}
-
-impl Subscriber for Capture {
-    fn enabled(&self, _: &Metadata<'_>) -> bool {
-        true
-    }
-
-    fn new_span(&self, attributes: &Attributes<'_>) -> Id {
-        let mut cache = None;
-        attributes.record(&mut Fields { cache: &mut cache });
-        let mut next = self.next.lock().unwrap();
-        let id = Id::from_u64(*next);
-        *next += 1;
-        if attributes.metadata().name() == "css.bundle" {
-            self.spans.lock().unwrap().push(cache);
-        }
-        id
-    }
-
-    fn record(&self, _: &Id, _: &Record<'_>) {}
-    fn record_follows_from(&self, _: &Id, _: &Id) {}
-    fn event(&self, _: &Event<'_>) {}
-    fn enter(&self, _: &Id) {}
-    fn exit(&self, _: &Id) {}
-}
+use super::stylesheet_support::compiled;
+use super::stylesheet_support::{attempt, bundle, bundler, fill, key, module, root, roots, tree};
 
 fn capture_bundle(
     shared: &Arc<Mutex<StylesheetCache>>,
-    inner: Arc<dyn StylesheetBundler>,
+    inner: Arc<dyn RootCompiler>,
     root: &mokly_css::types::StylesheetRoot,
     tree: Arc<dyn mokly_source_interface::tree::SourceTree>,
 ) -> Vec<Option<String>> {
-    let capture = Arc::new(Capture::default());
-    tracing::subscriber::with_default(capture.clone(), || {
+    let capture = Trace::default();
+    capture.in_scope(|| {
         attempt(inner, tree, shared).bundle(root).unwrap();
     });
-    capture.spans()
+    capture
+        .spans()
+        .into_iter()
+        .filter(|span| span.name == "css.bundle")
+        .map(|span| span.fields.get("cache").cloned())
+        .collect()
 }
 
 #[test]
@@ -93,9 +38,9 @@ fn finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent() {
     let no_record = capture_bundle(
         &Arc::new(Mutex::new(StylesheetCache::default())),
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(bundle(&root))),
+                .returns(Ok(compiled(bundle(&root)))),
         )),
         &root,
         tree(&Arc::default(), &[]),
@@ -132,9 +77,9 @@ fn finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent() {
         .insert(module(0), ReadBaseline::Late("1".repeat(64)));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(disagreeing)),
+                .returns(Ok(compiled(disagreeing))),
         )),
         tree(&Arc::default(), &[]),
         &shared,

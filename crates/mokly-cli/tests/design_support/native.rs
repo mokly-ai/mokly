@@ -61,6 +61,19 @@ impl Session {
             Arc::new(ProbeDiagnostics),
             cancellation.clone(),
             render_runtime::cache(),
+            crate::bundle_runtime::Reporting {
+                directory: changes_runtime::reporter(
+                    Arc::new(ProbeDiagnostics),
+                    Style {
+                        mode: Mode::Plain,
+                        color: false,
+                        ascii: true,
+                        columns: 120,
+                    },
+                    redactor.clone(),
+                ),
+                mode: Mode::Plain,
+            },
         )
         .unwrap();
         let catalogue: Arc<dyn CatalogueBuilder> = Arc::new(Builder {
@@ -90,13 +103,7 @@ impl Session {
                     cancellation.clone(),
                 )
                 .unwrap(),
-                Style {
-                    mode: Mode::Plain,
-                    color: false,
-                    ascii: true,
-                    columns: 120,
-                },
-                redactor,
+                services.reporter.clone(),
                 Arc::new(ProbeDiagnostics),
                 common.base_install_scripts_override(),
             ),

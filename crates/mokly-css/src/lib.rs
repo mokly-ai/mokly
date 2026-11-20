@@ -7,10 +7,12 @@ pub mod error;
 pub mod modules;
 pub mod names;
 pub mod paths;
+pub mod reference_cache;
 pub mod resolution;
 pub mod resolver;
 pub mod syntax;
 pub mod types;
+pub mod watch_inputs;
 
 mod delivery;
 mod module_checks;

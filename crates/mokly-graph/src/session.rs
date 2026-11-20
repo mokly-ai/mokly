@@ -1,6 +1,7 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -14,10 +15,14 @@ use mokly_source_interface::tree::SourceTree;
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::{Closure, Walker};
 use crate::collection::ComparisonCollector;
+use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
+use crate::document_store::StoreKey;
 use crate::error::Result;
 use crate::graph::Graph;
+use crate::link_index::LinkIndex;
+use crate::link_results::{self, LinkResults, MemoryLinkResults};
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::requests::{MemoryRequests, Requests};
@@ -28,7 +33,7 @@ use crate::types::{
 };
 use crate::validation_summary::Summary;
 use crate::workers::{ComparisonTask, ComparisonWorker, RenderWorkers, check_cancelled};
-use crate::{styles, temporary, validation};
+use crate::{session_proof, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
@@ -36,10 +41,15 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
+    pub(crate) fresh: Mutex<BTreeMap<String, StoreKey>>,
     pub(crate) anchor_flights: Arc<dyn Requests>,
+    pub(crate) link_results: Arc<dyn LinkResults>,
+    pub(crate) link_index: LinkIndex,
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
+    pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) generation_key: String,
     pub(crate) document_keys: BTreeSet<String>,
     pub(crate) matchers: Arc<styles::Matchers>,
@@ -55,9 +65,12 @@ pub(crate) struct State {
     pub(crate) cache: Arc<dyn RenderCache>,
     pub(crate) workers: Arc<dyn RenderWorkers>,
     pub(crate) policy: Arc<dyn PublicPolicy>,
+    pub(crate) comparison_policy: Option<ContentIdentity>,
 }
 
 pub(crate) struct SessionInput {
+    pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) config: ResolvedConfig,
     pub(crate) catalogue: PreparedCatalogue,
@@ -70,6 +83,8 @@ pub(crate) struct SessionInput {
 
 impl Session {
     pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
+        let comparison_policy = session_proof::policy(&input);
+        let link_index = LinkIndex::new(&input.plans, &input.catalogue.model.entries);
         for plan in input.plans.values() {
             graph.inputs.resources.retain(&plan.resource_key);
             graph.inputs.closures.retain(&plan.key.0);
@@ -81,7 +96,10 @@ impl Session {
             .collect();
         Self {
             state: Arc::new(State {
+                fresh: Mutex::new(BTreeMap::new()),
                 anchor_flights: Arc::new(MemoryRequests::default()),
+                link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
+                link_index,
                 observed: Arc::new(Mutex::new(
                     input
                         .plans
@@ -94,9 +112,13 @@ impl Session {
                 observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
+                stylesheet_resolution_files: input.stylesheet_resolution_files,
+                stylesheet_resolution_roots: input.stylesheet_resolution_roots,
                 document_keys,
                 matchers: Arc::new(input.matchers),
-                reference_index: Arc::new(MemoryReferenceIndex::default()),
+                reference_index: Arc::new(MemoryReferenceIndex::new(
+                    graph.inputs.style_references.clone(),
+                )),
                 inputs: graph.inputs.clone(),
                 config: Arc::new(input.config),
                 catalogue: Arc::new(input.catalogue),
@@ -108,6 +130,7 @@ impl Session {
                 cache: graph.cache.clone(),
                 workers: graph.workers.clone(),
                 policy: input.policy,
+                comparison_policy,
             }),
         }
     }
@@ -131,6 +154,14 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn comparison_identity(
+        &self,
+        read: ComparisonRead,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
+        self.input_identity(read, route, mode)
+    }
     fn check_cancelled(&self) -> Result<()> {
         check_cancelled(self.state.workers.as_ref())
     }
@@ -197,13 +228,23 @@ impl RenderGeneration for Session {
         for result in results {
             summary.record(result);
         }
-        summary.finish(self).map(|(summary, _)| summary)
+        let (summary, _) = summary.finish(self)?;
+        for route in &routes {
+            self.offer_document(route);
+        }
+        Ok(summary)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         self.collect_validated(collector)
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         &self.state.directories
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.state.stylesheet_resolution_files.clone()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.state.stylesheet_resolution_roots.clone()
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()

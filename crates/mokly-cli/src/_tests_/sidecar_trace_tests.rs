@@ -114,6 +114,7 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
                 Arc::new(factory.clone()),
                 Arc::new(clock.clone()),
                 Launch {
+                    capture_durability: false,
                     node: "private-node".into(),
                     entry: "private-entry".into(),
                     repository: "/private-root".into(),
@@ -154,7 +155,7 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
             .filter(|record| record["stage"] == "sidecar.stop")
             .collect();
         assert_eq!(stops.len(), if success { 2 } else { 4 });
-        for (index, pair) in stops.chunks_exact(2).enumerate() {
+        for (index, pair) in stops.as_chunks::<2>().0.iter().enumerate() {
             assert_eq!(pair[0]["event"], "start");
             assert_eq!(pair[1]["event"], "end");
             assert_eq!(pair[0]["id"], pair[1]["id"]);

@@ -18,6 +18,8 @@ import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { start, stop, waitFor } from "./process.js";
+import { renderStorePreparation } from "./render_store.js";
+import { prepareWarmSeed, type WarmSeedResult } from "./render_store_seed.js";
 import { finishRun } from "./run_output.js";
 import type { PreparedFixture } from "./setup.js";
 import { startupBudget } from "./startup_budget.js";
@@ -68,7 +70,22 @@ export async function benchmark(
     "--sidecars",
     String(sidecars),
   ];
+  const serveArguments = [
+    cli,
+    "serve",
+    ...common,
+    ...comparisonArguments(fixture.baseline, true),
+    "--port",
+    "0",
+  ];
+  const renderStore = renderStorePreparation(
+    fixture.root,
+    serveArguments,
+    memoryStopKiB,
+    options.sidecarTimeoutMs,
+  );
   const results: object[] = [];
+  const warmSeeds: (WarmSeedResult & { scenario: Scenario })[] = [];
   const report = {
     schemaVersion: 1,
     fixture,
@@ -85,6 +102,8 @@ export async function benchmark(
       v8.getHeapStatistics().heap_size_limit / 1024 / 1024,
     ),
     memory: "sampled aggregate RSS; CLI process tree and whole harness tree",
+    renderStorePreparation: renderStore.preparations,
+    warmSeedPreparation: warmSeeds,
     results,
   };
   let active: Scenario | undefined;
@@ -118,6 +137,7 @@ export async function benchmark(
           options.sidecarTimeoutMs,
           () => liveness.line(),
         );
+        renderStore.observe(running, "build");
         const liveness = buildLiveness(
           running,
           fixture.root,
@@ -158,19 +178,17 @@ export async function benchmark(
         for (const state of scenario === "watch"
           ? ["live"]
           : ["cold", "warm"]) {
+          if (state === "cold") await renderStore.cold(scenario);
           const beginning = performance.now();
           const running = start(
-            [
-              cli,
-              "serve",
-              ...common,
-              ...comparisonArguments(fixture.baseline, true),
-              "--port",
-              "0",
-            ],
+            serveArguments,
             fixture.root,
             memoryStopKiB,
             options.sidecarTimeoutMs,
+          );
+          const announcement = renderStore.observe(
+            running,
+            `${scenario}-${state}`,
           );
           try {
             const match = await waitFor(
@@ -218,13 +236,13 @@ export async function benchmark(
               basePreparation: {
                 baseCommit: fixture.baseline,
                 mode: "M9 Git sources and leased caches; retained across fresh processes",
-                cacheDirectory:
-                  running.output().match(/Mokly cache: ([^\r\n]+)/)?.[1] ??
-                  null,
+                cacheDirectory: announcement.directory(),
               },
               ...(await running.finishMemory()),
             });
             if (reason) throw new Error(reason);
+            if (state === "cold")
+              warmSeeds.push({ scenario, ...(await prepareWarmSeed(running)) });
           } finally {
             await finishRun(fixture.root, `${scenario}-${state}`, running);
           }

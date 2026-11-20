@@ -13,7 +13,7 @@ impl Pool {
     pub(super) fn source_root(&self, call: &Call) -> Option<PathBuf> {
         let state = self.lock();
         let source = match call {
-            Call::Bundle(params) => Some(params.source_root.clone()),
+            Call::Bundle(request) => Some(request.params.source_root.clone()),
             Call::RestoreGeneration(params) => Some(params.params.source_root.clone()),
             Call::ProcessCss(params) => Some(params.source_root.clone()),
             _ => generation(call).map(|id| state.bundles[id].source_root.clone()),

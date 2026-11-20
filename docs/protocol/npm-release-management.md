@@ -72,7 +72,7 @@ viewer. The release workflow then:
 4. Verifies that both tags identify clean `HEAD` locally and on origin.
 5. Runs dependency installation, the live npm and Rust audits, and verification
    in the read-only preparation job. It reuses applicable complete CI evidence
-   for the exact tagged tree or runs the complete strict gate. The
+   for the exact tagged tree. Absent or invalid evidence stops preparation. The
    [release verification evidence contract](./npm-release-evidence.md) defines
    selection and failure semantics. No preparation step receives publication
    credentials or access to the protected npm environment.
@@ -101,9 +101,7 @@ identity, branch, and event. Its head can differ from the tag commit when a
 later push creates the release. The archive recheck binds the saved bytes to
 the checked-out tag's commit and tree. An automatic attempt lists only its own
 run's artifacts.
-Its `verification` input defaults to `evidence`; selecting `complete` forces the
-full local gate without making GitHub evidence requests. A single concurrency
-group serializes automatic runs and manual retries without cancelling an
+A single concurrency group serializes automatic runs and manual retries without cancelling an
 in-progress publish. A completed publication is verified and skipped on
 retry; a later package cannot publish before the earlier verification succeeds.
 
@@ -128,6 +126,12 @@ follow-on workflow events created with that token, so maintainers must verify
 the release PR's required checks when using the fallback.
 
 ## Release Recovery
+
+When preparation reports absent CI evidence, re-run CI on the release commit.
+The run must provide the qualifying dual-runtime reports for the tagged tree
+under the [evidence contract](./npm-release-evidence.md#candidate-runs).
+Retry the release after CI passes. A local gate cannot replace this evidence.
+Invalid evidence requires a repair to the evidence pipeline before a retry.
 
 Release Please reads the merged release PR body as HTML. Changelog text can
 carry an angle-bracket placeholder such as `<path>` from a commit message into

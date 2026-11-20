@@ -4,6 +4,7 @@ import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -102,18 +103,22 @@ test("hover and geometry coalesce without drawing in the frame", async ({
       () => (window as unknown as FrameTestWindow).frameEvents,
     ),
   ).toEqual([]);
-  await child.evaluate(() => {
-    const rect = document.querySelector("button")!.getBoundingClientRect();
-    for (let i = 0; i < 200; i++) {
-      document.dispatchEvent(new Event("scroll"));
-      document.dispatchEvent(
-        new MouseEvent("pointermove", {
-          clientX: rect.x + 5,
-          clientY: rect.y + 5,
-        }),
-      );
-    }
-  });
+  await waitForFrameEvent(page, "geometry", () =>
+    waitForFrameEvent(page, "hover", () =>
+      child.evaluate(() => {
+        const rect = document.querySelector("button")!.getBoundingClientRect();
+        for (let i = 0; i < 200; i++) {
+          document.dispatchEvent(new Event("scroll"));
+          document.dispatchEvent(
+            new MouseEvent("pointermove", {
+              clientX: rect.x + 5,
+              clientY: rect.y + 5,
+            }),
+          );
+        }
+      }),
+    ),
+  );
   await settle();
   const events = await page.evaluate(
     () => (window as unknown as FrameTestWindow).frameEvents,

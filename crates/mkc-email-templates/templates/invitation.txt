@@ -1,0 +1,5 @@
+{{{invitedBy}}} invited you to {{{organization}}}
+
+Sign in with this email address to accept: {{{link}}}
+
+The invitation is valid for {{{expiry}}}.

@@ -10,13 +10,15 @@ use std::path::Path;
 use mokly_platform::error;
 
 use crate::cache::DiskCache;
-use crate::cache_types::Record;
+use crate::cache_lock::entry_lock_path;
+use crate::cache_types::{Kind, Record};
 use crate::error::{Error, InternalError, Result};
 
 impl DiskCache {
     pub(crate) fn evict(
         &self,
         namespace: &Path,
+        kind: Kind,
         records: &[Record],
         key: &str,
         needed: u64,
@@ -40,7 +42,7 @@ impl DiskCache {
                 return Ok(());
             }
             self.check()?;
-            let path = namespace.join("locks").join(format!("{}.lock", record.key));
+            let path = entry_lock_path(namespace, kind, &record.key);
             match self.locks.try_lock(&path) {
                 Ok(_guard) => {
                     self.storage.retire(
@@ -68,7 +70,7 @@ impl DiskCache {
         Ok(())
     }
 
-    pub(crate) fn clean_stages(&self, namespace: &Path, active: &str) -> Result<()> {
+    pub(crate) fn clean_stages(&self, namespace: &Path, kind: Kind, active: &str) -> Result<()> {
         let incomplete = self.storage.records(&namespace.join("entries"))?;
         for record in incomplete
             .iter()
@@ -77,7 +79,7 @@ impl DiskCache {
             self.check()?;
             match self
                 .locks
-                .try_lock(&namespace.join("locks").join(format!("{}.lock", record.key)))
+                .try_lock(&entry_lock_path(namespace, kind, &record.key))
             {
                 Ok(_guard) => self.storage.retire(
                     &namespace.join("entries").join(&record.key),
@@ -92,10 +94,7 @@ impl DiskCache {
                 continue;
             }
             self.check()?;
-            match self
-                .locks
-                .try_lock(&namespace.join("locks").join(format!("{key}.lock")))
-            {
+            match self.locks.try_lock(&entry_lock_path(namespace, kind, &key)) {
                 Ok(_guard) => self.storage.retire(
                     &namespace.join("staging").join(key),
                     &namespace.join("trash"),

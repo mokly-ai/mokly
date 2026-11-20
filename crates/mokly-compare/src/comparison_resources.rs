@@ -1,11 +1,12 @@
 //! Validate both resource closures, prove relocation aliases, and collect rule evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use mokly_css::attribution::{PageObservation, observe};
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::match_document;
-use mokly_css::{observation, rules};
+use mokly_css::rules;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::types::RenderGeneration;
@@ -118,8 +119,8 @@ pub(crate) fn aliases(
 pub(crate) struct ResourceInput<'a> {
     pub(crate) resources: &'a Resources,
     pub(crate) memo: &'a dyn ResourceMemo,
-    pub(crate) before_tree: Option<&'a MatchTree>,
-    pub(crate) after_tree: Option<&'a MatchTree>,
+    pub(crate) before_tree: Option<&'a Arc<MatchTree>>,
+    pub(crate) after_tree: Option<&'a Arc<MatchTree>>,
     pub(crate) paths: &'a BTreeMap<String, String>,
     pub(crate) before_route: &'a str,
     pub(crate) after_route: &'a str,
@@ -191,11 +192,11 @@ pub(crate) fn evidence(
                 let left = before_documents
                     .iter()
                     .find(|document| document.id == context)
-                    .map(|document| &document.tree);
+                    .map(|document| document.tree.as_ref());
                 let right = after_documents
                     .iter()
                     .find(|document| document.id == context)
-                    .map(|document| &document.tree);
+                    .map(|document| document.tree.as_ref());
                 let matches = match_document(&diff, left, right);
                 observation
                     .rules
@@ -232,7 +233,6 @@ pub(crate) fn evidence(
             .cmp(&mokly_model::review_order::resource_key(right))
     });
     output.dedup();
-    observation.rules = observation::merge(std::mem::take(&mut observation.rules));
     Ok(output)
 }
 

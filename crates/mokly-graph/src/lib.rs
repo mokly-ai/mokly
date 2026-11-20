@@ -2,6 +2,8 @@
 #![warn(unreachable_pub)]
 
 pub mod cache;
+pub mod cache_export;
+
 mod cache_encoder_pool;
 mod cache_encoding;
 mod cache_state;
@@ -10,14 +12,20 @@ mod cache_transit;
 pub mod closure;
 pub mod collection;
 pub mod comparison_input;
+pub mod comparison_proof;
 pub mod comparison_stream;
 pub mod delivery_inputs;
 mod dependency_inputs;
 mod document_annotations;
 pub mod document_codec;
 pub mod document_error;
+mod document_identity;
+mod document_metadata;
 mod document_nodes;
+mod document_persistence;
 mod document_records;
+pub mod document_store;
+mod document_store_metadata;
 mod document_usage;
 mod document_weight;
 mod document_writer;
@@ -25,13 +33,17 @@ pub mod error;
 pub mod fragments;
 pub mod graph;
 pub mod key;
+mod link_index;
+mod link_results;
 pub mod policy;
 pub mod public_denial;
 pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
 pub mod references;
+pub mod render_class;
 mod render_closure;
+mod render_exporters;
 pub mod render_inputs;
 pub mod route_inventory;
 pub mod source_snapshot;
@@ -56,6 +68,7 @@ mod resource_keys;
 mod routing_inputs;
 mod routing_records;
 mod session;
+mod session_proof;
 mod session_render;
 mod styles;
 mod stylesheet_jobs;
@@ -97,5 +110,16 @@ mod reference_tests;
 
 pub mod asset_delivery;
 
+mod document_capacity;
+mod document_export;
+mod document_node_capacity;
+pub mod export_memory;
 mod session_collection;
+mod session_persistence;
+pub mod store_memory;
 mod validation_summary;
+pub mod write_activity;
+
+#[cfg(test)]
+#[path = "_tests_/style_memo_tests.rs"]
+mod style_memo_tests;

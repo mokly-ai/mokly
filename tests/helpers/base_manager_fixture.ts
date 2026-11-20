@@ -25,6 +25,7 @@ export async function baseManagerFixture(
     | "paths"
     | "exec"
     | "constraints" = "installed",
+  originalPath?: string,
 ) {
   const fixture = await coldBaseFixture(2, context);
   const { root } = fixture;
@@ -172,7 +173,12 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
     "module.exports = 'Working workspace';",
   );
   const probe = await instrumentManagers(root);
-  const PATH = await managerPath(root, manager, mode === "missing");
+  const PATH = await managerPath(
+    root,
+    manager,
+    mode === "missing",
+    originalPath,
+  );
   return {
     ...fixture,
     base,

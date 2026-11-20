@@ -5,40 +5,132 @@ use std::sync::Arc;
 use crate::bindings::Bindings;
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
-use crate::methods::{Bundle, Call, CssModules, Generation};
+use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation};
 use crate::pool::Pool;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
+use crate::reusable_recipe::ReusableRecipe;
 use crate::wire::Request;
 
+/// Inputs that must already be installed before a generation call runs.
+pub(super) struct Prerequisites {
+    /// The call needs the retained CSS class maps.
+    pub(super) maps: bool,
+    /// The call needs evaluated registrations.
+    pub(super) description: bool,
+    /// The call needs the latest shared binding payload.
+    pub(super) bindings: bool,
+}
+
+impl Prerequisites {
+    /// Match the inputs that replay installs before the requested call.
+    pub(super) fn for_call(call: &Call) -> Self {
+        let bindings = matches!(
+            call,
+            Call::RenderScreen(_)
+                | Call::RenderComponent(_)
+                | Call::RenderStory(_)
+                | Call::RenderPage(_)
+        );
+        Self {
+            maps: !matches!(call, Call::CssModules(_)),
+            description: bindings || matches!(call, Call::Bindings(_)),
+            bindings,
+        }
+    }
+
+    /// Missing retained inputs never count as installed on a slot.
+    pub(super) fn loaded(&self, state: &State, slot: &Slot, generation: &str) -> bool {
+        (!self.maps || (state.maps.contains_key(generation) && slot.maps.contains(generation)))
+            && (!self.description || slot.described.contains(generation))
+            && (!self.bindings
+                || state
+                    .bindings
+                    .get(generation)
+                    .zip(slot.bindings.get(generation))
+                    .is_some_and(|(retained, loaded)| Arc::ptr_eq(retained, loaded)))
+    }
+}
+
 impl Pool {
-    pub(super) fn seed_compilation(&self, slot: &mut Slot, params: &Bundle) -> Result<()> {
-        let (stored, candidate) = {
+    pub(super) fn seed_compilation(
+        &self,
+        slot: &mut Slot,
+        request: &BundleRequest,
+    ) -> Result<bool> {
+        let params = &request.params;
+        let capture = request.capture.unwrap_or_default();
+        let (stored, mut candidate, fallback) = {
             let mut state = self.lock();
-            let stored = state.recipes.seed(params);
-            let candidate = state
+            let stored = state.recipes.seed(params, capture);
+            let candidates = state
                 .bundles
                 .iter()
                 .filter(|(_, retained)| same_settings(retained, params))
-                .max_by_key(|(id, _)| (state.epochs[*id], *id))
-                .map(|(id, _)| {
+                .filter_map(|(id, retained)| {
+                    ReusableRecipe::new(
+                        id.clone(),
+                        retained.clone(),
+                        state.modules[id].clone(),
+                        state.compiled[id].clone(),
+                    )
+                    .filter(|recipe| recipe.compiled().reuse_evidence.reusable(capture))
+                    .map(|recipe| (id, recipe))
+                });
+            let candidate = candidates
+                .clone()
+                .max_by_key(|(id, recipe)| {
+                    (
+                        recipe.compiled().reuse_evidence.captured(),
+                        state.epochs[*id],
+                        *id,
+                    )
+                })
+                .map(|(id, recipe)| {
                     (
                         id.clone(),
                         Preparation::snapshot(&state, slot, id, false, false, false),
+                        recipe.compiled().reuse_evidence.captured(),
                     )
                 });
-            (stored, candidate)
+            let fallback = candidate
+                .as_ref()
+                .filter(|(_, _, captured)| *captured)
+                .and_then(|_| {
+                    candidates
+                        .filter(|(_, recipe)| recipe.compiled().reuse_evidence.serve_edit())
+                        .max_by_key(|(id, _)| (state.epochs[*id], *id))
+                        .map(|(id, _)| {
+                            (
+                                id.clone(),
+                                Preparation::snapshot(&state, slot, id, false, false, false),
+                            )
+                        })
+                });
+            (stored, candidate, fallback)
         };
+        let complete = stored.is_some() || candidate.is_some();
+        if stored
+            .as_ref()
+            .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
+            && candidate.as_ref().is_some_and(|(_, _, captured)| *captured)
+            && let Some((generation, preparation, _)) = candidate.take()
+        {
+            self.restore(slot, &generation, false, preparation, false)?;
+        }
         if let Some(recipe) = stored {
             let generation = recipe.generation.clone();
-            self.prerequisite(slot, Call::RestoreGeneration(recipe))?;
+            self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
             slot.generations.insert(generation, 0);
         }
-        if let Some((generation, preparation)) = candidate {
-            self.restore(slot, &generation, false, preparation)?;
+        if let Some((generation, preparation, _)) = candidate {
+            self.restore(slot, &generation, false, preparation, false)?;
         }
-        Ok(())
+        if let Some((generation, preparation)) = fallback {
+            self.restore(slot, &generation, false, preparation, false)?;
+        }
+        Ok(complete)
     }
 
     pub(super) fn prepare(
@@ -60,15 +152,17 @@ impl Pool {
                 bindings_needed,
             )
         };
-        self.restore(slot, generation, description_needed, preparation)
+        self.restore(slot, generation, description_needed, preparation, false)
     }
 
-    fn restore(
+    /// Send the calls that a preparation snapshot names, one at a time, quiet for a warm-up.
+    pub(super) fn restore(
         &self,
         slot: &mut Slot,
         generation: &str,
         description_needed: bool,
         preparation: Preparation,
+        quiet: bool,
     ) -> Result<()> {
         let Preparation {
             recipe,
@@ -83,13 +177,14 @@ impl Pool {
                     generation: generation.into(),
                     params: recipe.params,
                     modules: recipe.modules,
-                    compiled: (*recipe.compiled).clone(),
+                    compiled: recipe.compiled,
                 })),
+                quiet,
             )?;
             slot.generations.insert(generation.into(), epoch);
         }
         if let Some(maps) = maps {
-            self.prerequisite(slot, Call::CssModules(maps))?;
+            self.prerequisite(slot, Call::CssModules(maps), quiet)?;
             slot.maps.insert(generation.to_owned());
         }
         if description_needed && !slot.described.contains(generation) {
@@ -98,27 +193,31 @@ impl Pool {
                 Call::Describe(Generation {
                     generation: generation.to_owned(),
                 }),
+                quiet,
             )?;
             slot.described.insert(generation.to_owned());
         }
         if let Some(bindings) = bindings {
-            self.prerequisite(slot, Call::Bindings((*bindings).clone()))?;
+            self.prerequisite(slot, Call::Bindings((*bindings).clone()), quiet)?;
             slot.bindings.insert(generation.to_owned(), bindings);
         }
         Ok(())
     }
 
-    fn prerequisite(&self, slot: &mut Slot, call: Call) -> Result<()> {
+    /// Send one call outside the request queue and discard its result; only a warm-up is quiet.
+    pub(super) fn prerequisite(&self, slot: &mut Slot, call: Call, quiet: bool) -> Result<()> {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
-        slot.worker.request(&Request { id: 1, call }, deadline)?;
+        slot.worker
+            .request(&Request { id: 1, call, quiet }, deadline)?;
         Ok(())
     }
 }
 
-struct Preparation {
+/// The retained inputs that one preparation sends to a slot.
+pub(super) struct Preparation {
     recipe: Option<Recipe>,
     maps: Option<CssModules>,
     bindings: Option<Arc<Bindings>>,
@@ -132,7 +231,8 @@ struct Recipe {
 }
 
 impl Preparation {
-    fn snapshot(
+    /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
+    pub(super) fn snapshot(
         state: &State,
         slot: &Slot,
         generation: &str,

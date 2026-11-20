@@ -67,7 +67,7 @@
 .mbk-icon-button:focus-visible,
 .mbk-icon-select:focus-within,
 .mbk-icon-button:has(> input:focus-visible) {
-  outline: 2px solid var(--mokly-accent);
+  outline: 2px solid var(--mokly-accent, var(--_mokly-private-accent-default));
   outline-offset: 2px;
 }
 
@@ -75,8 +75,11 @@
 .mbk-icon-button[aria-pressed="true"],
 .mbk-icon-button:has(> input:checked),
 details[open] > summary.mbk-icon-button {
-  color: var(--mokly-accent);
-  background: var(--mokly-accent-soft);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
+  background: var(
+    --mokly-accent-soft,
+    var(--_mokly-private-accent-soft-default)
+  );
   border-color: var(--chrome-border);
 }
 

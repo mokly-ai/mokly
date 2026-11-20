@@ -1,6 +1,5 @@
 /** Usage adoption for one mounted frame session, including mount completion. */
 
-import type { FrameErrorCode } from "@mokly/frame";
 import { FrameError } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
@@ -12,18 +11,6 @@ import type {
 
 /** Lifecycle status that a mounted frame reports to its React owner. */
 export type ShellFrameStatus = "error" | "loading" | "ready" | "unavailable";
-
-/**
- * Whether a frame error means that the preview failed. An inspection error,
- * such as too many boxes, stops inspection and leaves the page usable.
- */
-export function failsFrame(code: FrameErrorCode): boolean {
-  return (
-    code !== "limit" &&
-    code !== "invalid-boundary" &&
-    code !== "missing-instance"
-  );
-}
 
 /** Frame session with the private state its mount and usage updates share. */
 export interface ActiveSession extends ShellFrameSession {

@@ -43,11 +43,10 @@
   yanked later. A new yanked-release check would need approval.
 - **Previous examples:** PR #230 updated `pulldown-cmark` on 2026-10-28,
   after a new advisory failed the Rust dependency audit on every branch.
-- **Related:** [locked-cargo-gate.md](./locked-cargo-gate.md) asks the gate to
-  run Cargo with `--locked`, so that a stale `Cargo.lock` of the workspace
-  fails the gate. This item concerns the separate reviewed lock of the audit
-  tool, which already builds with `--locked`. The items share the
-  `--locked` mechanism, but their causes and fixes differ.
+- **Related:** The workspace gate uses `--locked`, so that a stale
+  `Cargo.lock` of the workspace fails the gate. This item concerns the
+  separate reviewed lock of the audit tool, which already builds with
+  `--locked`. The causes and fixes differ.
 - **Recommendation:** A. It removes the yanked release with the
   smallest reviewed change.
 - **Action:** fix after merge, apply A, because the audit-tool lock lies outside

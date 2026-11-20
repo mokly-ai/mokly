@@ -65,11 +65,11 @@ thrashes; a fixed tier split that reduces room for fitting catalogues; a
 scan-resistant order that still misses when the head exceeds the bound; a Serve
 head capture read by the base, because it only serves Changes and adds a copy.
 Both sides share equal keys with no side warning. Serve reads the head from the
-cache. A missing head document renders again on the head root. Each
-[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
-bound. The base-side extraction cache and the dependency install cache live in
-the operating system's cache directory under a key derived from the repository
-path, each with its own byte bound, and the terminal names that directory.
+cache. A missing head document comes from the [render store](./mokly-render-store.md)
+or renders again on the head root. Each [capture](./mokly-comparison-serving.md#base-and-head-capture)
+has its own bound. The base-side extraction cache, the dependency install cache, the bundle
+cache, and the render store live in the operating system's cache directory under a key
+derived from the repository path, each with its own byte bound, and the terminal names it.
 
 ## Serve
 
@@ -204,10 +204,11 @@ invalidation through the render graph, recovery, and publication.
 Both sides of a comparison render from sources with the current Mokly version,
 the head from the working tree and the base from the base commit's Git tree,
 under the [comparison contract](./mokly-comparison.md). Serve classifies Changes
-in background work after readiness and publishes the result as a revision.
-Comparison snapshots render on demand when the reader selects a diff, under the
-[comparison serving contract](./mokly-comparison-serving.md). `build` writes one
-complete comparison generation. There is no standalone comparison command.
+in background work after readiness and publishes the result as a revision. Serve
+keeps one [captured base](./mokly-base-preparation.md#serve-base-lifetime) between
+classifications. Comparison snapshots render on demand when the reader selects a
+diff, under the [comparison serving contract](./mokly-comparison-serving.md). `build`
+writes one complete comparison generation. There is no standalone comparison command.
 
 ## Shutdown
 
@@ -219,8 +220,7 @@ Shutdown runs in this order:
    remaining client connection, including incomplete requests.
    Event-stream connections have a 250 ms grace period to flush their final
    chunk before the other connections close.
-2. Stop the watcher and discard a configuration candidate that has not been
-   adopted.
+2. Stop the watcher and discard a configuration candidate that has not been adopted.
 3. Cancel outstanding render, background, and comparison work; drain the
    comparison generation work in flight before any generation is released.
 4. Cancel every Git process through its owned process tree, `SIGTERM` then
@@ -237,10 +237,10 @@ commit point and never leave a partial output directory in place.
 
 ## No Writes
 
-No command writes into the repository except `build` into its output
-directory. Serve, Changes, live prop editing, and comparison generations keep
-every result in process memory. The caches outside the repository are the
-only other files Mokly writes, and deleting them changes time only.
+No command writes into the repository except `build` into its output directory. Serve,
+Changes, live prop editing, and comparison generations keep every result in process memory.
+The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes.
+Deleting them changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
 
 ## Related Docs
 

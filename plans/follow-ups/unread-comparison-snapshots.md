@@ -5,11 +5,11 @@
 - **Added:** 2026-11-01, from decision 2 of the closed "Index and Ownership
   File Sizes" workspace, the proposed fifth decision and an outside-scope
   note of the closed "dedup 4" workspace, all of 2026-10-27.
-- **Location:** `crates/mokly-static/src/comparison_files.rs:31`,
-  `crates/mokly-static/src/comparison_output.rs:22`,
-  `crates/mokly-compare/src/projection_index.rs:53`,
-  `docs/protocol/mokly-changes-serving.md:46`, and
-  `docs/protocol/mokly-export-delivery.md:168`.
+- **Location:** `crates/mokly-static/src/comparison_files.rs:32`,
+  `crates/mokly-static/src/comparison_output.rs:24`,
+  `crates/mokly-compare/src/projection_index.rs:51`,
+  `docs/protocol/mokly-changes-serving.md:48`, and
+  `docs/protocol/mokly-export-delivery.md:169`.
 - **Reason:** The fix changes the snapshot rule of two protocol pages, and
   the user has not chosen an option.
 
@@ -25,7 +25,7 @@
   - **Ownership marker:** the file `.mokly-export-artifact`, which lists
     every output file with its path, SHA-256 digest, and size.
 - **Background:**
-  - `side` in `crates/mokly-static/src/comparison_files.rs:31` writes every
+  - `side` in `crates/mokly-static/src/comparison_files.rs:32` writes every
     document, generated resource, and public file to both sides. The
     protocol pages above require the snapshots of both sides.
   - The viewer fetches a snapshot only for an eligible view and for the
@@ -50,6 +50,17 @@
     such waste. Its selected generations already miss embedded documents,
     as [embedded-document-closures.md](./embedded-document-closures.md)
     says.
+  - Options B and C need Mokly Cloud to accept a comparison generation
+    without a snapshot for each view. On 2026-10-27 Mokly Cloud rejected an
+    upload when a compared view lacked a snapshot document. On 2026-11-03,
+    Mokly Cloud removed its `review.json` reader in its commit `908484d2`,
+    and its receiver now reads Changes from the index. The deleted item
+    [`cloud-without-review-json.md`](https://github.com/mokly-ai/mokly/blob/be242a628db21c24212b105c5a1f7277de2e8a29/plans/follow-ups/cloud-without-review-json.md?plain=1)
+    tracked that Cloud work.
+  - The cloud receiver, now in this repository, accepts a generation without
+    a snapshot for each view. It checks only that comparison files sit under
+    the generation root, in
+    `crates/mkc-mokly-contract/src/bundle_validation.rs:104-141`.
 - **Problem:** A build with Changes writes both snapshot sides of every
   view, also of views that offer no comparison.
 - **Impact if no action:** In the example, unread snapshots are 44% of the
@@ -70,7 +81,7 @@
     Effort: Large (estimate).
 - **Left out:** Decide eligibility in the viewer only. The writer already
   computes `eligible` for each view, in
-  `crates/mokly-compare/src/projection_index.rs:53`.
+  `crates/mokly-compare/src/projection_index.rs:51`.
 - **Wider fix:** C. Then the generation holds only files that a reader
   can open.
 - **Previous examples:** PR #220 stopped `build` from rendering the head
@@ -78,9 +89,8 @@
 - **Related:**
   - [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md):
     inside comparable entries it still removes equal before documents. The
-    two rules work together.
-  - [cloud-without-review-json.md](./cloud-without-review-json.md): Mokly
-    Cloud must accept a generation without a snapshot for each view.
+    two rules work together. Its open decision on the Mokly Cloud receiver
+    rule covers the same missing snapshot documents.
   - [snapshot-resource-copies.md](./snapshot-resource-copies.md): the after
     side also repeats the current resource files.
   - [embedded-document-closures.md](./embedded-document-closures.md): its

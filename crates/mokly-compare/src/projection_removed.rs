@@ -6,6 +6,7 @@ use mokly_model::axes::EntryKind;
 use mokly_model::projection;
 use mokly_model::public_detail::{EntryDetailV4, Workspace};
 use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
+use mokly_model::public_records::CatalogueRecord;
 use mokly_model::snapshot::RemovedPagePreview;
 use mokly_model::versions;
 
@@ -24,9 +25,17 @@ pub fn records(result: &ComparisonResult, historical: CatalogueReadModel) -> Vec
         .iter()
         .map(|removed| {
             let path = &removed.entry.metadata().path;
-            let entry = records
+            let mut entry = records
                 .remove(path)
                 .expect("the base projection contains every selected removed entry");
+            let metadata = match &mut entry {
+                CatalogueRecord::Screen(entry) => &mut entry.entry,
+                CatalogueRecord::Component(entry) => &mut entry.entry,
+                CatalogueRecord::Page(entry) => &mut entry.entry,
+                CatalogueRecord::Document(entry) => &mut entry.entry,
+                CatalogueRecord::UseCase(entry) => &mut entry.entry,
+            };
+            metadata.details.related_docs = removed.entry.metadata().related_docs.clone();
             RemovedEntry {
                 entry,
                 folder_titles: removed.folder_titles.clone(),

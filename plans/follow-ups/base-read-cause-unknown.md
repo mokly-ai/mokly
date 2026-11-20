@@ -6,10 +6,11 @@
   `conductor/rust-rebuild-150-process-tree-stops`. The root-cause trace of
   finding 8 found it.
 - **Location:** `crates/mokly-source-interface/src/error.rs:96` to line 114,
-  `crates/mokly-catalogue/src/config.rs:46` to line 62,
+  `crates/mokly-catalogue/src/config.rs:47` to line 63, in `Loader::load`,
   `crates/mokly-compare/src/git_failures.rs:15` to line 55,
   `crates/mokly-cli/src/changes_diagnostics.rs:28` to line 33, and
-  `crates/mokly-compare/tests/engine_support/mod.rs:157` to line 159.
+  `crates/mokly-compare/tests/engine_support/mod.rs:175` to line 177, in
+  `prepare`.
 - **Reason:** The code is older than the branch that found it, and the fix
   changes a diagnostic that a protocol page specifies.
 
@@ -34,31 +35,31 @@
     typed Git error. It also keeps that failure as the stored failure.
   - `SourceError::code`, at `crates/mokly-source-interface/src/error.rs:96` to
     line 114, returns "unknown" for each error that is not `Io`.
-  - The config loader formats the path and that code as a `config-invalid`
-    issue, at `crates/mokly-catalogue/src/config.rs:46` to line 52 and line
-    56 to line 62. So a failed base read gives "mokly.config.json: unknown".
+  - The config loader, `Loader::load`, formats the path and that code as a `config-invalid`
+    issue, at `crates/mokly-catalogue/src/config.rs:47` to line 53 and line
+    57 to line 63. So a failed base read gives "mokly.config.json: unknown".
   - The issue holds only that text, so its cause is lost.
   - More catalogue callers build the same text from `code()`:
-    - `config.rs:218` runs in each base load. It receives base Git failures.
-    - `config_paths.rs:178` and `:212` receive base Git failures only when
+    - `project` at `config.rs:222` runs in each base load. It receives base Git failures.
+    - `validate_inputs` at `config_inputs.rs:132` and `confined` at `:166` receive base Git failures only when
       the base configuration has a setting that they check.
-    - Line 178 checks `watch.rules[].paths`. Line 212 checks `renderer`,
+    - Line 132 checks `watch.rules[].paths`. Line 166 checks `renderer`,
       `moduleResolution.packageRoots`, and each local path of a `stylesheets`
       rule. A local path is not a URL and does not start with `$`.
-    - `config_paths.rs:85` receives no base read. `GitTree::project` returns
+    - `config_paths.rs:78` receives no base read. `GitTree::project` returns
       its input path unchanged, so `configuration_alias` returns at
-      `config_paths.rs:70` to line 71 before any read.
-    - `config.rs:194` runs only without an explicit file. The base load in
-      `crates/mokly-cli/src/changes_base.rs:77` passes one, so only the test
+      `config_paths.rs:63` to line 64 before any read.
+    - `find` at `config.rs:198` runs only without an explicit file. The base `loader.load` call in
+      `crates/mokly-cli/src/changes_base.rs:89` passes one, so only the test
       fixture below reaches it.
     - `discovery_walk.rs:96`, `:132`, and `:191` run in the base discovery
       walk. They receive base Git failures.
     - `preparation.rs:91` and `:136` run in the base preparation. They
       receive base Git failures.
-    - `discovery.rs:114` reads only an output path. The base discovery at
-      `changes_base.rs:83` passes none, so it receives no Git failure.
-  - In a build, `crates/mokly-compare/src/base_render.rs:215` to line 223
-    reports the stored failure before the catalogue error. A genuine Git
+    - `discovery.rs:114` reads only an output path. The base `discovery.discover` call at
+      `changes_base.rs:95` passes none, so it receives no Git failure.
+  - In a build, `crates/mokly-compare/src/base_classification.rs:123` to line
+    129 reports the stored failure before the catalogue error. A genuine Git
     failure then fails the command as `git-failed`, with its cause.
   - A conversion failure is not the stored failure. In `build` and
     `publish`, `crates/mokly-cli/src/changes_policy.rs:20` to line 25 then
@@ -72,7 +73,7 @@
     `docs/protocol/mokly-base-preparation.md:91` to line 93, which makes
     base diagnostics detail lines.
   - Serve prints the same failure as a `review-invalid` error block, at
-    `crates/mokly-cli/src/serve_changes.rs:166` to line 171. Its detail holds
+    `crates/mokly-cli/src/serve_changes.rs:169` to line 174. Its detail holds
     the same "unknown" text.
   - In rich mode, that block ends with the hint "Fix the reported comparison
     input and retry.", at `crates/mokly-cli/src/output.rs:170`.
@@ -81,14 +82,15 @@
   - Serve gives no "base validation failed" reason. Only
     `crates/mokly-cli/src/build_changes.rs:58` reaches
     `changes_policy::unavailable`.
-  - That path shows no `base-conversion` warning, because `base_render.rs:273`
-    adds those warnings only to a successful result.
+  - That path shows no `base-conversion` warning, because
+    `base_classification.rs:218` adds those warnings only to a successful
+    result.
   - `crates/mokly-cli/src/build_output.rs:206` to line 212 prints a
     `config-invalid` issue of the head build. Head reads use the working tree,
     so no base read reaches that output.
-  - The test fixture at `crates/mokly-compare/tests/engine_support/mod.rs:157`
-    to line 159 loads a base `GitTree` without its stored failure. So a Git
-    failure in a compare test shows only "unknown".
+  - The test fixture at `crates/mokly-compare/tests/engine_support/mod.rs:175`
+    to line 177, in `prepare`, loads a base `GitTree` without its stored
+    failure. So a Git failure in a compare test shows only "unknown".
   - The macOS CI of commit `3960484b` showed this in the test
     `referenced_resource_edits_stay_ready_and_missing_targets_fail`. Its log
     held this error:
@@ -129,7 +131,8 @@
   catalogue caller reports it?
 - **Options:**
   - **A.** In the test fixtures that prepare a base `GitTree`, report the
-    stored failure before the catalogue error, as `base_render.rs:215` does.
+    stored failure before the catalogue error, as
+    `base_classification.rs:123` does.
     - It changes no product behaviour.
     - The conversion case of a user stays as it is.
     - Effort: Small.

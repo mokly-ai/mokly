@@ -7,10 +7,13 @@ use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
+use mokly_compare::base_freshness::FreshnessMock;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_git::identity::ObjectId;
+use mokly_git::repository::RepositoryMock;
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGenerationMock;
 use mokly_graph::workers::{RenderWorkers, StylesheetWorker, ThreadWorkers};
@@ -22,6 +25,7 @@ use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes_base::NativeBase;
+use crate::serve_base_cancel::PreparingBase;
 use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_changes_base::CombinedCancel;
@@ -37,12 +41,17 @@ fn source(
 ) -> Source {
     Source {
         references: Mutex::new(None),
+        staging: Mutex::new(None),
         operation,
         pending: Arc::new(Mutex::new(Vec::new())),
         config: config(),
         head: Arc::new(Unimock::new(())),
         warnings: scopes(terminal).begin(),
         services: ServeChanges {
+            reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
+                32 * 1024 * 1024,
+            )),
+            kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(
                 PoolSchedulingMock::pool
                     .next_call(matching!(Some(_)))
@@ -80,6 +89,7 @@ fn head(
     Arc::new(Runtime::new(
         Arc::new(Unimock::new(())),
         dependencies,
+        Arc::new(Unimock::new(())),
         pool,
         Arc::new(Unimock::new(())),
         workers,
@@ -93,11 +103,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
     let command = Arc::new(ServeCancellation::default());
     let run = Arc::new(ChangeToken::default());
     let operation = Arc::new(CaptureCancellation::default());
-    let cancellation = Arc::new(CombinedCancel {
+    let cancellation = Arc::new(PreparingBase::new(Arc::new(CombinedCancel {
         operation: operation.clone(),
         command: command.clone(),
         generation: run.clone(),
-    });
+    })));
     let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(()));
     let head = head(
         pool.clone(),
@@ -125,6 +135,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
         runtime: source.classification_runtime(cancellation.clone()),
         cancellation,
         dependencies: Arc::new(Unimock::new(())),
+        freshness: Some(Arc::new(Unimock::new(
+            FreshnessMock::record
+                .some_call(matching!(_))
+                .returns(Ok(None)),
+        ))),
     };
     let generation = provider
         .prepare(&BaseRequest {
@@ -134,7 +149,14 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
                     .returns(catalogue(vec![])),
             ),
             working_config: &source.config,
-            repository: Arc::new(Unimock::new(())),
+            repository: Arc::new(Unimock::new(
+                RepositoryMock::checkout_identity
+                    .some_call(matching!(_))
+                    .returns(Ok(CheckoutIdentity {
+                        digest: "checkout".into(),
+                        filtered: false,
+                    })),
+            )),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             install_scripts: false,
             sources: HistoricalSources {
@@ -171,6 +193,8 @@ impl StylesheetWorker for Threads {
             route: format!("styles/{}", root.path),
             css: String::new(),
             assets: Default::default(),
+            resolution_files: Default::default(),
+            resolution_roots: Default::default(),
             css_modules: Default::default(),
             inputs: Default::default(),
             imported_by: Default::default(),
@@ -195,11 +219,11 @@ fn root(path: &str) -> StylesheetRoot {
 fn background_base_workers_bundle_stylesheet_roots_on_the_classification_thread() {
     let command = Arc::new(ServeCancellation::default());
     let operation = Arc::new(CaptureCancellation::default());
-    let cancellation = Arc::new(CombinedCancel {
+    let cancellation = Arc::new(PreparingBase::new(Arc::new(CombinedCancel {
         operation: operation.clone(),
         command: command.clone(),
         generation: Arc::new(ChangeToken::default()),
-    });
+    })));
     let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(()));
     let head = head(
         pool.clone(),

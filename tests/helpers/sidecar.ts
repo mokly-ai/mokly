@@ -67,11 +67,14 @@ export function startSidecar(
   const call = <T = unknown>(
     method: string,
     params: object = {},
+    envelope: { quiet?: boolean } = {},
   ): Promise<T> => {
     const id = next++;
     return new Promise((resolve, reject) => {
       pending.set(id, { resolve: (value) => resolve(value as T), reject });
-      child.stdin.write(JSON.stringify({ id, method, params }) + "\n");
+      child.stdin.write(
+        JSON.stringify({ id, method, params, ...envelope }) + "\n",
+      );
     });
   };
   return { call, child, operations, stderr: () => stderr };

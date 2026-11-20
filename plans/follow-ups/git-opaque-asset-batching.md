@@ -29,8 +29,8 @@
   - That measurement predates PR #236, merged on 2026-10-28. Since then an
     attached base extraction answers digests and reads of the files that it
     holds without Git, at `crates/mokly-compare/src/sources.rs:243-257`.
-  - A base gets an extraction only when it needs the sidecar, at
-    `crates/mokly-cli/src/changes_base.rs:67-85`. So each opaque asset of
+  - A base gets an extraction only when it needs the sidecar, at `needs_sidecar` in
+    `crates/mokly-cli/src/changes_base.rs:99-115`. So each opaque asset of
     an HTML-only base still starts its own Git processes. `opaque_stream`
     still buffers each whole blob.
   - The plan also asked for a measurement first. It counts the Git digest

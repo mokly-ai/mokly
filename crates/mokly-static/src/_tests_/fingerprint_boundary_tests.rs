@@ -19,6 +19,7 @@ fn config() -> ResolvedConfig {
         input: Config::default(),
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
+        modules: Default::default(),
         authored_inputs: vec!["/repo/renderer.ts".into()],
         roots: vec![ResolvedRoot {
             input: RootConfig {

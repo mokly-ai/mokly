@@ -1,0 +1,1 @@
+2026-09-22T21:42:20.837434000Z {"timestamp":"2026-09-22T21:42:20.837434Z","level":"INFO","fields":{"message":"development email","recipient":"reviewer@example.com","link":"https://pr-42.preview.example.com/auth/email/callback#token=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"target":"mkc_dev_mail"}

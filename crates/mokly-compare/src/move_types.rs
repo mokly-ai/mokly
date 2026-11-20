@@ -43,6 +43,24 @@ pub struct Pairing {
 }
 
 impl Pairing {
+    /// Equal-document sharing is safe only when every paired path keeps its exact spelling.
+    pub(crate) fn preserves_document_paths(
+        &self,
+        before: &CatalogueModel,
+        after: &CatalogueModel,
+    ) -> bool {
+        self.moves.is_empty()
+            && self.entries.iter().all(|pair| {
+                !pair.moved
+                    && match (pair.before, pair.after) {
+                        (Some(left), Some(right)) => {
+                            before.entries[left].metadata.path == after.entries[right].metadata.path
+                        }
+                        _ => true,
+                    }
+            })
+    }
+
     /// Map historical references to accepted current spellings, including case-only names.
     pub fn paths(
         &self,
@@ -121,3 +139,7 @@ impl fmt::Debug for dyn MoveEvidence + '_ {
         formatter.write_str("MoveEvidence")
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/pairing_path_tests.rs"]
+mod pairing_path_tests;

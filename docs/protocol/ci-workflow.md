@@ -44,6 +44,8 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one static-delivery job on Node 22.15.0; and
 - native jobs on macOS and Windows at Node 22.15.0.
 
+The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
+
 For a same-repository Release Please pull request, the viewer job and every
 browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
@@ -82,21 +84,23 @@ event-selected runtime profiles.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in the browser and static-delivery
-jobs. In this workflow, only the viewer jobs set up Bun. Each viewer job sets
-it up before the viewer suite with the official `oven-sh/setup-bun` action.
+jobs and in the cloud jobs that run browser tests. In this workflow, only the
+viewer jobs set up Bun. Each viewer job sets it up before the viewer suite
+with the official `oven-sh/setup-bun` action.
 The action reads the version from `.bun-version`, so the workflow holds no
 second copy of the pin. The
 [cache rules](./ci-verification-security.md#dependency-cache-and-security)
 keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
-Clippy, and the complete Rust tests run in the repository job and in the native
-jobs. Native jobs build the checked-out `@mokly/mokly` sidecar package after
-`npm ci`, so Rust integration tests use matching sidecar sources. Every
+Clippy, and the complete Rust tests run in the repository job. The native jobs
+run them for the `mokly-*` crates and `xtask` only. Native jobs build the
+checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
+integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
-before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.95.0 with
+before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout.
-Native jobs run workspace tests with `--no-fail-fast` so one job reports every
+Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
 failing test binary.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
@@ -111,6 +115,10 @@ cache key. The
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
+Every CI job that does not run Electron sets
+`ELECTRON_SKIP_BINARY_DOWNLOAD=1`. Its install does not download Electron.
+The cloud desktop partition clears that setting and caches the binary.
+
 Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
 or newer: older versions drop the lockfile's `libc` fields, which select the
 glibc or musl build of a native package
@@ -119,31 +127,21 @@ glibc or musl build of a native package
 pin equals `packageManager`. CI and release jobs set up that npm before
 `npm ci`.
 
-Linux x64 jobs across the CI, preview, release, native bootstrap, and
-Dependency Audit workflows run on GitHub-hosted `ubuntu-24.04`, except the
-design matrix below and the CI jobs that compile Rust. GitHub-hosted runners
-are free for this public repository, and Blacksmith's 2-vCPU tier is not.
-Linux ARM64 and Windows jobs use Blacksmith's 2-vCPU tiers, except the CI
-Windows native job. The Linux CI jobs that compile Rust use Blacksmith's
-4-vCPU tier. The 4-vCPU tier gives most of the speed of the 8-vCPU tier
-at half the price per minute. These jobs do not use 2 vCPUs, because on
-2 vCPUs the CI result comes much later. The CI Windows native job uses
-8 vCPUs, because on 2 vCPUs its complete Rust build and test run is usually
-the slowest CI job. It does not use 16 vCPUs, because with the Rust build
-cache it is no faster than on 8 vCPUs.
-macOS jobs use the provider's smallest available tier, which is 6 vCPUs.
-A job on a GitHub-hosted runner checks out with `actions/checkout`. A job on
-a Blacksmith runner checks out with Blacksmith's checkout action, which keeps
-a Git mirror between runs.
+Every job of every workflow runs on a GitHub-hosted standard runner, except
+the job of the [Testbox workflow](#testbox-workflow-target). GitHub-hosted
+standard runners are free for this public repository. Blacksmith runners were
+rejected for all other jobs, because Blacksmith bills each minute.
+Linux x64 jobs use `ubuntu-24.04`. Linux ARM64 jobs use `ubuntu-24.04-arm`.
+macOS ARM64 jobs use `macos-26`. Windows jobs use `windows-2025`.
+Every job on a GitHub-hosted runner checks out with `actions/checkout`.
 The release `publish` job, and every other job that publishes to npm with
 trusted publishing, runs on GitHub-hosted `ubuntu-24.04`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
 self-hosted runner such as Blacksmith.
-A narrow exception permits only the `darwin-x64` row of the release,
-release-check, and native bootstrap build matrices on GitHub-hosted
-`macos-26-intel`. Blacksmith's macOS hosts are ARM64. This row keeps native
-Intel build and execution coverage; it has no npm publishing permission.
-Every other native build row follows the runner rule above.
+Only the `darwin-x64` row of the release, release-check, and native bootstrap
+build matrices runs on Intel macOS, on GitHub-hosted `macos-26-intel`. This
+row keeps native Intel build and execution coverage. It has no npm publishing
+permission.
 
 In the CI workflow, the repository job has a 75-minute timeout and each viewer
 job has a 40-minute timeout. Browser shards, static-delivery jobs, and native
@@ -165,7 +163,9 @@ The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile job's selection: five
 viewer and browser reports for ordinary events and ten for a Release Please
-pull request.
+pull request. Every cloud verification partition is also required. The
+[cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
+provider plan only when its trusted main-push guard permits it.
 
 Static delivery is also required. It builds the example with Changes disabled
 and checks portable design journeys through static HTTP and `file://`.
@@ -190,12 +190,18 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## Cloud Jobs And Workflows
+
+The [cloud CI contract](./ci-workflow-cloud.md) defines the cloud jobs of this
+workflow, the cloud workflows, their fork rule, and the scope of Release
+Please.
+
 ## Design Attribution Matrix
 
 `.github/workflows/design-attribution.yml` runs nightly and through manual
 `workflow_dispatch`. It runs the `design_attribution_tests` test target of
 `mokly-cli` with the `design-matrix` Cargo feature on
-`blacksmith-8vcpu-ubuntu-2404` after building the workspace. It has a 120-minute
+`ubuntu-24.04` after building the workspace. It has a 120-minute
 job timeout and a separate 90-minute test-process hang guard with a 30-second
 termination grace period. Both guards must allow at least three times typical
 duration. Each run saves its source tree ID and its timed test log as an
@@ -206,11 +212,15 @@ artifact. This workflow is optional. `Required CI` does not depend on it.
 `.github/workflows/blacksmith-testbox.yml` prepares the Testboxes of the
 [remote verification contract](./remote-verification.md). The
 [Testbox workflow contract](./remote-verification-testbox.md#workflow) defines
-its triggers, job, step order, and action revisions. Its Node.js version equals
-the version of the CI native jobs. Its npm and Rust setup equals the setup of
-the CI repository job. Its runner and workflow `env` equal those of the CI
-suite jobs. It restores the Rust build cache of the CI viewer, browser, and
-static-delivery jobs and never saves it.
+its triggers, job, runner, step order, and action revisions. Its job runs on a
+Blacksmith runner, because Testboxes exist only on Blacksmith. The job checks
+out with Blacksmith's checkout action, which keeps a Git mirror between runs.
+Its default Node.js version equals the version of the CI native jobs. Cloud
+commands use their separate pinned Node installation. Its npm and Rust setup
+equals the setup of the CI repository job. Its workflow `env` equals the
+workflow `env` of the CI workflow. It restores the Rust build cache with the
+options of the CI viewer, browser, and static-delivery jobs and never saves it.
+CI saves its cache on GitHub-hosted runners, so no job refreshes that cache.
 `Required CI` does not depend on this workflow. The
 hosted CI graph and its release profile keep their required jobs.
 
@@ -218,6 +228,8 @@ hosted CI graph and its release profile keep their required jobs.
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [CI workflow: cloud jobs](./ci-workflow-cloud.md)
+- [Repository layout](./repository-layout.md)
 - [Remote verification](./remote-verification.md)
 - [CI and npm release](./npm-release.md)
 - [Release verification evidence](./npm-release-evidence.md)

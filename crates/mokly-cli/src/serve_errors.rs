@@ -5,7 +5,7 @@ use std::path::Path;
 use mokly_server::error::{InternalError, ServerError};
 
 use crate::codes::Code;
-use crate::output::Style;
+use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 use crate::{build_output, changes_diagnostics};
 
@@ -60,10 +60,9 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
             "Comparison capacity is full. Try again shortly.".into(),
         ),
         ServerError::ComparisonMetadataTooLarge => (Code::BuildInvalid, METADATA_TOO_LARGE.into()),
-        ServerError::Comparison { source } => (
-            changes_diagnostics::failure_code(source),
-            changes_diagnostics::failure_detail(source),
-        ),
+        ServerError::Comparison { source } => {
+            return changes_diagnostics::failure(style, source, "", redactor);
+        }
         ServerError::Internal(source) => (Code::ServerFailed, internal(source)),
     };
     style.error(code, &message, redactor)
@@ -71,6 +70,9 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
 
 fn internal(error: &InternalError) -> String {
     match error {
+        InternalError::CanonicalDetailIdentity => {
+            "Serve could not publish catalogue data. Restart Serve.".into()
+        }
         InternalError::Provider { source } => source.to_string(),
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),
@@ -82,11 +84,11 @@ fn internal(error: &InternalError) -> String {
 #[path = "_tests_/serve_errors_tests.rs"]
 mod serve_errors_tests;
 
-/// Retain the historical commit and authored diagnostics in a Changes status reason.
-pub fn changes_reason(error: &ServerError) -> String {
+/// Retain the base diagnostic and keep scripts recovery out of rich status reasons.
+pub fn changes_reason(error: &ServerError, mode: Mode) -> String {
     match error {
         ServerError::ComparisonMetadataTooLarge => METADATA_TOO_LARGE.into(),
-        ServerError::Comparison { source } => changes_diagnostics::failure_detail(source),
+        ServerError::Comparison { source } => changes_diagnostics::failure_detail(source, mode),
         _ => error.to_string(),
     }
 }

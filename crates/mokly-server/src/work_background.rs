@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use mokly_catalogue::diagnostic::Warning;
+use mokly_graph::render_class::RenderClass;
 
 use crate::backend::Documents;
 use crate::error::{InternalError, Result};
@@ -17,6 +18,7 @@ impl Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Vec<Warning>> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let permit = {
             let Ok(_turn) = self.turn.acquire().await else {
                 return Ok(Vec::new());
@@ -39,10 +41,13 @@ impl Workers {
         let guard = self.priority.enter(false);
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| {
-                let _guard = guard;
-                let _permit = permit;
-                documents.background(&route)
+            let _activity = activity;
+            RenderClass::Background.in_scope(|| {
+                parent.in_scope(|| {
+                    let _guard = guard;
+                    let _permit = permit;
+                    documents.background(&route)
+                })
             })
         })
         .await

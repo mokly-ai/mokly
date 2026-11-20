@@ -1,8 +1,12 @@
 //! CLI parsing and dependency composition.
 
+use std::env::consts;
+use std::fmt::Display;
 use std::io::{self, Write};
+use std::iter;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::result;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
@@ -14,6 +18,9 @@ use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
+use crate::policy::command::PolicyCommand;
+use crate::policy::environment;
+use crate::policy::runner::DefaultPolicyChecks;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::clients::github::SystemGithub;
@@ -46,6 +53,27 @@ pub(crate) struct Cli {
 #[derive(Debug, Subcommand)]
 /// Repository task variants.
 pub(crate) enum Command {
+    /// File and generated-artifact policies.
+    #[command(flatten)]
+    Policy(PolicyCommand),
+    /// Regenerate cloud contract fixtures from the built workspace packages.
+    MoklyFixtures {
+        /// Compare without changing committed fixtures.
+        #[arg(long)]
+        check: bool,
+    },
+    /// Generate committed cloud email templates.
+    EmailTemplates {
+        /// Compare without writing and run mutation tests.
+        #[arg(long)]
+        check: bool,
+    },
+    /// Run the AGPL cloud Stripe catalogue binary as a subprocess.
+    StripeCatalogue {
+        /// Arguments forwarded unchanged to the cloud binary.
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
     /// Build and install the host native binary.
     BuildNative,
     /// Write TypeScript declarations from mokly-model.
@@ -88,7 +116,7 @@ pub(crate) enum Command {
 }
 
 /// Parse arguments, compose real dependencies, and return a process exit code.
-pub(crate) fn main() -> ExitCode {
+pub fn main() -> ExitCode {
     let workspace = match workspace_root() {
         Ok(workspace) => workspace,
         Err(error) => {
@@ -96,6 +124,23 @@ pub(crate) fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    match application(workspace).run(Cli::parse().command) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            let _ = writeln!(io::stderr().lock(), "{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Run parsed commands with real adapters in a caller-supplied workspace.
+/// The binary entry point retains its build-time workspace root.
+pub fn run_at(workspace: PathBuf, arguments: &[&str]) -> result::Result<(), impl Display> {
+    let cli = Cli::parse_from(iter::once("xtask").chain(arguments.iter().copied()));
+    application(workspace).run(cli.command)
+}
+
+fn application(workspace: PathBuf) -> Arc<dyn Xtask> {
     let command_runner: Arc<dyn CommandRunner> = Arc::new(SystemCommandRunner);
     let rust_file_length_auditor: Arc<dyn RustFileLengthAuditor> =
         Arc::new(SystemRustFileLengthAuditor);
@@ -103,11 +148,17 @@ pub(crate) fn main() -> ExitCode {
     let selector: Arc<dyn Selector + Send + Sync> = Arc::new(DefaultSelector {
         dependencies: dependencies.clone(),
     });
-    let app: Arc<dyn Xtask> = Arc::new(Application {
+    Arc::new(Application {
+        policy: Arc::new(DefaultPolicyChecks {
+            environment: Arc::new(environment::SystemEnvironment {
+                root: workspace.clone(),
+                commands: command_runner.clone(),
+            }),
+        }),
         artifacts: Arc::new(DefaultArtifacts {
             workspace: workspace.clone(),
-            os: std::env::consts::OS.to_owned(),
-            architecture: std::env::consts::ARCH.to_owned(),
+            os: consts::OS.to_owned(),
+            architecture: consts::ARCH.to_owned(),
             commands: Arc::clone(&command_runner),
             files: Arc::new(SystemArtifactFiles),
         }),
@@ -125,14 +176,7 @@ pub(crate) fn main() -> ExitCode {
         reporter: Arc::clone(&dependencies.reporter),
         interrupt: Arc::clone(&dependencies.interrupt),
         workspace,
-    });
-    match app.run(Cli::parse().command) {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(error) => {
-            let _ = writeln!(io::stderr().lock(), "{error}");
-            ExitCode::FAILURE
-        }
-    }
+    })
 }
 
 /// Construct every concrete remote collaborator only at this composition root.

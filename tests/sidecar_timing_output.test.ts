@@ -94,3 +94,29 @@ test("timing records keep the captured writer after consumer stderr replacement"
   assert.equal(intercepted, 0);
   assert.deepEqual(chunks, ["partial consumer output", `\n${first}`, second]);
 });
+
+test("a quiet stream drops consumer writes, answers their callbacks, and keeps timing records", async () => {
+  const chunks: string[] = [];
+  const stream = new Writable({
+    write(chunk: Buffer, _encoding, callback) {
+      chunks.push(chunk.toString());
+      callback();
+    },
+  });
+  const timing = timingOutput(stream);
+  stream.write("partial");
+  timing.quiet(true);
+  const answered: string[] = [];
+  const accepted = [
+    stream.write("dropped\n", () => answered.push("callback")),
+    stream.write("dropped\n", "utf8", () => answered.push("encoded")),
+    stream.write("dropped\n"),
+  ];
+  timing("record\n");
+  timing.quiet(false);
+  stream.write("after\n");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(accepted, [true, true, true]);
+  assert.deepEqual(answered, ["callback", "encoded"]);
+  assert.deepEqual(chunks, ["partial", "\nrecord\n", "after\n"]);
+});

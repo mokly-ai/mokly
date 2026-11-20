@@ -97,14 +97,12 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 children: None,
             }),
     );
-    for (path, detail) in &details {
-        projection::set_detail_id(&mut index, path, &detail.detail_id);
-    }
-    for (path, detail) in &details {
+    for (path, detail) in &mut details {
         files.insert(
             format!("mokly-viewer/entries/{path}.json"),
-            EncodedDetails.encode(detail),
+            EncodedDetails.encode(Arc::make_mut(detail)).unwrap(),
         );
+        projection::set_detail_id(&mut index, path, &detail.detail_id);
     }
     Arc::new(Snapshot {
         changes: None,
@@ -127,6 +125,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
             render_token: "secret".into(),
         }),
         details,
+        recent_details: Default::default(),
         files,
         index,
         completed: BTreeMap::new(),
@@ -194,7 +193,9 @@ pub(crate) fn unrecorded_ready(count: usize, documents: Arc<dyn Documents>) -> A
         .iter()
         .map(|view| (view.route.clone(), ready()))
         .collect::<Vec<_>>();
-    let published = evidence::complete(&initial, &updates, &EncodedDetails).unwrap();
+    let published = evidence::complete(&initial, &updates, &EncodedDetails)
+        .unwrap()
+        .unwrap();
     let mut unrecorded = (*published).clone();
     unrecorded.completed.clear();
     Arc::new(unrecorded)

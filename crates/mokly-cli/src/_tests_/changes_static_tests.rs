@@ -26,6 +26,7 @@ fn static_base_admits_only_a_verified_prepared_generation() {
                 .returns(Ok(PreparedBase {
                     generation: generation.clone(),
                     scripts_off: true,
+                    freshness: None,
                 })),
             InputTreeMock::verify
                 .next_call(matching!())
@@ -46,6 +47,7 @@ fn static_base_admits_only_a_verified_prepared_generation() {
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
             roots: Vec::new(),
+            modules: Default::default(),
             authored_inputs: Vec::new(),
         };
         let result = provider.prepare(&BaseRequest {
@@ -86,6 +88,7 @@ fn static_base_keeps_scripts_off_after_another_input_verification_failure() {
             .returns(Ok(PreparedBase {
                 generation: Arc::new(Unimock::new(())),
                 scripts_off: true,
+                freshness: None,
             })),
         InputTreeMock::verify
             .next_call(matching!())
@@ -100,6 +103,7 @@ fn static_base_keeps_scripts_off_after_another_input_verification_failure() {
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     };
     let result = provider.prepare(&BaseRequest {

@@ -1,0 +1,43 @@
+{
+  "name": "@mokly-cloud/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./tokens": {
+      "types": "./src/tokens.ts",
+      "default": "./src/tokens.ts"
+    },
+    "./palettes": {
+      "types": "./src/palettes.ts",
+      "default": "./src/palettes.ts"
+    },
+    "./token-css": {
+      "types": "./src/token-css.ts",
+      "default": "./src/token-css.ts"
+    },
+    "./shared-ui-theme": {
+      "types": "./src/shared-ui-theme.ts",
+      "default": "./src/shared-ui-theme.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@firna/ui": "4.0.0"
+  },
+  "devDependencies": {
+    "@gorhom/bottom-sheet": "5.2.14",
+    "lucide-react": "0.577.0",
+    "lucide-react-native": "0.577.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "2.33.0",
+    "react-native-reanimated": "4.3.4",
+    "react-native-svg": "15.15.5",
+    "react-native-worklets": "0.8.3"
+  }
+}

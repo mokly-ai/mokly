@@ -8,6 +8,7 @@ import type { CatalogueUsage } from "../../packages/model/dist/index.js";
 import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -76,7 +77,9 @@ for (const cross of [false, true]) {
       });
       await button.hover();
       await button.click();
-      await frame.getByRole("link", { name: "Open Action" }).click();
+      await waitForFrameEvent(page, "navigation", () =>
+        frame.getByRole("link", { name: "Open Action" }).click(),
+      );
       await expect
         .poll(() =>
           page.evaluate(
@@ -105,7 +108,7 @@ for (const cross of [false, true]) {
         await state.mounted.updateUsage(usage);
         state.frameEvents.length = 0;
       }, JSON.stringify(fixture.usage));
-      await button.hover();
+      await waitForFrameEvent(page, "hover", () => button.hover());
       await expect
         .poll(() =>
           page.evaluate(() =>
@@ -123,7 +126,7 @@ for (const cross of [false, true]) {
           () => (window as unknown as ReadinessWindow).measurements,
         ),
       ).toBeGreaterThan(0);
-      await button.click();
+      await waitForFrameEvent(page, "click", () => button.click());
       await expect
         .poll(() =>
           page.evaluate(() =>
@@ -149,7 +152,9 @@ for (const cross of [false, true]) {
         },
       );
       await button.click();
-      await frame.getByRole("link", { name: "Open Action" }).click();
+      await waitForFrameEvent(page, "navigation", () =>
+        frame.getByRole("link", { name: "Open Action" }).click(),
+      );
       await expect
         .poll(() =>
           page.evaluate(

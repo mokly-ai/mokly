@@ -4,17 +4,23 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use mokly_platform::locks::FileLock;
+use mokly_sidecar::bundle_store::RecordToken;
 use serde::{Deserialize, Serialize};
 
+use crate::bundle_cache_types::{BundleReceipt, BundleRecord, CompilationRead, OpenBundle};
 use crate::error::Result;
 
-/// Independent extraction and dependency budgets.
+/// Cache namespaces with independent byte bounds.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Kind {
     /// Extracted immutable source trees.
     Sources,
     /// Installed immutable dependency sets.
     Dependencies,
+    /// Latest complete compiled JavaScript recipes.
+    Bundles,
+    /// Complete rendered document segments.
+    Renders,
 }
 
 impl Kind {
@@ -22,6 +28,8 @@ impl Kind {
         match self {
             Self::Sources => "sources",
             Self::Dependencies => "dependencies",
+            Self::Bundles => "bundles",
+            Self::Renders => "renders",
         }
     }
 }
@@ -77,6 +85,20 @@ pub trait Cache: Send + Sync {
 /// Filesystem boundary of cache orchestration and install size supervision.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StorageMock))]
 pub trait Storage: Send + Sync {
+    /// Advance the render kind access counter without a namespace inventory.
+    fn render_sequence(&self, namespace: &Path, floor: u64) -> Result<Option<u64>>;
+    /// Read only the bounded bundle receipt without opening payload data.
+    fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead>;
+    /// Inspect one bundle receipt and open its confined data file.
+    fn bundle_open(&self, entry: &Path) -> Result<OpenBundle>;
+    /// List owned bundle directories with bounded metadata and reservations.
+    fn bundle_records(&self, directory: &Path, limit: u64) -> Result<Vec<BundleRecord>>;
+    /// Atomically publish a bundle receipt, preserving its publication nonce.
+    fn bundle_receipt(&self, entry: &Path, receipt: &BundleReceipt, durable: bool) -> Result<()>;
+    /// Generate one fresh publication nonce through the host random source.
+    fn bundle_nonce(&self) -> Result<RecordToken>;
+    /// Detach one bundle entry without following a damaged final link.
+    fn bundle_retire(&self, path: &Path, trash: &Path) -> Result<()>;
     /// Check whether an installed dependency directory exists.
     fn directory(&self, path: &Path) -> Result<bool>;
     /// Ensure a real directory exists without traversing a cache symlink.

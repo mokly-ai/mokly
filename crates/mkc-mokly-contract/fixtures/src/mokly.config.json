@@ -1,0 +1,24 @@
+{
+  "repoRoot": ".",
+  "roots": [
+    {
+      "dir": "catalogue/src/entries",
+      "files": [
+        "**/*.screen.html",
+        "**/*.component.html",
+        "**/*.page.html",
+        "**/*.use-case.yaml",
+        "**/*.md"
+      ]
+    }
+  ],
+  "stylesheets": [
+    {
+      "match": "**/index.html",
+      "stylesheets": ["catalogue/styles.css"]
+    }
+  ],
+  "review": {
+    "base": "HEAD~1"
+  }
+}

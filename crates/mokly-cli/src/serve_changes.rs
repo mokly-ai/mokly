@@ -13,6 +13,7 @@ use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::PreparedServe;
 use mokly_cli::{build_output, serve_errors, serve_output};
 use mokly_compare::base_render::selected_base;
+use mokly_compare::comparison_reuse::{ComparisonReuse, ReuseAttempt};
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::extraction_snapshots::Snapshots;
 use mokly_graph::types::RenderGeneration;
@@ -23,6 +24,7 @@ use mokly_server::changes::{
 use mokly_server::comparison_graph::FrozenResources;
 use mokly_server::error::{Result, ServerError};
 
+use crate::serve_base::BaseSlot;
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
 use crate::serve_git::GitWork;
 use crate::serve_pool::PoolScheduling;
@@ -41,6 +43,9 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    pub(super) reuse: Arc<dyn ComparisonReuse>,
+    /// All source generations share one optional captured base.
+    pub(super) kept_base: Arc<BaseSlot>,
     pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) progress: Arc<dyn Progress>,
     pub(super) refreshes: Arc<dyn GitRefresh>,
@@ -70,10 +75,12 @@ impl ChangeSources for ServeChanges {
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
             references: Mutex::new(None),
+            staging: Mutex::new(None),
         })
     }
 }
 pub(super) struct Source {
+    pub(super) staging: Mutex<Option<Arc<dyn ReuseAttempt>>>,
     pub(super) references: Mutex<Option<(Vec<String>, String)>>,
     pub(super) operation: Arc<dyn CaptureScopes>,
     pub(super) pending: Arc<Mutex<Vec<Warning>>>,
@@ -116,6 +123,7 @@ impl ChangeSource for Source {
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
             references: Mutex::new(None),
+            staging: Mutex::new(None),
         }))
     }
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
@@ -133,6 +141,18 @@ impl ChangeSource for Source {
         result: std::result::Result<&ComparisonResult, &ServerError>,
         elapsed: Duration,
     ) {
+        if let Some(staging) = self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take()
+        {
+            if result.is_ok() {
+                staging.accept();
+            } else {
+                staging.discard();
+            }
+        }
         let mut warnings = self
             .pending
             .lock()
@@ -173,15 +193,37 @@ impl ChangeSource for Source {
                         .terminal
                         .stdout(&serve_output::changes_unavailable(
                             &self.services.style,
-                            &serve_errors::changes_reason(error),
+                            &serve_errors::changes_reason(error, self.services.style.mode),
                             &self.services.redactor,
                         ));
                 }
             }
         });
+        self.services.sidecars.base_finished();
+        if let Some(store) = &self.services.runtime.document_store {
+            store.resume();
+        }
+    }
+    fn discarded(&self) {
+        if let Some(staging) = self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take()
+        {
+            staging.discard();
+        }
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/serve_changes_tests.rs"]
 mod serve_changes_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_reuse_support.rs"]
+mod serve_reuse_support;
+
+#[cfg(test)]
+#[path = "_tests_/serve_return_tests.rs"]
+mod serve_return_tests;

@@ -92,30 +92,41 @@ test("both appearances define exactly the same shell roles", () => {
 });
 
 test("only the three public accent overrides survive from a host", () => {
-  // The embedded stylesheet drops the public accent declarations so a host
-  // value on an ancestor can inherit in. The fallback behind each use must therefore
-  // follow the appearance, or a dark root would paint the Light accent.
-  assert.deepEqual(
-    [
-      ...new Set(
-        [...STANDALONE_CSS.matchAll(/(--mokly-[a-z0-9-]+):/g)].map(
-          (match) => match[1]!,
+  // No stylesheet declares a public accent override, so a host value on the
+  // root or on an ancestor wins in each appearance. The fallback behind each
+  // use must therefore follow the appearance, or a dark root would paint the
+  // Light accent. A wrapped declaration reads as one line here.
+  for (const [delivery, styles] of [
+    ["standalone", STANDALONE_CSS],
+    ["embedded", EMBEDDED_CSS],
+  ] as const) {
+    const css = styles
+      .replace(/\/\*[^]*?\*\//gu, "")
+      .replace(/\s+/gu, " ")
+      .replace(/\(\s/gu, "(")
+      .replace(/\s\)/gu, ")");
+    assert.deepEqual(
+      [
+        ...new Set(
+          [...css.matchAll(/var\((--mokly-[a-z0-9-]+)/gu)].map(
+            (match) => match[1]!,
+          ),
         ),
-      ),
-    ].sort(),
-    [...ACCENT_OVERRIDES.keys()].sort(),
-  );
-  for (const [name, fallback] of ACCENT_OVERRIDES) {
-    assert.doesNotMatch(
-      EMBEDDED_CSS,
-      new RegExp(`^\\s*${name}: (?!var\\()`, "mu"),
-      `${name} is declared in the embedded shell, shadowing a host override`,
+      ].sort(),
+      [...ACCENT_OVERRIDES.keys()].sort(),
+      `the ${delivery} shell reads a public property other than the three overrides`,
     );
-    assert.match(
-      EMBEDDED_CSS,
-      new RegExp(`var\\(${name}, var\\(${fallback}\\)\\)`),
-      `${name} has no scheme-aware fallback`,
+    assert.deepEqual(
+      [...css.matchAll(/(--mokly-[a-z0-9-]+)\s*:/gu)].map((match) => match[1]),
+      [],
+      `the ${delivery} shell declares a public override, shadowing a host's value`,
     );
+    for (const [name, fallback] of ACCENT_OVERRIDES)
+      assert.doesNotMatch(
+        css,
+        new RegExp(`var\\(${name}(?![\\w-]|, var\\(${fallback}\\)\\))`, "u"),
+        `a use of ${name} in the ${delivery} shell has no scheme-aware fallback`,
+      );
   }
   for (const [block, accent] of [
     [/\n\.mbk, \.mbk-document \{([\s\S]*?)\}/, "#4f7864"],

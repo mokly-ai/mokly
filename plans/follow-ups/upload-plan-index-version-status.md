@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   gap outside the scope of its review.
-- **Location:** `docs/protocol/mokly-upload-validation.md:20`.
+- **Location:** `docs/protocol/mokly-upload-validation.md:22`.
 - **Reason:** The rejection table predates PR #217, and the review found the
   gap outside the diff of that change.
 
@@ -30,15 +30,23 @@
   - The CLI maps a receiver's status by value alone. A 426 answer stops the
     exchange without a retry and prints "The catalogue service does not
     support this Mokly version. Update the service and try again."
-  - `docs/protocol/mokly-upload-validation.md:20` gives 426 for an
+  - `docs/protocol/mokly-upload-validation.md:22` gives 426 for an
     unsupported envelope or a present ownership `schemaVersion` other than 3. A malformed archive gets 400 or 422.
-  - Each receiver accepts exactly the index versions that it knows. Mokly
-    Cloud must move its index parser for each new index version.
-  - `docs/protocol/mokly-format-versions.md:77` says that a receiver that
+  - Each receiver accepts exactly the index versions that it knows. The
+    Mokly Cloud receiver in this repository reads index version 9 only. Its
+    parser moves with each new index version.
+  - `docs/protocol/mokly-format-versions.md:78` says that a receiver that
     does not support these versions answers HTTP 426. The inventory at
     line 7 of that page lists the public catalogue index, version 9. So
     the 426 answer for an unsupported index version is already a
     requirement. Only the rejection table lacks its row.
+  - Mokly Cloud already answers 426 with `upload-unsupported-version` for
+    an unsupported index version. Checked on 2026-11-18 at the Cloud `main`
+    commit `767be7b2`, with the same lines in this repository:
+    `crates/mkc-mokly-contract/src/index.rs:30-36` turns an index
+    `schemaVersion` other than 9 into an unsupported-version error.
+    `crates/mkc-mokly-contract/src/error.rs:143` maps that error to 426,
+    and line 154 maps it to `upload-unsupported-version`.
 - **Problem:** The table gives no status for a catalogue index in the Plan
   archive whose version the receiver does not support. Receivers can then
   answer with different statuses, and the CLI shows different messages.
@@ -54,11 +62,11 @@
     Effort: Small.
   - **B.** Answer 400 or 422, as for an invalid archive. The CLI reports
     `upload-invalid-bundle`. Add the row to the table. This changes the
-    426 rule of `mokly-format-versions.md:77`, which needs the user.
+    426 rule of `mokly-format-versions.md:78`, which needs the user.
     Effort: Small.
   - **C.** Leave the status to each receiver, and state in the table that
     the receiver chooses it. This changes the 426 rule of
-    `mokly-format-versions.md:77`, which needs the user. Effort: Small.
+    `mokly-format-versions.md:78`, which needs the user. Effort: Small.
   - **D.** Change the 426 row to cover every versioned file in the Plan
     archive: the envelope, the ownership marker, and the catalogue index.
     Future versioned Plan files then fall under the same row. This changes
@@ -77,13 +85,15 @@
   Upload envelope version 3 added the catalogue index to the Plan archive
   on 2026-10-26. The index rule was added to the validation page, but the
   426 row did not change.
-- **Related:** [mokly-cloud-index-v9.md](./mokly-cloud-index-v9.md) moves
-  Mokly Cloud to index version 9. Until it does, a publication of the next
-  release meets exactly this case.
+- **Related:**
+  [unsupported-version-message-blames-service.md](./unsupported-version-message-blames-service.md)
+  asks what the 426 message tells the user. Both items change the 426 rules
+  of `docs/protocol/mokly-upload-validation.md`, so one change can carry
+  both answers.
 - **Recommendation:** D. It states the existing 426 requirement once for
   every versioned Plan file and keeps the CLI's update message.
 - **Action:** fix after merge, apply D, because the row restates the 426
-  rule of `docs/protocol/mokly-format-versions.md:77`. The review found the
+  rule of `docs/protocol/mokly-format-versions.md:78`. The review found the
   gap outside its change, so the fix stays in a separate branch.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/remove-review-json.md?plain=1#L187).

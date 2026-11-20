@@ -1,6 +1,7 @@
 //! Own-view CSS impact uses kept source proof independently of nested ownership records.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use mokly_css::attribution::{self, PageObservation};
 use mokly_css::containment::ContainmentPath;
@@ -13,7 +14,7 @@ use mokly_model::evidence::{EvidenceOwner, ViewEvidence};
 use mokly_model::review::ReviewState;
 
 use crate::comparison_types::{DocumentComparison, ViewKey};
-use crate::comparison_views::PendingView;
+use crate::comparison_views::{ImmutableView, PendingView};
 use crate::implementation::OwnImpact;
 
 use super::{ViewInput, apply};
@@ -65,9 +66,9 @@ fn check(mixed: bool) {
     if mixed {
         x.rules.extend(page("x", &[("x", true)], "own.css").rules);
     }
-    let attributed = attribution::attribute(vec![x, page("y", &[("y", true)], "y-document")]);
+    let attributed = attribution::attribute(&[x, page("y", &[("y", true)], "y-document")]);
     assert_eq!(attributed.component_pages.contains(&0), mixed);
-    let mut view = PendingView {
+    let mut view = PendingView::new(Arc::new(ImmutableView {
         document: DocumentComparison {
             key: ViewKey {
                 viewport: None,
@@ -87,10 +88,9 @@ fn check(mixed: bool) {
         inputs: false,
         structure: false,
         root_changed: false,
-        rule_sources: BTreeSet::new(),
         proofs: vec![],
         owned: Default::default(),
-    };
+    }));
     let mut impact = BTreeSet::new();
     let mut own = OwnImpact::default();
     apply(

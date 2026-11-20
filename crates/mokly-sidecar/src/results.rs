@@ -1,11 +1,15 @@
 //! Typed result payloads and diagnostic records.
 
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::bundle_outcomes::CacheOutcome;
 use crate::compiled::CompiledGeneration;
 use crate::postcss_evidence::Evidence;
 use crate::render_records::{CollectedStyle, MarkerDraft};
+use crate::resolution_plan::ResolutionPlan;
 use crate::usage::{InstanceDraft, SlotDraft};
 
 /// Package version reported during hello.
@@ -33,6 +37,10 @@ pub struct Module {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[ts(rename = "BundleResult")]
 pub struct Bundle {
+    /// Optional native plan paired with this compilation's reuse evidence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub plan: Option<Arc<ResolutionPlan>>,
     /// Used repository dependency directories whose importer lookup is not mapped.
     #[serde(
         default,
@@ -45,8 +53,16 @@ pub struct Bundle {
     #[serde(skip)]
     #[ts(skip)]
     pub epoch: u64,
+    /// Pool-owned cache classification; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub cache: Option<CacheOutcome>,
+    /// Worker-observed esbuild operations for this request; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub compile_count: u64,
     /// Immutable code for restoration and evaluation-only reuse.
-    pub compiled: CompiledGeneration,
+    pub compiled: Arc<CompiledGeneration>,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.

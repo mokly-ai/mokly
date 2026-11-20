@@ -4,10 +4,11 @@ use std::fs;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex, mpsc};
-use std::thread;
 
 use mokly_platform::processes::ProcessGroups;
+use mokly_platform::volumes::{CaptureVolumes, SystemCaptureVolumes};
 
+use crate::capture_hint::CaptureHint;
 use crate::client::Client;
 use crate::error::{Error, InternalError, Result};
 use crate::pool_options::Launch;
@@ -21,9 +22,10 @@ use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
 use crate::process_reaper::Reaper;
 use crate::process_startup::StartupTiming;
+use crate::process_threads::{PipeThreads, SystemPipeThreads};
 use crate::process_transport::{Deadlines, PipeTransport};
 use crate::process_worker::{ForwardEvents, ProcessWorker};
-use crate::workers::{Diagnostics, Spawned, WorkerControl, WorkerFactory};
+use crate::workers::{Diagnostics, SpawnFailure, Spawned, WorkerControl, WorkerFactory};
 
 /// Concrete worker factory, assembled once by the executable composition root.
 pub struct NodeFactory {
@@ -33,6 +35,8 @@ pub struct NodeFactory {
     diagnostics: Arc<dyn Diagnostics>,
     memory: Arc<dyn MemoryFactory>,
     timings: bool,
+    volumes: Arc<dyn CaptureVolumes>,
+    threads: Arc<dyn PipeThreads>,
 }
 
 impl NodeFactory {
@@ -50,6 +54,8 @@ impl NodeFactory {
             diagnostics,
             memory,
             timings: false,
+            volumes: Arc::new(SystemCaptureVolumes),
+            threads: Arc::new(SystemPipeThreads),
         }
     }
 
@@ -58,13 +64,19 @@ impl NodeFactory {
         self.timings = enabled;
         self
     }
+
+    /// Inject the host thread creation boundary for pipe startup.
+    pub fn with_threads(mut self, threads: Arc<dyn PipeThreads>) -> Self {
+        self.threads = threads;
+        self
+    }
 }
 
-impl WorkerFactory for NodeFactory {
-    /// Start one Node sidecar with the canonical source directory as its working
+impl NodeFactory {
+    /// Prepare Node with the canonical source directory as its working
     /// directory and `PWD`. `dunce::canonicalize` avoids the Windows `\\?\` verbatim form
     /// that `std::fs::canonicalize` returns, which many Node tools do not handle.
-    fn spawn(&self, launch: &Launch) -> Result<Spawned> {
+    fn command(&self, launch: &Launch) -> Result<Command> {
         if !matches!(fs::metadata(&launch.entry), Ok(metadata) if metadata.is_file()) {
             return Err(Error::Unavailable {
                 part: launch.entry.display().to_string(),
@@ -99,28 +111,34 @@ impl WorkerFactory for NodeFactory {
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
-        let startup = Arc::new(StartupTiming::default());
-        let mut child = match self.parent.spawn(command) {
-            Ok(child) => Reaper(child, Some(Arc::clone(&startup))),
-            Err(_) => {
-                return Err(Error::Unavailable {
-                    part: launch.node.display().to_string(),
-                });
-            }
-        };
-        let group = match self.groups.attach(&child.0) {
+        Ok(command)
+    }
+
+    fn spawn_owned(
+        &self,
+        launch: &Launch,
+        mut child: Reaper,
+        startup: Arc<StartupTiming>,
+    ) -> Result<Spawned> {
+        let group = match self.groups.attach(&child.child) {
             Ok(group) => group,
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
-        let pid = child.0.id();
-        let stdin = child.0.stdin.take().expect("stdin is configured as a pipe");
+        let pid = child.child.id();
+        let memory = Arc::from(self.memory.monitor(pid));
+        let discover_memory = Arc::new(AtomicBool::new(false));
+        let stdin = child
+            .child
+            .stdin
+            .take()
+            .expect("stdin is configured as a pipe");
         let stdout = child
-            .0
+            .child
             .stdout
             .take()
             .expect("stdout is configured as a pipe");
         let stderr = child
-            .0
+            .child
             .stderr
             .take()
             .expect("stderr is configured as a pipe");
@@ -129,6 +147,8 @@ impl WorkerFactory for NodeFactory {
         let (exited_tx, exited) = mpsc::sync_channel(1);
         let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let control: Arc<dyn WorkerControl> = Arc::new(ProcessControl {
+            memory: Arc::clone(&memory),
+            discover_memory: Arc::clone(&discover_memory),
             group,
             outgoing: outgoing.clone(),
             exited: Mutex::new(exited),
@@ -136,9 +156,11 @@ impl WorkerFactory for NodeFactory {
             clock: Arc::clone(&self.clock),
             startup: Arc::downgrade(&startup),
         });
+        child.attached(Arc::clone(&control));
         let diagnostics = Arc::clone(&self.diagnostics);
         let timings = self.timings;
         let phases = PhaseState::default();
+        let compile_count = Arc::new(AtomicU64::new(0));
         let diagnostic_phases = phases.clone();
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
@@ -153,13 +175,9 @@ impl WorkerFactory for NodeFactory {
             }),
         ];
         for task in tasks {
-            if let Err(source) = thread::Builder::new()
-                .name("mokly-sidecar-pipe".to_owned())
-                .spawn(task)
-            {
+            if let Err(source) = self.threads.spawn(task) {
                 let span = startup.stop();
                 let _scope = span.enter();
-                control.kill()?;
                 return Err(InternalError::Io { source }.into());
             }
         }
@@ -178,22 +196,51 @@ impl WorkerFactory for NodeFactory {
             Box::new(ForwardEvents {
                 diagnostics: Arc::clone(&self.diagnostics),
                 phases: phases.clone(),
+                compile_count: compile_count.clone(),
             }),
             launch.version.clone(),
         )
-        .with_timings(self.timings);
+        .with_timings(self.timings)
+        .with_capture(
+            launch
+                .capture_durability
+                .then(|| CaptureHint::from_volumes(self.volumes.local())),
+        );
         startup.hand_off();
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
                 diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
-                memory: self.memory.monitor(pid),
-                discover_memory: AtomicBool::new(false),
+                memory,
+                discover_memory,
                 deadlines,
                 phases,
+                compile_count,
             }),
             control,
         })
+    }
+}
+
+impl WorkerFactory for NodeFactory {
+    fn spawn(&self, launch: &Launch) -> std::result::Result<Spawned, SpawnFailure> {
+        let command = match self.command(launch) {
+            Ok(command) => command,
+            Err(error) => return Err(SpawnFailure::NotStarted(error)),
+        };
+        let startup = Arc::new(StartupTiming::default());
+        let child = match self.parent.spawn(command) {
+            Ok(child) => Reaper::new(child, Arc::clone(&startup), Arc::clone(&self.groups)),
+            Err(_) => {
+                return Err(SpawnFailure::NotStarted(Error::Unavailable {
+                    part: launch.node.display().to_string(),
+                }));
+            }
+        };
+        match self.spawn_owned(launch, child, startup) {
+            Ok(spawned) => Ok(spawned),
+            Err(error) => Err(SpawnFailure::Started(error)),
+        }
     }
 }

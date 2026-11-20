@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
+import type { FrameEvent } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
@@ -28,7 +29,10 @@ interface FrameHookSnapshot {
   mounts: number;
   pendingMounts: number;
   pendingUpdates: number;
+  /** The status of the registry session, which inspection reads. */
+  sessionStatus: string | undefined;
   sessions: number;
+  /** The status that the hook renders. */
   status: string;
   highlightedKeys: string[];
   updateStatuses: string[];
@@ -37,6 +41,11 @@ interface FrameHookSnapshot {
 }
 
 interface FrameHookHarness {
+  /**
+   * Send one event through the latest mount and render its result. Returns
+   * the event types, or the error codes, that reached the registry listeners.
+   */
+  emit(id: string, event: FrameEvent): string[];
   highlight(id: string): Promise<void>;
   ready(id: string): Promise<string>;
   rejectMount(id: string): void;
@@ -75,6 +84,22 @@ export function installFrameHookHarness(): void {
     frameHookHarness: FrameHookHarness;
   };
   browser.frameHookHarness = {
+    emit: (id, event) => {
+      const { receive, registry } = requiredHost(id);
+      if (!receive || !registry) throw new Error(`No frame mount for ${id}`);
+      const delivered: string[] = [];
+      const unsubscribe = registry.subscribeEvents((_session, received) =>
+        delivered.push(
+          received.type === "error" ? received.code : received.type,
+        ),
+      );
+      try {
+        flushSync(() => receive(event));
+      } finally {
+        unsubscribe();
+      }
+      return delivered;
+    },
     highlight: async (id) => {
       const mounted = requiredHost(id).registry?.values()[0]?.mounted;
       await mounted?.highlight(["instance"], "highlight");
@@ -147,6 +172,7 @@ export function installFrameHookHarness(): void {
         mounts: host.mounts,
         pendingMounts: host.pendingMounts.length,
         pendingUpdates: host.pendingUpdates.length,
+        sessionStatus: session?.status,
         sessions: host.registry?.values().length ?? 0,
         status: host.status,
         highlightedKeys: [...host.highlightedKeys],
@@ -161,7 +187,12 @@ export function installFrameHookHarness(): void {
       document.body.append(element);
       const host: HookHost = {
         activeSubscriptions: 0,
-        adapter: { mount: () => mountFrame(host) },
+        adapter: {
+          mount: (_frame, view) => {
+            host.receive = view.onEvent;
+            return mountFrame(host);
+          },
+        },
         deferredMount: options.deferredMount ?? false,
         deferredUpdates: options.deferredUpdates ?? false,
         disposals: 0,
@@ -171,6 +202,7 @@ export function installFrameHookHarness(): void {
         ...(options.generatedUsage ? { previewUsage: previewUsage() } : {}),
         pendingMounts: [],
         pendingUpdates: [],
+        receive: undefined,
         registry: undefined,
         retry: undefined,
         root: createRoot(element),

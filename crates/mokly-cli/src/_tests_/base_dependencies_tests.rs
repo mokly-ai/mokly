@@ -33,6 +33,7 @@ fn package_roots_are_normalized_before_selecting_dependency_tiers() {
         },
         file: "/repo/config/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };

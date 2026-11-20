@@ -1,5 +1,6 @@
 //! A fake wait exposes the shutdown boundary without sleeping or spawning.
 
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, mpsc};
 
 use mokly_platform::processes::ProcessGroupMock;
@@ -27,6 +28,8 @@ fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
     let (_exited_sender, exited) = mpsc::sync_channel(1);
     let (_drained_sender, drained) = mpsc::sync_channel(1);
     let control: Box<dyn WorkerControl> = Box::new(ProcessControl {
+        memory: Arc::new(Unimock::new(())),
+        discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
         group: Box::new(mock.clone()),
         outgoing: sender,
@@ -77,6 +80,8 @@ fn an_open_stderr_pipe_cannot_extend_the_shared_deadline() {
     };
     let (_never_drained, drained) = mpsc::sync_channel(1);
     let control: Box<dyn WorkerControl> = Box::new(ProcessControl {
+        memory: Arc::new(Unimock::new(())),
+        discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
         group: Box::new(mock.clone()),
         outgoing,
@@ -104,6 +109,8 @@ fn graceful_completion_waits_for_exit_and_drain_with_one_deadline() {
     let (_exited_sender, exited) = mpsc::sync_channel(1);
     let (_drained_sender, drained) = mpsc::sync_channel(1);
     let control: Box<dyn WorkerControl> = Box::new(ProcessControl {
+        memory: Arc::new(Unimock::new(())),
+        discover_memory: Arc::new(AtomicBool::new(false)),
         startup: Default::default(),
         group: Box::new(mock.clone()),
         outgoing,

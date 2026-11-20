@@ -1,27 +1,44 @@
 # A guide for agents
 
-Mokly builds app-independent static mockup catalogues, serves them for
-development browsing, and renders visual comparisons. The Rust core is a
-Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
-`mokly` shim, the render sidecar, and the authoring API, is under
-`packages/mokly`. The `@mokly/viewer` React viewer is under
-`packages/viewer`. The `@mokly/ui` shared UI package, every element and every
-stylesheet of the shell, is under `packages/ui`. The `@mokly/model` package,
-the catalogue rules and generated types that the frame package and the viewer
-share, is under `packages/model`. The `@mokly/frame` package, the frame
-adapters and the frame probe script that runs inside published pages, is under
-`packages/frame`. The example catalogue is under `examples/basic`, the tooling
-tests and browser specs are under `tests/`, the viewer tests are under
+This repository holds Mokly and Mokly Cloud. Mokly builds app-independent
+static mockup catalogues, serves them for development browsing, and renders
+visual comparisons. Mokly Cloud, its hosted companion, publishes the
+catalogue of each branch, posts a GitHub check, and hosts the viewer. Both
+parts share one Cargo workspace, one npm workspace, one `xtask`, and one gate.
+[Repository layout](./docs/protocol/repository-layout.md) defines their
+paths, their licenses, and the boundary between them.
+
+The Mokly Rust core is the `mokly-*` crates under `crates/`. The
+`@mokly/mokly` package, which holds the `mokly` shim, the render sidecar, and
+the authoring API, is under `packages/mokly`. The `@mokly/viewer` React viewer
+is under `packages/viewer`. The `@mokly/ui` shared UI package, every element
+and every stylesheet of the shell, is under `packages/ui`. The `@mokly/model`
+package, the catalogue rules and generated types that the frame package and
+the viewer share, is under `packages/model`. The `@mokly/frame` package, the
+frame adapters and the frame probe script that runs inside published pages, is
+under `packages/frame`. The example catalogue is under `examples/basic`, the
+tooling tests and browser specs are under `tests/`, the viewer tests are under
 `packages/viewer/tests`, the UI, model, and frame package tests are under
 `packages/ui/tests`, `packages/model/tests`, and `packages/frame/tests`, and
 the Rust verification task runner is under `xtask/`. The protocol docs under
 `docs/protocol` are the spec.
 
+The cloud Rust crates are the `mkc-*` crates under `crates/`. The cloud npm
+projects are under `apps/`: the Expo app, the Electron desktop shell, the
+Astro site, the Cloudflare origin router, and the mockup tooling. The cloud
+design tokens are under `packages/tokens`, the cloud mockup catalogue is under
+`docs/mockups`, the cloud protocol docs are under `docs/protocol/cloud`, the
+runbooks are under `docs/ops`, and the infrastructure is under `infra/`.
+
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
 `Firna-AI/skills`. Read the skill at the named moment instead of guessing
 the rule. Rules for one application, package, or feature live in the
-`README.md`, doc, or protocol doc next to the code they describe.
+`README.md`, doc, or protocol doc next to the code they describe. The cloud
+rules for the API types and the OpenAPI generation, `rpc-error`, the
+migrations, `@firna/ui`, the Expo app, the desktop shell, the sandbox
+catalogue origin, the settings dialog, and product copy live in the cloud
+README files and in the cloud protocol docs under `docs/protocol/cloud`.
 
 ## Shared skills
 
@@ -36,9 +53,11 @@ the rule. Rules for one application, package, or feature live in the
 - `git-merge`: before you merge or rebase, and after each merge commit.
 - `documentation`: before you edit a `README.md`, a doc, or a protocol doc.
 - `rust`: before you edit Rust under `crates/` or `xtask/`.
+- `shared-types`: before you change data shared by Rust and TypeScript.
+- `databases`: before you touch migrations, Diesel, or the store crates.
 - `mockups`: before you create or change an entry of the example catalogue
   under `examples/basic`, including the design mockups under
-  `examples/basic/specs/design`.
+  `examples/basic/specs/design`, or a cloud mockup under `docs/mockups`.
 - `product-ui`: before you implement or change a user-facing screen or
   copy.
 
@@ -64,7 +83,8 @@ the rule. Rules for one application, package, or feature live in the
 
 - Build: `npm run build`. It builds the host native target, the UI package,
   the model package, the frame package, the viewer, and then the shim and the
-  sidecar, in that order.
+  sidecar, in that order. The cloud builds of the app, the site, the mockups,
+  and the desktop bundle use these built workspace packages, so run it first.
 - Dev server: `npm run dev` serves the example catalogue with watching. It
   runs `npm ci` and `npm run build` first when the install or the build is
   missing or out of date with `package-lock.json`. It does not rebuild after
@@ -77,30 +97,52 @@ the rule. Rules for one application, package, or feature live in the
   commands build first. The
   [developer test commands](./docs/protocol/developer-test-commands.md)
   hold the full rules, including the raw commands that test the last build.
+  `cargo test -p <crate>` also runs one `mkc-` crate, whose database tests
+  need Postgres. `npm run <script> --workspace @mokly-cloud/<project>` runs
+  the tests of one cloud project, as its README says.
 - Early check (format, lint, file length, exports, Rust):
   `cargo xtask check --suite repository`.
-- Complete gate: `cargo xtask check`. A local run stops at the first failed
-  suite. A [remote run](./docs/protocol/remote-verification.md) reports
-  every failed suite. Rerun one failed suite with `--suite <name>`.
+- Complete gate: `cargo xtask check`. It runs every suite, the cloud suites
+  included. A suite fails when a tool that it needs, such as Postgres, is
+  missing. A local run stops at the first failed suite. A
+  [remote run](./docs/protocol/remote-verification.md) reports every failed
+  suite. Rerun one failed suite with `--suite <name>`.
+- Contract fixtures: `cargo xtask mokly-fixtures` regenerates the cloud
+  contract fixtures from the workspace build. Commit its output when a Mokly
+  change changes them, because the drift check of the gate fails until then.
 - Format: `npm run format` and `cargo fmt --all`.
 - Markdown check: `npm run format:check` and
   `npm test -- tests/markdown_links.test.ts`.
 - Mockup check, after you change an example entry, the renderer, the
   configuration, or a configured style: `npm run build`, then
   `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
-  Then smoke-test the changed pages through `npm run dev`.
+  Then smoke-test the changed pages through `npm run dev`. For a cloud mockup
+  under `docs/mockups`, run the check that `docs/mockups/README.md` gives.
 
 ## Repository rules
 
+- Mokly never depends on the cloud. No `mokly-*` crate depends on an `mkc-`
+  crate, and no package under `packages/` imports a project under `apps/`. A
+  Repository-suite check enforces both rules. The cloud may depend on Mokly,
+  and it uses the workspace `@mokly/*` packages and `mokly-*` crates directly,
+  not published releases.
+- Every cloud crate has the `mkc-` prefix. `LICENSE` is MIT and names the
+  AGPL paths: `apps/`, the `mkc-` crates, `docs/mockups/`, `packages/tokens/`,
+  `infra/`, and `scripts/cloud/`. `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text, and
+  each Cargo or npm manifest under an AGPL path says `AGPL-3.0-only`. A new `mkc-` crate or
+  cloud project follows the same rules. Every other path, the docs and the
+  plans included, is MIT.
 - The repository gate caps changed TypeScript and JavaScript files at 300
   lines and protocol Markdown at 250 lines. The exact reviewed caps in
-  `xtask/protocol-document-caps.json` are the only exceptions. Fetch
-  `origin/main` before you run `cargo xtask source-file-length-lint`.
+  `xtask/protocol-document-caps.json` and the generated files that the audit
+  excludes by path are the only exceptions. Fetch `origin/main` before you
+  run `cargo xtask source-file-length-lint`.
 - `cargo xtask rust-file-length-lint` caps Rust files under `xtask/` and
   `crates/` at 300 lines. Every run audits every Rust file there. There is
   no override.
 - `tests/markdown_links.test.ts` checks the local links and anchors in
-  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+  `AGENTS.md`, `docs/`, `plans/`, every `README.md`, and the Markdown files
+  under the AGPL paths.
 - Never commit build output. `mokly-static/` and every `--out` directory
   stay ignored by Git. Commit the authored specs, configuration, components,
   and CSS under `examples/basic/`.
@@ -114,12 +156,10 @@ the rule. Rules for one application, package, or feature live in the
   contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
 - A protocol, architecture, or README page whose behaviour is not
-  implemented yet starts with one status line below its title. Link the line
-  to the active plan or follow-up item that owns the missing behaviour. The
-  page has no other link to that work item. Remove the line when the behaviour
-  is implemented.
-  The guides under `docs/guides` ship with the npm package, describe the
-  released product, and carry no status line.
+  implemented yet starts with a status line. The `documentation` skill says
+  what the line links and when it goes. The guides under `docs/guides` ship
+  with the npm package, describe the released product, and carry no status
+  line.
 - A page names an earlier format number or a removed input only where its
   rule needs the name: a version gate that rejects the number, a
   removed-input warning, or a migration step in a guide.
@@ -157,6 +197,10 @@ the rule. Rules for one application, package, or feature live in the
   and of each package component that it renders, each by its repository path
   under `packages/ui/src`. Shared, layout, and global design styles stay in
   the mixed `examples/basic/design*.css` files.
+- The cloud product screens live in the Expo app under `apps/app`, which
+  hosts the workspace `@mokly/viewer`. The marketing site lives in
+  `apps/site`. Their README files name the shared UI library to check first
+  and the rules for their screens.
 
 ## Review focus
 
@@ -165,6 +209,22 @@ the rule. Rules for one application, package, or feature live in the
 - The end-state rule: a page describes the intended behaviour only, with the
   status line of the repository rules while that behaviour is not
   implemented.
+- The boundary and the license scope of the
+  [repository layout](./docs/protocol/repository-layout.md): Mokly never
+  depends on the cloud, and every cloud path keeps its AGPL license.
+- The cloud consumers of a changed Mokly package, crate, or artifact, because
+  every push to `main` deploys the cloud with that change.
+- Publication files served from any origin other than the sandbox catalogue
+  origin, and cloud chrome outside the viewer's slots or a reimplemented
+  Browse, Changes, or catalogue tree.
+- API error reasons that differ between the code,
+  `docs/protocol/cloud/rest-api.md`, and the OpenAPI document. Migration
+  safety: each new `down.sql` reverses its `up.sql`, and no merged migration
+  changes.
+- Cloud user-facing text and mockups, checked against
+  `docs/protocol/cloud/product-copy.md`. Treat unnecessary explanation,
+  repetition, and text that does not help the user act as contract
+  violations, not style preferences.
 
 ## Status
 

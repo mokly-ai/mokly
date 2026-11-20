@@ -171,25 +171,11 @@ the packed contents of the package.
   `define*` helpers that turn authored input into catalogue definitions.
 - [`config.schema.json`](./config.schema.json) is the configuration schema,
   which the binary embeds and enforces.
-- [`src/sidecar.ts`](./src/sidecar.ts) is the sidecar process entry, which
-  reads framed requests from the binary and writes one response for each.
-- [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
-  dispatches each sidecar request to its method.
-- [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
-  the binary's typed requests and limits the size of each response.
-- [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
-  compiles the catalogue modules. esbuild resolves most imports itself, and
-  [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
-  result. It plans a second compile when esbuild's own resolution would change
-  the bundle.
-- [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
-  which owns the PostCSS child processes.
-- [`src/generated/sidecar`](./src/generated/sidecar) holds the request and
-  result types that `cargo xtask generate-types` writes from the Rust types.
+- The [render sidecar README](./src/sidecar/README.md#key-code) names the key
+  code of the render sidecar, the Node process that bundles, describes, and
+  renders the catalogue modules.
 - [`scripts/build.mjs`](./scripts/build.mjs) builds `dist/` and copies the
   guides, the protocol documents, and the root changelog into the package.
-- The [Rust sidecar pool](../../crates/mokly-sidecar/README.md) starts and
-  stops the sidecar processes.
 
 ## License
 

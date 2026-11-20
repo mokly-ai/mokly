@@ -1,5 +1,6 @@
 //! Ordered client requests and exact-version hello handshake.
 
+use crate::capture_hint::CaptureHint;
 use crate::error::{Error, ProtocolError, Result};
 use crate::methods::{Call, Hello};
 use crate::wire::{Event, Frame, MethodResult, Request};
@@ -35,6 +36,7 @@ pub struct Client {
     events: Box<dyn Events>,
     version: String,
     timings: bool,
+    capture: Option<CaptureHint>,
 }
 
 impl Client {
@@ -46,6 +48,7 @@ impl Client {
             events,
             version,
             timings: false,
+            capture: None,
         }
     }
 
@@ -54,13 +57,21 @@ impl Client {
         self.timings = enabled;
         self
     }
+
+    /// Request capture witnesses for the optional disk store.
+    pub fn with_capture(mut self, hint: Option<CaptureHint>) -> Self {
+        self.capture = hint;
+        self
+    }
 }
 
 impl SidecarClient for Client {
     fn handshake(&mut self) -> Result<()> {
         let request = Request {
             id: 0,
+            quiet: false,
             call: Call::Hello(Hello {
+                capture: self.capture.clone(),
                 timings: self.timings,
             }),
         };

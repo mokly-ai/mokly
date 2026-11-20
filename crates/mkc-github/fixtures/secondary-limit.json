@@ -1,0 +1,18 @@
+{
+  "status": 403,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST",
+    "retry-after": "60"
+  },
+  "body": {
+    "message": "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.",
+    "documentation_url": "https://docs.github.com/rest/overview/resources-in-the-rest-api#secondary-rate-limits",
+    "status": "403"
+  }
+}

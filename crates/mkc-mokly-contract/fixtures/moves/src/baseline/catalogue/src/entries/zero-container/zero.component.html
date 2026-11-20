@@ -1,0 +1,20 @@
+---
+title: "Zero"
+description: "Before move."
+element: "fixture-zero-container-zero"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    { "slug": "one", "title": "First moved", "props": { "label": "First" } },
+    { "slug": "two", "title": "Second moved", "props": { "label": "Second" } },
+  ]
+---
+
+<p>{{ label }}</p>

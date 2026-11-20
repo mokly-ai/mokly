@@ -8,6 +8,7 @@ use tokio::sync::{broadcast, watch};
 
 use crate::backend::Documents;
 use crate::background_batch::Window;
+use crate::background_capacity::BackgroundCapacity;
 use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
@@ -24,8 +25,8 @@ pub trait Background: Send + Sync {
 
 /// Evidence uses the same scheduler and document adapter as foreground requests.
 pub struct UsagePass {
-    /// At most this many background renders run at once; zero runs one.
-    pub batch: usize,
+    /// Current bound, read again before each background render starts.
+    pub capacity: Arc<dyn BackgroundCapacity>,
     /// Optional Changes continuation after every current document settles.
     pub changes: Option<Arc<dyn AfterUsage>>,
     /// Atomic states and completion publisher.
@@ -75,13 +76,18 @@ impl UsagePass {
         stop: &mut watch::Receiver<bool>,
         updates: &mut broadcast::Receiver<PublicationEvent>,
     ) -> bool {
-        let mut window = Window::new(self.batch);
+        let mut window = Window::new(1);
         let mut routes = origin.routes.iter().enumerate();
         loop {
-            while window.has_room()
-                && let Some((position, route)) = routes.next()
-            {
+            loop {
                 tokio::task::yield_now().await;
+                window.set_limit(self.capacity.capacity());
+                if !window.has_room() {
+                    break;
+                }
+                let Some((position, route)) = routes.next() else {
+                    break;
+                };
                 let current = self.publications.current();
                 if stopped(stop) || !Arc::ptr_eq(&current.documents, &origin.documents) {
                     return cancelled();

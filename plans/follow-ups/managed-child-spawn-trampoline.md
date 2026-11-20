@@ -93,12 +93,16 @@
   - [plain-git-fsmonitor-override.md](./plain-git-fsmonitor-override.md): a
     plain-group `check-attr` or `rev-parse` can start the user's filesystem
     monitor hook, because the index read starts it.
-  - [plain-git-promisor-tree-reads.md](./plain-git-promisor-tree-reads.md): a
-    plain-group `ls-tree -l` can lazy-fetch in a partial clone on a Git build
-    without the lazy-fetch control.
+  - A second case has a direct fix and no item. In a partial clone, a
+    plain-group `ls-tree -l` could lazy-fetch on a Git build that ignores
+    `GIT_NO_LAZY_FETCH=1`. `tree_request` in
+    `crates/mokly-git/src/repository_command.rs` keeps full setup for
+    `ls-tree` when the repository has a promisor remote, so these tree reads
+    pay the fork cost.
   - Both cases have the same cause: a list of helper-free commands depends on
     the user's configuration and the Git build. The launcher of option A
-    removes the need for that list, so it is also the wider fix of both items.
+    removes the need for that list and for its promisor condition, so it is
+    also the wider fix of both cases.
 
 - **Recommendation:**
 
