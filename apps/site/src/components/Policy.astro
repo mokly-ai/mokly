@@ -1,0 +1,44 @@
+---
+/**
+ * One legal document: the location eyebrow, title, effective date, Markdown
+ * body and links to the other legal documents.
+ */
+import { getEntry, render } from "astro:content";
+
+import { effectiveDate, relatedPolicies, type PolicyId } from "../legal.js";
+
+import "../styles/document.css";
+
+interface Props {
+  readonly id: PolicyId;
+}
+
+const { id } = Astro.props;
+
+const entry = await getEntry("legal", id);
+if (!entry) throw new Error(`The site publishes no policy document for ${id}.`);
+const { Content } = await render(entry);
+const effective = effectiveDate(entry.data.effective);
+const related = relatedPolicies(id);
+---
+
+<div class="site-document-intro">
+  <p class="site-eyebrow">Legal</p>
+  <h1>{entry.data.title}</h1>
+  <p class="site-policy-date">
+    Effective <time datetime={effective.datetime}>{effective.readable}</time>
+  </p>
+</div>
+<div class="site-document-body site-policy-body">
+  <Content />
+</div>
+<nav aria-label="Legal documents" class="site-policy-links">
+  <p class="site-policy-links-title">Legal documents</p>
+  <div class="site-policy-link-list">
+    {related.map((policy) => (
+      <a class="site-link" href={policy.route}>
+        {policy.label} <span aria-hidden="true">&#8594;</span>
+      </a>
+    ))}
+  </div>
+</nav>

@@ -13,7 +13,7 @@ catalogue decisions, caching, invalidation, comparison, and output.
 - The binary spawns `node <mokly package>/dist/sidecar.js` with input/output
   pipes and the [source worker environment](./mokly-sidecar-modules.md#source-root-workers).
   Its directory stays at `sourceRoot`. Another root replaces it before replay.
-  A missing source directory is the unavailable part. Standard error goes to the terminal reporter as diagnostics.
+  A missing source directory is the unavailable part. Standard error goes to the terminal reporter as diagnostics, except the consumer output that a [quiet call](./mokly-sidecar-return-warmup.md#warm-up-steps) drops.
 - The default pool size is the machine's core count, and a default pool grows
   under the [memory admission rules](./mokly-sidecar-memory.md#default-admission).
   `--sidecars <n>` and `MOKLY_SIDECARS` accept any positive integer and set an
@@ -38,7 +38,7 @@ protection, including on the historical side.
 
 Frames are newline-delimited UTF-8 JSON, with at most 64 MiB of JSON bytes
 per frame, excluding its LF delimiter. A request has `id`, `method`, and
-`params`; a method without parameters uses `{}`. A response repeats `id` with
+`params`, and a [warm-up](./mokly-sidecar-return-warmup.md#warm-up-steps) call also has `quiet: true`; a method without parameters uses `{}`. A response repeats `id` with
 exactly one of `result` or `error`; a method without a return value uses
 `result: null`. An event has `event` and `params` and no `id`. Requests on one
 sidecar run in order; the pool spreads independent requests across sidecars. A request waiting for its affine slot does not block the first later request that can use another slot.

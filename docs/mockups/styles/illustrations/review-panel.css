@@ -1,0 +1,119 @@
+.review-panel {
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  background: var(--mk-color-surface-muted);
+}
+.panel-toolbar {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 22px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+}
+.panel-toolbar strong {
+  color: var(--mk-color-text);
+}
+.panel-branch {
+  margin-left: auto;
+  color: var(--mk-color-accent);
+}
+.panel-columns {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 230px;
+}
+.panel-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 20px;
+  font-size: 10px;
+  border-right: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+}
+.panel-sidebar .scene-kicker {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.panel-selected {
+  padding: 8px 10px;
+  margin: -4px -10px;
+  color: var(--mk-color-accent);
+  background: var(--mk-color-accent-soft);
+  border-radius: 4px;
+}
+.panel-chip {
+  border: 1px solid var(--mk-color-border);
+  padding: 3px 6px;
+  align-self: start;
+  font-size: 8px;
+}
+.panel-stage {
+  padding: 28px;
+  min-width: 0;
+}
+.panel-stage .product-scene {
+  box-shadow: var(--mk-shadow-medium);
+}
+.panel-caption {
+  display: block;
+  margin-top: 16px;
+  color: var(--mk-color-text-muted);
+  font-size: 8px;
+  text-align: center;
+}
+.panel-discussion {
+  padding: 26px 15px;
+  border-left: 1px solid var(--mk-color-border);
+}
+.panel-discussion .comment-thread {
+  padding: 14px;
+  font-size: 11px;
+}
+.panel-discussion .comment-heading {
+  gap: 7px;
+}
+.panel-discussion .replies {
+  margin-left: 0;
+}
+.discussion-note {
+  font: italic 16px/1.7 var(--mk-font-display);
+  transform: rotate(3deg);
+  padding: 24px 16px;
+  margin-top: 24px;
+  background: var(--mk-color-accent-soft);
+  color: var(--mk-color-accent);
+}
+@media (max-width: 1000px) {
+  .panel-columns {
+    grid-template-columns: minmax(0, 1fr) 210px;
+  }
+  .panel-sidebar {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .panel-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .panel-toolbar {
+    flex-wrap: wrap;
+    padding: 15px;
+    gap: 8px;
+  }
+  .panel-branch {
+    margin-left: 0;
+  }
+  .panel-stage {
+    padding: 15px;
+  }
+  .panel-discussion {
+    border-left: 0;
+    border-top: 1px solid var(--mk-color-border);
+    padding: 18px;
+  }
+  .discussion-note {
+    margin-top: 15px;
+  }
+}

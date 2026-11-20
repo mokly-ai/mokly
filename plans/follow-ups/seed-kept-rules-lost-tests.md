@@ -1,0 +1,31 @@
+# Two kept seed rules have no tests
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, from the branch `calummoore/preview-environment-seeding-discussion`, review finding 2.
+- **Location:** `crates/mkc-api/src/preview_seed/identity.rs:92`, `crates/mkc-api/src/preview_seed/identity_validation.rs:25-57`, `crates/mkc-api/src/preview_seed/evidence.rs:78-113`, `crates/mkc-api/src/preview_seed/_tests_/service/evidence_failure_tests.rs`.
+- **Reason:** On 2026-10-30 Cal chose to handle this after the merge. The choice of option still waits for Cal.
+- **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The only service failure test uses matching project and publication fixtures, so neither kept rule has a negative test.
+- **Category:** Test (estimate).
+
+- **Terms:**
+  - **Preview seed command:** `mkc-api preview-seed --run <run>`. It creates the shared preview account, the workspace `Mokly` (`mokly-ai`), the project `Mokly Cloud` (`mokly`) and a publication of the PR's mockups in a preview environment.
+  - **Project token:** a credential that permits uploads to one project. The seed creates one named `Preview seed` and revokes it at the end.
+- **Background:**
+  - The Python preview seed was deleted on 2026-10-30, with the user's approval, when the seed moved into the API binary.
+  - `docs/protocol/cloud/preview-seed.md` keeps two rules from that seed. First, a mismatched existing workspace or project fails with the field, the expected value and the received value, before a project token exists. Second, after the upload, the seed requires a `ready` publication with the request's revision as its head SHA, the request's pull request, and a viewer URL under the app origin. Otherwise the seed ends `failed` and writes no proof.
+  - The Rust code meets both rules: `project()` in `crates/mkc-api/src/preview_seed/identity_validation.rs` checks the project, and `Proof::verified` in `crates/mkc-api/src/preview_seed/evidence.rs` checks the publication.
+  - The deleted Python tests covered these rules: `test_mismatched_existing_project_fails_before_minting_a_token` and `test_existing_project_with_cloud_builds_fails_before_minting_a_token` for the project rule, and `test_replayed_receipt_still_requires_a_ready_publication` and `test_proof_rejects_a_publication_for_another_revision` for the publication rule. They were in `infra/tests/test_preview_seed_failures.py` and `infra/tests/test_preview_seed_exchange.py` at commit `860b163f`.
+  - An earlier commit message said that all 31 deleted tests covered only removed code. The squash commit `cdf9c9e5` of PR #81 corrected that: these four covered kept rules. It also records the deferral.
+  - The command tests in `crates/mkc-api/tests/preview_seed_tests.rs:80-125` cover a catalogue revision mismatch and an existing Free workspace. Both fail before the project step, so neither reaches the two kept rules.
+- **Problem:** No test fails when the project check or a publication check is removed. Every project fixture of the seed's tests has matching values, and no fixture returns a publication that fails a check. The Free workspace test stops before the project step.
+- **Impact if no action:** A later change can drop either check with green tests. The seed could then publish into a project that a reviewer changed, for example one made public, or report `seeded` for a publication that is not ready.
+- **Root question:** How do the seed's tests prove both kept rules?
+- **Options:**
+  - **A.** Add two service tests through `SeedService::run`, with the existing `unimock` fixtures, in `crates/mkc-api/src/preview_seed/_tests_/service/evidence_failure_tests.rs`. The first returns an existing project with visibility `public`, and asserts the mismatch error, the failed status, no proof, and no token creation. The second returns a publication that fails a step 10 check, and asserts the failed status, no proof, and the token revocation. Stub the later steps and record their calls, so that a removed check fails an assertion. Effort: Small.
+  - **B.** Add command tests in `crates/mkc-api/tests/preview_seed_tests.rs` against Postgres: seed once, change the project through the store, seed again, and assert the failure and the token count. A failed publication check cannot happen through the real upload service, so only the project rule fits this level. Effort: Small.
+- **Left out:** Change nothing: the rules stay required, and the deletion did not decide to leave them untested. A browser test: it adds no distinct coverage. A test of the private check functions: the `testing` skill asks for the entry point that real callers use.
+- **Wider fix:** None. The ports rule of the `testing` skill already says that a replacement test must cover each requirement of a deleted test.
+- **Previous examples:** Review finding 2 of Milestone 1B in the deleted `plans/preview-seed-data.md` found the earlier identity defect that the deleted project tests guarded. See [the identity TODO](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/preview-seed-data.md?plain=1#L380-L384).
+- **Recommendation:** A. A service test is the lowest level that fails without each check, and it covers both rules.
+- **Action:** ask the user, because condition 6 of the decision test holds for a missing-test finding.

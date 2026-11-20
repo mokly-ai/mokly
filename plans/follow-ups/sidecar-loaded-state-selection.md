@@ -25,7 +25,7 @@
     process evaluates it once and then renders from it.
   - **Warm head process:** the process that bundled the newest head
     generation, or the process that last rendered it after a successful
-    render.
+    render request. A warm-up replay does not move it.
   - **Kept base:** the captured base side that Serve keeps between Changes
     classifications.
 - **Background:**
@@ -50,10 +50,12 @@
     process and no empty slot is available.
     `docs/protocol/mokly-sidecar-root-scheduling.md` holds this rule.
   - The same change starts a return pass after each Changes publication in
-    Serve. The pass replaces idle base processes with new head processes. The
-    new processes load no generation in advance. So at the next edit, a call
-    that reaches a new process loads the runtime packages and evaluates the
-    generation from a cold start.
+    Serve. The pass replaces idle base processes with new head processes. Each
+    new process then warms up while the pool is idle: it prepares the newest
+    head generation and replays up to 30 of its recent renders, under
+    `docs/protocol/mokly-sidecar-return-warmup.md`. A call that reaches a new
+    process before its warm-up ends still loads the runtime packages and
+    evaluates the generation from a cold start.
   - Serve keeps a base capture of at most 256 MiB, at
     `crates/mokly-compare/src/capture_weight.rs:12`. A view outside it renders
     again through the kept base and needs a base process. After the return

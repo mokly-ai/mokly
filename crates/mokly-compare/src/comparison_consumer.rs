@@ -57,6 +57,7 @@ impl ViewConsumer for Consumer<'_> {
             mut resources,
             trees: [before_tree, after_tree],
             material,
+            equal_document,
         } = prepared;
         let [before_document, after_document] = comparison_preparation::documents(&artifacts);
         if self.moved {
@@ -109,41 +110,49 @@ impl ViewConsumer for Consumer<'_> {
             (Some(comparison), Some(_), Some(_)) => comparison.instances.as_slice(),
             _ => &[],
         };
-        let mut owned = owned_styles::compare(
-            [
-                before_document.map_or(&[], |document| document.tree.as_slice()),
-                after_document.map_or(&[], |document| document.tree.as_slice()),
-            ],
-            [before_tree.as_ref(), after_tree.as_ref()],
-            self.paths,
-            &format!(
-                "static/mokly-generated/{}",
-                after_route
-                    .as_ref()
-                    .or(before_route.as_ref())
-                    .map_or("", String::as_str)
-            ),
-            self.memo,
-            candidates,
-        )?;
+        let mut owned = if equal_document {
+            owned_styles::Changes::default()
+        } else {
+            owned_styles::compare(
+                [
+                    before_document.map_or(&[], |document| document.tree.as_slice()),
+                    after_document.map_or(&[], |document| document.tree.as_slice()),
+                ],
+                [before_tree.as_deref(), after_tree.as_deref()],
+                self.paths,
+                &format!(
+                    "static/mokly-generated/{}",
+                    after_route
+                        .as_ref()
+                        .or(before_route.as_ref())
+                        .map_or("", String::as_str)
+                ),
+                self.memo,
+                candidates,
+            )?
+        };
         if let Some(comparison) = &comparison {
             owned.prepare(comparison);
         }
         observation.rules.extend(mem::take(&mut owned.rules));
-        let inline = inline_styles::compare(
-            before_document.map(|document| document.tree.as_slice()),
-            after_document.map(|document| document.tree.as_slice()),
-            before_tree.as_ref(),
-            after_tree.as_ref(),
-            &format!(
-                "static/mokly-generated/{}",
-                after_route
-                    .as_ref()
-                    .or(before_route.as_ref())
-                    .map_or("", String::as_str)
-            ),
-            self.memo,
-        )?;
+        let inline = if equal_document {
+            Vec::new()
+        } else {
+            inline_styles::compare(
+                before_document.map(|document| document.tree.as_slice()),
+                after_document.map(|document| document.tree.as_slice()),
+                before_tree.as_deref(),
+                after_tree.as_deref(),
+                &format!(
+                    "static/mokly-generated/{}",
+                    after_route
+                        .as_ref()
+                        .or(before_route.as_ref())
+                        .map_or("", String::as_str)
+                ),
+                self.memo,
+            )?
+        };
         observation.rules.extend(inline);
         observation.rules = observation::merge(mem::take(&mut observation.rules));
         let proofs = match (&comparison, self.previous, self.current) {

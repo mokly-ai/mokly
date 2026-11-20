@@ -53,10 +53,7 @@ pub(super) fn captured(
                 };
                 (
                     route.into(),
-                    CapturedView {
-                        document: EncodedView::encode(&artifact).unwrap(),
-                        closure: Closure::default(),
-                    },
+                    CapturedView::encode(&artifact, Closure::default()).unwrap(),
                 )
             })
             .collect(),

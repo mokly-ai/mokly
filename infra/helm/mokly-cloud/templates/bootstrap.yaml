@@ -1,0 +1,76 @@
+{{- include "mkc.validate" . -}}
+{{- range $name := list "api" "catalogue" "app" }}
+{{- if (index $.Values $name).enabled }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  {{- if eq $.Values.database.mode "cloudsql" }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+    {{- if ne $name "app" }}
+    iam.gke.io/gcp-service-account: {{ printf "mkc-%s-%s@%s.iam.gserviceaccount.com" (include "mkc.environment" $) (ternary "cat" "api" (eq $name "catalogue")) $.Values.project | quote }}
+    {{- end }}
+  {{- end }}
+automountServiceAccountToken: false
+{{- end }}
+{{- end }}
+{{- if eq .Values.database.mode "cloudsql" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reset
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+    iam.gke.io/gcp-service-account: {{ printf "mkc-%s-reset@%s.iam.gserviceaccount.com" (include "mkc.environment" .) .Values.project | quote }}
+automountServiceAccountToken: false
+{{- end }}
+{{- if eq .Values.database.mode "cloudsql" }}
+{{- range $name := list "api" "catalogue" }}
+{{- if (index $.Values $name).enabled }}
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: {{ $name }}-secrets
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  provider: gke
+  parameters:
+    secrets: |
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-catalogue-signing-key/versions/latest"
+        path: "catalogue-signing-key"
+      {{- if and (eq $name "api") (not (hasPrefix "preview-pr-" (include "mkc.environment" $))) }}
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-postmark-token/versions/latest"
+        path: "postmark-token"
+      {{- end }}
+      {{- if and (eq $name "api") $.Values.github.enabled }}
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-github-client-secret/versions/latest"
+        path: "github-client-secret"
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-github-app-key/versions/latest"
+        path: "github-app-key"
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-github-webhook-secret/versions/latest"
+        path: "github-webhook-secret"
+      {{- end }}
+      {{- if and (eq $name "api") $.Values.billing.enabled }}
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-stripe-secret-key/versions/latest"
+        path: "stripe-secret-key"
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-stripe-webhook-secret/versions/latest"
+        path: "stripe-webhook-secret"
+      {{- end }}
+      {{- if and (eq $name "api") $.Values.builds.enabled }}
+      - resourceName: "projects/{{ $.Values.project }}/secrets/mkc-{{ include "mkc.environment" $ }}-e2b-api-key/versions/latest"
+        path: "e2b-api-key"
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,2000 @@
+[
+  {
+    "oldId": "design-avatar",
+    "path": "design/avatar",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/avatar.mockup.tsx"
+  },
+  {
+    "oldId": "design-avatar-soft",
+    "path": "design/avatar/soft",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/avatar.mockup.tsx",
+    "parent": "design/avatar",
+    "slug": "soft"
+  },
+  {
+    "oldId": "design-avatar-solid",
+    "path": "design/avatar/solid",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/avatar.mockup.tsx",
+    "parent": "design/avatar",
+    "slug": "solid"
+  },
+  {
+    "oldId": "design-badge",
+    "path": "design/badge",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/badge.mockup.tsx"
+  },
+  {
+    "oldId": "design-badge-neutral",
+    "path": "design/badge/neutral",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/badge.mockup.tsx",
+    "parent": "design/badge",
+    "slug": "neutral"
+  },
+  {
+    "oldId": "design-badge-success",
+    "path": "design/badge/success",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/badge.mockup.tsx",
+    "parent": "design/badge",
+    "slug": "success"
+  },
+  {
+    "oldId": "design-badge-warning",
+    "path": "design/badge/warning",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/badge.mockup.tsx",
+    "parent": "design/badge",
+    "slug": "warning"
+  },
+  {
+    "oldId": "design-badge-danger",
+    "path": "design/badge/danger",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/badge.mockup.tsx",
+    "parent": "design/badge",
+    "slug": "danger"
+  },
+  {
+    "oldId": "design-button",
+    "path": "design/button",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx"
+  },
+  {
+    "oldId": "design-button-danger",
+    "path": "design/button/danger",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx",
+    "parent": "design/button",
+    "slug": "danger"
+  },
+  {
+    "oldId": "design-button-primary",
+    "path": "design/button/primary",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx",
+    "parent": "design/button",
+    "slug": "primary"
+  },
+  {
+    "oldId": "design-button-secondary",
+    "path": "design/button/secondary",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx",
+    "parent": "design/button",
+    "slug": "secondary"
+  },
+  {
+    "oldId": "design-button-quiet",
+    "path": "design/button/quiet",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx",
+    "parent": "design/button",
+    "slug": "quiet"
+  },
+  {
+    "oldId": "design-button-disabled",
+    "path": "design/button/disabled",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/button.mockup.tsx",
+    "parent": "design/button",
+    "slug": "disabled"
+  },
+  {
+    "oldId": "design-card",
+    "path": "design/card",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/card.mockup.tsx"
+  },
+  {
+    "oldId": "design-card-plain",
+    "path": "design/card/plain",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/card.mockup.tsx",
+    "parent": "design/card",
+    "slug": "plain"
+  },
+  {
+    "oldId": "design-card-selected",
+    "path": "design/card/selected",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/card.mockup.tsx",
+    "parent": "design/card",
+    "slug": "selected"
+  },
+  {
+    "oldId": "design-comment-thread",
+    "path": "design/comment-thread",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/comment-thread.mockup.tsx"
+  },
+  {
+    "oldId": "design-comment-thread-open",
+    "path": "design/comment-thread/open",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/comment-thread.mockup.tsx",
+    "parent": "design/comment-thread",
+    "slug": "open"
+  },
+  {
+    "oldId": "design-comment-thread-resolved",
+    "path": "design/comment-thread/resolved",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/comment-thread.mockup.tsx",
+    "parent": "design/comment-thread",
+    "slug": "resolved"
+  },
+  {
+    "oldId": "design-content-list",
+    "path": "design/content-list",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/content-list.mockup.tsx"
+  },
+  {
+    "oldId": "design-content-list-projects",
+    "path": "design/content-list/projects",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/content-list.mockup.tsx",
+    "parent": "design/content-list",
+    "slug": "projects"
+  },
+  {
+    "oldId": "design-content-list-members",
+    "path": "design/content-list/members",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/content-list.mockup.tsx",
+    "parent": "design/content-list",
+    "slug": "members"
+  },
+  {
+    "oldId": "design-content-list-choices",
+    "path": "design/content-list/choices",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/content-list.mockup.tsx",
+    "parent": "design/content-list",
+    "slug": "choices"
+  },
+  {
+    "oldId": "design-header",
+    "path": "design/header",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/header.mockup.tsx"
+  },
+  {
+    "oldId": "design-header-full",
+    "path": "design/header/full",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/header.mockup.tsx",
+    "parent": "design/header",
+    "slug": "full"
+  },
+  {
+    "oldId": "design-header-compact",
+    "path": "design/header/compact",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/header.mockup.tsx",
+    "parent": "design/header",
+    "slug": "compact"
+  },
+  {
+    "oldId": "design-input",
+    "path": "design/input",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/input.mockup.tsx"
+  },
+  {
+    "oldId": "design-input-empty",
+    "path": "design/input/empty",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/input.mockup.tsx",
+    "parent": "design/input",
+    "slug": "empty"
+  },
+  {
+    "oldId": "design-input-filled",
+    "path": "design/input/filled",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/input.mockup.tsx",
+    "parent": "design/input",
+    "slug": "filled"
+  },
+  {
+    "oldId": "design-input-invalid",
+    "path": "design/input/invalid",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/input.mockup.tsx",
+    "parent": "design/input",
+    "slug": "invalid"
+  },
+  {
+    "oldId": "design-input-disabled",
+    "path": "design/input/disabled",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/input.mockup.tsx",
+    "parent": "design/input",
+    "slug": "disabled"
+  },
+  {
+    "oldId": "design-options-list",
+    "path": "design/options-list",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/options-list.mockup.tsx"
+  },
+  {
+    "oldId": "design-options-list-selected",
+    "path": "design/options-list/selected",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/options-list.mockup.tsx",
+    "parent": "design/options-list",
+    "slug": "selected"
+  },
+  {
+    "oldId": "design-options-list-empty",
+    "path": "design/options-list/empty",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/options-list.mockup.tsx",
+    "parent": "design/options-list",
+    "slug": "empty"
+  },
+  {
+    "oldId": "design-page-frame",
+    "path": "design/page-frame",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/page-frame.mockup.tsx"
+  },
+  {
+    "oldId": "design-page-frame-content",
+    "path": "design/page-frame/content",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/page-frame.mockup.tsx",
+    "parent": "design/page-frame",
+    "slug": "content"
+  },
+  {
+    "oldId": "design-page-frame-wide",
+    "path": "design/page-frame/wide",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/page-frame.mockup.tsx",
+    "parent": "design/page-frame",
+    "slug": "wide"
+  },
+  {
+    "oldId": "design-panel",
+    "path": "design/panel",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/panel.mockup.tsx"
+  },
+  {
+    "oldId": "design-panel-publications",
+    "path": "design/panel/publications",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/panel.mockup.tsx",
+    "parent": "design/panel",
+    "slug": "publications"
+  },
+  {
+    "oldId": "design-panel-share",
+    "path": "design/panel/share",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/panel.mockup.tsx",
+    "parent": "design/panel",
+    "slug": "share"
+  },
+  {
+    "oldId": "design-responsive-menu",
+    "path": "design/responsive-menu",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/responsive-menu.mockup.tsx"
+  },
+  {
+    "oldId": "design-responsive-menu-closed",
+    "path": "design/responsive-menu/closed",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/responsive-menu.mockup.tsx",
+    "parent": "design/responsive-menu",
+    "slug": "closed"
+  },
+  {
+    "oldId": "design-responsive-menu-open",
+    "path": "design/responsive-menu/open",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/responsive-menu.mockup.tsx",
+    "parent": "design/responsive-menu",
+    "slug": "open"
+  },
+  {
+    "oldId": "design-review-illustration",
+    "path": "design/review-illustration",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx"
+  },
+  {
+    "oldId": "design-review-illustration-fieldnotes",
+    "path": "design/review-illustration/fieldnotes",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx",
+    "parent": "design/review-illustration",
+    "slug": "fieldnotes"
+  },
+  {
+    "oldId": "design-review-illustration-review",
+    "path": "design/review-illustration/review",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx",
+    "parent": "design/review-illustration",
+    "slug": "review"
+  },
+  {
+    "oldId": "design-review-illustration-screens",
+    "path": "design/review-illustration/screens",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx",
+    "parent": "design/review-illustration",
+    "slug": "screens"
+  },
+  {
+    "oldId": "design-review-illustration-flow",
+    "path": "design/review-illustration/flow",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx",
+    "parent": "design/review-illustration",
+    "slug": "flow"
+  },
+  {
+    "oldId": "design-review-illustration-changes",
+    "path": "design/review-illustration/changes",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/review-illustration.mockup.tsx",
+    "parent": "design/review-illustration",
+    "slug": "changes"
+  },
+  {
+    "oldId": "design-segmented",
+    "path": "design/segmented",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/segmented.mockup.tsx"
+  },
+  {
+    "oldId": "design-segmented-branches",
+    "path": "design/segmented/branches",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/segmented.mockup.tsx",
+    "parent": "design/segmented",
+    "slug": "branches"
+  },
+  {
+    "oldId": "design-segmented-pull-requests",
+    "path": "design/segmented/pull-requests",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/segmented.mockup.tsx",
+    "parent": "design/segmented",
+    "slug": "pull-requests"
+  },
+  {
+    "oldId": "design-settings-dialog",
+    "path": "design/settings-dialog",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-dialog.mockup.tsx"
+  },
+  {
+    "oldId": "design-settings-dialog-pane",
+    "path": "design/settings-dialog/pane",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-dialog.mockup.tsx",
+    "parent": "design/settings-dialog",
+    "slug": "pane"
+  },
+  {
+    "oldId": "design-settings-dialog-confirmation",
+    "path": "design/settings-dialog/confirmation",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-dialog.mockup.tsx",
+    "parent": "design/settings-dialog",
+    "slug": "confirmation"
+  },
+  {
+    "oldId": "design-settings-layer",
+    "path": "design/settings-layer",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-layer.mockup.tsx"
+  },
+  {
+    "oldId": "design-settings-layer-pane",
+    "path": "design/settings-layer/pane",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-layer.mockup.tsx",
+    "parent": "design/settings-layer",
+    "slug": "pane"
+  },
+  {
+    "oldId": "design-settings-layer-sections",
+    "path": "design/settings-layer/sections",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/settings-layer.mockup.tsx",
+    "parent": "design/settings-layer",
+    "slug": "sections"
+  },
+  {
+    "oldId": "design-skeleton",
+    "path": "design/skeleton",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/skeleton.mockup.tsx"
+  },
+  {
+    "oldId": "design-skeleton-project",
+    "path": "design/skeleton/project",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/skeleton.mockup.tsx",
+    "parent": "design/skeleton",
+    "slug": "project"
+  },
+  {
+    "oldId": "design-status-dot",
+    "path": "design/status-dot",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/status-dot.mockup.tsx"
+  },
+  {
+    "oldId": "design-status-dot-neutral",
+    "path": "design/status-dot/neutral",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/status-dot.mockup.tsx",
+    "parent": "design/status-dot",
+    "slug": "neutral"
+  },
+  {
+    "oldId": "design-status-dot-success",
+    "path": "design/status-dot/success",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/status-dot.mockup.tsx",
+    "parent": "design/status-dot",
+    "slug": "success"
+  },
+  {
+    "oldId": "design-status-dot-warning",
+    "path": "design/status-dot/warning",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/status-dot.mockup.tsx",
+    "parent": "design/status-dot",
+    "slug": "warning"
+  },
+  {
+    "oldId": "design-status-dot-danger",
+    "path": "design/status-dot/danger",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/status-dot.mockup.tsx",
+    "parent": "design/status-dot",
+    "slug": "danger"
+  },
+  {
+    "oldId": "design-switch",
+    "path": "design/switch",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/switch.mockup.tsx"
+  },
+  {
+    "oldId": "design-switch-off",
+    "path": "design/switch/off",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/switch.mockup.tsx",
+    "parent": "design/switch",
+    "slug": "off"
+  },
+  {
+    "oldId": "design-switch-on",
+    "path": "design/switch/on",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/switch.mockup.tsx",
+    "parent": "design/switch",
+    "slug": "on"
+  },
+  {
+    "oldId": "design-table",
+    "path": "design/table",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/table.mockup.tsx"
+  },
+  {
+    "oldId": "design-table-readable",
+    "path": "design/table/readable",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/table.mockup.tsx",
+    "parent": "design/table",
+    "slug": "readable"
+  },
+  {
+    "oldId": "design-table-publications",
+    "path": "design/table/publications",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/table.mockup.tsx",
+    "parent": "design/table",
+    "slug": "publications"
+  },
+  {
+    "oldId": "design-table-members",
+    "path": "design/table/members",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/table.mockup.tsx",
+    "parent": "design/table",
+    "slug": "members"
+  },
+  {
+    "oldId": "design-textarea",
+    "path": "design/textarea",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/textarea.mockup.tsx"
+  },
+  {
+    "oldId": "design-textarea-empty",
+    "path": "design/textarea/empty",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/textarea.mockup.tsx",
+    "parent": "design/textarea",
+    "slug": "empty"
+  },
+  {
+    "oldId": "design-textarea-retry",
+    "path": "design/textarea/retry",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/textarea.mockup.tsx",
+    "parent": "design/textarea",
+    "slug": "retry"
+  },
+  {
+    "oldId": "design-write-failure",
+    "path": "design/write-failure",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/write-failure.mockup.tsx"
+  },
+  {
+    "oldId": "design-write-failure-save",
+    "path": "design/write-failure/save",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/write-failure.mockup.tsx",
+    "parent": "design/write-failure",
+    "slug": "save"
+  },
+  {
+    "oldId": "design-write-failure-confirmation",
+    "path": "design/write-failure/confirmation",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/write-failure.mockup.tsx",
+    "parent": "design/write-failure",
+    "slug": "confirmation"
+  },
+  {
+    "oldId": "design-write-failure-answered",
+    "path": "design/write-failure/answered",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/write-failure.mockup.tsx",
+    "parent": "design/write-failure",
+    "slug": "answered"
+  },
+  {
+    "oldId": "design-write-failure-unreferenced",
+    "path": "design/write-failure/unreferenced",
+    "kind": "component",
+    "module": "docs/mockups/src/entries/design/write-failure.mockup.tsx",
+    "parent": "design/write-failure",
+    "slug": "unreferenced"
+  },
+  {
+    "oldId": "account-callback",
+    "path": "product/account/callback",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-callback-email-invalid",
+    "path": "product/account/callback/email-invalid",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/email-invalid.mockup.tsx"
+  },
+  {
+    "oldId": "account-callback-email-expired",
+    "path": "product/account/callback/email-invalid/expired",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/email-invalid.mockup.tsx",
+    "parent": "product/account/callback/email-invalid",
+    "slug": "expired"
+  },
+  {
+    "oldId": "account-callback-email-used",
+    "path": "product/account/callback/email-invalid/used",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/email-invalid.mockup.tsx",
+    "parent": "product/account/callback/email-invalid",
+    "slug": "used"
+  },
+  {
+    "oldId": "account-callback-email-failure",
+    "path": "product/account/callback/email-invalid/failure",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/email-invalid.mockup.tsx",
+    "parent": "product/account/callback/email-invalid",
+    "slug": "failure"
+  },
+  {
+    "oldId": "account-callback-preview-invalid",
+    "path": "product/account/callback/preview-invalid",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/preview-invalid.mockup.tsx"
+  },
+  {
+    "oldId": "account-callback-preview-failure",
+    "path": "product/account/callback/preview-invalid/failure",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/callback/preview-invalid.mockup.tsx",
+    "parent": "product/account/callback/preview-invalid",
+    "slug": "failure"
+  },
+  {
+    "oldId": "account-choose-repository",
+    "path": "product/account/choose-repository",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-choose-repository-empty",
+    "path": "product/account/choose-repository/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/index.mockup.tsx",
+    "parent": "product/account/choose-repository",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-choose-repository-loading",
+    "path": "product/account/choose-repository/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/index.mockup.tsx",
+    "parent": "product/account/choose-repository",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-choose-repository-error",
+    "path": "product/account/choose-repository/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/index.mockup.tsx",
+    "parent": "product/account/choose-repository",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-choose-repository-suggestion-loading",
+    "path": "product/account/choose-repository/suggestion-loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/index.mockup.tsx",
+    "parent": "product/account/choose-repository",
+    "slug": "suggestion-loading"
+  },
+  {
+    "oldId": "account-choose-repository-slug-taken",
+    "path": "product/account/choose-repository/slug-taken",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/slug-taken.mockup.tsx"
+  },
+  {
+    "oldId": "account-choose-repository-slug-taken-empty",
+    "path": "product/account/choose-repository/slug-taken/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/choose-repository/slug-taken.mockup.tsx",
+    "parent": "product/account/choose-repository/slug-taken",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-create-organization",
+    "path": "product/account/create-workspace",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-create-organization-empty",
+    "path": "product/account/create-workspace/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/index.mockup.tsx",
+    "parent": "product/account/create-workspace",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-create-organization-loading",
+    "path": "product/account/create-workspace/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/index.mockup.tsx",
+    "parent": "product/account/create-workspace",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-create-organization-error",
+    "path": "product/account/create-workspace/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/index.mockup.tsx",
+    "parent": "product/account/create-workspace",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-create-organization-suggestion-loading",
+    "path": "product/account/create-workspace/suggestion-loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/index.mockup.tsx",
+    "parent": "product/account/create-workspace",
+    "slug": "suggestion-loading"
+  },
+  {
+    "oldId": "account-create-organization-slug",
+    "path": "product/account/create-workspace/slug",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/slug.mockup.tsx"
+  },
+  {
+    "oldId": "account-create-organization-slug-empty",
+    "path": "product/account/create-workspace/slug/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/slug.mockup.tsx",
+    "parent": "product/account/create-workspace/slug",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-create-organization-slug-error",
+    "path": "product/account/create-workspace/slug/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/create-workspace/slug.mockup.tsx",
+    "parent": "product/account/create-workspace/slug",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-install-app",
+    "path": "product/account/install-app",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/install-app/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-install-app-empty",
+    "path": "product/account/install-app/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/install-app/index.mockup.tsx",
+    "parent": "product/account/install-app",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-install-app-loading",
+    "path": "product/account/install-app/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/install-app/index.mockup.tsx",
+    "parent": "product/account/install-app",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-install-app-error",
+    "path": "product/account/install-app/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/install-app/index.mockup.tsx",
+    "parent": "product/account/install-app",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-magic-link",
+    "path": "product/account/magic-link",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/magic-link.mockup.tsx"
+  },
+  {
+    "oldId": "account-magic-link-empty",
+    "path": "product/account/magic-link/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/magic-link.mockup.tsx",
+    "parent": "product/account/magic-link",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-magic-link-loading",
+    "path": "product/account/magic-link/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/magic-link.mockup.tsx",
+    "parent": "product/account/magic-link",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-magic-link-error",
+    "path": "product/account/magic-link/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/magic-link.mockup.tsx",
+    "parent": "product/account/magic-link",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-project-created",
+    "path": "product/account/project-created",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/project-created.mockup.tsx"
+  },
+  {
+    "oldId": "account-project-created-empty",
+    "path": "product/account/project-created/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/project-created.mockup.tsx",
+    "parent": "product/account/project-created",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-project-created-loading",
+    "path": "product/account/project-created/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/project-created.mockup.tsx",
+    "parent": "product/account/project-created",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-project-created-error",
+    "path": "product/account/project-created/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/project-created.mockup.tsx",
+    "parent": "product/account/project-created",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-sign-in",
+    "path": "product/account/sign-in",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-in-empty",
+    "path": "product/account/sign-in/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/index.mockup.tsx",
+    "parent": "product/account/sign-in",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-sign-in-loading",
+    "path": "product/account/sign-in/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/index.mockup.tsx",
+    "parent": "product/account/sign-in",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-sign-in-error",
+    "path": "product/account/sign-in/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/index.mockup.tsx",
+    "parent": "product/account/sign-in",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-sign-in-address-refused",
+    "path": "product/account/sign-in/address-refused",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/address-refused.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-in-github-opens-soon",
+    "path": "product/account/sign-in/github-opens-soon",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/github-opens-soon.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-in-github-refused",
+    "path": "product/account/sign-in/github-refused",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-in/github-refused.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-up",
+    "path": "product/account/sign-up",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/index.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-up-empty",
+    "path": "product/account/sign-up/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/index.mockup.tsx",
+    "parent": "product/account/sign-up",
+    "slug": "empty"
+  },
+  {
+    "oldId": "account-sign-up-loading",
+    "path": "product/account/sign-up/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/index.mockup.tsx",
+    "parent": "product/account/sign-up",
+    "slug": "loading"
+  },
+  {
+    "oldId": "account-sign-up-error",
+    "path": "product/account/sign-up/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/index.mockup.tsx",
+    "parent": "product/account/sign-up",
+    "slug": "error"
+  },
+  {
+    "oldId": "account-sign-up-address-refused",
+    "path": "product/account/sign-up/address-refused",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/address-refused.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-up-github-opens-soon",
+    "path": "product/account/sign-up/github-opens-soon",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/github-opens-soon.mockup.tsx"
+  },
+  {
+    "oldId": "account-sign-up-github-refused",
+    "path": "product/account/sign-up/github-refused",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/account/sign-up/github-refused.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-changelog",
+    "path": "design/site/changelog",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/changelog.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-complaints",
+    "path": "design/site/complaints",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/complaints.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-docs",
+    "path": "design/site/docs",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/docs.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-home",
+    "path": "design/site/home",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/home.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-privacy",
+    "path": "design/site/privacy",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/privacy.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-security",
+    "path": "design/site/security",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/security.mockup.tsx"
+  },
+  {
+    "oldId": "design-site-terms",
+    "path": "design/site/terms",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/site/terms.mockup.tsx"
+  },
+  {
+    "oldId": "design-tokens",
+    "path": "design/tokens",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/design/tokens.mockup.tsx"
+  },
+  {
+    "oldId": "recovery-not-found",
+    "path": "product/recovery/not-found",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/recovery/not-found.mockup.tsx"
+  },
+  {
+    "oldId": "recovery-not-found-empty",
+    "path": "product/recovery/not-found/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/recovery/not-found.mockup.tsx",
+    "parent": "product/recovery/not-found",
+    "slug": "empty"
+  },
+  {
+    "oldId": "recovery-not-found-loading",
+    "path": "product/recovery/not-found/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/recovery/not-found.mockup.tsx",
+    "parent": "product/recovery/not-found",
+    "slug": "loading"
+  },
+  {
+    "oldId": "recovery-not-found-error",
+    "path": "product/recovery/not-found/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/recovery/not-found.mockup.tsx",
+    "parent": "product/recovery/not-found",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-access",
+    "path": "product/settings/access",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/access.mockup.tsx"
+  },
+  {
+    "oldId": "settings-access-empty",
+    "path": "product/settings/access/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/access.mockup.tsx",
+    "parent": "product/settings/access",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-access-loading",
+    "path": "product/settings/access/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/access.mockup.tsx",
+    "parent": "product/settings/access",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-access-error",
+    "path": "product/settings/access/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/access.mockup.tsx",
+    "parent": "product/settings/access",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-account",
+    "path": "product/settings/account",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/account/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-account-empty",
+    "path": "product/settings/account/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/account/index.mockup.tsx",
+    "parent": "product/settings/account",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-account-loading",
+    "path": "product/settings/account/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/account/index.mockup.tsx",
+    "parent": "product/settings/account",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-account-error",
+    "path": "product/settings/account/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/account/index.mockup.tsx",
+    "parent": "product/settings/account",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-billing",
+    "path": "product/settings/billing",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-empty",
+    "path": "product/settings/billing/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/index.mockup.tsx",
+    "parent": "product/settings/billing",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-billing-loading",
+    "path": "product/settings/billing/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/index.mockup.tsx",
+    "parent": "product/settings/billing",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-billing-error",
+    "path": "product/settings/billing/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/index.mockup.tsx",
+    "parent": "product/settings/billing",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-billing-admin",
+    "path": "product/settings/billing/admin",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/admin.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-admin-free",
+    "path": "product/settings/billing/admin-free",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/admin-free.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-confirming",
+    "path": "product/settings/billing/confirming",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/confirming.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-delayed",
+    "path": "product/settings/billing/delayed",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/delayed.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-ending",
+    "path": "product/settings/billing/ending",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/ending.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-past-due",
+    "path": "product/settings/billing/past-due",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/past-due.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-trial",
+    "path": "product/settings/billing/trial",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/trial.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-unavailable",
+    "path": "product/settings/billing/unavailable",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/unavailable.mockup.tsx"
+  },
+  {
+    "oldId": "settings-billing-unpriced",
+    "path": "product/settings/billing/unpriced",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/billing/unpriced.mockup.tsx"
+  },
+  {
+    "oldId": "settings-danger",
+    "path": "product/settings/danger",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/danger.mockup.tsx"
+  },
+  {
+    "oldId": "settings-danger-empty",
+    "path": "product/settings/danger/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/danger.mockup.tsx",
+    "parent": "product/settings/danger",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-danger-loading",
+    "path": "product/settings/danger/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/danger.mockup.tsx",
+    "parent": "product/settings/danger",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-danger-error",
+    "path": "product/settings/danger/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/danger.mockup.tsx",
+    "parent": "product/settings/danger",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-members",
+    "path": "product/settings/members",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-members-empty",
+    "path": "product/settings/members/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/index.mockup.tsx",
+    "parent": "product/settings/members",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-members-loading",
+    "path": "product/settings/members/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/index.mockup.tsx",
+    "parent": "product/settings/members",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-members-error",
+    "path": "product/settings/members/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/index.mockup.tsx",
+    "parent": "product/settings/members",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-members-identity",
+    "path": "product/settings/members/identity",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/index.mockup.tsx",
+    "parent": "product/settings/members",
+    "slug": "identity"
+  },
+  {
+    "oldId": "settings-members-remove",
+    "path": "product/settings/members/remove",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/remove.mockup.tsx"
+  },
+  {
+    "oldId": "settings-members-remove-loading",
+    "path": "product/settings/members/remove/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/members/remove.mockup.tsx",
+    "parent": "product/settings/members/remove",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-organization",
+    "path": "product/settings/workspace",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-empty",
+    "path": "product/settings/workspace/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/index.mockup.tsx",
+    "parent": "product/settings/workspace",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-organization-loading",
+    "path": "product/settings/workspace/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/index.mockup.tsx",
+    "parent": "product/settings/workspace",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-organization-error",
+    "path": "product/settings/workspace/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/index.mockup.tsx",
+    "parent": "product/settings/workspace",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-organization-absent",
+    "path": "product/settings/workspace/absent",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/absent.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-plan",
+    "path": "product/settings/workspace/plan",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/plan.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-plan-member",
+    "path": "product/settings/workspace/plan-member",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/plan-member.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-slug",
+    "path": "product/settings/workspace/slug",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-slug-empty",
+    "path": "product/settings/workspace/slug/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug.mockup.tsx",
+    "parent": "product/settings/workspace/slug",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-organization-slug-loading",
+    "path": "product/settings/workspace/slug/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug.mockup.tsx",
+    "parent": "product/settings/workspace/slug",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-organization-slug-error",
+    "path": "product/settings/workspace/slug/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug.mockup.tsx",
+    "parent": "product/settings/workspace/slug",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-organization-slug-recovery",
+    "path": "product/settings/workspace/slug-recovery",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug-recovery.mockup.tsx"
+  },
+  {
+    "oldId": "settings-organization-slug-recovery-error",
+    "path": "product/settings/workspace/slug-recovery/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/slug-recovery.mockup.tsx",
+    "parent": "product/settings/workspace/slug-recovery",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-organization-suspended",
+    "path": "product/settings/workspace/suspended",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/workspace/suspended.mockup.tsx"
+  },
+  {
+    "oldId": "settings-project",
+    "path": "product/settings/project",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-project-empty",
+    "path": "product/settings/project/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/index.mockup.tsx",
+    "parent": "product/settings/project",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-project-loading",
+    "path": "product/settings/project/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/index.mockup.tsx",
+    "parent": "product/settings/project",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-project-error",
+    "path": "product/settings/project/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/index.mockup.tsx",
+    "parent": "product/settings/project",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-project-no-builds",
+    "path": "product/settings/project/no-builds",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/index.mockup.tsx",
+    "parent": "product/settings/project",
+    "slug": "no-builds"
+  },
+  {
+    "oldId": "settings-project-slug",
+    "path": "product/settings/project/slug",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/slug.mockup.tsx"
+  },
+  {
+    "oldId": "settings-project-slug-empty",
+    "path": "product/settings/project/slug/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/slug.mockup.tsx",
+    "parent": "product/settings/project/slug",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-project-slug-loading",
+    "path": "product/settings/project/slug/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/slug.mockup.tsx",
+    "parent": "product/settings/project/slug",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-project-slug-error",
+    "path": "product/settings/project/slug/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/slug.mockup.tsx",
+    "parent": "product/settings/project/slug",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-project-slug-conflict",
+    "path": "product/settings/project/slug/conflict",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/slug.mockup.tsx",
+    "parent": "product/settings/project/slug",
+    "slug": "conflict"
+  },
+  {
+    "oldId": "settings-project-visibility",
+    "path": "product/settings/project/visibility",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/visibility.mockup.tsx"
+  },
+  {
+    "oldId": "settings-project-plan",
+    "path": "product/settings/project/visibility/plan",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/visibility.mockup.tsx",
+    "parent": "product/settings/project/visibility",
+    "slug": "plan"
+  },
+  {
+    "oldId": "settings-project-plan-admin",
+    "path": "product/settings/project/visibility/plan-admin",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/project/visibility.mockup.tsx",
+    "parent": "product/settings/project/visibility",
+    "slug": "plan-admin"
+  },
+  {
+    "oldId": "settings-sections",
+    "path": "product/settings/sections",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/sections.mockup.tsx"
+  },
+  {
+    "oldId": "settings-sections-empty",
+    "path": "product/settings/sections/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/sections.mockup.tsx",
+    "parent": "product/settings/sections",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-sections-loading",
+    "path": "product/settings/sections/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/sections.mockup.tsx",
+    "parent": "product/settings/sections",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-sections-error",
+    "path": "product/settings/sections/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/sections.mockup.tsx",
+    "parent": "product/settings/sections",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-tokens",
+    "path": "product/settings/tokens",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/index.mockup.tsx"
+  },
+  {
+    "oldId": "settings-tokens-empty",
+    "path": "product/settings/tokens/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/index.mockup.tsx",
+    "parent": "product/settings/tokens",
+    "slug": "empty"
+  },
+  {
+    "oldId": "settings-tokens-loading",
+    "path": "product/settings/tokens/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/index.mockup.tsx",
+    "parent": "product/settings/tokens",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-tokens-error",
+    "path": "product/settings/tokens/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/index.mockup.tsx",
+    "parent": "product/settings/tokens",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-tokens-create",
+    "path": "product/settings/tokens/create",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/create.mockup.tsx"
+  },
+  {
+    "oldId": "settings-tokens-create-loading",
+    "path": "product/settings/tokens/create/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/create.mockup.tsx",
+    "parent": "product/settings/tokens/create",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-tokens-create-error",
+    "path": "product/settings/tokens/create/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/create.mockup.tsx",
+    "parent": "product/settings/tokens/create",
+    "slug": "error"
+  },
+  {
+    "oldId": "settings-tokens-reveal",
+    "path": "product/settings/tokens/create/reveal",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/create.mockup.tsx",
+    "parent": "product/settings/tokens/create",
+    "slug": "reveal"
+  },
+  {
+    "oldId": "settings-tokens-copy",
+    "path": "product/settings/tokens/create/copy",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/create.mockup.tsx",
+    "parent": "product/settings/tokens/create",
+    "slug": "copy"
+  },
+  {
+    "oldId": "settings-tokens-revoke",
+    "path": "product/settings/tokens/revoke",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/revoke.mockup.tsx"
+  },
+  {
+    "oldId": "settings-tokens-revoke-loading",
+    "path": "product/settings/tokens/revoke/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/revoke.mockup.tsx",
+    "parent": "product/settings/tokens/revoke",
+    "slug": "loading"
+  },
+  {
+    "oldId": "settings-tokens-menu",
+    "path": "product/settings/tokens/revoke/menu",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/settings/tokens/revoke.mockup.tsx",
+    "parent": "product/settings/tokens/revoke",
+    "slug": "menu"
+  },
+  {
+    "oldId": "viewer-history",
+    "path": "product/viewer/history",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/history.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-history-empty",
+    "path": "product/viewer/history/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/history.mockup.tsx",
+    "parent": "product/viewer/history",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-history-loading",
+    "path": "product/viewer/history/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/history.mockup.tsx",
+    "parent": "product/viewer/history",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-history-error",
+    "path": "product/viewer/history/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/history.mockup.tsx",
+    "parent": "product/viewer/history",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-projects",
+    "path": "product/viewer/projects",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/projects.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-projects-empty",
+    "path": "product/viewer/projects/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/projects.mockup.tsx",
+    "parent": "product/viewer/projects",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-projects-loading",
+    "path": "product/viewer/projects/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/projects.mockup.tsx",
+    "parent": "product/viewer/projects",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-projects-error",
+    "path": "product/viewer/projects/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/projects.mockup.tsx",
+    "parent": "product/viewer/projects",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-pull-request",
+    "path": "product/viewer/pull-request",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/pull-request/index.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-pull-request-empty",
+    "path": "product/viewer/pull-request/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/pull-request/index.mockup.tsx",
+    "parent": "product/viewer/pull-request",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-pull-request-loading",
+    "path": "product/viewer/pull-request/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/pull-request/index.mockup.tsx",
+    "parent": "product/viewer/pull-request",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-pull-request-error",
+    "path": "product/viewer/pull-request/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/pull-request/index.mockup.tsx",
+    "parent": "product/viewer/pull-request",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-pull-request-publishing",
+    "path": "product/viewer/pull-request/publishing",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/pull-request/index.mockup.tsx",
+    "parent": "product/viewer/pull-request",
+    "slug": "publishing"
+  },
+  {
+    "oldId": "viewer-share",
+    "path": "product/viewer/share",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/share.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-share-empty",
+    "path": "product/viewer/share/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/share.mockup.tsx",
+    "parent": "product/viewer/share",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-share-loading",
+    "path": "product/viewer/share/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/share.mockup.tsx",
+    "parent": "product/viewer/share",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-share-error",
+    "path": "product/viewer/share/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/share.mockup.tsx",
+    "parent": "product/viewer/share",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-share-catalogue",
+    "path": "product/viewer/share/catalogue",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/share.mockup.tsx",
+    "parent": "product/viewer/share",
+    "slug": "catalogue"
+  },
+  {
+    "oldId": "viewer-standalone",
+    "path": "product/viewer/standalone",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/index.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-empty",
+    "path": "product/viewer/standalone/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/index.mockup.tsx",
+    "parent": "product/viewer/standalone",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-standalone-loading",
+    "path": "product/viewer/standalone/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/index.mockup.tsx",
+    "parent": "product/viewer/standalone",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-standalone-error",
+    "path": "product/viewer/standalone/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/index.mockup.tsx",
+    "parent": "product/viewer/standalone",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-standalone-account",
+    "path": "product/viewer/standalone/account",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/account.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-build",
+    "path": "product/viewer/standalone/build",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/index.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-build-empty",
+    "path": "product/viewer/standalone/build/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/index.mockup.tsx",
+    "parent": "product/viewer/standalone/build",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-standalone-build-loading",
+    "path": "product/viewer/standalone/build/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/index.mockup.tsx",
+    "parent": "product/viewer/standalone/build",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-standalone-build-error",
+    "path": "product/viewer/standalone/build/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/index.mockup.tsx",
+    "parent": "product/viewer/standalone/build",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-standalone-build-published",
+    "path": "product/viewer/standalone/build/published",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/index.mockup.tsx",
+    "parent": "product/viewer/standalone/build",
+    "slug": "published"
+  },
+  {
+    "oldId": "viewer-standalone-build-failed",
+    "path": "product/viewer/standalone/build/failed",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/failed.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-build-timed-out",
+    "path": "product/viewer/standalone/build/failed/timed-out",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/failed.mockup.tsx",
+    "parent": "product/viewer/standalone/build/failed",
+    "slug": "timed-out"
+  },
+  {
+    "oldId": "viewer-standalone-build-infrastructure",
+    "path": "product/viewer/standalone/build/failed/infrastructure",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/failed.mockup.tsx",
+    "parent": "product/viewer/standalone/build/failed",
+    "slug": "infrastructure"
+  },
+  {
+    "oldId": "viewer-standalone-build-plan",
+    "path": "product/viewer/standalone/build/failed/plan",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/failed.mockup.tsx",
+    "parent": "product/viewer/standalone/build/failed",
+    "slug": "plan"
+  },
+  {
+    "oldId": "viewer-standalone-build-version",
+    "path": "product/viewer/standalone/build/failed/version",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/failed.mockup.tsx",
+    "parent": "product/viewer/standalone/build/failed",
+    "slug": "version"
+  },
+  {
+    "oldId": "viewer-standalone-build-superseded",
+    "path": "product/viewer/standalone/build/superseded",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/superseded.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-build-cancelled",
+    "path": "product/viewer/standalone/build/superseded/cancelled",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/superseded.mockup.tsx",
+    "parent": "product/viewer/standalone/build/superseded",
+    "slug": "cancelled"
+  },
+  {
+    "oldId": "viewer-standalone-build-unreadable",
+    "path": "product/viewer/standalone/build/unreadable",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/build/unreadable.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-catalogue",
+    "path": "product/viewer/standalone/catalogue",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/catalogue.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-catalogue-loading",
+    "path": "product/viewer/standalone/catalogue/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/catalogue.mockup.tsx",
+    "parent": "product/viewer/standalone/catalogue",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-standalone-catalogue-error",
+    "path": "product/viewer/standalone/catalogue/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/catalogue.mockup.tsx",
+    "parent": "product/viewer/standalone/catalogue",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-standalone-comparison",
+    "path": "product/viewer/standalone/catalogue/comparison",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/catalogue.mockup.tsx",
+    "parent": "product/viewer/standalone/catalogue",
+    "slug": "comparison"
+  },
+  {
+    "oldId": "viewer-standalone-failed",
+    "path": "product/viewer/standalone/failed",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/failed.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-latest",
+    "path": "product/viewer/standalone/latest",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/latest.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-organization-unreadable",
+    "path": "product/viewer/standalone/workspace-unreadable",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/workspace-unreadable.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-plan",
+    "path": "product/viewer/standalone/plan",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/plan.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-plan-reader",
+    "path": "product/viewer/standalone/plan-reader",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/plan-reader.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-publish",
+    "path": "product/viewer/standalone/publish",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/publish.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-publish-pull-request",
+    "path": "product/viewer/standalone/publish/pull-request",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/publish.mockup.tsx",
+    "parent": "product/viewer/standalone/publish",
+    "slug": "pull-request"
+  },
+  {
+    "oldId": "viewer-standalone-publish-reader",
+    "path": "product/viewer/standalone/publish/reader",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/publish.mockup.tsx",
+    "parent": "product/viewer/standalone/publish",
+    "slug": "reader"
+  },
+  {
+    "oldId": "viewer-standalone-publishing",
+    "path": "product/viewer/standalone/publish/publishing",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/publish.mockup.tsx",
+    "parent": "product/viewer/standalone/publish",
+    "slug": "publishing"
+  },
+  {
+    "oldId": "viewer-standalone-reader",
+    "path": "product/viewer/standalone/reader",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/reader.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-standalone-unreadable",
+    "path": "product/viewer/standalone/unreadable",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/standalone/unreadable.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-switcher",
+    "path": "product/viewer/switcher",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/switcher.mockup.tsx"
+  },
+  {
+    "oldId": "viewer-switcher-empty",
+    "path": "product/viewer/switcher/empty",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/switcher.mockup.tsx",
+    "parent": "product/viewer/switcher",
+    "slug": "empty"
+  },
+  {
+    "oldId": "viewer-switcher-loading",
+    "path": "product/viewer/switcher/loading",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/switcher.mockup.tsx",
+    "parent": "product/viewer/switcher",
+    "slug": "loading"
+  },
+  {
+    "oldId": "viewer-switcher-error",
+    "path": "product/viewer/switcher/error",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/switcher.mockup.tsx",
+    "parent": "product/viewer/switcher",
+    "slug": "error"
+  },
+  {
+    "oldId": "viewer-switcher-no-branches",
+    "path": "product/viewer/switcher/no-branches",
+    "kind": "screen",
+    "module": "docs/mockups/src/entries/product/viewer/switcher.mockup.tsx",
+    "parent": "product/viewer/switcher",
+    "slug": "no-branches"
+  },
+  {
+    "oldId": "design-site-tour",
+    "path": "design/site/tour",
+    "kind": "use-case",
+    "module": "docs/mockups/src/entries/design/site/tour.mockup.tsx"
+  },
+  {
+    "oldId": "flow-product-browse",
+    "path": "flows/product-browse",
+    "kind": "use-case",
+    "module": "docs/mockups/src/entries/flows/product-browse.mockup.tsx"
+  },
+  {
+    "oldId": "flow-product-onboarding",
+    "path": "flows/product-onboarding",
+    "kind": "use-case",
+    "module": "docs/mockups/src/entries/flows/product-onboarding.mockup.tsx"
+  }
+]

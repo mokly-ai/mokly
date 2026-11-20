@@ -1,0 +1,31 @@
+[package]
+name = "mkc-store-pg"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mkc-domain.workspace = true
+mkc-store-interface.workspace = true
+mkc-db.workspace = true
+internal-error.workspace = true
+diesel = { version = "2.3.13", features = ["postgres", "chrono", "uuid", "r2d2"] }
+chrono = "0.4.45"
+uuid = "1.26.1"
+getrandom = "0.4.3"
+unimock = "0.6.8"
+thiserror = "2.0.20"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-test-pg = { workspace = true }
+uuid = { version = "1.26.1", features = ["v7"] }
+
+[[test]]
+name = "maintenance"
+path = "tests/maintenance/mod.rs"

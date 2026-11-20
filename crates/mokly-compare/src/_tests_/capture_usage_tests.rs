@@ -7,7 +7,6 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_proof::{ComparisonRead, ProofMode, content_identity};
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_error::{CodecError, CodecInternalError};
 use mokly_graph::error::GraphError;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
@@ -44,10 +43,7 @@ fn untrusted_document_proof_preserves_restore_fallback_and_its_source_failure() 
         source,
         views: BTreeMap::from([(
             "base/index.html".into(),
-            CapturedView {
-                document: EncodedView::encode(&artifact).unwrap(),
-                closure: Closure::default(),
-            },
+            CapturedView::encode(&artifact, Closure::default()).unwrap(),
         )]),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),

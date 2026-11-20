@@ -1,0 +1,14 @@
+{
+  "status": 500,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_unavailable_fixture"
+  },
+  "body": {
+    "error": {
+      "type": "api_error",
+      "code": "internal_failure",
+      "message": "Temporary fixture outage"
+    }
+  }
+}

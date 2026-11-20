@@ -28,10 +28,16 @@ write permission, without a checkout or dependency builds. Reruns accept the
 same commit and never update a tag. Manual retries only verify existing tags.
 
 `release.yml` calls `release-prepare.yml` at the caller's workflow revision.
-The reusable workflow receives only tag, verification, and artifact inputs.
+The reusable workflow receives only tag and artifact inputs.
 It has read-only permissions and no inherited secrets. It runs live audits,
 verification, packing, and clean-consumer smokes. It returns the checked artifact
 run and name, plus the exact Node version selected during preparation.
+
+Preparation runs the evidence selector from the checked-out tag. It supplies
+the fixed `RELEASE_VERIFICATION=evidence` value for older tag scripts and checks
+that their saved record has outcome `applicable`. An absent record stops with
+instructions to re-run CI on the release commit and retry after CI passes.
+Preparation never runs `cargo xtask check` on the release runner.
 
 The publish job waits for that result. It downloads the selected archive set,
 uses `npm ci --ignore-scripts`, and runs `pack.mjs --reuse` to inspect the bytes.

@@ -19,6 +19,12 @@ pub enum CodecError {
 /// Internal failures retain the original error type.
 #[derive(Debug, Error)]
 pub enum CodecInternalError {
+    /// Retained metadata could not be serialized for its comparison identity.
+    #[error("document metadata serialization failed: {source}")]
+    Metadata {
+        /// Original metadata serialization failure.
+        source: serde_json::Error,
+    },
     /// The flat tree records could not be serialized or decoded.
     #[error("document serialization failed: {source}")]
     Binary {
@@ -59,6 +65,15 @@ impl<T> CodecResult<T> for io::Result<T> {
         match self {
             Ok(value) => Ok(value),
             Err(source) => Err(CodecInternalError::Io { source }.into()),
+        }
+    }
+}
+
+impl<T> CodecResult<T> for serde_json::Result<T> {
+    fn codec(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(CodecInternalError::Metadata { source }.into()),
         }
     }
 }

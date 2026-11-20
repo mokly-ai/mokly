@@ -12,7 +12,7 @@ export function planCapture(root: string): CaptureDurability {
     if (path.dirname(parent) === parent) break;
   }
   const now = BigInt(Date.now() + 10_000) * 1_000_000n;
-  const durability = new CaptureDurability(
+  const capture = new CaptureDurability(
     { volumes: [] },
     {
       ...captureRuntime,
@@ -23,8 +23,9 @@ export function planCapture(root: string): CaptureDurability {
       stat: (file) => ancestors.get(file) ?? captureRuntime.stat(file),
     },
   );
-  const observe = durability.observe.bind(durability);
-  durability.observe = (file, stat, follow, metadata = false) =>
+  // Physical input reads bypass the capture runtime when they supply stamps.
+  const observe = capture.observe.bind(capture);
+  capture.observe = (file, stat, follow, metadata) =>
     observe(file, ancestors.get(file) ?? stat, follow, metadata);
-  return durability;
+  return capture;
 }

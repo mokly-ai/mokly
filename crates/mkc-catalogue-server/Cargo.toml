@@ -1,0 +1,62 @@
+[package]
+name = "mkc-catalogue-server"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+# Opt-in release-mode timing proof; no gate suite enables it.
+compression-benchmark = []
+
+[dependencies]
+mkc-domain = { workspace = true }
+mkc-store-interface = { workspace = true }
+mkc-store-pg = { workspace = true }
+mkc-file-store-interface = { workspace = true }
+mkc-file-store-local = { workspace = true }
+mkc-file-store-gcs = { workspace = true }
+mkc-publications = { workspace = true }
+mkc-auth = { workspace = true }
+mkc-config = { workspace = true }
+mkc-db = { workspace = true }
+internal-error = { workspace = true }
+rpc-error = { workspace = true }
+axum = "0.8.9"
+percent-encoding = "2.3.2"
+thiserror = "2.0.20"
+unimock = "0.6.8"
+serde_json = "1.0.151"
+url = "2.5.8"
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }
+tower-http = { version = "0.7.1", features = ["cors", "request-id", "set-header"] }
+clap = { version = "4.6.7", features = ["derive"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+chrono = "0.4.45"
+uuid = { version = "1.26.1", features = ["v7"] }
+bytes = "1.12.1"
+lru = "0.18.5"
+async-trait = "0.1.92"
+futures-util = "0.3.34"
+tokio-util = { version = "0.7.19", features = ["io"] }
+async-compression = { version = "0.4.48", features = ["tokio", "gzip", "brotli"] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-github-interface = { workspace = true }
+mkc-api = { workspace = true }
+mkc-mokly-contract = { workspace = true }
+mkc-upload-memory = { workspace = true }
+diesel = { version = "2.3.13", features = ["postgres"] }
+tower = { version = "0.5.3", features = ["util"] }
+tokio = { version = "1.53.1", features = ["test-util"] }
+tokio-stream = "0.1.19"
+brotli = "9.0.0"
+flate2 = "1.1.10"
+http-body-util = "0.1.5"

@@ -1,0 +1,25 @@
+---
+title: "Target component"
+description: "After move."
+element: "fixture-variant-target"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties":
+      { "label": { "type": "string" }, "ready": { "type": "boolean" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    {
+      "slug": "saved",
+      "title": "Moved variant",
+      "movedFrom": "variant-source/saved",
+      "props": { "label": "Move me" },
+    },
+  ]
+---
+
+<p data-ready="{{ ready }}">{{ label }}</p>

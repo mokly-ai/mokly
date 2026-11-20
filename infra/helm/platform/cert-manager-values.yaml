@@ -1,0 +1,27 @@
+crds:
+  enabled: true
+global:
+  leaderElection:
+    namespace: mkc-preview-system
+extraArgs:
+  - --cluster-resource-namespace=mkc-preview-system
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+webhook:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+cainjector:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi

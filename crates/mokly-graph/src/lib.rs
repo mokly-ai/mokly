@@ -17,6 +17,8 @@ mod dependency_inputs;
 mod document_annotations;
 pub mod document_codec;
 pub mod document_error;
+mod document_identity;
+mod document_metadata;
 mod document_nodes;
 mod document_records;
 mod document_usage;

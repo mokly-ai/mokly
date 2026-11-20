@@ -2,7 +2,7 @@
 
 The generator makes HTML and React catalogues with the same entry paths,
 viewports, colour schemes, component variants, slots, pages, flows,
-Markdown documents, CSS imports, and images. React uses Firna and React Native Web.
+Markdown documents, CSS imports, and images. React uses Firna.
 HTML starts no sidecar. Defaults produce 1,620 routes and 5,850 documents.
 Component parents have their own views as well as three saved variants.
 

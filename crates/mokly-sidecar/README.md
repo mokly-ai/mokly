@@ -84,12 +84,18 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-Ties and calls without a generation keep queue order. A call can use another
-available slot while the worker that holds its generation is busy. The launch
-root is the head root.
+A head bundle prefers the idle head worker that compiled last, then older
+compilers, under the
+[head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity).
+A successful head bundle counts as a compile unless its `cache` field is
+`memory` or `hit`. A new process starts without a compile. Ties and other
+calls without a generation keep queue order. A call can use another available
+slot while the worker that holds its generation is busy. The launch root is
+the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
-after a successful render. The pool bound covers all roots.
+after a successful render request. A warm-up replay does not move it. The pool
+bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
 event. PostCSS context affinity prevents duplicate workers. A busy affine
 request does not block independent work on another available slot. Returning
@@ -113,6 +119,21 @@ other slots keep serving requests and switch roots on demand. A call affine to
 a retired PostCSS slot fails as unavailable at once. When no usable slot
 remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
+owns these rules.
+
+The pool keeps the last 30 successful render requests of the newest head
+generation, and no replay. After the return pass starts a head worker, the next steps warm
+it up while no request waits and Serve holds no claim. A warm-up sends the
+missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
+then replays the recorded renders, one call at a time, and discards each
+result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
+console and output writes of the code that the call runs, and its timing
+records still appear. `Request::quiet` has no default, so each request builder
+chooses it. A request takes the worker after the call in flight, and the warm-up
+continues later. A newer head generation, a stop, a failed call, or another
+loaded head generation ends it. A failed call keeps or replaces the worker as
+a failed request does. The
+[return warm-up contract](../../docs/protocol/mokly-sidecar-return-warmup.md)
 owns these rules.
 
 After the final release of a generation with captured reuse evidence, the
@@ -341,12 +362,22 @@ Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
-inputs, and preserve binding updates across workers. Generation affinity tests
+inputs, and preserve binding updates across workers. Head bundle affinity
+tests check that a head bundle takes the newest idle compiler, or the next
+newest while that one is busy. Base bundles keep FIFO order. Memory reuse
+neither creates nor raises a compile rank, and a disk hit creates none. After
+a recycle, a root switch, or a reap, the new process has no rank. A retired
+compiler leaves the surviving compiler preferred. Generation affinity tests
 check that a worker with every input that a call needs comes before other
 holders and non-holders, with FIFO ties. Stale epochs and missing records
-never win the rank. Calls without a generation keep FIFO order, and context
+never win the rank. Calls without a generation keep FIFO order while no worker
+has a compile, and context
 affinity and the pass preference still come first. Parallel renders use every
-available slot and start no process. Recipe store tests
+available slot and start no process. Return warm-up tests check the order of
+the preparation and the replays, the bound of 30 calls, the handover to a
+waiting request, the pause for a claim, the quiet flag of warm-up calls, the
+render count of replays, the warm head after replays, and each end of a
+warm-up. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -377,12 +408,17 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs. Growth reuses a free slot before it adds
-  a new one.
+  generation state that a call needs. For a `bundle` call, it then prefers the
+  newest `Slot::last_compilation`, the epoch that `Pool::execute` records
+  after a head compile. Growth reuses a free slot before it adds a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
-  warm head worker, the candidates of the return pass, and the
-  `return_disabled` flag, and `Pool::record_head`, which records each
-  successful head bundle and render.
+  warm head worker, the candidates of the return pass, the
+  `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
+  records each successful head bundle and render request.
+- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines `Warmups`, the
+  recorded head render calls and the pending warm-ups, and
+  `Pool::maintain_warmup`, which runs one warm-up step when no return step
+  can run.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
   runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,

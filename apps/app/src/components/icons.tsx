@@ -1,0 +1,88 @@
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Building2,
+  ChevronRight,
+  ChevronsUpDown,
+  CircleAlert,
+  CreditCard,
+  Ellipsis,
+  Github,
+  GitBranch,
+  GitPullRequest,
+  Inbox,
+  KeyRound,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  Plus,
+  RotateCw,
+  Settings,
+  Shield,
+  SquareLibrary,
+  Trash2,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
+
+/**
+ * The product chrome's icon vocabulary, matching the catalogue's own map in
+ * `docs/mockups/src/screens/product/icons.tsx`; a policy test compares the two
+ * so a glyph can never mean one thing in a mockup and another in the product.
+ */
+export const iconStroke = 1.5;
+
+/** Chrome glyphs sit on the 16px row grid; 20px is the standalone state size. */
+export const iconSize = { row: 16, state: 20 } as const;
+
+export const icons = {
+  account: UserRound,
+  access: Shield,
+  back: ArrowLeft,
+  billing: CreditCard,
+  branch: GitBranch,
+  close: X,
+  danger: Trash2,
+  empty: Inbox,
+  external: ArrowUpRight,
+  github: Github,
+  members: Users,
+  more: Ellipsis,
+  next: ChevronRight,
+  workspace: Building2,
+  private: Lock,
+  problem: CircleAlert,
+  project: SquareLibrary,
+  pullRequest: GitPullRequest,
+  retry: RotateCw,
+  settings: Settings,
+  signOut: LogOut,
+  start: Plus,
+  switcher: ChevronsUpDown,
+  tokens: KeyRound,
+  workspaces: LayoutGrid,
+} as const satisfies Record<string, LucideIcon>;
+
+/** The glyph names the chrome may draw; screens never reach past this set. */
+export type IconName = keyof typeof icons;
+
+/** A decorative glyph beside a label that already names the item. */
+export function Icon({
+  name,
+  size = iconSize.row,
+}: {
+  name: IconName;
+  size?: number;
+}) {
+  const Glyph = icons[name];
+  return (
+    <Glyph
+      size={size}
+      strokeWidth={iconStroke}
+      color="currentColor"
+      aria-hidden
+    />
+  );
+}

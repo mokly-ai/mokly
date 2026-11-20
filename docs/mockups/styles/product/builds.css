@@ -1,0 +1,187 @@
+/* The build card: one cloud build in the viewer stage, with its reference,
+   its three steps and its output. */
+.fo-stage-card > .fo-build {
+  max-width: 760px;
+}
+.fo-build {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  text-align: left;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+}
+.fo-build-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3) var(--mk-space-6);
+  padding: var(--mk-space-5) var(--mk-space-6);
+}
+/* The summary spaces its rows with margins rather than a gap, so a message
+   with no line leaves no empty row's gap beneath the reference. */
+.fo-build-summary {
+  display: grid;
+  flex: 1 1 18rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+/* The message is the title and its line, which a failed build announces as
+   one alert. The reference follows it in reading order, and on screen it sits
+   between them: the message spans the summary's three rows as a subgrid and
+   leaves the middle one to the reference. */
+.fo-build-message {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+@supports (grid-template-rows: subgrid) {
+  .fo-build-message {
+    grid-row: 1 / span 3;
+    grid-column: 1;
+    grid-template-rows: subgrid;
+  }
+  .fo-build-message > .fo-build-line {
+    grid-row: 3;
+  }
+  .fo-build-summary > .fo-build-reference {
+    grid-row: 2;
+    grid-column: 1;
+  }
+}
+.fo-build-reference {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--mk-space-1) var(--mk-space-2);
+  margin-top: var(--mk-space-1);
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-build-reference-name {
+  min-width: 0;
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+  overflow-wrap: anywhere;
+}
+.fo-build-line {
+  max-width: 62ch;
+  margin-top: var(--mk-space-1);
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+}
+.fo-build-line code {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-ui-small-size);
+  color: var(--mk-color-text);
+}
+/* The action column shrinks with the head, so a refused request's line wraps
+   inside it and a guide beside the control moves beneath it, rather than
+   either passing the card's edge. */
+.fo-build-action {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+/* The title takes focus after Cancel. Its box hugs its words, so the shared
+   focus outline in `base.css` goes round the title rather than the whole
+   column. */
+.fo-build-message > .fo-state-title {
+  justify-self: start;
+}
+.fo-build-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mk-space-3);
+  margin: 0;
+  padding: var(--mk-space-4) var(--mk-space-6);
+  list-style: none;
+  border-top: 1px solid var(--mk-color-border);
+}
+.fo-build-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--mk-space-2);
+  min-width: 0;
+}
+.fo-build-step-name {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+  overflow-wrap: anywhere;
+}
+.fo-build-step[aria-current] .fo-build-step-name {
+  font-weight: var(--mk-font-semibold);
+}
+.fo-build-step-state {
+  grid-column: 2;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-build-output {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-4) var(--mk-space-6) var(--mk-space-6);
+  border-top: 1px solid var(--mk-color-border);
+}
+/* The log keeps its newest line in view: a reversed column starts scrolled to
+   its end, so earlier output is above, a scroll away. */
+.fo-build-log {
+  display: flex;
+  flex-direction: column-reverse;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: var(--mk-space-3) var(--mk-space-4);
+  background: var(--mk-color-surface-muted);
+  border-radius: var(--mk-radius-medium);
+}
+/* The lines are one block that never shrinks, so the log scrolls around it
+   rather than the block scrolling inside the log. */
+.fo-build-lines {
+  flex: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fo-build-lines > span {
+  display: block;
+  min-height: var(--mk-type-ui-small-line);
+}
+.fo-build-system,
+.fo-build-elision {
+  color: var(--mk-color-text-muted);
+}
+.fo-build-elision {
+  margin: var(--mk-space-1) 0;
+  font-family: var(--mk-font-sans);
+  font-style: italic;
+}
+@media (max-width: 767px) {
+  .fo-build-head,
+  .fo-build-steps {
+    padding-inline: var(--mk-space-4);
+  }
+  .fo-build-output {
+    padding: var(--mk-space-4);
+  }
+  .fo-build-log {
+    max-height: 18rem;
+    padding: var(--mk-space-3);
+  }
+}

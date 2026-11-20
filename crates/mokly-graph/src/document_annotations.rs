@@ -32,7 +32,7 @@ impl From<AttributeRecord> for Attribute {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 /// Private authenticated logical-link record.
 pub(crate) struct ReferenceRecord {
     source_route: String,

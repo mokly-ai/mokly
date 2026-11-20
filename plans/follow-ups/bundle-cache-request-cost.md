@@ -69,7 +69,8 @@
       `crates/mokly-compare/src/bundle_codec_write.rs:60`. That function
       copies the settings and the module list, and it shares the
       compilation through an `Arc`, at
-      `crates/mokly-sidecar/src/reusable_recipe.rs:68` to line 70. Before
+      `crates/mokly-sidecar/src/reusable_recipe.rs:69` to line 71, in
+      `disk_seed_request`. Before
       the `Arc` change, it also deep-copied the compilation. `encode`
       serializes this request a second time only to count its bytes against
       the 64 MiB frame limit.

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 3,
+  "moklyVersion": "0.0.0",
+  "repository": {
+    "host": "github.com",
+    "owner": "mokly-ai",
+    "name": "mokly-cloud"
+  },
+  "branch": "fixture",
+  "headSha": "aa837aecfa8303c461ece6e8a293c72306d4481b",
+  "baseRef": "HEAD~1",
+  "baseSha": "8735278748f261faa7e843074c2b60b8b6b8fa38",
+  "pullRequest": null,
+  "configPath": "mokly.config.json",
+  "exportedAt": "2000-01-01T00:00:00.000Z"
+}
