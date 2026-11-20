@@ -23,3 +23,33 @@ packages/mokly/docs/
 /mokly-static/
 .mokly-export-reservations/
 packages/mokly/CHANGELOG.md
+
+# Mokly Cloud local state, credentials, and build output.
+/.conductor/
+mokly-generated/
+/target/
+__pycache__/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+gha-creds-*.json
+/infra/terraform/bootstrap/remote.backend.tf
+/packages/app/public/folio/
+/packages/app/public/mokly-viewer/
+/packages/app/.expo/
+/apps/site/.astro/
+/apps/site/public/og/
+/apps/site/public/stage/
+/apps/worker/wrangler.json
+/apps/worker/wrangler.test.json
+
+# Electron bundle and distribution outputs.
+packages/desktop/bundle/
+packages/desktop/release/
+packages/desktop/.expo/

@@ -1,0 +1,39 @@
+# Test-only items stay in Rust product files
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the branch `calummoore/mokly-stamp-early-exit`: the blocked wider fix of the first finding of its first review, and a problem that the check of that finding found outside the scope.
+- **Location:** `crates/mokly-cli/src/serve_return.rs:21`, `:63`, and `:98`; `crates/mokly-compare/src/owned_style_instances.rs:212`; `crates/mokly-compare/src/owned_styles.rs:158`; `crates/mokly-css/src/containment.rs:21`; `crates/mokly-graph/src/requests.rs:14`, `:17`, `:62`, and `:94`; `crates/mokly-model/src/usage_schemas.rs:18`, `:33`, and `:59`; `crates/mokly-sidecar/src/pool_recipes.rs:155` (`Recipes::len`); `crates/mokly-sidecar/src/pool_releases.rs:3`, `:15`, `:35`, and `:52`.
+- **Reason:** The fix that prevents new cases is a lint, and only the user can approve a new gate.
+
+- **Source:** Review.
+- **Category:** Repository rule.
+- **Terms:**
+  - **Product file:** a Rust source file under `crates/` or `xtask/` that is not in a `_tests_` folder or in a crate-root `tests` folder.
+  - **Test-only item:** an item under `#[cfg(test)]` that is not the declaration of a test module, such as a helper method, a counter field, an enum variant, or a statement.
+- **Background:**
+  - The Rust testing rules of the shared skills say that test implementations live outside production source files. The only test code that a product file may hold is the declaration of an external test module, such as `#[cfg(test)] #[path = "_tests_/name_tests.rs"] mod name_tests;`.
+  - On `main` at commit `4614c4a90`, eight product files hold test-only items. These are the lines of the **Location** line:
+    - `serve_return.rs`: a `Barrier` notice variant, its match arm, and an `impl Wake` block.
+    - `owned_style_instances.rs`: the method `counts`.
+    - `owned_styles.rs`: the method `retained_counts`.
+    - `containment.rs`: a call of `copy_tests::record()` inside a `Clone` implementation.
+    - `requests.rs`: the trait methods `len` and `is_empty`, an implementation of `len`, and an `impl Request` block.
+    - `usage_schemas.rs`: a `compilations` counter field, its initial value, and the block that counts.
+    - `pool_recipes.rs`: the method `len`.
+    - `pool_releases.rs`: an import, a `Barrier` notice variant, its match arm, and the method `synchronize_releases`.
+  - The branch `calummoore/mokly-stamp-early-exit` first left its reference method `InputStamp::current` under `#[cfg(test)]` in `crates/mokly-render/src/input_stamp.rs`, and its review found it. The branch then moved the method, unchanged, into the test module `crates/mokly-render/src/_tests_/stamp_reference.rs`, as an inherent `impl InputStamp` block. A test module that `input_stamp.rs` declares can call the private functions of `input_stamp.rs`, and an inherent method needs no import, so the tests that call it stayed unchanged.
+  - No lint checks the rule.
+- **Problem:** Eight product files hold test-only code against the Rust testing rule, and nothing stops a new case. The branch above shows that a new case can appear in a normal change.
+- **Impact if no action:** Product files keep test hooks and test helpers that the product never runs. New changes copy the pattern, so each later cleanup grows.
+- **Root question:** How does the codebase keep test-only code out of Rust product files?
+- **Options:**
+  - **A.** Move the test-only items out of the eight files, one file at a time. A helper method moves into an inherent `impl` block in a test module, as `stamp_reference.rs` does. A test hook inside product logic, such as a notice variant, a counter field, or a call in `Clone`, needs a test seam behind a trait instead. Keep every assertion of the tests that use them. Effort: Medium.
+  - **B.** Apply A, then add an `xtask` lint that rejects a test-only item in a product file. The lint runs in the repository suite. It adds a gate, so it needs the user. Effort: Medium.
+  - **C.** Allow small test-only helpers in product files, and change the Rust testing rule of the shared skills to say so. The change is in the shared skills, outside this repository. Effort: Small.
+- **Left out:** Change nothing, because the code then breaks a rule that stays.
+- **Wider fix:** B. The lint catches each new case. No structural fix was found, because a `#[cfg(test)]` attribute can go on any item.
+- **Previous examples:** The eight files of the **Location** line, and the first commit of the branch `calummoore/mokly-stamp-early-exit`, `11569c997`.
+- **Related:** None.
+- **Recommendation:** B. It removes the present cases and stops new ones.
+- **Action:** ask the user, because the lint adds a new gate, and only the user can approve a new gate.

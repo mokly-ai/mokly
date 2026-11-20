@@ -5,13 +5,13 @@
 This contract makes this repository the owner of the versioned
 documentation for the public Mokly CLI and catalogue. The guides are plain
 Markdown shipped in `@mokly/mokly` beside the published protocol documents and
-changelog. The private `mokly-cloud` repository owns the public documentation
-site and renders the files from an installed package version.
+changelog. The public documentation site under `apps/site` renders these
+files from the workspace `@mokly/mokly` package.
 
-This repository does not build, test, or deploy that site. The cloud repository
-also owns its Mokly Cloud, Review and edit, changelog, legal, and marketing
-pages. The package is the version boundary: a site rendering one package
-release must use that release's guides, protocol documents, and changelog.
+The site also owns its Mokly Cloud, Review and edit, changelog, legal, and
+marketing pages. The package is the version boundary: the site renders the
+guides, protocol documents, and changelog of the package version in the same
+commit.
 
 ## Guide Sources And Routes
 
@@ -29,8 +29,8 @@ Sections appear in this order:
 | 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.                             |
 | 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.                          |
 
-The cloud repository may add its own `cloud`, `reference`, and `review`
-sections. They are not valid section values in this repository's guides.
+The cloud site under `apps/site` may add `cloud`, `reference`, and `review`
+sections. They are not valid section values in the `@mokly/mokly` guides.
 
 ## Frontmatter
 

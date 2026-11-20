@@ -80,6 +80,7 @@ fn installed_tier_requires_only_directories_that_the_head_used() {
                     Unimock::new(())
                 };
             let tiers: &dyn Dependencies = &DependencyTiers {
+                steps: Arc::new(Unimock::new(())),
                 cache: Arc::new(Unimock::new(
                     CacheMock::get
                         .next_call(matching!(_, _, _))
@@ -152,6 +153,7 @@ fn outside_repository_importer_directories_still_fall_back() {
         unmapped_directories: vec!["../outside/node_modules".into()],
     };
     let tiers: &dyn Dependencies = &DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(Unimock::new(())),
         commands: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(())),
@@ -181,6 +183,7 @@ fn a_repository_importer_directory_uses_the_working_tier_without_a_warning() {
         unmapped_directories: vec!["packages/ui/node_modules".into()],
     };
     let tiers: &dyn Dependencies = &DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(Unimock::new(())),
         commands: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(())),

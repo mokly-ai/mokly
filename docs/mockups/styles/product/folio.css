@@ -1,0 +1,99 @@
+/* The Folio application frame: the settings rail and the viewer stage, whose
+   slots stay blank when the settings dialog is the subject. */
+.fo-nav,
+.fo-nav-group {
+  display: grid;
+  gap: var(--mk-space-1);
+  min-width: 0;
+}
+.fo-nav-group {
+  gap: var(--mk-space-2);
+}
+.fo-nav-group > .fo-group-label {
+  padding: 0 var(--mk-space-2);
+}
+.fo-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  min-height: 32px;
+  min-width: 0;
+  padding: var(--mk-space-1) var(--mk-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--mk-radius-chrome);
+  color: var(--mk-color-text-muted);
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+.fo-nav-item:hover {
+  background: color-mix(in srgb, var(--mk-color-accent) 9%, transparent);
+  color: var(--mk-color-text);
+}
+.fo-nav-icon {
+  display: inline-flex;
+  color: var(--mk-color-text-muted);
+}
+.fo-nav-label {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+  overflow-wrap: anywhere;
+}
+.fo-nav-item[aria-current] {
+  background: var(--mk-color-surface);
+  border-color: var(--mk-color-border);
+  box-shadow: var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+.fo-nav-item[aria-current] .fo-nav-label {
+  font-weight: var(--mk-font-semibold);
+}
+.fo-nav-item[aria-current] .fo-nav-icon {
+  color: var(--mk-color-text);
+}
+/* A pane whose address the surface does not know yet draws its entry itself,
+   disabled and with no link: faded as a disabled control is, and with no
+   pointer response until it has somewhere to lead. */
+.fo-nav-item[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+/* Stage: the published viewer fills the available height, and the cloud groups
+   sit in its top-bar slots. */
+.fo-stage {
+  display: flex;
+  flex-direction: column;
+}
+.fo-stage-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-4);
+  flex-shrink: 0;
+  min-height: var(--mk-layout-topbar);
+  padding: 0 var(--mk-space-4);
+  padding-left: max(var(--mk-space-4), var(--fo-window-inset, 0px));
+  padding-right: max(var(--mk-space-4), var(--fo-window-inset-end, 0px));
+  border-bottom: 1px solid var(--mk-color-border);
+}
+.fo-stage-slot {
+  height: 28px;
+}
+.fo-stage-slot-lead {
+  width: 220px;
+}
+.fo-stage-slot-middle {
+  flex: 1;
+  min-width: 0;
+}
+.fo-stage-slot-trail {
+  width: 160px;
+}
+.fo-stage-canvas {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--mk-color-surface);
+}

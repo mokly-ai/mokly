@@ -1,0 +1,15 @@
+---
+/**
+ * The home hero: the one-line heading, the lead and both
+ * actions. The copy is the approved home copy in docs/protocol/cloud/site-copy.md,
+ * held in src/home.ts so the page description and social cards repeat it.
+ */
+import { HOME_HERO } from "../../home.js";
+import Actions from "../Actions.astro";
+---
+
+<section class="site-hero">
+  <h1>{HOME_HERO.heading}</h1>
+  <p class="site-hero-lead">{HOME_HERO.lead}</p>
+  <Actions />
+</section>

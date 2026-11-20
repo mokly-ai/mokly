@@ -14,6 +14,7 @@ use crate::source_key::CheckoutIdentity;
 fn checkout_identity_preserves_the_existing_unfiltered_source_key() {
     let repository = GitRepository {
         fetch_lock: Mutex::new(()),
+        promisor_remotes: Vec::new(),
         unavailable: Mutex::new(BTreeMap::new()),
         timed_out: Mutex::new(BTreeSet::new()),
         directory: "/repo".into(),

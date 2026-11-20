@@ -21,7 +21,7 @@ export async function finishEvidence(
   run,
   { env, repositoryRoot, write = writeReleaseFile, writeOutput },
 ) {
-  const mode = result.outcome === "applicable" ? "evidence" : "complete";
+  const mode = "evidence";
   const record = {
     mode,
     outcome: result.outcome,
@@ -38,6 +38,11 @@ export async function finishEvidence(
     `${JSON.stringify(record, null, 2)}\n`,
   );
   (writeOutput ?? writeWorkflowOutput)("mode", mode, env.GITHUB_OUTPUT);
+  if (result.outcome === "absent")
+    throw new Error(
+      `CI evidence is absent: ${result.reason}. Re-run CI on release commit ${identity.taggedCommit}. Retry the release after CI passes.`,
+    );
+  if (result.outcome === "invalid") throw new Error(result.reason);
   process.stdout.write(`${result.outcome}: ${result.reason}\n`);
   return record;
 }

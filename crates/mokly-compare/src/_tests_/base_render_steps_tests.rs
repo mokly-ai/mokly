@@ -82,6 +82,7 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: vec![],
+        modules: Default::default(),
         authored_inputs: vec![],
     };
     assert!(matches!(

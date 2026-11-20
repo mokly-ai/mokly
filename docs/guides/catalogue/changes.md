@@ -190,6 +190,9 @@ dots and Changed views point to changes elsewhere.
 An added entry shows its current preview and an Added status, with no
 comparison controls, because there is no earlier version.
 
+A removed entry appears only in Changes. All shows the catalogue as it is now,
+so it lists no Removed row.
+
 A removed page, document or screen keeps its Removed status and opens the
 version from the branch point instead, labelled "Showing previous version". A
 page or document opens in its document pane and a screen in its mobile and

@@ -47,11 +47,29 @@ keeps the checkout and box comparison bases equal. The checkout's `HEAD`,
 index, and files do not change. The checkout and snapshot fingerprints must
 match before warmup.
 
-Xtask warms up seven boxes in parallel with a 30-minute idle timeout, probes
+Seven workers run the cloud suites through
+[`testbox-cloud.mjs`](../scripts/testbox-cloud.mjs):
+
+| Worker                                   | Suites                                                                                                                                                            |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cloud-rust`                             | `cloud-rust`, `cloud-desktop`                                                                                                                                     |
+| `cloud-app-1-of-4` to `cloud-app-4-of-4` | `cloud-app --shard INDEX/4`                                                                                                                                       |
+| `cloud-web`                              | `cloud-typecheck`, `cloud-mockups`, `cloud-site`, `cloud-fixtures`, `cloud-emails`                                                                                |
+| `cloud-infrastructure`                   | `cloud-toolchain-pins`, `cloud-migrations`, `cloud-openapi`, `cloud-openapi-lint`, `cloud-terraform`, `cloud-origin-router`, `cloud-helm`, `cloud-infrastructure` |
+
+Each worker checks the source fingerprint, installs the root lockfile and
+Chromium, then attempts all its assigned suites. Each failed suite is named
+in its log. App shards use separate boxes. Desktop needs Xvfb and reuses the
+cloud Rust build for its API harness. Infrastructure includes the storage
+probe and workload image builds. The cloud workers add no Viewer or Browser
+evidence reports. The five existing reports remain required. The Testbox
+workflow lifetime stays at 30 minutes.
+
+Xtask warms up fourteen boxes in parallel with a 30-minute idle timeout, probes
 every box within the 10-minute readiness bound, and reports the successful
 probe count from that box list. A failed probe emits no success count.
 It then starts the
-[seven commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
+[Mokly commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
 in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
 `browser-4-of-4`, plus `static-delivery`. The delivery command builds the source
 and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
@@ -65,7 +83,7 @@ its box at once. Only the viewer command and the four browser shards produce
 suite reports; repository and delivery outcomes use their exit codes. After all commands end,
 xtask cleans up the remaining boxes, runs the local aggregate over the five
 reports with the base commit and `node-22.15.0`, computes the local
-fingerprint again, and removes the snapshot. A successful check needs seven
+fingerprint again, and removes the snapshot. A successful check needs fourteen
 commands that exit 0, five downloads, a valid aggregate, and the same local
 fingerprint as before the run.
 
@@ -106,7 +124,7 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   [`policy.rs`](../src/remote/policy.rs) own the ordered availability checks.
   [`runner.rs`](../src/remote/runner.rs) owns the remote phase order,
   [`verdict.rs`](../src/remote/verdict.rs) attaches the final cleanup count,
-  [`plan.rs`](../src/remote/plan.rs) owns the seven-command inventory,
+  [`plan.rs`](../src/remote/plan.rs) owns the fourteen-command inventory,
   [`phases.rs`](../src/remote/phases.rs) parallel warmup and the all-probes
   barrier, and [`suites.rs`](../src/remote/suites.rs) concurrent suite
   execution and report downloads.

@@ -7,14 +7,21 @@ import { repositoryRoot } from "./helpers/fixture.js";
 import { rustPackageVersionProblems } from "./helpers/rust_package_version.js";
 
 // Cargo's unpublished crate version does not follow an npm Release Please bump.
-// Every Rust package-version path must use the npm-derived shared version.
-test("Rust package-version paths cannot use the independent Cargo crate version", async () => {
+// Mokly Rust package-version paths must use the npm-derived shared version.
+// Cloud crates keep their own release identity.
+test("Mokly Rust package-version paths cannot use the independent Cargo crate version", async () => {
   const failures: string[] = [];
-  for (const file of await rustFiles(path.join(repositoryRoot, "crates"))) {
-    const source = await fs.readFile(file, "utf8");
-    if (rustPackageVersionProblems(source).length > 0)
-      failures.push(path.relative(repositoryRoot, file));
-  }
+  const cratesRoot = path.join(repositoryRoot, "crates");
+  const crates = (await fs.readdir(cratesRoot, { withFileTypes: true })).filter(
+    (entry) => entry.isDirectory() && entry.name.startsWith("mokly-"),
+  );
+  assert.ok(crates.length > 0, "Mokly crates must be present");
+  for (const crate of crates)
+    for (const file of await rustFiles(path.join(cratesRoot, crate.name))) {
+      const source = await fs.readFile(file, "utf8");
+      if (rustPackageVersionProblems(source).length > 0)
+        failures.push(path.relative(repositoryRoot, file));
+    }
   assert.deepEqual(
     failures,
     [],

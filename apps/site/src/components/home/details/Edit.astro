@@ -1,0 +1,26 @@
+---
+/**
+ * The Edit detail: the agent session beside a screen, with its turns and the
+ * message field, redrawn from the tokens.
+ */
+import Glyph from "../../Glyph.astro";
+---
+
+<div aria-hidden="true" class="site-detail site-detail--split">
+  <div class="site-detail-screen">
+    <span class="site-detail-bar site-detail-bar--wide"></span>
+    <span class="site-detail-block"></span>
+    <span class="site-detail-bar"></span>
+  </div>
+  <div class="site-agent">
+    <p class="site-comment-head">Agent session</p>
+    <span class="site-agent-turn"></span>
+    <span class="site-agent-turn site-agent-turn--reply"></span>
+    <span class="site-agent-input">
+      Describe the change
+      <span class="site-agent-send">
+        <Glyph name="send" />
+      </span>
+    </span>
+  </div>
+</div>

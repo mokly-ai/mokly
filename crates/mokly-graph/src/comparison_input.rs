@@ -5,8 +5,18 @@ use std::sync::Arc;
 
 use crate::cache::Artifact;
 use crate::closure::Closure;
+use crate::comparison_proof::ContentIdentity;
 use crate::error::Result;
 use crate::types::ComparisonDocument;
+
+/// Exact codec input and captured closure of a document whose restore cannot fail.
+/// This proof permits no source read, restoration, fallback, or diagnostic.
+pub struct RetainedDocumentEvidence {
+    /// Exact document bytes, annotated tree records, and every retained metadata field.
+    pub identity: ContentIdentity,
+    /// This side's validated closure, including its own policy results.
+    pub closure: Closure,
+}
 
 /// A pure retained lookup either restores an input or defers its source fallback.
 #[derive(Debug)]

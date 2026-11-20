@@ -20,6 +20,7 @@ fn config(path: &str) -> ResolvedConfig {
         },
         file: "/repo/nested/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     }
@@ -130,9 +131,11 @@ fn every_supported_suffix_keeps_both_logical_and_physical_inputs() {
                 }))
             },
         ));
-        let paths = config_postcss::validate(&tree, &config(&path)).unwrap();
+        let module = config_postcss::validate(&tree, &config(&path))
+            .unwrap()
+            .unwrap();
         assert_eq!(
-            paths,
+            [module.path, module.identity],
             [
                 format!("/repo/postcss.{suffix}"),
                 format!("/repo/postcss.{suffix}")

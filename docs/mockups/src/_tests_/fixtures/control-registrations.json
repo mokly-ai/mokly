@@ -1,0 +1,297 @@
+[
+  {
+    "propSchema": {
+      "kind": "object",
+      "properties": {
+        "label": {
+          "schema": {
+            "kind": "string"
+          }
+        },
+        "tone": {
+          "schema": {
+            "kind": "enum",
+            "values": ["primary", "secondary", "quiet"]
+          }
+        },
+        "disabled": {
+          "schema": {
+            "kind": "boolean"
+          },
+          "optional": true
+        },
+        "arrow": {
+          "schema": {
+            "kind": "boolean"
+          },
+          "optional": true
+        }
+      }
+    },
+    "controls": {
+      "label": {
+        "kind": "text",
+        "label": "Label"
+      },
+      "tone": {
+        "kind": "select",
+        "options": [
+          {
+            "label": "Primary",
+            "value": "primary"
+          },
+          {
+            "label": "Secondary",
+            "value": "secondary"
+          },
+          {
+            "label": "Quiet",
+            "value": "quiet"
+          }
+        ]
+      },
+      "disabled": {
+        "kind": "boolean"
+      },
+      "arrow": {
+        "kind": "boolean"
+      }
+    },
+    "variants": [
+      {
+        "title": "Primary",
+        "props": {
+          "label": "Get started",
+          "tone": "primary"
+        },
+        "slug": "primary"
+      },
+      {
+        "title": "Secondary",
+        "props": {
+          "label": "Read the docs",
+          "tone": "secondary"
+        },
+        "slug": "secondary"
+      },
+      {
+        "title": "Quiet",
+        "props": {
+          "label": "View screen",
+          "tone": "quiet"
+        },
+        "slug": "quiet"
+      },
+      {
+        "title": "Disabled",
+        "props": {
+          "label": "Continue",
+          "tone": "primary",
+          "disabled": true
+        },
+        "slug": "disabled"
+      }
+    ],
+    "path": "design/button"
+  },
+  {
+    "propSchema": {
+      "kind": "object",
+      "properties": {
+        "label": {
+          "schema": {
+            "kind": "string"
+          }
+        },
+        "name": {
+          "schema": {
+            "kind": "string"
+          }
+        },
+        "type": {
+          "schema": {
+            "kind": "enum",
+            "values": ["email", "text"]
+          }
+        },
+        "value": {
+          "schema": {
+            "kind": "string"
+          },
+          "optional": true
+        },
+        "helper": {
+          "schema": {
+            "kind": "string"
+          },
+          "optional": true
+        },
+        "error": {
+          "schema": {
+            "kind": "string"
+          },
+          "optional": true
+        },
+        "disabled": {
+          "schema": {
+            "kind": "boolean"
+          },
+          "optional": true
+        }
+      }
+    },
+    "controls": {
+      "label": {
+        "kind": "text"
+      },
+      "value": {
+        "kind": "text"
+      },
+      "helper": {
+        "kind": "text"
+      },
+      "error": {
+        "kind": "text"
+      },
+      "disabled": {
+        "kind": "boolean"
+      },
+      "type": {
+        "kind": "select",
+        "options": [
+          {
+            "label": "Email",
+            "value": "email"
+          },
+          {
+            "label": "Text",
+            "value": "text"
+          }
+        ]
+      }
+    },
+    "variants": [
+      {
+        "title": "Empty",
+        "props": {
+          "label": "Email",
+          "name": "empty-email",
+          "type": "email"
+        },
+        "slug": "empty"
+      },
+      {
+        "title": "Filled",
+        "props": {
+          "label": "Email",
+          "name": "filled-email",
+          "type": "email",
+          "value": "sam@example.com"
+        },
+        "slug": "filled"
+      },
+      {
+        "title": "Invalid",
+        "props": {
+          "label": "Email",
+          "name": "invalid-email",
+          "type": "email",
+          "value": "sam@",
+          "error": "Enter a complete email address."
+        },
+        "slug": "invalid"
+      },
+      {
+        "title": "Disabled",
+        "props": {
+          "label": "Email",
+          "name": "disabled-email",
+          "type": "email",
+          "value": "sam@example.com",
+          "disabled": true
+        },
+        "slug": "disabled"
+      }
+    ],
+    "path": "design/input"
+  },
+  {
+    "propSchema": {
+      "kind": "object",
+      "properties": {
+        "label": {
+          "schema": {
+            "kind": "string"
+          }
+        },
+        "tone": {
+          "schema": {
+            "kind": "enum",
+            "values": ["neutral", "success", "warning", "danger"]
+          }
+        }
+      }
+    },
+    "controls": {
+      "label": {
+        "kind": "text"
+      },
+      "tone": {
+        "kind": "select",
+        "options": [
+          {
+            "label": "Neutral",
+            "value": "neutral"
+          },
+          {
+            "label": "Success",
+            "value": "success"
+          },
+          {
+            "label": "Warning",
+            "value": "warning"
+          },
+          {
+            "label": "Danger",
+            "value": "danger"
+          }
+        ]
+      }
+    },
+    "variants": [
+      {
+        "title": "Neutral",
+        "props": {
+          "label": "Open",
+          "tone": "neutral"
+        },
+        "slug": "neutral"
+      },
+      {
+        "title": "Success",
+        "props": {
+          "label": "Approved",
+          "tone": "success"
+        },
+        "slug": "success"
+      },
+      {
+        "title": "Warning",
+        "props": {
+          "label": "Needs review",
+          "tone": "warning"
+        },
+        "slug": "warning"
+      },
+      {
+        "title": "Danger",
+        "props": {
+          "label": "Unable to publish",
+          "tone": "danger"
+        },
+        "slug": "danger"
+      }
+    ],
+    "path": "design/badge"
+  }
+]

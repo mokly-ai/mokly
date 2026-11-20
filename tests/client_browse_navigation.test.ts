@@ -76,14 +76,20 @@ test("earlier keys do not discard a current folder preference", () => {
   assert.equal(state.disclosures["folder:components:components"], true);
 });
 
-test("removed pages appear only in Changes while removed screens remain in All", () => {
+test("removed pages and screens appear only in Changes", () => {
   const context = navigationContext([glossary.entryId, details.entryId]);
-  const removedPage = { ...glossary, removedPage: true };
-  assert.equal(navLeafVisible(removedPage, defaultSelection, context), false);
-  assert.equal(navLeafVisible(details, defaultSelection, context), true);
+  const removedPage = {
+    ...glossary,
+    key: `removed:${glossary.entryId}`,
+    removedPage: true,
+  };
+  const removedScreen = { ...details, key: `removed:${details.entryId}` };
   const changes = { ...defaultSelection, view: "changes" as const };
-  assert.equal(navLeafVisible(removedPage, changes, context), true);
-  assert.equal(navLeafVisible(details, changes, context), true);
+  for (const row of [removedPage, removedScreen]) {
+    assert.equal(navLeafVisible(row, defaultSelection, context), false);
+    assert.equal(navLeafVisible(row, changes, context), true);
+  }
+  assert.equal(navLeafVisible(details, defaultSelection, context), true);
 });
 
 test("a tag term hides unmatched rows and the groups they empty", () => {
@@ -154,6 +160,7 @@ test("a parent remains visible when a filtered variant matches", () => {
 test("a removed variant is hidden in All and visible in Changes", () => {
   const removed = {
     ...leaf("welcome-legacy", "welcome-legacy/index.html", "Legacy · Removed"),
+    key: "removed:welcome-legacy",
     removedVariant: true,
   };
   const context = navigationContext([removed.entryId]);

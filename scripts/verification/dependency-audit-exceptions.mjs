@@ -1,5 +1,6 @@
 import { auditIssue } from "./dependency-audit-issues.mjs";
 import {
+  isCloudAppLocation,
   isInstallLocation,
   isPackageName,
   isRecord,
@@ -41,12 +42,14 @@ function calendarDay(value) {
 function schemaErrors(record) {
   if (!isRecord(record)) return ["record must be an object"];
   const errors = [];
+  const keys =
+    record.kind === "private-app" ? [...REQUIRED_KEYS, "kind"] : REQUIRED_KEYS;
   if (
-    Object.keys(record).some((key) => !REQUIRED_KEYS.includes(key)) ||
+    Object.keys(record).some((key) => !keys.includes(key)) ||
     REQUIRED_KEYS.some((key) => !Object.hasOwn(record, key))
   )
     errors.push(
-      "use exactly advisory, package, path, until, reason, and tracking",
+      'use advisory, package, path, until, reason, and tracking, with kind only as "private-app"',
     );
   if (
     typeof record.advisory !== "string" ||
@@ -65,7 +68,11 @@ function schemaErrors(record) {
   if (
     !Array.isArray(record.path) ||
     record.path.length < 2 ||
-    !record.path.every(isInstallLocation) ||
+    !record.path.every((location, index) =>
+      record.kind === "private-app" && index === 0
+        ? isCloudAppLocation(location)
+        : isInstallLocation(location),
+    ) ||
     new Set(record.path).size !== record.path.length ||
     !record.path.at(-1)?.endsWith(`node_modules/${record.package}`)
   )

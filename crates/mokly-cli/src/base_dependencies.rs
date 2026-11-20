@@ -11,7 +11,6 @@ use mokly_compare::base_render::BaseRequest;
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
-use mokly_compare::comparison_steps::StepCache;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::error::{Error, Result};
@@ -65,6 +64,7 @@ impl BaseDependencies for NativeDependencies {
         let extraction: &dyn Extraction = &CachedExtraction {
             repository: request.repository.clone(),
             cache: caches.cache,
+            steps: request.steps.clone(),
             files: Limits::default().files,
         };
         Ok(extraction.existing(&request.commit)?.map(Arc::new))
@@ -135,16 +135,13 @@ impl NativeDependencies {
             storage,
             clock,
         } = self.caches(&config.repo_root)?;
-        let cache: Arc<dyn Cache> = Arc::new(StepCache {
-            inner: cache,
-            steps: request.steps.clone(),
-        });
         let sources = match sources {
             Some(sources) => sources,
             None => {
                 let extraction: &dyn Extraction = &CachedExtraction {
                     repository: request.repository.clone(),
                     cache: cache.clone(),
+                    steps: request.steps.clone(),
                     files: Limits::default().files,
                 };
                 Arc::new(extraction.acquire(&request.commit)?)
@@ -168,12 +165,14 @@ impl NativeDependencies {
         });
         let tiers: &dyn Dependencies = &DependencyTiers {
             cache,
+            steps: request.steps.clone(),
             storage: storage.clone(),
             clock: clock.clone(),
             timeout: Duration::from_secs(120),
             install_bytes: 2 * 1024 * 1024 * 1024,
             commands: Arc::new(TimedCommands {
                 spawner: Arc::new(SystemSpawner {
+                    clock: clock.clone(),
                     groups: Arc::new(SystemProcessGroups),
                 }),
                 clock,

@@ -8,21 +8,18 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
-use mokly_model::data::Props;
-use mokly_model::prop_schema::PropSchema;
 use mokly_model::routes;
-use mokly_model::usage::{
-    CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord,
-};
+use mokly_model::usage::{CatalogueUsage, ComponentInstanceRecord, ComponentSlotRecord};
 
+use crate::compose_start::Start;
 use crate::context::Context;
-use crate::diagnostic_code::Code;
-use crate::error::{Result, invalid};
+use crate::error::Result;
 use crate::expansion::Expansion;
-use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
+use crate::fragment::{FragmentRenderer, OwnedStyle};
+use crate::prepared_root::PreparedRoot;
 use crate::tree::Node;
 use crate::{
-    assembly, component_root, error, links, raw_markers, regions, relative_links, source_locations,
+    assembly, component_root, error, links, raw_markers, regions, root_inputs, source_locations,
 };
 
 /// One effective document view. Pages ignore the axes.
@@ -59,6 +56,25 @@ pub struct Composed {
 /// Non-pure composition boundary: JavaScript fragments are injected.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComposerMock))]
 pub trait Composer: Send + Sync {
+    /// Whether immutable entry metadata permits root preparation, without rendering.
+    /// This does not inspect cache state or available handoff capacity.
+    fn can_prepare_root(&self, _catalogue: &PreparedCatalogue, _entry: &ModelEntry) -> bool {
+        false
+    }
+    /// Prepare one eligible root exactly once without building its tree.
+    fn prepare_root(&self, _request: &ComposeRequest<'_>) -> Result<Option<PreparedRoot>> {
+        Ok(None)
+    }
+    /// Consume the exact prepared root. A custom composer never creates one.
+    fn compose_prepared(
+        &self,
+        _request: &ComposeRequest<'_>,
+        _prepared: PreparedRoot,
+    ) -> Result<Composed> {
+        Err(error::InternalError::PreparedRootUnsupported.into())
+    }
+    /// Record supported store-served inputs without composing or rendering them.
+    fn record_served(&self, _request: &ComposeRequest<'_>) {}
     /// Compose a screen, component, or authored page with no file writes.
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed>;
 }
@@ -87,7 +103,35 @@ pub(crate) struct Engine<'a> {
 }
 
 impl Composer for HtmlComposer {
+    fn can_prepare_root(&self, catalogue: &PreparedCatalogue, entry: &ModelEntry) -> bool {
+        Start::eligible(catalogue, entry)
+    }
+    fn record_served(&self, request: &ComposeRequest<'_>) {
+        if let Ok(Some(request)) = root_inputs::stored_request(request) {
+            self.fragments.record_served(&request);
+        }
+    }
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed> {
+        self.compose_root(request, None)
+    }
+    fn prepare_root(&self, request: &ComposeRequest<'_>) -> Result<Option<PreparedRoot>> {
+        PreparedRoot::prepare(request, self.fragments.as_ref())
+    }
+    fn compose_prepared(
+        &self,
+        request: &ComposeRequest<'_>,
+        prepared: PreparedRoot,
+    ) -> Result<Composed> {
+        self.compose_root(request, Some(prepared))
+    }
+}
+
+impl HtmlComposer {
+    fn compose_root(
+        &self,
+        request: &ComposeRequest<'_>,
+        prepared: Option<PreparedRoot>,
+    ) -> Result<Composed> {
         let mut engine = Engine {
             invocation_sites: BTreeMap::new(),
             placed_slots: BTreeSet::new(),
@@ -106,66 +150,24 @@ impl Composer for HtmlComposer {
         };
         let result = (|| -> Result<Composed> {
             let entry = request.entry;
-            let (schema, props, declared_slots) = match &entry.content {
-                EntryContent::Screen { visual, .. } => {
-                    (visual.prop_schema.clone(), visual.props.clone(), Vec::new())
-                }
-                EntryContent::Component { visual, slots, .. } => (
-                    visual.prop_schema.clone(),
-                    visual.props.clone(),
-                    slots.clone(),
-                ),
-                EntryContent::Page => (PropSchema::default(), Props::new(), Vec::new()),
-                _ => return Err(invalid(Code::HtmlElement, "entry has no HTML render")),
+            let (start, fragment) = match prepared {
+                Some(prepared) => (prepared.start, Some((prepared.request, prepared.result))),
+                None => (Start::new(request)?, None),
             };
-            let parent = entry
-                .metadata
-                .variant_of
-                .as_deref()
-                .unwrap_or(&entry.metadata.path);
-            let body_metadata = entry
-                .metadata
-                .variant_of
-                .as_ref()
-                .and_then(|parent| {
-                    request
-                        .catalogue
-                        .model
-                        .entries
-                        .iter()
-                        .find(|entry| &entry.metadata.path == parent)
-                })
-                .map_or(&entry.metadata, |entry| &entry.metadata);
-            let mut context = Context {
-                raw_text: false,
-                link_base: relative_links::base(body_metadata),
-                replay: false,
-                props,
-                schema,
-                source: entry.metadata.source.clone(),
-                owner: ComponentInputOwner::Entry,
-                slot_key: None,
-                ignore: true,
-                slots: BTreeMap::new(),
-                declared_slots,
-            };
-            engine.saved_slots(&mut context)?;
-            let mut tree = if let Some(template) = request.catalogue.templates.get(parent) {
+            let Start {
+                parent,
+                kind,
+                context,
+            } = start;
+            let mut tree = if let Some(template) = request.catalogue.templates.get(&parent) {
                 let nodes = source_locations::template(template)?;
                 engine.nodes(nodes, &context)?
             } else {
-                let kind = if matches!(entry.content, EntryContent::Page) {
-                    RenderKind::Page
-                } else if matches!(entry.content, EntryContent::Component { .. }) {
-                    RenderKind::Component
-                } else {
-                    RenderKind::Screen
-                };
-                engine.javascript(parent, kind, &context)?
+                engine.javascript(&parent, kind, &context, fragment)?
             };
             if matches!(entry.content, EntryContent::Component { .. }) {
-                engine.components.insert(0, parent.into());
-                tree = component_root::attach(tree, parent)?;
+                engine.components.insert(0, parent.clone());
+                tree = component_root::attach(tree, &parent)?;
             }
             if matches!(entry.content, EntryContent::Page) {
                 assembly::append_styles(&mut tree, &engine.styles);

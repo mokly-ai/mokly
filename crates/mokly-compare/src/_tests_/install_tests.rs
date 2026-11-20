@@ -12,6 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache_types::{Builder, StorageMock};
 use crate::commands::CommandsMock;
+use crate::comparison_steps::{Step, StepsMock};
 use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
 use crate::error::{Error, Result};
@@ -93,6 +94,11 @@ fn every_install_uses_the_remaining_shared_allowance_and_whole_tree_size_bound()
         CommandsMock::run.next_call(matching!((command) if command.directory == Path::new("/install/frontend") && command.timeout == Duration::from_secs(30))).returns(Ok(vec![])),
     ));
     let owner = DependencyTiers {
+        steps: Arc::new(Unimock::new(
+            StepsMock::step
+                .next_call(matching!(Step::Installing))
+                .returns(()),
+        )),
         cache: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new((
             StorageMock::copy
@@ -132,6 +138,11 @@ fn an_expired_shared_deadline_starts_no_next_package_manager() {
         resolution: ModuleResolution::default(),
     };
     let owner = DependencyTiers {
+        steps: Arc::new(Unimock::new(
+            StepsMock::step
+                .next_call(matching!(Step::Installing))
+                .returns(()),
+        )),
         cache: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(
             StorageMock::copy
@@ -193,6 +204,9 @@ fn a_nested_berry_cache_joins_the_private_repository_root_once() {
         resolution: ModuleResolution::default(),
     };
     let owner = DependencyTiers {
+        steps: Arc::new(Unimock::new(
+            StepsMock::step.next_call(matching!(Step::Installing)).returns(()),
+        )),
         cache: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new((
             StorageMock::copy

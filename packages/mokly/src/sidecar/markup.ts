@@ -1,10 +1,10 @@
-import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
 import type { RenderSession } from "../authoring/runtime.js";
 import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 import type { MarkerDraft } from "../generated/sidecar/MarkerDraft.js";
 
+import type { HtmlInput } from "./html_input.js";
 import { uniqueMarkerIds } from "./marker-ids.js";
 import { markerRecords } from "./markup-records.js";
 import type { InlineAttribution } from "./style-ownership.js";
@@ -13,13 +13,14 @@ type Node = DefaultTreeAdapterMap["node"];
 
 /** Authenticate generated boundaries before replacing them with inert comments. */
 export function finishMarkup(
-  html: string,
+  input: HtmlInput,
   session: RenderSession,
   extractStyles = true,
   inlineAttribution?: InlineAttribution,
 ): { html: string; styles: CollectedStyle[]; markers: MarkerDraft[] } {
   uniqueMarkerIds(session);
-  const document = parseFragment(html, { sourceCodeLocationInfo: true });
+  const document = input.tree;
+  let html = input.html;
   const replacements: { start: number; end: number; text: string }[] = [];
   const used = new Set<string>();
   const styles: CollectedStyle[] = [];

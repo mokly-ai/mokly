@@ -27,7 +27,7 @@ pub(super) struct Completion {
 }
 
 impl DefaultRemoteRunner {
-    /// Execute all seven commands concurrently while keeping each stream separate.
+    /// Execute all assigned commands concurrently while keeping each stream separate.
     pub(super) fn execute(
         &self,
         boxes: &[String],

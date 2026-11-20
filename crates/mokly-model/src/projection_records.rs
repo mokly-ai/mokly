@@ -17,7 +17,11 @@ pub(crate) fn comparison(status: ChangesStatus) -> ComparisonSelection {
     }
 }
 
-pub(crate) fn metadata(entry: &ModelEntry, status: ChangesStatus) -> CatalogueEntry {
+pub(crate) fn metadata(
+    entry: &ModelEntry,
+    status: ChangesStatus,
+    related_docs: Vec<String>,
+) -> CatalogueEntry {
     let metadata = &entry.metadata;
     CatalogueEntry {
         path: metadata.path.clone(),
@@ -28,7 +32,7 @@ pub(crate) fn metadata(entry: &ModelEntry, status: ChangesStatus) -> CatalogueEn
         details: CatalogueDetails {
             description: metadata.description.clone(),
             rationale: metadata.rationale.clone(),
-            related_docs: metadata.related_docs.clone(),
+            related_docs,
             source_path: metadata.source.path.clone(),
         },
         changes: match status {

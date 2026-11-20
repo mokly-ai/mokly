@@ -9,7 +9,7 @@
   `crates/mokly-cli/src/serve_services.rs:78` and `:137`,
   `crates/mokly-cli/src/static_runtime.rs:91` and `:161`,
   `crates/mokly-cli/src/changes_runtime.rs:45`, `:82`, and `:124` to line
-  146, `crates/mokly-graph/src/config_key.rs:9` to line 24, and
+  146, `config_key::resolved` at `crates/mokly-graph/src/config_key.rs:9` to line 26, and
   `crates/mokly-graph/src/planning.rs:127` to line 128.
 - **Reason:** The fix deletes a live configuration write on `origin/main`
   whose value reaches head document keys, and no user decision approves that
@@ -61,7 +61,7 @@
     `changes_runtime::service`. Its `classify` drops the parameter that its
     caller passes.
   - `config_key::resolved` at `crates/mokly-graph/src/config_key.rs:9` to
-    line 24 serializes all of `config.input`. Lines 127 and 128 of
+    line 26 serializes all of `config.input`. Lines 127 and 128 of
     `crates/mokly-graph/src/planning.rs` put the configuration key into each
     document key. So the write can enter each head document key and the Serve
     live generation.
@@ -70,11 +70,11 @@
     `review.baseInstallScripts` value of the configuration file. A missing
     value counts as different. When the file already stores the flag's value,
     the configuration key stays the same.
-  - The base configuration loads from the base tree with no write, at
-    `crates/mokly-cli/src/changes_base.rs:78` to line 91.
-  - Both sides share one render cache, at
-    `crates/mokly-cli/src/changes_base.rs:145`. The lookup at
-    `crates/mokly-graph/src/session_render.rs:42` uses the document key. So
+  - The base configuration loads from the base tree with no write, through
+    `loader.load` at `crates/mokly-cli/src/changes_base.rs:78` to line 92.
+  - Both sides share one render cache, `self.runtime.cache`, at
+    `crates/mokly-cli/src/changes_base.rs:146`. The lookup at
+    `crates/mokly-graph/src/session_lookup.rs:27` uses the document key. So
     an unchanged base view reuses the head render only when the two
     configuration keys are equal.
   - In the usual case, the base configuration file equals the working

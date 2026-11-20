@@ -10,6 +10,10 @@ use crate::template_types::Template;
 use crate::templates::validate;
 
 fn check(body: &str, line: usize, column: usize) {
+    check_locations(body, &[(line, column)]);
+}
+
+fn check_locations(body: &str, expected: &[(usize, usize)]) {
     let header = "---\ntitle: Home\n---\n";
     let template = Template {
         source_path: "specs/home.screen.html".into(),
@@ -28,14 +32,17 @@ fn check(body: &str, line: usize, column: usize) {
         &BTreeMap::new(),
         &BTreeSet::new(),
     );
-    let issue = result
+    let locations: Vec<_> = result
         .issues
         .iter()
-        .find(|issue| issue.code == Code::HtmlProps)
-        .unwrap();
-    let location = issue.location.as_ref().unwrap();
-    assert_eq!(location.path, template.source_path);
-    assert_eq!((location.line, location.column), (line, column), "{body:?}");
+        .filter(|issue| issue.code == Code::HtmlProps)
+        .map(|issue| {
+            let location = issue.location.as_ref().unwrap();
+            assert_eq!(location.path, template.source_path);
+            (location.line, location.column)
+        })
+        .collect();
+    assert_eq!(locations, expected, "{body:?}");
 }
 
 #[test]
@@ -76,6 +83,31 @@ fn attribute_value_after_cr_names_its_opening_braces() {
 #[test]
 fn reference_produced_braces_name_the_first_reference() {
     check("<p>&amp; &lbrace;&lbrace;missing}}</p>", 4, 10);
+}
+
+#[test]
+fn text_after_empty_end_tags_names_its_opening_braces() {
+    for (body, line, column) in [
+        ("<p>a</>{{missing}}</p>", 4, 8),
+        ("<p>a</>\n{{missing}}</p>", 5, 1),
+        (
+            "<p>a</>first line\nsecond line\nthird line\n          {{missing}}</p>",
+            7,
+            11,
+        ),
+        ("<p>a</>b</>{{missing}}</p>", 4, 12),
+        ("<p>a</>&lbrace;&lbrace;missing}}</p>", 4, 8),
+        ("<p></>{{missing}}</p>", 4, 7),
+        ("<textarea>a</>{{missing}}</textarea>", 4, 15),
+        ("<p title=\"a</>{{missing}}\">t</p>", 4, 15),
+    ] {
+        check(body, line, column);
+    }
+}
+
+#[test]
+fn each_substitution_after_empty_end_tag_names_its_own_braces() {
+    check_locations("<p>{{first}}</>{{second}}</p>", &[(4, 4), (4, 16)]);
 }
 
 #[test]

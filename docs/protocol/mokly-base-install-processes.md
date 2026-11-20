@@ -68,3 +68,13 @@ Two limits remain. On macOS, a stop does not signal a descendant outside the
 manager's process group whose parent exited before the stop. After a normal
 finish, Mokly signals only the manager's process group, so a process in a new
 session that a finished script left behind is outside that signal.
+
+After the last signal of a stop, Mokly waits up to a short grace period for
+the manager to exit and its output to close. Then the install ends with the
+result that the stop gives, such as cancellation or the time-limit fallback.
+This holds also when the manager has not exited or a process that the stop did
+not end still holds the output open. Decision: bound the wait after a stop,
+and keep the result that the stop gives. Rejected: return the manager's own
+exit status while its output stays open, because this changes the dependency
+tier of such a base. Rejected: a new error after the grace period,
+because no requirement covers that failure.

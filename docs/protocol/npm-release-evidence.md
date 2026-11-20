@@ -1,30 +1,19 @@
 # Npm Release Verification Evidence
 
-## Verification Modes
+## Verification Requirement
 
-The npm release workflow has two verification modes. A release push and a manual
-dispatch default to `evidence`. In that mode, publishing reuses complete CI
-evidence for the exact Git tree at the immutable release tags. A manual dispatch
-may instead select `complete`, which skips all GitHub evidence requests and runs
-`cargo xtask check --dependency-audit strict` in the release checkout. That step
-sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
-`main`, whose head can be newer than the tag, and the suite runners require
-reports to name the checked-out commit.
+Release preparation requires applicable CI evidence for the exact Git tree at
+the immutable release tags. This rule applies to automatic releases and manual
+retries. Preparation never runs the complete repository gate on the release
+runner. A local verification fallback was rejected because CI owns that work.
 
-A complete gate needs the Bun version that the release checkout's
-`.bun-version` pins. Preparation sets it up before the gate, with the setup
-action of the CI viewer jobs. A checkout without `.bun-version` predates the
-required Bun check. Preparation then sets up no Bun and adds no Bun
-requirement to that checkout's gate. Evidence mode sets up no Bun.
-
-Both modes run the live npm and Rust audits in read-only preparation after
-dependency installation. Evidence mode
-does not treat an earlier audit as current security evidence. Complete mode then
-runs the complete gate, whose first operation repeats that audit by design.
+Read-only preparation runs the live npm and Rust audits after dependency
+installation. It does not treat an earlier audit as current security evidence.
+It installs Chromium for the packed viewer smoke.
 
 ## Candidate Runs
 
-Evidence mode uses the GitHub REST API with a token that has `actions: read` and
+Evidence selection uses the GitHub REST API with a token that has `actions: read` and
 `contents: read`. Listings are bounded to `per_page=100`; no incomplete page is
 treated as proof. The client uses these endpoints:
 
@@ -82,22 +71,22 @@ proving only the test files present in another tree.
 Evidence selection produces one of three outcomes:
 
 - `applicable`: a candidate passes the job, artifact, identity, aggregate, and
-  live Node test and Playwright inventory checks. Preparation skips the complete
-  gate and continues with exact-artifact checks. It still runs the fresh Rust
-  audit and installs Chromium for the packed viewer smoke.
+  live Node test and Playwright inventory checks. Preparation continues with
+  exact-artifact checks.
 - `absent`: no candidate exists, a listing or download has a transport failure,
   the required job is unavailable, artifacts are missing or expired, the
   evidence commit cannot be resolved, or its tree differs from the tag. The
-  workflow falls back to `complete` verification.
+  workflow stops with one error that tells the operator to re-run CI on the
+  release commit and retry the release after CI passes.
 - `invalid`: an otherwise available report set is malformed, reports disagree on
   the commit, aggregate validation fails, or either live inventory differs. The
   script exits non-zero. Invalid evidence indicates a broken evidence pipeline
-  and must not be hidden by a complete-gate fallback.
+  and stops preparation.
 
 An `absent` result from one candidate continues to the next ordered candidate.
-If none apply, its final reason is recorded before the complete fallback runs.
-An `invalid` result stops selection immediately. Unknown modes and malformed
-required environment are usage errors and also exit non-zero.
+If none apply, its final reason is recorded before preparation fails.
+An `invalid` result stops selection immediately. Malformed required environment
+is a usage error and also exits non-zero.
 
 Artifact zip requests include the workflow token only on the GitHub API request.
 The client follows GitHub's redirect to blob storage without forwarding the
@@ -109,18 +98,16 @@ The client follows GitHub's redirect to blob storage without forwarding the
 Every selection writes `.context/release-evidence/record.json`, which is
 preserved beside the packed release artifacts. The JSON object contains:
 
-- `mode`: the effective `evidence` or `complete` verification mode;
-- `outcome`: `applicable`, `absent`, `invalid`, or `complete`;
+- `mode`: `evidence`;
+- `outcome`: `applicable`, `absent`, or `invalid`;
 - `taggedCommit` and `taggedTree`;
 - `selectedRunId` and `selectedRunUrl`, or `null` when no run was selected;
 - `evidenceCommit`, or `null` when no report identity was established;
 - `reportCount`; and
 - `reason`, a stable human-readable explanation of the decision.
 
-The workflow output `mode=evidence` is written only for `applicable`; every
-non-error fallback writes `mode=complete`. The explicit complete mode performs
-no GitHub evidence requests. The record is diagnostic evidence, while the
-workflow step result is the authority for whether publishing may continue.
+The record is diagnostic evidence. Preparation permits only an `applicable`
+outcome, including when it executes evidence selection from an older tag.
 
 ## Publish Boundary And Timing
 
@@ -129,7 +116,7 @@ smokes. Publication requires successful preparation and rechecks its saved
 archives before it uses npm publication credentials. Publication installs no
 dependency lifecycle scripts and performs no build or smoke fallback.
 
-Verification selection does not replace release-specific checks. Both modes
+Verification selection does not replace release-specific checks. Releases
 verify immutable local and remote tags, run the live audit, download the
 platform archives from the build matrix, pack and inspect the exact viewer and
 CLI archives, smoke-test clean consumers, recheck source and tags, guard
@@ -137,6 +124,6 @@ existing registry versions, publish with trusted provenance in the
 [publication order](./npm-release.md#release-build-matrix-and-publication-order),
 and verify registry bytes and attestations.
 
-Evidence mode removes the complete gate from preparation, so a release
-costs the release-specific work alone. Artifact retention is 14 days, so older
-releases take the complete fallback.
+Preparation runs only release-specific work. CI report retention is 14 days.
+Missing or expired reports require a new qualifying CI run for the release
+commit before preparation can succeed.

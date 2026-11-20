@@ -12,6 +12,7 @@ use crate::bundle_cache_types::CAPACITY;
 use crate::cache_lock::entry_lock_path;
 use crate::cache_types::{Builder, Cache, Kind, Lease, Receipt, Reporter, Storage};
 use crate::error::{Error, InternalError, Result};
+use crate::render_store;
 use crate::storage::valid_key;
 
 /// Persistent cache coordinator with separate data and lease ownership.
@@ -119,7 +120,7 @@ impl DiskCache {
         let stage = match kind {
             Kind::Sources => namespace.join("staging").join(key),
             Kind::Dependencies => target.clone(),
-            Kind::Bundles => return Err(Error::UnsafeCache { path: target }),
+            Kind::Bundles | Kind::Renders => return Err(Error::UnsafeCache { path: target }),
         };
         self.storage.remove(&stage)?;
         self.storage.prepare(&stage)?;
@@ -166,11 +167,12 @@ impl Cache for DiskCache {
             Kind::Sources => self.source_bytes,
             Kind::Dependencies => self.dependency_bytes,
             Kind::Bundles => CAPACITY,
+            Kind::Renders => render_store::CAPACITY,
         }
     }
 
     fn get(&self, kind: Kind, key: &str, builder: &dyn Builder) -> Result<Lease> {
-        if kind == Kind::Bundles || !valid_key(key) {
+        if matches!(kind, Kind::Bundles | Kind::Renders) || !valid_key(key) {
             return Err(Error::UnsafeCache {
                 path: self.root.join(key),
             });
@@ -198,7 +200,7 @@ impl Cache for DiskCache {
 
     /// Creates no directory, and reports the cache only when it leases an entry.
     fn lease(&self, kind: Kind, key: &str) -> Result<Option<Lease>> {
-        if kind == Kind::Bundles || !valid_key(key) {
+        if matches!(kind, Kind::Bundles | Kind::Renders) || !valid_key(key) {
             return Err(Error::UnsafeCache {
                 path: self.root.join(key),
             });

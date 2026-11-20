@@ -26,16 +26,40 @@ pub(super) fn descendants(
     root: ProcessIdentity,
     retained: &[ProcessIdentity],
 ) -> WalkResult {
+    walk(table, Anchor::Identity(root), retained)
+}
+
+/// The borrowed, unreaped root reserves its PID without an identity read.
+pub(super) fn unattached_descendants(table: &dyn ProcessTable, pid: i32) -> WalkResult {
+    walk(table, Anchor::Unreaped(pid), &[])
+}
+
+#[derive(Clone, Copy)]
+enum Anchor {
+    Identity(ProcessIdentity),
+    Unreaped(i32),
+}
+
+impl Anchor {
+    fn pid(self) -> i32 {
+        match self {
+            Self::Identity(identity) => identity.pid,
+            Self::Unreaped(pid) => pid,
+        }
+    }
+}
+
+fn walk(table: &dyn ProcessTable, root: Anchor, retained: &[ProcessIdentity]) -> WalkResult {
     let mut found = retained.to_vec();
     let mut error = None;
     for &identity in retained {
-        if live(table, identity, &mut error) {
+        if live(table, Anchor::Identity(identity), &mut error) {
             stop(table, identity, &mut error);
         }
     }
     let mut anchors = Vec::with_capacity(retained.len() + 1);
     anchors.push(root);
-    anchors.extend_from_slice(&found);
+    anchors.extend(found.iter().copied().map(Anchor::Identity));
     for _ in 0..MAX_PASSES {
         let mut added = false;
         let mut pending: VecDeque<_> = anchors.iter().copied().collect();
@@ -43,7 +67,7 @@ pub(super) fn descendants(
             if !live(table, anchor, &mut error) {
                 continue;
             }
-            let children = match table.children(anchor.pid) {
+            let children = match table.children(anchor.pid()) {
                 Ok(children) => children,
                 Err(source) => {
                     remember(&mut error, source);
@@ -54,13 +78,13 @@ pub(super) fn descendants(
                 if found.contains(&child) {
                     continue;
                 }
-                if !live(table, child, &mut error) {
+                if !live(table, Anchor::Identity(child), &mut error) {
                     continue;
                 }
                 stop(table, child, &mut error);
                 found.push(child);
-                anchors.push(child);
-                pending.push_back(child);
+                anchors.push(Anchor::Identity(child));
+                pending.push_back(Anchor::Identity(child));
                 added = true;
             }
         }
@@ -76,11 +100,10 @@ pub(super) fn descendants(
 }
 
 /// Confirm the same process instance immediately before the caller scans it.
-fn live(
-    table: &dyn ProcessTable,
-    identity: ProcessIdentity,
-    error: &mut Option<io::Error>,
-) -> bool {
+fn live(table: &dyn ProcessTable, anchor: Anchor, error: &mut Option<io::Error>) -> bool {
+    let Anchor::Identity(identity) = anchor else {
+        return true;
+    };
     match table.identity(identity.pid) {
         Ok(current) => current == Some(identity),
         Err(source) => {

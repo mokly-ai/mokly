@@ -8,7 +8,7 @@ use crate::error;
 use crate::token_tree::Tokens;
 
 /// A CSS URL reference with a replaceable byte range.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Reference {
     /// Decoded URL or import specifier.
     pub value: String,
@@ -108,7 +108,7 @@ pub fn references(source: &str) -> Vec<Reference> {
 
 /// Keep escaped names on the tokenizer path and reject only impossible references.
 /// Unescaped imports need an adjacent `@`, so `!important` needs no tokenization.
-fn may_have_references(source: &str) -> bool {
+pub(crate) fn may_have_references(source: &str) -> bool {
     let bytes = source.as_bytes();
     bytes.iter().enumerate().any(|(start, byte)| {
         let remaining = &bytes[start..];

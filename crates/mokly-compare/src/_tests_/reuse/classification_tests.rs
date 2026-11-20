@@ -166,6 +166,7 @@ fn failed_kept_base_retry_clears_its_candidate_before_the_fresh_comparison_fails
                 repo_root: "/repo".into(),
                 file: "/repo/mokly.config.json".into(),
                 roots: vec![],
+                modules: Default::default(),
                 authored_inputs: vec![],
             },
             None,

@@ -48,7 +48,10 @@
 
 .mbk-instance-select[aria-pressed="true"],
 .mbk-instance-tree a.mbk-instance-select[aria-current="true"] {
-  background: var(--mokly-accent-soft);
-  color: var(--mokly-accent);
+  background: var(
+    --mokly-accent-soft,
+    var(--_mokly-private-accent-soft-default)
+  );
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
   border-color: var(--chrome-border);
 }

@@ -1,8 +1,10 @@
 //! Complete and independently selectable verification suites.
 
+mod cloud_commands;
 mod commands;
 pub(crate) mod request;
 pub(crate) mod runner;
+pub(crate) mod tasks;
 
 #[cfg(test)]
 #[path = "_tests_/check_tests.rs"]
@@ -14,3 +16,11 @@ mod dependency_audit_tests;
 #[cfg(test)]
 #[path = "_tests_/native_tests.rs"]
 mod native_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cloud_tests.rs"]
+mod cloud_tests;
+
+#[cfg(test)]
+#[path = "_tests_/ported_stage_tests.rs"]
+mod ported_stage_tests;

@@ -1,4 +1,6 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+
+import type { FrameErrorCode } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
@@ -73,7 +75,7 @@ test("a custom adapter that resolves after unmount is disposed", async ({
     .toMatchObject({ disposals: 1, pendingMounts: 0, sessions: 0 });
 });
 
-test("a custom adapter rejection reports an owned frame error", async ({
+test("a custom adapter rejection reports an owned frame error, and retry mounts again", async ({
   page,
 }) => {
   await page.evaluate(() =>
@@ -96,6 +98,68 @@ test("a custom adapter rejection reports an owned frame error", async ({
   expect(
     await page.evaluate(() => window.frameHookHarness.ready("rejected-frame")),
   ).toBe("rejected");
+
+  await page.evaluate(() => window.frameHookHarness.retry("rejected-frame"));
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+    )
+    .toMatchObject({ mounts: 2, pendingMounts: 1, status: "loading" });
+  await page.evaluate(() =>
+    window.frameHookHarness.resolveMount("rejected-frame"),
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+    )
+    .toMatchObject({ pendingMounts: 0, sessions: 1, status: "ready" });
+});
+
+test("inspection errors keep a ready frame ready and load errors fail it", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.frameHookHarness.start("ready-frame"));
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("ready-frame")),
+    )
+    .toMatchObject({ sessionStatus: "ready", sessions: 1, status: "ready" });
+  for (const code of [
+    "limit",
+    "invalid-boundary",
+    "missing-instance",
+    "unavailable",
+  ] as const) {
+    expect({ code, ...(await emitError(page, "ready-frame", code)) }).toEqual({
+      code,
+      delivered: [code],
+      sessionStatus: "ready",
+      status: "ready",
+    });
+  }
+  expect(await emitError(page, "ready-frame", "timeout")).toEqual({
+    delivered: ["timeout"],
+    sessionStatus: "error",
+    status: "error",
+  });
+
+  await page.evaluate(() =>
+    window.frameHookHarness.start("loading-frame", { deferredMount: true }),
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("loading-frame")),
+    )
+    .toMatchObject({
+      pendingMounts: 1,
+      sessionStatus: "loading",
+      status: "loading",
+    });
+  expect(await emitError(page, "loading-frame", "unavailable")).toEqual({
+    delivered: ["unavailable"],
+    sessionStatus: "error",
+    status: "error",
+  });
 });
 
 test("an adapter without updateUsage replaces its frame for new evidence", async ({
@@ -186,3 +250,16 @@ test("an unrelated preview rerender retains usage and highlights", async ({
       usageRevision: 0,
     });
 });
+
+/** Send one error event to a harness frame, then read both of its statuses. */
+function emitError(page: Page, id: string, code: FrameErrorCode) {
+  return page.evaluate(
+    ([frame, error]) => {
+      const harness = window.frameHookHarness;
+      const delivered = harness.emit(frame, { type: "error", code: error });
+      const { sessionStatus, status } = harness.snapshot(frame);
+      return { delivered, sessionStatus, status };
+    },
+    [id, code] as const,
+  );
+}

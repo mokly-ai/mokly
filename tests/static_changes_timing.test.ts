@@ -115,6 +115,13 @@ test(
           [count.views, count.unchanged, count.changed, count.ignoredOnly],
           change ? [11, 3, 6, 2] : [9, 9, 0, 0],
         );
+        assert.deepEqual(
+          compared.map((record) => {
+            assert.ok("admittedViews" in record);
+            return record.admittedViews;
+          }),
+          change ? [0, 3, 3] : [0, 9, 9],
+        );
         assert.equal(compared[2]!.status, "ok");
         for (const record of [compared[0]!, compared[2]!])
           for (const field of ["views", "unchanged", "changed", "ignoredOnly"])
@@ -142,6 +149,7 @@ test(
                   "durationMs",
                   "status",
                   "views",
+                  "admittedViews",
                   "unchanged",
                   "changed",
                   "ignoredOnly",
