@@ -345,8 +345,10 @@ owns what the checks cover and what they miss.
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
 announces reading and comparing, and the base provider announces rendering.
-`StepCache` wraps a `dyn Cache` and announces a source build as extracting and
-a dependency build as installing. A complete entry announces nothing.
+`CachedExtraction` and `DependencyTiers` each take a required `dyn Steps`.
+`CachedExtraction` announces extracting when a source build starts.
+`DependencyTiers` announces installing when a dependency build starts. A
+complete entry announces nothing.
 
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
@@ -474,9 +476,8 @@ development dependencies, and no test uses the internet.
   first failed read. Its `comparison_identity` forwards only
   `ProofMode::Retained` proofs to the kept base generation, between two
   cancellation checks. A failed reader proves nothing.
-- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
-  `Steps`, and `StepCache`, the comparison steps that a command shows while
-  Changes runs.
+- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step` and
+  `Steps`, the comparison steps that a command shows while Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
   base.

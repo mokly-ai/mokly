@@ -9,6 +9,7 @@ use mokly_git::control::Clock;
 use crate::ancestor_roots;
 use crate::cache_types::{Cache, Kind, Lease, Storage};
 use crate::commands::{Command, Commands};
+use crate::comparison_steps::Steps;
 use crate::dependency_types::{Fallback, Request, Resolved, Tier, Warning};
 use crate::error::{Error, Result};
 use crate::install::{self, Install};
@@ -26,6 +27,8 @@ pub trait Dependencies: Send + Sync {
 pub struct DependencyTiers {
     /// Bounded dependency namespace.
     pub cache: Arc<dyn Cache>,
+    /// Receives the installing step when a dependency cache build starts.
+    pub steps: Arc<dyn Steps>,
     /// Fixed package-manager commands.
     pub commands: Arc<dyn Commands>,
     /// Source copying and size measurement.
@@ -232,3 +235,7 @@ mod ancestor_tests;
 #[cfg(test)]
 #[path = "_tests_/scripts_install_tests.rs"]
 mod scripts_install_tests;
+
+#[cfg(test)]
+#[path = "_tests_/dependency_steps_tests.rs"]
+mod dependency_steps_tests;

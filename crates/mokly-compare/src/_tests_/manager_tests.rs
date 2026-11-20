@@ -48,6 +48,7 @@ fn request(manager: &str, lock: &str, content: &str, config: Option<&str>) -> Re
 
 fn owner(commands: Unimock, cache: Unimock) -> DependencyTiers {
     DependencyTiers {
+        steps: Arc::new(Unimock::new(())),
         cache: Arc::new(cache),
         commands: Arc::new(commands),
         storage: Arc::new(Unimock::new(())),

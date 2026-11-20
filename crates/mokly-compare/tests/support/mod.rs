@@ -10,11 +10,19 @@ use std::thread;
 
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Builder, Reporter, Storage};
+use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::error::Result;
 use mokly_compare::locations::OnceReporter;
 use mokly_compare::storage::SystemStorage;
 use mokly_git::control::{SystemClock, Token};
 use mokly_platform::locks::SystemLocks;
+
+/// Receives cache steps in fixtures that inspect sources and installed files.
+pub struct IgnoredSteps;
+
+impl Steps for IgnoredSteps {
+    fn step(&self, _: Step) {}
+}
 
 #[derive(Default)]
 pub struct Notices(pub AtomicUsize);
