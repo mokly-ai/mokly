@@ -19,9 +19,15 @@ export const app = {
   signUp: siteOrigin + "/sign-up",
 } as const;
 
-/** The public open-source repository linked from every site header. */
+/**
+ * The public GitHub destinations: the open-source repository linked from
+ * every site header, and the releases of the desktop app, which the home's
+ * Download for Mac opens because every desktop release is still a
+ * pre-release.
+ */
 export const openSource = {
   github: "https://github.com/mokly-ai/mokly",
+  desktopReleases: "https://github.com/mokly-ai/mokly-desktop/releases",
 } as const;
 
 /** The approved publication label and review state shown above the real stage. */

@@ -27,7 +27,7 @@ export default defineScreen({
     const Screen = screens[state];
     return <Screen viewport={context.viewport} />;
   },
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Home",
   useCasePaths: ["design/site/tour"],
   variants: [

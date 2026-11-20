@@ -1,15 +1,37 @@
 /**
  * The documentation navigation. The tree sits on the page canvas rather than
- * in a filled panel: the version label heads it, every section is listed
- * expanded under a rubric head, page rows are full-height targets and the
- * page you are reading carries the shell's quiet accent fill.
+ * in a filled panel: the search control and the version label head it,
+ * every section is listed expanded under a rubric head, page rows are
+ * full-height targets and the page you are reading carries the shell's
+ * quiet accent fill.
  */
 
 import { MockLink } from "@mokly/mokly";
 
-import { SiteVersion } from "./chrome.js";
 import { DOCS_HEADINGS, DOCS_PAGE, DOCS_SECTIONS } from "./docs_data.js";
+import { SearchGlyph } from "./glyphs.js";
 import { SITE_SCREENS } from "./links.js";
+import { PACKAGE_VERSION } from "./version.js";
+
+/** The published CLI version, shown as the tree's quiet identity chip. */
+function SiteVersion({ label }: { label: string }) {
+  return (
+    <span className="site-version">
+      <span className="site-version-label">{label}</span>
+      {PACKAGE_VERSION}
+    </span>
+  );
+}
+
+/** The documentation search control, shaped like the catalogue's own. */
+function SiteSearch() {
+  return (
+    <button className="site-search" type="button">
+      <SearchGlyph />
+      Search docs
+    </button>
+  );
+}
 
 function TreeBody() {
   return (
@@ -52,32 +74,42 @@ function TreeBody() {
   );
 }
 
-/** The tree beside the document, hung on the page's own vertical hairline. */
+/**
+ * The tree beside the document, hung on the page's own vertical hairline,
+ * with the search control at its top.
+ */
 export function DocsTree() {
   return (
     <div className="site-docs-side">
       <nav aria-label="Documentation" className="site-doc-tree">
+        <SiteSearch />
         <TreeBody />
       </nav>
     </div>
   );
 }
 
-/** Below the breakpoint the tree collapses into a disclosure. */
+/**
+ * Below the breakpoint the search control heads the column and the tree
+ * collapses into a disclosure under it.
+ */
 export function DocsTreeDisclosure() {
   return (
-    <details className="site-doc-disclosure">
-      <summary>
-        {DOCS_PAGE.section}
-        <span aria-hidden="true" className="site-trail-sep">
-          &#8250;
-        </span>
-        {DOCS_PAGE.page}
-      </summary>
-      <nav aria-label="Documentation" className="site-doc-tree">
-        <TreeBody />
-      </nav>
-    </details>
+    <>
+      <SiteSearch />
+      <details className="site-doc-disclosure">
+        <summary>
+          {DOCS_PAGE.section}
+          <span aria-hidden="true" className="site-trail-sep">
+            &#8250;
+          </span>
+          {DOCS_PAGE.page}
+        </summary>
+        <nav aria-label="Documentation" className="site-doc-tree">
+          <TreeBody />
+        </nav>
+      </details>
+    </>
   );
 }
 

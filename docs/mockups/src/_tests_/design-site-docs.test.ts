@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { test } from "node:test";
 
 import {
@@ -7,50 +9,43 @@ import {
 } from "../../../../apps/site/src/docs/sections";
 
 import {
+  assertHoverChangesMoreThanColor,
+  assertStrongBoundaries,
   attribute,
   byClass,
+  childElements,
+  cssRules,
   elements,
   label,
+  repositoryRoot,
   siteDocument,
+  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
 
 const sections = SECTION_IDS.map((id) => SECTION_TITLES[id]);
 
+/** The documentation sections that the contract names, in any order. */
+const contractedSections = [
+  "Getting started",
+  "Authoring",
+  "Catalogue",
+  "CLI reference",
+  "Continuous integration",
+  "Mokly Cloud",
+  "Reference",
+  "Review and edit",
+];
+
+/** The documentation's controls, each of which promises a hover state. */
 const hoverClasses = [
-  "site-nav-link",
-  "site-menu-button",
-  "site-menu-close",
-  "site-menu-link",
-  "site-brand",
-  "site-button--primary",
-  "site-button--secondary",
-  "site-button--quiet",
   "site-code-copy",
   "site-search",
-  "site-link",
   "site-version-link",
-  "site-footer-link",
   "site-doc-link",
   "site-onpage-link",
   "site-pager-item",
-  "site-release-index-link",
-  "site-release-link",
 ];
-
-interface CssRule {
-  declarations: string;
-  selector: string;
-}
-
-function rules(source: string): CssRule[] {
-  const found: CssRule[] = [];
-  const pattern = /([^{}]+)\{([^{}]*)\}/g;
-  const css = source.replace(/\/\*[\s\S]*?\*\//g, "");
-  for (let match = pattern.exec(css); match; match = pattern.exec(css))
-    found.push({ declarations: match[2]!, selector: match[1]! });
-  return found;
-}
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: documentation tree lists every section expanded`, () => {
@@ -110,64 +105,103 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "PreviousGetting startedNextConfigure",
     );
   });
+
+  test(`${viewport}: documentation depicts the contracted architecture`, () => {
+    const { document } = siteDocument("design/site/docs", viewport);
+    const text = label(document);
+    for (const section of [...contractedSections, "Changelog"])
+      assert.ok(text.includes(section), `missing docs section: ${section}`);
+    assert.ok(
+      text.includes("npm install --save-dev @mokly/mokly react react-dom"),
+    );
+    assert.equal(byClass(document, "site-code-copy").map(label).join(), "Copy");
+    assert.equal(byClass(document, "site-search").length, 1);
+    assert.deepEqual(
+      byClass(document, "site-onpage-link").map((node) =>
+        attribute(node, "href"),
+      ),
+      [
+        "#install-the-package",
+        "#add-the-configuration",
+        "#author-your-first-screen",
+      ],
+    );
+    assert.equal(
+      byClass(document, "site-docs-side").length,
+      viewport === "desktop" ? 1 : 0,
+    );
+    assert.equal(
+      byClass(document, "site-doc-disclosure").length,
+      viewport === "mobile" ? 1 : 0,
+    );
+  });
+
+  test(`${viewport}: only the documentation draws the search control`, () => {
+    for (const id of siteScreens) {
+      const { document } = siteDocument(id, viewport);
+      assert.equal(
+        byClass(document, "site-search").length,
+        id === "design/site/docs" ? 1 : 0,
+        id,
+      );
+    }
+  });
 }
 
-test("documentation search remains in the shared header", () => {
+test("documentation search heads the documentation tree column", () => {
   for (const viewport of ["mobile", "desktop"] as const) {
     const { document } = siteDocument("design/site/docs", viewport);
     const header = byClass(document, "site-header")[0];
     assert.ok(header);
-    const search = byClass(header, "site-search");
-    assert.equal(search.length, 1);
+    assert.equal(byClass(header, "site-search").length, 0, viewport);
+    const docs = byClass(document, "site-docs")[0];
+    assert.ok(docs);
+    const search = byClass(docs, "site-search");
+    assert.equal(search.length, 1, viewport);
     assert.equal(search[0]!.tagName, "button");
     assert.match(label(search[0]!), /Search docs/);
+    // The desktop tree opens with the search; the mobile column opens with
+    // it, above the tree's disclosure.
+    const column =
+      viewport === "desktop" ? byClass(docs, "site-doc-tree")[0]! : docs;
+    assert.equal(childElements(column)[0], search[0], viewport);
   }
 });
 
-test("every promised interactive class changes more than color on hover", () => {
-  const parsed = rules(siteStyles());
-  for (const className of hoverClasses) {
-    const matching = parsed.filter((rule) =>
-      rule.selector.includes(`.${className}:hover`),
-    );
-    assert.ok(matching.length > 0, `missing hover for .${className}`);
-    assert.ok(
-      matching.some((rule) =>
-        /(?:background|border|text-decoration|outline|box-shadow)/.test(
-          rule.declarations,
-        ),
-      ),
-      `.${className}:hover changes only color`,
-    );
+test("the installed package version heads only the documentation tree", () => {
+  const packageVersion = JSON.parse(
+    readFileSync(
+      resolve(repositoryRoot, "node_modules/@mokly/mokly/package.json"),
+      "utf8",
+    ),
+  ) as { version: string };
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const { document } = siteDocument("design/site/docs", viewport);
+    assert.deepEqual(byClass(document, "site-version").map(label), [
+      "Mokly CLI" + packageVersion.version,
+    ]);
   }
+  for (const id of siteScreens.filter((id) => id !== "design/site/docs"))
+    assert.equal(
+      byClass(siteDocument(id, "desktop").document, "site-version").length,
+      0,
+    );
 });
 
-test("focus and meaningful control boundaries use semantic tokens", () => {
-  const parsed = rules(siteStyles());
-  const focus = parsed.find((rule) => rule.selector.includes(":focus-visible"));
-  assert.ok(focus);
-  assert.match(
-    focus.declarations,
-    /outline: 2px solid var\(--mk-color-focus\)/,
-  );
-  assert.match(focus.declarations, /outline-offset: 3px/);
+test("every promised documentation control changes more than color on hover", () => {
+  assertHoverChangesMoreThanColor(hoverClasses);
+});
 
-  for (const selector of [
+test("documentation control boundaries use the strong border role", () => {
+  assertStrongBoundaries([
     ".site-search",
-    ".site-button--quiet",
     ".site-doc-disclosure",
     ".site-version",
-  ]) {
-    const rule = parsed.find((candidate) =>
-      candidate.selector.split(",").some((part) => part.trim() === selector),
-    );
-    assert.ok(rule, selector);
-    assert.match(rule.declarations, /--mk-color-border-strong/, selector);
-  }
+  ]);
 });
 
 test("documentation rails sit on the page canvas behind hairlines", () => {
-  const parsed = rules(siteStyles());
+  const parsed = cssRules(siteStyles());
   const exact = (selector: string) =>
     parsed.find((rule) => rule.selector.trim() === selector);
   const side = exact(".site-docs-side");
@@ -190,4 +224,8 @@ test("documentation rails sit on the page canvas behind hairlines", () => {
     rail.declarations,
     /border-left: 1px solid var\(--mk-color-border\)/,
   );
+});
+
+test("split site styles own the documentation compositions", () => {
+  assert.ok(siteStyles().includes(".site-doc-tree {"), ".site-doc-tree");
 });

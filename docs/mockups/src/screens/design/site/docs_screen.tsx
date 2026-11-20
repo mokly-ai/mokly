@@ -1,12 +1,12 @@
 /**
- * The documentation page: search sits in the header, the tree sits
+ * The documentation page: search heads the tree column, the tree sits
  * on the page canvas behind a vertical hairline, and the document keeps a
  * ruled reading structure — an accent-ruled lead, hairlines between the
  * intro, the body and the previous and next row, and its own on-this-page
  * rail hung from a hairline at the outer edge.
  */
 
-import { SiteLayout, SiteTrail } from "./parts/chrome.js";
+import { SiteLayout } from "./parts/chrome.js";
 import { CodePanel } from "./parts/code_panel.js";
 import { DOCS_HEADINGS, DOCS_PAGE } from "./parts/docs_data.js";
 import {
@@ -16,11 +16,12 @@ import {
   DocsTreeDisclosure,
 } from "./parts/docs_navigation.js";
 import { SITE_SCREENS } from "./parts/links.js";
+import { SiteTrail } from "./parts/trail.js";
 
 function SiteDocs({ viewport }: { viewport: "mobile" | "desktop" }) {
   const desktop = viewport === "desktop";
   return (
-    <SiteLayout active={SITE_SCREENS.docs} search viewport={viewport}>
+    <SiteLayout active={SITE_SCREENS.docs} viewport={viewport}>
       <div className="site-docs">
         {desktop ? <DocsTree /> : <DocsTreeDisclosure />}
         <main className="site-document site-docs-document" id="main">

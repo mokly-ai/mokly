@@ -1,156 +1,225 @@
-/* 3 -- Skip link, application band and header ---------------------------- */
+/* The skip link, the tool bar and the brand. The tool bar is the design
+   file's: a sticky white band with a hairline, the brand at the start, the
+   file title centred on the page, and the people in the file, the
+   navigation and Get started at the end. Desktop targets keep the
+   prototype's 36px drawing and reach 44px through a transparent band above
+   and below each control. */
 
 .site-skip {
   align-items: center;
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
+  background: var(--mk-color-text);
   border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
+  color: var(--mk-color-surface);
   display: inline-flex;
   left: -9999px;
-  padding: var(--mk-space-2) var(--mk-space-4);
+  padding: 10px 14px;
   position: absolute;
   top: var(--mk-space-2);
-  z-index: 5;
+  z-index: 50;
 }
 
 .site-skip:focus {
-  left: var(--mk-space-4);
+  left: var(--mk-space-2);
 }
 
 .site-band {
-  background: none;
-}
-
-.site-band--ruled {
-  border-bottom: 1px solid var(--mk-color-border);
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 1px 0 var(--mk-color-border),
+    var(--mk-shadow-small);
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .site-header {
   align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-5);
-  justify-content: space-between;
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: var(--mk-space-2) var(--mk-layout-gutter-desktop);
-  width: 100%;
+  display: grid;
+  gap: var(--mk-space-4);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  min-height: 56px;
+  padding: 0 12px 0 10px;
 }
+
+.site-header-start,
+.site-header-end {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.site-header-end {
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* The brand: the mark and the Geist wordmark with its green period */
 
 .site-brand {
   align-items: center;
+  border-radius: 9px;
   color: var(--mk-color-text);
   display: inline-flex;
   font-family: var(--mk-font-display);
-  font-size: 1.75rem;
-  gap: var(--mk-space-2);
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 6px;
   text-decoration: none;
-  text-underline-offset: 6px;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
   white-space: nowrap;
 }
 
 .site-brand:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--mk-color-accent);
-  text-decoration-thickness: 2px;
+  background: var(--mk-color-background);
 }
 
-.site-brand svg {
-  color: var(--mk-color-accent);
+.site-brand-word {
+  font-size: 1.375rem;
+  font-weight: 640;
+  letter-spacing: -0.055em;
+  line-height: 1;
+  padding-bottom: 2px;
 }
 
 .site-brand-dot {
-  color: var(--mk-color-accent);
+  color: var(--mk-color-signal);
 }
+
+.site-brand svg {
+  color: var(--mk-color-text);
+  flex: none;
+}
+
+.site-mark-back {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.site-mark-front {
+  fill: var(--mk-color-signal);
+  paint-order: stroke;
+  stroke: var(--mk-color-surface);
+  stroke-width: 1.6;
+}
+
+.site-mark-rules {
+  fill: none;
+  stroke: var(--mk-color-on-signal);
+  stroke-linecap: round;
+  stroke-width: 2.1;
+}
+
+/* The file title, centred on the page; a depiction */
+
+.site-header-title {
+  align-items: center;
+  display: flex;
+  font-size: 0.84375rem;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.site-file-team {
+  color: var(--mk-color-text-muted);
+}
+
+.site-file-dash {
+  color: var(--mk-color-text-muted);
+  margin: 0 7px;
+}
+
+.site-file-name {
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-header-presence {
+  border-right: 1px solid var(--mk-color-border);
+  margin-right: 10px;
+  padding-right: 14px;
+}
+
+/* The navigation; the current page takes a green rule on the bar's edge */
 
 .site-nav {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-5);
+  gap: 2px;
 }
 
 .site-nav-link {
   align-items: center;
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
+  border-radius: 8px;
+  color: var(--mk-color-text-secondary);
   display: inline-flex;
-  font-size: var(--mk-type-small-size);
-  min-height: var(--mk-layout-control-min);
+  font-size: 0.90625rem;
+  font-weight: var(--mk-font-medium);
+  height: 36px;
+  padding: 0 11px;
+  position: relative;
   text-decoration: none;
-  text-underline-offset: 4px;
-  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-nav-link::before,
+.site-header-cta::before {
+  content: "";
+  inset: -4px 0;
+  position: absolute;
 }
 
 .site-nav-link:hover {
+  background: var(--mk-color-background);
   color: var(--mk-color-text);
-  text-decoration: underline;
 }
 
 .site-nav-link[aria-current="page"] {
   color: var(--mk-color-text);
 }
 
-/* The location trail, set as the eyebrow line above a page title */
-
-.site-trail {
-  align-items: center;
-  color: var(--mk-color-text-muted);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
+.site-nav-link[aria-current="page"]::after {
+  background: var(--mk-color-signal);
+  border-radius: 2px 2px 0 0;
+  bottom: -10px;
+  content: "";
+  height: 2px;
+  left: 11px;
+  position: absolute;
+  right: 11px;
 }
 
-.site-trail-step {
-  align-items: center;
-  display: inline-flex;
+.site-header-cta {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-left: 6px;
+  min-height: 36px;
+  padding: 0 14px;
 }
 
-.site-trail .site-trail-step:last-child {
-  color: var(--mk-color-text);
-}
+/* The mobile composition: the brand, Get started and the menu control */
 
-.site-trail-sep,
-.site-crumb-sep {
-  padding: 0 var(--mk-space-2);
-}
-
-/* The published CLI version, shown as the quiet identity chip */
-
-.site-version {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  display: inline-flex;
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
+[data-site-viewport="mobile"] .site-header {
   gap: var(--mk-space-2);
-  padding: var(--mk-space-1) var(--mk-space-2);
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 60px;
+  padding: 0 8px 0 6px;
 }
 
-.site-version-label {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-sans);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+[data-site-viewport="mobile"] .site-header-title,
+[data-site-viewport="mobile"] .site-header-presence {
+  display: none;
 }
 
-.site-version-link {
-  align-items: center;
-  color: var(--mk-color-text);
-  display: inline-flex;
+[data-site-viewport="mobile"] .site-nav {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-header-end {
+  gap: 4px;
+}
+
+[data-site-viewport="mobile"] .site-header-cta {
   min-height: var(--mk-layout-control-min);
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-
-.site-version-link:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--mk-color-border-strong);
 }

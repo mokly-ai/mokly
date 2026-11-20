@@ -20,6 +20,10 @@
   display: inline-flex;
 }
 
+.site-crumb-sep {
+  padding: 0 var(--mk-space-2);
+}
+
 .site-screen-title-row {
   align-items: center;
   display: flex;

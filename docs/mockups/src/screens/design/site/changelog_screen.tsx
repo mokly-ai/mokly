@@ -4,9 +4,10 @@
  * the grouped notes of that release.
  */
 
-import { SiteLayout, SiteTrail } from "./parts/chrome.js";
+import { SiteLayout } from "./parts/chrome.js";
 import { SITE_SCREENS } from "./parts/links.js";
 import { RELEASES } from "./parts/releases.js";
+import { SiteTrail } from "./parts/trail.js";
 
 function ReleaseIndex() {
   return (

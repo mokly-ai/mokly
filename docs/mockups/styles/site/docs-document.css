@@ -1,29 +1,9 @@
-/* The document: a wide reading measure inside a ruled structure */
-
-.site-document {
-  min-width: 0;
-  padding: var(--mk-space-12);
-  width: 100%;
-}
+/* The documentation's document column: a wide reading measure inside a
+   ruled structure */
 
 .site-docs-document {
   max-width: var(--mk-layout-site-document);
   padding: var(--mk-space-10) var(--mk-space-12) var(--mk-space-20);
-}
-
-.site-document-intro {
-  border-bottom: 1px solid var(--mk-color-border);
-  display: grid;
-  gap: var(--mk-space-4);
-  margin-bottom: var(--mk-space-10);
-  padding-bottom: var(--mk-space-8);
-}
-
-.site-document-intro h1 {
-  font-size: var(--mk-type-heading1-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: -0.045em;
-  line-height: var(--mk-type-heading1-line);
 }
 
 .site-pullquote {
@@ -34,61 +14,6 @@
   margin-top: var(--mk-space-2);
   max-width: 46ch;
   padding-left: var(--mk-space-5);
-}
-
-.site-document-body {
-  display: grid;
-  gap: var(--mk-space-12);
-}
-
-.site-document-body section {
-  display: grid;
-  gap: var(--mk-space-4);
-  justify-items: start;
-  scroll-margin-top: var(--mk-space-6);
-}
-
-.site-document-body h2 {
-  font-size: var(--mk-type-heading3-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading3-line);
-}
-
-.site-document-body p {
-  color: var(--mk-color-text-muted);
-  max-width: var(--mk-layout-prose-max);
-}
-
-.site-document-body ul,
-.site-document-body ol {
-  display: grid;
-  gap: var(--mk-space-2);
-  padding-left: var(--mk-space-5);
-}
-
-.site-document-body li {
-  color: var(--mk-color-text-muted);
-  min-width: 0;
-}
-
-.site-document-body a {
-  color: var(--mk-color-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.site-document-body a:hover {
-  color: var(--mk-color-accent-hover);
-  text-decoration-thickness: 2px;
-}
-
-.site-document-body code {
-  background: var(--mk-color-surface-muted);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  font-family: var(--mk-font-mono);
-  font-size: 0.875em;
-  padding: 1px var(--mk-space-1);
 }
 
 .site-docs-document .site-document-body {

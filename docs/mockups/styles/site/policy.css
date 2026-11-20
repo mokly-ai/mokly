@@ -1,18 +1,24 @@
-/* 10 -- Policy documents ------------------------------------------------- */
+/* The legal pages: the document as a page frame on the canvas at the policy
+   measure, its intro, its body sections ruled by hairlines across the whole
+   sheet, and the links to the other legal documents. */
 
 .site-policy {
   margin: 0 auto;
   max-width: var(--mk-layout-site-policy);
+  padding: 72px 0 0;
+  width: 100%;
 }
 
-.site-policy-body {
-  gap: var(--mk-space-8);
-  margin-bottom: var(--mk-space-10);
+.site-policy .site-page-sheet {
+  padding: 60px 88px 0;
 }
 
-.site-policy-body section {
-  border-top: 1px solid var(--mk-color-border);
-  padding-top: var(--mk-space-8);
+.site-policy .site-document-intro {
+  border-bottom: 0;
+  gap: 18px;
+  justify-items: start;
+  margin: 0;
+  padding: 0 0 44px;
 }
 
 .site-policy-date {
@@ -21,23 +27,96 @@
   line-height: var(--mk-type-small-line);
 }
 
+/* A hairline across the sheet, above the body, each section and the links */
+
+.site-policy-body,
+.site-policy-body section,
 .site-policy-links {
+  position: relative;
+}
+
+.site-policy-body::before,
+.site-policy-body section::before,
+.site-policy-links::before {
   border-top: 1px solid var(--mk-color-border);
+  content: "";
+  left: -100vmax;
+  position: absolute;
+  right: -100vmax;
+  top: 0;
+}
+
+.site-policy-body {
+  gap: 0;
+  margin-bottom: 0;
+  padding-top: 40px;
+}
+
+.site-policy-body > p {
+  color: var(--mk-color-text);
+  font-size: 1.1875rem;
+  letter-spacing: -0.012em;
+  line-height: 1.6;
+  padding-bottom: 40px;
+}
+
+.site-policy-body section {
+  border-top: 0;
+  padding: 40px 0;
+}
+
+.site-policy-links {
+  border-top: 0;
   display: grid;
-  gap: var(--mk-space-3);
+  gap: var(--mk-space-2);
   justify-items: start;
-  padding-top: var(--mk-space-6);
+  padding: 32px 0 40px;
 }
 
 .site-policy-links-title {
   color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-small-line);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .site-policy-link-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--mk-space-2) var(--mk-space-5);
+  gap: 0 var(--mk-space-6);
+}
+
+/* The mobile composition: the frame keeps a narrow canvas margin */
+
+[data-site-viewport="mobile"] .site-policy {
+  padding: 48px 10px 0;
+}
+
+[data-site-viewport="mobile"] .site-policy .site-page-sheet {
+  padding: 36px 20px 0;
+}
+
+[data-site-viewport="mobile"] .site-policy .site-document-intro {
+  padding-bottom: 32px;
+}
+
+[data-site-viewport="mobile"] .site-policy-body,
+[data-site-viewport="mobile"] .site-policy-body section {
+  padding-top: 32px;
+}
+
+[data-site-viewport="mobile"] .site-policy-body > p,
+[data-site-viewport="mobile"] .site-policy-body section {
+  padding-bottom: 32px;
+}
+
+[data-site-viewport="mobile"] .site-policy-body > p {
+  font-size: 1.0625rem;
+}
+
+[data-site-viewport="mobile"] .site-policy-link-list {
+  display: grid;
 }

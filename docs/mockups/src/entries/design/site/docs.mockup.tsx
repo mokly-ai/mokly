@@ -8,7 +8,7 @@ export default defineScreen({
   description:
     "Documentation with search, section tree, install command, on-this-page navigation and pagination.",
   render: (_props, context) => <SiteDocsScreen viewport={context.viewport} />,
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Documentation",
   useCasePaths: ["design/site/tour"],
 });

@@ -19,12 +19,7 @@ function SiteHome({
   viewport: "mobile" | "desktop";
 }) {
   return (
-    <SiteLayout
-      active={SITE_SCREENS.home}
-      menu={menu}
-      ruled={false}
-      viewport={viewport}
-    >
+    <SiteLayout active={SITE_SCREENS.home} menu={menu} viewport={viewport}>
       <main className="site-main" id="main">
         <section className="site-hero">
           <h1>Mockup your entire app.</h1>

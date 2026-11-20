@@ -120,15 +120,18 @@ test("static documents keep the theme boundary inside the wrapper and emit Firna
 });
 
 test("every document's wrapper carries the palette of its entry's kind and path", () => {
-  const folio = ["product/", "design/site/", "design/email/"];
+  const folio = ["product/", "design/email/"];
+  const canvas = ["design/site/"];
   for (const record of catalogueEntries()) {
     if (record.kind !== "screen" && record.kind !== "component") continue;
     const palette =
       record.kind === "component"
         ? "paper"
-        : folio.some((root) => record.path.startsWith(root))
-          ? "folio"
-          : "default";
+        : canvas.some((root) => record.path.startsWith(root))
+          ? "canvas"
+          : folio.some((root) => record.path.startsWith(root))
+            ? "folio"
+            : "default";
     for (const { viewport, colorScheme } of record.views)
       assert.equal(
         viewPalette(record.path, viewport, colorScheme),

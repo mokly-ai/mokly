@@ -1,4 +1,15 @@
-/* 4 -- Home hero --------------------------------------------------------- */
+/* The home's main column, its action pair and the hero. */
+
+.site-main {
+  width: 100%;
+}
+
+.site-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+}
 
 .site-hero {
   display: grid;

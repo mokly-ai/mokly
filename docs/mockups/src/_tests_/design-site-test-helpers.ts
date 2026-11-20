@@ -20,6 +20,18 @@ export type Element = DefaultTreeAdapterMap["element"];
 /** Root of the repository that owns the mockups. */
 export const repositoryRoot = resolve(catalogueRoot, "../..");
 
+/** The canonical site screens, in the order of the site tour. */
+export const siteScreens = [
+  "design/site/home",
+  "design/site/docs",
+  "design/site/changelog",
+  "design/site/pricing",
+  "design/site/terms",
+  "design/site/privacy",
+  "design/site/complaints",
+  "design/site/security",
+] as const;
+
 /** Find one current entry's record in the catalogue index. */
 export function siteEntry(id: string): CatalogueRecord {
   const entry = catalogueEntries().find((candidate) => candidate.path === id);
@@ -167,4 +179,59 @@ export function siteStyles(): string {
   return siteStylesheets()
     .map((path) => readFileSync(resolve(repositoryRoot, path), "utf8"))
     .join("\n");
+}
+
+/** One flat rule of a stylesheet: its selector list and its declarations. */
+export interface CssRule {
+  declarations: string;
+  selector: string;
+}
+
+/** Every flat rule of one stylesheet source, with its comments removed. */
+export function cssRules(source: string): CssRule[] {
+  const found: CssRule[] = [];
+  const pattern = /([^{}]+)\{([^{}]*)\}/g;
+  const css = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (let match = pattern.exec(css); match; match = pattern.exec(css))
+    found.push({ declarations: match[2]!, selector: match[1]! });
+  return found;
+}
+
+/**
+ * Assert that each named class has a hover rule in the site styles, and that
+ * one of its hover rules changes more than the colour.
+ */
+export function assertHoverChangesMoreThanColor(
+  classNames: readonly string[],
+): void {
+  const parsed = cssRules(siteStyles());
+  for (const className of classNames) {
+    const matching = parsed.filter((rule) =>
+      rule.selector.includes(`.${className}:hover`),
+    );
+    assert.ok(matching.length > 0, `missing hover for .${className}`);
+    assert.ok(
+      matching.some((rule) =>
+        /(?:background|border|text-decoration|outline|box-shadow)/.test(
+          rule.declarations,
+        ),
+      ),
+      `.${className}:hover changes only color`,
+    );
+  }
+}
+
+/**
+ * Assert that each selector has a rule of its own in the site styles whose
+ * declarations use the strong border role, the boundary of a control.
+ */
+export function assertStrongBoundaries(selectors: readonly string[]): void {
+  const parsed = cssRules(siteStyles());
+  for (const selector of selectors) {
+    const rule = parsed.find((candidate) =>
+      candidate.selector.split(",").some((part) => part.trim() === selector),
+    );
+    assert.ok(rule, selector);
+    assert.match(rule.declarations, /--mk-color-border-strong/, selector);
+  }
 }

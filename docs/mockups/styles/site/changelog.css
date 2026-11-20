@@ -1,4 +1,11 @@
-/* 9 -- Changelog --------------------------------------------------------- */
+/* The changelog: its intro lead, the release index and the releases. */
+
+.site-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: var(--mk-layout-prose-max);
+}
 
 .site-changelog {
   margin: 0 auto;

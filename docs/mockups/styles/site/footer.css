@@ -1,38 +1,48 @@
-/* 11 -- Footer ----------------------------------------------------------- */
+/* The footer: the last frame on the canvas, labelled Footer, then the
+   design file's status bar on the canvas under it. */
 
 .site-footer {
-  background: var(--mk-color-surface);
-  border-top: 1px solid var(--mk-color-border);
   margin-top: auto;
+  padding: 120px 78px 0;
 }
 
 .site-footer-inner {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
   display: grid;
-  gap: var(--mk-space-12);
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+  gap: 40px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr);
   margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: var(--mk-space-16) var(--mk-layout-gutter-desktop);
+  max-width: 1240px;
+  padding: 44px 48px 52px;
+  position: relative;
   width: 100%;
 }
 
 .site-footer-brand {
+  align-content: start;
   display: grid;
-  gap: var(--mk-space-3);
   justify-items: start;
 }
 
+.site-footer-brand .site-brand {
+  margin-left: -6px;
+}
+
 .site-footer-brand p {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  max-width: 34ch;
+  color: var(--mk-color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-top: 14px;
+  max-width: 300px;
 }
 
 .site-footer-nav {
   align-items: start;
   display: grid;
-  gap: var(--mk-space-6);
+  gap: 40px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -43,30 +53,173 @@
 }
 
 .site-footer-heading {
-  color: var(--mk-color-text);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: 0.08em;
-  margin-bottom: var(--mk-space-1);
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
   text-transform: uppercase;
 }
 
 .site-footer-link {
   align-items: center;
-  color: var(--mk-color-text-muted);
+  color: var(--mk-color-text);
   display: inline-flex;
-  font-size: var(--mk-type-small-size);
+  font-size: 0.9375rem;
   min-height: var(--mk-layout-control-min);
+  min-width: var(--mk-layout-control-min);
   text-decoration: none;
   text-underline-offset: 4px;
   transition: color var(--mk-motion-fast) var(--mk-motion-easing);
 }
 
 .site-footer-link:hover {
-  color: var(--mk-color-text);
+  color: var(--mk-color-signal-deep);
   text-decoration: underline;
 }
 
 .site-footer-link[aria-current="page"] {
+  color: var(--mk-color-signal-deep);
+}
+
+/* The scheme control: two native radios drawn as segments of the canvas
+   track; the chosen segment sits on the raised surface. The radio itself is
+   hidden, and its segment draws the focus ring. */
+
+.site-scheme {
+  background: var(--mk-color-background);
+  border: 0;
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: inline-flex;
+  gap: 2px;
+  margin: 24px 0 0;
+  min-inline-size: 0;
+  padding: 3px;
+}
+
+.site-scheme-option {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.84375rem;
+  font-weight: var(--mk-font-medium);
+  gap: 8px;
+  height: 34px;
+  padding: 0 13px 0 11px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-scheme-option::before {
+  content: "";
+  inset: -5px 0;
+  position: absolute;
+}
+
+.site-scheme-option:hover {
+  background: color-mix(in srgb, var(--mk-color-surface) 60%, transparent);
   color: var(--mk-color-text);
+}
+
+.site-scheme-option:has(.site-scheme-input:checked) {
+  background: var(--mk-color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+
+.site-scheme-option:has(.site-scheme-input:focus-visible) {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+}
+
+.site-scheme-input {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* The status bar: the file, the people in it and the zoom; a depiction */
+
+.site-statusbar {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-size: 0.78125rem;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 18px 0 28px;
+}
+
+.site-statusbar-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.site-statusbar .site-avatar {
+  box-shadow: 0 0 0 2px var(--mk-color-background);
+}
+
+.site-statusbar .site-presence {
+  margin-right: 4px;
+}
+
+.site-statusbar-zoom {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  gap: 12px;
+  margin-left: auto;
+  padding: 5px 10px;
+}
+
+/* The mobile composition */
+
+[data-site-viewport="mobile"] .site-footer {
+  padding: 96px 20px 0;
+}
+
+[data-site-viewport="mobile"] .site-footer-inner {
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 32px 24px 36px;
+}
+
+[data-site-viewport="mobile"] .site-footer-nav {
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+[data-site-viewport="mobile"] .site-scheme-option {
+  font-size: 0.9375rem;
+  height: var(--mk-layout-control-min);
+  padding: 0 16px 0 14px;
+}
+
+[data-site-viewport="mobile"] .site-statusbar-file {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .site-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

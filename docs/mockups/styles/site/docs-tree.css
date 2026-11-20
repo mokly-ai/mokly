@@ -1,4 +1,83 @@
-/* 8 -- Documentation ----------------------------------------------------- */
+/* The documentation tree, its search control and its version chip. */
+
+/* The rubric: the small mono label the tree, the rail and the pager share */
+
+.site-rubric {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.12em;
+  line-height: var(--mk-type-caption-line);
+  text-transform: uppercase;
+}
+
+/* The documentation search control */
+
+.site-search {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  flex: 0 1 320px;
+  font: inherit;
+  font-size: var(--mk-type-small-size);
+  gap: var(--mk-space-2);
+  justify-content: flex-start;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-3);
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-search:hover {
+  background: var(--mk-color-surface);
+  border-color: var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+/* The published CLI version, shown as the quiet identity chip */
+
+.site-version {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-1) var(--mk-space-2);
+}
+
+.site-version-label {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-version-link {
+  align-items: center;
+  color: var(--mk-color-text);
+  display: inline-flex;
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-version-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mk-color-border-strong);
+}
+
+/* The tree */
 
 /* The tree sits on the page canvas rather than in a filled panel. A single
    vertical hairline separates it from the document, and the on-this-page
@@ -25,11 +104,17 @@
 
 .site-doc-tree {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100vh;
   padding: var(--mk-space-6) 0 var(--mk-space-5);
   position: sticky;
   top: 0;
+}
+
+/* The search control heads the tree column */
+
+.site-doc-tree > .site-search {
+  margin-bottom: var(--mk-space-3);
 }
 
 .site-doc-tree-scroll {

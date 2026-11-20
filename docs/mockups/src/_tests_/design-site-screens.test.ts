@@ -12,17 +12,8 @@ import {
   label,
   siteDocument,
   siteEntry,
+  siteScreens as screens,
 } from "./design-site-test-helpers";
-
-const screens = [
-  "design/site/home",
-  "design/site/docs",
-  "design/site/changelog",
-  "design/site/terms",
-  "design/site/privacy",
-  "design/site/complaints",
-  "design/site/security",
-] as const;
 
 test("every site screen owns its folder, viewports and schemes", () => {
   for (const id of screens) {
@@ -41,7 +32,7 @@ test("every site screen owns its folder, viewports and schemes", () => {
   }
 });
 
-test("the Site folder holds the seven canonical screens, the open menu and their tour in order", () => {
+test("the Site folder holds the eight canonical screens, the open menu and their tour in order", () => {
   assert.deepEqual(
     catalogueEntries()
       .filter((entry) => entry.path.startsWith("design/site/"))
@@ -117,28 +108,52 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: header and footer retain the documented destinations`, () => {
     const { document } = siteDocument("design/site/home", viewport);
+    const headerLinks = elements(
+      byClass(document, "site-header")[0]!,
+      (node) => node.tagName === "a",
+    ).slice(1);
+    assert.deepEqual(headerLinks.map(label), [
+      "Docs",
+      "Changelog",
+      "Pricing",
+      "GitHub",
+      "Get started →",
+    ]);
     assert.deepEqual(
-      elements(
-        byClass(document, "site-header")[0]!,
-        (node) => node.tagName === "a",
-      )
-        .slice(1)
-        .map(label),
-      ["Docs", "Changelog", "GitHub", "Get started →"],
-    );
-    assert.deepEqual(
-      elements(
-        byClass(document, "site-footer-nav")[0]!,
-        (node) => node.tagName === "a",
-      ).map(label),
+      headerLinks.map((node) => attribute(node, "data-mokly-link")),
       [
-        "Home",
-        "Docs",
-        "Changelog",
-        "Terms",
-        "Privacy",
-        "Complaints",
-        "Security",
+        "design/site/docs",
+        "design/site/changelog",
+        "design/site/pricing",
+        undefined,
+        "design/site/docs",
+      ],
+    );
+    const footerLinks = elements(
+      byClass(document, "site-footer-nav")[0]!,
+      (node) => node.tagName === "a",
+    );
+    assert.deepEqual(footerLinks.map(label), [
+      "Home",
+      "Docs",
+      "Changelog",
+      "Pricing",
+      "Terms",
+      "Privacy",
+      "Complaints",
+      "Security",
+    ]);
+    assert.deepEqual(
+      footerLinks.map((node) => attribute(node, "data-mokly-link")),
+      [
+        "design/site/home",
+        "design/site/docs",
+        "design/site/changelog",
+        "design/site/pricing",
+        "design/site/terms",
+        "design/site/privacy",
+        "design/site/complaints",
+        "design/site/security",
       ],
     );
   });

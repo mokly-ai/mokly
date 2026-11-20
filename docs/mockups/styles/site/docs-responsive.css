@@ -1,0 +1,55 @@
+/* The documentation's mobile composition and its narrow widths. */
+
+[data-site-viewport="mobile"] .site-search {
+  flex: 1 0 100%;
+  margin-top: var(--mk-space-6);
+}
+
+[data-site-viewport="mobile"] .site-docs {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0 var(--mk-layout-gutter-mobile);
+}
+
+[data-site-viewport="mobile"] .site-docs-document {
+  padding: var(--mk-space-8) 0 var(--mk-space-12);
+}
+
+[data-site-viewport="mobile"] .site-docs-document > .site-onpage {
+  border-left: 1px solid var(--mk-color-border);
+  margin-bottom: var(--mk-space-10);
+  padding-left: var(--mk-space-4);
+}
+
+[data-site-viewport="mobile"] .site-pullquote {
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  padding-left: var(--mk-space-4);
+}
+
+[data-site-viewport="mobile"] .site-pager {
+  flex-direction: column;
+}
+
+[data-site-viewport="mobile"] .site-pager-item {
+  min-width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .site-docs {
+    grid-template-columns: var(--mk-layout-site-sidebar) minmax(0, 1fr);
+  }
+
+  .site-docs-rail {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-docs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-docs-side {
+    display: none;
+  }
+}

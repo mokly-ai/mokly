@@ -1,0 +1,71 @@
+/* The home's mobile composition and its narrow widths. */
+
+[data-site-viewport="mobile"] .site-hero {
+  gap: var(--mk-space-4);
+  justify-items: start;
+  padding: var(--mk-space-10) var(--mk-layout-gutter-mobile) var(--mk-space-8);
+  text-align: left;
+}
+
+[data-site-viewport="mobile"] .site-hero .site-actions {
+  justify-content: flex-start;
+}
+
+[data-site-viewport="mobile"] .site-frame-wrap {
+  padding: 0 var(--mk-layout-gutter-mobile) var(--mk-space-12);
+}
+
+[data-site-viewport="mobile"] .site-shell {
+  height: var(--mk-layout-site-stage-mobile);
+}
+
+[data-site-viewport="mobile"] .site-frame-head,
+[data-site-viewport="mobile"] .site-frame-foot {
+  padding: var(--mk-space-3) var(--mk-space-4);
+}
+
+[data-site-viewport="mobile"] .site-screen-head {
+  padding: var(--mk-space-3) var(--mk-space-4);
+}
+
+[data-site-viewport="mobile"] .site-stage {
+  padding: var(--mk-space-4) var(--mk-space-4) 0;
+}
+
+[data-site-viewport="mobile"] .site-module-grid,
+[data-site-viewport="mobile"] .site-closing-panel {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-site-viewport="mobile"] .site-modules {
+  padding: var(--mk-layout-section-mobile) var(--mk-layout-gutter-mobile);
+}
+
+[data-site-viewport="mobile"] .site-module-detail {
+  padding: var(--mk-space-4);
+}
+
+[data-site-viewport="mobile"] .site-detail {
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-2);
+}
+
+[data-site-viewport="mobile"] .site-detail--split {
+  gap: var(--mk-space-2);
+}
+
+[data-site-viewport="mobile"] .site-closing-panel {
+  gap: var(--mk-space-10);
+  padding: var(--mk-space-10) var(--mk-space-5);
+}
+
+[data-site-viewport="mobile"] .site-closing {
+  padding: 0 var(--mk-layout-gutter-mobile) var(--mk-layout-section-mobile);
+}
+
+@media (max-width: 767px) {
+  .site-module-grid,
+  .site-closing-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
