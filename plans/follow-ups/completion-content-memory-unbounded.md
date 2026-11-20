@@ -163,12 +163,14 @@
     result for overlapping requests of one attempt. On a temporary
     exhaustion, answer the retryable 503 `upload-unavailable`, the reason at
     `docs/protocol/cloud/rest-api.md:114`. The user also chooses the answer
-    for a detail that can never fit, such as 413 `upload-too-large`, which
+    for a detail whose charge exceeds the entire budget, such as 413
+    `upload-too-large`, which
     `docs/protocol/mokly-upload-validation.md:43` permits. Update
     `docs/protocol/cloud/publication-ingest.md`,
     `docs/protocol/cloud/publication-upload-exchange.md`, and
     `docs/ops/environment.md`. It adds a new Complete outcome, and the charge
-    for each value must follow the reader's memory layout. Effort: Medium.
+    for each value must follow the reader's memory layout. A conservative
+    charge can refuse a detail that would fit in actual memory. Effort: Medium.
   - **F.** Make the core reader run the version and privacy checks on the
     token stream, and then decode the typed shape from the text. Unknown
     fields then need no tree. serde can still buffer untagged unions, so the
@@ -209,9 +211,9 @@
   - [upload-quotas-not-revisited.md](./upload-quotas-not-revisited.md),
     linked work: it asks for measurements of real exports and receiver load.
     Option G needs such a measurement of real detail sizes.
-- **Recommendation:** E. It bounds each check and all concurrent checks with
-  the existing budget and the existing 503 reason, and it refuses only
-  content that cannot fit in the process. The review first recommended A,
+- **Recommendation:** E. It bounds admitted work with conservative charges,
+  the existing budget, and the existing 503 reason. Those charges can refuse
+  a detail that would fit in actual memory. The review first recommended A,
   which does not say how to charge the parse before the content loads. C,
   the wider fix, gives stronger isolation for more effort.
 - **Action:** ask the user, because E adds an admission rule, a 503 outcome,

@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 use crate::error::Error;
 use crate::ingest::{Ingest, PublicationIngest};
+use crate::policy::AccessPolicyMock;
 use crate::tests::support::{PROJECT, PUBLICATION, publication, runtime};
 use crate::transaction::{QueryWork, TransactionsMock};
 
@@ -74,6 +75,7 @@ pub(super) fn failure_cleanup(events: Arc<Mutex<Vec<EventKind>>>) -> impl Clause
 
 #[test]
 fn completion_rechecks_every_stored_detail_before_publishing() {
+    let valid_detail = serde_json::to_vec(&detail("current")).unwrap();
     let mut reused_index = index();
     reused_index["revision"] = json!(1);
     let mut unlisted = detail("current");
@@ -105,7 +107,19 @@ fn completion_rechecks_every_stored_detail_before_publishing() {
         let detail = serde_json::to_vec(&detail).unwrap();
         let index_file = reference(INDEX_PATH.into(), &index);
         let detail_file = reference(path, &detail);
-        let listed = vec![index_file.clone(), detail_file.clone()];
+        let valid_detail = valid_detail.clone();
+        let valid_file = reference(
+            "mokly-viewer/entries/components/action.json".into(),
+            &valid_detail,
+        );
+        let extended = name == "unlisted";
+        let mut listed = vec![index_file.clone(), detail_file.clone()];
+        let mut expected_reads = vec![detail_file.path.clone()];
+        if extended {
+            listed.push(valid_file.clone());
+            expected_reads.insert(0, valid_file.path.clone());
+        }
+        listed.sort_by(|left, right| left.path.cmp(&right.path));
         let mut attempt = publication();
         attempt.state = PublicationState::Validating;
         let events = Arc::new(Mutex::new(Vec::new()));
@@ -135,6 +149,8 @@ fn completion_rechecks_every_stored_detail_before_publishing() {
                     work(&mut query_calls.clone())
                 })),
         ));
+        let detail_reads = Arc::new(Mutex::new(Vec::new()));
+        let observed_reads = detail_reads.clone();
         let files = Unimock::new(
             FileStoreMock::get
                 .each_call(matching!(_))
@@ -142,16 +158,34 @@ fn completion_rechecks_every_stored_detail_before_publishing() {
                     Ok(Some(if key == &index_file.key {
                         index.clone()
                     } else if key == &detail_file.key {
+                        observed_reads
+                            .lock()
+                            .unwrap()
+                            .push(detail_file.path.clone());
                         detail.clone()
+                    } else if extended && key == &valid_file.key {
+                        observed_reads.lock().unwrap().push(valid_file.path.clone());
+                        valid_detail.clone()
                     } else {
                         panic!("unexpected stored content")
                     }))
                 })),
         );
+        let policy = if extended {
+            Unimock::new(AccessPolicyMock::token.stub(|each| {
+                each.call(matching!(_, &PROJECT, _))
+                    .answers(&|_, _, _, _| Err(Error::Unavailable))
+                    .at_least_times(0);
+            }))
+            .no_verify_in_drop()
+        } else {
+            Unimock::new(())
+        };
         let ingest = PublicationIngest {
             transactions,
             runtime: runtime(),
             files: Arc::new(files),
+            policy: Arc::new(policy),
             ..writing(Unimock::new(()))
         };
         assert!(
@@ -159,5 +193,6 @@ fn completion_rechecks_every_stored_detail_before_publishing() {
             "{name}"
         );
         assert_eq!(*events.lock().unwrap(), [EventKind::Failed], "{name}");
+        assert_eq!(*detail_reads.lock().unwrap(), expected_reads, "{name}");
     }
 }
