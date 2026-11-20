@@ -1,6 +1,7 @@
 //! Replay captured views and forward scheduling through the original generation.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -216,6 +217,12 @@ impl RenderGeneration for CapturedGeneration {
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.source.stylesheet_directories()
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.source.stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.source.stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.source.public_files()

@@ -115,7 +115,6 @@ export function TeamPlan({
           icon={icon}
           write={portal}
           operation="Opening the billing portal"
-          disabled={portal.disabled}
           onPress={onPortal}
           testID={testID}
         />
@@ -203,7 +202,6 @@ export function FreePlan({
                 size="md"
                 write={checkout}
                 operation="Opening checkout"
-                disabled={checkout.disabled}
                 onPress={onCheckout}
                 testID="upgrade-to-team"
               />

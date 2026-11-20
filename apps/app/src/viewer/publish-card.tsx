@@ -53,7 +53,6 @@ export function StagePublish({
                 size="md"
                 write={write}
                 operation={publishingOperation[reference.kind]}
-                disabled={write.disabled}
                 onPress={send}
                 testID="stage-publish"
               />

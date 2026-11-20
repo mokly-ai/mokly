@@ -102,7 +102,7 @@ export function DangerPane({ project }: { project: Project }) {
             size="md"
             write={deletion}
             operation="Deleting project"
-            disabled={deletion.disabled || !project.canAdmin}
+            disabled={!project.canAdmin}
             onPress={() => void remove()}
             testID="delete-project"
           />

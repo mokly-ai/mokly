@@ -44,6 +44,10 @@ impl OpaqueAsset {
 /// Fully prepared stylesheet bundle and private source inventory.
 #[derive(Clone, Debug)]
 pub struct Bundle {
+    /// Exact watch candidates, mapped to physical paths by the runtime before delivery.
+    pub resolution_files: BTreeSet<String>,
+    /// Delivery-only admitting dependency folders for exact physical watch candidates.
+    pub resolution_roots: BTreeMap<String, PathBuf>,
     /// Consumed-byte witnesses and explicitly incomplete late baselines.
     pub read_evidence: ReadEvidence,
     /// Route inside the generated namespace.

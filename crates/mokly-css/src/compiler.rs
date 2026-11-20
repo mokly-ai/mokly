@@ -50,6 +50,8 @@ impl StylesheetBundler for Compiler {
             sources: BTreeMap::new(),
             resolutions: BTreeMap::new(),
             result: Bundle {
+                resolution_files: Default::default(),
+                resolution_roots: Default::default(),
                 read_evidence: Default::default(),
                 route,
                 css: String::new(),

@@ -209,7 +209,6 @@ function BrowserEntry({
           block
           write={github}
           operation="Connecting to GitHub"
-          disabled={github.disabled}
           onPress={() => void authorize()}
           testID="github-entry"
         />,
@@ -232,7 +231,6 @@ function BrowserEntry({
           block
           write={link}
           operation="Sending sign-in link"
-          disabled={link.disabled}
           onPress={() => void submit()}
           testID="email-entry"
         />,

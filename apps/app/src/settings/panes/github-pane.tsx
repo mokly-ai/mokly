@@ -219,7 +219,6 @@ export function GitHubPane({ workspace }: { workspace: Workspace }) {
             icon={onWeb ? "external" : "start"}
             write={adding}
             operation="Adding a GitHub account"
-            disabled={adding.disabled}
             onPress={() =>
               onWeb
                 ? openOnWeb(

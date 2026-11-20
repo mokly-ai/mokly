@@ -38,11 +38,15 @@ mod source_lease;
 mod source_paths;
 mod sources;
 mod stylesheet_cache;
+mod stylesheet_capture;
+mod stylesheet_compiler;
 mod stylesheet_record;
 mod stylesheet_store;
+mod stylesheet_watch;
 mod stylesheet_weight;
 mod stylesheets;
 mod transport_values;
+mod watch_candidate;
 
 #[cfg(test)]
 #[path = "_tests_/nested_tests.rs"]

@@ -10,6 +10,7 @@ use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
 use unimock::Unimock;
 
 use crate::source_paths::SOURCE_INPUT_PREFIX;
+use crate::stylesheet_compiler::Compilation;
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
@@ -27,6 +28,8 @@ fn bundle(name: &str, module: &str) -> Bundle {
         route: format!("styles/{name}"),
         css: "a{color:red}".into(),
         assets: BTreeMap::new(),
+        resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::new(),
         imported_by: BTreeMap::new(),
@@ -48,7 +51,10 @@ fn stored(bundle: Bundle, context: Option<&Arc<ContextEvidence>>) -> Arc<Record>
     Arc::new(Record::new(
         &tree,
         root,
-        bundle,
+        Compilation {
+            bundle,
+            capture: Default::default(),
+        },
         |digest, evidence| match context {
             Some(context) => context.clone(),
             None => Arc::new(ContextEvidence::with_base(

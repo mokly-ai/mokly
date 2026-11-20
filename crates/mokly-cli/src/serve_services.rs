@@ -130,7 +130,8 @@ impl ServeServices {
         let mut runtime = (*services.runtime)
             .clone()
             .with_serve_edit_plans()
-            .with_document_store(documents.clone());
+            .with_document_store(documents.clone())
+            .with_stylesheet_watching();
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
         let head_published = Arc::new(AtomicBool::new(false));

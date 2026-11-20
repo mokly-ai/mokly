@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -17,13 +9,11 @@ import {
   mutationHeaders,
   setCsrfToken,
 } from "../api/client";
-import { asApiError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 import type { Session } from "../api/types";
 import { onShellFocus } from "../navigation/shell-focus";
 
-import { afterRefresh } from "./refresh";
-import type { SessionRead } from "./refresh";
+import { createSessionReadOwner } from "./read-owner";
 
 /** What the application knows about the reader right now. */
 export type SessionState =
@@ -47,89 +37,29 @@ const SessionContext = createContext<SessionValue | undefined>(undefined);
  * stays an error state, because signing a reader out on a flaky network would
  * lose their place.
  *
- * Every write carries a generation. The magic-link exchange adopts a session
- * while the start-up read is still in flight, and that read answers for the
- * request before it: without the generation its stale "no session" would land
- * last and send a reader who just signed in back to the entry screen.
+ * One owner applies every read, adoption and sign-out with its CSRF token.
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>({ status: "loading" });
-  const generation = useRef(0);
-
-  const apply = useCallback((mine: number, next: SessionState) => {
-    if (generation.current !== mine) return;
-    setState(next);
-  }, []);
-
-  const adopt = useCallback((session: Session) => {
-    generation.current += 1;
-    setCsrfToken(session.csrfToken);
-    setState({ status: "signed-in", session });
-  }, []);
-
-  const reload = useCallback(async () => {
-    generation.current += 1;
-    const mine = generation.current;
-    try {
-      const session = await expectBody((id) =>
-        api.GET("/v1/session", { headers: correlationHeader(id) }),
-      );
-      if (generation.current !== mine) return;
-      setCsrfToken(session.csrfToken);
-      apply(mine, { status: "signed-in", session });
-    } catch (caught) {
-      const error = asApiError(caught);
-      if (error?.signedOut) {
-        if (generation.current !== mine) return;
-        setCsrfToken("");
-        apply(mine, { status: "signed-out" });
-        return;
-      }
-      apply(
-        mine,
-        error ? { status: "error", error } : { status: "signed-out" as const },
-      );
-    }
-  }, [apply]);
-
-  /**
-   * Read the session again for a screen that may be out of date, without
-   * disturbing it, as `afterRefresh` decides. A sign-in, a sign-out or a
-   * reload that starts meanwhile wins over the answer.
-   */
-  const refresh = useCallback(async () => {
-    const mine = generation.current;
-    let read: SessionRead;
-    try {
-      read = {
-        session: await expectBody((id) =>
+  const [owner] = useState(() =>
+    createSessionReadOwner({
+      readSession: () =>
+        expectBody((id) =>
           api.GET("/v1/session", { headers: correlationHeader(id) }),
         ),
-      };
-    } catch (caught) {
-      read = { error: asApiError(caught) };
-    }
-    if (generation.current !== mine) return;
-    if ("session" in read) setCsrfToken(read.session.csrfToken);
-    else if (read.error?.signedOut) setCsrfToken("");
-    setState((current) => afterRefresh(current, read));
-  }, []);
-
-  const signOut = useCallback(async () => {
-    try {
-      await expectData((id) =>
-        api.DELETE("/v1/session", {
-          params: { header: mutationHeaders() },
-          headers: correlationHeader(id),
-        }),
-      );
-    } catch (caught) {
-      if (!asApiError(caught)?.signedOut) throw caught;
-    }
-    generation.current += 1;
-    setCsrfToken("");
-    setState({ status: "signed-out" });
-  }, []);
+      endSession: async () => {
+        await expectData((id) =>
+          api.DELETE("/v1/session", {
+            params: { header: mutationHeaders() },
+            headers: correlationHeader(id),
+          }),
+        );
+      },
+      publish: setState,
+      setCsrfToken,
+    }),
+  );
+  const { reload, refresh, adopt, signOut } = owner;
 
   useEffect(() => {
     void reload();

@@ -1,7 +1,7 @@
 //! Render generation plans are metadata; rendered documents stay in the cache.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -216,6 +216,14 @@ pub trait RenderGeneration: GeneratedResources {
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.
     fn stylesheet_directories(&self) -> &[DirectoryDependency];
+    /// Exact physical CSS resolution probes, including absent candidates.
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        BTreeSet::new()
+    }
+    /// Admitting dependency folders for exact physical stylesheet watch candidates.
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        BTreeMap::new()
+    }
     /// All authored files reached by completed documents of this generation.
     fn public_files(&self) -> BTreeSet<String>;
     /// Lexical resource inputs, including targets that need repair.

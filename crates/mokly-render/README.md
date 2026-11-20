@@ -110,7 +110,29 @@ and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
-identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
+identities, plugin dependency digests, directory-glob membership, and the
+captured results of its compilation. Empty directory recipes observe later
+additions.
+Each stylesheet root compiles through its own recording tree, resolver, and
+compiler, so roots that compile in parallel never share captured results.
+The recording tree keeps each read, digest, unretained digest, and projection
+of the core CSS compiler, its resolver, and the nested-import check of
+PostCSS. A read keeps the digest of the returned bytes, so a `package.json`
+read covers every field of that file. A projection keeps the returned node. A
+read or a projection that finds nothing keeps that absence. Projections
+include resolver candidates that find no file, each path part that the
+confinement walk checks, and the alias check of each source and asset. The
+stamp checks each captured result again before reuse. A changed package entry
+or an earlier candidate that appears therefore prevents reuse. Delivery
+replays the captured read results beside the PostCSS read evidence. The
+capture adds digests and nodes, not file bytes. The store charges them under
+its existing bound. The record key holds the configuration input, the
+resolved modules, the physical source root, and the module resolution
+settings. It also holds the complete CSS resolver settings.
+Serve watches each captured path as an exact input, including resolution
+files and absent candidates. An edit to only a package's `style` or `exports`
+entry therefore starts a rebuild, which compiles each affected stylesheet
+again.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
@@ -315,6 +337,20 @@ view after the edit and counts real process starts and hello calls.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
+- [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) defines
+  `RootCompiler`, which compiles one stylesheet root, and `CapturingCompiler`.
+  For each root, `CapturingCompiler` makes a new recording tree, resolver, and
+  compiler, and returns a `Compilation`: the bundle and its `Capture`. With
+  PostCSS, it uses `PostCss::for_root`, whose nested-import check reads
+  through that root's tree and resolver. The root still shares the PostCSS
+  state of its attempt.
+- [`src/stylesheet_capture.rs`](./src/stylesheet_capture.rs) defines
+  `RecordingTree`, the source tree of one compilation, which keeps each read
+  digest and projection. It also defines `Capture`, the stamp entries and the
+  read evidence that the tree returns.
+- [`src/input_stamp.rs`](./src/input_stamp.rs) defines `InputStamp`, the
+  recorded input results that `InputStamp::matches` checks again before a
+  record is reused.
 
 ### Related Docs
 

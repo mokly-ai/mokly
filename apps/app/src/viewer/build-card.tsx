@@ -85,7 +85,6 @@ function CancelBuild({
       size="md"
       write={cancel}
       operation={cancellingOperation}
-      disabled={cancel.disabled}
       onPress={() =>
         void cancel.run(async () =>
           onCancelled(await cancelBuild(project.id, build.id)),
@@ -124,7 +123,6 @@ function TryAgain({
           icon="retry"
           write={write}
           operation={publishingOperation[reference.kind]}
-          disabled={write.disabled}
           onPress={send}
           testID="build-try-again"
         />

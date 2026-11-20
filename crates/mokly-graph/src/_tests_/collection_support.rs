@@ -160,6 +160,8 @@ pub(super) fn probe_with_cache(
     let session = Session::new(
         &graph,
         SessionInput {
+            stylesheet_resolution_files: Default::default(),
+            stylesheet_resolution_roots: Default::default(),
             config,
             catalogue,
             plans,
