@@ -2,8 +2,9 @@
 
 use std::sync::Arc;
 
-use mokly_html::composition::{ComposeRequest, CompositionAdmission};
+use mokly_html::composition::ComposeRequest;
 use mokly_html::error::HtmlError;
+use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 
@@ -17,13 +18,10 @@ pub(crate) fn document(
     session: &Session,
     plan: &DocumentPlan,
     entry: &ModelEntry,
-    admission: Option<&dyn CompositionAdmission>,
+    prepared: Option<PreparedRoot>,
 ) -> Result<Arc<Artifact>> {
     let route = plan.route.as_str();
     let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
-        if let Some(admission) = admission {
-            admission.enter();
-        }
         let resolver = markdown_links::Resolver {
             tree: session.state.tree.clone(),
             config: &session.state.config,
@@ -41,8 +39,8 @@ pub(crate) fn document(
             color_scheme: plan.color_scheme,
             stylesheets: plan.stylesheets.clone(),
         };
-        let result = match admission {
-            Some(admission) => session.state.composer.compose_admitted(&request, admission),
+        let result = match prepared {
+            Some(prepared) => session.state.composer.compose_prepared(&request, prepared),
             None => session.state.composer.compose(&request),
         };
         match result {

@@ -1,0 +1,126 @@
+//! Root acquisition precedes admission and existing-worker composition consumes it once.
+
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+
+use mokly_html::composition::ComposerMock;
+use mokly_html::fragment::{Fragment, FragmentRendererMock};
+use unimock::{MockFn, Unimock, matching};
+
+use crate::background::CompletionMock;
+use crate::cache::{MemoryCache, RenderCache};
+use crate::error::{GraphError, InternalError};
+use crate::types::RenderGeneration;
+use crate::workers::RenderWorkersMock;
+
+use super::support::{catalogue, document, route, session};
+
+#[test]
+fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consumption() {
+    let phase = Arc::new(AtomicUsize::new(0));
+    let calls = Arc::new(AtomicUsize::new(0));
+    let order = Arc::new(Mutex::new(Vec::new()));
+    let provider = Unimock::new(
+        FragmentRendererMock::render
+            .some_call(matching!(_))
+            .answers_arc(Arc::new({
+                let phase = phase.clone();
+                let calls = calls.clone();
+                let order = order.clone();
+                move |_, _| {
+                    assert_eq!(phase.load(Ordering::SeqCst), 0);
+                    calls.fetch_add(1, Ordering::SeqCst);
+                    order.lock().unwrap().push("root");
+                    Ok(Fragment {
+                        html: document("<p>Prepared</p>"),
+                        ..Default::default()
+                    })
+                }
+            })),
+    );
+    let cache = Arc::new(MemoryCache::new(1 << 20, 0));
+    let (mut session, _) = session(catalogue(), Arc::new(provider.clone()), cache.clone());
+    let actual = session.state.composer.clone();
+    let custom = Unimock::new((
+        ComposerMock::prepare_root
+            .some_call(matching!(_))
+            .answers_arc(Arc::new({
+                let actual = actual.clone();
+                move |_, request| actual.prepare_root(request)
+            })),
+        ComposerMock::compose_prepared
+            .some_call(matching!(_, _))
+            .answers_arc(Arc::new({
+                let actual = actual.clone();
+                let phase = phase.clone();
+                let order = order.clone();
+                move |_, request, prepared| {
+                    assert_eq!(phase.load(Ordering::SeqCst), 1);
+                    order.lock().unwrap().push("compose");
+                    actual.compose_prepared(request, prepared)
+                }
+            })),
+    ))
+    .no_verify_in_drop();
+    let workers = Unimock::new((
+        RenderWorkersMock::cancelled
+            .some_call(matching!())
+            .returns(false),
+        RenderWorkersMock::document
+            .some_call(matching!(_, _))
+            .answers_arc(Arc::new({
+                let phase = phase.clone();
+                let order = order.clone();
+                let cache = cache.clone();
+                move |_, route, job| {
+                    assert_eq!(*order.lock().unwrap(), ["root", "handoff"]);
+                    assert_eq!(
+                        cache.stats().misses,
+                        1,
+                        "only the fragment read precedes worker dispatch"
+                    );
+                    phase.store(1, Ordering::SeqCst);
+                    let artifact = job.artifact(route)?;
+                    assert!(matches!(
+                        job.artifact(route),
+                        Err(GraphError::Internal(InternalError::PreparedRootConsumed))
+                    ));
+                    assert_eq!(
+                        cache.stats().misses,
+                        2,
+                        "the worker performs one counted document read"
+                    );
+                    Ok(artifact)
+                }
+            })),
+    ))
+    .no_verify_in_drop();
+    let completion = Unimock::new((
+        CompletionMock::metadata_bytes
+            .some_call(matching!())
+            .returns(256_usize),
+        CompletionMock::handoff
+            .some_call(matching!(_))
+            .answers_arc(Arc::new({
+                let phase = phase.clone();
+                let order = order.clone();
+                move |_, _| {
+                    assert_eq!(phase.load(Ordering::SeqCst), 0);
+                    order.lock().unwrap().push("handoff");
+                }
+            })),
+    ));
+    let state = Arc::get_mut(&mut session.state).unwrap();
+    state.composer = Arc::new(custom.clone());
+    state.workers = Arc::new(workers.clone());
+    let artifact = session
+        .render_background(&route("caller"), Arc::new(completion.clone()))
+        .unwrap();
+    assert!(
+        String::from_utf8(artifact.bytes.clone())
+            .unwrap()
+            .contains("<p>Prepared</p>")
+    );
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(*order.lock().unwrap(), ["root", "handoff", "compose"]);
+}

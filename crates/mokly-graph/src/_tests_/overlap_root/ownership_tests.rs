@@ -88,12 +88,14 @@ fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_sig
             .unwrap()
             .contains("../target/index.html#summary")
     );
-    assert_eq!(
-        *calls.lock().unwrap(),
-        [
-            ("caller".into(), thread::current().id()),
-            ("target".into(), thread::current().id())
-        ]
+    let recorded = calls.lock().unwrap();
+    assert_eq!(recorded.len(), 2);
+    assert_eq!(recorded[0], ("caller".into(), thread::current().id()));
+    assert_eq!(recorded[1].0, "target");
+    assert_ne!(
+        recorded[1].1,
+        thread::current().id(),
+        "nested completion must run on the existing render worker"
     );
     assert!(session.state.anchor_flights.is_empty());
     assert_eq!(handed.load(Ordering::SeqCst), 1);

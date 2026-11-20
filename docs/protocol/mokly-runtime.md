@@ -46,21 +46,18 @@ viewport and colour scheme. A page renders once. A Markdown document renders
 once per enabled colour scheme. A watched change renders only the outputs whose
 inputs changed. A component with the same props on many screens renders once.
 
-The 256 MiB render cache reserves 16 MiB for transit and encoding. The tiers and the background
-[handoff charges](./mokly-on-demand.md#background-work-and-replacement) share 240 MiB. Each tier evicts in
-its own access order. Inserts and charges never wait. A handoff charge evicts compact entries until that
-tier fits the remaining room, then full entries until both tiers fit, without compaction. A charge that
-cannot fit is refused.
+The 256 MiB render cache reserves 16 MiB for transit and encoding. The tiers share 240 MiB. Each tier
+evicts in its own access order. Inserts never wait.
 
 Compaction reserves three times the document charge and one of eight encoder leases. Encoders allocate on
 first use and retain 384 KiB each, at most 3 MiB, while idle or active. If charges do not fit or no lease
 is free, the document leaves and counts as an eviction. Every exit returns the lease and the document
 charge. Other evicted artifacts leave, and compact takes room from evicted full entries, up to 128 MiB.
-Full keeps at least the larger of zero and 112 MiB less the active handoff charges.
+Full keeps at least 112 MiB.
 
-A catalogue fitting 240 MiB with its active handoff charges never restores. Compact restores exact bytes,
-trees, and trusted annotations. Only a second restore within fewer operations than full has entries
-promotes, so a full pass never promotes. A document that compact cannot keep or restore leaves the cache.
+A catalogue fitting 240 MiB never restores. Compact restores exact bytes, trees, and trusted annotations.
+Only a second restore within fewer operations than full has entries promotes, so a full pass never
+promotes. A document that compact cannot keep or restore leaves the cache.
 Decision: keep evicted documents compact. Rejected: a larger bound that still thrashes, a fixed tier split
 that reduces room for fitting catalogues, a scan-resistant order that still misses when the head exceeds
 the bound, and a Serve head capture read by the base, because it only serves Changes and adds a copy.

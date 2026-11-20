@@ -30,13 +30,22 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
-`Composer::compose_admitted` composes a Serve background view under a
-`CompositionAdmission`. The default enters completion and then calls
-`compose`, so a custom composer keeps its document place. `HtmlComposer`
-enters before it composes a template or saved slot fragments. For other
-entries, it reports the entry's own root fragment once, after that fragment
-returns without failure, with the capacity of the root contexts. Nested
-component fragments report nothing.
+`Composer::prepare_root` prepares the own root of a Serve background view
+before any tree work. `HtmlComposer` prepares only a screen, component, or
+page without an HTML template or saved slot fragments. It requests that root
+fragment once. An opaque `PreparedRoot` keeps the start state, the exact
+`FragmentRequest`, and the one result, a fragment or an error, and no parsed
+tree. `Composer::compose_prepared` starts from that state and gives the kept
+result to the root call, so composition never requests that root again.
+`compose` and `prepare_root` share one start builder and one root request
+builder, so both paths send the same request.
+
+The trait default of `prepare_root` prepares nothing, so a custom composer
+keeps the ordinary path. The trait default of `compose_prepared` returns an
+internal error, because only `HtmlComposer` builds a `PreparedRoot`.
+`PreparedRoot::into_ready` returns a failed root's composition error.
+`PreparedRoot::input_bytes` and `PreparedRoot::fragment` give the capacities of
+the kept state for its charge.
 
 `parse::html` reads HTML through the catalogue's shared HTML driver with
 scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
@@ -187,11 +196,19 @@ aligned byte must equal its source byte or be an LF from a CR.
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
   `HtmlComposer`, which compose a screen, component, or page from a
-  `ComposeRequest` into a `Composed` document. It also defines
-  `CompositionAdmission`, which `Composer::compose_admitted` uses to enter
-  completion or to report the own root fragment of a background view.
+  `ComposeRequest` into a `Composed` document. `Composer::prepare_root` and
+  `Composer::compose_prepared` split a Serve background view at its own root
+  fragment.
+- [`src/prepared_root.rs`](./src/prepared_root.rs) defines `PreparedRoot`,
+  the opaque start state, root request, and single result of one prepared
+  root.
+- [`src/compose_start.rs`](./src/compose_start.rs) and
+  [`src/javascript_request.rs`](./src/javascript_request.rs) build the start
+  state and the root `FragmentRequest` that `compose` and `prepare_root`
+  share.
 - [`src/root_context_weight.rs`](./src/root_context_weight.rs) computes the
-  capacity charge of the root contexts that an admitted root fragment keeps.
+  capacity charge of the start state and the request that a `PreparedRoot`
+  keeps.
 - [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
   JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
   records.

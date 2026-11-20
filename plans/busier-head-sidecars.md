@@ -362,19 +362,20 @@ Depends on: 2 and 3
 - [x] Attribute the HTML core increase with a context-only existing-pool variant.
 - [x] Attribute the first capture regression with the performance orchestrator's exact-arm cache counts.
 - [x] Run a fresh options check for the thread placement and transient owner.
-- [ ] Update protocol decisions and crate entry points for the accepted corrections.
-- [ ] Extract shared pre-root state and request construction. Carry one opaque successful or failed prepared result.
-- [ ] Put all full completion on existing render workers. Admit completion before pool queueing, outside flights and locks.
-- [ ] Preserve one counted cache read and exact error/trace nesting. Keep nested checks inside the owner.
-- [ ] Replace retained-cache leases with a shared 4 MiB transient owner in Stages. Restore main's cache path.
-- [ ] Add red-first regressions for the changed preparation, worker placement, cache retention, charge refusal, and cleanup behavior.
-- [ ] Preserve every existing Serve and pool test. Repeat new asynchronous tests ten times.
+- [x] Update protocol decisions and crate entry points for the accepted corrections.
+- [x] Extract shared pre-root state and request construction. Carry one opaque successful or failed prepared result.
+- [x] Put all full completion on existing render workers. Admit completion before pool queueing, outside flights and locks.
+- [x] Preserve one counted cache read and exact error/trace nesting. Keep nested checks inside the owner.
+- [x] Replace retained-cache leases with a shared 4 MiB transient owner in Stages. Restore main's cache path.
+- [x] Add red-first regressions for the changed preparation, worker placement, cache retention, charge refusal, and cleanup behavior.
+- [x] Preserve every existing Serve and pool test. Repeat new asynchronous tests ten times.
 - [ ] Measure actual charge sizes/refusals, cache counts at startup and per edit, and the corrected whole-tree memory on all fixtures.
 - [ ] Obtain the revised canonical acceptance before the pull request.
 
 Evidence: `.context/busier-sidecars/cloud-0b229-result.md`,
 `measurements/diagnostic-html-graph-placement-report.md`, and
 `performance-fix-options-check.md` under the same context folder.
+Implementation and proof: `acceptance-fix/report.md`.
 
 ## Milestone 5: Measurement and verification
 
@@ -401,7 +402,7 @@ allows independent cloud measurement while local acceptance remains open.
 Depends on: 5
 
 - [x] Commit with Conventional Commits and push. Send the implementation SHA and dist source commit immediately.
-- [ ] Integrate the highest lower step with an open pull request, under the stacking and `git-merge` rules. Recheck the combined tree.
+- [ ] After the performance orchestrator reports on the fixed SHA, merge `origin/main` once. Step 2 and PRs #352, #356, and #363 are now on main. Check overlap with #363's idle-process ranking and run the complete gate on the combined tree with Rust 1.98.1. The pull request targets main.
 - [ ] Review the complete diff with `implementation-review` after the push. Use `origin/main`, or the named stack base. Apply finding checks and both fix rounds. Record follow-ups for the rest.
 - [ ] Delete this plan under the `plans` deletion rules.
 - [ ] Open the pull request against the selected stack base. Keep dated decisions and a plan permalink in its description. Wait for final CI with the shared `finish-work` script. Fix branch failures and rerun unrelated failures once. Send the final report to the performance orchestrator. Do not merge.

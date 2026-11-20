@@ -5,7 +5,6 @@ pub mod background;
 pub mod cache;
 mod cache_encoder_pool;
 mod cache_encoding;
-pub mod cache_lease;
 mod cache_state;
 mod cache_tier;
 mod cache_transit;
@@ -48,6 +47,7 @@ pub mod urls;
 mod worker_context;
 pub mod workers;
 
+mod background_render;
 mod component_keys;
 mod config_key;
 mod evaluation;
@@ -79,10 +79,6 @@ mod boundaries_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_tests.rs"]
 mod cache_tests;
-
-#[cfg(test)]
-#[path = "_tests_/overlap_cache_tests.rs"]
-mod overlap_cache_tests;
 
 mod resource_access;
 

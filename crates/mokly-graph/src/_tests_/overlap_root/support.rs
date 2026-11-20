@@ -128,9 +128,18 @@ pub(super) struct CompletionCounts {
     pub(super) entered: AtomicUsize,
     pub(super) handed: AtomicUsize,
     pub(super) metadata: AtomicUsize,
+    pub(super) bytes: AtomicUsize,
 }
 
 pub(super) fn completion() -> (Unimock, Arc<CompletionCounts>) {
+    completion_with(true)
+}
+
+pub(super) fn refusing() -> (Unimock, Arc<CompletionCounts>) {
+    completion_with(false)
+}
+
+fn completion_with(accept: bool) -> (Unimock, Arc<CompletionCounts>) {
     let counts = Arc::new(CompletionCounts::default());
     let mock = Unimock::new((
         CompletionMock::enter
@@ -145,8 +154,13 @@ pub(super) fn completion() -> (Unimock, Arc<CompletionCounts>) {
             .each_call(matching!(_))
             .answers_arc(Arc::new({
                 let counts = counts.clone();
-                move |_, _| {
-                    counts.handed.fetch_add(1, Ordering::SeqCst);
+                move |_, bytes| {
+                    counts.bytes.store(bytes, Ordering::SeqCst);
+                    if accept {
+                        counts.handed.fetch_add(1, Ordering::SeqCst);
+                    } else {
+                        counts.entered.fetch_add(1, Ordering::SeqCst);
+                    }
                 }
             })),
         CompletionMock::metadata_bytes

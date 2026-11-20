@@ -4,7 +4,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
-use mokly_graph::cache_lease::ByteLease;
 use tokio::sync::mpsc;
 use unimock::{MockFn, Unimock, matching};
 
@@ -27,21 +26,12 @@ fn open(gate: &Gate) {
     gate.1.notify_all();
 }
 
-struct Lease(Arc<AtomicUsize>);
-impl ByteLease for Lease {}
-impl Drop for Lease {
-    fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::SeqCst);
-    }
-}
-
 #[derive(Default)]
 pub(super) struct Counts {
     pub(super) sidecars: AtomicUsize,
     pub(super) completions: AtomicUsize,
     pub(super) sidecar_peak: AtomicUsize,
     pub(super) completion_peak: AtomicUsize,
-    pub(super) leases: Arc<AtomicUsize>,
 }
 
 pub(super) struct Renders {
@@ -87,8 +77,7 @@ impl Renders {
                         send.send(("start", index)).unwrap();
                         wait(&root[index]);
                         send.send(("root", index)).unwrap();
-                        counts.leases.fetch_add(1, Ordering::SeqCst);
-                        completion.handoff(Box::new(Lease(counts.leases.clone())));
+                        completion.handoff(128);
                         counts.sidecars.fetch_sub(1, Ordering::SeqCst);
                         counts.completion_peak.fetch_max(
                             counts.completions.fetch_add(1, Ordering::SeqCst) + 1,

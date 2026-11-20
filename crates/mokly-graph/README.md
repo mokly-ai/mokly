@@ -12,8 +12,8 @@ writes no files.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
 - Encode documents losslessly for the compact tier and the comparison capture.
-- Render views through an injected worker pool, and Serve background views on
-  their caller's thread.
+- Render all views through an injected worker pool. A Serve background view
+  can first request its own root fragment on its caller's thread.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
 - Validate logical anchors across destination views.
@@ -54,19 +54,27 @@ glob matches.
 `RenderGeneration::render_background` renders one Serve background view under
 the
 [on-demand background rules](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
-A prepared generation runs `check_cancelled`, then renders on the caller's
-thread instead of the render workers. The default enters the view's
-completion place and then calls `render`. A wrapper that does not forward it
-therefore keeps its worker and never hands off. The view's
-`background::Completion` owns its completion place. Through the private
-`RootAdmission`, the view enters that place before it composes a Markdown
-document, a template, or saved slots. It also enters before a cached document
-exposes its tree. After its own root fragment returns, `RootAdmission` charges
-the fragment, the root contexts, and the queue metadata through
-`RenderCache::reserve`. A granted `ByteLease` hands the view off. A refused
-charge only enters the completion place. A failed root fragment returns its
-error without an admission. Link checks inside the view use the ordinary path
-and never hand it off.
+A prepared generation runs `check_cancelled` and opens the view's
+`render.document` span on the caller's thread. `RenderCache::contains` checks
+for the document without a count, a promotion, or a restore. A held document,
+a Markdown view, and a view that `Composer::prepare_root` does not prepare
+enter the view's completion place through `background::Completion::enter`.
+Otherwise `prepare_root` requests the own root fragment once, on the caller's
+thread, so its `render.fragment` span stays inside the view's span. A failed
+root returns its composition error at once, without a completion place.
+
+A successful root passes its byte charge to `Completion::handoff`: the
+capacities of the prepared inputs and the fragment, and the job and queue
+metadata, without JSON encoding. Each view that reaches completion runs in
+one private `BackgroundJob`, prepared or not, on the render workers, through
+`RenderWorkers::document`. The job takes its prepared root, or none, once. It
+makes the view's one counted cache read, composes, finishes, and inserts the
+document, inside the view's one `render.document` span. A second take returns
+`InternalError::PreparedRootConsumed` and renders nothing. A document that
+leaves the cache after the check composes in that job. Link checks of the view
+render inline in the same job and take no other completion place. The trait
+default enters the completion place and then calls `render`. So a wrapper that
+does not forward it keeps its worker and never hands off.
 
 Resources found during composition enter a leased dependency index. Each
 recipe retains its first observed digests. Later preparations add changed
@@ -102,8 +110,8 @@ requested identities in the document key.
 `MemoryCache` implements `dyn RenderCache` with a full tier and a compact tier
 under one total byte bound. `MemoryCache::new` takes that total and the ceiling
 of the compact tier. One sixteenth of the total is fixed headroom for documents
-in transit and their encoding workspace. The full and compact tiers and the
-active byte leases share the rest. Each tier evicts by access order. The full tier charges document bytes,
+in transit and their encoding workspace. The full and compact tiers share the
+rest. Each tier evicts by access order. The full tier charges document bytes,
 parsed trees, and evidence, including registry ownership in documents and fragments. The charge
 is an estimate of retained memory. Usage, instance, and slot records count at
 twice their JSON length. When the full tier evicts a document, the cache
@@ -113,12 +121,7 @@ allocates on first use and keeps a 384 KiB headroom charge while idle or active,
 up to 3 MiB for all eight. The encoder reuses its compressor and serialization
 buffers between documents. If the document and workspace charges do not fit,
 or no lease is free, the document leaves the cache and counts as an eviction.
-Inserts never wait. `reserve` never waits either. It evicts the oldest compact
-and full entries without encoding them, and it refuses a byte lease that the
-shared part cannot hold. A `ByteLease` returns its bytes when its owner drops
-it. `get_admitted` enters the caller's completion admission only for a key that
-the cache holds, before it reads that entry. A reservation handle releases the
-document charge and
+Inserts never wait. A reservation handle releases the document charge and
 returns the lease on every exit path, including encoding failure. Encoding runs outside the lock. Its
 completion transfers the document from transit to the compact tier in one
 locked step. The compact tier uses room from evicted full entries up to its
@@ -127,15 +130,16 @@ tier, then transit documents, then the compact tier. A transit hit returns the
 full artifact without a restore. A compact hit returns the restored artifact.
 It promotes the entry to the full tier only
 when the same key was restored before within fewer cache operations than the
-full tier has entries. An `insert` of a key that transit or the compact tier
+full tier has entries. `contains` checks the same three places for a key, but
+it counts no cache operation, promotes nothing, and restores nothing. An `insert` of a key that transit or the compact tier
 holds keeps the entry there, so a caller that stores a restored artifact again
 does not promote it. When the full tier already holds the same artifact handle,
 and a replacement would keep the same charge, an `insert` only refreshes its
 access order. It computes no new charge, and it still counts as a cache
 operation. A failed restore removes the entry, counts as a miss and as a
 restore failure, and logs an error without document data. `stats` reports the
-charged bytes of both tiers, transit, encoder leases, and active byte leases,
-retained artifact entries, and the hit,
+charged bytes of both tiers, transit, and encoder leases, retained artifact
+entries, and the hit,
 restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
@@ -355,17 +359,17 @@ retention disabled.
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
   `Artifact`, and `CacheStats`, the render cache with its full and compact
-  tiers. `RenderCache::reserve` grants a byte lease from the retained share,
-  and `RenderCache::get_admitted` enters completion before a cached tree is
-  exposed.
-- [`src/cache_lease.rs`](./src/cache_lease.rs) defines `ByteLease`, a
-  retained-byte reservation that returns its bytes when its owner drops it.
+  tiers. `RenderCache::contains` checks for a key without a count, a
+  promotion, or a restore.
 - [`src/background.rs`](./src/background.rs) defines `Completion`, the
-  completion place and dispatch release of one Serve background view. Its
-  private `RootAdmission` enters that place, or charges a successful own root
-  fragment for a handoff.
+  completion place and dispatch release of one Serve background view.
+  `Completion::handoff` receives the byte charge of a prepared root.
+- [`src/background_render.rs`](./src/background_render.rs) prepares the own
+  root of one Serve background view on the caller's thread. Its private
+  `BackgroundJob` then composes and finishes every background view on the
+  render workers, and it takes the view's prepared root, or none, once.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
-  charge of an admitted root fragment without JSON encoding.
+  charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
   the lossless compact document that the compact tier and the comparison
   capture share.

@@ -35,9 +35,7 @@ lazy sidecar pool. `--sidecars` and `MOKLY_SIDECARS` set an exact size.
 The default uses the core count as its upper bound and applies the
 [memory admission rules](../../docs/protocol/mokly-sidecar-memory.md#default-admission).
 Each command also creates one render cache at its entry point and uses it
-across catalogue preparation, document rendering, live prop previews, and the
-[handoff charges](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
-of Serve's background views.
+across catalogue preparation, document rendering, and live prop previews.
 The timing layer of `--debug-timings` reads the same cache for its cache
 counts. Head and base renders use `mokly_render::runtime::Runtime` with that
 shared pool and cache. The npm shim supplies its package root and Node
@@ -96,10 +94,11 @@ The usage pass reads the current sidecar capacity before each view starts.
 Its sliding window bounds the current pass, and its completion bound also
 counts the views of a replaced pass that still complete. Both use the smaller
 of that capacity and the worker count. Both source roots share that capacity. A
-background view renders its document on its own admitted blocking thread, not
-on the shared render workers. So a view that waits for a sidecar holds no
-render worker that another view needs. HTTP renders, build, and comparison
-keep the shared render workers. A shared admission
+background view of a JavaScript entry without saved slots waits for its own
+root fragment on its admitted blocking thread. Every background
+view builds its document on the shared render workers, as HTTP renders, build,
+and comparison do. So a view that waits for its own root fragment holds no
+render worker that another view needs. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background

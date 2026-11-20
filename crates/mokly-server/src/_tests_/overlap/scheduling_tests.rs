@@ -56,7 +56,6 @@ async fn root_handoffs_overlap_with_bounded_completion_and_ordered_reports() {
     );
     assert_eq!(renders.counts.sidecar_peak.load(Ordering::SeqCst), 2);
     assert_eq!(renders.counts.completion_peak.load(Ordering::SeqCst), 2);
-    assert_eq!(renders.counts.leases.load(Ordering::SeqCst), 0);
     assert_eq!(
         *script.published.lock().unwrap(),
         [vec![route(0), route(1), route(2), route(3)]]

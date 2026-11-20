@@ -14,7 +14,7 @@ use crate::error::GraphError;
 use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{catalogue, completion, document, route, session};
+use super::support::{catalogue, completion, document, refusing, route, session};
 
 #[test]
 fn budget_refusal_completes_the_successful_root_without_handoff_or_repeat() {
@@ -38,7 +38,7 @@ fn budget_refusal_completes_the_successful_root_without_handoff_or_repeat() {
         Arc::new(provider.clone()),
         Arc::new(MemoryCache::new(0, 0)),
     );
-    let (completion, counts) = completion();
+    let (completion, counts) = refusing();
     let result = session
         .render_background(&route("caller"), Arc::new(completion.clone()))
         .unwrap();
@@ -107,7 +107,27 @@ fn failed_root_keeps_its_single_attempt_and_never_admits_successful_completion()
     );
     let (completion, counts) = completion();
     let result = session.render_background(&route("caller"), Arc::new(completion.clone()));
-    assert!(matches!(result, Err(GraphError::Document { .. })));
+    let GraphError::Document { entry, source } = result.unwrap_err() else {
+        panic!("expected original document failure")
+    };
+    assert_eq!(entry, "caller");
+    let GraphError::Html {
+        source: HtmlError::Route {
+            route: failed_route,
+            source,
+        },
+    } = *source
+    else {
+        panic!("expected original route failure")
+    };
+    assert_eq!(failed_route, route("caller"));
+    let HtmlError::Attempt { source, warnings } = *source else {
+        panic!("expected original composition attempt")
+    };
+    assert_eq!(warnings, vec![]);
+    assert!(
+        matches!(*source, HtmlError::FragmentUnavailable { ref handle } if handle == "caller.mockup.tsx#default")
+    );
     assert_eq!(calls.load(Ordering::SeqCst), 1);
     assert_eq!(flights.len(), 0);
     assert_eq!(counts.entered.load(Ordering::SeqCst), 0);
@@ -132,7 +152,7 @@ fn spare_root_payload_capacity_refuses_overlap_but_keeps_the_original_result() {
         Arc::new(provider.clone()),
         Arc::new(MemoryCache::new(65536, 0)),
     );
-    let (completion, counts) = completion();
+    let (completion, counts) = refusing();
     let result = session
         .render_background(&route("caller"), Arc::new(completion.clone()))
         .unwrap();
@@ -143,6 +163,7 @@ fn spare_root_payload_capacity_refuses_overlap_but_keeps_the_original_result() {
     );
     assert_eq!(counts.entered.load(Ordering::SeqCst), 1);
     assert_eq!(counts.handed.load(Ordering::SeqCst), 0);
+    assert!(counts.bytes.load(Ordering::SeqCst) >= 65536);
 }
 
 #[test]

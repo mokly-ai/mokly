@@ -2,62 +2,46 @@
 
 use std::sync::{Arc, Weak};
 
-use mokly_html::composition::CompositionAdmission;
+use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
+use crate::types::DocumentPlan;
 use crate::workers::ArtifactWorker;
 use crate::{document_composition, resource_digests, validation};
 
 impl Session {
-    pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
-        self.raw_admitted(route, None)
-    }
-
     #[tracing::instrument(
         name = "render.document",
         skip_all,
         fields(viewport, scheme, cache_hit = false),
         err
     )]
-    pub(crate) fn raw_admitted(
+    pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.raw_prepared(route, None)
+    }
+
+    pub(crate) fn raw_prepared(
         &self,
         route: &str,
-        admission: Option<&dyn CompositionAdmission>,
+        prepared: Option<PreparedRoot>,
     ) -> Result<Arc<Artifact>> {
         let plan = self
             .state
             .plans
             .get(route)
             .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
-        tracing::Span::current().record(
-            "viewport",
-            match plan.viewport {
-                Some(Viewport::Mobile) => "mobile",
-                Some(Viewport::Desktop) => "desktop",
-                None => "none",
-            },
-        );
-        tracing::Span::current().record(
-            "scheme",
-            match plan.color_scheme {
-                mokly_model::axes::ColorScheme::Light => "light",
-                mokly_model::axes::ColorScheme::Dark => "dark",
-            },
-        );
-        let cached = match admission {
-            Some(admission) => self.state.cache.get_admitted(&plan.key, admission),
-            None => self.state.cache.get(&plan.key),
-        };
+        record_axes(plan);
+        let cached = self.state.cache.get(&plan.key);
         if let Some(artifact) = cached {
             tracing::Span::current().record("cache_hit", true);
             return Ok(artifact);
         }
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = document_composition::document(self, plan, entry, admission);
+        let result = document_composition::document(self, plan, entry, prepared);
         match result {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(GraphError::Document {
@@ -187,4 +171,22 @@ impl ClosureObserver for Session {
             }
         }
     }
+}
+
+pub(crate) fn record_axes(plan: &DocumentPlan) {
+    tracing::Span::current().record(
+        "viewport",
+        match plan.viewport {
+            Some(Viewport::Mobile) => "mobile",
+            Some(Viewport::Desktop) => "desktop",
+            None => "none",
+        },
+    );
+    tracing::Span::current().record(
+        "scheme",
+        match plan.color_scheme {
+            mokly_model::axes::ColorScheme::Light => "light",
+            mokly_model::axes::ColorScheme::Dark => "dark",
+        },
+    );
 }

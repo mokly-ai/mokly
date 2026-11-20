@@ -5,11 +5,9 @@ use std::mem;
 use std::sync::{Arc, Mutex};
 
 use mokly_html::composition::Composed;
-use mokly_html::composition::CompositionAdmission;
 use mokly_html::fragment::Fragment;
 
 use crate::cache_encoding::{DocumentEncoder, Encoder};
-use crate::cache_lease::{ByteLease, Reservation};
 use crate::cache_state::State;
 use crate::cache_transit::Transit;
 use crate::document_codec::EncodedView;
@@ -62,19 +60,12 @@ pub struct CacheStats {
 /// Stateful cache boundary shared by Serve, build, and comparison.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderCacheMock))]
 pub trait RenderCache: Send + Sync {
-    /// Reserve transient payload bytes without waiting, or keep ordinary scheduling.
-    fn reserve(&self, _bytes: usize) -> Option<Box<dyn ByteLease>> {
-        None
+    /// Probe retained presence without counting, promotion, restoration, or copying.
+    /// Adapters without this probe conservatively keep the ordinary worker path.
+    fn contains(&self, _key: &NodeKey) -> bool {
+        true
     }
-    /// Enter document completion before exposing a cached tree or restoring one.
-    fn get_admitted(
-        &self,
-        key: &NodeKey,
-        admission: &dyn CompositionAdmission,
-    ) -> Option<Arc<Artifact>> {
-        admission.enter();
-        self.get(key)
-    }
+
     /// Get a node. A compact document promotes only on reuse within full-tier turnover.
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>>;
     /// Retain a result when it fits. Oversized results still return to the caller.
@@ -86,7 +77,7 @@ pub trait RenderCache: Send + Sync {
 /// Bounded full artifacts and compact documents, each with its own LRU order.
 pub struct MemoryCache {
     encoder: Arc<dyn Encoder>,
-    state: Arc<Mutex<State>>,
+    state: Mutex<State>,
 }
 
 impl MemoryCache {
@@ -103,11 +94,7 @@ impl MemoryCache {
         let workspace = encoder.workspace_bytes();
         Self {
             encoder,
-            state: Arc::new(Mutex::new(State::new(
-                total_bytes,
-                compact_ceiling,
-                workspace,
-            ))),
+            state: Mutex::new(State::new(total_bytes, compact_ceiling, workspace)),
         }
     }
 
@@ -150,36 +137,11 @@ impl MemoryCache {
 }
 
 impl RenderCache for MemoryCache {
-    fn reserve(&self, bytes: usize) -> Option<Box<dyn ByteLease>> {
-        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        if !state.reserve_bytes(bytes) {
-            return None;
-        }
-        Some(Box::new(Reservation {
-            owner: self.state.clone(),
-            bytes,
-        }))
+    fn contains(&self, key: &NodeKey) -> bool {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        state.full.contains(key) || state.transit.contains(key) || state.compact.contains(key)
     }
 
-    fn get_admitted(
-        &self,
-        key: &NodeKey,
-        admission: &dyn CompositionAdmission,
-    ) -> Option<Arc<Artifact>> {
-        {
-            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-            if !state.full.contains(key)
-                && !state.transit.contains(key)
-                && !state.compact.contains(key)
-            {
-                state.operation();
-                state.stats.misses = state.stats.misses.saturating_add(1);
-                return None;
-            }
-        }
-        admission.enter();
-        self.get(key)
-    }
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>> {
         let encoded = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -249,8 +211,7 @@ impl RenderCache for MemoryCache {
                 .bytes
                 .saturating_add(state.compact.bytes)
                 .saturating_add(state.transit.bytes)
-                .saturating_add(state.encoders.bytes)
-                .saturating_add(state.leased),
+                .saturating_add(state.encoders.bytes),
             entries: state
                 .full
                 .len()
@@ -295,3 +256,7 @@ mod cache_encoding_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_reinsert_tests.rs"]
 mod cache_reinsert_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap_cache_tests.rs"]
+mod overlap_cache_tests;

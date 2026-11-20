@@ -2,7 +2,6 @@
 
 use std::future::Future;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::task::{Context, Waker};
 
 use unimock::Unimock;
@@ -88,7 +87,6 @@ async fn cancellation_discards_evidence_and_stop_drains_both_stages() {
     stop.await;
     assert_eq!(*renders.starts.lock().unwrap(), [route(0), route(1)]);
     assert!(renders.reports.lock().unwrap().is_empty());
-    assert_eq!(renders.counts.leases.load(Ordering::SeqCst), 0);
     assert!(script.published.lock().unwrap().is_empty());
 }
 
@@ -125,5 +123,4 @@ async fn replacement_discards_an_old_completion_and_only_publishes_new_evidence(
     assert!(old.reports.lock().unwrap().is_empty());
     assert_eq!(*new.reports.lock().unwrap(), [route(0)]);
     assert_eq!(*script.published.lock().unwrap(), [vec![route(0)]]);
-    assert_eq!(old.counts.leases.load(Ordering::SeqCst), 0);
 }

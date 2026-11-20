@@ -1,12 +1,15 @@
 //! Annotated HTML trees and catalogue document composition.
 #![warn(unreachable_pub)]
 
+mod compose_start;
 pub mod composition;
 pub mod controls;
 pub mod diagnostic_code;
 pub mod error;
 pub mod fragment;
+mod javascript_request;
 pub mod links;
+pub mod prepared_root;
 mod root_context_weight;
 
 #[cfg(test)]

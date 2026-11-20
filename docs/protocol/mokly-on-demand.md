@@ -78,12 +78,13 @@ catalogue order starts.
 
 A view holds its batch place from its start until it hands off or ends. A view
 holds a completion place while it builds its document: its tree, its final
-checks, its bytes, and its cache entry. A view of a JavaScript entry without
-saved slots builds its document after the entry's own fragment returns. Every
-other view enters the completion stage before any tree work: a view with an
-HTML template or saved slots, and a Markdown view. A view whose document the
-cache already holds also enters the completion stage before it reads that
-document.
+checks, its bytes, and its cache entry. A render for a link check of the view
+runs inside that place and takes no other place. A view of a JavaScript entry
+without saved slots builds its document after the entry's own fragment
+returns. Every other view enters the completion stage before any tree work: a
+view with an HTML template or saved slots, and a Markdown view. A view whose
+document the cache already holds also enters the completion stage before it
+reads that document.
 
 Only a view of a JavaScript entry without saved slots can hand off. It can hand
 off when the entry's own fragment returns without failure, from the sidecar or
@@ -94,20 +95,24 @@ a link check of the view hand off no view. A view that does not hand off keeps
 its batch place and its worker until it ends. Foreground and base renders use
 neither stage.
 
-The charge counts the state that the view keeps at its handoff, with its
-bookkeeping, against the
-[render cache bound](./mokly-runtime.md#render-graph-and-cache). It never
-waits, and it ends when the view ends, also on failure or cancellation. A view
-whose charge does not fit completes in its batch place, inside the completion
-bound.
+The charge counts the allocated bytes of the state that the view keeps at its
+handoff, with its bookkeeping, against a transient budget of 4 MiB. The budget
+is outside the [render cache bound](./mokly-runtime.md#render-graph-and-cache),
+so a charge takes no cache room and removes no cached document. One budget and
+one completion bound serve every pass of a Serve process, so the views of a
+replaced pass that still complete count with the views of the current pass. A
+charge never waits, and it ends when its view ends, also on failure or
+cancellation. A view whose charge does not fit tries no second charge: it keeps
+its batch place and its worker, and it completes inside the completion bound.
 
 A view that waits to enter the completion stage keeps its batch place and its
 worker. It waits only for a completion place, never for foreground work or for
 another worker. It blocks no shared fragment render or link check that another
 completing view needs.
 
-The stages change no document, usage, resource, warning, or diagnostic. Each
-view's build warnings and a failed render's diagnostic report once, in
+The stages change no document, usage, resource, warning, or diagnostic, and
+they repeat no fragment request. Each view's build warnings and a failed
+render's diagnostic report once, in
 catalogue order, after every earlier view of the pass has ended; a failed
 view's warnings come directly before its diagnostic. The pass publishes the
 usage of its views together after its last view ends: a completion that
@@ -149,10 +154,14 @@ overlap.
 Decision: a waiting view waits only for a completion place. A wait for
 foreground work or for a worker was rejected, because a foreground render of
 the same view can hold both while it waits for that view's render, and neither
-would then finish. Decision: a handoff charges the state that it keeps to the
-render cache bound. An uncharged handoff was rejected, because the views that
-hand off would keep memory outside every bound. A separate or larger budget was
-rejected, because it would raise the memory of the process.
+would then finish.
+
+Decision: a handoff charges the state that it keeps to its own budget of 4 MiB,
+outside the render cache bound. An uncharged handoff was rejected, because the
+views that hand off would keep memory outside every bound. A charge to the
+render cache or to its transit reserve was rejected, because it removed cached
+documents, which Changes classification then rendered again. A larger budget
+was rejected, because it would raise the memory of the process.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
 Queued base calls wait until those requests finish their sidecar work. The

@@ -6,7 +6,6 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::task::Waker;
 
 use mokly_graph::background::Completion;
-use mokly_graph::cache_lease::ByteLease;
 use tokio::sync::OwnedSemaphorePermit;
 
 use crate::background_capacity::BackgroundCapacity;
@@ -18,6 +17,7 @@ pub struct Stages {
     capacity: Arc<dyn BackgroundCapacity>,
     active: Mutex<usize>,
     changed: Condvar,
+    bytes: Mutex<usize>,
 }
 
 impl Stages {
@@ -27,6 +27,7 @@ impl Stages {
             capacity,
             active: Mutex::new(0),
             changed: Condvar::new(),
+            bytes: Mutex::new(0),
         })
     }
 
@@ -39,6 +40,18 @@ impl Stages {
             wake: Mutex::new(None),
             queue_bytes: AtomicUsize::new(0),
             route: route.into(),
+        })
+    }
+
+    fn reserve(self: &Arc<Self>, charge: usize) -> Option<Charge> {
+        let mut bytes = self.bytes.lock().unwrap_or_else(|error| error.into_inner());
+        if charge > TRANSIENT_BYTES.saturating_sub(*bytes) {
+            return None;
+        }
+        *bytes += charge;
+        Some(Charge {
+            bound: self.clone(),
+            bytes: charge,
         })
     }
 
@@ -55,6 +68,22 @@ impl Stages {
         }
         *active += 1;
         Place(self.clone())
+    }
+}
+
+const TRANSIENT_BYTES: usize = 4 * 1024 * 1024;
+
+struct Charge {
+    bound: Arc<Stages>,
+    bytes: usize,
+}
+impl Drop for Charge {
+    fn drop(&mut self) {
+        *self
+            .bound
+            .bytes
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) -= self.bytes;
     }
 }
 
@@ -75,7 +104,7 @@ struct State {
     worker: Option<OwnedSemaphorePermit>,
     priority: Option<Arc<Priority>>,
     place: Option<Place>,
-    lease: Option<Box<dyn ByteLease>>,
+    charge: Option<Charge>,
 }
 
 /// One view keeps its dispatch ownership until a charged handoff or its end.
@@ -111,7 +140,7 @@ impl Stage {
         let (released, priority) = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             (
-                (state.place.take(), state.worker.take(), state.lease.take()),
+                (state.place.take(), state.worker.take(), state.charge.take()),
                 state.priority.take(),
             )
         };
@@ -142,14 +171,18 @@ impl Completion for Stage {
             .place = Some(place);
     }
 
-    fn handoff(&self, lease: Box<dyn ByteLease>) {
+    fn handoff(&self, bytes: usize) {
+        let charge = self.bound.reserve(bytes);
         self.enter();
+        let Some(charge) = charge else {
+            return;
+        };
         {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             if self.handed.swap(true, Ordering::SeqCst) {
                 return;
             }
-            state.lease = Some(lease);
+            state.charge = Some(charge);
             state.worker.take();
             if let Some(priority) = &state.priority {
                 priority.changed.notify_waiters();

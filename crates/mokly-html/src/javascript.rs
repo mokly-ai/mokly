@@ -1,7 +1,7 @@
 //! Graft sidecar fragments through authenticated marker and slot boundaries.
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -9,19 +9,17 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::html_tokens::ignore_warning_message;
 use mokly_catalogue::numeric_warnings;
-use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::EntryContent;
-use mokly_model::material::digest;
 use mokly_model::wire_decode;
 
-use crate::composition::{CompositionAdmission, Engine};
+use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
-use crate::fragment::{FragmentRequest, RenderKind};
-use crate::root_context_weight;
+use crate::fragment::{Fragment, FragmentRequest, RenderKind};
+use crate::javascript_request;
 use crate::tree::Node;
 use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
@@ -31,7 +29,7 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: Arc<Context>,
-        admission: Option<&dyn CompositionAdmission>,
+        prepared: Option<(FragmentRequest, Result<Fragment>)>,
     ) -> Result<Expansion> {
         let entry = self
             .request
@@ -46,68 +44,15 @@ impl Engine<'_> {
                     format!("unknown JavaScript definition {path}"),
                 )
             })?;
-        let effective = if self
-            .request
-            .entry
-            .metadata
-            .variant_of
-            .as_deref()
-            .unwrap_or(&self.request.entry.metadata.path)
-            == path
-        {
-            self.request.entry
-        } else {
-            entry
+        let (request, mut result) = match prepared {
+            Some((request, result)) => (request, result?),
+            None => {
+                let request = javascript_request::build(self.request, path, kind, &context)?;
+                let result = self.fragments.render(&request)?;
+                (request, result)
+            }
         };
-        let recipe = self
-            .request
-            .catalogue
-            .javascript
-            .entries
-            .get(&effective.metadata.path);
-        let kind = if recipe.is_some_and(|source| source.method == RenderMethod::Story) {
-            RenderKind::Story
-        } else {
-            kind
-        };
-        let handle = recipe.map_or_else(
-            || {
-                format!(
-                    "{}#{}",
-                    entry.metadata.source.path,
-                    entry.metadata.source.export.as_deref().unwrap_or("default")
-                )
-            },
-            |source| source.handle.clone(),
-        );
-        let tokens: BTreeMap<_, _> = context
-            .slots
-            .keys()
-            .map(|name| {
-                (
-                    name.clone(),
-                    digest(format!("mokly-placeholder:{path}:{name}").as_bytes()),
-                )
-            })
-            .collect();
-        let mut result = self.fragments.render(&FragmentRequest {
-            handle,
-            entry_path: effective.metadata.path.clone(),
-            entry_title: effective.metadata.title.clone(),
-            kind,
-            props: context.props.clone(),
-            viewport: self.request.viewport,
-            color_scheme: self.request.color_scheme,
-            ignore_enabled: context.ignore,
-            slots: tokens.clone(),
-            saved_slots: recipe.map_or_else(BTreeMap::new, |source| source.slots.clone()),
-        })?;
-        if let Some(admission) = admission {
-            admission.root_fragment(
-                &result,
-                root_context_weight::retained(self.request, &context),
-            );
-        }
+        let tokens = request.slots;
         self.styles.extend(result.styles.clone());
         self.resources.extend(result.resources.clone());
         self.warnings.extend(result.warnings.clone());
@@ -133,7 +78,7 @@ impl Engine<'_> {
         }
         checks.validate(page)?;
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
-            && effective.metadata.path == self.request.entry.metadata.path;
+            && request.entry_path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(
             nodes,
             &result,
@@ -201,10 +146,10 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: &Context,
-        admission: Option<&dyn CompositionAdmission>,
+        prepared: Option<(FragmentRequest, Result<Fragment>)>,
     ) -> Result<Vec<Node>> {
         let expansion =
-            self.javascript_expansion(path, kind, Arc::new(context.clone()), admission)?;
+            self.javascript_expansion(path, kind, Arc::new(context.clone()), prepared)?;
         self.expand(expansion)
     }
 }

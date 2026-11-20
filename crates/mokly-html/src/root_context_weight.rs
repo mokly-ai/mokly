@@ -1,25 +1,33 @@
-//! Capacity charges for the two root input contexts retained across admission.
+//! Capacity charges for owned prepared root inputs, without temporary encodings.
 
 use std::mem;
 
 use mokly_model::data::{DataValue, Props};
 use mokly_model::prop_schema::{Constant, JsonType, Primitive, PropSchema, Types};
 
-use crate::composition::{ComposeRequest, Engine};
 use crate::context::Context;
+use crate::fragment::FragmentRequest;
+use crate::prepared_root::PreparedRoot;
 
-pub(crate) fn retained(request: &ComposeRequest<'_>, context: &Context) -> usize {
-    mem::size_of::<Engine<'_>>()
-        + mem::size_of::<ComposeRequest<'_>>()
-        + strings(&request.stylesheets)
-        + 2 * (mem::size_of::<Context>()
-            + props(&context.props)
-            + schema(&context.schema)
-            + context.source.path.capacity()
-            + context.source.export.as_ref().map_or(0, String::capacity)
-            + context.link_base.capacity()
-            + strings(&context.declared_slots))
-        + 2 * mem::size_of::<usize>()
+pub(crate) fn prepared(parent: &String, context: &Context, request: &FragmentRequest) -> usize {
+    mem::size_of::<PreparedRoot>()
+        + parent.capacity()
+        + props(&context.props)
+        + schema(&context.schema)
+        + context.source.path.capacity()
+        + context.source.export.as_ref().map_or(0, String::capacity)
+        + context.link_base.capacity()
+        + strings(&context.declared_slots)
+        + request.handle.capacity()
+        + request.entry_path.capacity()
+        + request.entry_title.capacity()
+        + props(&request.props)
+        + request
+            .slots
+            .iter()
+            .chain(&request.saved_slots)
+            .map(|(key, value)| 256 + key.capacity() + value.capacity())
+            .sum::<usize>()
 }
 
 fn strings(values: &Vec<String>) -> usize {
