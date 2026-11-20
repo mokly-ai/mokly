@@ -34,11 +34,14 @@ until an input changes or it leaves the cache under the
 a document that left the cache reads it from the render store or renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
-take priority over background work: a background render that has not started
-does not start while a foreground request is active, and a foreground render
-that needs a sidecar does not wait behind queued background renders. A
-foreground request that finds every worker busy with background renders waits
-for the first of them to end; an active render is not interrupted. A failed
+take priority over background work: a background lookup or render that has
+not started does not start while a foreground request is active, and a
+foreground render that needs a sidecar does not wait behind queued background
+renders. A foreground request that finds every worker busy with background
+views waits until the first of them ends,
+[hands off](./mokly-on-demand-background.md#batch-and-completion), or
+[misses its lookup](./mokly-on-demand-background.md#window-and-lookup). An
+active lookup or render is not interrupted. A failed
 render answers 500, enters no cache, and makes no other route unavailable.
 Its typed diagnostic goes to the selected CLI reporter on stderr; the HTTP
 response carries the safe error envelope. A render that passes its deadline
@@ -64,46 +67,18 @@ model or the render store.
 After readiness, Serve renders every view in the background, or reads it from
 the render store, which fills the render cache and the usage of every detail,
 then classifies Changes, which renders the base side under the
-[comparison contract](./mokly-comparison.md#sides). This background pass
-renders a bounded batch of views at a time: at most the smaller of the worker
-count and the [sidecar capacity](./mokly-sidecar-memory.md#capacity), and at
-least one. The worker count is the machine's core count, up to eight. Each
-view start reads the current capacity and takes no
-[claim](./mokly-sidecar-memory.md#claims). The next view starts as soon as the
-batch has fewer views than its bound, and views start in catalogue
-order: when several views wait for one free worker, the first in catalogue
-order starts. Each view's build warnings and a failed render's diagnostic
-report once, in catalogue order, after every earlier view of the pass has
-ended; a failed view's warnings come directly before its diagnostic. The
-pass publishes the
-usage of its views together after its last view ends: a completion that
-changes the index or a detail publishes one revision under the
-[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Background
-work is bounded, yields to foreground renders, and cannot publish after its
-state is superseded by a watched change; a superseded result is discarded. A
-stop or a replacement starts no further view of the superseded pass and
-discards its unreported warnings and failures; a view that already renders
-finishes under its deadlines. `--no-watch` runs this work once.
-
-Decision: the batch is a sliding window. Fixed batches, which wait for their
-slowest view before the next batch starts, were rejected, because one slow
-view leaves the other workers idle. Decision: the batch is bounded by the
-smaller of the worker count and the sidecar capacity. The worker count alone
-and the pool size alone were rejected, because renders beyond the capacity
-would wait for a sidecar while they hold workers that foreground renders need.
-Keeping one worker free for foreground requests was rejected, because it slows
-every pass. Decision: a view start takes no claim. A claim for each started
-view was rejected, because an HTML view would hold sidecar capacity that it
-never uses, and the call order of sidecar admission already keeps foreground
-priority. Decision: warnings and
-failures report in catalogue order. Reporting each view when its render ends
-was rejected, because the order of the lines would change between runs.
+[comparison contract](./mokly-comparison.md#sides). The
+[background pass](./mokly-on-demand-background.md) defines how this pass
+starts, looks up, renders, reports, and stops its views.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
 Queued base calls wait until those requests finish their sidecar work. The
 queued calls of started background views go after the other queued head calls,
-such as the calls of HTTP renders. A call of a started view does not wait for
-the end of an HTTP request. Active calls finish under their deadlines.
+such as the calls of HTTP renders. The later calls of a view in the
+[completion stage](./mokly-on-demand-background.md#batch-and-completion) are
+such calls. So a batch view can wait behind them while it holds its worker. A
+call of a started view does not wait for the end of an HTTP request. Active
+calls finish under their deadlines.
 
 Head and base calls share the
 [sidecar capacity](./mokly-sidecar-memory.md#capacity), including a capacity
@@ -121,6 +96,12 @@ before memory fell, or while base calls held the sidecars, would then delay a
 foreground render. A wait for the end of each HTTP request was rejected,
 because that request can share the render of the view, and neither would then
 finish.
+
+Decision: a batch view can wait behind the later calls of the completion
+stage. A batch place for each later call was rejected, because waiting batch
+views and completing views would then wait for each other, and none would
+finish. The wait is bounded: the completion bound limits those calls, each call
+ends under its deadline, and foreground calls still go first.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no

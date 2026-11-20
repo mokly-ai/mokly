@@ -14,6 +14,7 @@ use tokio::sync::Semaphore;
 use crate::asset_streams::AssetResult;
 use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
+use crate::background_dispatch::Dispatch;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::foreground::Foreground;
@@ -21,6 +22,7 @@ use crate::priority::Priority;
 use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
+use crate::work_active::ActiveJobs;
 use crate::work_page::Page;
 
 /// Bound native HTTP and render scheduling to available machine parallelism.
@@ -31,12 +33,17 @@ pub fn parallelism(available: usize) -> u32 {
 #[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
 pub trait Work: Send + Sync {
+    /// Fixed native worker maximum; reading it performs no admission work.
+    fn parallelism(&self) -> usize {
+        1
+    }
     /// Render one background document only when foreground admission is idle, and
     /// return its warnings unreported.
     async fn background(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>>;
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
@@ -75,6 +82,7 @@ pub struct Workers {
     pages: Mutex<BTreeMap<String, Weak<Page>>>,
     pub(crate) closed: AtomicBool,
     parallelism: u32,
+    pub(crate) background_jobs: Arc<ActiveJobs>,
 }
 
 #[cfg(test)]
@@ -101,6 +109,7 @@ impl Workers {
             priority: Arc::new(Priority::default()),
             diagnostics,
             parallelism,
+            background_jobs: Arc::new(ActiveJobs::default()),
             workers: Arc::new(Semaphore::new(parallelism as usize)),
             turn: Semaphore::new(1),
             queued: Arc::new(Semaphore::new(8)),
@@ -112,12 +121,16 @@ impl Workers {
 
 #[async_trait]
 impl Work for Workers {
+    fn parallelism(&self) -> usize {
+        self.parallelism as usize
+    }
     async fn background(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>> {
-        self.background_render(documents, route).await
+        self.background_render(documents, route, dispatch).await
     }
     async fn generated(
         &self,
@@ -262,6 +275,7 @@ impl Work for Workers {
             .clone()
             .acquire_many_owned(self.parallelism)
             .await;
+        self.background_jobs.drain().await;
         self.pages
             .lock()
             .unwrap_or_else(|error| error.into_inner())

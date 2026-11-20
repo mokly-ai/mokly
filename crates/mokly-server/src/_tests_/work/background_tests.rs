@@ -1,5 +1,6 @@
 //! Foreground jobs pass queued background work between document boundaries.
 
+use crate::background_support::dispatch;
 use std::future::Future;
 use std::sync::{Arc, Condvar, Mutex};
 use std::task::{Context, Waker};
@@ -60,10 +61,13 @@ async fn foreground_precedes_waiting_background_and_jobs_remain_bounded() {
     let first = tokio::spawn({
         let work = work.clone();
         let documents = documents.clone();
-        async move { work.background(documents, "first".into()).await }
+        async move {
+            work.background(documents, "first".into(), dispatch(1))
+                .await
+        }
     });
     started.notified().await;
-    let mut second = Box::pin(work.background(documents.clone(), "second".into()));
+    let mut second = Box::pin(work.background(documents.clone(), "second".into(), dispatch(1)));
     let mut foreground = Box::pin(work.generated(documents, "foreground".into()));
     let mut context = Context::from_waker(Waker::noop());
     assert!(second.as_mut().poll(&mut context).is_pending());
@@ -120,16 +124,17 @@ async fn queued_background_renders_admit_in_request_order() {
         async move { work.generated(documents, "foreground".into()).await }
     });
     started.notified().await;
-    let mut first = work.background(documents.clone(), "first".into());
-    let mut second = work.background(documents, "second".into());
+    let mut first = work.background(documents.clone(), "first".into(), dispatch(1));
+    let mut second = work.background(documents, "second".into(), dispatch(1));
     let mut context = Context::from_waker(Waker::noop());
     assert!(first.as_mut().poll(&mut context).is_pending());
     assert!(second.as_mut().poll(&mut context).is_pending());
     release(&gate);
     assert!(foreground.await.unwrap().unwrap().is_none());
     assert!(second.as_mut().poll(&mut context).is_pending());
-    first.await.unwrap();
-    second.await.unwrap();
+    let (first, second) = tokio::join!(first, second);
+    first.unwrap();
+    second.unwrap();
     work.stop().await;
     assert_eq!(*order.lock().unwrap(), ["foreground", "first", "second"]);
 }

@@ -3,7 +3,7 @@
 use std::collections::{BTreeSet, VecDeque};
 use std::mem;
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use mokly_graph::document_store::{EntryFault, StoreKey, StoreStats};
 use mokly_graph::export_memory::ExportBuffer;
@@ -95,6 +95,19 @@ impl Pending {
     }
 }
 
+/// One ordinary read's accounting lock.
+pub(crate) struct ReadState<'a> {
+    /// Existing pending counters, held through publication and observer delivery.
+    pub(crate) pending: MutexGuard<'a, Pending>,
+}
+
+impl ReadState<'_> {
+    /// Publish once while retaining the ordinary pending-counter guard.
+    pub(crate) fn emit(&mut self, shared: &Shared, observer: &dyn StoreObserver) {
+        shared.emit(self.pending.stats, observer);
+    }
+}
+
 pub(crate) struct Shared {
     pub(crate) pending: Mutex<Pending>,
     pub(crate) admission: Arc<Admission>,
@@ -125,6 +138,16 @@ impl Shared {
                 snapshot: stats,
                 contended_drops: 0,
             }),
+        }
+    }
+
+    /// Keep ordinary loads on their existing blocking accounting path.
+    pub(crate) fn read_state(&self) -> ReadState<'_> {
+        ReadState {
+            pending: self
+                .pending
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()),
         }
     }
 
@@ -190,3 +213,7 @@ impl Publication {
         stats
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/render_read_accounting_tests.rs"]
+mod render_read_accounting_tests;

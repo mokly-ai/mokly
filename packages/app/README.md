@@ -138,6 +138,24 @@ It builds the web app before the shard runs.
 - `public/folio` and `public/mokly-viewer` are copies that `sync:styles` makes
   before every start, build and test. Never edit the copy: change
   `docs/mockups/styles` or bump the viewer pin instead.
+- The Mac desktop app's window has no title bar, as
+  [Mac window](../../docs/protocol/cloud/desktop-bundle.md#mac-window) requires.
+  The shared `docs/mockups/styles/product/shared.css` holds the window styles:
+  the start and end insets `--fo-window-inset` and `--fo-window-inset-end`
+  from the window controls overlay, the drag rule over the cloud-owned top
+  bars and the band of a screen without one, and the opt-out for each control
+  in them and each dialog, sheet and menu surface. Each top bar's own rule
+  keeps its padding at least as wide as the insets. Where the window reports
+  its buttons, the account header, the band and the viewer's fallback and
+  loading bars stay at the top while the page scrolls, and draw the page's
+  background once content scrolls under them. A browser reports no overlay,
+  so both insets are zero, every bar keeps its usual padding and scrolls with
+  the page, the band has no height, and the browser ignores
+  `-webkit-app-region`. While the window reports its buttons, the drag check
+  turns off each of these areas that a part of the viewer package or a
+  focused skip link covers, so the cover takes presses. A cloud dialog, sheet
+  or menu is no cover. A new drag area goes into the drag rule, the marker
+  rule beside it and the check's list in `src/layout/drag-covers.ts`.
 - The [testing guide](./testing.md) describes the logic suite, the browser
   suite and the recorded GitHub.
 - `react-hooks/exhaustive-deps` is an error over `src` and `app`, and the
@@ -169,7 +187,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `index.ts` — the entry, which takes an authentication landing's provider input off the address before `expo-router/entry` loads.
 - `app.json` — the Expo configuration: the single-page web output, the disabled route sitemap and the `mokly` scheme through which the connect page hands the desktop app its grant.
 - `app/` — the root-relative route tree: static account, callback and UUID resolver routes beside `[workspace]`, which holds the `-` sentinel for workspace actions and `[project]`.
-- `app/_layout.tsx` — the document frame that mounts the theme, the toasts, the session, resource invalidation, the drafts, the catalogue source and the settings dialog host around every route.
+- `app/_layout.tsx` — the document frame that mounts the theme, the toasts, the session, resource invalidation, the drafts, the catalogue source and the settings dialog host around every route, and starts the drag check once.
 - `app/+not-found.tsx` — the unmatched-route owner, which renders the recovery screen with one `/dashboard` action and reads no product data.
 - `app/_sitemap.tsx` — the static route for the reserved `/_sitemap` address, which renders the same recovery screen because the dynamic workspace segment would otherwise claim it.
 - `public/index.html` — the document shell: `noindex`, the viewer and Folio stylesheets, then `app.css`.
@@ -178,6 +196,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/theme/provider.tsx` — `AppTheme`, which emits `responsiveTokenCss` into the document, sets `folio-scope` and `data-color-scheme` on the root, and provides the `@firna/ui` theme from `paletteUiTheme`.
 - `src/theme/scheme.ts` — `useReaderScheme`, the one reading of the color scheme that the chrome, the hosted viewer's `theme` and the default preview scheme share.
 - `src/layout/viewport.ts` — `useCompact`, the one breakpoint reading that chooses the compact composition for the whole application.
+- `src/layout/covered-drag-areas.ts` — `useCoveredDragAreas`, the drag check of the Mac window. It runs only while `--fo-window-inset` or `--fo-window-inset-end` is above zero, and it reads them again on each resize and overlay geometry change. A browser attaches only those two listeners. While it runs, it checks at most once a frame after each change of the page, resize and focus change, and after each scroll of the page or of an element whose box meets a drag area. `src/layout/drag-covers.ts` is one check: it tests points of each drag area with `document.elementFromPoint`, and it marks an area with `data-mkc-drag-covered` where a part inside the `data-mkc-viewer-host` wrapper of `ViewerHost` or a `.skip-link` covers it. `src/_tests_/mac-window/covered.spec.ts` tests it.
 - `src/api/generated/schema.ts` — the paths and components generated from the Rust-derived `docs/api/openapi.json`, with local aliases in `src/api/types.ts`; regenerate them with `cargo xtask openapi`, never edit them.
 - `src/api/client.ts` — the `openapi-fetch` client, the per-call `X-Request-ID`, the typed error conversion, and `mutationHeaders()`, which adds the CSRF token to every mutation while the browser supplies `Origin`.
 - `src/api/errors.ts` — `ApiError`, the one typed failure with `code`, `reason`, `message`, `requestId`, the status and `Retry-After`, for envelopes, non-envelopes and transport failures alike; `dataFor(reason)` returns the typed `data` of that reason.
@@ -221,6 +240,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/components/icons.tsx` — `icons` and `Icon`, the product chrome's glyph vocabulary, the same map the catalogue draws from `docs/mockups/src/screens/product/icons.tsx`.
 - `src/components/write-failure.tsx` — the registered write-failure fragment, the only place a cause and a reference are assembled. It is one element at rest, refused and while a retry works, so the control inside it keeps its node and the reader's focus; at rest it draws no box.
 - `src/components/plan-consequence.tsx` — the role rule for a refused plan gate: an owner opens Billing and everyone else asks an owner.
+- `src/components/window-band.tsx` — `WindowBand`, the band that moves the Mac window on a screen without a top bar: the session frame of `src/session/guard.tsx` and Not found.
 - `src/screens/account/` — sign in, sign up, the magic link, the callback landings, the desktop app's entry (`desktop-entry-screen.tsx`, with `DesktopSignInWait`, its wait), the browser page that signs it in (`connect-desktop-screen.tsx`, which draws its confirmation while the session read runs) and its landing (`desktop-callback-screen.tsx`), invitation acceptance and the three setup steps. The install and repository steps each draw only the reader's own situation and hand the other one on: `install-screen.tsx` draws the reader's role and replaces a reader whose workspace is connected with the repository step, and `choose-repository-screen.tsx` sends every other installation state back to the install step. `connect-screen.tsx` is the connect situation, `cli-form-screen.tsx` the CLI form, `repository-choices.ts` and `repository-field.tsx` the grouped select and the manage link's destination, `project-address.tsx` the slug and address both project forms share, and `project-name.ts` the display name both derive from the repository, cut to the API's display name limit. Each setup step and the finished project export their wait beside the screen, `CreateWorkspaceWait`, `InstallWait`, `ConnectWait`, `ChooseRepositoryWait`, `CliFormWait` and `ProjectCreatedWait`: the screen's own layout component with its parts in waiting form, which the session read, the route's read and the screen's own reads draw. `install-suspension.tsx` is the install step's suspension fact, `repository-form.tsx` the repository step's panel and form, `repository-project.ts` the project that step creates, and `cli-form-layout.tsx` the CLI form's panel and form.
 - `src/screens/app/` — the resolver routes: `/dashboard`, a workspace, a UUID permalink, project setup and the not-found screen. `resolver-wait.tsx` is the resolvers' one wait, and `workspace-route.tsx` and `project-route.tsx` require the waiting layout of their destination, which `viewer-route.tsx` gives as the cloud frame.
 - `src/screens/viewer/viewer-screen.tsx` — the viewer route; `address-state.ts` reads the selection, `viewer-catalogue.ts` pairs the access exchange with the catalogue source, `reference-redirect.ts` replaces a resolved alias with its publication's address, `slots.tsx` composes the six controls into two slots, with the reference trigger as its placeholder until the address or a read names the reference, `more-menu.tsx` draws the rows of More from the bar's placement, `carriers.ts` holds the slot refs and finds the control that carries an overlay's action now, `panel-host.tsx` draws the one open panel, and `body.tsx` is `ViewerMain`, the main landmark and its skip link, and `ViewerBody`, which keeps the stage mounted under an overlay. `frame-wait.tsx` is `ViewerFrameWait`, the cloud frame while the route reads the session or the project: one waiting region whose heading names the read for screen readers, over the bar's controls in their waiting forms and the stage's waiting card. It measures its own width as the viewer does, so its bar waits in the composition that the loaded bar draws.
@@ -258,6 +278,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/_tests_/screen-policy.ts` — the landmark, heading, skip-link and title rules every registered screen meets; logic tests stand in for a page with `page-window.ts`.
 - `src/_tests_/protocol-symbols.test.ts` — fails when a listed protocol doc names a `symbol()` this package does not declare.
 - `src/_tests_/viewer/layout.spec.ts` — desktop and phone height checks, and bar checks at 768px and 1024px. It also narrows and widens the viewer inside a wide window. It opens History, moves the viewer's width across the bar's switch width, closes History and checks focus: History after widening, More after narrowing. `src/viewer/bar-width.tsx` chooses the bar layout from the one switch rule in the shared `docs/mockups/styles/product/viewer.css`, through a probe that only the full bar draws. Other views and touch targets keep `useCompact()`.
+- `src/_tests_/mac-window/` — the Mac window checks. Chromium computes `-webkit-app-region`, so `toHaveCSS` reads it. In a browser both insets are zero and the band has no height. Each top bar and band moves the window, and each control in it, each dialog and each menu takes clicks. With the buttons emulated at either edge, every bar keeps clear of them, and the full bar keeps its controls apart at the switch width. The top area stays in view after a scroll, and in a browser it scrolls away as before. An expanded preview frame, the open compact search and a focused skip link turn off the area under them until they go or scroll away, a dialog does not, and a browser checks no area. `regions.ts` holds the shared reads and the emulation, also from a page's first script, `scroll.ts` the scroll helpers, and `hit-tests.ts` counts the page's hit tests.
 - `src/_tests_/data/resource-key.spec.ts` — the real React probe for the resource hook. It imports the `esbuild` API, which this package declares as an exact dev dependency.
 - `scripts/build-web.mjs` and `scripts/serve-dist.mjs` — the verified export and the local static server; `sync-styles.mjs` copies the stylesheets and `verify-web-build.mjs` proves the stylesheet, font and bundle bytes.
 - `metro.config.js` — Expo's resolver with the two npm workspace module roots and hierarchical lookup disabled.
