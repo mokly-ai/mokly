@@ -3,6 +3,7 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Arc;
 
+use crate::fixture_leases::FixtureLeases;
 use crate::methods::BundleCapture;
 use crate::pool::SidecarPool;
 
@@ -11,10 +12,11 @@ use super::recipe_support::{Fixture, envelope_size, envelope_size_with_capture};
 #[test]
 fn seed_restores_the_highest_live_epoch_on_each_fresh_worker() {
     let fixture = Fixture::new(usize::MAX);
-    fixture.select(0);
-    fixture.bundle("entry.ts", "a-old");
-    fixture.select(0);
-    fixture.bundle("entry.ts", "z-new");
+    {
+        let _leases = FixtureLeases::only(&fixture.pool, 0);
+        fixture.bundle("entry.ts", "a-old");
+        fixture.bundle("entry.ts", "z-new");
+    }
     for slot in 1..4 {
         assert_eq!(fixture.probe("entry.ts", "probe", slot), ["z-new"]);
     }
@@ -134,8 +136,10 @@ fn captured_live_seeds_take_priority_over_newer_live_and_released_edit_seeds() {
     let fixture = Fixture::new(usize::MAX);
     fixture.bundle("entry.ts", "captured");
     let older = fixture.bundle_with_capture("entry.ts", "older-edit", BundleCapture::ServeEdit);
-    fixture.select(1);
-    let edit = fixture.bundle_with_capture("entry.ts", "edit", BundleCapture::ServeEdit);
+    let edit = {
+        let _leases = FixtureLeases::only(&fixture.pool, 1);
+        fixture.bundle_with_capture("entry.ts", "edit", BundleCapture::ServeEdit)
+    };
     assert_eq!(
         fixture.probe_with_capture("entry.ts", "probe", 2, BundleCapture::ServeEdit),
         ["captured", "edit"]

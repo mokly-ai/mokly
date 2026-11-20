@@ -69,6 +69,14 @@ fn interpreter_probe() {
     let Some(tools) = std::env::var_os("MOKLY_NPM_INTERPRETER_PROBE") else {
         return;
     };
+    for (name, script) in [
+        ("npm", b"#!/usr/bin/env node\n".as_slice()),
+        ("node", b"#!/bin/sh\nprintf trusted-node\n"),
+    ] {
+        let path = std::path::Path::new(&tools).join(name);
+        std::fs::write(&path, script).unwrap();
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
     let temporary = tempfile::tempdir().unwrap();
     let node = temporary.path().join("node");
     std::fs::write(&node, b"#!/bin/sh\nprintf history-node\n").unwrap();
@@ -98,14 +106,6 @@ fn interpreter_probe() {
 #[test]
 fn npm_interpreters_also_ignore_relative_path_entries() {
     let tools = tempfile::tempdir().unwrap();
-    for (name, script) in [
-        ("npm", b"#!/usr/bin/env node\n".as_slice()),
-        ("node", b"#!/bin/sh\nprintf trusted-node\n"),
-    ] {
-        let path = tools.path().join(name);
-        std::fs::write(&path, script).unwrap();
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
-    }
     let output = std::process::Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "interpreter_probe", "--nocapture"])
         .env("MOKLY_NPM_INTERPRETER_PROBE", tools.path())
@@ -189,16 +189,6 @@ fn cancellation_kills_a_script_child_tree() {
             .success()
     );
     assert!(std::fs::metadata(&marker).unwrap().file_type().is_fifo());
-    let script = temporary.path().join("manager");
-    std::fs::write(
-        &script,
-        format!(
-            "#!/bin/sh\nsleep 1000 &\nchild=$!\nprintf '%s' \"$child\" > {}\nwait $child\n",
-            marker.display()
-        ),
-    )
-    .unwrap();
-    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
     let cancellation = Arc::new(Token::default());
     let commands = mokly_compare::commands::TimedCommands {
         spawner: Arc::new(mokly_compare::process::SystemSpawner {
@@ -214,8 +204,13 @@ fn cancellation_kills_a_script_child_tree() {
         }),
     };
     let command = mokly_compare::commands::Command {
-        program: script.into_os_string(),
-        args: Vec::new(),
+        program: "/bin/sh".into(),
+        args: vec![
+            "-c".into(),
+            "sleep 1000 &\nchild=$!\nprintf '%s' \"$child\" > \"$1\"\nwait $child\n".into(),
+            "mokly-cancellation-fixture".into(),
+            marker.as_os_str().to_owned(),
+        ],
         scripts: false,
         directory: temporary.path().to_owned(),
         timeout: std::time::Duration::from_secs(120),
