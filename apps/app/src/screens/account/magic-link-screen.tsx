@@ -80,7 +80,6 @@ export function MagicLinkScreen({
               block
               write={resend}
               operation="Sending sign-in link"
-              disabled={resend.disabled}
               onPress={() => void again()}
               testID="resend-link"
             />
@@ -104,7 +103,6 @@ export function MagicLinkScreen({
                 block
                 write={send}
                 operation="Sending sign-in link"
-                disabled={send.disabled}
                 onPress={() => void first()}
                 testID="send-link"
               />

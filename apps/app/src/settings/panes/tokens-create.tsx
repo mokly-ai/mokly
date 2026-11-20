@@ -157,7 +157,6 @@ export function CreateToken({
               icon="start"
               write={creation}
               operation="Creating token"
-              disabled={creation.disabled}
               onPress={() => void create()}
               testID="create-token"
             />

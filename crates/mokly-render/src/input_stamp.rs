@@ -12,6 +12,8 @@ use crate::postcss_scan::{Scan, glob};
 pub(crate) struct InputStamp {
     pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
+    pub(crate) unretained: BTreeMap<PathBuf, Option<String>>,
+    pub(crate) projections: BTreeMap<PathBuf, Option<Option<Node>>>,
     pub(crate) assets: BTreeMap<PathBuf, Option<(Node, String)>>,
     pub(crate) identities: BTreeMap<PathBuf, Option<(Node, String)>>,
     pub(crate) directories: BTreeMap<(PathBuf, String), Option<Vec<PathBuf>>>,
@@ -22,6 +24,7 @@ impl InputStamp {
         let files: usize = self
             .files
             .iter()
+            .chain(self.unretained.iter())
             .map(|(path, digest)| {
                 path.capacity()
                     + digest.as_ref().map_or(0, String::capacity)
@@ -68,7 +71,20 @@ impl InputStamp {
                         .map_or(0, |(node, hash)| node.identity.capacity() + hash.capacity())
             })
             .sum();
-        (files + directories + memberships + assets).saturating_mul(2)
+        let projections: usize = self
+            .projections
+            .iter()
+            .map(|(path, node)| {
+                size_of_val(path)
+                    + path.capacity()
+                    + size_of_val(node)
+                    + node
+                        .as_ref()
+                        .and_then(Option::as_ref)
+                        .map_or(0, |node| node.identity.capacity())
+            })
+            .sum();
+        (files + directories + memberships + assets + projections).saturating_mul(2)
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
@@ -110,6 +126,8 @@ impl InputStamp {
         let Self {
             memberships,
             files,
+            unretained,
+            projections,
             assets,
             identities,
             directories,
@@ -118,6 +136,12 @@ impl InputStamp {
         let mut scan = Scan::default();
         files.iter().filter(|(path, _)| !dependency(path)).all(file)
             && files.iter().filter(|(path, _)| dependency(path)).all(file)
+            && unretained
+                .iter()
+                .all(|(path, hash)| tree.digest_unretained(path).ok() == *hash)
+            && projections
+                .iter()
+                .all(|(path, node)| tree.project(path).ok() == *node)
             && memberships
                 .iter()
                 .all(|(path, names)| membership(tree, path) == *names)

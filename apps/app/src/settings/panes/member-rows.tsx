@@ -142,7 +142,6 @@ function InvitationRow({
             size="md"
             write={withdraw}
             operation="Revoking invitation"
-            disabled={withdraw.disabled}
             onPress={() => void withdraw.run(() => revoke(person))}
             testID="revoke-invitation"
           />

@@ -70,27 +70,30 @@ export function SlugEditor({
       : failure.on("slug");
   const field = subject === "workspace" ? "Workspace slug" : "Project slug";
 
-  const control = (
+  // After a version conflict the control is Reopen, which sends no write: it
+  // reads the stored address again. So only Save changes is bound to the
+  // write, and Reopen takes neither its refusal nor its wait. Both forms are
+  // the one Action in one place, so the control keeps its node and its focus.
+  const control = conflict ? (
     <Action
-      label={
-        conflict
-          ? "Reopen"
-          : failure.label("Save changes", "Saving…", "Try again")
-      }
+      label="Reopen"
+      tone="primary"
+      size="md"
+      onPress={() => {
+        reload();
+        drafts.forget(fieldKey);
+        closePaneView();
+      }}
+      testID={`save-${subject}-slug`}
+    />
+  ) : (
+    <Action
+      label={failure.label("Save changes", "Saving…", "Try again")}
       tone="primary"
       size="md"
       write={write}
       operation={`Saving ${subject} address`}
-      disabled={conflict ? false : write.disabled}
-      onPress={
-        conflict
-          ? () => {
-              reload();
-              drafts.forget(fieldKey);
-              closePaneView();
-            }
-          : () => void submit()
-      }
+      onPress={() => void submit()}
       testID={`save-${subject}-slug`}
     />
   );

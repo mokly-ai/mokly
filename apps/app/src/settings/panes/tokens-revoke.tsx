@@ -47,7 +47,6 @@ export function RevokeToken({
             size="md"
             write={revoke}
             operation="Revoking token"
-            disabled={revoke.disabled}
             onPress={() =>
               void revoke.run(() => revokeToken(project.id, token.id))
             }

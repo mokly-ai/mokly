@@ -255,7 +255,7 @@ export function ChooseRepositoryScreen({
                     block
                     write={write}
                     operation="Creating project"
-                    disabled={write.disabled || refreshing}
+                    disabled={refreshing}
                     onPress={() => void submit()}
                     testID="create-project"
                   />
