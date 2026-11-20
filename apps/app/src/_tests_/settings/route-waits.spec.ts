@@ -1,5 +1,3 @@
-import type { Page } from "@playwright/test";
-
 import { settingsPath } from "../../navigation/paths";
 import { projectPathFor, workspaceSettingsPathFor } from "../addresses";
 import {
@@ -11,6 +9,8 @@ import {
 } from "../harness";
 import { createProject } from "../project-setup";
 
+import { holdNext, holdReads } from "./route-wait-reads";
+
 /**
  * A durable settings route on a wide surface hands over to the dialog over
  * the page that the reader belongs on. Until it has, it draws that dialog's
@@ -19,40 +19,6 @@ import { createProject } from "../project-setup";
  * wait has been seen. A rail entry whose address the route does not know yet
  * waits disabled, with no link.
  */
-
-/** Hold every GET whose path matches until the test lets them go. */
-async function holdReads(page: Page, path: RegExp) {
-  const gate = Promise.withResolvers<void>();
-  const arrived = Promise.withResolvers<void>();
-  await page.route(
-    (url) => path.test(url.pathname),
-    async (route) => {
-      if (route.request().method() !== "GET") return route.fallback();
-      arrived.resolve();
-      await gate.promise;
-      return route.fallback();
-    },
-  );
-  return { arrived: arrived.promise, release: () => gate.resolve() };
-}
-
-/** Hold only the next GET whose path matches, until the test lets it go. */
-async function holdNext(page: Page, path: RegExp) {
-  const gate = Promise.withResolvers<void>();
-  const arrived = Promise.withResolvers<void>();
-  let held = false;
-  await page.route(
-    (url) => path.test(url.pathname),
-    async (route) => {
-      if (held || route.request().method() !== "GET") return route.fallback();
-      held = true;
-      arrived.resolve();
-      await gate.promise;
-      return route.fallback();
-    },
-  );
-  return { arrived: arrived.promise, release: () => gate.resolve() };
-}
 
 test("a settings route on a wide surface draws the dialog's wait until it hands over", async ({
   page,

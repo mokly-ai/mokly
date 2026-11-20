@@ -52,7 +52,8 @@ fake user-facing values exist.
 ## Authentication Retention
 
 `mkc-api prune` needs only the database URL and retention configuration. It
-captures one time, then deletes in one serializable query-only transaction:
+captures one time and derives every authentication cutoff from it. It deletes
+these authentication records:
 
 - Magic links with `expires_at <= now - MKC_AUTH_LINK_RETENTION_SECONDS`
   (default 604800, seven days), including consumed-link digests.
@@ -63,10 +64,26 @@ captures one time, then deletes in one serializable query-only transaction:
 - Counters with `resets_at <= now - MKC_AUTH_RATE_RETENTION_SECONDS`
   (default 86400, one day), including email, GitHub, preview sign-in and
   desktop grant admission keys.
-- In a second transaction, at most 1,000 finished cloud builds with
-  `finished_at <= now - MKC_BUILD_RETENTION_SECONDS` (default 2592000, thirty
-  days), oldest first, cascading their grants, log chunks and check outboxes,
-  with the failed publication attempts that name them.
+
+Each delete statement removes at most 1,000 rows of one of these kinds and
+commits in its own serializable transaction. Batches continue until no
+eligible row remains or 480 seconds pass after the authentication cleanup
+starts. No batch, and no retry of a batch, starts after that budget. Each
+authentication delete receives a statement timeout of at most five seconds,
+reduced to the remaining budget before each attempt. When the budget ends, the
+cleanup stops without an error, counts only committed rows and leaves the
+remaining rows for the next run. A statement timeout or another query error
+fails the command, and the batches committed before it stay deleted.
+Decision: authentication cleanup commits bounded batches within a time budget,
+not one transaction and not a longer CronJob deadline, because one unbounded
+transaction after a large backlog can hold locks on the authentication tables
+past the deadline.
+
+After the authentication cleanup, one more transaction deletes at most 1,000
+finished cloud builds with `finished_at <= now - MKC_BUILD_RETENTION_SECONDS`
+(default 2592000, thirty days), oldest first, cascading their grants, log
+chunks and check outboxes, with the failed publication attempts that name
+them.
 
 Each setting is an integer 0–31536000 seconds; zero removes records at their
 expiry boundary. Invalid settings fail before touching the database. Active

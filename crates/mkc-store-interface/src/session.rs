@@ -3,6 +3,7 @@
 use chrono::{DateTime, Utc};
 use mkc_domain::ids::UserId;
 
+use crate::auth_prune::PruneBatch;
 use crate::error::Result;
 
 /// Persisted session data; secret-bearing records are never serialized.
@@ -25,11 +26,12 @@ pub struct Session {
 /// Queries for sessions within the caller's transaction.
 #[unimock::unimock(api = SessionsMock)]
 pub trait Sessions {
-    /// Remove sessions past the absolute or activity retention cutoff.
+    /// Remove one bounded batch past the absolute or activity retention cutoff.
     fn prune_sessions(
         &mut self,
         expires_before: DateTime<Utc>,
         seen_before: DateTime<Utc>,
+        batch: PruneBatch,
     ) -> Result<usize>;
     /// Update activity only for rows older than the supplied threshold. The
     /// statement rechecks the threshold itself, so concurrent touches are

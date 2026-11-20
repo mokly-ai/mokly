@@ -326,9 +326,8 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
   `shell.css` and the embedded `styles.css` from the `@font-face` rule of
   [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
-  the UI package's `styles.css`: the font's address in each delivery, the
-  embedded font family, and the fallbacks that let a host's accent overrides
-  inherit
+  the UI package's `styles.css`: the font's address in each delivery and the
+  embedded font family
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index, the
   entry detail, and the live descriptor, which gate the format version and
   return a typed copy; the reader of the optional deployment file; the detail

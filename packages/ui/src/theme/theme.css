@@ -4,7 +4,11 @@
    Dark below, so a role never exists in one appearance only. The contract's
    role use sets three Light values: --chrome-muted is #676e6a, control
    boundaries use --chrome-control-edge, and an invalid field borders
-   --mbk-danger-ink. */
+   --mbk-danger-ink. No rule declares the public accent overrides
+   --mokly-accent, --mokly-accent-contrast and --mokly-accent-soft, so a
+   host's value, also one that a root inherits, wins in both appearances.
+   Each use reads its override with the private default of its root's
+   appearance as the fallback. */
 .mbk,
 .mbk-document {
   color-scheme: light;
@@ -40,9 +44,6 @@
   --_mokly-private-accent-default: #4f7864;
   --_mokly-private-accent-contrast-default: #ffffff;
   --_mokly-private-accent-soft-default: rgba(79, 120, 100, 0.1);
-  --mokly-accent: var(--_mokly-private-accent-default);
-  --mokly-accent-contrast: var(--_mokly-private-accent-contrast-default);
-  --mokly-accent-soft: var(--_mokly-private-accent-soft-default);
   --mbk-accent-deep: #2f5945;
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
@@ -132,9 +133,6 @@
     --_mokly-private-accent-default: #86b79b;
     --_mokly-private-accent-contrast-default: #0e1a14;
     --_mokly-private-accent-soft-default: rgba(134, 183, 155, 0.16);
-    --mokly-accent: var(--_mokly-private-accent-default);
-    --mokly-accent-contrast: var(--_mokly-private-accent-contrast-default);
-    --mokly-accent-soft: var(--_mokly-private-accent-soft-default);
     --mbk-accent-deep: #b6d8c4;
     --mbk-accent-surface: #24312a;
     --mbk-accent-edge: #3c5648;
@@ -183,9 +181,6 @@
   --_mokly-private-accent-default: #86b79b;
   --_mokly-private-accent-contrast-default: #0e1a14;
   --_mokly-private-accent-soft-default: rgba(134, 183, 155, 0.16);
-  --mokly-accent: var(--_mokly-private-accent-default);
-  --mokly-accent-contrast: var(--_mokly-private-accent-contrast-default);
-  --mokly-accent-soft: var(--_mokly-private-accent-soft-default);
   --mbk-accent-deep: #b6d8c4;
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
