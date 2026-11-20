@@ -25,29 +25,44 @@ export function registerDesignScrollTogether(
   type Box = { bottom: number; left: number; right: number; top: number };
 
   /**
-   * Diff-mode designs from every family: route, whether Scroll together is on,
-   * and whether the design also renders in Dark.
+   * Diff-mode designs from every family: route, Scroll together state, Dark
+   * support, and the authored Refresh form.
    */
   const DIFF_MODES = [
-    ["design/changes/diff-controls/overlay", true, true],
-    ["design/changes/diff-controls/overlay-long", true, true],
-    ["design/changes/diff-controls/overlay-panel", true, true],
-    ["design/changes/diff-controls/side-by-side-apart", false, true],
-    ["design/changes/outcomes/changed", true, true],
-    ["design/changes/outcomes/difference", true, true],
-    ["design/changes/impact/styles/matched-excluded/matched", true, false],
-    ["design/browse/appearance/workspaces/side-by-side", true, true],
-    ["design/browse/appearance/workspaces/difference", true, true],
-    ["design/components/pages/comparison", true, false],
-    ["design/components/pages/stacked/overlay-tall", true, false],
-    ["design/components/states/removed", true, false],
-    ["design/library/controls/comparison-toolbar/overlay", true, false],
+    ["design/changes/diff-controls/overlay", true, true, "picture"],
+    ["design/changes/diff-controls/overlay-long", true, true, "picture"],
+    ["design/changes/diff-controls/overlay-panel", true, true, "picture"],
+    ["design/changes/diff-controls/side-by-side-apart", false, true, "picture"],
+    ["design/changes/outcomes/changed", true, true, "picture"],
+    ["design/changes/outcomes/difference", true, true, "picture"],
+    [
+      "design/changes/impact/styles/matched-excluded/matched",
+      true,
+      false,
+      "picture",
+    ],
+    ["design/browse/appearance/workspaces/side-by-side", true, true, "picture"],
+    ["design/browse/appearance/workspaces/difference", true, true, "picture"],
+    ["design/components/pages/comparison", true, false, "button"],
+    ["design/components/pages/stacked/overlay-tall", true, false, "button"],
+    ["design/components/states/removed", true, false, "button"],
+    [
+      "design/library/controls/comparison-toolbar/overlay",
+      true,
+      false,
+      "button",
+    ],
     [
       "design/library/controls/comparison-toolbar/side-by-side-apart",
       false,
       false,
+      "button",
     ],
   ] as const;
+  const REFRESH_CLASSES = {
+    picture: "mbk-diff-refresh mbk-picture mbk-reset",
+    button: "mbk-diff-refresh mbk-reset",
+  } as const;
 
   /** Bands showing Current, where one version has nothing to scroll with. */
   const CURRENT = [
@@ -95,7 +110,7 @@ export function registerDesignScrollTogether(
     test(`${viewport}: Scroll together follows the modes in every diff mode`, async ({
       page,
     }) => {
-      for (const [route, on, dual] of DIFF_MODES) {
+      for (const [route, on, dual, refresh] of DIFF_MODES) {
         const schemes: readonly Scheme[] = dual ? ["light", "dark"] : ["light"];
         for (const scheme of schemes) {
           const where = `${route} ${viewport} ${scheme}`;
@@ -140,7 +155,7 @@ export function registerDesignScrollTogether(
           expect(facts.order, where).toEqual([
             "mbk-seg mbk-reset",
             "mbk-diff-sync mbk-reset",
-            "mbk-diff-refresh mbk-reset",
+            REFRESH_CLASSES[refresh],
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(

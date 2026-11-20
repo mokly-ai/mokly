@@ -180,7 +180,8 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 }
 
 /* An entry row with a list: the link and the chevron that discloses the
-   list. */
+   list. A static tree draws the chevron as a picture, whose marker keeps the
+   pointer and the hover colour off it. */
 .mbk-nav-leaf {
   display: flex;
   align-items: center;
@@ -241,6 +242,12 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 }
 
 .mbk-nav-variants-toggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+/* The picture of a static tree's toggle has no expanded state, so its own
+   mark turns the chevron while the list is open. */
+.mbk-nav-variants-toggle[data-nav-variants-open] svg {
   transform: rotate(90deg);
 }
 

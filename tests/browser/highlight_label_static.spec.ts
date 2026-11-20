@@ -37,7 +37,7 @@ test("a label's button and link show the pointer, every form draws the same chip
   const picture = page.getByText("Action · welcome", { exact: true });
   await expect(button).toHaveCSS("cursor", "pointer");
   await expect(link).toHaveCSS("cursor", "pointer");
-  await expect(picture).toHaveCSS("cursor", "auto");
+  await expect(picture).toHaveCSS("cursor", "default");
   const look = await chip(button);
   // A fixed line height keeps the gap above the outline in every font.
   expect(look[3]).toBe("13px");

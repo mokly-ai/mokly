@@ -35,10 +35,12 @@ test("the tag button's picture keeps its resting look, while its button and link
     await expect(control).toHaveCSS("color", HOVER_INK);
   }
 
-  // A picture takes no cursor of its own, so the arrow shows over its glyph.
   const picture = page.getByRole("img", { name: "Filter by tag" });
-  await expect(picture).toHaveCSS("cursor", "auto");
-  await picture.hover();
+  await expect(picture).toHaveCSS("cursor", "default");
+  await picture.scrollIntoViewIfNeeded();
+  const box = await picture.boundingBox();
+  if (!box) throw new Error("The tag button picture has no visible bounds");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await expect(picture).toHaveCSS("background-color", NO_FILL);
   await expect(picture).toHaveCSS("color", RESTING_INK);
 });

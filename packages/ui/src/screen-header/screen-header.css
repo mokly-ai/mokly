@@ -104,10 +104,10 @@ button.mbk-crumb-link {
 }
 
 /* The picture of the path chip in a static depiction takes the line box that
-   the chip button has by default, and acts on nothing. */
+   the chip button has by default. Its marker keeps the pointer and the press
+   style off it. */
 span.mbk-pathchip {
   line-height: normal;
-  cursor: default;
 }
 
 /* Below the breakpoint the scheme switch leaves the top bar for the header. */

@@ -78,9 +78,9 @@ test("a bar that is not interactive draws its controls as pictures and keeps its
     name: "Close catalogue navigation",
   });
   assert.equal(menu.tagName, "SPAN");
-  assert.equal(menu.className, "mbk-menu mbk-reset");
+  assert.equal(menu.className, "mbk-menu mbk-picture mbk-reset");
   const brand = within(header).getByRole("img", { name: "Mokly" });
-  assert.equal(brand.className, "mbk-brand mbk-reset");
+  assert.equal(brand.className, "mbk-brand mbk-picture mbk-reset");
   assert.equal(brand.textContent, "mokly.");
   // The compact search needs a script, so its toggle and Close search go.
   assert.equal(header.querySelector(".mbk-search-toggle"), null);

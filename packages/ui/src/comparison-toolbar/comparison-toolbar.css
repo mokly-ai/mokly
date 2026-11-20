@@ -105,11 +105,6 @@
   cursor: pointer;
 }
 
-/* The picture of Refresh in a band that is not interactive acts on nothing. */
-span.mbk-diff-refresh {
-  cursor: default;
-}
-
 @media (width < 56.25rem) {
   .mbk-diff-toolbar {
     padding: 8px 12px;

@@ -78,7 +78,8 @@
 /* A static depiction draws each tab as a native disclosure. The tabs share
    the first row with the open tab's title and Close, which is part of the
    tab, and the open panel fills the row below. The resize separator is a
-   picture of its grip, which lets a pointer reach the host's sizer below. */
+   picture of its grip, whose marker lets a pointer reach the host's sizer
+   below. */
 .mbk-inspector[data-inspector-disclosures] {
   display: grid;
   grid-template-columns:
@@ -147,7 +148,6 @@
 .mbk-inspector[data-inspector-disclosures]:has(> details[open])
   > .mbk-inspector-resize {
   display: block;
-  pointer-events: none;
 }
 
 .mbk-sheet-grab > input {

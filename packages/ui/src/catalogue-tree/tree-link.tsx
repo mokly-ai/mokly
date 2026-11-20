@@ -89,7 +89,8 @@ function LinkGlyph({
  * and decides whether the wording reaches assistive technology, so a host
  * moves the mark by changing the attributes alone. `data-nav-changed-text`
  * names the wording, so that search can leave it out. A row without an
- * address draws the same row as a picture that opens nothing.
+ * address draws the same row as a picture that opens nothing, and the
+ * picture marker keeps the pointer and the hover fill off it.
  */
 export function RowLink({
   currentRef,
@@ -102,9 +103,12 @@ export function RowLink({
   /** Whether the row is a variant in an entry's list. */
   variant: boolean;
 }) {
+  const picture = link.href === undefined;
   const row = {
     "aria-current": link.current ? ("page" as const) : undefined,
-    className: "mbk-nav-row mbk-reset",
+    className: picture
+      ? "mbk-nav-row mbk-picture mbk-reset"
+      : "mbk-nav-row mbk-reset",
     "data-changed": link.changed ? "true" : undefined,
     "data-changed-variants": link.changedVariants ? "true" : undefined,
     "data-entry-id": link.entry,
@@ -127,7 +131,7 @@ export function RowLink({
       </span>
     </>
   );
-  if (link.href === undefined)
+  if (picture)
     return (
       <span {...row} style={rowStyle(link.depth)}>
         {content}

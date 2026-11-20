@@ -17,7 +17,8 @@ export type DataAttribute = `data-${string}`;
  * without one is a toggle button that reports its value, or inert text when
  * the group is not interactive. A link or inert text names the shown segment
  * as the current page, because each segment of a static depiction is its own
- * page.
+ * page. Inert text is a picture of the segment, so it carries the picture
+ * marker.
  */
 function SegmentItem<Value extends string>({
   attribute,
@@ -52,7 +53,7 @@ function SegmentItem<Value extends string>({
     return (
       <span
         aria-current={shown ? "page" : undefined}
-        className="mbk-reset"
+        className="mbk-picture mbk-reset"
         {...data}
       >
         {label}

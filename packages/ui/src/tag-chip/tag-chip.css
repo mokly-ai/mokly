@@ -1,7 +1,9 @@
 /* A chip: a pill that names a tag, a use case, or a screen, in a group of
    chips. The tag picker and an entry's details draw the same chips. A tag chip
    is a toggle that fills with the accent while its tag filters the
-   catalogue. */
+   catalogue. The picture of a tag chip carries the picture marker, so the
+   pointer, the hover fill, and the press style reach only a link or a
+   button. */
 .mbk-chips {
   display: flex;
   flex-wrap: wrap;
@@ -31,9 +33,14 @@
   color: var(--chrome-muted);
 }
 
+/* A link and a button take the chip's type, which a button does not inherit.
+   The picture keeps its own line box. */
 .mbk-chip.tag:is(a, button) {
   font: inherit;
   font-size: 11.5px;
+}
+
+.mbk-chip.tag {
   cursor: pointer;
 }
 
@@ -42,9 +49,9 @@
   color: var(--chrome-muted);
 }
 
-/* The hover fill marks a resting link or button, so a selected chip keeps the
-   accent under the pointer. */
-.mbk-chip.tag:is(a, button):not(.active):hover {
+/* The hover fill marks a resting chip, so a selected chip keeps the accent
+   under the pointer. */
+.mbk-chip.tag:not(.active):hover {
   background: var(
     --mokly-accent-soft,
     var(--_mokly-private-accent-soft-default)
@@ -69,7 +76,7 @@
   );
 }
 
-.mbk-chip.tag:is(a, button):active {
+.mbk-chip.tag:active {
   box-shadow: var(--chrome-shadow-press);
   transform: translateY(1px);
 }

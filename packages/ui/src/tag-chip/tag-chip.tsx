@@ -2,7 +2,7 @@
  * A tag as a toggle chip, pressed while the tag filters the catalogue. The
  * tag picker and an entry's details draw the same chip. A static depiction
  * that runs no script draws it as a link to an address, or as a picture of
- * itself.
+ * itself, which carries the picture marker.
  */
 
 import { TagIcon } from "../icons/icons.js";
@@ -39,7 +39,8 @@ export function TagChip({
   /** The tag, which the chip shows and carries in `data-mokly-tag`. */
   tag: string;
 }) {
-  const className = `mbk-chip tag${selected ? " active" : ""} mbk-reset`;
+  const chip = `mbk-chip tag${selected ? " active" : ""}`;
+  const className = `${chip} mbk-reset`;
   if (href !== undefined)
     return (
       <a
@@ -54,7 +55,7 @@ export function TagChip({
     );
   if (!interactive)
     return (
-      <span className={className} data-mokly-tag={tag}>
+      <span className={`${chip} mbk-picture mbk-reset`} data-mokly-tag={tag}>
         <TagIcon size={11} />
         {tag}
       </span>

@@ -64,8 +64,10 @@ variants** shows `Welcome` with its variant list disclosed and one variant
 selected, and **Changed variant** shows the Changes filter holding one changed
 variant under a parent whose own render is unmodified. A screen row that owns
 variants renders a `mbk-nav-leaf` container holding the unchanged row link plus
-a trailing chevron disclosure button; the row cannot be both a link and a
-disclosure summary. The All and drawer fixtures also disclose Action's Default,
+a trailing chevron; the row cannot be both a link and a disclosure summary. A
+static artboard runs no script, so the chevron is a picture of the shell's
+disclosure button: it keeps the button's name and open look and does nothing.
+The All and drawer fixtures also disclose Action's Default,
 Disabled and Secondary rows and Toolbar's Default row in their real authored
 order. Component explorer and Changes artboards reuse those identities, while
 their synthetic Help hint and Badge examples each disclose their depicted
