@@ -54,21 +54,24 @@ const context: ShellContext = {
   changesStatus: "ready",
 };
 
-test("removed documents are Changes-only rows, like removed pages", () => {
+test("every removed row is a Changes-only row", () => {
   const found = rows();
   const visible = (key: string, view: "all" | "changes", search = "") => {
     const row = found.get(key);
     assert.ok(row, key);
     return navLeafVisible(row, { view, search, tags: [] }, context);
   };
-  for (const key of ["removed:guide/terms", "removed:guide/handbook"]) {
+  for (const key of [
+    "removed:guide/terms",
+    "removed:guide/handbook",
+    "removed:guide/farewell",
+  ]) {
     assert.equal(visible(key, "all"), false, `${key} in All`);
     assert.equal(visible(key, "all", "t"), false, `${key} in search`);
     assert.equal(visible(key, "changes"), true, `${key} in Changes`);
   }
   assert.equal(found.get("removed:guide/terms")?.entryKind, "document");
   assert.equal(found.get("removed:guide/terms")?.label, "Terms · Removed");
-  assert.equal(visible("removed:guide/farewell", "all"), true);
 });
 
 test("flat removed rows keep a parent's variant before the next sibling", () => {
