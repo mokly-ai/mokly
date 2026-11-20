@@ -28,12 +28,12 @@ impl Cancellation for Token {
     }
 }
 
-/// Monotonic clock and polling boundary.
+/// Monotonic clock and interruptible supervision wait.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClockMock))]
 pub trait Clock: Send + Sync {
     /// Time since an arbitrary fixed epoch.
     fn now(&self) -> Duration;
-    /// Yield until the next supervision poll.
+    /// Yield until a completion notification or the next supervision check.
     fn pause(&self, duration: Duration);
 }
 
@@ -52,7 +52,7 @@ impl Clock for SystemClock {
     }
 
     fn pause(&self, duration: Duration) {
-        thread::sleep(duration);
+        thread::park_timeout(duration);
     }
 }
 
