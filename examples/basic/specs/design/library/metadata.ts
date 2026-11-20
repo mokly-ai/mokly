@@ -26,6 +26,9 @@ export const CANVAS_SAMPLES: ReadonlySet<string> = new Set<LibraryStyle>([
   "frames-filter",
   "selection",
   "box-model",
+  "swipe-divider",
+  "change-stepper",
+  "compare-modes",
 ]);
 
 /**

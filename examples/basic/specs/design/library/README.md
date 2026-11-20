@@ -2,14 +2,14 @@
 
 ## Scope
 
-These twenty-four components render both Mokly's design artboards and
+These twenty-seven components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library. Sixteen render the `@mokly/ui` component that the shipped shell
 uses: each view imports its component, and each component sheet imports the
 package stylesheets of the component and of each package component that it
 renders, each by its repository path under `packages/ui/src`, so each side of
-a comparison renders its own package files. The eight parts of the Canvas
+a comparison renders its own package files. The eleven parts of the Canvas
 viewer, which `@mokly/ui` does not provide yet, implement their own markup;
 [Canvas viewer parts](#canvas-viewer-parts) describes them. The Mokly browser
 shell itself remains in the package source.
@@ -199,17 +199,24 @@ and box model draw the Canvas viewer that the `design/canvas/**` family
 depicts: `canvas/canvas-frame`, a bare frame with its mono label and size tag
 that holds a screen at its nominal size scaled by the zoom, in the frame's
 own scheme, and an unclipped overlay, such as a selection, that its caller
-places at the frame's scale; `canvas/zoom-pill`, zoom out, the zoom level,
-zoom in and Fit, whose Fit-only form the dock holds; `canvas/selection`, the
-selected instance's outline with eight handles, its name and size tags, and
-the redline of its padding, whose marks keep their size at every zoom;
+places at the frame's scale; in a comparison the frame holds both versions
+in the shipped stacked layers, or names its version in a tag in Side by
+side; `canvas/zoom-pill`, zoom out, the zoom level, zoom in and Fit, whose
+Fit-only form the dock holds; `canvas/selection`, the selected instance's
+outline with eight handles, its name and size tags, and the redline of its
+padding, whose marks keep their size at every zoom; `canvas/swipe-divider`,
+Swipe's divider over a frame, with its grip and the Before and Current tags;
 `panels/floating-panel`, the floating catalogue and right panel, and their
 bottom sheets with a grabber and a close control; `panels/panel-tabs`, the
 right panel's text tabs, Inspect and, on a changed entry, Changes;
 `panels/phone-dock`, the phone's dock with Catalogue, the current tab, and
-Fit; `inspector/frames-filter`, the viewport and scheme toggles of Inspect
-with the Highlight components switch; and `inspector/box-model`, the
-selected instance's padding on each side around its content size. The
+Fit; `panels/change-stepper`, the entry's place among the branch's changes
+with Previous change and Next change; `panels/compare-modes`, the compare
+modes as tiles with their keys, the compared frame's chips in Side by side,
+and Scroll together and Refresh; `inspector/frames-filter`, the viewport and
+scheme toggles of Inspect with the Highlight components switch; and
+`inspector/box-model`, the selected instance's padding on each side around
+its content size. The
 `CANVAS_SAMPLES` set of `metadata.ts` names them, and `LibraryHost` gives
 their sample root the Canvas palette scope that a Canvas artboard's root
 carries. A static artboard runs no script, so each control links to the
@@ -226,6 +233,17 @@ every instance of a depicted tree links to the artboard that shows it
 selected: the `selection` screen and its saved states select each of
 Welcome's four instances. A static artboard opens the panel scrolled to the
 section that its state is about, the selection or an unfolded section.
+
+The Changes tab draws the stepper, then Compared, the version before and
+the current version on a rail, then the compare modes, and the shipped
+comparison evidence of today's inspector, whose base sentence the rail
+replaces. The compare modes apply to the frames: Overlay and Difference
+stack both versions in each frame in the shipped layers, Swipe splits each
+frame at one divider, and Side by side shows the compared frame's two
+versions next to each other, while the stage holds every frame's pair, so
+the compact frame picker picks another pair in place. A comparison cannot
+be highlighted. An entry that the branch added has Current alone, and its
+rail holds the current version alone.
 
 The palette scope is `canvasScope` of `../parts/canvas_palette.ts`, the one
 module that maps the Canvas palette of `@mokly/ui`, imported by repository

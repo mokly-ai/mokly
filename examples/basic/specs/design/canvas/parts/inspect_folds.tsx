@@ -4,9 +4,12 @@ import {
   InstanceTree,
   type InstanceNode,
 } from "../../../../../../packages/ui/src/instance-tree/instance-tree.js";
-import { UsageList } from "../../../../../../packages/ui/src/usage-list/usage-list.js";
+import {
+  UsageList,
+  type UsageRow,
+} from "../../../../../../packages/ui/src/usage-list/usage-list.js";
 
-import type { CanvasDestination } from "./destinations.js";
+import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
 import {
   WELCOME_INSTANCES,
   type WelcomeInstanceId,
@@ -18,6 +21,47 @@ import {
  */
 export function ScreenUsage() {
   return <UsageList affected={[]} usedBy={[]} />;
+}
+
+/** The views of a consumer that renders in both viewports and schemes. */
+const CONSUMER_VIEWS = 4;
+
+/**
+ * The Actions that Welcome renders, its own and the Toolbar's two. Details
+ * renders as many: its own Action and the two of its Toolbar.
+ */
+const WELCOME_ACTIONS = Object.values(WELCOME_INSTANCES).filter(
+  (instance) => instance.component === "Action",
+).length;
+
+/** A screen that uses the Action itself, and the artboard that opens it. */
+function actionConsumer(title: string, to: CanvasDestination): UsageRow {
+  return {
+    direct: true,
+    href: mockLink(to),
+    id: title,
+    instances: WELCOME_ACTIONS,
+    key: title,
+    removed: false,
+    title,
+    views: CONSUMER_VIEWS,
+  };
+}
+
+/**
+ * The Usage section of the Action in the shipped list: the screens that
+ * use it, each opening its Canvas artboard, Welcome and Details.
+ */
+export function ActionUsage() {
+  return (
+    <UsageList
+      affected={[]}
+      usedBy={[
+        actionConsumer("Welcome", CANVAS_PAGES.overview),
+        actionConsumer("Details", CANVAS_PAGES.added),
+      ]}
+    />
+  );
 }
 
 /**

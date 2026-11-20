@@ -19,20 +19,23 @@ import {
 import { WELCOME_INSTANCES } from "./welcome_instances.js";
 
 /**
- * The zoom in percent that fits each stage: Welcome's four frames, its two
- * Light frames once the Frames filter hides Dark, Profile's two, the Action's
- * variant set and a reading frame at full size, and, in the compact form, a
- * phone frame, a desktop frame, and a variant set.
+ * The zoom in percent that fits each stage: a screen's four frames, Welcome's
+ * two Light frames once the Frames filter hides Dark, Profile's two, the two
+ * versions of a desktop frame side by side, the Action's variant set and a
+ * reading frame at full size, and, in the compact form, a phone frame, a
+ * desktop frame, a variant set, and two phone frames side by side.
  */
 export const FITS = {
   welcome: 38,
   welcomeLight: 42,
   profile: 42,
+  sideBySide: 29,
   action: 100,
   document: 100,
   phone: 72,
   phoneDesktop: 27,
   phoneSet: 50,
+  phoneSide: 44,
 } as const;
 
 /**

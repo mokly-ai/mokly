@@ -20,9 +20,11 @@ const propSchema = {
     width: length,
     height: length,
     zoom: { type: "number", minimum: 0.05, maximum: 4 },
+    compare: { enum: ["overlay", "difference", "swipe"] },
+    side: { enum: ["before", "after"] },
   },
 } as const;
-const slots = ["children", "overlay"] as const;
+const slots = ["children", "before", "overlay"] as const;
 export type CanvasFrameProps = LibraryProps<typeof propSchema, typeof slots>;
 
 const desktop = {
@@ -39,7 +41,7 @@ export const canvasFrame = defineComponent({
     "canvas",
     "canvas-frame",
     "Canvas frame",
-    "One view of an entry on the canvas: a bare frame with its label and size, scaled by the zoom.",
+    "One view of an entry on the canvas: a bare frame with its label and size, scaled by the zoom, which shows both versions in a comparison.",
   ),
   propSchema,
   props: desktop,
@@ -118,6 +120,21 @@ export const canvasFrame = defineComponent({
           </div>
         ),
       },
+    },
+    {
+      slug: "swipe",
+      title: "Swipe",
+      props: { ...desktop, compare: "swipe" },
+      slots: {
+        before: <MiniWelcome inert />,
+        children: <MiniWelcome inert revised />,
+      },
+    },
+    {
+      slug: "before",
+      title: "Side by side · Before",
+      props: { ...desktop, side: "before" },
+      slots: { children: <MiniWelcome inert /> },
     },
   ],
 });

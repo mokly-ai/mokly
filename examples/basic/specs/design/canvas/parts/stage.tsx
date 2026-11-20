@@ -4,6 +4,7 @@ import { canvasFrame } from "../../library/canvas/canvas-frame.js";
 import { CanvasGlyph } from "../../library/canvas/glyphs.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
+import type { CompareModesProps } from "../../library/panels/compare-modes.js";
 import {
   DepictedViewScope,
   type DepictedView,
@@ -11,6 +12,9 @@ import {
 
 import type { CanvasEntry } from "./entries.js";
 import type { CanvasFrameSpec } from "./frames.js";
+
+/** A compare mode of the Changes tab. */
+type CompareMode = CompareModesProps["mode"];
 
 /** The entry's change status, as the section head and the entry bar show it. */
 function EntryStatus({ entry, name }: { entry: CanvasEntry; name: string }) {
@@ -90,6 +94,12 @@ interface CanvasStageProps {
   overlays?: Readonly<Record<string, ReactNode>> | undefined;
   /** The depicted view, whose regions the Highlight components switch reveals. */
   view?: DepictedView | undefined;
+  /**
+   * The compare mode of the Changes tab. In Side by side, the stage shows
+   * the picked frame's two versions, and the compact frame picker picks
+   * another frame's pair in place.
+   */
+  compare?: CompareMode | undefined;
 }
 
 /**
@@ -100,6 +110,7 @@ interface CanvasStageProps {
  * the compact form while the panel sheet is closed.
  */
 export function CanvasStage({
+  compare,
   entry,
   frames,
   overlays = {},
@@ -117,7 +128,12 @@ export function CanvasStage({
         <span className="cv-path-chip">{entry.path}</span>
         <EntryStatus entry={entry} name="section-status" />
       </div>
-      <div className="cv-frames" data-cv-kind={entry.kind}>
+      <div
+        className="cv-frames"
+        data-cv-chosen={compare === "side-by-side" ? picked : undefined}
+        data-cv-compare={compare}
+        data-cv-kind={entry.kind}
+      >
         {frames.map((frame) => (
           <StageFrame
             entry={entry}
@@ -179,6 +195,9 @@ function StageFrame({
       width={frame.width}
       height={frame.height}
       zoom={zoom / 100}
+      {...optional("compare", frame.compare)}
+      {...optional("side", frame.side)}
+      {...optional("before", frame.before)}
       {...optional("overlay", overlay ?? undefined)}
     >
       {frame.content}

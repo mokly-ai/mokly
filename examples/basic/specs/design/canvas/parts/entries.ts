@@ -31,6 +31,14 @@ export const CANVAS_ENTRIES = {
     status: "changed",
     changed: true,
   },
+  details: {
+    title: "Details",
+    slug: "details",
+    path: ENTRY_PATHS.details,
+    kind: "screen",
+    status: "added",
+    changed: true,
+  },
   profile: {
     title: "Profile",
     slug: "profile",

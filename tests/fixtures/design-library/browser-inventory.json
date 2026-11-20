@@ -272,6 +272,31 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/changes/current",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/changes/difference",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/changes/overlay",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/changes/side-by-side",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/changes/swipe",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/inspect/frames",
     "colorSchemes": ["light", "dark"]
   },
@@ -312,6 +337,17 @@
     "kind": "screen",
     "path": "design/canvas/inspect/unchanged",
     "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/added",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/added/changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/added"
   },
   {
     "kind": "screen",
@@ -737,6 +773,12 @@
   },
   {
     "kind": "component",
+    "path": "design/library/canvas/canvas-frame/before",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/canvas-frame"
+  },
+  {
+    "kind": "component",
     "path": "design/library/canvas/canvas-frame/component",
     "colorSchemes": ["light"],
     "variantOf": "design/library/canvas/canvas-frame"
@@ -756,6 +798,12 @@
   {
     "kind": "component",
     "path": "design/library/canvas/canvas-frame/mobile-dark",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/canvas-frame"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/canvas-frame/swipe",
     "colorSchemes": ["light"],
     "variantOf": "design/library/canvas/canvas-frame"
   },
@@ -781,6 +829,23 @@
     "path": "design/library/canvas/selection/toolbar",
     "colorSchemes": ["light"],
     "variantOf": "design/library/canvas/selection"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/swipe-divider",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/swipe-divider/centred",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/swipe-divider"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/canvas/swipe-divider/moved",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/canvas/swipe-divider"
   },
   {
     "kind": "component",
@@ -1246,6 +1311,52 @@
     "path": "design/library/inspector/prop-field/text",
     "colorSchemes": ["light"],
     "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/change-stepper",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/change-stepper/first",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/change-stepper"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/change-stepper/second",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/change-stepper"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/compare-modes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/compare-modes/added",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/compare-modes"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/compare-modes/current",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/compare-modes"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/compare-modes/side-by-side",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/compare-modes"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/panels/compare-modes/swipe",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/panels/compare-modes"
   },
   {
     "kind": "component",

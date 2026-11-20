@@ -211,9 +211,10 @@ export function MiniWelcomePage({
 
 /**
  * Miniature depiction of the example Details fragment, with the Action and
- * the Toolbar that the real screen renders.
+ * the Toolbar that the real screen renders. An inert Details carries no link,
+ * as on the canvas of another design family.
  */
-export function MiniDetails({ compact }: MiniScreenProps) {
+export function MiniDetails({ compact, inert }: MiniScreenProps) {
   return (
     <Shot compact={compact}>
       <h2>{compact ? "Details" : "Example catalogue details"}</h2>
@@ -223,7 +224,7 @@ export function MiniDetails({ compact }: MiniScreenProps) {
       <MiniInstances
         form="details"
         link={
-          <DesignLink to={DESTINATIONS.welcome}>
+          <DesignLink to={inert ? undefined : DESTINATIONS.welcome}>
             <span className="mbk-shot-link">Return to welcome</span>
           </DesignLink>
         }

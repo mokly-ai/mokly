@@ -8,3 +8,12 @@ export const canvasDesignMetadata = {
     "docs/protocol/mokly-viewer-palette.md",
   ],
 } as const;
+
+/** The Canvas screens of the Changes tab, which also follow the comparisons. */
+export const canvasChangesMetadata = {
+  ...canvasDesignMetadata,
+  relatedDocs: [
+    ...canvasDesignMetadata.relatedDocs,
+    "docs/protocol/mokly-comparison-panes.md",
+  ],
+} as const;

@@ -42,18 +42,27 @@ The Canvas viewer's shared sheets follow the same order, through the sheets
 that every design route links: `design-stage.css` imports `design-canvas.css`,
 which imports Geist from `design-fonts/` and holds the roles that the Canvas
 palette lacks and the stage, `design-canvas-inspect.css`, Inspect's sections,
-and `design-canvas-sections.css`, the sections that a selection and an
-unfolded section fill, which imports the package stylesheets of the instance
-tree, the supplied props, the usage list, and the props form, as
-`design-component-details.css` does for the component designs;
-`design-component-workspace.css` imports `design-canvas-shell.css`, the
-shell's layout and the package parts that it restyles, and then
-`design-canvas-compact.css`, its compact form. The Canvas part sheets under
-`canvas/`, `panels/`, `inspector/frames-filter.css`, and
-`inspector/box-model.css` read the `--cv-*` roles, and a frame's document
-reads the preview tokens of its own scheme; a selection's handles take the
-surface of the document under them. No Canvas sheet names a colour: a role
-that the Canvas palette lacks mixes Canvas roles with `color-mix()`.
+`design-canvas-sections.css`, the sections that a selection and an unfolded
+section fill, which imports the package stylesheets of the instance tree, the
+supplied props, the usage list, and the props form, as
+`design-component-details.css` does for the component designs, and
+`design-canvas-changes.css`, the Changes tab's Compared rail and comparison
+details and Side by side on the stage; `design-component-workspace.css`
+imports `design-canvas-shell.css`, the shell's layout and the package parts
+that it restyles, and then `design-canvas-compact.css`, its compact form. The
+Canvas part sheets under `canvas/`, `panels/`, `inspector/frames-filter.css`,
+and `inspector/box-model.css` read the `--cv-*` roles, and a frame's document
+reads the preview tokens of its own scheme; a selection's handles and the
+Swipe divider's line and grip take the surface of the document under them.
+`canvas/canvas-frame.css` imports the package stylesheets of the comparison
+panes and stage, whose stacked layers a frame holds in a comparison. No
+Canvas sheet names a colour: a role that the Canvas palette lacks mixes
+Canvas roles with `color-mix()`.
+
+The Changes tab sets the shipped comparison evidence in Inspect's type from
+`design-canvas-changes.css` without its package stylesheet: every design
+route links the shared sheets, and the Browse designs that draw the evidence
+link no evidence sheet, so importing it there would restyle them.
 Keep shared host resets at zero specificity so component styles render
 identically in standalone samples and in-screen compositions.
 Declared sheets reload automatically in Serve, including after an edit.

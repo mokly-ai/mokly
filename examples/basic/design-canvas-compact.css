@@ -182,4 +182,28 @@
   .cv-float[data-sheet] .mbk-nav-head {
     padding-right: 56px;
   }
+
+  /* Side by side shows the picked frame's two versions next to each other,
+     each small enough that both fit; the tag leads the label, so the label
+     leaves out the viewport's glyph and the entry's slug. */
+  .cv-frames[data-cv-compare="side-by-side"] {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+  }
+
+  .cv-frames[data-cv-compare="side-by-side"]
+    > .cv-frame[data-cv-viewport="mobile"] {
+    --cv-zoom: 0.44;
+  }
+
+  .cv-frames[data-cv-compare="side-by-side"]
+    > .cv-frame[data-cv-viewport="desktop"] {
+    --cv-zoom: 0.135;
+  }
+
+  .cv-frame[data-cv-side] .cv-frame-entry,
+  .cv-frame[data-cv-side] .cv-frame-label > .cv-glyph {
+    display: none;
+  }
 }

@@ -263,9 +263,11 @@
       "component": "panels/floating-panel",
       "reason": "A phone draws a panel only as the sheet that a state opens.",
       "only": [
+        "design/canvas/changes/current",
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
         "design/canvas/inspect/unchanged",
+        "design/canvas/outcomes/added/changes",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/home"
       ]
@@ -288,17 +290,27 @@
       "component": "panels/panel-tabs",
       "reason": "A phone draws the right panel's tabs in the panel sheet.",
       "only": [
+        "design/canvas/changes/current",
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
-        "design/canvas/inspect/unchanged"
+        "design/canvas/inspect/unchanged",
+        "design/canvas/outcomes/added/changes"
       ]
     },
     {
       "family": "canvas",
       "component": "inspector/metadata-row",
-      "reason": "Inspect draws the entry's Details rows; home selects no entry.",
+      "reason": "Inspect draws the entry's Details rows; the Changes tab draws none, and home selects no entry.",
       "viewports": ["desktop"],
-      "except": ["design/canvas/stage/home"]
+      "except": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/home"
+      ]
     },
     {
       "family": "canvas",
@@ -313,9 +325,18 @@
     {
       "family": "canvas",
       "component": "inspector/frames-filter",
-      "reason": "A document opens as one reading frame, and home selects no entry.",
+      "reason": "Inspect holds the Frames filter; a document opens as one reading frame, and home selects no entry.",
       "viewports": ["desktop"],
-      "except": ["design/canvas/stage/document", "design/canvas/stage/home"]
+      "except": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/document",
+        "design/canvas/stage/home"
+      ]
     },
     {
       "family": "canvas",
@@ -330,8 +351,13 @@
     {
       "family": "canvas",
       "component": "controls/change-status",
-      "reason": "The states of Welcome, which the canonical branch changed.",
+      "reason": "The states of Welcome, which the canonical branch changed, and of Details, which it added.",
       "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
         "design/canvas/inspect/frames",
         "design/canvas/inspect/props",
         "design/canvas/inspect/sections",
@@ -339,6 +365,8 @@
         "design/canvas/inspect/selection/primary",
         "design/canvas/inspect/selection/secondary",
         "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added",
+        "design/canvas/outcomes/added/changes",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/zoomed"
@@ -357,6 +385,7 @@
         "design/canvas/inspect/selection/primary",
         "design/canvas/inspect/selection/secondary",
         "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added",
         "design/canvas/overview",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/component-set",
@@ -432,6 +461,60 @@
       "reason": "A phone draws the Props section in the open panel sheet.",
       "viewports": ["mobile"],
       "only": ["design/canvas/inspect/props", "design/canvas/inspect/sections"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/change-stepper",
+      "reason": "The Changes tab draws the stepper under the panel's tabs.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/change-stepper",
+      "reason": "A phone draws the Changes tab in the panel sheet that these states open.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/compare-modes",
+      "reason": "The Changes tab draws the compare modes.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/compare-modes",
+      "reason": "A phone draws the compare modes in the open Changes sheet.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/swipe-divider",
+      "reason": "Swipe draws its divider over every frame, and over a phone's one frame.",
+      "only": ["design/canvas/changes/swipe"]
     }
   ]
 }

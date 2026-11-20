@@ -117,3 +117,23 @@
   margin: 0;
   padding: 14px;
 }
+/* A Swipe divider sample stands over a document, as it does over a frame:
+   the host draws the document with room for the tags and the grip. The
+   stepper and the compare modes stand in the right panel's surface. */
+.mbk-library[data-library-component="swipe-divider"] .mbk-library-host {
+  background: var(--mbk-screen-bg);
+  box-shadow: 0 0 0 1px var(--cv-frame-ring);
+  height: 200px;
+  margin: 24px auto;
+  min-height: 0;
+  width: 320px;
+}
+.mbk-library[data-library-component="change-stepper"] .mbk-library-host,
+.mbk-library[data-library-component="compare-modes"] .mbk-library-host {
+  background: var(--cv-surface);
+  max-width: 312px;
+  min-height: 0;
+}
+.mbk-library[data-library-component="compare-modes"] .mbk-library-host {
+  padding: 14px;
+}

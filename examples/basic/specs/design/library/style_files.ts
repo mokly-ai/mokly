@@ -24,6 +24,9 @@ export const libraryStyleFiles = {
   "frames-filter": "design-library/inspector/frames-filter.css",
   selection: "design-library/canvas/selection.css",
   "box-model": "design-library/inspector/box-model.css",
+  "swipe-divider": "design-library/canvas/swipe-divider.css",
+  "change-stepper": "design-library/panels/change-stepper.css",
+  "compare-modes": "design-library/panels/compare-modes.css",
 } as const;
 
 export type LibraryStyle = keyof typeof libraryStyleFiles;

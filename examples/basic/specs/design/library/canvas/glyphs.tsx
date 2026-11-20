@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export type CanvasGlyphName =
   | "changes"
   | "chevron"
+  | "chevron-up"
   | "close"
   | "component"
   | "dark"
@@ -11,13 +12,15 @@ export type CanvasGlyphName =
   | "document"
   | "fit"
   | "folder-branch"
+  | "grip"
   | "highlight"
   | "inspect"
   | "layers"
   | "light"
   | "minus"
   | "mobile"
-  | "plus";
+  | "plus"
+  | "refresh";
 
 /**
  * The strokes of each glyph. The module creates no element while it loads:
@@ -38,6 +41,7 @@ const STROKES: Record<CanvasGlyphName, () => ReactNode> = {
     </>
   ),
   chevron: () => <path d="m4.5 6.3 3.5 3.5 3.5-3.5" />,
+  "chevron-up": () => <path d="m4.5 9.7 3.5-3.5 3.5 3.5" />,
   close: () => <path d="m4 4 8 8M12 4l-8 8" />,
   component: () => (
     <path d="M8 1.6 10.1 3.7 8 5.8 5.9 3.7zM8 10.2l2.1 2.1L8 14.4l-2.1-2.1zM3.7 5.9 5.8 8l-2.1 2.1L1.6 8zM12.3 5.9 14.4 8l-2.1 2.1L10.2 8z" />
@@ -71,6 +75,7 @@ const STROKES: Record<CanvasGlyphName, () => ReactNode> = {
       <path d="M4.5 5.2v5.6M11.5 7c0 2.6-2.4 3.3-5.6 4" />
     </>
   ),
+  grip: () => <path d="M6.2 4.6 2.8 8l3.4 3.4M9.8 4.6 13.2 8l-3.4 3.4" />,
   highlight: () => (
     <>
       <path d="M5.3 2H2v3.3M10.7 2H14v3.3M2 10.7V14h3.3M14 10.7V14h-3.3" />
@@ -98,6 +103,12 @@ const STROKES: Record<CanvasGlyphName, () => ReactNode> = {
     </>
   ),
   plus: () => <path d="M8 3.5v9M3.5 8h9" />,
+  refresh: () => (
+    <>
+      <path d="M13 8a5 5 0 1 1-1.5-3.6" />
+      <path d="M11.8 1.9v2.8H9" />
+    </>
+  ),
 };
 
 /** One Canvas glyph in `currentColor`, hidden from assistive technology. */

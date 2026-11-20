@@ -54,7 +54,14 @@ export const designLibrary = [
   [
     "canvas",
     "canvas-frame",
-    ["desktop-light", "mobile-dark", "component", "document"],
+    [
+      "desktop-light",
+      "mobile-dark",
+      "component",
+      "document",
+      "swipe",
+      "before",
+    ],
   ],
   ["canvas", "zoom-pill", ["fitted", "zoomed", "fit"]],
   ["panels", "floating-panel", ["catalogue", "panel", "sheet"]],
@@ -67,4 +74,7 @@ export const designLibrary = [
   ],
   ["canvas", "selection", ["action", "toolbar", "small"]],
   ["inspector", "box-model", ["action", "toolbar"]],
+  ["canvas", "swipe-divider", ["centred", "moved"]],
+  ["panels", "change-stepper", ["first", "second"]],
+  ["panels", "compare-modes", ["current", "side-by-side", "swipe", "added"]],
 ] as const;

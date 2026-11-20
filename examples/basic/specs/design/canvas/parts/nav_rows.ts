@@ -15,13 +15,14 @@ type NavigationRow = NavigationRows[number];
  */
 const ALL_TARGETS: Readonly<Record<string, DesignDestination>> = {
   welcome: CANVAS_PAGES.overview,
+  details: CANVAS_PAGES.added,
   profile: CANVAS_PAGES.unchanged,
   [COMPONENT_NAVIGATION.action.id]: CANVAS_PAGES.componentSet,
   "payment-terms": CANVAS_PAGES.document,
 };
 
 /** A row with the given destination, or without one. */
-function retarget(
+export function retarget(
   row: NavigationRow,
   to: DesignDestination | undefined,
 ): NavigationRow {
@@ -39,8 +40,8 @@ export const CANVAS_ALL_ROWS: NavigationRows = NAV_TREE.map((row) =>
  * Welcome changed, Details added, the billing entries moved under Account,
  * and five screens removed, ten entries in all. The changed and the added
  * rows carry the changed mark; a moved or removed row names its state
- * instead. Welcome opens the Changes filter with Welcome selected; the other
- * rows are pictures.
+ * instead. Welcome opens the Changes filter with Welcome selected, and
+ * Details opens the added entry; the other rows are pictures.
  */
 export const CANVAS_CHANGES_ROWS: NavigationRows = [
   {
@@ -65,7 +66,14 @@ export const CANVAS_CHANGES_ROWS: NavigationRows = [
     label: "Welcome",
     to: CANVAS_PAGES.catalogue,
   },
-  { key: "details", changed: true, depth: 2, kind: "screen", label: "Details" },
+  {
+    key: "details",
+    changed: true,
+    depth: 2,
+    kind: "screen",
+    label: "Details",
+    to: CANVAS_PAGES.added,
+  },
   ...MOVED_ROWS.map((row) => retarget(row, undefined)),
   ...REMOVED_SCREEN_ROWS.map((entry) => ({
     key: entry.key,

@@ -19,7 +19,7 @@ import {
   InspectVariants,
   WrappingPath,
 } from "./inspect.js";
-import { NoComponents, ScreenUsage } from "./inspect_folds.js";
+import { ActionUsage, NoComponents, ScreenUsage } from "./inspect_folds.js";
 
 /**
  * The Details rows of today's inspector that a depicted screen has, after
@@ -153,7 +153,9 @@ export function ActionInspect() {
       />
       <InspectSelection />
       <InspectFold count={6} name="props" title="Props" />
-      <InspectFold count={2} name="usage" title="Usage" />
+      <InspectFold count={2} name="usage" title="Usage">
+        <ActionUsage />
+      </InspectFold>
       <InspectFold name="components" title="Components">
         <NoComponents />
       </InspectFold>

@@ -2,7 +2,12 @@
    zoom, with a ring and a soft shadow, and its mono label and size above it.
    The stage may set --cv-zoom on a frame to show it at another zoom, as the
    compact layout does. A frame too narrow for both keeps its label and drops
-   its size. */
+   its size. In a comparison, the frame holds the shipped viewport, layers,
+   and surfaces of a stacked comparison, from their @mokly/ui stylesheets, in
+   the package's order. */
+@import "../../../../packages/ui/src/comparison-pane/comparison-pane.css";
+@import "../../../../packages/ui/src/comparison-stage/comparison-stage.css";
+
 .cv-frame {
   --cv-frame-scale: var(--cv-zoom, var(--cv-frame-zoom));
   container: cv-frame / inline-size;
@@ -79,4 +84,39 @@
   transform: scale(var(--cv-frame-scale));
   transform-origin: 0 0;
   width: calc(var(--cv-frame-w) * 1px);
+}
+
+/* A frame in a comparison: the shipped panes of Overlay and Difference, and
+   Swipe's layers, fill the document, where the shipped viewport stacks the
+   current version over the version before. */
+.cv-frame-scale > :is(.mb-panes, .cv-frame-swipe) {
+  display: block;
+  height: 100%;
+}
+
+/* Swipe shows the current version to the right of its divider. */
+.cv-frame-swipe .mb-pane--after {
+  clip-path: inset(0 0 0 var(--cv-frame-split));
+}
+
+/* A frame of Side by side names its version in a tag before its label: the
+   version before in the dark tag, the current version in the signal tag. */
+.cv-frame-side {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  flex: none;
+  font: 500 10.5px/1 var(--cv-mono);
+  height: 18px;
+  padding: 0 6px;
+}
+
+.cv-frame-side[data-side="before"] {
+  background: var(--cv-text);
+  color: var(--cv-surface);
+}
+
+.cv-frame-side[data-side="after"] {
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
 }

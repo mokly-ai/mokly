@@ -4,13 +4,19 @@ import { floatingPanel } from "../../library/panels/floating-panel.js";
 import { NavTree } from "../../parts/nav.js";
 
 import type { CanvasDestination } from "./destinations.js";
-import { CANVAS_ALL_ROWS, CANVAS_CHANGES_ROWS } from "./nav_rows.js";
+import { CANVAS_ALL_ROWS, CANVAS_CHANGES_ROWS, retarget } from "./nav_rows.js";
 
 /** The catalogue's filter, and the row of the selected entry. */
 export interface CatalogueView {
   filter: "all" | "changes";
   /** The key of the selected entry's row; none with nothing selected. */
   activeKey?: string | undefined;
+  /**
+   * The artboards that rows open where they differ from the rows' own, by
+   * the row's key. On the Changes tab, a changed entry's row keeps the tab,
+   * and the selected row opens the artboard that renders the catalogue.
+   */
+  targets?: Readonly<Record<string, CanvasDestination>> | undefined;
 }
 
 /** The foot of the Changes filter: the base that it compares with. */
@@ -38,6 +44,8 @@ export function CanvasCatalogue({
   view: CatalogueView;
 }) {
   const changes = view.filter === "changes";
+  const rows = changes ? CANVAS_CHANGES_ROWS : CANVAS_ALL_ROWS;
+  const { activeKey, targets } = view;
   return (
     <floatingPanel.Component
       moklyInstance={useDesignInstance("catalogue-panel")}
@@ -48,9 +56,16 @@ export function CanvasCatalogue({
       {...(changes ? { foot: <ChangesBase /> } : {})}
     >
       <NavTree
-        activeKey={view.activeKey}
+        activeKey={activeKey}
         changedOnly={changes}
-        nodes={changes ? CANVAS_CHANGES_ROWS : CANVAS_ALL_ROWS}
+        nodes={
+          targets === undefined
+            ? rows
+            : rows.map((row) => {
+                const to = targets[row.key];
+                return to === undefined ? row : retarget(row, to);
+              })
+        }
       />
     </floatingPanel.Component>
   );
