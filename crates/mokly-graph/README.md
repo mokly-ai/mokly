@@ -11,8 +11,12 @@ writes no files.
 - Compute content-addressed node keys before document rendering.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
-- Encode documents losslessly for the compact tier and the comparison capture,
-  and identify their exact codec input.
+- Encode documents losslessly for the compact tier, the comparison capture,
+  and the render store, and identify their exact codec input.
+- Read stored documents after a render cache miss and offer fresh documents
+  through an injected render store, without waiting for a write.
+- Define the activity and memory boundaries that pause and measure the writer
+  of the render store.
 - Render all views through an injected worker pool.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
@@ -123,6 +127,38 @@ destination renders in this same bounded cache. A repeated check of one
 destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
+
+`DocumentStore` is the optional render store boundary.
+`DeliveryInputs::persistence` carries one `Persistence`: the store and the
+JavaScript identity of the generation. Serve sets it for its head and base
+graphs, and direct and one-shot callers leave it absent. `StoreKey::new`
+combines a document key with the build identity: the native identity of the
+store and, for a document that uses JavaScript, the JavaScript identity. When
+a part is absent, the generation neither reads nor offers that document. After
+a render cache miss, a generation reads the store before it renders. A stored
+read repeats the public closure walk, the link checks, and the usage records of
+its side, so it gives the result of a fresh render. On a usable store hit, the
+generation also passes the same `ComposeRequest` that a composition uses to
+`Composer::record_served`, which records the root JavaScript request for the
+return warm-up. A render cache hit records nothing. A fresh document is offered
+only after the checks of its side pass, and a comparison collection offers its
+documents only after the whole collection passes. No generation waits for the
+write. Serve calls `DocumentStore::resume` after each completed Changes result,
+so the store writes nothing before the first one. `RenderCache::with_encoded`
+lends a writer one encoded document without a promotion, a refresh, or a count.
+It charges three times the document charge to the transit headroom, and it
+takes an encoder lease only for a document that is not compact yet.
+`RenderCache::with_workspace` charges the writer's fixed segment buffer to the
+same headroom. So the render cache stays the one owner of document memory.
+`EncodedView::write_stored` writes the bounded private record of a document,
+with all of its metadata, into a fixed caller buffer, and
+`EncodedView::from_stored` restores it. Serve work holds a `WriteLease` of the
+writer's `WriteActivity` while it runs, and `WriteReadiness` tells the writer
+whether the current Changes result is ready or unavailable. `StoreStats::memory`
+carries the writer's `StoreMemory`, and an `ExportObserver` samples export
+scratch without changing the cache accounting. The
+[render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the faults, the bound, and the writer rules.
 
 Each generation builds one immutable link index when it is created, and drops
 it with the generation. The index holds two positions for each catalogue entry
@@ -349,6 +385,28 @@ retention disabled.
   capture share. Its `encode_identified` and `comparison_identity` hash the
   complete codec input. The private `document_identity` and
   `document_metadata` modules hold that hash and the retained metadata.
+- [`src/document_store.rs`](./src/document_store.rs) defines `DocumentStore`,
+  the optional render store boundary, with `Persistence`, `StoreKey`,
+  `ReadOutcome`, `OfferOutcome`, `EntryFault`, and `StoreStats`.
+  [`src/session_persistence.rs`](./src/session_persistence.rs) builds the
+  `StoreKey` of a route and offers a fresh document after its checks.
+- [`src/write_activity.rs`](./src/write_activity.rs) defines `WriteReadiness`,
+  `WriteActivity`, and `WriteLease`, the boundary that pauses the writer while
+  Serve is busy.
+- [`src/store_memory.rs`](./src/store_memory.rs) defines `StoreMemory`, the
+  known buffer capacities and the separate charges of the writer.
+- [`src/cache_export.rs`](./src/cache_export.rs) defines `EncodedConsumer` and
+  `CacheOperation`, the writer work that `RenderCache::with_encoded` and
+  `RenderCache::with_workspace` run inside the transit headroom.
+  [`src/export_memory.rs`](./src/export_memory.rs) defines `ExportObserver` and
+  `ExportBuffer`, which observe the scratch buffers of an export.
+- [`src/document_persistence.rs`](./src/document_persistence.rs) and
+  [`src/document_store_metadata.rs`](./src/document_store_metadata.rs) write
+  the bounded stored record of a document into a fixed buffer through
+  `EncodedView::write_stored` and restore it through `EncodedView::from_stored`.
+  The private `document_export`, `document_capacity`, and
+  `document_node_capacity` modules measure the visible scratch capacities of an
+  export.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
   job. Its `stylesheets` method runs one `StylesheetWorker` job for
@@ -363,7 +421,9 @@ retention disabled.
   earlier class. `RenderClass::current` reads it. The private `WorkerContext`
   captures it with the tracing span for each worker job.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
-  memoizes JavaScript fragments in the same bounded cache.
+  memoizes JavaScript fragments in the same bounded cache. Its
+  `record_served` forwards a store-served request to its renderer without a
+  memo lookup.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
@@ -404,6 +464,7 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).

@@ -2,6 +2,9 @@
 
 #![cfg(unix)]
 
+#[path = "process_support/cache.rs"]
+mod cache;
+
 use std::fs;
 use std::path::Path;
 use std::process::Stdio;
@@ -14,6 +17,8 @@ use tokio::net::TcpStream;
 use tokio::process::{Child, Command};
 use tokio::sync::mpsc::{self, UnboundedReceiver};
 use tokio::task::JoinHandle;
+
+use cache::Cache;
 
 const RESOURCE: &str = "/static/mokly-generated/assets/css/image.svg";
 
@@ -98,6 +103,7 @@ fn fixture() -> TempDir {
 
 struct Serve {
     child: Child,
+    _cache: Cache,
     host: String,
     stdout: UnboundedReceiver<String>,
     stderr: UnboundedReceiver<String>,
@@ -111,6 +117,7 @@ impl Serve {
             .join("../../packages/viewer/dist")
             .canonicalize()
             .unwrap();
+        let cache = Cache::new();
         let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
             .args([
                 "serve",
@@ -119,6 +126,7 @@ impl Serve {
                 "0",
             ])
             .current_dir(root)
+            .envs(cache.environment())
             .env("PATH", "")
             .env("MOKLY_OUTPUT", "rich")
             .env(
@@ -144,6 +152,7 @@ impl Serve {
         until(&mut stdout, "Catalogue ready").await;
         Self {
             child,
+            _cache: cache,
             host,
             stdout,
             stderr,

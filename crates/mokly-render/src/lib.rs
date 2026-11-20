@@ -4,6 +4,7 @@
 
 mod bundle;
 mod bundle_attempt;
+mod bundle_finish;
 mod bundle_inputs;
 mod declarations;
 mod definition_handle;
@@ -18,6 +19,7 @@ mod fragments;
 mod graph;
 mod input_stamp;
 mod leases;
+mod persistent_identity;
 pub mod physical_inputs;
 mod postcss;
 mod postcss_cache;
@@ -26,8 +28,10 @@ mod postcss_nested;
 mod postcss_read_inventory;
 mod postcss_scan;
 mod postcss_turns;
+mod render_call;
 mod render_environment;
 pub mod runtime;
+mod runtime_factories;
 pub mod side;
 mod source_evidence;
 mod source_lease;
@@ -73,3 +77,9 @@ mod source_precedence_tests;
 #[cfg(test)]
 #[path = "_tests_/graph_tests.rs"]
 mod graph_tests;
+#[cfg(test)]
+#[path = "_tests_/stored_call_tests.rs"]
+mod stored_call_tests;
+#[cfg(test)]
+#[path = "_tests_/stored_provenance_tests.rs"]
+mod stored_provenance_tests;

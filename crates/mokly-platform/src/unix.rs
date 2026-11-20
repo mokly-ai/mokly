@@ -86,6 +86,11 @@ pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
     unix_process_tree::attach(child, Arc::new(SystemGroupSignal))
 }
 
+/// The caller keeps the child unreaped while its PID anchors cleanup.
+pub(crate) fn kill_unattached(child: &Child) -> Result<()> {
+    unix_process_tree::kill_unattached(child, &SystemGroupSignal)
+}
+
 struct SystemGroupSignal;
 
 impl GroupSignal for SystemGroupSignal {
