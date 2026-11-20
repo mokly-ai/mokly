@@ -79,12 +79,12 @@ its requests and results. The paths below are relative to the package root.
   with a readable configuration chain, that pass adds the folders and the
   `package.json` candidates of the targets that esbuild tried before its
   selection to `lookupDirectories` and `lookupFiles`, which `resolutionInputs`
-  turns into live inputs. Its `candidates` gives the mapped targets, then the `baseUrl`
-  candidate of a bare request. For an alias with an absolute target, it gives
-  the written path after a matched target instead, with no `baseUrl` step.
-  `mappedPaths` in
-  [`src/sidecar/mapped-paths.ts`](./mapped-paths.ts) gives the targets of the
-  selected key in order. `mappedSelection` in
+  turns into live inputs. `mappedCandidates` in
+  [`src/sidecar/mapped-paths.ts`](./mapped-paths.ts) gives the mapped targets,
+  then the `baseUrl` candidate of a bare request. For an alias with an
+  absolute target, it gives the written path after a matched target instead,
+  with no `baseUrl` step. `mappedPaths` in the same file gives the targets of
+  the selected key in order. `mappedSelection` in
   [`src/sidecar/mapped-selection.ts`](./mapped-selection.ts) compares each
   candidate with the selected module. A candidate file, one of its extension
   or TypeScript rewrite files, or an `index` file with a resolve extension
@@ -154,13 +154,29 @@ its requests and results. The paths below are relative to the package root.
   `nearestPackage` finds the own package, and `packageDirectories` gives the
   installed, linked, and configured package roots.
   [`src/sidecar/package-folders.ts`](./package-folders.ts) holds
-  `PackageFolders`. After a compile, its `lookup` places a native selection
-  among these candidates. It returns the candidates, the defining manifests,
-  and whether it placed the module.
+  `PackageFolders`, which takes the shared `PnpLocations` and a
+  `ConfigInputs`. After a compile, its `lookup` places a native selection
+  among these candidates. It first tries the configured candidates of
+  `mappedCandidates`. When `mappedSelection` proves one of them, as in the
+  `paths` pass above, the selection needs no folder checks. Otherwise a
+  package root counts only when its canonical folder, from
+  `PhysicalInputs.canonicalDirectory`, contains the selected module: a
+  `PnpLocations` root, the own package with `exports`, or an installed,
+  linked, or configured root. When no qualified root accounts for the
+  selection, it still counts as placed when a configured candidate contains
+  the selected module, or when the configuration chain cannot be followed.
+  Otherwise, with a PnP state file, the lookup throws, so each caller fails
+  closed. In its read-only mode, it adds no package or link observation.
+  `lookup` returns the candidates, the defining manifests, and whether it
+  placed the module.
   [`src/sidecar/package-folder-lookups.ts`](./package-folder-lookups.ts) holds
-  `PackageFolderLookups`. Its `record` uses `PackageFolders` to find each
-  import that a package folder mapping selects, and it adds the candidate
-  folders to the live lookup directories. `markedFileEvidence` in
+  `PackageFolderLookups`. Its `record` uses `PackageFolders`, with its own
+  `PnpLocations`, to find each import that a package folder mapping selects,
+  and it adds the candidate folders to the live lookup directories. Its
+  `PackageFolders` builds a non-strict `ConfigInputs` on the same
+  `PhysicalInputs` budget. A configuration chain that it cannot follow, such
+  as one with a package `extends`, then adds no configured candidate. A read
+  failure still makes the lookup incomplete. `markedFileEvidence` in
   [`src/sidecar/marked-file-evidence.ts`](./marked-file-evidence.ts) turns the
   folder files into the private evidence of the marked compilation: file,
   absent, and link entries beside the `uncaptured: "serveEdit"` marker.
@@ -168,13 +184,19 @@ its requests and results. The paths below are relative to the package root.
   staged paths or its table pass `EVIDENCE_LIMIT`, when it cannot read the
   package metadata of an import within the metadata bounds, or when the table
   holds another kind or fails a fresh read.
-- [`src/sidecar/pnp-inputs.ts`](./pnp-inputs.ts) holds `PnpInputs`, which
-  indexes the package locations of the PnP data without copying PnP
-  selection, so the capture also records the folder maps of PnP packages. It
-  reads and records the PnP data through `PhysicalInputs`, within its one
-  read budget. Its `finish` checks each native bare selection through
-  `PackageFolders`. It makes the evidence incomplete for an uncovered folder
-  map, a metadata bound, or a failed lookup.
+- [`src/sidecar/pnp-locations.ts`](./pnp-locations.ts) holds `PnpLocations`,
+  the shared catalogue of PnP package roots. On first use, it finds the
+  present PnP state file, reads it through `PhysicalInputs`, and parses it
+  with `pnpJson`. Its `roots` gives the physical root candidates of a package
+  name and its alias identifiers, without copying PnP locator, fallback, or
+  ignore selection. [`src/sidecar/pnp-inputs.ts`](./pnp-inputs.ts) holds
+  `PnpInputs`, the PnP capture and audit owner of a `full` compile. Its
+  `capture` records the folder maps of the `PnpLocations` roots, after a
+  fresh read confirms the pinned state file and manifest. Its `finish` checks
+  each native bare selection through a read-only `PackageFolders` that
+  borrows the `ConfigInputs` of `ResolutionEvidence`. It makes the evidence
+  incomplete for an uncovered folder map, a native selection that nothing
+  accounts for, a metadata bound, or another lookup error.
   [`src/sidecar/pnp-json.ts`](./pnp-json.ts) reads `.pnp.data.json` and the
   state that `.pnp.cjs` or `.pnp.js` embeds, without running their code.
   `pnpFiles` in [`src/sidecar/pnp-files.ts`](./pnp-files.ts) gives the PnP

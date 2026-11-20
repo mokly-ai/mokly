@@ -45,7 +45,12 @@ export class ResolutionEvidence {
       params.sourceRoot,
       params.configurationDirectory,
     );
-    this.pnp = new PnpInputs(this.physical, this.aliasDirectory, paths);
+    this.pnp = new PnpInputs(
+      this.physical,
+      this.aliasDirectory,
+      paths,
+      this.configs,
+    );
   }
 
   readonly plugin: Plugin = {

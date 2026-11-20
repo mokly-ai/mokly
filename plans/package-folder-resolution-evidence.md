@@ -240,6 +240,49 @@ scope. Its report is `private-folder-options-check.md` under the context
 directory. Full admission stays distinct from marked admission in both
 runtimes. They share per-entry comparison, not the full-only completeness gate.
 
+### 7. Remove cold PnP helper loading
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/pnp-inputs.ts` and its existing preparation callers.
+- **Background:** The Session import graph loads the new PnP parser even for a catalogue with no PnP state. Each new sidecar worker pays that cold import.
+- **Problem:** A paired fresh-worker diagnostic measures about 58 ms of added Session import work. Cloud startup restores show a similar 50 to 90 ms increase.
+- **Impact if no action:** Every fresh Serve worker pays unused parsing-helper initialization.
+- **Root question:** How can a catalogue load package parsing code only when its resolution needs it?
+- **Options:**
+  - **A.** Load the parser through the existing asynchronous preparation boundary only after PnP discovery needs it. Keep the synchronous candidate walk after preparation. Effort: Small.
+  - **B.** Make the package-map walk asynchronous throughout. This can defer every helper, but changes more call sites and checks. Effort: Medium.
+  - **C.** Keep eager loading and accept its measured cost. This fails the performance orchestrator's speed-first call. Effort: Small.
+  - **D.** Load the CommonJS Babel traversal helper synchronously on the first JavaScript-form PnP parse. Keep the parser signature, read order, and callers. Effort: Small.
+  - **E.** Replace Babel traversal with a small parser-AST walker. This must reproduce binding and scope rules, with more parity checks. Effort: Medium.
+- **Left out:** A separate parser process adds a process. Dropping supported PnP forms changes output or reuse. Replacing the native resolver changes the class and its risk. A Rust parser adds a boundary and dependency that D avoids. Background prewarming and the Node compile cache still load unused code in every worker.
+- **Wider fix:** D. The parser owns its optional dependency, so every synchronous and asynchronous caller gets the same lazy behavior.
+- **Previous examples:** The recorded 24-worker diagnostic compares Session import, compiled import, first toolchain inventory, and cached identity. Compiled import and toolchain inventory show no clear added cost.
+- **Recommendation:** D, changed from A by the fresh options check. It removes the measured dependency without changing callers or read order.
+- **Action:** fix now, apply D.
+
+The performance orchestrator chose removal on 2026-11-19 under the user's
+speed-first delegation. Keep output byte-identical and keep every rule and
+test. If a synchronous call site cannot gain lazy loading in a Small change,
+report that call site and cost to the performance orchestrator before widening
+this change. Repeat the same 24-worker, six-pair diagnostic. Cold Session
+import must stay within main's noise, with 5 ms as the example margin.
+Report final dist file counts and bytes. Fold the result into the review-fix
+SHA for the orchestrator's short Cloud confirmation.
+
+The workspace orchestrator chooses D on 2026-11-19 after the fresh options
+check. The Babel traversal dependency is CommonJS. It can load synchronously
+only when a JavaScript PnP state needs parsing. A remains the Small fallback
+if this dependency boundary fails the source checks. The options report is
+`cold-loading-options-check.md` under the context directory. Main already
+loads the Babel parser, so the unused new dependency is Babel traversal.
+
+Shared assumptions: current output, bounds, formats, supported native routes,
+and the no-new-process rule remain task requirements. Existing preparation
+may become the lazy boundary; whether it suffices is a source audit, not an
+assumption that permits widening the change.
+
 ## Milestone 1: Documentation and contract audit
 
 Depends on: none
@@ -331,7 +374,7 @@ the performance acceptance. The performance orchestrator then measures
 - [ ] Confirm memory stays within 2% and timing stays within noise. Investigate each failure before acceptance.
 - [ ] Confirm native output and unaffected catalogue output. Record identity changes separately when the toolchain requires them.
 - [ ] Compare every view's document keys on cloud and the example against main. Permit only per-run fields proved by the main/main control.
-- [ ] Run the strict example build and smoke the served catalogue after the final build.
+- [x] Run the strict example build and smoke the served catalogue after the final build.
 
 ## Milestone 4: Verification, review, and pull request
 
@@ -342,10 +385,24 @@ install git-lfs, and use pinned Bun. Use locked Cargo dependencies. Check free
 disk and memory before large builds. Disable Cargo incremental and dev debug
 information. Give each checkout its own target directory. Run one Cargo build
 at a time. Keep workspace 54's changes when current `main` needs integration.
+The performance orchestrator's later instruction keeps this verification on
+`c2fe4bf2a`. Do not integrate the incoming Cloud and Rust-toolchain PR #350
+until the performance orchestrator explicitly permits it.
 
 - [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`.
 - [x] Align the existing Node malformed-marker case with the approved file table. Keep the flag, toolchain, and invalid-kind assertions. Repeat the changed async case ten times and rerun the complete gate.
+- [x] Check and fix review findings 1 and 2 through one shared mapping-description change. Keep ordinary exact, alias, link, self, PnP, and configured-path reuse contrasts. Preserve read-only final classification.
+- [x] Run the fresh options check for item 7 and merge its result. Audit synchronous call sites within the approved Small scope.
+- [ ] Defer the optional parser dependency and repeat the same cold-worker diagnostic.
+- [x] Run the complete gate on the combined review fixes and integrated current main. Audit the entry-point documentation after the shared root description changes.
 - [ ] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator.
 - [ ] Review the full diff against `origin/main` with `implementation-review` after the push. Check new findings. Apply up to two fix rounds. Record follow-up items for remaining findings. Re-review once.
 - [ ] Delete this plan after every other required TODO passes and review rounds finish.
 - [ ] Open the pull request against `main`. Preserve this plan's dated calls and permalink in its description. Watch CI with the finish-work script. Fix branch failures. Report results to the sending session. Do not merge.
+
+Evidence: `.context/package-folder-resolution-evidence/main-review-integration-audit.txt`
+and `main-review-integration-preservation.patch` record the clean integration
+of current main before the review-fix delegation.
+The final delegated checks and smoke evidence are in
+`review-fix-round-1-report.md` and `review-fix-smoke-report.md` in that context
+directory.

@@ -104,6 +104,23 @@ export class PhysicalInputs extends PhysicalInputReader {
     return value?.kind === "file" ? value.path : undefined;
   }
 
+  canonicalDirectory(directory: string, observe = true): string | undefined {
+    if (!this.complete) return undefined;
+    try {
+      if (observe) this.pathLinks(directory);
+      else this.inspectPath(directory);
+      return this.complete
+        ? this.readDirectoryPath(
+            directory,
+            observe ? this.pathKinds.get(directory) : undefined,
+          )
+        : undefined;
+    } catch {
+      this.complete = false;
+      return undefined;
+    }
+  }
+
   /** Optional selection observes absence and regular-file paths without reading bodies. */
   optionalFile(file: string): boolean | undefined {
     const value = this.capturePath(file);
@@ -184,19 +201,22 @@ export class PhysicalInputs extends PhysicalInputReader {
   freshMetadata(file: string): CapturedMetadata | undefined {
     if (!this.complete) return undefined;
     try {
-      if (!this.pathKinds.has(file) && !this.inspectedPaths.has(file)) {
-        const bytes = Buffer.byteLength(file);
-        if (this.linkBytes + this.inspectionBytes + bytes > EVIDENCE_LIMIT)
-          throw new Error("metadata path evidence limit");
-        this.inspectionBytes += bytes;
-        this.inspectedPaths.add(file);
-        this.durability?.budget(this.linkBytes + this.inspectionBytes);
-      }
+      this.inspectPath(file);
       return this.readMetadata(file, this.pathKinds.get(file));
     } catch {
       this.complete = false;
       return undefined;
     }
+  }
+
+  private inspectPath(file: string): void {
+    if (this.pathKinds.has(file) || this.inspectedPaths.has(file)) return;
+    const bytes = Buffer.byteLength(file);
+    if (this.linkBytes + this.inspectionBytes + bytes > EVIDENCE_LIMIT)
+      throw new Error("metadata path evidence limit");
+    this.inspectionBytes += bytes;
+    this.inspectedPaths.add(file);
+    this.durability?.budget(this.linkBytes + this.inspectionBytes);
   }
 
   directory(directory: string): void {

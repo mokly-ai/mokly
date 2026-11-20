@@ -1,11 +1,22 @@
+import { createRequire } from "node:module";
+
 import { parse } from "@babel/parser";
-import traverseModule from "@babel/traverse";
+import type traverseModule from "@babel/traverse";
 
 import { jsonObject } from "./config-json.js";
 import { PackageJson, parsePackageJson } from "./package-json.js";
 
-const traverse = traverseModule.default;
+const moduleRequire = createRequire(import.meta.url);
+let traverse: typeof traverseModule.default | undefined;
 const fields = ["packageRegistryData", "fallbackPool"];
+
+function traversal(): typeof traverseModule.default {
+  if (!traverse) {
+    const loaded: typeof traverseModule = moduleRequire("@babel/traverse");
+    traverse = loaded.default;
+  }
+  return traverse;
+}
 
 function literalString(value: unknown): string | undefined {
   if (!jsonObject(value)) return undefined;
@@ -71,7 +82,7 @@ export function pnpJson(file: string, text: string): PackageJson | undefined {
   if (file.endsWith(".json")) return parsePackageJson(text, fields);
   let data: PackageJson | undefined;
   const ast = parse(text, { sourceType: "unambiguous" });
-  traverse(ast, {
+  traversal()(ast, {
     CallExpression: {
       exit(call) {
         const node = call.node;

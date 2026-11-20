@@ -14,6 +14,7 @@ import { packageFolderFiles } from "./package-map.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { pnpFiles } from "./pnp-files.js";
+import { PnpLocations } from "./pnp-locations.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { bareSpecifier } from "./specifier.js";
 
@@ -45,7 +46,11 @@ export class PackageFolderLookups {
   constructor(private readonly paths: ModulePaths) {}
 
   record(metafile: Metafile, configuration: string): ReuseEvidence | undefined {
-    const folders = new PackageFolders(this.inputs, this.paths);
+    const folders = new PackageFolders(
+      this.inputs,
+      this.paths,
+      new PnpLocations(this.inputs, configuration),
+    );
     const edges = new MetafileEdges(metafile, this.paths.sourceRoot);
     const aliases = Object.entries(this.paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,

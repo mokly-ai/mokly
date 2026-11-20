@@ -2,30 +2,24 @@ import path from "node:path";
 
 import type { Metafile } from "esbuild";
 
+import type { ConfigInputs } from "./config-inputs.js";
 import { MetafileEdges } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
 import { PackageFolders } from "./package-folders.js";
 import type { FolderSelection } from "./package-folders.js";
-import { PackageJson, parsePackageJson } from "./package-json.js";
+import { parsePackageJson } from "./package-json.js";
+import type { PackageJson } from "./package-json.js";
 import { packageMapTargets } from "./package-map.js";
 import type { CapturedMetadata } from "./physical-input-reader.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 import { pnpFiles } from "./pnp-files.js";
-import { pnpJson } from "./pnp-json.js";
+import { PnpLocations } from "./pnp-locations.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { bareSpecifier, packageName } from "./specifier.js";
 
-function* pairs(value: unknown): Generator<[unknown, unknown]> {
-  if (Array.isArray(value))
-    for (const item of value)
-      if (Array.isArray(item) && item.length === 2) yield [item[0], item[1]];
-}
-
 /** Index physical PnP candidates without copying locator, fallback, or ignore selection. */
 export class PnpInputs {
-  private readonly file: string | undefined;
-  private snapshot: CapturedMetadata | undefined;
-  private data: PackageJson | undefined;
+  readonly locations: PnpLocations;
   private readonly captured = new Set<string>();
   private readonly verified = new Set<string>();
   private discovery = false;
@@ -35,29 +29,21 @@ export class PnpInputs {
     private readonly inputs: PhysicalInputs,
     private readonly configuration: string,
     private readonly paths: ModulePaths,
+    private readonly configs: ConfigInputs,
   ) {
-    this.file = [...pnpFiles(configuration)].find(
-      (candidate) => candidate.present,
-    )?.file;
-    this.inspectNative = this.file !== undefined;
-    if (this.file)
-      try {
-        this.snapshot = this.inputs.inspectMetadata(this.file);
-        if (this.snapshot?.bytes)
-          this.data = pnpJson(this.file, this.snapshot.bytes.toString("utf8"));
-      } catch {
-        // The native selection pass below refuses uncovered folder maps only.
-      }
+    this.locations = new PnpLocations(this.inputs, this.configuration);
+    this.locations.read();
+    this.inspectNative = this.locations.file !== undefined;
   }
 
   capture(
     name: string,
     observe: (pkg: string, manifest: PackageJson) => void,
   ): void {
-    if (!this.file || !this.data || !this.snapshot) return;
+    const { file: state, snapshot: pinned } = this.locations;
+    if (!state || !pinned) return;
     const requested = "." + name.slice(packageName(name).length);
-    for (const location of this.locations(packageName(name))) {
-      const pkg = path.resolve(path.dirname(this.file), location);
+    for (const pkg of this.locations.roots(packageName(name))) {
       const file = path.join(pkg, "package.json");
       try {
         const snapshot = this.inputs.inspectMetadata(file);
@@ -71,10 +57,7 @@ export class PnpInputs {
             ),
           );
         if (!folder) continue;
-        if (
-          !this.commit(this.file, this.snapshot) ||
-          !this.commit(file, snapshot)
-        ) {
+        if (!this.commit(state, pinned) || !this.commit(file, snapshot)) {
           this.inputs.complete = false;
           return;
         }
@@ -107,40 +90,17 @@ export class PnpInputs {
     if (file) this.captured.add(file);
   }
 
-  private *locations(name: string): Generator<string> {
-    const packages: Array<[unknown, PackageJson]> = [];
-    const names = new Set([name]);
-    const alias = (key: unknown, target: unknown) => {
-      if (
-        key === name &&
-        Array.isArray(target) &&
-        typeof target[0] === "string"
-      )
-        names.add(target[0]);
-    };
-    for (const registry of this.data?.values("packageRegistryData") ?? [])
-      for (const [ident, references] of pairs(registry))
-        for (const [, value] of pairs(references))
-          if (value instanceof PackageJson) {
-            packages.push([ident, value]);
-            for (const dependencies of value.values("packageDependencies"))
-              for (const [key, target] of pairs(dependencies))
-                alias(key, target);
-          }
-    for (const pool of this.data?.values("fallbackPool") ?? [])
-      for (const [key, target] of pairs(pool)) alias(key, target);
-    const locations = new Set<string>();
-    for (const [ident, value] of packages)
-      if (typeof ident === "string" && names.has(ident))
-        for (const location of value.values("packageLocation"))
-          if (typeof location === "string") locations.add(location);
-    yield* locations;
-  }
-
-  /** Unsupported native PnP forms fail closed only when they select an uncovered folder map. */
+  /** Check qualified native package selections against the captured folder evidence. */
   finish(metafile: Metafile, aliases: Array<[string, string]>): void {
     if (!this.inspectNative || !this.inputs.complete) return;
-    const folders = new PackageFolders(this.inputs, this.paths, false, true);
+    const folders = new PackageFolders(
+      this.inputs,
+      this.paths,
+      this.locations,
+      this.configs,
+      false,
+      true,
+    );
     const edges = new MetafileEdges(metafile, this.paths.sourceRoot);
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file) || edges.own(file)) continue;

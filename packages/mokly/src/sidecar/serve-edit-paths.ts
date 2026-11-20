@@ -7,7 +7,7 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { ConfigInputs } from "./config-inputs.js";
 import type { PathSettings } from "./config-inputs.js";
-import { mappedPaths } from "./mapped-paths.js";
+import { mappedCandidates } from "./mapped-paths.js";
 import { mappedSelection } from "./mapped-selection.js";
 import { MetafileEdges } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -15,17 +15,6 @@ import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { bareSpecifier } from "./specifier.js";
-
-function* candidates(config: PathSettings, name: string): Generator<string> {
-  let mapped = false;
-  for (const candidate of mappedPaths(config, name, "selected")) {
-    mapped = true;
-    yield candidate;
-  }
-  if (path.isAbsolute(name)) {
-    if (mapped) yield name;
-  } else if (config.baseUrl) yield path.resolve(config.baseUrl, name);
-}
 
 /** Add readable mapped lookups to the existing live directory and metadata checks. */
 export class ServeEditPaths {
@@ -90,7 +79,7 @@ export class ServeEditPaths {
           let configured = false;
           let selected = false;
           let contained = false;
-          for (const base of candidates(config, request.name)) {
+          for (const base of mappedCandidates(config, request.name)) {
             configured = true;
             if (selection.kind === "unknown") return false;
             const kind = mappedSelection(

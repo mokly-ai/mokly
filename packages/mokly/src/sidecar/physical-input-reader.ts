@@ -94,6 +94,15 @@ export abstract class PhysicalInputReader {
     return fs.realpathSync.native(file);
   }
 
+  protected readDirectoryPath(
+    file: string,
+    known?: CaptureKind,
+  ): string | undefined {
+    return this.kind(file, known) === "directory"
+      ? this.realPath(file)
+      : undefined;
+  }
+
   protected readFilePath(file: string, known?: CaptureKind): FilePathProbe {
     try {
       const kind = this.kind(file, known);
