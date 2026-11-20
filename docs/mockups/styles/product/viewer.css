@@ -63,11 +63,11 @@
   );
 }
 .fo-package-slot-start {
-  padding-left: var(--mk-space-4);
+  padding-left: max(var(--mk-space-4), var(--fo-window-inset, 0px));
 }
 .fo-package-slot-end {
   justify-content: flex-end;
-  padding-right: var(--mk-space-4);
+  padding-right: max(var(--mk-space-4), var(--fo-window-inset-end, 0px));
 }
 .fo-package-publication {
   display: flex;
@@ -81,6 +81,12 @@
 .fo-package-slot-compact {
   max-width: none;
   padding-inline: 0;
+}
+.fo-package-slot-compact.fo-package-slot-start {
+  padding-left: var(--fo-window-inset, 0px);
+}
+.fo-package-slot-compact.fo-package-slot-end {
+  padding-right: var(--fo-window-inset-end, 0px);
 }
 /* The one switch width: the narrowest bar that holds the full composition
    beside the package's own controls. It is in rem, like the bar's type and
@@ -109,6 +115,8 @@
   flex-shrink: 0;
   min-height: var(--mk-layout-topbar);
   padding: 0 var(--mk-space-4);
+  padding-left: max(var(--mk-space-4), var(--fo-window-inset, 0px));
+  padding-right: max(var(--mk-space-4), var(--fo-window-inset-end, 0px));
   border-bottom: 1px solid var(--mk-color-border);
 }
 .fo-top-slot {

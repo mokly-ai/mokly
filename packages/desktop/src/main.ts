@@ -24,6 +24,7 @@ import { installMenu } from "./menu.js";
 import { installNavigation } from "./navigation.js";
 import { installPermissions } from "./permissions.js";
 import { startUpdates, updateMode } from "./updates.js";
+import { installWindowButtons } from "./window-buttons.js";
 import { createWindow } from "./window.js";
 
 const warn = (error: unknown) =>
@@ -80,29 +81,34 @@ startDesktop({
   },
   createWindow: () => {
     const statePath = resolve(app.getPath("userData"), "window.json");
-    return createWindow({
-      create: (options) => new BrowserWindow(options),
-      readState: () => readFileSync(statePath, "utf8"),
-      saveState: (value) => writeFileSync(statePath, value),
-      visible: (bounds) =>
-        screen
-          .getAllDisplays()
-          .some(
-            ({ workArea }) =>
-              bounds.x < workArea.x + workArea.width &&
-              bounds.x + bounds.width > workArea.x &&
-              bounds.y < workArea.y + workArea.height &&
-              bounds.y + bounds.height > workArea.y,
-          ),
-      warn,
-    });
+    return createWindow(
+      {
+        create: (options) => new BrowserWindow(options),
+        readState: () => readFileSync(statePath, "utf8"),
+        saveState: (value) => writeFileSync(statePath, value),
+        visible: (bounds) =>
+          screen
+            .getAllDisplays()
+            .some(
+              ({ workArea }) =>
+                bounds.x < workArea.x + workArea.width &&
+                bounds.x + bounds.width > workArea.x &&
+                bounds.y < workArea.y + workArea.height &&
+                bounds.y + bounds.height > workArea.y,
+            ),
+        warn,
+      },
+      process.platform,
+    );
   },
-  wireWindow: (active) =>
+  wireWindow: (active) => {
+    if (process.platform === "darwin") installWindowButtons(active);
     installNavigation(active.webContents, configuration.config.appOrigin, {
       openExternal: (url) => shell.openExternal(url),
       load: (url) => active.loadURL(url),
       warn,
-    }),
+    });
+  },
   updates: () =>
     startUpdates(
       {
@@ -125,7 +131,11 @@ startDesktop({
       {
         current: () => Menu.getApplicationMenu(),
         item: (options) => new MenuItem(options),
+        build: (items) => Menu.buildFromTemplate(items),
+        set: (menu) => Menu.setApplicationMenu(menu),
+        focusedWindow: () => BrowserWindow.getFocusedWindow(),
       },
       check,
+      process.platform,
     ),
 });
