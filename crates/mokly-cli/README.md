@@ -109,9 +109,21 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
-The usage pass reads the current sidecar capacity before each view starts.
-Its sliding window uses the smaller of that capacity and the worker count.
-Both source roots share that capacity. A shared admission
+The usage pass starts its views in a sliding window of the worker count. Each
+view first looks up its document on the shared render workers, and a cache or
+store hit ends there without a batch or completion admission reading. A sidecar
+call of its link checks still passes the gate checks below. A miss waits for a
+batch place. The completion bound limits only the misses whose own root fragment
+returned without failure. The batch and completion bounds read the current
+sidecar capacity at each entry, and both use the smaller of that capacity and
+the worker count. Both bounds also count the views of a replaced pass that
+still render or complete. Both source roots share that capacity. A miss of a
+JavaScript entry without saved slots waits for its own root fragment on its
+resumed blocking thread. Any other miss keeps its worker permit until it ends
+and takes no completion place. Every background view reads or builds its
+document on the shared render workers, as HTTP renders, build, and comparison
+do. So a view that waits for its own root fragment holds no render worker that
+another view needs. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background
@@ -371,8 +383,10 @@ changed.
   provider and its cancellations. Its `Source::comparison_attempt` begins one
   fenced reuse attempt.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
-  `comparison_reuse::MemoryComparisons` service. It gives the writer's
-  `WriteActivity` to `Workers`, `MemoryComparisons`, and `ChangesPass`.
+  `comparison_reuse::MemoryComparisons` service. It also composes `UsagePass`,
+  whose `UsageCapacity` gives both background stages the smaller of the worker
+  count and the sidecar limit. It gives the writer's `WriteActivity` to
+  `Workers`, `MemoryComparisons`, and `ChangesPass`.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

@@ -18,7 +18,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_pool::{PoolScheduling, ServePool};
 
-use super::serve_pool_support::css;
+use super::serve_pool_support::{css, dispatch};
 
 async fn queued(scheduler: Arc<ServePool>, total: usize) {
     tokio::task::spawn_blocking(move || {
@@ -118,7 +118,10 @@ async fn priority_after_a_busy_call(base_overlap: bool) {
     let background = tokio::spawn({
         let work = work.clone();
         let documents = documents.clone();
-        async move { work.background(documents, "background".into()).await }
+        async move {
+            work.background(documents, "background".into(), dispatch(2))
+                .await
+        }
     });
     queued(scheduler.clone(), 2).await;
     let http = tokio::spawn({

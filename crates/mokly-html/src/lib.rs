@@ -1,12 +1,15 @@
 //! Annotated HTML trees and catalogue document composition.
 #![warn(unreachable_pub)]
 
+mod compose_start;
 pub mod composition;
 pub mod controls;
 pub mod diagnostic_code;
 pub mod error;
 pub mod fragment;
 pub mod links;
+pub mod prepared_root;
+mod root_context_weight;
 
 #[cfg(test)]
 #[path = "_tests_/author_navigation_tests.rs"]
@@ -157,3 +160,7 @@ mod pipeline_tests;
 #[cfg(test)]
 #[path = "_tests_/token_tree_agreement_tests.rs"]
 mod token_tree_agreement_tests;
+
+#[cfg(test)]
+#[path = "_tests_/completion_admission_tests.rs"]
+mod completion_admission_tests;

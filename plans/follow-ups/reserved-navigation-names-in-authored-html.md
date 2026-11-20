@@ -10,7 +10,7 @@
   its plan.
 - **Location:** `crates/mokly-catalogue/src/html_tokens.rs:91-102`,
   `crates/mokly-html/src/elements.rs:30-48`,
-  `crates/mokly-html/src/source_checks.rs:15-19`, and
+  `crates/mokly-html/src/source_checks.rs:53` and line 98, and
   `docs/protocol/mokly-html-screens.md:142` and `:192`.
 - **Reason:** On 2026-11-01 the diagnostics branch left this choice to the
   user, because each option changes a protocol rule or adds a build error.
@@ -53,8 +53,8 @@
     `crates/mokly-html/src/elements.rs:26`, keeps the allowed attributes and
     the reserved navigation names on both wrappers.
   - A body that supplies a reserved name fails during rendering.
-    `source_checks::validate` at
-    `crates/mokly-html/src/source_checks.rs:15-19` rejects each start tag
+    `source_checks::validate`, through `SourceChecks` at
+    `crates/mokly-html/src/source_checks.rs:53` and line 98, rejects each start tag
     with a reserved name. The failure has the code `build-invalid` and the
     text `reserved navigation metadata in consumer output`.
   - That failure names the document route, not the file, the line, or the

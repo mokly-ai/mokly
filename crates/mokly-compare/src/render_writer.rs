@@ -61,44 +61,7 @@ impl DocumentStore for DocumentWriter {
         } else {
             self.backend.load(key)
         };
-        let entry_warning = match &outcome {
-            ReadOutcome::Rejected(fault) | ReadOutcome::RejectedWithStoreFault(fault) => {
-                Some(*fault)
-            }
-            _ => None,
-        };
-        let directory = matches!(
-            &outcome,
-            ReadOutcome::Unavailable
-                | ReadOutcome::HitWithStoreFault(_)
-                | ReadOutcome::RejectedWithStoreFault(_)
-        );
-        let directory = directory && !self.shared.disabled.swap(true, Ordering::AcqRel);
-        {
-            let mut pending = self
-                .shared
-                .pending
-                .lock()
-                .unwrap_or_else(|error| error.into_inner());
-            match &outcome {
-                ReadOutcome::Hit(_) | ReadOutcome::HitWithStoreFault(_) => pending.stats.hits += 1,
-                _ => pending.stats.misses += 1,
-            }
-            if matches!(
-                &outcome,
-                ReadOutcome::Rejected(_) | ReadOutcome::RejectedWithStoreFault(_)
-            ) {
-                pending.stats.faults += 1;
-            }
-            self.shared.emit(pending.stats, self.observer.as_ref());
-        }
-        if let Some(fault) = entry_warning {
-            self.observer.warning(StoreWarning::Entry(fault));
-        }
-        if directory {
-            self.observer.warning(StoreWarning::Directory);
-        }
-        outcome
+        self.finish_read(outcome)
     }
     fn offer(&self, key: StoreKey, document: NodeKey) -> OfferOutcome {
         let request = Request::new(key, document);
@@ -148,6 +111,48 @@ impl DocumentStore for DocumentWriter {
         pending.sample();
         self.shared.emit(pending.stats, self.observer.as_ref());
         self.shared.admission.close();
+    }
+}
+
+impl DocumentWriter {
+    /// Finalize one ordinary outcome through the shared state and warnings.
+    fn finish_read(&self, outcome: ReadOutcome) -> ReadOutcome {
+        let entry_warning = match &outcome {
+            ReadOutcome::Rejected(fault) | ReadOutcome::RejectedWithStoreFault(fault) => {
+                Some(*fault)
+            }
+            _ => None,
+        };
+        let directory = matches!(
+            &outcome,
+            ReadOutcome::Unavailable
+                | ReadOutcome::HitWithStoreFault(_)
+                | ReadOutcome::RejectedWithStoreFault(_)
+        );
+        let directory = directory && !self.shared.disabled.swap(true, Ordering::AcqRel);
+        {
+            let mut state = self.shared.read_state();
+            match &outcome {
+                ReadOutcome::Hit(_) | ReadOutcome::HitWithStoreFault(_) => {
+                    state.pending.stats.hits += 1;
+                }
+                _ => state.pending.stats.misses += 1,
+            }
+            if matches!(
+                &outcome,
+                ReadOutcome::Rejected(_) | ReadOutcome::RejectedWithStoreFault(_)
+            ) {
+                state.pending.stats.faults += 1;
+            }
+            state.emit(self.shared.as_ref(), self.observer.as_ref());
+        }
+        if let Some(fault) = entry_warning {
+            self.observer.warning(StoreWarning::Entry(fault));
+        }
+        if directory {
+            self.observer.warning(StoreWarning::Directory);
+        }
+        outcome
     }
 }
 
