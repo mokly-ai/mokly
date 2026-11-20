@@ -13,8 +13,9 @@ interface ConfigDirFixture {
 
 export async function configDirPaths(
   context: TestContext,
+  parent?: string,
 ): Promise<ConfigDirFixture> {
-  const root = await nativeRoot(context);
+  const root = await nativeRoot(context, parent);
   await write(path.join(root, "package.json"), "{}");
   await write(path.join(root, "one/.keep"), "");
   await write(path.join(root, "two/value.js"), "export const value='two';");

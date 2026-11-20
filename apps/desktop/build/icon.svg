@@ -1,0 +1,43 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1024"
+  height="1024"
+  viewBox="0 0 1024 1024"
+  role="img"
+  aria-labelledby="mokly-app-icon-title"
+>
+  <title id="mokly-app-icon-title">Mokly</title>
+  <defs>
+    <filter id="plate-shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow
+        dx="0"
+        dy="12"
+        stdDeviation="14"
+        flood-color="#000000"
+        flood-opacity="0.28"
+      />
+    </filter>
+  </defs>
+  <!-- The macOS icon grid: an 824 px plate centred on the 1024 px canvas. -->
+  <rect
+    x="100"
+    y="100"
+    width="824"
+    height="824"
+    rx="186"
+    fill="#ffffff"
+    filter="url(#plate-shadow)"
+  />
+  <!-- The light-surface brand mark of the site's mokly-icon-light.svg. -->
+  <g fill="#2f5945" transform="translate(224 224) scale(18)">
+    <rect x="3" y="3" width="20" height="21" rx="4" opacity=".3" />
+    <rect x="9" y="8" width="20" height="21" rx="4" />
+    <path
+      d="M14 15h10M14 20h7"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>

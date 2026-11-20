@@ -1,0 +1,153 @@
+/* The mobile header's menu: the control at the trailing edge of the header
+   row and the modal dialog it opens. The dialog slides in from the right
+   edge over a dimmed page, and its close control sits where the menu control
+   was. The rules match docs/mockups/styles/site/menu.css; only the site
+   draws the backdrop, the entry state and the scroll lock, because the
+   mockup depicts the open menu in a static document. Above the breakpoint
+   the header row lists the destinations and the menu control is not drawn. */
+
+.site-menu-button,
+.site-menu-close {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: var(--mk-layout-control-min);
+  justify-content: center;
+  padding: 0;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+  width: var(--mk-layout-control-min);
+}
+
+.site-menu-button:hover,
+.site-menu-close:hover {
+  background: var(--mk-color-surface-muted);
+}
+
+.site-menu {
+  background: var(--mk-color-surface);
+  border: 0;
+  box-shadow: var(--mk-shadow-large);
+  color: var(--mk-color-text);
+  height: auto;
+  inset: 0 0 0 auto;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  position: fixed;
+  transition:
+    translate var(--mk-motion-standard) var(--mk-motion-easing),
+    display var(--mk-motion-standard) allow-discrete,
+    overlay var(--mk-motion-standard) allow-discrete;
+  translate: 100% 0;
+  width: min(20rem, calc(100% - var(--mk-space-12)));
+  z-index: 10;
+}
+
+.site-menu[open] {
+  translate: 0 0;
+}
+
+.site-menu::backdrop {
+  background: var(--mk-color-text);
+  opacity: 0;
+  transition:
+    opacity var(--mk-motion-standard) var(--mk-motion-easing),
+    display var(--mk-motion-standard) allow-discrete,
+    overlay var(--mk-motion-standard) allow-discrete;
+}
+
+.site-menu[open]::backdrop {
+  opacity: 0.4;
+}
+
+@starting-style {
+  .site-menu[open] {
+    translate: 100% 0;
+  }
+
+  .site-menu[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* The page behind the open menu holds its scroll position. */
+
+:root:has(.site-menu[open]) {
+  overflow: hidden;
+}
+
+/* The panel fills the dialog, so a press on the panel never reaches the
+   dialog itself, which is how a press beside the panel is told apart. */
+
+.site-menu-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-space-5);
+  min-height: 100%;
+  padding: var(--mk-space-4) var(--mk-layout-gutter-mobile) var(--mk-space-8);
+}
+
+.site-menu-head {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.site-menu-nav {
+  display: grid;
+  gap: var(--mk-space-1);
+}
+
+.site-menu-link {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: flex;
+  font-size: var(--mk-type-body-size);
+  line-height: var(--mk-type-body-line);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-3);
+  text-decoration: none;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-menu-link:hover {
+  background: var(--mk-color-surface-muted);
+}
+
+.site-menu-link[aria-current="page"],
+.site-menu-link[aria-current="page"]:hover {
+  background: var(--mk-color-accent-soft);
+  color: var(--mk-color-accent);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-menu-actions {
+  border-top: 1px solid var(--mk-color-border);
+  display: grid;
+  gap: var(--mk-space-3);
+  padding-top: var(--mk-space-5);
+}
+
+.site-menu-actions .site-button {
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .site-menu-button {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .site-menu {
+    border: 1px solid CanvasText;
+  }
+}

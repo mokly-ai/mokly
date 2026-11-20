@@ -12,6 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache_types::{Builder, StorageMock};
 use crate::commands::CommandsMock;
+use crate::comparison_steps::{Step, StepsMock};
 use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
 use crate::inputs::Inputs;
@@ -45,6 +46,9 @@ fn build(yarnrc: &str, mirror: &'static str, removed: &'static [&'static str]) {
         resolution: ModuleResolution::default(),
     };
     let owner = DependencyTiers {
+        steps: Arc::new(Unimock::new(
+            StepsMock::step.next_call(matching!(Step::Installing)).returns(()),
+        )),
         cache: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new((
             StorageMock::copy

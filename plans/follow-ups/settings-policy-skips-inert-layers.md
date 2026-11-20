@@ -1,0 +1,46 @@
+# Settings policy does not check inert layers
+
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`. It keeps option B of `settings-modal-leaves-dialog-focusable.md`, which that branch fixed with option C and deleted.
+- **Location:** `docs/mockups/src/_tests_/settings-document-policy.ts:30-42`, `docs/protocol/cloud/settings-mockups.md:46-50` and `docs/protocol/cloud/settings-dialog.md:24-32`. The disk test runs the policy at `docs/mockups/src/_tests_/disk.spec.ts:166-167`.
+- **Reason:** Each option changes a check or a protocol statement, which the user reserves, and the approved settings fix does not depend on it.
+- **Checked:** 2026-11-03, on the completed helper and policy port. The settings policy still checks only `aria-hidden` on the page backdrop. The direct frame-focus regression passed 10 of 10 runs in both viewports.
+- **Category:** Test.
+
+- **Terms:**
+  - **Settings frame:** The registered settings dialog on desktop, or the registered settings layer on mobile, that holds one pane.
+  - **Confirmation modal:** A modal over a settings pane that asks about one row or field, such as a token revoke, a member removal or a visibility change.
+  - **Settings document policy:** `settingsDocumentViolations` in `docs/mockups/src/_tests_/settings-document-policy.ts`. The disk test runs it on every built page under `product/settings/`.
+  - **`LayerBeneath`:** The helper in `docs/mockups/src/components/layer-beneath.tsx`. It sets `inert` and `aria-hidden` together on a layer beneath an open layer.
+- **Background:**
+  - `docs/protocol/cloud/settings-dialog.md:24-32` says that the page beneath the dialog is inert. It also says that the dialog beneath a confirmation modal stays open and inert.
+  - `docs/protocol/cloud/settings-dialog.md:44-47` says that a row menu on a wide surface is a popover, and that the pane stays interactive around it.
+  - `docs/protocol/cloud/settings-mockups.md:46-50` says that the page beneath stays inert, and that policy tests enforce these rules.
+  - Until 2026-11-03, the settings frame beside a confirmation modal had no `inert` and no `aria-hidden`. So its rail links and buttons took keyboard focus.
+  - On 2026-11-03 the user chose to fix that through `LayerBeneath`. `SettingsSurface` in `docs/mockups/src/screens/product/settings/surface.tsx` uses it for the frame beneath an open modal and for the desktop page backdrop. A browser regression in `docs/mockups/src/_tests_/overlay.spec.ts` checks a built settings confirmation page.
+  - 14 settings entries draw a confirmation modal, in 56 documents. The count is from 2026-11-03.
+  - The hidden-subtree rule in `docs/mockups/src/_tests_/document-policy.ts` rejects a focusable element in an `aria-hidden` subtree without an `inert` ancestor. It cannot catch a lower layer that has neither attribute.
+  - Every settings page draws a skip link before the backdrop and `main`, outside every layer. `plans/follow-ups/settings-skip-link-outside-open-modal.md` holds that question.
+  - On mobile, `product/settings/github/menu` and `product/settings/tokens/revoke/menu` draw the open row-menu sheet in `.fo-settings-modal-layer`, outside the frame. The frame beneath the sheet is inert.
+- **Problem:** The settings document policy reports "page beneath must be inert", but it checks only `aria-hidden` on `.fo-settings-backdrop`. It checks neither attribute on the frame beneath a confirmation modal. So the policy message and the protocol claim a check of `inert` that never runs.
+- **Impact if no action:** A change that removes both attributes from the frame beneath a modal passes every page policy. Only the browser regression of one page can catch it. The hidden-subtree rule still catches a frame that keeps `aria-hidden`, loses `inert` and holds a focusable control.
+- **Root question:** What proves that no layer beneath an open settings layer takes focus, as the settings protocols say?
+- **Options:**
+  - **B.** Make the settings document policy check `inert` on each layer beneath an open modal layer, as its message says: the desktop page backdrop and the frame beneath a confirmation modal. A desktop row-menu popover is not modal, so the frame beneath it stays interactive. It makes a check stricter. Effort: Small.
+    - Its earlier limit for the frame beneath the mobile row-menu sheet no longer applies, because the sheet no longer draws inside the frame.
+  - **D.** Keep the checks as they are. Change the policy message and the sentence in `docs/protocol/cloud/settings-mockups.md:46-50` to say `aria-hidden` for the page beneath. It changes a protocol statement. It lowers the mockup check below the `inert` that `docs/protocol/cloud/settings-dialog.md:26` and `:30-31` require, and it leaves the frame beneath a modal unchecked. Effort: Small.
+  - **E.** Replace the class names of B with one rule in the shared document policy. On a page with a product screen root, at most one `aria-modal` dialog has no `inert` ancestor. When that open modal dialog exists, no element outside it takes focus unless an `inert` ancestor holds it. A page with no open modal dialog gets no focus condition from this rule. The rule covers the settings layers, the viewer backdrop and each later layer, whatever their class names. It also catches a control after an open viewer panel. Risk: on 2026-11-03 it fails all 86 desktop settings entries, because the skip link sits outside the dialog. It also fails the two mobile row-menu pages, because their sheet sits inside the frame. Each needs a decision or a fix first. The row-menu fix of 2026-11-04 removed the cause for the two menu pages, because it moved their sheet out of the frame. It makes a check stricter. Effort: Large.
+- **Left out:**
+  - Change nothing. The policy message and the protocol keep claiming a check of `inert` that the policy does not make.
+  - Draw the confirmation as a pane instead of a modal. `docs/protocol/cloud/settings-dialog.md` requires a modal over the pane.
+  - A Tab walk of each settings page with an open modal. E reads the same layers with no press count and no capture order, and both fail first on the skip link.
+- **Wider fix:** None. `LayerBeneath` is the structural fix, and it is in force since 2026-11-03. B is a direct detection fix, because it must know the class names of the settings layers. E is the detection fix that needs no class names.
+- **Previous examples:**
+  - The viewer overlay backdrop had the same defect: a layer beneath an open layer kept focus. The change of 2026-11-03 fixed both through `LayerBeneath`.
+  - On `main` at commit `164d73db`, `docs/mockups/src/_tests_/viewer-document-policy.ts:37-38` had the same message mismatch. The change of 2026-11-03 makes that policy check `inert` on the viewer backdrop too.
+  - The two mobile row-menu pages had the same defect: the frame beneath the open sheet kept focus. Commit [`88668a4b`](https://github.com/mokly-ai/mokly-cloud/commit/88668a4b71a9a1a83d2ce6c4554d1c8c2a553752), from PR #122 merged on 2026-11-04, moved the sheet into the `modal` slot of `SettingsSurface`, so `LayerBeneath` covers the frame.
+- **Related:**
+  - `plans/follow-ups/settings-skip-link-outside-open-modal.md`: work that waits for that answer. E fails on every desktop settings page while the skip link sits outside the dialog.
+- **Recommendation:** B. It is Small and keeps the protocol text. It also makes the settings policy match the viewer document policy, which now checks `inert` on its backdrop. E best protects the codebase, because it needs no class names, but it first needs an answer about the skip link.
+- **Action:** ask the user, because B and E make a check stricter, and D changes a protocol statement. The always-on rules reserve these choices for the user.

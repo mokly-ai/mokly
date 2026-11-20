@@ -85,15 +85,25 @@
     sidecar tree.
   - `docs/protocol/mokly-git.md` says that a Git helper process never
     outlives its command.
-  - Two records quote the macOS limit:
-    `plans/follow-ups/macos-process-tree-smoke-test.md` and
+  - One record quotes the macOS limit:
     `plans/follow-ups/git-helpers-outlive-commands.md`. A change of the limit
-    changes them too.
+    changes it too.
   - Both protocol pages start with a status line that links this item. A
     branch that applies an answer removes both lines only when both pages
     then match the code.
   - No run has reproduced this timing on macOS. A read of the code shows the
     gap.
+  - On 2026-11-19, a smoke test of the same stop code passed on a
+    GitHub-hosted `macos-26` runner with macOS 26.7.2 on arm64. It used a
+    build of `main` at `cdced5e9`, Yarn Classic 1.22.22, and
+    `--base-install-scripts`.
+    - The `postinstall` script of a local dependency started `sleep 1000`
+      and waited for it. The script and its child ran outside the manager's
+      process group.
+    - A cancellation and the time limit each stopped the install. After each
+      stop, no process of the tree was left.
+    - The script waited for its child. It did not exit before the walk
+      stopped it, so the smoke test cannot show this gap.
 - **Problem:** On macOS, the stop never signals a mid-walk orphan. The orphan
   moves to launchd, so the walk cannot reach it. The requirement covers such
   an orphan, but the recorded limit does not name it.
@@ -200,9 +210,6 @@
   the words of A without a user decision. The coordinator's review withdrew
   that call on the same day.
 - **Related:**
-  - `plans/follow-ups/macos-process-tree-smoke-test.md` holds the post-merge
-    macOS run of the same stop code. Its script waits for its child, so that
-    run cannot show this gap.
   - `plans/follow-ups/git-helpers-outlive-commands.md` holds the promise of
     the Git page that no Git helper outlives its command. The gap of this
     item also reaches Git helpers. Both items change the runtime words

@@ -40,20 +40,6 @@ interface Workflow {
   permissions: Readonly<Record<string, string>>;
 }
 
-interface WorkflowDispatch {
-  inputs: Readonly<
-    Record<
-      string,
-      {
-        default?: string;
-        options?: readonly string[];
-        required?: boolean;
-        type?: string;
-      }
-    >
-  >;
-}
-
 test("release workflow selects only releases and isolates OIDC publish", async () => {
   const source = await workflowSource("release.yml");
   const workflow = parse(source) as Workflow;
@@ -66,14 +52,6 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   const selection = workflow.jobs["select-release"];
   assert.ok(publish);
   assert.ok(selection);
-  const dispatch = workflow.on.workflow_dispatch as WorkflowDispatch;
-  assert.deepEqual(dispatch.inputs.verification, {
-    description: "Reuse exact-tree CI evidence or run complete verification",
-    required: true,
-    type: "choice",
-    options: ["evidence", "complete"],
-    default: "evidence",
-  });
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   assert.equal(publish.environment, "npm");
   assert.equal(publish["runs-on"], "ubuntu-24.04");
@@ -90,11 +68,6 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     contents: "read",
     "id-token": "write",
   });
-  assert.equal(
-    selection.outputs?.verification,
-    "${{ steps.select.outputs.verification }}",
-  );
-  assert.equal(prepare.env?.RELEASE_VERIFICATION, "${{ inputs.verification }}");
   assert.equal(source.includes("NPM_TOKEN"), false);
   assert.equal(source.includes("NODE_AUTH_TOKEN"), false);
   assert.match(source, /package-manager-cache: false/);
@@ -110,8 +83,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Set up Rust",
     "Audit Rust dependencies",
     "Select verification evidence",
-    "Install Chromium for verification and smoke",
-    "Run complete verification",
+    "Install Chromium for packed viewer smoke",
     "Prepare exact publish artifacts",
   ];
   for (const [index, name] of gateOrder.entries()) {
@@ -128,25 +100,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "npm run dependencies:check",
   );
   assert.equal(
-    prepare.steps.find((step) => step.name === "Run complete verification")
-      ?.run,
-    'GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict',
-  );
-  assert.equal(
-    prepare.steps.find((step) => step.name === "Run complete verification")?.env
-      ?.PLAYWRIGHT_CHANNEL,
-    "chromium",
-  );
-  assert.equal(
     prepare.steps.find(
-      (step) => step.name === "Install Chromium for verification and smoke",
+      (step) => step.name === "Install Chromium for packed viewer smoke",
     )?.run,
     "npx playwright install --with-deps chromium",
-  );
-  const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
-  assert.equal(
-    prepare.steps.find((step) => step.name === "Run complete verification")?.if,
-    fallbackCondition,
   );
   for (const name of ["Set up Rust", "Audit Rust dependencies"])
     assert.equal(
@@ -162,7 +119,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     (step) => step.name === "Select verification evidence",
   );
   assert.equal(evidence?.id, "evidence");
-  assert.deepEqual(evidence?.env, { GITHUB_TOKEN: "${{ github.token }}" });
+  assert.deepEqual(evidence?.env, {
+    GITHUB_TOKEN: "${{ github.token }}",
+    RELEASE_VERIFICATION: "evidence",
+  });
   assert.deepEqual(
     prepare.steps
       .filter((step) => step.env?.GITHUB_TOKEN)

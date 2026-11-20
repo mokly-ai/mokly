@@ -48,8 +48,9 @@ Public test commands and strict evidence rules live in the
 Run `actionlint` without arguments from the repository root to check every
 GitHub Actions workflow. It automatically reads
 [`.github/actionlint.yaml`](../../.github/actionlint.yaml), which lists the
-exact Blacksmith runner labels used by the workflows. Keep this list aligned
-with the workflow runners. Use no runner-label ignore pattern or alternate
+Blacksmith Testbox runner label. All other jobs use GitHub-hosted standard
+runners under the [runner rule](../../docs/protocol/ci-workflow.md#job-execution).
+Use no runner-label ignore pattern or alternate
 configuration file. This is a separate manual check.
 
 ## Rust advisory audit

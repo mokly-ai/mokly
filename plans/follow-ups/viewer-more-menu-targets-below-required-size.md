@@ -1,0 +1,31 @@
+# Viewer More rows miss the required size
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-03, from the hosted viewer layout verification on `conductor/follow-ups-hosted-viewer-layout`.
+- **Location:** `apps/app/src/screens/viewer/more-menu.tsx`, `apps/app/src/settings/row-menu.tsx`, `apps/app/src/screens/account/connect-screen.tsx`, and the Viewer top bar paragraph of `docs/protocol/cloud/folio-viewer.md`.
+- **Reason:** The recommended shared-control fix needs another repository and a release, while local alternatives change the design or requirements.
+- **Category:** Product bug.
+- **Terms:**
+  - **More menu:** The viewer's compact cloud action menu, rendered by `@firna/ui` `DropdownMenu`.
+  - **Touch target:** The clickable area of one menu row, measured in CSS pixels.
+  - **Touch viewport:** A window below 768 px, where `useCompact()` selects touch sizing. Wider windows keep pointer density.
+- **Background:** The compact viewer groups its cloud actions under More. `docs/protocol/cloud/folio-chrome.md` and `docs/protocol/cloud/shared-control-registrations.md` require 44 px targets on touch viewports. The More paragraph in `docs/protocol/cloud/folio-viewer.md` states that size without a viewport limit. More now also appears in narrow pointer windows. The App uses exact-pinned `@firna/ui` 4.0.0, whose phone menu already had the same row implementation before the bar-width fix.
+- **Problem:** History, Share, and Settings each measure 34 px high at 390, 768, and 1024 px. Projects measures 50 px and Account measures 80 px because those rows also show secondary text. The 390 px rows break the mobile target rule. The pointer rows conflict with the unqualified More sentence, while their triggers keep pointer density. Firna fixes vertical padding at 8 px and the label line at 18 px. Its public row props and theme expose no row-height setting.
+- **Impact if no action:** Single-line phone actions remain harder to tap than the required 44 px targets. The More requirement remains unclear for pointer windows.
+- **Root question:** How does each grouped action get the target size that its viewport requires?
+- **Options:**
+  - **A.** Accept 34 px phone rows. Change `folio-viewer.md`, `folio-chrome.md`, and `shared-control-registrations.md`. Keep the current menu, with smaller phone targets. Effort: Small.
+  - **B.** Compose More from public Firna portal, navigation, and button primitives with 44 px targets. The host owns the active row and focus movement. Update the More surface rule in `shared-controls.md` and add an open-menu drawing. Effort: Medium.
+  - **C.** Add a public row-minimum option to Firna, release it, and deliberately bump the three pinned workspaces in a separate change. Apply it to More and keep the existing dropdown behavior. Other phone menu families stay separate. Effort: Medium.
+  - **D.** Add visible Firna `DropdownIconBox` tiles through the public `leading` slot on touch viewports. A row then measures 8 + 28 + 8 = 44 px. This needs a new drawing and changes to the icon-size and tinted-fill rules in `folio-chrome.md`. Its sizing depends on the current tile and padding dimensions. Effort: Medium.
+  - **E.** Clarify that the More sentence's 44 px floor applies only on touch viewports. Pointer windows keep their current density. Combine E with B, C, D, F, or G, because E alone leaves phone rows at 34 px. Effort: Small.
+  - **F.** Give every Firna dropdown row family one supported floor, then release and bump the pin in `apps/app`, `apps/mockups`, and `packages/tokens`. Apply 44 px on touch viewports through one shared helper. Cover More, settings row menus, workspace selectors, and their drawings. Include E's viewport clarification. This needs two repositories and all affected call sites. Effort: Large.
+  - **G.** Open More in the existing settings sheet on touch viewports, using registered Firna `List` rows with 48 px targets. Pointer windows keep the dropdown. The sheet supplies its focus trap. Update the More surface requirements and add a drawing of the open sheet. Effort: Medium.
+- **Left out:** Ad hoc CSS overrides break the shared-control rule. A global breakpoint change does not change the fixed dropdown padding. Empty sizing spacers break `shared-controls.md`'s rule that public size and touch-target props set control geometry. Repeated secondary text breaks the product copy rule that supporting text stays optional. Firna `ResponsiveMenu` uses the same short rows. Changing nothing leaves the phone requirement unmet.
+- **Wider fix:** F. One supported row floor covers all affected menu families and their drawings.
+- **Previous examples:** The settings sheet in `apps/app/src/settings/row-menu.tsx` and the workspace selector in `apps/app/src/screens/account/connect-screen.tsx` use the same single-line rows. Their drawings use `docs/mockups/src/components/responsive-menu.tsx` and `options-list.tsx`. These additional cases follow from the shared implementation, rather than a browser measurement.
+- **Recommendation:** F. It preserves shared menu behavior and meets the mobile target rule for every affected family. The initial recommendation was C. G is the strongest option that needs no Firna release.
+- **Action:** ask the user, because F needs another repository and a release, while the local alternatives change requirements or menu design.
+
+Reproduce with a signed-in published project. At 390 px, open More and measure the elements with `role="menuitem"`. History, Share, and Settings each measure 34 px. Repeat at 768 px and 1024 px after the bar-width fix. The row heights stay the same. Measure row boxes, not the 18 px text labels. A future fix must preserve every action, keyboard navigation, focus return, and the bar handoff.

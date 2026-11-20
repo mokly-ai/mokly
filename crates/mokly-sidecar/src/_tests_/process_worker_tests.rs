@@ -46,6 +46,7 @@ fn deadline_uses_the_injected_clock_and_the_method_duration() {
         .request(
             &Request {
                 id: 1,
+                quiet: false,
                 call: Call::Shutdown(Empty {}),
             },
             71,
@@ -102,6 +103,7 @@ fn admission_discovers_postcss_children_without_consuming_the_worker_scan() {
         .request(
             &Request {
                 id: 1,
+                quiet: false,
                 call: Call::ProcessCss(ProcessCss {
                     repository_roots: vec![],
                     context: "stylesheet".into(),

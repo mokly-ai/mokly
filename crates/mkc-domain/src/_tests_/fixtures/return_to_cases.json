@@ -1,0 +1,133 @@
+{
+  "accepted": [
+    { "input": "/dashboard", "output": "/dashboard" },
+    {
+      "input": "/workspaces/00000000-0000-0000-0000-000000000001/invitations/00000000-0000-0000-0000-000000000002/accept",
+      "output": "/workspaces/00000000-0000-0000-0000-000000000001/invitations/00000000-0000-0000-0000-000000000002/accept"
+    },
+    {
+      "input": "/acme/website?settings=tokens",
+      "output": "/acme/website?settings=tokens"
+    },
+    {
+      "input": "/acme/website?selection=one%26two&tag=alpha%2Bbeta&note=release%23one",
+      "output": "/acme/website?selection=one%26two&tag=alpha%2Bbeta&note=release%23one"
+    },
+    {
+      "input": "/acme/website?branch=feature+dark&branch=équipe/東京",
+      "output": "/acme/website?branch=feature+dark&branch=équipe/東京"
+    },
+    {
+      "input": "/acme/website?view=changes&view=browse&empty=&flag",
+      "output": "/acme/website?view=changes&view=browse&empty=&flag"
+    },
+    {
+      "input": "/acme/website?escaped=%2f%2F%41",
+      "output": "/acme/website?escaped=%2f%2F%41"
+    },
+    {
+      "input": "/acme/website?pattern=100%25&source=https%3A%2F%2Fexample.test%2Fdocs",
+      "output": "/acme/website?pattern=100%25&source=https%3A%2F%2Fexample.test%2Fdocs"
+    },
+    {
+      "input": "%2Facme%2F-%2Fsettings%2Faccount",
+      "output": "/acme/-/settings/account"
+    },
+    {
+      "input": "%2Facme%2Fwebsite%3Fselection%3Done%2526two%26tag%3Dalpha%252Bbeta%26note%3Drelease%2523one",
+      "output": "/acme/website?selection=one%26two&tag=alpha%2Bbeta&note=release%23one"
+    },
+    { "input": "/docs-team/site", "output": "/docs-team/site" },
+    { "input": "/authentic/project", "output": "/authentic/project" },
+    { "input": "/sign-in-team/project", "output": "/sign-in-team/project" },
+    {
+      "input": "%2Facme%2Fwebsite%2Fpull-requests%2F7?view=changes",
+      "output": "/acme/website/pull-requests/7?view=changes"
+    },
+    { "input": "/acme/website#token=x", "output": "/acme/website" },
+    {
+      "input": "/acme/website?note=release%23one#browser-state",
+      "output": "/acme/website?note=release%23one"
+    }
+  ],
+  "rejected": [
+    null,
+    "",
+    "%E0%A4%A",
+    "%41cme/website",
+    "https://evil.test/acme/website",
+    "//evil.test",
+    "/acme//evil",
+    "/acme/../auth/email/callback",
+    "/acme/%252f/evil",
+    "/acme%2Fwebsite/branches",
+    "/acme%3Fwebsite",
+    "/acme%23website",
+    "/acme/%252e/website",
+    "/acme/%2E/website",
+    "/acme/%2e%2e/website",
+    "/%2Fexample.test/acme",
+    "/%68%74%74%70%3A/evil",
+    "/acme%3Awebsite",
+    "/acme/%5cevil",
+    "/\\evil.test/acme",
+    "http:/acme",
+    "/acme/../../etc",
+    "/acme/./website",
+    "/",
+    "/docs",
+    "/d%6fcs/getting-started",
+    "/docs/getting-started",
+    "/changelog/2026",
+    "/changelog.xml",
+    "/complaints",
+    "/terms",
+    "/privacy",
+    "/robots.txt",
+    "/security",
+    "/sitemap.xml",
+    "/favicon.svg",
+    "/brand/logo.svg",
+    "/og/card.png",
+    "/stage/example",
+    "/pagefind/index.js",
+    "/_astro/app.js",
+    "/.well-known/acme-challenge/token",
+    "/sign-in",
+    "/sign%2Din",
+    "/sign-in/",
+    "/sign-in?returnTo=/acme/website",
+    "/sign-up#account",
+    "%2Fsign-up%2F",
+    "%2Fsign-in",
+    "/auth",
+    "/a%75th/email/callback",
+    "/auth/email",
+    "/auth%2Femail%2Fcallback",
+    "/auth/email/callback",
+    "/auth/github/callback/again",
+    "/auth/github/install",
+    "/acme/website?token=secret",
+    "/acme/website?%74oken=secret",
+    "/acme/website?to%4Ben=secret",
+    "/acme/website?safe=1&%73ession=secret",
+    "/dashboard?a=1&secret=x",
+    "/dashboard?code=x",
+    "/dashboard?session=x",
+    "/acme/website?branch=%",
+    "/acme/website?branch=%2",
+    "/acme/website?branch=%GG",
+    "/acme/website?branch=%C3%28",
+    "/acme/website?branch=%00main",
+    "/acme/website?branch=%0Dmain",
+    "/acme/website?branch=%C2%80main",
+    "/acme/%C2%80website",
+    "/acme/website?bad%0Akey=value",
+    "/acme/website?branch=main\tother",
+    "/acme/%0aevil",
+    "%2facme%2f..%2fauth",
+    "%2F%2Fevil.test",
+    "%2Facme%2Fwebsite%3F%2574oken%3Dsecret",
+    "/acme\u0000/website"
+  ]
+}

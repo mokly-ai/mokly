@@ -8,6 +8,7 @@ use mokly_graph::error::GraphError;
 use mokly_model::axes::EntryKind;
 
 use crate::build::{BuildError, BuildSummary, strict_count};
+use crate::changes_diagnostics;
 use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::pre_installation;
@@ -111,14 +112,12 @@ pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redac
             if matches!(source.as_ref(), mokly_compare::error::Error::Git { .. }) {
                 return style.error(Code::GitFailed, &format!("Git information could not be read for {base_ref}. Check the repository and configured base."), redactor);
             }
-            style.error(
-                    crate::changes_diagnostics::failure_code(source),
-                    &format!(
-                        "comparison against base ref {base_ref:?} failed: {}",
-                        crate::changes_diagnostics::failure_detail(source)
-                    ),
-                    redactor,
-                )
+            changes_diagnostics::failure(
+                style,
+                source,
+                &format!("comparison against base ref {base_ref:?} failed: "),
+                redactor,
+            )
         }
         BuildError::RestartRequired { setting } => style.error(
             Code::BuildInvalid,

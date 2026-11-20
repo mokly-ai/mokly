@@ -1,7 +1,6 @@
 //! Checkout and blob access for dependency normalization and batched source reads.
 
 use crate::changes::fields;
-use crate::command::DEFAULT_OUTPUT_LIMIT;
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -19,17 +18,7 @@ pub struct WorkingFile {
 
 impl GitRepository {
     pub(crate) fn candidates(&self) -> Result<Vec<RepoPath>> {
-        let output = self.command(
-            &[
-                "ls-files",
-                "-z",
-                "--cached",
-                "--others",
-                "--exclude-standard",
-            ],
-            vec![],
-            DEFAULT_OUTPUT_LIMIT,
-        )?;
+        let output = self.file_listing(&["-z", "--cached", "--others", "--exclude-standard"])?;
         let mut paths = BTreeSet::new();
         for field in fields(&output)? {
             if let Some(value) = tree::candidate(field) {

@@ -1,0 +1,43 @@
+id: write-failure-through-the-fragment
+valid:
+  - 'const a = withdraw.around(<div><Action label="Revoke invitation" /></div>);'
+  - 'const a = failure.around(<div className="review-inline">{save}</div>);'
+  - 'const a = failure.around(<div className="fo-account-actions">{submit}</div>);'
+  # A state body hands its own frame the disclosure; that is the State
+  # composition, not a refused write.
+  - 'const a = <StateMessage title="x" error details={<ErrorDetails error={error} />} />;'
+  # The same disclosure, offered only when there is a reference to disclose.
+  - 'const a = <StateMessage title="x" error details={error ? <ErrorDetails error={error} /> : undefined} />;'
+  - 'const a = <PaneError title="x" error={error} onRetry={retry} />;'
+  # A cause that offers a link rather than one line is the documented
+  # exception: the same request cannot be made to succeed.
+  - 'const a = <p className="fo-copy" role="alert">Already taken. <a href={x}>Open it</a>.</p>;'
+  # The same, where the link''s words are a value rather than literal text.
+  - 'const a = <p className="fo-copy" role="alert">Already taken. <a href={x}>{label}</a>.</p>;'
+  # A different composition that announces itself.
+  - 'const a = <section className="fo-note fo-note-danger" role="alert">{copy}</section>;'
+  - 'const a = <section className="fo-state" role={error ? "alert" : undefined} />;'
+  - 'const a = <p className="fo-copy">No pending invitations.</p>;'
+  # A message that is not a refusal at all: its own flush composition, and
+  # polite, because nothing failed and there is nothing to send again.
+  - 'const a = <section className="fo-notice" role="status">GitHub sign-in opens soon.</section>;'
+invalid:
+  - 'const a = <p className="fo-copy" role="alert">{message}</p>;'
+  - 'const a = <span className="fo-copy" role="alert">Copying didn’t work here.</span>;'
+  # The pair split across a wrapper is the same shape: the wrapper carries no
+  # meaning of its own, it carries one of the two attributes the matcher reads.
+  - 'const a = <section role="alert"><p className="fo-copy">{message}</p></section>;'
+  # The same shape doing the whole job by hand: a cause, then the control.
+  - 'const a = <div><section role="alert"><p className="fo-copy">{cause}</p></section>{control}</div>;'
+  # A child that is not the link the exception is for.
+  - 'const a = <p className="fo-copy" role="alert"><span>{message}</span></p>;'
+  # The mirror of the wrapper: the cause line outside, the announcement in.
+  - 'const a = <p className="fo-copy"><span role="alert">{message}</span></p>;'
+  # The same announcement said the other way.
+  - 'const a = <p className="fo-copy" aria-live="assertive">{message}</p>;'
+  # A link with nothing in it offers the reader nothing, so it is not the
+  # exception; it is the exception's shape borrowed to satisfy the matcher.
+  - 'const a = <p className="fo-copy" role="alert">{message}<a href={x}></a></p>;'
+  - "const a = <div>{error && <ErrorDetails error={error} />}</div>;"
+  - "const a = <ErrorDetails error={error}></ErrorDetails>;"
+  - "const a = <ErrorDetails error={revoke.error} />;"

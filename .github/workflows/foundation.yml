@@ -1,0 +1,164 @@
+name: Foundation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: foundation-main
+  cancel-in-progress: false
+
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  plan:
+    name: Plan foundation infrastructure
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_REPOSITORY_ID: ${{ github.repository_id }}
+      MKC_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+      MKC_LEGACY_REPOSITORY_ID: ${{ vars.MKC_LEGACY_REPOSITORY_ID }}
+    steps:
+      - name: Check out trusted infrastructure scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate the plan identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Save the foundation plan
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/terraform-foundation.sh plan
+      - name: Publish the foundation plan
+        if: ${{ always() && steps.credentials.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: plan-foundation
+          path: .context/plans/foundation
+          if-no-files-found: error
+          retention-days: 7
+
+  apply:
+    name: Apply foundation infrastructure
+    needs: [plan]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (github.ref == 'refs/heads/main' && needs.plan.outputs.enabled == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      applied: ${{ steps.apply.outputs.applied }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_FOUNDATION_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_REPOSITORY_ID: ${{ github.repository_id }}
+      MKC_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+      MKC_LEGACY_REPOSITORY_ID: ${{ vars.MKC_LEGACY_REPOSITORY_ID }}
+    steps:
+      - name: Require the dedicated foundation identity
+        run: |
+          if [[ -z "$GCP_SERVICE_ACCOUNT" ]]; then
+            echo 'GCP_FOUNDATION_SERVICE_ACCOUNT must be configured before foundation can apply' >&2
+            exit 1
+          fi
+      - name: Check out trusted infrastructure scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check foundation identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate the foundation identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_FOUNDATION_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Download the approved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-foundation
+          path: .context/plans/foundation
+      - name: Apply the exact saved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        id: apply
+        run: |
+          bash infra/scripts/terraform-foundation.sh apply
+          echo 'applied=true' >> "$GITHUB_OUTPUT"
+
+  required:
+    name: Foundation required
+    if: ${{ always() }}
+    needs: [plan, apply]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require the complete foundation promotion
+        env:
+          CLOUD_DELIVERY_EXPECTED: ${{ vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' }}
+          REF: ${{ github.ref }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          ENABLED: ${{ needs.plan.outputs.enabled }}
+          APPLY_RESULT: ${{ needs.apply.result }}
+          APPLIED: ${{ needs.apply.outputs.applied }}
+        run: |
+          if [[ "$REF" != refs/heads/main ]]; then
+            echo 'Foundation runs only from refs/heads/main' >&2
+            exit 1
+          fi
+          if [[ "$CLOUD_DELIVERY_EXPECTED" != true ]]; then
+            test "$PLAN_RESULT" = skipped
+            test "$APPLY_RESULT" = skipped
+            echo 'SKIP cloud delivery: off until cutover'
+            exit 0
+          fi
+          test "$PLAN_RESULT" = success
+          if [[ "$ENABLED" == true ]]; then
+            test "$APPLY_RESULT" = success
+            test "$APPLIED" = true
+          else
+            test "$APPLY_RESULT" = skipped
+            echo 'SKIP foundation: cloud identity is not configured; no foundation change applied'
+          fi

@@ -1,0 +1,33 @@
+# Docs landing installs React for everyone
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-02, from finding 303 of the final review of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`.
+- **Location:** `apps/site/src/docs/version.ts:16-18`, `apps/site/src/pages/docs/index.astro:25-30`, `apps/site/src/components/docs/Install.astro`.
+- **Reason:** The recommended option removes the landing's install command, which is on `origin/main`, so it needs the user's approval.
+- **Category:** Docs or spec.
+
+- **Terms:**
+  - **Docs landing:** the site page `/docs/`, which opens with an "Install Mokly" section.
+  - **React peers:** `react` and `react-dom`, which `@mokly/mokly` declares as optional peers in `packages/mokly/package.json` and needs only for React screens.
+- **Background:**
+  - The landing's "Install Mokly" section shows `npm install --save-dev @mokly/mokly react react-dom`, the command of the 0.14.0 install guide.
+  - The sentence above it now says: "Screens written in React also need React and React DOM."
+  - The package guide `docs/guides/start/install.md` installs `@mokly/mokly` first, and the React peers only for React screens that do not have them yet. The site's own Install page renders that guide from the workspace package.
+  - In a repository that already has `react` and `react-dom` in `dependencies`, the landing's command moves both to `devDependencies` with `^<latest>` versions. This was seen with npm 11.11.0 in a scratch project.
+  - `docs/protocol/cloud/site.md` names React teams as the site's audience.
+- **Problem:** The landing gives every reader a React install step, and it disagrees with the Install page.
+- **Impact if no action:** Readers with HTML screens install packages that they do not need, and React teams can move their React dependencies by accident.
+- **Root question:** Where does the docs landing get its install steps, so that they agree with the package's Install guide after each change of that guide?
+- **Options:**
+  - **A.** Label the current command as the React setup, and link the Install page for other setups. Effort: Small.
+  - **B.** Show the base install first, and the React peers as a step for React screens "when your repository does not have them yet". Update the drawing and the command assertions. Effort: Small.
+  - **C.** Replace the landing's install block with a link to the package-owned Install page. Delete `INSTALL_COMMAND`, the `Install` component and the tests that cover only them. Effort: Small.
+  - **D.** Render the installed `start/install` guide in the landing's install section. The landing then repeats the next page. Effort: Medium.
+  - **E.** Make the guide contract `docs/protocol/mokly-guides.md` name the install section of `start/install.md`, and render only that section, in one change. Effort: Medium.
+- **Left out:** Keeping the command, because it fails the goal. A site test that compares the copy with the guide, because it tests package documentation.
+- **Wider fix:** C, because it removes the site's copy of the install steps.
+- **Previous examples:** Commit `7e35a06a` removed another package-dependent claim from the site's own pages.
+- **Related:** The Mokly Cloud drawing of the Install guide page, `docs/mockups/src/screens/design/site/docs_screen.tsx:43`, draws the same combined command, and `docs/mockups/src/_tests_/design-site-content.test.ts:131` pins it. That page renders the base command first, as `apps/site/tests/browser/docs.spec.ts:156` checks. Every option redraws it.
+- **Recommendation:** C. It leaves no site copy of the install steps, so the landing cannot disagree with the Install page after a later change of the guide. If the user does not approve the removal, B is the next best.
+- **Action:** ask the user, because C removes content that is on `origin/main`.

@@ -64,6 +64,8 @@ export function auditInternalExports(repositoryRoot, git) {
     git
       .currentFiles(SOURCE_ROOTS)
       .filter((file) => isSourceModulePath(file) && !isDeclarationPath(file))
+      // Mokly discovers catalogue fixture exports at build time.
+      .filter((file) => !normalize(file).startsWith("scripts/cloud/fixtures/"))
       .filter((file) => fs.existsSync(path.join(repositoryRoot, file)))
       .map(normalize),
   );

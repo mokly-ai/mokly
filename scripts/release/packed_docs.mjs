@@ -64,6 +64,7 @@ async function filesBelow(root, directory) {
     withFileTypes: true,
   })) {
     const name = `${directory}/${entry.name}`;
+    if (name === "docs/protocol/cloud") continue;
     if (entry.isDirectory()) files.push(...(await filesBelow(root, name)));
     else {
       assert.ok(

@@ -1,0 +1,44 @@
+# Markdown link check lacks the PR #39 rules
+
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, from the closed [PR #39](https://github.com/mokly-ai/mokly-cloud/pull/39), whose Markdown checks the re-land did not bring back. Updated on 2026-10-30 with the slugger follow-up of the deleted `plans/documentation-skill-alignment.md`.
+- **Location:** `tests/markdown_links.test.ts:47-72`, the anchor reader, and `:85-133`, the link resolution.
+- **Reason:** Every option that adds a rule adds stricter validation, and the user answers that.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The cloud link stage is gone. The Markdown link test of this repository now checks the cloud docs too. It resolves `<a id>` and `<a name>` anchors, still follows GitHub's slug rules only in part, and does not reject ignored targets. No current scan of all links ran.
+- **Category:** Process.
+
+- **Terms:**
+  - **Markdown link check:** `tests/markdown_links.test.ts`, which the Viewer suite of `cargo xtask check` runs once. It checks that each local link in `AGENTS.md`, `docs/`, `plans/`, every `README.md`, and the Markdown files under the AGPL paths (`apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and `scripts/cloud/`) resolves. In a site page under `apps/site/src/content/`, a root-relative link must name a route of the site. Before the move, the old cloud repository ran `cargo xtask markdown-links`, stage 9 of its gate, over every Markdown file that Git listed.
+  - **Fragment:** The `#name` part of a link, which must name a heading anchor of the target document.
+  - **Explicit anchor:** An HTML `id` or `name` attribute in a Markdown file that a fragment can target.
+- **Background:** The list below gives the facts.
+  - On 2026-10-12 the user approved four additions to the Markdown link check of the old cloud repository in PR #39.
+  - Fragments resolve with GitHub's heading slugs and explicit anchors. A link to a target that Git ignores fails.
+  - Each protocol doc over 250 lines prints a warning. A line that a branch adds under `plans/` fails when it cites a path below `.context/`.
+  - PR #51 then added its own fragment check to the old cloud `main`. On 2026-10-20 the user chose that check without the 250-line warning, in decision 7 of the deleted [documentation skill alignment plan](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/documentation-skill-alignment.md?plain=1#L85-L91).
+  - A scan of 2,593 local links on the old cloud `main` on 2026-10-30 found no link to an ignored target. It found no fragment that only an explicit anchor resolves, and no slug difference. This scan is history, and no current scan ran.
+  - On 2026-11-17 the cloud moved into this repository, and its link stage went with the old runner. The Markdown link test of this repository took over the cloud docs.
+  - The changed-file length audit of the Repository suite now fails a changed protocol doc over 250 lines, so the 250-line warning has a stricter replacement.
+  - The root lockfile already resolves `github-slugger` 2.0.0, through the Astro packages of `apps/site`.
+- **Problem:** The list below gives what the Markdown link test lacks from the four rules and from the old cloud stage.
+  - Explicit anchors resolve only on `<a>` elements. An `id` on another element is not an anchor for the test.
+  - The slug rules differ from GitHub's in edge cases. The test does not skip a duplicate suffix that another heading produced, drops combining marks, and reads only `#` headings, so an underlined heading gets no anchor.
+  - A link target that exists locally passes, also when Git ignores it, so it fails only on a fresh clone.
+  - The plan citation rule does not exist.
+  - The test does not read every Markdown file that Git lists. Since 2026-11-18 it reads every file that the old cloud stage read. On 2026-11-18 the only Markdown files outside its scope with a relative link to a repository file were `CHANGELOG.md`, `examples/basic/notes.md`, `examples/basic/specs/example/workspace-guide.md`, and the catalogue fixture `crates/mokly-graph/tests/fixtures/catalogue/specs/guide.md`.
+  - The old cloud stage had three more rules that the test does not have. An undefined reference link, such as `[text][label]` without a `[label]:` line, failed. A root-relative link outside the site pages resolved from the repository root, as on GitHub. A query string was removed from a local destination. The test skips a root-relative link outside the site pages, and it treats a query string as part of the path. On 2026-11-18 no file in its scope had an undefined reference link or a local link with a query string. The only root-relative links outside the site pages were the 41 site routes of the guides under `docs/guides/`.
+- **Impact if no action:** The scan of 2026-10-30 found nothing that the missing rules would catch. A future link to an ignored target fails only on a fresh clone.
+- **Root question:** Which link rules must the gate enforce so that every Markdown link resolves on a fresh clone and on GitHub?
+- **Options:**
+  - **A.** Change nothing, and delete this item. Effort: Small.
+  - **B.** Add the ignored-target rule to `tests/markdown_links.test.ts`. Send all local targets to one `git check-ignore -z --stdin` call, and fail an ignored target even when it exists locally. It adds stricter validation. Effort: Small.
+  - **C.** Do B. Also resolve an `id` on any element, and match GitHub's duplicate-suffix, combining-mark, and underlined-heading rules. It adds stricter validation. Effort: Medium.
+  - **D.** Use a maintained GitHub-compatible slugger, such as `github-slugger`, for the fragment check. The review of PR #51 proposed it as the follow-up of its finding 5. It adds a direct dependency. Effort: Medium.
+- **Left out:** The list below gives the two rules that the options leave out.
+  - The 250-line warning. The user chose the fragment check without it on 2026-10-20. The changed-file length audit now fails a changed protocol doc over 250 lines.
+  - The plan citation rule. The `plans` skill now tells a plan to name its evidence file under `.context/`. The rule rejects that line. On 2026-10-30, 118 plan lines added since 2026-10-15 would have failed it.
+- **Wider fix:** D. One maintained slugger matches GitHub's rules, so no local copy of the rules can drift.
+- **Previous examples:** On the branch `calummoore/untitled-v2` of the closed PR #39 in the old cloud repository, `xtask/src/checks/markdown_check.rs:15-117` holds the four rules, and `docs/protocol/markdown-checks.md` defines them. That branch adds the `regex` and `html-escape` dependencies, and its errors give no line number. That Rust check cannot move here as it is, because this repository checks links in a Node test.
+- **Recommendation:** A. The scan of 2026-10-30 found nothing that the missing rules would catch. Two of the rules conflict with a decision or a rule in force.
+- **Action:** ask the user, because condition 3 holds for B, C and D: each adds stricter validation or a dependency.

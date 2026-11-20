@@ -1,7 +1,5 @@
 # CLI Terminal Compatibility And Errors
 
-Status: Follow-up work remains in the [rich scripts hint item](../../plans/follow-ups/rich-scripts-hint-cut.md).
-
 This document supplements [CLI Terminal Output](./mokly-terminal-output.md)
 with the exact plain output, the rich error presentation, and the exit
 statuses of `serve`, `build`, and `publish`.
@@ -103,6 +101,8 @@ available and is not rolled back.
 
 Rich errors use `✖ <headline>  [mokly/<code>]`, with the code dimmed, followed
 by the original safe detail when it adds information and one indented hint.
+The [width rule](./mokly-terminal-output.md#colour-glyphs-and-width) never
+truncates the hint line, which holds the recovery action of the error.
 Secrets are redacted before every line. `MOKLY_DIAGNOSTIC=1` appends the
 core error cause chain, one cause per line, and any supplied sidecar JavaScript
 stack. Expected failures show only their normal error output when this option
@@ -154,7 +154,13 @@ in every command. The hint is one complete sentence that ends with a period
 and names `review.baseInstallScripts` and `--base-install-scripts`. In the
 Changes unavailable details of `build` and `publish`, also for a comparison
 limit, the hint is a separate diagnostic. In Serve and in a failed `build` or
-`publish`, the hint ends the failure detail without a doubled period.
+`publish`, the hint is the recovery action of the error. The plain message
+ends with the hint, after the failure detail and without a doubled period. The
+rich hint line shows the scripts hint instead of the table hint of its code.
+Each rich error has one hint line, so the table hint is not added as a second
+recovery action. The rich `! Changes unavailable` reason of Serve leaves the
+hint out, because that line is truncated at the width and the error already
+shows the whole hint.
 
 `git-uncommitted` shows the headline, detail and hint in both plain and rich
 output. Plain output keeps the `[mokly/<code>]` prefix and puts the detail and

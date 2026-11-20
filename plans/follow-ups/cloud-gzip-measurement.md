@@ -4,10 +4,11 @@
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, an unchecked
   post-merge task.
-- **Location:** None in this repository. The publications go to Mokly Cloud,
-  with `examples/basic/mokly.config.json` as the catalogue.
+- **Location:** None in the code. The publications go to a deployed Mokly
+  Cloud environment, with `examples/basic/mokly.config.json` as the
+  catalogue.
 - **Reason:** The measurement needs Mokly Cloud with the gzip listing on,
-  which waits for the two rollout phases after the release.
+  which waits for the two rollout phases.
 
 - **Terms:**
   - **Blob PUT:** one upload request with the bytes of one file that the
@@ -28,8 +29,8 @@
     digests and 23,493,689 bytes. So the repeated publication now sends
     fewer files than on 2026-10-27.
 - **Task:**
-  1. With the released CLI, publish `examples/basic` to a new Mokly Cloud
-     project. Record the Blob count, the gzip and raw Blob counts, the
+  1. With a Mokly CLI at 0.18.0 or later, publish `examples/basic` to a new
+     Mokly Cloud project. Record the Blob count, the gzip and raw Blob counts, the
      request bytes, and the decoded bytes.
   2. Make one small source edit, publish again, and record the same values.
   3. Write the two results and the CLI version into the pull request or the
@@ -38,7 +39,8 @@
   Mokly Cloud, or whether the repeated publication still sends large
   bodies.
 - **Needs:** [cloud-gzip-listing-rollout.md](./cloud-gzip-listing-rollout.md)
-  done, a released CLI, and credentials for a Mokly Cloud project.
+  done, a Mokly CLI at 0.18.0 or later, and credentials for a Mokly Cloud
+  project.
 - **Done when:** A first and a repeated publication against Mokly Cloud have
   recorded Blob counts, request bytes, and decoded bytes.
 - **Related:**
@@ -47,7 +49,6 @@
     because without the listing the CLI sends only raw Blobs.
   - [hosted-upload-reuse-check.md](./hosted-upload-reuse-check.md)
     publishes `examples/basic` twice in the same way to check the content
-    ids. One pair of publications can serve both tasks after the index
-    version 9 release.
+    ids. One pair of publications can serve both tasks.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/gzip-blob-uploads.md?plain=1#L413).

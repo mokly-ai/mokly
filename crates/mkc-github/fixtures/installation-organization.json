@@ -1,0 +1,40 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "id": 2,
+    "app_id": 123,
+    "account": {
+      "id": 2,
+      "login": "fixture-org",
+      "type": "Organization",
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjI="
+    },
+    "html_url": "https://github.com/organizations/fixture-org/settings/installations/2",
+    "suspended_at": null,
+    "repository_selection": "selected",
+    "permissions": {
+      "checks": "write",
+      "contents": "read",
+      "metadata": "read",
+      "pull_requests": "write"
+    },
+    "events": [
+      "installation",
+      "installation_repositories",
+      "repository",
+      "pull_request",
+      "push",
+      "check_suite",
+      "check_run"
+    ]
+  }
+}

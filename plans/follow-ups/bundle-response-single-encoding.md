@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`. It is the wider fix of the size-check item of that change.
-- **Location:** `packages/mokly/src/sidecar/recipe-size.ts`, `packages/mokly/src/sidecar.ts:30`, `packages/mokly/src/sidecar/transport.ts:38`, and `packages/mokly/src/sidecar/json.ts:2`.
+- **Location:** `packages/mokly/src/sidecar/recipe-size.ts`, `packages/mokly/src/sidecar.ts:26` (`send`), `packages/mokly/src/sidecar/transport.ts:38`, and `packages/mokly/src/sidecar/json.ts:2`.
 - **Reason:** One shared text changes which code owns the response encoding, and the bundle change kept its size check local.
 
 - **Source:** Review.
@@ -15,7 +15,7 @@
 - **Background:**
   - Each bundle response and each `restoreGeneration` request must fit the 64 MiB frame limit of `docs/protocol/mokly-sidecar.md`. `docs/protocol/mokly-sidecar-recipes.md` requires the rejection before the sidecar installs the generation. `checkRecipeSize` in `recipe-size.ts` checks both envelopes.
   - Since 2026-11-18, the check serializes the compiled recipe and the module graph once each with `JSON.stringify` and counts their bytes. The recipe types hold no numbers, so these counts equal the `jsonText` bytes.
-  - After the check, `send` in `sidecar.ts:30` encodes the whole response again with `encodeFrame` and `jsonText`.
+  - After the check, `send` in `sidecar.ts:26` encodes the whole response again with `encodeFrame` and `jsonText`.
   - On 2026-11-18, on a synthetic result with the `mokly-cloud` head bundle shape, the check took about 11 ms. The shape is 2.58 MB of code, 4,638 modules, and 15,251 import edges. The `jsonText` send pass took 20 to 34 ms for a Serve edit bundle and 48 to 94 ms with full reuse evidence. `JSON.stringify` of the whole result took about 20 ms and 23 ms.
   - The check also runs when the sidecar reuses an earlier compilation, in the `bundle` case of `session.ts`.
   - `bundleRecipe` in `bundle-recipe.ts` can change the identity and the generation id after the check. A shared text must come after that change.

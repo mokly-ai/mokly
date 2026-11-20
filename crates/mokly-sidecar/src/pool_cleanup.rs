@@ -41,6 +41,7 @@ pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64
         slot.worker.request(
             &Request {
                 id: 1,
+                quiet: false,
                 call: Call::Dispose(Generation {
                     generation: generation.clone(),
                 }),
@@ -64,6 +65,7 @@ pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64
         slot.worker.request(
             &Request {
                 id: 1,
+                quiet: false,
                 call: Call::DisposeContext(DisposeContext {
                     context: context.clone(),
                 }),

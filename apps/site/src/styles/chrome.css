@@ -1,0 +1,181 @@
+/* The site header chrome: the skip link, the header band, the brand mark and
+   wordmark, the navigation, the Get started button and the documentation
+   search control. menu.css holds the mobile menu. The class names and rules
+   match the promoted mockups under docs/mockups/styles/site/ so the mockups
+   and the site stay comparable. The mockups select a composition from
+   data-site-viewport; the site resolves the same switch at 768px, so mobile
+   is the default. */
+
+.site-skip {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text);
+  display: inline-flex;
+  left: -9999px;
+  padding: var(--mk-space-2) var(--mk-space-4);
+  position: absolute;
+  top: var(--mk-space-2);
+  z-index: 5;
+}
+
+.site-skip:focus {
+  left: var(--mk-space-4);
+}
+
+/* The header band sits on the page canvas with no fill. Every route but the
+   home rules it off so the document below starts against a hairline. */
+
+.site-band {
+  background: none;
+}
+
+.site-band--ruled {
+  border-bottom: 1px solid var(--mk-color-border);
+}
+
+.site-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-wide);
+  padding: var(--mk-space-4) var(--mk-layout-gutter-mobile);
+  width: 100%;
+}
+
+.site-brand {
+  align-items: center;
+  color: var(--mk-color-text);
+  display: inline-flex;
+  font-family: var(--mk-font-display);
+  font-size: 1.5rem;
+  gap: var(--mk-space-2);
+  text-decoration: none;
+  text-underline-offset: 6px;
+  white-space: nowrap;
+}
+
+.site-brand:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mk-color-accent);
+  text-decoration-thickness: 2px;
+}
+
+.site-brand svg {
+  color: var(--mk-color-accent);
+}
+
+.site-brand-dot {
+  color: var(--mk-color-accent);
+}
+
+/* Below the breakpoint the menu lists the destinations instead. */
+
+.site-nav {
+  align-items: center;
+  display: none;
+  flex-wrap: wrap;
+  gap: var(--mk-space-5);
+}
+
+.site-nav-link {
+  align-items: center;
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-size: var(--mk-type-small-size);
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-nav-link:hover {
+  color: var(--mk-color-text);
+  text-decoration: underline;
+}
+
+.site-nav-link[aria-current="page"] {
+  color: var(--mk-color-text);
+}
+
+.site-button {
+  align-items: center;
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  display: inline-flex;
+  font-size: var(--mk-type-small-size);
+  font-weight: var(--mk-font-medium);
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-4);
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-button--secondary {
+  color: var(--mk-color-text);
+}
+
+.site-button--secondary:hover {
+  background: var(--mk-color-surface-muted);
+  border-color: var(--mk-color-border-strong);
+}
+
+/* The documentation search control, shaped like the catalogue's own. It
+   appears in the header on documentation routes and nowhere else. It follows
+   the menu control in the document: below the breakpoint it takes the whole
+   row beneath the brand and the menu control, and above it it sits between
+   the brand and the navigation, so the reading order and the keyboard order
+   agree at both widths. */
+
+.site-search {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-small);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  flex: 1 0 100%;
+  font: inherit;
+  font-size: var(--mk-type-small-size);
+  gap: var(--mk-space-2);
+  justify-content: flex-start;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 var(--mk-space-3);
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-search:hover {
+  background: var(--mk-color-surface);
+  border-color: var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-header {
+    gap: var(--mk-space-5);
+    padding: var(--mk-space-2) var(--mk-layout-gutter-desktop);
+  }
+
+  .site-brand {
+    font-size: 1.75rem;
+  }
+
+  .site-nav {
+    display: flex;
+  }
+
+  .site-search {
+    flex: 0 1 320px;
+  }
+}
