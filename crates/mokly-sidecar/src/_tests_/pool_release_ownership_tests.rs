@@ -63,6 +63,7 @@ fn release_cleanup_after_pool_drop_keeps_mock_verification_on_the_owner() {
                 contexts: BTreeSet::from(["used".into()]),
                 renders: 0,
                 requests: 0,
+                last_compilation: None,
             }));
             state.controls.insert(0, control);
             state.available.push_back(0);

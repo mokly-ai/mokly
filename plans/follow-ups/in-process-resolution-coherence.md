@@ -257,6 +257,10 @@
   `plans/follow-ups/sequential-evidence-capture-cost.md` measures
   this capture boundary and can change its schedule. The ranking work of this
   item must remain possible, and the scheduling measurement must include it.
+  `plans/follow-ups/ancestor-churn-disables-durable-capture.md` investigates
+  whether the durable check needs each ancestor witness of an absent lookup.
+  A narrower witness rule from it must still keep the stale selections of
+  this item out of the bundle cache.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

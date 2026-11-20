@@ -84,9 +84,14 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-Ties and calls without a generation keep queue order. A call can use another
-available slot while the worker that holds its generation is busy. The launch
-root is the head root.
+A head bundle prefers the idle head worker that compiled last, then older
+compilers, under the
+[head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity).
+A successful head bundle counts as a compile unless its `cache` field is
+`memory` or `hit`. A new process starts without a compile. Ties and other
+calls without a generation keep queue order. A call can use another available
+slot while the worker that holds its generation is busy. The launch root is
+the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
 after a successful render. The pool bound covers all roots.
@@ -338,10 +343,16 @@ Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
-inputs, and preserve binding updates across workers. Generation affinity tests
+inputs, and preserve binding updates across workers. Head bundle affinity
+tests check that a head bundle takes the newest idle compiler, or the next
+newest while that one is busy. Base bundles keep FIFO order. Memory reuse
+neither creates nor raises a compile rank, and a disk hit creates none. After
+a recycle, a root switch, or a reap, the new process has no rank. A retired
+compiler leaves the surviving compiler preferred. Generation affinity tests
 check that a worker with every input that a call needs comes before other
 holders and non-holders, with FIFO ties. Stale epochs and missing records
-never win the rank. Calls without a generation keep FIFO order, and context
+never win the rank. Calls without a generation keep FIFO order while no worker
+has a compile, and context
 affinity and the pass preference still come first. Parallel renders use every
 available slot and start no process. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
@@ -374,8 +385,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs. Growth reuses a free slot before it adds
-  a new one.
+  generation state that a call needs. For a `bundle` call, it then prefers the
+  newest `Slot::last_compilation`, the epoch that `Pool::execute` records
+  after a head compile. Growth reuses a free slot before it adds a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, and the
   `return_disabled` flag, and `Pool::record_head`, which records each

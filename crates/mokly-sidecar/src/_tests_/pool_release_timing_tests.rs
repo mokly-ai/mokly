@@ -61,6 +61,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     contexts: BTreeSet::from(["private-context".into()]),
                     renders: 0,
                     requests: 0,
+                    last_compilation: None,
                 };
                 {
                     let mut state = pool.lock();
