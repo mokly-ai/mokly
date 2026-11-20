@@ -235,12 +235,14 @@ span.mbk-nav-filter-opt {
 .mbk-nav-resize:hover::after,
 .mbk-nav-resize:focus-visible::after,
 .mbk.mbk-nav-resizing .mbk-nav-resize::after {
-  background: var(--mokly-accent);
-  box-shadow: 0 0 0 3px var(--mokly-accent-soft);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
+  box-shadow: 0 0 0 3px
+    var(--mokly-accent-soft, var(--_mokly-private-accent-soft-default));
 }
 
 .mbk-nav-resize:focus-visible {
-  box-shadow: inset -2px 0 0 var(--mokly-accent);
+  box-shadow: inset -2px 0 0
+    var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 @media (width < 56.25rem) {

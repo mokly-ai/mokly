@@ -57,8 +57,11 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: var(--mokly-accent);
-  color: var(--mokly-accent-contrast);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
   font-size: 13px;
   font-weight: 800;
 }
@@ -81,7 +84,7 @@
   margin-top: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--mokly-accent);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
   text-decoration: none;
 }
 
