@@ -8,6 +8,10 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
+- [Desktop release pull requests and Mac updates](./desktop-release-pull-requests.md) —
+  release the desktop app from a Release Please pull request, and make the Mac
+  updater safe and complete.
+
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
