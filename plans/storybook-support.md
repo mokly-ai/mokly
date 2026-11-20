@@ -831,6 +831,13 @@ move them to "Design calls" at the merge.
 The options check reports of C1 and C2 are in
 `.context/storybook-support/track-c/reports/`.
 
+On 2026-11-20 the orchestrator answered the scope question of track C with
+option A. Track C edits the sentences outside its file list that the asset
+delivery makes stale: in `docs/protocol/mokly-configuration.md`,
+`docs/protocol/mokly-artifact-paths.md`, and, after decision C1, the
+sentences about the `file` loader. Only the stale sentences change, because
+track D edits the same configuration pages.
+
 - [x] Add the delivery of imported assets to
       `docs/protocol/mokly-imported-styles-assets.md`, or to a new linked
       page when that page would pass 250 lines. Add the status line.
@@ -841,10 +848,6 @@ The options check reports of C1 and C2 are in
 - [ ] State the answer to decision C2 in
       `docs/protocol/mokly-imported-assets.md`. Branch:
       conductor/storybook-support-c-imported-assets
-- [ ] When the user allows edits outside the scope of track C, name the
-      asset delivery default in `docs/protocol/mokly-configuration.md` and
-      the imported assets in `docs/protocol/mokly-artifact-paths.md`.
-      Branch: conductor/storybook-support-c-imported-assets
 - [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`. Branch:
       conductor/storybook-support-c-imported-assets
@@ -862,7 +865,13 @@ Components that import images render them, as decision 6 says.
       the file under the generated assets route.
 - [ ] Add asset bytes to the watch inputs and the render keys.
 - [ ] Replace the `file` loader error and the `dataurl` advice, as "Replaced
-      ways" says, with the answer to decision C1.
+      ways" says, with the answer to decision C1. Also update the `file`
+      loader sentences of `docs/protocol/mokly-imported-styles-modules.md`,
+      `docs/protocol/mokly-configuration-imported-styles.md`, and
+      `docs/guides/authoring/config.md`.
+- [ ] Name the asset delivery default in
+      `docs/protocol/mokly-configuration.md`, and the imported assets under
+      `static/mokly-generated/` in `docs/protocol/mokly-artifact-paths.md`.
 - [ ] Apply the answer to decision C2 to the loader choice of the bundle.
 - [ ] Test that a component that imports a PNG and an SVG renders them in
       Serve and `build`, and that Changes shows an edited image.
