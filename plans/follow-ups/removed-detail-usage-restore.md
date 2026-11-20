@@ -95,7 +95,7 @@
     because its `render` already reads `comparison_document`. Wrappers that
     add checks keep the default, and other wrappers forward it. Call it in
     `projection_removed::details`. Write the wrapper rule on the trait and in
-    `crates/mokly-graph/README.md`, beside the rule of `comparison_usage`.
+    `crates/mokly-graph/cache.md`, beside the rule of `comparison_usage`.
     Test that removed details over a captured base call the document
     restorer zero times, with `DocumentRestorer` in
     `crates/mokly-compare/src/capture_restore.rs`. The trait then has two
