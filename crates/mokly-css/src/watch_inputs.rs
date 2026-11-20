@@ -1,4 +1,4 @@
-//! Delivery-only stylesheet watch metadata stays separate from compiled input identities.
+//! Delivery-only resolution watch metadata stays separate from compiled input identities.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

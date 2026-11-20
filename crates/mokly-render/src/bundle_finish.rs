@@ -8,6 +8,7 @@ use mokly_css::types::StylesheetBundler;
 use mokly_sidecar::definitions::Definitions;
 
 use crate::bundle::BundleState;
+use crate::bundle_watch;
 use crate::error::Result;
 use crate::leases::PreparedLease;
 use crate::runtime::Runtime;
@@ -19,6 +20,7 @@ pub(crate) fn finish(
     compiler: Arc<dyn StylesheetBundler>,
     bundle: Arc<BundleState>,
 ) -> Result<(JavaScriptGeneration, Definitions)> {
+    let resolution = bundle_watch::inputs(runtime, &side, &bundle)?;
     let lease = Arc::new(PreparedLease {
         bundle: bundle.clone(),
         side,
@@ -40,33 +42,8 @@ pub(crate) fn finish(
             class_map_digests: bundle.render.class_map_digests.clone(),
             runtime_packages: bundle.render.runtime_packages.clone(),
             unattributed: BTreeSet::new(),
-            resolution_files: bundle
-                .stamp
-                .files
-                .keys()
-                .filter_map(|path| {
-                    path.strip_prefix(&bundle.repository)
-                        .ok()
-                        .map(|path| path.to_string_lossy().replace('\\', "/"))
-                })
-                .collect(),
-            resolution_directories: bundle
-                .stamp
-                .memberships
-                .iter()
-                .filter_map(|(path, names)| {
-                    path.strip_prefix(&bundle.repository).ok().map(|path| {
-                        (
-                            path.to_string_lossy().replace('\\', "/"),
-                            names
-                                .iter()
-                                .flatten()
-                                .map(|name| name.to_string_lossy().into_owned())
-                                .collect(),
-                        )
-                    })
-                })
-                .collect(),
+            resolution_inputs: resolution.inputs,
+            resolution_directories: resolution.directories,
             lease: Some(lease),
         },
         bundle.definitions.clone(),

@@ -11,10 +11,11 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 use crate::backend::{DirectoryWatch, NotifyFactory, WatchFactory};
 use crate::error::Result;
 use crate::event::{Event, Kind};
+use crate::native_attachment;
 use crate::native_events::Receiver;
+use crate::native_scan::DirectoryChecks;
 use crate::observer::{Inbox, Observer};
 use crate::plan::Plan;
-use crate::{native_attachment, native_scan};
 
 /// Composition root for the platform observer and injected source reader.
 pub struct NativeObserver {
@@ -63,18 +64,14 @@ impl NativeObserver {
         if self.closed.load(Ordering::SeqCst) {
             return Ok(());
         }
+        let mut checks = DirectoryChecks::new(self.tree.as_ref());
         let targets = plan.targets();
         let replace = state.as_ref().is_none_or(|state| state.roots != plan.roots);
         if replace {
-            let root_directories = native_scan::directories(self.tree.as_ref(), plan)?;
+            let root_directories = checks.directories(plan)?;
             let parents: BTreeMap<_, _> = targets
                 .iter()
-                .map(|path| {
-                    (
-                        path.clone(),
-                        native_scan::input_parents(self.tree.as_ref(), path, plan),
-                    )
-                })
+                .map(|path| (path.clone(), checks.input_parents(path, plan)))
                 .collect();
             let mut directories = root_directories.clone();
             directories.extend(parents.values().flatten().cloned());
@@ -112,7 +109,7 @@ impl NativeObserver {
                 .cloned()
                 .collect();
             if scan {
-                state.root_directories = native_scan::directories(self.tree.as_ref(), plan)?;
+                state.root_directories = checks.directories(plan)?;
             }
             state.parents.retain(|path, _| targets.contains(path));
             for path in targets {
@@ -120,7 +117,7 @@ impl NativeObserver {
                     || !state.parents.contains_key(&path)
                     || state.dependency_roots.get(&path) != plan.dependency_roots.get(&path)
                 {
-                    let parents = native_scan::input_parents(self.tree.as_ref(), &path, plan);
+                    let parents = checks.input_parents(&path, plan);
                     state.parents.insert(path, parents);
                 }
             }
@@ -183,7 +180,8 @@ impl Observer for NativeObserver {
             .is_some_and(|state| state.directories.contains(directory))
     }
     fn covers(&self, plan: &Plan) -> bool {
-        let Ok(needed) = native_scan::directories(self.tree.as_ref(), plan) else {
+        let mut checks = DirectoryChecks::new(self.tree.as_ref());
+        let Ok(needed) = checks.directories(plan) else {
             return false;
         };
         let state = self.state.lock().unwrap_or_else(|error| error.into_inner());

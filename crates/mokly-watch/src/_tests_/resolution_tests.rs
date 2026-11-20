@@ -3,6 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use mokly_css::watch_inputs::WatchInputs;
+
 use crate::event::{Action, Event, Kind};
 use crate::plan::Plan;
 use crate::plan_tests::config;
@@ -12,8 +14,13 @@ fn resolution_candidates_rebuild_on_membership_but_ignore_unrelated_writes() {
     let mut plan = Plan::new(&config(), &[], &[], &BTreeSet::new()).unwrap();
     let roots = plan.roots.clone();
     plan.resolution(
-        &BTreeSet::from(["package.json".into(), "library/tsconfig.json".into()]),
+        &WatchInputs {
+            files: BTreeSet::from(["package.json".into(), "library/tsconfig.json".into()]),
+            ..Default::default()
+        },
         &BTreeMap::from([("library".into(), BTreeSet::from(["editor.swap".into()]))]),
+        None,
+        None,
     );
     assert_eq!(plan.roots, roots);
     for path in ["/repo/package.json", "/repo/library/tsconfig.json"] {
@@ -71,8 +78,13 @@ fn static_output_and_reservations_are_denied_without_reading_markers() {
 fn repository_resolution_membership_keeps_configuration_rescan_precedence() {
     let mut plan = Plan::new(&config(), &[], &[], &BTreeSet::new()).unwrap();
     plan.resolution(
-        &BTreeSet::from(["package.json".into()]),
+        &WatchInputs {
+            files: BTreeSet::from(["package.json".into()]),
+            ..Default::default()
+        },
         &BTreeMap::from([(String::new(), BTreeSet::new())]),
+        None,
+        None,
     );
     assert_eq!(
         plan.classify(&Event {

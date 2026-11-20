@@ -157,7 +157,7 @@ fn postcss_stylesheet_reselects_new_earlier_candidate() {
 #[test]
 fn resolution_watch_files_map_missing_virtual_candidates_to_the_selected_root() {
     let mut consumer = consumer("@import 'fixture-theme/tokens';\n");
-    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_resolution_watching());
     consumer.replace(
         "mokly.config.json",
         "\"resolveExtensions\":",
@@ -232,7 +232,7 @@ fn rejected_candidate(path: &Path) {
 #[test]
 fn a_rejected_dependency_candidate_keeps_valid_css_and_its_repair_watch_path() {
     let mut consumer = consumer("@import 'fixture-theme/tokens';\n");
-    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_resolution_watching());
     consumer.write("node_modules/fixture-theme/package.json", "{}");
     consumer.write("node_modules/fixture-theme/tokens.css", BEFORE);
     rejected_candidate(

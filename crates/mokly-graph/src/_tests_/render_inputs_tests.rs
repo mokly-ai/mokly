@@ -224,7 +224,11 @@ fn a_plain_stylesheet_edit_and_side_identities_move_nothing() {
     let side = edit(|f| {
         f.generation.id = "base generation".into();
         f.generation.css_context = "base".into();
-        f.generation.resolution_files = BTreeSet::from(["specs/package.json".into()]);
+        f.generation.resolution_inputs.files = BTreeSet::from(["specs/package.json".into()]);
+        f.generation.resolution_inputs.dependency_roots = BTreeMap::from([(
+            "/installation/pkg/package.json".into(),
+            "/installation".into(),
+        )]);
     });
     assert_eq!(side, BTreeSet::new());
 }

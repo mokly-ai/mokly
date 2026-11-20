@@ -16,6 +16,7 @@ html5ever = "0.39.0"
 html5gum = "0.8.4"
 jsonschema = { version = "0.58.6", default-features = false }
 mokly-model = { workspace = true }
+mokly-css = { workspace = true }
 mokly-source-interface = { workspace = true }
 pulldown-cmark = "0.13.6"
 serde = { version = "1.0.229", features = ["derive"] }

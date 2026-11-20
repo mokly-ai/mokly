@@ -120,8 +120,8 @@ fn a_base_of_a_base_keeps_only_the_original_weak_head_source() {
     );
     let first = head.for_base(Arc::new(Unimock::new(())), "version".into(), None);
     let second = first.for_base(Arc::new(Unimock::new(())), "version".into(), None);
-    assert!(!first.watch_stylesheets);
-    assert!(!second.watch_stylesheets);
+    assert!(!first.watch_resolution);
+    assert!(!second.watch_resolution);
     assert!(Arc::ptr_eq(
         &second.head_styles.as_ref().unwrap().upgrade().unwrap(),
         &head.styles
@@ -136,7 +136,7 @@ fn a_base_of_a_base_keeps_only_the_original_weak_head_source() {
 #[test]
 fn a_head_without_watch_mapping_still_lends_its_own_stylesheet_store() {
     let mut head = runtime_with_base(None);
-    head.watch_stylesheets = false;
+    head.watch_resolution = false;
     let base = head.for_base(Arc::new(Unimock::new(())), "version".into(), None);
     assert_eq!(
         base.head_styles

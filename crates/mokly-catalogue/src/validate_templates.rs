@@ -55,12 +55,9 @@ pub(crate) fn validate(
                 &prepared.elements,
             ));
             if let EntryContent::Component { .. } = &entry.content {
-                for variant in prepared
-                    .model
-                    .entries
-                    .iter()
-                    .filter(|variant| variant.metadata.variant_of.as_deref() == Some(parent))
-                {
+                for variant in prepared.model.entries.iter().filter(|variant| {
+                    variant.metadata.variant_of.as_deref() == Some(parent.as_str())
+                }) {
                     let EntryContent::Component { visual, slots, .. } = &variant.content else {
                         continue;
                     };

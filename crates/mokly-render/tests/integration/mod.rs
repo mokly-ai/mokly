@@ -17,6 +17,7 @@ mod declaration_tests;
 mod definition_tests;
 mod dependency_tests;
 mod invocation_paths_tests;
+mod javascript_watch_alias_tests;
 mod key_fallback_tests;
 mod lazy_tests;
 mod owned_catalogue_tests;

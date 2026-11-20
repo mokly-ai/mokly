@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_css::compiler::Compiler;
-use mokly_css::error::Result;
+use mokly_css::error::{InternalError, Result};
 use mokly_css::resolution::Resolution;
 use mokly_css::resolver::{ImportResolver, SourceResolver};
 use mokly_css::types::{
@@ -15,9 +15,9 @@ use mokly_css::watch_inputs::WatchInputs;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::postcss::PostCss;
+use crate::resolution_watch;
 use crate::side::SideInputs;
 use crate::stylesheet_capture::{Capture, RecordingTree};
-use crate::stylesheet_watch;
 
 pub(crate) struct Compilation {
     pub(crate) bundle: Bundle,
@@ -82,7 +82,13 @@ impl RootCompiler for CapturingCompiler {
     fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
         match &self.watch_sources {
             Some(sources) => {
-                stylesheet_watch::files(files, &self.root, &self.side, sources.as_ref())
+                match resolution_watch::inputs(files, &self.root, &self.side, sources.as_ref()) {
+                    Ok(projection) => Ok(projection.inputs),
+                    Err(source) => Err(InternalError::Provider {
+                        source: Box::new(source),
+                    }
+                    .into()),
+                }
             }
             None => Ok(WatchInputs::default()),
         }

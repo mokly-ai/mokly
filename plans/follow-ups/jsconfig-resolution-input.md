@@ -66,9 +66,9 @@
       `crates/mokly-render/src/render_environment.rs:110`.
     - `stamp`, at `crates/mokly-render/src/bundle_attempt.rs:82` to line 109,
       builds the input stamp from the metadata inputs and the module digests.
-      The stamp gives the `resolution_files` that the watcher observes, at
-      `crates/mokly-render/src/bundle.rs:199` and
-      `crates/mokly-cli/src/serve_watch_plan.rs:95`.
+      The Serve watch mapping sends the stamp's paths to `resolution_inputs`,
+      at `crates/mokly-render/src/bundle_watch.rs:21`. The watcher reads them
+      at `crates/mokly-cli/src/serve_watch_plan.rs:57`.
     - The section "Watch Targets And Readiness" of
       `docs/protocol/mokly-watch.md` says that this evidence is not a watch
       input and moves no render input key.

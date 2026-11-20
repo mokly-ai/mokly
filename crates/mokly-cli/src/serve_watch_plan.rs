@@ -10,6 +10,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
 use mokly_compare::locations::{Locations, SystemLocations};
 use mokly_css::dependencies::DirectoryDependency;
+use mokly_css::watch_inputs::WatchInputs;
 use mokly_server::error::Result;
 use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
@@ -18,7 +19,7 @@ use crate::serve_watch::{CandidateWatch, watch_result};
 
 /// Module resolution files, and resolution directories with the file names they hold.
 type Resolution<'a> = (
-    Cow<'a, BTreeSet<String>>,
+    Cow<'a, WatchInputs>,
     Cow<'a, BTreeMap<String, BTreeSet<String>>>,
 );
 
@@ -31,8 +32,7 @@ pub(super) struct PlanInputs<'a> {
     directories: Cow<'a, [DirectoryDependency]>,
     resources: BTreeSet<String>,
     resolution: Option<Resolution<'a>>,
-    stylesheet_resolution: BTreeSet<String>,
-    stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
+    stylesheet_resolution: WatchInputs,
     cache_root: Option<PathBuf>,
     cache_namespace: Option<PathBuf>,
 }
@@ -46,13 +46,15 @@ impl<'a> PlanInputs<'a> {
             sources: Cow::Borrowed(&catalogue.model.sources),
             directories: Cow::Borrowed(prepared.generation.stylesheet_directories()),
             resources: prepared.generation.watch_files(),
-            stylesheet_resolution: prepared.generation.stylesheet_resolution_files(),
-            stylesheet_resolution_roots: prepared.generation.stylesheet_resolution_roots(),
+            stylesheet_resolution: WatchInputs {
+                files: prepared.generation.stylesheet_resolution_files(),
+                dependency_roots: prepared.generation.stylesheet_resolution_roots(),
+            },
             cache_root: SystemLocations.cache_root().ok().flatten(),
             cache_namespace: SystemLocations.repository(&prepared.config.repo_root).ok(),
             resolution: catalogue.javascript.generation.as_ref().map(|generation| {
                 (
-                    Cow::Borrowed(&generation.resolution_files),
+                    Cow::Borrowed(&generation.resolution_inputs),
                     Cow::Borrowed(&generation.resolution_directories),
                 )
             }),
@@ -68,7 +70,6 @@ impl<'a> PlanInputs<'a> {
             resources,
             resolution,
             stylesheet_resolution,
-            stylesheet_resolution_roots,
             cache_root,
             cache_namespace,
         } = self;
@@ -78,7 +79,6 @@ impl<'a> PlanInputs<'a> {
             directories: Cow::Owned(directories.into_owned()),
             resources,
             stylesheet_resolution,
-            stylesheet_resolution_roots,
             cache_root,
             cache_namespace,
             resolution: resolution.map(|(files, directories)| {
@@ -108,12 +108,17 @@ impl PlanRecord {
             &inputs.directories,
             &inputs.resources,
         ))?;
-        if let Some((files, directories)) = &inputs.resolution {
-            plan.resolution(files, directories);
+        if let Some((resolution, directories)) = &inputs.resolution {
+            plan.resolution(
+                resolution,
+                directories,
+                inputs.cache_root.as_deref(),
+                inputs.cache_namespace.as_deref(),
+            );
         }
-        plan.stylesheet_resolution(
+        plan.resolution(
             &inputs.stylesheet_resolution,
-            &inputs.stylesheet_resolution_roots,
+            &BTreeMap::new(),
             inputs.cache_root.as_deref(),
             inputs.cache_namespace.as_deref(),
         );

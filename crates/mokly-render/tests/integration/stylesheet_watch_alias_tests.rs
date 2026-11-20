@@ -48,7 +48,7 @@ fn generation(consumer: &Consumer, misses: &[&str]) -> Arc<dyn RenderGeneration>
 #[test]
 fn resolution_watch_files_keep_all_dependency_root_aliases_on_compile_and_reuse() {
     let mut consumer = Consumer::single();
-    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_resolution_watching());
     consumer.without_installation();
     consumer.write(
         "app/mokly.config.json",

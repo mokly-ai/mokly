@@ -156,6 +156,27 @@ impl SideInputs {
             })
     }
 
+    /// Every selected root that contains an input can supply authored aliases for it.
+    fn watch_aliases(&self, path: &Path) -> BTreeSet<Candidate> {
+        let mut candidates = BTreeSet::new();
+        for (index, selected) in self.dependency_roots.iter().enumerate() {
+            let Ok(relative) = path.strip_prefix(selected) else {
+                continue;
+            };
+            let logical = ancestor_roots::logical(index);
+            candidates.extend(
+                self.dependency_aliases
+                    .iter()
+                    .filter(|(_, prefix)| *prefix == &logical)
+                    .map(|(authored, _)| Candidate {
+                        path: self.source_root.join(authored).join(relative),
+                        dependency_root: Some(self.source_root.join(authored)),
+                    }),
+            );
+        }
+        candidates
+    }
+
     /// Keep selected physical inputs and every authored dependency-root alias together.
     pub(crate) fn watch_candidates(
         &self,
@@ -189,16 +210,7 @@ impl SideInputs {
                 },
                 dependency_root: dependency_root.clone(),
             });
-            let logical = ancestor_roots::logical(index);
-            candidates.extend(
-                self.dependency_aliases
-                    .iter()
-                    .filter(|(_, prefix)| *prefix == &logical)
-                    .map(|(authored, _)| Candidate {
-                        path: self.source_root.join(authored).join(rest),
-                        dependency_root: dependency_root.clone(),
-                    }),
-            );
+            candidates.extend(self.watch_aliases(&selected.join(rest)));
             if rest.is_empty() {
                 return Ok(candidates);
             }
@@ -215,6 +227,7 @@ impl SideInputs {
             });
         }
         if let Some(path) = optional(self.physical_source(path, sources, root))? {
+            candidates.extend(self.watch_aliases(&path));
             candidates.insert(Candidate {
                 path,
                 dependency_root,

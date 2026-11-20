@@ -1,6 +1,7 @@
 //! Shared process fixtures preserve explicit readiness and cleanup.
 
 mod html_dependency_tests;
+mod javascript_resolution_tests;
 mod lifecycle_tests;
 mod preparation_warning_tests;
 mod support;

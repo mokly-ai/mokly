@@ -1,6 +1,5 @@
 //! Build and historical preparations do no physical watch-only projection.
 
-use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -14,12 +13,18 @@ use super::support::Consumer;
 
 #[test]
 fn build_and_historical_runtimes_deliver_css_without_watch_projections() {
-    for historical in [false, true] {
+    for (historical, enable_after_construction, watched) in [
+        (false, false, false),
+        (true, false, false),
+        (true, true, false),
+        (false, true, true),
+    ] {
         let mut consumer = Consumer::single();
         consumer.write(
             "mokly.config.json",
             r#"{
               "roots":[{"dir":"specs","files":["**/*.screen.html"]}],
+              "renderer":"renderer.mjs",
               "stylesheets":[{"match":"**","stylesheets":["theme.css"]}]
             }"#,
         );
@@ -28,6 +33,7 @@ fn build_and_historical_runtimes_deliver_css_without_watch_projections() {
             "---\ntitle: Home\n---\n<p>Home</p>\n",
         );
         consumer.write("theme.css", ".home { color: red }\n");
+        consumer.write("renderer.mjs", "export default () => ({node:'Home'});");
         let projections = Arc::new(AtomicUsize::new(0));
         let observed = projections.clone();
         let inventory = Arc::new(Unimock::new(
@@ -52,11 +58,14 @@ fn build_and_historical_runtimes_deliver_css_without_watch_projections() {
             None,
         );
         if historical {
-            runtime = runtime.with_stylesheet_watching().for_base(
+            runtime = runtime.with_resolution_watching().for_base(
                 inventory,
                 consumer.runtime.version.clone(),
                 None,
             );
+        }
+        if enable_after_construction {
+            runtime = runtime.with_resolution_watching();
         }
         consumer.runtime = Arc::new(runtime.with_tree(Arc::new(WorkingTree)));
         let generation = consumer.generation(consumer.prepare().unwrap());
@@ -66,11 +75,26 @@ fn build_and_historical_runtimes_deliver_css_without_watch_projections() {
             ".home {\n  color: red;\n}\n"
         );
         assert_eq!(
-            projections.load(Ordering::SeqCst),
-            0,
-            "historical={historical} must not project watch inputs"
+            projections.load(Ordering::SeqCst) > 0,
+            watched,
+            "historical={historical}, enable_after_construction={enable_after_construction}"
         );
-        assert_eq!(generation.stylesheet_resolution_files(), BTreeSet::new());
+        assert_eq!(
+            generation.stylesheet_resolution_files().is_empty(),
+            !watched
+        );
         assert!(generation.stylesheet_resolution_roots().is_empty());
+        let javascript = generation
+            .catalogue()
+            .javascript
+            .generation
+            .as_ref()
+            .unwrap();
+        assert_eq!(javascript.resolution_inputs.files.is_empty(), !watched);
+        assert_eq!(
+            javascript.resolution_inputs.dependency_roots.is_empty(),
+            !watched
+        );
+        assert_eq!(javascript.resolution_directories.is_empty(), !watched);
     }
 }
