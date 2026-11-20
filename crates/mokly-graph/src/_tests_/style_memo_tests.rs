@@ -98,6 +98,7 @@ fn two_generations_share_the_scans_of_equal_inline_styles() {
         let session = Session::new(
             &graph,
             SessionInput {
+                stylesheet_resolution_files: Default::default(),
                 matchers: Matchers::new(&config).unwrap(),
                 config,
                 catalogue: catalogue(),

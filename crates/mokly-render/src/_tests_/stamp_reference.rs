@@ -14,6 +14,8 @@ impl InputStamp {
         let Self {
             memberships,
             files,
+            unretained,
+            projections,
             assets,
             identities,
             directories,
@@ -26,6 +28,16 @@ impl InputStamp {
         }
         for path in files.keys() {
             result.file(tree, path.clone());
+        }
+        for path in unretained.keys() {
+            result
+                .unretained
+                .insert(path.clone(), tree.digest_unretained(path).ok());
+        }
+        for path in projections.keys() {
+            result
+                .projections
+                .insert(path.clone(), tree.project(path).ok());
         }
         for path in assets.keys() {
             result.asset(tree, path.clone());

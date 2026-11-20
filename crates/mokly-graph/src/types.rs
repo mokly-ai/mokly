@@ -211,6 +211,10 @@ pub trait RenderGeneration: GeneratedResources {
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.
     fn stylesheet_directories(&self) -> &[DirectoryDependency];
+    /// Exact physical CSS resolution probes, including absent candidates.
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        BTreeSet::new()
+    }
     /// All authored files reached by completed documents of this generation.
     fn public_files(&self) -> BTreeSet<String>;
     /// Lexical resource inputs, including targets that need repair.

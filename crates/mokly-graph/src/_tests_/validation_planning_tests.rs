@@ -98,6 +98,7 @@ fn planned() -> Session {
     Session::new(
         &graph,
         SessionInput {
+            stylesheet_resolution_files: Default::default(),
             config,
             catalogue,
             plans,

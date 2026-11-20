@@ -109,6 +109,9 @@ impl RenderGeneration for RecordingGeneration<'_> {
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.inner.stylesheet_directories()
     }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.inner.stylesheet_resolution_files()
+    }
     fn public_files(&self) -> BTreeSet<String> {
         self.inner.public_files()
     }

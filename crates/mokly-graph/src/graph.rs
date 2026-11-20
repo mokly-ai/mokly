@@ -103,6 +103,7 @@ impl Graph {
         let mut imported_by = BTreeMap::new();
         let mut plugin_inputs = BTreeMap::new();
         let mut directories = BTreeSet::new();
+        let mut stylesheet_resolution_files = BTreeSet::new();
         let roots = styles::roots(&config, &self.inputs);
         let configured: Vec<_> = styles::roots(&config, &DeliveryInputs::default())
             .into_keys()
@@ -122,6 +123,7 @@ impl Graph {
         let roots: Vec<_> = roots.into_values().collect();
         let bundles = self.workers.stylesheets(&roots, self)?;
         for (root, bundle) in roots.into_iter().zip(bundles) {
+            stylesheet_resolution_files.extend(bundle.resolution_files.iter().cloned());
             if let Err(source) = module_names.register(&bundle.css_modules) {
                 return Err(GraphError::Css { source });
             }
@@ -279,6 +281,7 @@ impl Graph {
                 generation_key,
                 matchers,
                 directories: directories.into_iter().collect(),
+                stylesheet_resolution_files,
             },
         )))
     }

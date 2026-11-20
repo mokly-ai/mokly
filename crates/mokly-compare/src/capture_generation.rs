@@ -206,6 +206,9 @@ impl RenderGeneration for CapturedGeneration {
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.source.stylesheet_directories()
     }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.source.stylesheet_resolution_files()
+    }
     fn public_files(&self) -> BTreeSet<String> {
         self.source.public_files()
     }

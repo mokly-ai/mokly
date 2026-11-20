@@ -5,10 +5,9 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_css::compiler::Compiler;
 use mokly_css::resolution::Resolution;
 use mokly_css::resolver::{ImportResolver, SourceResolver};
-use mokly_css::types::{CssProcessor, IdentityProcessor, StylesheetBundler, StylesheetRoot};
+use mokly_css::types::{StylesheetBundler, StylesheetRoot};
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
@@ -17,6 +16,7 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_compiler::CapturingCompiler;
 
 pub(crate) fn compiler(
     runtime: &Runtime,
@@ -24,25 +24,26 @@ pub(crate) fn compiler(
     side: &SideInputs,
 ) -> Arc<dyn StylesheetBundler> {
     let tree = sources::reader(runtime, config, side);
-    let resolution = &side.module_resolution;
+    let module_resolution = &side.module_resolution;
+    let resolution = Resolution {
+        config_directory: side.configuration_directory.clone(),
+        dependency_aliases: side.dependency_aliases.clone(),
+        aliases: module_resolution.aliases.clone(),
+        conditions: module_resolution.conditions.clone(),
+        main_fields: module_resolution.main_fields.clone(),
+        dependency_roots: (0..dependency_roots(side).len())
+            .map(mokly_compare::ancestor_roots::logical)
+            .collect(),
+        extensions: module_resolution.resolve_extensions.clone(),
+    };
     let resolver: Arc<dyn ImportResolver> = Arc::new(SourceResolver {
         tree: tree.clone(),
         repo_root: config.repo_root.clone(),
-        settings: Resolution {
-            config_directory: side.configuration_directory.clone(),
-            dependency_aliases: side.dependency_aliases.clone(),
-            aliases: resolution.aliases.clone(),
-            conditions: resolution.conditions.clone(),
-            main_fields: resolution.main_fields.clone(),
-            dependency_roots: (0..dependency_roots(side).len())
-                .map(mokly_compare::ancestor_roots::logical)
-                .collect(),
-            extensions: resolution.resolve_extensions.clone(),
-        },
+        settings: resolution.clone(),
     });
 
-    let processor = match config.postcss() {
-        Some(module) => Arc::new(PostCss {
+    let postcss = config.postcss().map(|module| {
+        Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
             lease: Arc::new(ContextLease {
                 id: side.context.clone(),
@@ -67,19 +68,27 @@ pub(crate) fn compiler(
             cache: runtime.css.clone(),
             turns: Turns::default(),
             module_digests: Default::default(),
-        }) as Arc<dyn CssProcessor>,
-        None => Arc::new(IdentityProcessor),
-    };
+        })
+    });
     let settings = format!(
-        "{:?}:{:?}:{:?}:{:?}",
-        config.input, config.modules, side.source_root, side.module_resolution
+        "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
+        config.input,
+        config.modules,
+        side.source_root,
+        side.module_resolution,
+        dependency_roots(side),
+        side.repository_roots
     );
     Arc::new(CachedStylesheets::new(
-        Arc::new(Compiler {
+        Arc::new(CapturingCompiler {
             tree: tree.clone(),
-            repo_root: config.repo_root.clone(),
-            resolver,
-            processor,
+            root: config.repo_root.clone(),
+            resolution,
+            postcss,
+            watch_sources: runtime
+                .watch_stylesheets
+                .then(|| runtime.inventory_tree.clone()),
+            side: side.clone(),
         }),
         tree,
         config.repo_root.clone(),
