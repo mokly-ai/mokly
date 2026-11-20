@@ -61,6 +61,7 @@ pub mod process_memory;
 mod process_parent;
 mod process_reaper;
 mod process_startup;
+pub mod process_threads;
 mod process_transport;
 mod process_worker;
 pub mod render_records;

@@ -26,6 +26,8 @@ pub trait ProcessGroups: Send + Sync {
     fn configure_plain(&self, command: &mut Command) -> Result<()>;
     /// Acquire the process-tree guard immediately after spawn.
     fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>>;
+    /// Stop a configured child's tree before its first reap when attachment fails.
+    fn kill_unattached(&self, child: &Child) -> Result<()>;
 }
 
 /// Host implementation: Unix process groups or Windows kill-on-close jobs.
@@ -53,5 +55,12 @@ impl ProcessGroups for SystemProcessGroups {
         return unix::attach(child);
         #[cfg(windows)]
         return windows::attach(child);
+    }
+
+    fn kill_unattached(&self, child: &Child) -> Result<()> {
+        #[cfg(unix)]
+        return unix::kill_unattached(child);
+        #[cfg(windows)]
+        return windows::kill_unattached(child);
     }
 }
