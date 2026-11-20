@@ -2,6 +2,9 @@
 
 #![cfg(unix)]
 
+#[path = "process_support/cache.rs"]
+mod cache;
+
 use std::fs::{self, File};
 use std::io::Write;
 use std::mem::MaybeUninit;
@@ -15,6 +18,8 @@ use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tokio::process::Command;
+
+use cache::Cache;
 
 fn terminal() -> (File, File) {
     let mut master = -1;
@@ -71,9 +76,11 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         fs::write(path, bytes).unwrap();
     }
     let (mut input, slave) = terminal();
+    let cache = Cache::new();
     let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--port", "0"])
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("MOKLY_OUTPUT", "rich")
         .env("NO_COLOR", "1")
         .env("PATH", "")
@@ -223,9 +230,11 @@ async fn shortcuts_write_carriage_returns_on_a_real_raw_terminal() {
     let (mut input, slave) = terminal();
     let probe = slave.try_clone().unwrap();
     let output = tokio::fs::File::from_std(input.try_clone().unwrap());
+    let cache = Cache::new();
     let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--port", "0"])
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("MOKLY_OUTPUT", "rich")
         .env("NO_COLOR", "1")
         .env("MOKLY_VIEWER_DIST", root.path().join("viewer"))

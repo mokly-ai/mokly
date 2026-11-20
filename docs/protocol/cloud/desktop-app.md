@@ -112,21 +112,19 @@ every environment, and [Environments](../../ops/environment.md) records it.
 
 ## Navigation
 
-Top-level navigation inside the window is allowed to the desktop origin and
-to the two round-trip hosts that return to the product for billing,
-`https://checkout.stripe.com` and `https://billing.stripe.com`. GitHub is not
-a round-trip host: no GitHub page loads in the window, because the window
-cannot use the browser's sign-ins, as [Sign-in](#sign-in) explains.
+Top-level navigation inside the window is allowed only to the desktop
+origin. No third-party page loads in the window, GitHub's and Stripe's
+included, because the window cannot use the browser's sign-ins, as
+[Sign-in](#sign-in) and [Billing](#billing) explain.
 
 A navigation or redirect whose target is on the public app origin is
 rewritten: a path whose first segment belongs to the public site opens in the
 system browser, and every other path loads `mokly-app://desktop` with the same
 path, query and fragment in the window. The site segments are the inventory
 that the site generates for the Worker, generated
-into the shell as well, and a test holds the two copies equal. This rewrite
-is how Stripe's return reaches the bundle: Stripe keeps the public origin as
-its return address, and the shell cancels the redirect before any request
-reaches the hosted server.
+into the shell as well, and a test holds the two copies equal. The shell
+cancels the navigation or redirect before any request reaches the hosted
+server.
 
 Every `window.open` and popup is denied. A popup whose target is on the
 public app origin opens in the system browser, whatever its path, so the
@@ -134,8 +132,7 @@ pages that the app opens for [sign-in](#sign-in) and [web setup](#web-setup)
 reach the browser's session. A screen link that the viewer opens as a popup to
 the public app origin therefore opens in the system browser too. A popup whose
 target is on the desktop origin loads in the existing window. Other `http:`
-and `https:` targets open in the system browser, including round-trip targets
-requested by a popup. Other schemes, including `file:`, `smb:` and custom
+and `https:` targets open in the system browser. Other schemes, including `file:`, `smb:` and custom
 schemes, are dropped and never reach the opener. Other top-level HTTP(S)
 navigation also opens in the system browser.
 
@@ -215,6 +212,21 @@ was rejected, because it needs a second return mechanism beside the grant.
 In the shell, the app reads the session and the GitHub connection and
 installations of the open screen again whenever its window gets focus, so a
 connection or an installation finished on the web appears without a reload.
+
+## Billing
+
+In the shell, **Upgrade to Team**, **Manage billing** and
+**Update payment method** open Stripe's pages in the system browser. The
+window's session asks the API for the Stripe session, so the payment applies
+to the window's workspace. Each action carries the external glyph, and its
+control returns to rest once the browser opens the page. Stripe returns to the
+Billing pane on the public app origin in the browser. The window reads the
+Billing pane again on focus, as [Checkout and Portal](./billing-subscriptions.md#checkout-and-portal) says.
+
+Decision: Stripe opens in the browser, where saved cards, Apple Pay and Google
+Pay work. Stripe in the window was rejected, because the window has none of
+them. The Billing pane on the web was rejected, because its payment would
+apply to the browser's account, which can differ from the window's.
 
 ## Distribution And Verification
 

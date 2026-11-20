@@ -168,6 +168,25 @@ export async function bundleRecipe(
   );
   const compilation: CompiledGeneration = {
     toolchain: toolchain ?? "",
+    ...(reuseEvidence.complete
+      ? {
+          metadataIdentity: createHash("sha256")
+            .update(
+              JSON.stringify(
+                [...(evidence?.physical.identityInputs ?? [])]
+                  .map(([file, value]): [string, string | null] => [
+                    path
+                      .relative(paths.sourceRoot, file)
+                      .split(path.sep)
+                      .join("/"),
+                    value,
+                  ])
+                  .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+              ),
+            )
+            .digest("hex"),
+        }
+      : {}),
     reuseEvidence,
     identity: hash.digest("hex"),
     code: compiled.outputFiles![0]!.text,
@@ -189,6 +208,7 @@ export async function bundleRecipe(
   const generation = restore(params, compilation, graph);
   const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
   if (reusable && !compilation.reuseEvidence.complete) {
+    delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")
       .update(compilation.identity)
       .update(runtimeKey)

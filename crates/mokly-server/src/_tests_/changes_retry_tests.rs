@@ -100,6 +100,7 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
             publications: publications.clone(),
             comparisons: Arc::new(store.clone()),
             diagnostics: Arc::new(Unimock::new(())),
+            activity: None,
             watching: false,
         };
         let cancel = Arc::new(ChangeToken::default());
@@ -201,6 +202,7 @@ async fn oversized_metadata_publishes_unavailable_without_admission_or_installat
         publications: publications.clone(),
         comparisons: Arc::new(Unimock::new(())),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: false,
     };
     let before = Instant::now();
@@ -238,6 +240,7 @@ async fn refused_admission_does_not_start_ready_projection() {
                 .returns(Err(ServerError::ComparisonCapacity)),
         )),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: false,
     };
     let work = pass.publish(origin, input.clone(), files());

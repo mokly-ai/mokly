@@ -9,14 +9,10 @@ import { installNavigation, navigationTarget } from "../navigation.js";
 import { navigationError } from "./navigation-error.js";
 
 const app = "https://mokly.example";
-test("navigation permits only the desktop origin and exact round-trip origins", () => {
-  for (const url of [
-    "mokly-app://desktop/dashboard",
-    "https://checkout.stripe.com/c/pay",
-    "https://billing.stripe.com/p/session",
-  ]) {
-    assert.deepEqual(navigationTarget(url, app), { action: "allow" });
-  }
+test("navigation permits only the desktop origin in the window", () => {
+  assert.deepEqual(navigationTarget("mokly-app://desktop/dashboard", app), {
+    action: "allow",
+  });
   for (const url of [
     "file:///etc/passwd",
     "smb://share/path",
@@ -32,6 +28,8 @@ test("navigation permits only the desktop origin and exact round-trip origins", 
     assert.deepEqual(navigationTarget(url, app), { action: "drop" });
   }
   for (const url of [
+    "https://checkout.stripe.com/c/pay",
+    "https://billing.stripe.com/p/session",
     "https://github.com/login",
     "https://github.com.evil.example/",
     "https://github.com:444/",
@@ -140,19 +138,31 @@ test("every popup is denied and its target uses the browser or existing window",
     });
     assert.equal(prevented, 1);
   }
+  let prevented = 0;
+  callbacks.get("will-navigate")!({
+    url: "https://billing.stripe.com/p/session",
+    isMainFrame: true,
+    preventDefault: () => {
+      prevented++;
+    },
+  });
+  assert.equal(prevented, 1);
   for (const target of [
     app + "/acme/web",
     app + "/docs",
     "https://github.com/login",
+    "https://checkout.stripe.com/c/pay",
     "file:///secret",
     "mokly-app://desktop/sign-in",
   ]) {
     assert.deepEqual(popup({ url: target }), { action: "deny" });
   }
   assert.deepEqual(external, [
+    "https://billing.stripe.com/p/session",
     app + "/acme/web",
     app + "/docs",
     "https://github.com/login",
+    "https://checkout.stripe.com/c/pay",
   ]);
   assert.deepEqual(loaded, [
     "mokly-app://desktop/auth/github/callback?code=c&state=s",

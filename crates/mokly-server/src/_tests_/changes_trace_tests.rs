@@ -87,6 +87,7 @@ async fn classify(case: &str) {
         publications,
         comparisons: Arc::new(store),
         diagnostics: Arc::new(diagnostics),
+        activity: None,
         watching: false,
     };
     pass.execute(

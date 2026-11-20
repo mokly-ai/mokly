@@ -19,10 +19,10 @@ pub enum CodecError {
 /// Internal failures retain the original error type.
 #[derive(Debug, Error)]
 pub enum CodecInternalError {
-    /// Retained metadata could not be serialized for its comparison identity.
+    /// Retained metadata could not be serialized or decoded.
     #[error("document metadata serialization failed: {source}")]
     Metadata {
-        /// Original metadata serialization failure.
+        /// Original typed metadata serialization or decoding failure.
         source: serde_json::Error,
     },
     /// The flat tree records could not be serialized or decoded.

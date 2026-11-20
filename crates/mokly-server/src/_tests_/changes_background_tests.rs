@@ -48,6 +48,7 @@ async fn source_replacement_cancels_and_drains_the_old_classifier_without_a_resu
         publications: publications.clone(),
         comparisons: Arc::new(Unimock::new(())),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: false,
     });
     let (_stop, stopping) = watch::channel(false);
@@ -96,6 +97,7 @@ async fn shutdown_cancels_and_drains_reference_lookup_without_starting_classific
         publications: publications.clone(),
         comparisons: Arc::new(Unimock::new(())),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: true,
     });
     let (stop, stopping) = watch::channel(false);
@@ -120,6 +122,7 @@ async fn a_closed_owner_channel_starts_no_reference_or_render_work() {
         publications: Arc::new(Unimock::new(())),
         comparisons: Arc::new(Unimock::new(())),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: true,
     };
     let stopping = {

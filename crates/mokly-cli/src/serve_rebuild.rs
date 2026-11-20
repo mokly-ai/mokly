@@ -11,6 +11,7 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_cli::build::{BuildError, BuildSummary};
 use mokly_cli::grammar::Common;
 use mokly_cli::serve::ServePreparation;
+use mokly_graph::write_activity::WriteActivity;
 use mokly_server::error::{InternalError, Result, ServerError};
 use mokly_server::publication::{PublicationWriter, Publications};
 use mokly_watch::event::{Action, Batch};
@@ -67,6 +68,7 @@ pub trait RebuildReporter: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ManualRebuilds {
+    pub(super) activity: Option<Arc<dyn WriteActivity>>,
     pub(super) warnings: Arc<dyn WarningScopes>,
     pub(super) watching: Option<Arc<dyn WatchInputs>>,
     pub(super) candidates: Arc<dyn CandidateWork>,
@@ -100,6 +102,7 @@ impl ServeActions for ManualRebuilds {
                     }
                 }
             }
+            let activity = self.activity.as_ref().map(|activity| activity.enter());
             if let Some(watch) = &self.watching
                 && let Some(result) = serve_debounce::settle(
                     watch.clone(),
@@ -125,6 +128,7 @@ impl ServeActions for ManualRebuilds {
             let action_batch = batch.clone();
             let producer = attempt.clone();
             let mut candidate = tokio::task::spawn_blocking(move || {
+                let _activity = activity;
                 let _candidate = permit;
                 let span = tracing::info_span!(
                     "watch.action",
@@ -176,7 +180,11 @@ impl ServeActions for ManualRebuilds {
 
 #[cfg(test)]
 #[path = "_tests_/serve_rebuild_tests.rs"]
-mod serve_rebuild_tests;
+pub(crate) mod serve_rebuild_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_activity_tests.rs"]
+mod serve_activity_tests;
 
 #[cfg(test)]
 #[path = "_tests_/serve_burst_tests.rs"]

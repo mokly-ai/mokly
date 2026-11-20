@@ -108,7 +108,7 @@ impl UnixGroup {
 }
 
 /// A descendant that vanished between enumeration and signaling is stopped.
-fn signal_process(
+pub(super) fn signal_process(
     table: &dyn ProcessTable,
     identity: ProcessIdentity,
     signal: i32,
@@ -120,13 +120,13 @@ fn signal_process(
     }
 }
 
-fn remember_result(slot: &mut Option<io::Error>, result: io::Result<()>) {
+pub(super) fn remember_result(slot: &mut Option<io::Error>, result: io::Result<()>) {
     if let Err(source) = result {
         remember(slot, source);
     }
 }
 
-fn remember(slot: &mut Option<io::Error>, source: io::Error) {
+pub(super) fn remember(slot: &mut Option<io::Error>, source: io::Error) {
     if slot.is_none() {
         *slot = Some(source);
     }
