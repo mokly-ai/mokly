@@ -60,7 +60,7 @@ export const secondInstallation = {
 } as const;
 
 /**
- * The statements that forget one recorded installation and what it holds.
+ * Start a release transaction that its caller commits after cleanup.
  *
  * The rows that hold a repository go first: a project keeps the repository
  * name it was created for, so what it loses is its link, the check runs its
@@ -74,6 +74,8 @@ function forgetInstallation(provider: number): string {
       ON installations.id = repositories.installation_id
     WHERE installations.github_id = ${provider}`;
   return `
+    BEGIN;
+    LOCK TABLE github_check_runs, builds IN SHARE ROW EXCLUSIVE MODE;
     DELETE FROM github_check_runs WHERE repository_id IN (${repositories});
     DELETE FROM builds WHERE repository_id IN (${repositories});
     DELETE FROM github_project_repositories
@@ -106,6 +108,7 @@ export function releaseRecordedGitHub(): void {
                          WHERE github_user_id = ${recordedUser});
     DELETE FROM github_user_identities
     WHERE github_user_id = ${recordedUser};
+    COMMIT;
   `);
 }
 
@@ -116,7 +119,7 @@ export function releaseRecordedGitHub(): void {
  * one, whom `releaseRecordedGitHub` hands back.
  */
 export function releaseSecondInstallation(): void {
-  sql(forgetInstallation(secondInstallation.id));
+  sql(`${forgetInstallation(secondInstallation.id)} COMMIT;`);
 }
 
 /**

@@ -1,6 +1,6 @@
 //! Test-thread process mocks define only the lifecycle calls that a scenario uses.
 
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -109,6 +109,7 @@ fn worker(
         }));
     let request_events = events.clone();
     let request_hook = hook.clone();
+    let generations = Mutex::new(BTreeMap::<String, String>::new());
     let exchange = (
         WorkerMock::request
             .each_call(matching!(_, _))
@@ -121,12 +122,34 @@ fn worker(
                 let event = Event::Request(id, label);
                 request_events.emit(event.clone());
                 request_hook(event);
+                let compile_count = match &request.call {
+                    Call::RestoreGeneration(recipe) => {
+                        generations
+                            .lock()
+                            .unwrap()
+                            .insert(recipe.generation.clone(), recipe.compiled.identity.clone());
+                        0
+                    }
+                    Call::Dispose(generation) => {
+                        generations.lock().unwrap().remove(&generation.generation);
+                        0
+                    }
+                    Call::Bundle(params) => {
+                        let identity = &params.params.entry_files[0];
+                        let mut generations = generations.lock().unwrap();
+                        let count = u64::from(!generations.values().any(|value| value == identity));
+                        generations.insert(identity.clone(), identity.clone());
+                        count
+                    }
+                    _ => 0,
+                };
                 Ok(match &request.call {
                     Call::Bundle(params) => MethodResult::Bundle(Box::new(results::Bundle {
                         plan: None,
                         generation: params.params.entry_files[0].clone(),
                         epoch: 0,
                         cache: None,
+                        compile_count,
                         compiled: Arc::new(compiled(&params.params.entry_files[0])),
                         modules: vec![],
                         unmapped_dependency_directories: None,

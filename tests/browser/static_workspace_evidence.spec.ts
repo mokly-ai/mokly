@@ -90,6 +90,10 @@ for (const suffix of ["", "/", "/index.html"])
       .locator('[data-usage-section="affected"]')
       .getByRole("link", { name: "Changed screen", exact: true })
       .click();
+    // The routed instance opens Props when its detail arrives.
+    await expect(
+      page.getByRole("tab", { name: "Props", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
     await expectChangedComponent(page);
     await expectKeptDocument(page);
   });

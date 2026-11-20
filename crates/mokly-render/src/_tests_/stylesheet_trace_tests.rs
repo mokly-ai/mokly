@@ -3,18 +3,20 @@
 use std::mem::size_of;
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{StylesheetBundler, StylesheetBundlerMock};
+use mokly_css::types::StylesheetBundler;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::stylesheet_compiler::{CompileRoot, RootCompiler};
 use crate::stylesheet_store::StylesheetCache;
 
+use super::stylesheet_support::compiled;
 use super::stylesheet_support::{attempt, bundle, bundler, fill, key, module, root, roots, tree};
 
 fn capture_bundle(
     shared: &Arc<Mutex<StylesheetCache>>,
-    inner: Arc<dyn StylesheetBundler>,
+    inner: Arc<dyn RootCompiler>,
     root: &mokly_css::types::StylesheetRoot,
     tree: Arc<dyn mokly_source_interface::tree::SourceTree>,
 ) -> Vec<Option<String>> {
@@ -36,9 +38,9 @@ fn finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent() {
     let no_record = capture_bundle(
         &Arc::new(Mutex::new(StylesheetCache::default())),
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(bundle(&root))),
+                .returns(Ok(compiled(bundle(&root)))),
         )),
         &root,
         tree(&Arc::default(), &[]),
@@ -75,9 +77,9 @@ fn finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent() {
         .insert(module(0), ReadBaseline::Late("1".repeat(64)));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(disagreeing)),
+                .returns(Ok(compiled(disagreeing))),
         )),
         tree(&Arc::default(), &[]),
         &shared,

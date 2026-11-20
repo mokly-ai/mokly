@@ -2,9 +2,10 @@
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::time;
 
 use chrono::{DateTime, Duration, Utc};
-use mkc_auth::runtime::Runtime;
+use mkc_auth::runtime::{Runtime, SystemRuntime};
 use mkc_store_interface::error::Result;
 use uuid::Uuid;
 
@@ -30,6 +31,10 @@ impl TestRuntime {
 impl Runtime for TestRuntime {
     fn now(&self) -> DateTime<Utc> {
         *self.now.lock().unwrap()
+    }
+
+    fn monotonic(&self) -> time::Duration {
+        SystemRuntime.monotonic()
     }
 
     fn id(&self) -> Uuid {

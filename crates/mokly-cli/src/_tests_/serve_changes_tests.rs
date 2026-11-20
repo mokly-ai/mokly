@@ -1,5 +1,6 @@
 //! Base-ref refresh keeps the current warning attempt and orders warnings before readiness.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -7,6 +8,7 @@ use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_compare::comparison_types::{ComparisonCounts, ComparisonResult};
+use mokly_graph::document_store::DocumentStoreMock;
 use mokly_model::review::ReviewResultV8;
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 use mokly_render::runtime::Runtime;
@@ -59,6 +61,15 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     );
     let old = scopes.begin();
     let current = scopes.begin();
+    let resumes = Arc::new(AtomicUsize::new(0));
+    let resumed = resumes.clone();
+    let documents = Arc::new(Unimock::new(
+        DocumentStoreMock::resume
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                resumed.fetch_add(1, Ordering::SeqCst);
+            })),
+    ));
     let service = Source {
         references: Mutex::new(None),
         staging: Mutex::new(None),
@@ -88,16 +99,19 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
                     .next_call(matching!())
                     .returns(current),
             )),
-            runtime: Arc::new(Runtime::new(
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                "test".into(),
-                None,
-            )),
+            runtime: Arc::new(
+                Runtime::new(
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    "test".into(),
+                    None,
+                )
+                .with_document_store(documents),
+            ),
             git: Arc::new(Unimock::new(())),
             cancellation: cancellation.clone(),
             terminal,
@@ -159,4 +173,9 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     cancellation.interrupt();
     refreshed.finished(Ok(&result), Duration::ZERO);
     assert_eq!(*lines.lock().unwrap(), recorded);
+    assert_eq!(
+        resumes.load(Ordering::SeqCst),
+        6,
+        "ready and unavailable outcomes must both release optional writes"
+    );
 }

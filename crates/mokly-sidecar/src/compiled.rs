@@ -113,6 +113,10 @@ impl ReuseEvidence {
 pub struct CompiledGeneration {
     /// The Mokly, esbuild, Node, package-root, and installed program identity.
     pub toolchain: String,
+    /// Stable compilation metadata absent from per-document render keys.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub metadata_identity: Option<String>,
     /// Cache-only physical inputs, never exported as render or watch inputs.
     pub reuse_evidence: Arc<ReuseEvidence>,
     /// Dependency lookup provenance retained across restored worker generations.
@@ -162,6 +166,7 @@ impl CompiledGeneration {
     pub(super) fn same_recipe(&self, other: &Self) -> bool {
         self.identity == other.identity
             && self.toolchain == other.toolchain
+            && self.metadata_identity == other.metadata_identity
             && self.reuse_evidence.complete == other.reuse_evidence.complete
             && self.reuse_evidence.uncaptured == other.reuse_evidence.uncaptured
             && self.reuse_evidence.inputs == other.reuse_evidence.inputs

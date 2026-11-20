@@ -91,16 +91,13 @@ export class ResolutionEvidence {
     for (const [name, file] of Object.entries(peers)) {
       if (!file) continue;
       const boundary = path.join("node_modules", packageName(name));
-      const manifests: string[] = [];
       for (let directory = path.dirname(file); this.physical.complete;) {
         const manifest = path.join(directory, "package.json");
-        const json = this.physical.json(manifest);
-        if (json) manifests.push(manifest);
+        const json = this.physical.json(manifest, true);
         if (
           json?.name === packageName(name) ||
           directory.endsWith(path.sep + boundary)
         ) {
-          for (const file of manifests) this.physical.file(file, true);
           break;
         }
         const parent = path.dirname(directory);

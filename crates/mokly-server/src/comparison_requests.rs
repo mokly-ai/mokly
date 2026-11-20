@@ -65,9 +65,11 @@ impl MemoryComparisons {
             },
         );
         let store = self.clone();
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let deadline = Instant::now() + Duration::from_secs(10);
         state.tasks.push(tokio::spawn(
             async move {
+                let _activity = activity;
                 store
                     .run(accepted, path, historical, cancel, deadline, sender)
                     .await;
@@ -119,7 +121,9 @@ impl MemoryComparisons {
         let entry = path.clone();
         let token = cancel.clone();
         let parent = tracing::Span::current();
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let mut work = tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             parent.in_scope(|| capture.capture(&input, &entry, historical, token))
         });
         let mut updates = self.publications.subscribe().updates;

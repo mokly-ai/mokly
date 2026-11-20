@@ -1,6 +1,7 @@
 //! A per-view generation wrapper records every comparison input read.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -117,6 +118,12 @@ impl RenderGeneration for RecordingGeneration<'_> {
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         self.inner.stylesheet_directories()
+    }
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        self.inner.stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.inner.stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.inner.public_files()

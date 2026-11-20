@@ -1,7 +1,5 @@
 # CI Workflow: Cloud Jobs
 
-Status: Cloud delivery stays disabled until the [operator cutover after the merge](../../plans/follow-ups/repository-cutover-after-merge.md).
-
 This continues the [CI workflow graph](./ci-workflow.md) for the jobs and the
 workflows of Mokly Cloud.
 

@@ -246,3 +246,7 @@ mod serve_references_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_capture_generation_tests.rs"]
 mod serve_capture_generation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_steps_integration_tests.rs"]
+mod serve_steps_integration_tests;

@@ -3,6 +3,7 @@
 use chrono::{DateTime, Utc};
 use mkc_domain::ids::UserId;
 
+use crate::auth_prune::PruneBatch;
 use crate::error::Result;
 
 /// Persisted desktop credential digest and its browser-authorized binding.
@@ -33,6 +34,6 @@ pub trait DesktopGrants {
     fn desktop_grant(&mut self, token_hash: &str) -> Result<Option<DesktopGrant>>;
     /// Consume a locked, challenge-validated grant only if unused and unexpired.
     fn consume_desktop_grant(&mut self, token_hash: &str, now: DateTime<Utc>) -> Result<bool>;
-    /// Delete grants at or before the retained expiry cutoff, including used grants.
-    fn prune_desktop_grants(&mut self, before: DateTime<Utc>) -> Result<usize>;
+    /// Delete one bounded batch at or before the cutoff, including used grants.
+    fn prune_desktop_grants(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize>;
 }

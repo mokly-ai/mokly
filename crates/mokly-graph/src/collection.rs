@@ -32,3 +32,15 @@ mod collection_cancellation_tests;
 #[cfg(test)]
 #[path = "_tests_/collection_support.rs"]
 mod collection_support;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_session_tests.rs"]
+mod persistent_session_tests;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_resource_tests.rs"]
+mod persistent_resource_tests;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_identity_tests.rs"]
+mod persistent_identity_tests;

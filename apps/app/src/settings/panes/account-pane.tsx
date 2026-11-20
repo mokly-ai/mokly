@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { unexpectedError } from "../../api/errors";
 import type { Session } from "../../api/types";
 import { Action } from "../../components/action";
 import type { ActionIcon } from "../../components/action";
@@ -12,7 +11,6 @@ import { Facts, Section } from "../../components/page-parts";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { connectGitHub, updateAccount } from "../../data/auth";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { storeGitHubFlow } from "../../navigation/github-flow";
 import { settingsPath } from "../../navigation/paths";
 import { currentReturnTo } from "../../navigation/return-to";
 import { openOnWeb } from "../../navigation/web-setup";
@@ -120,8 +118,7 @@ function GitHubConnect({ connected }: { connected: boolean }) {
     () =>
       authorize.run(async () => {
         const connection = await connectGitHub(currentReturnTo());
-        if (!storeGitHubFlow("connect", connection)) throw unexpectedError();
-        authorize.leave(connection.authorizeUrl);
+        authorize.leave("connect", connection);
       }),
     [authorize],
   );
@@ -138,7 +135,7 @@ function GitHubConnect({ connected }: { connected: boolean }) {
         icon={connectIcon(connected)}
         write={authorize}
         operation="Connecting to GitHub"
-        disabled={authorize.disabled || connected}
+        disabled={connected}
         onPress={() =>
           onWeb ? openOnWeb(settingsPath({ pane: "account" })) : void connect()
         }
@@ -202,7 +199,6 @@ export function AccountPane() {
             size="md"
             write={renaming}
             operation="Saving your name"
-            disabled={renaming.disabled}
             onPress={() => void save()}
             testID="save-account"
           />
@@ -218,7 +214,6 @@ export function AccountPane() {
             icon="signOut"
             write={signingOut}
             operation="Signing you out"
-            disabled={signingOut.disabled}
             onPress={() => leaveBy(() => void signingOut.run(signOut))}
             testID="sign-out"
           />

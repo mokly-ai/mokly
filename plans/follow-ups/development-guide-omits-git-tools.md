@@ -54,8 +54,9 @@
     - The three Git LFS tests were not part of these runs.
   - The gate already checks one tool. The required type check, `npm run typecheck:ci`, fails when the `bun` on the PATH is not the exact version in `.bun-version`. `npm run typecheck:fast` instead prints a warning with the install command and runs the standard check.
   - CI runs the Rust tests in the Repository job on Linux and in the Native jobs on macOS and Windows. All three jobs passed on `main` at `f4f0082fd`, in the CI run of 2026-11-19. So the GitHub-hosted runners have Git LFS and a Git that passes these tests.
-- **Problem:** The gate does not check the Git version or Git LFS before the Rust tests. With Git before 2.45.0, three Rust tests fail. Without `git-lfs`, three other Rust tests fail. They fail only after the earlier checks of the Repository suite. Their errors do not give the required Git version or a Git LFS install hint.
-- **Impact if no action:** A contributor who does not read the tool list loses the time of the earlier checks. Then the contributor must find the cause of six failures that give no install hint. The guide now names the tools, so this costs less than before.
+  - On 2026-11-20, the missing-base-object fix made the two promisor tests and the missing-historical-blob test pass on Git 2.43.0 and 2.45.0. The development requirement stays Git 2.45.0 or later and Git LFS. This item retains the development-tool preflight decision.
+- **Problem:** The gate does not check the development Git version or Git LFS before the Rust tests. Without `git-lfs`, three Rust tests fail after the earlier checks. Their errors give no Git LFS install hint. A Git older than the development requirement also gets no early version hint.
+- **Impact if no action:** A contributor without Git LFS must find the cause of three failures after the earlier checks. A contributor with an unsupported development Git gets no early hint. The guide already names the tools.
 - **Root question:** How does a contributor learn, before the gate fails, which Git tools the Rust tests need?
 - **Options:**
   - **A.** Name Git LFS and the minimum Git version in the tool list of `docs/development/README.md`, after finding the version that passes the three tests that do not need LFS. Effort: Small.
@@ -68,13 +69,13 @@
   - **C.** A plus the same check at the start of `cargo xtask check`, but the check prints a warning with the install hint and the gate continues. Effort: Small.
     - It adds no gate failure. It works like `npm run typecheck:fast`, which warns with the install command and continues.
     - It still changes the start of the gate in `docs/protocol/ci-verification.md`, which is a requirement.
-    - The gate still fails at the same Rust tests. The warning can scroll out of view before they fail.
+    - Missing Git LFS still fails at the Rust tests. The warning can scroll out of view before they fail.
 - **Left out:**
   - Skipping the tests when the tools are missing, because the gate would then pass without testing the LFS and partial-clone behaviour.
-  - An install hint in the errors of the six tests, because the hint then comes only when the tests fail, after the earlier checks. So it fails the goal of a hint before the gate fails. It can still go with B or C.
+  - An install hint in individual Rust test errors, because the hint then comes only after the earlier checks. It fails the goal of an early hint. It can still go with B or C.
   - A separate command that checks the tools, because a contributor must know to run it. It reaches the same readers as A, and A already gives the two check commands.
 - **Wider fix:** B, because the gate then names the missing tool for every contributor.
 - **Previous examples:** The Bun version check of the required type check, `runRequiredTypecheck` in `scripts/verification/typecheck-ci-runner.mjs`, described in `docs/development/README.md`. For C, the warning of `runFastTypecheck` in `scripts/verification/typecheck-fast-runner.mjs`.
 - **Related:** None.
-- **Recommendation:** B. It turns six confusing failures into one install hint, before the long checks run. C is the best option that adds no gate failure.
+- **Recommendation:** B. It names missing Git LFS or an unsupported development Git version before the long checks. C is the best option that adds no gate failure.
 - **Action:** ask the user, because option B adds a new gate failure, and only the user can approve one. On 2026-11-19 the user also asked to decide B.

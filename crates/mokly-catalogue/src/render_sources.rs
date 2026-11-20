@@ -15,6 +15,8 @@ pub trait GenerationLease: Debug + Send + Sync {}
 /// One immutable bundle, evaluated only after the core installs CSS Modules.
 #[derive(Clone, Debug, Default)]
 pub struct JavaScriptGeneration {
+    /// Stable captured toolchain and extra metadata for optional persistent documents.
+    pub persistence_identity: Option<String>,
     /// Provider-owned lifetime, released after the final graph or request.
     pub lease: Option<Arc<dyn GenerationLease>>,
     /// Side-specific bundle identity.

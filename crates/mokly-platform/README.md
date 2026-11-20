@@ -66,8 +66,11 @@ implementation starts the child suspended in both modes, attaches a kill-on-clos
 resumes its primary thread. This keeps descendants inside the job from their
 first instruction. It requests a console break for
 graceful termination, and terminates the job for forceful cancellation.
-The caller, such as the `mokly-git` runner, must kill and reap a child if
-attachment fails. The caller owns shutdown deadlines and pipe draining.
+`kill_unattached` stops a configured child's tree before its first reap when
+attachment fails. On Unix, the unreaped child reserves its PID, so cleanup can
+follow its descendants without reading the root identity. On Windows, the
+unattached child is suspended and cannot have descendants. The caller owns
+the direct child's kill and reap, shutdown deadlines, and pipe draining.
 
 `Flush` uses one Linux `syncfs` for a filesystem. Its per-file fallback uses
 plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data

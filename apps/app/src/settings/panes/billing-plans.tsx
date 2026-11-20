@@ -88,18 +88,22 @@ export function TeamPlanWait({ label }: { label: string }) {
  * A subscribed workspace: what it is paying for, and the one way to change
  * it. Payment failed is the state of the subscription rather than a failure of
  * this page — nothing was pressed and nothing was refused — so its one action
- * replaces Manage billing rather than joining it.
+ * replaces Manage billing rather than joining it. `external` is whether the
+ * Portal opens outside the app, as in the desktop app's window, where Manage
+ * billing carries the external glyph too.
  */
 export function TeamPlan({
   billing,
   situation,
   portal,
   onPortal,
+  external = false,
 }: {
   billing: Billing;
   situation: PlanSituation;
   portal: Write;
   onPortal: () => void;
+  external?: boolean;
 }) {
   const manage = (
     label: string,
@@ -115,7 +119,6 @@ export function TeamPlan({
           icon={icon}
           write={portal}
           operation="Opening the billing portal"
-          disabled={portal.disabled}
           onPress={onPortal}
           testID={testID}
         />
@@ -148,7 +151,12 @@ export function TeamPlan({
         !billing.manageable ? (
           <p className="fo-copy">{ownerManagesBilling}</p>
         ) : (
-          situation !== "past-due" && manage("Manage billing", "manage-billing")
+          situation !== "past-due" &&
+          manage(
+            "Manage billing",
+            "manage-billing",
+            external ? "external" : undefined,
+          )
         )
       }
     />
@@ -161,16 +169,20 @@ export function TeamPlan({
  * A configured price Mokly could not verify against the catalogue leaves the
  * section its title and its way on, and takes away every amount: a number
  * Stripe would not charge is worse than no number, so the plans on the public
- * site are where the reader is sent for one.
+ * site are where the reader is sent for one. `external` is whether Checkout
+ * opens outside the app, as in the desktop app's window, where Upgrade to Team
+ * carries the external glyph.
  */
 export function FreePlan({
   billing,
   checkout,
   onCheckout,
+  external = false,
 }: {
   billing: Billing;
   checkout: Write;
   onCheckout: () => void;
+  external?: boolean;
 }) {
   const editor = unitAmount(billing, "editor");
   const collaborator = unitAmount(billing, "collaborator");
@@ -201,9 +213,9 @@ export function FreePlan({
                 label={checkout.label("Upgrade to Team", "Opening…")}
                 tone="primary"
                 size="md"
+                icon={external ? "external" : undefined}
                 write={checkout}
                 operation="Opening checkout"
-                disabled={checkout.disabled}
                 onPress={onCheckout}
                 testID="upgrade-to-team"
               />

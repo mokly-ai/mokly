@@ -58,17 +58,11 @@ impl Pool {
         &self,
         slot: &mut Slot,
         request: &BundleRequest,
-    ) -> Result<(bool, Vec<String>)> {
+    ) -> Result<bool> {
         let params = &request.params;
         let capture = request.capture.unwrap_or_default();
-        let (stored, mut candidate, fallback, mut keys) = {
+        let (stored, mut candidate, fallback) = {
             let mut state = self.lock();
-            let keys: Vec<_> = slot
-                .generations
-                .keys()
-                .filter_map(|id| state.compiled.get(id))
-                .map(|compiled| compiled.runtime_key.clone())
-                .collect();
             let stored = state.recipes.seed(params, capture);
             let candidates = state
                 .bundles
@@ -96,55 +90,47 @@ impl Pool {
                 .map(|(id, recipe)| {
                     (
                         id.clone(),
-                        recipe.compiled().runtime_key.clone(),
                         Preparation::snapshot(&state, slot, id, false, false, false),
                         recipe.compiled().reuse_evidence.captured(),
                     )
                 });
             let fallback = candidate
                 .as_ref()
-                .filter(|(_, _, _, captured)| *captured)
+                .filter(|(_, _, captured)| *captured)
                 .and_then(|_| {
                     candidates
                         .filter(|(_, recipe)| recipe.compiled().reuse_evidence.serve_edit())
                         .max_by_key(|(id, _)| (state.epochs[*id], *id))
-                        .map(|(id, recipe)| {
+                        .map(|(id, _)| {
                             (
                                 id.clone(),
-                                recipe.compiled().runtime_key.clone(),
                                 Preparation::snapshot(&state, slot, id, false, false, false),
                             )
                         })
                 });
-            (stored, candidate, fallback, keys)
+            (stored, candidate, fallback)
         };
         let complete = stored.is_some() || candidate.is_some();
         if stored
             .as_ref()
             .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
-            && candidate
-                .as_ref()
-                .is_some_and(|(_, _, _, captured)| *captured)
-            && let Some((generation, runtime, preparation, _)) = candidate.take()
+            && candidate.as_ref().is_some_and(|(_, _, captured)| *captured)
+            && let Some((generation, preparation, _)) = candidate.take()
         {
             self.restore(slot, &generation, false, preparation, false)?;
-            keys.push(runtime);
         }
         if let Some(recipe) = stored {
-            keys.push(recipe.compiled.runtime_key.clone());
             let generation = recipe.generation.clone();
             self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
             slot.generations.insert(generation, 0);
         }
-        if let Some((generation, runtime, preparation, _)) = candidate {
+        if let Some((generation, preparation, _)) = candidate {
             self.restore(slot, &generation, false, preparation, false)?;
-            keys.push(runtime);
         }
-        if let Some((generation, runtime, preparation)) = fallback {
+        if let Some((generation, preparation)) = fallback {
             self.restore(slot, &generation, false, preparation, false)?;
-            keys.push(runtime);
         }
-        Ok((complete, keys))
+        Ok(complete)
     }
 
     pub(super) fn prepare(

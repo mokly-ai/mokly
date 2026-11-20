@@ -12,9 +12,9 @@ use crate::backend::{DirectoryWatch, NotifyFactory, WatchFactory};
 use crate::error::Result;
 use crate::event::{Event, Kind};
 use crate::native_events::Receiver;
-use crate::native_scan;
 use crate::observer::{Inbox, Observer};
 use crate::plan::Plan;
+use crate::{native_attachment, native_scan};
 
 /// Composition root for the platform observer and injected source reader.
 pub struct NativeObserver {
@@ -30,6 +30,7 @@ struct State {
     roots: BTreeSet<PathBuf>,
     root_directories: BTreeSet<PathBuf>,
     parents: BTreeMap<PathBuf, BTreeSet<PathBuf>>,
+    dependency_roots: BTreeMap<PathBuf, PathBuf>,
     directories: BTreeSet<PathBuf>,
     replaced: BTreeSet<PathBuf>,
 }
@@ -71,7 +72,7 @@ impl NativeObserver {
                 .map(|path| {
                     (
                         path.clone(),
-                        native_scan::parents(self.tree.as_ref(), path, &plan.repository),
+                        native_scan::input_parents(self.tree.as_ref(), path, plan),
                     )
                 })
                 .collect();
@@ -82,28 +83,55 @@ impl NativeObserver {
                 inbox: self.inbox.clone(),
                 warned: AtomicBool::new(false),
             }))?;
-            let directories = watcher.update(&directories, &BTreeSet::new())?;
+            let advisory = directories
+                .difference(&root_directories)
+                .filter(|path| !path.starts_with(&plan.repository))
+                .cloned()
+                .collect();
+            let directories = native_attachment::update(
+                watcher.as_mut(),
+                &directories,
+                &BTreeSet::new(),
+                &advisory,
+                &self.inbox,
+            )?;
             *state = Some(State {
                 watcher,
                 roots: plan.roots.clone(),
                 root_directories,
                 parents,
+                dependency_roots: plan.dependency_roots.clone(),
                 directories,
                 replaced: BTreeSet::new(),
             });
         } else if let Some(state) = state.as_mut() {
+            let mut advisory: BTreeSet<_> = state
+                .directories
+                .difference(&state.root_directories)
+                .filter(|path| !path.starts_with(&plan.repository))
+                .cloned()
+                .collect();
             if scan {
                 state.root_directories = native_scan::directories(self.tree.as_ref(), plan)?;
             }
             state.parents.retain(|path, _| targets.contains(path));
             for path in targets {
-                if scan || !state.parents.contains_key(&path) {
-                    let parents = native_scan::parents(self.tree.as_ref(), &path, &plan.repository);
+                if scan
+                    || !state.parents.contains_key(&path)
+                    || state.dependency_roots.get(&path) != plan.dependency_roots.get(&path)
+                {
+                    let parents = native_scan::input_parents(self.tree.as_ref(), &path, plan);
                     state.parents.insert(path, parents);
                 }
             }
             let mut directories = state.root_directories.clone();
             directories.extend(state.parents.values().flatten().cloned());
+            advisory.extend(
+                directories
+                    .difference(&state.root_directories)
+                    .filter(|path| !path.starts_with(&plan.repository))
+                    .cloned(),
+            );
             let mut add: BTreeSet<_> = directories
                 .difference(&state.directories)
                 .cloned()
@@ -122,10 +150,17 @@ impl NativeObserver {
                 remove.extend(state.replaced.iter().cloned());
             }
             if !add.is_empty() || !remove.is_empty() {
-                let attached = state.watcher.update(&add, &remove)?;
+                let attached = native_attachment::update(
+                    state.watcher.as_mut(),
+                    &add,
+                    &remove,
+                    &advisory,
+                    &self.inbox,
+                )?;
                 directories.retain(|path| !add.contains(path) || attached.contains(path));
             }
             state.directories = directories;
+            state.dependency_roots = plan.dependency_roots.clone();
             state.replaced.clear();
         }
         Ok(())
@@ -222,3 +257,7 @@ mod native_recovery_tests;
 #[cfg(test)]
 #[path = "_tests_/native_coverage_tests.rs"]
 mod native_coverage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_dependency_tests.rs"]
+mod native_dependency_tests;

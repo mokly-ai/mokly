@@ -122,8 +122,16 @@ remains, as in a one-slot pool, the pool stops. The
 owns these rules.
 
 The pool keeps the last 30 successful render requests of the newest head
-generation, and no replay. After the return pass starts a head worker, the next steps warm
-it up while no request waits and Serve holds no claim. A warm-up sends the
+generation, and no replay. `SidecarPool::record_served_render` also adds a
+store-served request without a call, when its source root is the launch
+repository and its generation is the newest head generation. An equal
+store-origin request already in the window adds no copy, and normal renders
+keep their order and their duplicates. The window and every warm-up share each
+call through an `Arc`. After the return pass starts a head worker, the next
+steps warm it up while no request waits and Serve holds no claim. The start of
+a return pass also enrolls each existing head worker without a successful
+render or replay of the newest generation's epoch, with one attempt for each
+epoch. A warm-up sends the
 missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
 then replays the recorded renders, one call at a time, and discards each
 result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
@@ -216,11 +224,13 @@ restores the entry with `disk_seed_request` under a private `disk:` seed id
 before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
-`damaged`, or `unavailable` when that removal finds the store unusable. After
-a successful `bundle` call, the pool compares the runtime key of the result
-with the keys of the seeds and of the generations that the worker already
-holds. It sets the `cache` field of the result, which never
-crosses the wire, to `memory` or `hit` for a reused compilation, or else to
+`damaged`, or `unavailable` when that removal finds the store unusable. A
+worker records the count of `esbuild` operation events of each `bundle`
+request in a result field that never crosses the wire. After a successful
+`bundle` call, the pool uses that count to set the `cache` field of the
+result, which also never crosses the wire. A count of zero gives `hit` when
+the runtime key of the result equals the key of the disk seed of the
+request. Otherwise, a count of zero gives `memory`. A positive count gives
 the reason why the sidecar compiled. When the result holds the restored
 stored compilation, the pool also adds the stored plan of that entry to the
 result. A `Full` call then offers the served recipe, with the plan of the
@@ -267,7 +277,13 @@ standard error. It returns `SpawnFailure::NotStarted` for a failure before the
 Node process exists. Examples are a missing sidecar entry or source directory,
 and a Node executable that cannot start. It returns `SpawnFailure::Started`
 when a later step fails, for example when it cannot take whole-tree ownership
-or start a pipe task. Shutdown wakes queued callers and sends shutdown to each
+or start a pipe task. Startup cleanup keeps tree ownership through direct-child
+reaping. Unix cleanup stops descendants before reaping the direct child.
+Windows retains the attached kill-on-close job until startup cleanup ends.
+Cleanup errors go to tracing and preserve the startup error.
+`NodeFactory::with_threads` injects `dyn PipeThreads` for pipe and completion
+task creation. The default uses named host threads.
+Shutdown wakes queued callers and sends shutdown to each
 process. All processes share one grace deadline. Survivors are killed and
 reaped. The [lifecycle contract](../../docs/protocol/mokly-sidecar-lifecycle.md)
 owns stderr drainage at that deadline.
@@ -397,7 +413,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, with `served_generation` for a core
-  reuse and `request_claimed` for a call that holds a `CallClaim`, and
+  reuse, `request_claimed` for a call that holds a `CallClaim`, and
+  `record_served_render` for a store-served record, and
   `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
@@ -415,12 +432,19 @@ spawn the built sidecar and render a component, screen, story, and page. The
   warm head worker, the candidates of the return pass, the
   `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
   records each successful head bundle and render request.
-- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines `Warmups`, the
-  recorded head render calls and the pending warm-ups, and
+  `Pool::record_stored_render` checks the head root, the newest generation,
+  and the render kind of a store-served record.
+- [`src/pool_warmup.rs`](./src/pool_warmup.rs) defines
   `Pool::maintain_warmup`, which runs one warm-up step when no return step
-  can run.
+  can run. [`src/pool_warmup_state.rs`](./src/pool_warmup_state.rs) defines
+  `Warmups`: the recent window of shared calls with their store-origin flags,
+  the pending warm-ups, and the render proofs and attempts of each slot and
+  epoch. [`src/pool_render_equality.rs`](./src/pool_render_equality.rs)
+  compares two render calls exactly, signed zero included, without
+  serializing them.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
-  runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
+  runs one step in `Pool::maintain_return`. The start of a pass enrolls the
+  existing head workers that need a warm-up. `Pool::retire_return` kills and
   reaps a worker while its slot stays leased. When it cannot confirm the reap,
   it adds the slot to the retired set, sets `return_disabled`, and returns
   `Error::HeadReturnDisabled` with the original failure. Only the return pass
@@ -456,11 +480,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `Prerequisites` gives the inputs that each generation call needs, for
   replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
-  call from the bundle store, keeps the request-local provenance of its
-  seeds, sets the `cache` outcome of its result, and offers the served recipe
+  call from the bundle store, keeps the request-local provenance of its disk
+  seed, sets the `cache` outcome of its result, and offers the served recipe
   of each `Full` call to the store. The provenance keeps the runtime key and
   the plan of a restored stored compilation. A result with that runtime key
-  reports `hit` and carries that plan.
+  carries that plan. It reports `hit` when its count of `esbuild` events is
+  zero.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -493,6 +518,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `CaptureHint` in `hello` when the launch asks for capture durability. Its
   `spawn` decides whether each failure is `SpawnFailure::NotStarted` or
   `SpawnFailure::Started`.
+- [`src/process_threads.rs`](./src/process_threads.rs) defines the `PipeThreads`
+  boundary and its `SystemPipeThreads` host implementation.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
   environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,

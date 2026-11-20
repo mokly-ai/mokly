@@ -56,6 +56,13 @@ impl<T> Tier<T> {
         self.values.contains_key(key)
     }
 
+    /// Lend a handle and its recorded charge without refreshing access order.
+    pub(crate) fn peek(&self, key: &NodeKey) -> Option<(Arc<T>, usize)> {
+        self.values
+            .get(key)
+            .map(|entry| (entry.value.clone(), entry.cost))
+    }
+
     /// Refresh an identical handle only when replacement would keep its key charge.
     pub(crate) fn refresh_same(&mut self, key: &NodeKey, value: &Arc<T>) -> bool {
         let same = self

@@ -8,21 +8,16 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
-use mokly_model::data::Props;
-use mokly_model::prop_schema::PropSchema;
 use mokly_model::routes;
-use mokly_model::usage::{
-    CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord,
-};
+use mokly_model::usage::{CatalogueUsage, ComponentInstanceRecord, ComponentSlotRecord};
 
 use crate::context::Context;
-use crate::diagnostic_code::Code;
-use crate::error::{Result, invalid};
+use crate::error::Result;
 use crate::expansion::Expansion;
-use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
+use crate::fragment::{FragmentRenderer, OwnedStyle};
 use crate::tree::Node;
 use crate::{
-    assembly, component_root, error, links, raw_markers, regions, relative_links, source_locations,
+    assembly, component_root, error, links, raw_markers, regions, root_inputs, source_locations,
 };
 
 /// One effective document view. Pages ignore the axes.
@@ -59,6 +54,8 @@ pub struct Composed {
 /// Non-pure composition boundary: JavaScript fragments are injected.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComposerMock))]
 pub trait Composer: Send + Sync {
+    /// Record supported store-served inputs without composing or rendering them.
+    fn record_served(&self, _request: &ComposeRequest<'_>) {}
     /// Compose a screen, component, or authored page with no file writes.
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed>;
 }
@@ -87,6 +84,11 @@ pub(crate) struct Engine<'a> {
 }
 
 impl Composer for HtmlComposer {
+    fn record_served(&self, request: &ComposeRequest<'_>) {
+        if let Ok(Some(request)) = root_inputs::stored_request(request) {
+            self.fragments.record_served(&request);
+        }
+    }
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed> {
         let mut engine = Engine {
             invocation_sites: BTreeMap::new(),
@@ -106,61 +108,14 @@ impl Composer for HtmlComposer {
         };
         let result = (|| -> Result<Composed> {
             let entry = request.entry;
-            let (schema, props, declared_slots) = match &entry.content {
-                EntryContent::Screen { visual, .. } => {
-                    (visual.prop_schema.clone(), visual.props.clone(), Vec::new())
-                }
-                EntryContent::Component { visual, slots, .. } => (
-                    visual.prop_schema.clone(),
-                    visual.props.clone(),
-                    slots.clone(),
-                ),
-                EntryContent::Page => (PropSchema::default(), Props::new(), Vec::new()),
-                _ => return Err(invalid(Code::HtmlElement, "entry has no HTML render")),
-            };
-            let parent = entry
-                .metadata
-                .variant_of
-                .as_deref()
-                .unwrap_or(&entry.metadata.path);
-            let body_metadata = entry
-                .metadata
-                .variant_of
-                .as_ref()
-                .and_then(|parent| {
-                    request
-                        .catalogue
-                        .model
-                        .entries
-                        .iter()
-                        .find(|entry| &entry.metadata.path == parent)
-                })
-                .map_or(&entry.metadata, |entry| &entry.metadata);
-            let mut context = Context {
-                raw_text: false,
-                link_base: relative_links::base(body_metadata),
-                replay: false,
-                props,
-                schema,
-                source: entry.metadata.source.clone(),
-                owner: ComponentInputOwner::Entry,
-                slot_key: None,
-                ignore: true,
-                slots: BTreeMap::new(),
-                declared_slots,
-            };
+            let parent = root_inputs::parent(entry);
+            let mut context = root_inputs::context(request)?;
             engine.saved_slots(&mut context)?;
             let mut tree = if let Some(template) = request.catalogue.templates.get(parent) {
                 let nodes = source_locations::template(template)?;
                 engine.nodes(nodes, &context)?
             } else {
-                let kind = if matches!(entry.content, EntryContent::Page) {
-                    RenderKind::Page
-                } else if matches!(entry.content, EntryContent::Component { .. }) {
-                    RenderKind::Component
-                } else {
-                    RenderKind::Screen
-                };
+                let kind = root_inputs::kind(entry);
                 engine.javascript(parent, kind, &context)?
             };
             if matches!(entry.content, EntryContent::Component { .. }) {

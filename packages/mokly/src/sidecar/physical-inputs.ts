@@ -12,7 +12,7 @@ import { PhysicalPathInputs } from "./physical-path-inputs.js";
 /** Filesystem observations, metadata parsing, request retention, and every byte bound have one owner. */
 export class PhysicalInputs extends PhysicalPathInputs {
   readonly inputs = new Map<string, PhysicalInput>();
-  readonly identityInputs = new Map<string, string>();
+  readonly identityInputs = new Map<string, string | null>();
   private bytes = Buffer.byteLength(
     JSON.stringify({ complete: false, durable: false, inputs: {} }),
   );
@@ -86,8 +86,11 @@ export class PhysicalInputs extends PhysicalPathInputs {
 
   file(file: string, identity = false): PhysicalInput | undefined {
     const value = this.captureFile(file)?.input;
-    if (identity && value?.kind === "file")
-      this.identityInputs.set(file, value.digest);
+    if (identity && (value?.kind === "file" || value?.kind === "absent"))
+      this.identityInputs.set(
+        file,
+        value.kind === "file" ? value.digest : null,
+      );
     return value;
   }
 

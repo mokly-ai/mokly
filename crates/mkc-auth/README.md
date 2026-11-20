@@ -58,10 +58,18 @@ no session, sends no email and creates no credential. It returns
 an unauthenticated or expired session, CSRF rejection and a rate limit with
 its retry delay, without HTTP codes; `Internal` keeps a query failure's
 source. Absence is a service decision: an unknown link is `InvalidLink` and a
-missing session or user is `Unauthenticated`. `prune::Pruner` deletes expired
-links, desktop grants, sessions and rate-limit windows older than the configured retention in
-one transaction and returns the committed counts; the API's `prune` command
-runs it with the `mkc-config` maintenance settings.
+missing session or user is `Unauthenticated`.
+
+`prune::Pruner` deletes expired links, desktop grants, sessions and
+rate-limit windows older than the configured retention. `AuthPruner` reads the
+wall clock once to derive all cutoffs. Each transaction then deletes at most
+1,000 rows of one kind, and the four kinds take turns until each is drained.
+No batch or retry starts after a 480-second monotonic budget. Each delete
+receives a statement timeout of at most five seconds, reduced to the remaining
+budget before each attempt. The call returns the committed counts, so rows
+left at the end of the budget wait for the next run. A database timeout or a
+query error returns an error, and the earlier batches stay committed. The
+API's `prune` command runs it with the `mkc-config` maintenance settings.
 
 ## Quick Start
 
@@ -132,8 +140,8 @@ returns `Option` for absence, and this crate decides what absence means.
 - [desktop_grant_policy.rs](./src/desktop_grant_policy.rs) — desktop credential forms and the unpadded base64url S256 challenge of the verifier's text.
 - [sessions.rs](./src/sessions.rs) — session authentication, rotation and revocation, and the Origin and CSRF checks, which return the admitted `ClientOrigin` and compare tokens in constant time with `subtle::ConstantTimeEq`.
 - [session_policy.rs](./src/session_policy.rs) — `new_session`, `new_session_until`, `expired` and `IDLE_LIFETIME`, the ordinary and inherited session construction paths and the expiry rules shared with GitHub sign-in.
-- [prune.rs](./src/prune.rs) — `Pruner`, `AuthPruner`, `Retention` and `PruneReport`, the one-transaction cleanup behind the `prune` command.
-- [runtime.rs](./src/runtime.rs) — `Runtime` and `SystemRuntime`, the clock, identifier and credential sources, and `hash`, the SHA-256 digest of a credential.
+- [prune.rs](./src/prune.rs) — `Pruner`, `AuthPruner`, `Retention` and `PruneReport`, the batched cleanup behind the `prune` command, bounded by a row limit, a time budget and statement timeouts.
+- [runtime.rs](./src/runtime.rs) — `Runtime` and `SystemRuntime`, the wall and monotonic clocks, the identifier and credential sources, and `hash`, the SHA-256 digest of a credential.
 
 ### Related Docs
 

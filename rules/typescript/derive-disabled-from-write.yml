@@ -2,15 +2,16 @@ id: derive-disabled-from-write
 language: Tsx
 severity: error
 message: >-
-  A control backed by a `useWrite` reads `<write>.disabled`, which already
-  answers "is it working, or is there nothing to send". Naming `.pending` on
-  its own here is the second answer that drifted apart from the first in three
-  consecutive reviews. Add `.disabled` for this control's own write; a
-  neighbouring write's `.pending` may be combined with it. An input that is
-  only held still while the write works reads `<write>.working`, which says
-  that and nothing else. Do not copy a write's `.pending` into a local first:
-  a control reading the copy reads a second answer this rule cannot see
-  through, which is the same drift one name away.
+  A control backed by a `useWrite` passes it to `Action` as `write`, with its
+  `operation`, and `Action` takes from it the answer to "is it working, or is
+  there nothing to send" and draws the wait. Naming `.pending` here is the
+  second answer that drifted apart from the first in three consecutive
+  reviews. Bind this control's own write instead, and keep `disabled` for the
+  control's other reasons. A control or an input that is only held still
+  while a write works, its own or a neighbouring one, reads
+  `<write>.working`, which says that and nothing else. Do not copy a write's
+  `.pending` into a local first: a control reading the copy reads a second
+  answer this rule cannot see through, which is the same drift one name away.
 files:
   - apps/app/src/**
 rule:

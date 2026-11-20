@@ -70,6 +70,7 @@ fn folder_file_changes_reject_a_retained_marked_generation() {
             bundle_inputs::cache_key(&config, &params, &side, runtime.dependency_tree.as_ref())
                 .unwrap();
         let retained = Arc::new(BundleState {
+            persistence_identity: None,
             repository: "/repo".into(),
             settings,
             lease: Arc::new(BundleLease {

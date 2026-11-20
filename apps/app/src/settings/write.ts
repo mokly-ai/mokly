@@ -5,6 +5,7 @@ import { asApiError, unexpectedError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 import { formFailure } from "../components/form-failure";
 import { useLeavePage } from "../navigation/leave-page";
+import type { PageTrip } from "../navigation/leave-page";
 
 /** What one control's write is doing, and what its own control should read. */
 export interface Write {
@@ -12,7 +13,12 @@ export interface Write {
   pending: boolean;
   /** Why the last attempt failed, for the pane to report with one retry. */
   error: ApiError | undefined;
-  /** Whether the control still has something to send. */
+  /**
+   * Whether the control still has something to send. The control that sends
+   * this write refuses a press at rest while it has not: `Action` reads this
+   * from the write bound to it, so what the control does and what its write
+   * believes cannot disagree.
+   */
   sendable: boolean;
   /**
    * Whether this write is working, for what shows it rather than what decides
@@ -26,12 +32,6 @@ export interface Write {
    * stand in for one, which is what `derive-disabled-from-write` reads.
    */
   working: boolean;
-  /**
-   * Whether the control should refuse a press: it is working, or there is
-   * nothing to send. A pane reads this rather than restating the condition,
-   * so what the control does and what its write believes cannot disagree.
-   */
-  disabled: boolean;
   /**
    * Send one write and own everything around it. The control passes a closure
    * naming exactly the fields it sends, so a control can never carry a field
@@ -48,8 +48,11 @@ export interface Write {
    * it stays in flight until then: its control stays busy and a second press
    * sends nothing. A page that the browser restores from its back-forward
    * cache returns the write to rest.
+   *
+   * GitHub takes its purpose and API answer together, so the shown check also
+   * protects the tab's flow record. Other hosted pages take their URL alone.
    */
-  leave: (url: string) => void;
+  leave: (...trip: PageTrip) => void;
   /** Forget a refusal after the input that produced it changes. */
   clearError: () => void;
   /**
@@ -150,8 +153,9 @@ export function failureAfterInput(
  *
  * `done` is the pane's own way of catching up afterwards, usually reloading
  * what it is showing. `sendable` is whether the control still has something to
- * send, and it is required: it is what the control's own `disabled` is derived
- * from, so a call site cannot leave the question unanswered.
+ * send, and it is required: the control that sends the write refuses a press
+ * while there is nothing to send, so a call site cannot leave the question
+ * unanswered.
  *
  * A failure belongs to the attempt, so when the reader undoes the input it was
  * made from, the failure goes with it rather than standing over a control that
@@ -203,8 +207,8 @@ export function useWrite(done: () => void, sendable: boolean): Write {
     if (wrote && !leaving.current) finish.current();
   }, []);
   const leave = useCallback(
-    (url: string) => {
-      if (leavePage(url)) leaving.current = true;
+    (...trip: PageTrip) => {
+      if (leavePage(...trip)) leaving.current = true;
     },
     [leavePage],
   );
@@ -231,7 +235,6 @@ export function useWrite(done: () => void, sendable: boolean): Write {
       error,
       sendable,
       working: pending,
-      disabled: pending || !sendable,
       run,
       leave,
       clearError,

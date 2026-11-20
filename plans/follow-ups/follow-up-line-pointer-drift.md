@@ -7,7 +7,9 @@
   this class under its new problems. Updated on 2026-11-19 with the
   pointers that the round-2 review of the branch
   `calummoore/mokly-return-warmup` and its checks found wrong. Updated on
-  2026-11-20 with the pointers that the branch
+  2026-11-20 with the two pointers that the round-2 docs work of the branch
+  `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` found wrong.
+  Updated on 2026-11-20 with the pointers that the branch
   `calummoore/mokly-folder-export-evidence-7rox` moved in items that it did
   not edit.
 - **Location:** `plans/follow-ups/isolated-git-in-every-test-helper.md:60`,
@@ -17,10 +19,6 @@
   `plans/follow-ups/bundle-cache-request-cost.md:37`,
   `plans/follow-ups/sequential-evidence-capture-cost.md:10`, lines 11, 12, 13,
   15, 54, 59, 69, 78, 81, 83, 88, and 218,
-  `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, lines 12, 39, 40,
-  43, 49, 72, 102, 106, 213, and 216,
-  `plans/follow-ups/sidecar-queue-steering-fixtures.md:7`, line 58, line 59,
-  and line 77,
   `plans/follow-ups/ancestor-churn-disables-durable-capture.md:8`, lines 9,
   10, 68, 70, 72, and 74,
   `plans/follow-ups/bundle-recipe-query-suffix.md:7`, line 8, and line 28,
@@ -36,7 +34,7 @@
   `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
   `plans/follow-ups/serve-plan-editor-invalidation.md:8`, lines 9, 10, 47,
   49, and 51, and
-  `plans/follow-ups/stylesheet-roots-span-parent.md:9`.
+  `plans/follow-ups/stylesheet-roots-span-parent.md:9` and line 36.
 - **Reason:** These pointers were already wrong on `origin/main`, or a branch
   moved them and recorded them here, so a separate branch fixes them, and the
   search rule lives in the shared skills repository.
@@ -106,31 +104,45 @@
       `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 for the
       `complete_bundle` call. That range names `fn cleanup`. The call is at
       line 141.
-    - `worker-bundle-reuse-provenance.md:10`, line 40, line 106, line 213, and
+    - [`worker-bundle-reuse-provenance.md:10`](https://github.com/mokly-ai/mokly/blob/e5acd1a25355139eeaa4559b3fed0ade35afabee/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1#L10), line 40, line 106, line 213, and
       line 216 cite `crates/mokly-sidecar/src/pool_requests.rs` lines that sit
       about six lines below their targets. `take_reused` is at line 80, the
       shared compilation starts at line 81, and the `dispose` arm starts at
       line 121.
-    - `worker-bundle-reuse-provenance.md:72` cites
+    - [`worker-bundle-reuse-provenance.md:72`](https://github.com/mokly-ai/mokly/blob/e5acd1a25355139eeaa4559b3fed0ade35afabee/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1#L72) cites
       `crates/mokly-sidecar/README.md:146` for the runtime-key comparison,
       which is at line 212.
-    - `sidecar-queue-steering-fixtures.md:7`, line 58, line 59, and line 77
-      cite `crates/mokly-sidecar/src/_tests_/recipe_support.rs`.
+    - The [completed queue-steering item](https://github.com/mokly-ai/mokly/blob/904d1a3e93d1d08b289764a67540ba24450a8aac/plans/follow-ups/sidecar-queue-steering-fixtures.md?plain=1#L7),
+      at line 7, line 58, line 59, and line 77, cites
+      `crates/mokly-sidecar/src/_tests_/recipe_support.rs`.
       `Fixture::select` is at line 175, `Fixture::probe` at line 212, and the
       idle setup is not at line 141.
-  - On 2026-11-20, a read-only check on the branch
+  - On 2026-11-20, the round-2 docs work of the branch
+    `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` found two more
+    pointers that were already wrong on `origin/main` at `a2f61eb53`:
+    - `stylesheet-roots-span-parent.md:9` cites
+      `crates/mokly-render/src/bundle.rs:232`, and its line 36 says that
+      `class_maps` calls `stylesheets::roots` at line 232. On `origin/main`
+      and on that branch, line 232 is `fn maps_digest`. The call is at
+      line 249.
+  - On 2026-11-20, a read-only check of the frozen source of the branch
     `calummoore/mokly-folder-export-evidence-7rox` compared each line pointer
     into a source file that the branch changed with the same line at the
-    merge base `a2f61eb53`:
-    - In 13 items that the branch did not edit, 57 pointers now cite a line
-      that holds other text. The **Location** above lists each one. The
-      cause: the branch changed the cited source files.
-    - The behaviour prose of these items stays correct, and each cited
-      source file still exists.
+    merge base `a2f61eb53`. The check ran before the branch merged
+    `origin/main` at `a16a623e6`, and its counts belong to that check only:
+    - In 13 items that the branch did not edit, 57 pointers then cited a line
+      that held other text. The cause: the branch changed the cited source
+      files.
+    - `origin/main` later completed and deleted the
+      [worker reuse provenance item](https://github.com/mokly-ai/mokly/blob/a2f61eb53ddaa76f5ce08b60a30932207f5b6ebc/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1),
+      which held 5 of the 57 pointers, at lines 12, 39, 43, 49, and 102. The
+      **Location** above lists the other 12 items and their 52 pointers.
+    - At that check, the behaviour prose of these items stayed correct, and
+      each cited source file existed.
     - At least one pointer was already wrong at the merge base.
       `jsconfig-resolution-input.md:53` cites `reuse` at
       `packages/mokly/src/sidecar/compiled.ts:106`. `reuse` was at line 111
-      at the merge base and is at line 114 on that branch.
+      at the merge base and at line 114 in the frozen source.
     - The check did not confirm the intended target of the other pointers.
     - The workspace orchestrator chose on 2026-11-20 to record these
       pointers here, so that one later change updates the line references
@@ -194,7 +206,10 @@
   moved seven pointers that were right on `origin/main`, and its round-2
   review found five of them. It re-anchored all seven with a symbol beside
   each, after a diff-based comparison of every pointer into each changed
-  file.
+  file. On 2026-11-20, the branch
+  `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` re-anchored the
+  two pointers of `stylesheet-roots-span-parent.md` that its change moved,
+  from `crates/mokly-render/src/stylesheets.rs:91` to line 92.
 - **Related:**
   - `plans/follow-ups/isolated-git-in-every-test-helper.md`: it holds the
     wrong pointer at line 60. Fix that pointer with option A or B of this
