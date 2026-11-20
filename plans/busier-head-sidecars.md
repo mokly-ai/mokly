@@ -127,15 +127,16 @@ must admit the next view sooner, rather than extend or replace that lease.
 Keep the default pool's claims and growth checks unchanged.
 
 Keep at most one stage bound of views in each current pass window and one
-shared bound of owning completion chains across replacement passes. Cancelled
-views that never hand off retain the original server worker and claim bounds.
+shared bound of prepared-root completion chains across replacement passes.
+Unprepared views use the ordinary document path and retain their original worker.
+Cancelled views keep those same original worker and claim bounds.
 Read capacity before admission. A lower capacity stops new work without
 cancelling work already admitted. Preserve catalogue start order and ordered
 warning and failure delivery. Publish usage only after every document ends.
 
 Only a successful root fragment of the owning head view can yield its place.
 The root has no HTML template and has built no partial tree. Template views
-keep their document place and take a completion place before composition.
+keep their document place and worker through the ordinary render-worker path.
 Nested link-validation renders cannot signal for their caller. Foreground
 and base calls retain their rules. A view signals once. Later fragment calls
 use the existing gate. Failed root calls follow the original failure path.
@@ -196,6 +197,10 @@ The classify stage of each edit must be within 20 ms of main. Session CPU must n
 Memory stays within 2% on basic, large HTML, and large React. The existing usage-pass gain target remains.
 The orchestrator allows completion bytes outside retained-cache capacity, or another bound that preserves head cache contents.
 The 256 MiB retained-render cache total must not increase. No allocator option may change.
+
+The dated acceptance records below control these initial criteria. The
+orchestrator accepted basic's disclosed memory exception and the exact merged
+Cloud result. Decision 5 replaces the remaining local measurement scope.
 
 ### 3. Keep completion on existing allocating threads
 
@@ -268,6 +273,10 @@ The full options check is `.context/busier-sidecars/performance-fix-options-chec
 The performance orchestrator approved the combined design on 2026-11-20.
 The revised acceptance supersedes the earlier first-Changes target in this plan.
 
+The merged Cloud result meets the revised startup target with option 4 B.
+The trigger for option 4 E is closed. Actual charge telemetry is not needed
+to choose E, and decision 5 cancels that local probe.
+
 The performance orchestrator accepted `3b59e2d1a` on Mokly Cloud on 2026-11-20.
 First Changes improved by 0.59 s. Capture returned to main's cost.
 The orchestrator accepted edit 1's 28 ms classification difference as noise.
@@ -303,8 +312,8 @@ Custom composers default to no preparation.
 
 All completion-place waits happen on the admitted job before render-pool
 dispatch, outside fragment flights, anchor flights, and cache locks. Native
-templates, Markdown, cached documents, and ineligible views use the existing
-render worker. Eligible root acquisition remains on the admitted job. Full
+templates, Markdown, cached documents, and ineligible views use the ordinary
+render-worker document path without a completion place under decision 7 D. Eligible root acquisition remains on the admitted job. Full
 composition, serialization, closure checks, nested validation, and insertion
 run on the existing render worker. Nested validation takes no second place.
 
@@ -321,7 +330,137 @@ cache lease and its altered retained-capacity arithmetic is removed, so
 cache insertion, compaction, lookup, and bounds match main. The initial
 internal cap is 4 MiB for one Serve. This is a small bounded part of the
 measured memory allowance. No setting is added. Measure actual charges and
-refusals before accepting it.
+refusals only if the performance orchestrator requests that probe again.
+Decision 5 cancels it and retains the charge, refusal, and cleanup tests.
+
+### 5. Reduce merged local validation
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** The remaining measurement TODOs in this plan.
+- **Terms:** A cold primer uses an empty application cache. A warm observation uses its own arm's primer cache in a new process.
+- **Background:** The performance orchestrator accepted six interleaved Cloud rounds on merged `2772eca02` against main `6995b84b7`. Earlier evidence remains available.
+- **Problem:** The remaining plan asks for another full matrix, local ten-edit sessions, and actual transient-charge telemetry. The orchestrator reduced this scope explicitly.
+- **Impact if no action:** Stale required TODOs delay the pull request and conflict with the chosen scope.
+- **Root question:** What must the merged tree and plan show before the pull request, with evidence or a dated cancellation for each requirement?
+- **Options:**
+  - **A.** Keep the earlier full matrix, edit sessions, and telemetry. This conflicts with the explicit reduction. Effort: Medium.
+  - **B.** Keep the complete gate, strict static byte equality on basic, large HTML, and large React, and one warm smoke pair per fixture. Use separate cold primers and preserve earlier records. Cancel additional matrix, edit-session, and charge-probe work. Effort: Medium.
+  - **C.** Apply B and compare the saved Serve artifacts from the same twelve starts. Declare the identity fields before comparison. Preserve every other value and array order. This checks the changed Serve path without another workload. Effort: Small in addition to B.
+  - **D.** Apply B and add a follow-up item for the cancelled measurements. This adds tracked work that the orchestrator did not request. Effort: Small in addition to B.
+- **Left out:** No local check and smoke without equality omit explicit requirements. More large-HTML rounds conflict with the chosen reduction. Static-build caches cannot replace warm Serve primers. A reduction recorded only in the pull request leaves this live plan stale.
+- **Shared assumptions:** Exact output and the three fixtures remain requirements from Cal's task. Earlier records and the six-pair PID limit remain requirements from the orchestrator. Static equality alone does not exercise Serve overlap, so C drops that assumption. B relies on the explicit reduced scope, with its evidence limits disclosed below. D drops the assumption that the pull request alone records cancelled work.
+- **Wider fix:** None. C closes this proof's direct coverage gap. The plans skill already requires live TODOs to match a scope change.
+- **Previous examples:** The exact-SHA Cloud acceptance and the explicit basic-memory exception in this plan.
+- **Recommendation:** C. The fresh options check changes the draft recommendation B. C adds the real-fixture Serve comparison without adding starts or builds.
+- **Action:** fix now, apply C. The performance orchestrator chose B on 2026-11-20. The workspace orchestrator adds C's saved-artifact comparison under the existing equality requirement. No user decision is pending.
+
+The check is `.context/busier-sidecars/validation-reduction-options-check.md`.
+Warm results have one observation per arm and fixture. They are smoke evidence
+and support no statistical acceptance claim. Separate cold primers make
+twelve starts in total. Static equality makes six strict builds.
+
+The earlier basic matrix has six cold and warm rounds, with 24 starts.
+Large HTML and React have one earlier cold diagnostic pair each. No local
+ten-edit session or actual charge probe ran. The earlier HTML pair showed
+first Changes 332.5 ms later, background CPU 1.05 s higher, and startup CPU
+0.90 s higher. Keep these limits beside the new smoke results.
+The reduced scope removes a local multi-round HTML timing verdict.
+
+The merge preserves all step-4 lines. It adds main's own lines in the graph
+module roots and types, and combines graph README text. The orchestrator's
+exact-merged-SHA Cloud result controls acceptance after this integration.
+It includes the disclosed single ten-edit peak increase of 3.06%.
+Complete-gate evidence and the stopped local duplicate run are recorded in
+`.context/busier-sidecars/integration-main-final/gate-evidence.md`.
+
+### 6. Confirm the repeated HTML slowdown
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** The HTML-only warm follow-up and the measurement TODOs in `plans/busier-head-sidecars.md`.
+- **Terms:** A pair compares one main observation with one step-4 observation. A primer precedes its arm's warm observation and is excluded from the statistics. Large HTML leaves the application cache empty.
+- **Background:** The pre-merge HTML pair had first Changes 333 ms later. The merged warm pair had first Changes 364 ms later and pass CPU 0.93 s higher. HTML has no sidecar renders. On 2026-11-20 the performance orchestrator requested three more interleaved warm HTML pairs, with excluded primers.
+- **Problem:** The earlier reduction no longer closes HTML timing. The added pairs need a declared action population before execution.
+- **Impact if no action:** The pull request can hide a repeated HTML cost or choose its sample after the result.
+- **Root question:** Which measured warm observations control the extra HTML check?
+- **Options:**
+  - **A.** Use only the three new pairs for the 200 ms action criterion. Report the original same-arm pair separately. Effort: Small.
+  - **B.** Use all four warm pairs on the frozen source arms for the action criterion. Report the new-three median separately. Pair orders BA, AB, BA balance the existing AB pair. Use two excluded primers and six new warm starts. Effort: Small.
+  - **C.** Require both the new-three median and the combined-four median to stay at or below 200 ms. Report both. This has the same action as B for every possible result, because the retained pair exceeds +200 ms. Effort: Small.
+- **Left out:** Mixing the pre-merge pair into the action sample combines different source arms. A full matrix exceeds the new three-pair instruction. An unbalanced four-pair order gives no benefit over B's balance. Discarding the unfavorable original observation breaks the explicit evidence-retention call.
+- **Shared assumptions:** The frozen arms are step `2772eca02` and main `6995b84b7`. The fixture, pinned tools, separate arm caches, and observation method remain unchanged. These follow the orchestrator's extra check. Only the controlling population was implicit. B drops A's smaller-population assumption without adding starts.
+- **Wider fix:** None. This is a one-time experiment. The immutable descriptor and recorded before-execution order already prevent source and sample drift.
+- **Previous examples:** Decision 5's reduced scope, and the existing same-arm merged warm pair.
+- **Recommendation:** B. Three more pairs extend the existing valid sample. All four remain visible and balanced. This is the workspace orchestrator's call of 2026-11-20.
+- **Action:** fix now, apply B. Keep the new-three and combined-four results separate. No automatic source or PR action runs in the driver. Root applies the user's criterion after reading the results.
+
+The performance orchestrator's conditional instruction remains authoritative:
+
+- At or below +200 ms paired median for first Changes, record the result and open the PR after remaining checks.
+- Above +200 ms, attribute the overhead first. If a Small change keeps main's path for ineligible kinds, implement it by delegation and send the SHA.
+- Otherwise send the attribution. Do not open the PR in the slower branch. Send the fix SHA or attribution to the performance orchestrator for its next call.
+
+The sampling population and order were frozen before execution. Root granted eight starts, which all completed. The combined-four median was above the threshold, so attribution is required. The performance orchestrator approved the empty-completion short-circuit conditionally on actual capacity-query counters. No source fix has been implemented.
+
+The read-only options check kept B. The primer order was main, then step.
+Step followed its own arm twice in the new warm sequence, while main did once.
+The size and sign of this carry-over effect are unknown. Do not add runs to
+repair this finished sample. Preserve the new-three and combined-four results.
+
+### 7. Remove a redundant completion capacity query
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `crates/mokly-graph/src/background_render.rs` and `crates/mokly-server/src/background_stage.rs`.
+- **Terms:** A completion place bounds a prepared-root document's core work. Its capacity is the smaller of the current memory-permitted sidecar count and worker count, with a minimum of one.
+- **Background:** Four balanced HTML pairs show a real regression. HTML renders no sidecar fragment. Every document still enters completion and adds a current-capacity query. The timed probe attributes most added CPU to those queries.
+- **Problem:** The empty-entry shortcut removes only about 22% of the added queries. Nonzero entries still need fresh capacity under #330. The unprepared path has no sidecar payload that needs an early handoff.
+- **Impact if no action:** The branch fails the HTML first-Changes criterion despite its accepted Cloud gain.
+- **Root question:** How can first Changes on HTML return within 200 ms of main, while output stays exact and every background document keeps a bounded owner?
+- **Options:**
+  - **A.** Skip the capacity query at zero active places. Keep every count and byte owner and update the protocol. This was conditionally approved before counters existed. It removes only the measured empty-entry share and cannot recover most query cost. Effort: Small.
+  - **B.** Expose a fresh guaranteed reservation floor from the pool. This avoids host reads when the floor settles admission. An HTML pool without claims or reservations still has a floor of one, so it gives A's result here. Effort: Medium.
+  - **C.** Reduce the cost of fresh host and cgroup reads in the shared memory provider. This reaches all default pool users and needs platform profiling. It keeps the unnecessary HTML completion boundary. Effort: Medium.
+  - **D.** Keep unprepared, cached, and native documents on the ordinary document path with their original worker. Only prepared-root completion enters Stages, including refused-charge fallback. Keep fresh capacity checks, one shared count, and the 4 MiB handoff budget. Remove graph completion entry from its trait and custom default. Keep entry private to Stage for prepared fallback. Record the W plus C envelope in the protocol. Validate mixed/replacement ownership. Effort: Small.
+  - **E.** Choose static eligibility before the view job through new composer, generation, and document methods. Ineligible views then bypass Stage allocation and preparation too. This removes unmeasured per-view work but widens API and dispatch changes. Use only if D fails the four-pair criterion. Effort: Medium.
+- **Left out:** A cached nonzero capacity or TTL breaks #330's current-growth rule. Keeping all completion places but bypassing preparation retains the measured calls. Raising a bound, adding a thread, or dropping memory admission breaks the task. No change fails the measured criterion.
+- **Shared assumptions:** Exact output, foreground priority, root order, #330, render pool, cache bounds, and shared handoff accounting remain task requirements. A through C preserve the branch's background-only completion bound. D drops that branch-added assumption under the performance orchestrator's explicit approval of 2026-11-20. The absolute Serve owner envelope remains worker-retaining jobs plus admitted handoffs, already permitted for foreground jobs plus handoffs.
+- **Wider fix:** D. Admission follows the ownership that creates extra in-flight state instead of applying to every document kind.
+- **Previous examples:** Decision 3's original-pool diagnostic removed the pure-HTML allocator increase. The accepted design already permits foreground worker-retaining jobs alongside background handoffs.
+- **Recommendation:** D replaces provisional A after timed attribution and the counter condition failed. D removes all extra native completion queries while keeping prepared-root admission unchanged.
+- **Action:** fix now, apply D. This is the performance orchestrator's approved call of 2026-11-20. Its message explicitly authorizes the changed branch-added contract. The fresh check kept D and added E as a fallback.
+
+The original options check kept A only if empty entries dominated. They did not.
+The timed diagnostic and ownership assessment are under
+`.context/busier-sidecars/html-capacity-probe/timing/`.
+The probe's clock and instrumentation overhead limits remain in its report.
+The check of D must assess ordinary document trace nesting, original worker
+retention across replacement and cancellation, and the shared handoff budget.
+The check is `.context/busier-sidecars/html-structural-options-check.md`.
+It kept D, added E, and confirmed the narrow graph-private worker shape.
+Do not change the capacity provider or combine A with D without another call.
+
+Only prepared-root completion waits for a Stage place. A refused charge keeps
+its original worker and still enters that bound. Unprepared documents use the
+existing `RenderWorkers::document` path with a graph-private ordinary worker.
+Do not pass Session as that worker: its raw span would nest a second document span.
+The native worker has no prepared-root mutex. It shares the raw/finish pipeline
+with the prepared worker and performs one counted cache read.
+They repeat no fragment and start no thread. Nested validation stays inline.
+All started blocking jobs remain drainable after their async callers disappear.
+At constant capacity, total owners stay within W worker-retaining calls plus
+C admitted handoffs. This absolute ceiling already exists with foreground calls.
+The background-only peak can change. The requested measurements must validate it.
+
+After the fix, run four balanced warm HTML pairs with excluded primers and
+one React proxy pair. Preserve all observations. Require the HTML paired median
+first Changes to stay within +200 ms of main. Send the pushed fix SHA and dist
+source commit for the performance orchestrator's brief confirming Cloud check.
+Do not open the pull request before that result.
 
 ## Milestone 1: Documentation and contracts
 
@@ -374,8 +513,8 @@ Depends on: 2 and 3
 - [x] Release dispatch ownership only after claim release and safe payload admission.
 - [x] Check nested link renders, template eligibility, lock-free waits, and the unchanged single-attempt failure path.
 - [x] Run background documents on their admitted blocking job without the graph-pool bottleneck.
-- [ ] Attribute the early diagnostic memory variation and confirm the acceptance bound.
-- [ ] Run an early cgroup anon-plus-swap diagnostic of both parser cuts and the bypass before accepting them or running the full matrix.
+- [x] Attribute the early memory variation. Record the orchestrator's explicit basic exception, exact retained gauges, and the limits of the GC explanation.
+- [x] Preserve the early cgroup diagnostics for both parser cuts and thread placement, including the unfavorable HTML and basic pairs.
 - [x] Keep the existing Serve and pool tests unchanged. Repeat new asynchronous tests ten times.
 - [x] Remove pending documentation status lines after the implementation matches.
 
@@ -397,7 +536,7 @@ Depends on: 2 and 3
 - [x] Replace retained-cache leases with a shared 4 MiB transient owner in Stages. Restore main's cache path.
 - [x] Add red-first regressions for the changed preparation, worker placement, cache retention, charge refusal, and cleanup behavior.
 - [x] Preserve every existing Serve and pool test. Repeat new asynchronous tests ten times.
-- [ ] Measure actual charge sizes/refusals, cache counts at startup and per edit, and the corrected whole-tree memory on all fixtures.
+- [x] Record startup and per-edit cache evidence and corrected whole-tree memory. Preserve the explicit basic exception. Cancel actual charge telemetry under decision 5.
 - [x] Obtain the revised canonical acceptance before the pull request.
 
 Evidence: `.context/busier-sidecars/cloud-0b229-result.md`,
@@ -410,10 +549,10 @@ Implementation and proof: `acceptance-fix/report.md`.
 Depends on: 4
 
 - [x] Build release main and branch in separate checkouts and target directories.
-- [ ] Run six interleaved cold and warm rounds on the basic, large HTML, and large React catalogues.
-- [ ] Report pass time, first Changes, Serve CPU per second, host CPU, and cgroup anon plus swap for both arms.
-- [ ] Check foreground response times and ten-edit sessions for speed and peak memory.
-- [ ] Prove equal documents, usage, resources, warnings, diagnostics, and result order once.
+- [x] Run one interleaved warm smoke pair per fixture on the merged tree, with separate cold primers. Preserve all earlier evidence under decision 5.
+- [x] Report the smoke's pass, first Changes, CPU, and whole-tree memory. Keep canonical per-second CPU evidence and disclose the single-pair limits.
+- [x] Report foreground response smoke data and the canonical ten-edit results. Cancel new local ten-edit sessions under decision 5.
+- [x] Prove strict static byte equality on all three fixtures. Compare saved Serve artifacts and ordered terminal diagnostics, with every coverage limit declared.
 - [x] Run targeted tests, the repository suite, and the complete gate with the required tools and locked Cargo graph.
 - [x] Run the strict example build and a live smoke. Save a browser screenshot under `.context/`.
 - [x] Commit and push the implementation. Send its SHA and dist source commit immediately for cloud measurement.
@@ -425,12 +564,38 @@ Its exact reruns passed. Standalone Native, Viewer, Browser, and delivery
 coverage passed. No complete-gate pass is claimed. The implementation push
 allows independent cloud measurement while local acceptance remains open.
 
+## Milestone 5a: HTML regression check and attribution
+
+Depends on: 5
+
+The performance orchestrator added this work on 2026-11-20 after two HTML pairs
+showed slower first Changes. This dated addition supersedes decision 5's limit
+only for the requested HTML follow-up and its conditional correction.
+
+- [x] Run three more interleaved warm HTML pairs with excluded primers. Preserve the original same-arm pair and both median populations.
+- [x] Apply the frozen four-pair criterion. Record the exceeded threshold and send all pairs to the performance orchestrator.
+- [x] Attribute the cost with actual completion/query counters, wall intervals, and thread CPU in an isolated temporary probe. Preserve frozen arms and all diagnostic limits.
+- [x] Assess the empty-completion shortcut. Record its failed counter condition and the approved structural route. Keep fresh #330 checks for prepared roots.
+- [x] Run the fresh options check for decision 7 D. Keep D, add E, and incorporate its contract, API, and trace corrections.
+- [ ] Commit and push the updated plan before code.
+- [ ] Update the protocol and affected READMEs by delegation. Record the approved W plus C envelope, original worker retention, and prepared-only completion bound.
+- [ ] Implement decision 7 D by delegation. Prove native bypass red first. Prove the single document span and mixed/replacement ownership with deliberate mutations. Preserve existing Serve, pool, shrink, and owner assertions. Repeat changed asynchronous tests ten times.
+- [ ] Repeat four balanced warm HTML pairs on the fix, with excluded primers. Run one React warm pair with excluded primers and preserve every row.
+- [ ] Run targeted tests, the Repository suite, complete-gate evidence, and a fresh implementation review on the corrected source.
+- [ ] Push the correction and send its implementation SHA and dist source commit. Obtain the performance orchestrator's confirming Cloud result before the pull request.
+
+Evidence: `.context/busier-sidecars/measurements/merged-preflight/html-warm-followup-result.md`.
+The completed reduction still omits a full merged matrix, local ten-edit
+sessions, additional PID pairs, and the charge probe. The HTML addition is
+not permission for any other workload. A source correction gets its own dated
+call before implementation. The slower branch does not authorize the PR.
+
 ## Milestone 6: Commit, review, and pull request
 
 Depends on: 5
 
 - [x] Commit with Conventional Commits and push. Send the implementation SHA and dist source commit immediately.
-- [ ] After the performance orchestrator reports on the fixed SHA, merge `origin/main` once. Step 2 and PRs #352, #356, and #363 are now on main. Check overlap with #363's idle-process ranking and run the complete gate on the combined tree with Rust 1.98.1. The pull request targets main.
-- [ ] Review the complete diff with `implementation-review` after the push. Use `origin/main`, or the named stack base. Apply finding checks and both fix rounds. Record follow-ups for the rest.
+- [x] After the accepted fixed SHA, merge main once. Preserve incoming content and check #363 affinity with #351 warm-up and overlap. Run their tests and obtain complete gate evidence with Rust 1.98.1. The pull request targets main.
+- [x] Review the complete pushed diff against main with `implementation-review`. Apply finding checks and the test-only fix. Re-review the merged tree. No finding remains open or deferred.
 - [ ] Delete this plan under the `plans` deletion rules.
 - [ ] Open the pull request against the selected stack base. Keep dated decisions and a plan permalink in its description. Wait for final CI with the shared `finish-work` script. Fix branch failures and rerun unrelated failures once. Send the final report to the performance orchestrator. Do not merge.
