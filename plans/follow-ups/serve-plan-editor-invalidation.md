@@ -169,8 +169,12 @@
      plan, oracle, bound, invalidation, warm-start, and bundle cache test.
   6. Keep these requirements: equal output, recorded inputs, and errors
      against the native-first path. Keep both 8 MiB bounds, no capture or
-     storage on edits, one esbuild call with a current plan, and the disk
-     rules of `docs/protocol/mokly-base-cache.md`.
+     storage on edits, and the disk rules of
+     `docs/protocol/mokly-base-cache.md`. Keep the attempt rule of an edit
+     with a current plan: no native attempt, one esbuild call when its
+     guarded result stands, and never more than two, as the
+     [guarded attempt rules](../../docs/protocol/mokly-sidecar-plans.md#guarded-attempts)
+     say.
   7. Update `docs/protocol/mokly-sidecar-plans.md`,
      `docs/protocol/mokly-sidecar-recipes.md`, and the area READMEs when a
      rule or an entry point changes.

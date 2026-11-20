@@ -276,7 +276,6 @@ async function bundleAttempt(
         preview,
         runtimeKey,
         evidence,
-        capture: capture.mode,
         editImports,
         plan: capture.plan,
       },

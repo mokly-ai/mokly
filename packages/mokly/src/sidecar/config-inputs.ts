@@ -19,6 +19,7 @@ function configPath(value: string, directory: string): string {
 
 /** Capture nearest configurations and every supported extends target before resolution. */
 export class ConfigInputs {
+  readable = true;
   private readonly scopes = new Map<string, PathSettings>();
   private readonly configs = new Map<string, PathSettings>();
   private readonly manifests = new Set<string>();
@@ -27,6 +28,7 @@ export class ConfigInputs {
   constructor(
     private readonly inputs: PhysicalInputs,
     private readonly paths: ModulePaths,
+    private readonly strict = true,
   ) {}
 
   scope(directory: string): PathSettings {
@@ -36,7 +38,8 @@ export class ConfigInputs {
       try {
         result = this.configuration(directory);
       } catch {
-        this.inputs.complete = false;
+        this.readable = false;
+        if (this.strict) this.inputs.complete = false;
         result = {};
       }
       this.scopes.set(directory, result);
