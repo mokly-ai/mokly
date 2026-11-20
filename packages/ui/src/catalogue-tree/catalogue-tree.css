@@ -203,6 +203,13 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   right: -18px;
 }
 
+/* The extended background must not take a hit behind a picture. Its fill
+   still spans the leaf, including the selected chevron. */
+.mbk-nav-leaf:has(> .mbk-nav-variants-toggle.mbk-picture)
+  > .mbk-nav-row::before {
+  pointer-events: none;
+}
+
 .mbk-nav-variants-toggle {
   position: relative;
   display: inline-flex;

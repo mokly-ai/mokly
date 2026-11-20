@@ -84,4 +84,65 @@ test("a depicted tree row keeps its resting fill and default cursor during hover
   await expect(picture).toBeHidden();
   await screens.click();
   await expect(picture).toBeVisible();
+
+  const profile = navigation.getByRole("link", {
+    name: "Profile",
+    exact: true,
+  });
+  const chevron = navigation.getByRole("img", {
+    name: "Show contents of Profile",
+    exact: true,
+  });
+  await expect(profile).toBeVisible();
+  await expect(chevron).toBeVisible();
+  await chevron.scrollIntoViewIfNeeded();
+  const chevronBox = await chevron.boundingBox();
+  if (!chevronBox) throw new Error("The Profile chevron has no visible bounds");
+  const chevronPoint = {
+    x: chevronBox.x + chevronBox.width / 2,
+    y: chevronBox.y + chevronBox.height / 2,
+  };
+  await page.mouse.move(chevronPoint.x, chevronPoint.y);
+  await expect.poll(() => rowFill(profile)).toBe(NO_FILL);
+  await expect(chevron).toHaveCSS("cursor", "default");
+  await expect
+    .poll(() =>
+      chevron.evaluate((node, position) => {
+        const target = node.ownerDocument.elementFromPoint(
+          position.x,
+          position.y,
+        );
+        return {
+          cursor: target === null ? null : getComputedStyle(target).cursor,
+          link: target?.closest("a")?.getAttribute("href") ?? null,
+        };
+      }, chevronPoint),
+    )
+    .toEqual({
+      cursor: expect.stringMatching(/^(auto|default)$/u),
+      link: null,
+    });
+  await page.mouse.down();
+  try {
+    await expect.poll(() => rowFill(profile)).toBe(NO_FILL);
+    await expect.poll(() => rowFill(selected)).toBe(SELECTED_FILL);
+  } finally {
+    await page.mouse.up();
+  }
+  await expect(page).toHaveURL(url.href);
+  await expect(selected).toHaveAttribute("aria-current", "page");
+
+  await profile.hover();
+  await expect(profile).toHaveCSS("cursor", "pointer");
+  await expect.poll(() => rowFill(profile)).toBe("rgba(79, 120, 100, 0.1)");
+  await profile.click();
+  await expect(page).toHaveURL(
+    designFileUrl(
+      path.join(
+        repositoryRoot,
+        "examples/basic/mokly-generated",
+        "design/browse/index-entries/screen/index.desktop.html",
+      ),
+    ).href,
+  );
 });
