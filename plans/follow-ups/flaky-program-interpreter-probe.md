@@ -66,8 +66,18 @@
   - The machine is `box-node-e93efe54ff5665a6`, with Linux 6.8.0-117-generic, four CPUs, and Rust 1.98.1.
   - The test profile includes debug information. `RUST_TEST_THREADS` is unset.
   - The archived unchanged `program_tests` binary passed all 1,000 whole-binary runs with default parallel threads and no concurrent workspace test run.
-  - This batch had zero interpreter failures and zero hangs. The source is still unknown.
-  - Isolated parent repetitions and traced repetitions under concurrent workspace test execution are pending.
+  - This batch had zero interpreter failures and zero hangs. The isolated parent also passed all 1,000 unchanged runs.
+  - A traced whole-binary batch under concurrent `cargo test --locked --workspace` compilation had 675 passes and one interpreter failure in 676 attempts.
+  - The failed call was `execve("/tmp/.tmpmOjf1y/npm", ["/tmp/.tmpmOjf1y/npm", "--version"], ...) = -1 ETXTBSY`, errno 26.
+  - The interpreter child reported `Err(CommandUnavailable)` at its spawn unwrap.
+  - The parent opened that `npm` with `O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC` as descriptor 13.
+  - A sibling `mkfifo` child started while that writer was open and inherited its descriptor.
+  - That sibling retained the writer across failed PATH lookups. Its first successful exec happened after the interpreter failure.
+  - The parent had already closed its own writer before starting the interpreter child. The inherited sibling writer caused the failure.
+  - A further 1,000 unchanged whole-binary runs under verified live workspace load had 997 passes, one interpreter failure, and two cancellation hangs.
+  - Moving the trusted fixture writes into the isolated interpreter child kept every assertion and passed all 1,000 isolated parent repetitions.
+  - The fixed whole binary had 999 passes and one cancellation hang without workspace load. The interpreter parent passed in that hung run.
+  - The remaining after-change loaded repetitions and repository checks are pending.
 - **Problem:** The trusted interpreter child failed twice under parallel process activity. Each unchanged binary passed its isolated rerun. Its failure output does not show the child's panic or an OS error.
 - **Impact if no action:** The required Rust suite can fail on unchanged code, and the failure does not identify its cause.
 - **Root question:** How does the interpreter probe select and run trusted Node reliably on every test run?
@@ -80,10 +90,10 @@
   - A retry, sleep, repeat in the test, skip, quarantine, or longer time limit hides the defect.
   - One test thread for the binary changes runner configuration without identifying the source.
   - Applying the environment-token fixture fix to this test now guesses that the two failures have the same cause.
-- **Wider fix:** None yet. The source is unknown. B gives better detection output for later failures.
+- **Wider fix:** D isolates the trusted fixture writers inside the selected child. Sibling test processes cannot inherit those writers.
 - **Previous examples:** The environment-token probe in this file failed with `CommandUnavailable`. A trace named `ETXTBSY` from a sibling process that inherited its writable fixture.
-- **Related:** [flaky-program-cancellation-fixture.md](./flaky-program-cancellation-fixture.md) records a confirmed writer-inheritance race in the same file. This interpreter failure has no trace that proves the same cause.
-- **Recommendation:** A. Trace the failure before selecting a fix, as the testing rules require.
-- **Action:** fix after merge, apply A, because this separate unchanged test needs its own investigation. If A cannot reproduce the failure or name its source, ask the user before changing code.
+- **Related:** [flaky-program-cancellation-fixture.md](./flaky-program-cancellation-fixture.md) records a writer-inheritance race in the same file. The interpreter trace now confirms the same source for its separate fixtures.
+- **Recommendation:** D. The trace names the inherited writer, so isolated fixture creation removes the confirmed source.
+- **Action:** fix now, apply D. The user authorized D on 2026-11-20 when a trace names the source. The trace confirms an inherited writable fixture descriptor.
 
 Assumptions: Keep both child assertions, the parent status assertion, and real process execution. The current test and testing rules supply these requirements.
