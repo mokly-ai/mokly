@@ -8,7 +8,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
-use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::ComparisonRead;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -42,6 +42,15 @@ impl GeneratedResources for RecordingGeneration<'_> {
     }
 }
 impl RenderGeneration for RecordingGeneration<'_> {
+    fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
+        let evidence = self.inner.retained_document_evidence(route)?;
+        self.recorder
+            .record(self.inner, self.side, ComparisonRead::Document, route);
+        self.recorder
+            .record(self.inner, self.side, ComparisonRead::Closure, route);
+        Some(evidence)
+    }
+
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         let document = self.inner.comparison_document(route)?;
         self.recorder
