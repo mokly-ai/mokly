@@ -89,59 +89,66 @@ Depends on: none
 
 State the new release process and the updater rules.
 
-- [ ] `docs/protocol/cloud/desktop-distribution.md`: the release pull request,
+- [x] `docs/protocol/cloud/desktop-distribution.md`: the release pull request,
       the tag check, the environment, the update flag, the move dialog, the
       manual check answers, and the offer after macOS accepts the download.
-- [ ] `docs/protocol/npm-release-management.md`: separate release pull
+- [x] `docs/protocol/npm-release-management.md`: separate release pull
       requests, and the desktop component beside the npm component.
-- [ ] `docs/ops/secrets.md`: the six secrets live in `desktop-release`, with
+- [x] `docs/ops/secrets.md`: the six secrets live in `desktop-release`, with
       the setup commands.
-- [ ] `docs/ops/repository-cutover.md`: replace the "next `desktop-v*` tag"
+- [x] `docs/ops/repository-cutover.md`: replace the "next `desktop-v*` tag"
       check with the first desktop release pull request.
-- [ ] `packages/desktop/README.md`: the release steps and the updater.
+- [x] `packages/desktop/README.md`: the release steps and the updater.
 
 ## Milestone 2: Release Please
 
 Depends on: 1
 
-- [ ] `release-please-config.json`: `separate-pull-requests: true`, and the
+- [x] `release-please-config.json`: `separate-pull-requests: true`, and the
       `packages` component with `component: desktop`, `prerelease: true`,
       `initial-version: 0.1.0`, `bump-minor-pre-major`, its changelog in
       `packages/desktop/CHANGELOG.md`, `extra-files` for the version in
       `packages/desktop/package.json` and `package-lock.json`, and
       `exclude-paths` for `packages/mokly` and `packages/native-*`.
-- [ ] `.release-please-manifest.json`: `"packages": "0.0.0"`.
-- [ ] Run a Release Please dry run against this branch. Check the desktop
-      pull request, its version `0.1.0`, its tag `desktop-v0.1.0`, and the
-      unchanged npm pull request. Save the output under `.context/`.
+- [x] `.release-please-manifest.json`: `"packages": "0.0.0"`.
+- [x] Run the pinned Release Please against the local configuration with
+      `scripts/release/version_updates.mjs`. A bundle change gives the desktop
+      version `0.1.0`. An npm CLI or native change gives no desktop release.
+      `tests/release_config.test.ts` keeps this check.
+- [ ] Run a Release Please dry run against this branch on GitHub. Check the
+      desktop pull request title and the tag `desktop-v0.1.0`. Save the output
+      under `.context/`.
+- [x] `scripts/verification/ratchets/public-exports.mjs`: skip a component
+      that releases a private workspace, such as the desktop shell.
 
 ## Milestone 3: Release workflow
 
 Depends on: 2
 
-- [ ] `desktop-release.yml`: replace the tag trigger with `workflow_call`
+- [x] `desktop-release.yml`: replace the tag trigger with `workflow_call`
       inputs for the tag and the commit. The release job uses the
       `desktop-release` environment, checks out the commit, and builds with
       the update flag on.
-- [ ] `release.yml`: expose the desktop outputs of Release Please. Add a tag
+- [x] `release.yml`: expose the desktop outputs of Release Please. Add a tag
       check job and a job that calls `desktop-release.yml`.
-- [ ] `release-environment.py`: keep the check that the tag equals
+- [x] `release-environment.py`: keep the check that the tag equals
       `desktop-v` plus the package version.
-- [ ] Update the workflow tests under `tests/` that read these files.
+- [x] Update the workflow tests under `tests/` that read these files, and add
+      `tests/desktop_release_workflow.test.ts`.
 
 ## Milestone 4: Mac updater
 
 Depends on: 1
 
-- [ ] `scripts/build.mjs` and `src/config.ts`: carry the update flag. Only
+- [x] `scripts/build.mjs` and `src/config.ts`: carry the update flag. Only
       `MKC_DESKTOP_UPDATES=enabled` turns it on.
-- [ ] `src/updates.ts`: the updater is off unless the app is packaged and the
+- [x] `src/updates.ts`: the updater is off unless the app is packaged and the
       flag is on. On macOS, offer Restart now only after the native updater
       accepts the download. Answer each manual check with a dialog.
-- [ ] `src/menu.ts`: disable Check for updates when the updater is off.
-- [ ] A new module offers to move a copy in a read-only place into
+- [x] `src/menu.ts`: disable Check for updates when the updater is off.
+- [x] A new module offers to move a copy in a read-only place into
       Applications, once per version.
-- [ ] Logic tests for each case, with Electron doubles.
+- [x] Logic tests for each case, with Electron doubles.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

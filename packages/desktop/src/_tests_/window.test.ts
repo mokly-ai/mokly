@@ -7,6 +7,7 @@ import type {
   BrowserWindowConstructorOptions,
   Menu,
   MenuItem,
+  MenuItemConstructorOptions,
 } from "electron";
 
 import { installLifecycle, singleInstance } from "../lifecycle.js";
@@ -138,28 +139,37 @@ test("single instance rejects a second process and delivers OS events to the run
 });
 
 test("the default menu gains Check for updates in Help", () => {
-  let action: (() => void) | undefined;
-  let checks = 0;
-  const item = {} as MenuItem;
-  const submenu = {
-    append: (input: MenuItem) => {
-      assert.equal(input, item);
-    },
-  };
-  const menu = { items: [{ role: "help", submenu }] } as unknown as Menu;
-  installMenu(
-    {
-      current: () => menu,
-      item: (options) => {
-        assert.equal(options.label, "Check for updates");
-        action = options.click as () => void;
-        return item;
+  const install = (available: boolean) => {
+    let options: MenuItemConstructorOptions | undefined;
+    let checks = 0;
+    const item = {} as MenuItem;
+    const submenu = {
+      append: (input: MenuItem) => {
+        assert.equal(input, item);
       },
-    },
-    () => {
-      checks++;
-    },
-  );
-  action!();
-  assert.equal(checks, 1);
+    };
+    const menu = { items: [{ role: "help", submenu }] } as unknown as Menu;
+    installMenu(
+      {
+        current: () => menu,
+        item: (input) => {
+          options = input;
+          return item;
+        },
+      },
+      {
+        available,
+        check: () => {
+          checks++;
+        },
+      },
+    );
+    (options!.click as () => void)();
+    return { options: options!, checks };
+  };
+  const on = install(true);
+  assert.equal(on.options.label, "Check for updates");
+  assert.equal(on.options.enabled, true);
+  assert.equal(on.checks, 1);
+  assert.equal(install(false).options.enabled, false);
 });

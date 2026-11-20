@@ -5,19 +5,35 @@ import path from "node:path";
 import { Manifest, setLogger } from "release-please";
 
 const MANIFEST = ".release-please-manifest.json";
+const CONFIG = "release-please-config.json";
 
 /**
  * Compute the updates of one breaking release from `root`. A `fixedManifest`
  * replaces the release manifest everywhere Release Please reads it, including
- * the previous release tags derived from it.
+ * the previous release tags derived from it. `paths` keeps only those release
+ * components, so a test can follow one product.
  */
-export async function releaseUpdates(root, changedFiles, fixedManifest) {
-  const read = async (file) =>
+export async function releaseUpdates(root, changedFiles, fixedManifest, paths) {
+  const only = (entries) =>
+    paths
+      ? Object.fromEntries(
+          Object.entries(entries).filter(([key]) => paths.includes(key)),
+        )
+      : entries;
+  const source = async (file) =>
     file === MANIFEST && fixedManifest
       ? `${JSON.stringify(fixedManifest, null, 2)}\n`
       : await fs.readFile(path.join(root, file), "utf8");
+  const read = async (file) => {
+    const content = await source(file);
+    if (file === MANIFEST)
+      return `${JSON.stringify(only(JSON.parse(content)), null, 2)}\n`;
+    if (file !== CONFIG) return content;
+    const config = JSON.parse(content);
+    return `${JSON.stringify({ ...config, packages: only(config.packages) })}\n`;
+  };
   const versions = JSON.parse(await read(MANIFEST));
-  const config = JSON.parse(await read("release-please-config.json"));
+  const config = JSON.parse(await read(CONFIG));
   const previous = "a".repeat(40);
   const github = {
     repository: { owner: "mokly-ai", repo: "mokly", defaultBranch: "main" },
@@ -33,10 +49,15 @@ export async function releaseUpdates(root, changedFiles, fixedManifest) {
     async *releaseIterator() {
       for (const [component, version] of Object.entries(versions)) {
         const entry = config.packages[component];
+        // A manifest entry without a component, or a component that never
+        // released, has no release tag.
+        if (!entry || version === "0.0.0") continue;
         const tagName = `${entry["include-component-in-tag"] ? entry.component + "-" : ""}v${version}`;
         yield { name: tagName, tagName, sha: previous, notes: "" };
       }
     },
+    // A component without a release looks for its tag; the fixture has none.
+    async *tagIterator() {},
     async *mergeCommitIterator() {
       yield {
         sha: "b".repeat(40),
