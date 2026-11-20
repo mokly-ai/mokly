@@ -7,7 +7,7 @@ import { build } from "esbuild";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
-import { currentEvidence } from "../packages/mokly/src/sidecar/physical-inputs.js";
+import { currentEvidence } from "../packages/mokly/src/sidecar/physical-input-reader.js";
 
 import { folderPackage } from "./helpers/package_folder.js";
 import type { FolderCase } from "./helpers/package_folder.js";

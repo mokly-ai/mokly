@@ -6,20 +6,40 @@
   `calummoore/mokly-parallel-view-comparison-n4kr`, finding 1, which listed
   this class under its new problems. Updated on 2026-11-19 with the
   pointers that the round-2 review of the branch
-  `calummoore/mokly-return-warmup` and its checks found wrong.
+  `calummoore/mokly-return-warmup` and its checks found wrong. Updated on
+  2026-11-20 with the pointers that the branch
+  `calummoore/mokly-folder-export-evidence-7rox` moved in items that it did
+  not edit.
 - **Location:** `plans/follow-ups/isolated-git-in-every-test-helper.md:60`,
   `plans/follow-ups/base-read-cause-unknown.md:12` and line 89,
   `plans/follow-ups/root-switch-reap-wait.md:12` and line 41,
   `plans/follow-ups/forced-kill-reap-wait.md:8`, line 27, and line 29,
   `plans/follow-ups/bundle-cache-request-cost.md:37`,
-  `plans/follow-ups/sequential-evidence-capture-cost.md:15` and line 88,
-  `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, line 40, line 72,
-  line 106, line 213, and line 216, and
+  `plans/follow-ups/sequential-evidence-capture-cost.md:10`, lines 11, 12, 13,
+  15, 54, 59, 69, 78, 81, 83, 88, and 218,
+  `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, lines 12, 39, 40,
+  43, 49, 72, 102, 106, 213, and 216,
   `plans/follow-ups/sidecar-queue-steering-fixtures.md:7`, line 58, line 59,
-  and line 77.
-- **Reason:** All these pointers were already wrong on `origin/main`, so a
-  separate branch fixes them, and the search rule lives in the shared skills
-  repository.
+  and line 77,
+  `plans/follow-ups/ancestor-churn-disables-durable-capture.md:8`, lines 9,
+  10, 68, 70, 72, and 74,
+  `plans/follow-ups/bundle-recipe-query-suffix.md:7`, line 8, and line 28,
+  `plans/follow-ups/css-bundling-global-pool.md:9` and line 73,
+  `plans/follow-ups/export-pattern-literal-replacement.md:9`, line 62, and
+  line 116,
+  `plans/follow-ups/fallback-keys-checkout-folder.md:10`, line 72, and line
+  74,
+  `plans/follow-ups/installed-module-watch-paths.md:8` and line 30,
+  `plans/follow-ups/jsconfig-resolution-input.md:13`, lines 53, 59, and 70,
+  `plans/follow-ups/marked-package-entry-targets.md:10`, lines 11, 78, 79,
+  99, and 102,
+  `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
+  `plans/follow-ups/serve-plan-editor-invalidation.md:8`, lines 9, 10, 47,
+  49, and 51, and
+  `plans/follow-ups/stylesheet-roots-span-parent.md:9`.
+- **Reason:** These pointers were already wrong on `origin/main`, or a branch
+  moved them and recorded them here, so a separate branch fixes them, and the
+  search rule lives in the shared skills repository.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -98,6 +118,24 @@
       cite `crates/mokly-sidecar/src/_tests_/recipe_support.rs`.
       `Fixture::select` is at line 175, `Fixture::probe` at line 212, and the
       idle setup is not at line 141.
+  - On 2026-11-20, a read-only check on the branch
+    `calummoore/mokly-folder-export-evidence-7rox` compared each line pointer
+    into a source file that the branch changed with the same line at the
+    merge base `a2f61eb53`:
+    - In 13 items that the branch did not edit, 57 pointers now cite a line
+      that holds other text. The **Location** above lists each one. The
+      cause: the branch changed the cited source files.
+    - The behaviour prose of these items stays correct, and each cited
+      source file still exists.
+    - At least one pointer was already wrong at the merge base.
+      `jsconfig-resolution-input.md:53` cites `reuse` at
+      `packages/mokly/src/sidecar/compiled.ts:106`. `reuse` was at line 111
+      at the merge base and is at line 114 on that branch.
+    - The check did not confirm the intended target of the other pointers.
+    - The workspace orchestrator chose on 2026-11-20 to record these
+      pointers here, so that one later change updates the line references
+      together. A fix in that branch was rejected, because it adds a scope
+      round of about thirty minutes before the final gate.
 - **Problem:** Line pointers in follow-up items go stale when lines above them
   change or a symbol moves to another file. The stale-reference search names
   removals and renames only, so no rule asks the change to update such

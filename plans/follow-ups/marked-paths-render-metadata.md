@@ -5,8 +5,8 @@
 - **Added:** 2026-11-19, from the options check of the private folder file
   table, on branch `calummoore/mokly-folder-export-evidence-7rox`, against
   `main` at `f4f0082fd`.
-- **Location:** `packages/mokly/src/sidecar/serve-edit-paths.ts:105` to line
-  115 and line 138, `packages/mokly/src/sidecar/resolution-inputs.ts:64` to
+- **Location:** `packages/mokly/src/sidecar/serve-edit-paths.ts:60` to line
+  70 and line 100, `packages/mokly/src/sidecar/resolution-inputs.ts:64` to
   line 75, `packages/mokly/src/sidecar/bundle.ts:195` to line 196,
   `crates/mokly-render/src/render_environment.rs:110`, and
   `crates/mokly-graph/src/render_inputs.rs:139` to line 155. The line numbers
@@ -37,15 +37,17 @@
     consumed file digests, the metadata inputs, and the directory lists.
   - Only a `serveEdit` compile creates `ServeEditImports`, at
     `packages/mokly/src/sidecar/bundle.ts:195` to line 196. Its `record` runs
-    `ServeEditPaths.record` of `packages/mokly/src/sidecar/serve-edit-paths.ts`.
+    `serveEditLookups` of `packages/mokly/src/sidecar/serve-edit-lookups.ts`,
+    which gives each request to `ServeEditPaths.accept` of
+    `packages/mokly/src/sidecar/serve-edit-paths.ts`.
   - That pass reads each source-side bare import that matches a TypeScript
     `paths` key of a readable configuration chain. It walks the mapped
     targets in order, up to the selected module.
   - For each earlier target that does not hold the selected module, it
     stages the target folder, its parent folder, and the `package.json` path
-    inside the target, at `serve-edit-paths.ts:105` to line 115.
-  - When the pass succeeds, it adds the staged files to `paths.lookupFiles`,
-    at line 138.
+    inside the target, at `serve-edit-paths.ts:60` to line 70.
+  - When `ServeEditPaths.finish` succeeds, it adds the staged files to
+    `paths.lookupFiles`, at line 100.
   - `resolutionInputs` writes each lookup file into the metadata inputs,
     with its digest or null, at `resolution-inputs.ts:64` to line 68.
   - The core keeps only the present files as `resolution_digests`, at

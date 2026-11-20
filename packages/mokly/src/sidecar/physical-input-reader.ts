@@ -23,7 +23,7 @@ export type FilePathProbe =
   { kind: "file"; path: string } | { kind: "absent" } | { kind: "other" };
 
 /** Protected filesystem primitives of the one PhysicalInputs owner. */
-export abstract class PhysicalInputReader {
+export class PhysicalInputReader {
   complete = true;
   protected metadataBytes = 0;
   protected readonly pathKinds = new Map<string, CaptureKind | undefined>();
@@ -266,4 +266,9 @@ export abstract class PhysicalInputReader {
       return false;
     }
   }
+}
+
+/** Each check owns fresh bounded reads without capture caches. */
+export function currentEvidence(evidence: ReuseEvidence): boolean {
+  return new PhysicalInputReader().current(evidence);
 }

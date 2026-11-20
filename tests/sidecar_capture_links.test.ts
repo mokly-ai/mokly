@@ -7,10 +7,8 @@ import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
-import {
-  currentEvidence,
-  PhysicalInputs,
-} from "../packages/mokly/src/sidecar/physical-inputs.js";
+import { currentEvidence } from "../packages/mokly/src/sidecar/physical-input-reader.js";
+import { PhysicalInputs } from "../packages/mokly/src/sidecar/physical-inputs.js";
 
 import {
   link,

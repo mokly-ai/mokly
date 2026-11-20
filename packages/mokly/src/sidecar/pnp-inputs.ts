@@ -5,8 +5,8 @@ import type { Metafile } from "esbuild";
 import type { ConfigInputs } from "./config-inputs.js";
 import { MetafileEdges } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
+import type { FolderSelection } from "./package-folder-maps.js";
 import { PackageFolders } from "./package-folders.js";
-import type { FolderSelection } from "./package-folders.js";
 import { parsePackageJson } from "./package-json.js";
 import type { PackageJson } from "./package-json.js";
 import { packageMapTargets } from "./package-map.js";
@@ -31,35 +31,45 @@ export class PnpInputs {
     private readonly paths: ModulePaths,
     private readonly configs: ConfigInputs,
   ) {
-    this.locations = new PnpLocations(this.inputs, this.configuration);
+    this.locations = new PnpLocations(this.inputs, this.configuration, paths);
     this.locations.read();
     this.inspectNative = this.locations.file !== undefined;
   }
 
   capture(
     name: string,
+    directory: string,
     observe: (pkg: string, manifest: PackageJson) => void,
   ): void {
     const { file: state, snapshot: pinned } = this.locations;
     if (!state || !pinned) return;
     const requested = "." + name.slice(packageName(name).length);
-    for (const pkg of this.locations.roots(packageName(name))) {
+    for (const { directory: pkg, reachable } of this.locations.roots(
+      packageName(name),
+      directory,
+    )) {
       const file = path.join(pkg, "package.json");
       try {
         const snapshot = this.inputs.inspectMetadata(file);
         if (!snapshot?.bytes) continue;
         const manifest = parsePackageJson(snapshot.bytes.toString("utf8"));
-        const folder = manifest
-          .values("exports")
-          .some((value) =>
-            [...packageMapTargets(value, requested)].some(
-              (target) => target.folder,
-            ),
-          );
+        let folder = false;
+        for (const value of manifest.values("exports")) {
+          for (const target of packageMapTargets(value, requested))
+            folder ||= target.folder;
+          if (folder) break;
+        }
         if (!folder) continue;
-        if (!this.commit(state, pinned) || !this.commit(file, snapshot)) {
+        if (
+          !this.commit(state, pinned) ||
+          (reachable && !this.commit(file, snapshot))
+        ) {
           this.inputs.complete = false;
           return;
+        }
+        if (!reachable) {
+          this.discover();
+          continue;
         }
         const canonical = this.inputs.canonicalFile(file);
         if (canonical) this.captured.add(canonical);
@@ -80,12 +90,16 @@ export class PnpInputs {
     return this.inputs.complete;
   }
 
-  covered(pkg: string): void {
+  private discover(): void {
     if (!this.discovery) {
       this.discovery = true;
       for (const { file } of pnpFiles(this.configuration))
         if (this.inputs.file(file)?.kind === "file") this.inspectNative = true;
     }
+  }
+
+  covered(pkg: string): void {
+    this.discover();
     const file = this.inputs.canonicalFile(path.join(pkg, "package.json"));
     if (file) this.captured.add(file);
   }
@@ -106,8 +120,6 @@ export class PnpInputs {
       if (!path.isAbsolute(file) || edges.own(file)) continue;
       for (const edge of input.imports) {
         if (edge.external || edge.original === undefined) continue;
-        const selection = edges.selection(edge.path);
-        if (selection.kind !== "physical") continue;
         const request = resolutionRequest(
           edge.original,
           path.dirname(file),
@@ -120,6 +132,8 @@ export class PnpInputs {
           request.name.startsWith("#")
         )
           continue;
+        const selection = edges.selection(edge.path);
+        if (selection.kind !== "physical") continue;
         let found: FolderSelection | undefined;
         try {
           found = folders.lookup(
@@ -133,8 +147,9 @@ export class PnpInputs {
         }
         if (
           !this.inputs.complete ||
-          (found?.candidates.length &&
-            !found.manifests.some((file) => this.captured.has(file)))
+          found?.candidates?.overflow ||
+          (found?.candidates?.present &&
+            !found.identities.some((file) => this.captured.has(file)))
         ) {
           this.inputs.complete = false;
           return;

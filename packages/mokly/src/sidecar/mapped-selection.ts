@@ -48,6 +48,7 @@ export function mappedSelection(
   selected: string,
   configuredExtensions: readonly string[],
 ): "file" | "directory" | "contained" | undefined {
+  if (base === selected) return "file";
   const extensions = resolutionExtensions(configuredExtensions);
   const files = mappedFiles(base, configuredExtensions);
   if (files.includes(selected)) return "file";

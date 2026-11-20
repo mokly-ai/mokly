@@ -17,7 +17,6 @@ import { bundleResult, generationId, restore } from "./compiled.js";
 import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
-import { PackageFolderLookups } from "./package-folder-lookups.js";
 import type { ConsumerRequire } from "./paths.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
@@ -57,15 +56,9 @@ export async function bundleRecipe(
   measurements: Measurements,
 ): Promise<Bundled> {
   const folderEvidence = editImports
-    ? measurements.runSync("sidecar.bundle.mapped-lookups", () => {
-        const folders = new PackageFolderLookups(paths).record(
-          compiled.metafile!,
-          path.resolve(params.sourceRoot, params.configurationDirectory),
-        );
-        return editImports.record(compiled.metafile!, paths)
-          ? folders
-          : undefined;
-      })
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
+        editImports.record(compiled.metafile!, paths),
+      )
     : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(

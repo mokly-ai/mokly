@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import { mappedFiles, resolutionExtensions } from "./mapped-selection.js";
-import { PackageJson } from "./package-json.js";
+import { PackageJson, packageFolderKey } from "./package-json.js";
 import { substitution } from "./path-pattern.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 
@@ -24,9 +24,10 @@ export function* packageMapTargets(
   matched?: Match,
   depth = 0,
   tolerateUnsupported = false,
+  requireComplete = false,
 ): Generator<PackageTarget> {
   if (depth > 32) {
-    if (tolerateUnsupported && !matched?.folder) return;
+    if (tolerateUnsupported && !matched?.folder && !requireComplete) return;
     throw new Error("package export evidence limit");
   }
   if (typeof value === "string") {
@@ -41,21 +42,28 @@ export function* packageMapTargets(
       selected: matched?.selected ?? true,
     };
   } else if (Array.isArray(value)) {
-    for (const item of value)
+    const strings = new Set<string>();
+    for (const item of value) {
+      if (typeof item === "string") {
+        if (strings.has(item)) continue;
+        strings.add(item);
+      }
       yield* packageMapTargets(
         item,
         requested,
         matched,
         depth + 1,
         tolerateUnsupported,
+        requireComplete,
       );
+    }
   } else if (value instanceof PackageJson) {
     const chosen = selectedKey(value.entries, requested);
     for (const [key, target] of value.entries) {
       if (key.startsWith(".") || key.startsWith("#")) {
-        if (key.split("*").length > 2 && !tolerateUnsupported)
+        if (!tolerateUnsupported && key.split("*").length > 2)
           throw new Error("unsupported export pattern");
-        const folder = key.endsWith("/") && !key.includes("*");
+        const folder = packageFolderKey(key);
         if (folder && key !== chosen) continue;
         const tail =
           folder && requested.startsWith(key)
@@ -68,6 +76,7 @@ export function* packageMapTargets(
           { tail, folder, selected: key === chosen },
           depth + 1,
           tolerateUnsupported,
+          requireComplete,
         );
       } else
         yield* packageMapTargets(
@@ -76,6 +85,7 @@ export function* packageMapTargets(
           matched,
           depth + 1,
           tolerateUnsupported,
+          requireComplete,
         );
     }
   } else if (value !== undefined && value !== null && !tolerateUnsupported)
@@ -86,27 +96,29 @@ function selectedKey(
   entries: Array<[string, unknown]>,
   requested: string,
 ): string | undefined {
-  const exact = entries.find(
-    ([key]) => key === requested && !key.endsWith("/") && !key.includes("*"),
-  );
-  if (exact) return exact[0];
-  return entries
-    .filter(([key]) => key.endsWith("/") || key.includes("*"))
-    .sort(([a], [b]) => patternOrder(a, b))
-    .find(([key]) =>
-      key.includes("*")
+  let chosen: string | undefined;
+  for (let index = 0; index < entries.length; index++) {
+    const key = entries[index]![0];
+    const star = key.indexOf("*");
+    if (key === requested && !key.endsWith("/") && star < 0) return key;
+    if (star < 0 && !key.endsWith("/")) continue;
+    const matches =
+      star >= 0
         ? substitution(key, requested) !== undefined &&
-          (!key.slice(key.indexOf("*") + 1) || requested.length >= key.length)
-        : requested.startsWith(key),
-    )?.[0];
+          (star === key.length - 1 || requested.length >= key.length)
+        : requested.startsWith(key);
+    if (matches && (chosen === undefined || patternOrder(key, chosen) < 0))
+      chosen = key;
+  }
+  return chosen;
 }
 
 function patternOrder(a: string, b: string): number {
-  const base = (key: string) =>
-    key.includes("*") ? key.indexOf("*") : key.length;
+  const aStar = a.indexOf("*");
+  const bStar = b.indexOf("*");
   return (
-    base(b) - base(a) ||
-    Number(!a.includes("*")) - Number(!b.includes("*")) ||
+    (bStar < 0 ? b.length : bStar) - (aStar < 0 ? a.length : aStar) ||
+    Number(aStar < 0) - Number(bStar < 0) ||
     b.length - a.length
   );
 }
@@ -127,9 +139,13 @@ export function* packageMainTargets(
   manifest: PackageJson,
   mainFields: string[],
 ): Generator<string> {
+  const seen = new Set<string>();
   for (const field of new Set(["main", "module", ...mainFields]))
     for (const target of manifest.values(field))
-      if (typeof target === "string" && target) yield path.resolve(pkg, target);
+      if (typeof target === "string" && target && !seen.has(target)) {
+        seen.add(target);
+        yield path.resolve(pkg, target);
+      }
 }
 
 /** Inexact map targets also probe a folder's main fields before its index files. */

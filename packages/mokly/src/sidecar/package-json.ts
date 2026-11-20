@@ -1,12 +1,38 @@
 /** A manifest object keeps property order and repeated values for resolution evidence. */
 export class PackageJson {
+  private folderExports: boolean | undefined;
+
   constructor(readonly entries: Array<[string, unknown]>) {}
+
+  get folderExportsPossible(): boolean {
+    return (this.folderExports ??= this.values("exports").some((value) =>
+      folderKeys(value),
+    ));
+  }
 
   values(key: string): unknown[] {
     return this.entries
       .filter(([name]) => name === key)
       .map(([, value]) => value);
   }
+}
+
+export function packageFolderKey(key: string): boolean {
+  return key.endsWith("/") && !key.includes("*");
+}
+
+function folderKeys(value: unknown, depth = 0): boolean {
+  if (depth > 32) return true;
+  if (value instanceof PackageJson)
+    return value.entries.some(
+      ([key, target]) =>
+        ((key.startsWith(".") || key.startsWith("#")) &&
+          packageFolderKey(key)) ||
+        folderKeys(target, depth + 1),
+    );
+  if (Array.isArray(value))
+    return value.some((item) => folderKeys(item, depth + 1));
+  return value !== undefined && value !== null && typeof value !== "string";
 }
 
 /** Validate package JSON, then retain strings and package maps without last-key-wins loss. */

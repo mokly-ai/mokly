@@ -1,29 +1,30 @@
 import path from "node:path";
 
 import { ConfigInputs } from "./config-inputs.js";
+import type { PathSettings } from "./config-inputs.js";
+import { collectFolderCandidates } from "./folder-candidates.js";
 import { mappedCandidates } from "./mapped-paths.js";
 import { mappedSelection } from "./mapped-selection.js";
 import type { ModulePaths } from "./module-paths.js";
+import { PackageFolderLocation } from "./package-folder-location.js";
+import {
+  PackageFolderMaps,
+  ordinaryFolderSelection,
+  mergeFolderSelections,
+} from "./package-folder-maps.js";
+import type { FolderSelection } from "./package-folder-maps.js";
 import type { PackageJson } from "./package-json.js";
 import { nearestPackage, packageDirectories } from "./package-lookup.js";
-import {
-  packageFolderCandidates,
-  packageMapTargets,
-  packageTarget,
-} from "./package-map.js";
-import { inside } from "./path-scope.js";
+import { packageMapTargets } from "./package-map.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 import type { PnpLocations } from "./pnp-locations.js";
-import { bareSpecifier, packageName } from "./specifier.js";
+import { packageName } from "./specifier.js";
 
-export interface FolderSelection {
-  candidates: string[];
-  manifests: string[];
-  placed: boolean;
-}
-
-/** Associate the native selection with one shared description of package-map probes. */
+/** Associate native selections with the shared package-map description. */
 export class PackageFolders {
+  registry = false;
+  private readonly maps: PackageFolderMaps;
+
   constructor(
     private readonly inputs: PhysicalInputs,
     private readonly paths: ModulePaths,
@@ -31,205 +32,211 @@ export class PackageFolders {
     private readonly configs = new ConfigInputs(inputs, paths, false),
     private readonly observe = true,
     private readonly current = false,
-  ) {}
+    private readonly cachedScope?: (
+      directory: string,
+    ) => PathSettings | undefined,
+  ) {
+    this.maps = new PackageFolderMaps(
+      inputs,
+      paths,
+      observe,
+      current,
+      (name, directory, selected, forced) =>
+        this.lookup(name, directory, selected, forced, false),
+    );
+  }
 
   lookup(
     name: string,
     directory: string,
     selected: string | undefined,
     forced = false,
+    classify = true,
   ): FolderSelection | undefined {
     const own = nearestPackage(
       this.inputs,
       directory,
-      this.observe,
+      false,
       this.current,
       true,
     );
+    if (!this.inputs.complete) throw new Error("package folder input limit");
     if (name.startsWith("#")) {
       if (!own) return undefined;
-      return this.map(
-        own.directory,
-        own.manifest,
+      return this.maps.describe(
+        this.location(
+          own.directory,
+          selected,
+          "self",
+          path.join(own.directory, "package.json"),
+          own.manifest,
+        ),
         "imports",
         name,
-        selected,
         forced,
       );
     }
     let contained = false;
-    if (selected !== undefined)
-      for (const base of mappedCandidates(
-        this.configs.scope(directory),
-        name,
-      )) {
+    if (selected !== undefined) {
+      const config = directory.split(path.sep).includes("node_modules")
+        ? {}
+        : (this.cachedScope?.(directory) ?? this.configs.scope(directory));
+      if (!this.inputs.complete) throw new Error("package folder input limit");
+      for (const base of mappedCandidates(config, name)) {
         const kind = mappedSelection(
           base,
           selected,
           this.paths.settings.resolveExtensions,
         );
         if (kind === "file" || kind === "directory")
-          return { candidates: [], manifests: [], placed: true };
+          return ordinaryFolderSelection();
         contained ||= kind === "contained";
       }
+    }
     let result: FolderSelection | undefined;
-    for (const pkg of this.pnp.roots(packageName(name))) {
-      const found = this.root(pkg, name, selected, forced);
-      if (found) result = this.merge(result, found);
+    let unplaced: FolderSelection | undefined;
+    for (const { directory: pkg, reachable } of this.pnp.roots(
+      packageName(name),
+      directory,
+    )) {
+      const location = this.location(pkg, selected, "pnp");
+      if (!reachable) {
+        this.registry ||= this.folder(location, name);
+        continue;
+      }
+      const found = this.root(location, name, forced);
+      if (!this.inputs.complete) throw new Error("package folder input limit");
+      if (!found) continue;
+      if (found.placed || location.contains()) {
+        if (found.candidates?.overflow)
+          throw new Error("package folder lookup limit");
+        result = mergeFolderSelections(result, found);
+      } else unplaced ??= found;
+      if (!this.inputs.complete) throw new Error("package folder input limit");
     }
-    if (
-      own?.manifest.values("name").includes(packageName(name)) &&
-      own.manifest.values("exports").length
-    ) {
-      const found = this.root(own.directory, name, selected, forced);
-      if (found) return this.merge(result, found);
-    }
-    for (const pkg of packageDirectories(this.paths, name, directory)) {
-      const found = this.root(pkg, name, selected, forced);
-      if (found) return this.merge(result, found);
-    }
-    if (!result && (contained || !this.configs.readable))
-      return { candidates: [], manifests: [], placed: true };
-    if (!result && this.pnp.file)
-      throw new Error("unqualified native PnP package root");
-    return result;
-  }
-
-  private root(
-    directory: string,
-    name: string,
-    selected: string | undefined,
-    forced: boolean,
-  ): FolderSelection | undefined {
-    const pkg = this.inputs.canonicalDirectory(directory, this.observe);
-    if (!pkg || (selected !== undefined && !inside(pkg, selected)))
-      return undefined;
-    const file = path.join(pkg, "package.json");
-    const manifest = this.inputs.packageJson(
-      file,
-      this.observe,
-      this.current,
-      true,
-    );
-    const subpath = name.slice(packageName(name).length);
-    if (manifest?.values("exports").length)
-      return this.map(
+    const identifier = packageName(name);
+    const names = own?.manifest.values("name") ?? [];
+    const self =
+      this.observe && !this.current
+        ? names[0] === identifier
+        : names.includes(identifier);
+    const ownRoot =
+      own && self && own.manifest.values("exports").length
+        ? own.directory
+        : undefined;
+    const ordinary =
+      classify &&
+      this.observe &&
+      !this.current &&
+      !forced &&
+      selected !== undefined &&
+      !this.pnp.file;
+    let usedNegative = false;
+    for (const pkg of this.directories(ownRoot, name, directory)) {
+      const file = path.join(pkg, "package.json");
+      if (usedNegative && !this.inputs.packageKnown(file, this.current, true))
+        return this.lookup(name, directory, selected, forced, false);
+      const location = this.location(
         pkg,
-        manifest,
-        "exports",
-        subpath ? "." + subpath : ".",
         selected,
-        forced,
+        pkg === ownRoot ? "self" : "installed",
+        file,
+        pkg === ownRoot ? own?.manifest : undefined,
       );
-    if (!forced) return { candidates: [], manifests: [], placed: true };
-    const candidates = [
-      ...packageFolderCandidates(
-        path.join(pkg, subpath),
-        this.inputs,
-        this.paths.settings.mainFields,
-        this.observe,
-        this.current,
-        true,
-      ),
-    ];
-    return {
-      candidates,
-      manifests: [file],
-      placed: candidates.some((base) => this.matches(base, selected)),
-    };
+      if (usedNegative && location.manifest?.folderExportsPossible)
+        return this.lookup(name, directory, selected, forced, false);
+      const found = this.root(location, name, forced, ordinary);
+      if (!this.inputs.complete) throw new Error("package folder input limit");
+      usedNegative ||= location.usedNegative;
+      if (found?.placed) return mergeFolderSelections(result, found);
+      unplaced ??= found;
+    }
+    if (result || unplaced) return result ?? unplaced;
+    if (contained || !this.configs.readable) return ordinaryFolderSelection();
+    if (this.pnp.file) throw new Error("unqualified native PnP package root");
+    return undefined;
   }
 
-  private merge(
-    previous: FolderSelection | undefined,
-    next: FolderSelection,
-  ): FolderSelection {
-    return {
-      candidates: [
-        ...new Set([...(previous?.candidates ?? []), ...next.candidates]),
-      ],
-      manifests: [
-        ...new Set([...(previous?.manifests ?? []), ...next.manifests]),
-      ],
-      placed: (previous?.placed ?? false) || next.placed,
-    };
+  private *directories(
+    own: string | undefined,
+    name: string,
+    directory: string,
+  ) {
+    if (own) yield own;
+    yield* packageDirectories(this.paths, name, directory);
   }
 
-  private map(
-    pkg: string,
-    manifest: PackageJson,
-    field: string,
-    requested: string,
+  private location(
+    directory: string,
     selected: string | undefined,
-    forced: boolean,
-  ): FolderSelection | undefined {
-    const file = path.join(pkg, "package.json");
-    const canonical = this.observe ? this.inputs.canonicalFile(file) : file;
-    if (!canonical) return undefined;
-    pkg = path.dirname(canonical);
-    let result: FolderSelection = {
-      candidates: [],
-      manifests: [canonical],
-      placed: false,
-    };
-    let ordinary = false;
-    for (const value of manifest.values(field).slice(0, 1)) {
-      for (const { target, folder, selected: active } of packageMapTargets(
+    provenance: "self" | "installed" | "pnp",
+    file = path.join(directory, "package.json"),
+    manifest?: PackageJson,
+  ): PackageFolderLocation {
+    manifest ??= this.inputs.packageJson(file, false, this.current, true);
+    if (!this.inputs.complete) throw new Error("package folder input limit");
+    return new PackageFolderLocation(
+      directory,
+      file,
+      manifest,
+      selected,
+      provenance,
+      this.inputs,
+      this.observe,
+    );
+  }
+
+  private folder(location: PackageFolderLocation, name: string): boolean {
+    const requested = "." + name.slice(packageName(name).length);
+    let folder = false;
+    for (const value of location.manifest?.values("exports").slice(0, 1) ?? [])
+      for (const target of packageMapTargets(
         value,
         requested,
         undefined,
         0,
         true,
-      )) {
-        if (!active) continue;
-        if (
-          field === "imports" &&
-          bareSpecifier(target) &&
-          !target.startsWith("#")
-        ) {
-          const found = this.lookup(target, pkg, selected, forced || folder);
-          if (found) {
-            result = this.merge(result, found);
-            ordinary ||= !found.candidates.length && found.placed;
-          }
-          continue;
-        }
-        const base = packageTarget(pkg, target);
-        if (folder || forced) {
-          const expanded = [
-            ...packageFolderCandidates(
-              base,
-              this.inputs,
-              this.paths.settings.mainFields,
-              this.observe,
-              this.current,
-              true,
-            ),
-          ];
-          result.candidates.push(...expanded);
-          result.placed ||= expanded.some((base) =>
-            this.matches(base, selected),
-          );
-        } else if (!ordinary) ordinary = this.matches(base, selected);
-      }
-    }
-    if (
-      result.candidates.length &&
-      (result.placed ||
-        ordinary ||
-        selected === undefined ||
-        inside(pkg, selected))
-    )
-      return { ...result, placed: result.placed || ordinary };
-    return ordinary
-      ? { candidates: [], manifests: [], placed: true }
-      : undefined;
+      ))
+        folder ||= target.selected && target.folder;
+    return folder;
   }
 
-  private matches(base: string, selected: string | undefined): boolean {
-    return (
-      selected !== undefined &&
-      mappedSelection(base, selected, this.paths.settings.resolveExtensions) !==
-        undefined
+  private root(
+    location: PackageFolderLocation,
+    name: string,
+    forced: boolean,
+    ordinary = false,
+  ): FolderSelection | undefined {
+    const subpath = name.slice(packageName(name).length);
+    if (location.manifest?.values("exports").length)
+      return this.maps.describe(
+        location,
+        "exports",
+        subpath ? "." + subpath : ".",
+        forced,
+        ordinary,
+      );
+    if (!forced)
+      return location.contains(ordinary)
+        ? ordinaryFolderSelection()
+        : undefined;
+    const candidates = location.describe();
+    const placed = collectFolderCandidates(
+      candidates,
+      path.join(location.directory, subpath),
+      location,
+      this.inputs,
+      this.paths,
+      this.observe,
+      this.current,
+      false,
     );
+    location.capture();
+    return {
+      candidates,
+      manifests: [location.file],
+      identities: location.identity ? [location.identity] : [],
+      placed,
+    };
   }
 }

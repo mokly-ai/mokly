@@ -171,7 +171,7 @@ export class ResolutionEvidence {
     const own = nearestPackage(this.physical, directory);
     if (own?.manifest.values("name").includes(packageName(name)))
       this.targets(own.directory, name, own.manifest);
-    this.pnp.capture(name, (pkg, manifest) =>
+    this.pnp.capture(name, directory, (pkg, manifest) =>
       this.targets(pkg, name, manifest),
     );
     for (const pkg of packageDirectories(this.paths, name, directory)) {

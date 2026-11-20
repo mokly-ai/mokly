@@ -40,13 +40,19 @@ export function* packageDirectories(
   directory: string,
 ): Generator<string> {
   const roots = new Set<string>();
+  const identifier = packageName(name);
   for (let start of new Set([
     directory,
     importerDirectory(paths, name, directory),
   ])) {
     for (;;) {
-      if (path.basename(start) !== "node_modules")
-        roots.add(path.join(start, "node_modules"));
+      if (path.basename(start) !== "node_modules") {
+        const root = path.join(start, "node_modules");
+        if (!roots.has(root)) {
+          roots.add(root);
+          yield path.join(root, identifier);
+        }
+      }
       const parent = path.dirname(start);
       if (parent === start) break;
       start = parent;
@@ -54,6 +60,8 @@ export function* packageDirectories(
   }
   for (const root of resolutionOptions(paths.sourceRoot, paths.settings)
     .nodePaths)
-    roots.add(root);
-  for (const root of roots) yield path.join(root, packageName(name));
+    if (!roots.has(root)) {
+      roots.add(root);
+      yield path.join(root, identifier);
+    }
 }

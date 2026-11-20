@@ -14,7 +14,10 @@ import type { Generation } from "./bundle.js";
 import { everyInput, fileDigest } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
-import { currentEvidence, PhysicalInputs } from "./physical-inputs.js";
+import {
+  currentEvidence,
+  PhysicalInputReader,
+} from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
@@ -157,7 +160,8 @@ export async function reuse(
       )) &&
       (generation.compiled.reuseEvidence.complete
         ? currentEvidence(generation.compiled.reuseEvidence)
-        : new PhysicalInputs().markedCurrent(
+        : !Object.keys(generation.compiled.reuseEvidence.inputs).length ||
+          new PhysicalInputReader().markedCurrent(
             generation.compiled.reuseEvidence,
           ));
     if (current)

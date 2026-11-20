@@ -283,6 +283,220 @@ and the no-new-process rule remain task requirements. Existing preparation
 may become the lazy boundary; whether it suffices is a source audit, not an
 assumption that permits widening the change.
 
+### 8. Bound overlapping PnP root checks
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/pnp-locations.ts` and `package-folders.ts`.
+- **Background:** Native PnP selects a package reference for the importer. The current catalogue keeps every reference of the requested name.
+- **Problem:** An unused outer root adds folder checks to an ordinary exact selection from an inner root. A preferred sibling then ends reuse unnecessarily.
+- **Impact if no action:** Some ordinary PnP imports gain extra compiles. Output stays correct.
+- **Root question:** How can native output stay correct while ordinary PnP reuse avoids unreachable folder checks?
+- **Options:**
+  - **A.** Filter the pinned catalogue to reachable dependency references around the importer, the top-level package, and the fallback pool. Keep a sound superset. Overlapping reachable roots can still add conservative checks. Effort: Medium.
+  - **B.** Model exact native PnP ownership, including raw locations, duplicate keys, aliases, discard flags, ignore patterns, and fallback exclusions. A wrong parity rule can drop real candidates. Effort: Large.
+  - **C.** Obtain package ownership directly from native compilation. The pinned esbuild interface exposes no such result, so this needs a fork or upstream integration. Effort: Large.
+  - **D.** Drop an unplaced root's folder checks when another root places the selection. A false placement miss can then omit the real owner's checks. This does not fix the confirmed layout, where both roots place the module. Effort: Medium.
+  - **E.** A, while retaining the PnP state-file observation when narrowing removes a matching folder root. This keeps registry-only owner changes visible. It keeps existing reads and bounds. It requires a narrow private-table protocol clause. Effort: Medium.
+- **Left out:** Deepest-root selection can miss an outer mapping into an inner package. Refusing the marker keeps the same performance defect. A resolve on each hit breaks the reuse contract. Running project PnP code changes the parser policy. No change keeps the confirmed regression.
+- **Wider fix:** C with the registry observation of E. B must preserve exact parity or fall back to A at each unclear step.
+- **Previous examples:** Review findings 2 and 5 show package-root qualification and the unused nested-root regression.
+- **Recommendation:** E, changed from A by the fresh options check. The native proof confirms that registry-only owner changes need the retained state-file observation.
+- **Action:** fix now, apply E.
+
+The performance orchestrator chose A on 2026-11-20 under the user's delegation.
+Reliability comes first, then speed. A sound superset cannot omit a real
+folder candidate. B can return stale output if one parity rule is wrong.
+C is not available through the pinned interface.
+
+This is a narrow exception to unchanged reuse: ordinary PnP reuse can retain
+conservative folder checks when two reachable roots overlap. Record the
+exception in the owning protocol. Add a follow-up with B and C and a method
+to measure the frequency of that layout. The existing metadata, evidence,
+wire, and disk bounds remain. Both owners use the same reachable-root filter.
+The fresh check of review finding 5 proposed this filter as option D.
+
+The fresh plan check is
+`.context/package-folder-resolution-evidence/overlapping-pnp-options-check.md`.
+It adds D and E. D can drop a real candidate after a placement miss, so it
+does not preserve the chosen sound superset. The native public proof is
+`round-2-reachable-registry-proof.ts` and its log in that context directory.
+
+The performance orchestrator extended the call to E on 2026-11-20. E replaces
+A alone. Filtering can remove the only observation of the registry that
+selects the owner. Both full and marked reuse must keep that state-file
+observation whenever the filter removes a matching folder root. A registry
+change must end reuse, while an irrelevant sibling in the removed root must
+not. Correct output comes first. E adds no read and keeps the same bounds.
+Record this private-table exception beside the overlap exception. The
+overlapping-root follow-up names C with the registry dependency as its wider
+fix. No-folder compiles must keep the time and memory cost goals.
+The reachable index must cover the actual second resolve start from
+`packageDirectory`, or preserve a sound superset for that start. Both owners
+share the index. It keeps duplicate entries, aliases, top-level targets, and
+fallback-pool targets without copying native exclusions.
+
+### 9. Remove unused marked-discovery work
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/package-folder-lookups.ts` and its physical reader.
+- **Background:** The marked pass walks the whole native graph. Most edges cannot reach a package map. Ordinary results retain no folder table.
+- **Problem:** A valid component profile shows extra edge interpretation, repeated root work, and capture allocations before the pass returns an empty table.
+- **Impact if no action:** A catalogue without a folder-map selection pays extra edit time and temporary memory.
+- **Root question:** How can ordinary compiles keep main's cost while preserving every possible folder-map observation?
+- **Options:**
+  - **A.** Test effective request eligibility before physical selection. Remove repeated root, placement, and canonical-path work within the existing owners and budgets. Borrow valid configuration scopes. Create candidate observations only when a folder description needs them. Use the physical comparison without unused capture caches. Effort: Medium.
+  - **B.** Keep the whole pass and memoize its repeated selections and roots within the existing owner bounds. This retains more temporary state and still visits unrelated edges. Effort: Medium.
+  - **C.** Get exact package-map routes from native compilation. The pinned interface exposes no such result, so this needs upstream integration. Effort: Large.
+  - **D.** A, plus one shared effective-request walk for the post-compile recorders. Keep each recorder's eligibility and failure state. Compute the generated entry path once and make the ownership predicate cheaper. Run folder classification only while the marker can still result. Effort: Medium.
+- **Left out:** Keeping the measured cost fails the performance call. Dropping unproved folder routes can return stale output. Raising bounds, adding a process, or resolving each hit breaks the task.
+- **Wider fix:** D, changed from A after the options check. The shared edge owner gives each recorder the effective request before physical selection.
+- **Previous examples:** The cold optional traversal import of item 7 added work to every worker. Lazy ownership removed that cost.
+- **Related:** The shared package-location fix must keep both link forms and E's registry dependency. A fast eligibility check must preserve non-bare aliases that become package requests.
+- **Recommendation:** D, changed from A after the paired residual measurement. Keep A and share the effective-request walk without changing either consumer's observations.
+- **Action:** fix now, apply D.
+
+This is the workspace orchestrator's call of 2026-11-20. The performance
+orchestrator requires the no-folder mapped-lookups span to return to main's
+level. Existing metadata snapshots and bounds remain the owners of any
+classification cache. Alias, internal-import, link, and PnP routes keep the
+same shared description. No public field, disk format, render key, native
+operation, or accepted marked exception changes.
+
+Shared assumptions come from the task and the performance orchestrator's
+calls: correct native output, memory within 2%, timing within noise, unchanged
+bounds, and no new process, attempt, retry, timeout, or hit-time resolution.
+The profile evidence is `review-r2-component-profile/` in the context folder.
+Its observer overhead is diagnostic and is not acceptance timing.
+The fresh options check is `ordinary-cost-options-check.md` in that folder.
+It confirms that A must remove per-lookup work as well as excess selections.
+It adds D and ranks D as the wider fix. Measure the combined source before
+deciding whether D is needed. No permanent operation-count test is added.
+
+Workspace orchestrator call of 2026-11-20: apply the conditional D refinement.
+Six alternating uninstrumented component pairs show a repeatable no-folder
+marked-check cost after A. Preserve A's refresh barriers and scalar-name fix.
+Share request interpretation while keeping each consumer's eligibility,
+failure, staging, and bounds. The component evidence is
+`component-timing/final-9A-pairs-20261120T055510.088112Z/` in the context folder.
+
+### 10. Bound folder descriptions before retaining candidates
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/package-folder-maps.ts`.
+- **Background:** The shared description collects folder targets and their main-field candidates. The marked recorder applies its existing table allowance afterward.
+- **Problem:** Repeated folder targets and repeated main-field strings can multiply retained candidate strings before that allowance applies. Cached metadata reads do not bound this array.
+- **Impact if no action:** Unusual bounded manifests can make the sidecar consume excessive memory before it refuses reuse.
+- **Root question:** How can folder discovery keep its existing memory bound throughout candidate collection?
+- **Options:**
+  - **A.** Collect unique candidates as they are emitted. Reserve their eventual parent, base, and manifest rows against the existing allowance before retaining them. Scope or release discarded-owner reservations. Effort: Medium.
+  - **B.** Replace materialized descriptions with a repeatable candidate iterator. Stream placement and observation through both consumers under their current bounds. This changes the shared description API more broadly. Effort: Medium.
+  - **C.** Refuse large map arrays before expansion with a separate count limit. Duplicate-heavy maps can then lose reuse while their unique table fits. Effort: Small.
+- **Left out:** C changes the existing refusal rule and adds a limit, while A keeps the current allowance. Dropping targets breaks the shared evidence superset. A larger allowance violates the memory requirement.
+- **Wider fix:** A. The shared description bounds each retained candidate before retention, including forced remaps and merges.
+- **Previous examples:** The existing marked table uses a unique-path charge before staging rows. Metadata and inspected paths already have bounded owners.
+- **Recommendation:** A. Apply the existing eventual charge at collection time without adding a bound or changing native output.
+- **Action:** fix now, apply A.
+
+Workspace orchestrator call of 2026-11-20: keep candidate materialization
+inside the existing table allowance. The source audit confirmed the late-bound
+cross-product. Do not run an OOM experiment. A discarded owner must not consume
+the selected owner's allowance or change ordinary reuse. The shared reader
+and all existing metadata, path, table, and frame limits stay unchanged.
+The performance orchestrator approved this call on 2026-11-20. The user's
+first rule forbids any change that can exhaust the machine's memory. A bounded
+regression must keep duplicate-heavy fitting tables within the existing charge
+and withhold the marker cleanly when that charge is reached.
+
+Shared assumptions come from the task and the existing folder protocol:
+native output, the same candidate superset, unchanged reuse below the existing
+bounds, and no new field, kind, ceiling, process, or native operation.
+
+The fresh `candidate-bound-options-check.md` kept A and added optional D,
+a two-pass description. A remains the one-pass choice. The check grades the
+complete preservation work Medium. The full PnP audit has no staged table:
+it must stream the same candidates for placement and a presence fact without
+retaining a list or applying the marked row allowance. This keeps the full
+record's existing bound. Each marked scope keeps its exact row reservation.
+
+### 11. Refuse unclassified imports at the depth bound
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/package-map.ts:28`.
+- **Background:** The package-map walker has an existing depth limit of 32. Tolerant traversal skips deeper values before a folder key is matched.
+- **Problem:** An exact internal imports key can hide a bare folder remap below 40 active conditions. The skip keeps an empty marker without observing the installed folder.
+- **Impact if no action:** A preferred file added after capture keeps stale marked output. This is a route of the original folder class, not a capture race.
+- **Root question:** What must marked reuse do when the existing depth bound prevents imports-target classification?
+- **Options:**
+  - **A.** Keep depth 32. Withhold the marker when imports traversal reaches it before classification finishes. Deep ordinary internal imports also lose reuse at that bound. Effort: Small.
+  - **B.** Replace imports recursion with a bounded iterative walk under the byte and table allowances. This removes its depth-32 bound and preserves deep ordinary reuse. Effort: Medium.
+  - **C.** Defer the route as a goal exception. It stays stale on main and the branch. Effort: Small.
+- **Left out:** Raising depth only moves the hole. A selected-file shortcut cannot prove the package owner. Native route capture needs a larger integration.
+- **Wider fix:** A. A classification that its bound stops cannot certify a marker. B removes one cutoff but changes a bound for a rare layout.
+- **Previous examples:** The metadata-limit call already withholds unproved markers at the existing file and aggregate byte bounds.
+- **Recommendation:** A. Preserve output and all bounds. Nothing changes below the depth limit.
+- **Action:** fix now, apply A.
+
+Performance orchestrator call of 2026-11-20: A under the user's delegation.
+The same metadata-limit rule applies to depth. Correct output and unchanged
+bounds outrank reuse in a layout that real catalogues almost never have.
+B changes a bound for a rare case. C leaves the original stale class open.
+The full internal-import capture remains incomplete as before.
+
+Shared assumptions are native output, unchanged bounds, no extra native
+operation or process, and unchanged below-limit reuse. The exact proof is
+`9D10-deep-remap-proof.mts` with its log in the context folder. Root's main
+control, `9D10-deep-remap-main-proof.mts`, fails the same old-key assertion.
+Both first results keep an empty marker. Fresh native output is preferred.
+The same fresh options check confirms A. The completion rule also covers
+a forced exports walk reached through an imports folder remap. Non-forced
+exports retain their existing rule. No bound changes.
+
+### 12. Finish with one measured allocation round
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/metafile-edges.ts` and ordinary package-map matching.
+- **Background:** The corrected branch passes its public flows and restores. Repeated component pairs still show extra marked-check work without a selected folder mapping.
+- **Problem:** The shared request walk and map traversal allocate temporary strings and arrays that ordinary compiles do not need.
+- **Impact if no action:** A planned compile pays approximately 35 additional milliseconds in the measured component.
+- **Root question:** How much further performance work belongs in this correctness fix?
+- **Options:**
+  - **A.** Run one Small allocation round. Defer input path splitting, avoid unnecessary extension strings, and narrow key work only where candidate, error and read-set rules stay. Then stop optimizing. Effort: Small.
+  - **B.** Continue until the marked phase equals main. This delays the correctness fix and can require wider metadata ownership changes. Effort: Large.
+  - **C.** Ship the measured correct branch without another allocation round. Retain its measured extra cost. Effort: Small.
+- **Left out:** Dropping folder checks or changing bounds violates correctness or memory requirements. A new setting, retry or native operation remains forbidden. A cross-compile request-result or selected-owner cache breaks the no-new-cache rule and risks the memory bound.
+- **Wider fix:** None in this branch. Any remaining shared-walk work gets a separate follow-up when the measured residual exceeds about 15 milliseconds.
+- **Previous examples:** The lazy optional-parser load removed its cold worker cost. The shared walk removed duplicated ownership work but retained a measured allocation cost.
+- **Recommendation:** A. Take the known Small reductions, then finish the correctness fix with the measured cost named.
+- **Action:** fix now, apply A.
+
+Performance orchestrator call of 2026-11-20: one final Small allocation round,
+then stop regardless of the remaining cost. Accept an additional marked-check
+cost of about 15 milliseconds or less per compile. Above it, still ship the
+correctness fix and record the residual and owner profile in a shared-walk
+follow-up. Correctness matters more than approximately 35 milliseconds per
+compile, about 1.4% of a real cloud edit. Memory within 2%, the cold check,
+all bounds, the imports-depth rule, and full audit streaming remain required.
+Open the PR only after the parent's final confirming result.
+
+Shared assumptions are unchanged native output and reuse rules, no new
+cache or resource ceiling, one Small round, and complete validation afterward.
+The current owner evidence is `current-cost-profile.md` in the context folder.
+The final allocation change does not narrow branch traversal. It uses pure
+selection work and preserves ignored branches and their existing errors.
+The fresh `final-allocation-options-check.md` confirms A and all pure
+shortcuts. It adds no option or scope change. Optional further reductions
+stay out because the one-round stop has been reached.
+
 ## Milestone 1: Documentation and contract audit
 
 Depends on: none
@@ -371,29 +585,118 @@ the performance acceptance. The performance orchestrator then measures
 
 - [ ] Compare startup, normal edits, peak memory, and operation counts with balanced runs.
 - [ ] Report marked-discovery metadata margins on cloud, the example, and the existing large fixtures. Confirm real cloud edits retain the marker and reuse.
-- [ ] Confirm memory stays within 2% and timing stays within noise. Investigate each failure before acceptance.
+- [ ] Confirm memory stays within 2% and measure timing against the final acceptance call. Record any accepted marked-check cost. Investigate other failures before acceptance.
 - [ ] Confirm native output and unaffected catalogue output. Record identity changes separately when the toolchain requires them.
 - [ ] Compare every view's document keys on cloud and the example against main. Permit only per-run fields proved by the main/main control.
 - [x] Run the strict example build and smoke the served catalogue after the final build.
 
+## Milestone 3a: Second review fixes and ordinary cost
+
+Depends on: 2b
+
+Keep package resolution paths separate from physical observation paths.
+Fix the two confirmed link cases and the unreachable PnP root case together.
+Profile no-folder restore and planned compile work before the final cost call.
+
+- [x] Record the approved reachable-root exception in the protocol. Add the overlapping-root follow-up.
+- [x] Run the fresh options check for design item 8 and merge its result.
+- [x] Run the fresh options check for design item 9 and merge its result.
+- [x] Prove the registry-only owner-change lead. Settle its state-file observation before changing the private-table exception.
+- [x] Add red-first full and marked registry-only owner-change regressions. Retain the unused-outer-root regression and record the E exception in the protocol and follow-up.
+- [x] Add red-first manifest-link, selected-file-link, and ordinary nested-PnP reuse regressions with native and unrelated controls.
+- [x] Implement the shared package-location record and physical matching for folder candidates. Keep ordinary mapped matching unchanged.
+- [x] Return an unplaced known-folder result when no candidate proves placement. Preserve existing ordinary and unreadable-configuration behavior.
+- [x] Share the reachable-reference filter between both evidence owners. Keep the approved overlapping-root exception and unchanged bounds.
+- [x] Profile one Cloud-sized restore and planned edit per arm. Name the measured ordinary-path cost owners.
+- [x] Attribute cold React sidecar memory after fresh capture, restore, and planned edit in both arms. Separate retained owner bytes from temporary allocations.
+- [x] Remove the remaining repeated-root and target work under 9A. Measure the uninstrumented residual before deciding on 9D.
+- [x] Apply conditional 9D through one shared effective-request walk. Preserve 9A's refresh and read-set barriers. Measure the resulting no-folder cost.
+- [x] Bound shared candidate descriptions during collection with the existing staging allowance. Keep duplicate-heavy fitting tables reusable and discarded owners independent. Add the approved bounded regression without an OOM experiment. Run the fresh options check for design item 10.
+- [x] Keep the full PnP audit streaming and free of the marked reservation. Prove full reuse below its existing bounds when the marked estimate exceeds its allowance.
+- [x] Apply the approved depth-bound exception for internal imports and their forced remaps. Add the red-first 40-condition refusal, forced-walk refusal, and below-limit ordinary-reuse control. Run the fresh options check for item 11.
+- [x] Verify the final README and metadata-limit protocol against the completed depth and streaming-audit behavior.
+- [x] Complete the one approved Small allocation round. Run its fresh options check, measure the residual, and stop optimizing. Add the shared-walk follow-up only if the residual exceeds about 15 milliseconds.
+- [x] Prove that a later repeated package name cannot impersonate a self-package owner. Keep the native first-name rule in marked qualification and the full-capture superset.
+- [x] Repeat affected async regressions ten times. Recheck owner, identity, PnP, metadata and table-bound proofs.
+- [ ] Run the complete gate, smoke checks, and final paired cost measurements. Commit and push one SHA for parent confirmation.
+
+Evidence: `.context/package-folder-resolution-evidence/review-r2-implementation-report.md`
+maps the approved source changes to their red and green checks.
+`review-r2-component-optimized/` holds the first component profile of those
+changes. The ordinary-path cost remains open.
+`retention/REPORT.md` and `retention/comparison.json` hold the retained-owner
+diagnostic. The final whole-tree memory comparison remains required.
+`approved9A-refinement-report.md` records the refresh barriers, repeated-name
+regression, final source hashes, targeted checks, and ten repetitions.
+`audit-final-implementation-handoff.md` records the final 9D, bound, audit,
+and depth checks. Its frozen dist and source are the measurement artifacts.
+`allocation-final-implementation-handoff.md` records the last approved pure
+allocation round and its replacement frozen artifacts.
+`final-allocation-options-check.md` confirms its options and stop boundary.
+`final-measurement-report.md` holds the concluding local pairs, output,
+metadata margins, and exclusions. The accepted residual is recorded in
+`plans/follow-ups/marked-request-walk-allocation.md`.
+
+## Milestone 3b: Baseline capture-coherence investigation
+
+Depends on: 2b
+
+The performance orchestrator clarified the scope on 2026-11-20. The original
+folder-export class excludes races between compilation and capture. Check each
+new race against main before deciding whether it belongs in this fix.
+
+- [x] Prove the post-build file-appearance failure through public bundle and reuse calls. Preserve the unchanged importer and real native results.
+- [x] Trace the native and saved-plan lifecycle. Investigate bounded coherence options in a fresh read-only context.
+- [x] Check the post-build file, dangling-link replacement, and nearer-PnP-state proofs against main. Confirm each accepts the same stale native result.
+- [x] Obtain the performance orchestrator's scope calls before changing any protocol rule. Keep the approved 9A refinement.
+- [x] Record each High/Rare baseline case as a self-contained follow-up with its exact proof and options. Add no accepted-race protocol rule.
+- [x] Merge the fresh scope options check. State the three remaining stale cases explicitly in the PR body.
+
+Evidence: `.context/package-folder-resolution-evidence/review-r2-post-build-coherence-proof.mts`
+and its log preserve the failing public call. `coherence-design-investigation.md`
+records the fresh source investigation. `main-baseline-proofs/` holds the three
+native main controls and their artifact provenance.
+
+The performance orchestrator chose the following outcomes on 2026-11-20:
+
+- Post-build preferred file: E. Defer the shared capture-coherence race. Keep
+  ordered marked checks, proved full checks, timestamps, and pre-compile
+  witnesses as options A to D in its follow-up. The fix is Medium and the
+  branch introduces no regression.
+- Replaced dangling link: A now and C in the follow-up. Preserve current reuse
+  now. Pin lexical dangling-link identity through the shared TS/Rust matcher
+  later. B stays out because withholding the marker removes working reuse.
+- Nearer PnP state after compilation: A. Keep the shared metadata timing and
+  record pre-compile witnesses, exact native parity, and timestamps as B to D.
+
+All three cases remain stale on main and on this branch. The shared capture
+question needs its own design. These calls change no accepted protocol rule.
+
+The fresh `baseline-coherence-options-check.md` confirms all three main
+controls and all scope calls. It adds future ordinary-route, link-kind, and
+owner-witness options. The later marked check is Medium. The full-owner lead
+did not reproduce, so that half remains conditional. The calls for this
+branch stay E, A now with C later, and A.
+
 ## Milestone 4: Verification, review, and pull request
 
-Depends on: 1, 2, 2a, 2b, 2c, 3
+Depends on: 1, 2, 2a, 2b, 2c, 3, 3a, 3b
 
 The orchestrator owns these steps. Keep Git 2.45 or later first on `PATH`,
 install git-lfs, and use pinned Bun. Use locked Cargo dependencies. Check free
 disk and memory before large builds. Disable Cargo incremental and dev debug
 information. Give each checkout its own target directory. Run one Cargo build
 at a time. Keep workspace 54's changes when current `main` needs integration.
-The performance orchestrator's later instruction keeps this verification on
-`c2fe4bf2a`. Do not integrate the incoming Cloud and Rust-toolchain PR #350
-until the performance orchestrator explicitly permits it.
+The performance orchestrator held the first confirming comparison on
+`c2fe4bf2a`. Its returned result of 2026-11-20 permits one integration of
+`origin/main`, including Cloud and Rust 1.98.1, before the final pull request.
+Keep the frozen control artifacts for the separate component comparison.
 
 - [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`.
 - [x] Align the existing Node malformed-marker case with the approved file table. Keep the flag, toolchain, and invalid-kind assertions. Repeat the changed async case ten times and rerun the complete gate.
 - [x] Check and fix review findings 1 and 2 through one shared mapping-description change. Keep ordinary exact, alias, link, self, PnP, and configured-path reuse contrasts. Preserve read-only final classification.
 - [x] Run the fresh options check for item 7 and merge its result. Audit synchronous call sites within the approved Small scope.
-- [ ] Defer the optional parser dependency and repeat the same cold-worker diagnostic.
+- [x] Defer the optional parser dependency and repeat the same cold-worker diagnostic.
 - [x] Run the complete gate on the combined review fixes and integrated current main. Audit the entry-point documentation after the shared root description changes.
 - [ ] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator.
 - [ ] Review the full diff against `origin/main` with `implementation-review` after the push. Check new findings. Apply up to two fix rounds. Record follow-up items for remaining findings. Re-review once.
