@@ -3,10 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
+use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_compiler::{Compilation, CompileRoot};
 use crate::stylesheet_store::StylesheetCache;
 
 #[test]
@@ -16,6 +17,8 @@ fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
         route: "styles/main.css".into(),
         css: "a {color:red}".into(),
         assets: BTreeMap::new(),
+        resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::new(),
         imported_by: BTreeMap::new(),
@@ -26,9 +29,14 @@ fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
     };
     let compiler: &dyn StylesheetBundler = &CachedStylesheets::new(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(bundle.clone())))
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(Compilation {
+                        bundle: bundle.clone(),
+                        capture: Default::default(),
+                    })
+                }))
                 .n_times(2),
         )),
         Arc::new(Unimock::new(())),

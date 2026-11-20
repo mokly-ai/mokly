@@ -1,0 +1,39 @@
+# CI does not test older Git compatibility
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the branch `calummoore/fu-git-2-43-missing-base-objects-vp9z`.
+- **Location:** `.github/workflows/ci.yml`, `crates/mokly-git/tests/promisor_tests.rs`, and `crates/mokly-cli/tests/changes_failures_tests.rs`.
+- **Reason:** The user excluded a new CI job from the missing-base-object fix and asked to record this wider fix.
+
+- **Source:** Implementation.
+- **Category:** Test.
+- **Terms:**
+  - **Blobless clone:** A Git partial clone that omits file objects until a command fetches them.
+  - **Promisor remote:** A Git remote that supplies the objects omitted from a partial clone.
+- **Background:**
+  - Mokly users can run an older Git than repository developers.
+  - `docs/development/README.md` requires Git 2.45.0 or later for repository development.
+  - Ubuntu 24.04 supplies Git 2.43.0.
+  - The native CI jobs use the Git installed on current GitHub-hosted runners.
+  - No CI job selects Git 2.43.0 to check missing base objects.
+- **Problem:**
+  - Newer Git accepts a missing blob as a start point for `rev-list --missing=print`.
+  - Git 2.43.0 exits 128 with `fatal: bad object {id}` or `fatal: could not fetch {id} from promisor remote`.
+  - Before the compatibility fix, these three tests failed on Git 2.43.0 but passed on newer Git:
+    - `crates/mokly-git/tests/promisor_tests.rs::blobless_clone_fetches_missing_base_blobs_in_one_batch`.
+    - `crates/mokly-git/tests/promisor_tests.rs::failed_promisor_fetch_names_recovery_command`.
+    - `crates/mokly-cli/tests/changes_failures_tests.rs::a_missing_historical_blob_is_git_failed_instead_of_unavailable_validation`.
+- **Impact if no action:** Later changes can break older Git users while CI stays green.
+- **Root question:** How should CI check missing-base-object compatibility with older Git?
+- **Options:**
+  - **A.** Add a Linux CI job with Git 2.43.0 for the two promisor tests and the missing-historical-blob test. Effort: Small.
+  - **B.** Add a Linux Git-version matrix for the complete Mokly Git and CLI test suites. Include Git 2.43.0 and the development Git version. Effort: Medium.
+- **Left out:**
+  - Keep only manual checks, because they do not detect a later regression in CI.
+  - Raise the Git requirement for Mokly users, because that removes the compatibility this work protects.
+  - Run the full repository gate on Git 2.43.0, because the development guide requires a newer Git.
+- **Wider fix:** B. It checks the other Git operations as well as the three known failures.
+- **Previous examples:** The three failures above were reproduced on Git 2.43.0 on 2026-11-20.
+- **Recommendation:** A. It protects the known user defect with a smaller CI cost.
+- **Action:** ask the user, because either option adds a CI job that the user excluded from the compatibility fix.

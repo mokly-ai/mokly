@@ -29,7 +29,7 @@ fn probe_diagnostic_counts_completed_boxes_before_starting_suites() {
             .iter()
             .filter(|event| event.starts_with("probe:"))
             .count();
-        assert_eq!(probes, 7);
+        assert_eq!(probes, 14);
         assert_eq!(announcements.len(), 1);
         let (announced_at, message) = announcements[0];
         assert_eq!(
@@ -53,7 +53,7 @@ fn probe_diagnostic_counts_completed_boxes_before_starting_suites() {
 
 /// Keep the existing remote evidence and cleanup assertions.
 #[test]
-fn complete_remote_gate_downloads_five_reports_after_seven_commands() {
+fn complete_remote_gate_downloads_five_reports_after_fourteen_commands() {
     let fixture = harness(Case::Success);
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
@@ -66,7 +66,7 @@ fn complete_remote_gate_downloads_five_reports_after_seven_commands() {
             .iter()
             .filter(|event| event.starts_with("suite:"))
             .count(),
-        7
+        14
     );
     assert_eq!(
         events
@@ -80,7 +80,7 @@ fn complete_remote_gate_downloads_five_reports_after_seven_commands() {
             .iter()
             .filter(|event| event.starts_with("stop:"))
             .count(),
-        7
+        14
     );
     let aggregate = events
         .iter()

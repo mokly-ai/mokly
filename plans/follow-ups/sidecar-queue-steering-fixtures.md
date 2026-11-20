@@ -27,7 +27,7 @@
     idle queue while other slots are also idle. Queue order then sends the
     next request to that slot.
 - **Background:**
-  - `Pool::request`, at `crates/mokly-sidecar/src/pool_exchange.rs:35`, takes
+  - `Pool::request`, at `crates/mokly-sidecar/src/pool_exchange.rs:39`, takes
     a lease, runs the call with its replay, and releases the slot. A release
     runs cleanup on the slot and puts the slot at the back of the idle queue.
   - On 2026-11-18 the generation affinity change, on the branch above, added a

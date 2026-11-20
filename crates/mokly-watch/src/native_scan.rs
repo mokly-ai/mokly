@@ -14,6 +14,14 @@ pub(crate) fn parents(tree: &dyn SourceTree, path: &Path, repository: &Path) -> 
         .map(Path::to_owned).collect()
 }
 
+pub(crate) fn input_parents(tree: &dyn SourceTree, path: &Path, plan: &Plan) -> BTreeSet<PathBuf> {
+    let mut result = parents(tree, path, &plan.repository);
+    if let Some(root) = plan.dependency_roots.get(path) {
+        result.extend(parents(tree, path, root));
+    }
+    result
+}
+
 pub(crate) fn directories(tree: &dyn SourceTree, plan: &Plan) -> Result<BTreeSet<PathBuf>> {
     let mut plan = plan.clone();
     plan.exact.clear();

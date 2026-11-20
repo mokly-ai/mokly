@@ -1,0 +1,8 @@
+title: Publish a draft
+description: Review the draft and read its details.
+relatedDocs: []
+steps:
+  - screenPath: start
+    title: Review the draft
+  - screenPath: finish
+    title: Read the details

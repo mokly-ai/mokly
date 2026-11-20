@@ -10,3 +10,4 @@ mod watch_tests;
 mod fixture;
 mod startup_edit_tests;
 mod startup_tests;
+mod stylesheet_resolution_tests;

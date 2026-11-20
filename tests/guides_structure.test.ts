@@ -8,6 +8,7 @@ import {
   guidesRoot,
   withoutFencedCode,
 } from "./helpers/guides.js";
+import { PUBLISHED_PROTOCOL_DOCUMENTS } from "./helpers/site_routes.js";
 
 const EXPECTED = [
   "start/install",
@@ -46,15 +47,9 @@ const EXPECTED = [
   "cli/options-and-exit-status",
 ];
 
-const REFERENCE_SLUGS = new Set([
-  "export-delivery",
-  "export-ownership",
-  "upload",
-  "upload-exchange",
-  "navigation",
-  "link-controls",
-  "pages",
-]);
+const REFERENCE_SLUGS = new Set<string>(
+  PUBLISHED_PROTOCOL_DOCUMENTS.map((document) => document.slug),
+);
 
 function allowedLink(destination: string): boolean {
   const target = destination.split("#", 1)[0] ?? "";

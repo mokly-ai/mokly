@@ -1,0 +1,24 @@
+---
+title: "Promoted"
+description: "After move."
+element: "fixture-promote-entry"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties":
+      { "label": { "type": "string" }, "expanded": { "type": "boolean" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    {
+      "slug": "saved",
+      "title": "Current saved",
+      "props": { "label": "Current saved" },
+    },
+  ]
+---
+
+<p data-expanded="{{ expanded }}">{{ label }}</p>

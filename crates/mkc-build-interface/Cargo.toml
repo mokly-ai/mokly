@@ -1,0 +1,21 @@
+[package]
+name = "mkc-build-interface"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+async-trait = "0.1.92"
+chrono = "0.4.45"
+internal-error.workspace = true
+mkc-domain.workspace = true
+thiserror = "2.0.21"
+unimock = "0.6.8"
+url = "2.5.8"
+uuid = "1.27.0"
+
+[lints]
+workspace = true

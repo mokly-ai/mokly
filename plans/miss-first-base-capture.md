@@ -226,24 +226,44 @@ Depends on: 2a
 The orchestrator measures release builds in separate checkouts and target directories.
 
 - [x] Correct the final README guard lifetime and the static admission references in the scripts-off follow-up.
-- [ ] Push a checked implementation snapshot and send its SHA and dist provenance for cloud measurements before the local timing matrix.
+- [x] Push a checked implementation snapshot and send its SHA and dist provenance for cloud measurements before the local timing matrix.
 
-- [ ] Measure baseline and candidate on `examples/basic` and the large HTML and React fixtures, warm and cold, in six interleaved rounds.
+- [x] End the old local matrix under the performance orchestrator's call of 2026-11-20. Preserve all completed pairs by boot, and mark warm React incomplete. Do not run more timing pairs on the old implementation.
 - [ ] Compare first Changes, capture stages, exact output, and cgroup anonymous memory plus swap.
-- [ ] Measure whole-tree startup and ten-edit peaks against the 2% memory limit.
+- [x] Measure whole-tree startup and ten-edit peaks against the 2% memory limit. The performance orchestrator accepted the cloud results and bounded core byte counters on 2026-11-19.
 - [ ] Remove the capture-batch-window follow-up after its implementation and measurements pass. Keep the wider kept-base worker follow-up open.
 - [ ] Run targeted tests, the repository suite, and the complete gate. Use Git 2.45 or later, git-lfs, pinned Bun, and locked Cargo.
 - [ ] Run large Cargo builds serially, check disk and memory first, and disable incremental builds and dev debug information.
 
 Evidence: `.context/miss-first-base-capture/measurements/` holds raw runs and before/after tables.
 
+## Milestone 3a: Integrate current main
+
+Depends on: 2a
+
+On 2026-11-20 the performance orchestrator ended old timing work and required one integration of main before the pull request. Keep every main fix and the early renders and capture window.
+
+- [x] Merge current main once. Preserve the equal-document fast path, stylesheet resolver inputs, bundle affinity, return-pass warm-up, Git waits, and test fixture fixes.
+- [x] Adapt the existing progress-token integration fixture to the capture pool capacity query. Preserve every Git error and token assertion.
+- [x] Align the existing timing ancestry test with early base renders. Preserve capture encoding, ordering, and memory assertions.
+- [x] Investigate the shared browser host's nonzero shutdown after all browser cases pass. Preserve the clean-exit check and record any unrelated failure.
+- [ ] Run targeted tests, the repository suite, and the complete gate with Rust 1.98.1. Record unrelated failures and verify final CI. Preserve all assertions and limits.
+- [ ] Run the delivery checks and Cloud suites that the known browser teardown failure prevented the complete gate from reaching.
+- [ ] Push the merged implementation and send its SHA immediately. Open the pull request before the confirming batch.
+- [ ] Run one batch of four interleaved cold React pairs against the merge's main parent. Do not start another batch. With a restart, decide on at least three completed pairs, or report fewer and stop.
+- [ ] If at least three of four pairs are slower and their mean delta exceeds 1.5% of main's first Changes, send stage attribution to the performance orchestrator before requesting a merge. Otherwise record the batch.
+- [ ] Use existing full byte proof and core counters, or run each missing proof once on the merged implementation.
+
+Evidence: `.context/miss-first-base-capture/main-final-additions.log` and `reports/main-integration.md` hold the integration record.
+
 ## Milestone 4: Commit, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 2, 3, 3a
 
-- [ ] Commit with Conventional Commits and push the implementation branch.
-- [ ] Send the implementation SHA and dist build commit immediately. Obtain the orchestrator's six-run `mokly-cloud` result.
+- [x] Commit with Conventional Commits and push the implementation branch.
+- [x] Send the implementation SHA and dist build commit immediately. Obtain the orchestrator's six-run `mokly-cloud` result.
 - [ ] Meet the cloud mean targets: capture-side improves by 0.5 seconds and first Changes improves by 0.4 seconds. Output stays equal and memory stays within 2%.
-- [ ] Review the complete local diff against `origin/main` with the implementation-review skill after the push. Check findings, apply at most two fix rounds, record follow-ups, and re-review once.
+- [x] Review the original implementation after its push. Two independent reviews found no findings. Review the integrated diff again after the merged push and apply the skill's finding checks and fix rounds.
+- [ ] Review the pushed integrated diff. Apply the finding checks and at most two fix rounds.
 - [ ] Delete this plan under the plans skill after its required work passes.
 - [ ] Open the pull request against `main`. Preserve this plan's dated record and permalink in the description. Watch final CI with the finish-work script and report to the performance orchestrator. Do not merge.

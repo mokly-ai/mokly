@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 
 use crate::cache_types::Builder;
 use crate::commands::Command;
+use crate::comparison_steps::Step;
 use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
 use crate::error::{Error, Result};
@@ -61,6 +62,7 @@ impl Builder for Install<'_> {
     /// cache counts bytes and flushes the entry, so those folders neither count
     /// against the bound nor cost flush time.
     fn build(&self, destination: &Path) -> Result<()> {
+        self.owner.steps.step(Step::Installing);
         self.owner.storage.copy(
             &self.request.source_root,
             destination,

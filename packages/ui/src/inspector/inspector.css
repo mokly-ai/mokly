@@ -64,7 +64,7 @@
 }
 
 .mbk-inspector-content a {
-  color: var(--mokly-accent);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 .mbk-sheet-grab {
@@ -161,7 +161,7 @@
 }
 
 .mbk-sheet-grab:has(> input:focus-visible) {
-  outline: 2px solid var(--mokly-accent);
+  outline: 2px solid var(--mokly-accent, var(--_mokly-private-accent-default));
   outline-offset: -2px;
 }
 
@@ -266,12 +266,14 @@
 .mbk-inspector-resize:hover::after,
 .mbk-inspector-resize:focus-visible::after,
 .mbk.mbk-inspector-resizing .mbk-inspector-resize::after {
-  background: var(--mokly-accent);
-  box-shadow: 0 0 0 3px var(--mokly-accent-soft);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
+  box-shadow: 0 0 0 3px
+    var(--mokly-accent-soft, var(--_mokly-private-accent-soft-default));
 }
 
 .mbk-inspector-resize:focus-visible {
-  box-shadow: inset 0 2px 0 var(--mokly-accent);
+  box-shadow: inset 0 2px 0
+    var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 /* While the reader drags the inspector's divider, the drag marks the shell

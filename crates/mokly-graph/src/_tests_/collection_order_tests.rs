@@ -10,6 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::collection::ComparisonCollectorMock;
 use crate::collection_input::{ComparisonEncoder, ComparisonEncoderMock, DocumentEncoder};
+use crate::document_codec::EncodedView;
 use crate::error::GraphError;
 use crate::types::RenderGeneration;
 use crate::workers::{ComparisonTask, RenderWorkers, RenderWorkersMock, ThreadWorkers};
@@ -142,9 +143,12 @@ fn out_of_order_completions_keep_route_commits_and_validation_failures_ordered()
                         decoded.lock().unwrap()[route].upgrade().is_none(),
                         "ordered consumption must hold no decoded input"
                     );
-                    assert!(
-                        String::from_utf8_lossy(&input.document.restore().unwrap().bytes)
-                            .contains("id=\"anchor\"")
+                    let restored = input.document.restore().unwrap();
+                    assert!(String::from_utf8_lossy(&restored.bytes).contains("id=\"anchor\""));
+                    assert_eq!(
+                        input.identity,
+                        EncodedView::comparison_identity(&restored).unwrap(),
+                        "worker encoding must preserve the exact document identity"
                     );
                     recorded.lock().unwrap().push(route.to_owned());
                     Ok(())

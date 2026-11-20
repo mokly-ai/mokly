@@ -25,6 +25,8 @@ pub(super) struct Slot {
     pub(super) contexts: BTreeSet<String>,
     pub(super) renders: u64,
     pub(super) requests: u64,
+    /// Epoch of the last head bundle whose cache outcome indicates compilation.
+    pub(super) last_compilation: Option<u64>,
 }
 
 /// A context keeps its source identity even while its recycled slot has no process.

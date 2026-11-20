@@ -11,7 +11,8 @@ writes no files.
 - Compute content-addressed node keys before document rendering.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
-- Encode documents losslessly for the compact tier and the comparison capture.
+- Encode documents losslessly for the compact tier and the comparison capture,
+  and identify their exact codec input.
 - Render all views through an injected worker pool.
 - Run complete side validation in a bounded window, and hand each view to the
   comparison collector in route order.
@@ -154,6 +155,13 @@ annotations without parsing authored HTML, or returns a
 records without a restore. An artifact without a composed document retains no
 usage.
 
+`EncodedView::encode_identified` also returns a `ContentIdentity`: a SHA-256
+digest of the exact bytes, the annotated tree records, and every retained
+metadata field. `EncodedView::comparison_identity` hashes a checked artifact
+through the same codec input without compression. Equal identities prove
+equal codec inputs. Only the caller keeps the identity. The render cache
+tiers keep none.
+
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
 cache retains nothing. The build head capture and the base capture use this
@@ -265,6 +273,12 @@ The default returns `None`. A wrapper
 that adds checks returns `None` when a forward would bypass those checks or
 need source IO.
 
+`retained_document_evidence` returns a `RetainedDocumentEvidence`: the codec
+identity and the kept closure of one retained view, without a decode. A
+generation returns it only when the restore of that view cannot fail. It reads
+no source and logs nothing. The default returns `None`. A wrapper that adds
+checks declines unless all of its checks still apply.
+
 `comparison_identity` proves one `ComparisonRead` of a route, a `Document`, a
 `Closure`, or a `Resource`, with a `ContentIdentity`. `None` means unknown,
 and the caller then compares the view in full. `ProofMode::Retained` permits
@@ -272,8 +286,9 @@ no source IO, restoration, or fallback. `ProofMode::Current` lets a head proof
 read current resources, and a failed read returns `None`. A prepared
 generation derives document and closure identities from the plan key and one
 identity of the configuration, the roots, the sources, and the route sets.
-The default returns `None`. A wrapper that adds checks keeps that default or
-applies its checks to the identity.
+These recipe identities do not prove equal bytes. The codec identity of
+`EncodedView::comparison_identity` does. The default returns `None`. A wrapper
+that adds checks keeps that default or applies its checks to the identity.
 
 `comparison_document_proof` returns a `DocumentProof`: the current identity
 and usage of one head document from one checked read. A failed check or an
@@ -366,7 +381,9 @@ retention disabled.
   tiers. `RenderCache::contains` checks every tier without a restore.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
   the lossless compact document that the compact tier and the comparison
-  capture share.
+  capture share. Its `encode_identified` and `comparison_identity` hash the
+  complete codec input. The private `document_identity` and
+  `document_metadata` modules hold that hash and the retained metadata.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
   job. Its `stylesheets` method runs one `StylesheetWorker` job for
@@ -408,13 +425,16 @@ retention disabled.
   gives the capture bytes that waiting views can use.
 - [`src/collection_input.rs`](./src/collection_input.rs) defines
   `ComparisonEncoder`, the encoding boundary that a collector or a checking
-  wrapper supplies, and `EncodedComparisonDocument`, one encoded view that
-  waits for its turn.
+  wrapper supplies. It returns the encoded view and its codec identity.
+  `EncodedComparisonDocument` holds one encoded view, its identity, and its
+  closure while the view waits for its turn.
 - [`src/prefetch.rs`](./src/prefetch.rs) defines `PrefetchGuard`, which stops
   the early renders of one classification and waits for them when it drops.
 - [`src/comparison_input.rs`](./src/comparison_input.rs) defines
   `RetainedComparisonInput` and `ComparisonFallback`, a retained comparison
-  input and the deferred source read of a failed restore.
+  input and the deferred source read of a failed restore, and
+  `RetainedDocumentEvidence`, the codec identity and closure of a retained
+  view.
 - [`src/comparison_stream.rs`](./src/comparison_stream.rs) defines
   `ComparisonConsumer`, which admits each index of an ordered comparison
   stream and consumes the finished indexes in order.

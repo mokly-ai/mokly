@@ -35,7 +35,6 @@ export function githubFixture(run: ReturnType<typeof releaseRun>) {
 
 export function evidenceEnvironment(output: string) {
   return {
-    RELEASE_VERIFICATION: "evidence",
     GITHUB_TOKEN: "token",
     GITHUB_REPOSITORY: "mokly-ai/mokly",
     GITHUB_SERVER_URL: "https://github.com",

@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::collection_input::{ComparisonEncoder, EncodedComparisonDocument};
+use mokly_graph::comparison_proof::ContentIdentity;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::{ComparisonDocument, RenderGeneration, RenderSummary};
@@ -41,7 +42,11 @@ struct CheckedEncoder {
 }
 
 impl ComparisonEncoder for CheckedEncoder {
-    fn encode(&self, route: &str, input: &ComparisonDocument) -> Result<EncodedView> {
+    fn encode(
+        &self,
+        route: &str,
+        input: &ComparisonDocument,
+    ) -> Result<(EncodedView, ContentIdentity)> {
         self.resources
             .check(&generated(route), Some(digest(&input.artifact.bytes)))?;
         for resource in input.closure.edges.keys() {

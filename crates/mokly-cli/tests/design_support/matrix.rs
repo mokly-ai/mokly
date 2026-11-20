@@ -81,21 +81,24 @@ pub fn run(root: &Path, session: &Session, baseline: &ComparisonResult) {
         (
             "top_bar_implementation",
             "chrome/top-bar.view.tsx",
-            "<header className=\"mbk-topbar\">",
-            "<header className=\"mbk-topbar\" data-m9-implementation=\"changed\">",
+            "className=\"mbk-topbar-frame\"",
+            "className=\"mbk-topbar-frame\" data-m9-implementation=\"changed\"",
             "design/library/chrome/top-bar",
         ),
         (
             "nested_tag_chip_implementation",
             "controls/tag-chip.view.tsx",
-            "className={className}",
-            "className={className} data-m9-implementation=\"changed\"",
+            "tag={label}",
+            "tag={`${label} changed`}",
             "design/library/controls/tag-chip",
         ),
     ] {
         let path = format!("examples/basic/specs/design/library/{file}");
         let source = text(root, &path);
-        assert!(source.contains(needle));
+        assert!(
+            source.contains(needle),
+            "missing source needle {needle:?} in {path}"
+        );
         let expected: Vec<_> = baseline
             .entries
             .iter()

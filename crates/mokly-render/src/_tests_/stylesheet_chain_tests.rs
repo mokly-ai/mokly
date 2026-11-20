@@ -3,14 +3,16 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::{StylesheetBundler, StylesheetBundlerMock};
+use mokly_css::types::StylesheetBundler;
 use mokly_model::material::digest;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::stylesheet_compiler::CompileRoot;
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 use super::stylesheet_chain_support::{full_context_bytes, module_bundle, module_evidence};
+use super::stylesheet_support::compiled;
 use super::stylesheet_support::{
     Calls, MODULES, assert_same, attempt, charges, key, module, roots, tree,
 };
@@ -34,9 +36,11 @@ fn finding_3_thirty_nine_growing_contexts_fit_without_full_copies() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(compiled(answers.lock().unwrap().remove(0)))
+                })),
         )),
         tree.clone(),
         &shared,
@@ -64,9 +68,11 @@ fn finding_3_growing_context_evidence_charges_only_added_versions() {
     let answers = responses.clone();
     let attempt = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(compiled(answers.lock().unwrap().remove(0)))
+                })),
         )),
         tree,
         &shared,
@@ -106,9 +112,11 @@ fn finding_3_a_chain_hit_returns_the_inner_bundle_and_full_evidence() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(compiled(answers.lock().unwrap().remove(0)))
+                })),
         )),
         tree(&Arc::default(), &[]),
         &shared,
@@ -144,9 +152,11 @@ fn finding_3_changed_base_module_misses_every_record_and_checks_each_entry() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(compiled(answers.lock().unwrap().remove(0)))
+                })),
         )),
         tree(&Arc::default(), &[]),
         &shared,
@@ -177,9 +187,9 @@ fn finding_3_largest_stored_subset_outweighs_a_smaller_attempt_entry() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .next_call(matching!(_))
-                .returns(Ok(module_bundle(root, 2))),
+                .returns(Ok(compiled(module_bundle(root, 2)))),
         )),
         tree(&Arc::default(), &[]),
         &shared,
@@ -229,10 +239,10 @@ fn finding_3_added_versions_are_checked_with_the_base_versions() {
     ]));
     let first = attempt(
         Arc::new(Unimock::new(
-            StylesheetBundlerMock::bundle
+            CompileRoot
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, _| {
-                    Ok(responses.lock().unwrap().remove(0))
+                    Ok(compiled(responses.lock().unwrap().remove(0)))
                 })),
         )),
         tree(&Arc::default(), &[]),

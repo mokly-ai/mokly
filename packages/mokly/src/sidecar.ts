@@ -19,12 +19,8 @@ const version = (
 ).version;
 guardParentOutput();
 const write = process.stdout.write.bind(process.stdout);
-const timings = new Timings(
-  performance,
-  timingOutput(process.stderr),
-  process.pid,
-  randomUUID(),
-);
+const output = timingOutput(process.stderr);
+const timings = new Timings(performance, output, process.pid, randomUUID());
 globalThis.console = new Console(process.stderr, process.stderr);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 const send = async (id: number, outcome: object) => {
@@ -64,7 +60,10 @@ try {
     let stop = false;
     try {
       finish = timings.begin(call, received);
-      const result = await session.call(call);
+      output.quiet(call.quiet ?? false);
+      const result = await session
+        .call(call)
+        .finally(() => output.quiet(false));
       if (call.method === "hello") timings.enable(call.params.timings ?? false);
       await send(call.id, { result });
       finish("ok");

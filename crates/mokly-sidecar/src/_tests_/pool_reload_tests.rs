@@ -148,6 +148,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
                 contexts: BTreeSet::new(),
                 renders: 0,
                 requests: 1,
+                last_compilation: None,
             }));
         }
         state.available.push_back(0);

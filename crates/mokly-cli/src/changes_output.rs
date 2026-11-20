@@ -1,8 +1,10 @@
 //! Changes presentation shares the shell's entry, move, and ignored-entry counts.
 
+use mokly_catalogue::diagnostic;
 use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildChanges;
+use crate::build_output::has_location_lines;
 use crate::codes::Code;
 use crate::output::{Mode, Style, bounded, warning_line};
 use crate::redaction::Redactor;
@@ -14,6 +16,8 @@ pub struct ChangeDiagnostic {
     pub code: Code,
     /// Authored diagnostic text, without crate display wrappers.
     pub message: String,
+    /// Original catalogue code, when the diagnostic came from a catalogue issue.
+    pub catalogue_code: Option<diagnostic::Code>,
 }
 
 /// Rich completion line. Plain commands emit no phase lines.
@@ -101,19 +105,20 @@ pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -
         } => diagnostics
             .iter()
             .map(|diagnostic| {
-                let text = redactor.safe(&format!(
+                let text = format!(
                     "base {base_commit}: [mokly/{}] {}",
                     diagnostic.code.presentation().0,
                     diagnostic.message
-                ));
-                format!(
-                    "{}\n",
-                    if style.mode == Mode::Plain {
-                        text
-                    } else {
-                        format!("  {text}")
-                    }
-                )
+                );
+                let text = if diagnostic.catalogue_code.is_some_and(has_location_lines) {
+                    redactor.safe_lines(&text)
+                } else {
+                    redactor.safe(&text)
+                };
+                let indent = if style.mode == Mode::Plain { "" } else { "  " };
+                text.split('\n')
+                    .map(|line| format!("{indent}{line}\n"))
+                    .collect::<String>()
             })
             .collect(),
         _ => String::new(),

@@ -4,7 +4,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::diagnostic::Warning;
@@ -134,17 +134,18 @@ fn inspect(root: &Path) {
     let config = loader.load(root, common.config.as_deref()).unwrap();
     let cancellation = Arc::new(BuildCancellation::new(Arc::new(Unimock::new(()))));
     let redactor = Arc::new(Redactor::default());
+    let diagnostics = Arc::new(ProbeDiagnostics::default());
     let services = render_runtime::Services::new(
         tree.clone(),
         root,
         &config.repo_root,
         &common,
-        Arc::new(ProbeDiagnostics),
+        diagnostics.clone(),
         cancellation.clone(),
         render_runtime::cache(),
         crate::bundle_runtime::Reporting {
             directory: changes_runtime::reporter(
-                Arc::new(ProbeDiagnostics),
+                diagnostics.clone(),
                 Style {
                     mode: Mode::Plain,
                     color: false,
@@ -179,7 +180,7 @@ fn inspect(root: &Path) {
             )
             .unwrap(),
             services.reporter.clone(),
-            Arc::new(ProbeDiagnostics),
+            diagnostics.clone(),
             None,
         ),
         cancellation,
@@ -202,6 +203,15 @@ fn inspect(root: &Path) {
     );
     services.pool.shutdown().unwrap();
     let summary = result.unwrap();
+    assert_eq!(
+        *diagnostics.steps.lock().unwrap(),
+        [
+            Step::Reading,
+            Step::Extracting,
+            Step::Rendering,
+            Step::Comparing
+        ]
+    );
     assert!(summary.warnings.is_empty(), "{:?}", summary.warnings);
     let BuildChanges::Ready(changes) = summary.changes else {
         panic!("{:?}", summary.changes)
@@ -236,7 +246,10 @@ fn inspect(root: &Path) {
     );
 }
 
-struct ProbeDiagnostics;
+#[derive(Default)]
+struct ProbeDiagnostics {
+    steps: Mutex<Vec<Step>>,
+}
 impl Diagnostics for ProbeDiagnostics {
     fn emit(&self, message: &str) {
         eprintln!("{message}");
@@ -250,7 +263,9 @@ impl Phases for ProbeDiagnostics {
     fn start(&self, phase: Phase) {
         assert!(matches!(phase, Phase::Comparing(_)));
     }
-    fn step(&self, _: Step) {}
+    fn step(&self, step: Step) {
+        self.steps.lock().unwrap().push(step);
+    }
     fn diagnostic(&self, message: &str) {
         eprintln!("{message}");
     }

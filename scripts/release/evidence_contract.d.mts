@@ -57,11 +57,6 @@ export const RELEASE_VERIFICATION_RUNTIMES: readonly [
   "node-24",
 ];
 
-export function resolveVerificationMode(input: {
-  eventName: string;
-  manualVerification: string;
-}): "evidence" | "complete";
-
 export function selectCandidateRuns(
   runs: readonly WorkflowRun[],
   pulls: readonly AssociatedPull[],

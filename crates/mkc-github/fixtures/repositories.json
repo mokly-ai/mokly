@@ -1,0 +1,32 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "total_count": 1,
+    "repositories": [
+      {
+        "id": 1296269,
+        "full_name": "octocat/Hello-World",
+        "name": "Hello-World",
+        "owner": {
+          "id": 1,
+          "login": "octocat",
+          "type": "User",
+          "node_id": "MDQ6VXNlcjE="
+        },
+        "default_branch": "master",
+        "private": false,
+        "archived": false,
+        "disabled": false
+      }
+    ]
+  }
+}

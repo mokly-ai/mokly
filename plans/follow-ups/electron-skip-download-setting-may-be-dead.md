@@ -1,0 +1,36 @@
+# Electron download skip setting may have no effect
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-19, from the branch `calummoore/combine-mokly-cloud-into-repo-704s`, a new problem in the check of review finding 2.
+- **Location:** The `ELECTRON_SKIP_BINARY_DOWNLOAD` lines of `.github/workflows/ci.yml:14`, `:407` and `:631`, `blacksmith-testbox.yml:18`, `:86` and `:91`, `deploy.yml:17`, `dependency-audit.yml:16`, `design-attribution.yml:12`, `foundation.yml:13`, `native-bootstrap.yml:15`, `preview.yml:20`, `pull-request-title.yml:11`, `release-check.yml:11`, `release-prepare.yml:25`, `release.yml:30` and `site.yml:17`, all under `.github/workflows/`. Also `infra/docker/app.Dockerfile:13`, `xtask/scripts/testbox-cloud.mjs:41-42`, `xtask/tests/cli/desktop_workflow_tests.rs:12-14` and `:20-29`, `docs/protocol/ci-workflow.md:118-120`, and `infra/README.md:44-45`.
+- **Reason:** The removal reaches thirteen workflow files, the app image, a Testbox script, a test and two docs, and it changes no behaviour, so it waits for a branch of its own.
+
+- **Terms:**
+  - **`ELECTRON_SKIP_BINARY_DOWNLOAD`:** an environment variable that the install script of older `electron` npm packages reads, to skip the download of the Electron binary during `npm ci`.
+  - **Lazy download:** in Electron 44.11.3, `node_modules/electron/index.js` downloads the binary when a Node process requires the `electron` package and the binary is missing. It runs `install.js` for the download and prints `Downloading Electron binary...`.
+- **Background:**
+  - `apps/desktop/package.json` pins `electron` 44.11.3.
+  - Each workflow job that does not run Electron sets the variable to `1`, at the places that the Location names. The cloud desktop partition clears it at `ci.yml:407`. `xtask/scripts/testbox-cloud.mjs:41-42` clears it for the `cloud-desktop` suite and sets it for the other suites. `blacksmith-testbox.yml:86` and `:91` write it into the Testbox environment. `infra/docker/app.Dockerfile:13` sets it for the image install.
+  - `docs/protocol/ci-workflow.md:118-120` says: "Every CI job that does not run Electron sets `ELECTRON_SKIP_BINARY_DOWNLOAD=1`. Its install does not download Electron. The cloud desktop partition clears that setting and caches the binary." `infra/README.md:44-45` gives the same reason for the image.
+  - `xtask/tests/cli/desktop_workflow_tests.rs:12-14` and `:20-29` assert the setting in `ci.yml`, `deploy.yml`, `preview.yml`, `site.yml` and the Dockerfile.
+  - On 2026-11-19 the installed `node_modules/electron/package.json` of 44.11.3 had an empty `scripts` object, so `npm ci` runs no Electron install script. Its `bin` field names `install-electron`, which runs `install.js`.
+  - `install.js` reads `ELECTRON_INSTALL_PLATFORM`, `ELECTRON_INSTALL_ARCH`, `ELECTRON_OVERRIDE_DIST_PATH`, `force_no_cache`, `electron_config_cache` and `electron_use_remote_checksums`. It does not read `ELECTRON_SKIP_BINARY_DOWNLOAD`.
+  - The same day, `grep -rl ELECTRON_SKIP_BINARY_DOWNLOAD node_modules` over the JavaScript and JSON files printed nothing. A case-insensitive search for `skip_binary_download`, `skip-binary-download` and `skipBinaryDownload` found no reader either. The root `package.json` has no install or prepare hook.
+  - Nobody ran CI without the setting, so the confidence is Medium.
+- **Problem:** With Electron 44.11.3 the setting seems to act on nothing, because no install script runs and no installed package reads it. A protocol page, a README and a test still require it.
+- **Impact if no action:** Thirteen workflows, the app image and the Testbox scripts keep a setting that does nothing. The protocol page states a mechanism that does not act, so a reader can trust it to stop a download that no install starts.
+- **Root question:** Does any install path still need the setting, and how does the repository then state that a CI job without Electron downloads no Electron binary?
+- **Options:**
+  - **A.** Confirm that the setting is dead under the four conditions of the dead-code rule of the `git-commit` skill, then delete it. Effort: Small.
+    - References: search the repository for `ELECTRON_SKIP_BINARY_DOWNLOAD`. Only the places that the Location names may hold it.
+    - Indirect readers: after `npm ci` of the current lockfile, search `node_modules` for the name and for `skip_binary_download` in any case and spelling. Each search must print nothing.
+    - Consumers outside the code: check each install of another lockfile, such as the comparison-base install of the preview capture and the app image build. The comparison-base install already runs without lifecycle scripts. Run one CI pass with the change, and check that no log of a job without Electron shows `Downloading Electron binary...`.
+    - Purpose: `docs/protocol/ci-workflow.md:118-120` requires the setting. In the same change, state the behaviour there instead: a CI job that does not run Electron does not download the Electron binary. Update `infra/README.md:44-45` in the same way.
+    - Then delete the setting from the workflows, the Dockerfile and the Testbox script, and delete the assertions of `desktop_workflow_tests.rs` that cover only the setting. Record each search in the commit message.
+  - **B.** Keep the setting as a guard for a later Electron release that brings back an install script. Correct the reason in the two docs. Effort: Small.
+- **Left out:** Changing nothing keeps a doc that states a mechanism that does not act. An older Electron with an install script reverses the desktop upgrade.
+- **Wider fix:** None. The dead-code rule of the `git-commit` skill already covers this class.
+- **Previous examples:** The Electron cache key at `.github/workflows/ci.yml:444` named 44.7.2 after the desktop app moved to 44.11.3. The review fix round of 2026-11-19 corrected it.
+- **Recommendation:** A. A setting that acts on nothing misleads each reader, and the confirmation steps make the removal safe.
+- **Action:** fix after merge, apply A, because the removal reaches thirteen workflow files, the app image, a Testbox script, a test and two docs, and it changes no behaviour.

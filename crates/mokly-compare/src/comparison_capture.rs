@@ -4,13 +4,18 @@ use std::collections::BTreeMap;
 use std::mem;
 use std::sync::Arc;
 
+#[cfg(test)]
+use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::collection_charge;
+use mokly_graph::comparison_proof::ContentIdentity;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::RenderGeneration;
 
 use crate::capture_collection::Collector;
+#[cfg(test)]
+use crate::capture_error::{self, CaptureResult};
 use crate::capture_generation::CapturedGeneration;
 use crate::capture_restore::LosslessRestorer;
 use crate::capture_styles::{self, EncodedResource};
@@ -43,13 +48,28 @@ impl CaptureSide {
 
 pub(crate) struct CapturedView {
     pub(crate) document: EncodedView,
+    pub(crate) identity: ContentIdentity,
     pub(crate) closure: Closure,
 }
 
 impl CapturedView {
+    #[cfg(test)]
+    #[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
+    pub(crate) fn encode(artifact: &Artifact, closure: Closure) -> Result<Self> {
+        let (document, identity) =
+            capture_error::graph(EncodedView::encode_identified(artifact).capture())?;
+        tracing::Span::current().record("status", "ok");
+        Ok(Self {
+            document,
+            identity,
+            closure,
+        })
+    }
+
     pub(crate) fn charge(&self, route: &str) -> usize {
         256 + route.len()
             + self.document.retained_bytes()
+            + mem::size_of::<ContentIdentity>()
             + collection_charge::closure(&self.closure)
     }
 }

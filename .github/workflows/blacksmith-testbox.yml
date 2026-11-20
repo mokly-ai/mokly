@@ -15,6 +15,7 @@ on:
 permissions:
   contents: read
 env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
   CARGO_PROFILE_TEST_DEBUG: 0
@@ -33,6 +34,15 @@ jobs:
         uses: useblacksmith/begin-testbox@233448af4bfdc6fca509a7f0974411ac6d8a8043 # v2
         with:
           testbox_id: ${{ inputs.testbox_id }}
+      - name: Set up cloud Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Set up cloud npm and record its Node installation
+        run: |
+          npm install --global npm@11.21.0
+          echo "MOKLY_CLOUD_NODE_BIN=$(dirname "$(command -v node)")" >> "$GITHUB_ENV"
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -60,12 +70,25 @@ jobs:
           sha256sum package-lock.json | cut -d ' ' -f1 > "$HOME/.mokly-testbox/package-lock.sha256"
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Install cloud verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 libpq-dev e2fsprogs xvfb
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
+          sudo -u postgres createdb mkc_test
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+          bash infra/scripts/install-tools.sh
+          bash infra/scripts/install-build-tools.sh
+          bash infra/scripts/start-buildkit.sh
       - name: Expose job environment to Testbox sessions
         run: |
-          sudo sed -i -E '/^(PATH|PLAYWRIGHT_CHANNEL|CARGO_INCREMENTAL|CARGO_PROFILE_DEV_DEBUG|CARGO_PROFILE_TEST_DEBUG)=/d' /etc/environment
+          sudo sed -i -E '/^(PATH|PLAYWRIGHT_CHANNEL|MOKLY_CLOUD_NODE_BIN|ELECTRON_SKIP_BINARY_DOWNLOAD|CARGO_INCREMENTAL|CARGO_PROFILE_DEV_DEBUG|CARGO_PROFILE_TEST_DEBUG)=/d' /etc/environment
           printf '%s=%s\n' \
             PATH "$PATH" \
             PLAYWRIGHT_CHANNEL chromium \
+            MOKLY_CLOUD_NODE_BIN "${MOKLY_CLOUD_NODE_BIN:?}" \
+            ELECTRON_SKIP_BINARY_DOWNLOAD "${ELECTRON_SKIP_BINARY_DOWNLOAD:?}" \
             CARGO_INCREMENTAL "${CARGO_INCREMENTAL:?}" \
             CARGO_PROFILE_DEV_DEBUG "${CARGO_PROFILE_DEV_DEBUG:?}" \
             CARGO_PROFILE_TEST_DEBUG "${CARGO_PROFILE_TEST_DEBUG:?}" |

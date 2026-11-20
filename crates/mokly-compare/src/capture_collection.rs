@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::collection_input::{ComparisonEncoder, EncodedComparisonDocument};
+use mokly_graph::comparison_proof::ContentIdentity;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
@@ -60,6 +61,7 @@ impl ComparisonCollector for Collector {
     fn collect(&mut self, route: &str, input: EncodedComparisonDocument) -> Result<()> {
         let view = CapturedView {
             document: input.document,
+            identity: input.identity,
             closure: input.closure,
         };
         let cost = view.charge(route);
@@ -80,10 +82,15 @@ struct Encoder;
 
 impl ComparisonEncoder for Encoder {
     #[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
-    fn encode(&self, _route: &str, input: &ComparisonDocument) -> Result<EncodedView> {
-        let document = capture_error::graph(EncodedView::encode(&input.artifact).capture())?;
+    fn encode(
+        &self,
+        _route: &str,
+        input: &ComparisonDocument,
+    ) -> Result<(EncodedView, ContentIdentity)> {
+        let encoded =
+            capture_error::graph(EncodedView::encode_identified(&input.artifact).capture())?;
         tracing::Span::current().record("status", "ok");
-        Ok(document)
+        Ok(encoded)
     }
 }
 

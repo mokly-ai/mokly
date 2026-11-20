@@ -12,6 +12,8 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 
 - Project a commit-pinned `dyn SourceTree` with bounded batched blob reads.
 - Compare canonical trees, paired ignores, caller inputs, and component regions.
+- Share the document work of an unmoved paired view whose base and head
+  codec inputs are equal.
 - Pair moves, keep removed metadata, and resolve branch-point references.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
 - Reuse the proven view comparisons of one accepted Serve classification
@@ -162,10 +164,13 @@ bytes, generated CSS, and trusted annotations in compressed form. Its collector
 gives the graph workers a `ComparisonEncoder` through
 `ComparisonCollector::encoder`. So each worker encodes its view with
 `mokly_graph::document_codec::EncodedView`, the codec that the compact tier of
-the render cache also uses. `ComparisonCollector::remaining` gives the bytes
-that the capture bound has left for the views that wait for their turn. Inputs
-that do not fit the capture budget, and kept views that fail to restore, read
-from their side's source.
+the render cache also uses. The encoder calls `EncodedView::encode_identified`,
+so each view also gets the 32-byte identity of its codec input.
+`ComparisonCollector::remaining` gives the bytes that the capture bound has
+left for the views that wait for their turn. Each waiting view and each kept
+view holds its identity, and the capture budget charges it. The render cache
+keeps no identity. Inputs that do not fit the capture budget, and kept views
+that fail to restore, read from their side's source.
 A usage read of a kept view returns its retained usage without a restore, so
 it needs no source fallback. Serve head reads use the bounded render cache and
 render again on the head root only when neither cache tier holds the document.
@@ -192,6 +197,24 @@ restores it once. The reader of a kept base checks its own cancellation, then
 forwards the lookup to the kept capture. Through that reader, a failed restore
 returns no retained input, and the ordered pass reads the view through the
 reader, with its cancellation and failure checks.
+
+`Pairing::preserves_document_paths` holds when no entry moved and every
+paired entry keeps its exact path spelling. Then a paired view whose two
+routes are equal asks the base for `retained_document_evidence` before any
+restore. The reader of a kept base checks its own cancellation before it
+forwards this request too. The task reads the checked head document once and
+hashes it with `EncodedView::comparison_identity`. An equal identity proves
+equal bytes, trees, annotations, and retained metadata. This codec identity
+differs from the `comparison_identity` proofs of view comparison reuse, which
+a prepared generation derives from plan keys.
+
+With an equal identity, the view uses the head document for both sides, with
+the base's own kept closure, and restores no base document. It builds one
+matching tree and skips the canonical and in-document style comparisons,
+because equal inputs give no difference. Usage that is not ready still gives
+conservative input signals. Both sides' closures, every resource comparison,
+the recorded proof reads, and the memo calls stay as in a full comparison.
+Without equal evidence, the task restores the retained base input.
 
 A view with a base route whose input is deferred or not retained gets all
 of its reads in the ordered pass, after every earlier view. An ordered failure
@@ -301,8 +324,10 @@ owns what the checks cover and what they miss.
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
 announces reading and comparing, and the base provider announces rendering.
-`StepCache` wraps a `dyn Cache` and announces a source build as extracting and
-a dependency build as installing. A complete entry announces nothing.
+`CachedExtraction` and `DependencyTiers` each take a required `dyn Steps`.
+`CachedExtraction` announces extracting when a source build starts.
+`DependencyTiers` announces installing when a dependency build starts. A
+complete entry announces nothing.
 
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
@@ -388,6 +413,11 @@ development dependencies, and no test uses the internet.
   boundary and its retained output.
 - [`src/comparison.rs`](./src/comparison.rs) defines `Engine`, the one
   catalogue-wide comparison for build, Serve, and static projection.
+- [`src/comparison_preparation.rs`](./src/comparison_preparation.rs) defines
+  `Preparation`, which reads the inputs of one paired view. It admits an equal
+  document through the base's retained evidence. The private
+  `comparison_documents` and `equal_material` modules build the shared
+  matching tree and the material of that view.
 - [`src/comparison_reuse.rs`](./src/comparison_reuse.rs) defines
   `ComparisonReuse`, `ReuseAttempt`, `MemoryComparisons`, `ReuseFence`, and
   `ReuseWork`, the bounded view comparison reuse of Serve. The private
@@ -421,15 +451,14 @@ development dependencies, and no test uses the internet.
   that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
-  checks its cancellation before each call, and forwards retained inputs and
-  captured usage to the kept capture after that check. It releases the base
-  through its `BaseRelease` after its own first failed read. Its
-  `comparison_identity` forwards only `ProofMode::Retained` proofs to the kept
-  base generation, between two cancellation checks. A failed reader proves
-  nothing.
-- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
-  `Steps`, and `StepCache`, the comparison steps that a command shows while
-  Changes runs.
+  checks its cancellation before each call, and forwards retained inputs,
+  retained document evidence, and captured usage to the kept capture after
+  that check. It releases the base through its `BaseRelease` after its own
+  first failed read. Its `comparison_identity` forwards only
+  `ProofMode::Retained` proofs to the kept base generation, between two
+  cancellation checks. A failed reader proves nothing.
+- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step` and
+  `Steps`, the comparison steps that a command shows while Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
   base.

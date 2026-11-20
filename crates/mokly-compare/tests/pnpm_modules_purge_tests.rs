@@ -173,6 +173,7 @@ fn run_install(version: &str, _ci: bool, _actions: bool) {
         10 * 1024 * 1024,
     ));
     let extraction: &dyn Extraction = &CachedExtraction {
+        steps: Arc::new(support::IgnoredSteps),
         repository,
         cache: Arc::clone(&cache),
         files: Limits::default().files,
@@ -200,6 +201,7 @@ fn run_install(version: &str, _ci: bool, _actions: bool) {
         resolution: ModuleResolution::default(),
     };
     let resolved = DependencyTiers {
+        steps: Arc::new(support::IgnoredSteps),
         cache,
         commands,
         storage: storage(temporary.path()),
