@@ -28,8 +28,13 @@ async function manifest(file: string): Promise<Manifest> {
 test("native package manifests match the root links and the CLI version pins", async () => {
   const workspace = await manifest("package.json");
   const cli = await manifest("packages/mokly/package.json");
+  const moklyWorkspaces: string[] = [];
+  for (const directory of workspace.workspaces ?? []) {
+    const entry = await manifest(`${directory}/package.json`);
+    if (entry.name.startsWith("@mokly/")) moklyWorkspaces.push(directory);
+  }
   assert.deepEqual(
-    new Set(workspace.workspaces),
+    new Set(moklyWorkspaces),
     new Set([
       "packages/ui",
       "packages/model",

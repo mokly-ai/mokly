@@ -28,7 +28,8 @@
     "LICENSE",
     "README.md",
     "docs/guides",
-    "docs/protocol"
+    "docs/protocol",
+    "!docs/protocol/cloud/**"
   ],
   "dependencies": {
     "@babel/parser": "^7.29.9",

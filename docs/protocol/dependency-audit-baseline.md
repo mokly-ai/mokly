@@ -190,9 +190,7 @@ The [update pull request contract](./dependency-audit-update-pr.md#pull-request-
 defines when the `dependency-audit` label takes effect.
 
 Read-only release preparation runs the strict npm dependency audit before
-it selects reusable evidence or the complete fallback.
-The complete fallback runs `cargo xtask check --dependency-audit strict`, so
-its repeated workspace audit also stays strict.
+it selects reusable CI evidence. Release preparation runs no repository gate.
 The scheduled audit and dependency update pull requests stay strict. On every
 strict surface, an expired exception requires a new risk review or removal;
 a stale exception requires removal. The packed-consumer production

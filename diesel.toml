@@ -1,0 +1,73 @@
+[print_schema.authentication]
+file = "crates/mkc-db/src/schema/authentication.rs"
+with_docs = true
+filter = { only_tables = ["^users$", "^sessions$", "^magic_links$", "^auth_rate_limits$"] }
+
+[print_schema.platform]
+file = "crates/mkc-db/src/schema/platform.rs"
+with_docs = true
+filter = { only_tables = ["^organizations$", "^memberships$", "^projects$", "^project_grants$", "^project_tokens$"] }
+
+[print_schema.billing]
+file = "crates/mkc-db/src/schema/billing.rs"
+with_docs = true
+filter = { only_tables = ["^billing_customers$", "^billing_subscriptions$", "^billing_subscription_items$", "^billing_deliveries$"] }
+
+[print_schema.billing_commands]
+file = "crates/mkc-db/src/schema/billing_commands.rs"
+with_docs = true
+filter = { only_tables = ["^billing_checkout_sessions$", "^billing_seat_commands$"] }
+
+[print_schema.slug]
+file = "crates/mkc-db/src/schema/slug.rs"
+with_docs = true
+filter = { only_tables = ["^organization_slugs$", "^project_slugs$"] }
+
+[print_schema.integration]
+file = "crates/mkc-db/src/schema/integration.rs"
+with_docs = true
+filter = { only_tables = ["^integrations$"] }
+
+[print_schema.github_installation]
+file = "crates/mkc-db/src/schema/github_installation.rs"
+with_docs = true
+filter = { only_tables = ["^github_installations$", "^github_repositories$", "^github_project_repositories$"] }
+
+[print_schema.github_identity]
+file = "crates/mkc-db/src/schema/github_identity.rs"
+with_docs = true
+filter = { only_tables = ["^github_user_identities$", "^github_oauth_flows$"] }
+
+[print_schema.github_delivery]
+file = "crates/mkc-db/src/schema/github_delivery.rs"
+with_docs = true
+filter = { only_tables = ["^github_webhook_deliveries$"] }
+
+[print_schema.github_refs]
+file = "crates/mkc-db/src/schema/github_refs.rs"
+with_docs = true
+filter = { only_tables = ["^github_pull_requests$", "^github_branches$", "^github_check_runs$"] }
+[print_schema.publication]
+file = "crates/mkc-db/src/schema/publication.rs"
+with_docs = true
+filter = { only_tables = ["^publications$", "^blobs$", "^publication_files$"] }
+
+[print_schema.publication_events]
+file = "crates/mkc-db/src/schema/publication_events.rs"
+with_docs = true
+filter = { only_tables = ["^publication_events$", "^publication_branch_aliases$", "^catalogue_grants$"] }
+
+[print_schema.publication_screens]
+file = "crates/mkc-db/src/schema/publication_screens.rs"
+with_docs = true
+filter = { only_tables = ["^publication_screen_views$"] }
+
+[print_schema.build]
+file = "crates/mkc-db/src/schema/build.rs"
+with_docs = true
+filter = { only_tables = ["^builds$"] }
+
+[print_schema.build_output]
+file = "crates/mkc-db/src/schema/build_output.rs"
+with_docs = true
+filter = { only_tables = ["^build_upload_grants$", "^build_log_chunks$", "^build_checks$"] }

@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_prices_lookup_empty_fixture"
+  },
+  "body": {
+    "object": "list",
+    "url": "/v1/prices",
+    "has_more": false,
+    "data": []
+  }
+}

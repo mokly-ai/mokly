@@ -34,6 +34,7 @@ const EXAMPLE_DEPENDENCIES = [
   "@gorhom/bottom-sheet",
   "@tailwindcss/postcss",
   "autoprefixer",
+  "lucide-react",
   "lucide-react-native",
   "postcss",
   "react",

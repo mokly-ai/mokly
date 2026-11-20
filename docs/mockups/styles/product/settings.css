@@ -1,0 +1,78 @@
+/* Settings screens: the dialog over the inert project page, or the mobile layer. */
+.fo-settings-screen {
+  position: relative;
+  min-height: 100vh;
+}
+.fo-settings-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fo-settings-backdrop > .fo-stage {
+  flex: 1;
+  min-height: 0;
+}
+.fo-settings-surface {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+.fo-settings-overlay {
+  align-items: center;
+  justify-content: center;
+  padding: var(--mk-space-8);
+  background: color-mix(in srgb, var(--mk-color-text) 34%, transparent);
+  backdrop-filter: blur(3px);
+}
+.fo-settings-screen .fo-state {
+  padding: var(--mk-space-10) var(--mk-space-6);
+}
+
+/* A confirmation or reveal the pane opened, over the frame it belongs to. */
+.fo-settings-modal-layer {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--mk-color-text) 30%, transparent);
+}
+.fo-settings-overlay > .fo-settings-modal-layer {
+  align-items: center;
+  padding: var(--mk-space-8);
+}
+.fo-settings-modal-layer .fo-viewer-panel {
+  max-width: 440px;
+}
+.fo-settings-modal-layer .fo-viewer-sheet {
+  max-width: none;
+}
+
+.fo-fact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+}
+/* A row's facts beside its three-dot menu. */
+.fo-note-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mk-space-3);
+}
+.fo-note-facts {
+  display: grid;
+  flex: 1 1 auto;
+  gap: var(--mk-space-3);
+  min-width: 0;
+}
+/* A setting the pane writes on its own: its switch, and one line beneath. */
+.fo-setting {
+  display: grid;
+  gap: var(--mk-space-1);
+}

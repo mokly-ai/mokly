@@ -89,8 +89,9 @@
   network.
 - **Previous examples:** On 2026-10-28 the agent of PR #222 opened that pull
   request with this local failure, because the ratchet failed the same way
-  on `origin/main`. `AGENTS.md:87` already names a similar preparation step:
-  fetch `origin/main` before `cargo xtask source-file-length-lint`.
+  on `origin/main`. The repository rules of `AGENTS.md` already name a
+  similar preparation step: fetch `origin/main` before
+  `cargo xtask source-file-length-lint`.
 - **Recommendation:** A. It names the missing preparation step
   where contributors look for it, with no new failure mode and no network
   dependency in the gate. C best protects the codebase, at the cost of
