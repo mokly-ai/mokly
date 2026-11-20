@@ -179,9 +179,10 @@ export function SettingsRoute({
         pane={requested}
         session={session}
         slugs={{ workspaceSlug, projectSlug }}
+        search={search}
         scope={scope.state}
         onRetry={scope.reload}
-        onRoute={(href) => router.replace(href)}
+        onRoute={(href) => replaceAddress(router, href)}
         onClose={close}
         discard={discard}
       />
