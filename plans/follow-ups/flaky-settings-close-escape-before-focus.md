@@ -1,8 +1,8 @@
 # Settings Close test presses Escape before focus
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-20, from the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431), in a local `cloud-app` suite run.
+- **Added:** 2026-11-20, from the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431), in two local `cloud-app` suite runs.
 - **Location:** `packages/app/src/_tests_/settings/doors.spec.ts:37-60`, the test "Close returns to the page beneath from any address", and its Escape press at `:50`. `packages/app/src/_tests_/settings/in-app.ts:9-33`, `openDialogInApp`. `packages/app/src/_tests_/settings/doors.spec.ts:16-35`, the test that waits for focus first.
 - **Reason:** The flaky test is in the Expo app tests, which the site change that found it does not touch.
 
@@ -10,7 +10,7 @@
   - **Settings dialog:** the modal dialog of the Expo app under `packages/app` that holds the settings panes, such as Account. A `settings` query parameter in the address opens it.
   - **`openDialogInApp`:** the test helper in `packages/app/src/_tests_/settings/in-app.ts` that opens a settings pane through the app's own navigation, then waits for the address and the pane heading.
 - **Background:** The `cloud-app` suite runs the Playwright tests of the Expo app. The test "Close returns to the page beneath from any address" opens the Account pane three times with `openDialogInApp`. It closes the dialog first with the Close control, then with the Escape key, then with Close and Discard. After each close, it expects no dialog and the project address.
-- **Problem:** On 2026-11-20 the test failed once and passed on its retry, in the `[desktop]` project of one local `cloud-app` run. The failure was at the Escape press:
+- **Problem:** On 2026-11-20 the test failed at its first attempt and passed on its retry, in the `[desktop]` project of each of two local `cloud-app` runs. Both failures were at the Escape press:
 
   ```text
   Error: expect(locator).toHaveCount(expected) failed
@@ -19,10 +19,10 @@
   Expected: 0
   Received: 1
   Timeout:  15000ms
-    at apps/app/src/_tests_/settings/doors.spec.ts:51:42
+    at packages/app/src/_tests_/settings/doors.spec.ts:51:42
   ```
 
-  The suite reported "1 flaky" and "420 passed". The run came before the app moved from `apps/app` to `packages/app`, so the failure text names the old path. The suspected source is a missing readiness signal. `openDialogInApp` waits for the address and the heading of the pane, but not for the dialog to move focus into itself. The first test of the same file, "Escape closes a clean dialog and returns to the page beneath", waits with `toBeFocused()` on the pane link before it presses Escape. Its comment says that a key pressed before the dialog takes focus reaches no dialog. The failing test presses Escape without that wait, so the key can reach the page before the dialog listens.
+  Each run reported "1 flaky" and "420 passed". The first run came before the app moved from `apps/app` to `packages/app`, so its failure text named the old path. The suspected source is a missing readiness signal. `openDialogInApp` waits for the address and the heading of the pane, but not for the dialog to move focus into itself. The first test of the same file, "Escape closes a clean dialog and returns to the page beneath", waits with `toBeFocused()` on the pane link before it presses Escape. Its comment says that a key pressed before the dialog takes focus reaches no dialog. The failing test presses Escape without that wait, so the key can reach the page before the dialog listens.
 
 - **Impact if no action:** The `cloud-app` suite of the gate fails now and then on a correct change. A Playwright retry hides it in CI, but a run without the retry fails, and the retry costs time.
 - **Root question:** How does the test know that the settings dialog takes the keyboard before it presses Escape?
