@@ -285,20 +285,16 @@ Depends on: 12
 
 Depends on: every other milestone
 
-- [ ] Run `npm run site:check`, which includes the browser suite, and the
-      report-only Lighthouse run. Report the scores of the home page.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Run the one full test pass on the merged primary branch (Cal,
+      2026-11-20): the complete gate of `AGENTS.md`, `npm run site:check` and
+      the report-only Lighthouse run, with the home page scores.
 - [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record follow-up
-      items under `plans/follow-ups/` for the rest, re-review once, and
-      report.
+- [ ] Review the diff against `origin/main` with the `implementation-review`
+      skill after the push, then apply its fix rule and re-review once.
 - [ ] Delete this plan, its design record and both decisions files when the
       `plans` skill says, under "Deleting the plan".
-- [ ] Open the pull request. Its description gives the decisions and the
-      design calls with their dates, a permalink to this plan, and the
-      follow-up items that the change adds.
+- [ ] Open the pull request, with the dated decisions and design calls, a
+      plan permalink and the new follow-up items. Its CI is the final check.
 
 ## Post-merge follow-up (non-blocking)
 

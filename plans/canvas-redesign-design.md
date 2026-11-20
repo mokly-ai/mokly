@@ -78,6 +78,13 @@ existing React, HTML and CSS components.`
   - Decision 10, **C**: a general Markdown fence that renders an HTML sample
     beside its code.
 
+- 2026-11-20, in this workspace: reduce testing. Each delegated workspace runs
+  only the tests that cover the files that it changes, and does not run the
+  complete gate or wait for CI. The primary branch merges a work item after
+  the diff read and those targeted tests. One full test pass runs on the
+  primary branch when every milestone is merged. Then the pull request into
+  `main` opens, and its CI is the final check.
+
 ## Design calls
 
 These are my calls, made on 2026-11-20. Cal can change any of them.
