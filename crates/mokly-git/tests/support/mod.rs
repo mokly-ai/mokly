@@ -20,6 +20,8 @@ impl Fixture {
     pub fn new() -> Self {
         let fixture = Self(tempfile::tempdir().unwrap());
         git(fixture.root(), &["init", "-b", "main"]);
+        git(fixture.root(), &["config", "core.autocrlf", "false"]);
+        git(fixture.root(), &["config", "core.eol", "native"]);
         git(fixture.root(), &["config", "user.name", "Mokly Tests"]);
         git(
             fixture.root(),
