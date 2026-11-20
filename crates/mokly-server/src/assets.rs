@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
+use mokly_css::imported_assets;
 use mokly_model::namespace::viewer;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
@@ -116,6 +117,11 @@ impl ViewerAssets for PackageAssets {
 
 /// MIME fallback for public authored files; never use a caller-supplied type.
 pub fn content_type(path: &str) -> String {
+    if path.starts_with("static/mokly-generated/assets/")
+        && let Some(mime) = imported_assets::content_type(path)
+    {
+        return mime.into();
+    }
     let mime = mime_guess::from_path(path)
         .first_or_octet_stream()
         .to_string();
@@ -125,3 +131,12 @@ pub fn content_type(path: &str) -> String {
         mime
     }
 }
+
+/// Content type of a planned generated resource, with the imported asset table.
+pub(crate) fn generated_content_type(path: &str) -> String {
+    imported_assets::content_type(path).map_or_else(|| content_type(path), str::to_owned)
+}
+
+#[cfg(test)]
+#[path = "_tests_/imported_asset_types_tests.rs"]
+mod imported_asset_types_tests;

@@ -11,7 +11,7 @@ use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
 use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
-use crate::assets::{File, content_type};
+use crate::assets::{File, generated_content_type};
 use crate::backend_preview::ArtifactBytes;
 use crate::error::{Result, ServerError};
 use crate::public_read::{OpenedFile, PublicReader};
@@ -144,7 +144,7 @@ impl Documents for GraphDocuments {
         match self.generation.resource(route) {
             Ok(bytes) => Ok(bytes.map(|bytes| File {
                 bytes: bytes.into(),
-                content_type: content_type(route),
+                content_type: generated_content_type(route),
             })),
             Err(source) => Err(ServerError::Render { source }),
         }

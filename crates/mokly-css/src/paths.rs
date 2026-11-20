@@ -9,7 +9,8 @@ pub fn portable(path: &str, asset: bool) -> bool {
         let Some((index, suffix)) = rest.split_once('/') else {
             return false;
         };
-        return !index.starts_with('0')
+        return !index.is_empty()
+            && !index.starts_with('0')
             && index.bytes().all(|byte| byte.is_ascii_digit())
             && portable_segments(&format!("node_modules/{suffix}"), asset);
     }

@@ -182,6 +182,7 @@ impl JavaScriptGraph {
                     &side.module_resolution.loaders,
                 ),
                 component_stylesheets: declarations,
+                imported_assets: Vec::new(),
                 entry_modules,
             };
         }

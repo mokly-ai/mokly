@@ -117,6 +117,10 @@ consumer renderer wrappers. Only instance and slot markers reach served bytes.
 `markdown::LinkResolver` classifies source-relative links before rendering.
 `links::rewrite` returns logical references for cross-view anchor validation
 by the graph. The crate performs no direct filesystem access or writes.
+The graph rewrites closed asset tokens whose paths are portable. It uses
+document-relative URLs in the final tree. Replacement does not depend on the
+generation's asset membership. Comments, tokens with non-portable paths,
+and collected stylesheet text stay unchanged.
 
 ## Quick Start
 

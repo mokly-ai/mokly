@@ -105,10 +105,16 @@ are `src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
 `url()`. The core also replaces a token in another position, such as
 `data-src`, but that URL is not a resource reference.
 
-A string that has the form of a token but names no asset of the generation
-stays unchanged. The URL policy then applies to it as to any other value. No
-attribute value, text, or collected style of a served or written document
-holds a token of its generation.
+The replacement does not depend on the assets of the generation. A string in
+token form also becomes a URL when its path names no asset of the generation.
+A reference to that URL then fails the referenced closure as a missing target.
+No attribute value, text, or collected style of a served or written document
+holds a token.
+
+Decision: the assets of a generation are not an input of the replacement.
+Rejected: a replacement only for the delivered paths, because the key of each
+document would then hold the asset list, and one new import would render every
+view again.
 
 ## Delivery
 
@@ -130,7 +136,9 @@ An imported asset follows the rules of stylesheet assets in these points:
   [dependency file names](./mokly-sidecar-modules.md#source-and-dependency-files).
 - It is a protected input of the
   [source inventory](./mokly-source-protection.md#complete-source-inventory).
-  A document that links its authored path fails as a protected target.
+  A document that links its authored path fails as a protected target, with
+  the [reason](./mokly-imported-styles-errors.md#build-build-invalid) of an
+  imported stylesheet asset. That reason names the importing module.
 - The digest and length checks and the verified copies of Serve, `build`,
   and publish follow
   [generation delivery](./mokly-imported-styles-assets.md#validation-and-the-render-cache).

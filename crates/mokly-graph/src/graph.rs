@@ -8,7 +8,6 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::names::ModuleNames;
-use mokly_css::paths;
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::canonical::compare_utf16;
@@ -25,8 +24,8 @@ use crate::session::{Session, SessionInput};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{
-    config_key, dependency_inputs, error, markdown_assets, markdown_sources, planning, styles,
-    stylesheet_keys, watch_rules,
+    config_key, dependency_inputs, error, imported_assets, markdown_assets, markdown_sources,
+    planning, styles, stylesheet_keys, watch_rules,
 };
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -164,33 +163,7 @@ impl Graph {
                     }),
             );
             for (route, asset) in bundle.assets {
-                names.insert(&route, true)?;
-                let asset_key = key(
-                    NodeKind::Stylesheet,
-                    &[route.as_bytes(), asset.digest.as_bytes()],
-                );
-                if resources
-                    .get(&route)
-                    .is_some_and(|previous| previous.key != asset_key)
-                {
-                    return Err(error::invalid(
-                        &route,
-                        format!(
-                            "CSS asset bytes disagree at {route}; keep shared asset inputs stable during the build"
-                        ),
-                    ));
-                }
-                resources
-                    .entry(route.clone())
-                    .or_insert_with(|| ResourcePlan {
-                        document_key: asset_key.clone(),
-                        key: asset_key,
-                        content_type: paths::content_type(&route)
-                            .unwrap_or("application/octet-stream")
-                            .into(),
-                        root: root.clone(),
-                        asset: Some(asset),
-                    });
+                imported_assets::register(route, asset, &root, &mut names, &mut resources)?;
             }
             catalogue.model.sources.extend(
                 bundle
@@ -210,6 +183,14 @@ impl Graph {
             plugin_inputs.extend(bundle.plugin_inputs);
             directories.extend(bundle.directories);
         }
+        imported_assets::register_imports(
+            &self.inputs.imported_assets,
+            &self.inputs.dependency_aliases,
+            &mut catalogue,
+            &mut names,
+            &mut resources,
+            &mut imported_by,
+        )?;
         catalogue
             .model
             .sources

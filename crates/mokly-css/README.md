@@ -102,6 +102,10 @@ changes work only. Evidence retains each source's public route.
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
+JavaScript-imported assets use a wider content-type table for images, fonts,
+media, and documents. CSS `url()` retains its own extension list.
+Stylesheet delivery and document asset tokens share the portable path rule.
+It rejects empty path segments, including an empty selected dependency-root index.
 
 `Bundle.read_evidence` retains distinct observed and late input versions.
 Combining stylesheets preserves both kinds without overwriting earlier
@@ -162,6 +166,10 @@ also fails when that exception no longer differs.
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
+- [`src/imported_assets.rs`](./src/imported_assets.rs) defines the JavaScript
+  asset type table and its case-sensitive content-type lookup.
+- [`src/paths.rs`](./src/paths.rs) supplies the shared portable path rule
+  for stylesheet routes, asset delivery, and document asset tokens.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
   `SourceResolver`, which resolve imports through the injected source tree.
 - [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the

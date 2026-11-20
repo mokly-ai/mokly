@@ -6,6 +6,7 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import { assetModule, assetType, consumerLoader } from "./asset-imports.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
@@ -42,18 +43,24 @@ export function consumerPlugins(
       name: "mokly-consumer",
       setup(build) {
         build.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
-          if (
-            params.moduleResolution.loaders[path.extname(args.path)] === "file"
-          )
+          const consumer = consumerLoader(
+            args.path,
+            params.moduleResolution.loaders,
+          );
+          if (consumer === "file")
             throw new Error(
               `consumer graph emitted an undelivered file: ${logical(root, args.path)}; use a dataurl or binary loader for JavaScript assets instead of file`,
             );
           const extension = path.extname(args.path);
           const loader =
-            params.moduleResolution.loaders[extension] ??
+            consumer ??
             sourceLoaders[extension] ??
             attributeLoaders[args.with.type ?? ""] ??
-            (extension === ".txt" ? "text" : undefined);
+            (assetType(args.path)
+              ? "asset"
+              : extension === ".txt"
+                ? "text"
+                : undefined);
           if (!loader) return undefined;
           let contents = reads.get(args.path);
           if (contents === undefined) {
@@ -76,6 +83,11 @@ export function consumerPlugins(
             reads.set(args.path, contents);
           }
           inputs.files.set(args.path, contents);
+          if (loader === "asset")
+            return {
+              contents: assetModule(paths.name(args.path), inputs.files),
+              loader: "js",
+            };
           return { contents, loader: loader as Loader };
         });
         // A repository-owned importer of `@mokly/mokly` (real path in the

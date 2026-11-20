@@ -723,7 +723,11 @@ move them to "Design calls" at the merge.
 5. The core replaces each token in the attribute values, the text, and the
    collected styles of a composed document. Only the reference positions of
    the comparison contract count as resource references. Reason: no output
-   shows a token, and no new error is necessary.
+   shows a token, and no new error is necessary. Changed on 2026-11-20: the
+   replacement does not depend on the assets of the generation, and a
+   reference to an undelivered path fails as a missing target. Reason: with
+   the asset list in each document key, one new import rendered every view
+   again, and the two sides of a comparison shared no cached view.
 6. Each imported asset, the file of an import that gives a token, is
    delivered with its generation, also when no document references it. A
    stylesheet asset at the same path shares its route. Reason: this is the
@@ -740,7 +744,10 @@ move them to "Design calls" at the merge.
 10. A document that links the authored path of an imported asset fails with
     the existing protected-target reason. No new row names the importing
     module. Reason: the failure already exists, and a new message can come
-    later.
+    later. Changed on 2026-11-20: the failure uses the existing row of an
+    imported stylesheet asset, which names the importing module. Reason: the
+    implementation showed that this row applies with no new message, and it
+    tells the author the fix.
 
 ### C1. A `file` loader on an asset import
 

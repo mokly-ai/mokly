@@ -112,6 +112,12 @@ your own React. It also runs your PostCSS module on local stylesheets. A
 catalogue of HTML files without a renderer or a PostCSS module starts no
 sidecar.
 
+The sidecar turns supported image, font, and media imports into closed
+`mokly-asset:[logical/path]` tokens. Consumer loaders and import attributes
+take precedence over the asset default. It records the original asset bytes
+for module digests and keeps the imported paths with each compile. The current
+Rust adapter does not transfer that asset list to document delivery yet.
+
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and
 the [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md)
@@ -214,6 +220,9 @@ the packed contents of the package.
   result before it drops the evidence. A `serveEdit` compile gets empty,
   incomplete evidence with the `uncaptured: "serveEdit"` marker. A compile
   without a toolchain identity gets no marker.
+- [`src/sidecar/asset-imports.ts`](./src/sidecar/asset-imports.ts) holds the
+  asset extension list, longest consumer-loader lookup, closed tokens, and
+  per-compile imported paths keyed by the consumed-byte map.
 - [`src/sidecar/captured-plan.ts`](./src/sidecar/captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
   only with complete, durable, and unmarked evidence. The plan and the

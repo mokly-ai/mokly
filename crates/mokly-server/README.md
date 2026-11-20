@@ -128,6 +128,9 @@ output.
 
 Generated opaque assets follow the
 [CSS assets contract](../../docs/protocol/mokly-imported-styles-assets.md).
+Generated asset responses use the JavaScript asset content-type table,
+including media and document types. Comparison resource routes use the same
+table. Other authored files retain their MIME fallback.
 `GraphDocuments::asset_request` reserves the capture of a route before
 foreground worker admission, without IO. `GraphDocuments` keeps a weak entry
 for each route, so concurrent requests of its generation join one capture.
@@ -260,7 +263,8 @@ generations.
 - [`src/shutdown.rs`](./src/shutdown.rs) defines `Lifecycle`, the ordered
   shutdown hooks.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
-  `PackageAssets`, the built viewer inventory. The shell stub comes from
+  `PackageAssets`, the built viewer inventory, and the generated asset
+  content-type lookup. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 
 ### Related Docs

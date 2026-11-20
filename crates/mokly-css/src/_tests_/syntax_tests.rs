@@ -39,6 +39,7 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
         "images/.hidden.png",
         "images/_private.png",
         "node_modules/@scope/nul.woff2",
+        "node_modules/.mokly-roots//image.png",
     ] {
         assert!(!paths::portable(path, true), "{path}");
     }

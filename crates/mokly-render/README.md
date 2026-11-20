@@ -50,6 +50,8 @@ an insert charges one record instead of recounting the cache. A context
 projects and hashes each of its modules once, and its later results reuse
 those late digests.
 Mokly's own CSS transforms stay in the Rust core.
+The graph adapter currently supplies an empty imported asset list. The module
+graph does not identify the files that used the asset-default loader.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
 directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
@@ -273,7 +275,7 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path.
+  same composition path and initializes their `DeliveryInputs` metadata.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
   isolates class maps across retained graphs. It sends the served-generation
   notice only at its direct return of a retained state. Its `BundleState`

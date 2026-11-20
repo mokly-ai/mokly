@@ -4,8 +4,9 @@ Status: The Build row "Non-portable JavaScript asset route" is not implemented y
 
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
-directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
-are repository-relative POSIX paths; `{line}` and `{column}` refer to the CSS
+directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, `{directory}`, and
+`{importer}`, the importing stylesheet or module, are repository-relative POSIX
+paths; `{line}` and `{column}` refer to the CSS
 that the scoper or the bundler received, after PostCSS, never to a source-map
 origin. `{config-path}` is the `postcss` value as the configuration spells
 it. Only `{detail}` may carry raw tool text.
@@ -69,7 +70,7 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Missing or non-file explicit plugin dependency          | `PostCSS plugin {plugin} reported a missing dependency for {stylesheet}: {file}; make it a regular file or correct the plugin`                                                                                            |
 | Missing or non-directory plugin directory dependency    | `PostCSS plugin {plugin} reported a missing directory dependency for {stylesheet}: {directory}; create the directory or correct the plugin`                                                                               |
 | Document references a plugin-reported dependency        | `protected target {reference}: PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}" or source(none) with explicit @source)` |
-| Document references an imported stylesheet or asset     | `protected target {reference}: imported by {stylesheet}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`                                                                      |
+| Document references an imported stylesheet or asset     | `protected target {reference}: imported by {importer}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`                                                                        |
 
 The two protected-target rows are `<reason>` texts of the document-link
 diagnostic below; the policy denial names the lister so the author can act

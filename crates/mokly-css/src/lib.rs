@@ -4,6 +4,7 @@
 pub mod compiler;
 pub mod dependencies;
 pub mod error;
+pub mod imported_assets;
 pub mod modules;
 pub mod names;
 pub mod paths;
