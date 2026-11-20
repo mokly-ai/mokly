@@ -42,6 +42,7 @@ fn fresh() -> results::Bundle {
         generation: "fresh".into(),
         epoch: 9,
         cache: None,
+        compile_count: 1,
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {

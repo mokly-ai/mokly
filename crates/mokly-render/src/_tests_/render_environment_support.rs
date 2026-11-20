@@ -91,6 +91,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
         unmapped_dependency_directories: None,
         epoch: 0,
         cache: None,
+        compile_count: 1,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
             metadata_identity: None,

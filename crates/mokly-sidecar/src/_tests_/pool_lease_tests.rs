@@ -44,6 +44,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
                     unmapped_dependency_directories: None,
                     epoch: 0,
                     cache: None,
+                    compile_count: 1,
                     compiled: Arc::new(compiled("g")),
                     generation: "g".into(),
                     modules: vec![],
