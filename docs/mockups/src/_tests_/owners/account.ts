@@ -262,4 +262,10 @@ export const accountOwners = {
     region: "recovery",
     files: ["screens/app/not-found-screen.tsx"],
   },
+  // Every product route reads the session through one guard, which draws the
+  // failed read in the account panel.
+  "product/recovery/session-error": {
+    region: "panelled",
+    files: ["session/guard.tsx"],
+  },
 } as const satisfies Record<string, Owner>;

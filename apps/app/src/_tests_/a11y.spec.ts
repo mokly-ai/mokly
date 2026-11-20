@@ -1,6 +1,9 @@
 import type { Page } from "@playwright/test";
 
+import { dashboardPath, signInPath } from "../navigation/paths";
+
 import { projectAddress } from "./addresses";
+import { failWith } from "./api-responses";
 import { stateDocumentViolations } from "./document-policy";
 import { expect, freshEmail, open, openDialog, signIn, test } from "./harness";
 import { createProject } from "./project-setup";
@@ -31,6 +34,43 @@ test("the logged-out account screens meet the screen policy", async ({
   for (const path of ["/sign-in", "/sign-up", "/auth/email"]) {
     await policy(page, path);
   }
+});
+
+test("a failed session read keeps the page heading, skip link and recovery controls", async ({
+  page,
+}) => {
+  await failWith(page, "**/v1/session", "GET", "unavailable");
+  await open(page, dashboardPath);
+  const alert = page.getByRole("alert");
+  await expect(alert).toBeVisible();
+  await expectScreenPolicy(page, "Failed session read");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Mokly couldn’t load",
+  );
+  await expect(alert.getByRole("heading")).toHaveCount(0);
+  expect(await page.evaluate(stateDocumentViolations)).toEqual([]);
+
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Skip to content", exact: true }),
+  ).toBeFocused();
+
+  const details = alert.getByText("Details", { exact: true });
+  const reference = alert.getByText(/^Reference /);
+  await expect(reference).toBeHidden();
+  await details.click();
+  await expect(reference).toBeVisible();
+  await details.click();
+  await expect(reference).toBeHidden();
+
+  await page.unroute("**/v1/session");
+  await alert.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname === signInPath &&
+      url.searchParams.get("returnTo") === dashboardPath,
+  );
+  await expect(page.getByLabel("Email", { exact: true })).toBeEnabled();
 });
 
 test("the signed-in screens meet the screen policy", async ({ page }) => {

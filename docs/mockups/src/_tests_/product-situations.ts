@@ -61,6 +61,24 @@ export const repeatedStates = [
     reason:
       "the unmatched route reads no product data, so it has no failed-read situation distinct from its canonical recovery",
   },
+  {
+    screen: "product/recovery/session-error",
+    state: "empty",
+    reason:
+      "a session read answers with the session, a sign-out or a failure, never an empty result, so it has no missing-data situation distinct from its canonical recovery",
+  },
+  {
+    screen: "product/recovery/session-error",
+    state: "loading",
+    reason:
+      "the route draws its destination's wait while the session read runs, and Try again keeps this screen until the read answers, so it has no pending situation distinct from its canonical recovery",
+  },
+  {
+    screen: "product/recovery/session-error",
+    state: "error",
+    reason:
+      "the canonical drawing is the failed session read, so it has no failed-read situation distinct from its canonical recovery",
+  },
 ] as const satisfies readonly {
   screen: string;
   state: (typeof productStates)[number];
