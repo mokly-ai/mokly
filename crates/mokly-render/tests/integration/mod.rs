@@ -35,6 +35,7 @@ mod source_alias_tests;
 mod stylesheet_resolution_tests;
 mod stylesheet_reuse_tests;
 mod stylesheet_scan_tests;
+mod stylesheet_watch_alias_tests;
 mod supplier_containment_tests;
 mod support;
 mod validation_tests;

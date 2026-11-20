@@ -1,6 +1,6 @@
 //! Side-specific roots and retained base preparation leases.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -10,6 +10,7 @@ use mokly_compare::ancestor_roots;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::Resolved;
 use mokly_sidecar::methods::ModuleResolution;
+use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::source_paths;
@@ -154,13 +155,54 @@ impl SideInputs {
             })
     }
 
+    /// Keep selected physical inputs and every authored dependency-root alias together.
+    pub(crate) fn watch_candidates(
+        &self,
+        path: &str,
+        sources: &dyn SourceTree,
+        root: &Path,
+    ) -> Result<BTreeSet<PathBuf>> {
+        let dependency = if path == "node_modules" {
+            Some((0, ""))
+        } else {
+            path.strip_prefix("node_modules/").and_then(|rest| {
+                if let Some(rest) = rest.strip_prefix(".mokly-roots/") {
+                    let (index, rest) = rest.split_once('/').unwrap_or((rest, ""));
+                    Some((index.parse::<usize>().ok()?, rest))
+                } else {
+                    Some((0, rest))
+                }
+            })
+        };
+        let mut candidates = BTreeSet::new();
+        if let Some((index, rest)) = dependency
+            && let Some(selected) = self.dependency_roots.get(index)
+        {
+            candidates.insert(selected.join(rest));
+            let logical = ancestor_roots::logical(index);
+            candidates.extend(
+                self.dependency_aliases
+                    .iter()
+                    .filter(|(_, prefix)| *prefix == &logical)
+                    .map(|(authored, _)| self.source_root.join(authored).join(rest)),
+            );
+            if rest.is_empty() {
+                return Ok(candidates);
+            }
+        } else {
+            candidates.insert(self.source_root.join(path));
+        }
+        candidates.insert(self.physical_source(path, sources, root)?);
+        Ok(candidates)
+    }
+
     /// Resolve a logical stylesheet source into this side's selected physical inputs.
     pub fn physical_source(
         &self,
         path: &str,
         sources: &dyn SourceTree,
         root: &Path,
-    ) -> mokly_source_interface::error::Result<PathBuf> {
+    ) -> Result<PathBuf> {
         if let Some((source, _)) =
             source_paths::source_node(sources, root, &self.dependency_aliases, path)?
             && let Ok(relative) = source.strip_prefix(root)
