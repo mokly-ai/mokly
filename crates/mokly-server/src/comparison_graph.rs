@@ -1,6 +1,7 @@
 //! Comparison handles reject public bytes that changed after their accepted inputs.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -223,6 +224,9 @@ impl RenderGeneration for FrozenResources {
     }
     fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
         self.inner.stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.inner.stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.inner.public_files()

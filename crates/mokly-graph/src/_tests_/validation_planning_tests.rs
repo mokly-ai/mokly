@@ -99,6 +99,7 @@ fn planned() -> Session {
         &graph,
         SessionInput {
             stylesheet_resolution_files: Default::default(),
+            stylesheet_resolution_roots: Default::default(),
             config,
             catalogue,
             plans,

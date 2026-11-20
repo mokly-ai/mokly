@@ -31,6 +31,7 @@ fn bundle(root: &StylesheetRoot) -> Bundle {
         css: format!("/* {} */\n", root.path),
         assets: BTreeMap::new(),
         resolution_files: Default::default(),
+        resolution_roots: Default::default(),
         css_modules: BTreeMap::new(),
         inputs: BTreeMap::new(),
         imported_by: BTreeMap::new(),

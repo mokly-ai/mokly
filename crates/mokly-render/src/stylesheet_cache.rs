@@ -152,7 +152,9 @@ impl CachedStylesheets {
             }
         }
         let mut bundle = record.complete();
-        bundle.resolution_files = self.inner.watch_files(&bundle.resolution_files)?;
+        let watched = self.inner.watch_files(&bundle.resolution_files)?;
+        bundle.resolution_files = watched.files;
+        bundle.resolution_roots = watched.dependency_roots;
         Ok(bundle)
     }
 

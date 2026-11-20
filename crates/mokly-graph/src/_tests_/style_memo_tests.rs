@@ -99,6 +99,7 @@ fn two_generations_share_the_scans_of_equal_inline_styles() {
             &graph,
             SessionInput {
                 stylesheet_resolution_files: Default::default(),
+                stylesheet_resolution_roots: Default::default(),
                 matchers: Matchers::new(&config).unwrap(),
                 config,
                 catalogue: catalogue(),

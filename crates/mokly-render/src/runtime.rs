@@ -78,6 +78,14 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// Enable physical stylesheet watch mapping for the working side of Serve.
+    pub fn with_stylesheet_watching(mut self) -> Self {
+        if self.base.is_none() {
+            self.watch_stylesheets = true;
+        }
+        self
+    }
+
     /// Keep bounded captured plans for the head preparations of one Serve command.
     pub fn with_serve_edit_plans(mut self) -> Self {
         if self.base.is_none() && self.edit_plans.is_none() {
@@ -182,7 +190,7 @@ impl Runtime {
             cache,
             workers,
             version,
-            watch_stylesheets: base.is_none(),
+            watch_stylesheets: false,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             style_references,

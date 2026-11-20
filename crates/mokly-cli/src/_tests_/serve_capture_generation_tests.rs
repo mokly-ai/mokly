@@ -194,6 +194,7 @@ impl StylesheetWorker for Threads {
             css: String::new(),
             assets: Default::default(),
             resolution_files: Default::default(),
+            resolution_roots: Default::default(),
             css_modules: Default::default(),
             inputs: Default::default(),
             imported_by: Default::default(),
