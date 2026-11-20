@@ -2,7 +2,7 @@
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
-chrome and delivery. Product and account routes remain in `apps/app`.
+chrome and delivery. Product and account routes remain in `packages/app`.
 
 ## Responsibilities
 

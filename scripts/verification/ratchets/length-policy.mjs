@@ -10,7 +10,7 @@ const PROTOCOL_PREFIX = "docs/protocol/";
 
 // Exact paths only. Each entry names the generator that owns the whole file.
 const generatedSources = {
-  "apps/app/src/api/generated/schema.ts":
+  "packages/app/src/api/generated/schema.ts":
     "openapi-typescript (npm run api:generate --workspace @mokly-cloud/app)",
 };
 

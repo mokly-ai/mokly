@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the check of finding 41 of the round 1 review of `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `apps/app/src/settings/write.ts:181` (`run` clears the error when the retry starts) and `apps/app/src/components/write-failure.tsx`.
+- **Location:** `packages/app/src/settings/write.ts:181` (`run` clears the error when the retry starts) and `packages/app/src/components/write-failure.tsx`.
 - **Reason:** Keeping the refusal on screen during a retry changes visible behaviour that no requirement states, so the user decides.
 - **Category:** Product bug.
 

@@ -41,7 +41,7 @@ tracked. Byte-checked archives, JSON and checksums under
 `crates/mkc-mokly-contract/fixtures/` are committed golden files, with the
 authored Changes-count corpus beside them. The generated OpenAPI
 document `docs/api/openapi.json` and the generated TypeScript client under
-`apps/app/src/api/generated/` are committed too. They are committed rather than
+`packages/app/src/api/generated/` are committed too. They are committed rather than
 generated at build time so that the frontend builds without Rust, reviewers
 can see contract changes, and the drift stages (18 for the fixtures, 17 for
 the API document and the client) prove that the pinned generators still

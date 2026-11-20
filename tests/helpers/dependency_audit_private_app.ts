@@ -10,7 +10,7 @@ export function privateAppAuditFixture() {
     kind: "private-app",
     advisory: "GHSA-aaaa-bbbb-cccc",
     package: "vulnerable",
-    path: ["apps/app", "node_modules/parent", "node_modules/vulnerable"],
+    path: ["packages/app", "node_modules/parent", "node_modules/vulnerable"],
     until: "2026-12-18",
     reason: "Private app tooling reads repository-authored patterns only.",
     tracking: "https://github.com/advisories/GHSA-aaaa-bbbb-cccc",
@@ -18,7 +18,7 @@ export function privateAppAuditFixture() {
   const lockfile: AuditLockfile = {
     packages: {
       "": {},
-      "apps/app": { dependencies: { parent: "*" } },
+      "packages/app": { dependencies: { parent: "*" } },
       "packages/viewer": {},
       "node_modules/parent": { dependencies: { vulnerable: "*" } },
       "node_modules/vulnerable": {},
@@ -44,7 +44,7 @@ export function privateAppAuditFixture() {
     },
   };
   const workspaces = {
-    "apps/app": { private: true },
+    "packages/app": { private: true },
     "packages/viewer": {},
   };
   return {

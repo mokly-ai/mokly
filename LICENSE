@@ -7,6 +7,8 @@ LICENSES/AGPL-3.0-only.txt.
 - crates/mkc-*/
 - docs/mockups/
 - infra/
+- packages/app/
+- packages/desktop/
 - packages/tokens/
 - scripts/cloud/
 
