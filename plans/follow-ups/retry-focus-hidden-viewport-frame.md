@@ -1,0 +1,32 @@
+# Stage recovery focuses a hidden first frame
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-20, from branch `calummoore/preview-cannot-be-loaded-v2-oe8e`, review finding 12.
+- **Location:** `packages/viewer/src/shell/retry_focus.ts` (`RetryFocus.content`), `packages/viewer/src/shell/public_stage.tsx` (one `StageFrame` per viewport), `packages/ui/src/stage/stage.css` (`.mbk-live[data-viewport="desktop"] .mbk-frame-mobile { display: none; }`).
+- **Reason:** The review that found it ran after the two fix rounds of the branch, so the fix rule gives it a follow-up item.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Recovery focus rule:** the rule in the "Package And Props" section of `docs/protocol/mokly-viewer.md`. After Try again, focus moves to the status that replaces the button, and then to the content that replaces the status. The user chose it on 2026-11-20.
+  - **RetryFocus:** the helper in `packages/viewer/src/shell/retry_focus.ts` that applies the rule. `content` is the ref callback of the content.
+  - **Viewport switch:** the Mobile, Desktop, and Both control of a screen route. It sets `data-viewport` on the stage.
+- **Background:**
+  - After Try again on the routed stage ("This screen could not be shown"), the rule sends focus to "Loading preview…" and then to the first preview frame.
+  - `PublicStage` renders the mobile frame first, then the desktop frame. Each `StageFrame` offers its `<iframe>` through `useRetryContent`.
+  - On a live stage with Desktop selected, `stage.css` hides the mobile frame with `display: none`. `focus()` on such an element does nothing.
+  - `RetryFocus.content` ends the recovery at the first element that it gets, before it knows whether `focus()` worked.
+- **Problem:** With one viewport selected and the other frame first in the tree, the recovery ends on the hidden frame. Focus stays on the page body.
+- **Impact if no action:** A keyboard or screen-reader reader who selected Desktop loses their place after each stage recovery.
+- **Root question:** How does the recovery give focus to the first content element that can take it?
+- **Options:**
+  - **A.** In `RetryFocus.content`, end the recovery only when `ownerDocument.activeElement === element` after `focus()`. Otherwise keep it open for the next element of the same commit. Add a unit test in `packages/viewer/tests/retry_focus.test.ts` whose first fake element ignores `focus()`, and a case with `?viewport=desktop` in `tests/browser/shell_retry_focus.spec.ts`. Effort: Small.
+  - **B.** In `StageFrame`, offer the frame only when it shows, for example with `checkVisibility()`. Each call site repeats the check. Effort: Small.
+  - **C.** Make the stage element the content of the routed stage, as the comparison does. This changes the table of the rule, so it needs the user. Effort: Medium.
+- **Left out:** Reorder the viewports. With Mobile selected, the first frame is then hidden.
+- **Wider fix:** A. It fixes every content call site in the one helper.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/retry-focus-repeated-failure.md` changes the same `content` step. Apply the two together.
+- **Recommendation:** A.
+- **Action:** fix after merge.
