@@ -583,12 +583,14 @@ workaround or increase the stop. Push after the complete gate passes, before
 the performance acceptance. The performance orchestrator then measures
 `mokly-cloud` with the cgroup harness and compares every view's public keys.
 
-- [ ] Compare startup, normal edits, peak memory, and operation counts with balanced runs.
-- [ ] Report marked-discovery metadata margins on cloud, the example, and the existing large fixtures. Confirm real cloud edits retain the marker and reuse.
-- [ ] Confirm memory stays within 2% and measure timing against the final acceptance call. Record any accepted marked-check cost. Investigate other failures before acceptance.
-- [ ] Confirm native output and unaffected catalogue output. Record identity changes separately when the toolchain requires them.
-- [ ] Compare every view's document keys on cloud and the example against main. Permit only per-run fields proved by the main/main control.
+- [x] Compare startup, normal edits, peak memory, and operation counts with balanced runs.
+- [x] Report marked-discovery metadata margins on cloud, the example, and the existing large fixtures. Confirm real cloud edits retain the marker and reuse.
+- [x] Confirm memory stays within 2% and measure timing against the final acceptance call. Record any accepted marked-check cost. Investigate other failures before acceptance.
+- [x] Confirm native output and unaffected catalogue output. Record identity changes separately when the toolchain requires them.
+- [x] Compare every view's document keys on cloud and the example against main. Permit only per-run fields proved by the main/main control.
 - [x] Run the strict example build and smoke the served catalogue after the final build.
+
+Evidence: `.context/package-folder-resolution-evidence/final-cloud-confirmation-report.md` records the final exact-main comparison and the performance orchestrator's acceptance of the measured restore cost. The performance orchestrator accepted the comparison on 2026-11-20. He accepts the measured restore cost for correctness and reads the remaining startup difference as noise.
 
 ## Milestone 3a: Second review fixes and ordinary cost
 
@@ -618,7 +620,7 @@ Profile no-folder restore and planned compile work before the final cost call.
 - [x] Complete the one approved Small allocation round. Run its fresh options check, measure the residual, and stop optimizing. Add the shared-walk follow-up only if the residual exceeds about 15 milliseconds.
 - [x] Prove that a later repeated package name cannot impersonate a self-package owner. Keep the native first-name rule in marked qualification and the full-capture superset.
 - [x] Repeat affected async regressions ten times. Recheck owner, identity, PnP, metadata and table-bound proofs.
-- [ ] Run the complete gate, smoke checks, and final paired cost measurements. Commit and push one SHA for parent confirmation.
+- [x] Run the complete gate, smoke checks, and final paired cost measurements. Commit and push one SHA for parent confirmation.
 
 Evidence: `.context/package-folder-resolution-evidence/review-r2-implementation-report.md`
 maps the approved source changes to their red and green checks.
@@ -692,14 +694,23 @@ The performance orchestrator held the first confirming comparison on
 `origin/main`, including Cloud and Rust 1.98.1, before the final pull request.
 Keep the frozen control artifacts for the separate component comparison.
 
+The performance orchestrator changed the final order on 2026-11-20 after the
+frozen fix passed its complete gate. Integrate current main before the last
+Cloud comparison. Preserve both sides, run targeted tests and the repository
+suite, then push at once. The complete matrix runs in CI. The parent uses
+exact main `a16a623e6` as its control. The parent also authorized the one-line
+`compile_count: 1` fixture correction of pending PR #411 when that merge
+exposes the known main compile error.
+
 - [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`.
 - [x] Align the existing Node malformed-marker case with the approved file table. Keep the flag, toolchain, and invalid-kind assertions. Repeat the changed async case ten times and rerun the complete gate.
 - [x] Check and fix review findings 1 and 2 through one shared mapping-description change. Keep ordinary exact, alias, link, self, PnP, and configured-path reuse contrasts. Preserve read-only final classification.
 - [x] Run the fresh options check for item 7 and merge its result. Audit synchronous call sites within the approved Small scope.
 - [x] Defer the optional parser dependency and repeat the same cold-worker diagnostic.
 - [x] Run the complete gate on the combined review fixes and integrated current main. Audit the entry-point documentation after the shared root description changes.
-- [ ] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator.
-- [ ] Review the full diff against `origin/main` with `implementation-review` after the push. Check new findings. Apply up to two fix rounds. Record follow-up items for remaining findings. Re-review once.
+- [x] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator.
+- [x] Review the full diff against `origin/main` with `implementation-review` after the push. Check new findings. Apply up to two fix rounds. Record follow-up items for remaining findings. Re-review once.
+- [x] Integrate the final current main once under the updated parent order. Keep folder, stylesheet, base-reuse, and render-store inputs. Run targeted tests and the repository suite. Push the merged SHA for exact-main Cloud confirmation. CI owns the complete merged matrix.
 - [ ] Delete this plan after every other required TODO passes and review rounds finish.
 - [ ] Open the pull request against `main`. Preserve this plan's dated calls and permalink in its description. Watch CI with the finish-work script. Fix branch failures. Report results to the sending session. Do not merge.
 
@@ -709,3 +720,5 @@ of current main before the review-fix delegation.
 The final delegated checks and smoke evidence are in
 `review-fix-round-1-report.md` and `review-fix-smoke-report.md` in that context
 directory.
+
+Final integration evidence: `.context/package-folder-resolution-evidence/final-main-product-integration-report.md`, `final-main-docs-merge-report.md`, `final-main-merge-preservation.patch`, `final-main-repository-fixed-result.json`, and `final-main-targeted-results.json`.
