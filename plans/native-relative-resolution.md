@@ -139,7 +139,7 @@ Shared assumptions: published output, watch inputs, evidence, and returned plans
   - **Positive filter:** A pattern that matches non-relative strings and the known relative strings that need the callback.
   - **Split filter:** Several disjoint patterns whose union equals the current complementary filter.
 - **Background:** The Cloud run confirms a speed gain but exceeds the memory bound. An empty-build probe shows that the complementary regex alone raises esbuild memory. Its construction also raises Node RSS much more than live heap.
-- **Problem:** One large compiled pattern and its temporary construction exceed the allowed process memory.
+- **Problem:** The real Serve burst exceeds the memory bound even after splitting the same aggregate pattern text.
 - **Impact if no action:** The pull request cannot meet the two-percent memory rule.
 - **Root question:** How can Serve edits, including import-adding edits, save about 0.15 seconds while memory stays within two percent of main?
 - **Options:**
@@ -153,12 +153,24 @@ Shared assumptions: published output, watch inputs, evidence, and returned plans
   - **G.** Stop esbuild after each build with a small filter, when no build remains in flight. This frees compiled filters. The large-filter restart missed the speed goal, but the small-filter cost is not measured. Effort: Medium.
   - **H.** Record the outer import keys that the consumer callback answers. Prove each internal relative edge without such a key. Keep the external name rule, because erased imports do not call the callback. Reject an unhandled relative `require.resolve` edge too. A failed proof uses the authorized complete fallback. This adds no error or third compile. Effort: Medium.
 - **Left out:** The unchanged filter fails the memory rule. C falls back on ordinary Cloud edits because an erased type-only import is external. Keep its letter as a rejected option. An idle-only restart does not bound an edit burst. A positive filter without proof of unknown relative edges breaks exactness. Exempting erased imports breaks the kept external-edge rejection. Keeping failed names across requests would retain filesystem facts beyond the authorized filter cache.
-- **Wider fix:** B with A's total cap bounds the representation structurally. Measure compiled matching memory as well as pattern source length. H makes the proof follow actual callback ownership when a pattern and its routing model disagree.
+- **Wider fix:** A with B bounds the aggregate program and each pattern. Measure compiled matching memory as well as source length. H makes the proof follow actual callback ownership when a pattern and its routing model disagree.
 - **Previous examples:** Item 1E introduced the bounded complement. Its current source and node limits did not bound the compiler's peak closely enough.
-- **Recommendation:** B with H. The options check changed the comparison from B then C to B against E. Cal then chose B after the measurements. It keeps exact new-name routing in every import style. E repeats the fallback after a new repository `.js` import while the startup plan stays in use.
-- **Action:** Apply B. Cal accepted the exact split on 2026-11-20. Choose its size by paired saving while both seeded process peaks stay within about two percent of main. Cal accepts a final gain near 150 milliseconds when memory passes. H is an orchestrator design call. It enforces the existing proof requirement and preserves the complete planned result or error.
+- **Recommendation:** A with B and H, changed from F after its repeated import-add fallback. Compare exact subsets by paired timing and save/import counts. E and F can repeat the fallback after a new repository `.js` import while the startup plan stays in use.
+- **Action:** Apply A with B at 24,000 nodes. Cal selected this point on 2026-11-20. Keep the edit-plan rule unchanged. Preserve D's metadata proof and H's ownership check. The real Serve cgroup peak decides the memory bound.
 
 Orchestrator design call, 2026-11-20: use 32 KiB patterns. The rotated seeded comparison gives the best paired saving among the tested splits. Both process peaks remain within two percent of the seeded main control. Generate bounded strings directly, keep the existing total representation bound, and retain the exact unknown-name routing. The parent performance orchestrator still owns the real Serve measurement.
+
+Cal revised the memory choice on 2026-11-20. The integrated split saves 0.26 seconds per warm edit, but three cold sessions use 3.4 percent more memory. Cal chose F as the next measured candidate and kept the 19:25 UTC checkpoint. Known safe and unsafe routing stays exact. A native unknown continuation still needs the complete proof. Plan refresh stays outside this branch because an edit has no new stable capture evidence. Evidence: `.context/native-relative-resolution/memory-small/`.
+
+Orchestrator design call, 2026-11-20: compare F combined with E after both all-relative margins fail the kept external-edge proof on an erased extensionless import. Keep non-JavaScript-suffixed names on the callback. Prove every cut-prefix continuation in the JavaScript subset. Both candidate margins pass the first real Cloud equality and one-compile checks. Save/import counts and paired timing decide the choice. Keep no learned exception or new record.
+
+Cal then accepted A with B on 2026-11-20 after both prefix margins repeated the complete fallback for a new Basic import. Compare two or three exact trie bounds. Report selected names, distinct targets, filter bytes, empty-build Go RSS, paired saving, and save/import compile counts. Report edit one separately from edits two and three. Keep the cold preparation cost near 50 milliseconds or less on the edit path. Keep only a small filter representation across requests. Do not refresh the startup plan.
+
+Orchestrator design call, 2026-11-20: replace the greedy probe selector with one sort. Reuse its trie during emission and keep only final filters, selected names, and the digest. Keep every omitted or unknown string on the callback. The measured bound stays for Cal to choose. Curve evidence: `.context/native-relative-resolution/memory-small/fast-curve-report.md`.
+
+Cal selected 24,000 nodes on 2026-11-20. Its steady replay saving is near the 150 millisecond floor, and its first edit still improves after cold preparation. Cal clarified that the two-percent bound applies to the whole-tree cgroup peak in real Serve. Finish the Small allocation check within about 30 minutes and keep it only with exact routing. Then implement, run targeted tests, the repository suite, complete gate, and four-fixture byte proof before pushing. Cal measures six interleaved three-edit rounds and three cold ten-edit sessions per arm. If the real peak exceeds two percent, Cal authorizes 18,000 nodes without another design review. No merge into main occurs before version 0.20.0 is on npm.
+
+Cal changed the order on 2026-11-20 after an environmental cloud-app browser failure. Run the four-fixture proof first, then push its passing source for Serve measurements while gate recovery continues. Report any later source change at once. Keep main `3e09c6150` for proof and integration despite later main advances. The complete gate, review, final Serve memory decision, and CI remain required before completion.
 
 Shared assumptions: output, evidence, and watch inputs stay equal, from Cal's task. Keep the file loading hook and native D scope. Keep memory within two percent, from Cal's task. Cal's latest target is about 0.15 seconds saved per edit or more. Cal explicitly reopened item 1E's one-compile handling of new strings for comparison. E and F drop uniform routing of unknown strings. G drops the service-lifetime assumption. H drops proof ownership based on names alone. The parsing contract and external-edge rejection stay for every option. The startup plan serves later edits, so a new rejected name can repeat its fallback.
 
@@ -232,9 +244,12 @@ Depends on: 1, 2
 Cal put the pull request on hold on 2026-11-20. The Cloud run confirms the speed gain but exceeds the memory bound. Cal then chose split filters after the memory investigation. Source changes must go to the performance orchestrator for new Cloud measurements before the pull request. Evidence: `.context/native-relative-resolution/memory-node/`.
 
 - [x] Measure Node heap and RSS on the captured edit. Isolate filter preparation, the cache, verification, and replay.
+- [x] Compare bounded exact subsets, empty-build Go RSS, paired first-edit and later-edit timing, and save/import-add/subsequent-edit counts. Preserve the external-edge predicate. Keep cold preparation near 50 milliseconds or less.
+- [x] Implement the chosen bounded variant and repeat the final equality checks and four-fixture byte proof.
 - [x] Close the confirmed stale parsing-fact proof gap. Observe the red regression, validate metadata stability, and measure the added cost before pushing.
 - [x] Implement the measured exact split with red routing tests and the callback ownership proof. Keep the filter cache free of plan and filesystem facts.
 - [x] Repeat targeted tests and strict published-byte proof on the final memory variant.
+- [x] Integrate main at `3e09c6150` once. Cal authorized this integration after choosing 24,000 nodes. Keep the viewer/frame changes and incoming fixtures. Do not integrate later held pull requests unless GitHub reports a conflict or Cal asks.
 - [ ] Send its pushed SHA for Cloud A/B and memory sessions.
 - [ ] Select and validate a memory mitigation before the pull request. Preserve published bytes and the two-percent bound.
 - [x] Commit the tested split, then integrate `origin/main` once more with the `git-merge` skill. Cal authorized this order on 2026-11-20 after main advanced. Preserve the render store, literal export-target evidence, and compiled generation fields. Repeat combined checks and all four fixture byte proofs before pushing the integrated SHA.
@@ -248,3 +263,5 @@ Cal put the pull request on hold on 2026-11-20. The Cloud run confirms the speed
 - [ ] Open the pull request into main. Wait for CI with `scripts/ci-wait.sh`. Fix branch failures. Report the PR and SHA without merging.
 
 Memory investigation and split-size selection evidence: `.context/native-relative-resolution/memory-node/report.md`.
+
+The final 24k implementation and fresh four-fixture proof against main `3e09c6150` are in `.context/native-relative-resolution/memory-small/product-implementation-report.md` and `final24-byte-proof.log`. Gate recovery evidence is in `final24-gate-failure.md`. The cloud-app browser executable was missing. Installing it changed no source.

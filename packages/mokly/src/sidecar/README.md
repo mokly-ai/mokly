@@ -57,33 +57,44 @@ its requests and results. The paths below are relative to the package root.
   to it. Without a captured preview selection, a `serveEdit` call selects only
   a regular preview file.
 - For a `serveEdit` call with a plan, `bundle` runs no native compile. It
-  starts with a guarded planned compile, in which esbuild resolves each safe
-  relative specifier of the plan itself. `PlannedRelative.create` in
-  [`src/sidecar/planned-relative.ts`](./planned-relative.ts) selects the safe
-  specifiers. A specifier is safe when none of its planned targets has
-  distinct parse settings, such as a package `type` or `tsconfig.json`
-  settings. Each of its targets must also keep its planned side-effect flag.
-  The resolve callback of `consumerPlugins` takes every other specifier. Its
-  filters come from `specifierFilter` in
-  [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts), which builds a
-  bounded trie of the safe specifiers. `specifierPatterns` in
-  [`src/sidecar/specifier-patterns.ts`](./specifier-patterns.ts) emits the
-  exact complement of that trie as disjoint patterns of bounded size, so no
-  step builds one large pattern. Together the patterns match every specifier
-  except the safe specifiers in the trie. When the patterns would pass their
-  total bound, `specifierFilter` keeps no specifier. It keeps one cached
-  pattern set, keyed by the freshly classified safe strings. Every request
-  still checks the target parse settings and side-effect flags. The cache
-  keeps no plan or filesystem facts. An unsafe specifier, a specifier outside
-  the plan, and a safe specifier that the bound leaves out keep the callback.
-  So an edit that adds a new specifier, such as `./new-file`, resolves it with
-  the full resolver in the same compile. When `create` keeps no specifier, the
-  compile is the complete planned compile. The callback records the importer,
+  starts with a guarded planned compile, in which esbuild itself resolves the
+  selected safe relative specifiers of the plan. `PlannedRelative.create` in
+  [`src/sidecar/planned-relative.ts`](./planned-relative.ts) classifies the
+  relative specifiers of the plan on each request. A specifier is safe when
+  none of its planned targets has distinct parse settings, such as a package
+  `type` or `tsconfig.json` settings. Each of its targets must also keep its
+  planned side-effect flag. `create` also counts the planned imports of each
+  safe specifier. The resolve callback of `consumerPlugins` takes every
+  specifier outside the selection. Its filters come from `specifierFilter` in
+  [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts). The selection
+  comes from `selectSpecifiers` in
+  [`src/sidecar/specifier-selection.ts`](./specifier-selection.ts). It sorts
+  the safe specifiers once, by planned imports per character, highest first.
+  In that order, it adds a specifier to a trie only when its new nodes keep
+  the trie within 24,000 nodes. A specifier adds one node for each character
+  after the prefix that it shares with the trie. A specifier that does not fit
+  stays out, and a later specifier can still fit. So the selection prefers
+  frequent, short safe specifiers within its node bound. `specifierPatterns` in
+  [`src/sidecar/specifier-patterns.ts`](./specifier-patterns.ts) reuses that
+  trie. It measures each distinct subtree once. It then emits the exact
+  complement of the trie as disjoint patterns of bounded size, so no step
+  builds one large pattern. Together the patterns match every specifier except
+  the selected specifiers. When the patterns would pass their total bound,
+  `specifierFilter` keeps no specifier. It caches one result, keyed by a
+  digest of the freshly classified safe specifiers and their planned import
+  counts. Every request still checks the target parse settings and side-effect
+  flags. The cache keeps only that digest, the final patterns, and the
+  selected specifiers. It keeps no trie, subtree sizes, import counts, plan,
+  or filesystem facts. An unsafe specifier, a specifier outside the plan, and a
+  safe specifier that the selection leaves out keep the callback. So an edit
+  that adds a new specifier, such as `./new-file`, resolves it with the full
+  resolver in the same compile. When `create` keeps no specifier, the compile
+  is the complete planned compile. The callback records the importer,
   specifier, and kind key of each outer import that it answers, never of an
   inner resolution that a plugin requests. After the compile,
   `PlannedRelative.verify` checks each internal relative edge between physical
   files whose key the callback did not answer. When its key has a plan entry,
-  its target must equal the planned path. When the trie holds its specifier,
+  its target must equal the planned path. When the selection holds its specifier,
   preparation already proved the parse settings and side-effect flag of that
   target. Every other edge, also one without a plan entry, needs
   `classifyNativeTarget`, which `planNative` also uses. Its target must map to
@@ -106,7 +117,7 @@ its requests and results. The paths below are relative to the package root.
   also fails the proof. The whole proof needs no esbuild call and never waits.
   It creates no `CaptureDurability` and keeps no stamp after the request. A
   failed proof discards the guarded result. Each external edge
-  whose specifier the trie holds also discards it, because such an edge has no
+  whose specifier the selection holds also discards it, because such an edge has no
   target. Examples are a relative `require.resolve` and a failed relative
   `require` inside `try`. An external relative `require.resolve` or
   `require` edge that the callback did not answer discards it too. `verify`

@@ -43,7 +43,7 @@ export class PlannedRelative {
     }
     const scope = new PackageScope();
     const settings = new Map<string, Promise<boolean | undefined>>();
-    const safe = new Set<string>();
+    const safe = new Map<string, number>();
     for (const [name, files] of candidates) {
       let distinct = false;
       for (const target of files) {
@@ -61,7 +61,7 @@ export class PlannedRelative {
           break;
         }
       }
-      if (!distinct) safe.add(name);
+      if (!distinct) safe.set(name, files.length);
     }
     const { filters, skipped } = specifierFilter(safe);
     return skipped.size
