@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the closed [PR #67](https://github.com/mokly-ai/mokly-cloud/pull/67), which re-landed finding S2 of the closed PR #39, and its review finding 2. The closed PR #39 left the variant list question open as finding F8.
-- **Location:** `apps/site/scripts/stage/catalogue.ts:35-47`, `:61-74` and `:108-121`, `apps/site/src/stage.ts:28-35`, `docs/protocol/cloud/site-delivery.md:132-141` and `docs/mockups/src/_tests_/design-site-test-helpers.ts:37-59`.
+- **Location:** `apps/site/scripts/stage/catalogue.ts:35-47`, `:61-74` and `:108-121`, `apps/site/src/stage.ts:28-35`, `docs/protocol/cloud/site-delivery.md:145-156` and `docs/mockups/src/_tests_/design-site-test-helpers.ts:37-59`.
 - **Reason:** One detail of the fix must choose between the viewer's rows and the approved site mockup, which the user decides.
 - **Checked:** 2026-11-17, in the combined repository. The choice is still open. `row()` still gives entry rows a count and empty folders a zero, and the stage schema still accepts both.
 - **Category:** Product bug.
