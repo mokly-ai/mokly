@@ -65,10 +65,11 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
 - [ ] Draw the right panel states: Inspect with the selection, the props and
       the box model, Usage and the component tree as sections, and Changes
       with every compare mode and Swipe (decisions 7 and 8).
-- [ ] Redraw the cloud viewer mockups under
+- [x] Redraw the cloud viewer mockups under
       `docs/mockups/src/entries/product/viewer/`: the bar, the account menu
       with Theme, Settings and Sign out, the compact More menu, the check in
-      Changes, and the overlays.
+      Changes, and the overlays. Branch:
+      `calummoore/canvas-redesign-m1-cloud-viewer-mockups-1osn`.
 - [ ] Run the mockup checks that `AGENTS.md` and `docs/mockups/README.md`
       name. Smoke-test the changed pages in both schemes at 390px and 1440px.
 - [ ] Update the design and the TODOs of this plan for each problem that the

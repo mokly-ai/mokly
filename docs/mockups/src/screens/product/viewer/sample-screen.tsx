@@ -23,12 +23,12 @@ type SamplePalette = CSSProperties &
   >;
 
 /**
- * The Folio palette of the shown view's scheme, which the product documents
+ * The Canvas palette of the shown view's scheme, which the viewer documents
  * bind, read from the shared tokens. A frame can show a light view in a dark
  * document, so the sample does not read the document's own palette.
  */
 function samplePalette(scheme: ColorScheme): SamplePalette {
-  const color = paletteColors(scheme, "folio");
+  const color = paletteColors(scheme, "canvas");
   return {
     "--fo-sample-surface": color.surface,
     "--fo-sample-fill": color.surfaceMuted,

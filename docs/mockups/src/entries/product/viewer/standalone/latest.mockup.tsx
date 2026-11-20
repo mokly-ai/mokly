@@ -11,7 +11,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "latest"],
+  tags: ["product", "canvas", "viewer", "latest"],
   render: (_props, { viewport }) => (
     <ViewerStandaloneLatestScreen viewport={viewport} />
   ),

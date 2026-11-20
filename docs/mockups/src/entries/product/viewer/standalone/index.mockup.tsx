@@ -23,7 +23,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -42,7 +42,7 @@ export default defineScreen({
       title: "Standalone · Empty",
       description:
         "Standalone — the branch has no publication in a project that cannot build, so the stage offers Set up publishing.",
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -50,7 +50,7 @@ export default defineScreen({
       title: "Standalone · Loading",
       description:
         "Standalone — a branch alias's own read: the chrome stays and names the branch while the publication loads, and the stage's waiting card names the read in its title.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -58,7 +58,7 @@ export default defineScreen({
       title: "Standalone · Error",
       description:
         "Standalone — the publication is unavailable and the switcher recovers it.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
   ],

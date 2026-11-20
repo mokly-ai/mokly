@@ -27,7 +27,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer.md",
     "docs/protocol/cloud/viewer-read-model.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -52,7 +52,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -64,7 +64,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -76,7 +76,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -84,7 +84,7 @@ export default defineScreen({
       title: "Share · Whole catalogue",
       description:
         "Share — a publication with nothing to compare has no screens of its own, so the link points at the whole catalogue and no screen choice is offered.",
-      tags: ["product", "folio", "viewer", "catalogue"],
+      tags: ["product", "canvas", "viewer", "catalogue"],
       props: { state: "catalogue" },
     },
   ],

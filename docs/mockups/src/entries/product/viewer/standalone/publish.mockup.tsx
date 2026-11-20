@@ -26,7 +26,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups-viewer.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "publish"],
+  tags: ["product", "canvas", "viewer", "publish"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -54,7 +54,7 @@ export default defineScreen({
       title: "Standalone · Publish · Pull request",
       description:
         "Standalone — a pull request with nothing published offers Publish this pull request, with the CI setup guide beside it.",
-      tags: ["product", "folio", "viewer", "publish"],
+      tags: ["product", "canvas", "viewer", "publish"],
       props: { state: "pull-request" },
     },
     {
@@ -62,7 +62,7 @@ export default defineScreen({
       title: "Standalone · Publish · Reviewer",
       description:
         "Standalone — the same branch read by a reviewer, who cannot request a build: the card says who can and offers the switcher.",
-      tags: ["product", "folio", "viewer", "reader"],
+      tags: ["product", "canvas", "viewer", "reader"],
       props: { state: "reader" },
     },
     {
@@ -70,7 +70,7 @@ export default defineScreen({
       title: "Standalone · Publishing",
       description:
         "Standalone — a new project's default branch, whose first build runs in the stage until its publication is ready. Onboarding's Open project arrives here.",
-      tags: ["product", "folio", "viewer", "publishing"],
+      tags: ["product", "canvas", "viewer", "publishing"],
       useCasePaths: ["flows/product-onboarding"],
       props: { state: "publishing" },
     },
@@ -79,7 +79,7 @@ export default defineScreen({
       title: "Standalone · Publish · Pull request reviewer",
       description:
         "Standalone — a pull request with nothing published, read by a reviewer, who cannot request a build: the card says who can publish it and offers the switcher.",
-      tags: ["product", "folio", "viewer", "reader"],
+      tags: ["product", "canvas", "viewer", "reader"],
       props: { state: "reader-pull-request" },
     },
   ],

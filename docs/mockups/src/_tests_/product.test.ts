@@ -11,6 +11,7 @@ import { variantParent } from "./catalogue-variants";
 import {
   inventoryPages,
   productInventoryViolations,
+  productPalette,
 } from "./product-inventory";
 import { repeatedStates } from "./product-situations";
 
@@ -41,6 +42,20 @@ test("every standard product screen owns canonical, empty, loading and error sta
       id,
     );
   }
+  // A viewer page drawn in Folio, and another family's page drawn in Canvas,
+  // are both in the wrong palette.
+  for (const [id, wrong] of [
+    ["product/viewer/standalone", "folio"],
+    ["product/viewer/switcher/error", "folio"],
+    ["product/settings/project", "canvas"],
+    ["product/account/sign-in/loading", "canvas"],
+  ] as const)
+    assert.ok(
+      productInventoryViolations(entries, (path) =>
+        path === id ? wrong : drawnPalette(path),
+      ).length,
+      id + " " + wrong,
+    );
   const variants = entries.filter(
     (entry) => variantParent(entry) === "product/settings/project",
   );
@@ -75,13 +90,16 @@ test("every standard product screen owns canonical, empty, loading and error sta
   );
 });
 
-test("all 285 inventory pages render both widths and schemes with their stable identity", () => {
+test("all 287 inventory pages render both widths and schemes with their stable identity", () => {
   let rendered = 0;
   for (const { path: id, state } of inventoryPages())
     for (const view of ["mobile", "desktop"] as const)
       for (const scheme of ["light", "dark"] as const) {
         const html = readFileSync(screenFile(id, view, scheme), "utf8");
-        assert.ok(html.includes('class="folio-scope"'), id);
+        assert.ok(
+          html.includes('class="' + productPalette(id) + '-scope"'),
+          id,
+        );
         assert.ok(html.includes('data-mkc-screen="' + id + '"'), id);
         if (!id.startsWith("product/viewer/"))
           assert.ok(!html.includes("<iframe"), id);
@@ -98,7 +116,7 @@ test("all 285 inventory pages render both widths and schemes with their stable i
         );
         rendered += 1;
       }
-  assert.equal(rendered / 4, 285);
+  assert.equal(rendered / 4, 287);
 });
 
 test("a state child that repeats its canonical drawing says why", () => {

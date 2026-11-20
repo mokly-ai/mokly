@@ -6,12 +6,12 @@ import { expect, test } from "@playwright/test";
 
 import { screenFile } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
-import { folioScreens } from "./folio-inventory";
+import { permanentScreens } from "./folio-inventory";
 
 for (const viewport of ["mobile", "desktop"] as const)
   for (const scheme of ["light", "dark"] as const) {
     test(
-      "Folio preserves surfaces, geometry and frames: " +
+      "Folio and Canvas preserve surfaces, geometry and frames: " +
         viewport +
         " " +
         scheme,
@@ -20,14 +20,14 @@ for (const viewport of ["mobile", "desktop"] as const)
           width: viewport === "mobile" ? 390 : 1440,
           height: viewport === "mobile" ? 844 : 900,
         });
-        for (const { path: id } of folioScreens) {
+        for (const { path: id, palette } of permanentScreens) {
           await page.goto(pathToFileURL(screenFile(id, viewport, scheme)).href);
           // The renderer's wrapper carries the palette and paints the page.
           const wrapper = page.locator("[data-color-scheme][data-viewport]");
-          await expect(wrapper).toHaveClass("folio-scope");
+          await expect(wrapper).toHaveClass(palette + "-scope");
           await expect(wrapper).toHaveCSS(
             "background-color",
-            rgb(paletteColors(scheme, "folio").background),
+            rgb(paletteColors(scheme, palette).background),
           );
           await expect(page.locator("main")).toBeVisible();
           await expect(page.locator("h1")).toHaveCount(1);
@@ -35,7 +35,7 @@ for (const viewport of ["mobile", "desktop"] as const)
           if (await action.count())
             await expect(action).toHaveCSS(
               "border-radius",
-              paletteUiTheme(scheme, "folio").radii.md + "px",
+              paletteUiTheme(scheme, palette).radii.md + "px",
             );
           // The viewer's stage draws the publication's screen in its phone
           // and browser frames; no Folio screen frames a document.

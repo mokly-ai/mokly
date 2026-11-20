@@ -9,6 +9,7 @@ import type { Viewport } from "@mokly/mokly";
 import { builds } from "../../../fixtures/builds";
 import { members } from "../../../fixtures/product";
 
+import { namedReader } from "./account-trigger";
 import type { BuildReader } from "./build-card";
 import { BuildPage } from "./build-screen";
 
@@ -34,7 +35,7 @@ export function ViewerBuildReaderScreen({ viewport }: { viewport: Viewport }) {
       screen="product/viewer/standalone/build/reader"
       build={builds.failed}
       reader={reviewer}
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
     />
   );
 }
@@ -54,7 +55,7 @@ export function ViewerBuildReaderPlanScreen({
       screen="product/viewer/standalone/build/reader/plan"
       build={builds.plan}
       reader={{ canRequestBuilds: true, canCancel: true, role: "not-owner" }}
-      account={{ label: members[1].name }}
+      account={namedReader(members[1])}
     />
   );
 }
@@ -94,7 +95,7 @@ export function ViewerBuildReaderQueuedScreen({
       screen="product/viewer/standalone/build/reader/queued"
       build={builds.queued}
       reader={reviewer}
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
     />
   );
 }
@@ -115,7 +116,7 @@ export function ViewerBuildReaderRunningScreen({
       screen="product/viewer/standalone/build/reader/running"
       build={builds.running}
       reader={reviewer}
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
     />
   );
 }

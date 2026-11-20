@@ -13,7 +13,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer-chrome.md",
     "docs/protocol/cloud/folio-chrome.md",
   ],
-  tags: ["product", "folio", "viewer", "loading"],
+  tags: ["product", "canvas", "viewer", "loading"],
   render: (_props, { viewport }) => (
     <ViewerPublicationLoadingScreen viewport={viewport} />
   ),

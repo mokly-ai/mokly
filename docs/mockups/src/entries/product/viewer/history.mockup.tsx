@@ -24,7 +24,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer.md",
     "docs/protocol/cloud/viewer-builds.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -43,7 +43,7 @@ export default defineScreen({
       title: "History · Empty",
       description:
         "History — the branch has published once, so there is nothing earlier.",
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -51,7 +51,7 @@ export default defineScreen({
       title: "History · Loading",
       description:
         "History — the publications load over the viewer: the list draws one placeholder row.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -59,7 +59,7 @@ export default defineScreen({
       title: "History · Error",
       description:
         "History — the publications could not load and offer one retry.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
   ],

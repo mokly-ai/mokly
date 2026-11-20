@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
-import { ContentList } from "../../../entries/design/content-list.mockup";
 import type { BuildName } from "../../../fixtures/builds";
 import type { PublicationRef } from "../../../fixtures/publications";
 import { publicationTones } from "../../../fixtures/publications";
 import { TextBar } from "../placeholders";
+
+import { PanelList } from "./panel-rows";
+import type { PanelRow } from "./panel-rows";
 
 /**
  * The drawing of each failed build a row opens through Details. That build's
@@ -35,19 +37,24 @@ interface RefDestinations {
   building: string;
   /** Where a reference with nothing ready opens; its address resolves too. */
   unpublished: string;
+  /** The reference the reader is on, whose row says Current. */
+  current?: string;
 }
 
 /**
- * A group of publication rows under its label.
+ * A group of publication rows under its label. A branch reads in mono, as a
+ * reference does, and a pull request keeps its number and title in sans.
  *
  * Every reference is somewhere the reader can go, because the address of a
  * branch or pull request resolves whether or not it has a ready publication.
  * A reference with one opens it, even while a build publishes a newer push; a
  * reference with none opens the stage that shows its running build or offers
- * to publish it. One leads somewhere else: a reference with nothing ready
- * whose newest attempt failed offers that attempt's own details, because
- * there is no catalogue behind it to open instead. A failed publication opens
- * its own details, and a failed build opens that build.
+ * to publish it. Two lead somewhere else. The reference the reader is on is
+ * where they already are, so its row says Current in place of a
+ * destination. A reference with nothing ready whose newest attempt failed
+ * offers that attempt's own details, because there is no catalogue behind it
+ * to open instead: a failed publication opens its own details, and a failed
+ * build opens that build.
  *
  * While the switcher's read runs, `waiting` is the label's width in its own
  * type, as a CSS length: only a group with references shows its label, so the
@@ -56,8 +63,8 @@ interface RefDestinations {
  */
 export function RefGroup(
   props: {
-    instance: string;
     label: string;
+    kind: "branch" | "pullRequest";
     children?: ReactNode;
   } & (RefDestinations | { waiting: string }),
 ) {
@@ -71,8 +78,7 @@ export function RefGroup(
       ) : (
         <span className="fo-group-label">{props.label}</span>
       )}
-      <ContentList
-        moklyInstance={props.instance}
+      <PanelList
         label={props.label}
         rows={
           waits
@@ -82,8 +88,7 @@ export function RefGroup(
                   title: "",
                   detail: "",
                   status: "neutral",
-                  meta: "",
-                  mono: true,
+                  sha: "",
                   to: "product/viewer/standalone",
                   action: "Open",
                   waiting: true,
@@ -99,26 +104,29 @@ export function RefGroup(
 
 /** Each reference's row, with where it leads. */
 function refRows({
+  kind,
   refs,
   destination,
   building,
   unpublished,
-}: RefDestinations) {
+  current,
+}: RefDestinations & { kind: "branch" | "pullRequest" }): PanelRow[] {
   return refs.map((ref) => ({
     id: ref.id,
     title: ref.name,
+    form: kind === "branch" ? "reference" : "pullRequest",
     detail: ref.detail,
     status: publicationTones[ref.state],
-    // The registered list refuses an `undefined` value, so a reference with
-    // no commit yet passes no `meta` at all.
-    ...(ref.sha === undefined ? {} : { meta: ref.sha }),
-    mono: true,
-    ...(ref.ready
-      ? { to: destination, action: "Open" }
-      : ref.state === "failed"
-        ? { to: failedDetails(ref), action: "Details" }
-        : ref.state === "publishing"
-          ? { to: building, action: "Open" }
-          : { to: unpublished, action: "Open" }),
+    // A reference with no commit yet has no SHA to show.
+    ...(ref.sha === undefined ? {} : { sha: ref.sha }),
+    ...(ref.name === current
+      ? { current: true, mark: "Current" }
+      : ref.ready
+        ? { to: destination, action: "Open" }
+        : ref.state === "failed"
+          ? { to: failedDetails(ref), action: "Details" }
+          : ref.state === "publishing"
+            ? { to: building, action: "Open" }
+            : { to: unpublished, action: "Open" }),
   }));
 }

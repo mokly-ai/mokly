@@ -20,7 +20,7 @@ const screens = {
 export default defineScreen({
   title: "Switcher",
   description:
-    "Switcher — branches with the default first, then pull requests. A row's state and commit are the newer of its newest publication and its newest build, and a row with a ready publication still opens it: the branch Cal reads says Publishing now while a build publishes a newer push, and Alex's alex/onboarding-copy says Unable to publish because its newest publication failed. Every reference opens, because its address resolves whether or not anything is ready: a pull request whose first build runs opens that build, and a branch with nothing published offers to publish it. A reference with nothing ready whose newest attempt failed offers its details instead, because there is no catalogue behind it: a failed publication opens its own details, and a failed build opens that build.",
+    "Switcher — the search leads the panel, then branches with the default first, then pull requests. A row's state and commit are the newer of its newest publication and its newest build: the branch Cal reads says Publishing now while a build publishes a newer push, and because Cal is already on it, its row says Current. A row with a ready publication still opens it: Alex's alex/onboarding-copy says Unable to publish because its newest publication failed, and opens its earlier publication. Every reference opens, because its address resolves whether or not anything is ready: a pull request whose first build runs opens that build, and a branch with nothing published offers to publish it. A reference with nothing ready whose newest attempt failed offers its details instead, because there is no catalogue behind it: a failed publication opens its own details, and a failed build opens that build.",
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
@@ -28,7 +28,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer-builds.md",
     "docs/protocol/cloud/viewer-build-navigation.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -52,7 +52,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -64,7 +64,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -76,7 +76,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -88,7 +88,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "no-branches"],
+      tags: ["product", "canvas", "viewer", "no-branches"],
       props: { state: "no-branches" },
     },
   ],

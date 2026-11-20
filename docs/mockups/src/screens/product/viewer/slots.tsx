@@ -5,9 +5,10 @@ import { SiteLink } from "../page-parts";
 import { WaitingDot } from "../placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../placeholders";
 
-import { PublicationMeta } from "./chrome";
+import { Pill, PillChevron, PillDot, PillGlyph, PillState } from "./pill";
+import type { ReferenceKind } from "./pill";
 import { slotBars } from "./published-bar";
-import { ReferenceTrigger } from "./reference-trigger";
+import { ReferenceTrigger, switcherPath } from "./reference-trigger";
 
 /** What the middle slot says about the publication or build the stage shows. */
 export interface SlotMeta {
@@ -25,10 +26,19 @@ export interface SlotPullRequest {
 }
 
 /**
- * The width of the reference trigger's own frame, in px: its 9rem, in which
- * the bar draws the trigger and its placeholder, as the application does.
+ * The width of the reference trigger's placeholder, in px: the 9rem frame
+ * that `viewer.css` gives the trigger, which a branch name such as the one
+ * Cal reads fills.
  */
 const referenceFrameWidth = 144;
+
+/**
+ * The class that shows a part in the compact bar only. A phone draws the
+ * compact bar alone, so its parts need none.
+ */
+function compactPart(viewport: Viewport) {
+  return viewport === "mobile" ? undefined : ("fo-compact-bar-only" as const);
+}
 
 /**
  * The reference trigger while nothing names the reference: a placeholder in
@@ -61,35 +71,73 @@ function ReferenceTriggers({
       key={bar.part ?? "compact"}
       bar={bar}
       reference={reference}
-      to="product/viewer/switcher"
+      to={switcherPath}
     />
   ));
 }
 
 /**
+ * The publication pill of the cloud's bar: the compact bar's dot, the glyph
+ * of the reference's kind, the trigger of each composition and the state
+ * that the full bar shows. A glyph is drawn only once a branch or pull
+ * request names the reference.
+ */
+function SlotPill({
+  viewport,
+  kind,
+  reference,
+  meta,
+}: {
+  viewport: Viewport;
+  kind?: ReferenceKind;
+  reference: string;
+  meta: SlotMeta;
+}) {
+  return (
+    <Pill>
+      <PillDot state={meta.state} part={compactPart(viewport)} />
+      {kind && <PillGlyph kind={kind} />}
+      <ReferenceTriggers viewport={viewport} reference={reference} />
+      <PillState state={meta.state} detail={meta.detail} sha={meta.sha} />
+    </Pill>
+  );
+}
+
+/**
  * The branch trigger, which opens the switcher, and what the stage shows of
- * it. Until the address or a read names the reference, the trigger is its
- * placeholder, and the state beside it keeps its words.
+ * it, in the pill. Until the address or a read names the reference, the
+ * trigger is its placeholder, and the state beside it keeps its words. A
+ * name that stands in for a reference no read has reached, such as This
+ * build, draws no branch glyph.
  */
 export function BranchSlot({
   viewport,
   name,
   meta,
+  glyph = true,
 }: {
   viewport: Viewport;
   /** The reference's name, once the address or a read gives it. */
   name?: string;
   meta: SlotMeta;
+  /** Whether the name is a branch's, so the pill draws the branch glyph. */
+  glyph?: boolean;
 }) {
-  return (
-    <>
-      {name === undefined ? (
+  if (name === undefined)
+    return (
+      <Pill waiting>
+        <PillDot state={meta.state} part={compactPart(viewport)} />
         <ReferencePlaceholder />
-      ) : (
-        <ReferenceTriggers viewport={viewport} reference={name} />
-      )}
-      <PublicationMeta state={meta.state} detail={meta.detail} sha={meta.sha} />
-    </>
+        <PillState state={meta.state} detail={meta.detail} sha={meta.sha} />
+      </Pill>
+    );
+  return (
+    <SlotPill
+      viewport={viewport}
+      kind={glyph ? "branch" : undefined}
+      reference={name}
+      meta={meta}
+    />
   );
 }
 
@@ -97,23 +145,30 @@ export function BranchSlot({
  * The publication slot while the route reads the project. The reference and
  * its state are the project's to tell, so the trigger is a placeholder in the
  * reference's own frame and the state is a dot and a bar in its own line, both
- * hidden from assistive technology like every placeholder.
+ * hidden from assistive technology like every placeholder. The pill keeps its
+ * frame, its hairline and its chevron around them.
  */
-export function SlotPlaceholder() {
+export function SlotPlaceholder({ viewport }: { viewport: Viewport }) {
   return (
-    <>
+    <Pill waiting>
+      <PillDot part={compactPart(viewport)} />
       <ReferencePlaceholder />
       <span className="fo-top-state" aria-hidden="true">
+        <span className="fo-canvas-pill-rule" />
         <WaitingDot />
         <span className="fo-top-state-detail">
           <TextBar width="6em" />
         </span>
+        <PillChevron />
       </span>
-    </>
+    </Pill>
   );
 }
 
-/** The pull request trigger with its author and the pull request on GitHub. */
+/**
+ * The pull request trigger in the pill, with its author beside the state, and
+ * the pull request on GitHub beside the pill in the full bar.
+ */
 export function PullRequestSlot({
   viewport,
   pull,
@@ -125,17 +180,17 @@ export function PullRequestSlot({
 }) {
   return (
     <>
-      <ReferenceTriggers
+      <SlotPill
         viewport={viewport}
+        kind="pullRequest"
         reference={pull.number + " " + pull.title}
+        meta={{ ...meta, detail: pull.author + " · " + meta.detail }}
       />
-      <PublicationMeta
-        state={meta.state}
-        detail={pull.author + " · " + meta.detail}
-        sha={meta.sha}
-      >
-        <SiteLink href={pull.github} label="GitHub" />
-      </PublicationMeta>
+      {viewport === "desktop" && (
+        <span className="fo-canvas-pill-extra fo-full-bar-only">
+          <SiteLink href={pull.github} label="GitHub" />
+        </span>
+      )}
     </>
   );
 }
