@@ -9,6 +9,11 @@ use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::Result;
 
+/// Check lexical and projected paths against the resolved repository root.
+pub(crate) fn confined_to_repository(repo_root: &Path, paths: &[&Path]) -> bool {
+    paths.iter().all(|path| path.starts_with(repo_root))
+}
+
 impl ResolvedConfig {
     /// The repository-relative POSIX path that a config-relative value names:
     /// the value joined to the configuration directory, without `.`, `..`, or
@@ -17,8 +22,7 @@ impl ResolvedConfig {
     /// no repository path; loading rejects every such configured value.
     pub fn repository_path(&self, value: &str) -> Option<String> {
         let path = self.local_path(value);
-        path.starts_with(&self.repo_root)
-            .then(|| relative(&path, &self.repo_root))
+        confined_to_repository(&self.repo_root, &[&path]).then(|| relative(&path, &self.repo_root))
     }
 
     /// The configured renderer module's resolved repository-relative identity.

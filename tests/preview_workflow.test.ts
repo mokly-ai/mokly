@@ -66,27 +66,33 @@ function allowed(
       "startsWith",
       "contains",
       "join",
+      "vars",
       `return (${expression})`,
     )(
       github,
       (value: string, prefix: string) => value.startsWith(prefix),
       (value: string, part: string) => value.includes(part),
       (value: string[], separator: string) => value.join(separator),
+      { MKC_CLOUD_CUTOVER_ENABLED: "true" },
     ),
   );
 }
 
-test("every preview job has least-privilege credentials and checkout properties", async () => {
+test("Mokly Pages jobs keep least-privilege credentials and checkout properties", async () => {
   const value = await workflow();
   const nodeVersion = (await fs.readFile(".nvmrc", "utf8")).trim();
-  assert.equal(value.on.pull_request_target, undefined);
+  assert.deepEqual(value.on.pull_request_target, {
+    types: ["labeled", "unlabeled", "synchronize", "reopened", "closed"],
+    branches: ["main"],
+  });
   assert.equal(value.permissions["pull-requests"], undefined);
-  assert.equal(value.concurrency["cancel-in-progress"], true);
+  assert.equal(value.concurrency["cancel-in-progress"], false);
   const hasSecret = (object: unknown) =>
     /secrets\./u.test(JSON.stringify(object ?? {}));
   assert.equal(hasSecret(value.env), false);
   let installers = 0;
-  for (const job of Object.values(value.jobs)) {
+  for (const name of ["deploy-main", "deploy-pr", "close-pr"]) {
+    const job = value.jobs[name]!;
     assert.equal(hasSecret(job.env), false);
     assert.equal(hasSecret(job.with), false);
     assert.ok(

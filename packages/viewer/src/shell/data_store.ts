@@ -69,14 +69,16 @@ export function useShellDataStore(input: {
   const [controller] = useState(
     () =>
       new ShellDataController(input.initial, input.source, {
-        commit(next) {
+        prepare(next) {
           const current = latest.current;
           const state = shellStateWithCatalogue(
             current.stateRef.current,
             next.catalogue,
           );
-          current.stateRef.current = state;
-          current.setState(state);
+          return () => {
+            current.stateRef.current = state;
+            current.setState(state);
+          };
         },
         route: () => latest.current.stateRef.current.route,
         versionError: (error) => latest.current.onVersionError?.(error),
@@ -88,6 +90,7 @@ export function useShellDataStore(input: {
     controller.version,
     controller.version,
   );
+  if (controller.failure) throw controller.failure.error;
   const snapshot = controller.snapshot;
   const requests = useMemo(
     () => routeDetailRequests(snapshot.index, input.state.route),

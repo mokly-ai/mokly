@@ -1,0 +1,23 @@
+[package]
+name = "mkc-store-interface"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mkc-domain.workspace = true
+internal-error.workspace = true
+chrono = { version = "0.4.45", features = ["serde"] }
+thiserror = "2.0.20"
+unimock = "0.6.8"
+uuid = { version = "1.26.1", features = ["serde"] }
+serde = { version = "1.0.229", features = ["derive"] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+serde_json = "1.0.151"

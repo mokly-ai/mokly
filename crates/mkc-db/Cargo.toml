@@ -1,0 +1,24 @@
+[package]
+name = "mkc-db"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+diesel = { version = "2.3.13", features = ["postgres", "chrono", "uuid", "r2d2"] }
+diesel_migrations = { version = "2.3.2", features = ["postgres"] }
+internal-error.workspace = true
+thiserror = "2.0.20"
+unimock = { version = "0.6.8", optional = true }
+
+[lints]
+workspace = true
+
+[features]
+unimock = ["dep:unimock"]
+
+[dev-dependencies]
+mkc-test-pg = { workspace = true }

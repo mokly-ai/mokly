@@ -1,0 +1,121 @@
+/* The static depiction of the published viewer, which only the catalogue
+   draws: the sample screen inside the package's device frames, and the
+   comparison message over the preview pane. In the app the package's own
+   stage overlay covers that pane after a browser measurement; a static
+   document runs no script, so the cloud's copy of the message covers the
+   pane instead. These rules style cloud elements only, never a package
+   part. The drawing's module imports this stylesheet, so Mokly bundles it
+   into the entries that render the drawing, and the application, which
+   links `viewer.css`, never loads it.
+
+   The sample paints the palette of the view that its frame shows, which can
+   be light in a dark document. `sample-screen.tsx` sets the `--fo-sample-*`
+   properties from the shared tokens of that view's scheme, so this file
+   copies no token value. */
+.fo-stage-overlay-static {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+}
+.fo-sample-screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--mk-space-6);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--mk-space-5) var(--mk-space-8);
+  background: var(--fo-sample-surface);
+  color: var(--fo-sample-ink);
+  font-family: var(--mk-font-sans);
+}
+/* The phone sizes itself from its content on a narrow stage. The frame the
+   sample stands in for is an iframe, whose default width is 300px, so the
+   sample takes that width and the phone keeps the size it has in the app. */
+.fo-sample-mobile {
+  width: 300px;
+  max-width: 100%;
+  gap: var(--mk-space-5);
+  padding: var(--mk-space-4) var(--mk-space-5);
+}
+.fo-sample-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-4);
+  padding-bottom: var(--mk-space-4);
+  border-bottom: 1px solid var(--fo-sample-line);
+}
+.fo-sample-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-sample-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--mk-radius-small);
+  background: var(--fo-sample-ink-muted);
+}
+.fo-sample-links {
+  display: flex;
+  gap: var(--mk-space-5);
+  color: var(--fo-sample-ink-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-sample-menu {
+  width: 18px;
+  height: 12px;
+  border-block: 2px solid var(--fo-sample-ink-muted);
+  background: linear-gradient(
+      var(--fo-sample-ink-muted),
+      var(--fo-sample-ink-muted)
+    )
+    center / 100% 2px no-repeat;
+}
+.fo-sample-hero {
+  display: grid;
+  gap: var(--mk-space-3);
+  max-width: 32rem;
+}
+.fo-sample-title {
+  font-size: var(--mk-type-heading1-size);
+  line-height: var(--mk-type-heading1-line);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-sample-line {
+  display: block;
+  height: 10px;
+  border-radius: var(--mk-radius-pill);
+  background: var(--fo-sample-fill);
+}
+.fo-sample-line-short {
+  width: 60%;
+}
+.fo-sample-action {
+  width: 128px;
+  height: 32px;
+  margin-top: var(--mk-space-2);
+  border-radius: var(--mk-radius-chrome);
+  background: var(--fo-sample-ink-muted);
+}
+.fo-sample-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mk-space-4);
+}
+.fo-sample-mobile .fo-sample-cards {
+  grid-template-columns: minmax(0, 1fr);
+}
+.fo-sample-card {
+  height: 120px;
+  border: 1px solid var(--fo-sample-line);
+  border-radius: var(--mk-radius-medium);
+  background: var(--fo-sample-fill);
+}

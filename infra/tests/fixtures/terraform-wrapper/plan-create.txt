@@ -1,0 +1,22 @@
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # terraform_data.retired will be created
+  + resource "terraform_data" "retired" {
+      + id     = (known after apply)
+      + input  = "fixture"
+      + output = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: release.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "release.tfplan"

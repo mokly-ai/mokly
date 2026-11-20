@@ -243,9 +243,109 @@
         {
           "type": "generic",
           "path": "/packages/viewer/CHANGELOG.md"
+        },
+        {
+          "type": "json",
+          "path": "/apps/app/package.json",
+          "jsonpath": "$['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/app']['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/site/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/site']['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/site/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/site']['devDependencies']['@mokly/viewer']"
         }
       ],
-      "package-name": "@mokly/mokly"
+      "package-name": "@mokly/mokly",
+      "exclude-paths": [
+        "apps",
+        "crates/mkc-api",
+        "crates/mkc-auth",
+        "crates/mkc-billing",
+        "crates/mkc-billing-interface",
+        "crates/mkc-billing-stripe",
+        "crates/mkc-build-interface",
+        "crates/mkc-build-sandbox",
+        "crates/mkc-catalogue-server",
+        "crates/mkc-config",
+        "crates/mkc-db",
+        "crates/mkc-domain",
+        "crates/mkc-email-interface",
+        "crates/mkc-email-postmark",
+        "crates/mkc-email-templates",
+        "crates/mkc-file-store-gcs",
+        "crates/mkc-file-store-interface",
+        "crates/mkc-file-store-local",
+        "crates/mkc-github",
+        "crates/mkc-github-double",
+        "crates/mkc-github-interface",
+        "crates/mkc-mokly-contract",
+        "crates/mkc-publications",
+        "crates/mkc-store-interface",
+        "crates/mkc-store-pg",
+        "crates/mkc-test-pg",
+        "crates/mkc-test-support",
+        "crates/mkc-upload-memory",
+        "crates/mkc-upload-memory-interface",
+        "packages/tokens",
+        "infra",
+        "scripts/cloud",
+        "docs/protocol/cloud",
+        "docs/mockups",
+        "docs/ops",
+        "docs/api",
+        "fixtures",
+        "rules"
+      ]
     }
   }
 }

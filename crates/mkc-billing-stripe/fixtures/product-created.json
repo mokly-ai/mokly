@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_product_created_fixture"
+  },
+  "body": {
+    "id": "prod_created_fixture",
+    "object": "product",
+    "active": true,
+    "created": 1790380800,
+    "metadata": {
+      "mokly_lookup_key": "mokly_team"
+    },
+    "name": "Mokly Team"
+  }
+}

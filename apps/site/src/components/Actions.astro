@@ -1,0 +1,17 @@
+---
+/**
+ * The action pair the home hero and the home closing both carry: Get
+ * started, which opens the first Getting started guide, and View on GitHub,
+ * which opens the open-source repository.
+ */
+import { EXTERNAL_LINKS, GET_STARTED_PATH } from "../navigation.js";
+---
+
+<div class="site-actions">
+  <a class="site-button site-button--primary" href={GET_STARTED_PATH}>
+    Get started <span aria-hidden="true">&#8594;</span>
+  </a>
+  <a class="site-button site-button--quiet" href={EXTERNAL_LINKS.github}>
+    View on GitHub
+  </a>
+</div>

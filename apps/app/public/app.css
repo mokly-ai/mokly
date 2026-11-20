@@ -1,0 +1,89 @@
+/* The application's own document frame. The Folio stylesheets own every
+   composition, and this document links them before this file, so a selector
+   declared in both would silently be settled here — which is what
+   `stylesheets.test.ts` refuses. This file only undoes the react-native-web
+   root reset, which assumes a full-height flex root that never scrolls, and
+   gives the Expo root element the page's own scrolling column. */
+html,
+body {
+  height: auto;
+  min-height: 100%;
+}
+body {
+  overflow: visible;
+}
+#root {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+  flex: none;
+}
+/* The live settings dialog. The package's modal frame owns the surface, the
+   portal, the focus trap and the close action, so the rail and pane sit inside
+   it without a second card; every other rule is the shared `.fo-dialog-*`
+   vocabulary the catalogue uses. */
+.fo-dialog-live {
+  display: grid;
+  grid-template-columns: var(--mk-layout-rail) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  /* The frame is bounded by a maximum, not a fixed height, so the grid takes
+     its size from the frame as a flex child that may shrink. A percentage
+     height would have nothing definite to resolve against, and the pane body
+     below would stop being the scroll region. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.fo-dialog-live > .fo-dialog-pane {
+  /* The grid row already bounds the column; the catalogue's own viewport cap
+     would fight it. */
+  max-height: none;
+  min-height: 0;
+}
+.fo-dialog-live > .fo-dialog-rail {
+  border-right: 1px solid var(--mk-color-border);
+  overflow: auto;
+}
+@media (max-width: 767px) {
+  .fo-dialog-live {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fo-dialog-live > .fo-dialog-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--mk-color-border);
+  }
+}
+
+/* A control that names a person carries a full email address when that is all
+   the person has, which is wider than the column a panel draws it in. A flex
+   item will not shrink below its content unless it is told it may, so without
+   this the control pushes past the panel and out of the dialog. With it the
+   control takes the width it is given and the label wraps inside it, which is
+   what the package control already does once it has room to. */
+.fo-form .review-inline > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The write-failure fragment at rest. A refusal turns this same element into
+   the shared `.fo-write-failure`, and a retry turns it back, so the control
+   inside it is never replaced and keeps the reader's focus. At rest it draws
+   no box, so the control lays out in its form as the catalogue draws it,
+   whose static drawings have no state change to survive and no frame. */
+.fo-write-frame {
+  display: contents;
+}
+
+/* The live viewer panel. The package's modal frame owns the surface, the
+   portal, the focus trap, Escape and the backdrop, so the panel inside it is
+   only the composition the catalogue registers: a sticky bar over a body that
+   scrolls. The frame's body is the grid row that bounds this column, so the
+   catalogue's own viewport cap would fight it. */
+.fo-viewer-panel-live {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 auto;
+}

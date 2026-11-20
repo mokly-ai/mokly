@@ -164,10 +164,10 @@ impl Style {
         if let Some(detail) = detail {
             lines.extend(detail.split('\n').map(|line| format!("  {line}")));
         }
-        lines.push(format!("  {hint}"));
         lines
             .into_iter()
             .map(|line| format!("{}\n", bounded(&line, self.columns)))
+            .chain(std::iter::once(format!("  {hint}\n")))
             .collect()
     }
 }

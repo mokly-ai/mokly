@@ -8,6 +8,16 @@ const SOURCE_LIMIT = 300;
 export const PROTOCOL_LIMIT = 250;
 const PROTOCOL_PREFIX = "docs/protocol/";
 
+// Exact paths only. Each entry names the generator that owns the whole file.
+const generatedSources = {
+  "apps/app/src/api/generated/schema.ts":
+    "openapi-typescript (npm run api:generate --workspace @mokly-cloud/app)",
+};
+
+export function isGeneratedSource(file) {
+  return Object.hasOwn(generatedSources, file);
+}
+
 /** Read and validate the reviewed exact caps in the JSON cap table. */
 export function parseProtocolCapTable(source, label) {
   const text = source.toString("utf8");

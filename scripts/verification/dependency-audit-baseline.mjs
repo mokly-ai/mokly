@@ -3,6 +3,7 @@ import { Buffer } from "node:buffer";
 import { auditCommandInDirectory } from "./dependency-audit-command.mjs";
 import {
   AUDIT_INPUT_FILES,
+  auditWorkspaceFiles,
   runAuditTree,
 } from "./dependency-audit-execution.mjs";
 import { auditCause, auditIssue } from "./dependency-audit-issues.mjs";
@@ -80,6 +81,20 @@ export async function compareDependencyAudit({
         }
       }),
     );
+    const workspaceFiles = auditWorkspaceFiles(
+      JSON.parse(baseFiles.get(AUDIT_INPUT_FILES[1]).toString("utf8")),
+      JSON.parse(baseFiles.get(AUDIT_INPUT_FILES[2]).toString("utf8")),
+    );
+    await Promise.all(
+      workspaceFiles.map(async (file) => {
+        const bytes = await baseline.readRevision(comparisonCommit, file);
+        if (!Buffer.isBuffer(bytes))
+          throw new TypeError(
+            `Cannot read comparison workspace manifest ${file} as Buffer bytes.`,
+          );
+        baseFiles.set(file, bytes);
+      }),
+    );
   } catch (error) {
     return failed(
       [
@@ -92,8 +107,10 @@ export async function compareDependencyAudit({
     );
   }
   if (
-    AUDIT_INPUT_FILES.every((file) =>
-      baseFiles.get(file).equals(workingFiles.get(file)),
+    baseFiles.size === workingFiles.size &&
+    [...baseFiles].every(
+      ([file, contents]) =>
+        workingFiles.has(file) && contents.equals(workingFiles.get(file)),
     )
   )
     return { comparisonCommit, issues: annotate(headIssues, true) };

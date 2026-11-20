@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_cancel_fixture"
+  },
+  "body": {
+    "id": "sub_fixture",
+    "object": "subscription",
+    "customer": "cus_fixture",
+    "status": "canceled",
+    "items": {
+      "object": "list",
+      "data": []
+    },
+    "cancel_at_period_end": false,
+    "trial_end": null,
+    "metadata": {
+      "organization_id": "01998a00-0000-7000-8000-000000000001"
+    }
+  }
+}
