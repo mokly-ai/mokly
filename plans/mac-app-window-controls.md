@@ -560,18 +560,18 @@ combined paths of [Repository layout](../docs/protocol/repository-layout.md).
       protocol pages to `docs/protocol/cloud`. Keep both sides of each
       conflict, and add the inventory entries to the owner and situation
       files that `main` split.
-- [x] Merge the home page Lighthouse item into
-      `plans/follow-ups/flaky-site-lighthouse-performance.md`, which `main`
-      already holds for the same problem.
-- [ ] Run the targeted tests and the complete gate, `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Drop the home page Lighthouse item, because
+      `plans/follow-ups/flaky-site-lighthouse-performance.md` on `main`
+      already records the same problem, and PR #398 owns that item.
+- [x] Run the targeted tests and the complete gate, `cargo xtask check`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 5 found none.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request in this repository. Its description gives the
+- [x] Open the pull request in this repository. Its description gives the
       decisions and the design calls of this plan with their dates, a
       permalink to this plan, and the follow-up items that the change adds.
