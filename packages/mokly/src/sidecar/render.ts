@@ -13,7 +13,8 @@ import { componentOutput } from "./component-output.js";
 import { SidecarError, detail, handleLocation } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
-import type { PortableStory } from "./story-reader.js";
+import type { StoredStory } from "./story-reader.js";
+import { setupStories } from "./story-setup.js";
 import { collectStyles } from "./styles.js";
 
 export async function render(
@@ -29,7 +30,7 @@ export async function render(
       colorScheme: params.colorScheme,
     };
     const session = renderSession(generation, context, handleLocation(name));
-    return generation.runtime.withSession(session, () => {
+    return await generation.runtime.withSession(session, async () => {
       const props: Record<string, unknown> = structuredClone(params.props);
       let node: ReactNode;
       let resources: readonly string[] = [];
@@ -37,12 +38,12 @@ export async function render(
         kind === "story" ||
         (kind === "component" && generation.stories.has(name))
       ) {
-        const stored = generation.stories.get(name) as {
-          compose: () => PortableStory;
-        };
+        const stored = generation.stories.get(name) as StoredStory;
         const story = stored.compose();
         story.globals.moklyViewport = params.viewport;
         story.globals.moklyColorScheme = params.colorScheme;
+        await setupStories(generation, stored.beforeAll);
+        await story.load();
         node = React.createElement(
           story as (props: object) => ReactNode,
           props,

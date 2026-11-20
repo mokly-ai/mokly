@@ -959,11 +959,14 @@ Depends on: 3
 
 Loaders and `beforeEach` run before each story render, as decision 12 says.
 
-- [ ] Await `story.load()` before each story render, and run its cleanups as
+- [x] Await `story.load()` before each story render, and run its cleanups as
       Storybook does.
-- [ ] Run `beforeAll` as the answer to decision B2 says.
-- [ ] Test that a loader story and a `beforeEach` story render their prepared
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Run `beforeAll` as the answer to decision B2 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a loader story and a `beforeEach` story render their prepared
       data.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 6: The first story as the parent page

@@ -18,6 +18,7 @@ export async function describeStories(
     if (!first) continue;
     generation.stories.set(`${file}#default`, {
       compose: read.composeParent,
+      beforeAll: read.beforeAll,
     });
     const excludedProps: string[] = [];
     const parent = {
@@ -81,6 +82,7 @@ export async function describeStories(
       generation.stories.set(id, {
         compose,
         story,
+        beforeAll: read.beforeAll,
       });
     }
     parent.controlOrder = [...dataKeys];

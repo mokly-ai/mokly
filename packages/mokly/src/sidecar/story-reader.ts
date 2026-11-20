@@ -8,14 +8,18 @@ import { orderedExports } from "./export-order.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 
+export interface StoredStory {
+  compose: () => PortableStory;
+  beforeAll: ReturnType<typeof Storybook.setProjectAnnotations>["beforeAll"];
+}
+
 type ArgTypes = Record<string, Record<string, unknown>>;
 
-interface ReadStory {
+interface ReadStory extends StoredStory {
   exportName: string;
   title: string;
   tags: string[];
   story: PortableStory;
-  compose: () => PortableStory;
 }
 
 interface ReadStories {
@@ -23,6 +27,7 @@ interface ReadStories {
   description: string;
   args: Record<string, unknown>;
   argTypes: ArgTypes;
+  beforeAll: StoredStory["beforeAll"];
   composeParent: () => PortableStory;
   stories: ReadStory[];
 }
@@ -44,6 +49,9 @@ export function readStories(
     ? preview.composed
     : record(preview);
   const title = entryTitle(meta, file, factory !== undefined);
+  const projectAnnotations = () =>
+    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
+  const project = projectAnnotations();
 
   // Storybook's runtime also accepts factory modules without a default export.
   const composeStories = storybook.composeStories as (
@@ -52,7 +60,7 @@ export function readStories(
   const compose = () => {
     // Project annotations are global. Reset them for every composition, also
     // when renders from different generations are interleaved.
-    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
+    projectAnnotations();
     const copied = Object.fromEntries(
       Object.entries(module).map(([name, value]) => [
         name,
@@ -71,7 +79,7 @@ export function readStories(
   };
   const composed = compose();
   const composeParent = () => {
-    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
+    projectAnnotations();
     return storybook.composeStory({}, { ...meta }, undefined, "MoklyDefault");
   };
   const stories = orderedExports(
@@ -98,6 +106,7 @@ export function readStories(
         tags: customTags(composed[exportName]!.tags),
         story: composed[exportName]!,
         compose: () => compose()[exportName]!,
+        beforeAll: project.beforeAll,
       };
     });
   const docs = record(stories[0]?.story.parameters.docs);
@@ -107,6 +116,7 @@ export function readStories(
     description: typeof description === "string" ? description : "",
     args: record(meta.args),
     argTypes: stories.length ? argTypes(composeParent().argTypes) : {},
+    beforeAll: project.beforeAll,
     composeParent,
     stories,
   };

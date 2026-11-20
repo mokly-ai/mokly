@@ -182,12 +182,17 @@ the packed contents of the package.
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/story-reader.ts`](./src/sidecar/story-reader.ts) holds
   `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It selects
-  stories by their tags and keeps Storybook names, tags, and descriptions.
+  stories by their tags and keeps Storybook names, tags, descriptions, and the
+  preview's composed `beforeAll` hook.
 - [`src/sidecar/stories.ts`](./src/sidecar/stories.ts) holds `describeStories`,
   which classifies args by composed argTypes and gives data props their hints.
   It omits function and React element args without warnings.
+- [`src/sidecar/story-setup.ts`](./src/sidecar/story-setup.ts) holds
+  `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
+  a generation switch, and remembers setup failures.
 - [`src/sidecar/render.ts`](./src/sidecar/render.ts) holds `render`, which
-  renders entries and the reader's portable stories to static markup.
+  renders entries and the reader's portable stories to static markup. It
+  awaits story setup and `load()` before rendering each story or meta parent.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
