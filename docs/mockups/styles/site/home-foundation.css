@@ -1,1 +1,169 @@
-/* The home Open foundation frame: the code panel, its wires, the facts and the steps. */
+/* The home's open foundation: the closing copy with its actions, the frame
+   where the dark code panel is wired to the rendered pricing artboard, the
+   terminal under the source, and the four facts. The code panel keeps its
+   shared colours; the terminal's text mixes the signal into the panel's
+   own text, which keeps it above 4.5:1. */
+
+.site-closing {
+  margin-top: 144px;
+}
+
+.site-closing-copy h2 {
+  margin-top: 20px;
+}
+
+.site-closing-panel {
+  align-items: flex-end;
+  display: flex;
+  gap: 32px 48px;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.site-closing-copy p {
+  max-width: 46ch;
+}
+
+.site-closing-panel p {
+  color: var(--mk-color-text-secondary);
+  font-size: 16.5px;
+  letter-spacing: -0.004em;
+  line-height: 1.6;
+}
+
+.site-closing .site-actions {
+  flex: none;
+}
+
+.site-module-detail.site-home-source {
+  align-items: center;
+  display: grid;
+  gap: 96px;
+  grid-template-columns: minmax(0, 1fr) 286px;
+  margin-top: 104px;
+}
+
+.site-home-source .site-code,
+.site-home-source-board {
+  position: relative;
+  z-index: 2;
+}
+
+/* Wrapped source lines hang under the code, clear of the line numbers */
+
+.site-home-source .site-code--numbered .site-code-line {
+  padding-left: 46px;
+  text-indent: -46px;
+}
+
+.site-home-source .site-code--numbered .site-code-line::before {
+  text-indent: 0;
+}
+
+.site-home-terminal {
+  background: color-mix(in srgb, var(--mk-color-on-signal) 40%, transparent);
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-family: var(--mk-font-mono);
+  font-size: 13px;
+  line-height: 1.8;
+  padding: 14px 20px 16px;
+}
+
+.site-home-terminal-prompt {
+  color: var(--mk-color-signal);
+  margin-right: 12px;
+}
+
+.site-home-terminal-out {
+  align-items: center;
+  color: color-mix(in srgb, var(--mk-color-signal) 60%, currentColor);
+  display: flex;
+  gap: 9px;
+}
+
+.site-home-terminal-out svg {
+  flex: none;
+  stroke-width: 2;
+}
+
+[data-site-viewport="desktop"]
+  .site-home-source-board
+  .site-home-board--phone
+  .site-home-board-frame {
+  height: 618.9px;
+  width: 286px;
+}
+
+[data-site-viewport="desktop"]
+  .site-home-source-board
+  .site-home-board--phone
+  .site-home-board-screen {
+  transform: scale(0.733333);
+}
+
+.site-home-source-codex {
+  left: calc(100% - 120px);
+  top: 76%;
+}
+
+/* The wire from the PriceCard's lines to the card on the artboard */
+
+.site-home-wire {
+  height: 100%;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 3;
+}
+
+.site-home-wire-path {
+  fill: none;
+  stroke: var(--mk-color-signal);
+  stroke-linecap: round;
+  stroke-width: 1.75;
+}
+
+.site-home-wire-end {
+  fill: var(--mk-color-surface);
+  stroke: var(--mk-color-signal);
+  stroke-width: 1.75;
+}
+
+/* The facts of the open-source CLI */
+
+.site-closing .site-home-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 56px 0 0;
+  padding: 0;
+}
+
+.site-home-facts li {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-size: 14px;
+  gap: 8px;
+  height: 38px;
+  padding: 0 15px 0 13px;
+}
+
+.site-home-facts svg {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-facts li:first-child {
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 13px;
+}

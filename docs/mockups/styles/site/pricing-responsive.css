@@ -1,1 +1,176 @@
-/* The pricing mobile composition. */
+/* The pricing mobile composition: everything stacks in reading order. The
+   plan frames span the column, the comparison draws each property as a
+   line over three cells under the plan heads, and the threads run in one
+   column. Every control is at least 44px tall. */
+
+[data-site-viewport="mobile"] .site-pricing {
+  padding: 0 20px;
+}
+
+/* The hero stacks; the redline measures the space down to the lead */
+
+[data-site-viewport="mobile"] .site-pricing-hero {
+  display: block;
+  padding-top: 48px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-heading .site-pricing-title {
+  font-size: 2.625rem;
+  line-height: 1;
+}
+
+[data-site-viewport="mobile"] .site-pricing-redline {
+  height: 44px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-lead {
+  font-size: 1.09375rem;
+  line-height: 1.5;
+  margin-top: 44px;
+}
+
+[data-site-viewport="mobile"] .site-pricing .site-pricing-section-title {
+  font-size: 2.25rem;
+}
+
+/* The plans stack inside their section boxes */
+
+[data-site-viewport="mobile"] .site-pricing-plan-grid {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  row-gap: 28px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-plans .site-section-box {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  grid-column: 1;
+  grid-row: auto;
+  margin: 0 -10px;
+  padding: 12px 10px 52px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-box--cli {
+  padding-bottom: 24px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-plans .site-section-box-head {
+  margin-bottom: -8px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-plan {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px 26px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-plan .site-pricing-plan-name {
+  font-size: 1.5rem;
+}
+
+[data-site-viewport="mobile"] .site-pricing-amount {
+  font-size: 3rem;
+}
+
+[data-site-viewport="mobile"] .site-pricing-plan-action .site-button {
+  min-height: 50px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-cursor {
+  left: calc(100% - 64px);
+}
+
+/* The comparison: the plan heads stick under the tool bar, and each row
+   is the property line over three cells */
+
+[data-site-viewport="mobile"] .site-pricing-compare {
+  padding-top: 104px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props-frame {
+  margin: 64px -10px 0;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props,
+[data-site-viewport="mobile"] .site-pricing-props tbody {
+  display: block;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props thead {
+  background: var(--mk-color-surface);
+  display: block;
+  position: sticky;
+  top: 60px;
+  z-index: 2;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+}
+
+[data-site-viewport="mobile"] .site-pricing-props th,
+[data-site-viewport="mobile"] .site-pricing-props td {
+  font-size: 0.875rem;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props thead th {
+  padding: 14px 12px 13px 14px;
+  position: static;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props thead small {
+  display: none;
+}
+
+[data-site-viewport="mobile"]
+  .site-pricing-props
+  thead
+  th.site-pricing-props-property {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props th[scope="row"] {
+  border-bottom: 0;
+  grid-column: 1 / -1;
+  padding: 15px 14px 4px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props td {
+  padding: 6px 8px 15px 14px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-props-group th {
+  grid-column: 1 / -1;
+  padding: 24px 14px 9px;
+}
+
+/* The questions: the heading, then the threads in one column */
+
+[data-site-viewport="mobile"] .site-pricing-questions {
+  display: block;
+  padding-top: 104px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-questions-intro {
+  position: static;
+}
+
+[data-site-viewport="mobile"] .site-pricing-questions .site-pricing-docs {
+  margin-top: 26px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-threads {
+  columns: auto;
+  margin-top: 44px;
+}
+
+[data-site-viewport="mobile"] .site-pricing-thread {
+  margin-bottom: 18px;
+}

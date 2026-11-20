@@ -1,1 +1,260 @@
-/* The home spread: the Specs and Components boxes with their artboards. */
+/* The home spread: the whole acme/storefront app on the canvas, zoomed out
+   to 36 percent. Its canvas starts at the heading's left edge, the Specs and
+   Components boxes bleed off the right edge, and the spread clips them so
+   the page never scrolls sideways. Each artboard and component set sits at
+   its own spot, which the screen passes as its position. The acme screens
+   that only the spread draws follow: the welcome art and the component
+   sets. */
+
+.site-home-spread {
+  height: 830px;
+  margin-top: 76px;
+  overflow-x: clip;
+  position: relative;
+}
+
+.site-home-spread-canvas {
+  height: 100%;
+  left: max(78px, calc((100% - 1440px) / 2 + 78px));
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+.site-home-spread-canvas .site-home-spread-specs,
+.site-home-spread-canvas .site-home-spread-components {
+  height: 806px;
+  left: -30px;
+  position: absolute;
+  top: 0;
+  width: 1026px;
+}
+
+.site-home-spread-canvas .site-home-spread-components {
+  height: 520px;
+  left: 1028px;
+  width: 500px;
+}
+
+/* The quiet works with Storybook label beside the Components tag */
+
+.site-home-spread-components .site-section-box-meta {
+  font-family: var(--mk-font-sans);
+  overflow: visible;
+}
+
+.site-home-works {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+}
+
+.site-home-works b {
+  color: var(--mk-color-text-secondary);
+  font-weight: 560;
+}
+
+.site-home-storybook-shape {
+  fill: var(--mk-color-people-pink-fill);
+}
+
+.site-home-storybook-letter {
+  fill: var(--mk-color-on-signal-fill);
+}
+
+.site-home-spread .site-home-board {
+  position: absolute;
+}
+
+.site-home-spread .site-home-board--phone .site-home-board-frame {
+  height: 303.84px;
+  width: 140.4px;
+}
+
+.site-home-spread .site-home-board--desktop .site-home-board-frame {
+  height: 288px;
+  width: 460.8px;
+}
+
+.site-home-spread .site-home-board-screen {
+  transform: scale(0.36);
+}
+
+.site-home-board .site-home-spread-peer {
+  border-radius: 3px;
+  inset: -4px;
+}
+
+/* The component sets at half size, on a light backing in both schemes */
+
+.site-home-set {
+  position: absolute;
+}
+
+.site-home-set-label {
+  align-items: center;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.site-home-set-box {
+  background: color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--mk-color-text) 22%, transparent);
+  outline-offset: 3px;
+  padding: 10px;
+}
+
+[data-color-scheme="dark"] .site-home-set-box {
+  background: var(--mk-color-text);
+}
+
+.site-home-set-inner {
+  zoom: 0.5;
+}
+
+.site-home-set .site-home-set-peer {
+  border-radius: 3px;
+  inset: 13px -7px -7px;
+}
+
+/* The people at work in the spread */
+
+.site-home-spread-claude {
+  left: 692px;
+  top: 270px;
+}
+
+.site-home-spread-codex {
+  left: 1116px;
+  top: 116px;
+}
+
+.site-home-spread-sam {
+  left: 262px;
+  top: 340px;
+}
+/* The acme screens that only the spread draws: the welcome art, the
+   account settings and the component sets with the toast */
+
+.site-acme-welcome-art {
+  background: currentColor;
+  height: 470px;
+  overflow: hidden;
+  position: relative;
+}
+
+.site-acme-welcome-art > .site-acme-status {
+  color: color-mix(in srgb, currentColor 14%, var(--mk-color-on-signal));
+}
+
+.site-acme-welcome-sun {
+  background: color-mix(
+    in srgb,
+    currentColor 70%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: var(--mk-radius-pill);
+  height: 300px;
+  left: 45px;
+  position: absolute;
+  top: 104px;
+  width: 300px;
+}
+
+.site-acme-welcome-bag {
+  position: absolute;
+  width: 116px;
+  z-index: 1;
+}
+
+.site-acme-welcome-bag--left {
+  bottom: 74px;
+  left: 38px;
+  transform: rotate(-9deg);
+}
+
+.site-acme-welcome-bag--centre {
+  bottom: 62px;
+  left: 116px;
+  width: 158px;
+  z-index: 2;
+}
+
+.site-acme-welcome-bag--right {
+  bottom: 78px;
+  right: 36px;
+  transform: rotate(8deg);
+}
+
+.site-acme-beans {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 3;
+}
+
+.site-acme-bean {
+  fill: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 30%,
+    var(--mk-color-on-signal)
+  );
+}
+
+.site-acme-bean-crease {
+  fill: none;
+  stroke: var(--mk-color-on-signal);
+  stroke-linecap: round;
+  stroke-width: 1.15;
+}
+
+.site-acme-welcome-body {
+  padding: 22px 24px 0;
+}
+
+.site-acme-set-row {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.site-acme-set-column {
+  width: 330px;
+}
+
+.site-acme-set-column .site-acme-field:first-child {
+  margin-top: 0;
+}
+
+.site-acme--bare > .site-acme-price-card {
+  width: 340px;
+}
+
+.site-acme-toast {
+  border-radius: 18px;
+  box-shadow: 0 18px 36px -18px
+    color-mix(in srgb, var(--mk-color-on-signal) 70%, transparent);
+  padding: 10px 18px 10px 10px;
+  width: 360px;
+}
+
+.site-acme-toast i {
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.site-acme-toast-undo {
+  flex: none;
+  font-weight: 650;
+}

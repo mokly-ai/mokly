@@ -1,1 +1,269 @@
-/* The home Edit frame: the tool window, the artboard and the agent chat. */
+/* The home Edit frame: one tool window with its title bar, the canvas where
+   the section copy sits as a text layer beside the pricing artboard, and
+   the Claude chat docked on the right. The bar shares the viewer bar's
+   mark, crumb and branch chip. */
+
+.site-detail--split {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-large);
+  min-height: 0;
+}
+
+.site-home-edit-bar {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  font-size: 15px;
+  gap: 12px;
+  height: 50px;
+  padding: 0 12px 0 14px;
+  white-space: nowrap;
+}
+
+.site-home-edit-tools {
+  border-left: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: 2px;
+  margin-left: 2px;
+  padding-left: 10px;
+}
+
+.site-home-edit-tool {
+  border-radius: 8px;
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  height: 30px;
+  place-items: center;
+  width: 30px;
+}
+
+.site-home-edit-tool--active {
+  background: var(--mk-color-signal-fill);
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-home-edit-live {
+  align-items: center;
+  background: var(--mk-color-signal-soft);
+  border-radius: var(--mk-radius-pill);
+  color: var(--mk-color-signal-deep);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  height: 28px;
+  line-height: 1;
+  padding: 0 11px;
+}
+
+.site-home-edit-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+}
+
+.site-home-edit-canvas {
+  align-items: start;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-size: 20px 20px;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 54px 40px 44px 44px;
+}
+
+.site-home-edit-canvas .site-module-text {
+  max-width: 380px;
+  padding-top: 2px;
+}
+
+.site-home-edit-canvas h3 {
+  font-size: 36px;
+}
+
+.site-home-edit-board {
+  position: relative;
+}
+
+.site-home-edit-claude {
+  left: 54%;
+  top: 61%;
+}
+
+/* The chat's messages: the prompts in ink bubbles with the picked chip,
+   Claude's answers beside its avatar, the diff hunk, the composer and the
+   foot with Publish and Replay */
+
+.site-agent-turn {
+  align-self: flex-end;
+  background: var(--mk-color-text);
+  border-radius: 14px 14px 4px 14px;
+  color: var(--mk-color-surface);
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 92%;
+  padding: 10px 13px;
+}
+
+[data-color-scheme="dark"] .site-agent-turn:not(.site-agent-turn--reply) {
+  background: var(--mk-color-surface-raised);
+  color: var(--mk-color-text);
+}
+
+.site-agent-turn--reply {
+  align-self: stretch;
+  background: none;
+  border-radius: 0;
+  color: var(--mk-color-text);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+  max-width: none;
+  padding: 0;
+}
+
+.site-home-reply-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-agent-turn code {
+  font-family: var(--mk-font-mono);
+  font-size: 12.5px;
+  font-weight: var(--mk-font-medium);
+}
+
+.site-home-chip {
+  align-items: center;
+  background: color-mix(in srgb, var(--mk-color-signal) 22%, transparent);
+  border-radius: 6px;
+  color: color-mix(
+    in srgb,
+    var(--mk-color-signal) 55%,
+    var(--mk-color-surface)
+  );
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  font-weight: var(--mk-font-medium);
+  gap: 4px;
+  height: 22px;
+  line-height: 1;
+  margin-right: 6px;
+  padding: 0 7px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+[data-color-scheme="dark"] .site-home-chip {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-diff {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--mk-color-border);
+  display: block;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.site-home-diff-head {
+  background: var(--mk-color-surface-muted);
+  border-bottom: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.site-home-diff-add {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-diff-del {
+  color: var(--mk-color-danger);
+  margin-left: 6px;
+}
+
+.site-home-diff-line {
+  display: block;
+  overflow: hidden;
+  padding: 0 10px;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.site-home-diff-line--del {
+  background: var(--mk-color-danger-soft);
+  color: var(--mk-color-danger);
+}
+
+.site-home-diff-line--add {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-signal-deep);
+}
+
+.site-agent-input {
+  align-items: flex-end;
+  border-radius: 13px;
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-border-strong) 45%, transparent);
+  display: flex;
+  gap: 8px;
+  margin: 0 12px 10px;
+  min-height: 70px;
+  padding: 10px 10px 10px 13px;
+}
+
+.site-home-agent-placeholder {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 46px;
+}
+
+.site-agent-send {
+  background: var(--mk-color-background);
+  border-radius: 10px;
+  color: var(--mk-color-text-muted);
+  display: grid;
+  flex: none;
+  height: 38px;
+  place-items: center;
+  width: 38px;
+}
+
+.site-home-agent-foot {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 14px;
+}
+
+.site-home-agent-foot .site-home-publish {
+  border-radius: 11px;
+  flex: 1;
+  font-size: 14px;
+  height: 44px;
+}
+
+.site-home-replay {
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  flex: none;
+  height: 44px;
+  place-items: center;
+  width: 44px;
+}

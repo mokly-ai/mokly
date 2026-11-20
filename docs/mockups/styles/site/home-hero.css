@@ -1,1 +1,211 @@
-/* The home hero: the selected heading layer, its tags, the lead and the actions. */
+/* The home hero: the selected heading layer with its handles, its name tag,
+   its type badge and its size tag, the green redline that measures the gap
+   to the lead, Maya's cursor on the resize handle, then the lead and the
+   actions as one left-aligned group. The heading runs at 162px on one line
+   on the desktop composition. The form parts of the acme screens follow:
+   the fields, the segmented control, the brew chips and the page dots. */
+
+.site-hero {
+  padding-top: 86px;
+  position: relative;
+}
+
+.site-home-hero-inner {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 0 78px;
+  position: relative;
+  z-index: 2;
+}
+
+.site-home-title-layer {
+  display: inline-block;
+  max-width: 100%;
+  position: relative;
+}
+
+.site-hero h1 {
+  font-size: 162px;
+  letter-spacing: -0.058em;
+  line-height: 0.96;
+  white-space: nowrap;
+}
+
+/* The selection keeps the descender of the g inside it */
+
+.site-home-title-layer .site-home-title-sel {
+  inset: -2px -14px -16px;
+}
+
+.site-home-hero-maya {
+  left: calc(100% - 6px);
+  top: calc(100% - 14px);
+}
+
+.site-home-hero-group {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-top: 60px;
+}
+
+.site-home-hero-copy {
+  position: relative;
+}
+
+.site-home-hero-redline {
+  bottom: 100%;
+  height: 60px;
+  left: 6px;
+}
+
+.site-hero-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 23.75px;
+  letter-spacing: -0.012em;
+  line-height: 1.45;
+  max-width: 29em;
+  text-wrap: balance;
+}
+
+.site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+/* Fields, the segmented control, the brew chips and the page dots */
+
+.site-acme-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+  min-width: 0;
+}
+
+.site-acme-field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.site-acme-input {
+  align-items: center;
+  border-radius: 13px;
+  display: flex;
+  font-size: 15.5px;
+  gap: 10px;
+  height: 50px;
+  padding: 0 14px;
+  position: relative;
+}
+
+.site-acme-input-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-acme-input--focus::after,
+.site-acme-input--error::after {
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.site-acme-input--focus::after {
+  box-shadow:
+    inset 0 0 0 1.5px currentColor,
+    0 0 0 4px color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.site-acme-field-note {
+  font-size: 12.5px;
+}
+
+.site-acme-apply {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.site-acme-pair {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.site-acme-segmented,
+.site-acme-chips,
+.site-acme-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.site-acme-segmented {
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-radius: 13px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+  margin-top: 20px;
+  padding: 4px;
+}
+
+.site-acme-segmented > span {
+  border-radius: 10px;
+  display: grid;
+  font-size: 14px;
+  font-weight: 600;
+  height: 36px;
+  padding: 0 18px;
+  place-items: center;
+}
+
+.site-acme-chips {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 22px;
+}
+
+.site-acme-chips > span {
+  border-radius: 19px;
+  font-size: 14px;
+  font-weight: 550;
+  height: 38px;
+  padding: 0 15px;
+}
+
+.site-acme-chips > span > span {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  height: 100%;
+}
+
+.site-acme-chips .site-acme-chips-on {
+  box-shadow: none;
+}
+
+.site-acme-chips .site-acme-icon {
+  height: 16px;
+  stroke-width: 2.2;
+  width: 16px;
+}
+
+.site-acme-dots {
+  gap: 6px;
+}
+
+.site-acme-dots i {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 3px;
+  height: 6px;
+  width: 6px;
+}
+
+.site-acme-dots .site-acme-dots-on {
+  background: currentColor;
+  width: 22px;
+}

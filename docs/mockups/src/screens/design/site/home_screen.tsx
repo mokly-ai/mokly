@@ -1,15 +1,14 @@
 /**
- * The home: a compact hero above the catalogue shell rendered at
- * full width, then the three product modules and the open-foundation
- * closing. The shell is the page's principal image, so the copy stays short
- * and the chrome carries the hierarchy.
+ * The home: the hero with its selected heading layer and the spread of the
+ * depicted acme/storefront app, then the workspace, where the Specs panel
+ * floats beside the frames on the desktop composition: the features intro,
+ * the Browse, Review and Edit frames and the open foundation.
  */
 
-import { SiteActions } from "./parts/actions.js";
+import { HomeHero } from "./home/hero.js";
+import { HomeWorkspace } from "./home/workspace.js";
 import { SiteLayout } from "./parts/chrome.js";
 import { SITE_SCREENS } from "./parts/links.js";
-import { SiteClosing, SiteModules } from "./parts/modules.js";
-import { CatalogueFrame } from "./parts/shell.js";
 
 function SiteHome({
   menu = false,
@@ -21,19 +20,8 @@ function SiteHome({
   return (
     <SiteLayout active={SITE_SCREENS.home} menu={menu} viewport={viewport}>
       <main className="site-main" id="main">
-        <section className="site-hero">
-          <h1>Mockup your entire app.</h1>
-          <p className="site-hero-lead">
-            Prevent AI slop and accidental clobbers, by codifying your design
-            and forcing agents to align their implementation with it.
-          </p>
-          <SiteActions />
-        </section>
-        <div className="site-frame-wrap">
-          <CatalogueFrame viewport={viewport} />
-        </div>
-        <SiteModules />
-        <SiteClosing />
+        <HomeHero viewport={viewport} />
+        <HomeWorkspace viewport={viewport} />
       </main>
     </SiteLayout>
   );

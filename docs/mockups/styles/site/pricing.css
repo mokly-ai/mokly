@@ -1,1 +1,230 @@
-/* The pricing page: its hero and the page sections. */
+/* The pricing page: its column, the hero, the section headings and the
+   resolved questions. The page is one 1240px column, the footer frame's
+   width, on three plan tracks: the open-source frame, the Free frame and
+   the Team frame, with a 64px gap after the first and a 24px gap between
+   the cloud frames. The hero, the plans and the questions use these
+   tracks; the mobile composition lives in pricing-responsive.css. */
+
+.site-pricing {
+  margin: 0 auto;
+  max-width: calc(1240px + 156px);
+  padding: 0 78px;
+  width: 100%;
+}
+
+/* Read by screen readers, not shown */
+
+.site-pricing-sr {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* The hero stands on the plan grid: the heading spans the first two
+   tracks and the lead sits in the Team track, on the heading's last
+   baseline. The redline measures the space under the heading, down to the
+   plan boxes. */
+
+.site-pricing-hero {
+  align-items: last baseline;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) 64px minmax(0, 1fr) 24px
+    minmax(0, 1fr);
+  padding-top: 64px;
+}
+
+.site-pricing-hero > .site-kicker {
+  grid-column: 1 / 4;
+  grid-row: 1;
+}
+
+.site-pricing-heading {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  margin-top: 20px;
+  position: relative;
+}
+
+.site-pricing-heading .site-pricing-title {
+  font-size: 4.75rem;
+  letter-spacing: -0.054em;
+  line-height: 0.98;
+}
+
+.site-pricing-title span,
+.site-pricing-section-title span {
+  color: var(--mk-color-text-muted);
+}
+
+.site-pricing-redline {
+  height: 64px;
+  left: 4px;
+  top: 100%;
+}
+
+.site-pricing-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.125rem;
+  grid-column: 5;
+  grid-row: 2;
+  letter-spacing: -0.012em;
+  line-height: 1.55;
+}
+
+/* The section headings, a step below the page heading */
+
+.site-pricing .site-pricing-section-title {
+  font-size: 3.5rem;
+  letter-spacing: -0.046em;
+  line-height: 1.02;
+}
+
+/* The questions: the heading stays beside the threads, which run in two
+   columns over the Free and Team tracks */
+
+.site-pricing-questions {
+  align-items: start;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) 64px minmax(0, 1fr) 24px
+    minmax(0, 1fr);
+  padding-top: 144px;
+}
+
+.site-pricing-questions-intro {
+  grid-column: 1;
+  position: sticky;
+  top: 96px;
+}
+
+.site-pricing-questions .site-pricing-docs {
+  margin-top: 32px;
+}
+
+.site-pricing-threads {
+  column-gap: 24px;
+  columns: 2;
+  grid-column: 3 / 6;
+}
+
+.site-pricing-thread {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+  break-inside: avoid;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.site-pricing-thread-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px 0 14px;
+}
+
+.site-pricing-thread-topic {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.84375rem;
+  font-weight: var(--mk-font-semibold);
+  gap: 7px;
+}
+
+.site-pricing-thread-topic svg {
+  color: var(--mk-color-text-muted);
+}
+
+.site-pricing-thread-pin {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-pricing-thread-resolved {
+  background: var(--mk-color-signal-soft);
+  border-radius: var(--mk-radius-pill);
+  color: var(--mk-color-signal-deep);
+  display: grid;
+  flex: none;
+  height: 22px;
+  place-items: center;
+  width: 22px;
+}
+
+.site-pricing-thread-resolved svg {
+  stroke-width: 1.8;
+}
+
+/* A question and its answer, joined by a reply line */
+
+.site-pricing-message {
+  display: flex;
+  gap: 12px;
+  padding: 16px 18px 6px 14px;
+  position: relative;
+}
+
+.site-pricing-message--answer {
+  padding-bottom: 18px;
+  padding-top: 12px;
+}
+
+.site-pricing-message:not(.site-pricing-message--answer)::after {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  bottom: -10px;
+  content: "";
+  left: 27.5px;
+  position: absolute;
+  top: 50px;
+  width: 1px;
+}
+
+.site-pricing-message > div {
+  min-width: 0;
+}
+
+.site-pricing-message-meta {
+  align-items: baseline;
+  display: flex;
+  font-size: 0.8125rem;
+  gap: 7px;
+  line-height: 1.2;
+  min-height: 28px;
+  padding-top: 6px;
+}
+
+.site-pricing-message-meta span {
+  color: var(--mk-color-text-muted);
+  font-size: 0.75rem;
+}
+
+.site-pricing-message .site-pricing-question {
+  font-size: 1.03125rem;
+  letter-spacing: -0.014em;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.site-pricing-message .site-pricing-answer {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin-top: 2px;
+}

@@ -1,144 +1,204 @@
-/* Catalogue navigation */
+/* The catalogue column of the depicted viewer: the All and Changes filter,
+   the Specs and Components sections, and the rows of folders, screens,
+   components and variants, with the open screen selected and a dot on each
+   changed or added entry. The acme account settings screen follows. */
 
 .site-tree {
   background: var(--mk-color-surface-muted);
   border-right: 1px solid var(--mk-color-border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  width: 248px;
+  overflow: hidden;
+  padding: 12px;
 }
 
 .site-filter {
-  align-self: flex-start;
   background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  display: inline-flex;
-  gap: 2px;
-  margin: 0 var(--mk-space-2) var(--mk-space-2);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   padding: 3px;
 }
 
 .site-filter-option {
   align-items: center;
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  display: flex;
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-semibold);
-  gap: var(--mk-space-2);
-  padding: var(--mk-space-1) var(--mk-space-3);
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: 550;
+  gap: 6px;
+  height: 32px;
+  justify-content: center;
 }
 
 .site-filter-option--current {
   background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
   color: var(--mk-color-text);
-  padding: 3px 11px;
 }
 
 .site-filter-count {
-  background: var(--mk-color-accent-soft);
-  border-radius: var(--mk-radius-pill);
-  color: var(--mk-color-accent);
+  background: var(--mk-color-warning-soft);
+  border-radius: 5px;
+  color: var(--mk-color-warning);
   font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-nano-size);
-  padding: 1px var(--mk-space-2);
+  font-size: 11px;
+  font-weight: var(--mk-font-semibold);
+  line-height: 1;
+  padding: 3px 5px;
 }
 
 .site-tree-scroll {
-  flex: 1;
-  overflow: hidden;
-  padding: 0 var(--mk-space-2) var(--mk-space-3);
-}
-
-.site-tree-section + .site-tree-section {
-  margin-top: var(--mk-space-3);
+  margin-top: 8px;
 }
 
 .site-tree-section-head {
-  align-items: center;
   color: var(--mk-color-text-muted);
-  display: flex;
-  font-size: var(--mk-type-nano-size);
-  font-weight: var(--mk-font-bold);
-  gap: var(--mk-space-1);
-  letter-spacing: 0.08em;
-  padding: var(--mk-space-2) var(--mk-space-2) var(--mk-space-1);
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding: 12px 6px 6px;
   text-transform: uppercase;
-}
-
-.site-tree-chevron {
-  display: inline-grid;
-  place-items: center;
-  transform: rotate(90deg);
-  transition: transform var(--mk-motion-fast) var(--mk-motion-easing);
 }
 
 .site-row {
   align-items: center;
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
   display: flex;
-  font-size: var(--mk-type-caption-size);
-  gap: var(--mk-space-2);
-  line-height: 1.35;
-  padding: var(--mk-space-1) var(--mk-space-2);
+  gap: 7px;
+  height: 29px;
+  padding: 0 8px;
+  white-space: nowrap;
 }
 
-.site-row[data-site-depth="1"],
-.site-row[data-site-depth="2"] {
-  background-image: linear-gradient(
-    var(--mk-color-border),
-    var(--mk-color-border)
-  );
-  background-position: 15px 0;
-  background-repeat: no-repeat;
-  background-size: 1px 100%;
-  padding-left: var(--mk-space-6);
+.site-row--group {
+  padding-left: 6px;
+}
+
+.site-row[data-site-depth="1"] {
+  padding-left: 25px;
 }
 
 .site-row[data-site-depth="2"] {
-  background-image:
-    linear-gradient(var(--mk-color-border), var(--mk-color-border)),
-    linear-gradient(var(--mk-color-border), var(--mk-color-border));
-  background-position:
-    15px 0,
-    31px 0;
-  background-size:
-    1px 100%,
-    1px 100%;
-  padding-left: var(--mk-space-10);
+  color: var(--mk-color-text-muted);
+  padding-left: 45px;
 }
 
 .site-row--group .site-row-label {
-  color: var(--mk-color-text);
-  font-weight: var(--mk-font-semibold);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-tree-chevron {
+  color: var(--mk-color-text-muted);
+  display: inline-grid;
+  flex: none;
+}
+
+.site-row-ico {
+  color: color-mix(in srgb, var(--mk-color-text-muted) 72%, transparent);
+  display: inline-grid;
+  flex: none;
 }
 
 .site-row--current {
-  background-color: var(--mk-color-accent-soft);
+  background: var(--mk-color-signal-soft);
   color: var(--mk-color-text);
   font-weight: var(--mk-font-semibold);
 }
 
 .site-row--current .site-row-ico {
-  color: var(--mk-color-accent);
+  color: var(--mk-color-signal-deep);
 }
 
-.site-row-ico {
-  color: var(--mk-color-text-muted);
-  display: inline-grid;
-  flex-shrink: 0;
-  height: 15px;
-  place-items: center;
-  width: 15px;
-}
-
-.site-row-count {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-nano-size);
+.site-home-dot {
+  background: var(--mk-color-warning);
+  border-radius: var(--mk-radius-pill);
+  flex: none;
+  height: 7px;
   margin-left: auto;
+  width: 7px;
+}
+
+.site-home-dot--added {
+  background: var(--mk-color-signal-deep);
+}
+
+/* The acme account settings screen, dark, which only the spread draws:
+   the account menu, the profile, the notifications, the saved cards and
+   Close account */
+
+.site-acme-settings {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+
+.site-acme-settings-menu {
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 28px 18px;
+}
+
+.site-acme-settings-links {
+  display: grid;
+  gap: 4px;
+  margin-top: 38px;
+}
+
+.site-acme-settings-links > span {
+  align-items: center;
+  border-radius: 11px;
+  display: flex;
+  gap: 12px;
+  height: 46px;
+  padding: 0 12px;
+}
+
+.site-acme-settings-body {
+  padding: 46px 56px;
+}
+
+.site-acme-settings-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 30px;
+}
+
+.site-acme-panel {
+  border-radius: 20px;
+  padding: 22px 24px;
+}
+
+.site-acme-panel-title {
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.site-acme-panel .site-acme-toggle-row:last-child,
+.site-acme-saved:last-child {
+  border-bottom: 0;
+}
+
+.site-acme-profile {
+  margin-top: 14px;
+}
+
+.site-acme-saved {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 14px 0;
+}
+
+.site-acme-saved .site-acme-link {
+  margin: 0;
+}
+
+.site-acme-close {
+  margin-top: 18px;
 }

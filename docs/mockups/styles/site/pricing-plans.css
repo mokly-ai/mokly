@@ -1,1 +1,198 @@
-/* The pricing plan frames inside their section boxes. */
+/* The pricing plan frames inside their section boxes. The grid has five
+   rows: the box head, then the frame's head, price, action and list. Each
+   box and each frame passes the rows down as a subgrid, so the rows line
+   up across the three frames. */
+
+.site-pricing-plans {
+  padding-top: 64px;
+}
+
+.site-pricing-plan-grid {
+  align-items: start;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) 64px minmax(0, 1fr) 24px
+    minmax(0, 1fr);
+  grid-template-rows: repeat(5, auto);
+}
+
+/* The section boxes: the shared part, outset so that its frames sit on the
+   tracks, with room under the frames for the size tag and the cursor */
+
+.site-pricing-plans .site-section-box {
+  display: grid;
+  grid-row: 1 / span 5;
+  grid-template-rows: subgrid;
+  margin: 0 -20px;
+  padding: 14px 20px 56px;
+}
+
+.site-pricing-box--cli {
+  grid-column: 1;
+}
+
+.site-pricing-box--cloud {
+  column-gap: 24px;
+  grid-column: 3 / 6;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.site-pricing-plans .site-section-box-head {
+  grid-column: 1 / -1;
+  margin-bottom: 38px;
+}
+
+/* A plan frame: its four rows are the box's rows */
+
+.site-pricing-plan {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: grid;
+  grid-row: 2 / span 4;
+  grid-template-rows: subgrid;
+  padding: 28px 28px 30px;
+  position: relative;
+  transition: box-shadow var(--mk-motion-standard) var(--mk-motion-easing);
+}
+
+.site-pricing-plan:not(.site-pricing-plan--selected):hover {
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+}
+
+.site-pricing-plan:not(.site-pricing-plan--selected):hover .site-frame-name {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-pricing-plan--selected {
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+}
+
+.site-pricing-plan .site-pricing-plan-name {
+  font-size: 1.625rem;
+  letter-spacing: -0.034em;
+  line-height: 1.1;
+}
+
+.site-pricing-plan .site-pricing-plan-for {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.96875rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+/* The price: one amount with a note, or Team's two seat rows, whose
+   amounts share a right-aligned column */
+
+.site-pricing-plan-price {
+  margin-top: 28px;
+}
+
+.site-pricing-amount {
+  color: var(--mk-color-text);
+  font-size: 3.375rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+
+.site-pricing-plan .site-pricing-price-note {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  margin-top: 12px;
+}
+
+.site-pricing-seats {
+  align-content: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.site-pricing-seat {
+  display: contents;
+}
+
+.site-pricing-seats .site-pricing-amount {
+  justify-self: end;
+}
+
+.site-pricing-seat-unit {
+  align-self: center;
+  color: var(--mk-color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.site-pricing-seat-unit small {
+  color: var(--mk-color-text-muted);
+  display: block;
+  font-size: 0.8125rem;
+  margin-top: 2px;
+}
+
+/* The action spans the frame; Team's currency line sits under it */
+
+.site-pricing-plan-action {
+  margin-top: 28px;
+}
+
+.site-pricing-plan-action .site-button {
+  width: 100%;
+}
+
+.site-pricing-plan .site-pricing-fine {
+  color: var(--mk-color-text-muted);
+  font-size: 0.78125rem;
+  line-height: 1.4;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* What the plan holds, each line after a check */
+
+.site-pricing-plan .site-pricing-features {
+  align-content: start;
+  border-top: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  font-size: 0.9375rem;
+  gap: 11px;
+  line-height: 1.45;
+  list-style: none;
+  margin-top: 28px;
+  padding: 24px 0 0;
+}
+
+.site-pricing-features li {
+  display: flex;
+  gap: 10px;
+}
+
+.site-pricing-features svg {
+  color: var(--mk-color-signal-deep);
+  flex: none;
+  margin-top: 3px;
+  stroke-width: 1.8;
+}
+
+/* Team is the selected frame: the selection sits on the frame's edge, and
+   Maya's cursor rests on its lower right corner */
+
+.site-pricing-plan > .site-sel {
+  inset: -1px;
+}
+
+.site-pricing-cursor {
+  left: calc(100% - 46px);
+  top: calc(100% - 10px);
+}

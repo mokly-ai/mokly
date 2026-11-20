@@ -1,229 +1,222 @@
 import assert from "node:assert/strict";
-import { dirname, relative } from "node:path";
 import { test } from "node:test";
 
-import type { CatalogueNode } from "@mokly/viewer";
+import { openSource } from "../fixtures/site";
 
-import { openSource, siteStage } from "../fixtures/site";
-
-import { ancestorTitles, catalogueIndex } from "./catalogue-index";
-import { screenView } from "./catalogue-paths";
 import {
   attribute,
   byClass,
   elements,
-  folderChildCount,
   label,
   siteDocument,
-  siteEntry,
   siteStyles,
+  textContent,
+  type Element,
 } from "./design-site-test-helpers";
 
-/** The hero's one-line heading and lead, in reading order. */
-const hero = [
-  "Mockup your entire app.",
-  "Prevent AI slop and accidental clobbers, by codifying your design and forcing agents to align their implementation with it.",
-];
+/** Cal's hero heading, with the non-breaking space that keeps "in code." together. */
+const HEADING = "Design in\u00a0code.";
 
-const features = [
-  "See every branch as screens.",
-  "Comment on the screen itself.",
-  "Ask for the change beside the screen.",
-];
+/** Cal's hero lead, word for word. */
+const LEAD =
+  "Generate an interactive mockup of your entire app using your existing React, HTML and CSS components.";
 
-const steps = [
-  "Shape the next screen.",
-  "Publish the branch.",
-  "Build from a shared decision.",
-];
+/** Cal's Review body, word for word. */
+const REVIEW_BODY =
+  "Each comment is tied to the component it is about, so it stays put when the layout changes. Approve when it is right, in step with the pull request review.";
 
-type FolderNode = Extract<CatalogueNode, { kind: "folder" }>;
+type Parsed = ReturnType<typeof siteDocument>["document"] | Element;
 
-/** The folder node at one path of an index tree, or nothing. */
-function findFolder(
-  nodes: readonly CatalogueNode[],
-  path: string,
-): FolderNode | undefined {
-  for (const node of nodes) {
-    if (node.kind === "folder" && node.path === path) return node;
-    const found = findFolder(node.children ?? [], path);
-    if (found) return found;
-  }
-  return undefined;
+/** The one element of a class inside a node, failing on none or several. */
+function only(node: Parsed, name: string): Element {
+  const found = byClass(node, name);
+  assert.equal(found.length, 1, `one .${name}`);
+  return found[0]!;
+}
+
+/** The links inside one region, as their labels and destinations. */
+function links(region: Element): Array<[string, string | undefined]> {
+  return elements(region, (node) => node.tagName === "a").map((link) => [
+    label(link),
+    attribute(link, "data-mokly-link") ?? attribute(link, "href"),
+  ]);
+}
+
+/** The first element of one tag inside a node, as text. */
+function first(node: Element, tagName: string): string {
+  const found = elements(node, (child) => child.tagName === tagName)[0];
+  assert.ok(found, `a ${tagName} inside .${attribute(node, "class")}`);
+  return label(found);
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: home carries the approved copy and real dogfood stage`, () => {
-    const { document, html, route } = siteDocument(
-      "design/site/home",
-      viewport,
-    );
-    const text = label(document);
-    for (const line of [...hero, ...features, ...steps])
-      assert.ok(text.includes(line), `missing home copy: ${line}`);
-    const intro = byClass(document, "site-hero")[0];
-    assert.ok(intro);
-    assert.deepEqual(
-      elements(intro, (node) => ["h1", "p"].includes(node.tagName)).map(label),
-      hero,
-      "the hero carries only its heading and lead",
-    );
-    for (const actions of byClass(document, "site-actions")) {
-      const links = elements(actions, (node) => node.tagName === "a");
-      assert.deepEqual(links.map(label), ["Get started →", "View on GitHub"]);
-      assert.equal(attribute(links[0]!, "data-mokly-link"), "design/site/docs");
-      assert.equal(attribute(links[1]!, "href"), openSource.github);
-    }
-    assert.deepEqual(byClass(document, "site-feature-label").map(label), [
-      "BROWSE",
-      "REVIEW",
-      "EDIT",
-    ]);
-
-    const frame = byClass(document, "site-frame")[0];
-    assert.ok(frame);
-    assert.equal(
-      label(byClass(frame, "site-frame-head")[0]!),
-      siteStage.label + siteStage.status,
-    );
-    const depicted = siteEntry("product/account/project-created");
-    assert.equal(depicted.kind, "screen");
-    if (depicted.kind !== "screen") return;
-    assert.equal(
-      label(byClass(frame, "site-frame-foot")[0]!),
-      "Screen" + depicted.title,
-    );
-    assert.equal(
-      label(byClass(frame, "site-screen-title")[0]!),
-      depicted.title,
-    );
-    assert.equal(
-      label(byClass(frame, "site-idchip")[0]!),
-      "#product/account/project-created",
-    );
-
-    const frames = elements(frame, (node) => node.tagName === "iframe");
-    assert.equal(frames.length, 2);
-    for (const [index, scheme] of [
-      [0, "light"],
-      [1, "dark"],
-    ] as const) {
-      const child = frames[index]!;
-      assert.equal(
-        attribute(child, "sandbox"),
-        "allow-same-origin allow-scripts",
-      );
-      assert.equal(attribute(child, "tabindex"), "-1");
-      // Each frame opens the depicted screen's own document in this viewport
-      // and scheme, addressed from the home document.
-      assert.equal(
-        attribute(child, "src"),
-        relative(
-          dirname(route),
-          screenView("product/account/project-created", viewport, scheme),
-        ),
-      );
-    }
-    assert.doesNotMatch(
-      html,
-      /Pull request #|Welcome to Mokly|github\.com\/mokly-cloud/,
-    );
-  });
-
-  test(`${viewport}: the stage chrome names the real catalogue hierarchy`, () => {
+  test(`${viewport}: the hero draws Cal's heading, lead and actions`, () => {
     const { document } = siteDocument("design/site/home", viewport);
-    const frame = byClass(document, "site-frame")[0];
-    assert.ok(frame);
-    assert.match(label(byClass(frame, "site-topbar")[0]!), /Search catalogue/);
+    const hero = only(document, "site-hero");
+    const headings = elements(document, (node) => node.tagName === "h1");
+    assert.deepEqual(headings.map(textContent), [HEADING]);
     assert.equal(
-      byClass(frame, "site-topbar-menu").length,
-      viewport === "mobile" ? 1 : 0,
+      elements(hero, (node) => node.tagName === "h1")[0],
+      headings[0],
+      "the page's only h1 is the hero heading",
     );
-    assert.deepEqual(
-      byClass(frame, "site-crumb").map((node) => label(node).replace(/^›/, "")),
-      ancestorTitles("product/account/project-created"),
-    );
-
-    const tree = byClass(frame, "site-tree")[0];
-    if (viewport === "mobile") {
-      assert.equal(tree, undefined);
-      return;
-    }
-    assert.ok(tree);
-    assert.deepEqual(byClass(tree, "site-tree-section-head").map(label), [
-      "Specs",
-      "Components",
-    ]);
-    assert.equal(byClass(tree, "site-filter").length, 0);
-    assert.deepEqual(byClass(tree, "site-row--current").map(label), [
-      "Project created",
-    ]);
-    assert.deepEqual(byClass(tree, "site-row-count").map(label), [
-      String(folderChildCount("pages", ["Product"])),
-      String(folderChildCount("pages", ["Product", "Account"])),
-      String(folderChildCount("components", ["Design"])),
+    assert.equal(label(only(hero, "site-hero-lead")), LEAD);
+    assert.deepEqual(links(only(hero, "site-actions")), [
+      ["Get started →", "design/site/docs"],
+      ["Download for Mac", openSource.desktopReleases],
     ]);
   });
 
-  test(`${viewport}: home modules and closing retain their structure`, () => {
+  test(`${viewport}: the open foundation closes with Get started, View on GitHub and the steps`, () => {
     const { document } = siteDocument("design/site/home", viewport);
-    const modules = byClass(document, "site-module");
-    assert.equal(modules.length, 3);
+    const closing = only(document, "site-closing");
+    assert.equal(attribute(closing, "id"), "foundation");
+    assert.deepEqual(links(only(closing, "site-actions")), [
+      ["Get started →", "design/site/docs"],
+      ["View on GitHub", openSource.github],
+    ]);
     assert.deepEqual(
-      modules.map((module) => attribute(module, "id")),
-      ["browse", "review", "edit"],
-    );
-    for (const module of modules)
-      assert.equal(byClass(module, "site-detail").length, 1);
-    assert.equal(byClass(modules[1]!, "site-pin").length, 2);
-    assert.match(
-      label(byClass(modules[2]!, "site-agent")[0]!),
-      /Agent session/,
-    );
-    assert.deepEqual(
-      byClass(document, "site-step").map((step) =>
-        label(elements(step, (node) => node.tagName === "h3")[0]!),
-      ),
+      byClass(closing, "site-step").map((step) => [
+        first(step, "h3"),
+        first(step, "p"),
+      ]),
       [
-        "Shape the next screen.",
-        "Publish the branch.",
-        "Build from a shared decision.",
+        [
+          "Shape the next screen.",
+          "Author with React and your shared components.",
+        ],
+        [
+          "Publish the branch.",
+          "Open the pull request check to review the screens that changed.",
+        ],
+        [
+          "Build from a shared decision.",
+          "Keep comments and approvals with the pull request.",
+        ],
       ],
     );
-    assert.equal(byClass(document, "site-actions").length, 2);
+  });
+
+  test(`${viewport}: the feature frames carry their kickers, headings and copy`, () => {
+    const { document } = siteDocument("design/site/home", viewport);
+    const intro = only(document, "site-section-head");
+    const heading = elements(intro, (node) => node.tagName === "h2")[0];
+    assert.ok(heading);
+    assert.deepEqual(
+      [
+        ...heading.childNodes.map(textContent).filter(Boolean),
+        first(intro, "p"),
+      ],
+      [
+        "Browse, review, edit.",
+        "One place for all of it.",
+        "Every branch becomes a catalogue your whole team can open.",
+      ],
+    );
+    const modules = byClass(document, "site-module");
+    assert.deepEqual(
+      modules.map((module) => [
+        attribute(module, "id"),
+        label(only(module, "site-kicker")),
+        first(module, "h3"),
+      ]),
+      [
+        ["browse", "01 Browse", "A visual diff for every branch."],
+        ["review", "02 Review", "Sticky comments."],
+        ["edit", "03 Edit", "Ask for the change beside the screen."],
+      ],
+    );
+    assert.equal(label(only(modules[1]!, "site-module-body")), REVIEW_BODY);
+  });
+
+  test(`${viewport}: the Browse compare lists the five modes with Swipe chosen`, () => {
+    const { document } = siteDocument("design/site/home", viewport);
+    const viewer = only(only(document, "site-module--browse"), "site-frame");
+    assert.deepEqual(byClass(viewer, "site-home-mode").map(label), [
+      "Current",
+      "Side by side",
+      "Overlay",
+      "Swipe",
+      "Difference",
+    ]);
+    assert.deepEqual(byClass(viewer, "site-home-mode--chosen").map(label), [
+      "Swipe",
+    ]);
+    assert.equal(byClass(viewer, "site-home-swipe").length, 1);
+    assert.deepEqual(byClass(viewer, "site-stage-label").map(label), [
+      "main",
+      "feat/checkout-v2",
+    ]);
+  });
+
+  test(`${viewport}: the depictions are hidden from assistive technology and hold nothing to focus`, () => {
+    const { document } = siteDocument("design/site/home", viewport);
+    const review = only(document, "site-module--review");
+    const depictions = [
+      only(document, "site-home-spread"),
+      only(document, "site-home-check"),
+      only(document, "site-frame"),
+      only(review, "site-detail"),
+      only(document, "site-comment"),
+      only(document, "site-home-edit-bar"),
+      only(document, "site-home-edit-board"),
+      only(document, "site-agent"),
+      only(document, "site-home-source-board"),
+      only(document, "site-home-connector"),
+      ...byClass(document, "site-home-wire"),
+    ];
+    assert.equal(depictions.length, viewport === "desktop" ? 11 : 10);
+    for (const depiction of depictions) {
+      const name = attribute(depiction, "class") ?? depiction.tagName;
+      assert.equal(attribute(depiction, "aria-hidden"), "true", name);
+      assert.deepEqual(
+        elements(depiction, (node) =>
+          /^(?:a|button|input|select|textarea|h[1-6])$/.test(node.tagName),
+        ).map((node) => node.tagName),
+        [],
+        `${name} holds no control and no heading`,
+      );
+    }
   });
 }
 
-test("breadcrumb parity detects a changed ancestor title", () => {
-  const { document } = siteDocument("design/site/home", "desktop");
-  const crumbs = byClass(document, "site-crumb").map((node) =>
-    label(node).replace(/^›/, ""),
+test("the Specs panel lists the page sections on the desktop composition only", () => {
+  const desktop = siteDocument("design/site/home", "desktop").document;
+  const panel = only(desktop, "site-home-specs");
+  assert.equal(panel.tagName, "nav");
+  assert.equal(attribute(panel, "aria-label"), "Page sections");
+  assert.equal(label(only(panel, "site-panel-title")), "Specs");
+  assert.deepEqual(
+    byClass(panel, "site-panel-row").map((row) => [
+      label(row),
+      attribute(row, "href"),
+    ]),
+    [
+      ["Hero", "#hero"],
+      ["Browse, review, edit.", "#features"],
+      ["01 Browse", "#browse"],
+      ["02 Review", "#review"],
+      ["03 Edit", "#edit"],
+      ["Open foundation", "#foundation"],
+      ["Footer", undefined],
+    ],
   );
-  const changed = structuredClone(catalogueIndex());
-  const account = findFolder(changed.tree, "product/account");
-  assert.ok(account);
-  account.title = "Changed account title";
-  assert.throws(
-    () =>
-      assert.deepEqual(
-        crumbs,
-        ancestorTitles("product/account/project-created", changed),
-      ),
-    { name: "AssertionError" },
-  );
+  const mobile = siteDocument("design/site/home", "mobile").document;
+  assert.equal(byClass(mobile, "site-home-specs").length, 0);
 });
 
 test("split site styles own the home compositions", () => {
   const css = siteStyles();
   for (const selector of [
+    ".site-hero",
+    ".site-home-spread",
     ".site-frame",
-    ".site-topbar",
-    ".site-tree",
-    ".site-screen-head",
-    ".site-stage",
-    ".site-stage-frame",
     ".site-module",
+    ".site-comment",
+    ".site-agent",
+    ".site-closing",
+    ".site-steps",
   ])
     assert.ok(css.includes(`${selector} {`), selector);
-  assert.match(css, /\[data-site-viewport="mobile"\] \.site-module-grid/);
+  assert.match(css, /\[data-site-viewport="mobile"\] \.site-home-spread \{/);
 });

@@ -1,21 +1,44 @@
 /**
- * The recorded parity differences of the documentation area: the tree, the
- * document column, its rail and its pager. `design-site-parity.test.ts`
- * merges this list with the lists of the other areas. Each key is a selector
- * that the mockup sheets and the site sheets both declare with different
- * values; each value says why.
+ * The recorded parity differences of the documentation area: the workspace,
+ * the Layers panel with its search and CLI version, the lead, On this page
+ * and the pager. `design-site-parity.test.ts` merges this list with the
+ * lists of the other areas. Each key is a selector that the mockup sheets
+ * and the site sheets both declare with different values; each value says
+ * why, and which milestone of the Canvas redesign plan removes the
+ * difference.
  */
+
+const WORKSPACE =
+  "Canvas docs: the page frame sits on the canvas between the floating Layers and Inspect panels, and below the breakpoint fills the canvas under the sub-bar; Milestone 6 rebuilds the docs layout";
+const LAYERS =
+  "Canvas docs: the tree is the Layers panel, with the search field and the CLI version row at its top, a page count on each section rubric and the Changelog link in its foot; Milestone 6 rebuilds the docs layout";
+const ON_THIS_PAGE =
+  "Canvas docs: On this page is an indexed outline in the Inspect panel, and under the lead in a disclosure below the breakpoint; Milestone 6 rebuilds the docs layout";
+const PAGER =
+  "Canvas docs: previous and next are two small frames under mono labels, below a rule across the page frame, and take a signal edge on hover; Milestone 6 rebuilds the docs layout";
+
 export const DOCS_DIFFERENCES: Readonly<Record<string, string>> = {
-  ".site-doc-disclosure":
-    "the site publishes the tree as a disclosure and hides it above the breakpoint; the mockup depicts one composition per screen",
-  ".site-doc-tree":
-    "the mockup pins the tree from the rule itself; the site pins it from the enclosing column so the disclosure can reuse the tree; the mockup's tree also opens with the search control until Milestone 6 builds the Layers panel with its search",
-  ".site-doc-tree-scroll":
-    "the scroller only overflows inside the site's pinned column, for the same reason",
-  ".site-pager":
-    "the mockup stacks the cards by giving them the full measure; the site stacks them with the flex direction",
-  ".site-pager-item": "the same stacking difference",
-  ".site-pager-item--next": "the same stacking difference",
-  ".site-search":
-    "the mobile search heads the documentation column above the tree's disclosure, because the Canvas tool bar has no search; Milestone 6 builds the Layers panel with its search",
+  ".site-docs": WORKSPACE,
+  ".site-docs-document": WORKSPACE,
+  ".site-docs-rail": WORKSPACE,
+  ".site-docs-side": WORKSPACE,
+  ".site-doc-tree": LAYERS,
+  ".site-doc-tree-scroll": LAYERS,
+  ".site-doc-tree-foot": LAYERS,
+  ".site-doc-tree .site-version": LAYERS,
+  ".site-doc-section-head": LAYERS,
+  ".site-search": LAYERS,
+  ".site-search:hover": LAYERS,
+  ".site-version": LAYERS,
+  ".site-version-label": LAYERS,
+  ".site-version-link": LAYERS,
+  ".site-version-link:hover": LAYERS,
+  ".site-onpage-link": ON_THIS_PAGE,
+  ".site-onpage-link:hover": ON_THIS_PAGE,
+  ".site-pullquote":
+    "Canvas docs: the lead is the guide's description beside the signal rule, in secondary ink; Milestone 6 rebuilds the docs layout",
+  ".site-pager": PAGER,
+  ".site-pager-item": PAGER,
+  ".site-pager-item--next": PAGER,
+  ".site-pager-item:hover": PAGER,
 };

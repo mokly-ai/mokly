@@ -1,55 +1,273 @@
-/* The documentation's mobile composition and its narrow widths. */
-
-[data-site-viewport="mobile"] .site-search {
-  flex: 1 0 100%;
-  margin-top: var(--mk-space-6);
-}
+/* The documentation's mobile composition. The panels leave the canvas: a
+   sticky sub-bar under the tool bar names the section and the page, opens
+   the tree as a sheet and opens search, and the page frame fills the canvas
+   with a 10px margin. The open state draws the sheet in place over a scrim,
+   as the open menu does, because a static document has no top layer. */
 
 [data-site-viewport="mobile"] .site-docs {
+  gap: 0;
   grid-template-columns: minmax(0, 1fr);
-  padding: 0 var(--mk-layout-gutter-mobile);
+  padding: 44px 10px 0;
 }
 
 [data-site-viewport="mobile"] .site-docs-document {
-  padding: var(--mk-space-8) 0 var(--mk-space-12);
+  padding: 0;
 }
 
-[data-site-viewport="mobile"] .site-docs-document > .site-onpage {
-  border-left: 1px solid var(--mk-color-border);
-  margin-bottom: var(--mk-space-10);
-  padding-left: var(--mk-space-4);
+/* The sub-bar */
+
+.site-docs-subbar {
+  align-items: center;
+  background: var(--mk-color-surface);
+  box-shadow: 0 1px 0 var(--mk-color-border);
+  display: flex;
+  gap: 4px;
+  height: 52px;
+  padding: 0 4px 0 6px;
+  position: sticky;
+  top: 60px;
+  z-index: 25;
+}
+
+.site-docs-layers-toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  color: var(--mk-color-text);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font: inherit;
+  font-size: 0.875rem;
+  gap: var(--mk-space-2);
+  height: var(--mk-layout-control-min);
+  min-width: 0;
+  padding: 0 10px;
+  text-align: left;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-docs-layers-toggle:hover,
+.site-docs-layers-toggle[aria-expanded="true"] {
+  background: var(--mk-color-background);
+}
+
+.site-docs-layers-toggle svg {
+  flex: none;
+}
+
+.site-docs-layers-toggle > svg:first-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-docs-layers-toggle-trail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-docs-layers-toggle-section,
+.site-docs-layers-toggle-sep,
+.site-docs-layers-toggle-chevron {
+  color: var(--mk-color-text-muted);
+}
+
+.site-docs-layers-toggle-page {
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-docs-layers-toggle[aria-expanded="true"]
+  .site-docs-layers-toggle-chevron {
+  rotate: 180deg;
+}
+
+.site-docs-subbar .site-search {
+  background: none;
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--mk-color-text-secondary);
+  flex: none;
+  justify-content: center;
+  padding: 0;
+  width: var(--mk-layout-control-min);
+}
+
+.site-docs-subbar .site-search:hover {
+  background: var(--mk-color-background);
+  box-shadow: none;
+  color: var(--mk-color-text);
+}
+
+/* The tree sheet under the sub-bar, over a scrim that dims the page */
+
+.site-docs-sheet-scrim {
+  background: color-mix(in srgb, var(--mk-color-text) 32%, transparent);
+  inset: 0;
+  position: fixed;
+  z-index: 20;
+}
+
+[data-color-scheme="dark"] .site-docs-sheet-scrim {
+  background: color-mix(in srgb, var(--mk-color-background) 70%, transparent);
+}
+
+.site-docs-sheet {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 0 0 16px 16px;
+  box-shadow:
+    0 1px 0 var(--mk-color-border),
+    var(--mk-shadow-large);
+  color: var(--mk-color-text);
+  height: auto;
+  inset: 112px 0 auto;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  padding: 0;
+  position: fixed;
+  width: auto;
+  z-index: 24;
+}
+
+.site-docs-sheet .site-doc-tree {
+  display: flex;
+  flex-direction: column;
+  max-height: min(640px, calc(100vh - 136px));
+}
+
+.site-docs-sheet .site-docs-layers-top {
+  padding: 8px 12px 10px;
+}
+
+.site-docs-sheet .site-doc-tree-scroll {
+  padding: 0 12px 10px;
+}
+
+.site-docs-sheet .site-doc-section-head {
+  font-size: 0.71875rem;
+  min-height: 44px;
+}
+
+.site-docs-sheet .site-panel-row {
+  font-size: 0.9375rem;
+}
+
+.site-docs-sheet .site-doc-tree-foot {
+  border-top: 1px solid var(--mk-color-border);
+  padding: var(--mk-space-2) 12px;
+}
+
+/* The page frame fills the canvas; the index heads its section */
+
+[data-site-viewport="mobile"] .site-docs-frame .site-page-sheet {
+  grid-template-columns:
+    [bleed-start] 20px [text-start] minmax(0, 1fr) [text-end] 20px
+    [bleed-end];
+  padding-top: 36px;
+}
+
+[data-site-viewport="mobile"] .site-docs-frame .site-document-intro h1 {
+  font-size: 2.5rem;
+  margin-top: 16px;
 }
 
 [data-site-viewport="mobile"] .site-pullquote {
-  font-size: var(--mk-type-lead-size);
-  line-height: var(--mk-type-lead-line);
-  padding-left: var(--mk-space-4);
+  font-size: 1.125rem;
+  padding-left: 14px;
+}
+
+[data-site-viewport="mobile"]
+  .site-docs-frame
+  .site-document-intro
+  .site-pullquote {
+  margin-top: 18px;
+}
+
+[data-site-viewport="mobile"] .site-docs-frame .site-document-body > section {
+  margin-top: 40px;
+  padding-top: 32px;
+}
+
+[data-site-viewport="mobile"] .site-docs-frame .site-document-body h2 {
+  scroll-margin-top: 136px;
+}
+
+[data-site-viewport="mobile"]
+  .site-docs-frame
+  .site-document-body
+  > section
+  > .site-code {
+  margin-inline: -6px;
+  width: auto;
+}
+
+[data-site-viewport="mobile"] .site-docs-section-index {
+  color: var(--mk-color-signal-deep);
+  grid-row: auto;
+  line-height: 14px;
+  position: static;
 }
 
 [data-site-viewport="mobile"] .site-pager {
-  flex-direction: column;
+  gap: 44px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 44px;
+  padding: 56px 0 52px;
 }
 
-[data-site-viewport="mobile"] .site-pager-item {
-  min-width: 100%;
+[data-site-viewport="mobile"] .site-pager-item--next {
+  grid-column: 1;
+  text-align: left;
 }
 
-@media (max-width: 1100px) {
-  .site-docs {
-    grid-template-columns: var(--mk-layout-site-sidebar) minmax(0, 1fr);
-  }
-
-  .site-docs-rail {
-    display: none;
-  }
+[data-site-viewport="mobile"] .site-pager-item--next .site-pager-label {
+  left: 0;
+  right: auto;
 }
 
-@media (max-width: 767px) {
-  .site-docs {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* The sample fence stacks the code, the controls and the frame */
 
-  .site-docs-side {
-    display: none;
-  }
+[data-site-viewport="mobile"] .site-docs-sample {
+  grid-template-areas:
+    "head"
+    "code"
+    "controls"
+    "stage";
+  grid-template-columns: minmax(0, 1fr);
+  padding: 28px 14px 0;
+  row-gap: 14px;
+}
+
+[data-site-viewport="mobile"] .site-docs-sample-controls,
+[data-site-viewport="mobile"] .site-docs-sample-stage {
+  margin-top: 22px;
+}
+
+[data-site-viewport="mobile"] .site-docs-sample-stage {
+  justify-self: center;
+  padding-left: 0;
+}
+
+[data-site-viewport="mobile"] .site-docs-sample-option {
+  height: var(--mk-layout-control-min);
+  min-width: var(--mk-layout-control-min);
+}
+
+[data-site-viewport="mobile"] .site-docs-sample-code .site-code-meta {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-docs-sample-code .site-code-language--end {
+  margin-left: auto;
+}
+
+[data-site-viewport="mobile"]
+  .site-docs-frame
+  .site-code--numbered
+  .site-code-line {
+  padding-left: 34px;
+  text-indent: -34px;
 }

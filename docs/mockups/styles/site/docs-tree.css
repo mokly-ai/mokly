@@ -1,6 +1,149 @@
-/* The documentation tree, its search control and its version chip. */
+/* The documentation workspace on the canvas: the Layers panel, the page
+   frame and the Inspect panel side by side under the tool bar. This file
+   holds the workspace and the Layers panel: its search control, the
+   published CLI version, every section with its pages, and the shared text
+   that names an icon. */
 
-/* The rubric: the small mono label the tree, the rail and the pager share */
+/* Three columns on the canvas, the panels close to its edges */
+
+.site-docs {
+  align-items: start;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 252px minmax(0, 1fr) 236px;
+  margin: 0 auto;
+  max-width: 1680px;
+  padding: 56px var(--mk-space-4) 0;
+  width: 100%;
+}
+
+/* The Layers panel sticks below the tool bar and stays inside the window;
+   its sections scroll inside it between the head and the foot */
+
+.site-docs-side {
+  min-width: 0;
+  position: sticky;
+  top: 72px;
+}
+
+.site-doc-tree {
+  max-height: calc(100vh - 128px);
+}
+
+.site-doc-tree > .site-panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+}
+
+.site-docs-layers-top {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: grid;
+  flex: none;
+  gap: var(--mk-space-2);
+  padding: 10px 10px 12px;
+}
+
+/* The search control: shaped like a field, with its key, and the strong
+   edge of a control */
+
+.site-search {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 0;
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 8px 0 12px;
+  text-align: left;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    box-shadow var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  width: 100%;
+}
+
+.site-search:hover {
+  background: var(--mk-color-surface);
+  box-shadow: inset 0 0 0 1px var(--mk-color-text);
+  color: var(--mk-color-text);
+}
+
+.site-search svg {
+  flex: none;
+}
+
+.site-search-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-search-key {
+  background: var(--mk-color-surface);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px var(--mk-color-border),
+    0 1px 0 var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  line-height: 20px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/* The published CLI version: a row that links the changelog, the version
+   on its signal chip */
+
+.site-version-link {
+  align-items: center;
+  border-radius: 9px;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 8px 0 12px;
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-version-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-version {
+  align-items: center;
+  display: flex;
+  gap: var(--mk-space-2);
+}
+
+.site-doc-tree .site-version {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-version svg {
+  color: var(--mk-color-signal-deep);
+  flex: none;
+}
+
+.site-version-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The rubric: the small mono label of a section */
 
 .site-rubric {
   color: var(--mk-color-text-muted);
@@ -12,129 +155,33 @@
   text-transform: uppercase;
 }
 
-/* The documentation search control */
-
-.site-search {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  display: inline-flex;
-  flex: 0 1 320px;
-  font: inherit;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-2);
-  justify-content: flex-start;
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-3);
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-search:hover {
-  background: var(--mk-color-surface);
-  border-color: var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-}
-
-/* The published CLI version, shown as the quiet identity chip */
-
-.site-version {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  display: inline-flex;
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
-  gap: var(--mk-space-2);
-  padding: var(--mk-space-1) var(--mk-space-2);
-}
-
-.site-version-label {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-sans);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.site-version-link {
-  align-items: center;
-  color: var(--mk-color-text);
-  display: inline-flex;
-  min-height: var(--mk-layout-control-min);
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-
-.site-version-link:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--mk-color-border-strong);
-}
-
-/* The tree */
-
-/* The tree sits on the page canvas rather than in a filled panel. A single
-   vertical hairline separates it from the document, and the on-this-page
-   rail hangs from a hairline of its own at the outer edge. */
-
-.site-docs {
-  display: grid;
-  grid-template-columns:
-    var(--mk-layout-site-sidebar)
-    minmax(0, 1fr)
-    var(--mk-layout-site-on-page);
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: 0 var(--mk-layout-gutter-desktop);
-  width: 100%;
-}
-
-.site-docs-side {
-  align-self: stretch;
-  border-right: 1px solid var(--mk-color-border);
-  display: block;
-  padding-right: var(--mk-space-6);
-}
-
-.site-doc-tree {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  height: 100vh;
-  padding: var(--mk-space-6) 0 var(--mk-space-5);
-  position: sticky;
-  top: 0;
-}
-
-/* The search control heads the tree column */
-
-.site-doc-tree > .site-search {
-  margin-bottom: var(--mk-space-3);
-}
+/* The sections: each listed expanded under its rubric and page count; the
+   pages are the shared 44px panel rows */
 
 .site-doc-tree-scroll {
-  display: grid;
-  gap: var(--mk-space-5);
-  margin: var(--mk-space-4) 0;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding-right: var(--mk-space-2);
+  overscroll-behavior: contain;
+  padding: 4px 8px 12px;
   scrollbar-color: var(--mk-color-border-strong) transparent;
   scrollbar-width: thin;
 }
 
-.site-doc-tree .site-version {
-  background: none;
-  border: 0;
-  padding: 0 var(--mk-space-3);
+.site-doc-section-head {
+  align-items: center;
+  display: flex;
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  letter-spacing: 0.06em;
+  min-height: 34px;
+  padding: 8px 9px 0;
 }
 
-.site-doc-section-head {
-  padding: 0 var(--mk-space-3) var(--mk-space-2);
+.site-docs-section-count {
+  letter-spacing: 0;
+  margin-left: auto;
 }
 
 .site-doc-section ul {
@@ -144,71 +191,25 @@
   padding: 0;
 }
 
-.site-doc-link {
-  align-items: center;
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  min-height: var(--mk-layout-control-min);
-  padding: var(--mk-space-1) var(--mk-space-3);
-  text-decoration: none;
-  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+.site-docs-command {
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
 }
 
-.site-doc-link:hover {
-  background: var(--mk-color-surface-muted);
-  color: var(--mk-color-text);
-}
-
-.site-doc-link--current,
-.site-doc-link--current:hover {
-  background: var(--mk-color-accent-soft);
-  color: var(--mk-color-accent);
-  font-weight: var(--mk-font-medium);
-}
+/* The foot: the Changelog link */
 
 .site-doc-tree-foot {
-  border-top: 1px solid var(--mk-color-border);
   display: grid;
-  padding-top: var(--mk-space-3);
 }
 
-.site-doc-tree-foot .site-doc-link {
-  color: var(--mk-color-text);
-  font-weight: var(--mk-font-medium);
-}
+/* Text that names a control without showing, such as the name of an icon
+   or of a hidden radio */
 
-.site-doc-disclosure {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  margin-top: var(--mk-space-6);
-  padding: 0 var(--mk-space-2);
-}
-
-.site-doc-disclosure > summary {
-  align-items: center;
-  border-radius: var(--mk-radius-small);
-  cursor: pointer;
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-medium);
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-2);
-}
-
-.site-doc-disclosure > summary:hover {
-  background: var(--mk-color-surface-muted);
-}
-
-.site-doc-disclosure .site-doc-tree {
-  height: auto;
-  padding-top: 0;
-  position: static;
-}
-
-.site-doc-disclosure .site-doc-tree-scroll {
-  overflow: visible;
+.site-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }

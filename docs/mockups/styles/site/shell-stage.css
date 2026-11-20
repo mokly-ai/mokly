@@ -1,103 +1,248 @@
-/* Screen header and stage */
-
-.site-screen-head {
-  background: var(--mk-color-surface);
-  border-bottom: 1px solid var(--mk-color-border);
-  flex-shrink: 0;
-  padding: var(--mk-space-3) var(--mk-space-6);
-}
-
-.site-crumbs {
-  align-items: center;
-  color: var(--mk-color-text-muted);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: var(--mk-type-ui-label-size);
-}
-
-.site-crumb {
-  align-items: center;
-  display: inline-flex;
-}
-
-.site-crumb-sep {
-  padding: 0 var(--mk-space-2);
-}
-
-.site-screen-title-row {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-3);
-  margin-top: var(--mk-space-1);
-}
-
-.site-screen-title {
-  font-size: 1.1875rem;
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: -0.01em;
-}
-
-.site-idchip {
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-ui-label-size);
-  padding: 2px var(--mk-space-2);
-}
+/* The stage of the depicted viewer's open screen: the dotted canvas where
+   the Swipe divider with its grip splits main on the left from
+   feat/checkout-v2 on the right. The compared acme payment screens follow;
+   they draw at 49 percent. */
 
 .site-stage {
   background-color: var(--mk-color-background);
   background-image: radial-gradient(
-    circle at center,
-    var(--mk-color-border) 1px,
-    transparent 1px
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
   );
-  background-size: 22px 22px;
-  display: flex;
+  background-size: 20px 20px;
+  display: grid;
   flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding: var(--mk-space-5) var(--mk-space-6) 0;
-}
-
-.site-stage-label {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-ui-label-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: 0.06em;
-  margin-bottom: var(--mk-space-3);
-  text-transform: uppercase;
+  padding: 48px 30px 28px;
+  place-items: center;
 }
 
 .site-stage-frame {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  flex: 1;
-  margin: 0 auto;
-  max-width: 940px;
-  min-height: 0;
-  overflow: hidden;
+  aspect-ratio: 1280 / 800;
   position: relative;
-  width: 100%;
+  width: 632px;
 }
 
 .site-stage-screen {
-  background: var(--mk-color-surface);
-  border: 0;
-  height: 133.3334%;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mk-color-text) 8%, transparent),
+    var(--mk-shadow-medium);
   inset: 0;
+  overflow: hidden;
   position: absolute;
-  transform: scale(0.75);
-  transform-origin: top left;
-  width: 133.3334%;
 }
 
-[data-color-scheme="light"] .site-stage-screen--dark,
-[data-color-scheme="dark"] .site-stage-screen--light {
-  display: none;
+.site-stage-screen > .site-acme {
+  transform: scale(0.49375);
+  transform-origin: 0 0;
+}
+
+.site-stage-frame .site-home-swipe-branch {
+  clip-path: inset(0 0 0 50%);
+}
+
+.site-stage-label {
+  align-items: center;
+  background: color-mix(in srgb, var(--mk-color-text) 82%, transparent);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  height: 22px;
+  left: 0;
+  line-height: 1;
+  padding: 0 8px;
+  position: absolute;
+  top: -32px;
+  z-index: 2;
+}
+
+[data-color-scheme="dark"] .site-stage-label {
+  background: var(--mk-color-surface-raised);
+  color: var(--mk-color-text);
+}
+
+.site-stage-frame .site-home-tag-branch {
+  background: var(--mk-color-signal);
+  color: var(--mk-color-on-signal);
+  left: auto;
+  right: 0;
+}
+
+/* The Swipe divider: a green rule with its round grip */
+
+.site-home-swipe {
+  bottom: -12px;
+  left: calc(50% - 22px);
+  position: absolute;
+  top: -12px;
+  width: 44px;
+  z-index: 3;
+}
+
+.site-home-swipe::before {
+  background: var(--mk-color-signal);
+  bottom: 0;
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
+  content: "";
+  left: 21px;
+  position: absolute;
+  top: 0;
+  width: 2px;
+}
+
+.site-home-swipe-grip {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    0 0 0 2px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-text);
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  left: 3px;
+  position: absolute;
+  top: calc(50% - 19px);
+  width: 38px;
+}
+
+.site-home-swipe-grip svg {
+  margin: 0 -2px;
+  stroke-width: 2;
+}
+
+.site-home-swipe-grip svg:first-child {
+  transform: scaleX(-1);
+}
+
+.site-home-compare-sam {
+  left: calc(50% + 12px);
+  top: 58%;
+}
+/* The two payment screens that the compare draws: the plain form on main,
+   and the redesign with its stepper and summary card */
+
+.site-acme-stepper {
+  align-items: center;
+  display: flex;
+  font-size: 14.5px;
+  gap: 12px;
+}
+
+.site-acme-stepper > span,
+.site-acme-secure {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.site-acme-stepper em {
+  border-radius: var(--mk-radius-pill);
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, currentColor 20%, transparent);
+  display: grid;
+  font-size: 12.5px;
+  font-weight: 650;
+  height: 26px;
+  place-items: center;
+  width: 26px;
+}
+
+.site-acme-stepper-on em {
+  background: currentColor;
+  box-shadow: none;
+}
+
+.site-acme-stepper-on em b {
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-acme-stepper-done .site-acme-icon {
+  background: color-mix(
+    in srgb,
+    currentColor 35%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: var(--mk-radius-pill);
+  height: 26px;
+  padding: 5px;
+  stroke: color-mix(in srgb, currentColor 40%, var(--mk-color-on-signal));
+  stroke-width: 2.4;
+  width: 26px;
+}
+
+.site-acme-stepper > i {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  height: 1.5px;
+  width: 44px;
+}
+
+.site-acme-secure {
+  font-size: 14px;
+}
+
+.site-acme-checkout-desktop {
+  display: grid;
+  gap: 64px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  padding: 40px 80px 0;
+}
+
+.site-acme-checkout-desktop .site-acme-toggle-row {
+  margin-top: 4px;
+}
+
+.site-acme-checkout-desktop .site-acme-pay {
+  margin-top: 22px;
+}
+
+.site-acme-summary {
+  align-self: start;
+  border-radius: 24px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent),
+    0 30px 60px -40px
+      color-mix(in srgb, var(--mk-color-on-signal) 45%, transparent);
+  margin-top: 6px;
+  padding: 28px 30px 30px;
+}
+
+.site-acme-summary-title {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.site-acme-checkout-desktop--before {
+  gap: 72px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  padding: 52px 120px 0;
+}
+
+.site-acme-summary--plain {
+  background: none;
+  border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 0;
+  padding: 6px 0 0 40px;
+}
+
+.site-acme-before .site-acme-input {
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+  height: 44px;
+}
+
+.site-acme-before .site-acme-field {
+  margin-top: 12px;
+}
+
+.site-acme-before .site-acme-button {
+  border-radius: 5px;
+  margin-top: 24px;
 }

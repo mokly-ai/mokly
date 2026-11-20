@@ -1,73 +1,54 @@
 /**
- * The documentation page: search heads the tree column, the tree sits
- * on the page canvas behind a vertical hairline, and the document keeps a
- * ruled reading structure — an accent-ruled lead, hairlines between the
- * intro, the body and the previous and next row, and its own on-this-page
- * rail hung from a hairline at the outer edge.
+ * The documentation page as a part of the design file: the open guide is a
+ * page frame on the canvas between two floating panels, Layers, the section
+ * tree with its search, and Inspect, the page's properties and outline.
+ * Below the breakpoint a sub-bar under the tool bar names the section and
+ * the page, opens the tree as a sheet and opens search, and the page frame
+ * fills the canvas with a narrow margin.
  */
 
 import { SiteLayout } from "./parts/chrome.js";
-import { CodePanel } from "./parts/code_panel.js";
-import { DOCS_HEADINGS, DOCS_PAGE } from "./parts/docs_data.js";
-import {
-  DocsOnThisPage,
-  DocsPager,
-  DocsTree,
-  DocsTreeDisclosure,
-} from "./parts/docs_navigation.js";
+import { FIRST_SCREEN_PAGE } from "./parts/docs-first-screen.js";
+import { DocsInspect } from "./parts/docs-inspect.js";
+import { INSTALL_PAGE } from "./parts/docs-install.js";
+import { DocsPageFrame } from "./parts/docs-page.js";
+import type { DocsPage } from "./parts/docs-pages.js";
+import { DocsLayersSheet, DocsSubbar } from "./parts/docs-sheet.js";
+import { DocsLayers } from "./parts/docs_navigation.js";
 import { SITE_SCREENS } from "./parts/links.js";
-import { SiteTrail } from "./parts/trail.js";
 
-function SiteDocs({ viewport }: { viewport: "mobile" | "desktop" }) {
+type Viewport = "mobile" | "desktop";
+
+/**
+ * One documentation page in one composition. `layers` draws the mobile
+ * tree sheet open; the desktop composition keeps the tree in its panel.
+ */
+function SiteDocs({
+  layers = false,
+  page,
+  viewport,
+}: {
+  layers?: boolean | undefined;
+  page: DocsPage;
+  viewport: Viewport;
+}) {
   const desktop = viewport === "desktop";
   return (
     <SiteLayout active={SITE_SCREENS.docs} viewport={viewport}>
+      {desktop ? null : <DocsSubbar open={layers} page={page} />}
+      {layers && !desktop ? <DocsLayersSheet page={page} /> : null}
       <div className="site-docs">
-        {desktop ? <DocsTree /> : <DocsTreeDisclosure />}
+        {desktop ? (
+          <div className="site-docs-side">
+            <DocsLayers page={page} />
+          </div>
+        ) : null}
         <main className="site-document site-docs-document" id="main">
-          <div className="site-document-intro">
-            <SiteTrail trail={["Documentation", DOCS_PAGE.section]} />
-            <h1>{DOCS_PAGE.page}</h1>
-            <p className="site-pullquote">
-              Add Mokly to the repository that holds your components.
-            </p>
-          </div>
-          {desktop ? null : <DocsOnThisPage />}
-          <div className="site-document-body">
-            <section id={DOCS_HEADINGS[0].id}>
-              <h2>{DOCS_HEADINGS[0].title}</h2>
-              <p>
-                Mokly runs from your repository as a development dependency.
-                Screens written in React also need React and React DOM.
-              </p>
-              <CodePanel
-                code="npm install --save-dev @mokly/mokly react react-dom"
-                language="shell"
-              />
-            </section>
-            <section id={DOCS_HEADINGS[1].id}>
-              <h2>{DOCS_HEADINGS[1].title}</h2>
-              <p>
-                Create <code>mokly.config.json</code> at the repository root.
-                Set <code>roots</code> to the folders holding your entry
-                modules. By default, a build writes the static catalogue to{" "}
-                <code>mokly-static</code>. Keep that folder ignored by Git.
-              </p>
-            </section>
-            <section id={DOCS_HEADINGS[2].id}>
-              <h2>{DOCS_HEADINGS[2].title}</h2>
-              <p>
-                Add an entry module ending in <code>.mockup.tsx</code> whose
-                default export is a <code>defineScreen</code>. Mokly calls its{" "}
-                <code>render</code> for the mobile and the desktop view.
-              </p>
-            </section>
-          </div>
-          <DocsPager />
+          <DocsPageFrame desktop={desktop} page={page} />
         </main>
         {desktop ? (
           <div className="site-docs-rail">
-            <DocsOnThisPage />
+            <DocsInspect page={page} />
           </div>
         ) : null}
       </div>
@@ -75,11 +56,17 @@ function SiteDocs({ viewport }: { viewport: "mobile" | "desktop" }) {
   );
 }
 
-/** The documentation screen, with its composition selected by the viewport. */
-export function SiteDocsScreen({
-  viewport,
-}: {
-  viewport: "mobile" | "desktop";
-}) {
-  return <SiteDocs viewport={viewport} />;
+/** The Install guide, where Get started leads. */
+export function SiteDocsScreen({ viewport }: { viewport: Viewport }) {
+  return <SiteDocs page={INSTALL_PAGE} viewport={viewport} />;
+}
+
+/** The Your first screen guide, with its HTML sample fence. */
+export function SiteDocsFirstScreen({ viewport }: { viewport: Viewport }) {
+  return <SiteDocs page={FIRST_SCREEN_PAGE} viewport={viewport} />;
+}
+
+/** The Install guide with the mobile tree sheet open over it. */
+export function SiteDocsLayersScreen({ viewport }: { viewport: Viewport }) {
+  return <SiteDocs layers page={INSTALL_PAGE} viewport={viewport} />;
 }

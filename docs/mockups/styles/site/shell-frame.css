@@ -1,148 +1,181 @@
-/* 5 -- The catalogue frame ----------------------------------------------- */
-
-.site-frame-wrap {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: 0 var(--mk-layout-gutter-desktop) var(--mk-space-20);
-  width: 100%;
-}
+/* The depicted Mokly viewer of the Browse frame: its window, its bar with
+   the crumb, the branch, the pull request, the commit, the people, History
+   and Share, and the head of the open screen with the compare toolbar. The
+   Edit window's title bar reuses the bar's mark, crumb and branch chip. */
 
 .site-frame {
   background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-medium);
-  box-shadow: var(--mk-shadow-medium);
-  margin: 0;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-large);
+  font-size: 13px;
   overflow: hidden;
 }
 
-.site-frame-head {
+.site-topbar {
   align-items: center;
   border-bottom: 1px solid var(--mk-color-border);
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-3);
-  justify-content: space-between;
-  padding: var(--mk-space-3) var(--mk-space-5);
+  gap: 12px;
+  height: 50px;
+  padding: 0 12px 0 14px;
+  white-space: nowrap;
 }
 
-.site-frame-label {
-  color: var(--mk-color-text);
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-medium);
+.site-topbar-mark {
+  display: inline-grid;
+  flex: none;
 }
 
-.site-frame-foot {
-  align-items: center;
-  border-top: 1px solid var(--mk-color-border);
-  color: var(--mk-color-text);
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-3);
-  padding: var(--mk-space-3) var(--mk-space-5);
-}
-
-.site-frame-foot-label {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-nano-size);
+.site-crumbs {
+  display: inline-flex;
   font-weight: var(--mk-font-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
-.site-shell {
-  background: var(--mk-color-background);
-  display: flex;
-  flex-direction: column;
-  height: var(--mk-layout-site-stage-desktop);
-  overflow: hidden;
+.site-crumb {
+  display: inline-flex;
+}
+
+.site-crumb-sep {
+  color: var(--mk-color-text-muted);
+  font-weight: var(--mk-font-regular);
+  margin: 0 6px;
+}
+
+.site-home-viewer-branch {
+  align-items: center;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12.5px;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 30px;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.site-home-viewer-branch svg + svg {
+  color: var(--mk-color-text-muted);
+}
+
+.site-home-viewer-pr {
+  align-items: center;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+}
+
+.site-home-viewer-commit {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+}
+
+.site-home-viewer-people {
+  margin: 0 4px 0 auto;
+}
+
+.site-home-viewer-people .site-avatar {
+  font-size: 11px;
+  height: 26px;
+  width: 26px;
+}
+
+.site-home-viewer-button {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+}
+
+.site-home-viewer-share {
+  background: var(--mk-color-signal-fill);
+  color: var(--mk-color-on-signal-fill);
+  font-weight: var(--mk-font-semibold);
 }
 
 .site-shell-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  height: 548px;
 }
 
 .site-shell-main {
   display: flex;
-  flex: 1;
   flex-direction: column;
   min-width: 0;
 }
 
-/* Top bar */
+/* The screen head of the open screen: its title, path and status, and the
+   compare toolbar with the five modes and Swipe chosen */
 
-.site-topbar {
+.site-screen-head {
   align-items: center;
-  background: var(--mk-color-surface);
   border-bottom: 1px solid var(--mk-color-border);
   display: flex;
-  flex-shrink: 0;
-  gap: var(--mk-space-4);
-  height: 48px;
-  padding: 0 var(--mk-space-4);
+  gap: 12px;
+  height: 58px;
+  justify-content: space-between;
+  padding: 0 14px 0 18px;
 }
 
-.site-topbar-brand {
+.site-screen-title-row {
   align-items: center;
-  color: var(--mk-color-text);
-  display: inline-flex;
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-bold);
-  gap: var(--mk-space-2);
-  letter-spacing: -0.01em;
-}
-
-.site-topbar-mark {
-  background: var(--mk-color-accent);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-on-accent);
-  display: inline-grid;
-  flex-shrink: 0;
-  height: 24px;
-  place-items: center;
-  width: 24px;
-}
-
-.site-topbar-menu {
-  align-content: center;
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  display: grid;
-  flex-shrink: 0;
-  gap: 3px;
-  height: 28px;
-  padding: 0 6px;
-  width: 28px;
-}
-
-.site-topbar-menu span {
-  background: var(--mk-color-text-muted);
-  border-radius: var(--mk-radius-pill);
-  height: 1.5px;
-  width: 100%;
-}
-
-.site-topbar-search {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
   display: flex;
-  flex: 1;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-2);
-  height: 30px;
-  max-width: 440px;
+  gap: 10px;
   min-width: 0;
-  padding: 0 var(--mk-space-3);
+  white-space: nowrap;
 }
 
-.site-topbar-tag {
-  display: inline-grid;
-  flex-shrink: 0;
-  margin-left: auto;
-  place-items: center;
+.site-screen-title {
+  font-size: 15.5px;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.015em;
+}
+
+.site-idchip {
+  background: var(--mk-color-background);
+  border-radius: 5px;
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 11.5px;
+  padding: 4px 6px;
+}
+
+.site-home-modes {
+  background: var(--mk-color-background);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: flex;
+  flex: none;
+  padding: 3px;
+}
+
+.site-home-mode {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 550;
+  height: 30px;
+  justify-content: center;
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
+.site-home-mode--chosen {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
 }

@@ -38,7 +38,13 @@ test("the Site folder holds the eight canonical screens, the open menu and their
       .filter((entry) => entry.path.startsWith("design/site/"))
       .map((entry) => entry.path)
       .sort(),
-    [...screens, "design/site/home/menu", "design/site/tour"].sort(),
+    [
+      ...screens,
+      "design/site/docs/first-screen",
+      "design/site/docs/layers",
+      "design/site/home/menu",
+      "design/site/tour",
+    ].sort(),
   );
   const menu = siteEntry("design/site/home/menu");
   assert.equal(menu.kind, "screen");

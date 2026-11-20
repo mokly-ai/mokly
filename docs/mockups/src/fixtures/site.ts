@@ -29,14 +29,3 @@ export const openSource = {
   github: "https://github.com/mokly-ai/mokly",
   desktopReleases: "https://github.com/mokly-ai/mokly-desktop/releases",
 } as const;
-
-/** The approved publication label and review state shown above the real stage. */
-export const siteStage = {
-  label: "Mokly Cloud · sydney-v1",
-  status: "Ready for review",
-  /**
-   * How many entries and folders sit directly in each folder the depicted
-   * tree opens. A policy test reads them back from the catalogue manifest.
-   */
-  folders: { account: 10, design: 23, product: 4 },
-} as const;

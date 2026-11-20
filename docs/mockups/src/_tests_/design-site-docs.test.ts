@@ -1,6 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
 import {
@@ -8,6 +6,7 @@ import {
   SECTION_TITLES,
 } from "../../../../apps/site/src/docs/sections";
 
+import { installedVersion, one, type Root } from "./design-site-docs-helpers";
 import {
   assertHoverChangesMoreThanColor,
   assertStrongBoundaries,
@@ -17,7 +16,6 @@ import {
   cssRules,
   elements,
   label,
-  repositoryRoot,
   siteDocument,
   siteScreens,
   siteStyles,
@@ -42,98 +40,82 @@ const hoverClasses = [
   "site-code-copy",
   "site-search",
   "site-version-link",
-  "site-doc-link",
+  "site-panel-row",
   "site-onpage-link",
+  "site-docs-edit",
+  "site-docs-layers-toggle",
+  "site-docs-outline-summary",
+  "site-docs-sample-option",
   "site-pager-item",
 ];
 
+/** Each link of `root`: its text and the catalogue entry it opens. */
+function links(root: Root) {
+  return elements(root, (node) => node.tagName === "a").map((node) => [
+    label(node),
+    attribute(node, "data-mokly-link"),
+  ]);
+}
+
+/** The documentation tree: in the Layers panel, or in the open sheet. */
+function tree(viewport: "mobile" | "desktop") {
+  const id =
+    viewport === "desktop" ? "design/site/docs" : "design/site/docs/layers";
+  return one(siteDocument(id, viewport).document, "site-doc-tree");
+}
+
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: documentation tree lists every section expanded`, () => {
-    const { document } = siteDocument("design/site/docs", viewport);
-    const tree = byClass(document, "site-doc-tree")[0];
-    assert.ok(tree);
-    assert.deepEqual(
-      byClass(tree, "site-doc-section-head").map(label),
-      sections,
+  test(`${viewport}: the Layers tree lists every section and selects the open page`, () => {
+    const layers = tree(viewport);
+    assert.equal(layers.tagName, "nav");
+    assert.equal(attribute(layers, "aria-label"), "Documentation");
+    const titles = byClass(layers, "site-doc-section-head").map((head) =>
+      label(childElements(head)[0]!),
     );
-    assert.deepEqual(byClass(tree, "site-doc-link--current").map(label), [
-      "Install",
-    ]);
-    assert.equal(
-      attribute(byClass(tree, "site-doc-link--current")[0]!, "aria-current"),
-      "page",
-    );
-    assert.equal(label(byClass(tree, "site-doc-tree-foot")[0]!), "Changelog");
-
-    const disclosure = byClass(document, "site-doc-disclosure")[0];
-    if (viewport === "desktop") assert.equal(disclosure, undefined);
-    else {
-      assert.ok(disclosure);
-      assert.equal(disclosure.tagName, "details");
+    assert.deepEqual(titles, sections);
+    assert.deepEqual([...titles].sort(), [...contractedSections].sort());
+    for (const section of byClass(layers, "site-doc-section"))
       assert.equal(
-        label(elements(disclosure, (node) => node.tagName === "summary")[0]!),
-        "Getting started›Install",
+        label(one(section, "site-docs-section-count")),
+        String(byClass(section, "site-panel-row").length),
+        label(section),
       );
-    }
+    const current = elements(
+      layers,
+      (node) => attribute(node, "aria-current") !== undefined,
+    );
+    assert.deepEqual(current.map(label), ["Install"]);
+    assert.equal(attribute(current[0]!, "aria-current"), "page");
+    // The pages that a mockup draws link it; every other page is plain text.
+    assert.deepEqual(links(layers), [
+      ["Mokly CLI" + installedVersion(), "design/site/changelog"],
+      ["Install", "design/site/docs"],
+      ["Your first screen", "design/site/docs/first-screen"],
+      ["Changelog", "design/site/changelog"],
+    ]);
+    assert.equal(label(one(layers, "site-doc-tree-foot")), "Changelog");
   });
 
-  test(`${viewport}: document is one ruled column with contextual navigation`, () => {
+  test(`${viewport}: documentation search sits with the tree, not in the tool bar`, () => {
     const { document } = siteDocument("design/site/docs", viewport);
-    const main = byClass(document, "site-docs-document")[0];
-    assert.ok(main);
-    assert.equal(attribute(main, "id"), "main");
-    assert.equal(
-      label(byClass(main, "site-trail")[0]!),
-      "Documentation›Getting started",
-    );
-    assert.equal(
-      label(elements(main, (node) => node.tagName === "h1")[0]!),
-      "Install",
-    );
-    assert.equal(
-      label(byClass(main, "site-pullquote")[0]!),
-      "Add Mokly to the repository that holds your components.",
-    );
-    assert.equal(byClass(document, "site-code-copy").map(label).join(), "Copy");
-    assert.equal(byClass(document, "site-onpage").length, 1);
-    assert.equal(
-      byClass(document, "site-docs-rail").length,
-      viewport === "desktop" ? 1 : 0,
-    );
-    assert.equal(
-      label(byClass(document, "site-pager")[0]!),
-      "PreviousGetting startedNextConfigure",
-    );
-  });
-
-  test(`${viewport}: documentation depicts the contracted architecture`, () => {
-    const { document } = siteDocument("design/site/docs", viewport);
-    const text = label(document);
-    for (const section of [...contractedSections, "Changelog"])
-      assert.ok(text.includes(section), `missing docs section: ${section}`);
-    assert.ok(
-      text.includes("npm install --save-dev @mokly/mokly react react-dom"),
-    );
-    assert.equal(byClass(document, "site-code-copy").map(label).join(), "Copy");
-    assert.equal(byClass(document, "site-search").length, 1);
-    assert.deepEqual(
-      byClass(document, "site-onpage-link").map((node) =>
-        attribute(node, "href"),
-      ),
-      [
-        "#install-the-package",
-        "#add-the-configuration",
-        "#author-your-first-screen",
-      ],
-    );
-    assert.equal(
-      byClass(document, "site-docs-side").length,
-      viewport === "desktop" ? 1 : 0,
-    );
-    assert.equal(
-      byClass(document, "site-doc-disclosure").length,
-      viewport === "mobile" ? 1 : 0,
-    );
+    const header = one(document, "site-header");
+    assert.equal(byClass(header, "site-search").length, 0);
+    const search = one(document, "site-search");
+    assert.equal(search.tagName, "button");
+    assert.equal(attribute(search, "aria-haspopup"), "dialog");
+    assert.deepEqual(attribute(search, "aria-keyshortcuts")?.split(" "), [
+      "Control+K",
+      "Meta+K",
+      "/",
+    ]);
+    const name =
+      viewport === "desktop" ? "site-search-label" : "site-visually-hidden";
+    assert.equal(label(one(search, name)), "Search docs");
+    const holder =
+      viewport === "desktop" ? "site-docs-layers-top" : "site-docs-subbar";
+    const held = byClass(one(document, holder), "site-search");
+    assert.equal(held.length, 1, holder);
+    assert.equal(held[0], search, holder);
   });
 
   test(`${viewport}: only the documentation draws the search control`, () => {
@@ -148,44 +130,70 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 }
 
-test("documentation search heads the documentation tree column", () => {
-  for (const viewport of ["mobile", "desktop"] as const) {
-    const { document } = siteDocument("design/site/docs", viewport);
-    const header = byClass(document, "site-header")[0];
-    assert.ok(header);
-    assert.equal(byClass(header, "site-search").length, 0, viewport);
-    const docs = byClass(document, "site-docs")[0];
-    assert.ok(docs);
-    const search = byClass(docs, "site-search");
-    assert.equal(search.length, 1, viewport);
-    assert.equal(search[0]!.tagName, "button");
-    assert.match(label(search[0]!), /Search docs/);
-    // The desktop tree opens with the search; the mobile column opens with
-    // it, above the tree's disclosure.
-    const column =
-      viewport === "desktop" ? byClass(docs, "site-doc-tree")[0]! : docs;
-    assert.equal(childElements(column)[0], search[0], viewport);
-  }
-});
-
 test("the installed package version heads only the documentation tree", () => {
-  const packageVersion = JSON.parse(
-    readFileSync(
-      resolve(repositoryRoot, "node_modules/@mokly/mokly/package.json"),
-      "utf8",
-    ),
-  ) as { version: string };
-  for (const viewport of ["mobile", "desktop"] as const) {
-    const { document } = siteDocument("design/site/docs", viewport);
-    assert.deepEqual(byClass(document, "site-version").map(label), [
-      "Mokly CLI" + packageVersion.version,
+  for (const viewport of ["mobile", "desktop"] as const)
+    assert.deepEqual(byClass(tree(viewport), "site-version").map(label), [
+      "Mokly CLI" + installedVersion(),
     ]);
-  }
   for (const id of siteScreens.filter((id) => id !== "design/site/docs"))
     assert.equal(
       byClass(siteDocument(id, "desktop").document, "site-version").length,
       0,
     );
+});
+
+test("the desktop Layers panel heads the tree with search and the version", () => {
+  const layers = tree("desktop");
+  assert.deepEqual(attribute(layers, "class")?.split(" "), [
+    "site-panel",
+    "site-doc-tree",
+  ]);
+  assert.equal(label(one(layers, "site-panel-title")), "Layers");
+  assert.equal(label(one(layers, "site-panel-meta")), "Docs");
+  assert.deepEqual(
+    childElements(one(layers, "site-docs-layers-top")).map(
+      (node) => attribute(node, "class")?.split(" ")[0],
+    ),
+    ["site-search", "site-version-link"],
+  );
+});
+
+test("the mobile sub-bar names the page and opens the tree sheet", () => {
+  const closed = siteDocument("design/site/docs", "mobile").document;
+  const open = siteDocument("design/site/docs/layers", "mobile").document;
+  for (const [document, expanded] of [
+    [closed, "false"],
+    [open, "true"],
+  ] as const) {
+    const toggle = one(
+      one(document, "site-docs-subbar"),
+      "site-docs-layers-toggle",
+    );
+    assert.equal(toggle.tagName, "button");
+    assert.equal(label(toggle), "Getting started / Install");
+    assert.equal(attribute(toggle, "aria-expanded"), expanded);
+    assert.equal(attribute(toggle, "aria-controls"), "docs-layers");
+  }
+  assert.equal(byClass(closed, "site-docs-sheet").length, 0);
+  const sheet = one(open, "site-docs-sheet");
+  assert.equal(sheet.tagName, "dialog");
+  assert.equal(attribute(sheet, "id"), "docs-layers");
+  assert.equal(attribute(sheet, "aria-label"), "Layers");
+  assert.equal(attribute(sheet, "open"), "");
+  assert.equal(
+    attribute(one(open, "site-docs-sheet-scrim"), "aria-hidden"),
+    "true",
+  );
+  for (const id of ["design/site/docs", "design/site/docs/layers"]) {
+    const desktop = siteDocument(id, "desktop").document;
+    assert.equal(byClass(desktop, "site-docs-subbar").length, 0, id);
+    assert.equal(byClass(desktop, "site-docs-sheet").length, 0, id);
+    assert.equal(
+      byClass(one(desktop, "site-docs-side"), "site-doc-tree").length,
+      1,
+      id,
+    );
+  }
 });
 
 test("every promised documentation control changes more than color on hover", () => {
@@ -195,34 +203,31 @@ test("every promised documentation control changes more than color on hover", ()
 test("documentation control boundaries use the strong border role", () => {
   assertStrongBoundaries([
     ".site-search",
-    ".site-doc-disclosure",
-    ".site-version",
+    ".site-docs-outline",
+    ".site-docs-edit",
+    ".site-pager-item",
   ]);
 });
 
-test("documentation rails sit on the page canvas behind hairlines", () => {
+test("the Layers and Inspect panels stick below the tool bar and the tree scrolls in its panel", () => {
   const parsed = cssRules(siteStyles());
-  const exact = (selector: string) =>
-    parsed.find((rule) => rule.selector.trim() === selector);
-  const side = exact(".site-docs-side");
-  const tree = exact(".site-doc-tree");
-  const scroll = exact(".site-doc-tree-scroll");
-  const rail = exact(".site-docs-rail");
-  assert.ok(side);
-  assert.ok(tree);
-  assert.ok(scroll);
-  assert.ok(rail);
+  const exact = (selector: string) => {
+    const rule = parsed.find(
+      (candidate) => candidate.selector.trim() === selector,
+    );
+    assert.ok(rule, selector);
+    return rule.declarations;
+  };
+  for (const column of [".site-docs-side", ".site-docs-rail"]) {
+    assert.match(exact(column), /position:\s*sticky/, column);
+    assert.match(exact(column), /top:\s*\d+px/, column);
+  }
+  for (const panel of [".site-doc-tree", ".site-docs-inspect"])
+    assert.match(exact(panel), /max-height:\s*calc\(100vh - \d+px\)/, panel);
+  assert.match(exact(".site-doc-tree-scroll"), /overflow-y:\s*auto/);
   assert.match(
-    side.declarations,
-    /border-right: 1px solid var\(--mk-color-border\)/,
-  );
-  assert.doesNotMatch(side.declarations, /(?:^|\s)background:/);
-  assert.doesNotMatch(tree.declarations, /(?:^|\s)background:/);
-  assert.match(tree.declarations, /position:\s*sticky/);
-  assert.match(scroll.declarations, /overflow-y:\s*auto/);
-  assert.match(
-    rail.declarations,
-    /border-left: 1px solid var\(--mk-color-border\)/,
+    exact(".site-doc-tree > .site-panel-body"),
+    /flex-direction:\s*column/,
   );
 });
 

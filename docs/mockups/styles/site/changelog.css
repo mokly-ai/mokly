@@ -1,4 +1,57 @@
-/* The changelog: its intro lead, the release index and the releases. */
+/* The changelog: the workspace that sets Version history beside the release
+   frames, the page title as a selected text layer with its lead, the rows of
+   Version history on their rail, and the note rows of a release.
+   changelog-timeline.css holds the timeline and the filter,
+   changelog-release.css the release frames and the breaking callout, and
+   changelog-responsive.css the mobile composition. Every hairline that the
+   prototype draws darker than the border mixes a fifth of the strong border
+   into it, because the strong border is the 3:1 boundary of a control. */
+
+.site-changelog {
+  min-width: 0;
+  padding-bottom: var(--mk-space-24);
+  width: 100%;
+}
+
+/* The workspace: Version history, then the frames, up to 1080px and centred */
+
+.site-changelog-body {
+  align-items: start;
+  display: grid;
+  gap: var(--mk-space-10);
+  grid-template-columns: 200px minmax(0, 1fr);
+  padding: 0 var(--mk-space-20) 0 var(--mk-space-4);
+}
+
+.site-changelog-frames {
+  margin: 0 auto;
+  max-width: 1080px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* The intro: the page title as a selected text layer, then the lead */
+
+.site-changelog-intro {
+  display: grid;
+  justify-items: start;
+  padding-top: 104px;
+}
+
+.site-changelog-heading {
+  max-width: 100%;
+  position: relative;
+}
+
+.site-changelog-heading h1 {
+  font-size: 6rem;
+  letter-spacing: -0.052em;
+  line-height: 0.98;
+}
+
+.site-changelog-heading > .site-sel {
+  inset: -4px -14px -8px;
+}
 
 .site-lead {
   color: var(--mk-color-text-muted);
@@ -7,158 +60,244 @@
   max-width: var(--mk-layout-prose-max);
 }
 
-.site-changelog {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding-left: var(--mk-layout-gutter-desktop);
-  padding-right: var(--mk-layout-gutter-desktop);
+.site-changelog-intro .site-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.3125rem;
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  margin-top: 54px;
+  max-width: 34ch;
+  text-wrap: pretty;
 }
 
-.site-changelog .site-document-intro {
-  max-width: 1120px;
+/* What only a screen reader reads, such as the colon after a scope */
+
+.site-changelog-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
-.site-changelog-body {
-  display: grid;
-  gap: var(--mk-space-12);
-  grid-template-columns: 220px minmax(0, 1fr);
-  max-width: var(--mk-layout-content-max);
-}
+/* Version history: the floating panel, sticky under the tool bar; its list
+   scrolls inside it when the releases outgrow the window */
 
 .site-release-index {
-  align-self: start;
-  display: grid;
-  gap: 2px;
+  margin-top: 28px;
+  max-height: calc(100vh - 60px - var(--mk-space-8));
   position: sticky;
-  top: var(--mk-space-6);
+  top: calc(60px + var(--mk-space-6));
 }
 
-.site-release-index .site-tree-head {
-  padding: 0 0 var(--mk-space-2);
+.site-release-index .site-panel-body {
+  overflow-y: auto;
+  padding: 4px 8px 8px;
 }
 
-.site-release-index-link {
-  border-left: 2px solid var(--mk-color-border);
+/* A month and a release row share one rail: a hairline through every dot */
+
+.site-release-index-month,
+.site-release-index .site-panel-body > .site-panel-row {
+  position: relative;
+}
+
+.site-release-index-month::before,
+.site-release-index .site-panel-body > .site-panel-row::before {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  bottom: 0;
+  content: "";
+  left: 15px;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
+.site-release-index-month:first-child::before {
+  top: 50%;
+}
+
+.site-release-index .site-panel-body > .site-panel-row:last-child::before {
+  bottom: 50%;
+}
+
+.site-release-index-month {
   color: var(--mk-color-text-muted);
-  display: grid;
-  gap: 1px;
-  min-height: var(--mk-layout-control-min);
-  padding: var(--mk-space-2) var(--mk-space-3);
-  text-decoration: none;
-  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-release-index-link:hover {
-  background: var(--mk-color-surface-muted);
-  border-left-color: var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-}
-
-.site-release-index-link--current {
-  border-left-color: var(--mk-color-accent);
-  color: var(--mk-color-text);
-}
-
-.site-release-index-link--current:hover {
-  border-left-color: var(--mk-color-accent);
-}
-
-.site-release-index-version {
   font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
+  font-size: 0.6875rem;
   font-weight: var(--mk-font-medium);
-}
-
-.site-release-index-date {
-  font-size: var(--mk-type-caption-size);
-}
-
-.site-releases {
-  display: grid;
-}
-
-.site-release {
-  align-items: start;
-  border-top: 1px solid var(--mk-color-border);
-  display: grid;
-  gap: var(--mk-space-10);
-  grid-template-columns: 200px minmax(0, 1fr);
-  padding: var(--mk-space-8) 0;
-  scroll-margin-top: var(--mk-space-6);
-}
-
-.site-release-meta {
-  align-content: start;
-  display: grid;
-  gap: var(--mk-space-2);
-  justify-items: start;
-}
-
-.site-release-meta h2 {
-  font-size: var(--mk-type-body-size);
-  font-weight: var(--mk-font-medium);
-}
-
-.site-release-meta time {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-}
-
-.site-release-link {
-  align-items: center;
-  color: var(--mk-color-accent);
-  display: inline-flex;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-1);
-  min-height: var(--mk-layout-control-min);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.site-release-link:hover {
-  color: var(--mk-color-accent-hover);
-  text-decoration-thickness: 2px;
-}
-
-.site-release-notes {
-  display: grid;
-  gap: var(--mk-space-6);
-  max-width: var(--mk-layout-prose-max);
-}
-
-.site-release-group {
-  display: grid;
-  gap: var(--mk-space-3);
-}
-
-.site-release-group-head {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 13px 0 7px 30px;
   text-transform: uppercase;
 }
 
-.site-release-notes ul {
+.site-release-index .site-panel-body > .site-panel-row {
+  padding-left: 30px;
+}
+
+/* The dot of a release: smaller for a patch, green for the release in view */
+
+.site-release-index .site-panel-body > .site-panel-row::after {
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow: inset 0 0 0 1.5px var(--mk-color-text-muted);
+  content: "";
+  height: 9px;
+  left: 11px;
+  position: absolute;
+  top: calc(50% - 4.5px);
+  width: 9px;
+}
+
+.site-release-index
+  .site-panel-row:has(.site-release-index-version--patch)::after {
+  height: 7px;
+  left: 12px;
+  top: calc(50% - 3.5px);
+  width: 7px;
+}
+
+.site-release-index .site-panel-body > .site-panel-row--current::after {
+  background: var(--mk-color-signal);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--mk-color-signal) 24%, transparent);
+}
+
+.site-release-index-version {
   color: var(--mk-color-text);
-  display: grid;
-  gap: var(--mk-space-2);
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
+}
+
+.site-release-index-mark {
+  display: inline-grid;
+  margin-left: var(--mk-space-2);
+  vertical-align: -2px;
+}
+
+.site-release-index-mark svg {
+  color: var(--mk-color-warning);
+}
+
+.site-release-index-date {
+  font-family: var(--mk-font-sans);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The notes of a release: one row each, the text at a reading measure and
+   its issue and commit links in a right-hand column, like a commit log */
+
+.site-release-notes ul {
   list-style: none;
   padding: 0;
 }
 
 .site-release-notes li {
-  padding-left: var(--mk-space-5);
-  position: relative;
+  align-items: baseline;
+  border-top: 1px solid var(--mk-color-border);
+  column-gap: 32px;
+  display: grid;
+  font-size: 0.96875rem;
+  grid-template-columns: minmax(0, 31em) max-content;
+  justify-content: space-between;
+  letter-spacing: -0.004em;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+  padding: 11px 0 12px;
 }
 
-.site-release-notes li::before {
-  background: var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-pill);
+.site-release-notes li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* The scope of a note as a mono chip, and its code spans */
+
+.site-release-scope {
+  background: var(--mk-color-surface-muted);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: inline-block;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  line-height: 21px;
+  margin-right: 3px;
+  padding: 0 7px;
+  vertical-align: 1px;
+}
+
+.site-release-note-text code {
+  background: color-mix(in srgb, var(--mk-color-text) 5.5%, transparent);
+  border-radius: 4px;
+  font-family: var(--mk-font-mono);
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+  padding: 1px 4px;
+}
+
+/* The issue and commit links of a note */
+
+.site-release-refs {
+  display: inline-flex;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.site-release-ref {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 4px;
+  line-height: 1;
+  position: relative;
+  text-decoration: none;
+  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+/* A link reaches a 44px target through a transparent band */
+
+.site-release-ref::before {
   content: "";
-  height: 5px;
-  left: var(--mk-space-2);
+  inset: -16px -5px;
   position: absolute;
-  top: 10px;
-  width: 5px;
+}
+
+.site-release-ref:hover {
+  color: var(--mk-color-signal-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Nested items, such as a workspace dependency bump, as a layer tree */
+
+.site-release-notes .site-release-tree {
+  border-left: 1px solid
+    color-mix(
+      in srgb,
+      var(--mk-color-border-strong) 20%,
+      var(--mk-color-border)
+    );
+  grid-column: 1;
+  margin: 8px 0 0 3px;
+  padding-left: 14px;
+}
+
+.site-release-notes .site-release-tree li {
+  border: 0;
+  color: var(--mk-color-text-secondary);
+  display: block;
+  font-size: 0.90625rem;
+  padding: 3px 0;
 }
