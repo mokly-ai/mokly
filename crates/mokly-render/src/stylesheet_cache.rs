@@ -20,6 +20,7 @@ pub(crate) struct CachedStylesheets {
     root: PathBuf,
     settings: String,
     shared: Arc<Mutex<StylesheetCache>>,
+    head: Weak<Mutex<StylesheetCache>>,
     local: Mutex<StylesheetCache>,
     /// Non-owning indexes let the bounded stores control context payload lifetimes.
     contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
@@ -44,6 +45,7 @@ impl CachedStylesheets {
             root,
             settings,
             shared,
+            head: Weak::new(),
             local,
             contexts: Mutex::default(),
             checked: Mutex::default(),
@@ -51,26 +53,37 @@ impl CachedStylesheets {
         }
     }
 
+    /// Historical attempts borrow head records without owning or writing the head store.
+    pub(crate) fn with_head(mut self, head: Weak<Mutex<StylesheetCache>>) -> Self {
+        self.head = head;
+        self
+    }
+
     /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
     fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
         if let Some(record) = lock(&self.local).record(key) {
             return Ok(record);
         }
-        let (record, miss) = {
-            let shared = lock(&self.shared);
-            (shared.record(key), shared.miss(key))
-        };
-        let record = record.ok_or(miss)?;
-        if !record.stamp.matches(self.tree.as_ref())
-            || record
-                .context
-                .as_ref()
-                .is_some_and(|context| !self.current(context))
+        let mut miss = lock(&self.shared).miss(key);
+        for source in [Some(self.shared.clone()), self.head.upgrade()]
+            .into_iter()
+            .flatten()
         {
-            return Err(Miss::StampMismatch);
+            let record = lock(&source).record(key);
+            if let Some(record) = record {
+                if record.stamp.matches(self.tree.as_ref())
+                    && record
+                        .context
+                        .as_ref()
+                        .is_none_or(|context| self.current(context))
+                {
+                    lock(&self.local).insert(key.into(), record.clone());
+                    return Ok(record);
+                }
+                miss = Miss::StampMismatch;
+            }
         }
-        lock(&self.local).insert(key.into(), record.clone());
-        Ok(record)
+        Err(miss)
     }
 
     /// Check the stamp of a stored context entry once for each attempt.
@@ -212,6 +225,10 @@ mod stylesheet_evidence_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_capture_tests.rs"]
 mod stylesheet_capture_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_base_tests.rs"]
+mod stylesheet_base_tests;
 
 #[cfg(test)]
 #[path = "_tests_/stylesheet_miss_tests.rs"]

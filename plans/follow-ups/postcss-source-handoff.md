@@ -11,7 +11,7 @@
   `crates/mokly-render/src/stylesheet_compiler.rs:56`,
   `crates/mokly-render/src/postcss.rs:41` and line 66,
   `crates/mokly-css/src/_tests_/compiler_tests.rs:149`, and
-  `crates/mokly-render/README.md:331`.
+  `crates/mokly-render/README.md:373`.
 - **Reason:** Option C changes the shared `CssProcessor` trait and its mocks
   in two crates, beyond the cleanup that the branch needed.
 
@@ -68,7 +68,7 @@
     - Update `IdentityProcessor`, the `CssProcessorMock` expectation at
       `crates/mokly-css/src/_tests_/compiler_tests.rs:149`, each test that
       calls `process` or `for_root`, and the README entry at
-      `crates/mokly-render/README.md:331`.
+      `crates/mokly-render/README.md:373`.
     - Keep every test and every assertion. Keep the nested-import check on
       each call and the PostCSS cache key.
 - **Left out:**

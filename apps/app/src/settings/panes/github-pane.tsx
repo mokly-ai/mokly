@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
-import { unexpectedError } from "../../api/errors";
 import { accountKindLabels } from "../../api/labels";
 import type { Installation, Workspace } from "../../api/types";
 import { Action } from "../../components/action";
@@ -24,7 +23,6 @@ import {
 } from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { storeGitHubFlow } from "../../navigation/github-flow";
 import { settingsPath } from "../../navigation/paths";
 import { useShellFocus } from "../../navigation/shell-focus";
 import { openOnWeb } from "../../navigation/web-setup";
@@ -201,10 +199,7 @@ export function GitHubPane({ workspace }: { workspace: Workspace }) {
             workspaceSlug: workspace.slug,
           }),
         });
-        if (!storeGitHubFlow("install-setup", connection)) {
-          throw unexpectedError();
-        }
-        adding.leave(connection.authorizeUrl);
+        adding.leave("install-setup", connection);
       }),
     [adding, workspace.id, workspace.slug],
   );
