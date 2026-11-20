@@ -336,7 +336,7 @@ test checks the running build without a sleep. Then `build_exchange.rs`
 uploads the released fixture through the running API's plan, blob and
 completion routes with the build's upload token. The `serve` command has no
 setting or test detection that selects the fake runner. The
-[App guide](../../packages/app/README.md#cloud-builds) describes the browser side.
+[App guide](../../packages/app/cloud-builds.md) describes the browser side.
 
 ### Key Code
 

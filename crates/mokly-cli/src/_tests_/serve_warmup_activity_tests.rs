@@ -84,6 +84,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
                         generation: "g".into(),
                         epoch: 0,
                         cache: None,
+                        compile_count: 1,
                         compiled: Arc::new(compiled()),
                         modules: vec![],
                         unmapped_dependency_directories: None,
