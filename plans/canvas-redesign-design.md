@@ -60,6 +60,24 @@ existing React, HTML and CSS components.`
   does not have yet with Cal first. The site may depict features that ship
   before go-live.
 
+- 2026-11-20, in this workspace, the ten decisions of the decisions files:
+  - Decision 1, **D**: one Canvas look everywhere, open-source Mokly
+    included, generated from one palette source in `@mokly/ui`.
+  - Decision 2, **A**: draw the demo app as static components. The "every
+    value is real" rule is relaxed until go-live, because the site is not live
+    yet, and comments and agents ship before go-live.
+  - Decision 3, **A**: add `/pricing` now, with links to `/sign-up`.
+  - Decision 4, **A**: keep `#109f5c` with white text, and accept 3:1.
+  - Decision 5, **B**: the new mark and the Geist wordmark everywhere.
+  - Decision 6, **C**: the full canvas stage with four frames, pan, zoom,
+    floating panels, the phone dock and compare on every frame.
+  - Decision 7: "it should align with the mockup/design", read as **C**:
+    Inspect with the box model, and Changes.
+  - Decision 8, **C**: keep Overlay, and add a Swipe mode with the divider.
+  - Decision 9, **A**: no presence in the app now. A follow-up item holds it.
+  - Decision 10, **C**: a general Markdown fence that renders an HTML sample
+    beside its code.
+
 ## Design calls
 
 These are my calls, made on 2026-11-20. Cal can change any of them.
@@ -86,3 +104,56 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
 - `mokly serve` keeps its Appearance control in the bar, restyled, because
   the standalone shell has no account menu. Only the cloud moves Theme into
   the account menu. The frame scheme preview stays a stage control.
+- Inspect keeps Usage and the nested component tree as collapsible sections
+  under the design's sections. The design has no place for them, and
+  removing them would delete functionality that `origin/main` has.
+- The home Browse demo draws the Swipe mode with its divider, and lists the
+  five compare modes of the product.
+
+## Contract owners
+
+- [Site](../docs/protocol/cloud/site.md),
+  [Site home copy](../docs/protocol/cloud/site-copy.md),
+  [Site design](../docs/protocol/cloud/site-design.md),
+  [Site docs](../docs/protocol/cloud/site-docs.md),
+  [Site delivery](../docs/protocol/cloud/site-delivery.md),
+  [Site mockups](../docs/protocol/cloud/site-mockups.md) and
+  [Marketing site](../docs/protocol/cloud/marketing-site.md).
+- [Design tokens](../docs/protocol/cloud/design-tokens.md) and
+  [Design token colors](../docs/protocol/cloud/design-tokens-color.md).
+- [Viewer chrome](../docs/protocol/cloud/viewer-chrome.md),
+  [Viewer host](../docs/protocol/cloud/viewer-host.md),
+  [Folio viewer](../docs/protocol/cloud/folio-viewer.md),
+  [Settings dialog](../docs/protocol/cloud/settings-dialog.md),
+  [Product navigation](../docs/protocol/cloud/product-navigation.md) and
+  [Product mockups: viewer](../docs/protocol/cloud/product-mockups-viewer.md).
+- [Shell design](../docs/protocol/mokly-shell-design.md),
+  [Shell brand](../docs/protocol/mokly-shell-brand.md),
+  [Viewer palette](../docs/protocol/mokly-viewer-palette.md),
+  [Viewer appearance](../docs/protocol/mokly-viewer-appearance.md),
+  [Component inspector design](../docs/protocol/mokly-component-inspector-design.md)
+  [Comparison panes](../docs/protocol/mokly-comparison-panes.md),
+  [Shell device chrome](../docs/protocol/mokly-shell-device-chrome.md),
+  [Viewer selection](../docs/protocol/mokly-viewer-selection.md),
+  [Frame probe](../docs/protocol/mokly-frame-probe.md),
+  [Frame probe wire](../docs/protocol/mokly-frame-probe-wire.md) and
+  [Guides](../docs/protocol/mokly-guides.md).
+- The [site README](../apps/site/README.md), the
+  [UI package README](../packages/ui/README.md) and the
+  [mockups README](../docs/mockups/README.md).
+
+Replaced ways:
+
+- Hand-kept colour values → one palette source in `@mokly/ui` (decision 1).
+  Consumers: `packages/tokens`, the `@mokly/ui` theme, the `mokly-html`
+  Markdown style and `examples/basic/design.css`. Milestone 1 adds Canvas as
+  a named palette for the mockups. Milestone 3 adds the source, moves every
+  consumer to it and deletes the Folio values.
+- The inspector below the preview → the right panel (decision 7).
+  Consumers: the shell layout, the compact sheet, the inspector browser
+  specs and the Browse design mockups. Moved and deleted in Milestone 12.
+- The one-frame stage → the canvas stage (decision 6). Consumers: the shell,
+  the view controls, the comparison stage, the cloud stage overlay and their
+  specs. Moved in Milestones 11 and 12. Deleted in Milestone 12.
+- The real dogfood stage on the home page → the Canvas spread, under decision 2. Consumers: `apps/site/scripts/stage.mjs`, `src/stage.ts` and their
+  tests. Moved and deleted in Milestone 5.

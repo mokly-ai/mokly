@@ -39,7 +39,8 @@ terms, the summary table and the notes about the options check.
   or D.
 - **Recommendation:** A. Cal wants this change to be mostly a redesign. B, C
   and D fit a later plan.
-- **Action:** ask the user, because Cal asked to check large features first.
+- **Action:** answered. It waited for the user, because Cal asked to check large features first.
+- **Answer:** Cal chose **C** on 2026-11-20: the full canvas.
 
 ## 7. Inspect and Changes right panel
 
@@ -78,7 +79,8 @@ terms, the summary table and the notes about the options check.
 - **Related:** Decision 6. The panel floats only when decision 6 is C or D.
 - **Recommendation:** D, changed from B by the options check. It follows
   Cal's panel and removes nothing that `origin/main` has.
-- **Action:** ask the user, because Cal asked to check large features first.
+- **Action:** answered. It waited for the user, because Cal asked to check large features first.
+- **Answer:** Cal answered on 2026-11-20: "it should align with the mockup/design". That is **C**: Inspect with the box model, and Changes. My design call keeps Usage and the nested component tree as sections of Inspect, so no functionality goes away.
 
 ## 8. Overlay compare as a divider
 
@@ -110,8 +112,9 @@ terms, the summary table and the notes about the options check.
 - **Related:** Decision 2, option D conflicts with option D here.
 - **Recommendation:** D, changed from B by the options check. It keeps this
   change a redesign, and Cal lets the site show features before they ship.
-- **Action:** ask the user, because the options change behaviour that
+- **Action:** answered. It waited for the user, because the options change behaviour that
   `mokly-comparison-panes.md` defines, or let the site and the product differ.
+- **Answer:** Cal chose **C** on 2026-11-20: Overlay stays, and a fifth Swipe mode has the divider.
 
 ## 9. Live presence in the app
 
@@ -137,7 +140,8 @@ terms, the summary table and the notes about the options check.
 - **Wider fix:** None, because this is a choice of scope.
 - **Previous examples:** None found.
 - **Recommendation:** A. It is a new feature with a backend, not a redesign.
-- **Action:** ask the user, because Cal asked to check large features first.
+- **Action:** answered. It waited for the user, because Cal asked to check large features first.
+- **Answer:** Cal chose **A** on 2026-11-20, with a follow-up item for presence: [viewer live presence](./follow-ups/viewer-live-presence.md).
 
 ## 10. Docs "Your first screen" showpiece
 
@@ -163,4 +167,5 @@ terms, the summary table and the notes about the options check.
 - **Previous examples:** None found.
 - **Recommendation:** A. It is a new feature, and the docs redesign stands
   without it.
-- **Action:** ask the user, because Cal asked to check large features first.
+- **Action:** answered. It waited for the user, because Cal asked to check large features first.
+- **Answer:** Cal chose **C** on 2026-11-20: a general Markdown fence that renders an HTML sample beside its code.

@@ -6,8 +6,8 @@ are a part of that plan, and the pull request that deletes the plan deletes
 them too. The [design record](./canvas-redesign-design.md) holds the design
 source, Cal's decisions in force and my design calls.
 
-Each decision waits for Cal. The milestones assume the recommended option. A
-TODO that depends on a decision names it. The options check of 2026-11-20
+Cal answered every decision on 2026-11-20. Each item ends with his answer,
+and the milestones follow it. The options check of 2026-11-20
 added options and changed two recommendations. Its transcript is in
 `.context/canvas-redesign/`.
 
@@ -28,18 +28,18 @@ added options and changed two recommendations. Its transcript is in
 
 ## Summary
 
-| No. | Title                                  | Severity | Effort | Recommended |
-| --- | -------------------------------------- | -------- | ------ | ----------- |
-| 1   | Canvas look for open-source Mokly      | High     | Large  | A           |
-| 2   | Home demo content and the source rule  | Medium   | Medium | A           |
-| 3   | Pricing page and links to the app      | Medium   | Medium | A           |
-| 4   | Button colour below the access minimum | Medium   | Small  | A           |
-| 5   | Brand mark and wordmark                | Medium   | Medium | B           |
-| 6   | Stage with several frames and zoom     | Medium   | Medium | A           |
-| 7   | Inspect and Changes right panel        | Medium   | Large  | D, was B    |
-| 8   | Overlay compare as a divider           | Low      | Small  | D, was B    |
-| 9   | Live presence in the app               | Low      | Small  | A           |
-| 10  | Docs "Your first screen" showpiece     | Low      | Small  | A           |
+| No. | Title                                  | Severity | Effort | Recommended | Chosen                   |
+| --- | -------------------------------------- | -------- | ------ | ----------- | ------------------------ |
+| 1   | Canvas look for open-source Mokly      | High     | Large  | A           | D                        |
+| 2   | Home demo content and the source rule  | Medium   | Medium | A           | A, relaxed until go-live |
+| 3   | Pricing page and links to the app      | Medium   | Medium | A           | A                        |
+| 4   | Button colour below the access minimum | Medium   | Small  | A           | A                        |
+| 5   | Brand mark and wordmark                | Medium   | Medium | B           | B                        |
+| 6   | Stage with several frames and zoom     | Medium   | Medium | A           | C                        |
+| 7   | Inspect and Changes right panel        | Medium   | Large  | D, was B    | C                        |
+| 8   | Overlay compare as a divider           | Low      | Small  | D, was B    | C                        |
+| 9   | Live presence in the app               | Low      | Small  | A           | A                        |
+| 10  | Docs "Your first screen" showpiece     | Low      | Small  | A           | C                        |
 
 ## 1. Canvas look for open-source Mokly
 
@@ -87,8 +87,9 @@ added options and changed two recommendations. Its transcript is in
 - **Recommendation:** A. The site sells the open-source CLI first, so the
   open-source viewer must look like the product on the site. D best protects
   the codebase.
-- **Action:** ask the user, because the change reaches every open-source user,
+- **Action:** answered. It waited for the user, because the change reaches every open-source user,
   and no recorded decision covers that.
+- **Answer:** Cal chose **D** on 2026-11-20: one look everywhere, generated from one open-source palette source in `@mokly/ui`, with a drift check.
 
 ## 2. Home demo content and the source rule
 
@@ -124,8 +125,9 @@ added options and changed two recommendations. Its transcript is in
 - **Previous examples:** The current stage in `apps/site/scripts/stage.mjs`.
 - **Recommendation:** A. It keeps the design and keeps the work a redesign.
   B best protects the claim that Mokly renders the screens.
-- **Action:** ask the user, because every option changes the source rule in
+- **Action:** answered. It waited for the user, because every option changes the source rule in
   `site.md`.
+- **Answer:** Cal chose **A** on 2026-11-20. The source rule is relaxed only until go-live, because the site is not live yet and comments and agents ship before go-live.
 
 ## 3. Pricing page and links to the app
 
@@ -160,8 +162,9 @@ added options and changed two recommendations. Its transcript is in
 - **Recommendation:** A. Cal said the cloud features ship before go-live, and
   the app already needs the page. E best protects the codebase, and it can
   ship with A.
-- **Action:** ask the user, because the recommended option changes two rules
+- **Action:** answered. It waited for the user, because the recommended option changes two rules
   in `site.md`.
+- **Answer:** Cal chose **A** on 2026-11-20.
 
 ## 4. Button colour below the access minimum
 
@@ -193,8 +196,9 @@ added options and changed two recommendations. Its transcript is in
 - **Previous examples:** None found.
 - **Recommendation:** A. Cal accepted 3.42:1, and the viewer prototype uses
   the same fill. B best protects access.
-- **Action:** ask the user, because the options weaken three gate tests or
+- **Action:** answered. It waited for the user, because the options weaken three gate tests or
   reverse Cal's colour choice.
+- **Answer:** Cal chose **A** on 2026-11-20.
 
 ## 5. Brand mark and wordmark
 
@@ -225,5 +229,6 @@ added options and changed two recommendations. Its transcript is in
 - **Related:** Decision 1. Option C fits only decision 1, option C.
 - **Recommendation:** B. A design-tool brand needs one mark on every surface.
   D best protects the codebase.
-- **Action:** ask the user, because the prototype marked the mark as a
+- **Action:** answered. It waited for the user, because the prototype marked the mark as a
   proposal.
+- **Answer:** Cal chose **B** on 2026-11-20.
