@@ -4,27 +4,18 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
-import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 import { Session } from "../packages/mokly/src/sidecar/session.js";
 
 import {
   countedCompile,
-  fingerprint,
+  editFingerprint,
   nativeParams,
   nativeRoot,
   write,
 } from "./helpers/native_resolution.js";
 import { planCapture } from "./helpers/plan_capture.js";
-
-/** Edit identities include a random runtime key, unlike captured identities. */
-function editFingerprint(result: BundleResult) {
-  return fingerprint({
-    ...result,
-    compiled: { ...result.compiled, identity: "fresh edit identity" },
-  });
-}
 
 for (const exact of [true, false])
   test(`a captured native plan shares its bundle call's durable evidence with exact=${exact}`, async (context) => {
@@ -146,7 +137,7 @@ test("an edit plan makes one attempt and matches native-first output and inputs 
   }
 });
 
-test("a direct planned error equals native-first and never retries", async (context) => {
+test("a narrowed planned error retries the complete plan and equals native-first", async (context) => {
   const root = await nativeRoot(context);
   await write(
     path.join(root, "entry.mjs"),
@@ -180,7 +171,7 @@ test("a direct planned error equals native-first and never retries", async (cont
   );
   assert.equal(planned, native);
   assert.match(planned, /No matching export/);
-  assert.equal(counted.counts.compilations, 1);
+  assert.equal(counted.counts.compilations, 2);
 });
 
 test("a request plan stays outside settings and a full request ignores it", async (context) => {

@@ -141,8 +141,13 @@
       `mokly-sidecar-plans.md:48`.
     - The plan is not a bundle setting and changes no compilation identity,
       at line 90.
-    - An edit with a current plan makes one esbuild call, at line 94. Plan
-      reuse adds no setting, gate, retry, or process, at line 98.
+    - An edit with a current plan makes no native attempt. It makes one
+      esbuild call when its guarded result stands. A fallback to the complete
+      planned compile makes two, never more. See the
+      [guarded attempt rules](../../docs/protocol/mokly-sidecar-plans.md#guarded-attempts).
+      Plan reuse adds no setting, gate, or process, as the
+      [edit request rules](../../docs/protocol/mokly-sidecar-plans.md#edit-requests)
+      say.
     - One record holds at most 8 MiB of plan and evidence, at line 29. The
       kept records hold at most 8 MiB in total, settings included, at line 56. A separate 8 MiB plan allowance was rejected, at line 38.
     - The plan stays beside `compiled` on the wire and on disk, at line 35.
