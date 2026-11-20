@@ -89,7 +89,7 @@ export function labelDivergences(): Divergence[] {
     const owner = ownerOf(page.screen);
     if (!owner.files) continue;
     for (const path of owner.files)
-      if (!existsSync(resolve(repository, "apps/app/src", path)))
+      if (!existsSync(resolve(repository, "packages/app/src", path)))
         throw missingOwner(page.screen, path);
     const sources = owner.files.map(source).join("\n");
     for (const label of unwrittenLabels(

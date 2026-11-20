@@ -16,7 +16,7 @@
   - The 2026-10-12 fixture evidence paragraph, the hash table and two file counts in `mokly-artifact-compatibility.md` and `mokly-fixture-regeneration.md`.
   - One test sentence in `shared-control-registrations.md`, and count wording in `product-mockups.md`.
   - The schema-module count in `persistence-boundaries.md`, which now lives in the `mkc-db` README.
-  - Test narration, changelog and status sentences in these READMEs: `mkc-api`, `mkc-db`, `mkc-config`, `mkc-catalogue-server`, `mkc-mokly-contract` and its fixtures, `mkc-publications`, the Helm chart, `xtask`, `docs/api`, `apps/app` and the workspace README.
+  - Test narration, changelog and status sentences in these READMEs: `mkc-api`, `mkc-db`, `mkc-config`, `mkc-catalogue-server`, `mkc-mokly-contract` and its fixtures, `mkc-publications`, the Helm chart, `xtask`, `docs/api`, `packages/app` and the workspace README.
 - **Problem:** Decision 1 approved the removal of the audited passages only. Nobody approved the removal of `main`'s later edits to them.
 - **Impact if no action:** The record of `main` holds removals without the approval that the repository rules require. A later reader cannot tell whether the removals were wanted.
 - **Root question:** Does the user approve the removal of `main`'s edits to the passages that decision 1 dropped?

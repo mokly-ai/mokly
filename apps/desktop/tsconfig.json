@@ -1,9 +1,0 @@
-{
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "skipLibCheck": true,
-    "types": ["node"],
-    "allowJs": true
-  },
-  "include": ["src/**/*.ts", "playwright.config.ts"]
-}

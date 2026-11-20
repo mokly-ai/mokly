@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestones F6, F6A and F6B of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/github/mapping.rs:7-21`, `crates/mkc-github/src/identity.rs:73-89`, `apps/app/src/screens/account/github-callback-screen.tsx:81-108`, `docs/protocol/cloud/auth-callbacks.md:183-190` and `docs/protocol/cloud/rest-api.md`.
+- **Location:** `crates/mkc-api/src/github/mapping.rs:7-21`, `crates/mkc-github/src/identity.rs:73-89`, `packages/app/src/screens/account/github-callback-screen.tsx:81-108`, `docs/protocol/cloud/auth-callbacks.md:183-190` and `docs/protocol/cloud/rest-api.md`.
 - **Reason:** The fix adds an API reason, a recovery row and its drawing, which is Large, and no user decision picks the design.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. Every provider `Forbidden` still maps to `PermissionDenied`, and no `github-permission-missing` reason exists. The audit did not check the App permissions of a live deployment.
 - **Category:** UX wording.

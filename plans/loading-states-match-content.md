@@ -8,7 +8,7 @@ completes the work deletes this plan, as the `plans` skill says. The plan
 stays until decisions 4 and 5 are answered and applied.
 
 The app shows a loading state while it waits for the API. Every wait draws one
-shared block: `Pending` in `apps/app/src/components/page-parts.tsx`. The block is
+shared block: `Pending` in `packages/app/src/components/page-parts.tsx`. The block is
 a visible label line over a card with three placeholder bars. The mockup
 catalogue draws the same block through
 `docs/mockups/src/screens/product/page-parts.tsx`. The block does not depend on
@@ -130,7 +130,7 @@ The documentation milestone writes these rules as requirements.
 
 ### Parts
 
-- App: a new module `apps/app/src/components/placeholders.tsx` holds the
+- App: a new module `packages/app/src/components/placeholders.tsx` holds the
   placeholder forms. `page-parts.tsx` is near its length target, so the parts
   do not go there.
 - Mockups: a new module `docs/mockups/src/screens/product/placeholders.tsx`
@@ -332,7 +332,7 @@ Contract owners:
   [Viewer build navigation](../docs/protocol/cloud/viewer-build-navigation.md).
 - [Shared control overlays](../docs/protocol/cloud/shared-control-overlays.md).
 - [Shared control registrations](../docs/protocol/cloud/shared-control-registrations.md).
-- The [app README](../apps/app/README.md) and the
+- The [app README](../packages/app/README.md) and the
   [mockup catalogue README](../docs/mockups/README.md).
 
 Replaced ways:
@@ -357,7 +357,7 @@ Replaced ways:
   `docs/mockups/styles/product/` stay until Milestone 7, because the app reads
   them through `sync:styles` until then.
 - The tests of the old block move to the new layout with every assertion:
-  `apps/app/src/_tests_/invitation.spec.ts`, `preview-callback.spec.ts` and
+  `packages/app/src/_tests_/invitation.spec.ts`, `preview-callback.spec.ts` and
   `a11y.spec.ts`, and `docs/mockups/src/_tests_/` `product.spec.ts`,
   `product-pages.test.ts`, `cli-form.test.ts`, `workspaces-account.test.ts`,
   `workspaces-settings.test.ts` and `disk.spec.ts`.

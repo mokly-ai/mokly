@@ -18,7 +18,7 @@ const listed = execFileSync(
   .filter(Boolean);
 /** The cloud license paths. Their Markdown includes the site pages. */
 const cloud =
-  /^(?:apps\/|crates\/mkc-|infra\/|packages\/tokens\/|scripts\/cloud\/)/;
+  /^(?:apps\/|crates\/mkc-|infra\/|packages\/(?:app|desktop|tokens)\/|scripts\/cloud\/)/;
 const markdown = listed.filter(
   (file) =>
     file.endsWith(".md") &&

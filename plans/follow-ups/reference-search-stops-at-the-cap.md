@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Rare. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestones 13J and 13P of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/viewer/panels/switcher.tsx:30`, `:96-138` and `:230-254`, `apps/app/src/data/publications.ts:44-52`, `:86-96` and `:98-133`, `docs/protocol/cloud/viewer-read-model.md:59-100` and `docs/api/openapi.json`.
+- **Location:** `packages/app/src/viewer/panels/switcher.tsx:30`, `:96-138` and `:230-254`, `packages/app/src/data/publications.ts:44-52`, `:86-96` and `:98-133`, `docs/protocol/cloud/viewer-read-model.md:59-100` and `docs/api/openapi.json`.
 - **Reason:** The fix changes the API and the app together, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The switcher still filters only the rows of at most 20 pages, and the list operations still take no search term.
 - **Category:** Product bug.
@@ -32,6 +32,6 @@
 - **Recommendation:** B. A server search reaches every reference.
 - **Action:** ask the user, because condition 3 holds: B is Large.
 
-`apps/app/src/viewer/panels/switcher.tsx:113` names "Milestone 13J" in a comment. That name pointed into the deleted plan, so this item replaces it. Remove the comment when the work on this item lands.
+`packages/app/src/viewer/panels/switcher.tsx:113` names "Milestone 13J" in a comment. That name pointed into the deleted plan, so this item replaces it. Remove the comment when the work on this item lands.
 
 Source: [Milestone 13J](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-cloud-follow-ups.md?plain=1#L607-L632) and [Milestone 13P](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-cloud-follow-ups.md?plain=1#L633-L659) of the deleted plan.

@@ -36,12 +36,12 @@ test("runner reads actual workspace privacy on every audit", async () => {
   const h = privateAppHarness();
   const first = await runDependencyAudit(h.dependencies);
   assert.equal(first.ok, true, issueMessages(first));
-  h.files.set("apps/app/package.json", Buffer.from("{}"));
+  h.files.set("packages/app/package.json", Buffer.from("{}"));
   const second = await runDependencyAudit(h.dependencies);
   assert.equal(second.ok, false);
   assert.match(
     issueMessages(second),
-    /must start at a private apps\/ workspace/u,
+    /must start at a private Cloud app workspace/u,
   );
 });
 
@@ -63,7 +63,7 @@ test("runner fails when any required workspace manifest cannot be read", async (
 test("baseline comparison includes workspace manifest bytes", async () => {
   const h = privateAppHarness();
   h.dependencies.args = ["--baseline"];
-  h.files.set("apps/app/package.json", Buffer.from("{}"));
+  h.files.set("packages/app/package.json", Buffer.from("{}"));
   const result = await runDependencyAudit(h.dependencies);
   assert.equal(result.ok, false);
   assert.equal(h.state.temporary, 1);

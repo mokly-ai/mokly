@@ -13,10 +13,10 @@ boundaries, and the data flows between them are in the
 | `crates/`                      | Rust workspace crates, one directory per crate, each with a `README.md`                     |
 | `crates/mkc-api/src/contract/` | Rust API operation contracts and the OpenAPI document root                                  |
 | `xtask/`                       | Cargo workspace automation binary; `cargo xtask check` is the single verification entry     |
-| `apps/app/`                    | Expo app: sign-in, sign-up and the logged-in product on the web                             |
-| `apps/desktop/`                | Electron desktop shell serving the bundled web export                                       |
-| `apps/mockups/`                | Workspace `@mokly/mokly` dependency, React peers, Playwright, and the mockup scripts        |
+| `packages/app/`                | Expo app: sign-in, sign-up and the logged-in product on the web                             |
+| `packages/desktop/`            | Electron desktop shell serving the bundled web export                                       |
 | `packages/tokens/`             | `@mokly-cloud/tokens`: token tables, palettes, token CSS and the Firna theme                |
+| `apps/mockups/`                | Workspace `@mokly/mokly` dependency, React peers, Playwright, and the mockup scripts        |
 | `apps/site/`                   | Static Astro marketing, docs, changelog and legal site                                      |
 | `apps/worker/`                 | Cloudflare origin-router source, Wrangler config, types and tests                           |
 | `docs/`                        | Docs index, protocol docs, mockups, and operations runbooks                                 |
@@ -69,7 +69,7 @@ The [API contract guide](../../api/README.md) documents regeneration.
 | cert-manager chart  | v1.21.2                                                                                                           | `infra/toolchains.json` → `cert_manager_chart`                                                           |
 | Postgres image      | docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 | `infra/toolchains.json` → `postgres_image`                                                               |
 | Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the root npm lockfile                                 |
-| Electron            | 44.11.3                                                                                                           | `apps/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                       |
+| Electron            | 44.11.3                                                                                                           | `packages/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                   |
 
 CI installs the active toolchains at exactly these versions; local development
 should match them. The table is the source of truth; update matching pin files
