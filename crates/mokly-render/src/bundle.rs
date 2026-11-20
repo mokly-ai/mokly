@@ -68,7 +68,10 @@ pub(crate) fn describe(
                     runtime.physical_inputs.as_ref(),
                 ) || runtime.bundle_capture == BundleCapture::ServeEdit
                     && !state.toolchain.is_empty()
-                    && state.reuse_evidence.serve_edit())
+                    && physical_inputs::marked_current(
+                        &state.reuse_evidence,
+                        runtime.physical_inputs.as_ref(),
+                    ))
         })
         .collect();
     candidates.sort_by_key(|state| !state.reuse_evidence.captured());

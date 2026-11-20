@@ -4,6 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the repository CI job of PR #331.
 - **Location:** `crates/mokly-platform/tests/process_tree_tests.rs:85`,
+  `crates/mokly-platform/tests/process_tests.rs:41`,
   `crates/mokly-platform/src/unix_process_tree/group.rs:88`, and
   `crates/mokly-platform/src/unix_process_table/linux.rs`.
 - **Reason:** The failure is outside the viewer fix, and its exact failing
@@ -46,6 +47,18 @@
     or assertion changed between the failure and those passes.
   - Suspected source: real process-exit and reparenting order during process
     discovery or signaling. The exact operation and cause are not confirmed.
+  - On 2026-11-19, the local repository check on
+    `calummoore/mokly-folder-export-evidence-7rox`, based on `ce4229ae8`, failed
+    in `unix::owned_process_group_terminates_descendants_and_closes_pipes`.
+    Its `group.kill().unwrap()` at `process_tests.rs:41` returned the same
+    OS error 22 from `unix_process_tree/group.rs:88`. The two-test binary
+    reported one pass and one failure. Cargo returned status 101, and the
+    repository check stopped with status 1.
+    The branch changed no process-tree code or test. A fresh fetch showed
+    no missing commit from `origin/main` at `f4f0082fd`.
+    One focused rerun, `cargo test --locked -p mokly-platform --test process_tests`,
+    passed both tests. No assertion, timeout, or source code changed.
+    The suspected source remains process-exit or reparenting order.
 - **Problem:** The Linux gate can fail on a change that does not touch the
   process-tree code. The current error does not show whether the race is in
   the fixture, process discovery, or signal delivery.
