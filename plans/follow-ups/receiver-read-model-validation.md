@@ -297,3 +297,4 @@
     replaces the cloud's own index types in `mkc-mokly-contract` with the
     `mokly-model` types. That change keeps the content check that this task
     deploys.
+  - [completion-content-memory-unbounded.md](./completion-content-memory-unbounded.md) asks how to bound the memory of the content check that this task deploys.

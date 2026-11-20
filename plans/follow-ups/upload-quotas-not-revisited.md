@@ -23,6 +23,7 @@
 - **Left out:** Remove the quotas. A bound keeps a single upload from exhausting storage and time.
 - **Wider fix:** None.
 - **Previous examples:** None found.
+- **Related:** [completion-content-memory-unbounded.md](./completion-content-memory-unbounded.md) records the unreserved completion reads and parsed allocations. Its value-quota option needs measurements of real detail sizes.
 - **Recommendation:** B. A measurement shows whether the delta upload changed what the quotas must protect. The quotas stay until then.
 - **Action:** ask the user, because condition 1 holds: B changes the quota requirement.
 
