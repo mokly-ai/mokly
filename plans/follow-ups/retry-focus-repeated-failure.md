@@ -1,0 +1,32 @@
+# Focus after a Try again that fails again
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/preview-cannot-be-loaded-v2-oe8e`, review finding 13.
+- **Location:** `packages/viewer/src/shell/retry_focus.ts` (`RetryFocus.status`), `packages/viewer/src/shell/stage_delivery.tsx`, `packages/viewer/src/shell/workspace_props.tsx`, `packages/viewer/src/shell/workspace_usage.tsx`, `packages/viewer/src/standalone/shell.tsx`, `packages/viewer/src/viewer/component.tsx`, and the failed states in `packages/ui/src/preview-state/preview-state.tsx`, `packages/ui/src/props-panel/props-panel.tsx`, `packages/ui/src/usage-list/usage-list.tsx`, and `packages/ui/src/shell-layout/shell-layout.tsx`.
+- **Reason:** The table of the recovery focus rule names only the loaded content, so the target after a second failure is a new requirement for the user to choose.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Recovery focus rule:** the rule in the "Package And Props" section of `docs/protocol/mokly-viewer.md`. After Try again, focus moves to the status that replaces the button, and then to the content that replaces the status. The user chose it on 2026-11-20.
+  - **RetryFocus:** the helper in `packages/viewer/src/shell/retry_focus.ts` that applies the rule. Its private step is none, waiting for the status, or waiting for the content.
+- **Background:**
+  - After Try again on the catalogue, the routed stage, Props, or Usage, the loading status takes focus. When the focused status leaves, the step becomes "waiting for the content".
+  - When the second load fails too, the failure state with a new Try again replaces the status. It offers nothing to the recovery, so focus falls to the page body.
+  - The step stays "waiting for the content". Later content that mounts while focus is on the body takes focus without a Try again, for example after a mouse click on a navigation link in Safari, which leaves focus on the body.
+  - The same gap occurs when Usage shows "Usage is unavailable until the catalogue has been checked." after Try again.
+  - A preview frame and the comparison have no gap, because their focused element stays on the page.
+- **Problem:** When a retried load fails again, focus falls to the page body, and the recovery stays open, so it can take focus later without a reason.
+- **Impact if no action:** A keyboard reader loses their place each time a retry fails, for example while the server is down. Focus can later jump to a frame or a heading.
+- **Root question:** Where does focus go when the reload that Try again started fails again, and when does that recovery end?
+- **Options:**
+  - **A.** End the recovery when the status leaves and that commit offers no content. Focus stays on the body. This stops the later jump, but focus is still lost. Effort: Small.
+  - **B.** Offer the new Try again button of the failure state as its content. Add a `focusRef` for the button to `StageFailure`, `PropsStatus`, `UsageStatus`, and the failed `RootState`, and offer the unchecked Usage line. Add a row to the rule's table. Effort: Small.
+  - **C.** Offer the alert message of the failure as its content, with `tabindex="-1"`. A screen reader reads the failure, and Tab then reaches Try again. Add a row to the rule's table. Effort: Small.
+- **Left out:** Keep the status on the page beside the failure. It needs new states and mockups, and B or C reach the goal with less change.
+- **Wider fix:** B or C. Every end state of a recovery then offers content, so no recovery stays open.
+- **Previous examples:** None found. The catalogue retry on `main` before this branch used `FocusAfter` and also left focus on the body after a second failure.
+- **Related:** `plans/follow-ups/retry-focus-hidden-viewport-frame.md` changes the same `content` step. Apply the two together.
+- **Recommendation:** C. The reader hears why the retry failed, and Try again is the next Tab stop. B is faster for sighted keyboard readers, but a screen reader then announces only the button.
+- **Action:** ask the user.

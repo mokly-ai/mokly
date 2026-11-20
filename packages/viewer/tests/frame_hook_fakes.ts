@@ -31,6 +31,8 @@ export interface HookHost {
   /** The event receiver that the hook gave to its latest mount. */
   receive: ((event: FrameEvent) => void) | undefined;
   registry: ShellFrameRegistry | undefined;
+  /** Mounts the frame again, as Try again does. */
+  retry: (() => void) | undefined;
   root: Root;
   source: string;
   status: string;

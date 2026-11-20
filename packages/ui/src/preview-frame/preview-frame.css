@@ -38,6 +38,12 @@
   display: inline;
 }
 
+/* The empty state's action, inline as Try again in the line of a frame whose
+   document failed to load. */
+.mbk-frame-error > .mbk-empty-link {
+  margin: 0;
+}
+
 /* The screen of a user flow's step, below the step's heading. */
 .mbk-flow-screen {
   margin-left: 44px;

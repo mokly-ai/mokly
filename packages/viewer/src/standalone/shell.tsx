@@ -10,9 +10,9 @@ import { MoklyVersionError } from "../catalogue/version_error.js";
 import { CatalogueBoundary } from "../shell/catalogue_boundary.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";
-import { useFocusAfter } from "../shell/focus_after.js";
 import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
+import { RetryContent, useRetryFocus } from "../shell/retry_focus.js";
 import { useShellRoot } from "../shell/root_context.js";
 import { routeFromUrl } from "../shell/routes.js";
 import { ShellStoreProvider } from "../shell/store.js";
@@ -63,7 +63,7 @@ export function StandaloneShell({
   const appearance = useStandaloneAppearance(win, initialAppearance);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<IndexState>({ kind: "loading" });
-  const focus = useFocusAfter<"loading">();
+  const focus = useRetryFocus();
   useEffect(() => {
     const controller = new AbortController();
     void fetchStandaloneIndex(win, controller.signal).then(
@@ -93,28 +93,27 @@ export function StandaloneShell({
   if (state.kind === "failed")
     return (
       <RootState
-        onRetry={() => {
-          focus.request("loading");
+        onRetry={focus.retry(() => {
           setState({ kind: "loading" });
           setAttempt((value) => value + 1);
-        }}
+        })}
         root={root}
         state="failed"
       />
     );
   if (state.kind === "loading")
-    return (
-      <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
-    );
+    return <RootState focusRef={focus.status} root={root} state="loading" />;
   return (
     <CatalogueBoundary onFailure={() => setState({ kind: "failed" })}>
-      <ReadyShell
-        appearance={appearance}
-        index={state.index}
-        onVersionError={(error) => setState({ kind: "version", error })}
-        preferences={preferences}
-        win={win}
-      />
+      <RetryContent value={focus}>
+        <ReadyShell
+          appearance={appearance}
+          index={state.index}
+          onVersionError={(error) => setState({ kind: "version", error })}
+          preferences={preferences}
+          win={win}
+        />
+      </RetryContent>
     </CatalogueBoundary>
   );
 }
