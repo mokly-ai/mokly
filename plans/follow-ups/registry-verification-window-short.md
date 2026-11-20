@@ -1,0 +1,41 @@
+# Registry verification gives up before npm shows a package
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the 0.21.0 Release run 44799937906 on `586e74a3c`, which needed six attempts.
+- **Location:** `DEFAULT_RETRY_DELAYS` and `verifyRegistry` in `scripts/release/registry_verifier.mjs:11-55`, the publish and verify steps of `.github/workflows/release.yml:239-295`, and the publication rule of `docs/protocol/npm-release.md:137-147`.
+- **Reason:** The performance orchestrator, which owned the 0.21.0 release, asked for this item. The recommended option changes a rule of the release protocol.
+
+- **Source:** Implementation.
+- **Category:** Process.
+- **Terms:**
+  - **Registry verification:** the `verify` mode of `scripts/release/registry.mjs`. After each publish, it reads the metadata, the tarball, the dist-tag, and the signatures of the new version from npm, and it compares them with the checked pack report.
+  - **Guard:** the `guard` mode of the same script. Before each publish, it asks npm whether the version exists. It runs once, with no retry.
+  - **Visibility delay:** the time from a successful `npm publish` until npm serves the metadata and the tarball of the new version.
+- **Background:**
+  - The release publishes ten packages in a fixed order: the five platform packages, the UI package, the model package, the frame package, the viewer, and the CLI. Each publication completes its registry verification before the next starts, as `docs/protocol/npm-release.md` requires.
+  - The registry verification retries a missing metadata or tarball after 2, 4, 8, and 16 seconds, then nine times after 30 seconds. That is 14 attempts in about 5 minutes.
+  - On 2026-11-20 the visibility delay was often longer. These are the `publish` jobs of the Release run 44799937906:
+    - Attempt 2, job 136527580134: the tarball of `@mokly/native-linux-arm64-gnu` was still not visible after 14 attempts, from 19:50:39 to 19:55:15 UTC.
+    - Attempt 3, job 136532810391: the guard of the same package found its metadata, but the tarball download failed with `E404` at 19:57:43. The guard does not retry, so the workflow stopped.
+    - Attempt 4, job 136533631037: the metadata of `@mokly/native-darwin-x64` was not visible after 14 attempts, from 19:59:26 to 20:04:00.
+    - Attempt 5, job 136538703588: `@mokly/model` became visible after about 2 minutes. The tarball of `@mokly/frame` was not visible after 14 attempts, from 20:21:23 to 20:25:59.
+    - Attempt 6, job 136550029116, passed. `@mokly/viewer` became visible after about 3 minutes 37 seconds, and `@mokly/mokly` after about 3 minutes 40 seconds.
+  - Each failed attempt left one published package, which the next attempt found and verified. So the release needed six attempts, and its `publish` jobs ran from 19:46 to 20:38 UTC.
+  - The linux-arm64 tarball was still missing about 7 minutes after its publish, at the guard of attempt 3.
+- **Problem:** The verification window of about 5 minutes is shorter than the visibility delay of npm on 2026-11-20. The guard also stops at once when npm lists the version but its tarball is not readable yet. So one slow package stops the release, and an operator must retry it.
+- **Impact if no action:** A release can need several manual retries. Each retry costs runner time and the attention of an operator, and the release reaches npm later.
+- **Root question:** How does the release wait long enough for npm to show each published package, without losing a check?
+- **Options:**
+  - **A.** Change nothing. An operator retries the release run until each package verifies. Effort: Small.
+  - **B.** Lengthen the verification window, for example to 20 minutes, with the same backoff and every check. It covers the verification failures of 2026-11-20, but not the guard failure of attempt 3. Effort: Small.
+  - **C.** Do B. Also let the guard wait with the same window when npm lists the version but its tarball is not readable yet. This changes the rule of `docs/protocol/npm-release.md` that any other lookup failure stops the workflow. Effort: Small.
+- **Left out:**
+  - Publish every package first, and verify them all at the end: it breaks the rule that each package resolves published dependencies, which stays.
+  - A registry read that bypasses caches: no evidence shows that a cache causes the delay.
+- **Wider fix:** C. It covers both the verification and the guard.
+- **Previous examples:** None found.
+- **Related:**
+  - [lighthouse-failure-blocks-release-evidence.md](./lighthouse-failure-blocks-release-evidence.md) and [release-pr-merged-behind-main.md](./release-pr-merged-behind-main.md) also blocked the releases of 2026-11-20. Their causes differ.
+- **Recommendation:** C. It removes both failure points of 2026-11-20 and keeps every check.
+- **Action:** ask the user, because C changes the guard rule of `docs/protocol/npm-release.md`.
