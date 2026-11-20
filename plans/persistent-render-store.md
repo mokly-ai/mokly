@@ -555,11 +555,15 @@ existing cache and pool memory limits.
 - [ ] Measure a cold ten-edit session and report exact writer peak bytes.
 - [x] Require each document backend to supply the envelope version explicitly.
       Preserve the Mokly package version and remove the implicit Cargo crate version.
+- [x] Make the native cancellation test wait for complete blocking job teardown
+      before mock verification. Keep every behavior assertion.
 - [ ] Run the repository and complete gates on the combined tree with Rust
       1.98.1. Name each new cloud suite and any machine blocker.
 
 Evidence: `.context/persistent-render-store/m4b-implementation-report.md` records
 the source boundary, buffer ownership, red proofs, and targeted checks.
+`.context/persistent-render-store/fix-gate-4-report.md` records the cancellation
+test cleanup and its repeated checks.
 
 ## Milestone 4c: Warm head processes through the shared warm-up
 

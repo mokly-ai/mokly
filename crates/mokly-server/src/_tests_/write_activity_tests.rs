@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex, mpsc};
 
 use axum::body::Bytes;
 use mokly_graph::write_activity::{WriteActivityMock, WriteLease};
+use tokio::runtime::Builder;
 use tokio::sync::Notify;
 use unimock::{MockFn, Unimock, matching};
 
@@ -30,8 +31,18 @@ impl Drop for Release {
     }
 }
 
-#[tokio::test]
-async fn cancelled_native_html_work_keeps_writer_suppression_until_the_blocking_job_returns() {
+#[test]
+fn cancelled_native_html_work_keeps_writer_suppression_until_the_blocking_job_returns() {
+    Builder::new_current_thread()
+        .enable_all()
+        .max_blocking_threads(1)
+        .build()
+        .unwrap()
+        .block_on(cancelled_native_work());
+}
+
+/// One blocking thread makes the queued sentinel fence complete closure teardown.
+async fn cancelled_native_work() {
     for foreground in [false, true] {
         let active = Arc::new(AtomicUsize::new(0));
         let finished = Arc::new(Notify::new());
@@ -105,5 +116,6 @@ async fn cancelled_native_html_work_keeps_writer_suppression_until_the_blocking_
         release.0.send(()).unwrap();
         finished.notified().await;
         assert_eq!(active.load(Ordering::SeqCst), 0);
+        tokio::task::spawn_blocking(|| ()).await.unwrap();
     }
 }
