@@ -111,17 +111,28 @@ Depends on: 2, 3
 
 Depends on: 1, 2, 3, 4
 
+Evidence: `.context/preview-sample-project-public/live/` holds the local live
+check, and `.context/preview-sample-project-public/logs/` holds the gate logs.
+Review: round 1 found one Medium test finding, fixed in `13fe31bc`. Round 2
+found nothing. `.context/reviews/conductor/preview-sample-project-public/`
+holds the reports.
+
+Design call, 2026-11-20, my call: the local live check used a local scaffold
+base commit with the built `packages/ui/dist`, because the real comparison
+base cannot render the cloud mockups' `@mokly/ui` imports. The scaffold was
+never pushed, and the local `origin/main` ref was restored after the capture.
+
 - [ ] Run the targeted tests, the early check and the complete gate.
-- [ ] Seed the local preview stack. Open the publication host signed out,
+- [x] Seed the local preview stack. Open the publication host signed out,
       and confirm that Browse and Changes load. Save the screenshots under
       `.context/preview-sample-project-public/`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Open the pull request into `main`.
 - [ ] Add the `preview` label to the pull request once. Take the
       `publicationId` from the run's `preview-evidence-pr-N` artifact. Open
       the publication host signed out, and confirm that Browse and Changes
       load.
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
