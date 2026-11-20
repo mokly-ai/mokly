@@ -64,27 +64,39 @@ its requests and results. The paths below are relative to the package root.
   distinct parse settings, such as a package `type` or `tsconfig.json`
   settings. Each of its targets must also keep its planned side-effect flag.
   The resolve callback of `consumerPlugins` takes every other specifier. Its
-  filter comes from `specifierFilter` in
+  filters come from `specifierFilter` in
   [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts), which builds a
-  bounded trie of the safe specifiers. It keeps one cached filter keyed by the
-  freshly classified safe strings. Every request still checks the target parse
-  settings and side-effect flags. The cache keeps no plan or filesystem facts.
-  The filter matches every specifier
-  except those. An unsafe specifier, a specifier outside the plan, and a safe
-  specifier that the bound leaves out keep the callback. So an edit that adds
-  a new specifier, such as `./new-file`, resolves it with the full resolver in
-  the same compile. When `create` keeps no specifier, the compile is the
-  complete planned compile. After the compile, `PlannedRelative.verify` takes
-  each internal relative edge that esbuild resolved itself. It proves the edge
-  against the plan entry of its key. A key without a plan entry uses
-  `classifyNativeTarget`, which `planNative` also uses. It passes only when
-  its target maps to itself, with no distinct parse settings and no module
-  fallback. That proof needs no esbuild call. A path mismatch or another
-  failed proof discards the guarded result. Each external edge whose
-  specifier skipped the callback also discards it, because such an edge has
-  no target. Examples are a relative `require.resolve` and a failed relative
-  `require` inside `try`. `verify` records the observations and the
-  dependency usage of the skipped callbacks only after every edge passes.
+  bounded trie of the safe specifiers. `specifierPatterns` in
+  [`src/sidecar/specifier-patterns.ts`](./specifier-patterns.ts) emits the
+  exact complement of that trie as disjoint patterns of bounded size, so no
+  step builds one large pattern. Together the patterns match every specifier
+  except the safe specifiers in the trie. When the patterns would pass their
+  total bound, `specifierFilter` keeps no specifier. It keeps one cached
+  pattern set, keyed by the freshly classified safe strings. Every request
+  still checks the target parse settings and side-effect flags. The cache
+  keeps no plan or filesystem facts. An unsafe specifier, a specifier outside
+  the plan, and a safe specifier that the bound leaves out keep the callback.
+  So an edit that adds a new specifier, such as `./new-file`, resolves it with
+  the full resolver in the same compile. When `create` keeps no specifier, the
+  compile is the complete planned compile. The callback records the importer,
+  specifier, and kind key of each outer import that it answers, never of an
+  inner resolution that a plugin requests. After the compile,
+  `PlannedRelative.verify` checks each internal relative edge between physical
+  files whose key the callback did not answer. When its key has a plan entry,
+  its target must equal the planned path. That is enough when the trie holds
+  its specifier. Every other edge, also one without a plan entry, needs
+  `classifyNativeTarget`, which `planNative` also uses. Its target must map to
+  itself, with no distinct parse settings and no module fallback, and a
+  planned edge must keep its planned side-effect flag. So an omitted safe
+  specifier can pass, while a target with distinct parse settings or another
+  side-effect flag fails, even at the planned path. That proof needs no
+  esbuild call. A failed proof discards the guarded result. Each external edge
+  whose specifier the trie holds also discards it, because such an edge has no
+  target. Examples are a relative `require.resolve` and a failed relative
+  `require` inside `try`. An external relative `require.resolve` or
+  `require` edge that the callback did not answer discards it too. `verify`
+  records the observations and the dependency usage of the unanswered internal
+  edges only after every edge passes.
   After a discarded result or a failed guarded compile, `bundle` runs the
   complete planned compile, in which the callback takes every import. That
   compile gives the result or the error. A guarded result that stands has the

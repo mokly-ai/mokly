@@ -1,19 +1,16 @@
 import { createHash } from "node:crypto";
 
-interface Trie {
-  terminal: boolean;
-  children: Map<string, Trie>;
-}
+import { specifierPatterns } from "./specifier-patterns.js";
+import type { SpecifierTrie } from "./specifier-patterns.js";
 
 interface SpecifierFilter {
-  readonly filter: RegExp;
+  readonly filters: readonly RegExp[];
   readonly skipped: ReadonlySet<string>;
 }
 
 const NODE_LIMIT = 32_768;
 const SOURCE_LIMIT = 1_048_576;
 const LENGTH_LIMIT = 256;
-const rest = "[\\s\\S]";
 let cached: { key: string; result: SpecifierFilter } | undefined;
 
 /** A bounded, RE2-compatible complement of exact specifier strings. */
@@ -23,7 +20,7 @@ export function specifierFilter(names: Iterable<string>): SpecifierFilter {
   for (const name of ordered) hash.update(JSON.stringify(name));
   const key = hash.digest("hex");
   if (cached?.key === key) return cached.result;
-  const root: Trie = { terminal: false, children: new Map() };
+  const root: SpecifierTrie = { terminal: false, children: new Map() };
   const skipped = new Set<string>();
   let nodes = 1;
   for (const name of ordered) {
@@ -36,6 +33,8 @@ export function specifierFilter(names: Iterable<string>): SpecifierFilter {
         return (
           code < 32 ||
           (code >= 127 && code <= 159) ||
+          code === 0x2028 ||
+          code === 0x2029 ||
           (code >= 0xd800 && code <= 0xdfff)
         );
       })
@@ -63,40 +62,10 @@ export function specifierFilter(names: Iterable<string>): SpecifierFilter {
     node.terminal = true;
     skipped.add(name);
   }
-  const source = `^(?:${complement(root)})`;
-  const result =
-    Buffer.byteLength(source) > SOURCE_LIMIT
-      ? { filter: /.*/, skipped: new Set<string>() }
-      : { filter: new RegExp(source), skipped };
+  const filters = specifierPatterns(root, 32_768, SOURCE_LIMIT);
+  const result = filters
+    ? { filters, skipped }
+    : { filters: [/.*/], skipped: new Set<string>() };
   cached = { key, result };
   return result;
-}
-
-function complement(node: Trie): string {
-  if (!node.children.size) return rest + (node.terminal ? "+" : "*");
-  const alternatives = node.terminal ? [] : ["$"];
-  alternatives.push(
-    `[^${[...node.children.keys()].map(classCharacter).join("")}]${rest}*`,
-  );
-  const groups = new Map<string, string[]>();
-  for (const [character, child] of node.children) {
-    const suffix = complement(child);
-    const characters = groups.get(suffix) ?? [];
-    characters.push(character);
-    groups.set(suffix, characters);
-  }
-  for (const [suffix, characters] of groups) {
-    const prefix =
-      characters.length === 1
-        ? characters[0]!.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")
-        : `[${characters.map(classCharacter).join("")}]`;
-    alternatives.push(prefix + suffix);
-  }
-  return `(?:${alternatives.join("|")})`;
-}
-
-function classCharacter(character: string): string {
-  return ["\\", "]", "[", "^", "-"].includes(character)
-    ? "\\" + character
-    : character;
 }

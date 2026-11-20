@@ -27,7 +27,8 @@ interface BundleBuild {
   preview: string | null | undefined;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
-  resolveFilter: RegExp | undefined;
+  resolveFilters: readonly RegExp[] | undefined;
+  handledImports: Set<string> | undefined;
 }
 
 /** The esbuild options and plugin order shared by each compile attempt. */
@@ -43,7 +44,8 @@ export function bundleOptions({
   preview,
   evidence,
   editImports,
-  resolveFilter,
+  resolveFilters,
+  handledImports,
 }: BundleBuild) {
   const settings = params.moduleResolution;
   const loaders = Object.fromEntries(
@@ -87,7 +89,8 @@ export function bundleOptions({
         runtimeKey,
         resolution,
         reads,
-        resolveFilter,
+        resolveFilters,
+        handledImports,
       ),
     ],
     ...resolutionOptions(params.sourceRoot, settings),

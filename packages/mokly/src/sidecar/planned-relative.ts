@@ -12,8 +12,10 @@ import { specifierFilter } from "./specifier-filter.js";
 
 /** The planned relative strings that can use esbuild's own resolution. */
 export class PlannedRelative {
+  readonly handled = new Set<string>();
+
   private constructor(
-    readonly filter: RegExp,
+    readonly filters: readonly RegExp[],
     private readonly skipped: ReadonlySet<string>,
     private readonly plan: ReadonlyMap<string, PlannedImport>,
     private readonly scope: PackageScope,
@@ -58,9 +60,9 @@ export class PlannedRelative {
       }
       if (!distinct) safe.add(name);
     }
-    const { filter, skipped } = specifierFilter(safe);
+    const { filters, skipped } = specifierFilter(safe);
     return skipped.size
-      ? new PlannedRelative(filter, skipped, plan, scope)
+      ? new PlannedRelative(filters, skipped, plan, scope)
       : undefined;
   }
 
@@ -74,15 +76,22 @@ export class PlannedRelative {
       const directory = path.dirname(importer);
       for (const edge of input.imports) {
         if (edge.external && this.skipped.has(edge.path)) return false;
+        if (
+          edge.external &&
+          relative(edge.path) &&
+          (edge.kind === "require-resolve" || edge.kind === "require-call") &&
+          !this.handled.has(planKey(importer, edge.path, edge.kind))
+        )
+          return false;
         if (edge.external || !path.isAbsolute(edge.path)) continue;
         if (edge.original === undefined) return false;
-        if (!this.skipped.has(edge.original)) continue;
-        const planned = this.plan.get(
-          planKey(importer, edge.original, edge.kind),
-        );
-        if (planned) {
-          if (planned.path !== edge.path) return false;
-        } else {
+        if (!relative(edge.original)) continue;
+        const key = planKey(importer, edge.original, edge.kind);
+        if (this.handled.has(key)) continue;
+        if (edge.kind === "require-resolve") return false;
+        const planned = this.plan.get(key);
+        if (planned && planned.path !== edge.path) return false;
+        if (!planned || !this.skipped.has(edge.original)) {
           let target = targets.get(edge.path);
           if (!target) {
             target = classifyNativeTarget(paths, this.scope, edge.path);
@@ -92,6 +101,7 @@ export class PlannedRelative {
           if (
             !resolved ||
             resolved.distinct ||
+            (planned && resolved.sideEffects !== planned.sideEffects) ||
             (paths.settings.mainFields.length === 0 &&
               edge.kind !== "require-call" &&
               (await this.scope.moduleFallback(edge.path)))

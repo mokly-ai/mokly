@@ -13,7 +13,7 @@ Contract owners:
 
 ## Required results
 
-- Mokly Cloud edit to Changes improves by at least 0.25 seconds. The orchestrator measures six interleaved rounds of three edits against main.
+- Mokly Cloud edit to Changes improves by about 0.15 seconds or more. Cal set this target on 2026-11-20 after the memory audit. The orchestrator measures interleaved edits against main.
 - Published output stays byte equal on `examples/basic`, large HTML, large React, and Mokly Cloud. A difference stops implementation for a report.
 - Memory stays within two percent of main. The orchestrator measures ten-edit sessions.
 - Keep the file loading hook. Keep consumed bytes, evidence, watch inputs, and the returned plan equal.
@@ -129,6 +129,41 @@ The fresh options report is `.context/native-relative-resolution/milestone2-opti
 
 Shared assumptions: published output, watch inputs, evidence, and returned plans stay equal, from Cal's task. Full capture keeps its evidence owner, from the existing capture contract. B preserves that owner. C changes how the existing hook delegates resolution but keeps its observations. The audit reads esbuild's actual packet dispatch at `node_modules/esbuild/lib/main.js`.
 
+## 4. Bound the filter memory cost
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** performance.
+- **Location:** `packages/mokly/src/sidecar/specifier-filter.ts`, `planned-relative.ts`, and `plugins.ts`.
+- **Terms:**
+  - **Positive filter:** A pattern that matches non-relative strings and the known relative strings that need the callback.
+  - **Split filter:** Several disjoint patterns whose union equals the current complementary filter.
+- **Background:** The Cloud run confirms a speed gain but exceeds the memory bound. An empty-build probe shows that the complementary regex alone raises esbuild memory. Its construction also raises Node RSS much more than live heap.
+- **Problem:** One large compiled pattern and its temporary construction exceed the allowed process memory.
+- **Impact if no action:** The pull request cannot meet the two-percent memory rule.
+- **Root question:** How can Serve edits, including import-adding edits, save about 0.15 seconds while memory stays within two percent of main?
+- **Options:**
+  - **A.** Lower the existing trie bound. Prefer strings with many planned edges per added node. Omitted strings keep their callbacks. This keeps unknown imports on their original path, but bypasses fewer saved imports. Effort: Medium.
+  - **B.** Split the exact complement into bounded disjoint patterns. Emit small strings directly, so neither runtime parses one huge expression. This keeps every current bypass and unknown callback. Extra pattern tests can reduce the speed gain. Effort: Medium.
+  - **C.** Build a positive filter of non-relative strings and every known unsafe relative string. Prove every other relative edge, including new strings. New repository imports with distinct parsing need a complete fallback. This changes the accepted new-import tradeoff, which Cal explicitly asked to compare. Effort: Medium.
+  - **D.** Keep the filter and reduce Go GC headroom for the esbuild child. This may reduce the temporary peak, but leaves the large expression and needs a child-only setting. It does not directly reduce Node construction. Effort: Medium.
+- **Options added by the check:**
+  - **E.** Send non-relative names, relative names without a JavaScript suffix, and known unsafe JavaScript-suffixed names to the callback. Prove every remaining relative edge. The suffixes are `.js`, `.mjs`, and `.cjs`. This keeps most saved bypasses with a small pattern. An unknown JavaScript-suffixed name can need the complete fallback. That cost repeats while the startup plan stays in use. Effort: Medium.
+  - **F.** Build a trie of safe and unsafe names. Keep a margin of characters inside each safe-only branch before sending its continuations to esbuild. Keep all known safe endpoints and all known unsafe callbacks. Unknown branches keep the callback until they cross the margin. Combine with E or use all relative names. A leaked unknown name needs the same proof and can repeat its fallback. Effort: Medium.
+  - **G.** Stop esbuild after each build with a small filter, when no build remains in flight. This frees compiled filters. The large-filter restart missed the speed goal, but the small-filter cost is not measured. Effort: Medium.
+  - **H.** Record the outer import keys that the consumer callback answers. Prove each internal relative edge without such a key. Keep the external name rule, because erased imports do not call the callback. Reject an unhandled relative `require.resolve` edge too. A failed proof uses the authorized complete fallback. This adds no error or third compile. Effort: Medium.
+- **Left out:** The unchanged filter fails the memory rule. C falls back on ordinary Cloud edits because an erased type-only import is external. Keep its letter as a rejected option. An idle-only restart does not bound an edit burst. A positive filter without proof of unknown relative edges breaks exactness. Exempting erased imports breaks the kept external-edge rejection. Keeping failed names across requests would retain filesystem facts beyond the authorized filter cache.
+- **Wider fix:** B with A's total cap bounds the representation structurally. Measure compiled matching memory as well as pattern source length. H makes the proof follow actual callback ownership when a pattern and its routing model disagree.
+- **Previous examples:** Item 1E introduced the bounded complement. Its current source and node limits did not bound the compiler's peak closely enough.
+- **Recommendation:** B with H. The options check changed the comparison from B then C to B against E. Cal then chose B after the measurements. It keeps exact new-name routing in every import style. E repeats the fallback after a new repository `.js` import while the startup plan stays in use.
+- **Action:** Apply B. Cal accepted the exact split on 2026-11-20. Choose its size by paired saving while both seeded process peaks stay within about two percent of main. Cal accepts a final gain near 150 milliseconds when memory passes. H is an orchestrator design call. It enforces the existing proof requirement and preserves the complete planned result or error.
+
+Orchestrator design call, 2026-11-20: use 32 KiB patterns. The rotated seeded comparison gives the best paired saving among the tested splits. Both process peaks remain within two percent of the seeded main control. Generate bounded strings directly, keep the existing total representation bound, and retain the exact unknown-name routing. The parent performance orchestrator still owns the real Serve measurement.
+
+Shared assumptions: output, evidence, and watch inputs stay equal, from Cal's task. Keep the file loading hook and native D scope. Keep memory within two percent, from Cal's task. Cal's latest target is about 0.15 seconds saved per edit or more. Cal explicitly reopened item 1E's one-compile handling of new strings for comparison. E and F drop uniform routing of unknown strings. G drops the service-lifetime assumption. H drops proof ownership based on names alone. The parsing contract and external-edge rejection stay for every option. The startup plan serves later edits, so a new rejected name can repeat its fallback.
+
+Probe evidence: `.context/native-relative-resolution/memory-node/`. The fresh options check and its 4F model and 4H clarification are saved in `memory-node/options-check.md`. H enforces the existing proof requirement. It adds no boundary error or new attempt. Do not accept an unsafe planned target merely because its path matches after a filter defect.
+
 ## Milestone 1: Guarded planned compilation
 
 Depends on: none
@@ -163,11 +198,20 @@ Differential evidence: `.context/native-relative-resolution/captured-cloud-diffe
 
 Depends on: 1, 2
 
+Cal put the pull request on hold on 2026-11-20. The Cloud run confirms the speed gain but exceeds the memory bound. Cal then chose split filters after the memory investigation. Source changes must go to the performance orchestrator for new Cloud measurements before the pull request. Evidence: `.context/native-relative-resolution/memory-node/`.
+
+- [x] Measure Node heap and RSS on the captured edit. Isolate filter preparation, the cache, verification, and replay.
+- [x] Implement the measured exact split with red routing tests and the callback ownership proof. Keep the filter cache free of plan and filesystem facts.
+- [ ] Repeat targeted tests and strict published-byte proof on the final memory variant. Send its pushed SHA for Cloud A/B and memory sessions.
+- [ ] Select and validate a memory mitigation before the pull request. Preserve published bytes and the two-percent bound.
+- [ ] Commit the tested split, then integrate `origin/main` once more with the `git-merge` skill. Cal authorized this order on 2026-11-20 after main advanced. Preserve the render store, literal export-target evidence, and compiled generation fields. Repeat combined checks and all four fixture byte proofs before pushing the integrated SHA.
 - [x] Run local edit A/B on `examples/basic` and large React. Include an added relative import.
-- [ ] Give the orchestrator the candidate SHA for Mokly Cloud performance and memory measurements.
+- [x] Give the orchestrator the candidate SHA for Mokly Cloud performance and memory measurements.
 - [x] Integrate current `origin/main` once with the `git-merge` skill. Cal changed the order on 2026-11-20. Do not wait for workspaces 54 and 100.
 - [ ] Run the repository suite and complete gate. Use one heavy job and check disk and memory before Cargo builds.
-- [ ] Commit with Conventional Commits and push this workspace branch.
+- [x] Commit with Conventional Commits and push this workspace branch.
 - [ ] Review the full branch against `origin/main` with the `implementation-review` skill. Apply its finding checks and fix rounds.
 - [ ] Delete this plan when the `plans` skill permits it. Keep its dated decisions in the pull request.
 - [ ] Open the pull request into main. Wait for CI with `scripts/ci-wait.sh`. Fix branch failures. Report the PR and SHA without merging.
+
+Memory investigation and split-size selection evidence: `.context/native-relative-resolution/memory-node/report.md`.

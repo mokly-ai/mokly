@@ -234,7 +234,10 @@ async function bundleAttempt(
       preview,
       evidence,
       editImports,
-      resolveFilter: nativeRelatives ? nativeResolveFilter : relative?.filter,
+      resolveFilters: nativeRelatives
+        ? [nativeResolveFilter]
+        : relative?.filters,
+      handledImports: relative?.handled,
     });
     let compiled: BuildResult<typeof options>;
     try {

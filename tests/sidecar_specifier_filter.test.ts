@@ -13,14 +13,31 @@ test("the bounded filter caches one safe-string set and keeps unknown prefixes a
     "./value.mjs",
     "../tail?[]()+^$|{}\\x",
     "./雪😀.mjs",
+    ...Array.from(
+      { length: 512 },
+      (_, index) => `./group-${index.toString(16)}/value-${index * 37}.mjs`,
+    ),
   ];
-  const omitted = "./" + "long".repeat(1000);
-  const { filter, skipped } = specifierFilter([...names, omitted]);
-  const repeated = specifierFilter([omitted, ...names.toReversed()]);
-  assert.equal(repeated.filter, filter);
+  const omitted = [
+    "./" + "long".repeat(1000),
+    "./line\u2028.mjs",
+    "./line\u2029.mjs",
+  ];
+  const { filters, skipped } = specifierFilter([...names, ...omitted]);
+  const repeated = specifierFilter([...omitted, ...names.toReversed()]);
+  assert.equal(repeated.filters, filters);
   assert.equal(repeated.skipped, skipped);
-  const updated = specifierFilter([...names, "./added.mjs", omitted]);
-  assert.notEqual(specifierFilter([...names, omitted]).filter, filter);
+  assert.ok(filters.length > 1);
+  for (const filter of filters)
+    assert.ok(Buffer.byteLength(filter.source) <= 32_768);
+  assert.ok(
+    filters.reduce(
+      (sum, filter) => sum + Buffer.byteLength(filter.source),
+      0,
+    ) <= 1_048_576,
+  );
+  const updated = specifierFilter([...names, "./added.mjs", ...omitted]);
+  assert.notEqual(specifierFilter([...names, ...omitted]).filters, filters);
   const unknown = [
     "",
     "./",
@@ -31,11 +48,11 @@ test("the bounded filter caches one safe-string set and keeps unknown prefixes a
     "node:path",
     "./雪😃.mjs",
     "\n",
-    omitted,
+    ...omitted,
   ];
   for (const row of [
-    { filter, accepted: names },
-    { filter: updated.filter, accepted: [...names, "./added.mjs"] },
+    { filters, accepted: names },
+    { filters: updated.filters, accepted: [...names, "./added.mjs"] },
   ]) {
     const callbacks: string[] = [];
     await build({
@@ -51,10 +68,11 @@ test("the bounded filter caches one safe-string set and keeps unknown prefixes a
         {
           name: "filtered-specifiers",
           setup(builder) {
-            builder.onResolve({ filter: row.filter }, (args) => {
-              callbacks.push(args.path);
-              return { path: args.path || "empty", external: true };
-            });
+            for (const filter of row.filters)
+              builder.onResolve({ filter }, (args) => {
+                callbacks.push(args.path);
+                return undefined;
+              });
             builder.onResolve({ filter: /.*/ }, (args) => ({
               path: args.path || "empty",
               external: true,
@@ -66,5 +84,5 @@ test("the bounded filter caches one safe-string set and keeps unknown prefixes a
     assert.deepEqual(callbacks.sort(), unknown.toSorted());
   }
   for (const name of names) assert.equal(skipped.has(name), true, name);
-  assert.equal(skipped.has(omitted), false);
+  for (const name of omitted) assert.equal(skipped.has(name), false);
 });
