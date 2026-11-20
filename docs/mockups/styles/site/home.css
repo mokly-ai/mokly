@@ -1,0 +1,31 @@
+/* 4 -- Home hero --------------------------------------------------------- */
+
+.site-hero {
+  display: grid;
+  gap: var(--mk-space-5);
+  justify-items: center;
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: var(--mk-space-20) var(--mk-layout-gutter-desktop) var(--mk-space-12);
+  text-align: center;
+  width: 100%;
+}
+
+.site-hero h1 {
+  font-size: var(--mk-type-hero-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.05em;
+  line-height: var(--mk-type-hero-line);
+}
+
+.site-hero-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: 52ch;
+}
+
+.site-hero .site-actions {
+  justify-content: center;
+  margin-top: var(--mk-space-2);
+}

@@ -10,6 +10,7 @@ import {
   isRecord,
   lockfileErrors,
 } from "./dependency-audit-lockfile.mjs";
+import { privateAppPathErrors } from "./dependency-audit-private-app.mjs";
 
 const SEVERITIES = ["info", "low", "moderate", "high", "critical"];
 
@@ -109,7 +110,7 @@ function uncoveredNotice(name, advisory, nodes) {
     `Title: ${advisory.title}`,
     `URL: ${advisory.url}`,
     `Install locations: ${nodes.join(", ")}`,
-    "Action: Update the dependency to remove the advisory, or request a reviewed exception for this exact dev-only path.",
+    "Action: Update the dependency to remove the advisory, or request a reviewed exception for each exact dev-only or private-app path.",
   ].join("\n");
 }
 
@@ -125,7 +126,13 @@ function acceptedNotice(record) {
 }
 
 /** Evaluate untrusted audit and file data without IO or ambient time. */
-export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
+export function evaluateDependencyAudit(
+  report,
+  lockfile,
+  exceptions,
+  now,
+  workspaces = {},
+) {
   const reviewed = validateAuditExceptions(exceptions, now);
   const inspected = inspectReport(report);
   const reportIssues = inspected.errors;
@@ -138,7 +145,7 @@ export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
   const notices = [];
   for (const { name, advisory, nodes } of inspected.findings) {
     if (advisory.severity === "info") continue;
-    let covered = false;
+    const covered = new Set();
     for (const record of reviewed.records) {
       if (
         record.exception.advisory !== advisoryId(advisory.url) ||
@@ -149,7 +156,14 @@ export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
       if (reportIssues.length) continue;
       const pathIssues =
         lockfileIssues.length === 0
-          ? exceptionPathErrors(record.exception, nodes, lockfile.packages)
+          ? record.exception.kind === "private-app"
+            ? privateAppPathErrors(
+                record.exception,
+                nodes,
+                lockfile.packages,
+                workspaces,
+              )
+            : exceptionPathErrors(record.exception, nodes, lockfile.packages)
           : ["the lockfile is invalid, so the path cannot be verified"];
       if (pathIssues.length) {
         const message = `Invalid ${record.label}: ${pathIssues.join("; ")}. Review the changed path or remove the exception and update dependencies.`;
@@ -159,22 +173,33 @@ export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
           );
       }
       if (record.issues.length === 0) {
-        covered = true;
+        const location = record.exception.path.at(-1);
+        if (covered.has(location)) {
+          record.issues.push(
+            auditIssue(
+              "exception",
+              `Invalid ${record.label}: multiple records cover the same advisory, package, and install location. Keep one reviewed record per location.`,
+            ),
+          );
+          continue;
+        }
+        covered.add(location);
         if (!record.used) notices.push(acceptedNotice(record));
         record.used = true;
       }
     }
-    if (!covered) {
+    const uncovered = nodes.filter((node) => !covered.has(node));
+    if (uncovered.length) {
       const identifier = advisoryId(advisory.url);
       issues.push({
         kind: "finding",
-        message: uncoveredNotice(name, advisory, nodes),
+        message: uncoveredNotice(name, advisory, uncovered),
         package: name,
         advisoryUrl: advisory.url,
         ...(identifier ? { advisoryId: identifier } : {}),
         severity: advisory.severity,
         title: advisory.title,
-        installLocations: [...nodes],
+        installLocations: uncovered,
       });
     }
   }

@@ -1,0 +1,45 @@
+.fo-recovery {
+  min-height: 100vh;
+  background-image: radial-gradient(
+    var(--mk-color-border) 1px,
+    transparent 1px
+  );
+  background-size: var(--mk-space-6) var(--mk-space-6);
+}
+.fo-recovery-main {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: var(--mk-space-8) var(--mk-space-5);
+}
+.fo-recovery-body {
+  display: grid;
+  width: min(100%, var(--mk-layout-entry-max));
+  padding: var(--mk-space-8);
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  box-shadow: var(--mk-shadow-medium);
+}
+.fo-recovery-mark {
+  display: flex;
+  justify-content: center;
+}
+.fo-recovery .fo-state {
+  min-height: 240px;
+  align-content: center;
+  padding: var(--mk-space-6) 0 0;
+  background: none;
+  border: 0;
+}
+@media (max-width: 767px) {
+  .fo-recovery-main {
+    padding: var(--mk-space-4);
+  }
+  .fo-recovery-body {
+    padding: var(--mk-space-6);
+  }
+  .fo-recovery .fo-state {
+    min-height: 220px;
+  }
+}

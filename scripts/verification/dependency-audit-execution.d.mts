@@ -13,6 +13,12 @@ export const AUDIT_INPUT_FILES: readonly [
   "scripts/verification/dependency-audit-exceptions.json",
 ];
 
+/** Private-app reviews require the real manifests of every local package. */
+export function auditWorkspaceFiles(
+  lockfile: unknown,
+  exceptions: unknown,
+): string[];
+
 /** Runtime boundaries for one audit, with a caller-owned clock snapshot. */
 export interface AuditTreeDependencies {
   command: AuditCommand;

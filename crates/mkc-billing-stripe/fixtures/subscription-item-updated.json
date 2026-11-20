@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_item_update_fixture"
+  },
+  "body": {
+    "id": "si_collaborator_fixture",
+    "object": "subscription_item",
+    "price": {
+      "id": "price_collaborator_fixture",
+      "lookup_key": "mokly_team_collaborator_usd_month",
+      "object": "price",
+      "created": 1790380800,
+      "metadata": {
+        "mokly_seat_kind": "collaborator"
+      }
+    },
+    "quantity": 4,
+    "current_period_end": 1790596800
+  }
+}

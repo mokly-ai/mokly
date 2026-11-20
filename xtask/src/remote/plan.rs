@@ -1,9 +1,13 @@
 //! Pure remote verification inventory.
 
+#[cfg(test)]
+#[path = "_tests_/plan_tests.rs"]
+mod plan_tests;
+
 use crate::check::request::{DependencyAudit, VerificationSuite};
 
 /// Number of Testboxes in the complete minimum-runtime profile.
-pub(super) const COMMAND_COUNT: usize = 7;
+pub(super) const COMMAND_COUNT: usize = 14;
 /// Viewer plus four browser shard reports.
 pub(super) const REPORT_COUNT: usize = 5;
 
@@ -12,6 +16,56 @@ pub(super) const REPORT_COUNT: usize = 5;
 enum RemoteSuite {
     Check(VerificationSuite),
     StaticDelivery,
+    Cloud(CloudGroup),
+}
+
+/// Logical cloud assignments before the app expands into four workers.
+#[derive(Clone, Copy, Debug)]
+enum CloudGroup {
+    Rust,
+    App,
+    Web,
+    Infrastructure,
+}
+
+impl CloudGroup {
+    const ALL: [Self; 4] = [Self::Rust, Self::App, Self::Web, Self::Infrastructure];
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::Rust => "cloud-rust",
+            Self::App => "cloud-app",
+            Self::Web => "cloud-web",
+            Self::Infrastructure => "cloud-infrastructure",
+        }
+    }
+
+    fn suites(self) -> &'static [VerificationSuite] {
+        match self {
+            Self::Rust => &[
+                VerificationSuite::CloudRust,
+                VerificationSuite::CloudDesktop,
+            ],
+            Self::App => &[VerificationSuite::CloudApp],
+            Self::Web => &[
+                VerificationSuite::CloudTypecheck,
+                VerificationSuite::CloudMockups,
+                VerificationSuite::CloudSite,
+                VerificationSuite::CloudFixtures,
+                VerificationSuite::CloudEmails,
+            ],
+            Self::Infrastructure => &[
+                VerificationSuite::CloudToolchainPins,
+                VerificationSuite::CloudMigrations,
+                VerificationSuite::CloudOpenapi,
+                VerificationSuite::CloudOpenapiLint,
+                VerificationSuite::CloudTerraform,
+                VerificationSuite::CloudOriginRouter,
+                VerificationSuite::CloudHelm,
+                VerificationSuite::CloudInfrastructure,
+            ],
+        }
+    }
 }
 
 impl RemoteSuite {
@@ -19,6 +73,7 @@ impl RemoteSuite {
         match self {
             Self::Check(suite) => suite.as_str(),
             Self::StaticDelivery => "static-delivery",
+            Self::Cloud(group) => group.name(),
         }
     }
 }
@@ -41,10 +96,22 @@ pub(super) struct RunCommand {
 impl RunCommand {
     /// Format only validated identities and closed suite/shard values.
     pub(super) fn shell_command(&self, fingerprint: &str) -> String {
-        let mut command = format!(
-            "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect {fingerprint} --suite {}",
-            self.suite.as_str()
-        );
+        let mut command = if let RemoteSuite::Cloud(group) = self.suite {
+            let suites = group
+                .suites()
+                .iter()
+                .map(|suite| suite.as_str())
+                .collect::<Vec<_>>()
+                .join(",");
+            format!(
+                "node scripts/verification/refresh-source-mtimes.mjs && node xtask/scripts/testbox-cloud.mjs --expect {fingerprint} --suites {suites}"
+            )
+        } else {
+            format!(
+                "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect {fingerprint} --suite {}",
+                self.suite.as_str()
+            )
+        };
         if let Some(shard) = self.shard {
             command.push_str(&format!(" --shard {shard}/4"));
         }
@@ -55,7 +122,7 @@ impl RunCommand {
     }
 }
 
-/// List seven minimum-runtime commands, including independent static delivery.
+/// Assign seven Mokly workers and seven cloud workers, including four app shards.
 pub(super) fn commands(dependency_audit: DependencyAudit) -> Vec<RunCommand> {
     let mut commands = vec![
         RunCommand {
@@ -89,5 +156,25 @@ pub(super) fn commands(dependency_audit: DependencyAudit) -> Vec<RunCommand> {
         shard: None,
         dependency_audit: None,
     });
+    for group in CloudGroup::ALL {
+        let count = if matches!(group, CloudGroup::App) {
+            4
+        } else {
+            1
+        };
+        for index in 1..=count {
+            commands.push(RunCommand {
+                name: if count == 4 {
+                    format!("{}-{index}-of-4", group.name())
+                } else {
+                    group.name().into()
+                },
+                suite: RemoteSuite::Cloud(group),
+                report: false,
+                shard: (count == 4).then_some(index),
+                dependency_audit: None,
+            });
+        }
+    }
     commands
 }

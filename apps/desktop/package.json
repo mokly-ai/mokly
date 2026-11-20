@@ -1,0 +1,37 @@
+{
+  "name": "@mokly-cloud/desktop",
+  "version": "0.1.0-alpha.2",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "icon:build": "node scripts/icon.mjs",
+    "start": "electron .",
+    "typecheck": "../../node_modules/.bin/tsc --noEmit",
+    "test:logic": "tsx --test src/_tests_/*.test.ts",
+    "test:electron": "playwright test",
+    "test": "npm run test:logic && npm run build && node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@types/node": "26.6.4",
+    "builder-util": "26.16.0",
+    "electron": "44.11.3",
+    "electron-builder": "26.18.0",
+    "electron-publish": "26.18.0",
+    "sharp": "0.35.5",
+    "tsx": "4.23.15",
+    "yaml": "2.9.1"
+  },
+  "description": "Mokly Cloud desktop application",
+  "homepage": "https://mokly.ai",
+  "author": {
+    "name": "Mokly",
+    "email": "hello@mokly.ai"
+  }
+}

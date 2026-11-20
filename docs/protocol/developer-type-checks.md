@@ -137,8 +137,6 @@ it runs the Viewer suite:
   [CI workflow contract](./ci-workflow.md#job-execution).
 - Each remote viewer command installs it on its box under the
   [suite wrapper contract](./remote-verification-testbox.md#suite-wrapper).
-- Release preparation sets it up before a complete gate under the
-  [release evidence contract](./npm-release-evidence.md#verification-modes).
 
 A Bun dev dependency would give every install the pinned Bun. It was rejected,
 because it adds a native binary to every install, including the browser and
