@@ -1,6 +1,6 @@
 //! Parse one input into a Mokly tree, and repair trees that hold an HTML `plaintext`.
 
-use mokly_catalogue::html_driver::drive;
+use mokly_catalogue::html_driver::{TokenObserver, drive, drive_with_observer};
 use mokly_catalogue::html_input::{HtmlInput, HtmlShape};
 use mokly_model::catalogue::SourceLocation;
 
@@ -10,7 +10,7 @@ use crate::serialize;
 use crate::tree::{self, Node};
 
 /// Parse authored or delivered HTML with the shared driver.
-pub(crate) fn parse(input: HtmlInput<'_>) -> Vec<Node> {
+pub(crate) fn parse(input: HtmlInput<'_>, observer: Option<&dyn TokenObserver>) -> Vec<Node> {
     let shape = input.shape();
     match input {
         HtmlInput::Authored(html) => {
@@ -22,9 +22,10 @@ pub(crate) fn parse(input: HtmlInput<'_>) -> Vec<Node> {
                 origin.map(|origin| origin.path),
                 origin.map_or(1, |origin| origin.line),
                 origin.map_or(1, |origin| origin.column),
+                observer,
             )
         }
-        HtmlInput::Delivered(html) => run(html.text(), shape, false, None, 1, 1),
+        HtmlInput::Delivered(html) => run(html.text(), shape, false, None, 1, 1, observer),
     }
 }
 
@@ -35,13 +36,22 @@ fn run(
     path: Option<&str>,
     base_line: usize,
     base_column: usize,
+    observer: Option<&dyn TokenObserver>,
 ) -> Vec<Node> {
-    let nodes = run_once(source, shape, authored, path, base_line, base_column);
+    let nodes = run_once(
+        source,
+        shape,
+        authored,
+        path,
+        base_line,
+        base_column,
+        observer,
+    );
     if !contains_plaintext(&nodes) {
         return nodes;
     }
     let positions = authored.then(|| positions_before_plaintext(&nodes));
-    let mut repaired = run_once(&serialize::html(&nodes), shape, authored, path, 1, 1);
+    let mut repaired = run_once(&serialize::html(&nodes), shape, authored, path, 1, 1, None);
     if let Some(positions) = positions {
         copy_positions(&mut repaired, &positions);
     }
@@ -55,12 +65,16 @@ fn run_once(
     path: Option<&str>,
     base_line: usize,
     base_column: usize,
+    observer: Option<&dyn TokenObserver>,
 ) -> Vec<Node> {
     let arena = match path.filter(|_| authored) {
         Some(path) => Arena::located(Locator::new(source, path, base_line, base_column)),
         None => Arena::new(authored),
     };
-    let nodes = drive(source, shape, arena);
+    let nodes = match observer {
+        Some(observer) => drive_with_observer(source, shape, arena, observer),
+        None => drive(source, shape, arena),
+    };
     if shape == HtmlShape::Fragment {
         nodes
             .into_iter()

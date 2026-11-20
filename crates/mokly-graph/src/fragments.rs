@@ -112,3 +112,7 @@ impl FragmentRenderer for MemoFragments {
 #[cfg(test)]
 #[path = "_tests_/fragment_request_tests.rs"]
 mod fragment_request_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap_root/mod.rs"]
+mod overlap_root_tests;

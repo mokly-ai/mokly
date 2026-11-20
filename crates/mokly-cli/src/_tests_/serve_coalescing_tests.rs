@@ -12,7 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_pool::{PoolScheduling, ServePool};
 
-use super::serve_pool_support::{capacity, css};
+use super::serve_pool_support::{capacity, css, dispatch};
 
 #[tokio::test]
 async fn a_coalesced_http_request_does_not_block_the_active_background_views_next_call() {
@@ -85,7 +85,10 @@ async fn a_coalesced_http_request_does_not_block_the_active_background_views_nex
     let background = tokio::spawn({
         let work = work.clone();
         let documents = Arc::new(documents.clone());
-        async move { work.background(documents, "shared".into()).await }
+        async move {
+            work.background(documents, "shared".into(), dispatch(2))
+                .await
+        }
     });
     starting.await.unwrap();
     entered.store(false, Ordering::SeqCst);

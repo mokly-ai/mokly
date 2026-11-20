@@ -11,6 +11,7 @@ import { CaptureDurability } from "./capture-durability.js";
 import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
+import { HtmlInput } from "./html_input.js";
 import { finishMarkup } from "./markup.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
@@ -161,7 +162,7 @@ export class Session {
             throw new Error("page render must synchronously return a string");
           }
           return {
-            html: finishMarkup(html, session, false).html,
+            html: finishMarkup(new HtmlInput(html), session, false).html,
             resources: [],
           };
         } catch (error) {
