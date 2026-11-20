@@ -3,25 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { asApiError, unexpectedError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 
-/** Only the newest asynchronous suggestion may update a form. */
-export interface RequestSequence {
-  next: () => () => boolean;
-  invalidate: () => void;
-}
-
-/** Create the generation gate shared by the hook and its race regression test. */
-export function createRequestSequence(): RequestSequence {
-  let generation = 0;
-  return {
-    next: () => {
-      const current = ++generation;
-      return () => current === generation;
-    },
-    invalidate: () => {
-      generation += 1;
-    },
-  };
-}
+import { createRequestSequence } from "./request-sequence";
+import type { RequestSequence } from "./request-sequence";
 
 export type SlugSuggestionState =
   | { status: "idle" | "loading" }
