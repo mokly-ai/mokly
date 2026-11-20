@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 13G of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/navigation/address.ts:3-21`, `apps/app/src/navigation/address.ts:54-75`, `apps/app/src/navigation/address.ts:141-150`, `apps/app/src/_tests_/settings/gestures.spec.ts`, `apps/app/src/_tests_/settings-mobile.spec.ts` and `docs/protocol/cloud/web-product-shell.md:68-84`.
+- **Location:** `packages/app/src/navigation/address.ts:3-21`, `packages/app/src/navigation/address.ts:54-75`, `packages/app/src/navigation/address.ts:141-150`, `packages/app/src/_tests_/settings/gestures.spec.ts`, `packages/app/src/_tests_/settings-mobile.spec.ts` and `docs/protocol/cloud/web-product-shell.md:68-84`.
 - **Reason:** The work starts with an evaluation whose outcome is a choice between two designs.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still writes query-only changes with `pushState` and `replaceState`, and `address.ts` documents why. No user-visible defect is known.
 - **Category:** Code structure.
@@ -11,7 +11,7 @@
 - **Terms:**
   - **Depth contract:** The rule that the history stack holds one entry per overlay that the reader opened, undone rather than written over.
 - **Background:** The app wraps `history.pushState` and `replaceState` and writes query-only changes itself. So the history stack is exactly as deep as the reader's own steps, and the address is a value that a component holds. `gestures.spec.ts` and `settings-mobile.spec.ts` assert that depth. The history table of `docs/protocol/cloud/web-product-shell.md:68-84` gives the depth contract. It does not say which code writes the entries. An earlier milestone, 13D, deleted the reserved-key withholding. `web-app.md` had said that all three of its mechanisms would go with it, but these two stayed, because neither is about the reserved word. Expo Router offers `router.back()` and `router.setParams()`.
-- **Problem:** Nobody has evaluated whether the router can carry the depth contract. The module comment at `apps/app/src/navigation/address.ts:3-21` gives the reason for the app's own writes. No current user-visible defect is known.
+- **Problem:** Nobody has evaluated whether the router can carry the depth contract. The module comment at `packages/app/src/navigation/address.ts:3-21` gives the reason for the app's own writes. No current user-visible defect is known.
 - **Impact if no action:** Two writers of the address stay, and a later router upgrade can break the depth contract without warning.
 - **Root question:** Who writes query-only address changes: the router or the app?
 - **Options:**

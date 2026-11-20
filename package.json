@@ -55,8 +55,8 @@
     "site:routes": "npm run routes:generate --workspace @mokly-cloud/site",
     "site:test": "npm run test --workspace @mokly-cloud/site",
     "site:typecheck": "npm run typecheck --workspace @mokly-cloud/site",
-    "cloud:typecheck": "npm run typecheck --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker",
-    "cloud:test": "npm run test --if-present --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker"
+    "cloud:typecheck": "npm run typecheck --workspace packages/tokens --workspace packages/app --workspace packages/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker",
+    "cloud:test": "npm run test --if-present --workspace packages/tokens --workspace packages/app --workspace packages/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker"
   },
   "devDependencies": {
     "@ast-grep/cli": "0.45.3",
@@ -143,8 +143,8 @@
     "packages/viewer",
     "packages/mokly",
     "packages/tokens",
-    "apps/app",
-    "apps/desktop",
+    "packages/app",
+    "packages/desktop",
     "apps/mockups",
     "apps/site",
     "apps/worker"

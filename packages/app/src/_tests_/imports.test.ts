@@ -15,7 +15,7 @@ interface Statement {
  * The whole package: its modules and the Expo Router tree beside them, which
  * is application code the router imports and which the same rules hold over.
  */
-const roots = ["apps/app/src", "apps/app/app"].map((tree) =>
+const roots = ["packages/app/src", "packages/app/app"].map((tree) =>
   resolve(repositoryRoot, tree),
 );
 

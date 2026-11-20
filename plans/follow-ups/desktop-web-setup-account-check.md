@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the options check of decision 1 of the desktop browser sign-in plan on the branch `calummoore/desktop-browser-authentication`. The user chose option B before the check added option D, and has not answered D.
-- **Location:** `docs/protocol/cloud/desktop-app.md` "Web Setup" and `apps/app/src/navigation/web-setup.ts`.
+- **Location:** `docs/protocol/cloud/desktop-app.md` "Web Setup" and `packages/app/src/navigation/web-setup.ts`.
 - **Reason:** The fix adds a check at the account boundary that no requirement covers.
 
 - **Terms:**

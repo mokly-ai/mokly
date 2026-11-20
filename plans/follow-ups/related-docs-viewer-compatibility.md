@@ -45,7 +45,7 @@
   - `packages/viewer/docs/concepts/README.md:19` tells hosts to supply
     Mokly's files unchanged. Released indexes meet that rule. Mokly Cloud
     also shows retained publications through one viewer. Its
-    `apps/app/package.json` names `@mokly/viewer` `0.19.0`, the version of
+    `packages/app/package.json` names `@mokly/viewer` `0.19.0`, the version of
     the workspace package, so the cloud runs `packages/viewer` of this
     repository.
 - **Problem:** The viewer retains a live source-path lookup that duplicates

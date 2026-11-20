@@ -24,7 +24,7 @@ rejected because it disappears on a dark Dock.
 Releases are GitHub releases of the public repository
 `mokly-ai/mokly-desktop`, which holds releases and nothing else, because the
 updater needs an unauthenticated feed. The shell's version is
-`apps/desktop/package.json`; a tag `desktop-v<version>` on
+`packages/desktop/package.json`; a tag `desktop-v<version>` on
 this repository runs the release workflow, which builds on a macOS runner and
 a Linux runner and publishes with electron-builder's GitHub publisher. Every
 release is a pre-release until local mode lands, as

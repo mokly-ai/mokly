@@ -17,7 +17,7 @@ function quotedValue(source: string, pattern: RegExp, label: string): string {
 
 test("Rust and Expo share root-relative application paths", async () => {
   const [manifestSource, rustSource] = await Promise.all([
-    readFile(path.join(repository, "apps/app/app.json"), "utf8"),
+    readFile(path.join(repository, "packages/app/app.json"), "utf8"),
     readFile(
       path.join(repository, "crates/mkc-domain/src/app_paths.rs"),
       "utf8",
@@ -67,6 +67,6 @@ test("the landings the entry captures are the ones the API links to", async () =
     );
   }
   for (const { route } of Object.values(callbackLandings)) {
-    await access(path.join(repository, "apps/app/app", `${route}.tsx`));
+    await access(path.join(repository, "packages/app/app", `${route}.tsx`));
   }
 });

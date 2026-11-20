@@ -8,7 +8,7 @@ import { repositoryRoot } from "../root";
 
 const [probe] = buildSync({
   entryPoints: [
-    resolve(repositoryRoot, "apps/app/src/_tests_/data/resource-probe.tsx"),
+    resolve(repositoryRoot, "packages/app/src/_tests_/data/resource-probe.tsx"),
   ],
   bundle: true,
   write: false,

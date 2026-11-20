@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the options check of decision 2 of the desktop browser sign-in plan on the branch `calummoore/desktop-browser-authentication`. The user chose the `mokly` scheme (option A) before the check added option D, and has not answered D.
-- **Location:** `docs/protocol/cloud/desktop-app.md` "Sign-In Handoff", `apps/desktop/src/handoff.ts:4` and `docs/protocol/cloud/desktop-sign-in.md` "Connect Page".
+- **Location:** `docs/protocol/cloud/desktop-app.md` "Sign-In Handoff", `packages/desktop/src/handoff.ts:4` and `docs/protocol/cloud/desktop-sign-in.md` "Connect Page".
 - **Reason:** The fix adds a fallback at the sign-in boundary that no requirement covers.
 
 - **Terms:**

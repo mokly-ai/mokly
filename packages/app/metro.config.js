@@ -9,11 +9,22 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 // Expo's resolver with the two workspace module roots and hierarchical lookup
 // disabled; nothing deep-imports package rendering code. Metro watches the
 // root modules and the workspace packages they link to, not the whole
-// repository, whose Rust build output is large.
+// repository, whose Rust build output is large. The desktop shell shares the
+// packages folder, but the app never imports it, and its packaged output is
+// large too, so Metro blocks it.
 const config = getDefaultConfig(projectRoot);
 config.watchFolders = [
   path.resolve(workspaceRoot, "node_modules"),
   path.resolve(workspaceRoot, "packages"),
+];
+const desktopRoot = path
+  .resolve(workspaceRoot, "packages", "desktop")
+  .split(path.sep)
+  .map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+  .join("[\\\\/]");
+config.resolver.blockList = [
+  ...config.resolver.blockList,
+  new RegExp(`^${desktopRoot}(?:[\\\\/].*)?$`),
 ];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),

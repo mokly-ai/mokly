@@ -14,7 +14,7 @@ places the site, the origin router and the app on the one public origin.
 ## Boundary
 
 - The site lives in the private npm workspace package `apps/site/`, beside
-  `apps/app`, `apps/mockups` and `packages/tokens`. It is not published as a package.
+  `packages/app`, `apps/mockups` and `packages/tokens`. It is not published as a package.
 - CLI guides, reference documents, the CLI version and release notes come from
   the exact installed `@mokly/mokly` package. The site locates that package
   through the npm workspace installation and never imports its private code.

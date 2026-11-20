@@ -8,7 +8,7 @@ import { repositoryRoot } from "./root";
 /**
  * The protocol documents that describe this application by naming its own
  * symbols. They live here rather than under `docs/mockups` because what they
- * name is `apps/app/src`, and a check belongs beside the thing it can be wrong
+ * name is `packages/app/src`, and a check belongs beside the thing it can be wrong
  * about — the same reason `stylesheets.test.ts` reads the catalogue's CSS from
  * this suite rather than the other way round.
  */
@@ -65,7 +65,7 @@ const member = /^\s+(?:readonly\s+)?([A-Za-z_$][\w$]*)\??: \(/;
  */
 function declared(): ReadonlySet<string> {
   const names = new Set<string>();
-  const root = resolve(repositoryRoot, "apps/app/src");
+  const root = resolve(repositoryRoot, "packages/app/src");
   for (const path of sources(root)) {
     let depth = 0;
     for (const line of readFileSync(path, "utf8").split("\n")) {
@@ -123,7 +123,7 @@ test("every symbol excused as another package's is named and not owned", () => {
   const wrong = [...elsewhere]
     .map((symbol) => {
       if (defined.has(symbol.slice(0, -2))) {
-        return `${symbol} is declared in apps/app/src`;
+        return `${symbol} is declared in packages/app/src`;
       }
       return claims.has(symbol)
         ? undefined

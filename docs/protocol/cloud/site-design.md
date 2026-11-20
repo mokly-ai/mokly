@@ -10,7 +10,7 @@ copy are in [Site](./site.md).
 ## Ownership
 
 `packages/tokens` is the only token source. `apps/site` depends on the private
-`@mokly-cloud/tokens` npm workspace exactly as `apps/app` and `apps/mockups` do; npm
+`@mokly-cloud/tokens` npm workspace exactly as `packages/app` and `apps/mockups` do; npm
 links one local npm workspace copy, and no package is separately published or
 downloaded. The site emits the package's responsive token CSS for system
 light/dark and explicit `data-color-scheme` selectors. Site and mockup styles

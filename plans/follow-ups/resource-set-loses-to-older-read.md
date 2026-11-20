@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from finding 4 of the round 3 review of `calummoore/stripe-loading-outside-app-mrlb`.
-- **Location:** `apps/app/src/data/use-resource.ts` (`set`, and the read's `then`), used by `apps/app/src/settings/panes/billing-watch.ts` and `billing-pane.tsx`.
+- **Location:** `packages/app/src/data/use-resource.ts` (`set`, and the read's `then`), used by `packages/app/src/settings/panes/billing-watch.ts` and `billing-pane.tsx`.
 - **Reason:** The review found it after the second fix round, so the fix rule gives it `fix after merge`. The fix reaches the shared resource hook.
 - **Category:** Product bug.
 
@@ -20,6 +20,6 @@
   - **C.** Move every billing read into one billing owner. Effort: Medium.
 - **Left out:** Keeping both writers as they are keeps the bug. Waiting for the older read before the wait starts can hold the refresh back without a limit.
 - **Wider fix:** B. Every screen that stores a value with `set` gets the same protection.
-- **Previous examples:** PR #377 fixed the same answer order for session reads with the request sequence (`apps/app/src/session/read-owner.ts`).
+- **Previous examples:** PR #377 fixed the same answer order for session reads with the request sequence (`packages/app/src/session/read-owner.ts`).
 - **Recommendation:** B.
 - **Action:** Fix after merge, apply B.

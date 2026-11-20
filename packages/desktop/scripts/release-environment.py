@@ -19,7 +19,7 @@ def main():
     parser.add_argument("environment", choices=("production", "main-preview"))
     parser.add_argument("--tag")
     args = parser.parse_args()
-    package = json.loads((ROOT / "apps/desktop/package.json").read_text())
+    package = json.loads((ROOT / "packages/desktop/package.json").read_text())
     if args.tag is not None:
         version = package["version"]
         if args.tag != "desktop-v" + version:

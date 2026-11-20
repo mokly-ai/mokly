@@ -1,7 +1,7 @@
 # Desktop Package
 
 The Mokly Cloud desktop surface is a small Electron shell for macOS and
-Linux. It ships the Expo web export from `apps/app` and serves it from
+Linux. It ships the Expo web export from `packages/app` and serves it from
 `mokly-app://desktop`. It uses the same API, pages and cloud chrome as the
 browser app.
 

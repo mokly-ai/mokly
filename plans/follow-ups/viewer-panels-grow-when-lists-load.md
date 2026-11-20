@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from task M2d of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `docs/protocol/cloud/folio-viewer.md` (**Panel**), `docs/mockups/styles/product/viewer.css` (the panel frame), and the panels in `apps/app/src/viewer/panels/`.
+- **Location:** `docs/protocol/cloud/folio-viewer.md` (**Panel**), `docs/mockups/styles/product/viewer.css` (the panel frame), and the panels in `packages/app/src/viewer/panels/`.
 - **Reason:** Each option that stops the move changes the **Panel** rule of `docs/protocol/cloud/folio-viewer.md`, so the user decides.
 - **Category:** Product bug.
 

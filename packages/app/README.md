@@ -485,4 +485,4 @@ published catalogue. The spec routes no build operation.
 - [Billing](../../docs/protocol/cloud/billing.md), [plan gates](../../docs/protocol/cloud/billing-plan-gates.md) and [subscriptions](../../docs/protocol/cloud/billing-subscriptions.md).
 - [Shared controls](../../docs/protocol/cloud/shared-controls.md), [Design tokens](../../docs/protocol/cloud/design-tokens.md), [Design token colors](../../docs/protocol/cloud/design-tokens-color.md), [Folio chrome](../../docs/protocol/cloud/folio-chrome.md), [Folio viewer compositions](../../docs/protocol/cloud/folio-viewer.md), [Folio chrome: account entry](../../docs/protocol/cloud/folio-chrome-account.md) and [Product copy](../../docs/protocol/cloud/product-copy.md).
 - [REST API](../../docs/protocol/cloud/rest-api.md), [REST API surface](../../docs/protocol/cloud/rest-api-surface.md) and [Marketing site](../../docs/protocol/cloud/marketing-site.md).
-- [Tokens package](../../packages/tokens/README.md) and the [TypeScript npm workspace](../README.md).
+- [Tokens package](../../packages/tokens/README.md) and the [TypeScript npm workspace](../../apps/README.md).

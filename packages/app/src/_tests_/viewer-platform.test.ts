@@ -30,7 +30,7 @@ function hasRuntimeViewerImport(source: string): boolean {
 }
 
 test("the DOM viewer runtime stays outside every native Metro graph", () => {
-  const root = resolve(repositoryRoot, "apps/app/src");
+  const root = resolve(repositoryRoot, "packages/app/src");
   const files = sources(root);
   const runtimeImports = files
     .filter((path) => hasRuntimeViewerImport(readFileSync(path, "utf8")))

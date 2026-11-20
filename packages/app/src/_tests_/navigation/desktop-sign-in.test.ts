@@ -104,7 +104,7 @@ test("the connect page reads exactly one challenge of 43 base64url characters", 
 
 test("Open Mokly opens the desktop landing on the app's own scheme, which the shell accepts", async () => {
   const manifest = JSON.parse(
-    await readFile(path.join(repositoryRoot, "apps/app/app.json"), "utf8"),
+    await readFile(path.join(repositoryRoot, "packages/app/app.json"), "utf8"),
   ) as { expo: { scheme: string } };
   const grant = "0123456789abcdef".repeat(4);
   const handoff = desktopGrantAddress(grant);

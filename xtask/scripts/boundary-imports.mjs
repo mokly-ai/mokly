@@ -8,8 +8,9 @@ import valueParser from "postcss-value-parser";
 import ts from "typescript";
 
 const sourceExtension = /\.(?:[cm]?[jt]sx?)$/;
+/** The Cloud npm projects: every project under `apps/` and three under `packages/`. */
 const cloudPath = (file) =>
-  /^(?:apps(?:\/|$)|packages\/tokens(?:\/|$))/.test(file);
+  /^(?:apps|packages\/(?:app|desktop|tokens))(?:\/|$)/.test(file);
 
 /** Read manifest dependencies and resolve source imports at the MIT boundary. */
 export function violationsFor({ files, read, resolve, root }) {

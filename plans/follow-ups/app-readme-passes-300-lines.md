@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from Milestone 7 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/README.md`.
+- **Location:** `packages/app/README.md`.
 - **Reason:** The file already had 445 lines on `main` of the old cloud repository, so its split is not part of the loading-states change that grew it.
 - **Category:** Repository rule.
 

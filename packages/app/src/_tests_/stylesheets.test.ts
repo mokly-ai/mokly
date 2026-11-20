@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { repositoryRoot } from "./root";
 
 const document = readFileSync(
-  resolve(repositoryRoot, "apps/app/public/index.html"),
+  resolve(repositoryRoot, "packages/app/public/index.html"),
   "utf8",
 );
 
@@ -29,7 +29,7 @@ function stylesheetText(href: string): string {
       )
     : href === "mokly-viewer/styles.css"
       ? resolve(repositoryRoot, "node_modules/@mokly/viewer/dist/styles.css")
-      : resolve(repositoryRoot, "apps/app/public", href);
+      : resolve(repositoryRoot, "packages/app/public", href);
   return readFileSync(path, "utf8");
 }
 
@@ -103,7 +103,7 @@ function sourceFiles(directory: string): string[] {
  */
 function usedClasses(): Map<string, string> {
   const used = new Map<string, string>();
-  for (const path of sourceFiles(resolve(repositoryRoot, "apps/app/src"))) {
+  for (const path of sourceFiles(resolve(repositoryRoot, "packages/app/src"))) {
     if (path.includes("/_tests_/") || path.includes("/generated/")) continue;
     const source = readFileSync(path, "utf8");
     for (const match of source.matchAll(
@@ -142,7 +142,10 @@ test("every class the application writes is defined in a linked stylesheet", () 
 
 test("no selector is declared by both the catalogue and the app", () => {
   const app = declaredSelectors(
-    readFileSync(resolve(repositoryRoot, "apps/app/public/app.css"), "utf8"),
+    readFileSync(
+      resolve(repositoryRoot, "packages/app/public/app.css"),
+      "utf8",
+    ),
   );
   const catalogue = new Set<string>();
   for (const path of catalogueStylesheets(
