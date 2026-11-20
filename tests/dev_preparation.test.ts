@@ -6,6 +6,11 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import { prepareDevelopment } from "../scripts/dev-preparation.mjs";
+import { developmentInventoryDirectories } from "../scripts/development-inventories.mjs";
+import {
+  RUNTIME_INVENTORY,
+  writeRuntimeInventory,
+} from "../scripts/runtime-inventory.mjs";
 import { missingPreparedOutputs } from "../scripts/verification/prepared.mjs";
 
 const first = new Date("2026-10-01T09:00:00Z");
@@ -36,6 +41,11 @@ async function checkout(
   const present =
     outputs === "none" ? [] : outputs === "all" ? list : list.slice(0, -1);
   for (const output of present) await write(path.join(root, output), built);
+  for (const directory of developmentInventoryDirectories()) {
+    const target = path.join(root, directory);
+    await write(path.join(target, "generated.js"), built);
+    await writeRuntimeInventory(target);
+  }
   await write(path.join(root, "package-lock.json"), locked);
   if (installed) await write(path.join(root, installRecord), installed);
   return { root, outputs: list };
@@ -140,4 +150,96 @@ test("dev preparation stops at a failed install and runs no build", async (t) =>
     message: "npm run dev stopped, because npm ci failed.",
   });
   assert.deepEqual(record.commands, [["ci"]]);
+});
+
+test("dev preparation rebuilds a viewer stopped before its styles, manifest, and assets", async (t) => {
+  const { root, outputs } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  const target = path.join(root, "packages/viewer/dist");
+  await fs.rm(target, { recursive: true });
+  for (const file of outputs.filter((file) =>
+    file.startsWith("packages/viewer/"),
+  ))
+    await write(path.join(root, file), second);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, [["run", "build"]]);
+  assert.deepEqual(record.reports, [
+    "Building with npm run build, because packages/viewer/dist has no complete runtime inventory.",
+  ]);
+});
+
+test("dev preparation rebuilds Mokly stopped after the shim copy", async (t) => {
+  const { root, outputs } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  const target = path.join(root, "packages/mokly/dist");
+  await fs.rm(target, { recursive: true });
+  for (const file of outputs.filter((file) =>
+    file.startsWith("packages/mokly/"),
+  ))
+    await write(path.join(root, file), second);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, [["run", "build"]]);
+});
+
+test("dev preparation rebuilds a truncated native copy with its old inventory", async (t) => {
+  const { root, outputs } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  const binary = outputs.at(-1);
+  assert.ok(binary);
+  await fs.truncate(path.join(root, binary), 1);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, [["run", "build"]]);
+});
+
+test("dev preparation rebuilds when an inventoried runtime file is missing", async (t) => {
+  const { root } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  const file = path.join(root, "packages/mokly/dist/runtime.mjs");
+  await write(file, first);
+  await writeRuntimeInventory(path.dirname(file));
+  await fs.rm(file);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, [["run", "build"]]);
+});
+
+test("dev preparation rebuilds when an inventory write was interrupted", async (t) => {
+  const { root } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  const inventory = path.join(root, "packages/viewer/dist", RUNTIME_INVENTORY);
+  await fs.truncate(inventory, 1);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, [["run", "build"]]);
+});
+
+test("dev preparation keeps complete inventories valid after a source change", async (t) => {
+  const { root } = await checkout(t, {
+    locked: first,
+    installed: first,
+    outputs: "all",
+  });
+  await write(path.join(root, "packages/viewer/src/browser.tsx"), second);
+  const record = recorder(root);
+  await prepareDevelopment(root, record.preparation);
+  assert.deepEqual(record.commands, []);
+  assert.deepEqual(record.reports, []);
 });

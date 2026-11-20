@@ -35,7 +35,7 @@
     "directory": "packages/frame"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs && node ../../scripts/write-runtime-inventory.mjs dist",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test",
     "prepack": "npm run build"

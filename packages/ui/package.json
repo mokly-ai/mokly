@@ -198,7 +198,7 @@
     "directory": "packages/ui"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs && node ../../scripts/write-runtime-inventory.mjs dist",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
     "prepack": "npm run build"

@@ -64,7 +64,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs && node ../../scripts/write-runtime-inventory.mjs dist",
     "prepack": "node scripts/prepack.mjs"
   },
   "exports": {

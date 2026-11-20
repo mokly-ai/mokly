@@ -81,6 +81,14 @@ under `tests/` and run with `npm test -- packages/model/tests/<file>`. After a
 change to a Rust shape, run `cargo xtask generate-types`, and commit the
 generated modules with the Rust change.
 
+The `build` script of `package.json` runs `scripts/build.mjs`, then the root
+[`write-runtime-inventory.mjs`](../../scripts/write-runtime-inventory.mjs).
+That last step writes `dist/.runtime-inventory.json`, which lists every other
+file in `dist` with its SHA-256 digest. This runtime inventory is
+dev-preparation metadata that stays local to the checkout. No runtime code
+reads it. [`npm run dev`](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+builds again when it is missing or does not match `dist`.
+
 File names are snake_case, as `AGENTS.md` says for every package except
 `@mokly/ui`. The build sets `rootDir` to `src`, so it rejects a relative import
 from outside the package. Import `GENERATED_DIRECTORY` or `VIEWER_DIRECTORY`
