@@ -80,6 +80,14 @@ class PreviewCommentTests(unittest.TestCase):
             ("failed", {}, "Checks failed. Open the run for details.", False, False, PATTERN),
             (
                 "failed",
+                {"sign_in": "accepted"},
+                "Checks failed. Open the run for details.",
+                True,
+                False,
+                PATTERN,
+            ),
+            (
+                "failed",
                 {"sign_in": "accepted", "proof": PROOF},
                 "Checks failed. Open the run for details.",
                 True,
