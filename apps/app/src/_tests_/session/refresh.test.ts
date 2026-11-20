@@ -2,22 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { ApiError, transportError } from "../../api/errors";
-import type { Session } from "../../api/types";
 import type { SessionState } from "../../session/context";
 import { afterRefresh } from "../../session/refresh";
 
-function session(githubConnected: boolean): Session {
-  return {
-    user: {
-      id: "01994f10-0000-7000-8000-000000000011",
-      name: "person@example.com",
-      email: "person@example.com",
-      githubConnected,
-    },
-    csrfToken: "csrf",
-    workspaceIds: [],
-  };
-}
+import { session } from "./fixture";
 
 const signedIn: SessionState = { status: "signed-in", session: session(false) };
 const signedOut: SessionState = { status: "signed-out" };
@@ -55,4 +43,15 @@ test("a read that failed for any other reason keeps what is on screen", () => {
     assert.equal(afterRefresh(signedIn, { error }), signedIn);
     assert.equal(afterRefresh(signedOut, { error }), signedOut);
   }
+});
+
+test("a failed refresh while loading uses the startup failure outcome", () => {
+  const error = transportError("r-loading");
+  assert.deepEqual(afterRefresh({ status: "loading" }, { error }), {
+    status: "error",
+    error,
+  });
+  assert.deepEqual(afterRefresh({ status: "loading" }, { error: undefined }), {
+    status: "signed-out",
+  });
 });
