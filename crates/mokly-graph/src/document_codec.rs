@@ -17,20 +17,21 @@ use crate::document_metadata::Metadata;
 use crate::document_nodes::{self, FlatNode};
 use crate::document_weight;
 use crate::document_writer::TreeWriter;
+use crate::export_memory::{ExportBuffer, ExportObserver};
 
 #[derive(Serialize)]
-struct Payload {
-    tree: Vec<FlatNode>,
+pub(crate) struct Payload {
+    pub(crate) tree: Vec<FlatNode>,
 }
 
 /// Immutable compressed tree/bytes with Rust metadata outside the codec.
 pub struct EncodedView {
-    payload: Box<[u8]>,
-    bytes_len: usize,
-    tree_len: usize,
-    record_count: usize,
-    metadata: Metadata,
-    metadata_bytes: usize,
+    pub(crate) payload: Box<[u8]>,
+    pub(crate) bytes_len: usize,
+    pub(crate) tree_len: usize,
+    pub(crate) record_count: usize,
+    pub(crate) metadata: Metadata,
+    pub(crate) metadata_bytes: usize,
 }
 
 impl EncodedView {
@@ -47,6 +48,7 @@ impl EncodedView {
             encoder.finish().codec()?,
             tree_len,
             record_count,
+            None,
         ))
     }
 
@@ -70,6 +72,7 @@ impl EncodedView {
                 encoder.finish().codec()?,
                 tree_len,
                 record_count,
+                None,
             ),
             identity,
         ))
@@ -104,6 +107,7 @@ impl EncodedView {
             payload,
             tree_len,
             record_count,
+            None,
         ))
     }
 
@@ -124,23 +128,27 @@ impl EncodedView {
         Ok((tree_len, payload.tree.len()))
     }
 
-    fn from_payload(
+    pub(crate) fn from_payload(
         artifact: &Artifact,
         metadata: Metadata,
         payload: Vec<u8>,
         tree_len: usize,
         record_count: usize,
+        observer: Option<&dyn ExportObserver>,
     ) -> Self {
+        let payload = payload.into_boxed_slice();
+        if let Some(observer) = observer {
+            observer.bytes(ExportBuffer::Compressed, payload.len());
+        }
         Self {
-            payload: payload.into_boxed_slice(),
+            payload,
             bytes_len: artifact.bytes.len(),
             tree_len,
             record_count,
             metadata,
-            metadata_bytes: artifact
-                .document
-                .as_ref()
-                .map_or(0, document_weight::metadata),
+            metadata_bytes: artifact.document.as_ref().map_or(0, |document| {
+                document_weight::metadata_observed(document, observer)
+            }),
         }
     }
 
@@ -217,3 +225,7 @@ mod document_optional_tests;
 #[cfg(test)]
 #[path = "_tests_/document_identity_tests.rs"]
 mod document_identity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/document_persistence_tests.rs"]
+mod document_persistence_tests;

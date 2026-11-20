@@ -148,6 +148,16 @@ where
                 .stderr(&format!("{}\n", self.redactor.safe(&line)));
             return;
         }
+        if event.metadata().target() == "mokly::render_store"
+            && fields.values.get("event").is_some()
+        {
+            let mut record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"render.store","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed()});
+            for (name, value) in fields.values {
+                record[name] = value;
+            }
+            self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
+            return;
+        }
         if let Some(operation) = fields.values.get("operation") {
             let record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"sidecar.operation","event":"counts","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed(),"operation":operation,"worker":fields.values.get("worker"),"count":1});
             self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
@@ -202,6 +212,10 @@ mod bundle_timing_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_trace_tests.rs"]
 mod cache_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_trace_tests.rs"]
+mod render_store_trace_tests;
 
 #[cfg(test)]
 #[path = "_tests_/cache_codec_trace_tests.rs"]

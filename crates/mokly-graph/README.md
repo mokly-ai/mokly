@@ -11,8 +11,12 @@ writes no files.
 - Compute content-addressed node keys before document rendering.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
-- Encode documents losslessly for the compact tier and the comparison capture,
-  and identify their exact codec input.
+- Encode documents losslessly for the compact tier, the comparison capture,
+  and the render store, and identify their exact codec input.
+- Read stored documents after a render cache miss and offer fresh documents
+  through an injected render store, without waiting for a write.
+- Define the activity and memory boundaries that pause and measure the writer
+  of the render store.
 - Render all views through an injected worker pool.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
@@ -51,26 +55,6 @@ Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.
 
-Resources found during composition enter a leased dependency index. Each
-recipe retains its first observed digests. Later preparations add changed
-resource digests to its key. Usage completion alone keeps the published key.
-A resource edit changes its consuming document keys and reuses JavaScript
-fragments. Missing and denied lexical resource paths stay observable for
-repair. Weak subscribers attach those paths before the background pass
-completes. Key scans read template bodies and saved slots as authored HTML, so
-unknown ignore-wrapper attributes do not enter document keys.
-`generation_key` hashes the configuration, the document plans, the delivered
-stylesheet and asset identities, and the fragment generation for the live
-descriptor. A private stylesheet input that changes no delivered byte keeps it.
-`public_files` reads the shared closure records of the generation's document
-keys and applies its own policy to each path. An unchanged document's render
-that completes after replacement preparation is visible to the replacement.
-The records index both document keys and public paths. A membership request
-looks up one path and tests only the keys that reached it. The last lease of
-a document key removes its records from both indexes. Serve also rechecks
-live eligibility at read time. Temporary closure membership stays separate
-from the catalogue's reached public files.
-
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it
 reaches. Markdown document keys include no render input key.
@@ -84,13 +68,15 @@ requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It keeps rendered artifacts in a
 full tier and evicted documents in a lossless compact tier, under one total
-byte bound. [Cache and retained comparison](./cache.md) gives the complete
-rules of the render cache, the link index and anchor check result store of
-each generation, and the document codec. It also gives the capture and
-retained input methods `comparison_capture`, `comparison_usage`,
-`retained_comparison_input`, and `retained_document_evidence`, the content
-proof methods `comparison_identity` and `comparison_document_proof`, and the
-rules for their wrappers.
+byte bound. The [cache and retained comparison](./cache.md) page holds the
+guidance for the dependency records, the render cache, and the `DocumentStore`
+render store. It also holds the guidance for the link index, the anchor check
+result store, the document codec, and the `SourceSnapshot` source snapshots.
+It describes the methods `generation_key`, `public_files`,
+`comparison_capture`, `comparison_usage`, `retained_comparison_input`,
+`retained_document_evidence`, `comparison_identity`, and
+`comparison_document_proof`. It also gives the rules for wrappers of the
+comparison methods.
 
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
@@ -162,14 +148,6 @@ supplies the same boundary through the comparison adapter. `mokly-render`
 supplies the JavaScript factories and selected base dependencies through that
 path. Serve must also apply the public policy's read-time confinement rules.
 
-`SourceSnapshot` forwards external read evidence to static admission without
-replacing the witnessed bytes with a later snapshot hash. Stylesheet keys
-include these versions separately from plugin declaration digests. Source
-snapshots return `Arc<[u8]>` through `read_shared`, and cache hits share
-storage. `digest_unretained` memoizes an opaque input hash without retaining
-its payload. `SourceSnapshot::retained_bytes()` reports the retained private
-payload per path. Parsed source snapshots have no byte eviction policy.
-
 Opaque CSS asset preparation retains source identities and digests. A shared
 asset path has one generated resource plan across stylesheet roots. Bundles,
 source snapshots, and render caches retain no opaque payload for preparation.
@@ -233,6 +211,28 @@ retention disabled.
   capture share. Its `encode_identified` and `comparison_identity` hash the
   complete codec input. The private `document_identity` and
   `document_metadata` modules hold that hash and the retained metadata.
+- [`src/document_store.rs`](./src/document_store.rs) defines `DocumentStore`,
+  the optional render store boundary, with `Persistence`, `StoreKey`,
+  `ReadOutcome`, `OfferOutcome`, `EntryFault`, and `StoreStats`.
+  [`src/session_persistence.rs`](./src/session_persistence.rs) builds the
+  `StoreKey` of a route and offers a fresh document after its checks.
+- [`src/write_activity.rs`](./src/write_activity.rs) defines `WriteReadiness`,
+  `WriteActivity`, and `WriteLease`, the boundary that pauses the writer while
+  Serve is busy.
+- [`src/store_memory.rs`](./src/store_memory.rs) defines `StoreMemory`, the
+  known buffer capacities and the separate charges of the writer.
+- [`src/cache_export.rs`](./src/cache_export.rs) defines `EncodedConsumer` and
+  `CacheOperation`, the writer work that `RenderCache::with_encoded` and
+  `RenderCache::with_workspace` run inside the transit headroom.
+  [`src/export_memory.rs`](./src/export_memory.rs) defines `ExportObserver` and
+  `ExportBuffer`, which observe the scratch buffers of an export.
+- [`src/document_persistence.rs`](./src/document_persistence.rs) and
+  [`src/document_store_metadata.rs`](./src/document_store_metadata.rs) write
+  the bounded stored record of a document into a fixed buffer through
+  `EncodedView::write_stored` and restore it through `EncodedView::from_stored`.
+  The private `document_export`, `document_capacity`, and
+  `document_node_capacity` modules measure the visible scratch capacities of an
+  export.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
   job. Its `stylesheets` method runs one `StylesheetWorker` job for
@@ -247,7 +247,9 @@ retention disabled.
   earlier class. `RenderClass::current` reads it. The private `WorkerContext`
   captures it with the tracing span for each worker job.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
-  memoizes JavaScript fragments in the same bounded cache.
+  memoizes JavaScript fragments in the same bounded cache. Its
+  `record_served` forwards a store-served request to its renderer without a
+  memo lookup.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
@@ -288,6 +290,7 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).

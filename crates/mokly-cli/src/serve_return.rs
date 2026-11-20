@@ -4,12 +4,17 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, SyncSender};
 use std::sync::{Arc, Weak};
 
+use mokly_graph::write_activity::WriteLease;
 use mokly_sidecar::error::Error;
 use mokly_sidecar::pool::{ReturnWake, SidecarPool};
 
 /// Admission waiting outside the process pool can defer a new transition.
 #[cfg_attr(test, unimock::unimock(api = ReturnAdmissionMock))]
 pub(super) trait ReturnAdmission: Send + Sync {
+    /// Keep existing maintenance visible to optional writer admission.
+    fn activity(&self) -> Option<Box<dyn WriteLease>> {
+        None
+    }
     /// Check admission without retaining its lock during process work.
     fn ready(&self) -> bool;
     /// Report a background failure through the existing sidecar output owner.
@@ -76,6 +81,9 @@ pub(super) fn start(
                     let Some(pool) = pool.upgrade() else {
                         return;
                     };
+                    let _activity = admission
+                        .upgrade()
+                        .and_then(|admission| admission.activity());
                     match pool.maintain_head_return() {
                         Ok(false) => break,
                         Ok(true) => {}

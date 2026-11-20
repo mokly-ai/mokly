@@ -1,9 +1,32 @@
 # mokly-graph cache and retained comparison
 
 This page is part of the [`mokly-graph` README](./README.md). It holds the
-guidance for the render cache, the link index and result store of each
-generation, the document codec, the comparison captures and retained inputs,
-and the content proofs.
+cache and retained comparison guidance of the crate. The first sections cover
+the dependency records, the render cache, the render store, and the link index
+and result store. The last sections cover the document codec, the captures and
+retained inputs, the content proofs, and the source snapshots.
+
+## Dependency records
+
+Resources found during composition enter a leased dependency index. Each
+recipe retains its first observed digests. Later preparations add changed
+resource digests to its key. Usage completion alone keeps the published key.
+A resource edit changes its consuming document keys and reuses JavaScript
+fragments. Missing and denied lexical resource paths stay observable for
+repair. Weak subscribers attach those paths before the background pass
+completes. Key scans read template bodies and saved slots as authored HTML, so
+unknown ignore-wrapper attributes do not enter document keys.
+`generation_key` hashes the configuration, the document plans, the delivered
+stylesheet and asset identities, and the fragment generation for the live
+descriptor. A private stylesheet input that changes no delivered byte keeps it.
+`public_files` reads the shared closure records of the generation's document
+keys and applies its own policy to each path. An unchanged document's render
+that completes after replacement preparation is visible to the replacement.
+The records index both document keys and public paths. A membership request
+looks up one path and tests only the keys that reached it. The last lease of
+a document key removes its records from both indexes. Serve also rechecks
+live eligibility at read time. Temporary closure membership stays separate
+from the catalogue's reached public files.
 
 ## Render cache
 
@@ -48,6 +71,40 @@ destination renders in this same bounded cache. A repeated check of one
 destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
+
+## Render store
+
+`DocumentStore` is the optional render store boundary.
+`DeliveryInputs::persistence` carries one `Persistence`: the store and the
+JavaScript identity of the generation. Serve sets it for its head and base
+graphs, and direct and one-shot callers leave it absent. `StoreKey::new`
+combines a document key with the build identity: the native identity of the
+store and, for a document that uses JavaScript, the JavaScript identity. When
+a part is absent, the generation neither reads nor offers that document. After
+a render cache miss, a generation reads the store before it renders. A stored
+read repeats the public closure walk, the link checks, and the usage records of
+its side, so it gives the result of a fresh render. On a usable store hit, the
+generation also passes the same `ComposeRequest` that a composition uses to
+`Composer::record_served`, which records the root JavaScript request for the
+return warm-up. A render cache hit records nothing. A fresh document is offered
+only after the checks of its side pass, and a comparison collection offers its
+documents only after the whole collection passes. No generation waits for the
+write. Serve calls `DocumentStore::resume` after each completed Changes result,
+so the store writes nothing before the first one. `RenderCache::with_encoded`
+lends a writer one encoded document without a promotion, a refresh, or a count.
+It charges three times the document charge to the transit headroom, and it
+takes an encoder lease only for a document that is not compact yet.
+`RenderCache::with_workspace` charges the writer's fixed segment buffer to the
+same headroom. So the render cache stays the one owner of document memory.
+`EncodedView::write_stored` writes the bounded private record of a document,
+with all of its metadata, into a fixed caller buffer, and
+`EncodedView::from_stored` restores it. Serve work holds a `WriteLease` of the
+writer's `WriteActivity` while it runs, and `WriteReadiness` tells the writer
+whether the current Changes result is ready or unavailable. `StoreStats::memory`
+carries the writer's `StoreMemory`, and an `ExportObserver` samples export
+scratch without changing the cache accounting. The
+[render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the faults, the bound, and the writer rules.
 
 ## Link index and result store
 
@@ -140,3 +197,13 @@ and usage of one head document from one checked read. A failed check or an
 unknown identity returns `None` and reports no error. The default calls this
 generation's `comparison_document` and `comparison_identity`, so the checks
 of a wrapper apply. An override must keep those checks.
+
+## Source snapshots
+
+`SourceSnapshot` forwards external read evidence to static admission without
+replacing the witnessed bytes with a later snapshot hash. Stylesheet keys
+include these versions separately from plugin declaration digests. Source
+snapshots return `Arc<[u8]>` through `read_shared`, and cache hits share
+storage. `digest_unretained` memoizes an opaque input hash without retaining
+its payload. `SourceSnapshot::retained_bytes()` reports the retained private
+payload per path. Parsed source snapshots have no byte eviction policy.
