@@ -47,6 +47,18 @@ pub(super) struct Renders {
 
 impl Renders {
     pub(super) fn new(count: usize) -> (Self, Arc<dyn Documents>) {
+        Self::configured(count, Arc::new(Counts::default()), 128)
+    }
+
+    pub(super) fn with_counts(count: usize, counts: Arc<Counts>) -> (Self, Arc<dyn Documents>) {
+        Self::configured(count, counts, 128)
+    }
+
+    pub(super) fn with_charge(count: usize, bytes: usize) -> (Self, Arc<dyn Documents>) {
+        Self::configured(count, Arc::new(Counts::default()), bytes)
+    }
+
+    fn configured(count: usize, counts: Arc<Counts>, charge: usize) -> (Self, Arc<dyn Documents>) {
         let root: Vec<Gate> = (0..count)
             .map(|_| Arc::new((Mutex::new(false), Condvar::new())))
             .collect();
@@ -55,7 +67,6 @@ impl Renders {
             .map(|_| Arc::new((Mutex::new(false), Condvar::new())))
             .collect::<Vec<_>>();
         let (send, events) = mpsc::unbounded_channel();
-        let counts = Arc::new(Counts::default());
         let starts = Arc::new(Mutex::new(Vec::new()));
         let reports = Arc::new(Mutex::new(Vec::new()));
         let mock = Unimock::new((
@@ -77,7 +88,7 @@ impl Renders {
                         send.send(("start", index)).unwrap();
                         wait(&root[index]);
                         send.send(("root", index)).unwrap();
-                        completion.handoff(128);
+                        completion.handoff(charge);
                         counts.sidecars.fetch_sub(1, Ordering::SeqCst);
                         counts.completion_peak.fetch_max(
                             counts.completions.fetch_add(1, Ordering::SeqCst) + 1,

@@ -2,6 +2,7 @@
 
 use std::future::Future;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::task::{Context, Waker};
 
 use unimock::Unimock;
@@ -12,7 +13,7 @@ use crate::publication_support;
 use crate::work::{Work, Workers};
 
 use super::publication::pass;
-use super::support::{Renders, route};
+use super::support::{Counts, Renders, route};
 
 #[tokio::test]
 async fn completion_progresses_while_foreground_waits_and_then_yields_dispatch() {
@@ -92,8 +93,9 @@ async fn cancellation_discards_evidence_and_stop_drains_both_stages() {
 
 #[tokio::test]
 async fn replacement_discards_an_old_completion_and_only_publishes_new_evidence() {
-    let (mut old, documents) = Renders::new(2);
-    let (mut new, replacement) = Renders::new(1);
+    let counts = Arc::new(Counts::default());
+    let (mut old, documents) = Renders::with_counts(2, counts.clone());
+    let (mut new, replacement) = Renders::with_counts(1, counts.clone());
     let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
     let (script, pass, stopping) =
         pass(publication_support::snapshot(2, documents), 1, work.clone());
@@ -117,6 +119,45 @@ async fn replacement_discards_an_old_completion_and_only_publishes_new_evidence(
     old.done(0);
     old.root(1);
     old.done(1);
+    new.done(0);
+    task.await.unwrap();
+    work.stop().await;
+    assert!(old.reports.lock().unwrap().is_empty());
+    assert_eq!(*new.reports.lock().unwrap(), [route(0)]);
+    assert_eq!(*script.published.lock().unwrap(), [vec![route(0)]]);
+    assert_eq!(counts.completion_peak.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn replacement_shares_transient_budget_and_refused_charge_keeps_its_worker() {
+    let (mut old, documents) = Renders::with_charge(1, 4 * 1024 * 1024);
+    let (mut new, replacement) = Renders::new(1);
+    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
+    let (script, pass, stopping) =
+        pass(publication_support::snapshot(1, documents), 2, work.clone());
+    let task = tokio::spawn(async move { pass.run(stopping).await });
+    old.until(("start", 0)).await;
+    old.root(0);
+    old.until(("complete", 0)).await;
+    *script.current.lock().unwrap() = publication_support::snapshot(1, replacement);
+    assert!(
+        script
+            .updates
+            .send(PublicationEvent {
+                revision: 2,
+                deployment_id: "process".into()
+            })
+            .is_ok()
+    );
+    new.until(("start", 0)).await;
+    new.root(0);
+    new.until(("complete", 0)).await;
+    assert_eq!(
+        work.workers.available_permits(),
+        1,
+        "the shared full budget must refuse the replacement charge"
+    );
+    old.done(0);
     new.done(0);
     task.await.unwrap();
     work.stop().await;

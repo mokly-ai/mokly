@@ -268,6 +268,34 @@ The full options check is `.context/busier-sidecars/performance-fix-options-chec
 The performance orchestrator approved the combined design on 2026-11-20.
 The revised acceptance supersedes the earlier first-Changes target in this plan.
 
+The performance orchestrator accepted `3b59e2d1a` on Mokly Cloud on 2026-11-20.
+First Changes improved by 0.59 s. Capture returned to main's cost.
+The orchestrator accepted edit 1's 28 ms classification difference as noise.
+The mean difference across three edit classifications was 5 ms.
+This recorded acceptance controls the earlier individual timing thresholds.
+
+The same day, the orchestrator directed memory analysis to use six-round
+mean peaks and high-mode frequency. One pair can swing about 10% with sidecar
+GC timing. Keep every raw peak, maximum, and mode count in the report.
+For basic, accept the GC explanation only if core retained counters stay
+within 2% and Node sidecars own the high-mode increase in both arms.
+If the core or a step-only process owns the extra bytes, report its owner
+before the pull request. Run exactly six PID pairs and do not extend them.
+These calls replace a noisy single-pair or maximum-only memory verdict.
+
+The performance orchestrator accepted basic memory on 2026-11-20 after the
+six PID pairs. The strict GC-only condition was not established.
+The original cold matrix mean ratio was 1.102, with high-mode counts 2/6
+on main and 4/6 on the branch. Preserve those values in the pull request.
+The PID series had high-mode counts 6/6 and 5/6. Core retained gauges matched
+exactly. Node sidecars, PostCSS, and native esbuild in both arms owned the
+mode swing. No process kind ran only on the branch.
+High-band core RssAnon samples were 49.5 MB higher. These non-atomic samples
+show no matching retained-counter increase. Report this limit explicitly.
+The orchestrator accepted the result because the high-mode imbalance did
+not repeat, Cloud ten-edit peaks were lower, and large HTML and React were
+equal in the early pairs. This explicit decision controls basic acceptance.
+
 The explicit prepared result includes success or failure. Composition consumes
 it only at its owning root call. Shared start and request builders prevent
 request drift. A second take returns an internal error and never renders again.
@@ -370,7 +398,7 @@ Depends on: 2 and 3
 - [x] Add red-first regressions for the changed preparation, worker placement, cache retention, charge refusal, and cleanup behavior.
 - [x] Preserve every existing Serve and pool test. Repeat new asynchronous tests ten times.
 - [ ] Measure actual charge sizes/refusals, cache counts at startup and per edit, and the corrected whole-tree memory on all fixtures.
-- [ ] Obtain the revised canonical acceptance before the pull request.
+- [x] Obtain the revised canonical acceptance before the pull request.
 
 Evidence: `.context/busier-sidecars/cloud-0b229-result.md`,
 `measurements/diagnostic-html-graph-placement-report.md`, and
@@ -389,7 +417,7 @@ Depends on: 4
 - [x] Run targeted tests, the repository suite, and the complete gate with the required tools and locked Cargo graph.
 - [x] Run the strict example build and a live smoke. Save a browser screenshot under `.context/`.
 - [x] Commit and push the implementation. Send its SHA and dist source commit immediately for cloud measurement.
-- [ ] Obtain revised cloud acceptance: usage pass at least 0.8 s sooner, first Changes at least 0.5 s sooner, each edit classification within 20 ms, session CPU no higher, and memory within 2%.
+- [x] Obtain the performance orchestrator's revised Cloud acceptance. Record individual timing exceptions, CPU, memory, and the measured cache behavior.
 
 Evidence: `.context/busier-sidecars/measurements/` and `.context/busier-sidecars/checks/`.
 The complete gate hit the known saved-plan harness flake owned by PR #352.
