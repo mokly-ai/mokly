@@ -46,11 +46,12 @@ override and the mode stay together. The
 [file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
 reason and the Git source evidence.
 
-The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. A Git build that
-ignores it can fetch a missing blob while `ls-tree -l` reads its size. Such a
-build can also fetch a missing tree while a listing expands a sparse index. So
-`ls-tree` and both listings keep `FullTree` when the repository has a promisor
-remote. `GitRepositories::open` reads `remote.*.promisor` and
+The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
+first list metadata without blob sizes. They fetch missing requested blobs and
+attribute files before listing sizes. A Git build that ignores the lazy-fetch
+control can still fetch a missing tree during a tree query or sparse-index
+listing. So `ls-tree` and both listings keep `FullTree` when the repository has
+a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
 `extensions.partialClone` with one plain `config` command. The opened
 repository keeps the promisor remotes for its tree reads, its listings, and its
 object fetches.

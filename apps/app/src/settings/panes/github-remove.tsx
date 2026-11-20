@@ -49,7 +49,6 @@ export function RemoveInstallation({
             size="md"
             write={removal}
             operation="Removing GitHub account"
-            disabled={removal.disabled}
             onPress={() =>
               void removal.run(() => disconnectInstallation(installation.id))
             }

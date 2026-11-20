@@ -138,7 +138,7 @@ function GitHubConnect({ connected }: { connected: boolean }) {
         icon={connectIcon(connected)}
         write={authorize}
         operation="Connecting to GitHub"
-        disabled={authorize.disabled || connected}
+        disabled={connected}
         onPress={() =>
           onWeb ? openOnWeb(settingsPath({ pane: "account" })) : void connect()
         }
@@ -202,7 +202,6 @@ export function AccountPane() {
             size="md"
             write={renaming}
             operation="Saving your name"
-            disabled={renaming.disabled}
             onPress={() => void save()}
             testID="save-account"
           />
@@ -218,7 +217,6 @@ export function AccountPane() {
             icon="signOut"
             write={signingOut}
             operation="Signing you out"
-            disabled={signingOut.disabled}
             onPress={() => leaveBy(() => void signingOut.run(signOut))}
             testID="sign-out"
           />

@@ -45,7 +45,9 @@ export type ActionSemantics = Pick<
 
 /**
  * The write a control sends, and the operation that the write runs, as a
- * screen reader hears it: "Creating workspace". While the write works, the
+ * screen reader hears it: "Creating workspace". The control takes its write's
+ * refusal from the write, together with the write's wait. At rest it refuses a
+ * press while the write has nothing to send. While the write works, the
  * control is its Write in progress: it keeps its place and its focus, the
  * package draws its spinner and refuses the press, and the operation is
  * announced once beside it. Its label is then its working word, which the
@@ -53,7 +55,7 @@ export type ActionSemantics = Pick<
  */
 type ActionWrite =
   | { write?: undefined; operation?: undefined }
-  | { write: Pick<Write, "working">; operation: string };
+  | { write: Pick<Write, "working" | "sendable">; operation: string };
 
 export type ActionProps = ActionSemantics &
   ActionWrite & {
@@ -62,9 +64,10 @@ export type ActionProps = ActionSemantics &
     size?: "sm" | "md" | "lg";
     block?: boolean;
     /**
-     * Whether the control refuses a press while it is at rest. A busy control
-     * stays enabled, so it keeps its focus, and refuses the press because it
-     * is busy.
+     * Whether the control refuses a press while it is at rest, for a reason
+     * other than its own write, such as a permission the reader lacks. Its
+     * write's own refusal comes with `write`. A busy control stays enabled, so
+     * it keeps its focus, and refuses the press because it is busy.
      */
     disabled?: boolean;
     icon?: ActionIcon;
@@ -118,13 +121,16 @@ export function Action({
   }, [onPress, href, router]);
   // The operation, while the write this control sends is working.
   const running = write?.working === true ? operation : undefined;
+  // At rest, the control refuses a press for its own reason or while its
+  // write has nothing to send. While the write works, `busy` refuses it.
+  const refused = disabled === true || write?.sendable === false;
   return (
     <>
       <Button
         tone={tone === "quiet" ? "plain" : tone}
         size={size}
         block={block}
-        disabled={running === undefined && disabled}
+        disabled={running === undefined && refused}
         busy={running !== undefined}
         icon={icon ? icons[icon] : undefined}
         // A compact surface clears the 44px touch target; a pointer surface

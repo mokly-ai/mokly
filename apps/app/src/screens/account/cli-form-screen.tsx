@@ -214,7 +214,6 @@ export function CliFormScreen({
                   block
                   write={write}
                   operation="Creating project"
-                  disabled={write.disabled}
                   onPress={() => void submit()}
                   testID="create-cli-project"
                 />

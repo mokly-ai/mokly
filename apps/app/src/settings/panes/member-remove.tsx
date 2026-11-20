@@ -50,7 +50,6 @@ export function RemoveMember({
             size="md"
             write={removal}
             operation="Removing member"
-            disabled={removal.disabled}
             onPress={() =>
               void removal.run(() =>
                 removeMember(workspace.id, member.id, member.version),

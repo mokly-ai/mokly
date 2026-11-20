@@ -176,7 +176,6 @@ export function WorkspacePane({ workspace }: { workspace: Workspace }) {
               size="md"
               write={renaming}
               operation="Saving settings"
-              disabled={renaming.disabled}
               onPress={() => void save()}
               testID="save-workspace"
             />
