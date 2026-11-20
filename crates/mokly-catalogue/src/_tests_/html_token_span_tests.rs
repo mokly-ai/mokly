@@ -166,3 +166,25 @@ fn script_eof_text_keeps_compatibility_span_and_maps_actual_source_byte() {
     assert_eq!(tokens[0].source_map.span, Span { start: 23, end: 24 });
     assert_eq!(tokens[0].source_offset(0), 23);
 }
+
+#[test]
+fn empty_end_tags_keep_joined_text_span_and_map_actual_source_bytes() {
+    let source = "<p>a</>b</>c</p>";
+    let tokens: Vec<_> = html_tokens::parse(DeliveredHtml::fragment(source))
+        .filter_map(|parsed| match parsed.token {
+            Token::String(text) => Some(text),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(tokens.len(), 1);
+    assert_eq!(tokens[0].value, b"abc");
+    assert_eq!(tokens[0].span, Span { start: 3, end: 12 });
+    assert_eq!(tokens[0].source_map.span, Span { start: 3, end: 12 });
+    let offsets: Vec<_> = (0..tokens[0].value.len())
+        .map(|decoded| tokens[0].source_offset(decoded))
+        .collect();
+    assert_eq!(offsets, [3, 7, 11]);
+    for decoded in 0..tokens[0].value.len() {
+        assert!(tokens[0].source_map.is_aligned(decoded));
+    }
+}
