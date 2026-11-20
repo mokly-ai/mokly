@@ -21,6 +21,6 @@
 - **Recommendation:** B. The user accepted the drop in a forward migration.
 - **Action:** fix after merge, apply B, because the user accepted the finding and its forward-migration fix. Run the index-use checks below first, and drop the index only when they show no use.
 
-Use the `databases` skill for the migration. Before you drop the index, run `EXPLAIN` with representative publication rows for the retention query and the other ID-ordered lifecycle queries. Also read `pg_stat_user_indexes` with its workload and reset period, or equivalent operator evidence. The empty-table plan test of `plans/follow-ups/retention-plan-test-uses-empty-table.md` cannot settle this.
+Use the `databases` skill for the migration. Before you drop the index, run `EXPLAIN` with representative publication rows for the retention query and the other ID-ordered lifecycle queries. Also read `pg_stat_user_indexes` with its workload and reset period, or equivalent operator evidence. The populated plan test in `crates/mkc-store-pg/tests/maintenance/plans_tests.rs` checks cutoff index use with sequential scans disabled. It does not prove representative plan quality or settle index removal.
 
 Source: [Milestone F8](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-cloud-follow-ups.md?plain=1#L1010-L1051) of the deleted plan.

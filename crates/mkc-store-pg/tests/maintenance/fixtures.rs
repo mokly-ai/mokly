@@ -3,6 +3,9 @@
 use std::env;
 use std::sync::Arc;
 
+use chrono::{DateTime, Utc};
+use diesel::connection::SimpleConnection;
+use diesel::sql_types::Timestamptz;
 use diesel::{Connection, PgConnection, RunQueryDsl};
 use mkc_db::migration::{DieselMigrations, MigrationRunner};
 use mkc_store_interface::store::Store;
@@ -62,4 +65,42 @@ pub(super) fn database() -> Option<Database> {
         connection,
         name,
     })
+}
+
+/// Insert 200 attempts with one due upload and one failure at the age cutoff.
+/// Remaining rows are recent failures or uploads with future deadlines.
+pub(super) fn publication_candidate_rows(connection: &mut PgConnection, now: DateTime<Utc>) {
+    connection
+        .batch_execute(
+            "BEGIN;
+            INSERT INTO organizations (id, name, slug, version, created_at)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'Retention plans', 'retention-plans', 1, now());
+            INSERT INTO organization_slugs (slug, organization_id)
+            VALUES ('retention-plans', '00000000-0000-0000-0000-000000000001');
+            INSERT INTO projects (id, organization_id, name, slug, repository, config_path, visibility, version)
+            VALUES ('00000000-0000-0000-0000-000000000002',
+                '00000000-0000-0000-0000-000000000001', 'Retention plans', 'retention-plans',
+                'test/retention-plans', 'mokly.config.ts', 'private', 1);
+            INSERT INTO project_slugs (organization_id, slug, project_id)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'retention-plans',
+                '00000000-0000-0000-0000-000000000002');
+            COMMIT;",
+        )
+        .unwrap();
+    diesel::sql_query(
+        "INSERT INTO publications (id, project_id, state, failure_code, created_at, deadline)
+        SELECT lpad(n::text, 32, '0')::uuid, '00000000-0000-0000-0000-000000000002',
+            CASE WHEN n <= 100 THEN 'uploading' ELSE 'failed' END,
+            CASE WHEN n > 100 THEN 'internal' END,
+            CASE WHEN n = 199 THEN $1::timestamptz - interval '30 days'
+                ELSE $1::timestamptz - interval '1 hour' END,
+            CASE WHEN n = 99 THEN $1::timestamptz ELSE $1::timestamptz + interval '1 hour' END
+        FROM generate_series(1, 200) n",
+    )
+    .bind::<Timestamptz, _>(now)
+    .execute(connection)
+    .unwrap();
+    diesel::sql_query("ANALYZE publications")
+        .execute(connection)
+        .unwrap();
 }

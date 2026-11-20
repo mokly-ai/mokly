@@ -6,7 +6,7 @@ use diesel::sql_types::{BigInt, Nullable, Text, Timestamptz, Uuid as SqlUuid};
 use mkc_store_interface::store::Callback;
 use uuid::Uuid;
 
-use super::fixtures::database;
+use super::fixtures::{database, publication_candidate_rows};
 
 #[derive(QueryableByName)]
 struct PlanLine {
@@ -22,10 +22,12 @@ fn plan(lines: Vec<PlanLine>) -> String {
         .join("\n")
 }
 
+/// With sequential scans disabled, this checks cutoff index use rather than representative plan quality.
 #[test]
 fn production_candidate_queries_use_partial_cutoff_indexes() {
     let Some(mut db) = database() else { return };
     let now = Utc::now();
+    publication_candidate_rows(&mut db.connection, now);
     diesel::sql_query("SET enable_seqscan = off")
         .execute(&mut db.connection)
         .unwrap();
