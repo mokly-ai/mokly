@@ -1,4 +1,4 @@
-import { SITE_FIRST_SEGMENTS } from "../../../worker/src/site-segments";
+import { SITE_FIRST_SEGMENTS } from "../../../../apps/worker/src/site-segments";
 
 import { dashboardPath, signInPath, signUpPath } from "./paths";
 

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 
-import { SITE_FIRST_SEGMENTS as workerSegments } from "../../../worker/src/site-segments.js";
+import { SITE_FIRST_SEGMENTS as workerSegments } from "../../../../apps/worker/src/site-segments.js";
 import { contentSecurityPolicy } from "../config.js";
 import { DESKTOP_ORIGIN } from "../origin.js";
 import { SITE_FIRST_SEGMENTS } from "../site-segments.js";

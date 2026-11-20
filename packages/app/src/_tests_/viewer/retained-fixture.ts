@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { scratchDirectory } from "../../../../_tests_/scratch.mjs";
+import { scratchDirectory } from "../../../../../apps/_tests_/scratch.mjs";
 import { fixture } from "../publish";
 import { repositoryRoot } from "../root";
 

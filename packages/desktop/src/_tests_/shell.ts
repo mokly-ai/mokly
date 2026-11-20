@@ -4,13 +4,13 @@ import { resolve } from "node:path";
 import { _electron, expect } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
 
-import type * as Scratch from "../../../_tests_/scratch.mjs";
+import type * as Scratch from "../../../../apps/_tests_/scratch.mjs";
 import { catalogueOrigin } from "../../../app/src/_tests_/origins";
 
 // The app harness loads this shared MJS helper through CommonJS. Use the same
 // loader so Playwright never tries to register it as both CJS and ESM.
 const { scratchDirectory } = createRequire(import.meta.url)(
-  "../../../_tests_/scratch.mjs",
+  "../../../../apps/_tests_/scratch.mjs",
 ) as typeof Scratch;
 
 export function profileDirectory(label: string): string {

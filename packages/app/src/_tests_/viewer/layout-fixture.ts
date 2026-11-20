@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
 
-import { scratchDirectory } from "../../../../_tests_/scratch.mjs";
+import { scratchDirectory } from "../../../../../apps/_tests_/scratch.mjs";
 import { fixture } from "../publish";
 import { repositoryRoot } from "../root";
 

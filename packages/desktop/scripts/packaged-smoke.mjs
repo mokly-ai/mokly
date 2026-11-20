@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 
 import { _electron, expect } from "@playwright/test";
 
-import { scratchDirectory } from "../../_tests_/scratch.mjs";
+import { scratchDirectory } from "../../../apps/_tests_/scratch.mjs";
 
 import { packageArtifact } from "./package.mjs";
 
