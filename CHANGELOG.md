@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.21.0](https://github.com/mokly-ai/mokly/compare/v0.20.0...v0.21.0) (2026-11-20)
+
+
+### Features
+
+* **viewer:** hide removed entries from the All filter ([#417](https://github.com/mokly-ai/mokly/issues/417)) ([098d108](https://github.com/mokly-ai/mokly/commit/098d1080aa305eb92ab7fd891191c021de464f55))
+
+
+### Bug Fixes
+
+* **viewer:** wait for slow previews and recover focus after Try again ([#428](https://github.com/mokly-ai/mokly/issues/428)) ([3e09c61](https://github.com/mokly-ai/mokly/commit/3e09c6150e076abb0caead6fa2af8500087aece9))
+
 ## [0.20.0](https://github.com/mokly-ai/mokly/compare/v0.19.0...v0.20.0) (2026-11-20)
 
 
