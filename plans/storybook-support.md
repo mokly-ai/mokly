@@ -842,7 +842,7 @@ answers. The ledger of the workspaces is in
 | E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
 | F. Failed stories          | 23 to 25   | Tracks A and B                                   |
 | G. Storybook links         | 26 to 29   | Tracks A and E                                   |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                            |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d  |
 | I. Story component usage   | 34 to 36   | Tracks B and D, and decisions 19 and 21          |
 | J. Spike for decision 18   | 37         | Nothing                                          |
 
@@ -1271,7 +1271,7 @@ Depends on: 26, 27, 28
 
 ## Milestone 30: Storybook setup on Vite documentation
 
-Depends on: 12, 17, 22, 37
+Depends on: 12, 17, 22, 37, and the answers to decisions 18a to 18d
 
 Track H. The protocol states the Storybook setup rules of decision 17, with
 the answer to decision 18, and the `sb.mock()` warning of decision 12.
