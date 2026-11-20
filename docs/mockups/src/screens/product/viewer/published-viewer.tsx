@@ -9,6 +9,10 @@ import { sample } from "../../../fixtures/product";
 import { publication } from "../../../fixtures/publications";
 import { useMockupRenderContext } from "../../../render-context";
 
+import { defaultReader } from "./account-trigger";
+import type { AccountLabel } from "./account-trigger";
+import { ChangesCheck } from "./check-panel";
+import { readyDetail } from "./pill";
 import {
   catalogueFilter,
   catalogueSections,
@@ -20,16 +24,15 @@ import {
   PublishedSlotEnd,
   PublishedSlotStart,
 } from "./published-slots";
-import type {
-  PublishedAccountLabel,
-  PublishedSubject,
-} from "./published-slots";
+import type { PublishedSubject } from "./published-slots";
 import { PublishedWorkspace } from "./published-workspace";
+import { SearchHint } from "./search-hint";
 
 const defaultSubject: PublishedSubject = {
   label: publication.branch,
-  detail: publication.published,
+  detail: readyDetail(publication.published),
   sha: publication.sha,
+  kind: "branch",
 };
 
 /** The ids of the one embedded viewer a drawing holds, unique in its document. */
@@ -47,7 +50,12 @@ const ids = {
  * and the workspace with the sample screen in the phone and browser frames.
  * Every part draws its controls as pictures or native controls, so the
  * drawing runs no script, and the layout states the document's scheme as its
- * appearance.
+ * appearance. The top bar takes no end control, because the cloud's bar has
+ * no theme toggle, and its search field ends with the `⌘K` hint.
+ *
+ * A pull request's desktop drawing fills the `sidePanel` slot with the
+ * cloud's Mokly check. A phone draws no side panel, because the package's
+ * compact layout has none.
  *
  * A private comparison's message goes in the `stageOverlay` slot, as the app
  * places it. The package reveals that slot by a browser measurement, which a
@@ -58,19 +66,22 @@ const ids = {
 export function PublishedViewer({
   viewport,
   subject = defaultSubject,
-  account = { label: sample.viewer.name },
+  account = defaultReader,
   workspace = sample.workspace,
   project = sample.project,
   comparisonBlocked = false,
   view = "all",
+  layered = false,
 }: {
   viewport: "mobile" | "desktop";
   subject?: PublishedSubject;
-  account?: PublishedAccountLabel;
+  account?: AccountLabel;
   workspace?: string;
   project?: string;
   comparisonBlocked?: boolean;
   view?: CatalogueView;
+  /** Whether a panel or a sheet is open over the viewer. */
+  layered?: boolean;
 }) {
   const { colorScheme } = useMockupRenderContext();
   return (
@@ -118,7 +129,23 @@ export function PublishedViewer({
               project={project}
             />
           ),
-          topBarEnd: <PublishedSlotEnd viewport={viewport} account={account} />,
+          topBarEnd: (
+            <PublishedSlotEnd
+              viewport={viewport}
+              account={account}
+              layered={layered}
+            />
+          ),
+          ...(subject.check && viewport === "desktop"
+            ? {
+                sidePanel: {
+                  content: <ChangesCheck pull={subject.check} />,
+                  // The panel takes its own width, so the slot keeps none
+                  // where the panel hides with the full bar.
+                  width: "auto",
+                },
+              }
+            : {}),
           ...(comparisonBlocked
             ? {
                 stageOverlay: {
@@ -138,6 +165,7 @@ export function PublishedViewer({
             interactive={false}
             navigationId={ids.navigation}
             searchId={ids.search}
+            tagPicker={<SearchHint />}
           />
         }
       />

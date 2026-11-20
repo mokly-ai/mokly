@@ -1,8 +1,12 @@
 import { Badge } from "@firna/ui/badge";
-import { StatusDot as FirnaStatusDot } from "@firna/ui/status-dot";
 
 import { Action } from "../page-parts";
 
+import { AccountTrigger } from "./account-trigger";
+import type { AccountLabel } from "./account-trigger";
+import type { CheckedPullRequest } from "./check-panel";
+import { Pill, PillDot, PillGlyph, PillState } from "./pill";
+import type { ReferenceKind } from "./pill";
 import { slotBars, slotClass } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 import { ReferenceTrigger } from "./reference-trigger";
@@ -13,24 +17,23 @@ export interface PublishedSubject {
   label: string;
   detail: string;
   sha?: string;
+  /** The kind of reference the label names, which the pill's glyph shows. */
+  kind: ReferenceKind;
   changes?: boolean;
   github?: boolean;
   latest?: boolean;
-}
-
-/** What the published slot calls the reader. */
-export interface PublishedAccountLabel {
-  label: string;
-  whole?: string;
+  /** The pull request whose Mokly check the side panel shows. */
+  check?: CheckedPullRequest;
 }
 
 /**
  * One cloud action in a package slot: the registered Button through `Action`,
- * compact, on one line and with no catalogue link. The renderer's static
- * control theme reaches it, because the embedded layout renders the slots in
- * the screen's own React tree. The registered Button takes its touch target
- * from the drawing's viewport, not from the composition, because a compact
- * bar also fits a narrow desktop window.
+ * compact, on one line and with no catalogue link, so it stays the button
+ * that the application draws. The renderer's static control theme reaches
+ * it, because the embedded layout renders the slots in the screen's own React
+ * tree. The registered Button takes its touch target from the drawing's
+ * viewport, not from the composition, because a compact bar also fits a
+ * narrow desktop window.
  */
 function SlotButton({
   instance,
@@ -42,7 +45,7 @@ function SlotButton({
 }: {
   instance: string;
   label: string;
-  tone?: "quiet" | "secondary";
+  tone?: "primary" | "quiet" | "secondary";
   chevron?: boolean;
   whole?: string;
   block?: boolean;
@@ -61,6 +64,13 @@ function SlotButton({
   );
 }
 
+/**
+ * One composition's start: the quiet workspace and project switcher, then the
+ * publication pill, with the publication's Changes badge, GitHub and View
+ * latest beside it. The compact bar keeps only the pill, with the status dot
+ * and the reference's compact name. The published viewer always shows a
+ * ready publication.
+ */
 function StartSlot({
   bar,
   subject,
@@ -72,19 +82,16 @@ function StartSlot({
   workspace: string;
   project: string;
 }) {
+  const named = workspace + " / " + project;
   return (
     <div className={slotClass("fo-package-slot-start", bar)}>
       {!bar.compact && (
-        <span
-          className="fo-top-slot fo-top-project"
-          title={workspace + " / " + project}
-        >
+        <span className="fo-top-slot fo-top-project" title={named}>
           <span className="fo-top-variable-control">
             <SlotButton
               instance="viewer-project"
-              label={workspace + " / " + project}
-              whole={workspace + " / " + project}
-              tone="secondary"
+              label={named}
+              whole={named}
               chevron
               block
             />
@@ -92,30 +99,34 @@ function StartSlot({
         </span>
       )}
       <span className="fo-package-publication">
-        <ReferenceTrigger bar={bar} reference={subject.label} />
-        {!bar.compact && (
-          <span className="fo-top-state">
-            <FirnaStatusDot tone="primary" size="sm" />
-            <span className="fo-top-state-detail">{subject.detail}</span>
-            {subject.sha && <code className="mono-value">{subject.sha}</code>}
-            {subject.changes && (
-              <span className="fo-top-badge">
-                <Badge tone="neutral" size="sm">
-                  Changes
-                </Badge>
-              </span>
-            )}
-            {subject.github && (
-              <SlotButton instance="viewer-github" label="GitHub" />
-            )}
-            {subject.latest && (
-              <SlotButton
-                instance="viewer-view-latest"
-                label="View latest"
-                tone="secondary"
-              />
-            )}
+        <Pill>
+          {bar.compact && <PillDot state="ready" />}
+          <PillGlyph kind={subject.kind} />
+          <ReferenceTrigger bar={bar} reference={subject.label} />
+          {!bar.compact && (
+            <PillState
+              state="ready"
+              detail={subject.detail}
+              sha={subject.sha}
+            />
+          )}
+        </Pill>
+        {!bar.compact && subject.changes && (
+          <span className="fo-top-badge">
+            <Badge tone="neutral" size="sm">
+              Changes
+            </Badge>
           </span>
+        )}
+        {!bar.compact && subject.github && (
+          <SlotButton instance="viewer-github" label="GitHub" />
+        )}
+        {!bar.compact && subject.latest && (
+          <SlotButton
+            instance="viewer-view-latest"
+            label="View latest"
+            tone="secondary"
+          />
         )}
       </span>
     </div>
@@ -123,9 +134,8 @@ function StartSlot({
 }
 
 /**
- * The `topBarStart` slot: the workspace and project switcher, then the
- * reference with its publication state, Changes, GitHub and View latest. The
- * compact bar keeps only the reference's short name.
+ * The `topBarStart` slot: the workspace and project switcher and the
+ * publication pill on the full bar, and the pill alone on the compact bar.
  */
 export function PublishedSlotStart({
   viewport,
@@ -149,12 +159,19 @@ export function PublishedSlotStart({
   ));
 }
 
+/**
+ * One composition's end. Share takes the signal fill as the screen's one
+ * primary action; under a panel or a sheet it keeps the secondary tone,
+ * because the layer owns the screen's filled action.
+ */
 function EndSlot({
   bar,
   account,
+  layered,
 }: {
   bar: SlotBar;
-  account: PublishedAccountLabel;
+  account: AccountLabel;
+  layered: boolean;
 }) {
   return (
     <div className={slotClass("fo-package-slot-end", bar)}>
@@ -169,20 +186,11 @@ function EndSlot({
             <SlotButton
               instance="viewer-share"
               label="Share"
-              tone="secondary"
+              tone={layered ? "secondary" : "primary"}
             />
           </span>
           <span className="fo-top-slot fo-top-fixed">
-            <SlotButton instance="viewer-settings" label="Settings" />
-          </span>
-          <span className="fo-top-slot fo-top-account" title={account.whole}>
-            <SlotButton
-              instance="viewer-account"
-              label={account.label}
-              whole={account.whole ?? account.label}
-              chevron
-              block
-            />
+            <AccountTrigger account={account} />
           </span>
         </>
       )}
@@ -191,18 +199,25 @@ function EndSlot({
 }
 
 /**
- * The `topBarEnd` slot: History, Share, Settings and the account on the full
+ * The `topBarEnd` slot: History, Share and the account's avatar on the full
  * bar, and one More menu on the compact bar.
  */
 export function PublishedSlotEnd({
   viewport,
   account,
+  layered,
 }: {
   viewport: "mobile" | "desktop";
-  account: PublishedAccountLabel;
+  account: AccountLabel;
+  layered: boolean;
 }) {
   return slotBars(viewport).map((bar) => (
-    <EndSlot key={bar.part ?? "compact"} bar={bar} account={account} />
+    <EndSlot
+      key={bar.part ?? "compact"}
+      bar={bar}
+      account={account}
+      layered={layered}
+    />
   ));
 }
 

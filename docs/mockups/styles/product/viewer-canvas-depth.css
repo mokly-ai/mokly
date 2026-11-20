@@ -1,0 +1,43 @@
+/* The depth of the Canvas drawings: the shade that their shadows and scrims
+   mix, the radius of a floating surface, and the shadows of a card that
+   floats on the canvas and of a panel over it. Light mixes the ink. Dark
+   mixes the near-black background, because a light ink would glow around a
+   dark card. Only the drawings load this sheet: each Canvas sheet that draws
+   a floating surface imports it, so Mokly bundles it into that entry's own
+   stylesheet, and the application never loads it. */
+.canvas-scope {
+  --fo-canvas-shade: var(--mk-color-text);
+  --fo-canvas-radius: 12px;
+  --fo-canvas-shadow-float:
+    0 1px 1px color-mix(in srgb, var(--fo-canvas-shade) 4%, transparent),
+    0 4px 10px -2px color-mix(in srgb, var(--fo-canvas-shade) 6%, transparent),
+    0 18px 36px -14px
+      color-mix(in srgb, var(--fo-canvas-shade) 14%, transparent);
+  --fo-canvas-shadow-deep:
+    0 1px 1px color-mix(in srgb, var(--fo-canvas-shade) 5%, transparent),
+    0 10px 20px -6px color-mix(in srgb, var(--fo-canvas-shade) 8%, transparent),
+    0 40px 80px -28px
+      color-mix(in srgb, var(--fo-canvas-shade) 26%, transparent);
+  /* What an open panel or dialog lays over the canvas beneath it. */
+  --fo-canvas-scrim: color-mix(
+    in srgb,
+    var(--fo-canvas-shade) 24%,
+    transparent
+  );
+}
+.canvas-scope[data-color-scheme="dark"] {
+  --fo-canvas-shade: var(--mk-color-background);
+  --fo-canvas-shadow-float:
+    0 6px 14px -4px color-mix(in srgb, var(--fo-canvas-shade) 50%, transparent),
+    0 22px 44px -16px
+      color-mix(in srgb, var(--fo-canvas-shade) 60%, transparent);
+  --fo-canvas-shadow-deep:
+    0 14px 28px -8px color-mix(in srgb, var(--fo-canvas-shade) 55%, transparent),
+    0 48px 96px -32px
+      color-mix(in srgb, var(--fo-canvas-shade) 70%, transparent);
+  --fo-canvas-scrim: color-mix(
+    in srgb,
+    var(--fo-canvas-shade) 60%,
+    transparent
+  );
+}

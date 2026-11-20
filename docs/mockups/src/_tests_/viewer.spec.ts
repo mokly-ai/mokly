@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 
-import { tokens } from "@mokly-cloud/tokens/tokens";
+import { canvasColors } from "@mokly-cloud/tokens/palettes";
 import { expect, test } from "@playwright/test";
 
 import { sample } from "../fixtures/product";
@@ -54,7 +54,9 @@ for (const viewport of ["desktop", "mobile"] as const)
       "every viewer screen keeps the chrome over one stage: " + label,
       async ({ page }) => {
         await page.setViewportSize(size);
-        const folio = rgb(tokens.color[scheme].accentSolid);
+        // The viewer documents draw in the Canvas palette, whose solid accent
+        // is the signal fill of a filled button.
+        const fill = rgb(canvasColors(scheme).accentSolid);
         for (const [screen, panel] of family)
           for (const state of ["", "empty", "loading", "error"]) {
             await page.goto(url(screen, state || undefined));
@@ -83,7 +85,7 @@ for (const viewport of ["desktop", "mobile"] as const)
             const packageSelection =
               published && viewport === "desktop" ? 1 : 0;
             expect(
-              await page.evaluate(accentFills, folio),
+              await page.evaluate(accentFills, fill),
               screen + " " + state,
             ).toBe(primaries + packageSelection);
           }
@@ -141,6 +143,9 @@ for (const viewport of ["desktop", "mobile"] as const)
       await expect(
         viewer.getByRole("button", { name: publication.branch, exact: true }),
       ).toBeVisible();
+      // The full bar holds the project switcher, History, Share and the
+      // account's avatar, named by the reader; Settings lives in the account
+      // menu, not in the bar.
       const labels =
         viewport === "mobile"
           ? ["More"]
@@ -148,13 +153,15 @@ for (const viewport of ["desktop", "mobile"] as const)
               sample.workspace + " / " + sample.project,
               "History",
               "Share",
-              "Settings",
               sample.viewer.name,
             ];
       for (const name of labels)
         await expect(
           viewer.getByRole("button", { name, exact: true }),
         ).toBeVisible();
+      await expect(
+        viewer.getByRole("button", { name: "Settings", exact: true }),
+      ).toHaveCount(0);
 
       if (viewport === "desktop") {
         await page.setViewportSize({ width: 700, height: 900 });

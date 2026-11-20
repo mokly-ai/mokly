@@ -13,7 +13,7 @@ export default defineScreen({
     "docs/protocol/cloud/billing.md",
     "docs/protocol/cloud/billing-plan-gates.md",
   ],
-  tags: ["product", "folio", "viewer", "plan"],
+  tags: ["product", "canvas", "viewer", "plan"],
   render: (_props, { viewport }) => (
     <ViewerStandalonePlanScreen viewport={viewport} />
   ),

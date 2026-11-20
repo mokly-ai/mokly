@@ -26,7 +26,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups-viewer.md",
     "docs/protocol/cloud/cloud-build-runner.md",
   ],
-  tags: ["product", "folio", "viewer", "build"],
+  tags: ["product", "canvas", "viewer", "build"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -46,7 +46,7 @@ export default defineScreen({
       title: "Build · Empty",
       description:
         "Build — a requested build waiting to start: every step waits, there is no output yet, and Cancel stays.",
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -54,7 +54,7 @@ export default defineScreen({
       title: "Build · Loading",
       description:
         "Build — the chrome stays while the build is read, before anything names its branch, and the stage's waiting card names the read in its title.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -62,7 +62,7 @@ export default defineScreen({
       title: "Build · Error",
       description:
         "Build — an unknown build, one on another project or one the reader may not see; the switcher recovers.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -70,7 +70,7 @@ export default defineScreen({
       title: "Build · Published",
       description:
         "Build — the build that published the branch's current publication: every step done, the output with a dropped stretch named where the log kept only its head and tail, and Open catalogue.",
-      tags: ["product", "folio", "viewer", "published"],
+      tags: ["product", "canvas", "viewer", "published"],
       props: { state: "published" },
     },
   ],

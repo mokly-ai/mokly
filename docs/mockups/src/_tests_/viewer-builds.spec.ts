@@ -1,5 +1,6 @@
 import { pathToFileURL } from "node:url";
 
+import { canvasColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import { expect, test } from "@playwright/test";
 
@@ -66,7 +67,9 @@ for (const viewport of ["desktop", "mobile"] as const)
         label,
       async ({ page }) => {
         await page.setViewportSize(size);
-        const fill = rgb(tokens.color[scheme].accentSolid);
+        // The viewer documents draw in the Canvas palette, whose solid
+        // accent is the signal fill of a filled button.
+        const fill = rgb(canvasColors(scheme).accentSolid);
         for (const id of [...buildCards, ...buildStages]) {
           await page.goto(pathToFileURL(screenFile(id, viewport, scheme)).href);
           expect(await page.evaluate(viewerDocumentViolations), id).toEqual([]);

@@ -26,7 +26,7 @@ function refusedAsVariant(owner: string, sibling: string): boolean {
       entry.path === sibling ? { ...entry, variantOf: owner } : entry,
     ),
     drawnPalette,
-  ).includes("Folio parent screen: " + sibling);
+  ).includes("parent screen in its family's palette: " + sibling);
 }
 
 /** The module that owns one current entry, as the catalogue index records it. */

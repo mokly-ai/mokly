@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
+import "../../../../styles/product/viewer-canvas-panels.css";
 import { LayerBeneath } from "../../../components/layer-beneath";
 import { Panel } from "../../../entries/design/panel.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
 import { Action } from "../page-parts";
 
-import type { AccountLabel } from "./chrome";
+import type { AccountLabel } from "./account-trigger";
 import { ViewerChrome } from "./chrome";
 import type { PublishedSubject } from "./published-slots";
 
@@ -34,7 +35,7 @@ type ViewerScreenProps = {
   id: string;
   state: ScreenState;
   viewport: Viewport;
-  /** Who the bar calls the reader, when it is not their own display name. */
+  /** Who the bar calls the reader, when it is not Cal. */
   account?: AccountLabel;
   workspace?: string;
   project?: string;
@@ -138,11 +139,17 @@ export function ViewerScreen({
 /**
  * A viewer entry with one of its slots open: the panel is the subject, so it
  * takes the document's main landmark and heading and the viewer beneath is
- * inert, exactly as the settings dialog is hosted.
+ * inert, exactly as the settings dialog is hosted. The panel owns the
+ * screen's one filled action, so the bar's Share beneath it keeps the
+ * secondary tone.
  *
  * There is no skip link. Everything before the panel is the inert backdrop, so
  * there is nothing between the start of the document and the main landmark for
  * a reader to skip; the panel is already the first thing they reach.
+ *
+ * A panel led by its search draws the field in the bar in place of the
+ * visible title, as the switcher does. The title stays the document's
+ * heading for assistive technology, visually hidden.
  */
 export function ViewerPanelScreen({
   id,
@@ -152,6 +159,7 @@ export function ViewerPanelScreen({
   subtitle,
   close,
   screen,
+  search,
   children,
 }: {
   id: string;
@@ -162,6 +170,8 @@ export function ViewerPanelScreen({
   close: string;
   /** An entry drawing one of the panel's own situations names itself. */
   screen?: string;
+  /** The search that leads the panel, in the bar in place of the title. */
+  search?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -170,19 +180,34 @@ export function ViewerPanelScreen({
       data-mkc-screen={screen ?? stateScreenPath(id, state)}
     >
       <LayerBeneath className="fo-viewer-backdrop">
-        <ViewerChrome viewport={viewport} published />
+        <ViewerChrome viewport={viewport} published layered />
       </LayerBeneath>
-      <div id="main" role="main" className="fo-viewer-surface">
+      <div
+        id="main"
+        role="main"
+        className={
+          search === undefined
+            ? "fo-viewer-surface"
+            : "fo-viewer-surface fo-canvas-panel-searching"
+        }
+      >
         <Panel
           moklyInstance={"panel-" + id.replaceAll("/", "-")}
           label={title}
           header={
-            <>
-              <h1 className="fo-viewer-panel-title">{title}</h1>
-              {subtitle && (
-                <span className="fo-viewer-panel-subtitle">{subtitle}</span>
-              )}
-            </>
+            search === undefined ? (
+              <>
+                <h1 className="fo-viewer-panel-title">{title}</h1>
+                {subtitle && (
+                  <span className="fo-viewer-panel-subtitle">{subtitle}</span>
+                )}
+              </>
+            ) : (
+              <>
+                <h1 className="fo-sr-only">{title}</h1>
+                <div className="fo-canvas-panel-search">{search}</div>
+              </>
+            )
           }
           actions={
             <Action

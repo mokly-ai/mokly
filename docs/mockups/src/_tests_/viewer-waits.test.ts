@@ -139,8 +139,10 @@ test("the project read draws the cloud frame with its bar's controls waiting", (
     drawnPage("product/viewer/standalone/loading").main,
     "fo-top-trail",
   );
+  // History, Share and the account's avatar, whose control keeps the
+  // reader's name; Settings lives in the account menu, not in the bar.
   const trail = controlStates(loaded).map(([shown]) => shown);
-  assert.deepEqual(trail, ["History", "Share", "Settings", sample.viewer.name]);
+  assert.deepEqual(trail, ["History", "Share", sample.viewer.name]);
   // A desktop drawing draws the full bar and the compact bar for the switch
   // in `viewer.css` to show one, so its bar also holds the compact bar's More.
   for (const [viewport, known] of [
