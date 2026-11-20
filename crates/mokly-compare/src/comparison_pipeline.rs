@@ -26,6 +26,7 @@ pub(crate) struct ViewStream<'a> {
     pub(crate) consumers: &'a [Consumer<'a>],
     pub(crate) results: &'a mut [PairViews],
     pub(crate) outcome: Result<()>,
+    pub(crate) admitted_views: usize,
 }
 
 impl ViewStream<'_> {
@@ -85,6 +86,7 @@ impl ViewStream<'_> {
         });
         let consumer: &dyn ViewConsumer = recording.as_ref().map_or(original, |consumer| consumer);
         let warnings = self.results[route.pair].warnings.len();
+        let admitted = prepared.equal_document;
         consumer.consume(
             &mut self.results[route.pair],
             route.key,
@@ -92,6 +94,7 @@ impl ViewStream<'_> {
             route.after,
             *prepared,
         )?;
+        self.admitted_views += usize::from(admitted);
         if let Some(reuse) = &mut self.reuse {
             let result = &self.results[route.pair];
             if let Some(view) = result.views.last() {
