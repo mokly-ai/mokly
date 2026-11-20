@@ -1,6 +1,7 @@
 //! Linked CSS matches in its composed document, including embedded HTML and srcdoc.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::sync::Arc;
 
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_css::match_tree::MatchTree;
@@ -14,7 +15,7 @@ use crate::resource_memo::ResourceMemo;
 
 pub(crate) struct CssDocument {
     pub(crate) id: String,
-    pub(crate) tree: MatchTree,
+    pub(crate) tree: Arc<MatchTree>,
     pub(crate) stylesheets: BTreeSet<String>,
 }
 
@@ -22,7 +23,7 @@ pub(crate) fn collect(
     memo: &dyn ResourceMemo,
     side: ReviewSide,
     source: &str,
-    root: Option<&MatchTree>,
+    root: Option<&Arc<MatchTree>>,
     aliases: &BTreeMap<String, String>,
 ) -> Result<Vec<CssDocument>> {
     let Some(root) = root else {
@@ -51,11 +52,11 @@ pub(crate) fn collect(
                 continue;
             }
             if let Some(srcdoc) = element.attributes.get("srcdoc") {
-                let embedded = matching_tree::embedded(
+                let embedded = Arc::new(matching_tree::embedded(
                     &parse::html(DeliveredHtml::document(srcdoc)),
                     &element.regions,
                     &element.owner,
-                );
+                ));
                 queue.push_back((format!("{id}#srcdoc-{index}"), source.clone(), embedded));
                 continue;
             }
@@ -77,7 +78,11 @@ pub(crate) fn collect(
                 continue;
             };
             let nodes = parse::html(DeliveredHtml::document(&String::from_utf8_lossy(&bytes)));
-            let embedded = matching_tree::embedded(&nodes, &element.regions, &element.owner);
+            let embedded = Arc::new(matching_tree::embedded(
+                &nodes,
+                &element.regions,
+                &element.owner,
+            ));
             let id = aliases.get(&route).unwrap_or(&route).clone();
             queue.push_back((id, route, embedded));
         }

@@ -66,6 +66,7 @@ impl Visit for Fields {
             | "candidate_views"
             | "candidate_bytes"
             | "accepted_bytes"
+            | "admitted_views"
             | "recording_identity_reads" => {
                 let name = match field.name() {
                     "input_paths" => "inputPaths",
@@ -79,6 +80,7 @@ impl Visit for Fields {
                     "candidate_views" => "candidateViews",
                     "candidate_bytes" => "candidateBytes",
                     "accepted_bytes" => "acceptedBytes",
+                    "admitted_views" => "admittedViews",
                     "recording_identity_reads" => "recordingIdentityReads",
                     name => name,
                 };
