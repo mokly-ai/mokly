@@ -26,6 +26,9 @@ impl Runtime for CheckRuntime {
     fn now(&self) -> DateTime<Utc> {
         Utc::now() + chrono::Duration::seconds(self.offset.load(Ordering::SeqCst))
     }
+    fn monotonic(&self) -> Duration {
+        SystemRuntime.monotonic()
+    }
     fn id(&self) -> Uuid {
         Uuid::now_v7()
     }

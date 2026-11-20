@@ -1,4 +1,4 @@
-//! Sparse decoded-byte origins anchored at html5gum emission chunk ends.
+//! Sparse decoded-byte origins anchored at html5gum emission chunk boundaries.
 
 use std::mem;
 
@@ -82,6 +82,8 @@ impl Buffer {
             self.start = position;
             self.end = position;
             self.consumed_end = position;
+        } else {
+            self.end = self.end.max(position);
         }
     }
 
@@ -211,7 +213,7 @@ impl<'a> Recorder<'a> {
         self.consumed = self.consumed.max(self.position).min(self.source.len());
     }
 
-    /// Start a text value only when no prior emission is still buffered.
+    /// Record the next text chunk's source start without splitting a buffered value.
     pub(crate) fn init_string(&mut self) {
         self.text.begin(self.position);
     }
