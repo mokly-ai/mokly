@@ -6,7 +6,6 @@ use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
-use mokly_css::resolver::{ImportResolver, SourceResolver};
 use mokly_css::types::{StylesheetBundler, StylesheetRoot};
 
 use crate::leases::ContextLease;
@@ -36,12 +35,6 @@ pub(crate) fn compiler(
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
     };
-    let resolver: Arc<dyn ImportResolver> = Arc::new(SourceResolver {
-        tree: tree.clone(),
-        repo_root: config.repo_root.clone(),
-        settings: resolution.clone(),
-    });
-
     let postcss = config.postcss().map(|module| {
         Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
@@ -61,7 +54,6 @@ pub(crate) fn compiler(
             pool: runtime.pool.clone(),
             tree: tree.clone(),
             inventory_tree: runtime.inventory_tree.clone(),
-            resolver: resolver.clone(),
             root: config.repo_root.clone(),
             side: side.clone(),
             module,

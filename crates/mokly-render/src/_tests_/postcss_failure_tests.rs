@@ -15,8 +15,6 @@ use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::postcss_failure::PostcssFailure;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::postcss::PostCss;
-
 use super::postcss_support::{DEADLINE, css, processor};
 
 #[test]
@@ -35,7 +33,8 @@ fn a_failed_input_fails_again_for_its_context_without_another_request() {
             .each_call(matching!("context"))
             .returns(()),
     )));
-    let processor = processor(pool, Arc::new(Unimock::new(())));
+    let shared = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
+    let processor = shared.for_root(shared.tree.clone(), Arc::new(Unimock::new(())));
     let first = processor
         .process("a.css", ".a {}", &BTreeSet::new())
         .unwrap_err();
@@ -46,7 +45,7 @@ fn a_failed_input_fails_again_for_its_context_without_another_request() {
     assert_eq!(first.to_string(), second.to_string());
 }
 
-fn process(processor: &PostCss, path: &str) -> mokly_css::error::Result<String> {
+fn process(processor: &dyn CssProcessor, path: &str) -> mokly_css::error::Result<String> {
     processor
         .process(path, ".a {}", &BTreeSet::new())
         .map(|processed| processed.text)
@@ -84,11 +83,12 @@ fn waiting_requests_receive_a_lost_child_and_a_later_request_starts_again() {
             .returns(()),
     )));
     let processor = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
-    let first = processor.clone();
-    let lost = thread::spawn(move || process(&first, "a.css").unwrap_err().to_string());
+    let root = processor.for_root(processor.tree.clone(), Arc::new(Unimock::new(())));
+    let first = root.clone();
+    let lost = thread::spawn(move || process(first.as_ref(), "a.css").unwrap_err().to_string());
     called.recv_timeout(DEADLINE).unwrap();
-    let second = processor.clone();
-    let waiting = thread::spawn(move || process(&second, "b.css").unwrap_err().to_string());
+    let second = root.clone();
+    let waiting = thread::spawn(move || process(second.as_ref(), "b.css").unwrap_err().to_string());
     let deadline = Instant::now() + DEADLINE;
     while processor.turns.tickets.load(Ordering::SeqCst) < 2 {
         assert!(
@@ -101,6 +101,6 @@ fn waiting_requests_receive_a_lost_child_and_a_later_request_starts_again() {
     let lost = lost.join().unwrap();
     assert!(lost.contains("exceeded 60000ms"), "{lost}");
     assert_eq!(waiting.join().unwrap(), lost);
-    assert_eq!(process(&processor, "b.css").unwrap(), "a{}");
+    assert_eq!(process(root.as_ref(), "b.css").unwrap(), "a{}");
     assert_eq!(*requests.lock().unwrap(), ["a.css", "b.css"]);
 }
