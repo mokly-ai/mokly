@@ -67,10 +67,8 @@ function navLink(
     key: node.key,
     kind: node.entryKind,
     label,
-    removed: node.removed === true,
-    removedPage:
-      node.removed === true &&
-      (node.entryKind === "page" || node.entryKind === "document"),
+    removed: node.key.startsWith("removed:"),
+    removedPage: node.removedPage === true,
     removedVariant: node.removedVariant === true,
     route: entryRoute(node.entryId),
     tags: node.tags ?? [],
@@ -137,9 +135,9 @@ export function navLeaf(
 
 /**
  * Whether an entry's list holds a row that the selected filter can show,
- * before search narrows it. All lists no removed row, so a current entry
- * whose variants or members are all removed has no list there. Changes
- * keeps every list, so a parent with only removed variants still opens one.
+ * before search narrows it. All lists no removed row, so a current parent
+ * whose variants are all removed has no list there. Changes keeps every
+ * list, so that parent still opens one.
  */
 function listShows(
   node: NavLeafNode,

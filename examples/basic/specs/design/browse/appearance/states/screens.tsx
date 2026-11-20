@@ -108,21 +108,10 @@ function LightOnlyCurrentDocument({
   );
 }
 
-/**
- * The one Changes row of a branch that removed the Payment terms document. It
- * stands in its old Account and Billing folders.
- */
+/** The one Changes row of a branch that removed the Payment terms document. */
 const REMOVED_PAYMENT_TERMS: readonly NavNode[] = [
-  { depth: 0, key: "account", kind: "folder", label: "Account", open: true },
   {
-    depth: 1,
-    key: "billing",
-    kind: "folder",
-    label: "Billing & Payments",
-    open: true,
-  },
-  {
-    depth: 2,
+    depth: 0,
     key: "payment-terms",
     kind: "document",
     label: "Payment terms · Removed",

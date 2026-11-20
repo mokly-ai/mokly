@@ -81,13 +81,9 @@ test("removed pages and screens appear only in Changes", () => {
   const removedPage = {
     ...glossary,
     key: `removed:${glossary.entryId}`,
-    removed: true as const,
+    removedPage: true,
   };
-  const removedScreen = {
-    ...details,
-    key: `removed:${details.entryId}`,
-    removed: true as const,
-  };
+  const removedScreen = { ...details, key: `removed:${details.entryId}` };
   const changes = { ...defaultSelection, view: "changes" as const };
   for (const row of [removedPage, removedScreen]) {
     assert.equal(navLeafVisible(row, defaultSelection, context), false);
@@ -165,7 +161,6 @@ test("a removed variant is hidden in All and visible in Changes", () => {
   const removed = {
     ...leaf("welcome-legacy", "welcome-legacy/index.html", "Legacy · Removed"),
     key: "removed:welcome-legacy",
-    removed: true as const,
     removedVariant: true,
   };
   const context = navigationContext([removed.entryId]);
@@ -261,7 +256,6 @@ function group(label: string, children: NavLeafNode[]): NavGroupNode {
     key: `folder:${label.toLowerCase()}`,
     kind: "group",
     label,
-    path: label.toLowerCase(),
   };
 }
 

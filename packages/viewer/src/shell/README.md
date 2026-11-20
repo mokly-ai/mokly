@@ -77,15 +77,12 @@ component as that entry's row, whose container holds the variants and then
 the folder's other members. A deleted variant joins the container of the
 current parent the lookup resolves, including a moved or case-renamed parent,
 as a Removed row. `nav_removed_variants.ts` records actual attachment before
-it leaves the row to placement, so a former parent that is now a variant or
-another kind cannot make its historical child disappear and every removed
-entry remains represented once. `nav_removed_rows.ts` places every other
-removed row at its base path: in the deepest folder or entry row that the
-section still shows, after the current rows, with a recreated folder for each
-deleted one and each removed parent's removed variants under it. Only Changes
-shows removed rows; All and search hide them. Current section nodes use the
-shared folder-first comparator. Removed rows keep `removedEntries` order inside
-each container, under the
+removing the row from flat fallback, so a former parent that is now a variant
+or another kind cannot make its historical child disappear and every removed
+entry remains represented once. A removed page or document is a flat row.
+Only Changes shows removed rows of any kind; All and search hide them. Current section nodes use the
+shared folder-first comparator. Flat removed rows keep `removedEntries` order,
+with each removed parent's variants directly after it, under the
 [serialization contract](../../../../docs/protocol/mokly-catalogue-serialization.md#canonical-bytes).
 Specs and Components keep independent section roots even when they reuse the
 same folder paths. `filterHierarchy` orders each section again by the rows it

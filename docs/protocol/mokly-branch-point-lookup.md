@@ -89,7 +89,7 @@ A parent result distinguishes a current parent from a removed parent. If no
 eligible parent exists, a removed variant uses its stored `parentTitle` as
 plain text, with no link or workspace identity. A non-variant has no parent.
 The [variant navigation contract](./mokly-variant-navigation.md#changes-rows)
-owns row attachment, fallback rows and breadcrumb presentation.
+owns row attachment, flat fallback and breadcrumb presentation.
 
 The removal snapshot captures `parentTitle` from the validated base
 parent before any current path reuse or removal selection. Every removed

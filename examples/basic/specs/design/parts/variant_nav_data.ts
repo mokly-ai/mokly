@@ -70,15 +70,11 @@ export const REMOVED_VARIANT_ROWS: NavigationRows = [
   },
 ];
 
-/**
- * Changes shows only the removed route when its former parent is unmodified.
- * The route stays in Screens, because its former parent is now a variant.
- */
+/** Changes shows only the removed route when its former parent is unmodified. */
 export const REPARENTED_REMOVED_VARIANT_ROWS: NavigationRows = [
-  ...WELCOME_BRANCH,
   {
     key: "welcome-error-removed",
-    depth: 2,
+    depth: 0,
     kind: "screen",
     label: "Save failed · Removed",
   },

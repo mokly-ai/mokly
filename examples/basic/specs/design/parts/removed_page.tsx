@@ -21,8 +21,8 @@ interface RemovedDocument {
 }
 
 /**
- * The deleted Handbook folder. Changes shows it again under its old title,
- * inside Example, and lists its removed documents in it.
+ * The deleted Handbook folder. Changes lists its documents flat, because
+ * the folder that held them is no longer in the catalogue.
  */
 export const REMOVED_DOCUMENTS = {
   handbook: {
@@ -53,17 +53,13 @@ export const REMOVED_DOCUMENTS = {
 
 const documents = Object.entries(REMOVED_DOCUMENTS);
 
-const removedNodes: readonly NavNode[] = [
-  { depth: 0, key: "example", kind: "folder", label: "Example", open: true },
-  { depth: 1, key: "handbook", kind: "folder", label: "Handbook", open: true },
-  ...documents.map(([key, entry]) => ({
-    depth: 2,
-    key,
-    kind: "page" as const,
-    label: `${entry.title} · Removed`,
-    to: entry.design,
-  })),
-];
+const removedNodes: readonly NavNode[] = documents.map(([key, entry]) => ({
+  depth: 0,
+  key,
+  kind: "page" as const,
+  label: `${entry.title} · Removed`,
+  to: entry.design,
+}));
 
 function RemovedDetails({ entry }: { entry: RemovedDocument }) {
   const navigation = useDesignNavigation();
@@ -88,7 +84,7 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
 }
 
 /**
- * A removed document keeps its Changes row in its old folder, its Removed badge, and the
+ * A removed document keeps its flat Changes row, its Removed badge, and the
  * baseline path of the folder that was deleted with it. `document`
  * holds the previous version; a state stage replaces it while the previous
  * version is unavailable. Both stand below the previous version's band.

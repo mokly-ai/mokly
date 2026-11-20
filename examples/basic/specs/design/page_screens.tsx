@@ -132,7 +132,7 @@ export const removedScreen = defineScreen({
   slug: "removed",
   title: "Removed document",
   description:
-    "A removed document opens its previous version, keeping its Changes row in its old folder and its baseline ancestry.",
+    "A removed document opens its previous version, keeping its flat Changes row and baseline ancestry.",
   rationale:
     "Deleting a document should not hide what it said. The previous version is the only readable copy left, so the stage shows it read-only under a quiet label instead of an empty state, while the Removed badge and the ancestry of the deleted parent stay in place.",
   colorSchemes: ["light"],

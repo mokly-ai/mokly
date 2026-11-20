@@ -10,7 +10,6 @@ import type {
   HierarchyNode,
 } from "../registry/hierarchy.js";
 
-import { placeRemovedRows } from "./nav_removed_rows.js";
 import {
   adoptedVariants,
   attachRemovedVariants,
@@ -19,28 +18,27 @@ import {
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
   hidden?: true;
-  /** A retained baseline entry: a removed row, which only Changes lists. */
-  removed?: true;
   entryId: string;
   /**
    * The folder's own page, listed as the folder's first child row. Its label
    * is `Overview` when its title is also the folder's title.
    */
   index?: true;
-  /** A retained baseline variant placed under its current or removed parent. */
+  /**
+   * A retained baseline page or document: a flat Changes row. Like every
+   * removed row, All and search hide it.
+   */
+  removedPage?: boolean;
+  /**
+   * A retained baseline variant placed under its surviving parent. Like every
+   * removed row it is a Changes row: All hides it, Changes shows it.
+   */
   removedVariant?: boolean;
   /**
    * Entry id of the current parent a retained baseline variant attaches to,
    * as the branch-point lookup resolved it from the variant's baseline parent.
    */
   parentId?: string;
-  /** Entry id of the removed parent a retained baseline variant attaches to. */
-  removedParentId?: string;
-  /**
-   * Branch-point titles of the folders at or above a removed row's path,
-   * outermost first, used to name a former folder the section no longer has.
-   */
-  formerFolderTitles?: readonly string[];
   /** The branch-point path of an entry a move paired; Changes labels it Moved. */
   movedFrom?: string;
   entryKind: "component" | "document" | "screen" | "use-case" | "page";
@@ -78,8 +76,6 @@ export interface NavGroupNode {
   key: string;
   kind: "group";
   label: string;
-  /** The folder's catalogue path. */
-  path: string;
 }
 
 /** One rendered navigation node. */
@@ -131,16 +127,15 @@ export function buildNavSections(
       attached,
     ),
   };
-  const placed = additionalLeaves.filter((leaf) => !attached.has(leaf));
+  const flat = additionalLeaves.filter((leaf) => !attached.has(leaf));
   return (["specs", "components"] as const).flatMap((id) => {
-    const children = placeRemovedRows(
-      tree[id],
-      placed.filter((leaf) =>
-        id === "components"
-          ? leaf.entryKind === "component"
-          : leaf.entryKind !== "component",
-      ),
+    const current = tree[id];
+    const additional = flat.filter((leaf) =>
+      id === "components"
+        ? leaf.entryKind === "component"
+        : leaf.entryKind !== "component",
     );
+    const children = [...current, ...additional];
     if (children.length === 0) return [];
     return [
       id === "specs"
@@ -234,6 +229,5 @@ function structuredNode(
     key: `folder:${node.key}`,
     kind: "group",
     label: node.label,
-    path: node.key,
   };
 }

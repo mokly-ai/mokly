@@ -1,7 +1,7 @@
 /**
  * Removed-variant attachment: each retained baseline variant joins the list of
  * the current parent the branch-point lookup resolved for it, after the
- * current variants. A row that cannot attach stands at its branch-point path.
+ * current variants. A row that cannot attach stays a flat removed row.
  */
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
@@ -11,7 +11,7 @@ import type { NavLeafNode, NavNode } from "./nav_tree.js";
 
 /**
  * Retained baseline variants grouped by the surviving same-kind parent the
- * lookup resolved for them. An ineligible variant stands at its own path.
+ * lookup resolved for them. An ineligible variant keeps its flat removed row.
  */
 export function adoptedVariants(
   hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
@@ -33,8 +33,8 @@ export function adoptedVariants(
 
 /**
  * Append each adopted variant to its parent's list, after the current ones.
- * Adoption is what places the row under its parent, so the variant flag is
- * written here rather than guessed again by whoever supplied the leaf.
+ * Adoption is what makes the row a Changes row, so the flag is written here
+ * rather than guessed again by whoever supplied the leaf.
  */
 export function attachRemovedVariants(
   nodes: readonly NavNode[],
