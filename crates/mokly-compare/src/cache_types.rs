@@ -19,6 +19,8 @@ pub enum Kind {
     Dependencies,
     /// Latest complete compiled JavaScript recipes.
     Bundles,
+    /// Complete rendered document segments.
+    Renders,
 }
 
 impl Kind {
@@ -27,6 +29,7 @@ impl Kind {
             Self::Sources => "sources",
             Self::Dependencies => "dependencies",
             Self::Bundles => "bundles",
+            Self::Renders => "renders",
         }
     }
 }
@@ -82,6 +85,8 @@ pub trait Cache: Send + Sync {
 /// Filesystem boundary of cache orchestration and install size supervision.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StorageMock))]
 pub trait Storage: Send + Sync {
+    /// Advance the render kind access counter without a namespace inventory.
+    fn render_sequence(&self, namespace: &Path, floor: u64) -> Result<Option<u64>>;
     /// Read only the bounded bundle receipt without opening payload data.
     fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead>;
     /// Inspect one bundle receipt and open its confined data file.

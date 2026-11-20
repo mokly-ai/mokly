@@ -79,6 +79,7 @@ impl Session {
             for path in view.closure {
                 self.state.inputs.closures.record(key, &path);
             }
+            self.offer_document(&route);
         }
         Ok(summary)
     }

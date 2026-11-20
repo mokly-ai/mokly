@@ -25,7 +25,7 @@ pub struct Bindings {
 }
 
 /// A slot value belongs either to the core or to the loaded generation.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum SlotInput {
     /// HTML content that the core will graft at the returned placeholder.

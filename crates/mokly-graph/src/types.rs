@@ -103,7 +103,7 @@ pub trait RenderGeneration: GeneratedResources {
     fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
-    /// List document routes whose prepared keys are absent from every cache tier.
+    /// List routes absent from cache tiers and the prepared store, without restoration.
     fn uncached_documents(&self) -> Vec<String> {
         Vec::new()
     }

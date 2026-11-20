@@ -55,3 +55,19 @@ mod prefetch_tests;
 #[cfg(test)]
 #[path = "_tests_/prefetch_eviction_tests.rs"]
 mod prefetch_eviction_tests;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_session_tests.rs"]
+mod persistent_session_tests;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_resource_tests.rs"]
+mod persistent_resource_tests;
+
+#[cfg(test)]
+#[path = "_tests_/persistent_identity_tests.rs"]
+mod persistent_identity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/prefetch_persistence_tests.rs"]
+mod prefetch_persistence_tests;

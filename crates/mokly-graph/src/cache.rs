@@ -8,6 +8,7 @@ use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
 
 use crate::cache_encoding::{DocumentEncoder, Encoder};
+use crate::cache_export::{CacheOperation, EncodedConsumer};
 use crate::cache_state::State;
 use crate::cache_transit::Transit;
 use crate::document_codec::EncodedView;
@@ -70,12 +71,20 @@ pub trait RenderCache: Send + Sync {
     fn insert(&self, key: NodeKey, value: Arc<Artifact>);
     /// Observe charged bytes and operation counts.
     fn stats(&self) -> CacheStats;
+    /// Borrow an encoded document under headroom without changing cache access order.
+    fn with_encoded(&self, _key: &NodeKey, _consumer: &mut dyn EncodedConsumer) -> bool {
+        false
+    }
+    /// Run fixed writer scratch work within existing transit headroom.
+    fn with_workspace(&self, _bytes: usize, _operation: &mut dyn CacheOperation) -> bool {
+        false
+    }
 }
 
 /// Bounded full artifacts and compact documents, each with its own LRU order.
 pub struct MemoryCache {
-    encoder: Arc<dyn Encoder>,
-    state: Mutex<State>,
+    pub(crate) encoder: Arc<dyn Encoder>,
+    pub(crate) state: Mutex<State>,
 }
 
 impl MemoryCache {
@@ -208,7 +217,8 @@ impl RenderCache for MemoryCache {
                 .bytes
                 .saturating_add(state.compact.bytes)
                 .saturating_add(state.transit.bytes)
-                .saturating_add(state.encoders.bytes),
+                .saturating_add(state.encoders.bytes)
+                .saturating_add(state.exporting),
             entries: state
                 .full
                 .len()
@@ -216,6 +226,14 @@ impl RenderCache for MemoryCache {
                 .saturating_add(state.transit.len()),
             ..state.stats
         }
+    }
+
+    fn with_encoded(&self, key: &NodeKey, consumer: &mut dyn EncodedConsumer) -> bool {
+        self.export(key, consumer)
+    }
+
+    fn with_workspace(&self, bytes: usize, operation: &mut dyn CacheOperation) -> bool {
+        self.workspace(bytes, operation)
     }
 }
 
@@ -257,3 +275,7 @@ mod cache_reinsert_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_probe_tests.rs"]
 mod cache_probe_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_export_tests.rs"]
+mod cache_export_tests;

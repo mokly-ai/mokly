@@ -16,7 +16,7 @@ use mokly_model::usage::CatalogueUsage;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::cache::RenderCacheMock;
+use crate::cache::{RenderCache, RenderCacheMock};
 use crate::collection::ComparisonCollectorMock;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::graph::Graph;
@@ -66,6 +66,14 @@ pub(super) fn warm(probe: &Probe) {
 }
 
 pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>) -> Probe {
+    probe_with_cache(count, closures, None)
+}
+
+pub(super) fn probe_with_cache(
+    count: usize,
+    closures: Arc<dyn ClosureInputs>,
+    cache: Option<Arc<dyn RenderCache>>,
+) -> Probe {
     let renders = Arc::new(Mutex::new(Vec::new()));
     let recorded = renders.clone();
     let options = Arc::new(Mutex::new(Options::default()));
@@ -93,8 +101,6 @@ pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>
                 usage: CatalogueUsage::Unavailable, warnings: vec![warning(path)], resources: vec![], components: vec![], links: vec![],
             })
         })),
-        RenderCacheMock::get.each_call(matching!(_)).returns(None),
-        RenderCacheMock::insert.each_call(matching!(_, _)).returns(()),
     )));
     let graph = Graph {
         inputs: DeliveryInputs {
@@ -105,7 +111,14 @@ pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>
         tree: mock.clone(),
         composer: mock.clone(),
         stylesheets: mock.clone(),
-        cache: mock.clone(),
+        cache: cache.unwrap_or_else(|| {
+            Arc::new(Unimock::new((
+                RenderCacheMock::get.each_call(matching!(_)).returns(None),
+                RenderCacheMock::insert
+                    .each_call(matching!(_, _))
+                    .returns(()),
+            )))
+        }),
         workers: mock.clone(),
         version: "test".into(),
     };

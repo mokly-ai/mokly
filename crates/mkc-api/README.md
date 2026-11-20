@@ -190,8 +190,8 @@ The binary has twelve commands. `serve` applies pending migrations and listens
 on `MKC_BIND`. `migrate` applies them and exits. `openapi` prints the complete
 OpenAPI 3.1 document as pretty JSON with a trailing newline; it needs no
 serving configuration and writes no log lines. `prune` deletes retained
-expired authentication records and logs the committed counts; a second
-transaction removes up to 1,000 finished builds after
+expired authentication records in bounded batches and logs the committed
+counts; one more transaction then removes up to 1,000 finished builds after
 `MKC_BUILD_RETENTION_SECONDS` (default thirty days). `prune-github` deletes
 OAuth flow hashes after `MKC_GITHUB_OAUTH_RETENTION_SECONDS` (default one day
 after expiry) and terminal webhook deliveries after
@@ -336,7 +336,7 @@ test checks the running build without a sleep. Then `build_exchange.rs`
 uploads the released fixture through the running API's plan, blob and
 completion routes with the build's upload token. The `serve` command has no
 setting or test detection that selects the fake runner. The
-[App guide](../../apps/app/README.md#cloud-builds) describes the browser side.
+[App guide](../../apps/app/cloud-builds.md) describes the browser side.
 
 ### Key Code
 

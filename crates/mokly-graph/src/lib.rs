@@ -2,6 +2,8 @@
 #![warn(unreachable_pub)]
 
 pub mod cache;
+pub mod cache_export;
+
 mod cache_encoder_pool;
 mod cache_encoding;
 mod cache_state;
@@ -23,7 +25,10 @@ pub mod document_error;
 mod document_identity;
 mod document_metadata;
 mod document_nodes;
+mod document_persistence;
 mod document_records;
+pub mod document_store;
+mod document_store_metadata;
 mod document_usage;
 mod document_weight;
 mod document_writer;
@@ -111,10 +116,17 @@ mod reference_tests;
 pub mod asset_delivery;
 
 mod collection_jobs;
+mod document_capacity;
+mod document_export;
+mod document_node_capacity;
+pub mod export_memory;
 mod prefetch_state;
 mod session_collection;
+mod session_persistence;
 mod session_prefetch;
+pub mod store_memory;
 mod validation_summary;
+pub mod write_activity;
 
 #[cfg(test)]
 #[path = "_tests_/style_memo_tests.rs"]

@@ -1,0 +1,134 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
+
+import type { PathSettings } from "./config-inputs.js";
+import { missingFile } from "./file-digests.js";
+import { folderRowBytes } from "./folder-candidates.js";
+import { markedFileEvidence } from "./marked-file-evidence.js";
+import type { SelectedImport } from "./metafile-edges.js";
+import type { ModulePaths } from "./module-paths.js";
+import { PackageFolders } from "./package-folders.js";
+import { packageFolderFiles } from "./package-map.js";
+import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
+import { PhysicalInputs } from "./physical-inputs.js";
+import { pnpFiles } from "./pnp-files.js";
+import { PnpLocations } from "./pnp-locations.js";
+import type { LookupRequest } from "./resolution-request.js";
+
+function link(file: string): boolean {
+  try {
+    return (
+      fs.lstatSync(file, { throwIfNoEntry: false })?.isSymbolicLink() ?? false
+    );
+  } catch (error) {
+    if (!missingFile(error)) throw error;
+    return false;
+  }
+}
+
+function brokenLink(file: string): boolean {
+  if (!link(file)) return false;
+  try {
+    return fs.statSync(file, { throwIfNoEntry: false }) === undefined;
+  } catch (error) {
+    if (!missingFile(error)) throw error;
+    return true;
+  }
+}
+
+/** Stage the shared candidates only for imports selected through a package folder map. */
+export class PackageFolderLookups {
+  private readonly inputs = new PhysicalInputs();
+
+  private readonly folders: PackageFolders;
+  private readonly directories = new Set<string>();
+  private readonly files = new Set<string>();
+  private bytes = 0;
+  private folder = false;
+
+  constructor(
+    private readonly paths: ModulePaths,
+    private readonly configuration: string,
+    cachedScope: (directory: string) => PathSettings | undefined,
+  ) {
+    this.folders = new PackageFolders(
+      this.inputs,
+      paths,
+      new PnpLocations(this.inputs, configuration, paths),
+      undefined,
+      true,
+      false,
+      cachedScope,
+    );
+  }
+
+  private stage(set: Set<string>, file: string): void {
+    if (set.has(file)) return;
+    if (!this.directories.has(file) && !this.files.has(file)) {
+      this.bytes += folderRowBytes(file);
+      if (this.bytes > EVIDENCE_LIMIT)
+        throw new Error("package folder lookup limit");
+    }
+    if (set === this.directories) this.paths.name(file);
+    set.add(file);
+  }
+
+  accept(request: LookupRequest, selection: SelectedImport): boolean {
+    try {
+      const found = this.folders.lookup(
+        request.name,
+        request.directory,
+        selection.kind === "physical" ? selection.file : undefined,
+      );
+      if (found && (!found.placed || found.candidates?.overflow)) return false;
+      if (!found?.candidates?.present) return true;
+      this.folder = true;
+      for (const base of found.candidates.values) {
+        this.stage(this.directories, path.dirname(base));
+        this.stage(this.directories, base);
+        this.stage(this.files, path.join(base, "package.json"));
+        for (const file of packageFolderFiles(
+          base,
+          this.paths.settings.resolveExtensions,
+        ))
+          if (brokenLink(file)) {
+            const seen = new Set([file]);
+            let target = file;
+            do {
+              target = path.resolve(
+                path.dirname(target),
+                fs.readlinkSync(target),
+              );
+              if (seen.has(target)) throw new Error("candidate link cycle");
+              seen.add(target);
+              if (!link(target)) this.stage(this.files, target);
+            } while (link(target));
+          }
+      }
+      for (const manifest of found.manifests) this.stage(this.files, manifest);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  finish(): ReuseEvidence | undefined {
+    try {
+      if (this.folder || this.folders.registry)
+        for (const { file } of pnpFiles(this.configuration)) {
+          this.inputs.file(file);
+          this.stage(this.files, file);
+        }
+      if (!this.inputs.complete) return undefined;
+    } catch {
+      return undefined;
+    }
+    const evidence = markedFileEvidence(this.inputs, this.files);
+    if (!evidence) return undefined;
+    for (const directory of this.directories)
+      this.paths.lookupDirectories.add(directory);
+    return evidence;
+  }
+}

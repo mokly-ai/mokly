@@ -1,5 +1,6 @@
 //! Construct one generation while retaining its resource leases and prepared evidence.
 
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
 use crate::graph::Graph;
@@ -26,6 +27,7 @@ impl Session {
         Self {
             state: Arc::new(State {
                 prefetch: Mutex::new(None),
+                fresh: Mutex::new(BTreeMap::new()),
                 anchor_flights: Arc::new(MemoryRequests::default()),
                 link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
                 link_index,

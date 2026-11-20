@@ -1,8 +1,10 @@
 //! Serve sidecar admission groups foreground requests before queued base work.
 
+use std::path::Path;
 use std::sync::{Arc, Weak};
 
 use mokly_graph::render_class::RenderClass;
+use mokly_graph::write_activity::WriteActivity;
 
 use mokly_server::changes::ChangeCancellation;
 use mokly_server::changes_signal::ChangeSignal;
@@ -61,6 +63,16 @@ impl ServePool {
             .unwrap_or_else(|error| error.into_inner()) = Some(diagnostics);
         self
     }
+
+    /// Suppress optional writes while calls or existing maintenance remain active.
+    pub(super) fn with_activity(self, activity: Arc<dyn WriteActivity>) -> Self {
+        *self
+            .gate
+            .activity
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) = Some(activity);
+        self
+    }
 }
 
 impl Foreground for ServePool {
@@ -99,6 +111,9 @@ struct ScheduledPool {
 }
 
 impl SidecarPool for ScheduledPool {
+    fn record_served_render(&self, source_root: &Path, call: Call) {
+        self.inner.record_served_render(source_root, call);
+    }
     fn served_generation(&self, generation: &str, epoch: u64) {
         self.inner.served_generation(generation, epoch);
     }
@@ -112,6 +127,7 @@ impl SidecarPool for ScheduledPool {
         self.inner.observe_head_return(wake);
     }
     fn request(&self, call: Call) -> Result<MethodResult> {
+        let _activity = self.gate.activity();
         let _foreground = self.base.is_none().then(|| self.gate.foreground());
         let admission = self
             .gate
@@ -185,3 +201,7 @@ mod serve_claim_failure_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_claim_retirement_tests.rs"]
 mod serve_claim_retirement_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_warmup_activity_tests.rs"]
+mod serve_warmup_activity_tests;

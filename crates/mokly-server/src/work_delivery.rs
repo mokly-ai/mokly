@@ -15,6 +15,7 @@ impl Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Option<File>> {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return Ok(None);
@@ -27,6 +28,7 @@ impl Workers {
         }
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             parent.in_scope(|| {
                 let _guard = guard;
                 let _permit = permit;
@@ -45,6 +47,7 @@ impl Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> AssetResult {
+        let activity = self.activity.as_ref().map(|activity| activity.enter());
         let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return Ok(None);
@@ -58,6 +61,7 @@ impl Workers {
         }
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
+            let _activity = activity;
             parent.in_scope(|| {
                 let _guard = guard;
                 let _permit = permit;

@@ -46,7 +46,33 @@ export function timings(stderr: string): Timing[] {
     assert.equal(typeof record.stage, "string");
     assert.equal(typeof record.id, "number");
     assert.ok(Number.isFinite(record.elapsedMs));
-    assert.ok(["start", "end", "counts"].includes(record.event));
+    if (record.event === "state") {
+      assert.equal(record.stage, "render.store");
+      assert.equal(record.role, "core");
+      assert.equal(record.parentId, undefined);
+      const fields = new Map<string, unknown>(Object.entries(record));
+      for (const name of [
+        "sequence",
+        "queued",
+        "active",
+        "hits",
+        "misses",
+        "faults",
+        "writes",
+        "bytes",
+        "drops",
+      ]) {
+        const value = fields.get(name);
+        assert.ok(
+          typeof value === "number" &&
+            Number.isSafeInteger(value) &&
+            value >= 0,
+          `${name} must be a nonnegative safe integer`,
+        );
+      }
+    } else {
+      assert.ok(["start", "end", "counts"].includes(record.event));
+    }
     if (record.parentId !== undefined)
       assert.equal(typeof record.parentId, "number");
     if (record.event === "end") {

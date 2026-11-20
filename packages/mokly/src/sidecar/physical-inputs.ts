@@ -3,36 +3,32 @@ import path from "node:path";
 import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
-import { jsonObject, parseJson } from "./config-json.js";
-import {
-  EVIDENCE_LIMIT,
-  PhysicalInputReader,
-} from "./physical-input-reader.js";
-import type {
-  CapturedMetadata,
-  FilePathProbe,
-} from "./physical-input-reader.js";
+import { MetadataInputs } from "./metadata-inputs.js";
+import type { PackageJson } from "./package-json.js";
+import { EVIDENCE_LIMIT, currentEvidence } from "./physical-input-reader.js";
+import type { CapturedMetadata } from "./physical-input-reader.js";
+import { PhysicalPathInputs } from "./physical-path-inputs.js";
 
 /** Filesystem observations, metadata parsing, request retention, and every byte bound have one owner. */
-export class PhysicalInputs extends PhysicalInputReader {
+export class PhysicalInputs extends PhysicalPathInputs {
   readonly inputs = new Map<string, PhysicalInput>();
-  readonly identityInputs = new Map<string, string>();
+  readonly identityInputs = new Map<string, string | null>();
   private bytes = Buffer.byteLength(
     JSON.stringify({ complete: false, durable: false, inputs: {} }),
   );
-  private linkBytes = 0;
   private requestBytes = 0;
   private pending = Promise.resolve();
   private readonly requests = new Map<string, Promise<void>>();
   private readonly directories = new Set<string>();
   private readonly files = new Map<string, CapturedMetadata>();
-  private readonly jsonFiles = new Map<string, Record<string, unknown>>();
+  private readonly observedFiles = new Set<string>();
+  private readonly metadata = new MetadataInputs(this);
 
   get usage() {
     return {
       evidenceBytes: this.bytes,
       metadataBytes: this.metadataBytes,
-      visitedPathBytes: this.linkBytes + (this.durability?.bytes ?? 0),
+      visitedPathBytes: this.visitedPathBytes,
       requestBytes: this.requestBytes,
     };
   }
@@ -69,7 +65,7 @@ export class PhysicalInputs extends PhysicalInputReader {
     return result;
   }
 
-  private save(file: string, value: PhysicalInput): void {
+  protected override save(file: string, value: PhysicalInput): void {
     const previous = this.inputs.get(file);
     if (
       !this.complete ||
@@ -88,63 +84,30 @@ export class PhysicalInputs extends PhysicalInputReader {
     this.inputs.set(file, value);
   }
 
-  /** Exact resolution needs the canonical file path; source owners check its content. */
-  exactFile(file: string): boolean {
-    return this.canonicalFile(file) !== undefined && this.complete;
-  }
-
-  /** Configuration settings anchor at the canonical file while retaining written links. */
-  canonicalFile(file: string): string | undefined {
-    const value = this.capturePath(file);
-    return value?.kind === "file" ? value.path : undefined;
-  }
-
-  /** Optional selection observes absence and regular-file paths without reading bodies. */
-  optionalFile(file: string): boolean | undefined {
-    const value = this.capturePath(file);
-    if (!value || !this.complete) return undefined;
-    if (value.kind === "other") {
-      this.complete = false;
-      return undefined;
-    }
-    return value.kind === "file";
-  }
-
-  private capturePath(file: string): FilePathProbe | undefined {
-    if (!this.complete) return undefined;
-    try {
-      this.pathLinks(file);
-      if (!this.complete) return undefined;
-      const value = this.readFilePath(file, this.pathKinds.get(file));
-      if (value.kind === "file") this.save(value.path, { kind: "filePath" });
-      if (value.kind === "absent") this.save(file, value);
-      return value;
-    } catch {
-      this.complete = false;
-      return undefined;
-    }
-  }
-
   file(file: string, identity = false): PhysicalInput | undefined {
     const value = this.captureFile(file)?.input;
-    if (identity && value?.kind === "file")
-      this.identityInputs.set(file, value.digest);
+    if (identity && (value?.kind === "file" || value?.kind === "absent"))
+      this.identityInputs.set(
+        file,
+        value.kind === "file" ? value.digest : null,
+      );
     return value;
   }
 
   private captureFile(file: string): CapturedMetadata | undefined {
     if (!this.complete) return undefined;
     const existing = this.files.get(file);
-    if (existing) return existing;
+    if (existing && this.observedFiles.has(file)) return existing;
     try {
       this.pathLinks(file);
       if (!this.complete) return undefined;
-      const value = this.readMetadata(file, this.pathKinds.get(file));
+      const value = this.inspectMetadata(file);
+      if (!value) return undefined;
       this.save(
         value.input.kind === "absent" ? file : this.realPath(file),
         value.input,
       );
-      this.files.set(file, value);
+      this.observedFiles.add(file);
       return value;
     } catch {
       this.complete = false;
@@ -153,16 +116,37 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   json(file: string, identity = false): Record<string, unknown> | undefined {
-    if (this.file(file, identity)?.kind !== "file") return undefined;
-    const existing = this.jsonFiles.get(file);
+    return this.metadata.json(file, identity);
+  }
+
+  packageKnown(file: string, current = false, allowNonObject = false): boolean {
+    return this.metadata.known(file, current, allowNonObject);
+  }
+
+  packageJson(
+    file: string,
+    observe = true,
+    current = false,
+    allowNonObject = false,
+  ): PackageJson | undefined {
+    return this.metadata.package(file, observe, current, allowNonObject);
+  }
+
+  /** Pin metadata without publishing an observation for an unrelated resolution. */
+  inspectMetadata(file: string): CapturedMetadata | undefined {
+    const existing = this.files.get(file);
     if (existing) return existing;
-    const value = this.captureFile(file);
-    if (!value?.bytes) return undefined;
+    const value = this.freshMetadata(file);
+    if (value) this.files.set(file, value);
+    return value;
+  }
+
+  /** Fresh verification and classification reads use the same aggregate metadata allowance. */
+  freshMetadata(file: string): CapturedMetadata | undefined {
+    if (!this.complete) return undefined;
     try {
-      const json = parseJson(value.bytes.toString("utf8"));
-      if (!jsonObject(json)) throw new Error("configuration must be an object");
-      this.jsonFiles.set(file, json);
-      return json;
+      this.inspectPath(file);
+      return this.readMetadata(file, this.pathKinds.get(file));
     } catch {
       this.complete = false;
       return undefined;
@@ -196,28 +180,6 @@ export class PhysicalInputs extends PhysicalInputReader {
     this.directory(base);
   }
 
-  private pathLinks(file: string): void {
-    if (!this.complete || this.pathKinds.has(file)) return;
-    const bytes = Buffer.byteLength(file);
-    if (this.linkBytes + bytes > EVIDENCE_LIMIT) {
-      this.complete = false;
-      return;
-    }
-    this.linkBytes += bytes;
-    this.durability?.budget(this.linkBytes);
-    this.pathKinds.set(file, undefined);
-    const parent = path.dirname(file);
-    if (parent !== file) this.pathLinks(parent);
-    if (!this.complete) return;
-    const kind = this.pathKinds.get(parent);
-    if (parent !== file && kind && kind !== "directory" && kind !== "link") {
-      this.pathKinds.set(file, "absent");
-      return;
-    }
-    const target = this.linkTarget(file);
-    if (target !== undefined) this.save(file, { kind: "link", target });
-  }
-
   async finish(): Promise<ReuseEvidence> {
     await this.pending;
     const value = {
@@ -231,9 +193,4 @@ export class PhysicalInputs extends PhysicalInputReader {
     value.durable = this.durability?.finish() ?? false;
     return value;
   }
-}
-
-/** Each check owns fresh bounded reads, independent of capture's retained bytes. */
-export function currentEvidence(evidence: ReuseEvidence): boolean {
-  return new PhysicalInputs().current(evidence);
 }

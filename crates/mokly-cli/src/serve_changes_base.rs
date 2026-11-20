@@ -156,7 +156,7 @@ impl Reporter for CacheNotice {
             self.warnings.event(&|| {
                 if !self.announced.swap(true, Ordering::AcqRel) {
                     self.terminal
-                        .stdout(&cache_line(directory, &self.style, &self.redactor));
+                        .cache_notice(&cache_line(directory, &self.style, &self.redactor));
                 }
             })
         }));

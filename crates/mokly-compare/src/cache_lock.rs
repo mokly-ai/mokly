@@ -9,7 +9,7 @@ use crate::cache_types::Kind;
 pub(crate) fn entry_lock_path(namespace: &Path, kind: Kind, key: &str) -> PathBuf {
     let name = match kind {
         Kind::Sources | Kind::Dependencies => format!("{key}.lock"),
-        Kind::Bundles => format!(
+        Kind::Bundles | Kind::Renders => format!(
             "stripe-{}.lock",
             key.get(..2).unwrap_or("00").to_ascii_lowercase()
         ),

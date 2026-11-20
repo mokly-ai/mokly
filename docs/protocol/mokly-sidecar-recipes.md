@@ -9,6 +9,16 @@ These rules belong to the `bundle` and `restoreGeneration` requests of the
 Every private `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests, logical metadata
 digests, reuse evidence, the toolchain identity, and the compilation identity.
+A compilation with complete reuse evidence also carries the optional
+`metadataIdentity`. It digests the compilation identity files that no render
+input key covers: the `jsconfig.json` candidates, the `extends` targets, the
+resolved peer manifests, and the `tsconfig.json` and `package.json` candidates
+above the source root. Each file counts by its path relative to the source
+root and by its content or its absence. The
+[render store](./mokly-render-store.md#identity) uses `metadataIdentity` with
+the toolchain identity, and only when the reuse evidence is also stable and the
+toolchain identity is known. Without them, the render store neither reads nor
+writes the documents that depend on that compilation.
 `restoreGeneration` installs that recipe with its original parameters, module
 graph, and evaluated generation id. The bundle result carries the graph once. It
 reads no current source file and invokes no compiler. Peer packages retain the
@@ -24,10 +34,12 @@ A `bundle` request carries the optional request-only `capture` value: `full`,
 the default, or `serveEdit`. The value is not a bundle setting. The sidecar
 removes it before it compares settings, computes the compilation identity,
 restores a recipe, or checks the recipe size. A `full` request records the
-reuse evidence of the next section. A `serveEdit` request records no reuse
-evidence and no capture witnesses. Every request still records the consumed
-source digests, the module graph, the metadata digests, the directory lists,
-and the preview selection.
+reuse evidence of the next section. A `serveEdit` request records no capture
+witnesses, and no reuse evidence except the
+[private folder files](./mokly-sidecar-folder-reuse.md#private-folder-files)
+of a marked compilation. Every request still records the consumed source
+digests, the module graph, the metadata digests, the directory lists, and the
+preview selection.
 
 Serve switches its head to `serveEdit` after it publishes its first state,
 before it reports readiness. Each head preparation that starts after the
@@ -36,10 +48,11 @@ preparations, the base side of Serve, `build`, and `publish` send `full`.
 
 A `serveEdit` compilation with a known toolchain identity carries the marker
 `uncaptured: "serveEdit"` in its reuse evidence, with `complete` and `durable`
-false and no inputs, unless a rule below withholds it. Only this marker marks
-a deliberate omission. Evidence that is incomplete for any other reason
-carries no marker, also evidence that the sidecar drops to fit the frame
-limit. A compilation without a toolchain identity carries no marker.
+false and no inputs except its private folder files, unless a rule below or a
+[package folder rule](./mokly-sidecar-folder-reuse.md) withholds it. Only this
+marker marks a deliberate omission. Evidence that is incomplete for any other
+reason carries no marker, also evidence that the sidecar drops to fit the
+frame limit. A compilation without a toolchain identity carries no marker.
 
 The marker stays off when an authored absolute import specifier matches a
 TypeScript `paths` key, or when the sidecar cannot tell whether it matches. An
@@ -113,10 +126,11 @@ keeps them.
 
 A marked compilation is reused only by a `serveEdit` request. Its reuse
 checks are the live checks alone: equal settings, equal resolved roots, an
-equal toolchain identity, and the unchanged inputs and directory membership
-of the first paragraph of this section. Its reuse evidence needs `complete`
-and `durable` false and no recorded entries, and the compilation needs a
-known toolchain identity. A `full` request never reuses a marked compilation.
+equal toolchain identity, the unchanged inputs and directory membership of
+the first paragraph of this section, and its unchanged private folder files.
+Its reuse evidence needs `complete` and `durable` false and no recorded
+entries except these files, and the compilation needs a known toolchain
+identity. A `full` request never reuses a marked compilation.
 A `serveEdit` request tries every captured compilation before a marked one.
 At a `bundle` request, the sidecar compares the toolchain identity of each
 candidate with its own. The binary keeps these rules when it reuses a
@@ -152,6 +166,10 @@ common edit reuse, and a single target can fall back to a package lookup.
 Withholding it for configuration chains that the sidecar cannot read was
 rejected, because it removes edit reuse from common package-extends
 catalogues, such as `expo/tsconfig.base`.
+
+The [package folder reuse rules](./mokly-sidecar-folder-reuse.md) add the live
+checks and the private folder files of each import that esbuild selects
+through a package folder mapping, and the fallback at the metadata bounds.
 
 ## Released Recipes
 

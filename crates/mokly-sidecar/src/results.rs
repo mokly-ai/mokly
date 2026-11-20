@@ -57,6 +57,10 @@ pub struct Bundle {
     #[serde(skip)]
     #[ts(skip)]
     pub cache: Option<CacheOutcome>,
+    /// Worker-observed esbuild operations for this request; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub compile_count: u64,
     /// Immutable code for restoration and evaluation-only reuse.
     pub compiled: Arc<CompiledGeneration>,
     /// Content-addressed bundle id.

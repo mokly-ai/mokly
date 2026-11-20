@@ -55,8 +55,11 @@ to one project before the batch limit, and fence retries and requeues with a
 version. Retention candidates are unfinished attempts past their deadline and
 failed attempts past the age cutoff, never ready or expired rows. Retention and
 collection candidates are bounded reads whose predicates match partial
-indexes. Auth and GitHub cleanup receive explicit cutoffs and return bounded
-delete counts; services own those windows. GitHub cleanup uses the flow-expiry
+indexes. Auth and GitHub cleanup receive explicit cutoffs and row limits and
+return bounded delete counts; services own those windows. Each auth cleanup
+delete also sets a transaction-local `statement_timeout` from its
+`PruneBatch`, so a slow delete or a lock wait fails with `Error::Internal`
+instead of running on. GitHub cleanup uses the flow-expiry
 index and a terminal-delivery partial index and never deletes pending or
 processing deliveries.
 
@@ -180,6 +183,7 @@ and provider calls stay in the service.
 - [desktop_grant.rs](./src/desktop_grant.rs) — desktop grant insertion, `SELECT FOR UPDATE` for service-owned challenge checks, conditional unused and unexpired consumption, and expiry-based pruning.
 - [desktop_grant_tests.rs](./tests/desktop_grant_tests.rs) — Postgres concurrency, expiry, inherited deadline, replay and inclusive retention checks in isolated schemas.
 - [session.rs](./src/session.rs) — session rows and `touch`, one conditional UPDATE whose predicate rechecks staleness, run through `Store::autocommit`.
+- [auth_prune.rs](./src/auth_prune.rs), [magic_link_retention.sql](./src/magic_link_retention.sql), [desktop_grant_retention.sql](./src/desktop_grant_retention.sql), [session_retention.sql](./src/session_retention.sql) and [rate_limit_retention.sql](./src/rate_limit_retention.sql) — `configure_batch`, which sets the transaction-local `statement_timeout` of a `PruneBatch` and caps its row limit at 1,000, and the bounded authentication deletes that each remove at most that many eligible rows.
 - [organization.rs](./src/organization.rs) — organization rows and `claim_slug`, which claims the registry row before the write; a claim is current when it equals the stored slug, so no current flag exists. `seat_counts` is the one statement that counts distinct active users by their strongest role.
 - [project.rs](./src/project.rs), [member.rs](./src/member.rs), [grant.rs](./src/grant.rs) and [token.rs](./src/token.rs) — the project rows with their slug claims, the membership, direct-grant and publishing-token queries.
 - [integration.rs](./src/integration.rs) — reads and writes the one GitHub integration row per user or organization; the migration defines the generated parent columns and the cascade.

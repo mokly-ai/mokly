@@ -150,12 +150,14 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
     await follow(page, appOrigin + "/docs/publish");
     await follow(page, "https://example.com/review", true);
     await follow(page, "https://github.com/login");
+    await follow(page, "https://checkout.stripe.com/desktop-test");
     await expect
       .poll(() => opened(electron!))
       .toEqual([
         appOrigin + "/docs/publish",
         "https://example.com/review",
         "https://github.com/login",
+        "https://checkout.stripe.com/desktop-test",
       ]);
     expect(await electron.windows()).toHaveLength(1);
 
@@ -187,15 +189,10 @@ test("the bundled shell keeps its origin, session, navigation and catalogue boun
         }),
       });
     });
-    await page.route("https://checkout.stripe.com/desktop-test", (route) =>
-      route.fulfill({
-        status: 302,
-        headers: {
-          Location: `${appOrigin}/auth/github/callback?code=provider-code&state=${githubState}`,
-        },
-      }),
+    await follow(
+      page,
+      `${appOrigin}/auth/github/callback?code=provider-code&state=${githubState}`,
     );
-    await follow(page, "https://checkout.stripe.com/desktop-test");
     await expect(
       page.getByRole("heading", { name: "GitHub sign-in opens soon" }),
     ).toBeVisible();

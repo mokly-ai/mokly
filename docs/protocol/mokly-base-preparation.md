@@ -68,8 +68,8 @@ instead. HTML without a renderer or PostCSS follows the
 
 Static commands verify their source evidence before early renders start.
 As soon as a fresh base preparation knows its document keys, it lists each
-view whose key no tier of the [render cache](./mokly-runtime.md#render-graph-and-cache)
-holds. The listing restores no view. Early renders of the listed views then
+view whose key is absent from the [render cache](./mokly-runtime.md#render-graph-and-cache)
+and the prepared [render store](./mokly-render-store.md). The listing restores no view. Early renders of the listed views then
 start immediately. The limit of early renders that run at the same time is at
 least one. It cannot exceed the [sidecar capacity](./mokly-sidecar-memory.md#capacity).
 Early renders publish nothing. The

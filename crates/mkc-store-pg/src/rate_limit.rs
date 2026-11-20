@@ -2,10 +2,13 @@
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use diesel::sql_types::{BigInt, Timestamptz};
 use mkc_db::schema::authentication::auth_rate_limits;
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::error::{ErrorResultExt, Result};
 use mkc_store_interface::rate_limit::{RateLimit, RateLimits};
 
+use crate::auth_prune::configure_batch;
 use crate::queries::PgQueries;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset)]
@@ -37,8 +40,11 @@ impl Row {
 }
 
 impl RateLimits for PgQueries<'_> {
-    fn prune_rate_limits(&mut self, before: DateTime<Utc>) -> Result<usize> {
-        diesel::delete(auth_rate_limits::table.filter(auth_rate_limits::resets_at.le(before)))
+    fn prune_rate_limits(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize> {
+        let limit = configure_batch(self.connection, batch)?;
+        diesel::sql_query(include_str!("rate_limit_retention.sql"))
+            .bind::<Timestamptz, _>(before)
+            .bind::<BigInt, _>(limit)
             .execute(self.connection)
             .context("prune retained admission counters")
     }

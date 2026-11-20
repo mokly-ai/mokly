@@ -30,13 +30,11 @@ pub(crate) fn document(
         };
         rendering::markdown(&session.state.catalogue, entry, plan, &resolver)?
     } else {
-        match session.state.composer.compose(&ComposeRequest {
-            catalogue: &session.state.catalogue,
-            entry,
-            viewport: plan.viewport.unwrap_or(Viewport::Desktop),
-            color_scheme: plan.color_scheme,
-            stylesheets: plan.stylesheets.clone(),
-        }) {
+        match session
+            .state
+            .composer
+            .compose(&request(session, plan, entry))
+        {
             Ok(composed) => composed,
             Err(source) => {
                 return Err(GraphError::Html {
@@ -73,4 +71,18 @@ pub(crate) fn document(
         styles::install(&mut composed.tree, &hrefs);
     }
     rendering::finish(composed, plan, entry, &session.state.catalogue)
+}
+
+pub(crate) fn request<'a>(
+    session: &'a Session,
+    plan: &DocumentPlan,
+    entry: &'a ModelEntry,
+) -> ComposeRequest<'a> {
+    ComposeRequest {
+        catalogue: &session.state.catalogue,
+        entry,
+        viewport: plan.viewport.unwrap_or(Viewport::Desktop),
+        color_scheme: plan.color_scheme,
+        stylesheets: plan.stylesheets.clone(),
+    }
 }

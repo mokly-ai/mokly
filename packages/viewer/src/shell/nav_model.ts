@@ -94,7 +94,7 @@ export function navLeafVisible(
   if (
     selection.view === "changes"
       ? !context.changedEntries?.includes(leaf.entryId)
-      : leaf.removedPage || leaf.removedVariant
+      : leaf.key.startsWith("removed:")
   )
     return false;
   return rowMatchesQuery(

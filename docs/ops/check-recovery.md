@@ -39,7 +39,8 @@ The configured API delivery loop processes due events. Verify
 `delivered_at` on that same event and the `Mokly` check in GitHub. Further
 permanent failures can dead-letter it again; inspect diagnostics before repeating.
 The five-minute `publication-check-status` CronJob logs the current undelivered
-dead-letter count through the API image, using only database credentials.
+publication and build check dead-letter count through the API image, using only
+database credentials.
 The environment Terraform stack creates a Cloud Monitoring log alert for a
 positive count, links this runbook and requires existing operator notification
 channels. Alerts are scoped to the namespace and maintenance container, with

@@ -15,7 +15,6 @@ use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
 
 /// Request-local provenance survives only the existing exchange recovery.
 pub(super) struct BundleAttempt {
-    memory: Vec<String>,
     disk: Option<DiskCompilation>,
     cause: CacheOutcome,
     disk_checked: bool,
@@ -29,7 +28,6 @@ struct DiskCompilation {
 impl Default for BundleAttempt {
     fn default() -> Self {
         Self {
-            memory: Vec::new(),
             disk: None,
             cause: CacheOutcome::Unavailable,
             disk_checked: false,
@@ -45,9 +43,7 @@ impl Pool {
         attempt: &mut BundleAttempt,
     ) -> Result<()> {
         attempt.disk = None;
-        let (complete, memory) = self.seed_compilation(slot, request)?;
-        attempt.memory = memory;
-        if complete {
+        if self.seed_compilation(slot, request)? {
             attempt.cause = CacheOutcome::StampMismatch;
             return Ok(());
         }
@@ -111,17 +107,17 @@ impl Pool {
         attempt: &BundleAttempt,
     ) {
         let runtime = &result.compiled.runtime_key;
-        let reused = if attempt.memory.contains(runtime) {
-            Some(CacheOutcome::Memory)
-        } else if attempt
-            .disk
-            .as_ref()
-            .is_some_and(|disk| &disk.runtime == runtime)
-        {
-            Some(CacheOutcome::Hit)
-        } else {
-            None
-        };
+        let reused = (result.compile_count == 0).then(|| {
+            if attempt
+                .disk
+                .as_ref()
+                .is_some_and(|disk| &disk.runtime == runtime)
+            {
+                CacheOutcome::Hit
+            } else {
+                CacheOutcome::Memory
+            }
+        });
         if let Some(disk) = &attempt.disk
             && &disk.runtime == runtime
         {

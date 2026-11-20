@@ -5,6 +5,7 @@ import { asApiError, unexpectedError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 import { formFailure } from "../components/form-failure";
 import { useLeavePage } from "../navigation/leave-page";
+import type { PageTrip } from "../navigation/leave-page";
 
 /** What one control's write is doing, and what its own control should read. */
 export interface Write {
@@ -47,8 +48,11 @@ export interface Write {
    * it stays in flight until then: its control stays busy and a second press
    * sends nothing. A page that the browser restores from its back-forward
    * cache returns the write to rest.
+   *
+   * GitHub takes its purpose and API answer together, so the shown check also
+   * protects the tab's flow record. Other hosted pages take their URL alone.
    */
-  leave: (url: string) => void;
+  leave: (...trip: PageTrip) => void;
   /** Forget a refusal after the input that produced it changes. */
   clearError: () => void;
   /**
@@ -203,8 +207,8 @@ export function useWrite(done: () => void, sendable: boolean): Write {
     if (wrote && !leaving.current) finish.current();
   }, []);
   const leave = useCallback(
-    (url: string) => {
-      if (leavePage(url)) leaving.current = true;
+    (...trip: PageTrip) => {
+      if (leavePage(...trip)) leaving.current = true;
     },
     [leavePage],
   );
