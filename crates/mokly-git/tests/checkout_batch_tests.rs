@@ -8,7 +8,9 @@ use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::tree::{Entry, Limits};
-use mokly_test_support::git::{command, git, run};
+#[cfg(unix)]
+use mokly_test_support::git::git;
+use mokly_test_support::git::{command, run};
 
 #[path = "support/recording.rs"]
 mod recording;

@@ -3,6 +3,7 @@
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
+#[cfg(unix)]
 use mokly_test_support::git::git;
 
 mod support;
