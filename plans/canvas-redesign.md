@@ -41,10 +41,14 @@ Depends on: none
 Draw every changed screen in the mockup catalogues first. Read the `mockups`
 skill before you start. The mockup tests ban literal colours, and the Browse
 design mockups import the shipped theme. So the mockups read Canvas from a
-named palette, and the site and the app keep Folio until Milestone 3.
+named palette in `@mokly/ui` (decision 1), and the site and the app keep
+Folio until Milestone 3. The first TODO lands before the other TODOs start.
 
-- [ ] Add Canvas as a named light and dark palette in `packages/tokens`, used
-      only by the design mockups. Add the Geist faces to the mockup assets.
+- [ ] Add the Canvas light and dark values as a named, non-default palette
+      in a palette module of `@mokly/ui`. Expose it to `packages/tokens` as
+      a named palette, so that only the design mockups use it. Add the Geist
+      faces to the mockup assets. The site, the app and the shell keep Folio
+      until Milestone 3.
 - [ ] Redraw the site chrome: header, mobile menu and footer with the scheme
       control. Update `design/site/home/menu`.
 - [ ] Redraw `design/site/home` with the copy of the user decisions and the
@@ -110,8 +114,8 @@ a status line that links its milestone.
 
 Depends on: 2
 
-- [ ] Add the palette module to `@mokly/ui` with no side effects. Generate
-      the theme stylesheet and the `mokly-html` Markdown style from it.
+- [ ] Make the `@mokly/ui` palette module the source. Generate the theme
+      stylesheet and the `mokly-html` Markdown style from it.
 - [ ] Make `packages/tokens` import its shared values from the module. Make
       Canvas the default, and delete the Folio values.
 - [ ] Add the drift check that compares the generated files with the module.
@@ -131,7 +135,8 @@ Tags: ui
 Depends on: 3
 
 - [ ] Draw the dot-grid canvas base in the site stylesheets.
-- [ ] Rebuild the header, the mobile menu and the footer, with Pricing.
+- [ ] Rebuild the header, the mobile menu and the footer. Milestone 9 adds
+      the Pricing links with the route.
 - [ ] Add the footer scheme control as a script island, with `localStorage`
       and `?scheme=`. Set the scheme before the first paint.
 - [ ] Restyle the legal pages and the 404 page.
@@ -198,8 +203,9 @@ Tags: ui
 Depends on: 4
 
 - [ ] Add `/pricing` to `src/navigation.ts`, then run `npm run site:routes`.
-      `pricing` is already a reserved workspace name. Correct the module
-      comment about app routes.
+      `pricing` is already a reserved workspace name. Add Pricing to the
+      header, the menu and the footer. Correct the module comment about app
+      routes.
 - [ ] Build the plan frames, the compare table and the questions from
       `billing.md`.
 - [ ] Link Create an account and Start a 7-day trial to `/sign-up`, and let
