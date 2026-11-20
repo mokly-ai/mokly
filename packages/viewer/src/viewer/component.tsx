@@ -14,7 +14,7 @@ import {
   useHostProps,
 } from "../shell/catalogue_boundary.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
-import { useFocusAfter } from "../shell/focus_after.js";
+import { RetryContent, useRetryFocus } from "../shell/retry_focus.js";
 import { normalizeTheme } from "../shell/theme.js";
 
 import {
@@ -30,7 +30,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const source = useIndexSource(props.index, props.baseUrl);
   const [errors] = useState(hostErrors);
   const hosted = useHostProps(props, errors);
-  const focus = useFocusAfter<"loading">();
+  const focus = useRetryFocus();
   const [detailVersion, setDetailVersion] = useState<{
     key: unknown;
     error: MoklyVersionError;
@@ -144,18 +144,13 @@ export function MoklyViewer(props: MoklyViewerProps) {
       <RootState message={VERSION_ERROR_MESSAGE} root={root} state="version" />
     ) : (
       <RootState
-        onRetry={() => {
-          focus.request("loading");
-          source.retry();
-        }}
+        onRetry={focus.retry(source.retry)}
         root={root}
         state="failed"
       />
     );
   if (!source.loaded)
-    return (
-      <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
-    );
+    return <RootState focusRef={focus.status} root={root} state="loading" />;
   // Each generation gets a new catcher, so a replaced tree's cleanup failure
   // reaches the host, as before.
   return (
@@ -165,16 +160,20 @@ export function MoklyViewer(props: MoklyViewerProps) {
       markCleanup={props.frameAdapter ? errors.mark : undefined}
       onFailure={() => setRenderFailure({ key: source.key })}
     >
-      <ReadyViewer
-        {...hosted}
-        loaded={source.loaded}
-        adapter={selectedAdapter}
-        bridgeOwner={bridgeOwner.current}
-        identifierPrefix={identifierPrefix}
-        onVersionError={(error) => setDetailVersion({ key: source.key, error })}
-        replaced={replaced}
-        scrollTogether={scrollTogether}
-      />
+      <RetryContent value={focus}>
+        <ReadyViewer
+          {...hosted}
+          loaded={source.loaded}
+          adapter={selectedAdapter}
+          bridgeOwner={bridgeOwner.current}
+          identifierPrefix={identifierPrefix}
+          onVersionError={(error) =>
+            setDetailVersion({ key: source.key, error })
+          }
+          replaced={replaced}
+          scrollTogether={scrollTogether}
+        />
+      </RetryContent>
     </CatalogueBoundary>
   );
 }

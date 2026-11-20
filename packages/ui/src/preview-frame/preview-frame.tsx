@@ -8,7 +8,7 @@
 
 import type { ReactNode, Ref } from "react";
 
-import { EmptyLine } from "../empty-state/empty-state.js";
+import { EmptyAction, EmptyLine } from "../empty-state/empty-state.js";
 import { LightOnlyNote } from "../scheme-fallback/scheme-fallback.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
 
@@ -45,15 +45,23 @@ function FrameLabel({
 }
 
 /**
+ * How a frame whose document failed to load tries again: the host's callback,
+ * or, in a static depiction, the address of the outcome.
+ */
+export type FrameRetry = { href: string } | { onClick(): void };
+
+/**
  * The content of a frame, or the line of a preview that has none, then the
- * line of a frame whose document failed to load.
+ * line of a frame whose document failed to load, with Try again.
  */
 function FrameContent({
   children,
   error,
+  retry,
 }: {
   children: ReactNode;
   error: boolean;
+  retry: FrameRetry | undefined;
 }) {
   return (
     <>
@@ -61,6 +69,18 @@ function FrameContent({
       {error ? (
         <p className="mbk-frame-error mbk-reset" role="status">
           This preview could not be loaded.
+          {retry ? (
+            <>
+              {" "}
+              <EmptyAction
+                action={
+                  "href" in retry
+                    ? { href: retry.href, label: "Try again" }
+                    : { label: "Try again", onClick: retry.onClick }
+                }
+              />
+            </>
+          ) : null}
         </p>
       ) : null}
     </>
@@ -84,6 +104,7 @@ export function PreviewFrame({
   error = false,
   fallback = false,
   placement,
+  retry,
   scheme,
 }: {
   /** The frame in its device chrome. Without it, the preview is unavailable. */
@@ -93,6 +114,8 @@ export function PreviewFrame({
   /** Whether the view keeps its light render while the shell is Dark. */
   fallback?: boolean;
   placement: FramePlacement;
+  /** Try again on the line of a document that failed to load. */
+  retry?: FrameRetry | undefined;
   /** The scheme of the shown render, which its frame and chrome follow. */
   scheme: FrameScheme;
 }) {
@@ -105,7 +128,9 @@ export function PreviewFrame({
       {placement.kind === "canvas" || placement.kind === "frame" ? (
         <FrameLabel fallback={fallback} viewport={placement.viewport} />
       ) : null}
-      <FrameContent error={error}>{children}</FrameContent>
+      <FrameContent error={error} retry={retry}>
+        {children}
+      </FrameContent>
     </div>
   );
 }
@@ -118,6 +143,7 @@ export function DocumentFrame({
   children,
   error = false,
   ref,
+  retry,
   scheme,
 }: {
   /** The document's frame. Without it, the preview is unavailable. */
@@ -129,6 +155,8 @@ export function DocumentFrame({
    * frame, and whose scroll position it keeps.
    */
   ref?: Ref<HTMLDivElement> | undefined;
+  /** Try again on the line of a document that failed to load. */
+  retry?: FrameRetry | undefined;
   /** The scheme of the shown render. */
   scheme: FrameScheme;
 }) {
@@ -139,7 +167,9 @@ export function DocumentFrame({
       data-preview-color-scheme={scheme}
       ref={ref}
     >
-      <FrameContent error={error}>{children}</FrameContent>
+      <FrameContent error={error} retry={retry}>
+        {children}
+      </FrameContent>
     </div>
   );
 }

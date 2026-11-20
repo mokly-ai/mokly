@@ -3,10 +3,10 @@
   "viewerVersion": "0.0.0",
   "corpusSha256": "5419535ec0ee56c28f046ba6389221911eed42b003a3f96227001040fcddd2b1",
   "files": {
-    "moves-export.tar.gz": "687984fda3bf2e0410a5f4ad041b1315e8c31fb0fdb7e16d3c033b2ec0ddc4c7",
-    "moves-index-v9.json": "8d0dbfa45bdfe3b432208454191a2c1f83549f43169cb276eae43c7c06843cad",
-    "moves-inventory.json": "c581bdc1123af84ad863d6fb274734fc64b8db1c39ab57ea7ede3e95eda3e134",
+    "moves-export.tar.gz": "60b65de9ad45e11a164269c5465cfcf023d0b5f6ecf60dd0745d4acbe1ca3dc8",
+    "moves-index-v9.json": "ca848d0c31802cf6fcf48e4b754b1fb3ce05d55f43bc380e73d0f19d1aabe0db",
+    "moves-inventory.json": "483ccb6c6366a3d46b21afa0327c3797b7614141577deea92e3a77192721d3ff",
     "moves-mokly-upload.json": "4c2d4c10dc645bcb69ae895fba64e6d5e515ebfc457a344b4563cc965a0806ab",
-    "moves-plan.tar.gz": "7faaca1e5d7a86e5f33738515d5de0d9660b3ddfa70c35509db9776b93684925"
+    "moves-plan.tar.gz": "3736ebf9a2a0727a99775ca3328c722be959c81dabf64a4b529c609dce6afce4"
   }
 }
