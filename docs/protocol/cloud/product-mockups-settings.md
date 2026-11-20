@@ -114,7 +114,9 @@ five drawings:
 The Account and GitHub accounts panes each carry a fourth variant, `desktop`,
 which draws their GitHub action in the desktop app's window;
 [Product mockups: desktop app](./product-mockups-account-desktop.md) lists it
-with the other desktop drawings.
+with the other desktop drawings. That page also lists
+`product/settings/billing/desktop`, which draws the Billing pane's actions in
+the window.
 
 The Project folder holds the pane with its three states and
 `product/settings/project/no-builds`, `product/settings/project/builds-saving`

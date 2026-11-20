@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { asApiError, unexpectedError } from "../../api/errors";
 import type { ApiError } from "../../api/errors";
-import type { Billing, Workspace, Project } from "../../api/types";
+import type { Workspace, Project } from "../../api/types";
 import { Action } from "../../components/action";
 import { PaneError } from "../../components/resource-state";
 import {
@@ -10,14 +10,8 @@ import {
   readBilling,
   startCheckout,
 } from "../../data/billing";
-import {
-  workspaceResourceScope,
-  projectResourceScope,
-  useInvalidateResources,
-} from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
 import {
-  readQuery,
   useAddressPathname,
   useAddressSearch,
   writeAddress,
@@ -26,37 +20,19 @@ import { alwaysSendable, nothingToDo, useWrite } from "../write";
 
 import { planSituation } from "./billing-facts";
 import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
-
-/** How the reader arrived back from a Stripe-hosted Checkout session. */
-type Landing = "success" | "cancelled";
+import { useReconcilePlan } from "./billing-reconcile";
+import {
+  landingOf,
+  openStripe,
+  opensStripeOutside,
+  withoutCheckout,
+} from "./billing-stripe";
+import { readUntilTeam, useFocusReads } from "./billing-watch";
 
 /** A successful Checkout return while its webhook catches up. */
 type Confirmation = { workspaceId: string } & (
   { state: "confirming" | "delayed" } | { state: "error"; error: ApiError }
 );
-
-/** How long the pane waits for the webhook that writes the plan. */
-const confirmWindowMs = 30_000;
-
-/** How often it asks again while it waits. */
-const confirmIntervalMs = 2_000;
-
-function landingOf(search: string): Landing | undefined {
-  const value = readQuery(search).checkout;
-  const one = Array.isArray(value) ? value[0] : value;
-  return one === "success" || one === "cancelled" ? one : undefined;
-}
-
-function withoutCheckout(pathname: string, search: string): string {
-  const query = new URLSearchParams(search);
-  query.delete("checkout");
-  const rest = query.toString();
-  return rest.length > 0 ? `${pathname}?${rest}` : pathname;
-}
-
-function pause(ms: number): Promise<void> {
-  return new Promise((done) => setTimeout(done, ms));
-}
 
 /**
  * Plan, seats and the one way to change them.
@@ -98,21 +74,11 @@ export function BillingPane({
   const [confirmationRetry, setConfirmationRetry] = useState(0);
   // Taken apart rather than held as one value: the resource object is rebuilt
   // every render, and the confirming effect must not restart with it.
-  const { set } = billing;
-  const invalidate = useInvalidateResources();
-  // A read that reports Team invalidates the workspace and project
-  // resources before the pane settles, so switching panes or closing settings
-  // uses the reconciled plan without a page reload.
-  const acceptRead = useCallback(
-    (value: Billing) => {
-      set(value);
-      if (value.plan !== "team") return;
-      invalidate([
-        workspaceResourceScope(workspace.id),
-        ...(project ? [projectResourceScope(project.id)] : []),
-      ]);
-    },
-    [invalidate, workspace.id, project, set],
+  const { set: acceptRead } = billing;
+  useReconcilePlan(
+    billing.state.status === "ready" ? billing.state.value : undefined,
+    workspace.id,
+    project?.id,
   );
 
   const clearLanding = useCallback(() => {
@@ -132,34 +98,25 @@ export function BillingPane({
     }
     let live = true;
     const settle = async () => {
-      const deadline = Date.now() + confirmWindowMs;
-      let confirmed = false;
-      for (;;) {
-        let value: Billing | undefined;
-        try {
-          value = await readBilling(workspace.id);
-        } catch (caught) {
-          if (!live) return;
-          setConfirmation({
-            workspaceId: workspace.id,
-            state: "error",
-            error: asApiError(caught) ?? unexpectedError(),
-          });
-          setConfirmationRetry(0);
-          clearLanding();
-          return;
-        }
+      let confirmed: boolean | undefined;
+      try {
+        confirmed = await readUntilTeam(
+          () => readBilling(workspace.id),
+          acceptRead,
+          () => live,
+        );
+      } catch (caught) {
         if (!live) return;
-        acceptRead(value);
-        if (value.plan === "team") {
-          confirmed = true;
-          break;
-        }
-        if (Date.now() >= deadline) break;
-        await pause(confirmIntervalMs);
-        if (!live) return;
+        setConfirmation({
+          workspaceId: workspace.id,
+          state: "error",
+          error: asApiError(caught) ?? unexpectedError(),
+        });
+        setConfirmationRetry(0);
+        clearLanding();
+        return;
       }
-      if (!live) return;
+      if (confirmed === undefined || !live) return;
       setConfirmation(
         confirmed ? undefined : { workspaceId: workspace.id, state: "delayed" },
       );
@@ -195,21 +152,34 @@ export function BillingPane({
     [acceptRead, check, workspace.id],
   );
 
-  // A write that opens Stripe's own pages is done when the page leaves for
-  // them, so its control stays busy until then.
+  // A write that opens Stripe's own pages in this tab is done when the page
+  // leaves for them, so its control stays busy until then. The desktop app's
+  // window opens them in the system browser instead, so its control comes
+  // back to rest, and the window reads the plan again when it gets focus back:
+  // after Checkout, until the webhook writes Team or the bounded wait ends.
+  const external = opensStripeOutside();
+  const { reload } = billing;
+  const readPlan = useCallback(() => readBilling(workspace.id), [workspace.id]);
+  const watchCheckout = useFocusReads(
+    workspace.id,
+    readPlan,
+    acceptRead,
+    reload,
+  );
   const checkout = useWrite(nothingToDo, alwaysSendable);
   const portal = useWrite(nothingToDo, alwaysSendable);
   const upgrade = useCallback(
     () =>
-      void checkout.run(async () =>
-        checkout.leave(await startCheckout(workspace.id)),
-      ),
-    [checkout, workspace.id],
+      void checkout.run(async () => {
+        openStripe(checkout, await startCheckout(workspace.id));
+        if (external) watchCheckout();
+      }),
+    [checkout, external, watchCheckout, workspace.id],
   );
   const manage = useCallback(
     () =>
       void portal.run(async () =>
-        portal.leave(await openBillingPortal(workspace.id)),
+        openStripe(portal, await openBillingPortal(workspace.id)),
       ),
     [portal, workspace.id],
   );
@@ -269,13 +239,19 @@ export function BillingPane({
   }
   const value = billing.state.value;
   return value.plan === "free" ? (
-    <FreePlan billing={value} checkout={checkout} onCheckout={upgrade} />
+    <FreePlan
+      billing={value}
+      checkout={checkout}
+      onCheckout={upgrade}
+      external={external}
+    />
   ) : (
     <TeamPlan
       billing={value}
       situation={planSituation(value)}
       portal={portal}
       onPortal={manage}
+      external={external}
     />
   );
 }

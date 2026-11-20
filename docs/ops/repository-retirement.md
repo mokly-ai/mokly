@@ -60,6 +60,39 @@ step needs owner access to both repositories.
    text with a link to `https://github.com/mokly-ai/mokly`. Commit to `main`.
 6. Run `gh repo archive mokly-ai/mokly-cloud --yes`. Check:
    `gh api repos/mokly-ai/mokly-cloud --jq .archived` prints `true`.
-7. Add a dated record to the end of the
-   [repository cutover](./repository-cutover.md) runbook: the merge commit,
-   the run URLs of each check on both pages, and each change to their steps.
+7. Add a dated record to the end of this page: the merge commit, the run URLs
+   of each check of this page and of the
+   [repository cutover](./repository-cutover.md), and each change to their
+   steps.
+
+## Cutover Record
+
+The cutover ran on 2026-11-19 and 2026-11-20. Merge commit: `5cba4dc4` (#350).
+
+- **Stop The Old Deployments (2026-11-19):** #133, #107 and #88 closed. Their
+  Preview runs [44608586082](https://github.com/mokly-ai/mokly/actions/runs/44608586082), [44608593672](https://github.com/mokly-ai/mokly/actions/runs/44608593672) and [44608605274](https://github.com/mokly-ai/mokly/actions/runs/44608605274)
+  printed **Preview removed**. The Site runs [44608584890](https://github.com/mokly-ai/mokly/actions/runs/44608584890) and
+  [44608592462](https://github.com/mokly-ai/mokly/actions/runs/44608592462) printed `retained` with HTTP 400, and #88 got no site run,
+  so the manual loop deleted 25 `pr-N` deployments. The old Deploy, Desktop
+  release, Preview and Site workflows were disabled.
+- **Trust Both Repositories:** the operator plan was 8 to add, 1 to change and
+  0 to destroy. The apply matched it, and `check` showed no changes.
+- **Copies:** 15 secrets, 17 variables, the three environments and the
+  `preview` label. `notarytool history` accepted the restored Apple key.
+- **Turn On Cloud Delivery (2026-11-20):** Foundation [44714095037](https://github.com/mokly-ai/mokly/actions/runs/44714095037) had no
+  changes. Deploy [44714407942](https://github.com/mokly-ai/mokly/actions/runs/44714407942) deployed `e5acd1a2` to main-preview and
+  production. The first push Deploy, [44715518003](https://github.com/mokly-ai/mokly/actions/runs/44715518003), passed.
+- **Retirement (2026-11-20):** the old CI and Foundation were disabled, and the
+  preview inventory found no resource. The operator trust plan was 0 to add,
+  1 to change and 8 to destroy, and the apply matched it. The condition then
+  named only `1305675953`. Foundation [44726543979](https://github.com/mokly-ai/mokly/actions/runs/44726543979) had no changes, and
+  Deploy [44726762157](https://github.com/mokly-ai/mokly/actions/runs/44726762157) passed. The old ruleset was disabled, the old
+  README commit is `966f808d`, and the old repository is archived. The owner
+  ports the closed pull requests from their archived branches, so they got no
+  **Moved to** comment.
+- **Changes to the steps:** the operator needs Terraform 1.16.2 exactly. When
+  the Google application-default credentials need a new login, export
+  `GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"` for
+  Terraform. Run the manual Pages loop with `bash`, because `zsh` does not
+  split the ID list. A Wrangler login can supply its Cloudflare token. The
+  retirement plan exits 1 at the policy check before its approval exists.

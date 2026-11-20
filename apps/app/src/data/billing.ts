@@ -30,8 +30,10 @@ export function readBilling(workspaceId: string): Promise<Billing> {
  * page for it.
  *
  * The cloud never sees a card, so the operation is finished somewhere else:
- * the API answers with the session it created, and the caller hands this tab
- * to its address, which returns to the pane's own address afterwards. Nothing
+ * the API answers with the session it created, and the caller hands the
+ * reader to its address, which returns to the pane's address on the public
+ * app origin afterwards. A browser tab leaves for it; the desktop app's window
+ * opens it in the system browser, so the return lands there. Nothing
  * about the plan is written by that return — only the webhook writes it — so
  * the caller has nothing to update before it leaves.
  *

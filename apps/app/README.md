@@ -59,9 +59,12 @@ browser's account and after **Open Mokly** hands the app a one-use grant
 through `mokly://auth/desktop/callback`, and `/auth/desktop/callback` in the
 window exchanges the grant with the verifier. In the shell the GitHub actions
 open their own routes on the web, and the window reads the session and the
-open screen's GitHub accounts again when it gets focus back. The rules are
-[Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md) and
-[web setup](../../docs/protocol/cloud/desktop-app.md#web-setup). An invitation link carries its route through sign-in,
+open screen's GitHub accounts again when it gets focus back. Its billing
+actions open Stripe's pages in the browser, and the Billing pane reads the plan
+again on focus, after Checkout until Stripe's webhook writes Team. The rules are
+[Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md),
+[web setup](../../docs/protocol/cloud/desktop-app.md#web-setup) and
+[desktop billing](../../docs/protocol/cloud/desktop-app.md#billing). An invitation link carries its route through sign-in,
 accepts with the invited account's session, and distinguishes an acceptance
 that succeeded from a workspace read that failed afterwards. After
 acceptance succeeds, the invitation screen keeps that success while it opens
@@ -401,7 +404,7 @@ published catalogue. The spec routes no build operation.
 - `src/navigation/address.ts` — `writeAddress`, the query-only push or replace that never routes, the wrapped history operations, and the address hooks every surface reads.
 - `src/navigation/desktop-shell.ts` — `isDesktopShell()`, which recognizes the desktop shell by the page's `mokly-app:` protocol. A logic test pins its desktop origin literal to the shared fixture.
 - `src/navigation/desktop-sign-in.ts` — the window's verifier, its S256 challenge and its tab storage, the connect page's address and challenge, the grant's `mokly://` scheme address and when a held grant is handed over again.
-- `src/navigation/web-setup.ts` and `src/navigation/shell-focus.ts` — `openOnWeb`, which opens an application route on the public app origin as a popup that the shell sends to the system browser, and the shell's window focus, on which screens read again what the web may have changed.
+- `src/navigation/web-setup.ts` and `src/navigation/shell-focus.ts` — `openBeside`, which opens another site's page as a popup that the shell sends to the system browser, `openOnWeb`, which opens an application route on the public app origin that way, and the shell's window focus, on which screens read again what the web may have changed.
 - `src/navigation/follow.ts` — `follow()`, how an `Action` follows its `href`: an application route goes to the router, any other address opens in this tab, and one that would run in the page, such as `javascript:`, is never followed.
 - `src/navigation/leave-page.ts` — `useLeavePage`, how a screen hands the tab to GitHub or Stripe at the end of a write: only while that screen is still shown, called off with `window.stop()` when the screen goes before the next page loads, and with a hook for the page coming back from the back-forward cache. A GitHub trip takes its purpose and `Connection` together, then stores its record after the screen check. Other hosted pages take their URL alone. `useWrite` and the GitHub install landing leave through it.
 - `src/settings/panes.ts` — the pane registry and `availablePanes`, which requires the reader's role so Billing is never left visible to a member.
@@ -414,7 +417,7 @@ published catalogue. The spec routes no build operation.
 - `src/settings/dirty.tsx` — the unsaved drafts, kept outside React state so the Escape after a keystroke still finds them; `back-guard.ts` stops in-document back gestures while a draft exists.
 - `src/settings/write.ts` — `useWrite`, one write per control, from which the control's label, disabled state, busy state and failure derive: the `Action` that sends it reads `working` and `sendable`, and its call site passes in `disabled` only the control's other reasons, such as a permission. `leave` ends a write by leaving the page: the write stays in flight, and its control busy, until the page has gone, and a page restored from the back-forward cache is at rest again.
 - `src/settings/pane-link.tsx` and `src/settings/pane-rows.tsx` — reach or list other panes by pane, never by address.
-- `src/settings/panes/billing-pane.tsx` — the Billing pane: the Checkout return's bounded confirmation reads, the delayed state and Check again; `billing-facts.ts` builds the fact rows from the API's counts and amounts. Upgrade to Team and Manage billing leave for the Stripe address `data/billing.ts` answers through their write's `leave`, and the load and the confirmation both draw `TeamPlanWait` from `billing-plans.tsx`, which names the read in the Plan value.
+- `src/settings/panes/billing-pane.tsx` — the Billing pane: the Checkout return's bounded confirmation reads, the delayed state and Check again; `billing-facts.ts` builds the fact rows from the API's counts and amounts. Upgrade to Team and Manage billing hand the reader to the Stripe address `data/billing.ts` answers through `billing-stripe.ts`: a browser tab leaves through the write's `leave`, and the desktop app's window opens the address as a popup, which the shell opens in the system browser, then reads the plan again on window focus. `billing-watch.ts` holds those focus reads and the bounded wait that both the Checkout return and the first focus after the window opened Checkout use. `billing-stripe.ts` also reads and clears the Checkout return. `billing-reconcile.ts` invalidates the workspace and project reads after each billing read that reports Team, whichever way the read arrived. The load and the confirmation both draw `TeamPlanWait` from `billing-plans.tsx`, which names the read in the Plan value.
 - `src/settings/panes/github-pane.tsx` — the GitHub accounts pane: one row per account the workspace binds, the row menu, Add GitHub account and the role rule; `github-remove.tsx` is the remove modal, and `workspace-github.tsx` is the Workspace pane's GitHub accounts fact.
 - `src/settings/panes/project-builds.tsx` and `src/components/toggle.tsx` — the Automatic builds switch and the registered switch it is drawn with. While its write runs, the switch shows the value asked for, disabled, with its working word in its own row; `ToggleWait` is the setting while its value is read.
 - `src/data/workspaces.ts`, `src/data/projects.ts`, `src/data/installations.ts`, `src/data/billing.ts`, `src/data/tokens.ts` and `src/data/auth.ts` — the workspace and member, project, installation and repository, slug, billing, token, account and sign-in reads and writes, each one API operation.
