@@ -184,3 +184,26 @@ fn successful_handoff_keeps_no_stop_or_parent_for_later_cleanup() {
     });
     assert!(trace.closed("sidecar.stop").is_empty());
 }
+
+#[test]
+fn startup_cleanup_records_both_direct_child_errors() {
+    let mut child = Unimock::new((
+        ReapMock::kill
+            .next_call(matching!())
+            .answers(&|_| Err(io::ErrorKind::PermissionDenied.into())),
+        ReapMock::wait
+            .next_call(matching!())
+            .answers(&|_| Err(io::ErrorKind::Interrupted.into())),
+    ));
+    let trace = Trace::default();
+    trace.in_scope(|| reap(&mut child, Some(&StartupTiming::default())));
+    println!("direct-child cleanup events: {:?}", trace.events());
+    let operations: Vec<_> = trace
+        .events()
+        .iter()
+        .flat_map(|event| event.fields.iter())
+        .filter(|(field, _)| field == "operation")
+        .map(|(_, value)| value.clone())
+        .collect();
+    assert_eq!(operations, ["child.kill", "child.wait"]);
+}

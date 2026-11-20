@@ -264,7 +264,13 @@ standard error. It returns `SpawnFailure::NotStarted` for a failure before the
 Node process exists. Examples are a missing sidecar entry or source directory,
 and a Node executable that cannot start. It returns `SpawnFailure::Started`
 when a later step fails, for example when it cannot take whole-tree ownership
-or start a pipe task. Shutdown wakes queued callers and sends shutdown to each
+or start a pipe task. Startup cleanup keeps tree ownership through direct-child
+reaping. Unix cleanup stops descendants before reaping the direct child.
+Windows retains the attached kill-on-close job until startup cleanup ends.
+Cleanup errors go to tracing and preserve the startup error.
+`NodeFactory::with_threads` injects `dyn PipeThreads` for pipe and completion
+task creation. The default uses named host threads.
+Shutdown wakes queued callers and sends shutdown to each
 process. All processes share one grace deadline. Survivors are killed and
 reaped. The [lifecycle contract](../../docs/protocol/mokly-sidecar-lifecycle.md)
 owns stderr drainage at that deadline.
@@ -490,6 +496,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `CaptureHint` in `hello` when the launch asks for capture durability. Its
   `spawn` decides whether each failure is `SpawnFailure::NotStarted` or
   `SpawnFailure::Started`.
+- [`src/process_threads.rs`](./src/process_threads.rs) defines the `PipeThreads`
+  boundary and its `SystemPipeThreads` host implementation.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
   environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
