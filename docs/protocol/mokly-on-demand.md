@@ -25,12 +25,13 @@ stub does not satisfy that target. No validation is skipped to meet it.
 ## Foreground Documents
 
 A request for `/static/mokly-generated/<route>` renders the document on first
-request. A JavaScript fragment renders through the
+request, unless the [render store](./mokly-render-store.md) holds it. A
+JavaScript fragment renders through the
 [sidecar](./mokly-sidecar.md) under its deadlines; an HTML screen or component
 renders without the sidecar. The finished document stays in the render cache
 until an input changes or it leaves the cache under the
 [cache bounds](./mokly-runtime.md#render-graph-and-cache). The next request for
-a document that left the cache renders it again.
+a document that left the cache reads it from the render store or renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render that has not started
@@ -56,13 +57,13 @@ including a view first rendered on demand. Repeated requests repeat no warning.
 Live prop edits of the [controls contract](./mokly-component-controls.md)
 render through this same path with the edited props. Their temporary documents
 and resources never replace a saved document and never enter the catalogue
-model.
+model or the render store.
 
 ## Background Work And Replacement
 
-After readiness, Serve renders every view in the background, which fills the
-render cache and the usage of every detail, then classifies Changes, which
-renders the base side under the
+After readiness, Serve renders every view in the background, or reads it from
+the render store, which fills the render cache and the usage of every detail,
+then classifies Changes, which renders the base side under the
 [comparison contract](./mokly-comparison.md#sides). This background pass
 renders a bounded batch of views at a time: at most the smaller of the worker
 count and the [sidecar capacity](./mokly-sidecar-memory.md#capacity), and at

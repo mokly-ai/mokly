@@ -97,6 +97,7 @@ async fn ready_metadata_starts_retention_after_projection_finishes() {
         publications: publications.clone(),
         comparisons: store.clone(),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching: false,
     });
     let (stop, stopping) = watch::channel(false);

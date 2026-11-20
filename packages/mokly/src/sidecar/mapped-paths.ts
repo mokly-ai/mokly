@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type { PathSettings } from "./config-inputs.js";
-import { substitution } from "./path-pattern.js";
+import { substituteTarget, substitution } from "./path-pattern.js";
 
 /** Capture keeps all matches; native resolution selects one exact or most-specific key. */
 export function* mappedPaths(
@@ -31,12 +31,10 @@ export function* mappedPaths(
   }
   const { directory } = config.paths;
   for (const [pattern, targets] of entries) {
-    const matched = substitution(pattern, name);
-    if (matched === undefined) continue;
-    for (const target of targets)
-      yield path.resolve(
-        config.baseUrl ?? directory,
-        pattern.includes("*") ? target.replace("*", () => matched) : target,
-      );
+    for (const target of targets) {
+      const filled = substituteTarget(pattern, target, name, "first");
+      if (filled !== undefined)
+        yield path.resolve(config.baseUrl ?? directory, filled);
+    }
   }
 }

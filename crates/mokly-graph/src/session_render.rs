@@ -6,6 +6,7 @@ use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
+use crate::document_store::ReadOutcome;
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
 use crate::workers::ArtifactWorker;
@@ -43,10 +44,33 @@ impl Session {
             tracing::Span::current().record("cache_hit", true);
             return Ok(artifact);
         }
+        let stored_key = self.stored_key(route);
+        if let (Some(key), Some(persistence)) = (&stored_key, &self.state.inputs.persistence)
+            && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
+                persistence.store.load(key)
+        {
+            self.state
+                .composer
+                .record_served(&document_composition::request(
+                    self,
+                    plan,
+                    &self.state.catalogue.model.entries[plan.entry],
+                ));
+            return Ok(artifact);
+        }
         let entry = &self.state.catalogue.model.entries[plan.entry];
         let result = document_composition::document(self, plan, entry);
         match result {
-            Ok(artifact) => Ok(artifact),
+            Ok(artifact) => {
+                if let Some(key) = stored_key {
+                    self.state
+                        .fresh
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner())
+                        .insert(plan.key.0.clone(), key);
+                }
+                Ok(artifact)
+            }
             Err(source) => Err(GraphError::Document {
                 entry: entry.metadata.path.clone(),
                 source: Box::new(source),
@@ -103,6 +127,7 @@ impl ArtifactWorker for Session {
         for path in &closure.files {
             self.state.inputs.closures.record(key, path);
         }
+        self.offer_document(route);
         Ok(artifact)
     }
 }
