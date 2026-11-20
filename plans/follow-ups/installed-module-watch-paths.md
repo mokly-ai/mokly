@@ -19,7 +19,7 @@
   `crates/mokly-watch/src/plan.rs:132` and line 147,
   `crates/mokly-watch/src/native_scan.rs:11` and line 17,
   `packages/mokly/src/sidecar/module-paths.ts:150`,
-  `crates/mokly-render/src/runtime.rs:208`,
+  `crates/mokly-render/src/runtime.rs:215`,
   `crates/mokly-render/src/side.rs:160`,
   `crates/mokly-render/src/stylesheet_watch.rs:14`,
   `crates/mokly-css/src/watch_inputs.rs:8`, and
@@ -78,11 +78,11 @@
     `SideTree::mapped` at `crates/mokly-render/src/sources.rs:37`. So the
     input check of a bundle reads the right file. The watcher does not use
     that map.
-  - `Runtime::side`, at `crates/mokly-render/src/runtime.rs:208`, selects
+  - `Runtime::side`, at `crates/mokly-render/src/runtime.rs:215`, selects
     the dependency roots of a side. It resolves each root to its canonical
-    path at line 232. It merges roots with one canonical path at line 236.
+    path at line 239. It merges roots with one canonical path at line 243.
     It records each authored alias in `SideInputs.dependency_aliases`, at
-    line 244. So two authored aliases can name one logical root.
+    line 251. So two authored aliases can name one logical root.
   - Containment checks compare canonical paths, in `SideTree::project` at
     `crates/mokly-render/src/sources.rs:234` and in
     `SideInputs::logical_dependency` at `crates/mokly-render/src/side.rs:134`.
