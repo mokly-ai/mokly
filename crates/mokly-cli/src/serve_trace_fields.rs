@@ -14,6 +14,9 @@ pub(super) struct Fields {
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
+            "event" if value == "state" => {
+                self.values.insert("event".into(), json!(value));
+            }
             "viewport" | "scheme" | "action" | "operation" | "side" => {
                 self.values.insert(field.name().into(), json!(value));
             }
@@ -43,6 +46,25 @@ impl Visit for Fields {
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
         match field.name() {
+            "sequence"
+            | "queued"
+            | "active"
+            | "hits"
+            | "misses"
+            | "faults"
+            | "writes"
+            | "bytes"
+            | "drops"
+            | "memory_queue_peak"
+            | "memory_segment_peak"
+            | "memory_export_peak"
+            | "memory_codec_peak"
+            | "memory_known"
+            | "memory_known_peak"
+            | "queue_bookkeeping_charge"
+            | "codec_charge_peak" => {
+                self.values.insert(field.name().into(), json!(value));
+            }
             "views" | "unchanged" | "changed" | "ignored_only" | "uncaptured_views" => {
                 let name = match field.name() {
                     "ignored_only" => "ignoredOnly",

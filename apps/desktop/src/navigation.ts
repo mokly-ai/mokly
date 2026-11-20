@@ -5,12 +5,11 @@ import { SITE_FIRST_SEGMENTS } from "./site-segments.js";
 
 export type Navigation =
   { action: "allow" | "drop" } | { action: "load" | "external"; url: string };
-const roundTrips = new Set([
-  "https://checkout.stripe.com",
-  "https://billing.stripe.com",
-]);
 
-/** Public product navigation returns to the bundle; public popups use the browser. */
+/**
+ * Public product navigation returns to the bundle; public popups and every
+ * other HTTP(S) page, Stripe's and GitHub's included, use the browser.
+ */
 export function navigationTarget(
   address: string,
   appOrigin: string,
@@ -43,7 +42,6 @@ export function navigationTarget(
           url: DESKTOP_ORIGIN + url.pathname + url.search + url.hash,
         };
   }
-  if (!popup && roundTrips.has(url.origin)) return { action: "allow" };
   return { action: "external", url: url.href };
 }
 

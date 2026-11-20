@@ -25,18 +25,13 @@ import { useResource } from "../../data/use-resource";
 import { isDesktopShell } from "../../navigation/desktop-shell";
 import { settingsPath } from "../../navigation/paths";
 import { useShellFocus } from "../../navigation/shell-focus";
-import { openOnWeb } from "../../navigation/web-setup";
+import { openBeside, openOnWeb } from "../../navigation/web-setup";
 import { useSettings } from "../context";
 import { RowMenu } from "../row-menu";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
 
 import { RemoveInstallation } from "./github-remove";
 import { MenuTriggerPlaceholder } from "./row-placeholders";
-
-/** Somebody else's page, in a tab of its own, so the pane keeps its place. */
-function openBeside(address: string): void {
-  window.open(address, "_blank", "noopener,noreferrer");
-}
 
 /**
  * One account the workspace connects: its name over what kind of account it

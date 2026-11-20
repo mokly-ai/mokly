@@ -27,6 +27,9 @@ macro_rules! delegate {
 }
 
 impl Storage for PausedStorage {
+    fn render_sequence(&self, namespace: &Path, floor: u64) -> Result<Option<u64>> {
+        self.inner.render_sequence(namespace, floor)
+    }
     fn write(&self, path: &Path, bytes: &[u8]) -> Result<()> {
         let ready = self.ready.lock().unwrap().take();
         if let Some(ready) = ready {

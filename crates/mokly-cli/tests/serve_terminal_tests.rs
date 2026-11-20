@@ -5,6 +5,9 @@
 
 #![cfg(unix)]
 
+#[path = "process_support/cache.rs"]
+mod cache;
+
 use std::env;
 use std::fs::{self, File};
 use std::io::Write;
@@ -18,6 +21,8 @@ use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tokio::process::Command;
+
+use cache::Cache;
 
 fn terminal() -> (File, File) {
     let mut master = -1;
@@ -117,9 +122,11 @@ async fn closed_terminal_keeps_serve_available_and_hangup_exits_zero() {
             "{access}"
         );
         let probe = slave.try_clone().unwrap();
+        let cache = Cache::new();
         let mut child = Command::new(binary)
             .args(["serve", "--port", "0"])
             .current_dir(root.path())
+            .envs(cache.environment())
             .env("MOKLY_OUTPUT", "rich")
             .env("NO_COLOR", "1")
             .env("PATH", "")
