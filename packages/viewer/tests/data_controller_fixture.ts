@@ -28,7 +28,9 @@ export function controllerFixture(
   const initial = initialSnapshot(index);
   let route = routeAt(initial, options.path ?? "/");
   const controller = new ShellDataController(initial, source, {
-    commit: (next) => commits.push(next),
+    prepare: (next) => () => {
+      commits.push(next);
+    },
     route: () => route,
     versionError: (error) => versionErrors.push(error),
     warn: (message) => warnings.push(message),

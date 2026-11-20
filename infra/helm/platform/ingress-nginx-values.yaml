@@ -1,0 +1,28 @@
+controller:
+  replicaCount: 1
+  ingressClass: mkc-preview
+  ingressClassResource:
+    name: mkc-preview
+    controllerValue: mokly.ai/preview-ingress-nginx
+    default: false
+  watchIngressWithoutClass: false
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+    annotations:
+      cloud.google.com/l4-rbs: "enabled"
+  extraArgs:
+    default-ssl-certificate: mkc-preview-system/preview-origin-tls
+  config:
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    enable-real-ip: "false"
+  allowSnippetAnnotations: false
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi

@@ -5,10 +5,6 @@
   gap: 8px;
   max-width: 100%;
 }
-.example-action [role="button"],
-.example-action button {
-  border-radius: var(--example-radius, 8px);
-}
 .example-action-hint {
   font-size: 13px;
   line-height: 1.5;

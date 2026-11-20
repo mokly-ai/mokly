@@ -46,10 +46,10 @@ fn completed_status_requires_one_matching_table_row() {
 }
 
 #[test]
-fn command_inventory_has_seven_unique_commands_and_five_reports() {
+fn command_inventory_has_fourteen_unique_commands_and_five_reports() {
     let baseline = commands(DependencyAudit::Baseline);
     let commands = commands(DependencyAudit::Strict);
-    assert_eq!(commands.len(), 7);
+    assert_eq!(commands.len(), 14);
     assert_eq!(commands.iter().filter(|command| command.report).count(), 5);
     assert_eq!(
         commands
@@ -63,7 +63,14 @@ fn command_inventory_has_seven_unique_commands_and_five_reports() {
             "browser-2-of-4",
             "browser-3-of-4",
             "browser-4-of-4",
-            "static-delivery"
+            "static-delivery",
+            "cloud-rust",
+            "cloud-app-1-of-4",
+            "cloud-app-2-of-4",
+            "cloud-app-3-of-4",
+            "cloud-app-4-of-4",
+            "cloud-web",
+            "cloud-infrastructure"
         ]
     );
     assert!(
@@ -95,6 +102,7 @@ fn command_inventory_has_seven_unique_commands_and_five_reports() {
         "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite static-delivery"
     );
     assert!(!commands[6].report);
+    assert!(commands[7..].iter().all(|command| !command.report));
     assert!(
         baseline[0]
             .shell_command("sha256:abc")

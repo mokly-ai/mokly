@@ -27,6 +27,7 @@ export interface AuditReport {
 
 /** Exact reviewed scope and inclusive UTC expiry for one risk. */
 export interface AuditException {
+  kind?: "private-app";
   advisory: string;
   package: string;
   path: string[];
@@ -37,6 +38,8 @@ export interface AuditException {
 
 /** Dependency edges and development flags from a lockfile package entry. */
 export interface AuditLockfileEntry {
+  link?: boolean;
+  resolved?: string;
   dev?: boolean;
   devOptional?: boolean;
   dependencies?: Record<string, string>;
@@ -44,6 +47,9 @@ export interface AuditLockfileEntry {
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
 }
+
+/** Actual workspace manifests, read independently of npm's lockfile flags. */
+export type AuditWorkspaces = Readonly<Record<string, { private?: boolean }>>;
 
 /** Lockfile inventory, including root and workspace entries. */
 export interface AuditLockfile {
@@ -97,4 +103,5 @@ export function evaluateDependencyAudit(
   lockfile: unknown,
   exceptions: unknown,
   now: Date,
+  workspaces?: AuditWorkspaces,
 ): AuditEvaluation;

@@ -12,6 +12,29 @@ export function isPackageName(value: unknown): value is string;
 /** Accept canonical relative lockfile install locations. */
 export function isInstallLocation(value: unknown): value is string;
 
+/** Name at the end of a normalized install location. */
+export function installPackageName(location: string): string | undefined;
+
+/** All dependency scopes checked by reviewed paths. */
+export const DEPENDENCY_SCOPES: readonly [
+  "dependencies",
+  "devDependencies",
+  "optionalDependencies",
+  "peerDependencies",
+];
+
+/** Local package entries include workspaces and linked native packages. */
+export function workspaceLocations(
+  packages: Readonly<Record<string, AuditLockfileEntry>>,
+): string[];
+
+/** Resolve an edge through the nearest installed node_modules entry. */
+export function resolveDependency(
+  packages: Readonly<Record<string, AuditLockfileEntry>>,
+  owner: string,
+  name: string,
+): string | undefined;
+
 /** Reject missing package inventories and malformed dependency maps. */
 export function lockfileErrors(lockfile: unknown): string[];
 

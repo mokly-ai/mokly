@@ -6,6 +6,7 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::config::{invalid_path_text, relative};
 use crate::config_links;
+use crate::config_paths::confined_to_repository;
 use crate::config_postcss;
 use crate::config_types::{ResolvedConfig, ResolvedModules};
 use crate::config_validation::invalid;
@@ -114,7 +115,7 @@ pub(crate) fn validate_inputs(
         loop {
             match tree.project(&candidate) {
                 Ok(Some(node)) => {
-                    if !node.identity.starts_with(&config.repo_root) {
+                    if !confined_to_repository(&config.repo_root, &[&candidate, &node.identity]) {
                         return Err(invalid(format!(
                             "watch.rules.paths: {path} cannot be classified safely outside repoRoot"
                         )));
@@ -179,7 +180,7 @@ fn confined(
     } else {
         FileKind::File
     };
-    if !node.identity.starts_with(&config.repo_root) || !path.starts_with(&config.repo_root) {
+    if !confined_to_repository(&config.repo_root, &[&path, &node.identity]) {
         return Err(invalid(format!("{setting}: {value} is outside repoRoot")));
     }
     if node.kind != expected {

@@ -1,0 +1,68 @@
+/* The documentation columns and pager expand at the shared breakpoints. */
+
+@media (min-width: 768px) {
+  .site-docs {
+    grid-template-columns: var(--mk-layout-site-sidebar) minmax(0, 1fr);
+    padding: 0 var(--mk-layout-gutter-desktop);
+  }
+
+  .site-docs-side {
+    align-self: stretch;
+    border-right: 1px solid var(--mk-color-border);
+    display: block;
+    padding-right: var(--mk-space-6);
+  }
+
+  .site-docs-side .site-doc-tree {
+    height: 100vh;
+    padding: var(--mk-space-6) 0 var(--mk-space-5);
+    position: sticky;
+    top: 0;
+  }
+
+  .site-docs-side .site-doc-tree-scroll {
+    overflow-y: auto;
+  }
+
+  .site-doc-disclosure,
+  .site-docs-document > .site-onpage {
+    display: none;
+  }
+
+  .site-docs-document {
+    padding: var(--mk-space-10) var(--mk-space-12) var(--mk-space-20);
+  }
+
+  .site-pullquote {
+    font-size: var(--mk-type-heading3-size);
+    line-height: var(--mk-type-heading3-line);
+    padding-left: var(--mk-space-5);
+  }
+
+  .site-pager {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .site-pager-item--next {
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 1100px) {
+  .site-docs {
+    grid-template-columns:
+      var(--mk-layout-site-sidebar)
+      minmax(0, 1fr)
+      var(--mk-layout-site-on-page);
+  }
+
+  .site-docs-rail {
+    align-self: start;
+    border-left: 1px solid var(--mk-color-border);
+    display: block;
+    padding: var(--mk-space-10) 0 var(--mk-space-10) var(--mk-space-6);
+    position: sticky;
+    top: var(--mk-space-6);
+  }
+}

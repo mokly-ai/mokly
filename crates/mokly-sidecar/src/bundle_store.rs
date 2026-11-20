@@ -20,7 +20,7 @@ impl RecordToken {
             return None;
         }
         let mut bytes = [0; 32];
-        for (target, pair) in bytes.iter_mut().zip(value.as_bytes().chunks_exact(2)) {
+        for (target, pair) in bytes.iter_mut().zip(value.as_bytes().as_chunks::<2>().0) {
             let text = std::str::from_utf8(pair).ok()?;
             *target = u8::from_str_radix(text, 16).ok()?;
         }

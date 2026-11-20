@@ -9,16 +9,6 @@ export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 
-export function resolveVerificationMode({ eventName, manualVerification }) {
-  if (eventName === "push") return "evidence";
-  if (eventName !== "workflow_dispatch")
-    throw new Error(`unsupported release event: ${eventName}`);
-  const mode = manualVerification || "evidence";
-  if (!["evidence", "complete"].includes(mode))
-    throw new Error(`unsupported release verification mode: ${mode}`);
-  return mode;
-}
-
 export function selectCandidateRuns(runs, pulls, tagCommit, repository) {
   const normalizedRepository = repository.toLowerCase();
   const pullHeads = new Set(

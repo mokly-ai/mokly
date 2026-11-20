@@ -1,0 +1,38 @@
+{
+  "action": "rerequested",
+  "check_run": {
+    "id": 4,
+    "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "external_id": "publication-fixture",
+    "status": "completed",
+    "conclusion": "neutral",
+    "app": {
+      "id": 123,
+      "slug": "mokly-test"
+    }
+  },
+  "installation": {
+    "id": 1
+  },
+  "repository": {
+    "id": 1296269,
+    "full_name": "octocat/Hello-World",
+    "name": "Hello-World",
+    "owner": {
+      "id": 1,
+      "login": "octocat",
+      "type": "User",
+      "node_id": "MDQ6VXNlcjE="
+    },
+    "default_branch": "master",
+    "private": false,
+    "archived": false,
+    "disabled": false
+  },
+  "sender": {
+    "id": 1,
+    "login": "octocat",
+    "type": "User",
+    "node_id": "MDQ6VXNlcjE="
+  }
+}
