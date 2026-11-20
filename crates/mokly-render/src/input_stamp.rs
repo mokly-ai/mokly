@@ -185,12 +185,12 @@ fn file_identity(tree: &dyn SourceTree, path: &Path) -> Option<(Node, String)> {
     })
 }
 
-/// The names of the files and symbolic links directly in a directory.
+/// The names of the non-directory entries directly in a directory.
 fn membership(tree: &dyn SourceTree, path: &Path) -> Option<BTreeSet<PathBuf>> {
     tree.children(path).ok().map(|children| {
         children
             .into_iter()
-            .filter(|child| matches!(child.kind, FileKind::File | FileKind::Symlink))
+            .filter(|child| child.kind != FileKind::Directory)
             .map(|child| PathBuf::from(child.name))
             .collect()
     })

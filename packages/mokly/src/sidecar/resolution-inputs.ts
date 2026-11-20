@@ -7,7 +7,7 @@ import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 import { FRAME_LIMIT } from "./transport.js";
 
-/** Capture file membership without retaining source contents. */
+/** Capture non-directory membership without retaining source contents. */
 export async function directoryFiles(
   directory: string,
   limit = FRAME_LIMIT / 2,
@@ -16,7 +16,7 @@ export async function directoryFiles(
     const names: string[] = [];
     let bytes = 2;
     for await (const entry of await fs.opendir(directory)) {
-      if (!entry.isFile() && !entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) continue;
       bytes += Buffer.byteLength(JSON.stringify(entry.name)) + 1;
       if (bytes > limit)
         throw new SidecarError(

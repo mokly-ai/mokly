@@ -142,8 +142,6 @@
     - A dangling candidate link is a listed name that the snapshot cannot
       prove is no file. See
       [dangling-candidate-link-pin.md](./dangling-candidate-link-pin.md).
-    - Listings omit special files. See
-      [listing-kind-fidelity.md](./listing-kind-fidelity.md).
 - **Problem:** A marked compilation records its checks after the compile. A
   preferred candidate that appears between the read of esbuild and the
   recording enters the recorded listing. The checks then match the new disk,
@@ -220,8 +218,6 @@
     link.
   - [marked-metadata-owner-timing.md](./marked-metadata-owner-timing.md):
     holds the target-parity residual of option A.
-  - [listing-kind-fidelity.md](./listing-kind-fidelity.md): holds a listing
-    limit that option A shares.
   - [marked-sibling-file-candidates.md](./marked-sibling-file-candidates.md):
     option G abstains where a candidate folder has no listing, until that
     item adds the listings.

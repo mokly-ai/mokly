@@ -25,7 +25,8 @@
   - **Live checks:** the checks of a marked reuse: equal settings, roots, and
     toolchain identity, unchanged consumed file digests and metadata inputs,
     and unchanged directory lists.
-  - **Directory list:** the sorted names of the files and links in one folder.
+  - **Directory list:** the sorted names of the non-directory entries in one
+    folder.
     It holds no entry kind and no link target.
   - **Link retarget:** a symbolic link that is replaced by a link of the same
     name with another target.
@@ -41,7 +42,7 @@
     to line 51, turns each lookup folder into its real path through
     `ModulePaths.metadata`, at `packages/mokly/src/sidecar/module-paths.ts:122`.
     `directoryFiles`, at lines 11 to 39 of the first file, records only the
-    names of the files and links in a folder. So the live checks hold the
+    names of the non-directory entries in a folder. So the live checks hold the
     real folder behind a link, not the link and its target.
   - Consumed-module folders follow the same rule on `main`. Their live checks
     never recorded a link target, so the limit predates the absolute paths

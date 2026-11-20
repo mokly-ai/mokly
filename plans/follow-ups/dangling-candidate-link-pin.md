@@ -26,8 +26,8 @@
     evidence of a marked compilation.
   - **Dangling candidate link:** a symbolic link at an earlier candidate path
     whose final target is absent. esbuild skips it.
-  - **Listing:** the sorted names of the regular files and symbolic links of
-    one folder, which marked reuse compares with the disk.
+  - **Listing:** the sorted names of the non-directory entries of one
+    folder, which marked reuse compares with the disk.
 - **Background:**
   - esbuild skips a folder candidate that is a dangling symbolic link.
   - The marked folder pass stages the final target of such a link as an
@@ -122,8 +122,7 @@
     compare that map, so it fails the goal for retained reuse in Rust.
 - **Wider fix:** F. Entries with kinds for each candidate folder cover every
   skipped shape. The name-only listings also cause
-  [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md) and
-  [listing-kind-fidelity.md](./listing-kind-fidelity.md). Option E of
+  [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md). Option E of
   `marked-reuse-link-retarget.md`, one shared path-and-link observation
   model, with a dangling-link rule, is the form for every route.
 - **Previous examples:** The `full` evidence fails closed on a dangling link
@@ -135,8 +134,6 @@
     C here.
   - [marked-reuse-link-retarget.md](./marked-reuse-link-retarget.md): the
     same cause, name-only listings, for a link retarget on every route.
-  - [listing-kind-fidelity.md](./listing-kind-fidelity.md): the same cause,
-    for special files and the kind of a missing path.
 - **Recommendation:** C, kept as the later fix, while A stays the current
   call. It keeps the reuse of the control and closes the gap for both
   runtimes. F best protects the codebase.
