@@ -76,7 +76,6 @@
   - Applying the environment-token fixture fix to this test now guesses that the two failures have the same cause.
 - **Wider fix:** None yet. The source is unknown. B gives better detection output for later failures.
 - **Previous examples:** The environment-token probe in this file failed with `CommandUnavailable`. A trace named `ETXTBSY` from a sibling process that inherited its writable fixture.
-- **Related:** [flaky-program-cancellation-fixture.md](./flaky-program-cancellation-fixture.md) records a confirmed writer-inheritance race in the same file. This interpreter failure has no trace that proves the same cause.
 - **Recommendation:** A. Trace the failure before selecting a fix, as the testing rules require.
 - **Action:** fix after merge, apply A, because this separate unchanged test needs its own investigation. If A cannot reproduce the failure or name its source, ask the user before changing code.
 
