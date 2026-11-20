@@ -2,6 +2,7 @@
 
 #![warn(unreachable_pub)]
 
+mod auth_prune;
 mod billing_checkout;
 mod billing_customer;
 mod billing_delivery;

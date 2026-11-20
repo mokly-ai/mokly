@@ -4,9 +4,12 @@ The hourly `auth-prune` CronJob runs the released API image with `prune`, a
 ten-minute deadline, no retries and `concurrencyPolicy: Forbid`. It uses the
 API Workload Identity and native Cloud SQL proxy sidecar. It mounts no mail,
 GitHub, signing or storage secrets. The link, desktop grant, session and
-counter deletes commit together. Cloud builds add a second transaction that
-prunes finished [builds](../protocol/cloud/cloud-builds.md#retention-and-recovery),
-at most 1,000 per run, after `MKC_BUILD_RETENTION_SECONDS` (default 2592000).
+counter deletes commit in separate batches of at most 1,000 rows. After 480
+seconds (eight minutes) of authentication cleanup, the command starts no new
+batch, so a large backlog takes more than one run. One more transaction then
+prunes finished
+[builds](../protocol/cloud/cloud-builds.md#retention-and-recovery), at most
+1,000 per run, after `MKC_BUILD_RETENTION_SECONDS` (default 2592000).
 Build pruning follows the
 [build and publication lock order](../protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 
@@ -18,8 +21,13 @@ kubectl -n "mkc-$ENVIRONMENT" logs job/auth-prune-manual -c maintenance
 
 Use a unique manual Job name for subsequent runs. A successful command exits
 zero and reports link, desktop grant, session, counter and build counts.
-A failed command exits nonzero; inspect database reachability and migration
-state before retrying.
+The end of the 480-second budget is not a failure. The command then reports
+the authentication rows that it committed, and later hourly runs delete the
+remaining rows. A failed command exits nonzero and keeps the batches that it
+committed before the failure. An authentication delete that runs longer than
+five seconds, for example while it waits for a lock, fails the command.
+Inspect database reachability, migration state and lock waits on the
+authentication tables before retrying.
 Never infer success from an empty count or a missing scheduled run.
 
 Retention settings are seconds after expiry, from zero through 31536000:
