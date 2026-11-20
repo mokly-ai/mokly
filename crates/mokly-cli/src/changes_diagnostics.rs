@@ -25,6 +25,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             .map(|issue| ChangeDiagnostic {
                 code: Code::BuildInvalid,
                 message: issue_text(issue, Code::BuildInvalid),
+                catalogue_code: Some(issue.code),
             })
             .collect(),
         Error::Catalogue {
@@ -32,6 +33,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
         } => vec![ChangeDiagnostic {
             code: Code::ConfigInvalid,
             message: issue_text(issue, Code::ConfigInvalid),
+            catalogue_code: Some(issue.code),
         }],
         Error::Catalogue {
             source: CatalogueError::Runtime { source },
@@ -40,6 +42,7 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             vec![ChangeDiagnostic {
                 code: diagnostic.code,
                 message: diagnostic.message,
+                catalogue_code: None,
             }]
         }
         Error::Graph { source } => render_errors::diagnostics(source)
@@ -47,11 +50,13 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             .map(|diagnostic| ChangeDiagnostic {
                 code: diagnostic.code,
                 message: diagnostic.message,
+                catalogue_code: None,
             })
             .collect(),
         _ => vec![ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: error.to_string(),
+            catalogue_code: None,
         }],
     };
     append_scripts_hint(error, &mut diagnostics);
@@ -81,6 +86,7 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
         let mut diagnostics = vec![ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: detail,
+            catalogue_code: None,
         }];
         append_scripts_hint(error, &mut diagnostics);
         return Some(BuildChanges::Unavailable {
@@ -186,6 +192,7 @@ fn append_scripts_hint(error: &Error, diagnostics: &mut Vec<ChangeDiagnostic>) {
         diagnostics.push(ChangeDiagnostic {
             code: Code::BuildInvalid,
             message: SCRIPTS_HINT.into(),
+            catalogue_code: None,
         });
     }
 }
