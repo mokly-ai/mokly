@@ -38,7 +38,7 @@ impl Pool {
 
     pub(super) fn maintain_return(&self) -> Result<bool> {
         let Some((index, pass, slot)) = self.claim_return() else {
-            return Ok(false);
+            return Ok(self.maintain_warmup());
         };
         let outcome = self.return_slot(index, &slot);
         match outcome {
@@ -127,6 +127,7 @@ impl Pool {
             state.retired.insert(index);
             state.head.return_disabled = true;
             state.head.candidates.clear();
+            state.head.warmups.reset();
             if state.retired.len() == self.options.size.get() {
                 state.stopped = true;
                 state.recipes.clear();
@@ -153,6 +154,11 @@ impl Pool {
                 }
                 state.head.active = None;
                 if slot.is_some() || !state.controls.contains_key(&index) {
+                    if let Some(started) = &slot
+                        && state.head.warm.is_some()
+                    {
+                        state.head.warmups.start(index, &started.control);
+                    }
                     state.slots[index] = slot;
                     state.available.push_back(index);
                 }

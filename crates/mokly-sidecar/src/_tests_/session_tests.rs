@@ -59,6 +59,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
         assert!(matches!(
             client.request(&Request {
                 id: 1,
+                quiet: false,
                 call: Call::Describe(Generation {
                     generation: "g".into()
                 })
@@ -69,6 +70,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
             client
                 .request(&Request {
                     id: 2,
+                    quiet: false,
                     call: Call::Shutdown(Empty {})
                 })
                 .unwrap(),
@@ -107,6 +109,7 @@ fn a_remote_protocol_failure_retains_its_code() {
     client.handshake().unwrap();
     let request = Request {
         id: 1,
+        quiet: false,
         call: Call::Shutdown(Empty {}),
     };
     assert!(matches!(

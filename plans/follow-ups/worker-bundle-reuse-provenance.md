@@ -179,7 +179,8 @@
     `docs/protocol/mokly-sidecar.md:61`, so it needs the user. Effort: Medium.
   - **D.** Classify from the actual compile:
     - The worker client reads each `operation` event before the response, in
-      the request loop at `crates/mokly-sidecar/src/client.rs:92` to line 97.
+      the request loop of `Client::request` at
+      `crates/mokly-sidecar/src/client.rs:93` to line 98.
     - The process worker counts the `esbuild` events of a `bundle` request.
       It shares the counter with `ForwardEvents`, as `PhaseState` does, at
       `crates/mokly-sidecar/src/process_worker.rs:23` and line 70.

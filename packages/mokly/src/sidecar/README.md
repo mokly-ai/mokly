@@ -10,7 +10,11 @@ its requests and results. The paths below are relative to the package root.
 ## Key Code
 
 - [`src/sidecar.ts`](../sidecar.ts) is the sidecar process entry, which
-  reads framed requests from the binary and writes one response for each.
+  reads framed requests from the binary and writes one response for each. For
+  a request with `quiet: true`, it silences consumer output until the reply.
+- [`src/sidecar/timing-output.ts`](./timing-output.ts) holds `timingOutput`,
+  which wraps standard error: timing records start on their own line and use
+  the original writer, and its `quiet` control drops every other write.
 - [`src/sidecar/session.ts`](./session.ts) holds `Session`, which
   dispatches each sidecar request to its method. It removes the request-only
   `capture` and `plan` values of a `bundle` request before the reuse check,

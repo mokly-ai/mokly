@@ -4,11 +4,20 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-17, from the round 1 finding check of the branch
   `calummoore/mokly-parallel-view-comparison-n4kr`, finding 1, which listed
-  this class under its new problems.
+  this class under its new problems. Updated on 2026-11-19 with the
+  pointers that the round-2 review of the branch
+  `calummoore/mokly-return-warmup` and its checks found wrong.
 - **Location:** `plans/follow-ups/isolated-git-in-every-test-helper.md:60`,
-  `plans/follow-ups/base-read-cause-unknown.md:12`, and
-  `plans/follow-ups/base-read-cause-unknown.md:89`.
-- **Reason:** Both wrong pointers were already wrong on `origin/main`, so a
+  `plans/follow-ups/base-read-cause-unknown.md:12` and line 89,
+  `plans/follow-ups/root-switch-reap-wait.md:12` and line 41,
+  `plans/follow-ups/forced-kill-reap-wait.md:8`, line 27, and line 29,
+  `plans/follow-ups/bundle-cache-request-cost.md:37`,
+  `plans/follow-ups/sequential-evidence-capture-cost.md:15` and line 88,
+  `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, line 40, line 72,
+  line 106, line 213, and line 216, and
+  `plans/follow-ups/sidecar-queue-steering-fixtures.md:7`, line 58, line 59,
+  and line 77.
+- **Reason:** All these pointers were already wrong on `origin/main`, so a
   separate branch fixes them, and the search rule lives in the shared skills
   repository.
 
@@ -63,6 +72,32 @@
       moved from `crates/mokly-graph/src/workers.rs` to
       `crates/mokly-graph/src/worker_context.rs`.
   - The search rule asked for none of these updates. A review found them.
+  - On 2026-11-19, the round-2 review of the branch
+    `calummoore/mokly-return-warmup` and its checks found more pointers that
+    were already wrong on `origin/main` at `6ae96ed08`. That branch moved each
+    target one more line down. The lines below are those of that branch:
+    - `root-switch-reap-wait.md:12` and line 41, and
+      `forced-kill-reap-wait.md:8`, line 27, and line 29 point into
+      `crates/mokly-sidecar/src/process_control.rs`. `ProcessControl::kill`
+      is at line 61, `ProcessControl::finish` at line 68, and its `reaped`
+      call at line 72.
+    - `bundle-cache-request-cost.md:37` and
+      `sequential-evidence-capture-cost.md:15` and line 88 cite
+      `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 for the
+      `complete_bundle` call. That range names `fn cleanup`. The call is at
+      line 141.
+    - `worker-bundle-reuse-provenance.md:10`, line 40, line 106, line 213, and
+      line 216 cite `crates/mokly-sidecar/src/pool_requests.rs` lines that sit
+      about six lines below their targets. `take_reused` is at line 80, the
+      shared compilation starts at line 81, and the `dispose` arm starts at
+      line 121.
+    - `worker-bundle-reuse-provenance.md:72` cites
+      `crates/mokly-sidecar/README.md:146` for the runtime-key comparison,
+      which is at line 212.
+    - `sidecar-queue-steering-fixtures.md:7`, line 58, line 59, and line 77
+      cite `crates/mokly-sidecar/src/_tests_/recipe_support.rs`.
+      `Fixture::select` is at line 175, `Fixture::probe` at line 212, and the
+      idle setup is not at line 141.
 - **Problem:** Line pointers in follow-up items go stale when lines above them
   change or a symbol moves to another file. The stale-reference search names
   removals and renames only, so no rule asks the change to update such
@@ -117,7 +152,11 @@
   validation to `crates/mokly-catalogue/src/config_inputs.rs`. It re-anchored
   27 pointers that its change shifted in nine items. Each pointer now has
   a symbol name near it. Option D still owns file-and-symbol anchors in the
-  shared skills.
+  shared skills. On 2026-11-19, the branch `calummoore/mokly-return-warmup`
+  moved seven pointers that were right on `origin/main`, and its round-2
+  review found five of them. It re-anchored all seven with a symbol beside
+  each, after a diff-based comparison of every pointer into each changed
+  file.
 - **Related:**
   - `plans/follow-ups/isolated-git-in-every-test-helper.md`: it holds the
     wrong pointer at line 60. Fix that pointer with option A or B of this

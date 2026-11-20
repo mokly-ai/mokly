@@ -4,6 +4,9 @@ use crate::pool::Pool;
 use crate::pool_state::Slot;
 use crate::pool_timing::Reason;
 
+/// Retire a process after this many renders complete.
+pub(super) const RENDER_LIMIT: u64 = 500;
+
 impl Pool {
     pub(super) fn recycle(&self, index: usize, slot: &mut Option<Slot>) {
         let Some(current) = slot.as_mut() else {
@@ -33,7 +36,7 @@ impl Pool {
         if pressure == Some(true) {
             current.worker.memory_pressure();
         }
-        if current.renders < 500 && pressure.is_none() {
+        if current.renders < RENDER_LIMIT && pressure.is_none() {
             return;
         }
         let stopped = {

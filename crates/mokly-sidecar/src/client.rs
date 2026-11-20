@@ -69,6 +69,7 @@ impl SidecarClient for Client {
     fn handshake(&mut self) -> Result<()> {
         let request = Request {
             id: 0,
+            quiet: false,
             call: Call::Hello(Hello {
                 capture: self.capture.clone(),
                 timings: self.timings,
