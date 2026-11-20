@@ -180,9 +180,6 @@ the packed contents of the package.
 - The [render sidecar README](./src/sidecar/README.md#key-code) names the key
   code of the render sidecar, the Node process that bundles, describes, and
   renders the catalogue modules.
-- [`src/sidecar/asset-imports.ts`](./src/sidecar/asset-imports.ts) holds the
-  asset extension list, longest consumer-loader lookup, closed tokens, and
-  per-compile imported paths keyed by the consumed-byte map.
 - [`scripts/build.mjs`](./scripts/build.mjs) builds `dist/` and copies the
   guides, the protocol documents, and the root changelog into the package.
 

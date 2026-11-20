@@ -63,6 +63,9 @@ its requests and results. The paths below are relative to the package root.
   marker. A `serveEdit` compile also gets no marker when
   `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
+- [`src/sidecar/asset-imports.ts`](./asset-imports.ts) holds the asset
+  extension list, the longest consumer-loader lookup, the closed tokens, and
+  the imported paths of each compile, keyed by its consumed-byte map.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
