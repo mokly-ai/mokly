@@ -3,6 +3,7 @@
 use std::sync::{Arc, Condvar, Mutex};
 
 use mokly_graph::render_class::RenderClass;
+use mokly_graph::write_activity::{WriteActivity, WriteLease};
 use mokly_server::changes::ChangeCancellation;
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::foreground::ForegroundLease;
@@ -29,6 +30,7 @@ pub(super) struct Gate {
     pub(super) changed: Condvar,
     pub(super) return_wake: Mutex<Option<Arc<serve_return::Wake>>>,
     pub(super) diagnostics: Mutex<Option<Arc<dyn Diagnostics>>>,
+    pub(super) activity: Mutex<Option<Arc<dyn WriteActivity>>>,
 }
 
 impl Gate {
@@ -39,6 +41,7 @@ impl Gate {
             capacity,
             return_wake: Mutex::new(None),
             diagnostics: Mutex::new(None),
+            activity: Mutex::new(None),
         }
     }
 
@@ -53,12 +56,25 @@ impl Gate {
     }
 
     pub(super) fn foreground(self: &Arc<Self>) -> ForegroundGuard {
+        let activity = self.activity();
         self.state
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .foreground += 1;
         self.changed.notify_all();
-        ForegroundGuard { gate: self.clone() }
+        ForegroundGuard {
+            gate: self.clone(),
+            _activity: activity,
+        }
+    }
+
+    pub(super) fn activity(&self) -> Option<Box<dyn WriteLease>> {
+        let activity = self
+            .activity
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone();
+        activity.map(|activity| activity.enter())
     }
 
     pub(super) fn acquire(
@@ -121,6 +137,9 @@ impl Gate {
 }
 
 impl ReturnAdmission for Gate {
+    fn activity(&self) -> Option<Box<dyn WriteLease>> {
+        self.activity()
+    }
     fn ready(&self) -> bool {
         let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         !state.closed && state.waiting_base == 0
@@ -181,6 +200,7 @@ impl Drop for ActiveGuard {
 
 pub(super) struct ForegroundGuard {
     gate: Arc<Gate>,
+    _activity: Option<Box<dyn WriteLease>>,
 }
 
 impl ForegroundLease for ForegroundGuard {}

@@ -24,6 +24,12 @@ impl From<&SourceLocation> for SourceRecord {
     }
 }
 
+impl SourceRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        self.path.capacity() + self.export.as_ref().map_or(0, String::capacity)
+    }
+}
+
 impl From<SourceRecord> for SourceLocation {
     fn from(value: SourceRecord) -> Self {
         Self {
@@ -54,6 +60,15 @@ impl From<&ComponentInputOwner> for OwnerRecord {
             ComponentInputOwner::Instance { instance_key } => Self::Instance {
                 instance_key: instance_key.clone(),
             },
+        }
+    }
+}
+
+impl OwnerRecord {
+    pub(crate) fn known_bytes(&self) -> usize {
+        match self {
+            Self::Entry => 0,
+            Self::Instance { instance_key } => instance_key.capacity(),
         }
     }
 }

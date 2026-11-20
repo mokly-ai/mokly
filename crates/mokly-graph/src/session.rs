@@ -18,6 +18,7 @@ use crate::collection::ComparisonCollector;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
+use crate::document_store::StoreKey;
 use crate::error::Result;
 use crate::graph::Graph;
 use crate::link_index::LinkIndex;
@@ -40,6 +41,7 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
+    pub(crate) fresh: Mutex<BTreeMap<String, StoreKey>>,
     pub(crate) anchor_flights: Arc<dyn Requests>,
     pub(crate) link_results: Arc<dyn LinkResults>,
     pub(crate) link_index: LinkIndex,
@@ -94,6 +96,7 @@ impl Session {
             .collect();
         Self {
             state: Arc::new(State {
+                fresh: Mutex::new(BTreeMap::new()),
                 anchor_flights: Arc::new(MemoryRequests::default()),
                 link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
                 link_index,
@@ -225,7 +228,11 @@ impl RenderGeneration for Session {
         for result in results {
             summary.record(result);
         }
-        summary.finish(self).map(|(summary, _)| summary)
+        let (summary, _) = summary.finish(self)?;
+        for route in &routes {
+            self.offer_document(route);
+        }
+        Ok(summary)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         self.collect_validated(collector)

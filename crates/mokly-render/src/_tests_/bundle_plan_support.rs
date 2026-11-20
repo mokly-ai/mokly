@@ -62,6 +62,7 @@ pub(super) fn result(
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: evidence,
             identity: "identity".into(),
             code: String::new(),
