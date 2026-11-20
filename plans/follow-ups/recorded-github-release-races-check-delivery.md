@@ -1,10 +1,10 @@
 # Recorded GitHub release races check delivery
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-02, from the ten-run check of the app browser suite in the Milestone 2 app work item of the branch `calummoore/mokly-cli-upgrade`, an unrelated flaky test.
 - **Location:** `apps/app/src/_tests_/database-fixture.ts:70-110`, which holds `forgetInstallation` and `releaseRecordedGitHub`.
-- **Reason:** The release statements are the same on `origin/main` and this branch did not change them, so one fix in a separate branch reaches every open branch.
+- **Reason:** On 2026-11-20, 40 natural repetitions did not reproduce the cleanup failure, so option A waits for a user decision under the flaky-test rule.
 - **Category:** Test.
 - **Related:** `plans/follow-ups/installation-release-fails-on-late-check-row.md` records the same cleanup failure from CI, with reproduction guidance. Keep both histories when the future fix consolidates them.
 
@@ -34,7 +34,7 @@
 - **Wider fix:** D. Isolated state per test removes every race on the shared recorded installation, not only the race of the check worker.
 - **Previous examples:** `plans/follow-ups/app-build-tests-fail-on-late-route-fetch.md`, where work that an earlier step started also outlives its test in the same suite.
 - **Recommendation:** A. It removes the race inside the one function that owns the release, with no wait and no retry. D best protects the codebase.
-- **Action:** fix after merge, apply A, because the release code is the same on `origin/main` and the flake is outside the branch that met it.
+- **Action:** ask the user, because the failure did not reproduce in 40 natural repetitions on 2026-11-20, and the user asked to decide that case. Until then, the action was `fix after merge, apply A`, as the history below records.
 
 Failure, as history. These facts come from the recorded run.
 
@@ -60,3 +60,29 @@ Additional occurrence on 2026-11-04:
 - The test and cleanup helper match captured main exactly. No assertion,
   fixture operation or retry setting changed in the retention integration.
   The suspected background-write ordering remains a separate investigation.
+
+Investigation on 2026-11-20, as history. It changed no tracked code, test or configuration.
+
+- Until this investigation, the kind was Outside the scope. The reason and the action were:
+  - Reason: The release statements are the same on `origin/main` and this branch did not change them, so one fix in a separate branch reaches every open branch.
+  - Action: fix after merge, apply A, because the release code is the same on `origin/main` and the flake is outside the branch that met it.
+- On 2026-11-20 the user asked to reproduce the failure first, with the steps in `plans/follow-ups/installation-release-fails-on-late-check-row.md`. Option A was to follow only if the reproduction and its source justified it. If the repetitions did not reproduce the failure, no code was to change, and the user was to decide the next step.
+- The investigation ran at commit `4696ee41b` of `origin/main`. The release, the check write and the foreign keys were as the Background says. It used Postgres 16.15 and the browser setup of `apps/app/README.md`. That setup has the real API, the recorded GitHub, the exported app, one worker and an isolated schema.
+- Natural run: `viewer-handoff-mobile.spec.ts:42`, "a later pointer action cancels the package slot restore", and `:63`, "a late package slot does not restore after leaving its path", ran in order 20 times. The command ran from the repository root:
+  `PLAYWRIGHT_JSON_OUTPUT_FILE={absolute evidence folder}/before-results.json npm run test:browser --workspace @mokly-cloud/app -- src/_tests_/viewer-handoff-mobile.spec.ts:42 src/_tests_/viewer-handoff-mobile.spec.ts:63 --project=mobile --retries=0 --repeat-each=20 --reporter=list,json`
+  - All 40 runs passed, with no failed, skipped or flaky run. Each test passed 20 of 20. The command exited with 0 after 295.6 seconds. So the natural runs did not reproduce the cleanup failure.
+  - Postgres logged 16 inserts into `github_check_runs`: 15 committed and 1 failed. All 16 match `record_github_check`, which only the check worker calls outside tests, from `crates/mkc-publications/src/check_provider.rs`.
+  - The failed insert came after one `:42` run ended at 02:25:11.794 UTC:
+    - At 02:25:12.714 the check worker read the repository of that run.
+    - From 02:25:12.733 to 12.736 the release at the start of the next `:63` run deleted that repository, with no error.
+    - At 02:25:12.757 the check worker inserted the check row. The insert failed on `github_check_runs_repository_id_fkey`, because the repository was gone.
+    - At 02:25:12.759671 the API logged "publication check delivery failed" for event `01a1f6c5-a73f-737c-addf-3317754a87c6`, at attempt 1, with 0 permanent failures, not dead-lettered. Its context was "record created or recovered GitHub check".
+  - The `:63` run passed. So the check worker met a release in a natural run, but after the release committed. The API write failed, not the release. This is not a natural cleanup failure.
+- Controlled order. It is a diagnostic, not a natural failure and not an after-fix result.
+  - One run of `:42` on `mobile` passed: 1 of 1, exit 0, in 7.2 seconds. It left the recorded installation in the suite schema.
+  - A separate untracked script held an open transaction that inserted a check row for the recorded repository. Then it started the unchanged `releaseRecordedGitHub`.
+  - With no sleep, the script read `pg_stat_activity` until the release waited for the held transaction. The release waited at the `github_repositories` row that the installation delete cascades to. Then the script committed the held insert.
+  - The diagnostic set `deadlock_timeout=1ms` to log the lock wait. It made no elapsed-time assertion.
+  - The release exited with 1 on the recorded error, `update or delete on table "github_repositories" violates foreign key constraint "github_check_runs_repository_id_fkey" on table "github_check_runs"`. The stack ran from `sql` at `database-fixture.ts:12` and `releaseRecordedGitHub` at `database-fixture.ts:101`.
+  - The release rolled back. The held check row, the repository and the installation stayed, one row each.
+- Option A, the table lock, is not applied. No after-fix pass count exists.

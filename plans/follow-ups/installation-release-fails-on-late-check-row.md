@@ -1,10 +1,10 @@
 # Installation release fails on a late check row
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-02, from CI run 41370073016 of the branch `calummoore/ci-pipeline-duration`, an unrelated flaky test.
 - **Location:** `apps/app/src/_tests_/database-fixture.ts:11-17`, `:70-88` and `:100-110`, `apps/app/src/_tests_/github-installation.ts:87-93`, `crates/mkc-publications/src/check_provider.rs:120-133`, `crates/mkc-publications/src/check_worker.rs:42-60`, `crates/mkc-api/src/check_runtime.rs:62-77`, and `crates/mkc-db/migrations/202609161530_github_app/up.sql:18` and `:99`.
-- **Reason:** The branch that met the flake changes neither the test, the release helper nor the check writer, and the flaky-test rule fixes an unrelated flaky test in its own branch.
+- **Reason:** On 2026-11-20, 40 natural repetitions did not reproduce the release failure, so the next step waits for a user decision under the flaky-test rule.
 - **Checked:** 2026-11-02, at commit `07febda2`. These files are the same as on `main` at `10834d30`. The release still runs its deletes in one `psql -c` call, the check delivery still records each check row in its own transaction, and the foreign key still has no delete action. Nobody ran a controlled reproduction.
 - **Category:** Test.
 - **Related:** `plans/follow-ups/recorded-github-release-races-check-delivery.md` records the same failure in local runs, including a new occurrence on 2026-11-04. Keep both histories when the future fix consolidates them.
@@ -22,7 +22,7 @@
   - In `publication_events`, an event is pending while it has no `delivered_at` and no `dead_lettered_at`, as the index `publication_events_pending` shows.
 - **Problem:**
   - Confirmed: once in CI, the release failed with a foreign-key error at the start of a test, and the retry passed. The failure text is in the history below.
-  - Suspected, not reproduced: a check row for the recorded repository committed while the release ran, after its first delete and before its installation delete. The most likely writer is the check delivery of the test before, which also publishes. Another background writer, such as GitHub reconciliation, is not ruled out.
+  - The controlled reproduction on 2026-11-20 confirmed that a check insert can make the release fail on this foreign key. All 40 natural repetitions passed. Their logs identify check delivery as a concurrent writer, but its insert failed after the release succeeded.
 - **Impact if no action:** Any test that releases the installation after a test that published can fail one attempt this way. Two failed attempts in a row fail its App shard job and cost a CI rerun.
 - **Root question:** How does a test hand back the recorded installation while background work of the API can still write rows for its repository?
 - **Options:**
@@ -42,7 +42,7 @@
 - **Wider fix:** D. It removes the shared installation that lets the background work of one test reach the next test. A fixes the one shared release helper, so it covers every caller, but only for the source that the reproduction names.
 - **Previous examples:** `plans/follow-ups/app-build-tests-fail-on-late-route-fetch.md` records other asynchronous work that outlives its test in the same suite: a route handler awaits `route.fetch()` after its test ends. No earlier record of this foreign-key error was found in `plans/` or `docs/`.
 - **Recommendation:** A. It reproduces the race before it changes anything, keeps every assertion, and waits on a state, not on time. D best protects the suite from this class, but it is Large.
-- **Action:** fix after merge, apply A, because the test, its helper and the check writer are outside the branch that met the flake. If the reproduction names no source, the flaky-test rule gives the outcome ask the user. If it names a source in product code, the fix is a product bug fix with a failing test first.
+- **Action:** ask the user, because the failure did not reproduce in 40 natural repetitions on 2026-11-20, and the user asked to decide that case. Until then, the action was `fix after merge, apply A`, as the history below records.
 
 To reproduce and prove the fix:
 
@@ -65,3 +65,30 @@ Failure, as history. These facts come from the CI log of the job below.
   ```
 
 - Locally, shard 4 and the complete App browser suite of 371 tests passed with no retry.
+
+Investigation on 2026-11-20, as history. It changed no tracked code, test or configuration.
+
+- The earlier Problem line was: Suspected, not reproduced: a check row for the recorded repository committed while the release ran, after its first delete and before its installation delete. The most likely writer is the check delivery of the test before, which also publishes. Another background writer, such as GitHub reconciliation, is not ruled out.
+- Until this investigation, the kind was Outside the scope. The reason and the action were:
+  - Reason: The branch that met the flake changes neither the test, the release helper nor the check writer, and the flaky-test rule fixes an unrelated flaky test in its own branch.
+  - Action: fix after merge, apply A, because the test, its helper and the check writer are outside the branch that met the flake. If the reproduction names no source, the flaky-test rule gives the outcome ask the user. If it names a source in product code, the fix is a product bug fix with a failing test first.
+- On 2026-11-20 the user asked to reproduce the failure first, with the steps under "To reproduce and prove the fix". A table lock was to follow only if the reproduction and its source justified it. That lock is option A of `plans/follow-ups/recorded-github-release-races-check-delivery.md`: one release transaction that first takes `LOCK TABLE github_check_runs, builds IN SHARE ROW EXCLUSIVE MODE`. If the repetitions did not reproduce the failure, no code was to change, and the user was to decide the next step.
+- The investigation ran at commit `4696ee41b` of `origin/main`. The release, the check delivery and the foreign keys were as the Background says. It used Postgres 16.15 and the browser setup of `apps/app/README.md`. That setup has the real API, the recorded GitHub, the exported app, one worker and an isolated schema.
+- Natural run: `viewer-handoff-mobile.spec.ts:42`, "a later pointer action cancels the package slot restore", and `:63`, "a late package slot does not restore after leaving its path", ran in order 20 times. The command ran from the repository root:
+  `PLAYWRIGHT_JSON_OUTPUT_FILE={absolute evidence folder}/before-results.json npm run test:browser --workspace @mokly-cloud/app -- src/_tests_/viewer-handoff-mobile.spec.ts:42 src/_tests_/viewer-handoff-mobile.spec.ts:63 --project=mobile --retries=0 --repeat-each=20 --reporter=list,json`
+  - All 40 runs passed, with no failed, skipped or flaky run. Each test passed 20 of 20. The command exited with 0 after 295.6 seconds. So the natural runs did not reproduce the failure.
+  - Postgres logged 16 inserts into `github_check_runs`: 15 committed and 1 failed. All 16 match `record_github_check`, which only the check delivery calls outside tests, from `crates/mkc-publications/src/check_provider.rs`. So in this run, no other API path inserted a check row.
+  - The failed insert came after one `:42` run ended at 02:25:11.794 UTC:
+    - At 02:25:12.714 the check delivery read the repository of that run.
+    - From 02:25:12.733 to 12.736 the release at the start of the next `:63` run deleted that repository, with no error.
+    - At 02:25:12.757 the check delivery inserted the check row. The insert failed on `github_check_runs_repository_id_fkey`, because the repository was gone.
+    - At 02:25:12.759671 the API logged "publication check delivery failed" for event `01a1f6c5-a73f-737c-addf-3317754a87c6`, at attempt 1, with 0 permanent failures, not dead-lettered. Its context was "record created or recovered GitHub check".
+  - The `:63` run passed. So the check delivery of the test before met a release in a natural run, but after the release committed. The API write failed, not the release. This is not a natural release failure.
+- Controlled order, the forced-order step above. It is a diagnostic, not a natural failure and not an after-fix result.
+  - One run of `:42` on `mobile` passed: 1 of 1, exit 0, in 7.2 seconds. It left the recorded installation in the suite schema.
+  - A separate untracked script held an open transaction that inserted a check row for the recorded repository. Then it started the unchanged release.
+  - With no sleep, the script read `pg_stat_activity` until the release waited for the held transaction. The release waited at the `github_repositories` row that the installation delete cascades to. Then the script committed the held insert.
+  - The diagnostic set `deadlock_timeout=1ms` to log the lock wait. It made no elapsed-time assertion.
+  - The release exited with 1 on the recorded error, `update or delete on table "github_repositories" violates foreign key constraint "github_check_runs_repository_id_fkey" on table "github_check_runs"`. The stack ran from `sql` at `database-fixture.ts:12` and `releaseRecordedGitHub` at `database-fixture.ts:101`.
+  - The release rolled back. The held check row, the repository and the installation stayed, one row each.
+- No fix is applied, the table lock included. So the after-fix step did not run, and no after-fix pass count exists.
