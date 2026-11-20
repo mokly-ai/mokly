@@ -9,6 +9,7 @@ use mokly_git::changes::{Change, ChangedPath, Kind};
 use mokly_git::control::Token;
 use mokly_git::disk::SystemDisk;
 use mokly_git::repository::{GitRepositories, Repositories};
+use mokly_test_support::git::git;
 
 #[path = "support/recording.rs"]
 mod recording;
@@ -70,12 +71,18 @@ fn file_listings_keep_output_and_do_not_invoke_configured_fsmonitor() {
     let hook = fixture.root().join(".git/hooks/mokly-fsmonitor");
     #[cfg(unix)]
     fs::set_permissions(&hook, fs::Permissions::from_mode(0o755)).unwrap();
-    fixture.git(&[
-        "config",
-        "core.fsmonitor",
-        &hook.to_string_lossy().replace('\\', "/"),
-    ]);
-    fixture.git(&["config", "core.fsmonitorHookVersion", "2"]);
+    git(
+        fixture.root(),
+        &[
+            "config",
+            "core.fsmonitor",
+            &hook.to_string_lossy().replace('\\', "/"),
+        ],
+    );
+    git(
+        fixture.root(),
+        &["config", "core.fsmonitorHookVersion", "2"],
+    );
     let marker = fixture.root().join(".git/mokly-fsmonitor-marker");
     for (request, args) in requests.iter().zip([
         [
@@ -88,7 +95,7 @@ fn file_listings_keep_output_and_do_not_invoke_configured_fsmonitor() {
         .as_slice(),
         ["ls-files", "--others", "--exclude-standard", "-z"].as_slice(),
     ]) {
-        let before = fixture.git(args);
+        let before = git(fixture.root(), args);
         assert_eq!(fs::read(&marker).unwrap(), b"called");
         fs::remove_file(&marker).unwrap();
         assert_eq!(recorded.inner.run(request).unwrap().stdout, before);

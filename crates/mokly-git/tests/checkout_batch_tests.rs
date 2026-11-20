@@ -1,7 +1,6 @@
 //! One filtered Git process converts a batch with the bytes of per-file conversion.
 
 use std::fs;
-use std::process::Command;
 use std::sync::{Arc, Mutex};
 
 use mokly_git::control::Token;
@@ -9,6 +8,7 @@ use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::tree::{Entry, Limits};
+use mokly_test_support::git::{command, git, run};
 
 #[path = "support/recording.rs"]
 mod recording;
@@ -18,17 +18,13 @@ use support::Fixture;
 
 /// Converts one blob the way a checkout of `path` would, with the runner's locale.
 fn per_file(fixture: &Fixture, commit: &ObjectId, entry: &Entry) -> Vec<u8> {
-    let output = Command::new("git")
+    run(command()
         .current_dir(fixture.root())
         .env("LC_ALL", "C")
         .arg(format!("--attr-source={commit}"))
         .args(["cat-file", "--filters"])
         .arg(format!("--path={}", entry.path))
-        .arg(entry.object.as_str())
-        .output()
-        .unwrap();
-    assert!(output.status.success(), "{}", entry.path);
-    output.stdout
+        .arg(entry.object.as_str()))
 }
 
 fn recorded(fixture: &Fixture) -> (Arc<Recorded>, Arc<dyn Repository>) {
@@ -154,9 +150,12 @@ fn a_failing_filter_inside_a_batch_affects_only_its_file() {
         fixture.write("x.fail", b"x\n");
         fixture.write("z.txt", b"z\n");
         let base = fixture.commit();
-        fixture.git(&["config", "filter.fail.clean", "cat"]);
-        fixture.git(&["config", "filter.fail.smudge", smudge]);
-        fixture.git(&["config", "filter.fail.required", required]);
+        git(fixture.root(), &["config", "filter.fail.clean", "cat"]);
+        git(fixture.root(), &["config", "filter.fail.smudge", smudge]);
+        git(
+            fixture.root(),
+            &["config", "filter.fail.required", required],
+        );
         let repository = fixture.repository();
         let entries = files(repository.as_ref(), &base);
         let temporary = tempfile::tempdir().unwrap();

@@ -2,7 +2,6 @@
 
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::process::Command;
 use std::sync::{Arc, Mutex};
 
 use mokly_git::control::Token;
@@ -11,6 +10,7 @@ use mokly_git::error::Error;
 use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::tree::Limits;
+use mokly_test_support::git::{command, git, run};
 
 #[path = "support/recording.rs"]
 mod recording;
@@ -20,7 +20,7 @@ use recording::Recorded;
 use support::Fixture;
 
 fn missing_objects(clone: &Path, base: &ObjectId) -> BTreeSet<String> {
-    let output = Command::new("git")
+    let output = run(command()
         .current_dir(clone)
         .args([
             "rev-list",
@@ -29,11 +29,8 @@ fn missing_objects(clone: &Path, base: &ObjectId) -> BTreeSet<String> {
             "--missing=print",
             base.as_str(),
         ])
-        .env("GIT_NO_LAZY_FETCH", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
-    String::from_utf8(output.stdout)
+        .env("GIT_NO_LAZY_FETCH", "1"));
+    String::from_utf8(output)
         .unwrap()
         .lines()
         .filter_map(|line| line.strip_prefix('?').map(str::to_owned))
@@ -43,8 +40,11 @@ fn missing_objects(clone: &Path, base: &ObjectId) -> BTreeSet<String> {
 #[test]
 fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     let source = Fixture::new();
-    source.git(&["config", "uploadpack.allowFilter", "true"]);
-    source.git(&["config", "uploadpack.allowAnySHA1InWant", "true"]);
+    git(source.root(), &["config", "uploadpack.allowFilter", "true"]);
+    git(
+        source.root(),
+        &["config", "uploadpack.allowAnySHA1InWant", "true"],
+    );
     source.write(".gitattributes", b"*.txt text eol=crlf\n-l text eol=crlf\n");
     let paths: Vec<_> = (0..8)
         .map(|index| {
@@ -79,15 +79,18 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     }
     let base = source.commit();
     for (left, right) in [("HEAD:a", "HEAD:b"), ("HEAD:x/s", "HEAD:z")] {
-        let ids = String::from_utf8(source.git(&["rev-parse", left, right])).unwrap();
+        let ids = String::from_utf8(git(source.root(), &["rev-parse", left, right])).unwrap();
         let ids: Vec<_> = ids.lines().collect();
         assert_eq!(ids.len(), 2);
         assert_eq!(ids[0], ids[1], "{left} and {right} must share a tree");
     }
-    let unrequested = String::from_utf8(source.git(&["rev-parse", "HEAD:base/unrequested.txt"]))
-        .unwrap()
-        .trim()
-        .to_owned();
+    let unrequested = String::from_utf8(git(
+        source.root(),
+        &["rev-parse", "HEAD:base/unrequested.txt"],
+    ))
+    .unwrap()
+    .trim()
+    .to_owned();
     let temporary = tempfile::tempdir().unwrap();
     let clone = temporary.path().join("blobless");
     let remote_path = source.root().to_string_lossy().replace('\\', "/");
@@ -96,14 +99,9 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     } else {
         format!("file://{remote_path}")
     };
-    let output = Command::new("git")
+    run(command()
         .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
-        .arg(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
+        .arg(&clone));
     let recorded = Arc::new(Recorded {
         inner: support::runner(Arc::new(Token::default())),
         requests: Mutex::new(Vec::new()),
@@ -168,8 +166,11 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
 #[test]
 fn failed_promisor_fetch_names_recovery_command() {
     let source = Fixture::new();
-    source.git(&["config", "uploadpack.allowFilter", "true"]);
-    source.git(&["config", "uploadpack.allowAnySHA1InWant", "true"]);
+    git(source.root(), &["config", "uploadpack.allowFilter", "true"]);
+    git(
+        source.root(),
+        &["config", "uploadpack.allowAnySHA1InWant", "true"],
+    );
     source.write("base.txt", b"fetch failure\n");
     let base = source.commit();
     let temporary = tempfile::tempdir().unwrap();
@@ -180,21 +181,13 @@ fn failed_promisor_fetch_names_recovery_command() {
     } else {
         format!("file://{remote_path}")
     };
-    let output = Command::new("git")
+    run(command()
         .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
-        .arg(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
+        .arg(&clone));
     let replacement = temporary.path().join("missing-remote");
-    let output = Command::new("git")
+    run(command()
         .args(["-C", clone.to_str().unwrap(), "remote", "set-url", "origin"])
-        .arg(&replacement)
-        .output()
-        .unwrap();
-    assert!(output.status.success());
+        .arg(&replacement));
     let repositories: &dyn Repositories = &GitRepositories {
         runner: support::runner(Arc::new(Token::default())),
         disk: Arc::new(SystemDisk),

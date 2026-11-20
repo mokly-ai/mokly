@@ -18,15 +18,8 @@ use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
 #[cfg(unix)]
 use mokly_source_interface::tree::SourceTree;
+use mokly_test_support::git::{git, git_input};
 use tempfile::TempDir;
-
-use support::{git, git_input};
-
-#[expect(
-    dead_code,
-    reason = "The shared host fixtures also support cache and install tests."
-)]
-mod support;
 
 fn runner() -> Arc<SystemRunner> {
     Arc::new(SystemRunner {

@@ -26,6 +26,7 @@ tracing = "0.1.44"
 unimock = "0.6.8"
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 insta = "1.49.0"
 mokly-css = { workspace = true, features = ["test-support"] }
 mokly-source-interface = { workspace = true, features = ["mock"] }

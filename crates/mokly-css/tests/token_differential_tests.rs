@@ -2,14 +2,16 @@
 
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+
+use mokly_test_support::git::git;
 
 /// Every CSS file that Git lists has the same section observations.
 #[test]
 fn section_readers_agree_on_every_stylesheet_that_git_lists() {
     let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let output = Command::new("git")
-        .args([
+    let output = git(
+        &repository,
+        &[
             "ls-files",
             "-z",
             "--cached",
@@ -17,16 +19,9 @@ fn section_readers_agree_on_every_stylesheet_that_git_lists() {
             "--exclude-standard",
             "--",
             "*.css",
-        ])
-        .current_dir(&repository)
-        .output()
-        .expect("run git ls-files");
-    assert!(
-        output.status.success(),
-        "git ls-files failed: {}",
-        String::from_utf8_lossy(&output.stderr)
+        ],
     );
-    let paths = String::from_utf8(output.stdout).expect("git returned non-UTF-8 paths");
+    let paths = String::from_utf8(output).expect("git returned non-UTF-8 paths");
     let mut compared = 0;
     for path in paths.split('\0').filter(|path| !path.is_empty()) {
         let stylesheet = repository.join(path);

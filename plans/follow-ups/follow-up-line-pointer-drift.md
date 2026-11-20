@@ -9,8 +9,7 @@
   `calummoore/mokly-return-warmup` and its checks found wrong. Updated on
   2026-11-20 with the two pointers that the round-2 docs work of the branch
   `calummoore/mokly-stylesheet-resolution-evidence-fix-qnp4` found wrong.
-- **Location:** `plans/follow-ups/isolated-git-in-every-test-helper.md:60`,
-  `plans/follow-ups/base-read-cause-unknown.md:12` and line 89,
+- **Location:** `plans/follow-ups/base-read-cause-unknown.md:12` and line 89,
   `plans/follow-ups/root-switch-reap-wait.md:12` and line 41,
   `plans/follow-ups/forced-kill-reap-wait.md:8`, line 27, and line 29,
   `plans/follow-ups/bundle-cache-request-cost.md:37`,
@@ -40,13 +39,14 @@
     `README.md` for its name".
   - Neither rule asks for a search when a symbol moves to another file, or
     when lines above a pointed line change.
-  - Two pointers are wrong now. Both were already wrong on `origin/main` at
+  - Two pointers were already wrong on `origin/main` at
     `0b82cf6c0`:
-    - `plans/follow-ups/isolated-git-in-every-test-helper.md:60` lists
+    - The [completed isolated Git item](https://github.com/mokly-ai/mokly/blob/a16a623e670deca5256ef6a43044f9441abad313/plans/follow-ups/isolated-git-in-every-test-helper.md?plain=1#L60) lists
       `crates/mokly-compare/tests/engine_support/mod.rs:214` as a local Git
       helper. On `origin/main`, the helper
       `fn git(root: &Path, args: &[&str]) -> Vec<u8>` starts at line 219. At
-      commit `4f7bc0213`, it starts at line 232.
+      commit `4f7bc0213`, it starts at line 232. The shared Git helper change
+      completes that item and removes its local Git helper.
     - `plans/follow-ups/base-read-cause-unknown.md:12` and `:89` cite
       `crates/mokly-compare/tests/engine_support/mod.rs:157` to line 159 as
       the fixture that loads a base `GitTree` without its stored failure. On
@@ -109,7 +109,7 @@
 - **Problem:** Line pointers in follow-up items go stale when lines above them
   change or a symbol moves to another file. The stale-reference search names
   removals and renames only, so no rule asks the change to update such
-  pointers. Two pointers are wrong now.
+  pointers. The other pointers still need correction.
 - **Impact if no action:** A reader who follows a stale pointer opens the
   wrong code and must search for the target. A wrong pointer can also mislead
   a fix. The pointer of `base-read-cause-unknown.md` names function
@@ -117,10 +117,10 @@
 - **Root question:** How do follow-up items keep each source pointer true when
   the code that it names moves?
 - **Options:**
-  - **A.** In a later branch, re-anchor the two wrong pointers at that
+  - **A.** In a later branch, re-anchor the remaining wrong pointers at that
     branch's commit. Cost: the next move can break them again. Effort: Small.
-  - **B.** Apply A, and name the symbol beside each of the two pointers, for
-    example `fn git` at `crates/mokly-compare/tests/engine_support/mod.rs`
+  - **B.** Apply A, and name the symbol beside each remaining pointer, for
+    example `GitTree::new` at `crates/mokly-compare/tests/engine_support/mod.rs`
     and its line. A reader then finds a moved target by its name, and a search
     for the name finds the pointer. Cost: the lines can still drift. Effort:
     Small.
@@ -169,14 +169,11 @@
   two pointers of `stylesheet-roots-span-parent.md` that its change moved,
   from `crates/mokly-render/src/stylesheets.rs:91` to line 92.
 - **Related:**
-  - `plans/follow-ups/isolated-git-in-every-test-helper.md`: it holds the
-    wrong pointer at line 60. Fix that pointer with option A or B of this
-    item.
   - `plans/follow-ups/base-read-cause-unknown.md`: it holds the wrong pointers
     at lines 12 and 89. Fix those pointers with option A or B of this item.
-- **Recommendation:** B. It fixes the two known pointers and keeps them easy to
+- **Recommendation:** B. It fixes the remaining pointers and keeps them easy to
   find after the next move, with no change to shared instructions. D best
   protects the codebase, but it changes the shared skills repository.
-- **Action:** fix after merge, apply B, because both pointers were already
+- **Action:** fix after merge, apply B, because these pointers were already
   wrong on `origin/main`, and the wider fix D belongs to the shared skills
   repository, outside this repository.

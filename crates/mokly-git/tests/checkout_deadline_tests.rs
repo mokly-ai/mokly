@@ -14,6 +14,7 @@ use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_test_support::git::git;
 
 #[expect(
     dead_code,
@@ -58,8 +59,11 @@ fn hanging(always: bool) -> (Fixture, ObjectId, Arc<dyn Repository>) {
     for name in ["a", "b", "c"] {
         fixture.write(&format!("{name}.txt"), format!("{name}\n").as_bytes());
     }
-    fixture.git(&["config", "filter.slow.clean", "cat"]);
-    fixture.git(&["config", "filter.slow.smudge", "sh ./slow.sh %f"]);
+    git(fixture.root(), &["config", "filter.slow.clean", "cat"]);
+    git(
+        fixture.root(),
+        &["config", "filter.slow.smudge", "sh ./slow.sh %f"],
+    );
     let base = fixture.commit();
     let repositories: &dyn Repositories = &GitRepositories {
         runner: Arc::new(SystemRunner {

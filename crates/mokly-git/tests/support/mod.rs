@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 use std::sync::Arc;
 
 use mokly_git::command::Runner;
@@ -12,6 +11,7 @@ use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::system::SystemRunner;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
 pub struct Fixture(pub TempDir);
@@ -19,9 +19,12 @@ pub struct Fixture(pub TempDir);
 impl Fixture {
     pub fn new() -> Self {
         let fixture = Self(tempfile::tempdir().unwrap());
-        fixture.git(&["init", "-b", "main"]);
-        fixture.git(&["config", "user.name", "Mokly Tests"]);
-        fixture.git(&["config", "user.email", "tests@mokly.invalid"]);
+        git(fixture.root(), &["init", "-b", "main"]);
+        git(fixture.root(), &["config", "user.name", "Mokly Tests"]);
+        git(
+            fixture.root(),
+            &["config", "user.email", "tests@mokly.invalid"],
+        );
         fixture
     }
 
@@ -35,30 +38,11 @@ impl Fixture {
         fs::write(path, bytes).unwrap();
     }
 
-    pub fn git(&self, args: &[&str]) -> Vec<u8> {
-        let output = Command::new("git")
-            .env(
-                "GIT_CONFIG_GLOBAL",
-                if cfg!(windows) { "NUL" } else { "/dev/null" },
-            )
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .args(args)
-            .current_dir(self.root())
-            .output()
-            .unwrap();
-        assert!(
-            output.status.success(),
-            "{:?}: {}",
-            args,
-            String::from_utf8_lossy(&output.stderr)
-        );
-        output.stdout
-    }
-
     pub fn commit(&self) -> ObjectId {
-        self.git(&["add", "-A"]);
-        self.git(&["commit", "--allow-empty", "-m", "fixture"]);
-        ObjectId::parse(String::from_utf8_lossy(&self.git(&["rev-parse", "HEAD"])).trim()).unwrap()
+        git(self.root(), &["add", "-A"]);
+        git(self.root(), &["commit", "--allow-empty", "-m", "fixture"]);
+        ObjectId::parse(String::from_utf8_lossy(&git(self.root(), &["rev-parse", "HEAD"])).trim())
+            .unwrap()
     }
 
     pub fn repository(&self) -> Arc<dyn Repository> {

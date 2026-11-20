@@ -1,6 +1,5 @@
 //! Real head, extracted base, and pinned Git sources share the production runtime services.
 
-use std::process::Command;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
@@ -25,6 +24,7 @@ use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 use mokly_test_support::capture::Trace;
+use mokly_test_support::git::git;
 
 use super::support::{Consumer, package_version};
 
@@ -66,10 +66,10 @@ impl Fixture {
             head.write(path, text);
         }
         setup(&head);
-        git(&head, &["init", "--initial-branch=fixture-base"]);
-        git(&head, &["add", "-A"]);
+        git(head.root(), &["init", "--initial-branch=fixture-base"]);
+        git(head.root(), &["add", "-A"]);
         git(
-            &head,
+            head.root(),
             &[
                 "-c",
                 "user.name=Fixture",
@@ -81,7 +81,7 @@ impl Fixture {
             ],
         );
         let commit = ObjectId::parse(
-            String::from_utf8(git(&head, &["rev-parse", "HEAD"]))
+            String::from_utf8(git(head.root(), &["rev-parse", "HEAD"]))
                 .unwrap()
                 .trim(),
         )
@@ -220,19 +220,4 @@ pub(super) fn try_generation(
         .map(|span| span.fields["cache"].clone())
         .collect();
     (generation, misses)
-}
-
-fn git(head: &Consumer, arguments: &[&str]) -> Vec<u8> {
-    let output = Command::new("git")
-        .args(arguments)
-        .current_dir(head.root())
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    output.stdout
 }

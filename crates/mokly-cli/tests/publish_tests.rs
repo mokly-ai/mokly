@@ -7,18 +7,7 @@ use std::process::{Command, Output};
 #[cfg(windows)]
 use std::os::windows::fs::OpenOptionsExt;
 
-fn git(directory: &Path, args: &[&str]) {
-    let output = Command::new("git")
-        .current_dir(directory)
-        .args(args)
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
+use mokly_test_support::git::git;
 
 fn checkout() -> tempfile::TempDir {
     let directory = tempfile::tempdir().unwrap();

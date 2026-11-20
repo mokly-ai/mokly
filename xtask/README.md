@@ -288,11 +288,11 @@ directories. The base and snapshot adapter tests create real Git repositories
 in temporary directories. They use readiness signals and expected-state
 waits, and they never assert elapsed time, as the
 [test timing contract](../docs/protocol/ci-test-timing.md) requires. Fixture
-Git setup and inspection use
-[`git_test_runner.rs`](./src/remote/_tests_/git_test_runner.rs) with an empty
-global config file and system config disabled. Code under test uses
-`SystemProcess` with its real config, and captured requests record only that
-code.
+Git setup and inspection use the
+[shared isolated Git helpers](../crates/mokly-test-support/README.md#isolated-git-fixtures).
+The repository fixture also removes repository and secret environment
+variables. Code under test uses `SystemProcess` with its real config, and
+captured requests record only that code.
 
 ### Key Code
 
