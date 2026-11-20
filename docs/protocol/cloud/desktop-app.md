@@ -221,7 +221,7 @@ window's session asks the API for the Stripe session, so the payment applies
 to the window's workspace. Each action carries the external glyph, and its
 control returns to rest once the browser opens the page. Stripe returns to the
 Billing pane on the public app origin in the browser. The window reads the
-Billing pane again whenever it gets focus.
+Billing pane again on focus, as [Checkout and Portal](./billing-subscriptions.md#checkout-and-portal) says.
 
 Decision: Stripe opens in the browser, where saved cards, Apple Pay and Google
 Pay work. Stripe in the window was rejected, because the window has none of

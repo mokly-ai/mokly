@@ -3,12 +3,12 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from finding 3 of the round 2 review of `calummoore/stripe-loading-outside-app-mrlb`.
-- **Location:** `apps/app/src/settings/panes/billing-pane.tsx` (`useShellFocus(reload)`) and `apps/app/src/_tests_/settings/billing-reconcile.test.ts`.
+- **Location:** `apps/app/src/settings/panes/billing-pane.tsx` (the `useFocusReads` call and `watchCheckout`) and `apps/app/src/_tests_/settings/billing-watch.test.ts`.
 - **Reason:** The review found it after the last fix round, so the fix rule gives it `fix after merge`.
 - **Category:** Test.
 
 - **Background:** In the desktop app's window, Stripe opens in the system browser. The Billing pane reads the plan again when the window gets focus, and a Team read refreshes the workspace and project reads (`docs/protocol/cloud/desktop-app.md` "Billing").
-- **Problem:** `billing-reconcile.test.ts` hands a Team read to the reconcile hook directly. No test mounts the real pane and sends a window focus, so removing `useShellFocus(reload)` fails no test.
+- **Problem:** `billing-watch.test.ts` drives the focus hook with its own reads, and `billing-reconcile.test.ts` hands a Team read to the reconcile hook directly. No test mounts the real pane and sends a window focus, so removing the pane's `useFocusReads` call, or its `watchCheckout` call after Checkout, fails no test.
 - **Impact if no action:** A later change can stop the desktop refresh after payment without a failing test.
 - **Root question:** How does a test prove that returning to the window refreshes billing and the reads that depend on it?
 - **Options:**

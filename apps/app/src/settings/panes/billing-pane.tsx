@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { asApiError, unexpectedError } from "../../api/errors";
 import type { ApiError } from "../../api/errors";
-import type { Billing, Workspace, Project } from "../../api/types";
+import type { Workspace, Project } from "../../api/types";
 import { Action } from "../../components/action";
 import { PaneError } from "../../components/resource-state";
 import {
@@ -16,7 +16,6 @@ import {
   useAddressSearch,
   writeAddress,
 } from "../../navigation/address";
-import { useShellFocus } from "../../navigation/shell-focus";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
 
 import { planSituation } from "./billing-facts";
@@ -28,21 +27,12 @@ import {
   opensStripeOutside,
   withoutCheckout,
 } from "./billing-stripe";
+import { readUntilTeam, useFocusReads } from "./billing-watch";
 
 /** A successful Checkout return while its webhook catches up. */
 type Confirmation = { workspaceId: string } & (
   { state: "confirming" | "delayed" } | { state: "error"; error: ApiError }
 );
-
-/** How long the pane waits for the webhook that writes the plan. */
-const confirmWindowMs = 30_000;
-
-/** How often it asks again while it waits. */
-const confirmIntervalMs = 2_000;
-
-function pause(ms: number): Promise<void> {
-  return new Promise((done) => setTimeout(done, ms));
-}
 
 /**
  * Plan, seats and the one way to change them.
@@ -108,34 +98,25 @@ export function BillingPane({
     }
     let live = true;
     const settle = async () => {
-      const deadline = Date.now() + confirmWindowMs;
-      let confirmed = false;
-      for (;;) {
-        let value: Billing | undefined;
-        try {
-          value = await readBilling(workspace.id);
-        } catch (caught) {
-          if (!live) return;
-          setConfirmation({
-            workspaceId: workspace.id,
-            state: "error",
-            error: asApiError(caught) ?? unexpectedError(),
-          });
-          setConfirmationRetry(0);
-          clearLanding();
-          return;
-        }
+      let confirmed: boolean | undefined;
+      try {
+        confirmed = await readUntilTeam(
+          () => readBilling(workspace.id),
+          acceptRead,
+          () => live,
+        );
+      } catch (caught) {
         if (!live) return;
-        acceptRead(value);
-        if (value.plan === "team") {
-          confirmed = true;
-          break;
-        }
-        if (Date.now() >= deadline) break;
-        await pause(confirmIntervalMs);
-        if (!live) return;
+        setConfirmation({
+          workspaceId: workspace.id,
+          state: "error",
+          error: asApiError(caught) ?? unexpectedError(),
+        });
+        setConfirmationRetry(0);
+        clearLanding();
+        return;
       }
-      if (!live) return;
+      if (confirmed === undefined || !live) return;
       setConfirmation(
         confirmed ? undefined : { workspaceId: workspace.id, state: "delayed" },
       );
@@ -174,18 +155,26 @@ export function BillingPane({
   // A write that opens Stripe's own pages in this tab is done when the page
   // leaves for them, so its control stays busy until then. The desktop app's
   // window opens them in the system browser instead, so its control comes
-  // back to rest, and the window reads the plan again when it gets focus back.
+  // back to rest, and the window reads the plan again when it gets focus back:
+  // after Checkout, until the webhook writes Team or the bounded wait ends.
   const external = opensStripeOutside();
   const { reload } = billing;
-  useShellFocus(reload);
+  const readPlan = useCallback(() => readBilling(workspace.id), [workspace.id]);
+  const watchCheckout = useFocusReads(
+    workspace.id,
+    readPlan,
+    acceptRead,
+    reload,
+  );
   const checkout = useWrite(nothingToDo, alwaysSendable);
   const portal = useWrite(nothingToDo, alwaysSendable);
   const upgrade = useCallback(
     () =>
-      void checkout.run(async () =>
-        openStripe(checkout, await startCheckout(workspace.id)),
-      ),
-    [checkout, workspace.id],
+      void checkout.run(async () => {
+        openStripe(checkout, await startCheckout(workspace.id));
+        if (external) watchCheckout();
+      }),
+    [checkout, external, watchCheckout, workspace.id],
   );
   const manage = useCallback(
     () =>
