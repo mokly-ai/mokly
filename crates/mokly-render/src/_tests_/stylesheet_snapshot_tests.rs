@@ -70,6 +70,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                     Call::Bundle(_) => MethodResult::Bundle(Box::new(Bundle {
                         plan: None,
                         cache: None,
+                        compile_count: 1,
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         compiled: Arc::new(CompiledGeneration {

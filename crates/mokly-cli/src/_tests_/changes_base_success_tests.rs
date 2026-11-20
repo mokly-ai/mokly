@@ -95,6 +95,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
                 plan: None,
                 cache: None,
+                compile_count: 1,
                 unmapped_dependency_directories: None,
                 epoch: 0,
                 compiled: Arc::new(CompiledGeneration {

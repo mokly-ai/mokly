@@ -58,6 +58,7 @@ pub(super) fn result(
         generation: "generation".into(),
         epoch: 1,
         cache: None,
+        compile_count: 1,
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {

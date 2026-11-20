@@ -113,6 +113,7 @@ impl Fixture {
                                 )),
                                 epoch: 0,
                                 cache: None,
+                                compile_count: 1,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
                             }))

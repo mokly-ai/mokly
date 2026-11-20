@@ -35,6 +35,7 @@ fn result(cache: CacheOutcome) -> MethodResult {
         generation: "generation".into(),
         epoch: 7,
         cache: Some(cache),
+        compile_count: u64::from(!matches!(cache, CacheOutcome::Memory | CacheOutcome::Hit)),
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {

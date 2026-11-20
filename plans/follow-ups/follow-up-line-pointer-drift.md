@@ -15,8 +15,6 @@
   `plans/follow-ups/forced-kill-reap-wait.md:8`, line 27, and line 29,
   `plans/follow-ups/bundle-cache-request-cost.md:37`,
   `plans/follow-ups/sequential-evidence-capture-cost.md:15` and line 88,
-  `plans/follow-ups/worker-bundle-reuse-provenance.md:10`, line 40, line 72,
-  line 106, line 213, and line 216,
   `plans/follow-ups/sidecar-queue-steering-fixtures.md:7`, line 58, line 59,
   and line 77, and `plans/follow-ups/stylesheet-roots-span-parent.md:9` and
   line 36.
@@ -89,12 +87,12 @@
       `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 for the
       `complete_bundle` call. That range names `fn cleanup`. The call is at
       line 141.
-    - `worker-bundle-reuse-provenance.md:10`, line 40, line 106, line 213, and
+    - [`worker-bundle-reuse-provenance.md:10`](https://github.com/mokly-ai/mokly/blob/e5acd1a25355139eeaa4559b3fed0ade35afabee/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1#L10), line 40, line 106, line 213, and
       line 216 cite `crates/mokly-sidecar/src/pool_requests.rs` lines that sit
       about six lines below their targets. `take_reused` is at line 80, the
       shared compilation starts at line 81, and the `dispose` arm starts at
       line 121.
-    - `worker-bundle-reuse-provenance.md:72` cites
+    - [`worker-bundle-reuse-provenance.md:72`](https://github.com/mokly-ai/mokly/blob/e5acd1a25355139eeaa4559b3fed0ade35afabee/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1#L72) cites
       `crates/mokly-sidecar/README.md:146` for the runtime-key comparison,
       which is at line 212.
     - `sidecar-queue-steering-fixtures.md:7`, line 58, line 59, and line 77

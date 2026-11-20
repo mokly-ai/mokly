@@ -213,11 +213,13 @@ restores the entry with `disk_seed_request` under a private `disk:` seed id
 before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
-`damaged`, or `unavailable` when that removal finds the store unusable. After
-a successful `bundle` call, the pool compares the runtime key of the result
-with the keys of the seeds and of the generations that the worker already
-holds. It sets the `cache` field of the result, which never
-crosses the wire, to `memory` or `hit` for a reused compilation, or else to
+`damaged`, or `unavailable` when that removal finds the store unusable. A
+worker records the count of `esbuild` operation events of each `bundle`
+request in a result field that never crosses the wire. After a successful
+`bundle` call, the pool uses that count to set the `cache` field of the
+result, which also never crosses the wire. A count of zero gives `hit` when
+the runtime key of the result equals the key of the disk seed of the
+request. Otherwise, a count of zero gives `memory`. A positive count gives
 the reason why the sidecar compiled. When the result holds the restored
 stored compilation, the pool also adds the stored plan of that entry to the
 result. A `Full` call then offers the served recipe, with the plan of the
@@ -453,11 +455,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `Prerequisites` gives the inputs that each generation call needs, for
   replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
-  call from the bundle store, keeps the request-local provenance of its
-  seeds, sets the `cache` outcome of its result, and offers the served recipe
+  call from the bundle store, keeps the request-local provenance of its disk
+  seed, sets the `cache` outcome of its result, and offers the served recipe
   of each `Full` call to the store. The provenance keeps the runtime key and
   the plan of a restored stored compilation. A result with that runtime key
-  reports `hit` and carries that plan.
+  carries that plan. It reports `hit` when its count of `esbuild` events is
+  zero.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.

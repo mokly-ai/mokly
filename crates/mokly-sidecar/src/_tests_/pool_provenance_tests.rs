@@ -32,6 +32,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     unmapped_dependency_directories: Some(vec![id.clone()]),
                     epoch: 0,
                     cache: None,
+                    compile_count: 1,
                     generation: id.clone(),
                     modules: vec![],
 

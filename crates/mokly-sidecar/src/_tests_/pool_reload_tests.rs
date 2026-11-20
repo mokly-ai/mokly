@@ -53,6 +53,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         cache: None,
+                        compile_count: 1,
                         compiled: Arc::new(compiled("g")),
                         generation: "g".into(),
                         modules: Vec::new(),
