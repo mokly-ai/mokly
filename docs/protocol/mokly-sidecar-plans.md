@@ -13,7 +13,8 @@ modules that the [module source rules](./mokly-sidecar-modules.md) select.
 When the native result differs from its plan, a planned attempt compiles again
 with the plan. A planned attempt gives each import outside its plan the full
 resolution of the module source rules. A failed native attempt gives no plan.
-The compile then uses full resolution for every import.
+The compile then uses full resolution for every import. A compile with a plan
+starts with a [guarded attempt](#guarded-attempts) instead.
 
 ## Plan Records
 
@@ -91,11 +92,10 @@ The `plan` value, like `capture`, is not a bundle setting. The sidecar removes
 it before it compares settings, computes the compilation identity, restores a
 recipe, or checks the recipe size. Only a `serveEdit` request carries a plan.
 A plan changes no reuse rule and no identity rule. A compile with a plan makes
-one esbuild call: the planned attempt, with no native attempt. An import
-outside the plan uses full resolution. Apart from the fresh identity of each
-edit compile, the result or the error equals that of the same request without
-a plan. A failed planned attempt fails the request, and no other attempt
-follows. Plan reuse adds no setting, gate, retry, or process.
+no native attempt. It follows the [guarded attempt rules](#guarded-attempts).
+Apart from the fresh identity of each edit compile, the result or the error
+equals that of the same request without a plan. Plan reuse adds no setting,
+gate, or process.
 Decision: a current plan replaces the native attempt and its classification.
 Import keys that each compile resolves again were rejected, because they keep
 the classification and add resolver round trips. A kept esbuild build context
@@ -106,6 +106,34 @@ as an added catalogue entry, need their own record.
 Decision: a record is checked and used as a whole. A check of each plan entry
 and a record key of the resolution settings alone were rejected, because each
 adds an evidence index or a second key without a measured need.
+
+## Guarded Attempts
+
+A compile with a plan starts with a guarded attempt. In a guarded attempt,
+esbuild resolves some relative imports itself. Every other import uses its
+plan entry, or full resolution when the plan has no entry for it.
+
+After the compile, the sidecar checks each import that esbuild resolved
+itself. The check must prove that the import gets the module, the
+`sideEffects` flag, and the
+[parsing](./mokly-sidecar-modules.md#authoring-and-evaluation) of a planned
+attempt. When every proof passes, the guarded result stands. Otherwise the
+sidecar discards the guarded result, and a planned attempt compiles again with
+the same plan. A failed planned attempt fails the request, and no other
+attempt follows. A compile with a plan thus makes one esbuild call when its
+guarded result stands, and never more than two.
+Decision: the guarded attempt can fall back to a planned attempt. The common
+edit gets one faster compile, and a check that fails never publishes an
+unproved resolution. A planned attempt alone was rejected, because esbuild then
+calls a resolve callback in Node for each import. Native resolution of every
+relative import was rejected. Most repository modules have a package `type` or
+parse settings from a `tsconfig.json`. Their checks would fail, so most edits
+would compile twice.
+
+An import outside the plan causes no planned attempt by itself.
+Decision: an edit that adds an import can compile once. A planned attempt for
+each import outside the plan was rejected, because edits that add an import
+are common.
 
 ## Warm Start
 

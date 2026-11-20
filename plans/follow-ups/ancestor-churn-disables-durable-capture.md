@@ -51,7 +51,9 @@
       compilation instead of compiling again.
     - The core keeps a plan record only from complete and durable evidence,
       at `edit_plans.rs:47`. A Serve edit with a current record sends the
-      plan and makes one esbuild call.
+      plan and makes no native attempt. It makes one esbuild call when its
+      guarded result stands, and never more than two, under the
+      [guarded attempt rules](../../docs/protocol/mokly-sidecar-plans.md#guarded-attempts).
     - Without a record, the edit starts with the native attempt, in which
       esbuild resolves each import itself. A planned attempt can follow.
       `docs/protocol/mokly-sidecar-plans.md` states these rules.
