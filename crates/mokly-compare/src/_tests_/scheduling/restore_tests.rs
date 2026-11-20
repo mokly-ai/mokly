@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::io;
 use std::sync::Arc;
 
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_error::{CodecError, CodecInternalError};
 use mokly_graph::error::GraphError;
 use mokly_graph::types::{RenderGeneration, RenderSummary};
@@ -25,10 +24,7 @@ fn failed(source: Arc<dyn RenderGeneration>, index: usize) -> Arc<dyn RenderGene
         source,
         views: BTreeMap::from([(
             route(index),
-            CapturedView {
-                document: EncodedView::encode(&artifact(index)).unwrap(),
-                closure: closure(index),
-            },
+            CapturedView::encode(&artifact(index), closure(index)).unwrap(),
         )]),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),

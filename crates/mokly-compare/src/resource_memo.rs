@@ -41,6 +41,7 @@ pub(crate) struct ResourceFact {
     pub(crate) references: Vec<String>,
 }
 
+#[cfg_attr(test, unimock::unimock(api = [MemoFactMock, MemoReadMock, MemoFingerprintMock, MemoEqualMock, MemoDiffMock, MemoInlineDiffMock, MemoOwnedDiffMock, MemoWorkMock]))]
 pub(crate) trait ResourceMemo: Send + Sync {
     fn fact(&self, side: ReviewSide, route: &str) -> Result<ResourceFact>;
     fn read(&self, side: ReviewSide, route: &str) -> Result<Option<Arc<[u8]>>>;

@@ -8,7 +8,6 @@ use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
-use mokly_graph::document_codec::EncodedView;
 use mokly_graph::key::{NodeKind, key};
 use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
@@ -125,10 +124,7 @@ pub(super) fn generation(head: bool, parallel: bool) -> Arc<dyn RenderGeneration
             if index < 3 {
                 retained.insert(
                     route.clone(),
-                    CapturedView {
-                        document: EncodedView::encode(&artifact).unwrap(),
-                        closure: closure.clone(),
-                    },
+                    CapturedView::encode(&artifact, closure.clone()).unwrap(),
                 );
             }
             artifacts.insert(route.clone(), artifact);

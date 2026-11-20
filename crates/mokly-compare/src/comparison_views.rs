@@ -21,7 +21,7 @@ use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::error::Result;
 use crate::instance_proof::InstanceProof;
 use crate::move_inventory::PlanIndex;
-use crate::move_types::EntryPair;
+use crate::move_types::Pairing;
 use crate::owned_styles;
 use crate::resource_memo::ResourceMemo;
 use crate::reuse_collection::Collection;
@@ -71,7 +71,7 @@ pub(crate) struct PairViews {
 
 /// Keep entry outputs and every memo call in pairing and view order.
 pub(crate) fn collect(
-    pairs: &[EntryPair],
+    pairing: &Pairing,
     before: Arc<dyn RenderGeneration>,
     after: Arc<dyn RenderGeneration>,
     paths: &BTreeMap<String, String>,
@@ -79,6 +79,9 @@ pub(crate) fn collect(
     plans: [&PlanIndex<'_>; 2],
     reuse: Option<&mut Collection>,
 ) -> Result<Vec<PairViews>> {
+    let pairs = &pairing.entries;
+    let paths_preserved =
+        pairing.preserves_document_paths(&before.catalogue().model, &after.catalogue().model);
     let mut results: Vec<_> = pairs.iter().map(|_| PairViews::default()).collect();
     let mut routes = comparison_routes::stream(pairs, plans[0], plans[1]).peekable();
     if routes.peek().is_none() {
@@ -94,6 +97,7 @@ pub(crate) fn collect(
         before: before.as_ref(),
         after: after.as_ref(),
         paths,
+        paths_preserved,
     };
     let consumers: Vec<_> = pairs
         .iter()
@@ -130,7 +134,7 @@ pub(crate) fn collect(
         before.comparison_parallelism().max(1).saturating_mul(2),
         probes.as_deref(),
     );
-    let outcome = {
+    let (outcome, admitted_views) = {
         let mut stream = ViewStream {
             reuse,
             routes: Box::new(routes),
@@ -141,10 +145,12 @@ pub(crate) fn collect(
             consumers: &consumers,
             results: &mut results,
             outcome: Ok(()),
+            admitted_views: 0,
         };
         before.schedule_comparison_stream(&slots, &mut stream);
-        stream.outcome
+        (stream.outcome, stream.admitted_views)
     };
+    tracing::Span::current().record("admitted_views", admitted_views as u64);
     outcome?;
     Ok(results)
 }
