@@ -21,8 +21,8 @@ of the newest head generation that the process lacks, in that order. Then it
 replays the recorded render requests, oldest first. The pool discards each
 result. It stores, publishes, and caches nothing from a warm-up, and a warm-up
 changes no published output. A replayed render does not change the warm head
-process. It counts toward the render-count rule of
-[sampling and recycling](./mokly-sidecar-memory.md#sampling-and-recycling).
+process. It counts toward the
+[500-render rule](./mokly-sidecar-memory.md#sampling-and-recycling).
 
 Each warm-up call is a quiet call: its request has `quiet: true`, and every
 other request omits the field. From the start of a quiet call until its reply,
@@ -76,6 +76,16 @@ generation is bundled, when the newest head generation is released, when the
 pool stops, and when a failed reap ends background return. A process that a
 return pass starts later gets a warm-up of the newest head generation at that
 time.
+
+A warm-up never sends a replay that would bring the render count of its process
+to 500. It ends instead. So only a render request, not a replay, brings a
+process to 500 renders. The pool recycles the process after that request, under
+the [500-render rule](./mokly-sidecar-memory.md#sampling-and-recycling). A
+warm-up never recycles a process.
+
+Decision: a warm-up ends before a replay that would bring its process to 500
+renders. Rejected: a recycle by the warm-up when a replay reaches the limit,
+because background work would then need a recycle path of its own.
 
 A warm-up never sends a call of an older head generation. It never evaluates a
 generation on a process that holds another head generation.

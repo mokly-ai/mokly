@@ -9,6 +9,7 @@ use crate::pool::Pool;
 use crate::pool_cleanup::{pending, stale_generation};
 use crate::pool_exchange::reusable;
 use crate::pool_preparation::{Preparation, Prerequisites};
+use crate::pool_recycle::RENDER_LIMIT;
 use crate::pool_state::{Slot, State};
 use crate::workers::WorkerControl;
 
@@ -213,6 +214,9 @@ fn next(state: &mut State, index: usize, serial: u64, slot: &Slot) -> Step {
     }
     if let Some((preparation, describe)) = preparation(state, slot, &generation) {
         return Step::Prepare(preparation, generation, describe);
+    }
+    if slot.renders >= RENDER_LIMIT - 1 {
+        return Step::End;
     }
     state
         .head

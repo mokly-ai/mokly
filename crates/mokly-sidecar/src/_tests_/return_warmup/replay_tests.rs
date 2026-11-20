@@ -28,6 +28,43 @@ fn replayed_renders_count_toward_the_render_limit_of_the_process() {
 }
 
 #[test]
+fn warm_up_ends_before_a_replay_reaches_the_process_render_limit() {
+    for (renders, expected_replays) in [(499, 0), (498, 1)] {
+        let harness = Harness::plain(1);
+        harness.head("g", &views("view", 2));
+        harness.base();
+        harness.returned();
+        for _ in 0..renders {
+            harness.pool.request(render("g", "view-1")).unwrap();
+        }
+        let spawns_before = harness.events.spawns();
+        let steps = harness.maintain();
+        let replays = harness.events.quiet(2);
+        let spawns_after = harness.events.spawns();
+        let retired_before = harness.events.read().contains(&Event::Reap(2));
+        let calls_before = harness.events.calls(2).len();
+        harness.pool.request(render("g", "view-1")).unwrap();
+        let normal = harness.events.calls(2)[calls_before..].to_vec();
+        let retired_after = harness.events.read().contains(&Event::Reap(2));
+        let spawns_final = harness.events.spawns();
+        harness.pool.abort().unwrap();
+        assert_eq!(steps, 1, "{renders} renders: the warm-up ends");
+        assert_eq!(replays.len(), expected_replays, "{renders} normal renders");
+        assert_eq!(spawns_after, spawns_before, "warm-up starts no process");
+        assert_eq!(
+            spawns_final, spawns_before,
+            "the next render uses process 2"
+        );
+        assert_eq!(normal, [render("g", "view-1").to_string()]);
+        assert_eq!(
+            (retired_before, retired_after),
+            (false, true),
+            "{renders} renders: the next normal render retires process 2 at 500"
+        );
+    }
+}
+
+#[test]
 fn a_replay_does_not_move_the_warm_head_process() {
     let harness = Harness::plain(2);
     harness.head("g", &views("view", 2));
