@@ -1,0 +1,160 @@
+/* The filled tags of the canvas: a person's live tag over a selection, the
+   size tag in the signal green or a person's colour, and the spacing
+   redline with its value tag. */
+
+/* A person's live tag over the top-right corner, such as Claude is editing */
+
+.site-sel-tag {
+  align-items: center;
+  border-radius: 4px;
+  bottom: calc(100% + 6px);
+  display: inline-flex;
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-semibold);
+  gap: 6px;
+  height: 20px;
+  line-height: 1;
+  padding: 0 7px;
+  position: absolute;
+  right: -1.5px;
+  white-space: nowrap;
+}
+
+.site-sel-tag::before {
+  background: currentColor;
+  border-radius: var(--mk-radius-pill);
+  content: "";
+  height: 6px;
+  width: 6px;
+}
+
+/* The size tag; under a selection it is centred below the box */
+
+.site-size-tag {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 20px;
+  line-height: 1;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.site-sel-size {
+  left: 50%;
+  position: absolute;
+  top: calc(100% + 9px);
+  translate: -50% 0;
+}
+
+.site-size-tag,
+.site-sel .site-sel-tag {
+  background: var(--mk-color-signal);
+  color: var(--mk-color-on-signal);
+}
+
+.site-size-tag--maya,
+.site-sel--maya .site-sel-tag {
+  background: var(--mk-color-people-pink-fill);
+  color: var(--mk-color-people-pink-ink);
+}
+
+.site-size-tag--sam,
+.site-sel--sam .site-sel-tag {
+  background: var(--mk-color-people-blue-fill);
+  color: var(--mk-color-people-blue-ink);
+}
+
+.site-size-tag--claude,
+.site-sel--claude .site-sel-tag {
+  background: var(--mk-color-people-orange-fill);
+  color: var(--mk-color-people-orange-ink);
+}
+
+.site-size-tag--codex,
+.site-sel--codex .site-sel-tag {
+  background: var(--mk-color-people-violet-fill);
+  color: var(--mk-color-people-violet-ink);
+}
+
+/* The spacing redline and its value tag */
+
+.site-redline {
+  background: var(--mk-color-signal);
+  pointer-events: none;
+  position: absolute;
+}
+
+.site-redline--v {
+  width: 1px;
+}
+
+.site-redline--h {
+  height: 1px;
+}
+
+.site-redline::before,
+.site-redline::after {
+  background: var(--mk-color-signal);
+  content: "";
+  position: absolute;
+}
+
+.site-redline--v::before,
+.site-redline--v::after {
+  height: 1px;
+  left: -4px;
+  width: 9px;
+}
+
+.site-redline--v::before {
+  top: 0;
+}
+
+.site-redline--v::after {
+  bottom: 0;
+}
+
+.site-redline--h::before,
+.site-redline--h::after {
+  height: 9px;
+  top: -4px;
+  width: 1px;
+}
+
+.site-redline--h::before {
+  left: 0;
+}
+
+.site-redline--h::after {
+  right: 0;
+}
+
+.site-redline-value {
+  background: var(--mk-color-signal);
+  border-radius: 3px;
+  color: var(--mk-color-on-signal);
+  font-family: var(--mk-font-mono);
+  font-size: 0.65625rem;
+  line-height: 1;
+  padding: 3px 5px;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.site-redline--v .site-redline-value {
+  left: 8px;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.site-redline--h .site-redline-value {
+  left: 50%;
+  top: 6px;
+  translate: -50% 0;
+}

@@ -6,6 +6,7 @@ const screens = [
   "design/site/home",
   "design/site/docs",
   "design/site/changelog",
+  "design/site/pricing",
   "design/site/terms",
   "design/site/privacy",
   "design/site/complaints",
@@ -14,9 +15,10 @@ const screens = [
 
 export default defineUseCase({
   ...SITE_METADATA,
-  description: "Home to the documentation, changelog and legal documents.",
+  description:
+    "Home to the documentation, changelog, pricing and legal documents.",
 
   steps: screens.map((screenPath) => ({ screenPath })),
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Site tour",
 });

@@ -1,0 +1,250 @@
+/* The home Browse frame: its copy beside the GitHub check card on the
+   desktop composition, the card itself, and the green prototype connector
+   from View changes to the viewer's Changes filter. */
+
+[data-site-viewport="desktop"] .site-module--browse {
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.site-home-check {
+  background: var(--mk-color-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+  font-size: 13px;
+  max-width: 100%;
+  position: relative;
+  width: 420px;
+  z-index: 4;
+}
+
+.site-home-check-head {
+  align-items: center;
+  background: var(--mk-color-surface-muted);
+  border-bottom: 1px solid var(--mk-color-border);
+  border-radius: 12px 12px 0 0;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
+}
+
+.site-home-check-head b,
+.site-home-check-github {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-home-check-pr {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  gap: 4px;
+}
+
+.site-home-check-state {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-signal-fill) 80%,
+    var(--mk-color-on-signal)
+  );
+  border-radius: var(--mk-radius-pill);
+  color: var(--mk-color-on-signal-fill);
+  font-size: 11.5px;
+  font-weight: var(--mk-font-semibold);
+  line-height: 22px;
+  margin-left: auto;
+  padding: 0 9px;
+}
+
+.site-home-check-title {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  padding: 13px 14px 2px;
+}
+
+.site-home-check-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px 14px 14px;
+}
+
+.site-home-check-ok {
+  color: var(--mk-color-signal-deep);
+  flex: none;
+}
+
+.site-home-check-app {
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: grid;
+  flex: none;
+  height: 30px;
+  place-items: center;
+  width: 30px;
+}
+
+.site-home-check-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.site-home-check-text b {
+  font-size: 14px;
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-home-check-text span {
+  color: var(--mk-color-text-secondary);
+  white-space: nowrap;
+}
+
+.site-home-check-link {
+  align-items: center;
+  background: var(--mk-color-signal-fill);
+  border-radius: 8px;
+  color: var(--mk-color-on-signal-fill);
+  display: inline-flex;
+  font-weight: var(--mk-font-semibold);
+  gap: 6px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* The connector, drawn in pixels of the module, over everything in it */
+
+.site-home-connector {
+  height: 100%;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+.site-home-connector-halo {
+  fill: none;
+  opacity: 0.9;
+  stroke: var(--mk-color-surface);
+  stroke-linecap: round;
+  stroke-width: 5;
+}
+
+.site-home-connector-path {
+  fill: none;
+  stroke: var(--mk-color-signal);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.site-home-connector-start {
+  fill: var(--mk-color-surface);
+  stroke: var(--mk-color-signal);
+  stroke-width: 1.75;
+}
+
+/* The connector that fits each width below 1440px, in the Browse frame: a
+   curve stretched between its two ends with its start dot and arrowhead at
+   their own size. It ends on the Changes filter, 64px under the frame's
+   top, between the crumb and the branch chip. */
+
+.site-home-fit-connector {
+  display: none;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+}
+
+.site-home-fit-connector-curve,
+.site-home-fit-connector-start,
+.site-home-fit-connector-head {
+  overflow: visible;
+  position: absolute;
+}
+
+.site-home-fit-connector-curve path {
+  vector-effect: non-scaling-stroke;
+}
+
+.site-home-fit-connector-start {
+  height: 12px;
+  width: 12px;
+}
+
+.site-home-fit-connector-head {
+  height: 9px;
+  left: 169px;
+  top: 56px;
+  width: 12px;
+}
+
+.site-home-fit-connector--wide .site-home-fit-connector-curve {
+  height: 148px;
+  left: 175px;
+  top: -84px;
+  width: calc(100% - 252px);
+}
+
+.site-home-fit-connector--wide .site-home-fit-connector-start {
+  right: 71px;
+  top: -90px;
+}
+
+.site-home-fit-connector--stacked .site-home-fit-connector-curve {
+  height: 112px;
+  left: 175px;
+  top: -48px;
+  width: 188px;
+}
+
+.site-home-fit-connector--stacked .site-home-fit-connector-start {
+  left: 357px;
+  top: -54px;
+}
+
+/* The intermediate desktop steps: below 1440px the fitted connector takes
+   over; below 1100px the check card stacks under the copy at 440px, as the
+   prototype does, and the stacked connector follows it. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-connector {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--wide {
+    display: block;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module--browse {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-home-check {
+    width: 440px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--wide {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--stacked {
+    display: block;
+  }
+}

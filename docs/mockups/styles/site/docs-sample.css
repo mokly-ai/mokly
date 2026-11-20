@@ -1,0 +1,275 @@
+/* The documentation HTML sample fence: a band of canvas across the page
+   frame that sets the sample's code, under the screen's section header,
+   beside the screen it renders, under the viewport and saved-state
+   controls. A green wire ties the lit line to the element it renders. The
+   screen is drawn at the canvas zoom of 60%, with the browser's default
+   type because the sample has no CSS. */
+
+.site-docs-sample {
+  align-items: start;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-position: -1px -1px;
+  background-size: 24px 24px;
+  box-shadow:
+    inset 0 1px 0 var(--mk-color-border),
+    inset 0 -1px 0 var(--mk-color-border);
+  column-gap: 40px;
+  display: grid;
+  grid-template-areas:
+    "head controls"
+    "code stage";
+  grid-template-columns: minmax(0, 1fr) 266px;
+  margin-bottom: 12px;
+  padding: 44px 32px 6px;
+  row-gap: 40px;
+}
+
+/* The screen's section header: its title as a dark tag and its path */
+
+.site-docs-sample-head {
+  align-items: center;
+  display: flex;
+  gap: var(--mk-space-2);
+  grid-area: head;
+  min-height: 34px;
+}
+
+.site-docs-sample-name {
+  background: var(--mk-color-text);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.01em;
+  line-height: 24px;
+  padding: 0 9px;
+}
+
+.site-docs-sample-head .site-chip {
+  background: var(--mk-color-surface);
+}
+
+.site-docs-sample-code {
+  grid-area: code;
+}
+
+.site-docs-sample-code .site-code-body {
+  font-size: 0.75rem;
+}
+
+/* The viewport and saved-state controls: native radios drawn as the
+   segments of a track; the chosen segment sits on the canvas tone */
+
+.site-docs-sample-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2);
+  grid-area: controls;
+  justify-content: center;
+}
+
+.site-docs-sample-control {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 2px;
+}
+
+.site-docs-sample-option {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 30px;
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 10px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  white-space: nowrap;
+}
+
+.site-docs-sample-option::before {
+  content: "";
+  inset: -7px 0;
+  position: absolute;
+}
+
+.site-docs-sample-option:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked) {
+  background: var(--mk-color-background);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 2px;
+}
+
+.site-docs-sample-option svg {
+  flex: none;
+}
+
+/* The drawn frame: its label, the screen and its selection with the size
+   tag; the wire leaves the code panel's edge at the lit line */
+
+.site-docs-sample-stage {
+  grid-area: stage;
+  padding: 0 0 34px 16px;
+  position: relative;
+}
+
+.site-docs-sample-frame {
+  position: relative;
+  width: 234px;
+}
+
+.site-docs-sample-wire {
+  color: var(--mk-color-signal);
+  height: 257px;
+  left: -40px;
+  position: absolute;
+  top: 49.5px;
+  width: 56px;
+}
+
+.site-docs-sample-wire svg {
+  display: block;
+}
+
+.site-docs-sample-end {
+  background: var(--mk-color-surface);
+  border: 1.5px solid currentColor;
+  border-radius: var(--mk-radius-pill);
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  position: absolute;
+  width: 7px;
+}
+
+.site-docs-sample-end--source {
+  left: 0;
+  top: 256.1px;
+}
+
+.site-docs-sample-end--element {
+  left: 56px;
+  top: 0.8px;
+}
+
+/* The screen the sample renders, at the canvas zoom: the phone's status
+   band, then the body in the browser's default type, on the paper and the
+   ink that a page without CSS takes in both schemes */
+
+.site-docs-sample-screen {
+  background: var(--mk-color-surface);
+  border-radius: 15.6px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-text);
+  height: 506.4px;
+  overflow: hidden;
+}
+
+[data-color-scheme="dark"] .site-docs-sample-screen {
+  background: var(--mk-color-text);
+  color: var(--mk-color-background);
+}
+
+.site-docs-sample-status {
+  align-items: center;
+  display: flex;
+  font-size: 8.1px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-semibold);
+  height: 26.4px;
+  justify-content: space-between;
+  line-height: 1;
+  padding: 7.2px 16.8px 0 19.2px;
+}
+
+.site-docs-sample-glyphs {
+  align-items: center;
+  display: flex;
+  gap: 3px;
+}
+
+.site-docs-sample-glyphs span {
+  background: currentColor;
+  display: block;
+  height: 6.6px;
+}
+
+.site-docs-sample-glyphs span:nth-child(1) {
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  width: 9.6px;
+}
+
+.site-docs-sample-glyphs span:nth-child(2) {
+  clip-path: polygon(50% 100%, 0 20%, 100% 20%);
+  width: 9px;
+}
+
+.site-docs-sample-glyphs span:nth-child(3) {
+  border-radius: 2px;
+  width: 13.8px;
+}
+
+.site-docs-sample-page {
+  display: flow-root;
+  font-family: "Times New Roman", Times, "Liberation Serif", serif;
+  font-size: 9.6px;
+  line-height: 1.15;
+  padding: 0 4.8px;
+}
+
+.site-docs-sample-heading {
+  font-size: 19.2px;
+  font-weight: var(--mk-font-bold);
+  margin: 12.864px 0;
+}
+
+.site-docs-sample-text {
+  margin: 9.6px 0;
+}
+
+/* The rendered heading, selected and tagged as the lit line's element */
+
+.site-docs-sample-pick {
+  display: inline-block;
+  position: relative;
+}
+
+.site-docs-sample-pick > .site-sel {
+  inset: -3px -4px;
+}
+
+.site-docs-sample-tag {
+  left: calc(100% + 10px);
+  position: absolute;
+  top: -1.5px;
+}

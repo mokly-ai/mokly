@@ -13,6 +13,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { CHANGELOG_DIFFERENCES } from "./design-site-parity-changelog";
+import { CHROME_DIFFERENCES } from "./design-site-parity-chrome";
+import { DOCS_DIFFERENCES } from "./design-site-parity-docs";
+import { HOME_DIFFERENCES } from "./design-site-parity-home";
 import {
   repositoryRoot,
   siteStyles as mockupSiteStyles,
@@ -28,36 +32,15 @@ const SHARED_FLOOR = 180;
 
 /**
  * Selectors both sides declare and are expected to differ, with the reason.
+ * Each area of the site mockups records its own differences in its module.
  * Each entry is proved to still exist and still differ, so resolving one
  * means deleting its line rather than leaving a stale exception behind.
  */
 const INTENTIONAL: Readonly<Record<string, string>> = {
-  ".site-detail--split":
-    "the depicted module detail sets its own gap; the site inherits the detail gap below the breakpoint",
-  ".site-doc-disclosure":
-    "the site publishes the tree as a disclosure and hides it above the breakpoint; the mockup depicts one composition per screen",
-  ".site-doc-tree":
-    "the mockup pins the tree from the rule itself; the site pins it from the enclosing column so the disclosure can reuse the tree",
-  ".site-doc-tree-scroll":
-    "the scroller only overflows inside the site's pinned column, for the same reason",
-  ".site-document-body":
-    "the mockup wraps each part of a document in a section element; the site renders a flat Markdown body",
-  ".site-document-body h2":
-    "the site rules its flat body from the heading's own border, which the mockup's sections do not need",
-  ".site-document-body p":
-    "the site holds the reading measure on every child of the flat body rather than on paragraphs",
-  ".site-filter":
-    "the mockup styles the filter inside the depicted navigation column; the site only ever renders its detail variant",
-  ".site-pager":
-    "the mockup stacks the cards by giving them the full measure; the site stacks them with the flex direction",
-  ".site-pager-item": "the same stacking difference",
-  ".site-pager-item--next": "the same stacking difference",
-  ".site-release-index":
-    "the depicted index is a sticky rail beside the entries; the site lists the real releases above them",
-  ".site-topbar-menu":
-    "the depicted shell keeps the menu control; the site's miniature drops it because no real value backs it",
-  ".site-tree":
-    "the depicted shell keeps the navigation column below the breakpoint; the site's miniature drops it",
+  ...CHROME_DIFFERENCES,
+  ...HOME_DIFFERENCES,
+  ...DOCS_DIFFERENCES,
+  ...CHANGELOG_DIFFERENCES,
 };
 
 interface Rule {

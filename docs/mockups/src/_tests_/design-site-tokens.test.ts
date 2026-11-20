@@ -49,7 +49,9 @@ test("every token consumed by site mockups is emitted by the workspace", () => {
   assert.ok(used.size > 40, "site policy stopped covering the token surface");
   for (const scheme of ["light", "dark"] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
-      const emitted = tokenCss(scheme, viewport);
+      // Site documents are canvas documents, so they also carry the canvas
+      // scope with the Canvas roles.
+      const emitted = tokenCss(scheme, viewport, "canvas");
       for (const property of used)
         assert.ok(
           emitted.includes(property + ":"),
@@ -77,18 +79,34 @@ test("the responsive emitter keeps legacy root output and scopes complete themes
   }
 });
 
+test("site mockup CSS contains no parallel tokens or literal colors", () => {
+  const css = siteStyles();
+  assert.doesNotMatch(css, /--site-/);
+  assert.doesNotMatch(css, /--mk-[\w-]+\s*:/);
+  assert.doesNotMatch(css, /#[\da-f]{3,8}\b|(?:rgb|hsl)a?\(/i);
+  for (const value of css.matchAll(/^\s*[\w-]+:\s*([^;]+);/gm))
+    assert.doesNotMatch(
+      value[1] ?? "",
+      /(?<![\w-])(?:aqua|black|blue|brown|fuchsia|gold|gray|green|grey|lime|maroon|navy|olive|orange|pink|purple|red|silver|teal|violet|white|yellow)(?![\w-])/i,
+    );
+});
+
 test("site styles use semantic mk roles without aliases", () => {
   const css = siteStyles();
   assert.doesNotMatch(css, /--site-/);
   assert.doesNotMatch(css, /--mk-[\w-]+\s*:/);
+  // Roles of the shared sheets: the canvas, the surfaces, the control
+  // boundary, the filled button pair, the signal and a person's colour.
   for (const role of [
     "--mk-color-background",
     "--mk-color-surface-muted",
     "--mk-color-border-strong",
-    "--mk-color-accent-solid",
-    "--mk-type-hero-size",
-    "--mk-layout-site-stage-mobile",
-    "--mk-layout-site-stage-desktop",
+    "--mk-color-signal-fill",
+    "--mk-color-on-signal-fill",
+    "--mk-color-dot",
+    "--mk-color-signal",
+    "--mk-color-people-pink-fill",
+    "--mk-layout-site-policy",
   ])
     assert.ok(css.includes(`var(${role})`), role);
 });

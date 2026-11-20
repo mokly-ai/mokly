@@ -1,17 +1,17 @@
-/* The mobile header's menu: the control at the trailing edge of the header
-   row and the panel it opens. The site opens the panel as a modal dialog that
-   slides in from the right edge over a dimmed page; the open state draws the
-   same panel in place, and the scrim depicts the dimmed page because a static
-   document has no top layer. The close control sits where the menu control
-   was. Above the breakpoint the header row lists the destinations and the
-   menu control is not drawn. */
+/* The mobile header's menu: the control at the trailing edge of the tool
+   bar and the sheet it opens. The sheet drops below the 60px tool bar over
+   a scrim that dims the page, and its close control sits where the menu
+   control was, in the bar's top-right corner. The open state draws the
+   same sheet in place because a static document has no top layer. Above
+   the breakpoint the tool bar lists the destinations and the menu control
+   is not drawn. */
 
 .site-menu-button,
 .site-menu-close {
   align-items: center;
   background: none;
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
+  border: 0;
+  border-radius: 10px;
   color: var(--mk-color-text);
   cursor: pointer;
   display: inline-flex;
@@ -25,7 +25,7 @@
 
 .site-menu-button:hover,
 .site-menu-close:hover {
-  background: var(--mk-color-surface-muted);
+  background: var(--mk-color-background);
 }
 
 .site-menu-button {
@@ -33,89 +33,106 @@
 }
 
 .site-menu-scrim {
-  background: var(--mk-color-text);
+  background: color-mix(in srgb, var(--mk-color-text) 32%, transparent);
   inset: 0;
-  opacity: 0.4;
   position: fixed;
-  z-index: 10;
+  z-index: 20;
+}
+
+[data-color-scheme="dark"] .site-menu-scrim {
+  background: color-mix(in srgb, var(--mk-color-background) 70%, transparent);
 }
 
 .site-menu {
   background: var(--mk-color-surface);
   border: 0;
-  box-shadow: var(--mk-shadow-large);
+  box-shadow:
+    0 1px 0 var(--mk-color-border),
+    var(--mk-shadow-large);
   color: var(--mk-color-text);
   height: auto;
-  inset: 0 0 0 auto;
+  inset: 60px 0 auto;
   margin: 0;
   max-height: none;
   max-width: none;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  opacity: 0;
   padding: 0;
   position: fixed;
   transition:
-    translate var(--mk-motion-standard) var(--mk-motion-easing),
-    display var(--mk-motion-standard) allow-discrete,
-    overlay var(--mk-motion-standard) allow-discrete;
-  translate: 100% 0;
-  width: min(20rem, calc(100% - var(--mk-space-12)));
-  z-index: 10;
+    opacity var(--mk-motion-standard) var(--mk-motion-easing),
+    translate var(--mk-motion-standard) var(--mk-motion-easing);
+  translate: 0 -8px;
+  width: auto;
+  z-index: 40;
 }
 
+/* The open sheet settles into place; it sets no translate, so its close
+   control keeps the viewport as its containing block. */
 .site-menu[open] {
-  translate: 0 0;
+  opacity: 1;
+  translate: none;
 }
 
 .site-menu-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--mk-space-5);
-  min-height: 100%;
-  padding: var(--mk-space-4) var(--mk-layout-gutter-mobile) var(--mk-space-8);
+  display: grid;
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-2) 12px var(--mk-space-4);
 }
 
 .site-menu-head {
-  display: flex;
-  justify-content: flex-end;
+  position: fixed;
+  right: 8px;
+  top: 8px;
+}
+
+.site-menu-close {
+  background: var(--mk-color-surface);
 }
 
 .site-menu-nav {
   display: grid;
-  gap: var(--mk-space-1);
 }
 
 .site-menu-link {
   align-items: center;
-  border-radius: var(--mk-radius-small);
+  border-radius: 8px;
   color: var(--mk-color-text);
   display: flex;
-  font-size: var(--mk-type-body-size);
-  line-height: var(--mk-type-body-line);
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-3);
+  font-size: 1.0625rem;
+  font-weight: var(--mk-font-medium);
+  min-height: 48px;
+  padding: 0 11px;
   text-decoration: none;
   transition: background var(--mk-motion-fast) var(--mk-motion-easing);
 }
 
 .site-menu-link:hover {
-  background: var(--mk-color-surface-muted);
+  background: var(--mk-color-background);
 }
 
-.site-menu-link[aria-current="page"],
-.site-menu-link[aria-current="page"]:hover {
-  background: var(--mk-color-accent-soft);
-  color: var(--mk-color-accent);
-  font-weight: var(--mk-font-medium);
+.site-menu-link[aria-current="page"] {
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-menu-link[aria-current="page"]::after {
+  background: var(--mk-color-signal);
+  border-radius: var(--mk-radius-pill);
+  content: "";
+  height: 7px;
+  margin-left: 10px;
+  width: 7px;
 }
 
 .site-menu-actions {
   border-top: 1px solid var(--mk-color-border);
   display: grid;
-  gap: var(--mk-space-3);
-  padding-top: var(--mk-space-5);
+  padding-top: 12px;
 }
 
 .site-menu-actions .site-button {
-  justify-content: center;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-menu-button {
+  display: inline-flex;
 }

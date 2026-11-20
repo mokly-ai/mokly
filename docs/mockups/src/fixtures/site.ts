@@ -19,18 +19,13 @@ export const app = {
   signUp: siteOrigin + "/sign-up",
 } as const;
 
-/** The public open-source repository linked from every site header. */
+/**
+ * The public GitHub destinations: the open-source repository linked from
+ * every site header, and the releases of the desktop app, which the home's
+ * Download for Mac opens because every desktop release is still a
+ * pre-release.
+ */
 export const openSource = {
   github: "https://github.com/mokly-ai/mokly",
-} as const;
-
-/** The approved publication label and review state shown above the real stage. */
-export const siteStage = {
-  label: "Mokly Cloud · sydney-v1",
-  status: "Ready for review",
-  /**
-   * How many entries and folders sit directly in each folder the depicted
-   * tree opens. A policy test reads them back from the catalogue manifest.
-   */
-  folders: { account: 10, design: 23, product: 4 },
+  desktopReleases: "https://github.com/mokly-ai/mokly-desktop/releases",
 } as const;
