@@ -1,7 +1,5 @@
 # Catalogue Serialization, Identity And Versions
 
-Status: No receiver checks an upload under the lenient rule yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
-
 ## Canonical Bytes
 
 The catalogue index, every entry detail, and every detail inside a

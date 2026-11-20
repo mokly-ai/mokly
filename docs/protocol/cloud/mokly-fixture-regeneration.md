@@ -97,10 +97,10 @@ set/remove operations and exact raw text for byte-sensitive cases; each case
 checks its rendered input hash in both harnesses. Each case
 records the changed, added, removed and moved counts of the
 [Changes count](./publication-review.md#changes-count), or the cloud rejection
-kind of an index that the receiver refuses. Check mode runs the
+kind of an index that the cloud's index reader refuses. Check mode runs the
 corpus, both real producer indexes and the published
-`fixtures/catalogue-v9.json` through the Rust reader and through the public
-`readCatalogueIndex` of `@mokly/viewer`. The rule for the two
+`fixtures/catalogue-v9.json` through the cloud's index reader and through the
+public `readCatalogueIndex` of `@mokly/viewer`. The rule for the two
 readers is in
 [Publication index](./publication-review.md#reader-conformance-and-cloud-checks).
 The corpus carries no Mokly or viewer release number. A release alone changes

@@ -1,7 +1,5 @@
 # Component Usage Records
 
-Status: No receiver checks the usage records of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
-
 ## Record Shapes
 
 Usage records derive from the ownership regions of the composed trees under

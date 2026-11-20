@@ -2922,6 +2922,7 @@ dependencies = [
  "mkc-domain",
  "mkc-upload-memory",
  "mkc-upload-memory-interface",
+ "mokly-model",
  "ryu-js",
  "semver",
  "serde",

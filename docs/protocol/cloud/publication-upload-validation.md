@@ -1,7 +1,5 @@
 # Publication Upload Validation
 
-Status: The receiver does not run the content check yet. It checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
-
 This document defines how the receiver validates the plan request of the
 [upload exchange](./publication-upload-exchange.md): the plan archive's
 framing and quotas, the schema 3 ownership marker and the catalogue index.

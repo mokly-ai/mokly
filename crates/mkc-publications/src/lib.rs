@@ -18,6 +18,7 @@ pub mod build_scheduler;
 mod build_upload;
 pub mod build_worker;
 pub mod capability;
+mod catalogue_content;
 pub mod check_provider;
 pub mod check_rerequests;
 pub mod check_summary;

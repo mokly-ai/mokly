@@ -1,6 +1,6 @@
 # Component Prop Schema
 
-Status: No receiver checks the recorded props of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud. The [select option builder](../../plans/follow-ups/select-option-builder.md) repairs duplicate or unusable select choices.
+Status: The [select option builder](../../plans/follow-ups/select-option-builder.md) repairs duplicate or unusable select choices.
 
 ## Schema
 

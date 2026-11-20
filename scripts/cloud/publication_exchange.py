@@ -47,6 +47,20 @@ def current_only_files(files):
         for record in index[kind]:
             record["changes"] = {"status": "disabled"}
             record.pop("previousPath", None)
+            if "comparison" in record:
+                record["comparison"] = {"status": "disabled"}
+            for view in record.get("views", []):
+                view["comparison"] = {"status": "disabled"}
+    for path, data in list(changed.items()):
+        if not path.startswith("mokly-viewer/entries/") or not path.endswith(".json"):
+            continue
+        detail = json.loads(data)
+        for key in ["reasons", "before", "resourceEvidence", "workspace"]:
+            detail.pop(key, None)
+        for view in detail["views"]:
+            for key in ["state", "ignoredIds", "resourceEvidence"]:
+                view.pop(key, None)
+        changed[path] = json.dumps(detail).encode()
     changed[INDEX] = json.dumps(index).encode()
     return with_marker(changed)
 

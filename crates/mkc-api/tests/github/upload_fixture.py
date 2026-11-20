@@ -52,7 +52,21 @@ if len(sys.argv) > 4:
         for record in index[kind]:
             record["changes"] = {"status": "disabled"}
             record.pop("previousPath", None)
+            if "comparison" in record:
+                record["comparison"] = {"status": "disabled"}
+            for view in record.get("views", []):
+                view["comparison"] = {"status": "disabled"}
     files = {path: data for path, data in files.items() if not path.startswith("mokly-viewer/diffs/")}
+    for path, data in list(files.items()):
+        if not path.startswith("mokly-viewer/entries/") or not path.endswith(".json"):
+            continue
+        detail = json.loads(data)
+        for key in ["reasons", "before", "resourceEvidence", "workspace"]:
+            detail.pop(key, None)
+        for view in detail["views"]:
+            for key in ["state", "ignoredIds", "resourceEvidence"]:
+                view.pop(key, None)
+        files[path] = json.dumps(detail).encode()
     files[INDEX] = json.dumps(index).encode()
 envelope.update(patch)
 files[ENVELOPE] = json.dumps(envelope).encode()

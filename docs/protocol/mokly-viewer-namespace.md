@@ -1,7 +1,5 @@
 # Portable Viewer Namespace And Version Gates
 
-Status: No receiver rejects `usage` or `resourceEvidence` in an index yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
-
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.

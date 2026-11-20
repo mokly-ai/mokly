@@ -22,3 +22,4 @@
 - **Impact if no action:** Mokly Cloud keeps deploying nothing from this repository, so changes under `packages/` and `apps/` never reach the hosted cloud, and the old repository keeps its Google Cloud trust.
 - **Needs:** Owner access to both repositories and to Google Cloud project `mokly-508518`, and Conductor organization admin access.
 - **Done when:** Production runs a deploy from `main` of this repository, the old repository is archived and out of the trust condition, the cutover-only trust code is gone, and no page marks cloud delivery as off.
+- **Related:** [receiver-read-model-validation.md](./receiver-read-model-validation.md) deploys and smoke-tests the receiver's upload content check. Its deploy waits for the first deploy from `main` that this task runs.

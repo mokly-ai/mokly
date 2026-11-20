@@ -1,7 +1,5 @@
 # Publication Upload Exchange
 
-Status: Completion does not run the content check yet. The receiver checks only the index fields that its own features read, and it reads no entry detail. The [receiver read-model validation item](../../../plans/follow-ups/receiver-read-model-validation.md) adds the check.
-
 This is the plan, blob and completion exchange of
 [Publication upload](./publication-upload.md). Mokly's
 [upload exchange v1](../mokly-upload-exchange.md),
@@ -163,10 +161,10 @@ Only a publication that stops being ready inside the attempt's hour changes
 the answer, to 410, which the CLI resolves with its single re-plan.
 
 An internal failure is HTTP 500 with `upload-failed` and leaves an unfinished
-attempt open for the CLI's retry. A stored index that completion cannot load
-is such a failure, never a 404.
+attempt open for the CLI's retry. A stored index or entry detail that
+completion cannot load is such a failure, never a 404.
 [Publication ingest](./publication-ingest.md#completion) defines the exception
-for an index that went missing. A bearer, repository or plan
+for a file that went missing. A bearer, repository or plan
 refusal found by the ready transaction, or its deadline, closes the attempt.
 
 ## Expiry And Failure Mapping

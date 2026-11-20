@@ -64,9 +64,16 @@ requests that may reach different processes, and a stored link would still
 need this fallback once that winner expired.
 
 A validating attempt then checks for pending publication blobs. If any remain,
-the outcome is HTTP 409 with `upload-incomplete`. Otherwise the ready
-transaction reauthorizes, resolves the attempt again in the same order, then
-persists observations and returns the receipt with HTTP 201. A completion
+the outcome is HTTP 409 with `upload-incomplete`. Otherwise completion runs the
+[content check](./publication-review.md#content-check) on the stored index and
+on every entry detail that the marker declares, including a blob that an
+earlier attempt stored. A check that fails answers HTTP 400 with
+`upload-invalid-bundle` and publishes nothing. Like a rejected plan, the
+refusal closes the attempt through the ordinary failed-attempt cleanup, which
+releases its file references and emits a deliverable failure event. After a
+passed check, the ready transaction reauthorizes, resolves the attempt again
+in the same order, then persists observations and returns the receipt with
+HTTP 201. A completion
 that overlaps an earlier one for the same attempt finds the attempt ready
 there and answers 201 with it, writing nothing; a different upload that
 committed the identity first answers 200 with that winner. A deadline found
@@ -74,14 +81,16 @@ by that transaction answers 410 `upload-expired`. Authorization and deadline
 outcomes close the attempt; an internal or unavailable failure leaves it
 validating, so the CLI's retry can complete it before the deadline.
 
-Completion loads the stored index of every attempt that it may publish.
-A stored index that completion cannot load, because its file
-reference or its stored bytes are gone, is an internal failure only when the
-ready transaction still decides to publish. When another request
-closed the attempt after the index was first read, which releases the index's
-file reference, the ready transaction answers for the closed state instead.
-An index whose reference query or storage read fails, or that
-cannot be decoded, is an internal failure straight away.
+Completion loads the stored index and the declared entry details of every
+attempt that it may publish. A stored index or detail that completion cannot
+load, because its file reference or its stored bytes are gone, is an internal
+failure only when the ready transaction still decides to publish. When another
+request closed the attempt after completion first read these files, which
+releases the attempt's file references, the ready transaction answers for the
+closed state instead. An index or a detail whose reference query or storage
+read fails, or whose stored size differs from its reference, is an internal
+failure straight away. So is a stored index that the plan's index checks can
+no longer decode.
 
 Retention fails unfinished attempts at the same sixty-minute deadline and
 releases their references; blobs already made durable remain available to

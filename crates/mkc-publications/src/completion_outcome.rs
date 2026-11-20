@@ -41,6 +41,8 @@ pub(crate) enum StoredIndex {
     /// whether this fails the completion: it does when the upload is still to
     /// be published.
     Missing,
+    /// A detail object disappeared before the ready transaction resolved the attempt.
+    MissingDetail(String),
 }
 
 impl StoredIndex {
@@ -48,7 +50,7 @@ impl StoredIndex {
     pub(crate) fn index(&self) -> Option<&CatalogueIndex> {
         match self {
             Self::Loaded(index) => Some(index.as_ref()),
-            Self::Missing => None,
+            Self::Missing | Self::MissingDetail(_) => None,
         }
     }
 }
