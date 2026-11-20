@@ -37,11 +37,57 @@ The example has paths `components/Button` and `components/Button/Disabled`
 under the default `specs` root. The meta title supplies the display title's
 last segment. It does not change the path.
 
+The default-export meta can omit `title`. Mokly then uses the component's
+`displayName`, else its `name`, else the file name without the stories
+extension.
+
+## Story formats
+
+Mokly reads three forms of Storybook's Component Story Format, or CSF:
+
+- **CSF 2:** A default-export meta and function stories with static `args`.
+- **CSF 3:** A default-export meta and story objects, as in the example above.
+- **CSF Factories:** A meta from `preview.meta()` and stories from
+  `meta.story()`, without a default export.
+
+In a factories project, `.storybook/preview` uses `definePreview` from your
+Storybook framework package, such as `@storybook/react-vite`:
+
+```ts
+// .storybook/preview.ts
+import { definePreview } from "@storybook/react-vite";
+
+export default definePreview({});
+```
+
+The same component entry can use CSF Factories:
+
+```tsx
+// specs/components/Button.stories.tsx
+import preview from "../../.storybook/preview";
+import { Button } from "./button.js";
+
+const meta = preview.meta({
+  title: "Controls/Button",
+  component: Button,
+  args: { label: "Continue", disabled: false },
+});
+
+export const Disabled = meta.story({ args: { disabled: true } });
+```
+
+Mokly gets the meta and preview of a factories file from its stories.
+The preview's decorators wrap each story.
+
 ## Props and controls
 
 Mokly infers the schema from data args. `argTypes` supplies control hints:
 options, number bounds and step, a label, and help text. It does not supply a
 schema or change validation.
+
+Each story keeps the meta's select choices and number bounds, even for an
+entry prop that the story does not set. A story's own `argTypes` can override
+these hints.
 
 An arg with `control: false`, `table.disable: true`, an `action`, or a
 function type stays outside the data props and schema. Its file value remains

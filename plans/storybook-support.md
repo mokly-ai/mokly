@@ -920,7 +920,7 @@ design call 2 says. It fixes findings 2, 10, and 11.
 - [x] Add a factories fixture, an untitled file, and a variant that does not
       set an arg with options to `tests/sidecar_storybook.test.ts`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+- [x] Update `docs/guides/authoring/storybook.md` for CSF Factories.
       Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 4: Story args, names, tags, and descriptions
