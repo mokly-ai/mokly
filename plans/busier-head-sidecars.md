@@ -642,10 +642,10 @@ The saved phase attribution identifies no individual Small owner. Apply decision
 - [x] Promote the existing test-only Window::start to the ordinary production path, with its doc comment. Select ordinary Work and Window paths for every ineligible view, even in a mixed catalogue. Allocate no Stage and perform no preparation/cache probe merely to select that path.
 - [x] Keep eligible roots on D's path, including cached eligible views, refused charges, failures, and single-attempt consumption. Preserve counts, budget, worker order, priority, cancellation, replacement, and draining.
 - [x] Add regression cases red first at the eligibility and mixed-dispatch boundaries. Preserve existing Serve/pool tests and assertions. Prove any new asynchronous cases with ten explicit trials and mutation evidence where needed.
-- [ ] Run targeted tests and the Repository suite. Commit and push. Send the implementation SHA and dist build commit immediately. Obtain complete-gate CI evidence and a fresh whole-diff review.
-- [ ] Build the new release arm without overwriting frozen evidence. Run four balanced warm large-HTML pairs and one React warm pair, with excluded primers, unchanged observation rules, and fresh immutable provenance. Compare the saved seven output pairs without extra starts.
-- [ ] Apply the unchanged +200 ms HTML paired-median criterion and React no-regression check. Preserve every row, CPU bins, memory, and gauge. If HTML fails, send the pairs before any PR.
-- [ ] Send the new SHA for the performance orchestrator's brief Cloud recheck. Keep its accepted 0.93 s gain. Open no PR before its result. Do not merge main again.
+- [x] Run targeted tests and the Repository suite. Commit and push. Send the implementation SHA and dist build commit immediately. Obtain complete-gate CI evidence and a fresh whole-diff review.
+- [x] Build the new release arm without overwriting frozen evidence. Run four balanced warm large-HTML pairs and one React warm pair, with excluded primers, unchanged observation rules, and fresh immutable provenance. Compare the saved seven output pairs without extra starts.
+- [x] Apply the unchanged +200 ms HTML paired-median criterion and React no-regression check. Preserve every row, CPU bins, memory, and gauge. If HTML fails, send the pairs before any PR.
+- [x] Send the new SHA for the performance orchestrator's brief Cloud recheck. Keep its accepted 0.93 s gain. Open no PR before its result. Do not merge main again.
 
 Evidence: `.context/busier-sidecars/measurements/postfix-confirmation-01/report.md`
 and `phase-attribution-readonly.md` in that folder. The next run gets its own
@@ -653,9 +653,38 @@ immutable descriptor and new output folder. Reuse no old-source observation
 in the new fixed-source statistic. No other local matrix, probe, PID series,
 or edit session is authorized.
 
-## Milestone 6: Commit, review, and pull request
+## Milestone 5c: Timeboxed remaining HTML cost
 
 Depends on: 5b
+
+The performance orchestrator added this work on 2026-11-20 at about 11:25 UTC.
+It permits one CPU profile of a large-HTML usage pass per frozen arm.
+The work stops by about 12:25 UTC. Spans identify the window, not CPU owners.
+Compare inclusive CPU frames, thread counts, and render-worker parked or waiting time.
+
+If one Small item owns most of the cost, fix it and repeat four balanced HTML pairs.
+Run an options check before that source change. Preserve the accepted handoff gain and all memory bounds.
+Otherwise, stop the investigation within the timebox. The orchestrator accepts the measured HTML cost as a trade-off.
+Record the slower HTML result and a self-contained follow-up with the profile before opening the pull request.
+This dated call changes the earlier conditional pull-request rule. It adds no automatic sample extension.
+
+- [x] Record the failed E criterion, every pair, the complete saved-output proof, and the accepted Cloud result.
+- [x] Capture one core CPU profile per frozen arm, with exact provenance and owned-process cleanup.
+- [x] Report inclusive frames, separate Rayon and Tokio thread groups, and the limits of parked or waiting evidence.
+- [x] Apply the approved conditional outcome. Fix only a proven Small dominant owner, or record the accepted cost and profile follow-up.
+- [x] Send the profile summary, final local table, and all measurement limits to the performance orchestrator.
+
+On 2026-11-20, root applies the approved trade-off after the two frozen CPU profiles.
+The profiles establish no Small dominant owner. The first-Changes HTML median remains 292 ms later, about 1.8%.
+No source correction or extra acceptance sample follows this bounded investigation.
+The native HTML follow-up retains the profile facts and uncertainty. The performance orchestrator holds the merge.
+
+Evidence: `.context/busier-sidecars/measurements/exact-dispatch-confirmation-01/report.md`
+and `.context/busier-sidecars/html-residual-profile/`.
+
+## Milestone 6: Commit, review, and pull request
+
+Depends on: 5c
 
 - [x] Commit with Conventional Commits and push. Send the implementation SHA and dist source commit immediately.
 - [x] After the accepted fixed SHA, merge main once. Preserve incoming content and check #363 affinity with #351 warm-up and overlap. Run their tests and obtain complete gate evidence with Rust 1.98.1. The pull request targets main.
