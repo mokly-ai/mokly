@@ -10,11 +10,15 @@
   - `apps/site/src/lighthouse.ts:34` and `:50`: the throttling profiles of option A. `:91`: `THRESHOLDS`, whose performance entry option C replaces. `:122`: `measurementWithRetry`, the retry that option B replaces. Option E adds a score rule.
   - `apps/site/scripts/lighthouse.mjs:45-101`: the audit loop, the category scores that it reads, and the shortfall lines. Options B, C, and E change it.
   - `apps/site/tests/lighthouse.test.ts:24-105`: the tests of the audited pages, the CPU multiplier, the retry, and the thresholds. Options B, C, and E change them.
-  - `docs/protocol/cloud/site-delivery.md:165-182`: the Performance Budget requirement. Options B, C, and E change it. Option D keeps it.
+  - `docs/protocol/cloud/site-delivery.md:165-182`: the Performance Budget requirement. Options B, C, and E change it. Options D and F keep it.
   - `apps/site/README.md:128`, `:251`, and `:258`: the command table and the Key Code entries of the budget. Options B, C, and E update them.
   - `apps/site/tests/site_ci.test.ts:62`: the test that no Lighthouse result can fail Required CI. Every option keeps it.
-  - `apps/site/src/components/home/Stage.astro` and `apps/site/scripts/stage.mjs`: the sandboxed stage frame of the home page, and the script that publishes its documents. Option D starts there.
-- **Reason:** The user reserved the choice of option and caps, and the recommended option D is product work beyond this evidence update.
+  - `apps/site/src/components/home/Stage.astro` and `apps/site/scripts/stage.mjs`: the sandboxed stage frame of the home page, and the script that publishes its documents. Option D investigated there.
+  - `apps/site/scripts/stage/fragments.ts:187`: `rewriteStage`, which rewrites each stage document and collects the resources that it links. Option F inlines the stylesheets there.
+  - `docs/protocol/cloud/site-delivery.md:97-133`: the Home Stage requirement. Lines 102-103 copy each stylesheet beside the stage documents. Option F changes that rule.
+  - `apps/site/tests/stage.test.ts:94` and `:224`: the tests that publish the stage stylesheets and other resources beside the documents. Option F changes them.
+  - `apps/site/README.md:248`: the Key Code entry of the stage publication. Option F updates it.
+- **Reason:** Option D stopped under the user's stop rule, and the recommended option F changes the stage publication requirement, so the user must choose again.
 
 - **Terms:**
   - **Audit:** one Lighthouse run of one route at one width, which gives one score for each category.
@@ -35,16 +39,17 @@
   - The job is report-only. Required CI does not need it, so no Lighthouse result can fail Required CI.
   - A failed budget run still fails its own job, which shows as a failed check and keeps its report as an artifact.
   - `docs/protocol/cloud/site-delivery.md` keeps the job report-only "because measured scores vary between runs on shared runners".
-  - The home page embeds a sandboxed stage frame that shows a published mockup. At 1440 px, the frame is `/stage/project-created.desktop.html`.
-- **Problem:** Home at 1440 px missed the 0.95 performance threshold in 40 of 87 complete CI budget runs. It missed in 3 of 9 local budget runs. CLS alone penalized each failing local result. Whole-page CLS was about 0.168, and main-frame CLS was 0. The cause remains unknown. Host timing can still affect layout.
+  - The home page embeds a sandboxed stage frame that shows a published mockup. At 1440 px, the frame is `/stage/project-created.desktop.html`. It loads seven external stylesheets and one local font.
+- **Problem:** Home at 1440 px missed the 0.95 performance threshold in 40 of 87 complete CI budget runs. It missed in 3 of 9 local budget runs. CLS alone penalized each failing local result. The shift is in the stage frame. Chrome sometimes lays out that frame before its stylesheets apply, and then counts the styled layout as a shift. Chrome paints nothing before that shift, so users never see it. The exact Chrome trigger is not known, and CI logs hold scores only.
 - **Impact if no action:** Each failure shows a failed check and can need a rerun. Repeated failures can obscure a new regression.
 - **Root question:** How should site checks detect real regressions with stable pass or fail results?
 - **Options:**
   - **A.** Keep Lighthouse's simulated throttling and fixed CPU multiplier of 1. These settings already apply at both widths, with one conditional retry. CI passed 47 of 87 budget runs. Local budget runs passed 6 of 9. A adds no new control for the observed shift. Effort: Small.
   - **B.** Run each audit three times and judge the median score of each category, in place of the one retry. B keeps every current metric. In three local groups of three budget runs, the medians of the first audits passed once. B needs two passing audits in three, and the retry needs one in two. Locally, 5 of 9 first home audits at 1440 px failed. Each local budget run took 75 to 86 seconds, and B triples its audits to 36. Effort: Small.
   - **C.** Replace the performance-score threshold with per-route caps on total transfer bytes, script transfer bytes, and requests, from the `resource-summary` audit. The cap table below gives candidate values. Keep the other three thresholds and the report-only status, and print the performance score as a diagnostic only. C stops checking load timing and layout shift, so a page that shifts or loads slowly can pass. C does not fix the shift. Effort: Medium.
-  - **D.** Find the source of the shift outside the main frame with repeated local budget runs. If the runs confirm a source in the page, remove the shift there. Keep the 0.95 threshold, the retry, the other three thresholds, and the report-only status. Judge D by the CLS of each audit, because a CLS of 0.143 still passes. A confirmed fix comes with a deterministic regression test for the shift. If users cannot see the shift, or the page cannot remove it, D returns to the user. D is product work beyond this item, and its pass rate is not known. Effort: Medium.
+  - **D.** Find the source of the shift outside the main frame with repeated local budget runs. If the runs confirm a source in the page, remove the shift there. Keep the 0.95 threshold, the retry, the other three thresholds, and the report-only status. Judge D by the CLS of each audit, because a CLS of 0.143 still passes. A confirmed fix comes with a deterministic regression test for the shift. If users cannot see the shift, or the page cannot remove it, D returns to the user. D is product work beyond this item, and its pass rate is not known. On 2026-11-20, D stopped, because users cannot see the shift. D does not apply as a visible page fix. Effort: Medium.
   - **E.** Keep the score check, but compute the performance score with main-frame CLS in place of whole-page CLS. Every timing metric still counts. E drops the protection against shifts inside frames. It needs a custom score rule beside the Lighthouse score, and a protocol change. Its pass rate is not measured, although main-frame CLS was 0 in all 14 local home audits at 1440 px. Effort: Medium.
+  - **F.** Publish each stage document with its seven stylesheets inline, in their order and with rebased URLs, in place of copied external stylesheets. The font stays a separate local file. Keep every check, the 0.95 threshold, the retry, the job, the empty sandbox, the three hidden documents that are never fetched, the copy, and the final design. F avoids the trigger in Chrome, and it does not fix a visible defect. It changes the Home Stage publication requirement. In a focused prototype, 10 of 10 home audits at 1440 px scored 1.00. The full proof and a deterministic regression test are pending. Effort: Medium.
 - **Left out:**
   - Lowering the performance threshold. The user explicitly excluded it, and the score would still vary between audits of one build.
   - Removing the whole job. It fails the goal, because nothing then measures performance. The three other category checks, which never varied, also go.
@@ -53,11 +58,15 @@
   - Warm-cache audits. They fail the goal, because they stop measuring a first visit with an empty cache.
   - Blocking the stage frame in the audit. It fails the goal, because the audit then measures a page that users never get.
   - More retries. They fail the goal, because the result still changes between runs, and they hide the shift more often.
-  - Shared by every option: the job stays report-only, and the other three thresholds stay, as `docs/protocol/cloud/site-delivery.md` requires. A, B, C, and E leave page rendering unchanged. The original item listed audit-policy changes. D permits a page investigation.
-- **Wider fix:** None yet, because the cause of the shift is not known. C changes what the check protects, and it does not fix the shift.
+  - Waiting for a Chrome fix. It fails the goal of stable results for an unknown time.
+  - One combined external stylesheet. It still blocks rendering, so an early layout can still come before it.
+  - Hiding the stage content until its styles apply. It changes the mockup styles and only hides the trigger, so F is better on every point.
+  - Eager loading of the stage documents, or `allow-same-origin` in the frame sandbox. Each breaks a rule of `docs/protocol/cloud/site-delivery.md:117-119`: hidden documents are never fetched, and the sandbox is empty.
+  - Shared by every option: the job stays report-only, and the other three thresholds stay, as `docs/protocol/cloud/site-delivery.md` requires. A, B, C, and E leave page rendering unchanged. The original item listed audit-policy changes. D permitted a page investigation. F changes how the stage loads its styles, not what it shows.
+- **Wider fix:** None in this repository, because the class is the accounting in Chrome of a layout that it never paints. F avoids the trigger without weakening a check.
 - **Previous examples:** The CI table below confirms main commits `940ddd742`, `b32f3e907`, and `3f01b5f4e`, plus PRs #373, #386, and #390. The History section keeps the original PR #350 failure and rerun.
-- **Recommendation:** D. It seeks to keep the current performance coverage of load timing and layout stability. It replaces the first recommendation, C, after the local CLS evidence. C stays the measured resource-budget alternative if D stops.
-- **Action:** ask the user, because the user reserved this choice, and D widens the approved scope to product work.
+- **Recommendation:** F. It keeps every current check, and it avoided the recorded shift in a focused prototype with no visible change. It replaces D, which stopped, and D had replaced the first recommendation, C. C stays the measured resource-budget alternative.
+- **Action:** ask the user, because F changes the stage publication rule of site-delivery.md, and the other options weaken the performance protection.
 
 ## History
 
@@ -68,6 +77,8 @@
 - 2026-11-20: The evidence below corrected three claims. The thresholds are not 0.95 for each category, because accessibility needs 1. The evidence does not show that "the score depends on runner speed". Required CI does not fail when the job fails.
 - 2026-11-20: The user said that C removes a check and adds new checks, so the item waits for the user's answer. The user asked for a pull request that changes only this item before any check changes.
 - 2026-11-20: An options check added D and E. The recommendation changed from C to D after the local CLS evidence. C stays as an option.
+- 2026-11-20, 10:44 UTC: The user authorized D. D had to find the actual element and cause, and fix only a page defect, with the final design and copy unchanged. It had to keep the threshold, the retry, and the job, add a regression test only for a defect, and run nine budget runs after a fix. It had to stop and report if the shift was not a page defect, or if a fix needed a design or copy change.
+- 2026-11-20: D stopped, because the shift is not a visible page defect. No tracked file changed. The investigation proposed F, and the recommendation changed from D to F. The user has not answered F yet.
 
 ## CI evidence, 2026-11-20
 
@@ -144,7 +155,7 @@ The six reported cases:
 - CLS uses the recorded page-load trace. Its computation does not apply the simulated CPU multiplier. Host timing can still affect layout.
 - Whole-page CLS counts frames too. So a main-frame CLS of 0 puts the counted shift outside the top document.
 - The only frame document that the page requests at 1440 px is the stage frame.
-- Lighthouse names no consistent element or cause for the largest shift.
+- Lighthouse names no consistent element or cause for the largest shift. The D investigation below explains why.
 - The evidence does not show why only some loads shift, or that runner CPU speed alone causes it. Frame timing or other page behaviour can cause it.
 
 ### Resources
@@ -204,3 +215,30 @@ Each cell below gives transfer bytes / decoded bytes [requests]. "Both" marks a 
 - All 113 local audits and all 9 budget runs fit these caps by construction. That is not an independent test of the caps.
 - C keeps accessibility = 1, best practices ≥ 0.95, SEO ≥ 0.95, and the report-only status. It lowers no threshold.
 - The user can accept these caps or give other margins.
+
+## D investigation and F prototype, 2026-11-20
+
+The investigation changed no tracked file. It ran local Lighthouse audits and plain Chrome loads of home at 1440 px.
+
+| Stage frame element        | Box before the shift, y and height | Box after the shift, y and height |
+| -------------------------- | ---------------------------------- | --------------------------------- |
+| `header.fo-account-header` | 18 and 44                          | 0 and 48                          |
+| `main.fo-account-main`     | 62 and 380                         | 48 and 532, inside the viewport   |
+| `footer.fo-account-footer` | 458 and 18                         | Below the 580 px frame viewport   |
+
+- A Chrome DevTools Protocol session on the frame resolved these elements in the renderer of the frame. Lighthouse's own attribution names unrelated top-document elements.
+- The seven external stylesheets in the head of the stage document block rendering while they load. Chrome sometimes lays out the unstyled document during that wait. It then counts the styled layout as a shift from boxes that it never painted.
+- 21 traces had the large shift: 8 Lighthouse audits, 12 plain Chrome loads, and 1 mapping run. None had a Paint event or a painted layout object before the shift.
+- None fired `pagereveal`, the first rendering opportunity, before the first layout. In all 21, the first layout came before all seven stylesheets were parsed.
+- A second pass over 33 traces confirmed the 21 large shifts and no paint before them.
+- In one failing audit, the times after the HTML parse of the frame were: first layout 3.17 ms, `pagereveal` 21.27 ms, large shift 29.68 ms, first paint 29.75 ms, and the FCP mark 55.29 ms.
+- So users cannot see the old positions. The exact Chrome trigger is not known. No page fix is justified under D.
+- Before the prototype, 12 focused audits scored 0.93 six times, 0.95 twice, and 1.00 four times. So 6 failed, 6 passed, and 8 had a large CLS.
+- Plain Chrome without a DevTools client had the large shift in 12 of 20 loads. So Chrome records it outside Lighthouse too.
+- The prototype changed only a local copy of the built site. It inlined the seven stylesheets, in order, into the four stage documents, with rebased URLs. The font stayed a local file.
+- With the prototype, 10 of 10 focused audits scored 1.00, each with CLS 0.00001212477 from the small font shift. None of 20 plain Chrome loads had the large shift.
+- Headless screenshots of the stage figure at 1440 px and 390 px, in light and dark, had 0 different pixels. Desktop Chrome screenshots before and with the prototype showed the same layout, within antialiasing noise.
+- Home at 1440 px dropped from 15 to 8 requests, and from 392097 to 384590 transfer bytes.
+- Limits: the 10 prototype audits are not nine whole-site budget runs, not a production source change, and not CI proof. No regression test, repeated test runs, targeted site checks, or full gate ran. They wait for the user's approval.
+- CI logs hold rounded scores only, so they do not prove that all 40 CI failures have this cause.
+- On PR #398, CI run 44721416931 failed only its Site Lighthouse job, with home at 1440 px at 0.93. The Site, Preview, and both Title workflows passed. That run came before any fix and is outside the 100-run sample.
