@@ -1,7 +1,6 @@
 """Catalogue capture validates workflow identity and the exact CLI exchange."""
 
 import hashlib
-import json
 from pathlib import Path
 import random
 import subprocess
