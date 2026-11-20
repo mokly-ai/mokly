@@ -2,10 +2,13 @@
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use diesel::sql_types::{BigInt, Timestamptz};
 use mkc_db::schema::authentication::magic_links;
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::error::{ErrorResultExt, Result};
 use mkc_store_interface::magic_link::{MagicLink, MagicLinks};
 
+use crate::auth_prune::configure_batch;
 use crate::queries::PgQueries;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset)]
@@ -43,8 +46,11 @@ impl Row {
 }
 
 impl MagicLinks for PgQueries<'_> {
-    fn prune_magic_links(&mut self, before: DateTime<Utc>) -> Result<usize> {
-        diesel::delete(magic_links::table.filter(magic_links::expires_at.le(before)))
+    fn prune_magic_links(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize> {
+        let limit = configure_batch(self.connection, batch)?;
+        diesel::sql_query(include_str!("magic_link_retention.sql"))
+            .bind::<Timestamptz, _>(before)
+            .bind::<BigInt, _>(limit)
             .execute(self.connection)
             .context("prune retained magic links")
     }

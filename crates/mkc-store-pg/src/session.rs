@@ -2,11 +2,14 @@
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use diesel::sql_types::{BigInt, Timestamptz};
 use mkc_db::schema::authentication::sessions;
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::error::{ErrorResultExt, Result};
 use mkc_store_interface::session::{Session, Sessions};
 use uuid::Uuid;
 
+use crate::auth_prune::configure_batch;
 use crate::queries::PgQueries;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset)]
@@ -51,16 +54,15 @@ impl Sessions for PgQueries<'_> {
         &mut self,
         expires_before: DateTime<Utc>,
         seen_before: DateTime<Utc>,
+        batch: PruneBatch,
     ) -> Result<usize> {
-        diesel::delete(
-            sessions::table.filter(
-                sessions::expires_at
-                    .le(expires_before)
-                    .or(sessions::last_seen_at.le(seen_before)),
-            ),
-        )
-        .execute(self.connection)
-        .context("prune retained sessions")
+        let limit = configure_batch(self.connection, batch)?;
+        diesel::sql_query(include_str!("session_retention.sql"))
+            .bind::<Timestamptz, _>(expires_before)
+            .bind::<Timestamptz, _>(seen_before)
+            .bind::<BigInt, _>(limit)
+            .execute(self.connection)
+            .context("prune retained sessions")
     }
 
     fn session(&mut self, token_hash: &str) -> Result<Option<Session>> {

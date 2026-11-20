@@ -4,9 +4,11 @@
 
 use std::sync::{Arc, Barrier};
 use std::thread;
+use std::time;
 
 use chrono::{DateTime, Duration, Utc};
 use mkc_db::migration::{DieselMigrations, MigrationRunner};
+use mkc_store_interface::auth_prune::PruneBatch;
 use mkc_store_interface::desktop_grant::DesktopGrant;
 use mkc_store_interface::session::Session;
 use mkc_store_interface::store::{Callback, Store};
@@ -148,6 +150,10 @@ fn desktop_grant_pruning_keeps_newer_expiry_and_removes_used_and_unused_at_the_c
         return;
     };
     let cutoff = now() - Duration::days(7);
+    let batch = PruneBatch {
+        limit: 2,
+        timeout: time::Duration::from_secs(5),
+    };
     store
         .transaction(&mut Callback(&mut |queries| {
             for (index, delta) in [-1, 0, 1].into_iter().enumerate() {
@@ -158,7 +164,8 @@ fn desktop_grant_pruning_keeps_newer_expiry_and_removes_used_and_unused_at_the_c
                     queries.insert_desktop_grant(&record)?;
                 }
             }
-            assert_eq!(queries.prune_desktop_grants(cutoff)?, 4);
+            assert_eq!(queries.prune_desktop_grants(cutoff, batch)?, 2);
+            assert_eq!(queries.prune_desktop_grants(cutoff, batch)?, 2);
             for (index, expected) in [(0, false), (1, false), (2, true)] {
                 for used in [false, true] {
                     assert_eq!(
@@ -167,7 +174,7 @@ fn desktop_grant_pruning_keeps_newer_expiry_and_removes_used_and_unused_at_the_c
                     );
                 }
             }
-            assert_eq!(queries.prune_desktop_grants(cutoff)?, 0);
+            assert_eq!(queries.prune_desktop_grants(cutoff, batch)?, 0);
             Ok(())
         }))
         .unwrap();
