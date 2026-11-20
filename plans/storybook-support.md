@@ -893,6 +893,11 @@ Design calls of track B, made on 2026-11-18:
   global.
 - B-d. The meta's `includeStories` and `excludeStories` filters apply, as in
   Storybook. Reason: Storybook's composition applies them already.
+- B-e. Made on 2026-11-20. A CSF Factories meta whose title is Storybook's
+  placeholder `ComposedStory` counts as untitled. Reason: Storybook's
+  `meta.story()` writes that placeholder into an untitled factory meta while
+  the stories file evaluates, before the reader runs. Only an authored title
+  of exactly `ComposedStory` loses, in favour of the fallback title.
 
 ## Milestone 3: Story reader
 
@@ -901,17 +906,22 @@ Depends on: 2
 One reader turns CSF 2, CSF 3, and CSF Factories files into one shape, as
 design call 2 says. It fixes findings 2, 10, and 11.
 
-- [ ] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
+- [x] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
       composes from a copy of the meta, passes a module without a default
       export to `composeStories` unchanged, and takes a factory's meta and
       preview from its stories.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Move `describeStories` onto the reader. The title fallback then never
       reads "ComposedStory", which fixes finding 10.
-- [ ] Take each variant's control hints from its composed argTypes, which
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Take each variant's control hints from its composed argTypes, which
       fixes finding 11.
-- [ ] Add a factories fixture, an untitled file, and a variant that does not
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Add a factories fixture, an untitled file, and a variant that does not
       set an arg with options to `tests/sidecar_storybook.test.ts`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 4: Story args, names, tags, and descriptions
 

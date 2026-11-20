@@ -13,7 +13,7 @@ import { componentOutput } from "./component-output.js";
 import { SidecarError, detail, handleLocation } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
-import type { PortableStory } from "./stories.js";
+import type { PortableStory } from "./story-reader.js";
 import { collectStyles } from "./styles.js";
 
 export async function render(

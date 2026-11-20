@@ -180,6 +180,14 @@ the packed contents of the package.
   `CaptureDurability` only to a `full` request.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
+- [`src/sidecar/story-reader.ts`](./src/sidecar/story-reader.ts) holds
+  `readStories`, which reads CSF 2, CSF 3, and CSF Factories through Storybook
+  composition and reads the entry title before composition.
+- [`src/sidecar/stories.ts`](./src/sidecar/stories.ts) holds `describeStories`,
+  which builds story definitions and takes control hints from composed
+  argTypes for every data prop of the entry.
+- [`src/sidecar/render.ts`](./src/sidecar/render.ts) holds `render`, which
+  renders entries and the reader's portable stories to static markup.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
