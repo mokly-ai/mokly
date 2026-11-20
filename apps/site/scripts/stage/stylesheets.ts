@@ -2,10 +2,13 @@
 
 import path from "node:path";
 
+/** Marks linked stylesheets that the stage publishes inline. */
+export const INLINED_STYLESHEET_ATTRIBUTE = "data-inlined-stylesheet";
+
 const CSS_STRING = String.raw`"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'`;
 const CSS_REFERENCES = new RegExp(
   [
-    String.raw`@import[\t\n\f\r ]+(?<quotedImport>${CSS_STRING})`,
+    String.raw`@import[\t\n\f\r ]*(?<quotedImport>${CSS_STRING})`,
     String.raw`(?<![\w-])url\([\t\n\f\r ]*(?<url>${CSS_STRING}|[^\t\n\f\r "'()]+)[\t\n\f\r ]*\)`,
     // Consume comments and other strings so their contents stay untouched.
     String.raw`/\*[\s\S]*?\*/`,

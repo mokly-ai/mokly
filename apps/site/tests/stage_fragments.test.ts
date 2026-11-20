@@ -32,7 +32,10 @@ test("resources move beside the document and unpublished links are dropped", () 
     },
   );
   const html = rewritten.documents.get("welcome.desktop.html") ?? "";
-  assert.match(html, /<style>main \{ color: red; \}<\/style>/);
+  assert.match(
+    html,
+    /<style data-inlined-stylesheet="">main \{ color: red; \}<\/style>/,
+  );
   assert.ok(html.includes('src="./mokly-viewer/client/frame-probe.js"'));
   assert.ok(html.includes('href="./welcome.desktop.html"'));
   assert.ok(html.includes('href="https://example.com/"'));
@@ -73,8 +76,8 @@ test("linked stylesheets inline in place and reference copied resources", () => 
     styles.map((style) => serializeOuter(style)),
     [
       "<style>.before{color:red}</style>",
-      `<style>@import  "./styles/more.css" screen;\n.card { mask: url( './art/card.svg#mark' ); }</style>`,
-      String.raw`<style media="print">.label::after { content: "<\/style> <\/STYLE>"; }
+      `<style data-inlined-stylesheet="">@import  "./styles/more.css" screen;\n.card { mask: url( './art/card.svg#mark' ); }</style>`,
+      String.raw`<style media="print" data-inlined-stylesheet="">.label::after { content: "<\/style> <\/STYLE>"; }
 .icon { mask: url(#icon); }</style>`,
       "<style>.after{color:blue}</style>",
     ],
@@ -93,10 +96,11 @@ test("stylesheet resources include imports and nested URLs", () => {
   assert.deepEqual(
     stylesheetResources(
       "styles/product/inventory.css",
-      '@import "account.css";\n@import url("records.css");\n.card { background-image: url(../art/card.svg#mark); }',
+      '@import "account.css";\n@import"compact.css";\n@import url("records.css");\n.card { background-image: url(../art/card.svg#mark); }',
     ),
     [
       "styles/product/account.css",
+      "styles/product/compact.css",
       "styles/product/records.css",
       "styles/art/card.svg",
     ],

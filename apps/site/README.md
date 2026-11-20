@@ -44,9 +44,11 @@ four mobile/desktop and light/dark documents of
 `product/account/project-created`, read from
 `mokly-static/static/mokly-generated/`, into `public/stage/`. Each document
 carries its stylesheets inline, in their original order, with their URLs
-rebased to that directory. The self-hosted font and the other local resources
-are copied beside the documents. The workspace `@mokly/viewer` public
-`readCatalogueIndex` reader checks the version of
+rebased to that directory. Each inlined style element carries
+`data-inlined-stylesheet`, so `site:links` treats its fragment-only references
+as it treats those of a stylesheet file. The self-hosted font and the other
+local resources are copied beside the documents. The workspace
+`@mokly/viewer` public `readCatalogueIndex` reader checks the version of
 `mokly-static/mokly-viewer/index.json` and copies its content under the
 [reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#frame-boundary).
 The stage projects

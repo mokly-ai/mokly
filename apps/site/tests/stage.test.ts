@@ -5,6 +5,9 @@ import test from "node:test";
 
 import { serialize } from "parse5";
 
+import { currentDocumentPath, viewRoute } from "@mokly/viewer/data";
+
+import { cssReferences } from "../scripts/links/documents.js";
 import {
   CATALOGUE_ROOT,
   type CatalogueEntry,
@@ -12,13 +15,14 @@ import {
   catalogueTrail,
   stagedEntry,
 } from "../scripts/stage/catalogue.js";
+import { INLINED_STYLESHEET_ATTRIBUTE } from "../scripts/stage/stylesheets.js";
 import {
   parseStageManifest,
   readStageManifest,
   stageDocumentFor,
   stageDocumentPath,
 } from "../src/stage.js";
-import { sitePath } from "../src/workspace.js";
+import { repositoryPath, sitePath } from "../src/workspace.js";
 
 import { documentStyles } from "./helpers/stage-styles.js";
 
@@ -122,6 +126,8 @@ test("a manifest that does not describe a complete stage is rejected", () => {
 test("the build published every screen document and its resources", () => {
   const manifest = readStageManifest();
   const dist = sitePath("dist");
+  const font =
+    "static/mokly-generated/assets/docs/mockups/styles/fonts/InterVariable.woff2";
   assert.equal(manifest.documents.length, 4);
   assert.equal(manifest.screen, "Project created");
   assert.equal(manifest.screenPath, "product/account/project-created");
@@ -146,20 +152,45 @@ test("the build published every screen document and its resources", () => {
       assert.match(html, /<title>Project created<\/title>/);
       assert.match(html, /Mokly Cloud is ready/);
       assert.match(html, new RegExp(`data-color-scheme="${scheme}"`));
-      const { links, styles } = documentStyles(html);
+      const { head, links, styles } = documentStyles(html);
       assert.deepEqual(links, [], `${document.file} loads a stylesheet link`);
-      assert.doesNotMatch(
-        styles.map((style) => serialize(style)).join("\n"),
-        /@import\b/i,
-        `${document.file} uses @import`,
+      const css = styles.map((style) => serialize(style)).join("\n");
+      assert.doesNotMatch(css, /@import\b/i, `${document.file} uses @import`);
+
+      const sourcePath = currentDocumentPath(
+        viewRoute(manifest.screenPath, viewport, scheme),
+      );
+      const source = readFileSync(
+        repositoryPath("mokly-static", sourcePath),
+        "utf8",
+      );
+      const expected = documentStyles(source).head.map((element) =>
+        element.tagName === "link"
+          ? "inlined stylesheet"
+          : { text: serialize(element) },
+      );
+      const published = head.map((style) => {
+        const text = serialize(style);
+        const marked = style.attrs.some(
+          ({ name }) => name === INLINED_STYLESHEET_ATTRIBUTE,
+        );
+        if (!marked) return { text };
+        return text.trim() ? "inlined stylesheet" : "empty stylesheet";
+      });
+      assert.deepEqual(
+        published,
+        expected,
+        `${document.file} head styles differ from the source`,
+      );
+
+      const faces = css.match(/@font-face\s*\{[^}]*\}/gi) ?? [];
+      assert.ok(
+        faces.some((face) => cssReferences(face).includes(`./${font}`)),
+        `${document.file} has no inline @font-face for InterVariable.woff2`,
       );
     }
   }
-  assert.ok(
-    manifest.resources.includes(
-      "static/mokly-generated/assets/docs/mockups/styles/fonts/InterVariable.woff2",
-    ),
-  );
+  assert.ok(manifest.resources.includes(font));
   assert.ok(
     manifest.resources.some((resource) => resource.includes("/")),
     "nested catalogue resources retain their paths",

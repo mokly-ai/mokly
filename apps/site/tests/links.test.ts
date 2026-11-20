@@ -8,6 +8,7 @@ import type { TestContext } from "node:test";
 import { promisify } from "node:util";
 
 import { checkLinks } from "../scripts/links/check.js";
+import { INLINED_STYLESHEET_ATTRIBUTE } from "../scripts/stage/stylesheets.js";
 
 const origin = "https://mokly.example";
 
@@ -62,6 +63,19 @@ test("links resolve nested routes, fragments, assets and frames", async (t) => {
     "movie.mp4": "",
   });
   assert.ok((await checkLinks(root, origin)) > 20);
+
+  const unmarked = await output(t, {
+    "index.html": "<style>.art { filter: url(#absent); }</style>",
+  });
+  await assert.rejects(
+    checkLinks(unmarked, origin),
+    /missing anchor #absent in index\.html/,
+  );
+
+  const marked = await output(t, {
+    "index.html": `<style ${INLINED_STYLESHEET_ATTRIBUTE}>.art { filter: url(#absent); }</style>`,
+  });
+  await assert.doesNotReject(checkLinks(marked, origin));
 });
 
 test("base href changes relative URL resolution", async (t) => {

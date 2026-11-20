@@ -21,6 +21,7 @@ import {
 } from "parse5";
 
 import {
+  INLINED_STYLESHEET_ATTRIBUTE,
   local,
   rebaseStylesheet,
   resolve,
@@ -145,6 +146,9 @@ function inlineStylesheet(element: Element, css: string): void {
     element.namespaceURI,
     attrs,
   );
+  defaultTreeAdapter.adoptAttributes(style, [
+    { name: INLINED_STYLESHEET_ATTRIBUTE, value: "" },
+  ]);
   // parse5 serializes style text raw. Escape closing tag prefixes for HTML.
   defaultTreeAdapter.insertText(style, css.replace(/<(?=\/style)/gi, "<\\"));
   defaultTreeAdapter.insertBefore(parent, style, element);
