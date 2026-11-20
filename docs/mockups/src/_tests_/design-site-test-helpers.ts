@@ -151,7 +151,7 @@ function isStringList(value: unknown): value is string[] {
  * rule of `mokly.config.json` that gives every site document its sheets, so
  * the policy tests read exactly what the documents link.
  */
-function siteStylesheets(): string[] {
+export function siteStylesheets(): string[] {
   const config: unknown = JSON.parse(
     readFileSync(resolve(repositoryRoot, "mokly.config.json"), "utf8"),
   );

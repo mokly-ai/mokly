@@ -183,10 +183,6 @@
   width: 46px;
 }
 
-.site-code-line--dim {
-  opacity: 0.56;
-}
-
 .site-code-line--lit {
   background: color-mix(in srgb, var(--mk-color-signal) 13%, transparent);
 }
@@ -244,6 +240,23 @@
 [data-color-scheme="dark"] .site-code-copy:hover,
 [data-color-scheme="dark"] .site-code-token--fn {
   color: var(--mk-color-text);
+}
+
+/* A dimmed line, such as a line that the chosen view leaves out, takes the
+   panel's muted text throughout: its code, its tokens and its line number,
+   at full opacity, so it keeps 4.5:1 on the panel in both schemes. These
+   rules follow the token and line number rules that they replace. */
+
+.site-code .site-code-line--dim,
+.site-code .site-code-line--dim *,
+.site-code .site-code-line--dim::before {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+}
+
+[data-color-scheme="dark"] .site-code .site-code-line--dim,
+[data-color-scheme="dark"] .site-code .site-code-line--dim *,
+[data-color-scheme="dark"] .site-code .site-code-line--dim::before {
+  color: var(--mk-color-text-muted);
 }
 
 [data-site-viewport="mobile"] .site-code-body {

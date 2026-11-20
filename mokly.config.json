@@ -28,6 +28,7 @@
       "match": "design/site/**/index.html",
       "stylesheets": [
         "docs/mockups/styles/fonts/geist.css",
+        "docs/mockups/styles/site/fonts/instrument-serif.css",
         "docs/mockups/styles/site/base.css",
         "docs/mockups/styles/site/buttons.css",
         "docs/mockups/styles/site/canvas.css",

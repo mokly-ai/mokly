@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { test } from "node:test";
 
 import { openSource } from "../fixtures/site";
@@ -6,10 +8,13 @@ import { openSource } from "../fixtures/site";
 import {
   attribute,
   byClass,
+  cssRules,
   elements,
   label,
+  repositoryRoot,
   siteDocument,
   siteStyles,
+  siteStylesheets,
   textContent,
   type Element,
 } from "./design-site-test-helpers";
@@ -47,6 +52,18 @@ function first(node: Element, tagName: string): string {
   const found = elements(node, (child) => child.tagName === tagName)[0];
   assert.ok(found, `a ${tagName} inside .${attribute(node, "class")}`);
   return label(found);
+}
+
+/** The serif that the depicted acme/storefront app names. */
+const DEMO_SERIF = "Instrument Serif";
+
+/** The first family that one rule's declarations name, without quotes. */
+function firstFamily(declarations: string): string | undefined {
+  const families = /(?:^|;)\s*font-family\s*:([^;]*)/.exec(declarations)?.[1];
+  return families
+    ?.split(",")[0]
+    ?.trim()
+    .replace(/^["']|["']$/g, "");
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -219,4 +236,32 @@ test("split site styles own the home compositions", () => {
   ])
     assert.ok(css.includes(`${selector} {`), selector);
   assert.match(css, /\[data-site-viewport="mobile"\] \.site-home-spread \{/);
+});
+
+test("the site styles host the Instrument Serif face that the demo app names", () => {
+  const serif = siteStylesheets()
+    .flatMap((path) =>
+      cssRules(readFileSync(resolve(repositoryRoot, path), "utf8")).map(
+        (rule) => ({ ...rule, path, selector: rule.selector.trim() }),
+      ),
+    )
+    .filter((rule) => firstFamily(rule.declarations) === DEMO_SERIF);
+  const users = serif.filter((rule) => rule.selector !== "@font-face");
+  const faces = serif.filter((rule) => rule.selector === "@font-face");
+  assert.ok(users.length > 0, `a demo app rule draws in ${DEMO_SERIF}`);
+  assert.ok(
+    faces.length > 0,
+    `no @font-face hosts ${DEMO_SERIF} for ${users.map((rule) => rule.selector).join(", ")}`,
+  );
+  for (const face of faces) {
+    const files = [
+      ...face.declarations.matchAll(/url\(\s*["']?([^"')]+)/g),
+    ].map((match) => match[1]!);
+    assert.ok(files.length > 0, `the face in ${face.path} names its file`);
+    for (const file of files)
+      assert.ok(
+        existsSync(resolve(repositoryRoot, dirname(face.path), file)),
+        `${face.path} names ${file}, which does not exist`,
+      );
+  }
 });

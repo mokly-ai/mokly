@@ -5,9 +5,9 @@
    near-black roles with the people roles, which lighten a little in the
    dark scheme, so the app shifts only slightly. Each hue is written once,
    for every part that takes it; a part fills from currentColor, and the
-   label nested in it takes its own text colour. The serif headings use
-   Instrument Serif when the reader has it, and the platform serif
-   otherwise. Screens draw at their native size (390 x 844 or 1280 x 800)
+   label nested in it takes its own text colour. The serif titles, logo and
+   prices use Instrument Serif, which fonts/instrument-serif.css hosts for
+   every reader. Screens draw at their native size (390 x 844 or 1280 x 800)
    and the home scales them into their artboards. */
 
 .site-acme {

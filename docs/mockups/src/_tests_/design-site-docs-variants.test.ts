@@ -1,12 +1,22 @@
 /**
  * The two variants of the documentation screen: Your first screen, whose
- * first code block is the HTML sample fence, and the mobile tree sheet.
+ * first code block is the HTML sample fence with a dimmed code line, and the
+ * mobile tree sheet.
  */
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { one, tags } from "./design-site-docs-helpers";
+import {
+  composite,
+  contrast,
+  cssColour,
+  declared,
+  one,
+  siteRules,
+  tags,
+  type Rgb,
+} from "./design-site-docs-helpers";
 import {
   attribute,
   byClass,
@@ -127,3 +137,86 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
   });
 }
+
+/** The syntax token kinds of a code panel, each with its own colour rule. */
+const TOKEN_KINDS = [
+  "keyword",
+  "string",
+  "type",
+  "attr",
+  "number",
+  "fn",
+  "punct",
+];
+
+test("a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes", () => {
+  const rules = siteRules().filter((rule) => rule.at === null);
+  /** The last value that a rule with this exact selector declares. */
+  const last = (selector: string, property: string) =>
+    rules
+      .filter((rule) => rule.selectors.includes(selector))
+      .map((rule) => declared(rule, property))
+      .filter((value) => value !== undefined)
+      .at(-1);
+  const dimRules = rules.filter((rule) =>
+    rule.selectors.some((selector) => selector.includes("site-code-line--dim")),
+  );
+  const opacity = Number(
+    dimRules.map((rule) => declared(rule, "opacity")).findLast(Boolean) ?? 1,
+  );
+  const problems: string[] = [];
+  for (const scheme of ["light", "dark"] as const) {
+    const dark = '[data-color-scheme="dark"] ';
+    /** The scheme's own value for a selector, or the value for both. */
+    const value = (selector: string, property: string) =>
+      (scheme === "dark" ? last(dark + selector, property) : undefined) ??
+      last(selector, property);
+    /** The colour that a dimmed line sets for one of its parts, if any. */
+    const dimmed = (part: RegExp) => {
+      const colour = (inDark: boolean) =>
+        dimRules
+          .filter((rule) =>
+            rule.selectors.some(
+              (selector) =>
+                part.test(selector) && selector.startsWith(dark) === inDark,
+            ),
+          )
+          .map((rule) => declared(rule, "color"))
+          .findLast(Boolean);
+      return (scheme === "dark" ? colour(true) : undefined) ?? colour(false);
+    };
+    const fill = cssColour(value(".site-code", "background")!, scheme);
+    const code = cssColour(value(".site-code", "color")!, scheme);
+    const line = dimmed(/site-code-line--dim$/);
+    const lineColour =
+      line === undefined ? code : cssColour(line, scheme, code);
+    const parts: [string, Rgb][] = [["line", lineColour]];
+    const tokens = dimmed(/site-code-line--dim\s+[*.[]/);
+    for (const kind of TOKEN_KINDS) {
+      const own = value(`.site-code-token--${kind}`, "color");
+      assert.ok(own, kind);
+      parts.push([
+        `${kind} token`,
+        cssColour(tokens ?? own, scheme, lineColour),
+      ]);
+    }
+    const number =
+      dimmed(/site-code-line--dim::before$/) ??
+      value(".site-code--numbered .site-code-line::before", "color");
+    assert.ok(number, "line number");
+    parts.push(["line number", cssColour(number, scheme, lineColour)]);
+    for (const [part, colour] of parts) {
+      const ratio = contrast(composite(colour, fill, opacity), fill);
+      if (ratio < 4.5)
+        problems.push(`${scheme} ${part}: ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(problems, [], "dimmed text below 4.5:1");
+  assert.deepEqual(
+    dimRules
+      .filter((rule) => declared(rule, "opacity") !== undefined)
+      .map((rule) => rule.selectors.join(", ")),
+    [],
+    "a rule fades the dimmed line",
+  );
+});

@@ -59,9 +59,13 @@ export function docsPageScreen(
   return OWNED_PAGES[`${section}/${title}`];
 }
 
-/** Where Edit on GitHub opens a guide's source in the repository. */
+/**
+ * Where Edit on GitHub opens a guide's source: the tracked `docs/guides`
+ * Markdown of the repository, which the package build copies into its own
+ * ignored `docs/guides`.
+ */
 export function guideSource(file: string): string {
-  return `${EXTERNAL_LINKS.github}/edit/main/packages/mokly/docs/guides/${file}`;
+  return `${EXTERNAL_LINKS.github}/edit/main/docs/guides/${file}`;
 }
 
 /** The two-digit index of a section, such as `01`. */

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
+import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
 import { openSource } from "../fixtures/site";
 
 import {
@@ -61,17 +61,25 @@ function facts(root: Root) {
   );
 }
 
-/** Where Edit on GitHub opens a guide, and whether that source exists. */
+/**
+ * Edit on GitHub opens the guide's own source, `docs/guides/{file}`, on the
+ * main branch, and that path is a file that Git tracks.
+ */
 function editLink(root: Root, file: string) {
-  const source = `packages/mokly/docs/guides/${file}`;
-  assert.ok(existsSync(resolve(repositoryRoot, source)), source);
   const link = one(root, "site-docs-edit");
   assert.equal(label(link), "Edit on GitHub");
   assert.equal(attribute(link, "data-mokly-link"), undefined);
-  assert.equal(
-    attribute(link, "href"),
-    `${openSource.github}/edit/main/${source}`,
+  const href = attribute(link, "href") ?? "";
+  const edit = `${openSource.github}/edit/main/`;
+  assert.ok(href.startsWith(edit), href);
+  const source = href.slice(edit.length);
+  assert.equal(source, `docs/guides/${file}`);
+  const tracked = spawnSync(
+    "git",
+    ["ls-files", "--error-unmatch", "--", source],
+    { cwd: repositoryRoot, encoding: "utf8", env: fixtureGitEnvironment() },
   );
+  assert.equal(tracked.status, 0, `${source}: ${tracked.stderr}`);
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
