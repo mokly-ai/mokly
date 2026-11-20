@@ -1,8 +1,8 @@
 # Public preview sample project
 
-Status: Active. On branch `conductor/preview-sample-project-public`, no pull
-request yet. The pull request that completes the work deletes this plan, as
-the `plans` skill says.
+Status: Active. [PR #415](https://github.com/mokly-ai/mokly/pull/415) is open.
+The pull request that completes the work deletes this plan, as the `plans`
+skill says.
 
 Every pull request with the `preview` label gets a preview. The preview seed
 puts the pull request's mockups into the sample project **Mokly Cloud**
@@ -127,7 +127,7 @@ never pushed, and the local `origin/main` ref was restored after the capture.
       and confirm that Browse and Changes load. Save the screenshots under
       `.context/preview-sample-project-public/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Open the pull request into `main`.
+- [x] Open the pull request into `main`.
 - [ ] Add the `preview` label to the pull request once. Take the
       `publicationId` from the run's `preview-evidence-pr-N` artifact. Open
       the publication host signed out, and confirm that Browse and Changes
