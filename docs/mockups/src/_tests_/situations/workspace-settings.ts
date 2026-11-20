@@ -43,6 +43,23 @@ export const workspaceSettingsSituations = [
     name: "desktop",
     states: ["default"],
   },
+  // The Mac app's window has no title bar, so its buttons sit over the start of
+  // the top bar. One drawing for each composition of a top bar shows the space
+  // they take: the account header, the viewer bar and the settings frames.
+  {
+    path: "product/account/sign-in/mac-app",
+    family: "account",
+    screen: "sign-in",
+    name: "mac-app",
+    states: ["default"],
+  },
+  {
+    path: "product/settings/sections/mac-app",
+    family: "settings",
+    screen: "sections",
+    name: "mac-app",
+    states: ["default"],
+  },
   {
     path: "product/settings/workspace/suspended",
     family: "settings",

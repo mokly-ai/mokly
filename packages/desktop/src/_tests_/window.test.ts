@@ -45,39 +45,62 @@ test("the window restores valid visible bounds and recovers from missing or off-
   );
 });
 
-test("the renderer has all fixed protections and saves normal bounds", () => {
-  let options: BrowserWindowConstructorOptions | undefined;
-  let close = () => {};
-  let saved = "";
-  const window = {
-    on: (_event: string, callback: () => void) => {
-      close = callback;
+for (const [platform, frameOptions] of [
+  [
+    "darwin",
+    {
+      titleBarStyle: "hidden",
+      trafficLightPosition: { x: 16, y: 17 },
+      titleBarOverlay: true,
     },
-    getNormalBounds: () => bounds,
-  } as unknown as BrowserWindow;
-  createWindow({
-    create: (input) => {
-      options = input;
-      return window;
-    },
-    readState: () => "{}",
-    visible: () => true,
-    saveState: (value) => {
-      saved = value;
-    },
-    warn: assert.fail,
+  ],
+  ["linux", {}],
+] as const) {
+  test(`the ${platform} window uses its frame options, isolates the renderer and saves normal bounds`, () => {
+    let options: BrowserWindowConstructorOptions | undefined;
+    let close = () => {};
+    let saved = "";
+    const window = {
+      on: (_event: string, callback: () => void) => {
+        close = callback;
+      },
+      getNormalBounds: () => bounds,
+    } as unknown as BrowserWindow;
+    createWindow(
+      {
+        create: (input) => {
+          options = input;
+          return window;
+        },
+        readState: () => "{}",
+        visible: () => true,
+        saveState: (value) => {
+          saved = value;
+        },
+        warn: assert.fail,
+      },
+      platform,
+    );
+    assert.deepEqual(options, {
+      width: 1280,
+      height: 840,
+      minWidth: 640,
+      minHeight: 480,
+      title: "Mokly",
+      ...frameOptions,
+      webPreferences: {
+        contextIsolation: true,
+        sandbox: true,
+        nodeIntegration: false,
+        webSecurity: true,
+        webviewTag: false,
+        allowRunningInsecureContent: false,
+      },
+    });
+    close();
+    assert.deepEqual(JSON.parse(saved), bounds);
   });
-  assert.deepEqual(options?.webPreferences, {
-    contextIsolation: true,
-    sandbox: true,
-    nodeIntegration: false,
-    webSecurity: true,
-    webviewTag: false,
-    allowRunningInsecureContent: false,
-  });
-  close();
-  assert.deepEqual(JSON.parse(saved), bounds);
-});
+}
 
 test("single instance rejects a second process and delivers OS events to the running app", () => {
   let quits = 0;
@@ -156,6 +179,9 @@ test("the default menu gains Check for updates in Help", () => {
           options = input;
           return item;
         },
+        build: () => assert.fail("Linux must keep the default menu"),
+        set: () => assert.fail("Linux must keep the default menu"),
+        focusedWindow: assert.fail,
       },
       {
         available,
@@ -163,13 +189,15 @@ test("the default menu gains Check for updates in Help", () => {
           checks++;
         },
       },
+      "linux",
     );
-    (options!.click as () => void)();
-    return { options: options!, checks };
+    assert.ok(options);
+    return { options, checkCount: () => checks };
   };
   const on = install(true);
   assert.equal(on.options.label, "Check for updates");
   assert.equal(on.options.enabled, true);
-  assert.equal(on.checks, 1);
+  on.options.click?.({} as MenuItem, undefined, {} as Electron.KeyboardEvent);
+  assert.equal(on.checkCount(), 1);
   assert.equal(install(false).options.enabled, false);
 });

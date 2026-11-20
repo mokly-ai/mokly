@@ -135,6 +135,12 @@ token and span types, and it is the only html5gum user: other code must not
 construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
 the html5ever tree builder for any `DriverSink`: the token checks pass a sink
 that records tokens, and `mokly-html` passes its tree arena.
+`html_driver::drive_with_observer` runs the same pass and gives each original
+token to a `TokenObserver` before the tree builder reads it. One pass can then
+build a tree and keep the source evidence that the tree loses, such as
+duplicate-attribute errors. The observer gets tokens without the
+authored-input filter of `html_tokens::parse`, so a consumer of authored-HTML
+tokens still calls that function.
 Each text token and each attribute value is a `Spanned` with a `SourceMap`.
 The map gives the source byte of each decoded byte, and its `span` is the
 source interval that the tokenizer consumed for the value. The map anchors at
@@ -246,7 +252,8 @@ The property test of the source maps over the vendored HTML corpus lives in
   boundary for authored and delivered HTML.
 - [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
   `DriverSink`, which run html5gum under the html5ever tree builder for the
-  checks and for the tree.
+  checks and for the tree. `drive_with_observer` and `TokenObserver` add a
+  reader of the original tokens to the same pass.
 - [`src/html_driver_emitter.rs`](./src/html_driver_emitter.rs) defines
   `DriverEmitter`, which forwards the html5gum emitter calls to the driver and
   records the source position of each emitted chunk.

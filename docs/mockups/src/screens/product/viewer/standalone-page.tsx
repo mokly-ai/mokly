@@ -51,6 +51,7 @@ export function StandalonePage({
   reference,
   unnamed = false,
   comparisonBlocked,
+  macApp,
 }: {
   state: ScreenState;
   viewport: Viewport;
@@ -84,6 +85,8 @@ export function StandalonePage({
   unnamed?: boolean;
   /** Recovery the published viewer reports over its own stage. */
   comparisonBlocked?: boolean;
+  /** Whether the page draws the Mac app window around the viewer. */
+  macApp?: boolean;
 }) {
   const current: SlotMeta = publicationMeta ?? meta[state];
   const name = reference ?? subject;
@@ -97,6 +100,7 @@ export function StandalonePage({
     account,
     workspace,
     project,
+    macApp,
   };
   if (isPublishedPath(state, body))
     return (

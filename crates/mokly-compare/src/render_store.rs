@@ -134,3 +134,7 @@ impl DocumentBackend for CachedDocuments {
 #[cfg(test)]
 #[path = "_tests_/render_store_boundary_tests.rs"]
 mod render_store_boundary_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_fault_tests.rs"]
+mod render_store_fault_tests;

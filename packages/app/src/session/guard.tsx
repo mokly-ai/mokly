@@ -6,6 +6,7 @@ import type { Session } from "../api/types";
 import { Action } from "../components/action";
 import { ErrorDetails } from "../components/error-details";
 import { StateMessage } from "../components/page-parts";
+import { WindowBand } from "../components/window-band";
 import { replaceAddress } from "../navigation/address";
 import { signInHref } from "../navigation/destinations";
 import { SignInWait } from "../screens/account/entry-screen";
@@ -15,6 +16,7 @@ import { useSession } from "./context";
 function Frame({ children }: { children: ReactNode }) {
   return (
     <div className="folio-root fo-account" data-mkc-screen="app-session">
+      <WindowBand />
       <main id="main" className="fo-account-main">
         <div className="fo-account-panel">
           <div className="fo-account-content">{children}</div>

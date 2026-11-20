@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the closed branch `calummoore/mokly-startup-base-overlap-rae7`, after the performance orchestrator closed its product change without a merge.
-- **Location:** `crates/mokly-server/src/background.rs:42-56`, `crates/mokly-server/src/changes_background.rs:43-52`, `crates/mokly-cli/src/serve_gate.rs:64-87`, `crates/mokly-sidecar/src/pool_admission.rs:29-107`, `crates/mokly-cli/src/render_runtime.rs:115`, and the Default Admission section of `docs/protocol/mokly-sidecar-memory.md`.
+- **Location:** `crates/mokly-server/src/background.rs:44-62`, `crates/mokly-server/src/changes_background.rs:43-52`, `crates/mokly-cli/src/serve_gate.rs:64-87`, `crates/mokly-sidecar/src/pool_admission.rs:29-107`, `crates/mokly-cli/src/render_runtime.rs:115`, and the Default Admission section of `docs/protocol/mokly-sidecar-memory.md`.
 - **Reason:** A further attempt needs a new memory rule for early base work, and only the user can choose that rule.
 
 - **Source:** Implementation.
@@ -22,7 +22,7 @@
     - First Changes is the time from the Serve start to the first published Changes result.
     - HTTP is the time of one view render that a browser requests during usage.
     - A byte proof compares the published Changes bytes of both arms.
-  - Current main prepares the base serially. `UsagePass` renders current usage, then runs Changes, at `crates/mokly-server/src/background.rs:42-56`. Changes and its one-second reference poll start after usage, at `crates/mokly-server/src/changes_background.rs:43-52`.
+  - Current main prepares the base serially. `UsagePass` renders current usage, then runs Changes, at `crates/mokly-server/src/background.rs:44-62`. Changes and its one-second reference poll start after usage, at `crates/mokly-server/src/changes_background.rs:43-52`.
   - On main, a base sidecar call waits while a foreground lease is held, at `crates/mokly-cli/src/serve_gate.rs:86`.
   - Main has live memory admission for default-size sidecar pools, at `crates/mokly-sidecar/src/pool_admission.rs:29-107`, wired at `crates/mokly-cli/src/render_runtime.rs:115`.
     - Each sidecar slot reservation has a 1 GiB budget.
