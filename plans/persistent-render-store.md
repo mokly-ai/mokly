@@ -592,6 +592,8 @@ and `confirmation/preparation.md` there.
 Integration decisions: `.context/persistent-render-store/post-351-merge-decisions.md`.
 The current-main integration before the combined gate is recorded in
 `post-374-merge-decisions.md` there.
+The later parent-approved conflict integration with main 940ddd742 is recorded
+in `post-384-merge-decisions.md` there.
 
 ## Milestone 4: Measurements and verification
 
@@ -605,6 +607,10 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
       restarts. Compare Changes and published bytes. Measure ten-edit memory.
 - [ ] Send the pushed implementation SHA and dist build commit to the
       performance orchestrator for `mokly-cloud` measurement immediately.
+- [ ] After the approved main 940ddd742 conflict integration and combined gate,
+      send the merged SHA for the parent's short confirmation against that main:
+      three changed and three unchanged warm restart rounds, and one cold
+      ten-edit session per arm. Obtain acceptance before opening the pull request.
 - [x] Commit and push a measurement candidate after its targeted and required
       gate checks. This lets the cloud measurement run before final acceptance.
 - [x] Confirm the cloud goals: at least four seconds sooner on warm restart,
