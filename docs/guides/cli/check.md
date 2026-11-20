@@ -13,8 +13,8 @@ npx mokly build --strict --no-changes --out .context/validation
 
 Build checks the catalogue's sources, props, paths, links, and referenced
 resources. It renders every saved view before it installs the output.
-`--strict` makes warnings fail the command. `--no-changes` lets this check
-run without Git history.
+`--strict` makes warnings other than `base-dependencies` fail the command.
+`--no-changes` lets this check run without Git history.
 
 The output path resolves beside the configuration file. Keep it ignored by
 Git and outside source roots. You can remove this temporary output after the

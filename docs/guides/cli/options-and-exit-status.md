@@ -31,7 +31,7 @@ Boolean options take no value. There are no silent positional arguments.
 | `--no-watch`                     | `serve`            | Serve one snapshot.                                                  |
 | `--open`                         | `serve`            | Open the reported address in a browser.                              |
 | `--out {directory}`              | `build`            | Select config-relative output.                                       |
-| `--strict`                       | `build`, `publish` | Require a warning-free build.                                        |
+| `--strict`                       | `build`, `publish` | Fail on build warnings except `base-dependencies`.                   |
 | `--no-changes`                   | `build`, `publish` | Omit comparison work and base history.                               |
 | `--endpoint {url}`               | `publish`          | Override `MOKLY_ENDPOINT`.                                           |
 | `--token {token}`                | `publish`          | Override `MOKLY_TOKEN`.                                              |
@@ -49,8 +49,8 @@ Success exits `0`. A failure exits `1`. Closing Serve normally also exits `0`.
 Cancelling a build or publish exits `1`.
 
 Build warnings print on standard error. `build --strict` and `publish --strict`
-fail on warnings before output installation or upload. Without `--strict`, both
-commands can succeed with warnings.
+fail on warnings other than `base-dependencies` before output installation or
+upload. Without `--strict`, both commands can succeed with warnings.
 
 ## Error categories
 

@@ -101,10 +101,10 @@ warnings, and writes the static site into the directory `--out` names,
 writes the shell stub per route, the index, one detail per entry, every
 document, the comparison generation, the viewer bundle, styles, and fonts
 under the [static build contract](./mokly-export.md) and the
-[static delivery contract](./mokly-export-delivery.md). An error fails the
-command before any file is written. With `--strict`, a warning fails it too.
-The output transaction stages the whole site, replaces the output directory
-in one step, and rolls back on failure, so the last successful output stays
+[static delivery contract](./mokly-export-delivery.md). An error fails the command
+before any file is written. With `--strict`, a warning other than `base-dependencies`
+fails it too. The output transaction stages the whole site, replaces the output
+directory in one step, and rolls back on failure, so the last successful output stays
 in place. A validation-only run is a build to a temporary directory.
 
 `mokly publish` builds into its own directory outside the repository and uploads

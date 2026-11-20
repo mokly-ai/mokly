@@ -16,8 +16,9 @@ and moves are paired with their previous path.
 For duplicate CSS, configured-link placement or overlap, and stylesheet owners,
 continue with safe, unambiguous output and warn when an authored input is
 discarded. Confinement and source protection still apply. `build --strict` and
-`publish --strict` fail before writes or uploads when a warning exists; Serve refuses
-strict mode.
+`publish --strict` fail before writes or uploads when a warning other than
+`base-dependencies` exists; Serve refuses
+[strict mode](./mokly-build-warnings.md#strict-mode).
 
 ## Supported Formats
 

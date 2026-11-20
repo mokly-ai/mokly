@@ -23,7 +23,7 @@ npx mokly build --config tools/mokly.config.json --base origin/main
 | `--base-install-scripts`    | Run lifecycle scripts during base dependency installation.                                          |
 | `--no-base-install-scripts` | Keep lifecycle scripts disabled during base dependency installation.                                |
 | `--no-changes`              | Build current content without Git history or a comparison.                                          |
-| `--strict`                  | Fail on warnings before output installation.                                                        |
+| `--strict`                  | Fail on warnings except `base-dependencies` before output installation.                             |
 | `--sidecars {count}`        | Set the positive JavaScript worker count.                                                           |
 | `--debug-timings`           | Select plain output and report timing records.                                                      |
 

@@ -281,7 +281,8 @@ cargo xtask check
 ```
 
 `build --strict` renders every library sample and every design screen, and
-fails on any error or warning. `tests/design_appearance.test.ts` checks that
+fails on any error or on any warning except `base-dependencies`.
+`tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
 pairs, and that the palette declares every token that an imported `@mokly/ui`
 stylesheet reads. `tests/design_boundaries.test.ts` checks that marked

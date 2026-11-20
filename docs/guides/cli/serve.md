@@ -67,7 +67,8 @@ load the edited asset.
 When the complete generated output finishes, Serve prints that generation's
 build warnings once on standard error. Previews you open afterwards are not
 reported again, and Serve never stops for a warning.
-`--strict` is not a Serve option; use it with `build` or `publish` when warnings must fail automation.
+`--strict` is not a Serve option. Use it with `build` or `publish` to fail
+automation on warnings other than `base-dependencies`.
 
 ## Access
 

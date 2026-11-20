@@ -49,9 +49,9 @@ needs no Git checkout. Do not combine `--base` with `--no-changes`.
 
 ## Validate sources
 
-Use `--strict` to make warnings fail the build. Mokly prints the warnings
-before it stops. To validate without keeping a deployment, build into an
-ignored temporary output directory.
+Use `--strict` to make warnings other than `base-dependencies` fail the build.
+Mokly prints all warnings, including `base-dependencies`. To validate without
+keeping a deployment, build into an ignored temporary output directory.
 
 Use [Serve](/docs/start/serve/) while editing. Use
 [static hosting](/docs/catalogue/export-and-host/) to share the built site.
