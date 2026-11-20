@@ -33,10 +33,12 @@ struct LookupJob {
     lifetime: Lifetime,
 }
 
-/// The worker permit and the priority guard of a lookup job. The job returns them, and the
-/// render's task frees the worker after the join, in the poll that queues its miss. So a
-/// later render cannot use the freed worker for its lookup and its resumed job first. The
-/// permit drops before the guard, so the worker is free when the guard wakes the waiters.
+/// The worker permit and the priority guard of a lookup job. The job returns them, so the
+/// render's task, not the job's thread, frees the worker after the join, right before it
+/// queues its miss. A caller that polls its renders in request order, as the usage pass
+/// does, then keeps that order: a later render cannot take the worker for both of its jobs
+/// first. The permit drops before the guard, so the worker is free when the guard wakes the
+/// waiters.
 struct HeldWorker {
     _permit: OwnedSemaphorePermit,
     _guard: Guard,
