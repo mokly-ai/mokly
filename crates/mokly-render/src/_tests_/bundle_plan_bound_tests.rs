@@ -10,6 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_attempt::request;
 use crate::physical_inputs::PhysicalInputsMock;
+use crate::recorded_calls::lock_calls;
 
 use super::bundle_plan_support::{evidence, marked, params, plan, result, runtime};
 
@@ -47,9 +48,7 @@ fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previ
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let _ = request(&runtime, &first).unwrap();
     assert_eq!(
-        calls
-            .lock()
-            .unwrap()
+        lock_calls(&calls)
             .last()
             .unwrap()
             .plan
@@ -58,12 +57,12 @@ fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previ
         None
     );
     let _ = request(&runtime, &second).unwrap();
-    assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(large));
+    assert_eq!(lock_calls(&calls).last().unwrap().plan, Some(large));
     runtime.bundle_capture = BundleCapture::Full;
     let _ = request(&runtime, &second).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let _ = request(&runtime, &second).unwrap();
-    assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan()));
+    assert_eq!(lock_calls(&calls).last().unwrap().plan, Some(plan()));
 }
 
 #[test]
@@ -86,7 +85,7 @@ fn retained_settings_are_charged_inside_the_total_record_bound() {
     );
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let _ = request(&runtime, &params).unwrap();
-    assert_eq!(calls.lock().unwrap().last().unwrap().plan, None);
+    assert_eq!(lock_calls(&calls).last().unwrap().plan, None);
 }
 
 #[test]
@@ -142,7 +141,7 @@ fn an_ineligible_later_capture_keeps_the_older_plan_and_checks_its_own_evidence(
             current.store(expected, Ordering::Release);
             let _ = request(&runtime, &params()).unwrap();
             assert_eq!(
-                calls.lock().unwrap().last().unwrap().plan,
+                lock_calls(&calls).last().unwrap().plan,
                 expected.then(plan),
                 "{name}, current={expected}"
             );

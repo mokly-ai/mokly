@@ -18,6 +18,8 @@ use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_source_interface::tree::SourceTree;
 use unimock::Unimock;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::{Consumer, workspace};
 
 #[test]
@@ -147,7 +149,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         generation.resource(asset),
         Err(GraphError::InputsChanged { .. })
     ));
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     let maps = calls
         .iter()
         .find_map(|call| match call {

@@ -9,6 +9,7 @@ use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::stylesheet_cache::CachedStylesheets;
 use crate::stylesheet_capture::RecordingTree;
 use crate::stylesheet_compiler::{Compilation, CompileRoot};
@@ -34,10 +35,7 @@ fn core_byte_reads_replay_the_original_witness_on_a_shared_hit() {
             .answers_arc(Arc::new({
                 let observations = observations.clone();
                 move |_, path, baselines| {
-                    observations
-                        .lock()
-                        .unwrap()
-                        .push((path.to_owned(), baselines.clone()));
+                    lock_calls(&observations).push((path.to_owned(), baselines.clone()));
                     Ok(())
                 }
             })),
@@ -78,7 +76,7 @@ fn core_byte_reads_replay_the_original_witness_on_a_shared_hit() {
         Path::new("/repo/package.json").to_owned(),
         BTreeSet::from([ReadBaseline::ObservedWholeFile(HASH.into())]),
     );
-    assert_eq!(*observations.lock().unwrap(), [expected.clone(), expected]);
+    assert_eq!(*lock_calls(&observations), [expected.clone(), expected]);
 }
 
 #[test]

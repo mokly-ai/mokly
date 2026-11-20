@@ -4,6 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 /// The render keys fixture, with a dependency that only component C imports.
@@ -74,11 +76,7 @@ fn append(consumer: &Consumer, path: &str, text: &str) {
 }
 
 pub(super) fn render_calls(consumer: &Consumer) -> Vec<(String, String)> {
-    consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    lock_calls(&consumer.pool.calls)
         .iter()
         .filter_map(|call| match call {
             Call::RenderScreen(render) => {

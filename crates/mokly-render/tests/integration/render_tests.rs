@@ -5,6 +5,8 @@ use mokly_model::controls::ControlInput;
 use mokly_model::usage::{CatalogueUsage, ComponentRangeTarget};
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -68,19 +70,13 @@ fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
     assert!(prepared.warnings.is_empty());
     let generation = consumer.generation(prepared);
     assert!(
-        !consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
-            .iter()
-            .any(|call| matches!(
-                call,
-                Call::RenderScreen(_)
-                    | Call::RenderComponent(_)
-                    | Call::RenderStory(_)
-                    | Call::RenderPage(_)
-            ))
+        !lock_calls(&consumer.pool.calls).iter().any(|call| matches!(
+            call,
+            Call::RenderScreen(_)
+                | Call::RenderComponent(_)
+                | Call::RenderStory(_)
+                | Call::RenderPage(_)
+        ))
     );
     let rendered = generation.render_all().unwrap();
     assert_eq!(rendered.documents, 29);
@@ -151,7 +147,7 @@ fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
             .unwrap()
             .contains(scoped)
     );
-    let requests = consumer.pool.calls.lock().unwrap();
+    let requests = lock_calls(&consumer.pool.calls);
     assert_eq!(
         requests
             .iter()

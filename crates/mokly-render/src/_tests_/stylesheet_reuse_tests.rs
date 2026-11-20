@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use mokly_css::types::StylesheetBundler;
 use unimock::Unimock;
 
+use crate::recorded_calls::lock_calls;
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 use super::stylesheet_support::{
@@ -72,8 +73,8 @@ fn a_hit_returns_the_bundle_of_its_miss_and_replays_the_same_observations() {
         assert_same(&second.bundle(&root).unwrap(), &bundle(&root));
         assert_same(&second.bundle(&root).unwrap(), &bundle(&root));
     }
-    let mut missed = missed.observed.lock().unwrap().clone();
-    let mut hit = hit.observed.lock().unwrap().clone();
+    let mut missed = lock_calls(&missed.observed).clone();
+    let mut hit = lock_calls(&hit.observed).clone();
     assert_eq!(missed.len(), MODULES + 2);
     assert_eq!(hit.len(), MODULES + 4);
     let module = Path::new("/repo").join(module(0));

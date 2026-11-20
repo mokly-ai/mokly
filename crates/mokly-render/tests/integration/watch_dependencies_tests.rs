@@ -6,6 +6,8 @@ use std::sync::Arc;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::operations::Operation;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 fn html() -> Consumer {
@@ -55,7 +57,7 @@ fn html_component_edit_changes_only_its_own_and_consumer_documents() {
             .count(),
         4
     );
-    assert!(consumer.pool.calls.lock().unwrap().is_empty());
+    assert!(lock_calls(&consumer.pool.calls).is_empty());
     assert_eq!(consumer.processes.count(Operation::Esbuild), 0);
 }
 
@@ -77,11 +79,7 @@ export default {plugins:[{postcssPlugin:'candidates',Once(root,{result}) {
     )
     .unwrap();
     let count = || {
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::ProcessCss(_)))
             .count()
@@ -181,11 +179,7 @@ export default {plugins:[{postcssPlugin:'scan',Once(root,{result}){result.messag
         2
     );
     assert_eq!(
-        consumer
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&consumer.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::ProcessCss(_)))
             .count(),

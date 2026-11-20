@@ -13,6 +13,7 @@ use serde_json::{Value, json};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::fragments::Fragments;
+use crate::recorded_calls::lock_calls;
 
 #[test]
 fn stored_fragment_calls_keep_source_root_current_generation_and_exact_transport_inputs() {
@@ -22,9 +23,7 @@ fn stored_fragment_calls_keep_source_root_current_generation_and_exact_transport
         PoolMock::record_served_render
             .each_call(matching!(_, _))
             .answers_arc(Arc::new(move |_, root, call| {
-                captured
-                    .lock()
-                    .unwrap()
+                lock_calls(&captured)
                     .push((root.to_path_buf(), serde_json::to_value(call).unwrap()));
             })),
     );
@@ -63,7 +62,7 @@ fn stored_fragment_calls_keep_source_root_current_generation_and_exact_transport
             saved_slots: BTreeMap::from([("footer".into(), "current:footer".into())]),
         });
     }
-    let actual = recorded.lock().unwrap();
+    let actual = lock_calls(&recorded);
     assert_eq!(
         actual
             .iter()

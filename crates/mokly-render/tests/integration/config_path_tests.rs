@@ -9,6 +9,8 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::{Consumer, link_directory};
 
 const BADGE: &str = r#"import { defineComponent } from "@mokly/mokly";
@@ -73,11 +75,7 @@ fn a_renderer_named_through_a_parent_segment_and_link_keeps_its_stylesheet() {
         screen.contains(r#"<link rel="stylesheet" href="../styles/renderer.tsx.css">"#),
         "{screen}"
     );
-    let renderers: Vec<_> = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let renderers: Vec<_> = lock_calls(&consumer.pool.calls)
         .iter()
         .filter_map(|call| match call {
             Call::Bundle(request) => Some(request.params.renderer.clone()),
@@ -125,11 +123,7 @@ fn a_postcss_module_named_through_a_parent_segment_and_link_reaches_the_sidecar_
     );
     let generation = consumer.generation(consumer.prepare().unwrap());
     document(generation.as_ref(), "screen/index.mobile.html");
-    let modules: Vec<_> = consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
+    let modules: Vec<_> = lock_calls(&consumer.pool.calls)
         .iter()
         .filter_map(|call| match call {
             Call::ProcessCss(params) => Some(params.postcss.clone()),

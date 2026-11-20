@@ -8,6 +8,8 @@ use mokly_render::physical_inputs::{PhysicalInputs, SystemPhysicalInputs};
 use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput};
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::{Consumer, link_directory, workspace};
 
 #[test]
@@ -58,11 +60,7 @@ fn a_jsconfig_edit_reaches_the_sidecar_instead_of_the_bundle_fast_path() {
     fixture.write("jsconfig.json", r#"{"compilerOptions":{}}"#);
     let original = fixture.generation(fixture.prepare().unwrap());
     let bundle_calls = || {
-        fixture
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&fixture.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::Bundle(_)))
             .count()
@@ -103,11 +101,7 @@ fn incomplete_compilations_get_fresh_ids_and_descriptions() {
     );
     let original = fixture.generation(fixture.prepare().unwrap());
     let describe_calls = || {
-        fixture
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&fixture.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::Describe(_)))
             .count()
@@ -163,11 +157,7 @@ fn a_peer_manifest_edit_gets_a_new_generation_and_description() {
     );
     let original = fixture.generation(fixture.prepare().unwrap());
     let describe_calls = || {
-        fixture
-            .pool
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&fixture.pool.calls)
             .iter()
             .filter(|call| matches!(call, Call::Describe(_)))
             .count()

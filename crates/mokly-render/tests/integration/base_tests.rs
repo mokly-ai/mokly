@@ -15,6 +15,8 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use unimock::Unimock;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::{Consumer, workspace};
 
 #[test]
@@ -138,7 +140,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     assert!(!String::from_utf8_lossy(&base_css).contains("var(--head-cwd)"));
     let restored_head = head_generation.render("screen/index.desktop.html").unwrap();
     assert!(String::from_utf8_lossy(&restored_head.bytes).contains("head cwd:head cwd"));
-    let calls = head.pool.calls.lock().unwrap();
+    let calls = lock_calls(&head.pool.calls);
     let Call::Bundle(bundle) = calls
         .iter()
         .find(|call| matches!(call, Call::Bundle(bundle) if bundle.params.source_root == base.root().to_string_lossy()))

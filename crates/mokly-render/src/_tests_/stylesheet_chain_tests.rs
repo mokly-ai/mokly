@@ -8,6 +8,7 @@ use mokly_model::material::digest;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::recorded_calls::lock_calls;
 use crate::stylesheet_compiler::CompileRoot;
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
@@ -128,7 +129,7 @@ fn finding_3_a_chain_hit_returns_the_inner_bundle_and_full_evidence() {
     let second = attempt(Arc::new(Unimock::new(())), tree(&calls, &[]), &shared);
     assert_same(&second.bundle(&roots[0]).unwrap(), &expected_first);
     assert_same(&second.bundle(&roots[1]).unwrap(), &expected_second);
-    let observed = calls.observed.lock().unwrap();
+    let observed = lock_calls(&calls.observed);
     for index in 0..2 {
         let path = Path::new("/repo").join(module(index));
         assert_eq!(

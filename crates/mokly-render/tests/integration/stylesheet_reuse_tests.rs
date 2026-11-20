@@ -5,6 +5,8 @@ use std::fs;
 
 use mokly_sidecar::methods::Call;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 const ROOTS: usize = 64;
@@ -12,7 +14,7 @@ const MODULES: usize = 1_000;
 
 /// The source paths of the PostCSS requests so far.
 pub(super) fn requests(consumer: &Consumer) -> Vec<String> {
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     calls
         .iter()
         .filter_map(|call| match call {

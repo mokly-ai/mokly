@@ -8,6 +8,8 @@ use mokly_sidecar::methods::{BundleCapture, Call};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::wire::MethodResult;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::CapturedPool;
 
 /// The actual evidence and plan prerequisites of the fixture's first full capture.
@@ -47,10 +49,7 @@ impl PlanPool {
 
     /// Read the same last bundle request that the plan assertions inspect.
     pub(super) fn sent_plan(&self) -> bool {
-        self.inner
-            .calls
-            .lock()
-            .unwrap()
+        lock_calls(&self.inner.calls)
             .iter()
             .rev()
             .find_map(|call| match call {

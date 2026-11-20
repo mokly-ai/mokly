@@ -14,6 +14,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_attempt::{request, served};
 use crate::leases::BundleLease;
+use crate::recorded_calls::lock_calls;
 use crate::runtime::Runtime;
 
 fn params() -> Bundle {
@@ -125,10 +126,7 @@ fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_sp
         PoolMock::served_generation
             .some_call(matching!("generation", 7))
             .answers_arc(Arc::new(move |_, generation, epoch| {
-                recorded
-                    .lock()
-                    .unwrap()
-                    .push((generation.to_owned(), epoch));
+                lock_calls(&recorded).push((generation.to_owned(), epoch));
             })),
         PoolMock::release_generation
             .some_call(matching!("generation", 7))
@@ -142,10 +140,10 @@ fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_sp
     capture.in_scope(|| {
         runtime.bundle_capture = BundleCapture::ServeEdit;
         served(&runtime, &lease);
-        assert_eq!(*notices.lock().unwrap(), Vec::<(String, u64)>::new());
+        assert_eq!(*lock_calls(&notices), Vec::<(String, u64)>::new());
         runtime.bundle_capture = BundleCapture::Full;
         served(&runtime, &lease);
-        assert_eq!(*notices.lock().unwrap(), [("generation".to_owned(), 7)]);
+        assert_eq!(*lock_calls(&notices), [("generation".to_owned(), 7)]);
     });
     assert_eq!(capture.spans().len(), 0);
 }

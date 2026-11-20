@@ -9,6 +9,8 @@ use mokly_graph::types::RenderGeneration;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::operations::Operation;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 fn documents(generation: &dyn RenderGeneration) -> BTreeMap<String, Arc<Artifact>> {
@@ -19,7 +21,7 @@ fn documents(generation: &dyn RenderGeneration) -> BTreeMap<String, Arc<Artifact
         .collect()
 }
 fn calls(consumer: &Consumer) -> (usize, usize, usize) {
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     (
         consumer.processes.count(Operation::Esbuild),
         calls
@@ -94,12 +96,12 @@ fn javascript_edit_bundles_once_and_leaves_pure_html_documents_cached() {
     let first = consumer.generation(consumer.prepare().unwrap());
     let original = documents(first.as_ref());
     let initial = calls(&consumer);
-    let rendered = consumer.pool.calls.lock().unwrap().len();
+    let rendered = lock_calls(&consumer.pool.calls).len();
     consumer.replace("specs/screen.mockup.tsx", "Hello", "Changed");
     let second = consumer.generation(consumer.prepare().unwrap());
     let next = documents(second.as_ref());
     assert_eq!(calls(&consumer).0, initial.0 + 1);
-    let again: Vec<_> = consumer.pool.calls.lock().unwrap()[rendered..]
+    let again: Vec<_> = lock_calls(&consumer.pool.calls)[rendered..]
         .iter()
         .filter_map(|call| match call {
             Call::RenderScreen(render) => Some(render.entry.path.clone()),

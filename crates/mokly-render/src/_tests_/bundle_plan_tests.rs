@@ -8,6 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_attempt::request;
 use crate::physical_inputs::PhysicalInputsMock;
+use crate::recorded_calls::lock_calls;
 
 use super::bundle_plan_support::{evidence, params, plan, result, runtime};
 
@@ -41,7 +42,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
         current.store(expected, Ordering::Release);
         let (_, lease) = request(&runtime, &params()).unwrap();
         assert_eq!(
-            calls.lock().unwrap().last().unwrap().plan,
+            lock_calls(&calls).last().unwrap().plan,
             expected.then(|| plan.clone())
         );
         drop(lease);
@@ -54,7 +55,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     let mut evaluation = params();
     evaluation.evaluation = Some("new evaluation".into());
     let _ = request(&runtime, &evaluation).unwrap();
-    assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan));
+    assert_eq!(lock_calls(&calls).last().unwrap().plan, Some(plan));
 }
 
 #[test]
@@ -127,10 +128,10 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
         ),
     ] {
         let _ = request(&runtime, &params).unwrap();
-        assert_eq!(calls.lock().unwrap().last().unwrap().plan, None, "{name}");
+        assert_eq!(lock_calls(&calls).last().unwrap().plan, None, "{name}");
     }
     let _ = request(&runtime, &original).unwrap();
-    assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan()));
+    assert_eq!(lock_calls(&calls).last().unwrap().plan, Some(plan()));
 }
 
 #[test]
@@ -166,6 +167,6 @@ fn only_a_serve_head_retains_complete_durable_captured_records() {
         assert_eq!(Arc::strong_count(&evidence), 1, "{name}");
         runtime.bundle_capture = BundleCapture::ServeEdit;
         let _ = request(&runtime, &params()).unwrap();
-        assert_eq!(calls.lock().unwrap().last().unwrap().plan, None, "{name}");
+        assert_eq!(lock_calls(&calls).last().unwrap().plan, None, "{name}");
     }
 }

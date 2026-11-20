@@ -5,6 +5,8 @@ use std::sync::Arc;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::SidecarPool;
 
+use crate::recorded_calls::lock_calls;
+
 use super::support::Consumer;
 
 #[test]
@@ -70,7 +72,7 @@ fn javascript_rebuild_keeps_old_uncached_views_on_the_same_pool_and_process() {
     assert!(!old.contains("Generation B:"));
     assert!(old.contains("data-viewport=\"desktop\""));
     assert!(Arc::ptr_eq(&pool, &consumer.runtime.pool));
-    let calls = consumer.pool.calls.lock().unwrap();
+    let calls = lock_calls(&consumer.pool.calls);
     let renders: Vec<_> = calls
         .iter()
         .filter_map(|call| match call {

@@ -9,6 +9,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::postcss_inventory;
+use crate::recorded_calls::lock_calls;
 
 #[test]
 fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() {
@@ -75,7 +76,7 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
         SourceTreeMock::read
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                captured.lock().unwrap().push(path.to_owned());
+                lock_calls(&captured).push(path.to_owned());
                 Ok(files[path].clone())
             })),
     ));
@@ -108,5 +109,5 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
     assert!(inventory.inputs.contains_key(".context/exact.txt"));
     assert_eq!(inventory.directories.len(), 2);
     assert_eq!(inventory.plugin_inputs["inputs/one.txt"].plugin, "fixture");
-    assert_eq!(reads.lock().unwrap().len(), 3);
+    assert_eq!(lock_calls(&reads).len(), 3);
 }
