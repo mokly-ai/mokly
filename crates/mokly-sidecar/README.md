@@ -148,8 +148,10 @@ After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
 and directory lists in a bounded memory store. Captured evidence is complete
 and carries no marker. The pool also keeps a Serve edit generation with a
-toolchain identity whose evidence holds only the `uncaptured` marker. The
-final release of an unmarked incomplete generation removes the older entry
+toolchain identity whose evidence holds the `uncaptured` marker and no inputs
+except the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The final release of an unmarked incomplete generation removes the older entry
 with equal settings and keeps nothing. The
 [compiled recipes contract](../../docs/protocol/mokly-sidecar-recipes.md)
 owns the retention rule and the bound. Each entry costs the bytes of its
@@ -196,8 +198,9 @@ of each outcome maps it once to its `Effects`: the `cache` value of the timing
 record, at most one entry warning and one directory warning, and the
 `StoreState`. `ReusableRecipe::new` accepts a compilation with captured reuse
 evidence. It also accepts a Serve edit compilation with a toolchain identity
-whose evidence holds only the `uncaptured` marker, with `complete` and
-`durable` false and no inputs. `DurableRecipe::new` accepts only a recipe
+whose evidence holds the `uncaptured` marker, with `complete` and `durable`
+false. Its inputs can hold only the file, absent, or link entries of its
+private folder files. `DurableRecipe::new` accepts only a recipe
 whose evidence is captured and durable, with no marker, so no store caller
 can write or read a compilation without a stable capture.
 `DurableRecipe::with_plan` keeps the optional `ResolutionPlan` of the

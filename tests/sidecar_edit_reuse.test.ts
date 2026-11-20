@@ -77,7 +77,14 @@ test("Serve edits reject malformed markers and missing or foreign toolchains", a
       ...compilation,
       reuseEvidence: {
         ...compilation.reuseEvidence,
-        inputs: { unexpected: { kind: "absent" as const } },
+        inputs: { unexpected: { kind: "filePath" as const } },
+      },
+    },
+    {
+      ...compilation,
+      reuseEvidence: {
+        ...compilation.reuseEvidence,
+        inputs: { unexpected: { kind: "directory" as const, entries: [] } },
       },
     },
   ]) {
