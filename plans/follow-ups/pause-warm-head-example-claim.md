@@ -41,7 +41,7 @@
   points to it.
 - **Wider fix:** B. A link cannot drift from the rule.
 - **Previous examples:**
-  [follow-up-line-pointer-drift.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/a16a623e670deca5256ef6a43044f9441abad313/plans/follow-ups/follow-up-line-pointer-drift.md)
+  [follow-up-line-pointer-drift.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/be42d49389035be592175cef37933a48ecab0291/plans/follow-ups/follow-up-line-pointer-drift.md)
   records drift of other follow-up text after code moved.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the text is older than the

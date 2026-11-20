@@ -16,3 +16,18 @@ export function substitution(
     ? name.slice(prefix.length, name.length - suffix.length)
     : undefined;
 }
+
+/** Fill target stars with literal matched text, leaving exact targets unchanged. */
+export function substituteTarget(
+  key: string,
+  target: string,
+  name: string,
+  replacements: "all" | "first",
+): string | undefined {
+  const matched = substitution(key, name);
+  if (matched === undefined) return undefined;
+  if (!key.includes("*")) return target;
+  return replacements === "all"
+    ? target.replaceAll("*", () => matched)
+    : target.replace("*", () => matched);
+}
