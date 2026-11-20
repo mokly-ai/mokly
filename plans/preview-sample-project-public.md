@@ -63,16 +63,16 @@ The docs state that the sample project is public in every preview, that a
 successful comment links the publication host, and that a signed-out reader
 opens it for the mockups and their Changes.
 
-- [ ] `docs/protocol/cloud/preview-seed.md`: the intro, the last paragraph of
+- [x] `docs/protocol/cloud/preview-seed.md`: the intro, the last paragraph of
       "Account And Sign-In Link", step 6 of "Seed Steps", "Workflow, Comment
       And Failures", and "Reset". The page stays at or under 250 lines.
-- [ ] `docs/protocol/cloud/preview-seed-local.md`: the local sample project
+- [x] `docs/protocol/cloud/preview-seed-local.md`: the local sample project
       is public, so Changes load.
-- [ ] `docs/protocol/cloud/preview-scripts.md`: the comment's inputs and the
+- [x] `docs/protocol/cloud/preview-scripts.md`: the comment's inputs and the
       **Catalogue** line. The page stays at or under 250 lines.
-- [ ] `docs/ops/preview.md`: step 3 of "Review A Labelled PR" and the comment
+- [x] `docs/ops/preview.md`: step 3 of "Review A Labelled PR" and the comment
       paragraph.
-- [ ] `docs/development/cloud.md`, section "Local Preview Stack",
+- [x] `docs/development/cloud.md`, section "Local Preview Stack",
       `docs/ops/repository-cutover.md` and `infra/README.md`: correct the
       text about the private sample project and the Changes overlay.
 
@@ -80,32 +80,32 @@ opens it for the mockups and their Changes.
 
 Depends on: 1
 
-- [ ] Change a private sample project to public, and require `public`.
-- [ ] Service tests through `SeedService::run`: a created private project
+- [x] Change a private sample project to public, and require `public`.
+- [x] Service tests through `SeedService::run`: a created private project
       becomes public, a found private project becomes public, and a found
       public project gets no update.
-- [ ] The command tests require a public seeded project.
+- [x] The command tests require a public seeded project.
 
 ## Milestone 3: Comment links the publication
 
 Depends on: 1
 
-- [ ] In the `success` state, build the **Catalogue** link from the proof's
+- [x] In the `success` state, build the **Catalogue** link from the proof's
       `publicationId` after `canonical_uuid`. When the proof cannot be read
       or the ID is not canonical, keep the pattern line and print a warning
       to stderr. Keep the pattern line in every other state.
-- [ ] Tests in `infra/tests/test_preview_comment.py` for the link, the
+- [x] Tests in `infra/tests/test_preview_comment.py` for the link, the
       fallback and the other states.
 
 ## Milestone 4: Follow-up items
 
 Depends on: 2, 3
 
-- [ ] `plans/follow-ups/seed-kept-rules-lost-tests.md`: use a field that
+- [x] `plans/follow-ups/seed-kept-rules-lost-tests.md`: use a field that
       still mismatches as its example, and update its line references.
-- [ ] `plans/follow-ups/preview-proof-runs-not-recorded.md`: add the
+- [x] `plans/follow-ups/preview-proof-runs-not-recorded.md`: add the
       **Catalogue** link to the comment links.
-- [ ] Delete `plans/follow-ups/preview-sample-project-needs-log-access.md`.
+- [x] Delete `plans/follow-ups/preview-sample-project-needs-log-access.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

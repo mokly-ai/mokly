@@ -264,8 +264,9 @@ not re-run them. Steps 2 and 3 start new runs.
    `desktop-v*` tag must pass **Release desktop**.
 5. Label a pull request here with `preview`, as
    [Review A Labelled PR](./preview.md#review-a-labelled-pr) shows. Check:
-   **Preview required** passes, and the comment says **Checks passed**. This
-   repository is public, so the comment has no **Open preview** link. Sign in
-   as `preview@mokly.ai`, as
+   **Preview required** passes, the comment says **Checks passed**, and its
+   **Catalogue** link opens the mockups and their Changes signed out. This
+   repository is public, so the comment has no **Open preview** link. To check
+   the app, sign in as `preview@mokly.ai`, as
    [Read A Sign-In Link](./preview.md#read-a-sign-in-link) shows. Remove the label.
    Check: the comment changes to **Preview removed**.

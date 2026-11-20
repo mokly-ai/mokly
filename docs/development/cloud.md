@@ -177,7 +177,7 @@ exercises the published CLI with real project tokens.
 
 ### Local Preview Stack
 
-The capture and seed commands create the same private **Mokly Cloud** sample
+The capture and seed commands create the same public **Mokly Cloud** sample
 project as a PR preview;
 [Local preview seed](../protocol/cloud/preview-seed-local.md) defines the
 local commands. Run from the repository root. Each comment marks a separate
@@ -197,11 +197,11 @@ npm run start --workspace @mokly-cloud/app
 ```
 
 Add `--debug-timings` to the capture command to print Mokly's timing events
-and the capture summary. Sign in by opening
+and the capture summary. Open `http://p-<publicationId>.localhost:8082/`
+signed out for the mockups and their Changes, with the `publicationId` of
+`.context/blobs/seed/local/seed-proof.json`. To use the app, sign in by opening
 `http://localhost:8081/auth/preview/callback#secret=<secret>` with the secret
-from `.context/preview-sign-in`. The project is private, and the viewer
-cannot load its private comparison, so Changes show an overlay without an
-action.
+from `.context/preview-sign-in`.
 
 ### API Contract
 

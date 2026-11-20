@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from preview_lifecycle_core import preview_parts
-from preview_seed_types import SeedError, read_json, read_private_secret
+from preview_seed_types import SeedError, canonical_uuid, read_json, read_private_secret
 
 
 def repository_flag(value):
@@ -100,9 +100,21 @@ def comment(
     )
     if open_preview and secret_file is None:
         raise ValueError("Open preview requires its secret file")
+    catalogue_url = f"`https://p-<publication-id>.pr-{number}.preview.{catalogue}`"
+    if state == "success":
+        try:
+            publication_id = canonical_uuid(
+                read_json(seed_proof).get("publicationId"), "seed proof publication ID"
+            )
+            catalogue_url = f"https://p-{publication_id}.pr-{number}.preview.{catalogue}/"
+        except SeedError as error:
+            print(
+                f"Preview comment: warning: {error}; the Catalogue line keeps its pattern",
+                file=sys.stderr,
+            )
     lines = ["<!-- mokly-preview -->", "### Mokly preview", "", f"Status: **{messages[state]}**",
              f"- Commit: `{revision}`", f"- App: {app}/sign-in", f"- API: {api}",
-             f"- Catalogue: `https://p-<publication-id>.pr-{number}.preview.{catalogue}`",
+             f"- Catalogue: {catalogue_url}",
              f"- Workflow evidence: {run_url}"]
     if open_preview:
         secret = read_private_secret(secret_file)

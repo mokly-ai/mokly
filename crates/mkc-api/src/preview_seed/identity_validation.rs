@@ -52,7 +52,6 @@ pub(super) fn project(found: &ProjectSlugLookupView, workspace: OrganizationId) 
         CONFIG_PATH,
         project.config_path.as_str(),
     )?;
-    require("project visibility", "private", project.visibility.as_str())?;
     require("project automaticBuilds", false, project.automatic_builds)?;
     require("project buildsAvailable", false, project.builds_available)
 }

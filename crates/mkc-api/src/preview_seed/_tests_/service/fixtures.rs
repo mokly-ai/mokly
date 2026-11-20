@@ -1,15 +1,23 @@
 //! Typed replies and publications for seed orchestration tests.
 
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
+use mkc_auth::runtime::RuntimeMock;
+use mkc_auth::service::AuthenticatorMock;
 use mkc_domain::ids::{OrganizationId, ProjectId, PublicationId, TokenId, UserId};
 use mkc_domain::values::{Plan, Role, Visibility};
 use mkc_publications::ingest::Ingested;
 use mkc_publications::locations::Locations;
 use mkc_store_interface::publication::{Publication, PublicationMetadata, PublicationState};
 use mkc_store_interface::user::User;
+use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 use crate::payload::{Payload, Reply};
+use crate::preview_seed::catalogue::SeedCatalogueMock;
+use crate::preview_seed::service::SeedService;
+use crate::preview_seed::upload::CatalogueUploadMock;
 use crate::views::projects::{ProjectSlugLookupView, ProjectView};
 use crate::views::tokens::{TokenCreated, TokenView};
 use crate::views::workspaces::{InstallationState, WorkspaceSlugLookupView, WorkspaceView};
@@ -46,26 +54,30 @@ pub(super) fn workspace() -> Reply {
 
 pub(super) fn project() -> Reply {
     Reply::ok(Payload::ProjectSlugLookup(ProjectSlugLookupView {
-        project: ProjectView {
-            id: ProjectId(Uuid::from_u128(3)),
-            workspace_id: OrganizationId(Uuid::from_u128(2)),
-            name: "Mokly Cloud".to_owned(),
-            slug: "mokly".parse().unwrap(),
-            workspace_slug: "mokly-ai".parse().unwrap(),
-            repository: "mokly-ai/mokly".to_owned(),
-            config_path: "mokly.config.json".to_owned(),
-            visibility: Visibility::Private,
-            require_approval: false,
-            can_admin: true,
-            publishing_allowed: true,
-            automatic_builds: false,
-            builds_available: false,
-            can_request_builds: false,
-            version: 1,
-        },
+        project: project_view(),
         canonical_slug: "mokly".parse().unwrap(),
         canonical_workspace_slug: "mokly-ai".parse().unwrap(),
     }))
+}
+
+pub(super) fn project_view() -> ProjectView {
+    ProjectView {
+        id: ProjectId(Uuid::from_u128(3)),
+        workspace_id: OrganizationId(Uuid::from_u128(2)),
+        name: "Mokly Cloud".to_owned(),
+        slug: "mokly".parse().unwrap(),
+        workspace_slug: "mokly-ai".parse().unwrap(),
+        repository: "mokly-ai/mokly".to_owned(),
+        config_path: "mokly.config.json".to_owned(),
+        visibility: Visibility::Public,
+        require_approval: false,
+        can_admin: true,
+        publishing_allowed: true,
+        automatic_builds: false,
+        builds_available: false,
+        can_request_builds: false,
+        version: 1,
+    }
 }
 
 pub(super) fn token() -> Reply {
@@ -117,5 +129,35 @@ pub(super) fn locations() -> Locations {
         catalogue_domain: "mokly-catalogue.net".to_owned(),
         catalogue_scheme: "https".to_owned(),
         catalogue_port: None,
+    }
+}
+
+pub(super) fn service(platform: Unimock, files: Unimock) -> SeedService {
+    SeedService {
+        auth: Arc::new(Unimock::new((
+            AuthenticatorMock::preview_sign_in_available
+                .some_call(matching!())
+                .returns(true),
+            AuthenticatorMock::preview_account
+                .some_call(matching!())
+                .returns(Ok(user())),
+        ))),
+        platform: Arc::new(platform),
+        files: Arc::new(files),
+        catalogue: Arc::new(Unimock::new(
+            SeedCatalogueMock::read
+                .some_call(matching!((run, revision) if *run == "run" && *revision == HEAD))
+                .returns(Ok(vec![])),
+        )),
+        uploader: Arc::new(Unimock::new(
+            CatalogueUploadMock::publish
+                .some_call(matching!(_, _, _, _))
+                .returns(Ok(publication())),
+        )),
+        runtime: Arc::new(Unimock::new(
+            RuntimeMock::now.each_call(matching!()).returns(now()),
+        )),
+        locations: locations(),
+        revision: "development",
     }
 }

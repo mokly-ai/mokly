@@ -1,8 +1,9 @@
 # Preview Seed
 
 This sub-contract of [PR preview environments](./pr-preview-environments.md)
-gives every labelled PR a shared account and a sample project holding the PR's
-own mockups and comparison against `main`. One link signs in the shared
+gives every labelled PR a shared account and a public sample project holding
+the PR's own mockups and comparison against `main`. A signed-out reader opens
+them from the comment's **Catalogue** link. One link signs in the shared
 account, and only the comment of a private repository carries it. Stable
 environments never run the seed. `D`, `C` and `N` follow the parent contract.
 
@@ -31,7 +32,7 @@ because only people with access can read a private repository, and a preview
 holds only seed data, test data and reviewers' own uploads. The link is the
 only credential the PR comment may carry. A public repository gets no link in
 the comment, because anyone can read it. There, the shared account signs in
-like every other address, with an email link that the
+to the app like every other address, with an email link that the
 [log reader](./preview-scripts.md#sign-in-log-reader) reads.
 
 ## Catalogue Capture
@@ -108,8 +109,12 @@ its reason:
    only this comparison.
 4. Find or create the configured account. Issue no session.
 5. As that account, find or create the seed workspace. Require plan `team`.
-6. Find or create the seed project in it. Require its identity values and
-   visibility `private`.
+6. Find or create the seed project in it. Require its identity values. Then
+   change a private project to `public`, and leave a public project unchanged.
+   Require visibility `public`, so that a signed-out reader can open the PR's
+   publication and its Changes. A private project would need a sign-in, which
+   a public repository's preview sends only to restricted API logs, and its
+   Changes would stop at the [private artifact limit](./viewer.md#private-artifact-limit).
 7. Before any upload, require the head SHA in the captured plan's envelope
    to equal the request's revision. The seed reads upload envelope 3 only, so
    a plan with another envelope version fails this step.
@@ -203,34 +208,41 @@ The release job needs `capture` but deploys when capture fails; it downloads
 secret-file handling, the comment command and the required aggregate. Seed
 failure never invokes Helm rollback.
 
-| Workflow outcome                      | `--state`        | Exact status                               | **Open preview**        | **Sample project** |
-| ------------------------------------- | ---------------- | ------------------------------------------ | ----------------------- | ------------------ |
-| Deploy is running                     | `running`        | `Checks running`                           | No                      | No                 |
-| Deploy or smoke failed                | `failed`         | `Checks failed. Open the run for details.` | No                      | No                 |
-| Deploy passed; capture or seed failed | `failed`         | `Checks failed. Open the run for details.` | If sign-in was accepted | No                 |
-| Deploy, capture and seed passed       | `success`        | `Checks passed`                            | Yes                     | Yes                |
-| Cleanup passed                        | `removed`        | `Preview removed`                          | No                      | No                 |
-| Cleanup failed                        | `cleanup-failed` | `Cleanup failed. Rerun the workflow.`      | No                      | No                 |
+| Workflow outcome                      | `--state`        | Exact status                               | **Catalogue** | **Open preview**        | **Sample project** |
+| ------------------------------------- | ---------------- | ------------------------------------------ | ------------- | ----------------------- | ------------------ |
+| Deploy is running                     | `running`        | `Checks running`                           | Pattern       | No                      | No                 |
+| Deploy or smoke failed                | `failed`         | `Checks failed. Open the run for details.` | Pattern       | No                      | No                 |
+| Deploy passed; capture or seed failed | `failed`         | `Checks failed. Open the run for details.` | Pattern       | If sign-in was accepted | No                 |
+| Deploy, capture and seed passed       | `success`        | `Checks passed`                            | Link          | Yes                     | Yes                |
+| Cleanup passed                        | `removed`        | `Preview removed`                          | Pattern       | No                      | No                 |
+| Cleanup failed                        | `cleanup-failed` | `Cleanup failed. Rerun the workflow.`      | Pattern       | No                      | No                 |
 
 The Open preview cells also require the event's validated
 `repository.private` to be true; a public repository gets no credential link.
-Sample project is
-`https://pr-N.preview.D/mokly-ai/mokly/pull-requests/N`. The proof is only
-its presence flag; no proof value forms either link. Status selects the exact
-message independently of the link inputs.
+Sample project is `https://pr-N.preview.D/mokly-ai/mokly/pull-requests/N`, and
+the proof is only its presence flag. A Catalogue pattern is the text
+`https://p-<publication-id>.pr-N.preview.C`. A Catalogue link is the
+[publication host](./catalogue-hosting.md#origins-and-routes)
+`https://p-<publicationId>.pr-N.preview.C/`, built from the proof's
+`publicationId` after a canonical UUID check. The comment reads no other proof
+value. When the proof cannot be read or that ID is not canonical, the success
+comment shows the pattern, and the comment command prints a warning and does
+not fail. Status selects the exact message independently of the link inputs.
 
 ## Reset
 
 A rerun or a push runs a new seed Job. The seed finds or creates, so it
-restores deleted sample data but does not undo a change: a changed seed value,
-such as a slug or the plan, fails with a mismatch on an existing preview until
-a reset. To reset, remove the `preview` label, wait for cleanup, and add the
-label again. Cleanup deletes the namespace, the database, the sign-in Secret
-and the bucket prefix, so the new preview seeds an empty database. Each label
-cycle issues a new catalogue certificate. Let's Encrypt allows five for one PR
-in seven days, so keep the label cycle for rare resets.
+restores deleted sample data. It also changes a private sample project to
+public, so a visibility change needs no reset. It does not undo another
+change: a changed seed value, such as a slug or the plan, fails with a
+mismatch on an existing preview until a reset. To reset, remove the `preview`
+label, wait for cleanup, and add the label again. Cleanup deletes the
+namespace, the database, the sign-in Secret and the bucket prefix, so the new
+preview seeds an empty database. Each label cycle issues a new catalogue
+certificate. Let's Encrypt allows five for one PR in seven days, so keep the
+label cycle for rare resets.
 
 ## Local Stack
 
 [Local preview seed](./preview-seed-local.md) defines the local account, the
-local seed command, its proof and the viewer limits.
+local seed command, its proof and the local publication host.
