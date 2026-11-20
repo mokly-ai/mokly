@@ -12,10 +12,8 @@ the first time `cargo` runs in the repository. The Bun install command below
 reads `.bun-version`. Run it again when that file changes.
 
 The Rust tests run real Git commands in temporary repositories. The tests that
-read Git LFS files need the `git lfs` command. The tests that read partial
-clones or missing objects need Git 2.45.0 or later. With older Git, such as the
-Git 2.43.0 package of Ubuntu 24.04, these tests fail. The test errors do not
-give the required Git version or a Git LFS install hint. Check both tools with
+read Git LFS files need the `git lfs` command. Their errors do not give a Git
+LFS install hint. Check both tools with
 `git --version` and `git lfs version` before you run `cargo xtask check`.
 
 ```bash
