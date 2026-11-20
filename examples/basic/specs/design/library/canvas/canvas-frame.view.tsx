@@ -33,8 +33,9 @@ const SIDES: Record<NonNullable<CanvasFrameProps["side"]>, string> = {
  * outside the frame; the caller places it at the frame's scale, which the
  * frame gives as `--cv-frame-scale`. A screen's frame is named by its
  * viewport and scheme, and a component's frame by its saved variant and
- * scheme, as the compact frame picker names them. A selected frame's label
- * takes the signal.
+ * scheme, as the compact frame picker names them. The label of the frame
+ * that holds the selection, an instance on it or the frame itself, takes the
+ * signal.
  */
 export function CanvasFrameView({
   before,

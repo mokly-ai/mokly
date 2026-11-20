@@ -18,14 +18,14 @@ import { FITS } from "./sketches.js";
 import { CanvasStage } from "./stage.js";
 
 /** What the reader selected on a variant set: a frame, or an instance on one. */
-type SetSelection =
-  { frame: CanvasFrameSpec } | { instance: CanvasInstance };
+type SetSelection = { frame: CanvasFrameSpec } | { instance: CanvasInstance };
 
 /**
  * A component opened as its variant set: its saved variants' frames at the
  * set's fitted zoom, and the Inspect that the caller gives. A selected frame
- * draws its corners and size, and its label takes the signal; a selected
- * instance draws its selection on its frame. The compact form shows the
+ * draws its corners and size, and a selected instance draws its selection on
+ * its frame; the frame that holds the selection lights its label. The
+ * compact form shows the
  * whole set until a selection picks a frame, and then that frame at full
  * size with the frame picker, the pill of a selected instance, and the open
  * sheet that the state asks for.
@@ -91,7 +91,7 @@ export function VariantSetArtboard({
               : undefined
         }
         picked={picked}
-        selected={frame?.id}
+        selected={picked}
         view={view}
         zoom={zoom}
       />

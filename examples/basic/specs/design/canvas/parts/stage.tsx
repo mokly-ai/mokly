@@ -98,7 +98,10 @@ interface CanvasStageProps {
    * frame picker; a variant set without one shows the whole set.
    */
   picked?: string | undefined;
-  /** The selected frame of a variant set, whose label takes the signal. */
+  /**
+   * The frame that holds the selection, a selected instance's frame or a
+   * selected frame, whose label takes the signal.
+   */
   selected?: string | undefined;
   /** The frames that the compact frame picker lists; every frame by default. */
   pickable?: readonly CanvasFrameSpec[] | undefined;

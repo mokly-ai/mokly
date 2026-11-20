@@ -998,6 +998,62 @@
       "within": "cv-pill-place",
       "namePattern": "^Action label",
       "target": null
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/stage/zoomed"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection"
+    },
+    {
+      "source": "design/canvas/inspect/selection/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/toolbar"
+    },
+    {
+      "source": "design/canvas/inspect/selection/primary",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/primary"
+    },
+    {
+      "source": "design/canvas/inspect/selection/secondary",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/secondary"
+    },
+    {
+      "source": "design/canvas/inspect/sections",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/sections"
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/props"
+    },
+    {
+      "source": "design/canvas/inspect/frames",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/frames"
     }
   ],
   "tagStates": [

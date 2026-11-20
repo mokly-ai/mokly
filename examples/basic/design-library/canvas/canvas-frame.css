@@ -51,7 +51,8 @@
   margin-left: auto;
 }
 
-/* A selected frame's name and glyph take the signal; its size stays quiet. */
+/* The frame that holds the selection lights its name and glyph; its size
+   stays quiet. */
 .cv-frame[data-cv-selected] > .cv-frame-label {
   color: var(--cv-signal-deep);
 }

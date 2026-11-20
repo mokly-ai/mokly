@@ -43,10 +43,7 @@ function Added({
           ? {
               filter: "changes",
               activeKey: "details",
-              targets: {
-                welcome: CANVAS_PAGES.changesCurrent,
-                details: design,
-              },
+              targets: { welcome: CANVAS_PAGES.changesCurrent },
             }
           : { filter: "all", activeKey: "details" }
       }
@@ -72,8 +69,7 @@ function Added({
 /**
  * Details with one of its instances selected on Mobile · Light, as its
  * component tree selects it: the canvas zoomed onto that frame draws the
- * selection, and Inspect opens at the Selection section. The catalogue's
- * selected row opens this artboard.
+ * selection, and Inspect opens at the Selection section.
  */
 function Selected({
   instance: id,
@@ -85,11 +81,7 @@ function Selected({
   const instance = DETAILS_INSTANCES[id];
   return (
     <ScreenSelection
-      catalogue={{
-        filter: "all",
-        activeKey: "details",
-        targets: { details: instance.page },
-      }}
+      catalogue={{ filter: "all", activeKey: "details" }}
       entry={CANVAS_ENTRIES.details}
       frames={detailsFrames()}
       instance={instance}

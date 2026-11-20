@@ -6,6 +6,7 @@ import { boxModel } from "../../library/inspector/box-model.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 
 import { SCHEMES, type CanvasFrameSpec } from "./frames.js";
+import { WrappingPath } from "./inspect.js";
 import { contentSize, instanceSize, type CanvasInstance } from "./instances.js";
 
 /**
@@ -81,7 +82,9 @@ export function InspectSelected({
       />
       <p className="cv-source">
         <CanvasGlyph name="document" size={13} />
-        <span>{instance.source}</span>
+        <span>
+          <WrappingPath path={instance.source} />
+        </span>
       </p>
     </section>
   );

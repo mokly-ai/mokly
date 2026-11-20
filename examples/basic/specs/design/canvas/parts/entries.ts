@@ -1,6 +1,7 @@
 import type { ChangeStatus } from "../../components/parts/comparison_fixtures.js";
-import { COMPONENT_ENTRIES } from "../../components/parts/metadata.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
+
+import { COMPONENT_IDENTITIES } from "./component_identity.js";
 
 /** The kind of entry a Canvas artboard selects, which decides its frames. */
 export type CanvasEntryKind = "component" | "document" | "screen";
@@ -47,16 +48,16 @@ export const CANVAS_ENTRIES = {
     changed: false,
   },
   action: {
-    title: COMPONENT_ENTRIES.action.title,
+    title: COMPONENT_IDENTITIES.action.title,
     slug: "action",
-    path: COMPONENT_ENTRIES.action.path,
+    path: COMPONENT_IDENTITIES.action.path,
     kind: "component",
     changed: false,
   },
   toolbar: {
-    title: COMPONENT_ENTRIES.toolbar.title,
+    title: COMPONENT_IDENTITIES.toolbar.title,
     slug: "toolbar",
-    path: COMPONENT_ENTRIES.toolbar.path,
+    path: COMPONENT_IDENTITIES.toolbar.path,
     kind: "component",
     changed: false,
   },

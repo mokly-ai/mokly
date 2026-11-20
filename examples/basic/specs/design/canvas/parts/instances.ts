@@ -1,5 +1,4 @@
-import { COMPONENTS } from "../../components/parts/metadata.js";
-
+import { COMPONENT_IDENTITIES } from "./component_identity.js";
 import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
 
 /** A box in the sketch's CSS pixels, from the frame's top-left corner. */
@@ -97,12 +96,12 @@ export function toolbarAction(
   const action = TOOLBAR_ACTIONS[id];
   return {
     id,
-    component: COMPONENTS.action.title,
+    component: COMPONENT_IDENTITIES.action.title,
     ...record,
     props: actionProps(action.label, id, action.destination),
     box: { ...at, width: action.width, height: 26 },
     padding: ACTION_PADDING,
-    source: COMPONENTS.action.source,
+    source: COMPONENT_IDENTITIES.action.source,
     componentPage: CANVAS_PAGES.componentSet,
   };
 }

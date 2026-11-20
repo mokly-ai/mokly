@@ -40,7 +40,7 @@ export function WelcomeChangesArtboard({
       catalogue={{
         filter: "changes",
         activeKey: "welcome",
-        targets: { welcome: design, details: CANVAS_PAGES.addedChanges },
+        targets: { details: CANVAS_PAGES.addedChanges },
       }}
       compactZoom={side ? FITS.phoneSide : FITS.phone}
       design={design}

@@ -1,8 +1,11 @@
-import { COMPONENTS } from "../../components/parts/metadata.js";
 import type { FramesFilterProps } from "../../library/inspector/frames-filter.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 import { TagChips } from "../../parts/tag_filter.js";
 
+import {
+  COMPONENT_IDENTITIES,
+  type ComponentIdentity,
+} from "./component_identity.js";
 import {
   ActionDisabledControls,
   ChooseVariant,
@@ -10,7 +13,7 @@ import {
   VARIANT_FIELDS,
 } from "./component_props.js";
 import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
-import { CANVAS_ENTRIES } from "./entries.js";
+import { CANVAS_ENTRIES, type CanvasEntry } from "./entries.js";
 import type { CanvasFrameSpec } from "./frames.js";
 import {
   InspectFold,
@@ -43,12 +46,35 @@ const SET_FILTER = {
   highlight: false,
 } as const satisfies FramesFilterProps;
 
-/** The Schemes row of a component that renders in both schemes. */
-function BothSchemes() {
+/**
+ * The head of a component's Inspect, as its definition declares it: its
+ * description, its source, its schemes, and its tags where it has any.
+ */
+function ComponentHead({
+  component,
+  entry,
+}: {
+  component: ComponentIdentity;
+  entry: CanvasEntry;
+}) {
   return (
-    <MetaRow name="schemes" label="Schemes">
-      light, dark
-    </MetaRow>
+    <InspectHead
+      description={component.description}
+      entry={entry}
+      rows={
+        <>
+          <MetaRow name="schemes" label="Schemes">
+            light, dark
+          </MetaRow>
+          {component.tags.length > 0 ? (
+            <MetaRow name="tags" label="Tags">
+              <TagChips tags={component.tags} />
+            </MetaRow>
+          ) : null}
+        </>
+      }
+      source={component.source}
+    />
   );
 }
 
@@ -66,22 +92,12 @@ export function ActionInspect({
   /** The Disabled · Light frame, where the reader selected it. */
   disabled?: CanvasFrameSpec | undefined;
 }) {
-  const component = COMPONENTS.action;
   const chosen = disabled !== undefined;
   return (
     <>
-      <InspectHead
-        description={component.description}
+      <ComponentHead
+        component={COMPONENT_IDENTITIES.action}
         entry={CANVAS_ENTRIES.action}
-        rows={
-          <>
-            <BothSchemes />
-            <MetaRow name="tags" label="Tags">
-              <TagChips tags={["forms"]} />
-            </MetaRow>
-          </>
-        }
-        source={component.source}
       />
       <InspectVariants
         variants={[
@@ -120,15 +136,6 @@ export function ActionInspect({
 }
 
 /**
- * The Toolbar as the example defines it in
- * `examples/basic/src/components/toolbar`: its description and its source.
- */
-const TOOLBAR_DEFINITION = {
-  description: "A composed toolbar with caller-supplied content.",
-  source: "src/components/toolbar/toolbar.mokly.tsx",
-} as const;
-
-/**
  * Inspect for the Toolbar, a composed component, which opens as its variant
  * set: Default, the one saved variant. Its nested components are the two
  * Actions that it renders, each selecting its instance on the Default ·
@@ -147,11 +154,9 @@ export function ToolbarInspect({
   const chosen = selected !== undefined;
   return (
     <>
-      <InspectHead
-        description={TOOLBAR_DEFINITION.description}
+      <ComponentHead
+        component={COMPONENT_IDENTITIES.toolbar}
         entry={CANVAS_ENTRIES.toolbar}
-        rows={<BothSchemes />}
-        source={TOOLBAR_DEFINITION.source}
       />
       <InspectVariants variants={[{ label: "Default", current: chosen }]} />
       <InspectFrames count={2} filter={SET_FILTER} />

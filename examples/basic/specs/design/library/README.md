@@ -200,7 +200,7 @@ depicts: `canvas/canvas-frame`, a bare frame with its mono label and size tag
 that holds a screen at its nominal size scaled by the zoom, in the frame's
 own scheme, and an unclipped overlay, such as a selection, that its caller
 places at the frame's scale; a component's frame names its saved variant,
-and a selected frame's label takes the signal; in a comparison the frame
+and the frame that holds the selection lights its label; in a comparison the frame
 holds both versions in the shipped stacked layers, or names its version in a
 tag in Side by side; `canvas/zoom-pill`, zoom out, the zoom level, zoom in
 and Fit, whose Fit-only form the dock holds; `canvas/selection`, the
@@ -244,7 +244,12 @@ the saved states of `selection` select Welcome's four instances, those of
 Toolbar's two Actions. `../canvas/parts/instance_records.ts` holds each
 entry's instance records, with each instance's frame, box, and padding. A
 static artboard opens the panel scrolled to the section that its state is
-about, the selection or an unfolded section.
+about, the selection or an unfolded section. The Canvas family shows each
+component as the example defines it: `../canvas/parts/component_identity.ts`
+reads the title, the description, and the tags from the definitions under
+`examples/basic/src/components`, and every head, selection, chip, source
+line, usage row, and tree row reads that record. The other families keep the
+design fixtures of `../components/parts/metadata.ts`.
 
 The Changes tab draws the stepper, then Compared, the version before and
 the current version on a rail, then the compare modes, and the shipped
@@ -279,8 +284,10 @@ frame alone. They take the destination, the viewport, the catalogue's
 filter and row, the entry's title, path, and status, a render of each
 frame's sketch by viewport and scheme, and the Inspect body.
 `ScreenSelection` composes them for a screen with an instance selected, and
-`VariantSetArtboard` for a variant set with or without a selection. A
-depicted view that the shell highlights
+`VariantSetArtboard` for a variant set with or without a selection. The
+catalogue's selected row, which the shipped tree marks as the current page,
+opens the artboard that renders it. A depicted view that the shell
+highlights
 shows its highlight in the compact form also while the panel sheet, which
 holds the switch, is closed. Canvas links stay inside the Canvas family:
 `../canvas/parts/destinations.ts` names its artboards, and the `canvas`

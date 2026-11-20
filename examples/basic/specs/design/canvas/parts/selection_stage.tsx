@@ -14,9 +14,10 @@ import { CanvasStage } from "./stage.js";
 
 /**
  * A screen with one of its instances selected on its phone frame: the
- * canvas, zoomed onto that frame, draws the selection, and the Inspect that
- * the caller gives opens at the Selection section. On a phone, the one frame
- * draws the selection, and the pill above the dock names it.
+ * canvas, zoomed onto that frame, draws the selection and lights the frame's
+ * label, and the Inspect that the caller gives opens at the Selection
+ * section. On a phone, the one frame draws the selection, and the pill above
+ * the dock names it.
  */
 export function ScreenSelection({
   catalogue,
@@ -53,6 +54,7 @@ export function ScreenSelection({
         overlays={selectionOverlays(instance)}
         pan="end"
         picked={instance.frame.id}
+        selected={instance.frame.id}
         view={view}
         zoom={100}
       />

@@ -158,6 +158,7 @@ function CanvasWork({
           sheet={compact}
           view={catalogue}
           close={transitions.close}
+          design={design}
         />
       ) : null}
       {entry !== undefined && (!compact || sheet === "panel") ? (

@@ -40,14 +40,9 @@ function ActionSet({
   const design = chosen
     ? CANVAS_PAGES.componentSetDisabled
     : CANVAS_PAGES.componentSet;
-  const row = COMPONENT_NAVIGATION.action.id;
   return (
     <VariantSetArtboard
-      catalogue={{
-        filter: "all",
-        activeKey: row,
-        targets: { [row]: design },
-      }}
+      catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.action.id }}
       design={design}
       entry={CANVAS_ENTRIES.action}
       frames={frames}
@@ -76,10 +71,9 @@ function ToolbarSet({
   const instance =
     selected === undefined ? undefined : TOOLBAR_INSTANCES[selected];
   const design = instance?.page ?? CANVAS_PAGES.componentSetToolbar;
-  const row = COMPONENT_NAVIGATION.toolbar.id;
   return (
     <VariantSetArtboard
-      catalogue={{ filter: "all", activeKey: row, targets: { [row]: design } }}
+      catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.toolbar.id }}
       design={design}
       entry={CANVAS_ENTRIES.toolbar}
       frames={toolbarFrames()}

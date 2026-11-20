@@ -1,5 +1,4 @@
-import { COMPONENTS } from "../../components/parts/metadata.js";
-
+import { COMPONENT_IDENTITIES } from "./component_identity.js";
 import { CANVAS_PAGES } from "./destinations.js";
 import {
   ACTION_PADDING,
@@ -21,6 +20,9 @@ import {
  * their labels in Geist.
  */
 
+/** The two components that the depicted entries render. */
+const { action: ACTION, toolbar: TOOLBAR } = COMPONENT_IDENTITIES;
+
 /** The registered instances that the example's Welcome renders. */
 export type WelcomeInstanceId = "details" | "toolbar" | "primary" | "secondary";
 
@@ -31,23 +33,23 @@ export type WelcomeInstanceId = "details" | "toolbar" | "primary" | "secondary";
 export const WELCOME_INSTANCES: InstanceRecords<WelcomeInstanceId> = {
   details: {
     id: "details",
-    component: COMPONENTS.action.title,
+    component: ACTION.title,
     props: actionProps("View details", "primary", "details"),
     frame: MOBILE_LIGHT,
     box: { x: 20, y: 127.125, width: 112, height: 30 },
     padding: ACTION_PADDING,
-    source: COMPONENTS.action.source,
+    source: ACTION.source,
     page: CANVAS_PAGES.selection,
     componentPage: CANVAS_PAGES.componentSet,
   },
   toolbar: {
     id: "toolbar",
-    component: COMPONENTS.toolbar.title,
+    component: TOOLBAR.title,
     props: [{ name: "title", value: '"Workspace actions"' }],
     frame: MOBILE_LIGHT,
     box: { x: 20, y: 199.125, width: 350, height: 128 },
     padding: TOOLBAR_PADDING,
-    source: COMPONENTS.toolbar.source,
+    source: TOOLBAR.source,
     page: CANVAS_PAGES.selectionToolbar,
     componentPage: CANVAS_PAGES.componentSetToolbar,
   },
@@ -81,23 +83,23 @@ export type DetailsInstanceId = "welcome" | "toolbar" | "primary" | "secondary";
 export const DETAILS_INSTANCES: InstanceRecords<DetailsInstanceId> = {
   welcome: {
     id: "welcome",
-    component: COMPONENTS.action.title,
+    component: ACTION.title,
     props: actionProps("Return to welcome", "secondary", "welcome"),
     frame: MOBILE_LIGHT,
     box: { x: 20, y: 104.25, width: 148, height: 30 },
     padding: ACTION_PADDING,
-    source: COMPONENTS.action.source,
+    source: ACTION.source,
     page: CANVAS_PAGES.addedWelcome,
     componentPage: CANVAS_PAGES.componentSet,
   },
   toolbar: {
     id: "toolbar",
-    component: COMPONENTS.toolbar.title,
+    component: TOOLBAR.title,
     props: [{ name: "title", value: '"Catalogue actions"' }],
     frame: MOBILE_LIGHT,
     box: { x: 20, y: 176.25, width: 350, height: 128 },
     padding: TOOLBAR_PADDING,
-    source: COMPONENTS.toolbar.source,
+    source: TOOLBAR.source,
     page: CANVAS_PAGES.addedToolbar,
     componentPage: CANVAS_PAGES.componentSetToolbar,
   },

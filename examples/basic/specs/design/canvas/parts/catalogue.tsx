@@ -12,9 +12,9 @@ export interface CatalogueView {
   /** The key of the selected entry's row; none with nothing selected. */
   activeKey?: string | undefined;
   /**
-   * The artboards that rows open where they differ from the rows' own, by
-   * the row's key. On the Changes tab, a changed entry's row keeps the tab,
-   * and the selected row opens the artboard that renders the catalogue.
+   * The artboards that other rows open where they differ from the rows'
+   * own, by the row's key: on the Changes tab, a changed entry's row keeps
+   * the tab.
    */
   targets?: Readonly<Record<string, CanvasDestination>> | undefined;
 }
@@ -32,20 +32,26 @@ function ChangesBase() {
 /**
  * The floating catalogue: the shipped catalogue navigation in the All or
  * Changes filter, in a floating panel, or in the catalogue sheet of the
- * compact form. Its rows open Canvas artboards only.
+ * compact form. Its rows open Canvas artboards only. The shipped tree marks
+ * the selected row as the current page, so that row opens the artboard that
+ * renders the catalogue.
  */
 export function CanvasCatalogue({
   close,
+  design,
   sheet,
   view,
 }: {
   close?: CanvasDestination | undefined;
+  /** The artboard that renders the catalogue. */
+  design: CanvasDestination;
   sheet: boolean;
   view: CatalogueView;
 }) {
   const changes = view.filter === "changes";
   const rows = changes ? CANVAS_CHANGES_ROWS : CANVAS_ALL_ROWS;
-  const { activeKey, targets } = view;
+  const { activeKey, targets = {} } = view;
+  const target = (key: string) => (key === activeKey ? design : targets[key]);
   return (
     <floatingPanel.Component
       moklyInstance={useDesignInstance("catalogue-panel")}
@@ -58,14 +64,10 @@ export function CanvasCatalogue({
       <NavTree
         activeKey={activeKey}
         changedOnly={changes}
-        nodes={
-          targets === undefined
-            ? rows
-            : rows.map((row) => {
-                const to = targets[row.key];
-                return to === undefined ? row : retarget(row, to);
-              })
-        }
+        nodes={rows.map((row) => {
+          const to = target(row.key);
+          return to === undefined ? row : retarget(row, to);
+        })}
       />
     </floatingPanel.Component>
   );

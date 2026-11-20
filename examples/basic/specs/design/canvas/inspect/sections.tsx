@@ -50,6 +50,7 @@ function Sections({ viewport }: { viewport: ArtboardViewport }) {
         frames={welcomeFrames()}
         overlays={selectionOverlays(instance)}
         pan="end"
+        selected={instance.frame.id}
         view={WELCOME_VIEW}
         zoom={100}
       />

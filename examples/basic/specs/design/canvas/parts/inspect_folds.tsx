@@ -8,8 +8,8 @@ import {
   UsageList,
   type UsageRow,
 } from "../../../../../../packages/ui/src/usage-list/usage-list.js";
-import { COMPONENTS } from "../../components/parts/metadata.js";
 
+import { COMPONENT_IDENTITIES } from "./component_identity.js";
 import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
 import {
   DETAILS_INSTANCES,
@@ -79,14 +79,14 @@ function screenConsumers(component: string): UsageRow[] {
  * and a Toolbar with two Actions, and the Toolbar renders its two Actions.
  */
 export function ActionUsage() {
-  const action = COMPONENTS.action.title;
+  const action = COMPONENT_IDENTITIES.action.title;
   return (
     <UsageList
       affected={[]}
       usedBy={[
         ...screenConsumers(action),
         consumer(
-          COMPONENTS.toolbar.title,
+          COMPONENT_IDENTITIES.toolbar.title,
           CANVAS_PAGES.componentSetToolbar,
           instancesOf(TOOLBAR_INSTANCES, action),
         ),
@@ -100,7 +100,7 @@ export function ToolbarUsage() {
   return (
     <UsageList
       affected={[]}
-      usedBy={screenConsumers(COMPONENTS.toolbar.title)}
+      usedBy={screenConsumers(COMPONENT_IDENTITIES.toolbar.title)}
     />
   );
 }
