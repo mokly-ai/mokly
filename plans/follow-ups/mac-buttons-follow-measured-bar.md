@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from branch `calummoore/mac-title-bar-integration`, review round 3, finding 3, as its blocked wider fix.
-- **Location:** `apps/desktop/src/window.ts` and the shell module that sets the Mac button position from the page zoom.
+- **Location:** `packages/desktop/src/window.ts` and the shell module that sets the Mac button position from the page zoom.
 - **Reason:** The wider fix adds a preload bridge, and the renderer settings in `docs/protocol/cloud/desktop-bundle.md` allow none before local mode.
 
 - **Terms:**

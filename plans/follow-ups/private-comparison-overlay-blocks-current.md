@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-02, from Decision 11 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01. An options check added options D, E and F. The app work item added the clipped-card fact on 2026-11-02.
-- **Location:** `apps/app/src/viewer/published.web.tsx:14-23`, the mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:221`, `docs/protocol/cloud/viewer.md`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md`.
+- **Location:** `packages/app/src/viewer/published.web.tsx:14-23`, the mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:221`, `docs/protocol/cloud/viewer.md`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md`.
 - **Reason:** On 2026-11-02 the user deferred the choice, and with it the private-comparison part of Decision 5.
 - **Category:** Product bug.
 
@@ -12,7 +12,7 @@
   - **Decision 5:** the user's choice of 2026-11-01 to remove **Open catalogue in a new tab**, because the 0.18.0 standalone shell cannot load a private catalogue.
 - **Background:**
   - A private comparison fails, because the viewer reads its files without credentials. Decision 5 shows an overlay without an action on that error.
-  - The app and the mockups still show the card **Open the catalogue in its own tab** with its new-tab action, at `apps/app/src/viewer/stage.tsx:234-251`. With the 0.18.0 viewer, that tab never loaded a private catalogue. Since release 0.19.0, the standalone shell sends `credentials: "same-origin"` with every read, as `docs/protocol/mokly-shell-fences.md:53-55` requires. Nobody has checked whether the tab now loads a private catalogue in a browser that keeps the cookie in the catalogue's own store.
+  - The app and the mockups still show the card **Open the catalogue in its own tab** with its new-tab action, at `packages/app/src/viewer/stage.tsx:234-251`. With the 0.18.0 viewer, that tab never loaded a private catalogue. Since release 0.19.0, the standalone shell sends `credentials: "same-origin"` with every read, as `docs/protocol/mokly-shell-fences.md:53-55` requires. Nobody has checked whether the tab now loads a private catalogue in a browser that keeps the cookie in the catalogue's own store.
   - In 0.18.0 the overlay covers the whole preview area, with the comparison toolbar and its **Current** button. With `pointerEvents: "auto"`, a mouse reader cannot select **Current**.
   - The failed comparison area is about 220 px high, so the card is cut off at its lower edge.
   - The viewer sends no event when the comparison mode changes: `docs/protocol/mokly-viewer-selection.md:16-17` keeps the comparison mode out of the controlled selection. A viewport or colour change keeps the mode, so the comparison fails again.
@@ -34,6 +34,6 @@
   - Remount the viewer after the error, because the reader loses their place.
 - **Wider fix:** G for the overlay. F removes the failure itself, and `plans/follow-ups/private-catalogues-lose-changes-and-blocked-cookie-access.md` holds the restore of private Changes.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/blocked-cookie-message-has-no-words.md`, same code. The overlay reuses the blocked-cookie card in `apps/app/src/viewer/stage.tsx`, so both answers land in one change.
+- **Related:** `plans/follow-ups/blocked-cookie-message-has-no-words.md`, same code. The overlay reuses the blocked-cookie card in `packages/app/src/viewer/stage.tsx`, so both answers land in one change.
 - **Recommendation:** C. It is the only small change that lets a mouse reader reach **Current**, and it uses only documented slot properties. F removes the failure best.
 - **Action:** ask the user, because the choice changes the Decision 5 overlay and trades behaviour against undocumented viewer behaviour.

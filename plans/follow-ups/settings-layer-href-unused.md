@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 83 of the round 2 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/settings/surface.tsx:226` (`layerHref`).
+- **Location:** `packages/app/src/settings/surface.tsx:226` (`layerHref`).
 - **Reason:** The helper is already on `origin/main` and unchanged by the change that found it.
 - **Category:** Dead code.
 

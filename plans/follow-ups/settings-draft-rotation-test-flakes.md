@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from branch `calummoore/mac-title-bar-integration`, the CI run of its pull request.
-- **Location:** `apps/app/src/_tests_/settings/drafts.spec.ts:115`, the test "a draft survives the surface changing under it", and its assertion at line 156.
+- **Location:** `packages/app/src/_tests_/settings/drafts.spec.ts:115`, the test "a draft survives the surface changing under it", and its assertion at line 156.
 - **Reason:** The test fails on `origin/main` too and its cause is unknown, so its fix needs its own branch and a reproduction.
 
 - **Terms:**
@@ -13,8 +13,8 @@
   - The test signs in, opens the project pane of the layer route with a query on a 390px screen, and types a draft.
   - It changes the viewport to 1024px and back to 390px, and checks the address after each change.
   - Last, it changes the viewport to 1024px, 390px and 1024px in quick succession. It waits for a dialog and two animation frames, and expects the address to end with `&settings=project`.
-  - Three places write the address in a hand-over. `useLayerAddress` in `apps/app/src/settings/layer-address.ts` hands the layer route over to the dialog. The compact effect in `apps/app/src/settings/dialog-host.tsx` hands the dialog over to the layer route.
-  - Both call `replaceAddress` in `apps/app/src/navigation/address.ts`. It keeps one exact replacement, and it restores those exact bytes for up to three animation frames.
+  - Three places write the address in a hand-over. `useLayerAddress` in `packages/app/src/settings/layer-address.ts` hands the layer route over to the dialog. The compact effect in `packages/app/src/settings/dialog-host.tsx` hands the dialog over to the layer route.
+  - Both call `replaceAddress` in `packages/app/src/navigation/address.ts`. It keeps one exact replacement, and it restores those exact bytes for up to three animation frames.
 - **Problem:** After the quick changes, the address sometimes keeps the query without `&settings=project`. The failure text is:
 
   ```text
@@ -24,7 +24,7 @@
   ```
 
   - The page snapshot of each of 29 local failures, 15 on `main` and 14 on the branch, shows the viewer route's wait, the heading "Opening your project…", and no dialog. So the reader ends on the project page without the dialog.
-  - That address is the page beneath the dialog, which `pageBeneath` in `apps/app/src/settings/routes.ts` gives. Which write leaves it there is unknown.
+  - That address is the page beneath the dialog, which `pageBeneath` in `packages/app/src/settings/routes.ts` gives. Which write leaves it there is unknown.
   - CI run 44375124852 of commit `f4bc497b` failed the test in the job App checks 2/4, on the first try and on the retry. A rerun of the failed jobs failed it the same way.
   - The push CI run 44092627524 of `main` at `6d5163d6`, on 2026-11-17, failed the same test with the same text, on the first try and on the retry.
   - CI run 44386980398 of the next branch commit, `6704dc72`, passed the test.

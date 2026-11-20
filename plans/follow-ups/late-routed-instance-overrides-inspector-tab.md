@@ -238,8 +238,8 @@
     Account settings could then show GitHub as not connected after the
     connection succeeded.
   - PR #377 added one session read owner in
-    `apps/app/src/session/read-owner.ts`. It applies only the newest answer,
-    through the request sequence in `apps/app/src/data/request-sequence.ts`.
+    `packages/app/src/session/read-owner.ts`. It applies only the newest answer,
+    through the request sequence in `packages/app/src/data/request-sequence.ts`.
     A sign-in adoption or a sign-out discards pending reads.
     `docs/protocol/cloud/web-api-client.md` states the rule.
   - That case and this item share a class: a late answer replaces newer

@@ -9,8 +9,8 @@ target
 **/.env*
 gha-creds-*.json
 **/dist
-apps/app/public/folio
+packages/app/public/folio
 
-apps/desktop/bundle
-apps/desktop/release
-apps/desktop/.expo
+packages/desktop/bundle
+packages/desktop/release
+packages/desktop/.expo

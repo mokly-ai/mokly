@@ -122,10 +122,10 @@ async fn each_catalogue_route_runs_once_in_order_and_a_replacement_restarts_the_
                     }
                 })),
             WorkMock::background
-                .each_call(matching!(_, _))
+                .each_call(matching!(_, _, _))
                 .answers_arc(Arc::new({
                     let calls = calls.clone();
-                    move |_, _, route| {
+                    move |_, _, route, _| {
                         calls.lock().unwrap().push(route);
                         Ok(Vec::new())
                     }

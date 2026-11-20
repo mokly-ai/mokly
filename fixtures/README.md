@@ -13,7 +13,7 @@ Both tests use this path to check authored case and nested-path encoding.
 `desktop-origin.json` holds the privileged desktop origin. The `mkc-domain`
 test pins `client_origins::DESKTOP_ORIGIN` to it. The API and catalogue origin
 integration smokes read it too, and so does the web app through
-[`desktop-fixture.ts`](../apps/app/src/_tests_/desktop-fixture.ts): its logic
+[`desktop-fixture.ts`](../packages/app/src/_tests_/desktop-fixture.ts): its logic
 tests pin `isDesktopShell()` to the origin, and its browser tests request
 links with it. The Electron shell's origin test reads the same fixture from
-`apps/desktop/src/_tests_/contracts.test.ts`. Consumers read the fixture directly.
+`packages/desktop/src/_tests_/contracts.test.ts`. Consumers read the fixture directly.

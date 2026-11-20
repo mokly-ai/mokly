@@ -1,6 +1,6 @@
 # Desktop Application
 
-`apps/desktop` is the installed desktop surface of Mokly Cloud: an Electron
+`packages/desktop` is the installed desktop surface of Mokly Cloud: an Electron
 shell that ships the web application's export inside its package, serves it
 from its own origin and adds the operating-system integration a browser tab
 cannot give. It is the desktop half of the native phase in
@@ -8,7 +8,7 @@ cannot give. It is the desktop half of the native phase in
 first; Windows is a later change.
 
 The shell contains no product screens, no React Native and no second viewer.
-Every page is the same export of [`apps/app`](./web-app.md) that the app image
+Every page is the same export of [`packages/app`](./web-app.md) that the app image
 serves, built with the same two baked origins; the shell adds the window, the
 page's origin, the navigation policy, the scheme handoff and the updater, and
 never reads the session cookie or the CSRF token. The product therefore opens
@@ -26,9 +26,9 @@ desktop grant and its landing, [Catalogue hosting](./catalogue-hosting.md) and
 
 ## Packages And Pins
 
-The npm workspace is `@mokly-cloud/desktop` under `apps/desktop`, installed from
+The npm workspace is `@mokly-cloud/desktop` under `packages/desktop`, installed from
 the single `package-lock.json`. Its exact pins are in
-[`apps/desktop/package.json`](../../../apps/desktop/package.json). `electron` 44.11.3
+[`packages/desktop/package.json`](../../../packages/desktop/package.json). `electron` 44.11.3
 bundles Chromium 152 and Node 24.22.2.
 A bump of `electron` records the Chromium major it bundles, and the
 Electron smoke test in [desktop verification](./desktop-distribution.md#verification) is what proves the viewer on

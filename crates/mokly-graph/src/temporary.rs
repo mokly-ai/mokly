@@ -111,7 +111,7 @@ impl ArtifactWorker for PropsJob<'_> {
             return Ok(artifact);
         }
         visual.props = self.props.clone();
-        document_composition::document(self.session, plan, &entry)
+        document_composition::document(self.session, plan, &entry, None)
     }
 
     fn closure_job(&self, route: &str) -> Result<Closure> {

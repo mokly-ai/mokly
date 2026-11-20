@@ -21,6 +21,7 @@ import {
 } from "../src/shell/data_context.js";
 import type { LiveEditingStatus } from "../src/shell/data_descriptor.js";
 import type { ShellDataStore } from "../src/shell/data_store.js";
+import { RetryFocus } from "../src/shell/retry_focus.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
 import {
   WorkspaceProps,
@@ -125,6 +126,7 @@ test("a screen whose props have no controls shows them, with or without instance
         controls={<p>Own props</p>}
         data={data("screen")}
         delivery={{ status: "ready" }}
+        focus={new RetryFocus()}
         instance={undefined}
         target={target}
         usage={view}
@@ -181,6 +183,7 @@ test("own props wait for the routed detail, which alone carries their order", ()
         controls={<p>Own props</p>}
         data={data(target.kind)}
         delivery={delivery}
+        focus={new RetryFocus()}
         instance={undefined}
         target={target}
         usage={undefined}
@@ -188,7 +191,7 @@ test("own props wait for the routed detail, which alone carries their order", ()
     );
   assert.equal(
     tab({ status: "loading" }),
-    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status">Loading props…</p></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status" tabindex="-1">Loading props…</p></section>',
   );
   assert.equal(
     tab({ status: "failed", retry: () => (retries += 1) }),
@@ -197,7 +200,7 @@ test("own props wait for the routed detail, which alone carries their order", ()
   // A replaced catalogue brings new details, so Props keep waiting, as Usage does.
   assert.equal(
     tab({ status: "replaced" }),
-    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status">Loading props…</p></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status" tabindex="-1">Loading props…</p></section>',
   );
   assert.equal(tab({ status: "ready" }), "<p>Own props</p>");
   // A screen without own props never waits: the detail orders no fields.

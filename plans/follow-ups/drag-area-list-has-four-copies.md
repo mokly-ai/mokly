@@ -3,13 +3,13 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from branch `calummoore/mac-title-bar-integration`, the Mac window plan's covered drag area work.
-- **Location:** `docs/mockups/styles/product/shared.css` (the drag rule, the opt-out rule and the covered rule) and `dragAreas` in `apps/app/src/layout/drag-covers.ts`.
+- **Location:** `docs/mockups/styles/product/shared.css` (the drag rule, the opt-out rule and the covered rule) and `dragAreas` in `packages/app/src/layout/drag-covers.ts`.
 - **Reason:** One marker class reaches the app's bar components and the catalogue's drawings, which the covered drag area work did not change.
 
 - **Terms:**
   - **Drag area:** a part of the page that moves the Mac app's window, which has no title bar. A shared CSS rule gives it `-webkit-app-region: drag`.
-  - **Covered check:** the app's check in `apps/app/src/layout/drag-covers.ts`, which turns off the drag of an area that a viewer package surface or a skip link covers.
-- **Background:** Six classes are drag areas: `.fo-package-slot`, `.fo-top-bar`, `.fo-stage-bar`, `.fo-account-header`, `.fo-layer-bar` and `.fo-window-band`. The list appears in three rules of `docs/mockups/styles/product/shared.css` and once in the covered check. Only a rule in `apps/app/README.md` keeps the four lists the same.
+  - **Covered check:** the app's check in `packages/app/src/layout/drag-covers.ts`, which turns off the drag of an area that a viewer package surface or a skip link covers.
+- **Background:** Six classes are drag areas: `.fo-package-slot`, `.fo-top-bar`, `.fo-stage-bar`, `.fo-account-header`, `.fo-layer-bar` and `.fo-window-band`. The list appears in three rules of `docs/mockups/styles/product/shared.css` and once in the covered check. Only a rule in `packages/app/README.md` keeps the four lists the same.
 - **Problem:** A new drag area that joins the CSS rules but not the covered check moves the window, but it never turns off under a cover. Nothing fails when the lists differ.
 - **Impact if no action:** A later top bar can lose presses under a viewer surface or a skip link in the Mac app, and only a test on a Mac shows it.
 - **Root question:** How do the stylesheet and the covered check always agree on which parts move the window?

@@ -5,8 +5,8 @@ import { test } from "node:test";
 
 import { currentDocumentPath } from "@mokly/viewer/data";
 
-import { callbackLandings } from "../../../../apps/app/src/navigation/callback-input";
-import { invitationAcceptancePath } from "../../../../apps/app/src/navigation/paths";
+import { callbackLandings } from "../../../../packages/app/src/navigation/callback-input";
+import { invitationAcceptancePath } from "../../../../packages/app/src/navigation/paths";
 import { invitationEmail } from "../emails/invitation";
 import {
   invitationContent,

@@ -194,7 +194,7 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
       first.indexOf('data-inspector-panel="props"'),
       first.indexOf('data-inspector-panel="usage"'),
     ),
-    /<p class="mbk-reset" role="status">Loading props…<\/p>/,
+    /<p class="mbk-reset" role="status" tabindex="-1">Loading props…<\/p>/,
   );
 
   // Props wait for the routed detail, so a render that holds it shows them.

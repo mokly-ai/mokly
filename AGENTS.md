@@ -23,10 +23,11 @@ tooling tests and browser specs are under `tests/`, the viewer tests are under
 the Rust verification task runner is under `xtask/`. The protocol docs under
 `docs/protocol` are the spec.
 
-The cloud Rust crates are the `mkc-*` crates under `crates/`. The cloud npm
-projects are under `apps/`: the Expo app, the Electron desktop shell, the
-Astro site, the Cloudflare origin router, and the mockup tooling. The cloud
-design tokens are under `packages/tokens`, the cloud mockup catalogue is under
+The cloud Rust crates are the `mkc-*` crates under `crates/`. The Expo app,
+the Electron desktop shell, and the cloud design tokens are under
+`packages/app`, `packages/desktop`, and `packages/tokens`. The other cloud npm
+projects are under `apps/`: the Astro site, the Cloudflare origin router, and
+the mockup tooling. The cloud mockup catalogue is under
 `docs/mockups`, the cloud protocol docs are under `docs/protocol/cloud`, the
 runbooks are under `docs/ops`, and the infrastructure is under `infra/`.
 
@@ -122,13 +123,15 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
 ## Repository rules
 
 - Mokly never depends on the cloud. No `mokly-*` crate depends on an `mkc-`
-  crate, and no package under `packages/` imports a project under `apps/`. A
+  crate, and no Mokly package imports a cloud npm project under `apps/`,
+  `packages/app`, `packages/desktop`, or `packages/tokens`. A
   Repository-suite check enforces both rules. The cloud may depend on Mokly,
   and it uses the workspace `@mokly/*` packages and `mokly-*` crates directly,
   not published releases.
 - Every cloud crate has the `mkc-` prefix. `LICENSE` is MIT and names the
-  AGPL paths: `apps/`, the `mkc-` crates, `docs/mockups/`, `packages/tokens/`,
-  `infra/`, and `scripts/cloud/`. `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text, and
+  AGPL paths: `apps/`, `packages/app/`, `packages/desktop/`,
+  `packages/tokens/`, the `mkc-` crates, `docs/mockups/`, `infra/`, and
+  `scripts/cloud/`. `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text, and
   each Cargo or npm manifest under an AGPL path says `AGPL-3.0-only`. A new `mkc-` crate or
   cloud project follows the same rules. Every other path, the docs and the
   plans included, is MIT.
@@ -197,7 +200,7 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
   and of each package component that it renders, each by its repository path
   under `packages/ui/src`. Shared, layout, and global design styles stay in
   the mixed `examples/basic/design*.css` files.
-- The cloud product screens live in the Expo app under `apps/app`, which
+- The cloud product screens live in the Expo app under `packages/app`, which
   hosts the workspace `@mokly/viewer`. The marketing site lives in
   `apps/site`. Their README files name the shared UI library to check first
   and the rules for their screens.

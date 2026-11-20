@@ -1,5 +1,6 @@
 import { auditIssue } from "./dependency-audit-issues.mjs";
 import {
+  isCloudAppLocation,
   isInstallLocation,
   isPackageName,
   isRecord,
@@ -69,8 +70,7 @@ function schemaErrors(record) {
     record.path.length < 2 ||
     !record.path.every((location, index) =>
       record.kind === "private-app" && index === 0
-        ? typeof location === "string" &&
-          /^apps\/[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/u.test(location)
+        ? isCloudAppLocation(location)
         : isInstallLocation(location),
     ) ||
     new Set(record.path).size !== record.path.length ||

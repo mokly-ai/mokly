@@ -26,9 +26,9 @@ test("changed and untracked source/protocol files enforce their separate limits"
     path.join(root, "docs/protocol/new.md"),
     "x\n".repeat(251),
   );
-  const generated = "apps/app/src/api/generated/schema.ts";
-  const authored = "apps/app/src/api/generated/reader.ts";
-  await fs.mkdir(path.join(root, "apps/app/src/api/generated"), {
+  const generated = "packages/app/src/api/generated/schema.ts";
+  const authored = "packages/app/src/api/generated/reader.ts";
+  await fs.mkdir(path.join(root, "packages/app/src/api/generated"), {
     recursive: true,
   });
   for (const file of [generated, authored])
