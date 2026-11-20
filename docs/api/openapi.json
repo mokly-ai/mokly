@@ -7557,21 +7557,6 @@
         "additionalProperties": false,
         "allOf": [
           {
-            "else": {
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "version": {
-                  "format": "int64",
-                  "minimum": 1,
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "version"
-              ]
-            },
             "if": {
               "properties": {
                 "inherited": {
@@ -7585,6 +7570,21 @@
                   "type": "null"
                 },
                 "version": false
+              }
+            },
+            "else": {
+              "required": [
+                "version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 1
+                }
               }
             }
           }
