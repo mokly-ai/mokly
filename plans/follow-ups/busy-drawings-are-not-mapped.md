@@ -19,7 +19,7 @@
   - **B.** Add a `busyDrawings` map keyed by `RequestControl`, as `refusalDrawings` is, and name busy drawings in the parity rule. Effort: Small.
 - **Left out:** A lint. Option B gives the same result as a compile error.
 - **Wider fix:** B.
-- **Related:** `plans/follow-ups/write-binding-is-opt-in.md` makes the binding itself impossible to skip.
+- **Related:** `apps/app/src/components/action.tsx` takes the write's refusal from its binding. This item covers the separate mapping to catalogue drawings.
 - **Previous examples:** `refusalDrawings` in the same test.
 - **Recommendation:** B. It reuses the existing map shape.
 - **Action:** ask the user, because B adds a check and changes the parity rule.

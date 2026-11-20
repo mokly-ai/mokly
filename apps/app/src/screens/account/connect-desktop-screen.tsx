@@ -213,7 +213,6 @@ function Confirmation({
           block
           write={request}
           operation="Opening Mokly"
-          disabled={request.disabled}
           onPress={open}
           testID="open-mokly"
         />,
@@ -226,7 +225,6 @@ function Confirmation({
             block
             write={signingOut}
             operation="Signing you out"
-            disabled={signingOut.disabled}
             onPress={switchAccount}
             testID="use-another-account"
           />,
