@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { mappedFiles, resolutionExtensions } from "./mapped-selection.js";
 import { PackageJson, packageFolderKey } from "./package-json.js";
-import { substitution } from "./path-pattern.js";
+import { substituteTarget, substitution } from "./path-pattern.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 
 export interface PackageTarget {
@@ -12,6 +12,7 @@ export interface PackageTarget {
 }
 
 interface Match {
+  key: string;
   tail: string;
   folder: boolean;
   selected: boolean;
@@ -35,7 +36,8 @@ export function* packageMapTargets(
       throw new Error("unmapped export pattern");
     const target = matched?.folder
       ? value + matched.tail
-      : value.replaceAll("*", matched?.tail ?? "");
+      : substituteTarget(matched?.key ?? requested, value, requested, "all");
+    if (target === undefined) return;
     yield {
       target,
       folder: matched?.folder ?? false,
@@ -73,7 +75,7 @@ export function* packageMapTargets(
         yield* packageMapTargets(
           target,
           requested,
-          { tail, folder, selected: key === chosen },
+          { key, tail, folder, selected: key === chosen },
           depth + 1,
           tolerateUnsupported,
           requireComplete,

@@ -23,8 +23,6 @@
   10, 68, 70, 72, and 74,
   `plans/follow-ups/bundle-recipe-query-suffix.md:7`, line 8, and line 28,
   `plans/follow-ups/css-bundling-global-pool.md:9` and line 73,
-  `plans/follow-ups/export-pattern-literal-replacement.md:9`, line 62, and
-  line 116,
   `plans/follow-ups/fallback-keys-checkout-folder.md:10`, line 72, and line
   74,
   `plans/follow-ups/installed-module-watch-paths.md:8` and line 30,
@@ -135,8 +133,11 @@
       files.
     - `origin/main` later completed and deleted the
       [worker reuse provenance item](https://github.com/mokly-ai/mokly/blob/a2f61eb53ddaa76f5ce08b60a30932207f5b6ebc/plans/follow-ups/worker-bundle-reuse-provenance.md?plain=1),
-      which held 5 of the 57 pointers, at lines 12, 39, 43, 49, and 102. The
-      **Location** above lists the other 12 items and their 52 pointers.
+      which held 5 of the 57 pointers, at lines 12, 39, 43, 49, and 102.
+    - `origin/main` later also completed and deleted the
+      [export pattern literal replacement item](https://github.com/mokly-ai/mokly/blob/a16a623e670deca5256ef6a43044f9441abad313/plans/follow-ups/export-pattern-literal-replacement.md?plain=1),
+      which held 3 of the 57 pointers, at lines 9, 62, and 116.
+    - The **Location** above lists the other 11 items and their 49 pointers.
     - At that check, the behaviour prose of these items stayed correct, and
       each cited source file existed.
     - At least one pointer was already wrong at the merge base.
