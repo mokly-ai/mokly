@@ -1,5 +1,3 @@
-import type { ColorScheme, Viewport } from "@mokly/mokly";
-
 import { useMockupRenderContext } from "./render-context";
 
 /**
@@ -20,25 +18,4 @@ function generatedRoot(path: string): string {
  */
 export function useRepositoryFile(path: string): string {
   return generatedRoot(useMockupRenderContext().path) + "../" + path;
-}
-
-/**
- * Another entry's generated document in one view, addressed from the current
- * document, for example `useEntryDocument("product/account/project-created",
- * "mobile", "dark")`.
- */
-export function useEntryDocument(
-  path: string,
-  viewport: Viewport,
-  colorScheme: ColorScheme,
-): string {
-  const scheme = colorScheme === "dark" ? ".dark" : "";
-  return (
-    generatedRoot(useMockupRenderContext().path) +
-    path +
-    "/index." +
-    viewport +
-    scheme +
-    ".html"
-  );
 }

@@ -129,6 +129,8 @@ Depends on: 2
 - [ ] Self-host Geist and Geist Mono for the site, the app, the mockups and
       the shell. Replace Inter in `packages/viewer/src/shell/assets/fonts/`,
       `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
+- [ ] Self-host the Instrument Serif 400 face for the site's drawn demo app,
+      as the mockups do in `docs/mockups/styles/site/fonts/`.
 - [ ] Lower the button pair to 3:1 in the three contrast tests.
 - [ ] Draw the new mark and the Geist wordmark in every copy: brand files,
       favicon, social cards, shell, app, emails and desktop icon. Run
@@ -175,7 +177,8 @@ Depends on: 4
 - [ ] Build the Layers panel with search, the version chip and the
       Changelog foot. Keep 44px rows.
 - [ ] Frame the document, and add the Inspect panel with page facts, Edit on
-      GitHub and On this page.
+      GitHub and On this page. Edit on GitHub opens the tracked guide
+      source under `docs/guides/`, not the generated package copy.
 - [ ] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
 - [ ] Build the mobile sub-bar and the tree sheet.
 

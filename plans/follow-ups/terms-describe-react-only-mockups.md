@@ -20,7 +20,7 @@
 - **Options:**
   - **A.** Say "mockups" without "React-authored" in the Terms and the drawing. Keep the effective date, because "mockups" was also true before the upgrade. Effort: Small.
   - **B.** Do A, and add a requirement to `site-legal.md` that the Terms name no authoring format, because each Mokly change can change the formats. Effort: Small.
-  - **C.** Do A, and publish the change with a new approved effective date. Change the tests that expect 2026-09-22: `apps/site/tests/legal.test.ts:72`, `apps/site/tests/browser/documents.spec.ts:115` and `docs/mockups/src/_tests_/design-site-content.test.ts:181`. Effort: Small.
+  - **C.** Do A, and publish the change with a new approved effective date. Change the tests that expect 2026-09-22: `apps/site/tests/legal.test.ts:72`, `apps/site/tests/browser/documents.spec.ts:115` and `docs/mockups/src/_tests_/design-site-legal.test.ts:57`. Effort: Small.
   - **D.** Name the forms that Mokly builds: HTML files, React components and Storybook stories. This needs the new date of C, and each Mokly change that changes the forms opens the legal text again. Effort: Small.
 - **Left out:** Restricting the service to React, because it removes supported behaviour and adds an upload rejection. Keeping the text, because it fails the goal.
 - **Wider fix:** B. Mokly changes reach the site without a pin bump, so the pin-bump step in `apps/site/README.md` no longer runs, and only a requirement keeps the formats out of the Terms.
