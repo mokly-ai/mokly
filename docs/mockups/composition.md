@@ -92,9 +92,10 @@ reveal a settings pane opens over itself is drawn the same way:
 variants, `product/settings/tokens/create` carries naming a token through to
 `product/settings/tokens/create/copy`, `product/settings/tokens/revoke` carries the row menu, and
 `product/settings/members/remove` and `product/settings/github/remove` carry
-losing access. Recovery repeats its canonical
-drawing for Empty, Loading and Error because an unmatched route reads no
-product data. `src/_tests_/product-situations.ts` declares every one of them,
+losing access. Each Recovery screen repeats its canonical
+drawing for Empty, Loading and Error, because an unmatched route reads no
+product data and a failed session read has no empty or pending drawing of its
+own. `src/_tests_/product-situations.ts` declares every one of them,
 `product-inventory.ts` derives which are variants and which are screens, and
 `src/_tests_/product.test.ts` asserts the inventory's size, so both the set and
 the count live there and in no prose. Each source module default-exports one
