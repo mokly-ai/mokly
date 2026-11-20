@@ -155,3 +155,96 @@
   stroke: var(--mk-color-signal);
   stroke-width: 1.75;
 }
+
+/* The connector that fits each width below 1440px, in the Browse frame: a
+   curve stretched between its two ends with its start dot and arrowhead at
+   their own size. It ends on the Changes filter, 64px under the frame's
+   top, between the crumb and the branch chip. */
+
+.site-home-fit-connector {
+  display: none;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+}
+
+.site-home-fit-connector-curve,
+.site-home-fit-connector-start,
+.site-home-fit-connector-head {
+  overflow: visible;
+  position: absolute;
+}
+
+.site-home-fit-connector-curve path {
+  vector-effect: non-scaling-stroke;
+}
+
+.site-home-fit-connector-start {
+  height: 12px;
+  width: 12px;
+}
+
+.site-home-fit-connector-head {
+  height: 9px;
+  left: 169px;
+  top: 56px;
+  width: 12px;
+}
+
+.site-home-fit-connector--wide .site-home-fit-connector-curve {
+  height: 148px;
+  left: 175px;
+  top: -84px;
+  width: calc(100% - 252px);
+}
+
+.site-home-fit-connector--wide .site-home-fit-connector-start {
+  right: 71px;
+  top: -90px;
+}
+
+.site-home-fit-connector--stacked .site-home-fit-connector-curve {
+  height: 112px;
+  left: 175px;
+  top: -48px;
+  width: 188px;
+}
+
+.site-home-fit-connector--stacked .site-home-fit-connector-start {
+  left: 357px;
+  top: -54px;
+}
+
+/* The intermediate desktop steps: below 1440px the fitted connector takes
+   over; below 1100px the check card stacks under the copy at 440px, as the
+   prototype does, and the stacked connector follows it. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-connector {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--wide {
+    display: block;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module--browse {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-home-check {
+    width: 440px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--wide {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-connector--stacked {
+    display: block;
+  }
+}

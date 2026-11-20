@@ -124,3 +124,36 @@
   left: calc(50% + 12px);
   top: 58%;
 }
+
+/* The intermediate desktop steps: the compared screens draw at 44, 38 and
+   25 percent as the stage narrows, so the compare always fits it. */
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-stage-frame {
+    width: 560px;
+  }
+
+  [data-site-viewport="desktop"] .site-stage-screen > .site-acme {
+    transform: scale(0.4375);
+  }
+}
+
+@media (max-width: 1023px) {
+  [data-site-viewport="desktop"] .site-stage-frame {
+    width: 480px;
+  }
+
+  [data-site-viewport="desktop"] .site-stage-screen > .site-acme {
+    transform: scale(0.375);
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-stage-frame {
+    width: 320px;
+  }
+
+  [data-site-viewport="desktop"] .site-stage-screen > .site-acme {
+    transform: scale(0.25);
+  }
+}

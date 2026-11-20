@@ -196,3 +196,61 @@
   left: calc(100% - 46px);
   top: calc(100% - 10px);
 }
+
+/* Narrower desktops. From 1279px down the frames pad a little less. Below
+   1100px the boxes stack: the Mokly CLI frame spans the column with its
+   list in a second inner column, and the Free and Team frames stay side by
+   side with their rows lined up. */
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-pricing-plan {
+    padding: 26px 24px 28px;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-pricing-plan-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 28px;
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-plans .site-section-box {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-plans .site-pricing-box--cli {
+    grid-template-rows: auto auto;
+    padding-bottom: 28px;
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-plans .site-pricing-box--cloud {
+    grid-template-rows: auto repeat(4, auto);
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-plan {
+    padding: 28px 28px 30px;
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-box--cli .site-pricing-plan {
+    column-gap: 48px;
+    grid-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-pricing-box--cli
+    .site-pricing-plan-action {
+    align-self: start;
+  }
+
+  [data-site-viewport="desktop"] .site-pricing-box--cli .site-pricing-features {
+    border-top: 0;
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin-top: 0;
+    padding-top: 0;
+  }
+}

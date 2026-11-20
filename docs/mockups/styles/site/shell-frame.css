@@ -179,3 +179,31 @@
     var(--mk-shadow-small);
   color: var(--mk-color-text);
 }
+
+/* The intermediate desktop steps: below 1280px the screen head puts the
+   compare toolbar under the title; below 900px the bar leaves out the
+   commit and History; below 800px the five modes close up. */
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-screen-head {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 14px 12px 18px;
+    row-gap: 10px;
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-home-viewer-commit,
+  [data-site-viewport="desktop"]
+    .site-home-viewer-button:not(.site-home-viewer-share) {
+    display: none;
+  }
+}
+
+@media (max-width: 799px) {
+  [data-site-viewport="desktop"] .site-home-mode {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}

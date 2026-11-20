@@ -156,3 +156,104 @@
   font-family: var(--mk-font-mono);
   font-size: 13px;
 }
+
+/* The wire that fits each width below 1440px: a 400px box at the source
+   frame's right edge, where the code and the artboard keep their places. */
+
+.site-home-fit-wire {
+  display: none;
+  height: 400px;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 400px;
+  z-index: 3;
+}
+
+/* The intermediate desktop steps: below 1440px the top space scales and the
+   fitted wire takes over; below 1280px the artboard narrows to 250px, so
+   the code keeps its lines whole beside the Specs panel; below 960px the
+   artboard follows the code and the wire leaves; below 900px the actions
+   go under the copy, as the prototype does. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-closing {
+    margin-top: clamp(112px, 10vw, 150px);
+  }
+
+  [data-site-viewport="desktop"] .site-home-wire {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-wire--large {
+    display: block;
+  }
+}
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-module-detail.site-home-source {
+    gap: 64px;
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-source-board
+    .site-home-board--phone
+    .site-home-board-frame {
+    height: 541px;
+    width: 250px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-source-board
+    .site-home-board--phone
+    .site-home-board-screen {
+    transform: scale(0.641026);
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-wire--large {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-wire--small {
+    display: block;
+  }
+}
+
+@media (max-width: 959px) {
+  [data-site-viewport="desktop"] .site-module-detail.site-home-source {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-home-source-board {
+    justify-self: center;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-source-board
+    .site-home-board--phone
+    .site-home-board-frame {
+    height: 519.4px;
+    width: 240px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-source-board
+    .site-home-board--phone
+    .site-home-board-screen {
+    transform: scale(0.615385);
+  }
+
+  [data-site-viewport="desktop"] .site-home-fit-wire--small {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-closing-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -73,3 +73,29 @@
   flex-wrap: wrap;
   gap: 12px;
 }
+
+/* The intermediate desktop steps, from the prototype: below 1440px the
+   heading scales with the window on one line, its selection keeps the
+   descender inside, and the gutter, the top space and the lead follow. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-hero {
+    padding-top: clamp(64px, 6vw, 88px);
+  }
+
+  [data-site-viewport="desktop"] .site-home-hero-inner {
+    padding: 0 clamp(20px, 5.4vw, 80px);
+  }
+
+  [data-site-viewport="desktop"] .site-hero h1 {
+    font-size: clamp(46px, 11.25vw, 162px);
+  }
+
+  [data-site-viewport="desktop"] .site-home-title-layer .site-home-title-sel {
+    inset: -2px -14px calc(clamp(46px, 11.25vw, 162px) * -0.1);
+  }
+
+  [data-site-viewport="desktop"] .site-hero-lead {
+    font-size: clamp(19px, 1.65vw, 24px);
+  }
+}

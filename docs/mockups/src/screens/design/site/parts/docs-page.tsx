@@ -3,7 +3,8 @@
  * is the selected layer: the trail as the mono eyebrow, the title and the
  * lead with its green rule, then each `h2` section ruled across the sheet
  * with its index hung in the margin, and previous and next as two small
- * frames. Below the breakpoint On this page sits under the lead.
+ * frames. On this page also sits under the lead as a disclosure, which the
+ * compositions show where the Inspect panel is not drawn.
  */
 
 import { classNames } from "./class-names.js";
@@ -76,7 +77,7 @@ export function DocsPageFrame({
         <h1>{page.title}</h1>
         <p className="site-pullquote">{page.description}</p>
       </div>
-      {desktop ? null : <DocsOutline page={page} />}
+      <DocsOutline page={page} />
       <div className="site-document-body">
         {page.sections.map((section, index) => (
           <section key={section.id}>

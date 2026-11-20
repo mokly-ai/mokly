@@ -146,3 +146,98 @@
   width: 34px;
   z-index: 4;
 }
+
+/* The intermediate desktop steps, from the prototype: below 1100px the copy
+   stacks above a taller frame, the artboards keep their places from the
+   frame's edges, the phone artboard grows to 250px and the thread sits
+   inside the frame; below 900px the frame keeps the 240px phone artboard
+   alone and the thread follows the frame. */
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module--review {
+    grid-template-areas: none;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review > .site-module-text,
+  [data-site-viewport="desktop"] .site-module--review > .site-module-detail {
+    grid-area: auto;
+  }
+
+  [data-site-viewport="desktop"] .site-module--review > .site-module-text {
+    padding-top: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-detail {
+    min-height: 716px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-desk {
+    left: -76px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-phone {
+    left: auto;
+    right: 378px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-frame {
+    height: 541px;
+    width: 250px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-screen {
+    transform: scale(0.641026);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-comment {
+    left: auto;
+    right: 28px;
+    top: 196px;
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-module--review .site-detail {
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+    padding: 64px 20px 56px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-desk {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-phone {
+    position: relative;
+    right: auto;
+    top: auto;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-frame {
+    height: 519.4px;
+    width: 240px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-screen {
+    transform: scale(0.615385);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-comment {
+    margin: 24px auto 0;
+    max-width: 420px;
+    position: relative;
+    right: auto;
+    top: auto;
+    width: 100%;
+  }
+}

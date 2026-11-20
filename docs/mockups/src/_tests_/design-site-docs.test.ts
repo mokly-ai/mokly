@@ -6,7 +6,12 @@ import {
   SECTION_TITLES,
 } from "../../../../apps/site/src/docs/sections";
 
-import { installedVersion, one, type Root } from "./design-site-docs-helpers";
+import {
+  installedVersion,
+  one,
+  siteRules,
+  type Root,
+} from "./design-site-docs-helpers";
 import {
   assertHoverChangesMoreThanColor,
   assertStrongBoundaries,
@@ -105,22 +110,27 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const { document } = siteDocument("design/site/docs", viewport);
     const header = one(document, "site-header");
     assert.equal(byClass(header, "site-search").length, 0);
-    const search = one(document, "site-search");
-    assert.equal(search.tagName, "button");
-    assert.equal(attribute(search, "aria-haspopup"), "dialog");
-    assert.deepEqual(attribute(search, "aria-keyshortcuts")?.split(" "), [
-      "Control+K",
-      "Meta+K",
-      "/",
-    ]);
-    const name =
-      viewport === "desktop" ? "site-search-label" : "site-visually-hidden";
-    assert.equal(label(one(search, name)), "Search docs");
-    const holder =
-      viewport === "desktop" ? "site-docs-layers-top" : "site-docs-subbar";
-    const held = byClass(one(document, holder), "site-search");
-    assert.equal(held.length, 1, holder);
-    assert.equal(held[0], search, holder);
+    // The sub-bar's control serves the mobile composition and the narrow
+    // desktop steps; the Layers panel's field serves the wider ones.
+    const holders =
+      viewport === "desktop"
+        ? ["site-docs-subbar", "site-docs-layers-top"]
+        : ["site-docs-subbar"];
+    assert.equal(byClass(document, "site-search").length, holders.length);
+    for (const holder of holders) {
+      const search = one(one(document, holder), "site-search");
+      assert.equal(search.tagName, "button", holder);
+      assert.equal(attribute(search, "aria-haspopup"), "dialog", holder);
+      assert.deepEqual(
+        attribute(search, "aria-keyshortcuts")?.split(" "),
+        ["Control+K", "Meta+K", "/"],
+        holder,
+      );
+      const name =
+        byClass(search, "site-search-label")[0] ??
+        one(search, "site-visually-hidden");
+      assert.equal(label(name), "Search docs", holder);
+    }
   });
 
   test(`${viewport}: only the documentation draws the search control`, () => {
@@ -128,7 +138,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const { document } = siteDocument(id, viewport);
       assert.equal(
         byClass(document, "site-search").length,
-        id === "design/site/docs" ? 1 : 0,
+        // The desktop document draws the panel's field and the sub-bar's
+        // control, one for each width.
+        id === "design/site/docs" ? (viewport === "desktop" ? 2 : 1) : 0,
         id,
       );
     }
@@ -163,7 +175,7 @@ test("the desktop Layers panel heads the tree with search and the version", () =
   );
 });
 
-test("the mobile sub-bar names the page and opens the tree sheet", () => {
+test("the sub-bar names the page and opens the tree sheet, open only in the mobile layers view", () => {
   const closed = siteDocument("design/site/docs", "mobile").document;
   const open = siteDocument("design/site/docs/layers", "mobile").document;
   for (const [document, expanded] of [
@@ -191,7 +203,11 @@ test("the mobile sub-bar names the page and opens the tree sheet", () => {
   );
   for (const id of ["design/site/docs", "design/site/docs/layers"]) {
     const desktop = siteDocument(id, "desktop").document;
-    assert.equal(byClass(desktop, "site-docs-subbar").length, 0, id);
+    const toggle = one(
+      one(desktop, "site-docs-subbar"),
+      "site-docs-layers-toggle",
+    );
+    assert.equal(attribute(toggle, "aria-expanded"), "false", id);
     assert.equal(byClass(desktop, "site-docs-sheet").length, 0, id);
     assert.equal(
       byClass(one(desktop, "site-docs-side"), "site-doc-tree").length,
@@ -234,6 +250,26 @@ test("the Layers and Inspect panels stick below the tool bar and the tree scroll
     exact(".site-doc-tree > .site-panel-body"),
     /flex-direction:\s*column/,
   );
+});
+
+test("below 1280px the desktop document trades Inspect for the disclosure, and below 1024px Layers for the sub-bar", () => {
+  const rules = siteRules();
+  const display = (at: string | null, part: string) =>
+    rules
+      .filter(
+        (rule) =>
+          rule.at === at &&
+          rule.selectors.includes(`[data-site-viewport="desktop"] ${part}`),
+      )
+      .map((rule) => /display: ([a-z]+)/.exec(rule.declarations)?.[1]);
+  assert.deepEqual(display(null, ".site-docs-subbar"), ["none"]);
+  assert.deepEqual(display(null, ".site-docs-outline"), ["none"]);
+  const below1280 = "@media (max-width: 1279px)";
+  assert.deepEqual(display(below1280, ".site-docs-rail"), ["none"]);
+  assert.deepEqual(display(below1280, ".site-docs-outline"), ["block"]);
+  const below1024 = "@media (max-width: 1023px)";
+  assert.deepEqual(display(below1024, ".site-docs-side"), ["none"]);
+  assert.deepEqual(display(below1024, ".site-docs-subbar"), ["flex"]);
 });
 
 test("split site styles own the documentation compositions", () => {

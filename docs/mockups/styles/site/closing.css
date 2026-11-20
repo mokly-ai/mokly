@@ -107,3 +107,36 @@
 [data-site-viewport="mobile"] .site-step h3 {
   min-height: 0;
 }
+
+/* Below 900px the desktop steps stack in one column, with the arrows
+   running down between the frames, as the prototype does */
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-steps {
+    gap: 40px;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 520px;
+  }
+
+  [data-site-viewport="desktop"] .site-step:not(:last-child)::after {
+    background: linear-gradient(
+      180deg,
+      var(--mk-color-signal) 0 78%,
+      transparent 0
+    );
+    height: 40px;
+    left: 34px;
+    top: 100%;
+    width: 1.75px;
+  }
+
+  [data-site-viewport="desktop"] .site-step:not(:last-child)::before {
+    left: 30.5px;
+    top: calc(100% + 26px);
+    transform: rotate(135deg);
+  }
+
+  [data-site-viewport="desktop"] .site-step h3 {
+    min-height: 0;
+  }
+}

@@ -188,3 +188,44 @@
 .site-home-agent-note {
   text-align: center;
 }
+
+/* The Edit window's intermediate desktop steps: the heading scales below
+   1440px; below 1280px the chat moves under the canvas, ruled off above, so
+   the copy keeps a readable column beside the artboard; below 900px the
+   copy leads the artboard and the bar leaves out the live session, as the
+   prototype does. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-edit-canvas h3 {
+    font-size: clamp(28px, 2.5vw, 36px);
+  }
+}
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-home-edit-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-agent {
+    border-left: 0;
+    border-top: 1px solid var(--mk-color-border);
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-home-edit-canvas {
+    gap: 60px;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    padding: 36px 20px 40px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-edit-canvas .site-module-text {
+    justify-self: stretch;
+    max-width: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-edit-live {
+    display: none;
+  }
+}

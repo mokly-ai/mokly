@@ -160,3 +160,53 @@
   height: 6px;
   width: 6px;
 }
+
+/* The intermediate desktop steps, from the prototype: below 1440px the
+   gutter, the section spaces and the headings scale with the window; below
+   1200px the Specs panel leaves and the frames take the width; below
+   1100px a module's rows close up. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-workspace {
+    padding: 0 clamp(20px, 5.4vw, 80px) 0 16px;
+  }
+
+  [data-site-viewport="desktop"] .site-modules {
+    padding-top: clamp(104px, 10vw, 150px);
+  }
+
+  [data-site-viewport="desktop"] .site-section-head h2,
+  [data-site-viewport="desktop"] .site-closing-copy h2 {
+    font-size: clamp(38px, 4.6vw, 68px);
+  }
+
+  [data-site-viewport="desktop"] .site-section-head p {
+    font-size: clamp(17px, 1.45vw, 21px);
+  }
+
+  [data-site-viewport="desktop"] .site-module-grid {
+    gap: clamp(112px, 11vw, 168px);
+    padding-top: clamp(112px, 11vw, 168px);
+  }
+
+  [data-site-viewport="desktop"] .site-module h3 {
+    font-size: clamp(28px, 2.95vw, 42px);
+  }
+}
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-home-workspace {
+    display: block;
+    padding: 0 clamp(20px, 5.4vw, 80px);
+  }
+
+  [data-site-viewport="desktop"] .site-home-specs {
+    display: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module {
+    gap: 40px;
+  }
+}

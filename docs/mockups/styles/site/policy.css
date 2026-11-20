@@ -89,6 +89,19 @@
   gap: 0 var(--mk-space-6);
 }
 
+/* The desktop steps: below 1440px the page frame keeps the footer's fluid
+   canvas gutter on each side, so it never meets the window's edge, and at
+   narrow widths the frame and the footer frame share their edges. From
+   942px up the frame keeps its full policy measure. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-policy {
+    max-width: calc(var(--mk-layout-site-policy) + 10.8vw);
+    padding-left: 5.4vw;
+    padding-right: 5.4vw;
+  }
+}
+
 /* The mobile composition: the frame keeps a narrow canvas margin */
 
 [data-site-viewport="mobile"] .site-policy {

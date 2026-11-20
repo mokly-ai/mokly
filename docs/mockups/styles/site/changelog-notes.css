@@ -1,8 +1,54 @@
-/* The changelog notes: the note rows of a release with their scope chips,
-   code spans, issue and commit links and nested items, and the upgrade
-   notes with their closed document row. This sheet loads after
-   changelog-timeline.css and before changelog-release.css, whose breaking
-   callout tints the rows. */
+/* The changelog notes: the note groups of a release on their rail, the note
+   rows with their scope chips, code spans, issue and commit links and nested
+   items, and the upgrade notes with their closed document row. This sheet
+   loads after changelog-timeline.css and before changelog-release.css, whose
+   breaking callout refines the groups and tints the rows. */
+
+/* The groups: each heading sticks on a rail beside its notes */
+
+.site-release-notes {
+  display: grid;
+  gap: 40px;
+  padding: 34px 40px 44px;
+}
+
+.site-release-group {
+  display: grid;
+  gap: 36px;
+  grid-template-columns: 236px minmax(0, 1fr);
+  position: relative;
+  scroll-margin-top: 136px;
+}
+
+.site-release-group-head {
+  align-self: start;
+  min-width: 0;
+  position: sticky;
+  top: 140px;
+}
+
+.site-release-group-title {
+  align-items: flex-start;
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 9px;
+  letter-spacing: -0.012em;
+  line-height: 24px;
+}
+
+.site-release-group-title svg {
+  color: var(--mk-color-text-muted);
+  flex: none;
+  margin-top: 4px;
+}
+
+.site-release-group-count {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  margin-left: 3px;
+}
 
 /* The notes of a release: their lists carry no markers and keep long words
    inside the measure. Each note of a group is a row, the text at a reading
@@ -192,4 +238,40 @@
 
 .site-release-upgrade-body h5 {
   font-size: 0.96875rem;
+}
+
+/* Narrower frames. In a frame under 940px, below 1036px and from 1200px to
+   1275px beside Version history, the rail narrows and each note's links
+   flow after its text at the reading measure. In a frame under 700px, below
+   780px, each group's head stands above its notes. */
+
+@media (max-width: 1035px), (min-width: 1200px) and (max-width: 1275px) {
+  [data-site-viewport="desktop"] .site-release-group {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-release-group--breaking {
+    grid-template-columns: 154px minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-release-group > ul > li {
+    display: block;
+    padding-right: max(0px, calc(100% - 35em));
+  }
+
+  [data-site-viewport="desktop"] .site-release-refs {
+    margin-left: 4px;
+  }
+}
+
+@media (max-width: 779px) {
+  [data-site-viewport="desktop"] .site-release-group,
+  [data-site-viewport="desktop"] .site-release-group--breaking {
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-release-group-head {
+    position: static;
+  }
 }

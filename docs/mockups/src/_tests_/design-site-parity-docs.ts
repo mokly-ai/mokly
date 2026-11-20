@@ -9,7 +9,7 @@
  */
 
 const WORKSPACE =
-  "Canvas docs: the page frame sits on the canvas between the floating Layers and Inspect panels, and below the breakpoint fills the canvas under the sub-bar; Milestone 6 rebuilds the docs layout";
+  "Canvas docs: the page frame sits on the canvas between the floating Layers and Inspect panels, and below the breakpoint fills the canvas under the sub-bar; the mockup's intermediate desktop steps hide the Inspect panel below 1280px and the Layers panel below 1024px; Milestone 6 rebuilds the docs layout";
 const LAYERS =
   "Canvas docs: the tree is the Layers panel, with the search field and the CLI version row at its top, a page count on each section rubric and the Changelog link in its foot; Milestone 6 rebuilds the docs layout";
 const ROWS =

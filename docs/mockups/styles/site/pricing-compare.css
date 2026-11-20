@@ -142,3 +142,21 @@
 .site-pricing-line {
   display: block;
 }
+
+/* Narrower desktops: the section gap follows the viewport from 1439px
+   down, and below 1100px the cells pad less, so that each plan column
+   keeps a readable measure. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-pricing-compare {
+    padding-top: clamp(7rem, 10vw, 9.5rem);
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-pricing-props th,
+  [data-site-viewport="desktop"] .site-pricing-props td {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

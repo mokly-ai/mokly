@@ -17,6 +17,7 @@ import { SiteCursor } from "../parts/people.js";
 import { AcmePricingPhone } from "./acme/acme-pricing.js";
 import { Artboard } from "./artboard.js";
 import { CardSelection } from "./card-selection.js";
+import { FitWire } from "./fit-lines.js";
 import { PRICING_SOURCE, WIRED_LINES } from "./foundation-source.js";
 import { ModuleFrame } from "./module.js";
 import { Steps } from "./steps.js";
@@ -112,7 +113,13 @@ export function Foundation({ viewport }: { viewport: "mobile" | "desktop" }) {
           </Artboard>
           <SiteCursor className="site-home-source-codex" person="codex" />
         </div>
-        {viewport === "desktop" ? <Wire /> : null}
+        {viewport === "desktop" ? (
+          <>
+            <Wire />
+            <FitWire size="large" />
+            <FitWire size="small" />
+          </>
+        ) : null}
       </ModuleFrame>
       <ul className="site-home-facts">
         {FACTS.map(([icon, fact]) => (

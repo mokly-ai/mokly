@@ -4,7 +4,9 @@
  * tree with its search, and Inspect, the page's properties and outline.
  * Below the breakpoint a sub-bar under the tool bar names the section and
  * the page, opens the tree as a sheet and opens search, and the page frame
- * fills the canvas with a narrow margin.
+ * fills the canvas with a narrow margin. The desktop composition draws the
+ * sub-bar and the page's On this page disclosure too; its narrower desktop
+ * steps show them in place of the panels.
  */
 
 import { SiteLayout } from "./parts/chrome.js";
@@ -21,7 +23,8 @@ type Viewport = "mobile" | "desktop";
 
 /**
  * One documentation page in one composition. `layers` draws the mobile
- * tree sheet open; the desktop composition keeps the tree in its panel.
+ * tree sheet open; the desktop composition keeps the tree in its panel and
+ * its sub-bar closed, so its view matches the documentation page.
  */
 function SiteDocs({
   layers = false,
@@ -35,7 +38,7 @@ function SiteDocs({
   const desktop = viewport === "desktop";
   return (
     <SiteLayout active={SITE_SCREENS.docs} viewport={viewport}>
-      {desktop ? null : <DocsSubbar open={layers} page={page} />}
+      <DocsSubbar open={layers && !desktop} page={page} />
       {layers && !desktop ? <DocsLayersSheet page={page} /> : null}
       <div className="site-docs">
         {desktop ? (

@@ -149,15 +149,23 @@ for (const viewport of ["mobile", "desktop"] as const) {
         );
         assert.equal(label(one(panel, "site-code-copy")), "Copy");
       }
-      const outline = byClass(document, "site-onpage-link");
-      assert.deepEqual(
-        outline.map((link) => attribute(link, "href")),
-        page.ids.map((id) => `#${id}`),
-      );
-      assert.deepEqual(
-        outline.map((link) => attribute(link, "aria-current")),
-        page.ids.map((_, index) => (index === 0 ? "location" : undefined)),
-      );
+      // The desktop document draws On this page twice: in the Inspect panel
+      // and in the disclosure that its narrower steps show.
+      const outlines = byClass(document, "site-onpage");
+      assert.equal(outlines.length, viewport === "desktop" ? 2 : 1);
+      for (const [index, outline] of outlines.entries()) {
+        const links = byClass(outline, "site-onpage-link");
+        assert.deepEqual(
+          links.map((link) => attribute(link, "href")),
+          page.ids.map((id) => `#${id}`),
+          `${page.entry}: outline ${index}`,
+        );
+        assert.deepEqual(
+          links.map((link) => attribute(link, "aria-current")),
+          page.ids.map((_, at) => (at === 0 ? "location" : undefined)),
+          `${page.entry}: outline ${index}`,
+        );
+      }
     }
   });
 }
@@ -182,30 +190,36 @@ test("desktop: the Inspect panel holds the page's properties, Edit on GitHub and
       attribute(one(inspect, "site-onpage"), "aria-label"),
       "On this page",
     );
-    assert.equal(byClass(document, "site-docs-outline").length, 0, page.entry);
   }
 });
 
-test("mobile: On this page sits under the lead in a closed disclosure", () => {
-  for (const page of pages) {
-    const { document } = siteDocument(page.entry, "mobile");
-    assert.equal(byClass(document, "site-docs-rail").length, 0, page.entry);
-    const outline = one(document, "site-docs-outline");
-    assert.equal(outline.tagName, "details");
-    assert.equal(attribute(outline, "open"), undefined);
-    const sheet = one(document, "site-page-sheet");
-    const intro = childElements(sheet).findIndex((node) =>
-      attribute(node, "class")?.includes("site-document-intro"),
-    );
-    assert.equal(childElements(sheet)[intro + 1], outline, page.entry);
-    const summary = one(outline, "site-docs-outline-summary");
-    assert.equal(summary.tagName, "summary");
-    assert.match(label(summary), /^On this page/);
-    assert.equal(
-      label(one(summary, "site-docs-outline-count")),
-      String(page.ids.length),
-    );
-    assert.deepEqual(facts(outline)[1], ["Version", installedVersion()]);
-    editLink(outline, page.file);
-  }
-});
+for (const viewport of ["mobile", "desktop"] as const)
+  test(`${viewport}: On this page sits under the lead in a closed disclosure`, () => {
+    for (const page of pages) {
+      const { document } = siteDocument(page.entry, viewport);
+      // The desktop document keeps the Inspect panel beside the disclosure,
+      // and its steps show one of the two at each width.
+      assert.equal(
+        byClass(document, "site-docs-rail").length,
+        viewport === "desktop" ? 1 : 0,
+        page.entry,
+      );
+      const outline = one(document, "site-docs-outline");
+      assert.equal(outline.tagName, "details");
+      assert.equal(attribute(outline, "open"), undefined);
+      const sheet = one(document, "site-page-sheet");
+      const intro = childElements(sheet).findIndex((node) =>
+        attribute(node, "class")?.includes("site-document-intro"),
+      );
+      assert.equal(childElements(sheet)[intro + 1], outline, page.entry);
+      const summary = one(outline, "site-docs-outline-summary");
+      assert.equal(summary.tagName, "summary");
+      assert.match(label(summary), /^On this page/);
+      assert.equal(
+        label(one(summary, "site-docs-outline-count")),
+        String(page.ids.length),
+      );
+      assert.deepEqual(facts(outline)[1], ["Version", installedVersion()]);
+      editLink(outline, page.file);
+    }
+  });

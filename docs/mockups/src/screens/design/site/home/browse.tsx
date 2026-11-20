@@ -2,10 +2,12 @@
  * Frame 01 Browse: the copy beside the GitHub check card, then the depicted
  * viewer on the branch, and the prototype connector that runs from View
  * changes into the viewer's Changes filter. The connector's path follows
- * the rendered places of both ends on each composition.
+ * the rendered places of both ends on each composition; below 1440px the
+ * desktop composition draws the connector that fits each width instead.
  */
 
 import { CheckCard } from "./check-card.js";
+import { FitConnector } from "./fit-lines.js";
 import { ModuleFrame, ModuleText } from "./module.js";
 import { Viewer } from "./viewer.js";
 
@@ -72,6 +74,12 @@ export function BrowseModule({ viewport }: { viewport: "mobile" | "desktop" }) {
       <CheckCard />
       <ModuleFrame name="01 Browse">
         <Viewer viewport={viewport} />
+        {viewport === "desktop" ? (
+          <>
+            <FitConnector layout="wide" />
+            <FitConnector layout="stacked" />
+          </>
+        ) : null}
       </ModuleFrame>
       <Connector viewport={viewport} />
     </article>

@@ -191,6 +191,18 @@
   padding: 5px 10px;
 }
 
+/* The desktop steps: below 1440px the canvas gutter beside the footer
+   frame and the status bar follows the prototype's fluid gutter, 5.4% of
+   the window, which is 78px at 1440px. Below 768px the frame stacks its
+   brand above the two link groups, by the narrow rule at the end. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-footer {
+    padding-left: 5.4vw;
+    padding-right: 5.4vw;
+  }
+}
+
 /* The mobile composition */
 
 [data-site-viewport="mobile"] .site-footer {

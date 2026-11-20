@@ -141,3 +141,12 @@
   left: 262px;
   top: 340px;
 }
+
+/* Below 1440px the canvas starts at the narrower gutter of the heading and
+   keeps bleeding off the right edge, clipped by the spread. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-spread-canvas {
+    left: clamp(20px, 5.4vw, 80px);
+  }
+}

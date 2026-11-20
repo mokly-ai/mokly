@@ -1,7 +1,9 @@
 /* The changelog's mobile composition: no panel, the page title on two
    lines, the timeline with up to three lanes, the filter as a grid of two
    and three options with 44px targets, and full-width frames whose group
-   headings stack above their notes. */
+   headings stack above their notes. At its end, the narrower desktop steps
+   of the timeline and the filter. The other sheets end with the narrower
+   desktop steps of their own parts. */
 
 [data-site-viewport="mobile"] .site-changelog {
   padding-bottom: var(--mk-space-16);
@@ -223,4 +225,58 @@
 
 [data-site-viewport="mobile"] .site-release-upgrade-body {
   padding: 8px 16px 22px;
+}
+
+/* The timeline and the filter on narrower desktop widths; changelog-timeline.css
+   has no room for them. The filter stops sticking below 1200px and sets its
+   status on a line of its own below 1100px. Below 830px the keyframes step
+   down, so that releases two days apart still stand clear. */
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-changelog-filterbar {
+    position: static;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-changelog-filterbar {
+    background: none;
+    box-shadow: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-filter {
+    background: var(--mk-color-surface);
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 1px var(--mk-color-border),
+      var(--mk-shadow-small);
+    flex-wrap: wrap;
+    padding: 3px;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-filter-status {
+    border-left: 0;
+    flex-basis: 100%;
+    margin: 0;
+    padding: 0 0 0 2px;
+  }
+}
+
+@media (max-width: 829px) {
+  [data-site-viewport="desktop"]
+    .site-changelog-keys
+    .site-changelog-key::before {
+    height: 8px;
+    width: 8px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-changelog-keys
+    .site-changelog-key--patch::before {
+    height: 6px;
+    width: 6px;
+  }
 }

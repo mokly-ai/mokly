@@ -1,7 +1,8 @@
 /**
  * Readers that the documentation tests share: the installed `@mokly/mokly`
  * version and guides, which the docs mockup depicts word for word, the code
- * panels of a generated page, and lookups of its elements.
+ * panels of a generated page, lookups of its elements, and the site style
+ * rules with the width query that holds each.
  */
 
 import assert from "node:assert/strict";
@@ -15,6 +16,7 @@ import {
   elements,
   label,
   repositoryRoot,
+  siteStyles,
   textContent,
   type Element,
 } from "./design-site-test-helpers";
@@ -86,4 +88,44 @@ export function one(root: Root, className: string): Element {
 /** Every element of `root` with the tag name. */
 export function tags(root: Root, tagName: string): Element[] {
   return elements(root, (node) => node.tagName === tagName);
+}
+
+/** One rule of the site styles and the width query around it, if any. */
+export interface SiteRule {
+  at: string | null;
+  declarations: string;
+  selectors: string[];
+}
+
+/** Every rule of the site styles, each with the width query that holds it. */
+export function siteRules(): SiteRule[] {
+  const found: SiteRule[] = [];
+  const read = (source: string, at: string | null) => {
+    let index = 0;
+    while (index < source.length) {
+      const brace = source.indexOf("{", index);
+      if (brace === -1) break;
+      const prelude = source.slice(index, brace).trim().replace(/\s+/g, " ");
+      let depth = 0;
+      let end = source.length - 1;
+      for (let scan = brace; scan < source.length; scan += 1) {
+        if (source[scan] === "{") depth += 1;
+        else if (source[scan] === "}" && --depth === 0) {
+          end = scan;
+          break;
+        }
+      }
+      const inner = source.slice(brace + 1, end);
+      if (prelude.startsWith("@media")) read(inner, prelude);
+      else if (!prelude.startsWith("@"))
+        found.push({
+          at,
+          declarations: inner.trim().replace(/\s+/g, " "),
+          selectors: prelude.split(",").map((part) => part.trim()),
+        });
+      index = end + 1;
+    }
+  };
+  read(siteStyles().replace(/\/\*[\s\S]*?\*\//g, ""), null);
+  return found;
 }

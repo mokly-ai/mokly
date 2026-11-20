@@ -198,6 +198,41 @@
   padding: 0 14px;
 }
 
+/* The desktop steps: the tool bar sheds chrome as the window narrows, in
+   the prototype's order. First the file title leaves the page centre and
+   centres between the brand and the end group, then the people in the file
+   hide, then the file title hides; the navigation and Get started stay in
+   the row down to 700px. The prototype set its steps at 1350, 910 and
+   780px for its Home title. The longest page names here, Complaints and
+   Changelog, are up to 40px wider, so each step sits where every page still
+   keeps the prototype's 12px clear gap between the items. */
+
+@media (max-width: 1399px) {
+  [data-site-viewport="desktop"] .site-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  [data-site-viewport="desktop"] .site-header-title {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 959px) {
+  [data-site-viewport="desktop"] .site-header-presence {
+    display: none;
+  }
+}
+
+@media (max-width: 829px) {
+  [data-site-viewport="desktop"] .site-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-header-title {
+    display: none;
+  }
+}
+
 /* The mobile composition: the brand, Get started and the menu control */
 
 [data-site-viewport="mobile"] .site-header {

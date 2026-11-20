@@ -17,10 +17,20 @@ import { SiteRedline } from "./parts/selection.js";
 type Viewport = "mobile" | "desktop";
 
 /**
- * The space under the heading, which the redline measures: to the plan
- * boxes on desktop, and to the lead when the hero stacks on mobile.
+ * The space under the heading, which the redline measures: on desktop the
+ * 64px down to the plan boxes, or the 36px down to the lead once the hero
+ * stacks below 1100px, which the stylesheet shows in its place; on mobile
+ * the 44px down to the lead.
  */
-const HEADING_SPACE: Record<Viewport, string> = { desktop: "64", mobile: "44" };
+function HeadingSpace({ viewport }: { viewport: Viewport }) {
+  if (viewport === "mobile") return <>44</>;
+  return (
+    <>
+      <span className="site-pricing-space-wide">64</span>
+      <span className="site-pricing-space-stacked">36</span>
+    </>
+  );
+}
 
 /** The hero: the kicker, the two-tone heading and the lead. */
 function PricingHero({ viewport }: { viewport: Viewport }) {
@@ -34,7 +44,7 @@ function PricingHero({ viewport }: { viewport: Viewport }) {
         </h1>
         <SiteRedline
           className="site-pricing-redline"
-          value={HEADING_SPACE[viewport]}
+          value={<HeadingSpace viewport={viewport} />}
         />
       </div>
       <p className="site-pricing-lead">

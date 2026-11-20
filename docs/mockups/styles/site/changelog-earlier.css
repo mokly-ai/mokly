@@ -98,3 +98,43 @@
   border-top: 1px solid var(--mk-color-border);
   margin: 4px -14px 0 -20px;
 }
+
+/* Narrower compact frames. Where the row cannot hold the version, the date,
+   up to seven chips, the link and Show notes, below 1156px and from 1200px
+   to 1395px beside Version history, the link takes a second row. Below
+   934px the chips take a row of their own too. */
+
+@media (max-width: 1155px), (min-width: 1200px) and (max-width: 1395px) {
+  [data-site-viewport="desktop"] .site-release--compact {
+    grid-template-columns: 84px 140px minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"]
+    .site-release--compact
+    .site-release-meta
+    .site-release-counts {
+    margin-right: 150px;
+  }
+
+  [data-site-viewport="desktop"] .site-release--compact .site-release-links {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-right: 0;
+    padding-bottom: 6px;
+  }
+}
+
+@media (max-width: 933px) {
+  [data-site-viewport="desktop"] .site-release--compact {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 44px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-release--compact
+    .site-release-meta
+    .site-release-counts {
+    grid-column: 1 / -1;
+    margin-right: 0;
+  }
+}

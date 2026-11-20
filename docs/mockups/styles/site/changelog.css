@@ -197,3 +197,48 @@
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* Narrower desktop widths. Below 1200px the frames take the width without
+   Version history. The heading steps down where its 96px line no longer
+   fits, and its type badge and size tag, which state the 96px measures,
+   leave the selection. */
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-release-index {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-body {
+    display: block;
+    padding: 0 48px;
+  }
+}
+
+@media (max-width: 959px) {
+  [data-site-viewport="desktop"] .site-changelog-intro {
+    padding-top: 80px;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-heading h1 {
+    font-size: 5rem;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-heading .site-sel-badge,
+  [data-site-viewport="desktop"] .site-changelog-heading .site-sel-size {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-intro .site-lead {
+    margin-top: 44px;
+  }
+}
+
+@media (max-width: 799px) {
+  [data-site-viewport="desktop"] .site-changelog-body {
+    padding: 0 40px;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-heading h1 {
+    font-size: 4rem;
+  }
+}
