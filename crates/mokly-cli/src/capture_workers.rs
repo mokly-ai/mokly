@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_css::types::{Bundle, StylesheetRoot};
+use mokly_graph::background::{BackgroundRead, BackgroundWorker};
 use mokly_graph::cache::Artifact;
 use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::Closure;
@@ -43,6 +44,9 @@ pub struct CaptureWorkers {
 }
 
 impl RenderWorkers for CaptureWorkers {
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        self.inner.background(route, worker)
+    }
     fn capture_parallelism(&self) -> usize {
         self.capture
             .comparison_parallelism()

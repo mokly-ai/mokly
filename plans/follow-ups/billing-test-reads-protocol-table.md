@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from the round 2 review of `calummoore/stripe-loading-outside-app-mrlb`.
-- **Location:** `apps/app/src/_tests_/billing.test.ts:51`.
+- **Location:** `packages/app/src/_tests_/billing.test.ts:51`.
 - **Reason:** The test is on `origin/main`, so the fix belongs to a separate branch.
 - **Category:** Repository rule.
 

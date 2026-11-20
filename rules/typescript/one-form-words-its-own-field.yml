@@ -12,12 +12,12 @@ message: >-
   text scan read this pair in one spelling and missed the same object with its
   two keys the other way round, which is why it is a shape here.
 files:
-  - apps/app/src/**
+  - packages/app/src/**
 ignores:
   # The one form that words its own field, recorded in `product-mockups.md`:
   # an address the API refused asks for a complete email address, which is what
   # the registered input's invalid variant draws.
-  - apps/app/src/screens/account/entry-screen.tsx
+  - packages/app/src/screens/account/entry-screen.tsx
 rule:
   kind: pair
   all:

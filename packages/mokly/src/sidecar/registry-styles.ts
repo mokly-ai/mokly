@@ -1,9 +1,10 @@
-import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 import postcss from "postcss";
 import type { AtRule, ChildNode } from "postcss";
 
-function classes(html: string): Set<string> {
+import type { HtmlInput } from "./html_input.js";
+
+function classes(input: HtmlInput): Set<string> {
   const tokens = new Set<string>();
   function visit(node: DefaultTreeAdapterMap["node"]) {
     if ("attrs" in node) {
@@ -15,7 +16,7 @@ function classes(html: string): Set<string> {
     }
     if ("childNodes" in node) node.childNodes.forEach(visit);
   }
-  visit(parseFragment(html));
+  visit(input.tree);
   return tokens;
 }
 
@@ -28,9 +29,9 @@ function unescape(value: string): string {
 }
 
 /** Filter persistent registries by fragment classes, then close rule dependencies. */
-export function registryStyles(css: string, html: string): string {
+export function registryStyles(css: string, input: HtmlInput): string {
   if (!css) return "";
-  const tokens = classes(html);
+  const tokens = classes(input);
   const root = postcss.parse(css);
   const needed = new Set<ChildNode>();
   const declarations: string[] = [];

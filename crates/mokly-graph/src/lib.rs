@@ -1,6 +1,7 @@
 //! Content-addressed catalogue rendering and bounded process caches.
 #![warn(unreachable_pub)]
 
+pub mod background;
 pub mod cache;
 pub mod cache_export;
 
@@ -33,6 +34,7 @@ mod document_usage;
 mod document_weight;
 mod document_writer;
 pub mod error;
+mod fragment_weight;
 pub mod fragments;
 pub mod graph;
 pub mod key;
@@ -56,6 +58,7 @@ pub mod urls;
 mod worker_context;
 pub mod workers;
 
+mod background_render;
 mod component_keys;
 mod config_key;
 mod evaluation;
@@ -73,6 +76,7 @@ mod routing_inputs;
 mod routing_records;
 mod session;
 mod session_build;
+mod session_lookup;
 mod session_proof;
 mod session_render;
 mod styles;

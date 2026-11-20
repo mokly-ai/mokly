@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 6 of the Milestone 26 review TODO in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/viewer/build-watch.ts:16` and `:72`, `apps/app/src/_tests_/build-announcements.spec.ts:120-148` and `apps/app/src/_tests_/build-order.spec.ts:173-190`.
+- **Location:** `packages/app/src/viewer/build-watch.ts:16` and `:72`, `packages/app/src/_tests_/build-announcements.spec.ts:120-148` and `packages/app/src/_tests_/build-order.spec.ts:173-190`.
 - **Reason:** PR #45 merged on 2026-10-20 with the finding open. The review-fix rule leaves its category to the user.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The tests still wait on the real poll interval and on fixed one-second waits. No current flake is known.
 - **Category:** Test.

@@ -11,6 +11,7 @@ use mokly_html::links::Reference;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use rayon::prelude::*;
 
+use crate::background::{BackgroundRead, BackgroundWorker};
 use crate::cache::Artifact;
 use crate::capture_window::{self, CaptureConsumer};
 use crate::closure::Closure;
@@ -123,6 +124,10 @@ pub trait RenderWorkers: Send + Sync {
             &mut capture_window::All { count },
         );
     }
+    /// Run one background lookup on an existing worker and retain its typed outcome.
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        worker.read(route)
+    }
     /// Complete the bounded indexed batch before returning. Results and errors
     /// remain with the supplied task, including cancellation checks. Pure preparation
     /// jobs can submit all indexes when they retain only finished results.
@@ -192,6 +197,11 @@ impl RenderWorkers for ThreadWorkers {
         consumer: &mut dyn CaptureConsumer,
     ) {
         capture_window::parallel(&self.pool, limit, task, consumer);
+    }
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        let context = WorkerContext::current();
+        self.pool
+            .install(|| context.in_scope(|| worker.read(route)))
     }
     fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
         comparison_stream::parallel(&self.pool, task, consumer);

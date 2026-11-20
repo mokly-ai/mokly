@@ -49,7 +49,7 @@ reserved workspace names.
 ### Cloud Markdown Links
 
 The Markdown link check also covers the Markdown files under `apps/`,
-`crates/mkc-*/`, and `infra/`, not only `docs/`, `plans/`, and each
+`packages/app/`, `packages/desktop/`, `crates/mkc-*/`, and `infra/`, not only `docs/`, `plans/`, and each
 `README.md`. Under `apps/site/src/content/legal/`, a root route of one segment
 resolves to its sibling Markdown source, as `/privacy/` resolves to
 `privacy.md`. The source and the published destination of each legal link

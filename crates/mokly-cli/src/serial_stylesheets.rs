@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use mokly_graph::background::{BackgroundRead, BackgroundWorker};
 use mokly_graph::cache::Artifact;
 use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::Closure;
@@ -35,6 +36,9 @@ impl RenderWorkers for SerialStylesheets {
     }
     fn prefetch_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.inner.prefetch_tasks(count, task);
+    }
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        self.inner.background(route, worker)
     }
     /// Phase A uses retained base inputs only and never calls the base sidecar.
     fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {

@@ -242,3 +242,20 @@ The investigation changed no tracked file. It ran local Lighthouse audits and pl
 - Limits: the 10 prototype audits are not nine whole-site budget runs, not a production source change, and not CI proof. No regression test, repeated test runs, targeted site checks, or full gate ran. They wait for the user's approval.
 - CI logs hold rounded scores only, so they do not prove that all 40 CI failures have this cause.
 - On PR #398, CI run 44721416931 failed only its Site Lighthouse job, with home at 1440 px at 0.93. The Site, Preview, and both Title workflows passed. That run came before any fix and is outside the 100-run sample.
+
+## Step 4 CI occurrences, 2026-11-20
+
+The branch `calummoore/mokly-first-changes-4-busier-sidecars-3nds` recorded two more failures before this integration.
+Both failed in `Run Lighthouse budget` with this text:
+
+```text
+site:lighthouse / at 1440px scored 0.93 for performance, under the 0.95 threshold.
+```
+
+- Commit `2772eca024a938746426dfd1243152964c4a4d87`: run [44684057706](https://github.com/mokly-ai/mokly/actions/runs/44684057706), attempt 1, Site Lighthouse job [136114064879](https://github.com/mokly-ai/mokly/actions/runs/44684057706/job/136114064879). Required CI job [136122540836](https://github.com/mokly-ai/mokly/actions/runs/44684057706/job/136122540836) passed. One Site Lighthouse rerun passed on the same commit. The rerun job ID was not recorded.
+- Commit `969133546bc8f030f4f1c87d20eec8921497d7a7`: run [44724325009](https://github.com/mokly-ai/mokly/actions/runs/44724325009), attempt 1, Site Lighthouse job [136247781837](https://github.com/mokly-ai/mokly/actions/runs/44724325009/job/136247781837). Required CI job [136258316015](https://github.com/mokly-ai/mokly/actions/runs/44724325009/job/136258316015) passed. One Site Lighthouse rerun passed on the same commit, job [136260270412](https://github.com/mokly-ai/mokly/actions/runs/44724325009/job/136260270412).
+- Each failing table showed that every other route and viewport passed. Each Required CI job validated five reports with 5,468 observed test results. Each workflow run ended in success after its one rerun.
+- Between those failures, Site Lighthouse passed on commit `33b63f5aa1c7a1e820ccdd4eea31bbdf7c76a48b`, run [44708037057](https://github.com/mokly-ai/mokly/actions/runs/44708037057), job [136192422162](https://github.com/mokly-ai/mokly/actions/runs/44708037057/job/136192422162).
+- Step 4 changed no `apps/site` or `.github` file before this integration.
+- The branch's earlier record suspected shared-runner speed. That cause was not proven. The investigation above supersedes that hypothesis.
+- This appendix preserves the branch's observations. It changes no threshold, option, recommendation, or pending decision above.

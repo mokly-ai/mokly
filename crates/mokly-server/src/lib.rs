@@ -11,8 +11,16 @@ pub mod backend;
 mod backend_assets;
 mod backend_preview;
 pub mod background;
+mod background_admission;
+pub mod background_dispatch;
+pub mod background_read;
+
 mod background_batch;
 pub mod background_capacity;
+pub mod background_stage;
+#[cfg(test)]
+#[path = "_tests_/background_support.rs"]
+pub(crate) mod background_support;
 pub mod changes;
 pub mod changes_background;
 mod changes_detail;
@@ -71,6 +79,7 @@ mod replacement_tests;
 pub mod asset_streams;
 
 mod generated_routes;
+mod work_active;
 mod work_background;
 mod work_delivery;
 

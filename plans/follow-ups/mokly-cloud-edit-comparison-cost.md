@@ -8,7 +8,7 @@
 - **Location:** `crates/mokly-compare/src/comparison.rs:60-101`,
   `crates/mokly-compare/src/comparison_slots.rs:92-118`,
   `crates/mokly-compare/src/comparison_preparation.rs:150-160`,
-  `crates/mokly-graph/src/session_render.rs:15-55`,
+  `crates/mokly-graph/src/session_render.rs:34-45`,
   `crates/mokly-server/src/comparison_graph.rs:59-72`, and
   `crates/mokly-graph/src/session_proof.rs:37-42`, in `Session::input_identity`.
 - **Reason:** The change of the branch that measured this cost shares link
@@ -24,7 +24,7 @@
     still has the same content identity. A reused view passes it. A compared
     view fails it or has no kept comparison, so Serve compares it in full.
   - **`render.document`:** the timing stage of one document read, opened by
-    `Session::raw` at `crates/mokly-graph/src/session_render.rs:15-55`. It
+    `Session::raw` at `crates/mokly-graph/src/session_render.rs:34-45`. It
     also opens on a render cache hit, and it records `cache_hit`.
   - **Performance orchestrator:** the coordinating agent of the Changes
     performance work. It holds the design decisions that the user gave it.

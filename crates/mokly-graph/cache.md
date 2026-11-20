@@ -88,7 +88,9 @@ a part is absent, the generation neither reads nor offers that document.
 access-order changes. Early-render miss discovery uses that probe after the
 render cache probe. An unprepared, contended, or disabled index gives no hit.
 A later read still checks the indexed entry and renders from sources on a miss.
-After a render cache miss, a generation reads the store before it renders. A stored
+After a render cache miss, a generation reads the store before it renders. A Serve
+background view makes this same read on a render worker, as the
+[background lookup](./workers.md#background-lookup) guidance says. A stored
 read repeats the public closure walk, the link checks, and the usage records of
 its side, so it gives the result of a fresh render. On a usable store hit, the
 generation also passes the same `ComposeRequest` that a composition uses to
@@ -135,7 +137,9 @@ route.
 ## Document codec
 
 `document_codec::EncodedView` is the lossless compact form of one document. The
-compact tier and the base and head captures of `mokly-compare` share it.
+compact tier and the base and head captures of `mokly-compare` share it. It
+encodes trees with `postcard` and compresses trees and bytes with zlib through
+`flate2`.
 `EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
 annotations without parsing authored HTML, or returns a
 `document_error::CodecError`. An encoded view also lends its retained usage

@@ -17,7 +17,9 @@ writes no files.
   through an injected render store, without waiting for a write.
 - Define the activity and memory boundaries that pause and measure the writer
   of the render store.
-- Render all views through an injected worker pool.
+- Render all views through an injected worker pool. A Serve background view
+  first looks up its document on a render worker, and only a miss returns for
+  batch admission.
 - Run complete side validation in a bounded window, and hand each view to the
   comparison collector in route order.
 - Reconstruct documents and stylesheet resources that left the cache from
@@ -56,6 +58,11 @@ closure path.
 Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.
+
+Serve reads each background view through `RenderGeneration::read_background`.
+A hit finishes on a render worker, and a miss returns as a `BackgroundMiss`
+without a tree. The [render workers and background views](./workers.md) page
+holds the guidance for the lookup, the miss, the handoff, and the shared finish.
 
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it
@@ -124,43 +131,11 @@ including after cache eviction. Closure traversal stops at declared documents,
 so embedded catalogue cycles terminate. Closure evidence retains exact logical
 instance and referring edge context for comparison proof.
 
-`schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
-index on the generation's render workers. It returns when every index has run.
-The caller sizes each of these calls by `comparison_parallelism`.
-
-`schedule_comparison_stream` runs a `ComparisonTask` as one ordered stream. Its
-`ComparisonConsumer` admits each index into a slot that the caller owns. The
-calling thread consumes the finished indexes in index order. At most twice
-`comparison_parallelism().max(1)` indexes are started and not yet consumed. Each
-consumption lets one more index start. A `false` from `admit` ends the stream.
-A `false` from `consume`, or a task panic, stops new admission and
-consumption. The call still waits for every admitted task, and a task panic
-then reaches the caller. A stream that starts on a worker of the same pool
-prepares and consumes one index at a time.
-
-In both operations, the caller keeps the results, the errors, and the
-cancellation checks. `ThreadWorkers` carries the caller's tracing span,
-subscriber, and `RenderClass` through one shared context for all worker
-methods. So a background render keeps its class in every worker job, and
-Serve can order the sidecar calls of that render. The trait
-defaults have a capacity of one. They run the indexes in order on the caller,
-and the stream default prepares and consumes one index at a time.
-
-Wrappers forward `comparison_parallelism`, `capture_parallelism`,
-`schedule_capture_window`, `schedule_comparison_tasks`, and
-`schedule_comparison_stream` to their inner generation. A capture wrapper and
-a checking wrapper keep these forwards too. `RenderWorkers` wrappers forward
-`comparison_parallelism`, `capture_parallelism`, `capture_window`,
-`prefetch_tasks`, `comparison_tasks`, and `comparison_stream` in the same way. Without these
-forwards, the comparison runs one view at a time. A scheduled task still calls
-the wrapper's own methods, so the wrapper's checks stay active. A wrapper that
-checks capture inputs wraps the `ComparisonEncoder` of
-`ComparisonCollector::encoder`, so its checks run on the worker before the
-encoding. It forwards `ComparisonCollector::remaining`, so the waiting views
-keep the same byte bound. `RenderKeys::build_with_workers` also runs one key
-job for each exporting module through `comparison_tasks` on the shared render
-workers. Without the `comparison_tasks` forward, the key calculation runs one
-module at a time.
+`schedule_comparison_tasks` and `schedule_comparison_stream` run indexed
+comparison work on the generation's render workers. The
+[render workers](./workers.md#comparison-tasks-and-streams) guidance holds
+their rules, the `RenderClass` that `ThreadWorkers` carries, and the
+[forwards](./workers.md#wrapper-forwards) that wrappers of these methods need.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
@@ -223,11 +198,12 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call. `RenderGeneration::uncached_documents` lists the routes
-  that no cache tier or prepared render-store index holds, and
-  `RenderGeneration::prefetch_comparison` starts
-  their early renders. `RenderGeneration::schedule_capture_window` runs the
-  capture window with the limit of `RenderGeneration::capture_parallelism`.
+  static output call. `RenderGeneration::read_background` looks up one Serve
+  background view, and its default `Ok(None)` declines the lookup.
+  `RenderGeneration::uncached_documents` lists routes absent from all cache tiers
+  and the prepared render-store index. `RenderGeneration::prefetch_comparison`
+  starts their early renders. `RenderGeneration::schedule_capture_window` runs
+  the capture window with the limit of `RenderGeneration::capture_parallelism`.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -238,6 +214,19 @@ retention disabled.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
   `Artifact`, and `CacheStats`, the render cache with its full and compact
   tiers. `RenderCache::contains` checks every tier without a restore.
+- [`src/background.rs`](./src/background.rs) defines `BackgroundRead`, a hit
+  that its worker finished or a `BackgroundMiss`, the single-use continuation
+  of a miss, and `BackgroundWorker`, the lookup that `RenderWorkers::background`
+  runs. Its `Completion` is the completion place and dispatch release of a miss
+  with a prepared root. `Completion::handoff`, the only way into the completion
+  place, receives the byte charge of that root.
+- [`src/background_render.rs`](./src/background_render.rs) runs the lookup of
+  one Serve background view on the render workers. Its private miss keeps the
+  store key, the root eligibility, and the view's span, and no tree.
+  `BackgroundMiss::complete` can prepare the own root, hands it off, and
+  finishes the view on the render workers without a second lookup.
+- [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
+  charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
   the lossless compact document that the compact tier and the comparison
   capture share. Its `encode_identified` and `comparison_identity` hash the
@@ -248,6 +237,12 @@ retention disabled.
   `ReadOutcome`, `OfferOutcome`, `EntryFault`, and `StoreStats`.
   [`src/session_persistence.rs`](./src/session_persistence.rs) builds the
   `StoreKey` of a route and offers a fresh document after its checks.
+  [`src/session_lookup.rs`](./src/session_lookup.rs) holds `Session::raw_lookup`,
+  the one counted cache read and store load of every view, and
+  `Session::compose_miss`, which composes a miss without a second lookup. The
+  shared `Session::finish_artifact` of
+  [`src/session_render.rs`](./src/session_render.rs) checks and inserts every
+  document and offers each fresh one.
 - [`src/write_activity.rs`](./src/write_activity.rs) defines `WriteReadiness`,
   `WriteActivity`, and `WriteLease`, the boundary that pauses the writer while
   Serve is busy.
@@ -272,13 +267,14 @@ retention disabled.
   root order. Its `comparison_tasks` method runs every index of a
   `ComparisonTask` once and returns when all of them have run. Its
   `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
-  at most twice the pool size started and not yet consumed. Its
-  `capture_window` method runs a bounded capture window and joins every
-  admitted task before it returns. Its `capture_parallelism` method gives the
-  window limit, which includes the sidecar bound of the runtime.
-- [`src/capture_window.rs`](./src/capture_window.rs) defines
-  `CaptureConsumer`, which admits each route index of a capture window and
-  frees the slot of a finished view only when its queued bytes fit.
+  at most twice the pool size started and not yet consumed. Its `background`
+  method runs one `BackgroundWorker` lookup on the pool. Its `capture_window`
+  method runs a bounded capture window and joins every admitted task before it
+  returns. Its `capture_parallelism` method gives the window limit, which
+  includes the sidecar bound of the runtime.
+- [`src/capture_window.rs`](./src/capture_window.rs) defines `CaptureConsumer`,
+  which admits each route index of a capture window and frees the slot of a
+  finished view only when its queued bytes fit.
 - [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
   scheduling class of a blocking render, `Foreground` by default.
   `RenderClass::in_scope` sets a class for one operation and restores the
@@ -337,6 +333,8 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).

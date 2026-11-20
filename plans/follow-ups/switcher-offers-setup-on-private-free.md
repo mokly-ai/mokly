@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestones 6A/6B finding 2 of the Milestone 7 review TODO in the deleted `plans/desktop-app-shell.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/screens/viewer/panel-host.tsx:63-65` and `:93-100`, `apps/app/src/viewer/panels/switcher.tsx:146-166` and `:246-247`, `apps/app/src/viewer/stage-view-decision.ts:83-102` and `docs/protocol/cloud/viewer-chrome.md:103-126`.
+- **Location:** `packages/app/src/screens/viewer/panel-host.tsx:63-65` and `:93-100`, `packages/app/src/viewer/panels/switcher.tsx:146-166` and `:246-247`, `packages/app/src/viewer/stage-view-decision.ts:83-102` and `docs/protocol/cloud/viewer-chrome.md:103-126`.
 - **Reason:** The source keeps the current behaviour pending a product decision.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The panel host still gives the switcher Set up publishing from `project.canAdmin` alone, without the plan check.
 - **Category:** UX wording.
