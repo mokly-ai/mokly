@@ -1,6 +1,6 @@
 # Reuse rendered documents after Serve restarts
 
-Status: Active. [PR #394](https://github.com/mokly-ai/mokly/pull/394) is open into `main` from `calummoore/mokly-first-changes-5-render-store-p3o6`. The final work commit deletes this plan.
+Status: Active. CI startup-output repair remains. [PR #394](https://github.com/mokly-ai/mokly/pull/394) is open into `main` from `calummoore/mokly-first-changes-5-render-store-p3o6`. The parent accepted the final integrated performance result. Required CI remains the merge condition. The final work commit deletes this plan after the CI repair and preserves its dated record in the PR.
 
 Mokly renders every view again after a Serve restart. The first Changes on
 `mokly-cloud` takes about 12 to 14 seconds. The head usage pass renders 1,508
@@ -562,14 +562,14 @@ Run the post-push review before the final release series. This avoids
 repeating hours of measurements for a review fix. The acceptance results
 still block the pull request.
 
-- [ ] Review the complete local diff against `origin/main` after the push,
+- [x] Review the complete local diff against `origin/main` after the push,
       with the `implementation-review` skill. Check findings with fresh
       second-pass reviewers. Apply up to two fix rounds and re-review.
       Record deferred work as follow-up items.
 - [x] Confirm the review findings with separate fresh checks. Fix confirmed
       foreground preparation and state-ordering defects with assertion-red
       regressions. Preserve the render and memory boundaries.
-- [ ] Check the combined fixes, commit and push, then run the fresh re-review.
+- [x] Check the combined fixes, commit and push, then run the fresh re-review.
 - [x] Pause new writer units across reference probes and the hand-off to a refreshed
       classification. Apply the checked owner-level lease, keep it with blocking
       work, and prove suppression and release with deterministic barriers.
@@ -608,16 +608,19 @@ existing cache and pool memory limits.
       barriers. Keep a single encoder and a batch no larger than 4 MiB.
 - [x] Move all old record-save consumers to the built-segment boundary.
       Remove the unused save API and its converters. Preserve every existing test assertion.
-- [ ] Attribute cold peak anon plus swap by phase and process.
-      Separate core writer work from sidecar and allocator-retained memory.
-- [ ] Measure compaction admission and drop behavior with the smaller writer reservation.
-- [ ] Measure a cold ten-edit session and report exact writer peak bytes.
+- [x] Record the parent's cold ten-edit sessions and actual writer peak bytes.
+      Separate measured capacities from reservations and independent component peaks.
 - [x] Require each document backend to supply the envelope version explicitly.
       Preserve the Mokly package version and remove the implicit Cargo crate version.
 - [x] Make the native cancellation test wait for complete blocking job teardown
       before mock verification. Keep every behavior assertion.
-- [ ] Run the repository and complete gates on the combined tree with Rust
+- [x] Run the repository and complete gates on the combined tree with Rust
       1.98.1. Name each new cloud suite and any machine blocker.
+
+The parent settled memory on 2026-11-20 with repeated whole-tree sessions and the
+writer byte record. Extra local phase/process attribution and compaction-admission
+measurements did not run. They no longer hold acceptance. The complete local gate
+passed on 9a3493ee3. Required CI separately verifies the later c6d2fffa4 integration.
 
 Evidence: `.context/persistent-render-store/m4b-implementation-report.md` records
 the source boundary, buffer ownership, red proofs, and targeted checks.
@@ -647,7 +650,10 @@ waiting for the required merge.
 - [x] Prove scheduling and cancellation red first.
 - [x] Save the named assertion-red proof for the failed-warm-up attempt rule.
       Preserve the existing test and restore the temporary mutation.
-- [ ] Measure the first edit within the control's run-to-run noise.
+- [x] Record the final integrated first-edit measurement and accepted trade-off.
+      The earlier 0ccd5395c series met the noise goal. Later more complete store
+      reuse leaves missing head processes. The parent accepted option B with
+      about 0.35 seconds of first-edit cost and a standalone fill follow-up.
 - [x] Align protocol and architecture text with these implemented rules.
 
 Implementation and preparation evidence: `.context/persistent-render-store/m4c-implementation-report.md`
@@ -678,6 +684,50 @@ Evidence: `.context/persistent-render-store/source-attribution-9a-report.md`,
 `m4d-options-check-report.md`, and `cloud-confirmation-9a-u-m.md` record the cause,
 corrected effort, measured cost, and accepted memory block.
 
+## Milestone 4e: Preserve startup output and isolate process caches
+
+Depends on: 4d
+
+User call, 2026-11-20: keep every existing process-test assertion. A Serve start
+that fails before listening keeps empty stdout. The listening line remains the
+first line that the process tests parse. Defer the cache announcement until after
+listening, while retaining background store preparation. Check portable cache
+isolation, including macOS, without changing the workspace HOME or adding a setting.
+The macOS native CI failure supplies the existing assertion-red evidence.
+
+- [x] Align the cache-output protocol with the startup ordering and failure rule.
+- [x] Add deterministic reporter-boundary regressions for queued startup notices,
+      failed or cancelled startup, and the listening-before-cache order.
+- [x] Preserve off-path store preparation. Release only the queued notice after
+      successful listening. Start no process, worker, channel, or retry.
+- [x] Isolate the affected real-process fixtures on macOS and Linux. Preserve
+      every current assertion and timeout. Record any remaining uncovered fixture.
+- [x] Run all 27 affected process cases and the three new cases ten times each.
+      Preserve all 125 assertion texts and duration expressions. Run fmt and Clippy.
+- [x] Run the repository check on the combined tree. It passed with 2,974 Rust
+      tests and the existing two child probes. All 3,344 Rust files meet the cap.
+- [ ] Commit and push the combined repair, then get a fresh focused review.
+      Required native CI remains the final PR merge gate.
+- [ ] Send the new SHA to the parent. Explain any startup work change separately
+      from the notice ordering and test-only changes. The parent decides the rerun.
+
+The source handoff is complete. The existing progress owner queues one notice and
+releases it after the complete readiness write. Both reporters use its explicit
+cache-notice route. The original four failing process assertions pass unchanged.
+Two older non-Serve cache-isolation gaps remain outside this repair and are in
+`plans/follow-ups/non-serve-process-cache-homes.md`. Their commands and assertions
+were not changed.
+
+Evidence: `.context/persistent-render-store/m4e-implementation-report.md`,
+`m4e-assertion-preservation.json`, `m4e-source-hashes.json`, `m4e-repeats.json`, and
+`docs-m4e-alignment-report.md` record the handoff, checks, costs, and scope.
+The root repository check passed in `m4e-root-repository-gate.log`.
+
+Evidence: `.context/persistent-render-store/ci-macos-failure-6d.log` records the
+four failures in native job 136227864765. The live cache announcement reached
+stdout before readiness. Current main advanced to 4eb342907, but its three commits
+change unrelated app/API/cancellation-fixture work. No new main merge was made.
+
 ## Milestone 4: Measurements and verification
 
 Depends on: 4a fixes, 4b, and 4c
@@ -685,15 +735,13 @@ Depends on: 4a fixes, 4b, and 4c
 Measure release builds against the last merged main in separate checkouts and
 target directories. Run Cargo builds one at a time. Check disk and memory first.
 
-- [ ] Measure at least six interleaved cold and warm rounds on `examples/basic`
-      and large HTML and React fixtures. Include unchanged and one-line-edit
-      restarts. Compare Changes and published bytes. Measure ten-edit memory.
-- [ ] Send the pushed implementation SHA and dist build commit to the
-      performance orchestrator for `mokly-cloud` measurement immediately.
-- [ ] After the approved main 940ddd742 conflict integration and combined gate,
-      send the merged SHA for the parent's short confirmation against that main:
-      three changed and three unchanged warm restart rounds, and one cold
-      ten-edit session per arm. Obtain acceptance before opening the pull request.
+- [x] Use the parent's release W/U/C/M acceptance series, with unchanged and
+      one-line restarts, matched output counts, and repeated ten-edit memory.
+- [x] Send the pushed implementation SHA for parent-built native and sidecar
+      artifacts. The parent builds both from that commit and needs no local dist freeze.
+- [x] Complete the parent's 940ddd742 confirmation and record its first-edit
+      cause and accepted memory. Open the PR after the local gate as the parent
+      directed. Later accept option B and complete the c6d2fffa4 confirmation.
 - [x] Commit and push a measurement candidate after its targeted and required
       gate checks. This lets the cloud measurement run before final acceptance.
 - [x] Confirm the cloud goals: at least four seconds sooner on warm restart,
@@ -705,6 +753,12 @@ target directories. Run Cargo builds one at a time. Check disk and memory first.
       Git 2.45 or later, git-lfs, pinned Bun, and locked Cargo dependencies.
       Record any machine blocker and each suite that ran.
 
+The expanded local six-round examples/basic and large HTML/React matrix did not
+complete. The parent release series supplies acceptance instead. Additional local
+immediate-edit and idle-completion timing also did not run. Their helpers remain
+preparation only. The parent's final three-round W and U blocks on 6d3cde102 pass
+against c6d2fffa4 with equal counts. The accepted first-edit trade-off remains.
+
 Evidence: `.context/persistent-render-store/` holds all logs and reports.
 `cloud-final-acceptance-0ccd.md` records the accepted final cloud series and its CPU and timing limits.
 The performance orchestrator requires no further main merge unless a conflict or CI needs it.
@@ -713,10 +767,16 @@ The performance orchestrator requires no further main merge unless a conflict or
 
 Depends on: 4 and 4a
 
-- [ ] Commit the final implementation with Conventional Commits and push.
-      Watch CI with `scripts/ci-wait.sh`.
-- [ ] Integrate current main and the highest lower step that has a pull request,
-      under the stacking rule and the `git-merge` skill. Verify the combined tree.
+- [x] Commit and push the implementation with Conventional Commits.
+      Send the integration SHA immediately and start `scripts/ci-wait.sh`.
+      Required CI remains a PR merge condition, with no pass claimed yet.
+- [x] Integrate approved main c6d2fffa4 under the `git-merge` skill.
+      Preserve both runtime features, audit the two-parent merge, and verify
+      all 98 one-sided main paths. Do not integrate main again without need.
+- [x] Confirm final review finding 4 with a fresh check. Record its Low resume-state
+      gap in `plans/follow-ups/render-store-resume-state-record.md` and the timing
+      status line. Both fix rounds are used. Preserve product source unchanged.
 - [ ] Delete this plan under the `plans` skill after its required work completes.
-- [ ] Open the stacked pull request. Keep every dated decision and design call
-      in its description. Wait for CI. Report to the sending session. Do not merge.
+- [ ] Keep PR #394 open into main with every dated decision and design call.
+      Finish the Required CI watch and report the final SHA to the parent.
+      The parent merges. Do not merge the PR or main.

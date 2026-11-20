@@ -11,8 +11,14 @@ install cache, the bundle cache, or the
 directory. All four caches share this line. While `build` or `publish`
 renders the head catalogue, the line waits. The command writes it before the
 next phase starts, or when rendering passes validation, whichever comes
-first. A failure or a cancellation while the line waits drops it. Serve and
-every other phase write the line at once. Rich mode prints it dimmed before
+first. A failure or a cancellation while the line waits drops it. While Serve
+starts, the line also waits. Serve writes it after its ready output: the
+listening line of the [compatibility contract](./mokly-terminal-errors.md) in
+plain mode, or the URL panel of the
+[Serve layout](./mokly-terminal-output.md#serve-layout) in rich mode. A Serve
+start that fails or is cancelled before that output drops the line. After the
+ready output, Serve writes the line at once, and so does every other phase.
+Rich mode prints it dimmed before
 the next durable line; plain mode prints the exact string of the
 compatibility contract on stdout. The line appears at most once per process
 and names the directory so a reader can delete it, which is always safe.
@@ -23,6 +29,9 @@ the base caches and drops it when a later step fails. A deferring reporter
 for each cache kind was rejected, because each new kind then needs its own
 wiring. A line after the whole command and a buffer of all plain stdout were
 rejected, because they delay or hold unrelated output.
+Decision: a startup line of Serve waits for the ready output, so a failed start
+keeps stdout empty, and the listening line stays the first line. A line at once
+was rejected, because Serve opens the render store before it listens.
 
 ```text
   cache ~/.cache/mokly/3f9c1a…

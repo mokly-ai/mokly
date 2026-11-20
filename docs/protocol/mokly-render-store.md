@@ -64,12 +64,13 @@ was rejected, because one source edit would then miss every unchanged view.
 
 ## Reads
 
-Serve prepares the store while it starts, outside the render path: it reads
-the native build identity and indexes the stored documents. A lookup before
-that preparation ends is a miss. When Serve opens the store, it reports the
-cache directory under the
-[cache output rule](./mokly-terminal-cache.md#cache-directory), also when the
-store holds no entry.
+Serve opens and prepares the store while it starts, outside the render path:
+it reads the native build identity and indexes the stored documents. A lookup
+before that preparation ends is a miss. Opening the store announces the cache
+directory, also when the store holds no entry. The
+[cache output rule](./mokly-terminal-cache.md#cache-directory) decides when
+that line prints: a line from Serve's startup waits for its ready output. The
+preparation never waits for the line.
 
 Serve reads the store after a render cache miss and before it renders the
 document. A stored read and a fresh render of the same side give equal results:

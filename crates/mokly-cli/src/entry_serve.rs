@@ -219,7 +219,7 @@ pub(super) fn run(
             );
             if *receiver.borrow()
                 || !phase.serve(&|| {
-                    terminal.stdout(&layout);
+                    progress.ready(&layout);
                     attempt.finish(&summary.warnings, false, &|warnings| {
                         terminal.stderr(&build_output::warnings(style, warnings, &redactor));
                         terminal.stdout(&serve_output::catalogue(

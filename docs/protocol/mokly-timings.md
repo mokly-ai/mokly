@@ -1,5 +1,7 @@
 # Startup Diagnostics And Scale Fixtures
 
+Status: Writer resumes do not emit the required store state record yet. The [writer resume state item](../../plans/follow-ups/render-store-resume-state-record.md) adds it.
+
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the

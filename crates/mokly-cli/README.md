@@ -70,7 +70,11 @@ head renders, under the
 [cache directory rule](../../docs/protocol/mokly-terminal-cache.md#cache-directory).
 In Serve, the `ServeDirectory` of the bundle cache
 and the base cache notice of each comparison attempt share one flag.
-`ServeDirectory` does not depend on a comparison attempt.
+`ServeDirectory` does not depend on a comparison attempt. Both write through
+`Terminal::cache_notice`. `ServeProgress` holds one such notice while Serve
+starts. `Progress::ready` writes the readiness layout and then releases it. A
+startup that fails or is cancelled drops the notice, and a later notice prints
+at once.
 Serve prepares its head in the `full` mode of the
 [capture modes](../../docs/protocol/mokly-sidecar-recipes.md#capture-modes)
 until it publishes its first state. After that publication, and before Serve
@@ -269,12 +273,18 @@ changed.
   service of `build` and `publish`. Its `reporter` gives the one-shot
   `OnceReporter` that the bundle store shares.
 - [`src/cache_directory.rs`](./src/cache_directory.rs) defines
-  `ServeDirectory`, the cache directory announcement of the bundle cache in
-  Serve.
+  `ServeDirectory`, the cache directory announcement of the bundle cache and
+  the render store in Serve. It writes through `Terminal::cache_notice` of
+  [`src/terminal.rs`](./src/terminal.rs), which writes at once by default.
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
   `entry_serve.rs` passes the terminal output of Serve to
-  `ServeServices::new`.
+  `ServeServices::new`, and it calls `Progress::ready` with the readiness
+  layout inside the serve phase.
+- [`src/serve_progress.rs`](./src/serve_progress.rs) defines `ServeProgress`,
+  the one terminal owner of Serve. It erases progress before each durable
+  line, holds one cache notice until `Progress::ready` writes the readiness
+  layout, and drops that notice when startup fails or is cancelled.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
   cache across Serve preparation and live views. It gives the sidecar gate
   the command's `Diagnostics` reporter. `ServeServices::new` takes that
