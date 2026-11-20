@@ -190,8 +190,8 @@ The binary has twelve commands. `serve` applies pending migrations and listens
 on `MKC_BIND`. `migrate` applies them and exits. `openapi` prints the complete
 OpenAPI 3.1 document as pretty JSON with a trailing newline; it needs no
 serving configuration and writes no log lines. `prune` deletes retained
-expired authentication records and logs the committed counts; a second
-transaction removes up to 1,000 finished builds after
+expired authentication records in bounded batches and logs the committed
+counts; one more transaction then removes up to 1,000 finished builds after
 `MKC_BUILD_RETENTION_SECONDS` (default thirty days). `prune-github` deletes
 OAuth flow hashes after `MKC_GITHUB_OAUTH_RETENTION_SECONDS` (default one day
 after expiry) and terminal webhook deliveries after

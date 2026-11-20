@@ -2,6 +2,7 @@
 
 use chrono::{DateTime, Utc};
 
+use crate::auth_prune::PruneBatch;
 use crate::error::Result;
 
 /// Persisted rate limit data; secret-bearing records are never serialized.
@@ -18,8 +19,8 @@ pub struct RateLimit {
 /// Queries for auth rate limits within the caller's transaction.
 #[unimock::unimock(api = RateLimitsMock)]
 pub trait RateLimits {
-    /// Remove admission windows reset at or before the retained cutoff.
-    fn prune_rate_limits(&mut self, before: DateTime<Utc>) -> Result<usize>;
+    /// Remove one bounded batch of windows reset at or before the cutoff.
+    fn prune_rate_limits(&mut self, before: DateTime<Utc>, batch: PruneBatch) -> Result<usize>;
     /// Execute the rate limit query.
     fn rate_limit(&mut self, key: &str) -> Result<Option<RateLimit>>;
     /// Execute the insert rate limit query.

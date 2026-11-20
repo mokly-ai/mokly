@@ -2,7 +2,6 @@ import { DropdownSelector } from "@firna/ui/dropdown";
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
-import { unexpectedError } from "../../api/errors";
 import type { User } from "../../api/types";
 import { Action } from "../../components/action";
 import { ErrorDetails } from "../../components/error-details";
@@ -16,7 +15,6 @@ import { useResource } from "../../data/use-resource";
 import { listEveryWorkspace } from "../../data/workspaces";
 import { useCompact } from "../../layout/viewport";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { storeGitHubFlow } from "../../navigation/github-flow";
 import {
   connectInstallationPath,
   createWorkspaceForPath,
@@ -125,10 +123,7 @@ function Destination({
           installationId,
           returnTo: installStepPath(target.id),
         });
-        if (!storeGitHubFlow("install-authorize", connection)) {
-          throw unexpectedError();
-        }
-        write.leave(connection.authorizeUrl);
+        write.leave("install-authorize", connection);
       }),
     [write, target.id, installationId],
   );
@@ -174,7 +169,6 @@ function Destination({
             block
             write={write}
             operation="Connecting a GitHub account"
-            disabled={write.disabled}
             onPress={() =>
               onWeb
                 ? openOnWeb(

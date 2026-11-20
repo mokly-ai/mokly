@@ -9,16 +9,18 @@ use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::read_evidence::ReadEvidence;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::stylesheet_compiler::{Compilation, RootCompiler};
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 /// One attempt's stylesheet bundler: an attempt-local store in front of the shared store.
 pub(crate) struct CachedStylesheets {
-    inner: Arc<dyn StylesheetBundler>,
+    inner: Arc<dyn RootCompiler>,
     tree: Arc<dyn SourceTree>,
     root: PathBuf,
     settings: String,
     shared: Arc<Mutex<StylesheetCache>>,
+    head: Weak<Mutex<StylesheetCache>>,
     local: Mutex<StylesheetCache>,
     /// Non-owning indexes let the bounded stores control context payload lifetimes.
     contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
@@ -30,7 +32,7 @@ pub(crate) struct CachedStylesheets {
 
 impl CachedStylesheets {
     pub(crate) fn new(
-        inner: Arc<dyn StylesheetBundler>,
+        inner: Arc<dyn RootCompiler>,
         tree: Arc<dyn SourceTree>,
         root: PathBuf,
         settings: String,
@@ -43,6 +45,7 @@ impl CachedStylesheets {
             root,
             settings,
             shared,
+            head: Weak::new(),
             local,
             contexts: Mutex::default(),
             checked: Mutex::default(),
@@ -50,26 +53,37 @@ impl CachedStylesheets {
         }
     }
 
+    /// Historical attempts borrow head records without owning or writing the head store.
+    pub(crate) fn with_head(mut self, head: Weak<Mutex<StylesheetCache>>) -> Self {
+        self.head = head;
+        self
+    }
+
     /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
     fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
         if let Some(record) = lock(&self.local).record(key) {
             return Ok(record);
         }
-        let (record, miss) = {
-            let shared = lock(&self.shared);
-            (shared.record(key), shared.miss(key))
-        };
-        let record = record.ok_or(miss)?;
-        if !record.stamp.matches(self.tree.as_ref())
-            || record
-                .context
-                .as_ref()
-                .is_some_and(|context| !self.current(context))
+        let mut miss = lock(&self.shared).miss(key);
+        for source in [Some(self.shared.clone()), self.head.upgrade()]
+            .into_iter()
+            .flatten()
         {
-            return Err(Miss::StampMismatch);
+            let record = lock(&source).record(key);
+            if let Some(record) = record {
+                if record.stamp.matches(self.tree.as_ref())
+                    && record
+                        .context
+                        .as_ref()
+                        .is_none_or(|context| self.current(context))
+                {
+                    lock(&self.local).insert(key.into(), record.clone());
+                    return Ok(record);
+                }
+                miss = Miss::StampMismatch;
+            }
         }
-        lock(&self.local).insert(key.into(), record.clone());
-        Ok(record)
+        Err(miss)
     }
 
     /// Check the stamp of a stored context entry once for each attempt.
@@ -133,13 +147,14 @@ impl CachedStylesheets {
     }
 
     #[tracing::instrument(name = "css.bundle", skip_all, err, fields(cache = miss.as_str()))]
-    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Bundle> {
-        self.inner.bundle(root)
+    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Compilation> {
+        self.inner.compile(root)
     }
 
     /// Replay a record's observations into this attempt's tree. Context evidence replays once.
     fn deliver(&self, record: &Record) -> Result<Bundle> {
         self.observe(record.evidence())?;
+        self.observe(record.core_evidence())?;
         if let Some(context) = &record.context {
             for entry in ContextEvidence::chain_arcs(context) {
                 let mut replayed = lock(&self.replayed);
@@ -149,7 +164,11 @@ impl CachedStylesheets {
                 }
             }
         }
-        Ok(record.complete())
+        let mut bundle = record.complete();
+        let watched = self.inner.watch_files(&bundle.resolution_files)?;
+        bundle.resolution_files = watched.files;
+        bundle.resolution_roots = watched.dependency_roots;
+        Ok(bundle)
     }
 
     fn observe(&self, evidence: &ReadEvidence) -> Result<()> {
@@ -202,6 +221,14 @@ mod stylesheet_cache_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_evidence_tests.rs"]
 mod stylesheet_evidence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_capture_tests.rs"]
+mod stylesheet_capture_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_base_tests.rs"]
+mod stylesheet_base_tests;
 
 #[cfg(test)]
 #[path = "_tests_/stylesheet_miss_tests.rs"]

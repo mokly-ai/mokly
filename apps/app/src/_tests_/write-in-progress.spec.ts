@@ -148,13 +148,31 @@ test("a GitHub trip leaves only from the screen that started it", async ({
       if (new URL(event.destination.url).origin !== window.location.origin)
         document.documentElement.dataset.trip = event.destination.url;
     });
+    // The answer must pass through the app's JSON read. The next task runs
+    // after its promise continuations, including the abandoned write, settle.
+    const readJson = Response.prototype.json;
+    Response.prototype.json = async function () {
+      const body: unknown = await readJson.call(this);
+      if (this.url.endsWith("/v1/auth/github")) {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => {
+          document.documentElement.dataset.githubAnswer = "processed";
+          channel.port1.close();
+          channel.port2.close();
+        };
+        channel.port2.postMessage(null);
+      }
+      return body;
+    };
   });
   answer();
-  // The flow is stored just before the trip would start, so once it is
-  // stored, the write has decided whether to leave.
-  await expect
-    .poll(() => storedFlow(page, githubFlowKeys["sign-in"]))
-    .not.toBeNull();
+  await page.waitForFunction(
+    () => document.documentElement.dataset.githubAnswer === "processed",
+  );
+  expect(
+    await storedFlow(page, githubFlowKeys["sign-in"]),
+    "the abandoned answer stores no GitHub flow",
+  ).toBeNull();
   const trip = await page.evaluate(
     () => document.documentElement.dataset.trip ?? null,
   );

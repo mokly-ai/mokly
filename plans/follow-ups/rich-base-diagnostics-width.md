@@ -5,7 +5,7 @@
 - **Added:** 2026-11-01, from the branch
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`, which put
   the problem outside the scope of its first review.
-- **Location:** `crates/mokly-cli/src/changes_output.rs:95` to line 121,
+- **Location:** `crates/mokly-cli/src/changes_output.rs:99` to line 126,
   `crates/mokly-cli/src/one_shot/phases.rs:93` to line 106,
   `docs/protocol/mokly-terminal-output.md:51` to line 59,
   `docs/protocol/mokly-terminal-errors.md:150` to line 163, and
@@ -38,12 +38,13 @@
   - `docs/protocol/mokly-base-preparation.md` says that base diagnostics are
     detail lines that name the full base commit and the original terminal
     code.
-  - `changes_output::diagnostics` prints each detail as
+  - `changes_output::diagnostics` prints each detail heading as
     `base {commit}: [mokly/{code}] {message}`. `one_shot/phases.rs` writes
-    these lines to stderr. Rich mode adds a two-space indent and does not cut
-    the line.
-  - The text before each message takes 71 columns for `build-invalid`. The
-    scripts hint line has 176 columns.
+    these lines to stderr. Location lists continue on following indented
+    lines. Rich mode adds a two-space indent to every line, retains the
+    location indent, and does not cut any line.
+  - The text before each heading message takes 71 columns for
+    `build-invalid`. The scripts hint line has 176 columns.
   - The hint rule at `docs/protocol/mokly-terminal-errors.md:150` to line 163
     gives the scripts hint to every base failure in every command, as one
     complete sentence.
@@ -61,8 +62,8 @@
     `base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagnostic`
     runs a rich `build` with an unknown width. It expects the full message
     text in stderr. A cut at 80 columns fails it.
-  - `origin/main` prints the details in the same way, since the Rust rebuild
-    of 2026-10-25.
+  - The rich width behavior matches `origin/main`, since the Rust rebuild of
+    2026-10-25.
 - **Problem:** Rich `build` and `publish` print each base diagnostic in full.
   The width rule cuts every rich line except recovery paths and the rich hint
   line of an error. The contract and the output disagree.
@@ -110,9 +111,11 @@
     whole rich hint line of an error, which the user's choice of 2026-10-29
     requires. Effort: Medium.
 - **Shared assumptions:** Every option except D shares five assumptions.
-  - Each base diagnostic is one detail line that names the full base commit
-    and its code. Source: `docs/protocol/mokly-base-preparation.md:91` to
-    line 92. Every option keeps it.
+  - Each base diagnostic heading names the full base commit and its code.
+    Location lists continue on following indented lines. Sources:
+    `docs/protocol/mokly-base-preparation.md:91` to line 92, and
+    `docs/protocol/mokly-terminal-errors.md:54` to line 56. Every option
+    keeps them.
   - The scripts hint is a separate detail line. Source:
     `docs/protocol/mokly-terminal-errors.md:154` to line 156. Every option
     keeps it.
@@ -123,7 +126,7 @@
     `docs/protocol/mokly-terminal-output.md:25` to line 26. Every option
     keeps it.
   - Each base diagnostic shows in full in rich mode. Source: the code at
-    `crates/mokly-cli/src/changes_output.rs:109` to line 115 and its test. It
+    `crates/mokly-cli/src/changes_output.rs:115` to line 124 and its test. It
     is not a requirement, because the width rule says the opposite. D drops
     it.
 - **Left out:**
@@ -132,7 +135,7 @@
     user's choice of 2026-10-29 keeps.
   - Print the base commit once as a header line, then cut shorter lines. It
     breaks `docs/protocol/mokly-base-preparation.md:91` to line 92, because
-    each detail line must name the full base commit.
+    each diagnostic heading must name the full base commit.
   - Change nothing. The contract and the output keep disagreeing. So it
     fails the goal.
 - **Wider fix:** E. It removes both wrong cases of this class: a line that
@@ -144,10 +147,6 @@
   that rich mode cut the scripts hint in Serve and in a failed `build` or
   `publish`. The fix that the user chose on 2026-10-29 added the rich hint
   line of an error to the exception of the width rule.
-- **Related:**
-  [base-diagnostic-location-lines.md](./base-diagnostic-location-lines.md)
-  changes the same code, `changes_output::diagnostics`, so one branch can do
-  both. The rich width of its following lines follows the answer here.
 - **Recommendation:** A. It is the smallest option that makes the contract
   match the full diagnostics on `origin/main`. E best protects the codebase.
 - **Action:** ask the user, because A changes the width rule for each base

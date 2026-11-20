@@ -14,6 +14,7 @@ import {
   test,
 } from "./harness";
 import { createProject } from "./project-setup";
+import { admitLinkRequest } from "./sign-in-links";
 
 async function expectErrorReference(page: Page) {
   const details = page.locator(".fo-error-details");
@@ -58,11 +59,13 @@ test("the delivered invitation accepts the invited address after sign-in", async
   expect(new URL(page.url()).searchParams.get("returnTo")).toBe(link.pathname);
 
   await page.getByLabel("Email").fill(invited);
-  const sent = page.waitForResponse((answer) =>
-    answer.url().endsWith("/v1/auth/magic-links"),
-  );
-  await page.getByRole("button", { name: "Continue with email" }).click();
-  const issue = await sent;
+  const issue = await admitLinkRequest(page, async () => {
+    const sent = page.waitForResponse((answer) =>
+      answer.url().endsWith("/v1/auth/magic-links"),
+    );
+    await page.getByTestId("email-entry").click();
+    return sent;
+  });
   expect(issue.status()).toBe(202);
   expect(issue.request().postDataJSON()).toMatchObject({
     returnTo: link.pathname,
@@ -219,11 +222,14 @@ test("a different signed-in address can switch to the invited address", async ({
   await page.waitForURL((url) => url.pathname === "/sign-in");
   expect(new URL(page.url()).searchParams.get("returnTo")).toBe(route);
   await page.getByLabel("Email").fill(invited);
-  const sent = page.waitForResponse((answer) =>
-    answer.url().endsWith("/v1/auth/magic-links"),
-  );
-  await page.getByRole("button", { name: "Continue with email" }).click();
-  expect((await sent).request().postDataJSON()).toMatchObject({
+  const sent = await admitLinkRequest(page, async () => {
+    const sent = page.waitForResponse((answer) =>
+      answer.url().endsWith("/v1/auth/magic-links"),
+    );
+    await page.getByTestId("email-entry").click();
+    return sent;
+  });
+  expect(sent.request().postDataJSON()).toMatchObject({
     returnTo: route,
   });
   await openMagicLink(page, invited);

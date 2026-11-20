@@ -16,13 +16,13 @@ export interface LinkRequestAnswer {
  * Retry-After, rather than pretending the limit is not there or guessing a
  * delay.
  */
-export async function admitLinkRequest(
+export async function admitLinkRequest<Answer extends LinkRequestAnswer>(
   page: Page,
-  send: () => Promise<LinkRequestAnswer>,
-): Promise<void> {
+  send: () => Promise<Answer>,
+): Promise<Answer> {
   for (let attempt = 0; ; attempt += 1) {
     const answer = await send();
-    if (answer.status() === 202) return;
+    if (answer.status() === 202) return answer;
     expect(answer.status(), "the API admits or rate-limits the request").toBe(
       429,
     );

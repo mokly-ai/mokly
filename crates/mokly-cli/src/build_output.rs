@@ -169,14 +169,7 @@ pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redac
             let mut text = String::new();
             for issue in issues {
                 let detail = issue_text(issue, Code::BuildInvalid);
-                let diagnostic = if matches!(
-                    issue.code,
-                    diagnostic::Code::DuplicateExport
-                        | diagnostic::Code::DuplicatePath
-                        | diagnostic::Code::CaseCollision
-                        | diagnostic::Code::DuplicateFolder
-                        | diagnostic::Code::DuplicateMovedFrom
-                ) {
+                let diagnostic = if has_location_lines(issue.code) {
                     style.error_lines(Code::BuildInvalid, &detail, redactor)
                 } else {
                     style.error(Code::BuildInvalid, &detail, redactor)
@@ -220,6 +213,18 @@ pub fn render_diagnostics(style: &Style, error: &GraphError, redactor: &Redactor
         .iter()
         .map(|diagnostic| style.error(diagnostic.code, &diagnostic.message, redactor))
         .collect()
+}
+
+/// Catalogue codes whose exact messages contain structural location lines.
+pub(crate) fn has_location_lines(code: diagnostic::Code) -> bool {
+    matches!(
+        code,
+        diagnostic::Code::DuplicateExport
+            | diagnostic::Code::DuplicatePath
+            | diagnostic::Code::CaseCollision
+            | diagnostic::Code::DuplicateFolder
+            | diagnostic::Code::DuplicateMovedFrom
+    )
 }
 
 pub(crate) fn issue_text(issue: &Issue, outer: Code) -> String {

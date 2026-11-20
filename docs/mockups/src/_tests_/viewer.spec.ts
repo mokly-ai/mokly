@@ -82,31 +82,10 @@ for (const viewport of ["desktop", "mobile"] as const)
             // selected catalogue row, including the pull request in Changes.
             const packageSelection =
               published && viewport === "desktop" ? 1 : 0;
-            // @mokly/ui 0.18.0 sets --mokly-accent again on its own root, so
-            // the row paints the package's accent, not Folio's, and in Dark
-            // the two differ. Each colour keeps its own count, summed when
-            // they are equal, as in Light. The follow-up item
-            // plans/follow-ups/viewer-dark-accent-ignores-folio.md restores
-            // the Folio count after a Mokly release keeps host values.
-            const packageAccent = published
-              ? rgb(
-                  await page
-                    .locator(".mokly-viewer")
-                    .evaluate((root) =>
-                      getComputedStyle(root).getPropertyValue("--mokly-accent"),
-                    ),
-                )
-              : folio;
-            const budget = new Map([[folio, primaries]]);
-            budget.set(
-              packageAccent,
-              (budget.get(packageAccent) ?? 0) + packageSelection,
-            );
-            for (const [fill, count] of budget)
-              expect(
-                await page.evaluate(accentFills, fill),
-                screen + " " + state + " " + fill,
-              ).toBe(count);
+            expect(
+              await page.evaluate(accentFills, folio),
+              screen + " " + state,
+            ).toBe(primaries + packageSelection);
           }
       },
     );

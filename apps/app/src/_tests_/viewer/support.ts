@@ -51,6 +51,24 @@ export async function publishedViewerReady(page: Page): Promise<void> {
   }
 }
 
+/** The Notice variant reads both consumer lists from its parent's detail. */
+export async function expectParentUsage(page: Page): Promise<void> {
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  await expect(usage.getByRole("heading")).toHaveText([
+    "Used by",
+    "Affected screens and components",
+  ]);
+  await expect(usage.getByRole("list")).toHaveCount(2);
+  for (const list of await usage.getByRole("list").all()) {
+    await expect(list.getByRole("link")).toHaveText(["Finish", "Start"]);
+    await expect(list.getByRole("listitem")).toHaveText([
+      "FinishDirect use · 1 instance · 2 views",
+      "StartDirect use · 1 instance · 2 views",
+    ]);
+  }
+}
+
 /**
  * Wait for the route to finish with an address before asserting what it kept.
  *

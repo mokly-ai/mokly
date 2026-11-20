@@ -68,6 +68,9 @@ pub struct Runtime {
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
+    /// None marks an original head. Some marks a base, including an empty or expired source.
+    pub(crate) head_styles: Option<Weak<Mutex<StylesheetCache>>>,
+    pub(crate) watch_stylesheets: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
     pub(crate) describing: Arc<Mutex<()>>,
@@ -77,6 +80,14 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// Enable physical stylesheet watch mapping for the working side of Serve.
+    pub fn with_stylesheet_watching(mut self) -> Self {
+        if self.base.is_none() {
+            self.watch_stylesheets = true;
+        }
+        self
+    }
+
     /// Keep bounded captured plans for the head preparations of one Serve command.
     pub fn with_serve_edit_plans(mut self) -> Self {
         if self.base.is_none() && self.edit_plans.is_none() {
@@ -131,16 +142,16 @@ impl Runtime {
         )
     }
 
-    /// The runtime of one base preparation over `tree`. It shares the dependency reader,
-    /// the physical inputs, the sidecar pool, the render cache, the workers, and the style
-    /// memo of this runtime, and it starts its own stores.
+    /// The runtime of one base preparation over `tree`. It shares the dependency reader, physical
+    /// inputs, sidecar pool, render cache, workers, and style memo of this runtime. It starts its
+    /// own stores and reads the original head's stylesheet store only through a weak reference.
     pub fn for_base(
         &self,
         tree: Arc<dyn SourceTree>,
         version: String,
         base: Option<Arc<BaseSide>>,
     ) -> Self {
-        Self::assemble(
+        let mut runtime = Self::assemble(
             tree,
             self.dependency_tree.clone(),
             self.physical_inputs.clone(),
@@ -150,7 +161,13 @@ impl Runtime {
             version,
             base,
             self.style_references.clone(),
-        )
+        );
+        runtime.watch_stylesheets = false;
+        runtime.head_styles = Some(match &self.head_styles {
+            Some(head) => head.clone(),
+            None => Arc::downgrade(&self.styles),
+        });
+        runtime
     }
 
     /// Every field of a runtime, so that each constructor passes the style memo.
@@ -179,6 +196,8 @@ impl Runtime {
             cache,
             workers,
             version,
+            watch_stylesheets: false,
+            head_styles: base.as_ref().map(|_| Weak::new()),
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             style_references,

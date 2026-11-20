@@ -34,7 +34,7 @@ enum Command {
     },
     /// Emit the current failed billing delivery count for alerting.
     BillingDeliveryStatus,
-    /// Emit the current undelivered publication dead-letter count for alerting.
+    /// Emit the current undelivered publication and build check dead-letter count for alerting.
     PublicationCheckStatus,
     /// Remove retained expired authentication records using database credentials only.
     Prune,

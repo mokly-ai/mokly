@@ -87,10 +87,12 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         let metadata = text(&record[..tab])?
             .split_ascii_whitespace()
             .collect::<Vec<_>>();
-        let [mode, kind, object, size] = metadata.as_slice() else {
-            return Err(Error::MalformedOutput);
+        let (mode, kind, object, size) = match metadata.as_slice() {
+            [mode, kind, object] => (*mode, *kind, *object, "-"),
+            [mode, kind, object, size] => (*mode, *kind, *object, *size),
+            _ => return Err(Error::MalformedOutput),
         };
-        let mode = match (*mode, *kind) {
+        let mode = match (mode, kind) {
             ("040000", "tree") => Mode::Directory,
             ("100644", "blob") => Mode::File,
             ("100755", "blob") => Mode::Executable,
@@ -109,7 +111,7 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         let size = if matches!(mode, Mode::Submodule | Mode::Directory) {
             0
         } else {
-            if matches!(*size, "-" | "BAD") {
+            if matches!(size, "-" | "BAD") {
                 0
             } else {
                 match size.parse() {

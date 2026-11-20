@@ -241,7 +241,6 @@ export function BillingPane({
             size="md"
             write={check}
             operation="Checking your subscription"
-            disabled={check.disabled}
             onPress={() => void checkAgain()}
             testID="check-subscription"
           />,

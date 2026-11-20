@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 
-import { unexpectedError } from "../../api/errors";
 import type { User, Workspace } from "../../api/types";
 import { Action } from "../../components/action";
 import { AppLink } from "../../components/app-link";
@@ -16,7 +15,6 @@ import {
 } from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { storeGitHubFlow } from "../../navigation/github-flow";
 import {
   createWorkspacePath,
   installStepPath,
@@ -174,10 +172,7 @@ function InstallAction({
           workspaceId: workspace.id,
           returnTo: currentReturnTo(),
         });
-        if (!storeGitHubFlow("install-setup", connection)) {
-          throw unexpectedError();
-        }
-        write.leave(connection.authorizeUrl);
+        write.leave("install-setup", connection);
       }),
     [write, workspace.id],
   );
@@ -212,7 +207,6 @@ function InstallAction({
             block
             write={write}
             operation="Installing the Mokly app"
-            disabled={write.disabled}
             onPress={() =>
               onWeb ? openOnWeb(installStepPath(workspace.id)) : void install()
             }
