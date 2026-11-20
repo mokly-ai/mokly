@@ -5,6 +5,7 @@ import { CatalogueLinks } from "../../../components/catalogue-links";
 import { sample } from "../../../fixtures/product";
 import { denseViewerChrome } from "../../../fixtures/product-states";
 
+import { addressReader } from "./account-trigger";
 import {
   StageFailed,
   StageWorkspaceUnreadable,
@@ -61,16 +62,16 @@ export function ViewerStandaloneErrorScreen({
 
 /**
  * The bar naming a reader who has not set a display name, which is every
- * account until somebody does. The long workspace name and address prove
- * that desktop truncation keeps every action on one row; the compact bar keeps
- * the address's local part. Both retain their complete accessible names.
+ * account until somebody does. The long workspace name proves that desktop
+ * truncation keeps every action on one row, and the avatar shows the
+ * address's initials with the whole address as its name and tooltip. The
+ * compact label keeps the address's local part.
  */
 export function ViewerStandaloneAccountScreen({
   viewport,
 }: {
   viewport: Viewport;
 }) {
-  const email = denseViewerChrome.email;
   return (
     <StandalonePage
       viewport={viewport}
@@ -78,11 +79,7 @@ export function ViewerStandaloneAccountScreen({
       screen="product/viewer/standalone/account"
       workspace={denseViewerChrome.workspace}
       project={sample.project}
-      account={
-        viewport === "mobile"
-          ? { label: email.split("@")[0] ?? email, whole: email }
-          : { label: email, whole: email }
-      }
+      account={addressReader(denseViewerChrome.email, viewport === "mobile")}
     />
   );
 }

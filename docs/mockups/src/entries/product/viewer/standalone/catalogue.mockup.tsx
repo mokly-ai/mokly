@@ -24,7 +24,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "catalogue"],
+  tags: ["product", "canvas", "viewer", "catalogue"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -44,7 +44,7 @@ export default defineScreen({
       title: "Standalone · Catalogue · Loading",
       description:
         "Standalone — the publication\u2019s own host is exchanging the reader\u2019s grant for its cookie, which it needs before the catalogue can mount. The stage's waiting card names the exchange in its title.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -52,7 +52,7 @@ export default defineScreen({
       title: "Standalone · Catalogue · Error",
       description:
         "Standalone — the publication\u2019s host refused the reader\u2019s credential, which another press can still fix.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -60,7 +60,7 @@ export default defineScreen({
       title: "Standalone · Catalogue · Comparison",
       description:
         "Standalone — a private comparison the published viewer cannot authenticate in-page offers the server-rendered catalogue in its own tab.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "comparison" },
     },
   ],

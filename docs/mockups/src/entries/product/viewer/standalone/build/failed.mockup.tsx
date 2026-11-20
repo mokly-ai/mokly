@@ -26,7 +26,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups-viewer.md",
     "docs/protocol/cloud/product-copy.md",
   ],
-  tags: ["product", "folio", "viewer", "failed"],
+  tags: ["product", "canvas", "viewer", "failed"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -48,7 +48,7 @@ export default defineScreen({
       title: "Build · Failed · Timed out",
       description:
         "Build — a pull request's build whose publish ran into the fifteen-minute limit; the runner's own line says where it stopped.",
-      tags: ["product", "folio", "viewer", "timed-out"],
+      tags: ["product", "canvas", "viewer", "timed-out"],
       props: { state: "timed-out" },
     },
     {
@@ -56,7 +56,7 @@ export default defineScreen({
       title: "Build · Failed · Couldn’t run",
       description:
         "Build — a build Mokly could not run after every retry, here because GitHub kept answering the fetch with a server error.",
-      tags: ["product", "folio", "viewer", "infrastructure"],
+      tags: ["product", "canvas", "viewer", "infrastructure"],
       props: { state: "infrastructure" },
     },
     {
@@ -64,7 +64,7 @@ export default defineScreen({
       title: "Build · Failed · Plan",
       description:
         "Build — a private project's build claimed after the workspace returned to Free: the Team card's copy with Open billing for the owner, and no step run.",
-      tags: ["product", "folio", "viewer", "plan"],
+      tags: ["product", "canvas", "viewer", "plan"],
       props: { state: "plan" },
     },
     {
@@ -72,7 +72,7 @@ export default defineScreen({
       title: "Build · Failed · Version",
       description:
         "Build — a branch that installs a CLI older than builds accept, stopped before it exports; the output shows the version the repository installed.",
-      tags: ["product", "folio", "viewer", "version"],
+      tags: ["product", "canvas", "viewer", "version"],
       props: { state: "version" },
     },
   ],

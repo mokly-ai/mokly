@@ -11,7 +11,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "fork"],
+  tags: ["product", "canvas", "viewer", "fork"],
   render: (_props, { viewport }) => (
     <ViewerPullRequestForkScreen viewport={viewport} />
   ),

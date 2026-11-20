@@ -1,15 +1,61 @@
+import { InputFrame } from "@firna/ui/input";
+import { Search } from "lucide-react-native";
+
 import type { Viewport } from "@mokly/mokly";
 
-import { Input } from "../../../entries/design/input.mockup";
+import { staticNoop } from "../../../components/static-controls";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
-import { listedBranches, pullRequests } from "../../../fixtures/publications";
+import {
+  listedBranches,
+  publication,
+  pullRequests,
+} from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
 
 import { RefGroup } from "./rows";
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Branches and pull requests";
+
+/** What the search finds, which names the field. */
+const searchLabel = "Find a branch or pull request";
+
+/**
+ * The search that leads the switcher, in the bar in place of the visible
+ * title: the package's plain field with the search glyph, which the field's
+ * own name labels for assistive technology and shows as its placeholder.
+ * While the references load or fail it keeps its place, disabled until there
+ * is something to search.
+ */
+function SwitcherSearch({
+  value,
+  disabled,
+  viewport,
+}: {
+  value: string;
+  disabled: boolean;
+  viewport: Viewport;
+}) {
+  return (
+    <div className={disabled ? "fo-canvas-search-off" : undefined}>
+      <InputFrame
+        nativeID="publication-search"
+        accessibilityLabel={searchLabel}
+        placeholder={searchLabel}
+        prefixIcon={Search}
+        variant="plain"
+        size={viewport === "mobile" ? "lg" : "md"}
+        value={value}
+        onChangeText={staticNoop}
+        autoComplete="off"
+        editable={!disabled}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+      />
+    </div>
+  );
+}
 
 /**
  * A project Mokly has not observed yet has no branches and no pull requests,
@@ -58,30 +104,22 @@ function SwitcherPage({
       title={title}
       close="product/viewer/standalone"
       screen={screen}
-    >
-      <div className="fo-panel-stack">
-        <Input
-          label="Find a branch or pull request"
-          name="publication-search"
-          type="text"
+      search={
+        <SwitcherSearch
           value={state === "empty" ? "settings" : ""}
           disabled={state === "loading" || state === "error"}
+          viewport={viewport}
         />
+      }
+    >
+      <div className="fo-panel-stack">
         {state === "loading" ? (
           // The search keeps its place, disabled until there is something to
           // search. Each list draws one placeholder row, and its name is for
           // screen readers only, because no text place here is the read's.
           <Pending label="Loading branches" labelMode="screen-reader-only">
-            <RefGroup
-              instance="switcher-branches"
-              label="Branches"
-              waiting="6em"
-            />
-            <RefGroup
-              instance="switcher-pull-requests"
-              label="Pull requests"
-              waiting="9em"
-            />
+            <RefGroup kind="branch" label="Branches" waiting="6em" />
+            <RefGroup kind="pullRequest" label="Pull requests" waiting="9em" />
           </Pending>
         ) : state === "error" ? (
           <StateMessage
@@ -108,15 +146,16 @@ function SwitcherPage({
         ) : (
           <>
             <RefGroup
-              instance="switcher-branches"
+              kind="branch"
               label="Branches"
               refs={listedBranches}
               destination="product/viewer/standalone"
               building="product/viewer/standalone/publish/publishing"
               unpublished="product/viewer/standalone/publish"
+              current={publication.branch}
             />
             <RefGroup
-              instance="switcher-pull-requests"
+              kind="pullRequest"
               label="Pull requests"
               refs={pullRequests}
               destination="product/viewer/pull-request"

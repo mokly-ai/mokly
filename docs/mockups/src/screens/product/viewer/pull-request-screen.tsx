@@ -8,6 +8,7 @@ import {
   forkPullRequest,
 } from "../../../fixtures/publications";
 
+import { namedReader } from "./account-trigger";
 import { BuildStage } from "./build-stage";
 import { PullRequestPage } from "./pull-request-page";
 import {
@@ -160,7 +161,7 @@ export function ViewerPullRequestPlanReaderScreen({
       viewport={viewport}
       state="empty"
       screen="product/viewer/pull-request/plan/reader"
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
       stage={<StagePlanRequiredReader />}
     />
   );

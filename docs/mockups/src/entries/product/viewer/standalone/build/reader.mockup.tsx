@@ -26,7 +26,7 @@ export default defineScreen({
     "docs/protocol/cloud/viewer-chrome.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "reader"],
+  tags: ["product", "canvas", "viewer", "reader"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -48,7 +48,7 @@ export default defineScreen({
       title: "Build · Reader · Plan",
       description:
         "Build — the plan refusal read by an administrator who is not an owner: the Team card's title, the line that says who can upgrade, and no action.",
-      tags: ["product", "folio", "viewer", "plan"],
+      tags: ["product", "canvas", "viewer", "plan"],
       props: { state: "plan" },
     },
     {
@@ -56,7 +56,7 @@ export default defineScreen({
       title: "Build · Reader · Plan loading",
       description:
         "Build — the same refusal while the workspace read decides whether the reader can open Billing: the title, and the owner's action as a placeholder, with no line, because an owner's card has none. Screen readers hear the read.",
-      tags: ["product", "folio", "viewer", "plan"],
+      tags: ["product", "canvas", "viewer", "plan"],
       props: { state: "plan-loading" },
     },
     {
@@ -64,7 +64,7 @@ export default defineScreen({
       title: "Build · Reader · Queued",
       description:
         "Build — a requested build waiting to start, read by a reviewer, who cannot cancel builds: every step waits, there is no output yet, and the card offers no action.",
-      tags: ["product", "folio", "viewer", "queued"],
+      tags: ["product", "canvas", "viewer", "queued"],
       props: { state: "queued" },
     },
     {
@@ -72,7 +72,7 @@ export default defineScreen({
       title: "Build · Reader · Running",
       description:
         "Build — a build running on a newer push, read by a reviewer, who cannot cancel builds: its steps and its live output, with no line and no action.",
-      tags: ["product", "folio", "viewer", "running"],
+      tags: ["product", "canvas", "viewer", "running"],
       props: { state: "running" },
     },
   ],

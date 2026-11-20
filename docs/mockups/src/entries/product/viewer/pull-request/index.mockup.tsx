@@ -20,13 +20,13 @@ const screens = {
 export default defineScreen({
   title: "Pull request",
   description:
-    "Pull request — the check link's publication, with Changes preselected.",
+    "Pull request — the check link's publication, with Changes preselected. Beside the stage, the cloud's Mokly check says it succeeded, gives its changed, added and removed counts, and links the pull request's checks on GitHub. The phone draws no side panel, because the package's compact layout has none until Milestone 11.",
 
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "default"],
+  tags: ["product", "canvas", "viewer", "default"],
   useCasePaths: ["flows/product-browse"],
   propSchema: {
     type: "object",
@@ -47,7 +47,7 @@ export default defineScreen({
       title: "Pull request · Empty",
       description:
         "Pull request — the check has not published a catalogue yet.",
-      tags: ["product", "folio", "viewer", "empty"],
+      tags: ["product", "canvas", "viewer", "empty"],
       props: { state: "empty" },
     },
     {
@@ -55,7 +55,7 @@ export default defineScreen({
       title: "Pull request · Loading",
       description:
         "Pull request — the chrome stays while the publication loads, and the stage's waiting card names the read in its title.",
-      tags: ["product", "folio", "viewer", "loading"],
+      tags: ["product", "canvas", "viewer", "loading"],
       props: { state: "loading" },
     },
     {
@@ -63,7 +63,7 @@ export default defineScreen({
       title: "Pull request · Error",
       description:
         "Pull request — the publication is unavailable and the switcher recovers it.",
-      tags: ["product", "folio", "viewer", "error"],
+      tags: ["product", "canvas", "viewer", "error"],
       props: { state: "error" },
     },
     {
@@ -76,7 +76,7 @@ export default defineScreen({
         "docs/protocol/cloud/product-mockups-viewer.md",
         "docs/protocol/cloud/viewer.md",
       ],
-      tags: ["product", "folio", "viewer", "publishing"],
+      tags: ["product", "canvas", "viewer", "publishing"],
       props: { state: "publishing" },
     },
   ],

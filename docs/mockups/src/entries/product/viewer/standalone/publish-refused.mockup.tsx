@@ -20,7 +20,7 @@ export default defineScreen({
     "docs/protocol/cloud/folio-chrome.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "refused"],
+  tags: ["product", "canvas", "viewer", "refused"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -38,7 +38,7 @@ export default defineScreen({
       title: "Standalone · Publish · Refused · Pull request",
       description:
         "Standalone — Publish this pull request was refused because the project no longer builds. The control keeps its label, because pressing it again would be refused again, and Publish from CI beside it moves beneath it on a narrow screen, still above Details.",
-      tags: ["product", "folio", "viewer", "refused"],
+      tags: ["product", "canvas", "viewer", "refused"],
       props: { state: "pull-request" },
     },
   ],
