@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import { branchPathFor, expect, failWith, open, test } from "../harness";
+import { branchPathFor } from "../addresses";
+import { failWith } from "../api-responses";
+import { expect, open, test } from "../harness";
 import { notFoundPaths } from "../not-found-cases";
 import { publishedProject, publishedViewerReady } from "../viewer/support";
 

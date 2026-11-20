@@ -84,6 +84,7 @@ export async function expectStaysOver(
   // draws by itself, which is all that the part may show. A role locator no
   // longer finds hidden content, so one handle hides it and shows it again.
   const content = await beneath.elementHandle();
+  if (content === null) throw new Error(`${label} has no content beneath it`);
   await content.evaluate((element: HTMLElement) => {
     element.style.visibility = "hidden";
   });
