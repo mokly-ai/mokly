@@ -45,7 +45,7 @@ impl ToolchainCheck {
         )?);
         for path in [
             "docs/protocol/cloud/viewer-builds.md",
-            "apps/app/src/viewer/build-copy.ts",
+            "packages/app/src/viewer/build-copy.ts",
             "docs/mockups/src/fixtures/build-copy.ts",
         ] {
             violations.extend(build_pins::failure_sentence(

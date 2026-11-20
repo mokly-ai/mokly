@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-02, from the Milestone 3 smoke test of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`.
-- **Location:** `apps/app/src/screens/app/project-route.tsx:123`, `apps/app/src/viewer/panels/share-link.tsx:15`, and the "Sharing" section of `docs/protocol/cloud/viewer-address-state.md`.
+- **Location:** `packages/app/src/screens/app/project-route.tsx:123`, `packages/app/src/viewer/panels/share-link.tsx:15`, and the "Sharing" section of `docs/protocol/cloud/viewer-address-state.md`.
 - **Reason:** On 2026-11-03 the user chose D, to let readers who are not signed in use the viewer in the app, and asked for the fix after the merge of the Mokly 0.18.0 upgrade.
 - **Category:** Docs or spec.
 

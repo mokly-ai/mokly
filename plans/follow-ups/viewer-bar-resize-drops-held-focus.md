@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from the wider-fix check of review finding 6 on `conductor/follow-ups-hosted-viewer-layout`.
-- **Location:** `apps/app/src/viewer/bar.tsx`, the More state in `apps/app/src/screens/viewer/viewer-screen.tsx`, the slot references in `apps/app/src/screens/viewer/carriers.ts`, and the focus return in `apps/app/src/viewer/focus.ts`.
+- **Location:** `packages/app/src/viewer/bar.tsx`, the More state in `packages/app/src/screens/viewer/viewer-screen.tsx`, the slot references in `packages/app/src/screens/viewer/carriers.ts`, and the focus return in `packages/app/src/viewer/focus.ts`.
 - **Reason:** No requirement states where focus moves when a responsive bar removes its focused control, so the wider fix needs a user choice.
 - **Category:** Product bug.
 - **Terms:**
@@ -19,9 +19,9 @@
   - **C.** Resolve the logical action to its current carrier through the bar's placement model. Move focus there only when the removed control or menu held it. Preserve focus elsewhere. Define the behavior in the viewer contract and cover both directions in the layout browser journey. Effort: Medium.
 - **Left out:** Keeping hidden controls mounted provides no usable focus destination. Freezing the wide composition can reintroduce overlap. Closing unrelated overlays adds a dismissal behavior that the user did not choose.
 - **Wider fix:** C. The same placement model can govern rendering, held focus, and overlay focus return.
-- **Previous examples:** The old 768 px window switch had the same removal paths. `apps/app/src/viewer/focus.ts` already resolves logical opener slots across package handoff, but only after overlay dismissal.
-- **Related:** Overlay dismissal already returns focus to the action's current carrier through the placement model in `apps/app/src/viewer/bar.tsx` and `apps/app/src/viewer/focus.ts`, without this held-focus choice. Option C adds the held-focus move to that same placement model. `compact-viewer-hides-latest-publication-offer.md` also changes action placement.
+- **Previous examples:** The old 768 px window switch had the same removal paths. `packages/app/src/viewer/focus.ts` already resolves logical opener slots across package handoff, but only after overlay dismissal.
+- **Related:** Overlay dismissal already returns focus to the action's current carrier through the placement model in `packages/app/src/viewer/bar.tsx` and `packages/app/src/viewer/focus.ts`, without this held-focus choice. Option C adds the held-focus move to that same placement model. `compact-viewer-hides-latest-publication-offer.md` also changes action placement.
 - **Recommendation:** C. It keeps the reader on the same logical action and preserves unrelated focus.
 - **Action:** ask the user, because C adds a focus move during resize that no current requirement defines.
 
-Reproduce first. Focus History in a wide bar and narrow the App-owned viewer container. Then open More in a narrow bar and widen the container while a row has focus. Record the destination after each change. Do not add a retry, sleep, or longer restoration window. Keep the overlay-dismissal restoration of `apps/app/src/viewer/focus.ts` working. The journey "the top bar keeps controls readable and follows its own width" in `apps/app/src/_tests_/viewer/layout.spec.ts` covers it.
+Reproduce first. Focus History in a wide bar and narrow the App-owned viewer container. Then open More in a narrow bar and widen the container while a row has focus. Record the destination after each change. Do not add a retry, sleep, or longer restoration window. Keep the overlay-dismissal restoration of `packages/app/src/viewer/focus.ts` working. The journey "the top bar keeps controls readable and follows its own width" in `packages/app/src/_tests_/viewer/layout.spec.ts` covers it.

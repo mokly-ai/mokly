@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-17, from branch `calummoore/combine-mokly-cloud-into-repo-704s`.
-- **Location:** `apps/app/package.json`, `package-lock.json`, and `scripts/verification/dependency-audit-exceptions.json`.
+- **Location:** `packages/app/package.json`, `package-lock.json`, and `scripts/verification/dependency-audit-exceptions.json`.
 - **Reason:** Cal deferred the Expo migration on 2026-11-17 and accepted reviewed private-app risks for at most 31 days.
 
 - **Terms:**

@@ -27,7 +27,7 @@ RUN npm run build:web --workspace @mokly-cloud/app
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 WORKDIR /app
-COPY --from=build /build/apps/app/dist ./dist
+COPY --from=build /build/packages/app/dist ./dist
 COPY --from=build /build/build-config.json ./build-config.json
 COPY infra/docker/app-server.mjs ./app-server.mjs
 USER 65532:65532

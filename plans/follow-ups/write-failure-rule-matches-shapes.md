@@ -3,13 +3,13 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F1 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `rules/typescript/write-failure-through-the-fragment.yml:20-43` and `:47-127`, `rules/_tests_/write-failure-through-the-fragment-test.yml:24-43` and `apps/app/src/components/write-failure.tsx:23-38`.
+- **Location:** `rules/typescript/write-failure-through-the-fragment.yml:20-43` and `:47-127`, `rules/_tests_/write-failure-through-the-fragment-test.yml:24-43` and `packages/app/src/components/write-failure.tsx:23-38`.
 - **Reason:** The fix replaces a lint rule with a stricter import rule, and that change needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The rule still matches literal JSX shapes, and its fixtures still omit the spread and computed `className` forms. No current bypass is known.
 - **Category:** Repository rule.
 
 - **Terms:**
-  - **`write-failure` fragment:** The component in `apps/app/src/components/write-failure.tsx` that reports a refused write beside its control.
+  - **`write-failure` fragment:** The component in `packages/app/src/components/write-failure.tsx` that reports a refused write beside its control.
 - **Background:** The ast-grep rule `write-failure-through-the-fragment` makes every refused write go through the fragment. It matches the shapes of the code. Three reviews each spent a round on a way to defeat it by moving one attribute. The review of an earlier milestone, 12G round 2, closed the mirror, the `aria-live` variant and the empty link. It left the spread and the computed `className` shapes open. Those review rounds are history. No current bypass is known.
 - **Problem:** A shape rule needs a new `invalid:` case for each new way around it.
 - **Impact if no action:** A refusal can bypass the fragment with a shape the rule does not know, and each review keeps finding new shapes.

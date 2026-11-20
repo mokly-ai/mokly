@@ -1,7 +1,7 @@
 # Marketing Site
 
 The public website and documentation live in this repository as the static
-Astro npm workspace `apps/site`. Marketing lives here, not in `apps/app`,
+Astro npm workspace `apps/site`. Marketing lives here, not in `packages/app`,
 because the site documents the cloud from the cloud protocol docs, stages the
 cloud dogfood catalogue and consumes the cloud design tokens, while the
 product app serves only the signed-in application and its account routes. The site and app share one
@@ -13,17 +13,17 @@ implementation contract.
 
 ## Ownership
 
-| Public surface                | Owner         | Routes                                                                         |
-| ----------------------------- | ------------- | ------------------------------------------------------------------------------ |
-| Shared app/site origin        | `apps/site`   | `/`, `/docs/…`, `/changelog`, `/terms`, `/privacy`, `/complaints`, `/security` |
-| Shared app/site origin        | `apps/app`    | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`        |
-| Catalogue publication origins | Rust workload | per-publication sandbox subdomains, see [Viewer](./viewer.md)                  |
+| Public surface                | Owner          | Routes                                                                         |
+| ----------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| Shared app/site origin        | `apps/site`    | `/`, `/docs/…`, `/changelog`, `/terms`, `/privacy`, `/complaints`, `/security` |
+| Shared app/site origin        | `packages/app` | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`        |
+| Catalogue publication origins | Rust workload  | per-publication sandbox subdomains, see [Viewer](./viewer.md)                  |
 
 The internal app-origin hostname is an app-workload endpoint used only by the
 Worker. It is not a public surface and is never linked or navigated directly.
 
 The site is static, makes no API calls and sets no cookies. The app serves no
-marketing content and no documentation; `apps/app` has no static marketing
+marketing content and no documentation; `packages/app` has no static marketing
 export. The [origin router](./origin-router.md) handles the whole origin,
 passes `/` and the site's declared first segments through to Pages and sends
 all other paths to the app workload. Every path on a preview host belongs to
