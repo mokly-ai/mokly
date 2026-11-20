@@ -68,6 +68,7 @@ pub struct Runtime {
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
+    pub(crate) watch_stylesheets: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
     pub(crate) describing: Arc<Mutex<()>>,
@@ -77,6 +78,14 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// Enable physical stylesheet watch mapping for the working side of Serve.
+    pub fn with_stylesheet_watching(mut self) -> Self {
+        if self.base.is_none() {
+            self.watch_stylesheets = true;
+        }
+        self
+    }
+
     /// Keep bounded captured plans for the head preparations of one Serve command.
     pub fn with_serve_edit_plans(mut self) -> Self {
         if self.base.is_none() && self.edit_plans.is_none() {
@@ -140,7 +149,7 @@ impl Runtime {
         version: String,
         base: Option<Arc<BaseSide>>,
     ) -> Self {
-        Self::assemble(
+        let mut runtime = Self::assemble(
             tree,
             self.dependency_tree.clone(),
             self.physical_inputs.clone(),
@@ -150,7 +159,9 @@ impl Runtime {
             version,
             base,
             self.style_references.clone(),
-        )
+        );
+        runtime.watch_stylesheets = false;
+        runtime
     }
 
     /// Every field of a runtime, so that each constructor passes the style memo.
@@ -179,6 +190,7 @@ impl Runtime {
             cache,
             workers,
             version,
+            watch_stylesheets: false,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             style_references,

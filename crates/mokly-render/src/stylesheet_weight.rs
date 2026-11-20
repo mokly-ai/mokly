@@ -23,7 +23,14 @@ pub(crate) fn bundle(value: &Bundle) -> usize {
     for (path, value) in value.imported_by.iter().chain(&value.dependency_digests) {
         bytes += size_of::<(String, String)>() + path.capacity() + value.capacity();
     }
-    for path in &value.repository_aliases {
+    for (path, root) in &value.resolution_roots {
+        bytes += size_of_val(path) + size_of_val(root) + path.capacity() + root.capacity();
+    }
+    for path in value
+        .repository_aliases
+        .iter()
+        .chain(&value.resolution_files)
+    {
         bytes += size_of::<String>() + path.capacity();
     }
     for (path, names) in &value.css_modules {
