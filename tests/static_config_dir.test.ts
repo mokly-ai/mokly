@@ -9,13 +9,15 @@ import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
 
 import { configDirPaths } from "./helpers/config_dir.js";
+import { durableRoot } from "./helpers/durable_fixture.js";
 import { nativeRoot, write } from "./helpers/native_resolution.js";
 import { command } from "./helpers/static_publication.js";
 import { timings } from "./helpers/static_timings.js";
 
 test("strict builds replace cached HTML after an earlier configDir paths target appears", async (context) => {
-  const { root, params, addEarlier } = await configDirPaths(context);
-  const cache = await nativeRoot(context);
+  const parent = await durableRoot(context, "static-config-dir");
+  const { root, params, addEarlier } = await configDirPaths(context, parent);
+  const cache = await nativeRoot(context, parent);
   await fs.mkdir(path.join(root, ".context"));
   await write(path.join(root, "mokly.config.json"), "{}");
   await write(

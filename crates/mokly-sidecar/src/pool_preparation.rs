@@ -127,21 +127,21 @@ impl Pool {
                 .is_some_and(|(_, _, _, captured)| *captured)
             && let Some((generation, runtime, preparation, _)) = candidate.take()
         {
-            self.restore(slot, &generation, false, preparation)?;
+            self.restore(slot, &generation, false, preparation, false)?;
             keys.push(runtime);
         }
         if let Some(recipe) = stored {
             keys.push(recipe.compiled.runtime_key.clone());
             let generation = recipe.generation.clone();
-            self.prerequisite(slot, Call::RestoreGeneration(recipe))?;
+            self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
             slot.generations.insert(generation, 0);
         }
         if let Some((generation, runtime, preparation, _)) = candidate {
-            self.restore(slot, &generation, false, preparation)?;
+            self.restore(slot, &generation, false, preparation, false)?;
             keys.push(runtime);
         }
         if let Some((generation, runtime, preparation)) = fallback {
-            self.restore(slot, &generation, false, preparation)?;
+            self.restore(slot, &generation, false, preparation, false)?;
             keys.push(runtime);
         }
         Ok((complete, keys))
@@ -166,15 +166,17 @@ impl Pool {
                 bindings_needed,
             )
         };
-        self.restore(slot, generation, description_needed, preparation)
+        self.restore(slot, generation, description_needed, preparation, false)
     }
 
-    fn restore(
+    /// Send the calls that a preparation snapshot names, one at a time, quiet for a warm-up.
+    pub(super) fn restore(
         &self,
         slot: &mut Slot,
         generation: &str,
         description_needed: bool,
         preparation: Preparation,
+        quiet: bool,
     ) -> Result<()> {
         let Preparation {
             recipe,
@@ -191,11 +193,12 @@ impl Pool {
                     modules: recipe.modules,
                     compiled: recipe.compiled,
                 })),
+                quiet,
             )?;
             slot.generations.insert(generation.into(), epoch);
         }
         if let Some(maps) = maps {
-            self.prerequisite(slot, Call::CssModules(maps))?;
+            self.prerequisite(slot, Call::CssModules(maps), quiet)?;
             slot.maps.insert(generation.to_owned());
         }
         if description_needed && !slot.described.contains(generation) {
@@ -204,27 +207,31 @@ impl Pool {
                 Call::Describe(Generation {
                     generation: generation.to_owned(),
                 }),
+                quiet,
             )?;
             slot.described.insert(generation.to_owned());
         }
         if let Some(bindings) = bindings {
-            self.prerequisite(slot, Call::Bindings((*bindings).clone()))?;
+            self.prerequisite(slot, Call::Bindings((*bindings).clone()), quiet)?;
             slot.bindings.insert(generation.to_owned(), bindings);
         }
         Ok(())
     }
 
-    fn prerequisite(&self, slot: &mut Slot, call: Call) -> Result<()> {
+    /// Send one call outside the request queue and discard its result; only a warm-up is quiet.
+    pub(super) fn prerequisite(&self, slot: &mut Slot, call: Call, quiet: bool) -> Result<()> {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
-        slot.worker.request(&Request { id: 1, call }, deadline)?;
+        slot.worker
+            .request(&Request { id: 1, call, quiet }, deadline)?;
         Ok(())
     }
 }
 
-struct Preparation {
+/// The retained inputs that one preparation sends to a slot.
+pub(super) struct Preparation {
     recipe: Option<Recipe>,
     maps: Option<CssModules>,
     bindings: Option<Arc<Bindings>>,
@@ -238,7 +245,8 @@ struct Recipe {
 }
 
 impl Preparation {
-    fn snapshot(
+    /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
+    pub(super) fn snapshot(
         state: &State,
         slot: &Slot,
         generation: &str,

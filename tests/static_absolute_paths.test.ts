@@ -4,14 +4,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { absolutePaths } from "./helpers/absolute_paths.js";
+import { durableRoot } from "./helpers/durable_fixture.js";
 import { nativeRoot, write } from "./helpers/native_resolution.js";
-import { command, workspace } from "./helpers/static_publication.js";
+import { command } from "./helpers/static_publication.js";
 import { timings } from "./helpers/static_timings.js";
 
 test("strict builds replace cached HTML after an earlier absolute paths target appears", async (context) => {
-  const scratch = path.join(workspace, ".context");
-  await fs.mkdir(scratch, { recursive: true });
-  const parent = await nativeRoot(context, scratch);
+  const parent = await durableRoot(context, "static-absolute-paths");
   const { root, addEarlier } = await absolutePaths(context, "exact", parent);
   const cache = await nativeRoot(context, parent);
   await fs.mkdir(path.join(root, ".context"));

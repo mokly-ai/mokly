@@ -21,6 +21,14 @@ pub struct Request {
     /// Method and its structured params.
     #[serde(flatten)]
     pub call: Call,
+    /// The sidecar drops console and output writes until it replies; only warm-up calls set it.
+    #[serde(default, skip_serializing_if = "loud")]
+    #[ts(optional, as = "Option<bool>")]
+    pub quiet: bool,
+}
+
+fn loud(quiet: &bool) -> bool {
+    !quiet
 }
 
 /// Structured remote failure.

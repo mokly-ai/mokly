@@ -46,6 +46,7 @@ mod pool_sources;
 mod pool_start;
 mod pool_state;
 mod pool_timing;
+mod pool_warmup;
 pub mod postcss_evidence;
 pub mod postcss_failure;
 mod postcss_phase;

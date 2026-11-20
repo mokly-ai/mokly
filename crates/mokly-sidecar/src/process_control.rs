@@ -49,6 +49,7 @@ impl WorkerControl for ProcessControl {
     fn shutdown(&self) -> Result<()> {
         let frame = encode(&Request {
             id: 9_007_199_254_740_991,
+            quiet: false,
             call: Call::Shutdown(Empty {}),
         })?;
         if self.outgoing.try_send(frame).is_err() {

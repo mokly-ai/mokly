@@ -61,11 +61,7 @@ impl GitRepository {
             .into_iter()
             .map(|change| (change.path.clone(), change))
             .collect();
-        let untracked = self.command(
-            &["ls-files", "--others", "--exclude-standard", "-z"],
-            vec![],
-            DEFAULT_OUTPUT_LIMIT,
-        )?;
+        let untracked = self.file_listing(&["--others", "--exclude-standard", "-z"])?;
         for field in changes::fields(&untracked)? {
             let Some(value) = tree::candidate(field) else {
                 continue;

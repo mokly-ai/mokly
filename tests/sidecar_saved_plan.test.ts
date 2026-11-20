@@ -46,9 +46,15 @@ for (const exact of [true, false])
       undefined,
       planCapture(root),
     );
+    const { reuseEvidence } = captured.result.compiled;
     assert.ok(
       captured.result.plan,
-      "the captured bundle must return its native plan",
+      `the captured bundle must return its native plan: ${JSON.stringify({
+        complete: reuseEvidence.complete,
+        durable: reuseEvidence.durable,
+        uncaptured: reuseEvidence.uncaptured ?? null,
+        toolchainPresent: Boolean(captured.result.compiled.toolchain),
+      })}`,
     );
     assert.deepEqual(captured.result.plan.imports, {
       [planKey(
