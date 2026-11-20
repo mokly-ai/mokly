@@ -96,6 +96,7 @@ fn fixture() -> (State, Slot) {
         contexts: Default::default(),
         renders: 0,
         requests: 0,
+        last_compilation: None,
     };
     (state, slot)
 }
