@@ -108,74 +108,9 @@
       the wait, so the evidence is not durable.
     - A recorded input changes between the captured compile and the edit
       check, so the core sends no plan.
-  - The second failure:
-    - On 2026-11-19 the complete gate `cargo xtask check` failed in
-      `cargo test --locked --workspace` with status 101. The branch was
-      `calummoore/mokly-git-command-wait-kvvh`. Its base and the current
-      `origin/main` were both commit `6ae96ed08`. The `integration_tests`
-      binary of `mokly-render` reported 102 passed, 1 failed, and 0 ignored,
-      in 71.79 s.
-    - This time the first case, "content", failed. Its module assertion at
-      line 113 passed. So the second `prepare` returned the expected modules
-      `entry.ts` and `value.ts`. The loop stopped there, so the "existing
-      import" case did not run. The failure text:
-
-      ```text
-      thread 'integration::plan_invalidation_tests::serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes' (332883) panicked at crates/mokly-render/tests/integration/plan_invalidation_tests.rs:115:9:
-      assertion `left == right` failed: plan content
-        left: false
-       right: true
-      ```
-
-    - The exact isolated rerun passed, with 1 passed, 0 failed, 0 ignored,
-      and 102 filtered out, in 3.77 s. It used the full name with the
-      `integration::plan_invalidation_tests::` prefix:
-
-      ```text
-      cargo test --locked -p mokly-render --test integration_tests integration::plan_invalidation_tests::serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes -- --exact --nocapture
-      ```
-
-    - Before that gate, `cargo xtask check --suite repository` passed on the
-      same code, with this test and all 2,704 Rust tests.
-    - The test and its fixture were byte-identical to `origin/main` at
-      `6ae96ed08`. The fixture uses `WorkingTree`, `SystemPhysicalInputs`, a
-      real Node sidecar, and `mokly_sidecar::process_clock::SystemClock`.
-      Neither file uses `mokly_git`. `mokly-render` lists `mokly-git` only as
-      a development dependency. So the Git runner and file listing changes of
-      that branch are not on the path of this test.
-    - In this run, the Cargo target folder was
-      `.context/git-command-wait/target-branch` in the repository. So
-      `CARGO_TARGET_TMPDIR` was inside `.context`. The sibling test creates
-      and removes its fixture folder directly in `.context`. So in this run,
-      that folder was a shared ancestor of both fixtures.
-    - No trace recorded this failure. The evidence does not show whether
-      shared ancestor churn, capture maturity, or a changed input caused it.
-  - The third failure:
-    - On 2026-11-19 a second complete gate `cargo xtask check` of the same
-      branch failed in `cargo test --locked --workspace` with status 101. It
-      used the same Cargo target folder inside `.context`, so the same shared
-      ancestor setup held. The test and its fixture were still byte-identical
-      to `origin/main` at `6ae96ed08`. The `integration_tests` binary of
-      `mokly-render` reported 102 passed, 1 failed, and 0 ignored, in 60.48 s.
-    - The "existing import" case failed again, at the same line. The
-      "content" case passed before it. The failure text:
-
-      ```text
-      thread 'integration::plan_invalidation_tests::serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes' (403437) panicked at crates/mokly-render/tests/integration/plan_invalidation_tests.rs:115:9:
-      assertion `left == right` failed: plan existing import
-        left: false
-       right: true
-      ```
-
-    - No isolated rerun followed this failure. The user allowed one isolated
-      rerun, and the rerun after the second failure already passed.
-    - No trace recorded this failure. Its source remains unknown.
-- **Problem:** The test fails now and then. In three complete gates, a Serve
-  edit request carried no saved plan where the test expects one. The failures
-  were in the "existing import" case, then the "content" case, then the
-  "existing import" case again. An isolated rerun passed after each of the
-  first two failures. The source remains unknown. In the last two failures,
-  both plan fixtures shared the `.context` ancestor folder.
+- **Problem:** The test fails now and then. In one complete gate, the Serve
+  edit request of its "existing import" case carried no saved plan, and an
+  isolated rerun passed.
 - **Impact if no action:** A complete gate can fail without a code defect,
   and each such failure costs a gate run. If the source is in product code,
   a Serve edit can also lose its saved plan and run the native attempt
@@ -224,8 +159,10 @@
 - **Wider fix:** D, if a reproduction confirms unrelated ancestor churn. It is
   blocked, because it changes the stable-capture rule.
 - **Previous examples:**
-  - `plans/follow-ups/flaky-program-environment-probe.md` records another
-    flaky test whose source was unknown at the first failure.
+  - The environment-token probe in
+    `crates/mokly-compare/tests/program_tests.rs` had an unknown source at
+    its first failure. A later process trace found an inherited writable
+    fixture handle, which caused `ETXTBSY`.
   - On the branch of this item, the new sibling test
     `serve_plans_reject_an_added_earlier_absolute_paths_target` failed in the
     second complete gate with "Mock for BundleStore::save was never called.
