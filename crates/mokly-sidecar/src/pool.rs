@@ -180,6 +180,7 @@ impl Pool {
             contexts: BTreeSet::new(),
             renders: 0,
             requests: 0,
+            last_compilation: None,
         })
     }
 

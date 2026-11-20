@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use crate::bundle_outcomes::CacheOutcome;
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
@@ -138,6 +139,11 @@ impl Pool {
         }
         if let (Call::Bundle(params), MethodResult::Bundle(bundle)) = (call, &mut result) {
             self.complete_bundle(params, bundle, attempt);
+            if slot.source_root == self.launch.repository
+                && !matches!(bundle.cache, Some(CacheOutcome::Memory | CacheOutcome::Hit))
+            {
+                slot.last_compilation = Some(bundle.epoch);
+            }
         }
         Ok(result)
     }

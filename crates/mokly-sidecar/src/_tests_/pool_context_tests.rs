@@ -47,6 +47,7 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
                     contexts: BTreeSet::from(["used".into()]),
                     renders: 0,
                     requests: 0,
+                    last_compilation: None,
                 })
             })
             .collect();
