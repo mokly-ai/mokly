@@ -45,6 +45,7 @@ import {
 } from "./control_values.js";
 import { useLiveEditingStart, useViewerCapabilities } from "./data_context.js";
 import { useFocusAfter } from "./focus_after.js";
+import { useNamedRetryContent, type RetryFocus } from "./retry_focus.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Control output consumed by both the stage and the Props panel. */
@@ -64,6 +65,7 @@ export function useComponentControls({
   contexts,
   data,
   onCurrent,
+  recovery,
   target,
   workspaceRef,
 }: {
@@ -72,6 +74,8 @@ export function useComponentControls({
   data: WorkspaceData;
   /** Show Current instead of the comparison. */
   onCurrent(): void;
+  /** The Try again of the Props tab, whose recovery ends on the heading. */
+  recovery: RetryFocus;
   target: ControlTarget | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): ComponentControlsResult {
@@ -94,6 +98,7 @@ export function useComponentControls({
   const state = shownEditorState(stored, initial);
   const [lifecycle] = useState(() => new EditLifecycle());
   const focus = useFocusAfter<ControlsFocus>("heading");
+  const named = useNamedRetryContent(focus.ref, "heading", recovery);
   const pageIds = useRef(new Map<string, string>());
   const mode = target
     ? controlsMode(target, comparing, previews ? "ready" : start?.status)
@@ -259,7 +264,7 @@ export function useComponentControls({
       target && mode ? (
         <ComponentControlsPanel
           data={data}
-          focus={focus.ref}
+          focus={named}
           mode={mode}
           onChange={change}
           onCurrent={current}

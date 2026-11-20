@@ -7,6 +7,7 @@ import type { GeneratedComponentView } from "../components/views.js";
 import type { Catalogue } from "./catalogue.js";
 import { useRouteDelivery } from "./data_context.js";
 import { PublicStage } from "./public_stage.js";
+import { RetryContent, useRetryFocus } from "./retry_focus.js";
 import { routedEntries } from "./selection.js";
 import { StageDelivery } from "./stage_delivery.js";
 import type { RouteTarget } from "./target.js";
@@ -20,21 +21,27 @@ export function TargetStage(props: {
   variantPath?: string | undefined;
 }) {
   const delivery = useRouteDelivery();
+  const focus = useRetryFocus();
   const entry = props.target.entry;
   if (delivery && delivery.status !== "ready")
-    return <StageDelivery delivery={delivery} kind={entry.kind} />;
+    return (
+      <StageDelivery delivery={delivery} focus={focus} kind={entry.kind} />
+    );
   const model = props.catalogue.publicModel;
   const current = routedEntries(model).find(
     (item) => item.path === entry.path,
   )!;
+  // After a Try again of the stage, its first frame takes focus.
   return (
-    <PublicStage
-      catalogue={model}
-      entry={current}
-      hasDarkFragments={props.catalogue.hasDarkFragments}
-      {...(props.fragment ? { fragment: props.fragment } : {})}
-      {...(props.previewViews ? { previewViews: props.previewViews } : {})}
-      {...(props.variantPath ? { variantPath: props.variantPath } : {})}
-    />
+    <RetryContent value={focus}>
+      <PublicStage
+        catalogue={model}
+        entry={current}
+        hasDarkFragments={props.catalogue.hasDarkFragments}
+        {...(props.fragment ? { fragment: props.fragment } : {})}
+        {...(props.previewViews ? { previewViews: props.previewViews } : {})}
+        {...(props.variantPath ? { variantPath: props.variantPath } : {})}
+      />
+    </RetryContent>
   );
 }
