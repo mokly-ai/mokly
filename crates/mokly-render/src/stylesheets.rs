@@ -96,7 +96,7 @@ pub(crate) fn compiler(
             settings,
             runtime.styles.clone(),
         )
-        .with_head(runtime.head_styles.clone()),
+        .with_head(runtime.head_styles.clone().unwrap_or_default()),
     )
 }
 

@@ -34,6 +34,16 @@ The three head-generation tests reproduced stale CSS on 2026-11-19. Each returne
 
 After that push, merge the fix branch into this branch. The performance orchestrator will give the final stack order with PR #355. Report capture cost from `css.bundle` spans on `examples/basic` and both large fixtures. Report a cost above about five percent. Correct output comes before the speed work.
 
+On 2026-11-20, the performance orchestrator reported PR #350 merged at `5cba4dc4b`. The correctness branch integrated that main commit once. The integration preserved the complete in-progress fix. Rust is now 1.98.1. This branch will receive that main content through the correctness branch.
+
+The performance orchestrator also included the CSS-only watch gap in the correctness fix on 2026-11-20. Captured resolution files and directories must reach Serve's watch inputs. A red-first test changes only a package `style` entry in one Serve session and requires updated published CSS. If that extension exceeds Medium, ship the reuse fix first and record the separate High watch gap as a follow-up item.
+
+The correctness fix is pushed at `95d89823d83972deb3fbb7acf7e3aec3792a56aa`. The merged repository suite passed. This branch merged that fix at `1bbad0f05`, preserving the monorepo and both README changes. The performance orchestrator owns the fix's review, full gate, pull request, and CI in a separate workspace. Its CSS cost report is still due.
+
+On 2026-11-20, the performance orchestrator reported step 2 merged into `main` at `9fb9ad1f9a`. Its branch is deleted. Build the base lookup on the correctness fix. Before opening this pull request, merge current `origin/main`, which holds step 2. Target the fix branch while its pull request is open. Target `main` after the fix merges. This replaces the earlier instruction to merge the step 2 branch.
+
+On 2026-11-20, workspace 130 took ownership of the correctness branch. The local CSS cost report was sent to that workspace and the performance orchestrator. This branch integrated its later alias watch correction at `079b465e15d009bfa286ecfdca92c0f93b063da6`. Both branches contain `main` at `a2f61eb53`. The merge kept every prerequisite change without a conflict. The performance orchestrator dropped the proposed historical evidence reduction. Head capture and base validation and replay stay complete.
+
 ## Contract owners
 
 - [Base preparation](../docs/protocol/mokly-base-preparation.md).
@@ -93,6 +103,31 @@ A class of inputs that cannot be proved stops this step. A historical isolation 
 - **Action:** Apply E under the user's authorisation for a Medium evidence extension. Stop and report if the extension becomes larger.
 - **Call:** Workspace orchestrator, 2026-11-19. The reason is to preserve validation and head retention while removing duplicate compilation.
 
+### 2. Keep cache origin independent of watching
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Code structure.
+- **Location:** `crates/mokly-render/src/runtime.rs` and `crates/mokly-render/src/stylesheets.rs`.
+- **Terms:** An original head owns the first writable store. A base borrows its original head through a weak reference.
+- **Background:** The prerequisite owner will make watch mapping an explicit Serve builder option. Build and publish heads will keep mapping disabled.
+- **Problem:** The initial base lookup uses the watch flag to distinguish a head from a base. That flag will no longer identify cache origin.
+- **Impact if no action:** A head without watch mapping will offer no records to its base. A future workaround could expose a base store.
+- **Root question:** How does a runtime identify an original head store across watch modes, base extraction modes, and source lifetimes?
+- **Options:**
+  - **A.** Add a separate base-origin flag beside the weak reference. It is small but keeps related state in two fields. Effort: Small.
+  - **B.** Use an optional weak reference. `None` marks an original head. `Some` marks a base, including an expired or unavailable original source. It adds no separate flag. Effort: Small.
+  - **C.** Use an explicit head-or-base enum with the weak reference in its base variant. This names both states but requires more type and module changes. Effort: Small.
+  - **D.** Give every runtime an original-head weak source. An original head points to itself. Exclude that same store from its own fallback. This copies store identity and needs extra same-store logic. Effort: Small.
+  - **E.** Put the writable store and borrowed source in one private value with three constructors. This limits other runtime code but changes more files and adds a type. Effort: Small.
+- **Left out:** A watch flag cannot identify build or publish heads. A live-reference test would promote a base after its head expires. Presence of `BaseSide` misses bases without extraction. Always lending the writable store exposes base stores. A strong reference keeps an expired head store alive. Lookup limited to Serve breaks the non-watching head requirement.
+- **Wider fix:** B. One value keeps the base marker and its original source together.
+- **Previous examples:** The earlier watch-origin guard already protects no-extraction bases. The prerequisite changes the meaning of its flag.
+- **Assumptions:** The user requires read-only original-head lookup, private base stores, independent watch behavior, and unchanged bounds. The prerequisite owner explicitly chose the Serve builder on 2026-11-20.
+- **Recommendation:** B, confirmed by the fresh options check. It keeps origin separate from watching without copying the store identity or adding a lookup check.
+- **Action:** Apply B. The options check is complete. Preserve the prerequisite Serve builder during integration.
+- **Call:** Workspace orchestrator, 2026-11-20. Preserve the new watch boundary and the existing cache ownership rule.
+
 No public format, option, error, scheduling rule, or protocol requirement changes. The differential tests are explicitly required by the user. Keep them even though the testing skill normally treats output equivalence as a one-time proof.
 
 ## Milestone 1: Safety and documentation
@@ -109,42 +144,43 @@ Depends on: none
 Depends on: 1
 
 - [x] Reproduce stale head reuse for package `style`, package `exports`, and an earlier extension candidate. Send the assertion failures before fixing the code.
-- [ ] Delegate per-root evidence capture to the `non-ui implementor` in its separate worktree. Include the PostCSS shared resolver when its effort fits Medium. Branch: `calummoore/mokly-stylesheet-resolution-evidence`.
-- [ ] Turn the three regressions green. Run targeted tests and the repository check on the fix branch.
-- [ ] Measure initial `css.bundle` count and time before and after on the example and both large fixtures. Report a cost above about five percent.
-- [ ] Commit and push the fix branch. Send its SHA, changed paths, exact High defect record, checks, and cost to the performance orchestrator.
-- [ ] Merge the fix into this branch with the `git-merge` skill. Keep its complete gate, review, pull request, and CI with the orchestrator's new workspace.
+- [x] Delegate per-root evidence capture to the `non-ui implementor` in its separate worktree. Include the PostCSS shared resolver when its effort fits Medium. Branch: `calummoore/mokly-stylesheet-resolution-evidence`.
+- [x] Turn the three regressions green. Run targeted tests and the repository check on the fix branch.
+- [x] Include CSS resolution watch inputs and the real Serve regression when the extension fits Medium. Repeat the new asynchronous test ten times.
+- [x] Commit and push the fix branch. Send its SHA, changed paths, exact High defect record, and checks to the performance orchestrator.
+- [x] Merge the fix into this branch with the `git-merge` skill. Keep its complete gate, review, pull request, and CI with the orchestrator's new workspace.
 
 ## Milestone 3: Bounded record lookup and differential coverage
 
 Depends on: 2
 
-- [ ] Delegate code and tests to the `non-ui implementor`.
-- [ ] Add the new-behaviour test first. Save an assertion failure from the existing implementation.
-- [ ] Confirm that the prerequisite fix retains and validates every resolution read and candidate, including absence.
-- [ ] Add read-only head lookup through the existing validation and replay path. Keep base miss insertion and rejection in the base store.
-- [ ] Preserve resolution evidence or reject a record whose resolution inputs cannot be proved.
-- [ ] Keep root-dependent PostCSS records isolated unless the existing evidence proves equal effective inputs.
-- [ ] Add differential shared-versus-separate output coverage for equal CSS, changed CSS, changed imports, changed assets, changed PostCSS configuration, changed base Tailwind content, and changed dependency versions.
-- [ ] Add red-first base cases for changed package `style` and `exports` entries and an earlier candidate appearing.
-- [ ] Add a red-first base case for a symbolic link in a path part. Prove one cache hit through the real historical tree.
-- [ ] Check read-only head behaviour, base-store bounds, evidence replay, misses, and the unchanged timing spans.
-- [ ] Check all delegated changes against these TODOs and the 300-line Rust cap.
-- [ ] Update relevant code comments. Align the README with the prerequisite fix and remove its pending status after implementation.
+- [x] Delegate code and tests to the `non-ui implementor`.
+- [x] Add the new-behaviour test first. Save an assertion failure from the existing implementation.
+- [x] Confirm that the prerequisite fix retains and validates every resolution read and candidate, including absence.
+- [x] Add read-only head lookup through the existing validation and replay path. Keep base miss insertion and rejection in the base store.
+- [x] Preserve resolution evidence or reject a record whose resolution inputs cannot be proved.
+- [x] Keep root-dependent PostCSS records isolated unless the existing evidence proves equal effective inputs.
+- [x] Add differential shared-versus-separate output coverage for equal CSS, changed CSS, changed imports, changed assets, changed PostCSS configuration, changed base Tailwind content, and changed dependency versions.
+- [x] Add red-first base cases for changed package `style` and `exports` entries and an earlier candidate appearing.
+- [x] Add a red-first base case for a symbolic link in a path part. Prove one cache hit through the real historical tree.
+- [x] Check read-only head behaviour, base-store bounds, evidence replay, misses, and the unchanged timing spans.
+- [x] Check all delegated changes against these TODOs and the 300-line Rust cap.
+- [x] Update relevant code comments. Align the README with the prerequisite fix and remove its pending status after implementation.
 
-Evidence: `.context/shared-base-stylesheets/evidence/` holds test commands, the red proof, timing costs, and repeated-run results.
+Evidence: `.context/shared-base-stylesheets/evidence/` holds test commands, the red proof, timing costs, and repeated-run results. `origin-options.md` records the second options check.
 
 ## Milestone 4: Performance, output, and memory proof
 
 Depends on: 3
 
 - [ ] Build release binaries from the last merged `main` and this branch in separate checkouts and target directories. Build Cargo serially with incremental and dev debug disabled.
+- [x] Send the prerequisite fix's initial `css.bundle` count and time before and after on the example and both large fixtures. Report a cost above about five percent.
 - [ ] Check strict `examples/basic` output and large HTML and React fixture output from `scripts/large/` for exact byte equality.
 - [ ] Measure first Changes and base preparation in at least six interleaved warm and cold rounds on `examples/basic` and both large fixtures.
 - [ ] Count base `css.bundle` spans and cache outcomes. Keep their existing meaning.
 - [ ] Measure whole-tree cgroup anonymous memory plus swap at startup and during a ten-edit session. Require no increase above two percent.
 - [ ] Push the implementation and send its SHA and dist build commit to the performance orchestrator at once. Obtain the Mokly Cloud measurements.
-- [ ] Confirm the Mokly Cloud plain-CSS goal: no equal-input base `no-record` spans, at least 0.15 seconds less base preparation, and at least 0.15 seconds earlier first Changes.
+- [x] Confirm the Mokly Cloud plain-CSS goal: no equal-input base `no-record` spans, at least 0.15 seconds less base preparation, and at least 0.15 seconds earlier first Changes.
 
 Evidence: `.context/shared-base-stylesheets/evidence/` holds the raw runs, byte comparisons, and before-and-after report.
 
@@ -154,10 +190,13 @@ The earlier 0.25-second base stylesheet figure comes from Mokly Cloud, which has
 
 Depends on: 1, 2, 3, 4
 
-- [ ] Smoke-test the strict example through Serve. Save any browser screenshot under `.context/`.
-- [ ] Run targeted tests and each new asynchronous test ten times. Record test costs and assertion-failure proofs.
+- [x] Smoke-test the strict example through Serve. Save any browser screenshot under `.context/`.
+- [ ] Integrate later correctness fixes from the prerequisite owner before final verification and measurements. Keep their review and pull request with that owner.
+- [ ] Send the final combined SHA for the performance orchestrator's confirming check before the pull request. The initial Cloud result is accepted.
+- [x] Separate cache origin from the new Serve watch option. Prove non-watching heads, no-extraction bases, and expired original-head references.
+- [x] Run targeted tests and each new asynchronous test ten times. Record test costs and assertion-failure proofs.
 - [ ] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate. Use Git 2.45 or later, Git LFS, pinned Bun, and locked Cargo dependencies.
-- [ ] Merge the step 2 branch with the `git-merge` skill before the final pull request. Preserve all content. Integrate `origin/main` only after the PR #350 notice.
+- [x] Merge current `origin/main` with the `git-merge` skill before the final pull request. It now holds step 2. Target the fix branch until its pull request merges, then target `main`.
 - [ ] Commit with Conventional Commits and push this branch. Send the implementation SHA to the performance orchestrator.
 - [ ] Review the complete local diff against the stacked base with the `implementation-review` skill after the push. Fix confirmed `fix now` findings, record follow-ups for the rest, and re-review. Use at most two fix rounds.
 - [ ] Delete this plan when every earlier TODO is complete and the review rounds are done.
