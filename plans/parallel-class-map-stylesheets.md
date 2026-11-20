@@ -24,9 +24,11 @@ User calls, 2026-11-20:
 - Bound concurrency by available parallelism, four, and the number of roots.
 - Merge maps and select the first error in root order.
 - Keep the uncovered `.module.css` loop and cache rules.
-- Keep timing records, except that `css.bundle` spans can overlap.
+- Keep the timing schema and code. Read-span parentage and running byte totals may follow actual compile overlap.
 - Stop before implementation if completion order can change the required results.
-- Open the reviewed PR into `main`. Do not merge.
+- Freeze base `3e09c6150` for the first gate, byte proof, and performance measurements.
+- After cloud acceptance, merge `origin/main` once. Rerun the gate. Redo byte proof if stylesheet code changes.
+- Open the reviewed PR into `main`. Do not merge the PR.
 
 Design calls, 2026-11-20, checked by the fresh options review:
 
@@ -83,13 +85,16 @@ The current implementation confirms those traits.
   The unconditional evidence and record requirement needs clarification or a wider implementation.
 - **Recommendation:** D, changed from C after the options check. It defines a safe case and keeps C as the fallback.
 - **Action:** The parent authorized ordered commit and serial PostCSS on 2026-11-20.
-  Two residual effects still need the parent's answer before implementation.
+  The parent accepted R1 and conditionally accepted R2 on 2026-11-20. The base-selection audit selects R2 option B.
 
 ### Residual decisions from the options check
 
-- **R1:** Accept changed parent spans and running retained-byte totals for first input reads during parallel builds, or close the change.
-- **R2:** Accept dependency usage from up to three later roots in a failed chunk, or buffer usage before ordered commit.
-- Recommended outcomes are acceptance for both. The parent received the full numbered decisions on 2026-11-20.
+- **R1 = A, accepted 2026-11-20:** Read spans and running byte totals follow the actual overlap. Record changed parentage in the PR.
+- **R2 = B, selected 2026-11-20:** Buffer usage per parallel root and replay only the serial prefix, including the failing root's own reads.
+- The parent required B if extra failed-root usage can change later base selection. The runtime shares usage across attempts.
+- Base dependency selection reads those sets and changes fallback for an unmapped or missing directory. This activates the B condition.
+- Keep ordinary serial compilation unchanged. The parallel result retains its usage even when compilation fails.
+- Test successful usage equality and failed-attempt prefix usage. Record bounded speculative work in the PR and at ordered commit.
 - The options report proves plain compilation reads no cache state created by earlier inserts.
 - The report found no protocol requirement for serial roots. No protocol change is needed.
 - Exact store retention follows equal record charges, equal insertion order, and the held shared-store lock.
@@ -106,8 +111,8 @@ Depends on: none
 - [x] Audit captured reads, watch inputs, evidence, cache records, render keys, and published output for completion-order effects.
 - [x] Run the fresh read-only options check and incorporate its report.
 - [x] Send confirmed order-sensitive evidence and the recommended D path to the performance parent before implementation.
-- [ ] Resolve residual decisions R1 and R2 before implementation.
-- [ ] Validate Markdown, commit the plan, and push.
+- [x] Resolve residual decisions R1 and R2 before implementation.
+- [x] Validate Markdown, commit the plan, and push.
 
 Evidence: `.context/parallel-class-map-stylesheets/`.
 
@@ -115,14 +120,16 @@ Evidence: `.context/parallel-class-map-stylesheets/`.
 
 Depends on: Milestone 1
 
-- [ ] Delegate implementation to the non-ui implementor after the safety requirement is resolved.
-- [ ] Write tests first and observe assertion failures.
-- [ ] Prove root-order merging and first-error selection with reversed completion.
-- [ ] Prove failed roots return the existing error and no worker outlives the call.
-- [ ] Cover cancellation and the unchanged uncovered-module rule.
-- [ ] Implement bounded root concurrency with tracing context propagation.
-- [ ] Run targeted tests and each new concurrent test ten times.
-- [ ] Report extra work for concurrent roots that share an uncached import.
+- [x] Delegate implementation to the non-ui implementor after the safety requirement is resolved.
+- [x] Write tests first and observe assertion failures.
+- [x] Prove root-order merging and first-error selection with reversed completion.
+- [x] Prove failed roots return the existing error and no worker outlives the call.
+- [x] Cover cancellation and the unchanged uncovered-module rule.
+- [x] Prove exact successful dependency usage and failed-root usage prefix with deferred per-root usage.
+- [x] Implement bounded root concurrency with tracing context propagation.
+- [x] Run targeted tests and each new concurrent test ten times.
+- [x] Report extra work for concurrent roots that share an uncached import.
+- [x] Add the final shared-cache miss-vector assertions and repeat their focused case ten times.
 
 ## Milestone 3: Verification and performance evidence
 
@@ -130,10 +137,10 @@ Depends on: Milestone 2
 
 - [ ] Run the repository suite and complete gate from `AGENTS.md`.
 - [ ] Run the strict example build and renderer smoke check.
-- [ ] Measure cold and warm `serve.ready` on `examples/basic` and the large React fixture.
-- [ ] Compare every published byte and render key against main on all four fixtures.
-- [ ] Send the candidate SHA to the performance parent for Mokly Cloud latency, store-hit, and memory measurements.
-- [ ] Incorporate the parent's acceptance results.
+- [ ] Measure cold and warm `serve.ready` and first Changes on `examples/basic` and the large React fixture.
+- [x] Compare every published byte and render key against main on all four fixtures.
+- [ ] Send the candidate SHA immediately after the four-fixture proof for the parent's Cloud latency, store-hit, and memory measurements.
+      The parent authorized cloud suites to finish while it measures on another machine.
 
 ## Milestone 4: Commit, review, and pull request
 
@@ -142,6 +149,9 @@ Depends on: Milestone 3
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push.
       Fix confirmed findings under its two-round rule and record follow-ups.
+- [ ] Incorporate the parent's acceptance results before opening the pull request.
+- [ ] Merge current `origin/main` once after cloud acceptance. Audit preservation and rerun the complete gate.
+- [ ] Redo the byte proof if that merge changes stylesheet code.
 - [ ] Delete this plan under the `plans` skill.
 - [ ] Open the pull request into `main` with dated decisions and the plan permalink.
       Wait for final CI with `scripts/ci-wait.sh`. Fix branch-caused failures. Do not merge.
