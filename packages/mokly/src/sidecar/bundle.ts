@@ -1,8 +1,7 @@
 import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
-import path from "node:path";
 
-import type { build, BuildResult, Loader } from "esbuild";
+import type { build, BuildResult } from "esbuild";
 
 import type { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
@@ -17,20 +16,18 @@ import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
+import { bundleOptions } from "./bundle-options.js";
 import { bundleRecipe } from "./bundle-recipe.js";
 import type { CaptureDurability } from "./capture-durability.js";
-import { configuredFiles } from "./configured-files.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative } from "./native-plan.js";
-import { nativeLogOverride } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
-import { consumerPlugins } from "./plugins.js";
+import { PlannedRelative } from "./planned-relative.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
-import { resolutionOptions } from "./resolution.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
 
 export interface Generation {
@@ -125,6 +122,7 @@ export async function bundle(
     measurements,
     native.plan ? { mode: "planned", plan: native.plan } : { mode: "full" },
     capture,
+    true,
   );
 }
 
@@ -159,6 +157,7 @@ async function bundleAttempt(
   measurements: Measurements,
   resolution: Exclude<Resolution, { mode: "native" }>,
   capture: BundleCaptureState,
+  completePlan?: boolean,
 ): Promise<Bundled>;
 async function bundleAttempt(
   params: BundleParams,
@@ -166,6 +165,7 @@ async function bundleAttempt(
   measurements: Measurements,
   resolution: Resolution,
   capture: BundleCaptureState,
+  completePlan?: boolean,
 ): Promise<Bundled | NativeOutcome>;
 async function bundleAttempt(
   params: BundleParams,
@@ -173,6 +173,7 @@ async function bundleAttempt(
   measurements: Measurements,
   resolution: Resolution,
   capture: BundleCaptureState,
+  completePlan = false,
 ): Promise<Bundled | NativeOutcome> {
   const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
@@ -206,56 +207,32 @@ async function bundleAttempt(
       capture.mode,
     );
     capture.preview = preview ?? null;
-    const settings = params.moduleResolution;
-    const loaders = Object.fromEntries(
-      Object.entries(settings.loaders).filter(
-        ([extension]) => extension !== ".css" && extension !== ".module.css",
-      ),
-    );
-    const options = {
-      absWorkingDir: path.resolve(
-        params.sourceRoot,
-        params.configurationDirectory,
-      ),
-      absPaths: ["metafile", "log"],
-      stdin: {
-        contents,
-        resolveDir: params.sourceRoot,
-        sourcefile: path.resolve(params.sourceRoot, "mokly-entry"),
-      },
-      bundle: true,
-      write: false,
-      outdir: path.resolve(params.sourceRoot, ".context/sidecar-output"),
-      platform: "node",
-      format: "cjs",
-      target: "node22",
-      jsx: "automatic",
-      jsxDev: true,
-      // Renaming a colliding top-level name would let another module change
-      // a function's `name` and its stack frames, outside its render key.
-      keepNames: true,
-      metafile: true,
-      logLevel: "silent",
-      ...(resolution.mode === "native"
-        ? { logOverride: nativeLogOverride }
-        : {}),
-      plugins: [
-        configuredFiles(params, paths, preview, resolution),
-        ...(evidence ? [evidence.plugin] : []),
-        ...(capture.editImports ? [capture.editImports.plugin] : []),
-        ...consumerPlugins(
-          params,
-          inputs,
-          require,
-          paths,
-          runtimeKey,
-          resolution,
-          capture.reads,
-        ),
-      ],
-      ...resolutionOptions(params.sourceRoot, settings),
-      loader: loaders as Record<string, Loader>,
-    } satisfies Parameters<typeof build>[0];
+    const relative =
+      capture.mode === "serveEdit" &&
+      resolution.mode === "planned" &&
+      !completePlan
+        ? await PlannedRelative.create(resolution.plan).catch(() => undefined)
+        : undefined;
+    const editImports =
+      relative && capture.mode === "serveEdit"
+        ? new ServeEditImports(params, paths)
+        : capture.editImports;
+    const retryPlanned = () =>
+      bundleAttempt(params, compile, measurements, resolution, capture, true);
+    const options = bundleOptions({
+      params,
+      paths,
+      inputs,
+      require,
+      runtimeKey,
+      resolution,
+      reads: capture.reads,
+      contents,
+      preview,
+      evidence,
+      editImports,
+      resolveFilter: relative?.filter,
+    });
     let compiled: BuildResult<typeof options>;
     try {
       compiled = await measurements.run("sidecar.bundle.compile", () =>
@@ -263,8 +240,14 @@ async function bundleAttempt(
       );
     } catch (error) {
       if (resolution.mode === "native") return {};
+      if (relative) return retryPlanned();
       throw error;
     }
+    if (
+      relative &&
+      !(await relative.verify(compiled.metafile, paths).catch(() => false))
+    )
+      return retryPlanned();
     if (resolution.mode === "native") {
       const { metafile } = compiled;
       const plan = await measurements
@@ -286,7 +269,7 @@ async function bundleAttempt(
         runtimeKey,
         evidence,
         capture: capture.mode,
-        editImports: capture.editImports,
+        editImports,
         plan: capture.plan,
       },
       measurements,

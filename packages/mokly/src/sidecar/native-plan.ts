@@ -38,7 +38,7 @@ export async function planNative(
   const target = (file: string) => {
     let found = targets.get(file);
     if (!found) {
-      found = classify(paths, scope, file);
+      found = classifyNativeTarget(paths, scope, file);
       targets.set(file, found);
     }
     return found;
@@ -120,7 +120,7 @@ export async function plannedResult(
 }
 
 /** A target that the full path rejects stays unplanned, so it reports there. */
-async function classify(
+export async function classifyNativeTarget(
   paths: ModulePaths,
   scope: PackageScope,
   file: string,

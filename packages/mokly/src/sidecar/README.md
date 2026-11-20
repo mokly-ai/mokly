@@ -25,7 +25,10 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
-  records. esbuild resolves most imports itself, and
+  records. Each attempt takes its esbuild options and plugin order from
+  `bundleOptions` in [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
+  Only a native compile gets its log override, which makes a handled
+  `require` failure an error. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` keys each planned import by importer,
@@ -35,14 +38,12 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/plugins.ts`](./plugins.ts) applies the resolution
   mode of
   [`src/sidecar/native-resolution.ts`](./native-resolution.ts). A
-  planned compile resolves each import outside its plan with the full
+  complete planned compile resolves each import outside its plan with the full
   resolver. A `full` call keeps the native plan, also of an exact native
-  compile. A `serveEdit` call with a plan runs one planned compile with that
-  plan and no native compile. In a `full` call, one evidence owner and one
-  preparation serve every attempt. A `serveEdit` call creates no evidence
-  owner, no evidence plugin, and no durability check. It still records the
-  consumed sources, the module graph, the metadata digests, and the directory
-  lists.
+  compile. In a `full` call, one evidence owner and one preparation serve every
+  attempt. A `serveEdit` call creates no evidence owner, no evidence plugin,
+  and no durability check. It still records the consumed sources, the module
+  graph, the metadata digests, and the directory lists.
   [`src/sidecar/bundle-entry.ts`](./bundle-entry.ts) builds the
   virtual entry module. `configuredFiles` in
   [`src/sidecar/configured-files.ts`](./configured-files.ts), the
@@ -50,6 +51,37 @@ its requests and results. The paths below are relative to the package root.
   configured file or selected preview file, so TypeScript `paths` never apply
   to it. Without a captured preview selection, a `serveEdit` call selects only
   a regular preview file.
+- For a `serveEdit` call with a plan, `bundle` runs no native compile. It
+  starts with a guarded planned compile, in which esbuild resolves each safe
+  relative specifier of the plan itself. `PlannedRelative.create` in
+  [`src/sidecar/planned-relative.ts`](./planned-relative.ts) selects the safe
+  specifiers. A specifier is safe when none of its planned targets has
+  distinct parse settings, such as a package `type` or `tsconfig.json`
+  settings. Each of its targets must also keep its planned side-effect flag.
+  The resolve callback of `consumerPlugins` takes every other specifier. Its
+  filter comes from `specifierFilter` in
+  [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts), which builds a
+  bounded trie of the safe specifiers. The filter matches every specifier
+  except those. An unsafe specifier, a specifier outside the plan, and a safe
+  specifier that the bound leaves out keep the callback. So an edit that adds
+  a new specifier, such as `./new-file`, resolves it with the full resolver in
+  the same compile. When `create` keeps no specifier, the compile is the
+  complete planned compile. After the compile, `PlannedRelative.verify` takes
+  each internal relative edge that esbuild resolved itself. It proves the edge
+  against the plan entry of its key. A key without a plan entry uses
+  `classifyNativeTarget`, which `planNative` also uses. It passes only when
+  its target maps to itself, with no distinct parse settings and no module
+  fallback. That proof needs no esbuild call. A path mismatch or another
+  failed proof discards the guarded result. Each external edge whose
+  specifier skipped the callback also discards it, because such an edge has
+  no target. Examples are a relative `require.resolve` and a failed relative
+  `require` inside `try`. `verify` records the observations and the
+  dependency usage of the skipped callbacks only after every edge passes.
+  After a discarded result or a failed guarded compile, `bundle` runs the
+  complete planned compile, in which the callback takes every import. That
+  compile gives the result or the error. A guarded result that stands has the
+  output, the evidence, the watch inputs, and the returned plan of the
+  complete planned compile.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and

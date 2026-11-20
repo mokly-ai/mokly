@@ -32,6 +32,7 @@ export function consumerPlugins(
   runtimeKey = "mokly:runtime",
   resolution: Resolution = { mode: "full" },
   reads = inputs.files,
+  resolveFilter = /.*/,
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
@@ -176,7 +177,7 @@ export function consumerPlugins(
             return { errors: [{ text: detail(error) }] };
           }
         });
-        build.onResolve({ filter: /.*/ }, async (args) => {
+        build.onResolve({ filter: resolveFilter }, async (args) => {
           if (
             ["repository-resolved", "css-resolved", "consumer-peer"].includes(
               args.pluginData,
