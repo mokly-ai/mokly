@@ -41,6 +41,7 @@ fn deadline_uses_the_injected_clock_and_the_method_duration() {
         discover_memory: Arc::new(AtomicBool::new(false)),
         deadlines,
         phases: PhaseState::default(),
+        compile_count: Arc::new(AtomicU64::new(0)),
     };
     worker
         .request(
@@ -98,6 +99,7 @@ fn admission_discovers_postcss_children_without_consuming_the_worker_scan() {
             duration: AtomicU64::new(0),
         }),
         phases: PhaseState::default(),
+        compile_count: Arc::new(AtomicU64::new(0)),
     };
     worker
         .request(

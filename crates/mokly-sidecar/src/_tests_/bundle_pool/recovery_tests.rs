@@ -48,7 +48,7 @@ fn a_product_exchange_crash_forgets_disk_reuse_on_the_replacement_worker() {
                         .answers_arc(Arc::new(move |_, request, _| {
                             assert!(matches!(request.call, Call::Bundle(_)));
                             captured.lock().unwrap().push("replacement-bundle");
-                            Ok(answer("seed"))
+                            Ok(answer("seed", 1))
                         })),
                     WorkerMock::resident_bytes
                         .some_call(matching!())

@@ -2,6 +2,9 @@
 
 #![cfg(unix)]
 
+#[path = "process_support/cache.rs"]
+mod cache;
+
 use std::fs;
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
@@ -12,6 +15,8 @@ use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tokio::process::Command;
 use tokio::sync::Notify;
+
+use cache::Cache;
 
 async fn get(host: &str, path: &str) -> String {
     let mut socket = TcpStream::connect(host).await.unwrap();
@@ -83,9 +88,11 @@ async fn watched_html_css_membership_config_and_failure_recovery_share_one_port(
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, bytes).unwrap();
     }
+    let cache = Cache::new();
     let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .args(["serve", "--port", "0", "--debug-timings"])
         .current_dir(root.path())
+        .envs(cache.environment())
         .env("MOKLY_VIEWER_DIST", root.path().join("viewer"))
         .env("PATH", "")
         .env("MOKLY_OUTPUT", "plain")

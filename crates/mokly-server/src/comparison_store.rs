@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, Weak};
 
 use async_trait::async_trait;
+use mokly_graph::write_activity::WriteActivity;
 use tokio::sync::{Semaphore, watch};
 use tokio::task::JoinHandle;
 
@@ -73,6 +74,7 @@ pub(crate) struct State {
 /// One store per Serve process; all clocks, entropy, and render work are injected.
 #[derive(Clone)]
 pub struct MemoryComparisons {
+    pub(crate) activity: Option<Arc<dyn WriteActivity>>,
     pub(crate) state: Arc<Mutex<State>>,
     pub(crate) serial: Arc<Semaphore>,
     pub(crate) clock: Arc<dyn Clock>,
@@ -83,6 +85,11 @@ pub struct MemoryComparisons {
 }
 
 impl MemoryComparisons {
+    /// Keep queued captures and detached native workers visible to optional writes.
+    pub fn with_activity(mut self, activity: Option<Arc<dyn WriteActivity>>) -> Self {
+        self.activity = activity;
+        self
+    }
     /// Construct without starting work or retaining a generation.
     pub fn new(
         clock: Arc<dyn Clock>,
@@ -92,6 +99,7 @@ impl MemoryComparisons {
         diagnostics: Arc<dyn Diagnostics>,
     ) -> Self {
         Self {
+            activity: None,
             state: Arc::new(Mutex::new(State::default())),
             serial: Arc::new(Semaphore::new(1)),
             clock,
@@ -102,6 +110,10 @@ impl MemoryComparisons {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_activity_tests.rs"]
+mod comparison_activity_tests;
 
 /// Release generations idle for `RETENTION` and stale selections, and cancel captures of
 /// replaced classifications. The current classification keeps its JSON and drops only
