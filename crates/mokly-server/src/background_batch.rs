@@ -83,7 +83,7 @@ impl<'a> Window<'a> {
         });
     }
 
-    #[cfg(test)]
+    /// Start an ordinary render that retains its window place until completion.
     pub(crate) fn start(&mut self, position: usize, render: Render<'a>) {
         self.renders.push(Pending {
             position,

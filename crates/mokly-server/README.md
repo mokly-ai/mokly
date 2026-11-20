@@ -80,7 +80,17 @@ one at a time, in request order, whenever no foreground request is active.
 It runs each background document render in `RenderClass::Background`, so the
 sidecar calls of that render go after the other waiting head calls.
 
-A view of a JavaScript entry leaves the window's bound when it
+Before each view starts, `UsagePass` asks `Documents::can_prepare_root`
+whether the view can prepare its own root fragment. The answer depends only on
+immutable catalogue metadata. The check reads no cache, prepares no root,
+performs no IO, takes no claim, and does not lock the per-route usage state. A
+view with the answer `false` takes the ordinary path: `Window::start` and
+`Work::background`, with no `Stage`. It keeps its window place and its worker
+permit until its render ends. A view with the answer `true` takes the staged
+path: `Stages::view`, `Window::start_staged`, and `Work::background_staged`.
+Each view gets its own answer, so one catalogue can use both paths.
+
+A staged view leaves the window's bound when it
 [hands off](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
 after its own root fragment returns. The `Window` then starts the next view,
 and it still reports in catalogue order. Each pass has its own `Window`, so the
@@ -97,12 +107,15 @@ and its active sidecar call keeps its claim. New starts can overlap such views
 only within the free workers and the sidecar capacity. HTTP requests share
 these worker permits, so the permits and the `Stages` bound give the
 [limit of the worker count plus the completion bound](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
-Each view's `Stage` owns its worker permit. After its own root fragment
-returns, the `Stage` also owns the view's completion place and, when the charge
-fits, its transient charge. A handoff releases the worker. `Workers::stop` takes every worker permit and then drains
-the background jobs that released theirs. A `Documents` adapter that keeps the
-default `background_staged` keeps the original background call, so its view
-takes no completion place and keeps its worker for the whole call.
+The `Stage` of a staged view owns its worker permit. After its own root
+fragment returns, the `Stage` also owns the view's completion place and, when
+the charge fits, its transient charge. A handoff releases the worker.
+`Workers::stop` takes every worker permit and then drains the background jobs
+that released theirs. The `Documents::can_prepare_root` default answers
+`false`, so an adapter that keeps it puts every view on the ordinary path. An
+adapter that answers `true` but keeps the default `background_staged` keeps
+the original background call. Its view takes no completion place and keeps its
+worker for the whole call.
 
 `Stages` also owns one fixed transient budget of 4 MiB for the
 [handoff charges](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
@@ -263,9 +276,14 @@ generations.
   shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
-  `GraphDocuments::background_staged` passes the view's `Completion` to
-  `RenderGeneration::render_background`. The `Documents::background_staged`
-  default calls `background` and takes no completion place.
+  `GraphDocuments::can_prepare_root` answers `false` for an undeclared route
+  and forwards every other route to `RenderGeneration::can_prepare_root`.
+  `GraphDocuments::background` passes an ordinary view to
+  `RenderGeneration::render`, and `GraphDocuments::background_staged` passes a
+  staged view's `Completion` to `RenderGeneration::render_background`. The
+  `Documents::can_prepare_root` default answers `false`. The
+  `Documents::background_staged` default calls `background` and takes no
+  completion place.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
@@ -279,14 +297,18 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+  `UsagePass::fill_window` chooses the ordinary or the staged path of each
+  view before the view starts.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   bounded batch of the current usage pass, which keeps catalogue order for
-  starts, warnings, and failure reports. It counts only the views that have not handed off, and
-  a handoff event lets it start the next view.
+  starts, warnings, and failure reports. `Window::start` adds an ordinary view,
+  which keeps its place until it ends. `Window::start_staged` adds a staged
+  view with its `Stage`. The window counts only the views that have not handed
+  off, and a handoff event lets it start the next view.
 - [`src/background_stage.rs`](./src/background_stage.rs) defines `Stages`, the
   completion bound and the 4 MiB transient budget that every pass of one
-  `UsagePass` shares, and `Stage`, the owner of one view's worker permit,
-  completion place, and transient charge. `Stage` implements the graph's
+  `UsagePass` shares, and `Stage`, the owner of one staged view's worker
+  permit, completion place, and transient charge. `Stage` implements the graph's
   `Completion`. Its handoff takes a charge without waiting, then takes a
   completion place through the crate-private `Stage::enter`, also when the
   charge does not fit. A granted charge releases the worker and wakes the
@@ -295,11 +317,13 @@ generations.
   `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
-  `Work::background_staged` renders one view with its `Stage`, and its default
-  calls `background`.
+  `Work::background` renders one ordinary view. `Work::background_staged`
+  renders one staged view with its `Stage`, and its default calls
+  `background`.
   [`src/work_background.rs`](./src/work_background.rs) admits one background
-  render at a time, attaches its worker permit to the view's `Stage`, and runs
-  it in `RenderClass::Background`.
+  render at a time and runs it in `RenderClass::Background`. The job of an
+  ordinary view holds its worker permit until the render ends. The job of a
+  staged view attaches its worker permit to the view's `Stage`.
   [`src/work_active.rs`](./src/work_active.rs) counts the blocking background
   jobs, so `Workers::stop` also waits for a job that has already released its
   worker permit.

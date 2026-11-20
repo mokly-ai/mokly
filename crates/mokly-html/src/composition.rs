@@ -54,6 +54,11 @@ pub struct Composed {
 /// Non-pure composition boundary: JavaScript fragments are injected.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComposerMock))]
 pub trait Composer: Send + Sync {
+    /// Whether immutable entry metadata permits root preparation, without rendering.
+    /// This does not inspect cache state or available handoff capacity.
+    fn can_prepare_root(&self, _catalogue: &PreparedCatalogue, _entry: &ModelEntry) -> bool {
+        false
+    }
     /// Prepare one eligible root exactly once without building its tree.
     fn prepare_root(&self, _request: &ComposeRequest<'_>) -> Result<Option<PreparedRoot>> {
         Ok(None)
@@ -94,6 +99,9 @@ pub(crate) struct Engine<'a> {
 }
 
 impl Composer for HtmlComposer {
+    fn can_prepare_root(&self, catalogue: &PreparedCatalogue, entry: &ModelEntry) -> bool {
+        Start::eligible(catalogue, entry)
+    }
     fn compose(&self, request: &ComposeRequest<'_>) -> Result<Composed> {
         self.compose_root(request, None)
     }

@@ -31,6 +31,11 @@ pub struct PreviewDocument {
 /// Graph work; HTTP runs IO outside its event loop.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
+    /// Whether immutable route metadata permits root preparation, without work or IO.
+    /// Unknown backends keep ordinary background dispatch.
+    fn can_prepare_root(&self, _route: &str) -> bool {
+        false
+    }
     /// Render with an optional root handoff owned by this background view.
     /// Legacy backends keep their original worker for the complete render.
     fn background_staged(
@@ -141,6 +146,10 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
+    fn can_prepare_root(&self, route: &str) -> bool {
+        self.locks.contains_key(route) && self.generation.can_prepare_root(route)
+    }
+
     fn asset_request(&self, route: &str) -> Box<dyn AssetRequest> {
         self.reserve_asset(route)
     }

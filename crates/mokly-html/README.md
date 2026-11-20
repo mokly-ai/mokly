@@ -40,12 +40,20 @@ result to the root call, so composition never requests that root again.
 `compose` and `prepare_root` share one start builder and one root request
 builder, so both paths send the same request.
 
-The trait default of `prepare_root` prepares nothing, so a custom composer
-keeps the ordinary path. The trait default of `compose_prepared` returns an
-internal error, because only `HtmlComposer` builds a `PreparedRoot`.
-`PreparedRoot::into_ready` returns a failed root's composition error.
-`PreparedRoot::input_bytes` and `PreparedRoot::fragment` give the capacities of
-the kept state for its charge.
+`Composer::can_prepare_root` answers whether `prepare_root` can prepare one
+entry. Serve asks it before a background view starts, to choose the path of
+that view. It reads only the prepared catalogue and the entry. It takes no
+`ComposeRequest`, requests no fragment, and performs no IO. `HtmlComposer`
+applies the same pure rule that `prepare_root` checks first. So `prepare_root`
+prepares nothing for an entry that answers `false`.
+
+The trait default of `can_prepare_root` answers `false`, so a custom composer
+keeps the ordinary path in Serve unless it overrides that method. The trait
+default of `prepare_root` prepares nothing. The trait default of
+`compose_prepared` returns an internal error, because only `HtmlComposer`
+builds a `PreparedRoot`. `PreparedRoot::into_ready` returns a failed root's
+composition error. `PreparedRoot::input_bytes` and `PreparedRoot::fragment`
+give the capacities of the kept state for its charge.
 
 `parse::html` reads HTML through the catalogue's shared HTML driver with
 scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
@@ -198,14 +206,16 @@ aligned byte must equal its source byte or be an LF from a CR.
   `HtmlComposer`, which compose a screen, component, or page from a
   `ComposeRequest` into a `Composed` document. `Composer::prepare_root` and
   `Composer::compose_prepared` split a Serve background view at its own root
-  fragment.
+  fragment. `Composer::can_prepare_root` answers, without a `ComposeRequest`,
+  whether `prepare_root` can prepare an entry.
 - [`src/prepared_root.rs`](./src/prepared_root.rs) defines `PreparedRoot`,
   the opaque start state, root request, and single result of one prepared
   root.
 - [`src/compose_start.rs`](./src/compose_start.rs) and
   [`src/javascript_request.rs`](./src/javascript_request.rs) build the start
   state and the root `FragmentRequest` that `compose` and `prepare_root`
-  share.
+  share. The crate-private `Start::eligible` holds the one rule that
+  `HtmlComposer::can_prepare_root` and `PreparedRoot::prepare` apply.
 - [`src/root_context_weight.rs`](./src/root_context_weight.rs) computes the
   capacity charge of the start state and the request that a `PreparedRoot`
   keeps.

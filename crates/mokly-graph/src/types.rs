@@ -89,6 +89,11 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Whether immutable route metadata permits root preparation, without work or IO.
+    /// Unknown generations keep ordinary background dispatch.
+    fn can_prepare_root(&self, _route: &str) -> bool {
+        false
+    }
     /// Render with optional prepared-root handoff; the default retains its original worker.
     fn render_background(
         &self,

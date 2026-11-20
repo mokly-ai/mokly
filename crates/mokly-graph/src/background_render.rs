@@ -7,7 +7,7 @@ use mokly_html::composition::ComposeRequest;
 use mokly_html::error::HtmlError;
 use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
-use mokly_model::catalogue::EntryContent;
+use mokly_model::catalogue::{EntryContent, ModelEntry};
 
 use crate::background::Completion;
 use crate::cache::Artifact;
@@ -20,6 +20,21 @@ use crate::types::RenderGeneration;
 use crate::workers::ArtifactWorker;
 
 impl Session {
+    /// Classify dispatch from immutable metadata without preparing or reading the cache.
+    pub(crate) fn background_root_eligible(&self, route: &str) -> bool {
+        let Some(plan) = self.state.plans.get(route) else {
+            return false;
+        };
+        let Some(entry) = self.state.catalogue.model.entries.get(plan.entry) else {
+            return false;
+        };
+        preparation_allowed(entry)
+            && self
+                .state
+                .composer
+                .can_prepare_root(&self.state.catalogue, entry)
+    }
+
     #[tracing::instrument(
         name = "render.document",
         skip_all,
@@ -39,9 +54,7 @@ impl Session {
             .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
         record_axes(plan);
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let prepared = if self.state.cache.contains(&plan.key)
-            || matches!(entry.content, EntryContent::Document { .. })
-        {
+        let prepared = if self.state.cache.contains(&plan.key) || !preparation_allowed(entry) {
             None
         } else {
             let request = ComposeRequest {
@@ -80,6 +93,10 @@ impl Session {
         };
         self.state.workers.document(route, &job)
     }
+}
+
+fn preparation_allowed(entry: &ModelEntry) -> bool {
+    !matches!(entry.content, EntryContent::Document { .. })
 }
 
 struct BackgroundJob<'a> {

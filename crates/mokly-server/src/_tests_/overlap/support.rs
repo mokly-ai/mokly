@@ -70,6 +70,9 @@ impl Renders {
         let starts = Arc::new(Mutex::new(Vec::new()));
         let reports = Arc::new(Mutex::new(Vec::new()));
         let mock = Unimock::new((
+            DocumentsMock::can_prepare_root
+                .each_call(matching!(_))
+                .returns(true),
             DocumentsMock::background_staged
                 .each_call(matching!(_, _))
                 .answers_arc(Arc::new({

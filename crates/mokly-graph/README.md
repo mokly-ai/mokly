@@ -52,25 +52,34 @@ Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.
 
-`RenderGeneration::render_background` renders one Serve background view under
-the
+Serve renders each background view on one of two paths under the
 [on-demand background rules](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
-A prepared generation runs `check_cancelled` and opens the view's
-`render.document` span on the caller's thread. `RenderCache::contains` checks
-for the document without a count, a promotion, or a restore. A held document,
-a Markdown view, and a view that `Composer::prepare_root` does not prepare
-make no `background::Completion` call. They take no completion place, and the
-caller keeps its worker until the view ends. Otherwise `prepare_root` requests
-the own root fragment once, on the caller's thread, so its `render.fragment`
-span stays inside the view's span. A failed root returns its composition error
-at once, without a completion place.
+Before the view starts, Serve asks `RenderGeneration::can_prepare_root`. A
+prepared generation answers from the route's immutable plan and entry alone.
+An unknown route and a Markdown view answer `false`, and every other view gets
+the answer of `Composer::can_prepare_root`. The check reads no cache, prepares
+no root, takes no lock, and calls no worker. A view with the answer `false`
+takes the ordinary path, `RenderGeneration::render`, which foreground renders
+also use. The `Session` worker then opens the view's one `render.document`
+span and makes its one counted cache read on the render workers.
+
+A view with the answer `true` takes the staged path,
+`RenderGeneration::render_background`. A prepared generation runs
+`check_cancelled` and opens the view's `render.document` span on the caller's
+thread. `RenderCache::contains` checks for the document without a count, a
+promotion, or a restore. A held document, a Markdown view, and a view that
+`Composer::prepare_root` does not prepare make no `background::Completion`
+call. They take no completion place, and the caller keeps its worker until the
+view ends. Otherwise `prepare_root` requests the own root fragment once, on the
+caller's thread, so its `render.fragment` span stays inside the view's span. A
+failed root returns its composition error at once, without a completion place.
 
 A successful root passes its byte charge to `Completion::handoff`: the
 capacities of the prepared inputs and the fragment, and the job and queue
 metadata, without JSON encoding. `handoff` is the only way into the completion
-place. Every view then runs in one private `BackgroundJob` on the render
-workers, through `RenderWorkers::document`. The job of a prepared view keeps
-its root behind a one-shot lock and takes it once. A second take returns
+place. Every staged view then runs in one private `BackgroundJob` on the
+render workers, through `RenderWorkers::document`. The job of a prepared view
+keeps its root behind a one-shot lock and takes it once. A second take returns
 `InternalError::PreparedRootConsumed` and renders nothing. The job of an
 unprepared view holds no root and no lock. Each job makes the view's one
 counted cache read, composes, finishes, and inserts the document, inside the
@@ -78,9 +87,10 @@ view's one `render.document` span. The view passes this job, not the `Session`,
 to `RenderWorkers::document`, because the `Session` worker opens a second
 `render.document` span. A document that leaves the cache after the check
 composes in that job. Link checks of the view render inline in the same job
-and take no completion place. The trait default only calls `render`. So a
-wrapper that does not forward it takes no completion place, keeps its worker,
-and never hands off.
+and take no completion place. The trait default of `can_prepare_root` answers
+`false`, and the default of `render_background` only calls `render`. So a
+wrapper that does not forward them takes no completion place, keeps its
+worker, and never hands off.
 
 Resources found during composition enter a leased dependency index. Each
 recipe retains its first observed digests. Later preparations add changed
@@ -367,9 +377,11 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call. `RenderGeneration::render_background` renders one
-  admitted Serve background view. Its default only calls `render` and takes no
-  completion place.
+  static output call. `RenderGeneration::can_prepare_root` tells Serve
+  whether one background view takes the staged path, and its default answers
+  `false`. `RenderGeneration::render_background` renders one staged Serve
+  background view. Its default only calls `render` and takes no completion
+  place.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -385,11 +397,13 @@ retention disabled.
   completion place and dispatch release of a Serve background view with a
   prepared root. `Completion::handoff`, the only way into the completion place,
   receives the byte charge of that root.
-- [`src/background_render.rs`](./src/background_render.rs) prepares the own
-  root of one Serve background view on the caller's thread. Its private
-  `BackgroundJob` then composes and finishes every background view on the
-  render workers. The job of a prepared view takes its root once, and the job
-  of an unprepared view holds no root.
+- [`src/background_render.rs`](./src/background_render.rs) answers
+  `can_prepare_root` for a prepared generation from the immutable plan and
+  entry, with the same Markdown exclusion as `render_background`. It prepares
+  the own root of one staged Serve background view on the caller's thread. Its
+  private `BackgroundJob` then composes and finishes that view on the render
+  workers. The job of a prepared view takes its root once, and the job of an
+  unprepared view holds no root.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
   charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,

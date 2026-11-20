@@ -21,7 +21,7 @@ impl PreparedRoot {
         request: &ComposeRequest<'_>,
         renderer: &dyn FragmentRenderer,
     ) -> Result<Option<Self>> {
-        if !Start::eligible(request) {
+        if !Start::eligible(request.catalogue, request.entry) {
             return Ok(None);
         }
         let start = match Start::new(request) {

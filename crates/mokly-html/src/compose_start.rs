@@ -2,7 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use mokly_model::catalogue::EntryContent;
+use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::data::Props;
 use mokly_model::prop_schema::PropSchema;
 use mokly_model::usage::ComponentInputOwner;
@@ -21,8 +22,7 @@ pub(crate) struct Start {
 }
 
 impl Start {
-    pub(crate) fn eligible(request: &ComposeRequest<'_>) -> bool {
-        let entry = request.entry;
+    pub(crate) fn eligible(catalogue: &PreparedCatalogue, entry: &ModelEntry) -> bool {
         let parent = entry
             .metadata
             .variant_of
@@ -31,9 +31,8 @@ impl Start {
         matches!(
             entry.content,
             EntryContent::Screen { .. } | EntryContent::Component { .. } | EntryContent::Page
-        ) && !request.catalogue.templates.contains_key(parent)
-            && request
-                .catalogue
+        ) && !catalogue.templates.contains_key(parent)
+            && catalogue
                 .slot_fragments
                 .get(&entry.metadata.path)
                 .is_none_or(|slots| slots.is_empty())

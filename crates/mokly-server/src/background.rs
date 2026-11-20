@@ -52,7 +52,7 @@ impl Background for UsagePass {
             }
             let origin = self.publications.current();
             if !self
-                .fill_staged(&origin, &mut stop, &mut updates, &stages)
+                .fill_window(&origin, &mut stop, &mut updates, &stages)
                 .await
             {
                 continue;
@@ -75,7 +75,7 @@ impl Background for UsagePass {
 
 impl UsagePass {
     #[tracing::instrument(name = "serve.background", skip_all, fields(status = "ok"))]
-    async fn fill_staged(
+    async fn fill_window(
         &self,
         origin: &Arc<Snapshot>,
         stop: &mut watch::Receiver<bool>,
@@ -101,16 +101,24 @@ impl UsagePass {
                 if current.completed.contains_key(&route.route) {
                     continue;
                 }
-                let stage = stages.view(&route.route);
-                window.start_staged(
-                    position,
-                    self.work.background_staged(
-                        origin.documents.clone(),
-                        route.route.clone(),
-                        stage.clone(),
-                    ),
-                    stage,
-                );
+                if origin.documents.can_prepare_root(&route.route) {
+                    let stage = stages.view(&route.route);
+                    window.start_staged(
+                        position,
+                        self.work.background_staged(
+                            origin.documents.clone(),
+                            route.route.clone(),
+                            stage.clone(),
+                        ),
+                        stage,
+                    );
+                } else {
+                    window.start(
+                        position,
+                        self.work
+                            .background(origin.documents.clone(), route.route.clone()),
+                    );
+                }
             }
             if window.is_empty() {
                 break;
@@ -160,7 +168,7 @@ impl UsagePass {
         stop: &mut watch::Receiver<bool>,
         updates: &mut broadcast::Receiver<PublicationEvent>,
     ) -> bool {
-        self.fill_staged(origin, stop, updates, &Stages::new(self.capacity.clone()))
+        self.fill_window(origin, stop, updates, &Stages::new(self.capacity.clone()))
             .await
     }
 

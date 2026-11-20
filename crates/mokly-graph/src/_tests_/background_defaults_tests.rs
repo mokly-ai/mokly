@@ -45,6 +45,7 @@ fn custom_generation_default_renders_without_completion_admission_or_handoff() {
             })),
     ))
     .no_verify_in_drop();
+    assert!(!generation.can_prepare_root("custom"));
     generation
         .render_background("custom", Arc::new(completion.clone()))
         .unwrap();

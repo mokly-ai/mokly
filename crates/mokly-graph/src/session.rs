@@ -145,6 +145,9 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn can_prepare_root(&self, route: &str) -> bool {
+        self.background_root_eligible(route)
+    }
     fn render_background(
         &self,
         route: &str,

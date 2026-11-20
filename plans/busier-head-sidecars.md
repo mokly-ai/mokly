@@ -636,12 +636,12 @@ The saved phase attribution identifies no individual Small owner. Apply decision
 7 E. Do not reopen the earlier completed milestones.
 
 - [x] Run a fresh read-only options check of 7 E and merge its corrections. Keep E, add F, and record the purity, defaults, shared guard, and per-view test needs.
-- [ ] Commit and push the updated plan before code.
-- [ ] Update server, graph, and HTML README entry points for per-view selection. The protocol stays unchanged because completion membership and every boundary rule stay the same. Check the CLI README and update it only if it contradicts the new entry points.
-- [ ] Share one pure static eligibility predicate between composer preparation and dispatch selection. Add conservative defaults and migrate all consumers. Keep the defensive Markdown rule in a shared graph helper. The GraphDocuments choice takes no per-route usage mutex.
-- [ ] Promote the existing test-only Window::start to the ordinary production path, with its doc comment. Select ordinary Work and Window paths for every ineligible view, even in a mixed catalogue. Allocate no Stage and perform no preparation/cache probe merely to select that path.
-- [ ] Keep eligible roots on D's path, including cached eligible views, refused charges, failures, and single-attempt consumption. Preserve counts, budget, worker order, priority, cancellation, replacement, and draining.
-- [ ] Add regression cases red first at the eligibility and mixed-dispatch boundaries. Preserve existing Serve/pool tests and assertions. Prove any new asynchronous cases with ten explicit trials and mutation evidence where needed.
+- [x] Commit and push the updated plan before code.
+- [x] Update server, graph, and HTML README entry points for per-view selection. The protocol stays unchanged because completion membership and every boundary rule stay the same. Check the CLI README and update it only if it contradicts the new entry points.
+- [x] Share one pure static eligibility predicate between composer preparation and dispatch selection. Add conservative defaults and migrate all consumers. Keep the defensive Markdown rule in a shared graph helper. The GraphDocuments choice takes no per-route usage mutex.
+- [x] Promote the existing test-only Window::start to the ordinary production path, with its doc comment. Select ordinary Work and Window paths for every ineligible view, even in a mixed catalogue. Allocate no Stage and perform no preparation/cache probe merely to select that path.
+- [x] Keep eligible roots on D's path, including cached eligible views, refused charges, failures, and single-attempt consumption. Preserve counts, budget, worker order, priority, cancellation, replacement, and draining.
+- [x] Add regression cases red first at the eligibility and mixed-dispatch boundaries. Preserve existing Serve/pool tests and assertions. Prove any new asynchronous cases with ten explicit trials and mutation evidence where needed.
 - [ ] Run targeted tests and the Repository suite. Commit and push. Send the implementation SHA and dist build commit immediately. Obtain complete-gate CI evidence and a fresh whole-diff review.
 - [ ] Build the new release arm without overwriting frozen evidence. Run four balanced warm large-HTML pairs and one React warm pair, with excluded primers, unchanged observation rules, and fresh immutable provenance. Compare the saved seven output pairs without extra starts.
 - [ ] Apply the unchanged +200 ms HTML paired-median criterion and React no-regression check. Preserve every row, CPU bins, memory, and gauge. If HTML fails, send the pairs before any PR.
