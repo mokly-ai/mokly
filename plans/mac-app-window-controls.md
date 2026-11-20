@@ -1,6 +1,6 @@
 # Mac app window controls in the top bar
 
-Status: Active. The work moved from cloud PR #133 of the old `mokly-ai/mokly-cloud` repository to the branch `calummoore/pr-completion-from-branch-8cbc` of this repository, and no pull request exists here yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. The work moved from cloud PR #133 of the old `mokly-ai/mokly-cloud` repository to this repository. [PR #397](https://github.com/mokly-ai/mokly/pull/397) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The Mac window of the desktop app keeps the native title bar. That bar shows
 the page title, such as `Sign in · Mokly`, above the app's own 48px top bar,
