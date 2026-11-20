@@ -59,6 +59,8 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
   expect(requests).toHaveLength(1);
 
   await loadComparison(page, "Try again");
+  // The stage that shows the load and then the panes keeps the focus.
+  await expect(page.locator("[data-diff-stage]")).toBeFocused();
   await expect(frames).toHaveCount(4);
   await expect(frames.first()).toHaveAttribute(PANE_SOURCE, BEFORE_SNAPSHOT);
   const retried = (await frames.first().getAttribute(PANE_SOURCE))!;

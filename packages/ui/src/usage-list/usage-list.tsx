@@ -4,6 +4,8 @@
  * whether the use is direct or nested, and counts its instances and views.
  */
 
+import type { Ref } from "react";
+
 import { count } from "../count/count.js";
 import { TextButton } from "../text-button/text-button.js";
 
@@ -33,15 +35,23 @@ const SECTIONS = {
 } as const;
 
 function UsageSection({
+  headingRef,
   rows,
   section,
 }: {
+  headingRef?: Ref<HTMLHeadingElement> | undefined;
   rows: readonly UsageRow[];
   section: keyof typeof SECTIONS;
 }) {
   return (
     <section className="mbk-reset" data-usage-section={section}>
-      <h3 className="mbk-reset">{SECTIONS[section]}</h3>
+      <h3
+        className="mbk-reset"
+        ref={headingRef}
+        tabIndex={headingRef === undefined ? undefined : -1}
+      >
+        {SECTIONS[section]}
+      </h3>
       {!rows.length ? (
         <p className="mbk-reset">No recorded consumers.</p>
       ) : (
@@ -70,14 +80,17 @@ function UsageSection({
  */
 export function UsageList({
   affected,
+  focusRef,
   usedBy,
 }: {
   affected: readonly UsageRow[];
+  /** Receives the first heading, which the host focuses after Try again. */
+  focusRef?: Ref<HTMLHeadingElement> | undefined;
   usedBy: readonly UsageRow[];
 }) {
   return (
     <>
-      <UsageSection rows={usedBy} section="used-by" />
+      <UsageSection headingRef={focusRef} rows={usedBy} section="used-by" />
       {affected.length ? (
         <UsageSection rows={affected} section="affected" />
       ) : null}
@@ -90,9 +103,12 @@ export function UsageList({
  * or while the catalogue has not been checked.
  */
 export function UsageStatus({
+  focusRef,
   onRetry,
   status,
 }: {
+  /** Receives the loading status, which the host focuses after Try again. */
+  focusRef?: Ref<HTMLParagraphElement> | undefined;
   /** Receives each press of Try again. */
   onRetry?: (() => void) | undefined;
   status: "failed" | "loading" | "unchecked";
@@ -117,7 +133,12 @@ export function UsageStatus({
           <TextButton onClick={onRetry}>Try again</TextButton>
         </>
       ) : (
-        <p className="mbk-reset" role="status">
+        <p
+          className="mbk-reset"
+          ref={focusRef}
+          role="status"
+          tabIndex={focusRef === undefined ? undefined : -1}
+        >
           Loading usage…
         </p>
       )}
