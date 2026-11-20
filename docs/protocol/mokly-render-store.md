@@ -1,6 +1,6 @@
 # Render Store
 
-Status: The sidecar release thread and finite file response bodies do not pause the writer yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them. The byte bound of the store is provisional, and [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
+Status: The sidecar release thread and finite file response bodies do not pause the writer yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
 
 The render store keeps the complete documents that `mokly serve` renders, so
 that a later Serve process reuses them instead of rendering them again. It is
@@ -190,9 +190,11 @@ replaced or evicted data that is not yet deleted. Before a write, Mokly makes
 room for the whole new entry: it evicts the least recently used entries first,
 under the common eviction rule. When it cannot make room, it drops the write.
 Decision: a fixed byte bound with access-order eviction keeps the entries that
-recent Serve processes read or wrote. A fixed count of entries was rejected,
-because document sizes vary. A setting was rejected, because no other cache
-bound has one.
+recent Serve processes read or wrote. Its value holds several complete passes
+of a large catalogue: a cold pass of a 1,508-view catalogue stored 1,494
+documents in about 21 MiB. A fixed count of entries was rejected, because
+document sizes vary. A setting was rejected, because no other cache bound has
+one.
 
 ## Restarts And Deletion
 

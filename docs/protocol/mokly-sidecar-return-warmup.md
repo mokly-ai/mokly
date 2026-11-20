@@ -1,5 +1,7 @@
 # Sidecar Return Warm-Up
 
+Status: The return pass does not fill unused head slots after a stored startup yet, so the first edit after an unchanged warm restart can start the missing processes, about 0.35 s slower. The [store-served startup head slots item](../../plans/follow-ups/store-served-startup-head-slots.md) adds the fill.
+
 This page expands the
 [background return](./mokly-sidecar-root-scheduling.md#background-return). A
 head process that a return pass starts holds no generation. The warm-up
@@ -95,6 +97,42 @@ that Serve admitted could then run on another process beside the warm-up.
 Decision: an interrupted warm-up continues later. Rejected: an end at the first
 request, because one request after the publication could then leave the
 process cold.
+
+## Startup Fill
+
+A Serve startup that serves head documents from the
+[render store](./mokly-render-store.md) can leave head slots without a
+process. After the first completed Changes result of such a startup, the
+return pass starts head processes in the unused slots, which hold no
+reservation, so the first edit finds started and warm processes. The pass arms the fill once, and only when the newest head
+generation recorded at least one store-served top-level JavaScript request. A
+catalogue without such a request, such as an HTML-only catalogue, gets no fill
+and starts no extra sidecar. A newer head generation ends the fill.
+
+The fill is a step of the same return pass. It comes after every base return
+step and before the warm-up of a process. It starts one process at a time in
+a slot that holds no reservation, only while no request waits in the pool
+queue and Serve holds no sidecar claim. Otherwise its next step waits until the pool is idle.
+Each start needs the normal
+[memory admission](./mokly-sidecar-memory.md#default-admission) of a new
+reservation. The fill starts a process only while the pool runs fewer than four
+processes and fewer than its pool size. The cap of four matches the process
+count that the measured sessions held before the first edit. It does not
+guarantee a resident memory peak. A step that started completes its start and
+hello, and a waiting request then takes priority. Each new process gets one
+warm-up under the rules above. A denied admission ends the fill quietly. A
+failed step also ends the fill, and Serve reports it once, like any failed step
+of the [return pass](./mokly-sidecar-root-scheduling.md#background-return). The
+pool does not try the fill again. A fill step is sidecar pool maintenance, so the [render store](./mokly-render-store.md#writes) writer starts
+no new work during it.
+
+Decision: the return pass fills unused head slots after a stored startup.
+Rejected: no fill, because the first edit after an unchanged warm restart then
+started the missing processes, about 0.35 s slower. Rejected: a start at the
+store read, because a store-served record sends no call and starts no process.
+Rejected: a fill before the first Changes result, because it competes with the
+cold startup. Rejected: a larger pool or a cap above four, because four is the
+process count that the measured sessions held before the first edit.
 
 ## End
 

@@ -1,6 +1,6 @@
 # Reuse rendered documents after Serve restarts
 
-Status: Active. On branch `calummoore/mokly-first-changes-5-render-store-p3o6`, no pull request yet. The pull request that completes the work deletes this plan.
+Status: Active. [PR #394](https://github.com/mokly-ai/mokly/pull/394) is open into `main` from `calummoore/mokly-first-changes-5-render-store-p3o6`. The final work commit deletes this plan.
 
 Mokly renders every view again after a Serve restart. The first Changes on
 `mokly-cloud` takes about 12 to 14 seconds. The head usage pass renders 1,508
@@ -164,6 +164,12 @@ Implementation details of the checked calls, recorded on 2026-11-19:
 - The store publishes separate cumulative `render.store` state events.
   A sequence orders events from different threads. The process-cache
   counts keep their existing meaning.
+
+Final bound selection by this workspace's orchestrator, 2026-11-20:
+keep the render kind at 128 MiB. The confirmed cold pass durably retains
+about 21 MiB. Warm restart gain and cold memory meet the parent's acceptance.
+This keeps room for later document versions under the existing eviction rule.
+It changes no setting, process-cache limit, or implementation constant.
 
 ### 3. Admit writer work only during idle periods
 
@@ -342,6 +348,59 @@ The source arithmetic of the fresh check is not a memory measurement.
 
 Options-check evidence: `.context/persistent-render-store/m4c-options-check-report.md`.
 Read-only preparation: `.context/persistent-render-store/m4c-preparation-report.md`.
+
+### 6. Fill unused head slots after stored startup
+
+- **Severity:** Medium. **Effort:** Small for the selected deferral.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** The existing sidecar return pass and its process admission.
+- **Background:** Stored startup renders can leave head slots without a process.
+  The current return pass warms only live processes.
+- **Problem:** The first edit starts missing processes and pays their description and first-render costs.
+- **Impact if no action:** The measured first edit after an unchanged warm restart costs about 0.35 seconds more.
+- **Root question:** How can a stored warm restart start and warm head processes before the first edit within existing bounds?
+- **Options:**
+  - **A.** After first completed Changes of an eligible stored startup, fill
+    unreserved head slots through the same idle return worker. Admit each new
+    reservation normally, stop at four or the configured pool size, and enroll
+    each process in the existing warm-up. Fence by generation. End on denial
+    or failed start. Add no setting, worker, or channel. Effort: Medium.
+  - **B.** Keep current production behavior. Record the cause and measured cost
+    in the PR. Add a standalone follow-up for the admitted fill.
+    The restart still gains more than five seconds. Effort: Small.
+  - **C.** Apply A, and also cap fill at the startup generation's count of
+    store-served top-level JavaScript requests. This preserves small-catalogue
+    demand, but gives less preparation to JavaScript called from HTML bodies.
+    Effort: Medium.
+- **Left out:** A second warm-up mechanism violates the shared-mechanism requirement.
+  Starting from a store read breaks its record-only boundary.
+  Filling before Changes competes with startup work.
+  A larger pool or a cap above four exceeds the resource evidence.
+  Starting at the next edit competes with its bundle.
+  Waiting for warm processes changes demand growth.
+  Starting all slots at launch adds processes to cold and HTML-only sessions.
+- **Assumptions:** Keep output, admission, pool limits, quiet replays, and the
+  record-only store boundary. The parent's conditional call permits B when A
+  needs more than one hour for implementation, tests, and review.
+- **Wider fix:** A. One idle slot-readiness owner removes dependence on miss overlap.
+  Eager generation installation after an edit bundle needs the same readiness.
+  The parent measured that separate preparation at about 0.25 seconds less per edit.
+- **Previous examples:** Startup miss overlap created enough processes in the earlier accepted candidate.
+- **Recommendation:** B for this PR, changed from A after the independent check.
+  The initial 35–55 minute estimate omitted rollback, wake logic, harness work,
+  and review. The corrected estimate is 1.5–3 hours, which is Medium.
+- **Action:** fix now, apply B. The performance orchestrator accepted B on
+  2026-11-20. Defer A in `plans/follow-ups/store-served-startup-head-slots.md`.
+  Keep the measured 0.35-second first-edit cost explicit. No fill code or test
+  was written. The follow-up keeps every admitted lifecycle and memory rule.
+
+Options-check evidence: `.context/persistent-render-store/m4d-options-check-report.md`.
+
+The parent accepted cold memory and requested the completed c6d2fffa4 integration
+as soon as the follow-up exists. Send its SHA before CI ends. The parent will run
+three changed and three unchanged warm restart rounds against c6d2fffa4 while CI runs.
+The parent owns the final merge. No further main integration is authorized without a conflict or CI need.
 
 ## Cloud acceptance calls of 2026-11-20
 
@@ -598,6 +657,26 @@ The current-main integration before the combined gate is recorded in
 `post-374-merge-decisions.md` there.
 The later parent-approved conflict integration with main 940ddd742 is recorded
 in `post-384-merge-decisions.md` there.
+
+## Milestone 4d: Record the deferred startup fill
+
+Depends on: 4c and the approved c6d2fffa4 integration
+
+- [x] Write the admitted idle fill requirement in the warm-up contract.
+- [x] Apply accepted option B after the independent check corrected A to Medium.
+      Move the fill, its regressions, harness extensions, and performance proof
+      into the standalone head-slot follow-up. Link the future rules to that item.
+- [x] Record the cause and measured first-edit cost in the PR.
+      Keep production code and the sidecar README unchanged.
+
+No startup-fill code or tests ran. Its earlier implementation tasks now belong
+to `plans/follow-ups/store-served-startup-head-slots.md`, under the user's accepted deferral.
+The c6d2fffa4 merge preserves step 3's stylesheet reuse and the store in `runtime.rs`.
+The parent requested its SHA immediately for a confirming run in parallel with CI.
+
+Evidence: `.context/persistent-render-store/source-attribution-9a-report.md`,
+`m4d-options-check-report.md`, and `cloud-confirmation-9a-u-m.md` record the cause,
+corrected effort, measured cost, and accepted memory block.
 
 ## Milestone 4: Measurements and verification
 

@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: The 128 MiB render store bound is provisional. [Milestone 4: Measurements and verification](../../plans/persistent-render-store.md#milestone-4-measurements-and-verification) sets the final bound.
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
