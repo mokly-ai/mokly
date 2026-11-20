@@ -10,10 +10,11 @@
   `crates/mokly-sidecar/src/pool_requests.rs:84` to line 92,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:102` to line 109, and
   `crates/mokly-sidecar/src/compiled.rs:157`.
-- **Reason:** The defect is Rare and affects only the optional timing output.
-  No current command flow was found to send two equal bundles at the same
-  time. The one-worker trigger needs unusual timing, and only a trace through
-  the source shows it. Its fix does not get harder after the merge.
+- **Reason:** The defect is Rare and affects only the optional timing output
+  and which worker a head bundle prefers. No current command flow was found to
+  send two equal bundles at the same time. The one-worker trigger needs
+  unusual timing, and only a trace through the source shows it. Its fix does
+  not get harder after the merge.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -144,8 +145,15 @@
   compiler ran, and `sidecar.operation` shows no `esbuild` event for that
   request. The split stays, so each later reuse on that worker gives a wrong
   report. Each new generation that the worker makes from its compilation also
-  gets a wrong record. Rendered output and caching do not change, and the
-  `sidecar.operation` counts give a workaround.
+  gets a wrong record. `Pool::execute`, in
+  `crates/mokly-sidecar/src/pool_requests.rs`, also records each wrong report
+  as the last compile of that worker. The
+  [head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity)
+  uses that record, so a head bundle can prefer that worker to a worker that
+  compiled after it. In each known trigger, that worker compiled earlier, and
+  the sidecar keeps its esbuild service until the process exits. So no extra
+  compiler starts. Rendered output and caching do not change, and the
+  `sidecar.operation` counts give a workaround for the timing output.
 - **Root question:** How should each request report whether its worker
   reused compiled code?
 - **Options:**
@@ -257,7 +265,7 @@
   recipe sharing. Prefer F to B, because F gets the same result with one
   insert path.
 - **Action:** fix after merge, apply D, because the defect is Rare and affects
-  only the optional timing output. No current command flow was found to send
-  two equal bundles at the same time. The one-worker trigger needs unusual
-  timing, and only a trace through the source shows it. The fix does not get
-  harder after the merge.
+  only the optional timing output and which worker a head bundle prefers. No
+  current command flow was found to send two equal bundles at the same time.
+  The one-worker trigger needs unusual timing, and only a trace through the
+  source shows it. The fix does not get harder after the merge.

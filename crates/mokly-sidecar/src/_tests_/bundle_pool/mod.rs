@@ -132,6 +132,7 @@ fn pool(store: Unimock, worker: Unimock) -> Arc<Pool> {
                 contexts: Default::default(),
                 renders: 0,
                 requests: 1,
+                last_compilation: None,
             }));
         }
         state.available.extend([0, 1]);

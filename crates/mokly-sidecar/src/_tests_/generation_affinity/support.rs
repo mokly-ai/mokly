@@ -109,6 +109,7 @@ fn slot(state: &State, root: &str, loaded: Loaded) -> Slot {
         contexts: BTreeSet::new(),
         renders: 0,
         requests: 0,
+        last_compilation: None,
     };
     if !matches!(loaded, Loaded::None) {
         slot.generations.insert(
