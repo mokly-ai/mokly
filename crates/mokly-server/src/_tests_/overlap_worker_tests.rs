@@ -11,7 +11,9 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::DocumentsMock;
 use crate::background_capacity::FixedCapacity;
+use crate::background_dispatch::Dispatch;
 use crate::background_stage::Stages;
+use crate::background_support::staged;
 use crate::error::{InternalError, ServerError};
 use crate::work::{Work, Workers};
 
@@ -52,9 +54,9 @@ async fn admitted_root_releases_dispatch_before_document_completion() {
     let (sent, received) = oneshot::channel();
     let sent = Mutex::new(Some(sent));
     let mock = Unimock::new(
-        DocumentsMock::background_staged
-            .some_call(matching!(_, _))
-            .answers_arc(Arc::new({
+        DocumentsMock::background_read
+            .some_call(matching!(_))
+            .answers_arc(staged(Arc::new({
                 let gate = gate.clone();
                 move |_, _, completion| {
                     completion.handoff(128);
@@ -65,7 +67,7 @@ async fn admitted_root_releases_dispatch_before_document_completion() {
                     }
                     Ok(Vec::new())
                 }
-            })),
+            }))),
     );
     let documents = Arc::new(mock.clone());
     let workers = Arc::new(Workers::new(1, Arc::new(Unimock::new(()))));
@@ -74,7 +76,7 @@ async fn admitted_root_releases_dispatch_before_document_completion() {
         let workers = workers.clone();
         async move {
             workers
-                .background_staged(documents, "one".into(), stages.view("one"))
+                .background(documents, "one".into(), Dispatch::new(stages))
                 .await
         }
     });
@@ -92,25 +94,29 @@ async fn admitted_root_releases_dispatch_before_document_completion() {
 #[tokio::test]
 async fn handed_off_job_releases_its_charge_on_error_and_unwind_with_stage_still_retained() {
     for unwind in [false, true] {
+        let stages = Stages::new(Arc::new(FixedCapacity(1)));
+        let dispatch = Dispatch::new(stages.clone());
+        let retained = Arc::new(Mutex::new(None));
         let mock = Unimock::new(
-            DocumentsMock::background_staged
-                .some_call(matching!(_, _))
-                .answers_arc(Arc::new({
+            DocumentsMock::background_read
+                .some_call(matching!(_))
+                .answers_arc(staged(Arc::new({
+                    let dispatch = dispatch.clone();
+                    let retained = retained.clone();
                     move |_, _, completion| {
+                        *retained.lock().unwrap() = dispatch.stage.get().unwrap().upgrade();
                         completion.handoff(128);
                         if unwind {
                             panic!("injected background unwind");
                         }
                         Err(ServerError::Deadline)
                     }
-                })),
+                }))),
         );
         let documents = Arc::new(mock.clone());
         let work = Workers::new(1, Arc::new(Unimock::new(())));
-        let stages = Stages::new(Arc::new(FixedCapacity(1)));
-        let stage = stages.view("error");
         let error = work
-            .background_staged(documents, "error".into(), stage.clone())
+            .background(documents, "error".into(), dispatch)
             .await
             .unwrap_err();
         let unwound = match error {
@@ -121,6 +127,7 @@ async fn handed_off_job_releases_its_charge_on_error_and_unwind_with_stage_still
         assert_eq!(unwound, unwind);
         assert_eq!(*stages.bytes.lock().unwrap(), 0);
         assert_eq!(work.workers.available_permits(), 1);
+        let stage = retained.lock().unwrap().take().unwrap();
         assert!(stage.state.lock().unwrap().charge.is_none());
         assert_eq!(*stages.active.lock().unwrap(), 0);
         work.stop().await;
@@ -134,9 +141,9 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
     let (sent, mut received) = tokio::sync::mpsc::unbounded_channel();
     let calls = Arc::new(AtomicUsize::new(0));
     let mock = Unimock::new(
-        DocumentsMock::background_staged
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new({
+        DocumentsMock::background_read
+            .each_call(matching!(_))
+            .answers_arc(staged(Arc::new({
                 let gate = gate.clone();
                 let calls = calls.clone();
                 move |_, route, completion| {
@@ -153,7 +160,7 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
                     }
                     Ok(Vec::new())
                 }
-            })),
+            }))),
     );
     let documents = Arc::new(mock.clone());
     let observed = Arc::new(Activity::default());
@@ -170,16 +177,13 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
         Workers::new(2, Arc::new(Unimock::new(()))).with_activity(Some(Arc::new(activity.clone()))),
     );
     let stages = Stages::new(Arc::new(FixedCapacity(2)));
-    let first_stage = stages.view("first");
-    let second_stage = stages.view("second");
+    let first_dispatch = Dispatch::new(stages.clone());
+    let second_dispatch = Dispatch::new(stages.clone());
     let mut first = Box::pin({
         let work = work.clone();
         let documents = documents.clone();
-        let stage = first_stage.clone();
-        async move {
-            work.background_staged(documents, "first".into(), stage)
-                .await
-        }
+        let dispatch = first_dispatch.clone();
+        async move { work.background(documents, "first".into(), dispatch).await }
     });
     {
         let _turn = work.turn.acquire().await.unwrap();
@@ -197,17 +201,16 @@ async fn refused_charge_keeps_its_worker_and_cancelled_owner_returns_charge_at_f
     }
     let first = tokio::spawn(first);
     assert_eq!(received.recv().await.unwrap(), "first");
+    let first_stage = first_dispatch.stage.get().unwrap().upgrade().unwrap();
     assert_eq!(observed.state(), (1, 0));
     let second = tokio::spawn({
         let work = work.clone();
         let documents = documents.clone();
-        let stage = second_stage.clone();
-        async move {
-            work.background_staged(documents, "second".into(), stage)
-                .await
-        }
+        let dispatch = second_dispatch.clone();
+        async move { work.background(documents, "second".into(), dispatch).await }
     });
     assert_eq!(received.recv().await.unwrap(), "second");
+    let second_stage = second_dispatch.stage.get().unwrap().upgrade().unwrap();
     assert!(first_stage.handed_off());
     assert!(!second_stage.handed_off());
     assert_eq!(work.workers.available_permits(), 1);

@@ -2,18 +2,16 @@
 
 use std::sync::{Arc, Weak};
 
-use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver, Walker};
-use crate::document_store::ReadOutcome;
-use crate::error::{GraphError, Result, invalid};
+use crate::error::{GraphError, Result};
 use crate::session::Session;
-use crate::session_persistence::DocumentLookup;
+use crate::session_lookup::DocumentRead;
 use crate::types::DocumentPlan;
 use crate::workers::ArtifactWorker;
-use crate::{document_composition, resource_digests, validation};
+use crate::{resource_digests, validation};
 
 impl Session {
     pub(crate) fn preview_walker(&self) -> Walker {
@@ -40,62 +38,9 @@ impl Session {
         err
     )]
     pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
-        self.raw_prepared(route, None, None)
-    }
-
-    pub(crate) fn raw_prepared(
-        &self,
-        route: &str,
-        prepared: Option<PreparedRoot>,
-        lookup: Option<DocumentLookup>,
-    ) -> Result<Arc<Artifact>> {
-        let plan = self
-            .state
-            .plans
-            .get(route)
-            .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
-        record_axes(plan);
-        let cached = self.state.cache.get(&plan.key);
-        if let Some(artifact) = cached {
-            tracing::Span::current().record("cache_hit", true);
-            return Ok(artifact);
-        }
-        let (stored_key, read_store) = match lookup {
-            Some(DocumentLookup::Read(key)) => (key, true),
-            Some(DocumentLookup::Miss(key)) => (key, false),
-            None => (self.stored_key(route), true),
-        };
-        if let (Some(key), Some(persistence)) = (&stored_key, &self.state.inputs.persistence)
-            && read_store
-            && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
-                persistence.store.load(key)
-        {
-            self.state
-                .composer
-                .record_served(&document_composition::request(
-                    self,
-                    plan,
-                    &self.state.catalogue.model.entries[plan.entry],
-                ));
-            return Ok(artifact);
-        }
-        let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = document_composition::document(self, plan, entry, prepared);
-        match result {
-            Ok(artifact) => {
-                if let Some(key) = stored_key {
-                    self.state
-                        .fresh
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner())
-                        .insert(plan.key.0.clone(), key);
-                }
-                Ok(artifact)
-            }
-            Err(source) => Err(GraphError::Document {
-                entry: entry.metadata.path.clone(),
-                source: Box::new(source),
-            }),
+        match self.raw_lookup(route)? {
+            DocumentRead::Hit(artifact) => Ok(artifact),
+            DocumentRead::Miss(key) => self.compose_miss(route, key, None),
         }
     }
 

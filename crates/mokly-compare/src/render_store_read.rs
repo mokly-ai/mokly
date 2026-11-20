@@ -10,26 +10,6 @@ use crate::render_segment;
 use crate::render_store::{CachedDocuments, SegmentIdentity, SegmentPosition};
 
 impl CachedDocuments {
-    /// Inspect the ordinary miss prefix without consuming faults or touching storage.
-    pub(crate) fn known_missing_document(&self, key: &StoreKey) -> bool {
-        if !self.enabled.load(Ordering::Acquire) {
-            return true;
-        }
-        let Ok(index) = self.index.try_lock() else {
-            return false;
-        };
-        let Some(index) = index.as_ref() else {
-            return false;
-        };
-        if index.contains_key(key) {
-            return false;
-        }
-        let Ok(faults) = self.faults.try_lock() else {
-            return false;
-        };
-        faults.is_empty()
-    }
-
     pub(crate) fn read_document(&self, key: &StoreKey) -> ReadOutcome {
         if !self.enabled.load(Ordering::Acquire) {
             return ReadOutcome::Miss;

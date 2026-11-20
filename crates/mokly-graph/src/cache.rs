@@ -61,12 +61,6 @@ pub struct CacheStats {
 /// Stateful cache boundary shared by Serve, build, and comparison.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderCacheMock))]
 pub trait RenderCache: Send + Sync {
-    /// Probe retained presence without counting, promotion, restoration, or copying.
-    /// Adapters without this probe conservatively keep the ordinary worker path.
-    fn contains(&self, _key: &NodeKey) -> bool {
-        true
-    }
-
     /// Get a node. A compact document promotes only on reuse within full-tier turnover.
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>>;
     /// Retain a result when it fits. Oversized results still return to the caller.
@@ -146,11 +140,6 @@ impl MemoryCache {
 }
 
 impl RenderCache for MemoryCache {
-    fn contains(&self, key: &NodeKey) -> bool {
-        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        state.full.contains(key) || state.transit.contains(key) || state.compact.contains(key)
-    }
-
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>> {
         let encoded = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -274,10 +263,6 @@ mod cache_encoding_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_reinsert_tests.rs"]
 mod cache_reinsert_tests;
-
-#[cfg(test)]
-#[path = "_tests_/overlap_cache_tests.rs"]
-mod overlap_cache_tests;
 
 #[cfg(test)]
 #[path = "_tests_/cache_export_tests.rs"]

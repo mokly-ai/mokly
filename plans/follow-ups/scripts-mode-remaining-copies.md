@@ -74,7 +74,7 @@
     `loader.load` at `crates/mokly-cli/src/changes_base.rs:78` to line 92.
   - Both sides share one render cache, `self.runtime.cache`, at
     `crates/mokly-cli/src/changes_base.rs:146`. The lookup at
-    `crates/mokly-graph/src/session_render.rs:42` uses the document key. So
+    `crates/mokly-graph/src/session_lookup.rs:27` uses the document key. So
     an unchanged base view reuses the head render only when the two
     configuration keys are equal.
   - In the usual case, the base configuration file equals the working

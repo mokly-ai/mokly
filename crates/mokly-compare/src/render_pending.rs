@@ -95,24 +95,16 @@ impl Pending {
     }
 }
 
-/// A read's accounting locks, with publication reserved only for a miss hint.
+/// One ordinary read's accounting lock.
 pub(crate) struct ReadState<'a> {
     /// Existing pending counters, held through publication and observer delivery.
     pub(crate) pending: MutexGuard<'a, Pending>,
-    publication: Option<MutexGuard<'a, Publication>>,
 }
 
 impl ReadState<'_> {
-    /// Publish once without reacquiring a hint's reserved publication lock.
+    /// Publish once while retaining the ordinary pending-counter guard.
     pub(crate) fn emit(&mut self, shared: &Shared, observer: &dyn StoreObserver) {
-        let snapshot = {
-            let Some(mut publication) = self.publication.take() else {
-                shared.emit(self.pending.stats, observer);
-                return;
-            };
-            publication.publish(self.pending.stats)
-        };
-        observer.state(snapshot);
+        shared.emit(self.pending.stats, observer);
     }
 }
 
@@ -156,18 +148,7 @@ impl Shared {
                 .pending
                 .lock()
                 .unwrap_or_else(|error| error.into_inner()),
-            publication: None,
         }
-    }
-
-    /// Decline a hint before any outcome is counted when either lock is held.
-    pub(crate) fn try_read_state(&self) -> Option<ReadState<'_>> {
-        let pending = self.pending.try_lock().ok()?;
-        let publication = self.publication.try_lock().ok()?;
-        Some(ReadState {
-            pending,
-            publication: Some(publication),
-        })
     }
 
     pub(crate) fn emit(&self, stats: StoreStats, observer: &dyn StoreObserver) {

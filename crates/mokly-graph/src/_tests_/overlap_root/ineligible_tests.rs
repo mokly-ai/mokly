@@ -16,10 +16,9 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::{Artifact, MemoryCache, RenderCache, RenderCacheMock};
 use crate::key::NodeKey;
-use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{catalogue, completion, document, route, session};
+use super::support::{background, catalogue, completion, document, route, session};
 
 #[test]
 fn unprepared_views_use_ordinary_workers_without_completion_or_early_fragment() {
@@ -117,6 +116,17 @@ fn unprepared_views_use_ordinary_workers_without_completion_or_early_fragment() 
         )
         .no_verify_in_drop();
         let workers = Unimock::new((
+            RenderWorkersMock::background
+                .some_call(matching!(_, _))
+                .answers_arc(Arc::new({
+                    let phase = phase.clone();
+                    move |_, route, job| {
+                        phase.store(1, Ordering::SeqCst);
+                        let result = job.read(route);
+                        phase.store(0, Ordering::SeqCst);
+                        result
+                    }
+                })),
             RenderWorkersMock::cancelled
                 .each_call(matching!())
                 .returns(false),
@@ -137,8 +147,8 @@ fn unprepared_views_use_ordinary_workers_without_completion_or_early_fragment() 
                         assert_eq!(calls.load(Ordering::SeqCst), 0, "{kind}");
                         assert_eq!(
                             cache.stats().hits + cache.stats().misses,
-                            0,
-                            "probe must not count {kind}"
+                            1,
+                            "the lookup worker performs one counted document read for {kind}"
                         );
                         phase.store(1, Ordering::SeqCst);
                         job.artifact(route)
@@ -156,9 +166,7 @@ fn unprepared_views_use_ordinary_workers_without_completion_or_early_fragment() 
         state.workers = Arc::new(workers.clone());
         let trace = Trace::default();
         let artifact = trace.in_scope(|| {
-            session
-                .render_background(&route("caller"), Arc::new(completion.clone()))
-                .unwrap()
+            background(&session, &route("caller"), Arc::new(completion.clone())).unwrap()
         });
         let expected = match kind {
             "cached" | "custom-cache" => "Cached",

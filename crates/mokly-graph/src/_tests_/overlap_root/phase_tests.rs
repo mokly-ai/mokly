@@ -11,10 +11,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::background::CompletionMock;
 use crate::cache::{MemoryCache, RenderCache};
 use crate::error::{GraphError, InternalError};
-use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{catalogue, document, route, session};
+use super::support::{background, catalogue, document, route, session};
 
 #[test]
 fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consumption() {
@@ -75,7 +74,7 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
     .no_verify_in_drop();
     let workers = Unimock::new((
         RenderWorkersMock::cancelled
-            .some_call(matching!())
+            .each_call(matching!())
             .returns(false),
         RenderWorkersMock::document
             .some_call(matching!(_, _))
@@ -87,8 +86,8 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
                     assert_eq!(*order.lock().unwrap(), ["root", "handoff"]);
                     assert_eq!(
                         cache.stats().misses,
-                        1,
-                        "only the fragment read precedes worker dispatch"
+                        2,
+                        "the lookup worker read and the fragment read precede composition"
                     );
                     phase.store(1, Ordering::SeqCst);
                     let artifact = job.artifact(route)?;
@@ -99,7 +98,7 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
                     assert_eq!(
                         cache.stats().misses,
                         2,
-                        "the worker performs one counted document read"
+                        "composition does not repeat the counted document read"
                     );
                     Ok(artifact)
                 }
@@ -125,11 +124,8 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
     state.composer = Arc::new(custom.clone());
     state.workers = Arc::new(workers.clone());
     let trace = Trace::default();
-    let artifact = trace.in_scope(|| {
-        session
-            .render_background(&route("caller"), Arc::new(completion.clone()))
-            .unwrap()
-    });
+    let artifact = trace
+        .in_scope(|| background(&session, &route("caller"), Arc::new(completion.clone())).unwrap());
     assert!(
         String::from_utf8(artifact.bytes.clone())
             .unwrap()

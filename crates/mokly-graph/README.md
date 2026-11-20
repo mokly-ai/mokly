@@ -18,8 +18,8 @@ writes no files.
 - Define the activity and memory boundaries that pause and measure the writer
   of the render store.
 - Render all views through an injected worker pool. A Serve background view
-  can first request its own root fragment on its caller's thread, unless the
-  render store may hold its document.
+  first looks up its document on a render worker, and only a miss returns for
+  batch admission.
 - Reconstruct documents and stylesheet resources that left the cache from
   their recipes.
 - Validate logical anchors across destination views.
@@ -57,11 +57,10 @@ Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.
 
-Serve renders each background view through `RenderGeneration::render` or the
-staged `RenderGeneration::render_background`, which can request the view's own
-root fragment before a render worker completes the document. The
-[render workers and background views](./workers.md) page holds the guidance
-for both paths, the store lookup, the handoff, and the shared finish.
+Serve reads each background view through `RenderGeneration::read_background`.
+A hit finishes on a render worker, and a miss returns as a `BackgroundMiss`
+without a tree. The [render workers and background views](./workers.md) page
+holds the guidance for the lookup, the miss, the handoff, and the shared finish.
 
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it
@@ -176,9 +175,8 @@ retention disabled.
 
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
-  static output call. `RenderGeneration::can_prepare_root` tells Serve
-  whether one background view takes the staged path, and
-  `RenderGeneration::render_background` renders that view.
+  static output call. `RenderGeneration::read_background` looks up one Serve
+  background view, and its default `Ok(None)` declines the lookup.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -188,18 +186,18 @@ retention disabled.
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
   `Artifact`, and `CacheStats`, the render cache with its full and compact
-  tiers. `RenderCache::contains` checks for a key without a count, a
-  promotion, or a restore.
-- [`src/background.rs`](./src/background.rs) defines `Completion`, the
-  completion place and dispatch release of a Serve background view with a
-  prepared root. `Completion::handoff`, the only way into the completion place,
-  receives the byte charge of that root.
-- [`src/background_render.rs`](./src/background_render.rs) answers
-  `can_prepare_root` for a prepared generation from the immutable plan and
-  entry, with the same Markdown exclusion as `render_background`. It takes the
-  store lookup of one staged Serve background view and can prepare its own root
-  on the caller's thread. Its private `BackgroundJob` then takes its one-shot
-  `BackgroundAttempt` and finishes that view on the render workers.
+  tiers.
+- [`src/background.rs`](./src/background.rs) defines `BackgroundRead`, a hit
+  that its worker finished or a `BackgroundMiss`, the single-use continuation
+  of a miss, and `BackgroundWorker`, the lookup that `RenderWorkers::background`
+  runs. Its `Completion` is the completion place and dispatch release of a miss
+  with a prepared root. `Completion::handoff`, the only way into the completion
+  place, receives the byte charge of that root.
+- [`src/background_render.rs`](./src/background_render.rs) runs the lookup of
+  one Serve background view on the render workers. Its private miss keeps the
+  store key, the root eligibility, and the view's span, and no tree.
+  `BackgroundMiss::complete` can prepare the own root, hands it off, and
+  finishes the view on the render workers without a second lookup.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
   charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
@@ -210,14 +208,14 @@ retention disabled.
 - [`src/document_store.rs`](./src/document_store.rs) defines `DocumentStore`,
   the optional render store boundary, with `Persistence`, `StoreKey`,
   `ReadOutcome`, `OfferOutcome`, `EntryFault`, and `StoreStats`.
-  `DocumentStore::try_miss` counts one definite miss without IO, and its
-  default answers `false`.
   [`src/session_persistence.rs`](./src/session_persistence.rs) builds the
-  `StoreKey` of a route and the `DocumentLookup` of a staged view, and it
-  offers a fresh document after its checks.
-  [`src/session_render.rs`](./src/session_render.rs) reads and composes one
-  view through `Session::raw_prepared`. Its shared `Session::finish_artifact`
-  checks and inserts every document and offers each fresh one.
+  `StoreKey` of a route and offers a fresh document after its checks.
+  [`src/session_lookup.rs`](./src/session_lookup.rs) holds `Session::raw_lookup`,
+  the one counted cache read and store load of every view, and
+  `Session::compose_miss`, which composes a miss without a second lookup. The
+  shared `Session::finish_artifact` of
+  [`src/session_render.rs`](./src/session_render.rs) checks and inserts every
+  document and offers each fresh one.
 - [`src/write_activity.rs`](./src/write_activity.rs) defines `WriteReadiness`,
   `WriteActivity`, and `WriteLease`, the boundary that pauses the writer while
   Serve is busy.
@@ -242,7 +240,8 @@ retention disabled.
   root order. Its `comparison_tasks` method runs every index of a
   `ComparisonTask` once and returns when all of them have run. Its
   `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
-  at most twice the pool size started and not yet consumed.
+  at most twice the pool size started and not yet consumed. Its `background`
+  method runs one `BackgroundWorker` lookup on the pool.
 - [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
   scheduling class of a blocking render, `Foreground` by default.
   `RenderClass::in_scope` sets a class for one operation and restores the
@@ -292,7 +291,8 @@ retention disabled.
 
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).

@@ -1,19 +1,21 @@
 //! Count-bounded completion ownership for the background usage window.
 
 use std::mem;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
-use std::task::Waker;
 
 use mokly_graph::background::Completion;
 use tokio::sync::OwnedSemaphorePermit;
 
+use crate::background_admission::{Admission, BatchPlace};
 use crate::background_capacity::BackgroundCapacity;
+use crate::background_dispatch::Dispatch;
 use crate::priority::Priority;
 
 /// Completion admission shared by current and superseded generations of one Serve.
 /// Original workers and sidecar claims still bound unsignalled replacement work.
 pub struct Stages {
+    pub(crate) batch: Arc<Admission>,
     capacity: Arc<dyn BackgroundCapacity>,
     active: Mutex<usize>,
     changed: Condvar,
@@ -24,6 +26,7 @@ impl Stages {
     /// Create completion admission without starting work.
     pub fn new(capacity: Arc<dyn BackgroundCapacity>) -> Arc<Self> {
         Arc::new(Self {
+            batch: Admission::new(capacity.clone()),
             capacity,
             active: Mutex::new(0),
             changed: Condvar::new(),
@@ -33,14 +36,23 @@ impl Stages {
 
     /// Allocate the owner of one admitted view.
     pub fn view(self: &Arc<Self>, route: &str) -> Arc<Stage> {
-        Arc::new(Stage {
+        self.view_dispatched(route, Dispatch::new(self.clone()))
+    }
+
+    pub(crate) fn view_dispatched(
+        self: &Arc<Self>,
+        route: &str,
+        dispatch: Arc<Dispatch>,
+    ) -> Arc<Stage> {
+        let stage = Arc::new(Stage {
             bound: self.clone(),
             state: Mutex::new(State::default()),
+            dispatch: dispatch.clone(),
             handed: AtomicBool::new(false),
-            wake: Mutex::new(None),
-            queue_bytes: AtomicUsize::new(0),
             route: route.into(),
-        })
+        });
+        let _ = dispatch.stage.set(Arc::downgrade(&stage));
+        stage
     }
 
     fn reserve(self: &Arc<Self>, charge: usize) -> Option<Charge> {
@@ -101,6 +113,7 @@ impl Drop for Place {
 
 #[derive(Default)]
 struct State {
+    batch: Option<BatchPlace>,
     worker: Option<OwnedSemaphorePermit>,
     priority: Option<Arc<Priority>>,
     place: Option<Place>,
@@ -111,9 +124,8 @@ struct State {
 pub struct Stage {
     bound: Arc<Stages>,
     state: Mutex<State>,
+    dispatch: Arc<Dispatch>,
     handed: AtomicBool,
-    wake: Mutex<Option<Waker>>,
-    queue_bytes: AtomicUsize,
     route: String,
 }
 
@@ -128,12 +140,11 @@ impl Stage {
         self.handed.load(Ordering::SeqCst)
     }
 
-    pub(crate) fn register(&self, wake: &Waker) {
-        *self.wake.lock().unwrap_or_else(|error| error.into_inner()) = Some(wake.clone());
-    }
-
-    pub(crate) fn queue_bytes(&self, bytes: usize) {
-        self.queue_bytes.store(bytes, Ordering::SeqCst);
+    pub(crate) fn attach_batch(&self, batch: BatchPlace) {
+        self.state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .batch = Some(batch);
     }
 
     /// Admit prepared-root completion while its original dispatch worker remains owned.
@@ -158,7 +169,12 @@ impl Stage {
         let (released, priority) = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             (
-                (state.place.take(), state.worker.take(), state.charge.take()),
+                (
+                    state.place.take(),
+                    state.worker.take(),
+                    state.charge.take(),
+                    state.batch.take(),
+                ),
                 state.priority.take(),
             )
         };
@@ -185,17 +201,11 @@ impl Completion for Stage {
             }
             state.charge = Some(charge);
             state.worker.take();
+            state.batch.take();
+            self.dispatch.handoff();
             if let Some(priority) = &state.priority {
                 priority.changed.notify_waiters();
             }
-        }
-        if let Some(wake) = self
-            .wake
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .take()
-        {
-            wake.wake();
         }
     }
 
@@ -203,7 +213,8 @@ impl Completion for Stage {
         mem::size_of::<Self>()
             + mem::size_of::<Stages>()
             + self.route.capacity().saturating_mul(2)
-            + self.queue_bytes.load(Ordering::SeqCst)
+            + self.dispatch.queue_bytes.load(Ordering::SeqCst)
+            + mem::size_of::<Dispatch>()
             + 1024
     }
 }

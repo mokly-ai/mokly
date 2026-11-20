@@ -70,8 +70,8 @@ them, so a rejected candidate leaves the live records unchanged.
 `UsagePass` and `ChangesPass` run the background work of Serve: current usage
 first, then Changes classification against one pinned merge base. The
 [background work](./background.md) page holds the guidance for their window,
-the ordinary and staged paths of each view, the `Stages` bound and budget, the
-ready state, and the write leases of the Changes reference probes.
+the lookup and the miss of each view, the `Stages` bounds and budget, the ready
+state, and the write leases of the Changes reference probes.
 
 `MemoryComparisons` implements `dyn Comparisons`, the store of the
 [selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
@@ -208,14 +208,14 @@ generations.
   shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
-  `GraphDocuments::can_prepare_root` answers `false` for an undeclared route
-  and forwards every other route to `RenderGeneration::can_prepare_root`.
-  `GraphDocuments::background` passes an ordinary view to
-  `RenderGeneration::render`, and `GraphDocuments::background_staged` passes a
-  staged view's `Completion` to `RenderGeneration::render_background`. The
-  `Documents::can_prepare_root` default answers `false`. The
-  `Documents::background_staged` default calls `background` and takes no
-  completion place.
+  `Documents::background_read` looks up one background view, and its default
+  `Ok(None)` declines the lookup. `GraphDocuments::background` renders one view
+  on the ordinary path.
+- [`src/background_read.rs`](./src/background_read.rs) defines
+  `BackgroundRead` and `BackgroundMiss`, the result of one lookup and the
+  single-use miss that `GraphDocuments::read_background` returns.
+  `BackgroundMiss::complete` takes the route's usage lock again and renders
+  nothing when that usage is already settled.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
@@ -229,47 +229,45 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
-  `UsagePass::fill_window` chooses the ordinary or the staged path of each
-  view before the view starts. `ChangesPass::activity` holds the render
-  store's activity, and the private `Reference` keeps a probe result together
-  with its lease.
+  `UsagePass::fill_window` starts each view in catalogue order with its own
+  `Dispatch`. `ChangesPass::activity` holds the render store's activity, and
+  the private `Reference` keeps a probe result together with its lease.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
-  bounded batch of the current usage pass, which keeps catalogue order for
-  starts, warnings, and failure reports. `Window::start` adds an ordinary view,
-  which keeps its place until it ends. `Window::start_staged` adds a staged
-  view with its `Stage`. The window counts only the views that have not handed
+  bounded window of the current usage pass, which keeps catalogue order for
+  starts, warnings, and failure reports. `Window::start_dispatched` adds a view
+  with its `Dispatch`. The window counts only the views that have not handed
   off, and a handoff event lets it start the next view.
+  [`src/background_dispatch.rs`](./src/background_dispatch.rs) defines
+  `Dispatch`, the window place of one view, which its `Stage` wakes at the
+  handoff. `Dispatch::new` creates it from the shared `Stages`.
 - [`src/background_stage.rs`](./src/background_stage.rs) defines `Stages`, the
-  completion bound and the 4 MiB transient budget that every pass of one
-  `UsagePass` shares, and `Stage`, the owner of one staged view's worker
-  permit, completion place, and transient charge. `Stage` implements the graph's
-  `Completion`. Its handoff takes a charge without waiting, then takes a
-  completion place through the crate-private `Stage::enter`, also when the
-  charge does not fit. A granted charge releases the worker and wakes the
-  window.
+  batch bound, the completion bound, and the 4 MiB transient budget that every
+  pass of one `UsagePass` shares, and `Stage`, the owner of one eligible miss's
+  worker permit, batch place, completion place, and transient charge. `Stage`
+  implements the graph's `Completion`. Its handoff takes a charge without
+  waiting, then takes a completion place through the crate-private
+  `Stage::enter`, also when the charge does not fit. A granted charge releases
+  the worker and the batch place and wakes the window. The private
+  [`src/background_admission.rs`](./src/background_admission.rs) admits each
+  miss to the batch with a fresh capacity reading.
 - [`src/background_capacity.rs`](./src/background_capacity.rs) defines
-  `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
+  `BackgroundCapacity`, the changing bound of the batch and the completion
+  stage, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
-  `Work::background` renders one ordinary view. `Work::background_staged`
-  renders one staged view with its `Stage`, and its default calls
-  `background`. `Workers::with_activity` takes the `WriteActivity` of the
-  render store, and each queued or active job, native work included, holds a
-  lease of it. A file response holds its lease until the file opens, and its
-  body streams after that.
-  [`src/work_background.rs`](./src/work_background.rs) admits one background
-  render at a time and runs it in `RenderClass::Background`. The job of an
-  ordinary view holds its worker permit until the render ends. The job of a
-  staged view attaches its worker permit to the view's `Stage`. Each
-  background job, ordinary or staged, takes one `WriteActivity` lease before
-  it waits for its turn. Its blocking job keeps that lease after a handoff or a
-  cancellation of the async caller, until the job ends. The job first releases
-  its worker permit, or the completion place, the worker permit, and the charge
-  of its `Stage`. It then releases the lease, and last its count of
-  [`src/work_active.rs`](./src/work_active.rs). That module counts the
-  blocking background jobs, so `Workers::stop` also waits for a job that has
-  already released its worker permit, and it returns only after the lease
-  ends.
+  `Work::parallelism` gives the fixed worker count that bounds the window, and
+  `Work::background` runs one view with its `Dispatch`.
+  `Workers::with_activity` takes the `WriteActivity` of the render store, and
+  each queued or active job, native work included, holds a lease of it. A
+  file response holds its lease until the file opens, and its body streams
+  after that.
+  [`src/work_background.rs`](./src/work_background.rs) runs the lookup job of
+  one background view and, after a miss, its resumed job, in
+  `RenderClass::Background`. One lease and one count of
+  [`src/work_active.rs`](./src/work_active.rs) pass from the lookup job to the
+  resumed job, so `Workers::stop` waits for both jobs. The
+  [lookup and miss](./background.md#lookup-and-miss) guidance gives their
+  order.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
   `MemoryComparisons::with_activity` takes the same activity, and each queued
@@ -286,7 +284,8 @@ generations.
 ### Related Docs
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).

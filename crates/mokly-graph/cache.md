@@ -53,9 +53,7 @@ tier, then transit documents, then the compact tier. A transit hit returns the
 full artifact without a restore. A compact hit returns the restored artifact.
 It promotes the entry to the full tier only
 when the same key was restored before within fewer cache operations than the
-full tier has entries. `contains` checks the same three places for a key, but
-it counts no cache operation, promotes nothing, and restores nothing. An
-`insert` of a key that transit or the compact tier
+full tier has entries. An `insert` of a key that transit or the compact tier
 holds keeps the entry there, so a caller that stores a restored artifact again
 does not promote it. When the full tier already holds the same artifact handle,
 and a replacement would keep the same charge, an `insert` only refreshes its
@@ -83,11 +81,9 @@ graphs, and direct and one-shot callers leave it absent. `StoreKey::new`
 combines a document key with the build identity: the native identity of the
 store and, for a document that uses JavaScript, the JavaScript identity. When
 a part is absent, the generation neither reads nor offers that document. After
-a render cache miss, a generation reads the store before it renders. A staged
-Serve background view first asks `DocumentStore::try_miss`, so that a definite
-miss counts once before its root request. Every other outcome of that view
-comes from one `DocumentStore::load` on a render worker, as the
-[store lookup](./workers.md#store-lookup) guidance says. A stored
+a render cache miss, a generation reads the store before it renders. A Serve
+background view makes this same read on a render worker, as the
+[background lookup](./workers.md#background-lookup) guidance says. A stored
 read repeats the public closure walk, the link checks, and the usage records of
 its side, so it gives the result of a fresh render. On a usable store hit, the
 generation also passes the same `ComposeRequest` that a composition uses to

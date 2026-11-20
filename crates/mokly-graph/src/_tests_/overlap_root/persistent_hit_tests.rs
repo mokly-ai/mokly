@@ -15,11 +15,11 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::{Artifact, MemoryCache, RenderCache};
 use crate::document_store::{DocumentStoreMock, OfferOutcome, Persistence, ReadOutcome, StoreKey};
-use crate::types::RenderGeneration;
+use crate::key::NodeKey;
 use crate::workers::RenderWorkersMock;
 
 use super::support::{
-    completion, document, observe_validation, persistent_catalogue, route, session,
+    background, completion, document, observe_validation, persistent_catalogue, route, session,
 };
 
 #[test]
@@ -69,26 +69,12 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
                 links: vec![],
             }),
         });
-        let hints = Arc::new(Mutex::new(Vec::<StoreKey>::new()));
         let loads = Arc::new(Mutex::new(Vec::new()));
         let offers = Arc::new(AtomicUsize::new(0));
         let store = Unimock::new((
             DocumentStoreMock::identity
                 .each_call(matching!())
                 .returns(Some("native-build".into())),
-            DocumentStoreMock::try_miss
-                .each_call(matching!(_))
-                .answers_arc(Arc::new({
-                    let in_worker = in_worker.clone();
-                    let events = events.clone();
-                    let hints = hints.clone();
-                    move |_, key| {
-                        assert!(!in_worker.load(Ordering::SeqCst));
-                        events.lock().unwrap().push("hint");
-                        hints.lock().unwrap().push(key.clone());
-                        false
-                    }
-                })),
             DocumentStoreMock::load
                 .each_call(matching!(_))
                 .answers_arc(Arc::new({
@@ -119,7 +105,7 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
         ))
         .no_verify_in_drop();
         let workers = Unimock::new(
-            RenderWorkersMock::document
+            RenderWorkersMock::background
                 .each_call(matching!(_, _))
                 .answers_arc(Arc::new({
                     let in_worker = in_worker.clone();
@@ -127,7 +113,7 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
                     move |_, route, job| {
                         events.lock().unwrap().push("worker");
                         in_worker.store(true, Ordering::SeqCst);
-                        let result = job.artifact(route);
+                        let result = job.read(route);
                         in_worker.store(false, Ordering::SeqCst);
                         events.lock().unwrap().push("complete");
                         result
@@ -148,13 +134,11 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
             store: Arc::new(store.clone()),
             javascript: Some("stable-typescript-react-config".into()),
         });
-        assert!(session.can_prepare_root(&route("caller")));
+        assert!(session.background_root_eligible(&route("caller")));
         let (completion, counts) = completion();
         let trace = Trace::default();
         let actual = trace.in_scope(|| {
-            session
-                .render_background(&route("caller"), Arc::new(completion.clone()))
-                .unwrap()
+            background(&session, &route("caller"), Arc::new(completion.clone())).unwrap()
         });
 
         assert_eq!(roots.load(Ordering::SeqCst), 0, "with_fault={with_fault}");
@@ -182,11 +166,17 @@ fn stored_background_views_record_served_inputs_without_root_render_or_handoff()
         );
         assert_eq!(offers.load(Ordering::SeqCst), 0);
         assert_eq!(*session.state.fresh.lock().unwrap(), BTreeMap::new());
-        assert_eq!(hints.lock().unwrap().len(), 1);
-        assert_eq!(*loads.lock().unwrap(), *hints.lock().unwrap());
+        assert_eq!(loads.lock().unwrap().len(), 1);
+        assert_eq!(
+            *loads.lock().unwrap(),
+            [StoreKey::new(
+                &NodeKey("caller".into()),
+                "12:native-buildstable-typescript-react-config"
+            )]
+        );
         assert_eq!(
             *events.lock().unwrap(),
-            ["hint", "worker", "load", "served", "validate", "complete"]
+            ["worker", "load", "served", "validate", "complete"]
         );
         assert_eq!(cache.stats().misses, 1);
         assert_eq!(cache.stats().hits, 0);

@@ -16,9 +16,8 @@ use crate::background::CompletionMock;
 use crate::cache::{Artifact, MemoryCache, RenderCache};
 use crate::key::NodeKey;
 use crate::requests::Requests;
-use crate::types::RenderGeneration;
 
-use super::support::{catalogue, completion, document, route, session};
+use super::support::{background, catalogue, completion, document, route, session};
 
 #[test]
 fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_signal() {
@@ -71,9 +70,7 @@ fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_sig
             })),
     ))
     .no_verify_in_drop();
-    let artifact = session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    let artifact = background(&session, &route("caller"), Arc::new(completion.clone())).unwrap();
     assert!(
         String::from_utf8(artifact.bytes.clone())
             .unwrap()
@@ -136,9 +133,7 @@ fn cached_owner_keeps_ordinary_ownership_during_nested_anchor_work_without_hando
         }),
     );
     let (session, _) = session(catalogue(), Arc::new(provider.clone()), cache);
-    session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    background(&session, &route("caller"), Arc::new(completion.clone())).unwrap();
     assert_eq!(rendered.load(Ordering::SeqCst), 1);
     assert_eq!(counts.handed.load(Ordering::SeqCst), 0);
     assert_eq!(counts.metadata.load(Ordering::SeqCst), 0);

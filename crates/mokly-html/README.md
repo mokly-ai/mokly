@@ -32,8 +32,8 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
-`Composer::prepare_root` prepares the own root of a Serve background view
-before any tree work. `HtmlComposer` prepares only a screen, component, or
+`Composer::prepare_root` prepares the own root of a Serve background view whose
+lookup missed, before any tree work. `HtmlComposer` prepares only a screen, component, or
 page without an HTML template or saved slot fragments. It requests that root
 fragment once. An opaque `PreparedRoot` keeps the start state, the exact
 `FragmentRequest`, and the one result, a fragment or an error, and no parsed
@@ -44,14 +44,16 @@ result to the root call, so composition never requests that root again.
 the same request.
 
 `Composer::can_prepare_root` answers whether `prepare_root` can prepare one
-entry. Serve asks it before a background view starts, to choose the path of
-that view. It reads only the prepared catalogue and the entry. It takes no
+entry. Serve asks it when the lookup of a background view misses, to decide
+whether that miss prepares its own root and can hand off. It reads only the
+prepared catalogue and the entry. It takes no
 `ComposeRequest`, requests no fragment, and performs no IO. `HtmlComposer`
 applies the same pure rule that `prepare_root` checks first. So `prepare_root`
 prepares nothing for an entry that answers `false`.
 
-The trait default of `can_prepare_root` answers `false`, so a custom composer
-keeps the ordinary path in Serve unless it overrides that method. The trait
+The trait default of `can_prepare_root` answers `false`, so the misses of a
+custom composer render without a prepared root and never hand off, unless it
+overrides that method. The trait
 default of `prepare_root` prepares nothing. The trait default of
 `compose_prepared` returns an internal error, because only `HtmlComposer`
 builds a `PreparedRoot`. `PreparedRoot::into_ready` returns a failed root's

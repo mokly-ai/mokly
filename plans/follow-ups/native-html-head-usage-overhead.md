@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/mokly-first-changes-4-busier-sidecars-3nds`, step 4 of the first-Changes series, after the performance orchestrator accepted this cost as a trade-off.
-- **Location:** `crates/mokly-server/src/background.rs:104` to line 121, `crates/mokly-server/src/work_background.rs:54`, `crates/mokly-server/src/background_batch.rs:50` and line 87, `crates/mokly-graph/src/workers.rs:205`, `crates/mokly-graph/src/session_render.rs:27` and line 54, `crates/mokly-graph/src/validation.rs:69`, `crates/mokly-html/src/composition.rs:121`, `crates/mokly-html/src/compose_start.rs:41`, `crates/mokly-html/src/source_locations.rs:10`, `crates/mokly-html/src/source_checks.rs:40` and line 125, `crates/mokly-html/src/normalization.rs:51`, and `crates/mokly-catalogue/src/html_driver_events.rs:70`.
+- **Location:** the start and the lookup of every view: `crates/mokly-server/src/background.rs:79` (`UsagePass::fill_window`), `crates/mokly-server/src/work_background.rs:82` (`Workers::background_render`), `crates/mokly-server/src/background_read.rs:75` and line 61 (`GraphDocuments::read_background` and `BackgroundMiss::complete`), `crates/mokly-server/src/background_admission.rs:26` (`Admission::acquire`), `crates/mokly-server/src/background_batch.rs:69` (`Window::start_dispatched`), `crates/mokly-graph/src/background_render.rs:23` and line 120 (`Session::read_background_document` and the private miss's `finish`), `crates/mokly-graph/src/session_lookup.rs:20` and line 48 (`Session::raw_lookup` and `Session::compose_miss`), and `crates/mokly-graph/src/workers.rs:178` and line 215 (`ThreadWorkers::background` and `ThreadWorkers::document`). The native document steps: `crates/mokly-graph/src/session_render.rs:47` (`Session::finish_artifact`), `crates/mokly-graph/src/validation.rs:69`, `crates/mokly-html/src/composition.rs:130`, `crates/mokly-html/src/compose_start.rs:35`, `crates/mokly-html/src/source_locations.rs:10`, `crates/mokly-html/src/source_checks.rs:40` and line 125, `crates/mokly-html/src/normalization.rs:51`, and `crates/mokly-catalogue/src/html_driver_events.rs:70`.
 - **Reason:** On 2026-11-20 the performance orchestrator accepted this cost for the measured Cloud and React gains, after a time-boxed profile investigation found no Small change that owns most of it.
 
 - **Source:** Implementation.
@@ -16,10 +16,11 @@
   - **Performance orchestrator:** the coordinating agent of the Changes performance work. It holds the design decisions that the user gave it.
 - **Background:**
 
-  - Step 4 makes the head usage pass of JavaScript catalogues finish sooner. It adds the handoff, one token stream for fragment parsing and source checks, and one parse5 tree per Node render. "Background Work And Replacement" in `docs/protocol/mokly-on-demand.md` holds the rules.
-  - A native HTML view has an HTML template, so it never hands off. Since commit `969133546`, `UsagePass::fill_window` chooses the path of each view before the view starts. `Start::eligible` decides from immutable metadata. It reads no cache, does no IO, and prepares no root.
-  - A view that cannot hand off takes main's ordinary path: `Window::start`, `Work::background`, and `RenderGeneration::render`, with no `Stage`. `ThreadWorkers::document` runs it on the dedicated Rayon render pool.
-  - There `Session::artifact` composes the document, walks its closure, checks its logical links, and inserts it into the render cache. A link check renders its target views inline.
+  - Step 4 makes the head usage pass of JavaScript catalogues finish sooner. It adds the handoff, one token stream for fragment parsing and source checks, and one parse5 tree per Node render. `docs/protocol/mokly-on-demand-background.md` holds the rules of the background pass.
+  - A native HTML view has an HTML template, so it never hands off. At the frozen candidate `969133546`, `UsagePass::fill_window` chose the path of each view before the view started. `Start::eligible` decided from immutable metadata. It read no cache, did no IO, and prepared no root.
+  - At that candidate, a view that could not hand off took main's ordinary path: `Window::start`, `Work::background`, and `RenderGeneration::render`, with no `Stage`. `ThreadWorkers::document` ran it on the dedicated Rayon render pool.
+  - There `Session::artifact` composed the document, walked its closure, checked its logical links, and inserted it into the render cache. A link check renders its target views inline.
+  - Current path, since the worker-first change of 2026-11-20 on the same branch: every view first looks up its document on the render pool, in a Tokio blocking job that holds a worker permit. A cache or store hit finishes there. A miss, native views included, releases its permit and waits for a batch place, which reads the current sidecar capacity. It then takes a permit again and resumes in a second blocking job, without a second lookup. A native miss gets no `Stage`. `ThreadWorkers::document` composes it on the render pool, and `Session::finish_artifact` walks its closure, checks its links, and inserts it. This item holds no measurement of this path.
   - The frozen control is `main` at `6995b84b75465f090ef41c6c0ddb768381b7fde8`. The candidate is step 4 at `969133546bc8f030f4f1c87d20eec8921497d7a7`. Both are release builds from separate checkouts and Cargo targets.
   - Each arm used its own `packages/mokly` dist. The viewer dist was identical. The host had 4 CPUs, Linux 6.8.0-117-generic, Node 24.21.0, npm 11.21.0, Rust 1.98.1, and Bun 1.4.4.
 
@@ -123,14 +124,15 @@
   - `HtmlComposer::compose`, which now runs `compose_root` and `Start::new`. `Start::new` runs main's former inline start steps and copies the parent path once.
   - The binary layout: the step-4 binary is 109,496 bytes larger.
   - Commit `0b2295917` holds the token stream, the overlap, and the composition changes together. So a commit bisection cannot separate them.
+  - Current path note, 2026-11-20: the worker-first change removed the eligibility call on the async task and `Workers::background_job`. Each native miss now runs two blocking jobs, the lookup and the resumed render, with a batch admission and a second permit wait between them. Its eligibility check runs on the render pool at the miss. Option B's merged-tree check covers this path.
 
   Later `main` and the requirements that stay:
 
   - After the frozen control, `main` received the lower step 3 of the same series, PR #385 at `c6d2fffa4`. It also received other changes, such as PR #391 in the shared HTML source map.
   - The user forbade another main merge and another performance matrix before this pull request. So no record measures this change on the merged tree.
-  - Output stays equal: documents, usage, resources, warnings, diagnostics, and their order. No fragment request repeats. Source: `docs/protocol/mokly-on-demand.md`.
-  - Both stages keep their bound: the smaller of the worker count and the sidecar capacity, at least one. Each view start reads the current capacity. Source: that page and "Capacity" in `docs/protocol/mokly-sidecar-memory.md`.
-  - A view with an HTML template takes no completion place. Foreground renders keep priority. Views start and report in catalogue order.
+  - Output stays equal: documents, usage, resources, warnings, diagnostics, and their order. No fragment request repeats. Source: `docs/protocol/mokly-on-demand-background.md`.
+  - Both stages keep their bound: the smaller of the worker count and the sidecar capacity, at least one. Each batch entry and each completion entry reads the current capacity. A view start reads none, and a view that the cache or the render store serves needs no capacity reading for either stage. Source: that page and "Capacity" in `docs/protocol/mokly-sidecar-memory.md`.
+  - A view with an HTML template takes no completion place. Every miss, native views included, takes a batch place. Foreground renders keep priority. Views start and report in catalogue order.
   - The handoff budget stays 4 MiB, outside the 256 MiB render cache. The cache total does not grow, and no allocator option changes. Source: the protocol and the performance orchestrator's calls of 2026-11-20.
   - The path of a view depends on that view only. The performance orchestrator rejected a catalogue-wide switch on 2026-11-20. The Cloud and React handoff gains stay.
   - Step 4's acceptance required memory within 2% of main on basic, large HTML, and large React. A later fix keeps that bound unless the performance orchestrator sets another.
@@ -177,7 +179,7 @@
   - The frozen sample describes one 4-CPU host, one fixture size, and the frozen arms. Source: the measurements of 2026-11-20. B drops the frozen-arm part with its merged-tree check.
   - The requirements above stay. Source: the protocol pages and the performance orchestrator's calls of 2026-11-20. F drops the stage-bound requirement, so it needs a decision.
   - The earlier +200 ms paired-median criterion marks a small enough delay. Source: the step-4 criterion of the performance orchestrator. A accepts the larger delay, as the orchestrator did for this pull request.
-- **Wider fix:** None. The structural fix for the known class is in force: since `969133546`, a view that cannot hand off allocates no stage and takes main's ordinary path. The remaining cost has no known owner, so no other class is known. D only makes a later cost of this kind visible.
+- **Wider fix:** None. The structural fix for the known class is in force: a view that cannot hand off allocates no stage. From `969133546` it took main's ordinary path. Since the worker-first change of 2026-11-20, it takes the shared lookup, a batch place, and a resumed render without a prepared root. The remaining cost has no known owner, so no other class is known. D only makes a later cost of this kind visible.
 - **Previous examples:**
   - In step 4, two fixes moved native views off the staged path. The four-pair first Changes median was +548.3 ms at `2772eca02`, +431.2 ms at `33b63f5aa`, and +292.0 ms at `969133546`. These are separate samples.
   - `plans/follow-ups/compact-copies-after-preparation.md` records a large React usage pass that ran 2.4 s slower with identical work counts. Its cause stayed unproven.

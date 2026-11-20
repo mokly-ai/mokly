@@ -16,7 +16,9 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{DocumentsMock, GraphDocuments};
 use crate::background_capacity::FixedCapacity;
+use crate::background_dispatch::Dispatch;
 use crate::background_stage::Stages;
+use crate::background_support::staged;
 use crate::work::{Work, Workers};
 
 type Gate = Arc<(Mutex<bool>, Condvar)>;
@@ -49,9 +51,9 @@ fn superseded_handoff_and_native_job_keep_owners_until_stop_drains() {
     let (old_sent, old_started) = oneshot::channel();
     let old_sent = Mutex::new(Some(old_sent));
     let old = Unimock::new(
-        DocumentsMock::background_staged
-            .some_call(matching!("old", _))
-            .answers_arc(Arc::new({
+        DocumentsMock::background_read
+            .some_call(matching!("old"))
+            .answers_arc(staged(Arc::new({
                 let old_gate = old_gate.clone();
                 move |_, _, completion| {
                     completion.handoff(128);
@@ -59,7 +61,7 @@ fn superseded_handoff_and_native_job_keep_owners_until_stop_drains() {
                     wait(&old_gate);
                     Ok(Vec::new())
                 }
-            })),
+            }))),
     );
     let route = "native/index.html";
     let (native_sent, native_started) = oneshot::channel();
@@ -110,25 +112,26 @@ fn superseded_handoff_and_native_job_keep_owners_until_stop_drains() {
     );
     let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
     let stages = Stages::new(Arc::new(FixedCapacity(2)));
-    let old_stage = stages.view("old");
+    let old_dispatch = Dispatch::new(stages.clone());
     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
     let _cleanup = Cleanup(vec![old_gate.clone(), native_gate.clone()]);
     runtime.block_on(async {
         let old_job = tokio::spawn({
             let work = work.clone();
-            let stage = old_stage.clone();
+            let dispatch = old_dispatch.clone();
             let documents = Arc::new(old.clone());
-            async move { work.background_staged(documents, "old".into(), stage).await }
+            async move { work.background(documents, "old".into(), dispatch).await }
         });
         old_started.await.unwrap();
+        let old_stage = old_dispatch.stage.get().unwrap().upgrade().unwrap();
         old_job.abort();
         assert!(old_job.await.unwrap_err().is_cancelled());
-        let native_stage = stages.view(route);
+        let native_dispatch = Dispatch::new(stages.clone());
         let native_job = tokio::spawn({
             let work = work.clone();
-            let stage = native_stage.clone();
+            let dispatch = native_dispatch.clone();
             async move {
-                work.background_staged(Arc::new(native), route.into(), stage)
+                work.background(Arc::new(native), route.into(), dispatch)
                     .await
             }
         });
@@ -136,11 +139,9 @@ fn superseded_handoff_and_native_job_keep_owners_until_stop_drains() {
         assert!(old_stage.handed_off());
         assert_eq!(*stages.active.lock().unwrap(), 1);
         assert_eq!(*stages.bytes.lock().unwrap(), 128);
-        assert!(!native_stage.handed_off());
-        assert!(native_stage.state.lock().unwrap().place.is_none());
-        assert!(native_stage.state.lock().unwrap().charge.is_none());
+        assert!(!native_dispatch.handed_off());
+        assert!(native_dispatch.stage.get().is_none());
         assert_eq!(work.workers.available_permits(), 1);
-        assert!(native_stage.state.lock().unwrap().worker.is_some());
         native_job.abort();
         assert!(native_job.await.unwrap_err().is_cancelled());
         assert_eq!(work.workers.available_permits(), 1);
@@ -167,12 +168,12 @@ fn superseded_handoff_and_native_job_keep_owners_until_stop_drains() {
                 .poll(&mut Context::from_waker(Waker::noop()))
                 .is_pending()
         );
-        assert!(native_stage.state.lock().unwrap().worker.is_some());
+        assert_eq!(work.workers.available_permits(), 0);
         release(&native_gate);
         stopping.await;
         assert_eq!(work.workers.available_permits(), 2);
         assert_eq!(*stages.active.lock().unwrap(), 0);
         assert_eq!(*stages.bytes.lock().unwrap(), 0);
-        assert!(native_stage.state.lock().unwrap().worker.is_none());
+        assert!(native_dispatch.stage.get().is_none());
     });
 }

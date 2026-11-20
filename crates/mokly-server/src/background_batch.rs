@@ -9,7 +9,7 @@ use std::task::Poll;
 
 use mokly_catalogue::diagnostic::Warning;
 
-use crate::background_stage::Stage;
+use crate::background_dispatch::Dispatch;
 use crate::error::Result;
 
 /// One pending background render; it ends with its unreported warnings or a failure.
@@ -18,7 +18,7 @@ pub(crate) type Render<'a> = Pin<Box<dyn Future<Output = Result<Vec<Warning>>> +
 struct Pending<'a> {
     position: usize,
     render: Render<'a>,
-    stage: Option<Arc<Stage>>,
+    stage: Option<Arc<Dispatch>>,
     observed: bool,
 }
 
@@ -60,18 +60,18 @@ impl<'a> Window<'a> {
             < self.limit
     }
 
-    /// Refresh admission without cancelling renders that already started.
-    pub(crate) fn set_limit(&mut self, limit: usize) {
-        self.limit = limit.max(1);
-    }
-
     /// Whether every started render has ended.
     pub(crate) fn is_empty(&self) -> bool {
         self.renders.is_empty()
     }
 
     /// Start the render at a catalogue position after every position already started.
-    pub(crate) fn start_staged(&mut self, position: usize, render: Render<'a>, stage: Arc<Stage>) {
+    pub(crate) fn start_dispatched(
+        &mut self,
+        position: usize,
+        render: Render<'a>,
+        stage: Arc<Dispatch>,
+    ) {
         stage.queue_bytes(
             mem::size_of_val(render.as_ref().get_ref()) + 4 * mem::size_of::<Pending<'_>>(),
         );
@@ -84,6 +84,7 @@ impl<'a> Window<'a> {
     }
 
     /// Start an ordinary render that retains its window place until completion.
+    #[cfg(test)]
     pub(crate) fn start(&mut self, position: usize, render: Render<'a>) {
         self.renders.push(Pending {
             position,

@@ -11,10 +11,9 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::MemoryCache;
 use crate::error::GraphError;
-use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{catalogue, completion, document, refusing, route, session};
+use super::support::{background, catalogue, completion, document, refusing, route, session};
 
 #[test]
 fn budget_refusal_completes_the_successful_root_without_handoff_or_repeat() {
@@ -39,9 +38,7 @@ fn budget_refusal_completes_the_successful_root_without_handoff_or_repeat() {
         Arc::new(MemoryCache::new(0, 0)),
     );
     let (completion, counts) = refusing();
-    let result = session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    let result = background(&session, &route("caller"), Arc::new(completion.clone())).unwrap();
     assert!(
         String::from_utf8(result.bytes.clone())
             .unwrap()
@@ -72,9 +69,7 @@ fn template_composition_keeps_ordinary_ownership_and_never_signals_a_root_handof
         Arc::new(MemoryCache::new(1 << 20, 0)),
     );
     let (completion, counts) = completion();
-    let result = session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    let result = background(&session, &route("caller"), Arc::new(completion.clone())).unwrap();
     assert!(
         String::from_utf8(result.bytes.clone())
             .unwrap()
@@ -106,7 +101,7 @@ fn failed_root_keeps_its_single_attempt_and_never_admits_successful_completion()
         Arc::new(MemoryCache::new(0, 0)),
     );
     let (completion, counts) = completion();
-    let result = session.render_background(&route("caller"), Arc::new(completion.clone()));
+    let result = background(&session, &route("caller"), Arc::new(completion.clone()));
     let GraphError::Document { entry, source } = result.unwrap_err() else {
         panic!("expected original document failure")
     };
@@ -153,9 +148,7 @@ fn spare_root_payload_capacity_refuses_overlap_but_keeps_the_original_result() {
         Arc::new(MemoryCache::new(65536, 0)),
     );
     let (completion, counts) = refusing();
-    let result = session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    let result = background(&session, &route("caller"), Arc::new(completion.clone())).unwrap();
     assert!(
         String::from_utf8(result.bytes.clone())
             .unwrap()
@@ -196,7 +189,7 @@ fn direct_background_dispatch_keeps_the_worker_cancellation_check() {
     );
     Arc::get_mut(&mut session.state).unwrap().workers = Arc::new(cancelled.clone());
     let (completion, counts) = completion();
-    let result = session.render_background(&route("caller"), Arc::new(completion.clone()));
+    let result = background(&session, &route("caller"), Arc::new(completion.clone()));
     assert!(matches!(&result, Err(GraphError::Runtime { .. })));
     let error = result.unwrap_err();
     let GraphError::Runtime { source } = error else {

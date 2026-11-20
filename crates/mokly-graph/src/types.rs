@@ -13,7 +13,7 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::background::Completion;
+use crate::background::BackgroundRead;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
@@ -89,18 +89,9 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
-    /// Whether immutable route metadata permits root preparation, without work or IO.
-    /// Unknown generations keep ordinary background dispatch.
-    fn can_prepare_root(&self, _route: &str) -> bool {
-        false
-    }
-    /// Render with optional prepared-root handoff; the default retains its original worker.
-    fn render_background(
-        &self,
-        route: &str,
-        _completion: Arc<dyn Completion>,
-    ) -> Result<Arc<Artifact>> {
-        self.render(route)
+    /// Perform the ordinary worker lookup, completing a hit or deferring its real miss.
+    fn read_background(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
     }
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;

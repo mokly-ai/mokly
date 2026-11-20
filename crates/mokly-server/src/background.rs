@@ -9,6 +9,7 @@ use tokio::sync::{broadcast, watch};
 use crate::backend::Documents;
 use crate::background_batch::{Event, Window};
 use crate::background_capacity::BackgroundCapacity;
+use crate::background_dispatch::Dispatch;
 use crate::background_stage::Stages;
 use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
@@ -82,12 +83,11 @@ impl UsagePass {
         updates: &mut broadcast::Receiver<PublicationEvent>,
         stages: &Arc<Stages>,
     ) -> bool {
-        let mut window = Window::new(1);
+        let mut window = Window::new(self.work.parallelism());
         let mut routes = origin.routes.iter().enumerate();
         loop {
             loop {
                 tokio::task::yield_now().await;
-                window.set_limit(self.capacity.capacity());
                 if !window.has_room() {
                     break;
                 }
@@ -101,24 +101,16 @@ impl UsagePass {
                 if current.completed.contains_key(&route.route) {
                     continue;
                 }
-                if origin.documents.can_prepare_root(&route.route) {
-                    let stage = stages.view(&route.route);
-                    window.start_staged(
-                        position,
-                        self.work.background_staged(
-                            origin.documents.clone(),
-                            route.route.clone(),
-                            stage.clone(),
-                        ),
-                        stage,
-                    );
-                } else {
-                    window.start(
-                        position,
-                        self.work
-                            .background(origin.documents.clone(), route.route.clone()),
-                    );
-                }
+                let dispatch = Dispatch::new(stages.clone());
+                window.start_dispatched(
+                    position,
+                    self.work.background(
+                        origin.documents.clone(),
+                        route.route.clone(),
+                        dispatch.clone(),
+                    ),
+                    dispatch,
+                );
             }
             if window.is_empty() {
                 break;

@@ -17,10 +17,11 @@ use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::background::CompletionMock;
+use crate::background::{BackgroundRead, Completion, CompletionMock};
 
-use crate::cache::RenderCache;
+use crate::cache::{Artifact, RenderCache};
 use crate::delivery_inputs::DeliveryInputs;
+use crate::error::{InternalError, Result};
 use crate::fragments::MemoFragments;
 use crate::graph::Graph;
 use crate::key::NodeKey;
@@ -29,8 +30,20 @@ use crate::render_inputs::RenderKeys;
 use crate::requests::{MemoryRequests, Requests};
 use crate::session::{Session, SessionInput};
 use crate::styles::Matchers;
-use crate::types::DocumentPlan;
+use crate::types::{DocumentPlan, RenderGeneration};
 use crate::workers::ThreadWorkers;
+
+pub(super) fn background(
+    session: &Session,
+    route: &str,
+    completion: Arc<dyn Completion>,
+) -> Result<Arc<Artifact>> {
+    match session.read_background(route)? {
+        Some(BackgroundRead::Complete(artifact)) => Ok(artifact),
+        Some(BackgroundRead::Miss(miss)) => miss.complete(Some(completion)),
+        None => Err(InternalError::PreparedRootConsumed.into()),
+    }
+}
 
 pub(super) fn route(path: &str) -> String {
     routes::document(path, ColorScheme::Light)

@@ -123,18 +123,9 @@ segment down. Each read then checks the identity of its segment and the digest
 of its document. An access counter under the namespace lock orders the
 segments, so a read scans no entries. Only a segment publication scans the
 kind, to make room under the bound.
-`DocumentBackend::known_missing` proves a miss from the index alone, and its
-trait default answers `false`. `CachedDocuments` answers `true` when the store
-is off, or when the index and fault locks are free, the completed index has no
-entry for the key, and no entry fault waits. It opens no file and takes no queued fault,
-so the next `load` still reports that fault.
 `DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
-only keys, under the bounds of `WriterLimits`. `DocumentWriter::try_miss`
-counts one `Miss` through the same finalizer and `render.store.read` span as
-`load` when the writer is off or `known_missing` answers `true`. It counts
-nothing and answers `false` while an accounting lock is held.
-`DocumentWriter::activity` gives the `WriteActivity` whose leases Serve work
-holds while it runs, and
+only keys, under the bounds of `WriterLimits`. `DocumentWriter::activity` gives
+the `WriteActivity` whose leases Serve work holds while it runs, and
 `DocumentWriter::bind_readiness` takes the `WriteReadiness` of the current
 Changes result. Its one writer thread starts a new export or save only while
 that readiness holds and no lease is held, and work that already started
@@ -545,8 +536,7 @@ development dependencies, and no test uses the internet.
   [`src/render_sequence.rs`](./src/render_sequence.rs) advances the access
   counter.
 - [`src/render_writer.rs`](./src/render_writer.rs) defines `DocumentWriter` and
-  `WriterLimits`, the bounded key admission and the one writer, and
-  `DocumentWriter::try_miss`, the counted definite miss.
+  `WriterLimits`, the bounded key admission and the one writer.
   [`src/render_batch.rs`](./src/render_batch.rs) builds one batch inside its
   workspace. [`src/render_pending.rs`](./src/render_pending.rs) defines
   `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`. The private

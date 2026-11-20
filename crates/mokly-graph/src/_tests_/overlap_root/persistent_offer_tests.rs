@@ -1,7 +1,8 @@
 //! A frozen store miss keeps root overlap and offers only completed worker output.
 
 use std::collections::BTreeSet;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::slice;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mokly_html::composition::ComposerMock;
@@ -10,19 +11,23 @@ use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::background::CompletionMock;
-use crate::cache::{MemoryCache, RenderCache};
+use crate::cache::{MemoryCache, RenderCache, RenderCacheMock};
 use crate::document_store::{DocumentStoreMock, OfferOutcome, Persistence, ReadOutcome, StoreKey};
 use crate::key::NodeKey;
-use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{document, observe_validation, persistent_catalogue, route, session};
+use super::support::{
+    background, document, observe_validation, persistent_catalogue, route, session,
+};
 
 #[test]
 fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_insertion() {
     let in_worker = Arc::new(AtomicBool::new(false));
     let events = Arc::new(Mutex::new(Vec::new()));
     let cache = Arc::new(MemoryCache::new(1 << 20, 0));
+    let reads = Arc::new(AtomicUsize::new(0));
+    let identities = Arc::new(AtomicUsize::new(0));
+    let insertions = Arc::new(Mutex::new(Vec::new()));
     let provider = Unimock::new(
         FragmentRendererMock::render
             .each_call(matching!(_))
@@ -32,7 +37,7 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
                 let cache = cache.clone();
                 move |_, _| {
                     assert!(!in_worker.load(Ordering::SeqCst));
-                    assert_eq!(cache.stats().misses, 1);
+                    assert_eq!(cache.stats().misses, 2);
                     events.lock().unwrap().push("root");
                     Ok(Fragment {
                         html: document("<p>Fresh</p>"),
@@ -48,7 +53,7 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
         Arc::new(provider.clone()),
         cache.clone(),
     );
-    assert!(session.can_prepare_root(&route("caller")));
+    assert!(session.background_root_eligible(&route("caller")));
     observe_validation(&mut session, in_worker.clone(), events.clone());
     let actual = session.state.composer.clone();
     let composer = Unimock::new((
@@ -88,25 +93,19 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
             })),
     ))
     .no_verify_in_drop();
-    let hints = Arc::new(Mutex::new(Vec::<StoreKey>::new()));
     let loads = Arc::new(Mutex::new(Vec::<StoreKey>::new()));
     let offers = Arc::new(Mutex::new(Vec::new()));
     let closures = session.state.inputs.closures.clone();
     let store = Unimock::new((
         DocumentStoreMock::identity
             .each_call(matching!())
-            .returns(Some("native-build".into())),
-        DocumentStoreMock::try_miss
-            .each_call(matching!(_))
             .answers_arc(Arc::new({
                 let in_worker = in_worker.clone();
-                let events = events.clone();
-                let hints = hints.clone();
-                move |_, key| {
-                    assert!(!in_worker.load(Ordering::SeqCst));
-                    events.lock().unwrap().push("hint");
-                    hints.lock().unwrap().push(key.clone());
-                    true
+                let identities = identities.clone();
+                move |_| {
+                    assert!(in_worker.load(Ordering::SeqCst));
+                    identities.fetch_add(1, Ordering::SeqCst);
+                    Some("native-build".into())
                 }
             })),
         DocumentStoreMock::load
@@ -126,11 +125,14 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
                 let in_worker = in_worker.clone();
                 let events = events.clone();
                 let offers = offers.clone();
-                let cache = cache.clone();
+                let insertions = insertions.clone();
                 move |_, key, document| {
                     assert!(in_worker.load(Ordering::SeqCst));
                     assert!(events.lock().unwrap().contains(&"validate"));
-                    assert!(cache.contains(&document));
+                    assert_eq!(
+                        insertions.lock().unwrap().as_slice(),
+                        slice::from_ref(&document)
+                    );
                     assert_eq!(
                         closures.paths(&document.0),
                         BTreeSet::from(["asset.bin".into()])
@@ -142,7 +144,46 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
             })),
     ))
     .no_verify_in_drop();
+    let document_cache = Unimock::new((
+        RenderCacheMock::get
+            .each_call(matching!(_))
+            .answers_arc(Arc::new({
+                let cache = cache.clone();
+                let reads = reads.clone();
+                move |_, key| {
+                    reads.fetch_add(1, Ordering::SeqCst);
+                    cache.get(key)
+                }
+            })),
+        RenderCacheMock::insert
+            .each_call(matching!(_, _))
+            .answers_arc(Arc::new({
+                let cache = cache.clone();
+                let insertions = insertions.clone();
+                let events = events.clone();
+                move |_, key, artifact| {
+                    insertions.lock().unwrap().push(key.clone());
+                    events.lock().unwrap().push("insert");
+                    cache.insert(key, artifact);
+                }
+            })),
+    ))
+    .no_verify_in_drop();
     let workers = Unimock::new((
+        RenderWorkersMock::background
+            .each_call(matching!(_, _))
+            .answers_arc(Arc::new({
+                let in_worker = in_worker.clone();
+                let events = events.clone();
+                move |_, route, job| {
+                    events.lock().unwrap().push("read-worker");
+                    in_worker.store(true, Ordering::SeqCst);
+                    let result = job.read(route);
+                    in_worker.store(false, Ordering::SeqCst);
+                    events.lock().unwrap().push("read-complete");
+                    result
+                }
+            })),
         RenderWorkersMock::document
             .each_call(matching!(_, _))
             .answers_arc(Arc::new({
@@ -191,34 +232,43 @@ fn fresh_background_completion_offers_the_frozen_key_after_validation_and_cache_
     .no_verify_in_drop();
     let state = Arc::get_mut(&mut session.state).unwrap();
     state.composer = Arc::new(composer.clone());
+    state.cache = Arc::new(document_cache.clone());
     state.workers = Arc::new(workers.clone());
     state.inputs.persistence = Some(Persistence {
         store: Arc::new(store.clone()),
         javascript: Some("stable-typescript-react-config".into()),
     });
-    assert!(session.can_prepare_root(&route("caller")));
+    assert!(session.background_root_eligible(&route("caller")));
     let trace = Trace::default();
-    let artifact = trace.in_scope(|| {
-        session
-            .render_background(&route("caller"), Arc::new(completion.clone()))
-            .unwrap()
-    });
+    let artifact = trace
+        .in_scope(|| background(&session, &route("caller"), Arc::new(completion.clone())).unwrap());
 
     assert_eq!(
         offers.lock().unwrap().len(),
         1,
         "BackgroundJob must offer its completed fresh document"
     );
-    assert_eq!(hints.lock().unwrap().len(), 1);
+    assert_eq!(loads.lock().unwrap().len(), 1);
+    assert_eq!(reads.load(Ordering::SeqCst), 1);
+    assert_eq!(identities.load(Ordering::SeqCst), 1);
     assert_eq!(
         *offers.lock().unwrap(),
-        [(hints.lock().unwrap()[0].clone(), NodeKey("caller".into()))]
+        [(loads.lock().unwrap()[0].clone(), NodeKey("caller".into()))]
     );
-    assert_eq!(*loads.lock().unwrap(), Vec::<StoreKey>::new());
     assert_eq!(
         *events.lock().unwrap(),
         [
-            "hint", "root", "handoff", "worker", "compose", "validate", "offer", "complete"
+            "read-worker",
+            "load",
+            "read-complete",
+            "root",
+            "handoff",
+            "worker",
+            "compose",
+            "validate",
+            "insert",
+            "offer",
+            "complete"
         ]
     );
     assert!(

@@ -5,7 +5,6 @@ use std::sync::{Arc, Mutex, Weak};
 
 use axum::body::Bytes;
 use mokly_catalogue::diagnostic::Warning;
-use mokly_graph::background::Completion;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
@@ -14,6 +13,7 @@ use mokly_model::usage::CatalogueUsage;
 use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
 use crate::assets::{File, content_type};
 use crate::backend_preview::ArtifactBytes;
+use crate::background_read::BackgroundRead;
 use crate::error::{Result, ServerError};
 use crate::public_read::{OpenedFile, PublicReader};
 use crate::warnings::RenderWarnings;
@@ -31,19 +31,9 @@ pub struct PreviewDocument {
 /// Graph work; HTTP runs IO outside its event loop.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
-    /// Whether immutable route metadata permits root preparation, without work or IO.
-    /// Unknown backends keep ordinary background dispatch.
-    fn can_prepare_root(&self, _route: &str) -> bool {
-        false
-    }
-    /// Render with an optional root handoff owned by this background view.
-    /// Legacy backends keep their original worker for the complete render.
-    fn background_staged(
-        &self,
-        route: &str,
-        _completion: Arc<dyn Completion>,
-    ) -> Result<Vec<Warning>> {
-        self.background(route)
+    /// Complete the real worker read or return only a deferred miss.
+    fn background_read(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
     }
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
@@ -72,7 +62,7 @@ pub struct GraphDocuments {
     /// Verified-capture boundary used after foreground admission.
     pub(crate) streams: Arc<dyn AssetStreams>,
     warnings: Arc<dyn RenderWarnings>,
-    locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
+    pub(crate) locks: BTreeMap<String, Arc<Mutex<Option<CatalogueUsage>>>>,
     /// Only live requests and responses own the capture and its temporary file.
     pub(crate) asset_copies: Mutex<BTreeMap<String, Weak<Capture>>>,
 }
@@ -88,7 +78,7 @@ impl GraphDocuments {
         let locks = generation
             .plans()
             .keys()
-            .map(|route| (route.clone(), Mutex::new(None)))
+            .map(|route| (route.clone(), Arc::new(Mutex::new(None))))
             .collect();
         Self {
             generation,
@@ -101,20 +91,12 @@ impl GraphDocuments {
     }
     /// Render a declared route and record its usage. A foreground render reports its
     /// warnings here; a background render leaves them to the usage pass.
-    fn render(
-        &self,
-        route: &str,
-        report: bool,
-        completion: Option<Arc<dyn Completion>>,
-    ) -> Result<Option<Arc<Artifact>>> {
+    fn render(&self, route: &str, report: bool) -> Result<Option<Arc<Artifact>>> {
         let Some(lock) = self.locks.get(route) else {
             return Ok(None);
         };
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
-        let rendered = match completion {
-            Some(completion) => self.generation.render_background(route, completion),
-            None => self.generation.render(route),
-        };
+        let rendered = self.generation.render(route);
         match rendered {
             Ok(artifact) => {
                 if let Some(document) = &artifact.document
@@ -146,8 +128,8 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
-    fn can_prepare_root(&self, route: &str) -> bool {
-        self.locks.contains_key(route) && self.generation.can_prepare_root(route)
+    fn background_read(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background(route).map(Some)
     }
 
     fn asset_request(&self, route: &str) -> Box<dyn AssetRequest> {
@@ -156,7 +138,7 @@ impl Documents for GraphDocuments {
 
     fn generated(&self, route: &str) -> Result<Option<File>> {
         if self.locks.contains_key(route) {
-            return Ok(self.render(route, true, None)?.map(|artifact| File {
+            return Ok(self.render(route, true)?.map(|artifact| File {
                 bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
                 content_type: artifact.content_type.clone(),
             }));
@@ -178,14 +160,7 @@ impl Documents for GraphDocuments {
         }
     }
     fn background(&self, route: &str) -> Result<Vec<Warning>> {
-        self.background_document(route, None)
-    }
-    fn background_staged(
-        &self,
-        route: &str,
-        completion: Arc<dyn Completion>,
-    ) -> Result<Vec<Warning>> {
-        self.background_document(route, Some(completion))
+        self.background_document(route)
     }
     fn report(&self, warnings: &[Warning], failed: bool) {
         self.warnings.report(warnings, failed);
@@ -223,11 +198,7 @@ impl Documents for GraphDocuments {
 }
 
 impl GraphDocuments {
-    fn background_document(
-        &self,
-        route: &str,
-        completion: Option<Arc<dyn Completion>>,
-    ) -> Result<Vec<Warning>> {
+    fn background_document(&self, route: &str) -> Result<Vec<Warning>> {
         if self.locks.get(route).is_some_and(|state| {
             state
                 .lock()
@@ -237,7 +208,7 @@ impl GraphDocuments {
             return Ok(Vec::new());
         }
         Ok(self
-            .render(route, false, completion)?
+            .render(route, false)?
             .and_then(|artifact| {
                 artifact
                     .document

@@ -12,7 +12,7 @@ use mokly_html::composition::Composer;
 use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
-use crate::background::Completion;
+use crate::background::BackgroundRead;
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::Closure;
 use crate::collection::ComparisonCollector;
@@ -138,15 +138,8 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
-    fn can_prepare_root(&self, route: &str) -> bool {
-        self.background_root_eligible(route)
-    }
-    fn render_background(
-        &self,
-        route: &str,
-        completion: Arc<dyn Completion>,
-    ) -> Result<Arc<Artifact>> {
-        self.background_document(route, completion)
+    fn read_background(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background_document(route).map(Some)
     }
     fn comparison_identity(
         &self,

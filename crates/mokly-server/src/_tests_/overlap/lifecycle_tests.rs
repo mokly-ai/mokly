@@ -94,15 +94,15 @@ async fn cancellation_discards_evidence_and_stop_drains_both_stages() {
 #[tokio::test]
 async fn replacement_discards_an_old_completion_and_only_publishes_new_evidence() {
     let counts = Arc::new(Counts::default());
-    let (mut old, documents) = Renders::with_counts(2, counts.clone());
+    let (mut old, documents) = Renders::with_counts(1, counts.clone());
     let (mut new, replacement) = Renders::with_counts(1, counts.clone());
     let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
     let (script, pass, stopping) =
-        pass(publication_support::snapshot(2, documents), 1, work.clone());
+        pass(publication_support::snapshot(1, documents), 1, work.clone());
     let task = tokio::spawn(async move { pass.run(stopping).await });
     old.until(("start", 0)).await;
     old.root(0);
-    old.until(("start", 1)).await;
+    old.until(("complete", 0)).await;
     *script.current.lock().unwrap() = publication_support::snapshot(1, replacement);
     assert!(
         script
@@ -117,8 +117,6 @@ async fn replacement_discards_an_old_completion_and_only_publishes_new_evidence(
     new.root(0);
     new.until(("root", 0)).await;
     old.done(0);
-    old.root(1);
-    old.done(1);
     new.done(0);
     task.await.unwrap();
     work.stop().await;

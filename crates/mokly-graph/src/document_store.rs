@@ -94,13 +94,6 @@ pub trait DocumentStore: Send + Sync {
     }
     /// Release optional writes after the first completed Changes publication.
     fn resume(&self) {}
-    /// Freeze and count one definite miss without storage IO or document restoration.
-    /// True completes this attempt: retain its key and do not call `load` for it.
-    /// False changes no counters or faults and keeps the ordinary worker load.
-    /// Implementations decline when a required metadata or accounting lock is held.
-    fn try_miss(&self, _key: &StoreKey) -> bool {
-        false
-    }
     /// Read without bypassing the caller's current-side validation.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
     /// Offer a process-cache key without waiting for pending-set or disk work, or encoding.

@@ -2,8 +2,8 @@
 
 This page is part of the [`mokly-server` README](./README.md). It holds the
 background work guidance of the crate: the usage pass and its window, the
-ordinary and staged paths of each view with their bounds and budget, and the
-ready state and Changes work that the passes publish.
+lookup and the miss of each view with their bounds and budget, and the ready
+state and Changes work that the passes publish.
 
 ## Usage pass
 
@@ -12,63 +12,81 @@ ready state and Changes work that the passes publish.
 usage first, then Changes classification against one pinned merge base. They
 yield to foreground requests, publish changed evidence in one revision, and
 cannot publish into a replacement. `UsagePass` keeps a sliding window bounded
-by its injected `dyn BackgroundCapacity`. It reads the bound before each
-view starts, so the same pass can grow when capacity recovers.
-It starts views in catalogue order and reports each
-view's warnings and failure once, in catalogue order, after every earlier
-render ends. The
-composition root supplies its current capacity. `Workers` admits queued background renders
-one at a time, in request order, whenever no foreground request is active.
-It runs each background document render in `RenderClass::Background`, so the
-sidecar calls of that render go after the other waiting head calls.
+by `Work::parallelism`, the fixed worker count. Its `Stages` read the injected
+`dyn BackgroundCapacity` at each batch entry and each completion entry, so the
+same pass can admit more misses when capacity recovers. It starts views in
+catalogue order and reports each view's warnings and failure once, in
+catalogue order, after every earlier render ends. The composition root
+supplies its current capacity. `Workers` admits queued background jobs one at
+a time, in request order, whenever no foreground request is active. It runs
+each lookup and each resumed render in `RenderClass::Background`, so the
+sidecar calls of that view go after the other waiting head calls.
 
-## Ordinary and staged views
+## Lookup and miss
 
-Before each view starts, `UsagePass` asks `Documents::can_prepare_root`
-whether the view can prepare its own root fragment. The answer depends only on
-immutable catalogue metadata. The check reads no cache, prepares no root,
-performs no IO, takes no claim, and does not lock the per-route usage state. A
-view with the answer `false` takes the ordinary path: `Window::start` and
-`Work::background`, with no `Stage`. It keeps its window place and its worker
-permit until its render ends. A view with the answer `true` takes the staged
-path: `Stages::view`, `Window::start_staged`, and `Work::background_staged`.
-Each view gets its own answer, so one catalogue can use both paths.
+`UsagePass::fill_window` starts each view with its own `Dispatch`, through
+`Window::start_dispatched` and `Work::background`. A view start reads no
+capacity, takes no claim, and does not lock the per-route usage state.
+`Workers::background_render` takes one `WriteActivity` lease and one worker
+permit, and then runs the lookup in a blocking job through
+`Documents::background_read`. `GraphDocuments::read_background` holds the
+route's usage lock during the graph lookup, and it does no work when that
+usage is already settled. A complete result settles the usage, and the view
+ends with its warnings.
 
-A staged view leaves the window's bound when it
-[hands off](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
-after its own root fragment returns. The `Window` then starts the next view,
-and it still reports in catalogue order. Each pass has its own `Window`, so the
-window bound counts only the views of the current pass. One `Stages` bound of
-the same size limits the views whose own root fragment returned without
-failure, while they build their documents. It serves every pass of the
-`UsagePass`, so the views of a replaced generation keep their completion
-places, and the bound counts them with the views of the current pass. Every
-other view takes no completion place and reads or builds its document under its
-worker permit. A staged view whose document the render cache holds, or the
-render store may hold, is such a view, because the graph makes no handoff for
-it.
+A miss releases the worker permit and the usage lock. It keeps a handle to the
+route's usage lock, not the lock, and it keeps its window place. A declined
+lookup, the `Ok(None)` default of `Documents::background_read`, becomes a miss
+that renders through `Documents::background`. The miss waits for a batch place
+from `Stages`, and then for a worker permit again under the same foreground
+priority. Each miss gets its own root eligibility. An eligible miss gets a
+`Stage`, which takes its worker permit and its batch place. Any other miss
+keeps both until it ends. The resumed blocking job calls
+`BackgroundMiss::complete`, which takes the usage lock again. When foreground
+work settled that usage in the meantime, ready or unavailable, it returns no
+warnings and renders nothing. Otherwise it completes the miss, with the `Stage`
+as the `Completion` of an eligible miss.
+
+After the own root fragment of an eligible miss returns, its `Stage` also owns
+the view's completion place and, when the charge fits, its transient charge.
+The completion bound limits these misses while they build their documents. An
+eligible miss leaves the window's bound when it
+[hands off](../../docs/protocol/mokly-on-demand-background.md#batch-and-completion).
+Its `Stage` then releases the worker permit and the batch place, and wakes the
+`Dispatch` of the view. The `Window`
+starts the next view, and it still reports in catalogue order. Each pass has
+its own `Window`, so the window bound counts only the views of the current
+pass. The batch bound and the completion bound of `Stages` have the same size,
+and they serve every pass of the `UsagePass`. So the views of a replaced
+generation keep their batch and completion places, and the bounds count them
+with the views of the current pass. Every other miss takes no completion place
+and builds its document under its worker permit and its batch place.
 
 A replaced view that has not handed off keeps its worker permit until it ends,
 and its active sidecar call keeps its claim. New starts can overlap such views
 only within the free workers and the sidecar capacity. HTTP requests share
-these worker permits, so the permits and the `Stages` bound give the
-[limit of the worker count plus the completion bound](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
-The `Stage` of a staged view owns its worker permit. After its own root
-fragment returns, the `Stage` also owns the view's completion place and, when
-the charge fits, its transient charge. A handoff releases the worker.
-`Workers::stop` takes every worker permit and then drains the background jobs
-that released theirs. The `Documents::can_prepare_root` default answers
-`false`, so an adapter that keeps it puts every view on the ordinary path. An
-adapter that answers `true` but keeps the default `background_staged` keeps
-the original background call. Its view takes no completion place and keeps its
-worker for the whole call.
+these worker permits, so the permits and the completion bound give the
+[limit of the worker count plus the completion bound](../../docs/protocol/mokly-on-demand-background.md#bounds-and-reports).
+A cancelled pass drops its views that wait for a batch place or a worker, so
+they never resume. `Workers::stop` takes every worker permit and then drains
+the background jobs that released theirs.
+
+The lease starts before the first wait for a worker permit, and one count of
+`work_active` starts with the lookup job. The lookup job returns both with its
+result, and the resumed job takes them over, so a miss keeps them while it
+waits for a batch place and a worker. After a handoff or a cancellation of the async caller, the blocking job
+that runs keeps them until it ends. The resumed job first releases the miss,
+the `Stage` resources, its worker permit, and its batch place. It then
+releases the lease, and last its count. So `Workers::stop` also waits for a job
+that has already released its worker permit, and it returns only after the
+lease ends.
 
 `Stages` also owns one fixed transient budget of 4 MiB for the
-[handoff charges](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement)
+[handoff charges](../../docs/protocol/mokly-on-demand-background.md#batch-and-completion)
 of every pass. A handoff takes its charge from this budget without waiting,
 and the charge takes no room in the render cache. A charge that does not fit
-only enters the completion place, so the view keeps its worker and tries no
-second charge. The `Stage` returns its charge when its view ends, also on
+only enters the completion place, so the view keeps its worker and its batch
+place and tries no second charge. The `Stage` returns its charge when its view ends, also on
 failure, cancellation, or a panic.
 
 ## Ready state and Changes

@@ -14,7 +14,7 @@ use tokio::sync::Semaphore;
 use crate::asset_streams::AssetResult;
 use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
-use crate::background_stage::Stage;
+use crate::background_dispatch::Dispatch;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::foreground::Foreground;
@@ -33,14 +33,9 @@ pub fn parallelism(available: usize) -> u32 {
 #[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
 pub trait Work: Send + Sync {
-    /// Render one view with bounded root-to-completion ownership.
-    async fn background_staged(
-        &self,
-        documents: Arc<dyn Documents>,
-        route: String,
-        _stage: Arc<Stage>,
-    ) -> Result<Vec<Warning>> {
-        self.background(documents, route).await
+    /// Fixed native worker maximum; reading it performs no admission work.
+    fn parallelism(&self) -> usize {
+        1
     }
     /// Render one background document only when foreground admission is idle, and
     /// return its warnings unreported.
@@ -48,6 +43,7 @@ pub trait Work: Send + Sync {
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>>;
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
@@ -125,20 +121,16 @@ impl Workers {
 
 #[async_trait]
 impl Work for Workers {
-    async fn background_staged(
-        &self,
-        documents: Arc<dyn Documents>,
-        route: String,
-        stage: Arc<Stage>,
-    ) -> Result<Vec<Warning>> {
-        self.background_stage_render(documents, route, stage).await
+    fn parallelism(&self) -> usize {
+        self.parallelism as usize
     }
     async fn background(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
+        dispatch: Arc<Dispatch>,
     ) -> Result<Vec<Warning>> {
-        self.background_render(documents, route).await
+        self.background_render(documents, route, dispatch).await
     }
     async fn generated(
         &self,

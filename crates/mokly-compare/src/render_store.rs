@@ -70,12 +70,6 @@ pub trait DocumentBackend: Send + Sync {
     fn initialize(&self) -> ReadOutcome {
         ReadOutcome::Miss
     }
-    /// Prove a miss from current metadata without IO, restoration, or fault consumption.
-    /// False leaves the ordinary load responsible for the outcome and queued faults.
-    /// A required held or poisoned lock must return false without waiting.
-    fn known_missing(&self, _key: &StoreKey) -> bool {
-        false
-    }
     /// Read one complete document from its retained segment.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
     /// Envelope version used by the appending writer.
@@ -126,9 +120,6 @@ impl DocumentBackend for CachedDocuments {
     fn initialize(&self) -> ReadOutcome {
         self.prepare_documents()
     }
-    fn known_missing(&self, key: &StoreKey) -> bool {
-        self.known_missing_document(key)
-    }
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         self.read_document(key)
     }
@@ -145,5 +136,5 @@ impl DocumentBackend for CachedDocuments {
 mod render_store_boundary_tests;
 
 #[cfg(test)]
-#[path = "_tests_/render_store_hint_tests.rs"]
-mod render_store_hint_tests;
+#[path = "_tests_/render_store_fault_tests.rs"]
+mod render_store_fault_tests;

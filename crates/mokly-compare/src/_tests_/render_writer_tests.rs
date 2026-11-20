@@ -175,7 +175,6 @@ fn entry_faults_warn_each_time_and_a_store_fault_disables_later_reads_once() {
         observer,
     );
     let key = StoreKey::new(&NodeKey("a".into()), "build");
-    assert!(!store.try_miss(&key));
     assert_eq!(store.stats().misses, 0);
     assert!(matches!(
         store.load(&key),
@@ -197,7 +196,7 @@ fn entry_faults_warn_each_time_and_a_store_fault_disables_later_reads_once() {
     );
     assert_eq!(store.stats().misses, 4);
     assert_eq!(store.stats().faults, 2);
-    assert!(store.try_miss(&key));
+    assert!(matches!(store.load(&key), ReadOutcome::Miss));
     assert_eq!(store.stats().misses, 5);
     assert_eq!(store.stats().faults, 2);
     assert_eq!(warnings.lock().unwrap().len(), 3);

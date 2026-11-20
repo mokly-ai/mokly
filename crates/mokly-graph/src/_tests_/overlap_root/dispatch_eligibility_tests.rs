@@ -12,14 +12,12 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::{Artifact, MemoryCache, RenderCache, RenderCacheMock};
 use crate::key::NodeKey;
-use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
 use super::support::{catalogue, document, route, session};
 
 #[derive(Default)]
 struct Operations {
-    probes: AtomicUsize,
     reads: AtomicUsize,
     preparations: AtomicUsize,
     fragments: AtomicUsize,
@@ -27,9 +25,8 @@ struct Operations {
 }
 
 impl Operations {
-    fn snapshot(&self) -> [usize; 5] {
+    fn snapshot(&self) -> [usize; 4] {
         [
-            self.probes.load(Ordering::SeqCst),
             self.reads.load(Ordering::SeqCst),
             self.preparations.load(Ordering::SeqCst),
             self.fragments.load(Ordering::SeqCst),
@@ -105,18 +102,7 @@ fn static_root_choice_ignores_cache_and_never_starts_preparation_or_work() {
             .at_least_times(0),
     ))
     .no_verify_in_drop();
-    let cache_reads = Unimock::new((
-        RenderCacheMock::contains
-            .each_call(matching!(_))
-            .answers_arc(Arc::new({
-                let operations = operations.clone();
-                let cache = cache.clone();
-                move |_, key| {
-                    operations.probes.fetch_add(1, Ordering::SeqCst);
-                    cache.contains(key)
-                }
-            }))
-            .at_least_times(0),
+    let cache_reads = Unimock::new(
         RenderCacheMock::get
             .each_call(matching!(_))
             .answers_arc(Arc::new({
@@ -128,7 +114,7 @@ fn static_root_choice_ignores_cache_and_never_starts_preparation_or_work() {
                 }
             }))
             .at_least_times(0),
-    ))
+    )
     .no_verify_in_drop();
     let workers = Unimock::new((
         RenderWorkersMock::cancelled
@@ -159,11 +145,11 @@ fn static_root_choice_ignores_cache_and_never_starts_preparation_or_work() {
     state.cache = Arc::new(cache_reads.clone());
     state.workers = Arc::new(workers.clone());
 
-    assert!(session.can_prepare_root(&route("caller")));
-    assert!(!session.can_prepare_root(&route("target")));
-    assert!(!session.can_prepare_root(&route("markdown")));
-    assert!(!session.can_prepare_root(&route("absent")));
-    assert_eq!(operations.snapshot(), [0, 0, 0, 0, 0]);
+    assert!(session.background_root_eligible(&route("caller")));
+    assert!(!session.background_root_eligible(&route("target")));
+    assert!(!session.background_root_eligible(&route("markdown")));
+    assert!(!session.background_root_eligible(&route("absent")));
+    assert_eq!(operations.snapshot(), [0, 0, 0, 0]);
     cache.insert(
         NodeKey("caller".into()),
         Arc::new(Artifact {
@@ -173,7 +159,10 @@ fn static_root_choice_ignores_cache_and_never_starts_preparation_or_work() {
             fragment: None,
         }),
     );
-    assert!(cache.contains(&NodeKey("caller".into())));
-    assert!(session.can_prepare_root(&route("caller")));
-    assert_eq!(operations.snapshot(), [0, 0, 0, 0, 0]);
+    assert_eq!(
+        cache.get(&NodeKey("caller".into())).unwrap().bytes,
+        Vec::<u8>::new()
+    );
+    assert!(session.background_root_eligible(&route("caller")));
+    assert_eq!(operations.snapshot(), [0, 0, 0, 0]);
 }

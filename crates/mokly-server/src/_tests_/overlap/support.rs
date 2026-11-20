@@ -8,6 +8,7 @@ use tokio::sync::mpsc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{Documents, DocumentsMock};
+use crate::background_support::staged;
 
 pub(super) fn route(index: usize) -> String {
     format!("screen-{index}/index.mobile.html")
@@ -70,12 +71,9 @@ impl Renders {
         let starts = Arc::new(Mutex::new(Vec::new()));
         let reports = Arc::new(Mutex::new(Vec::new()));
         let mock = Unimock::new((
-            DocumentsMock::can_prepare_root
+            DocumentsMock::background_read
                 .each_call(matching!(_))
-                .returns(true),
-            DocumentsMock::background_staged
-                .each_call(matching!(_, _))
-                .answers_arc(Arc::new({
+                .answers_arc(staged(Arc::new({
                     let root = root.clone();
                     let done = done.clone();
                     let counts = counts.clone();
@@ -107,7 +105,7 @@ impl Renders {
                             message: path.into(),
                         }])
                     }
-                })),
+                }))),
             DocumentsMock::report
                 .each_call(matching!(_, false))
                 .answers_arc(Arc::new({

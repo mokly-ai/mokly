@@ -10,7 +10,7 @@ use mokly_graph::document_store::{DocumentStore, OfferOutcome, ReadOutcome, Stor
 use mokly_graph::key::NodeKey;
 
 use crate::render_batch::Batch;
-use crate::render_pending::{ReadState, Request, Shared, StoreObserver, StoreWarning};
+use crate::render_pending::{Request, Shared, StoreObserver, StoreWarning};
 use crate::render_segment::MAX_DOCUMENTS;
 use crate::render_segment_buffer::SegmentBuffer;
 use crate::render_store::DocumentBackend;
@@ -54,17 +54,6 @@ impl DocumentStore for DocumentWriter {
     fn resume(&self) {
         self.shared.admission.resume();
     }
-    fn try_miss(&self, key: &StoreKey) -> bool {
-        if !self.shared.disabled.load(Ordering::Acquire) && !self.backend.known_missing(key) {
-            return false;
-        }
-        let Some(state) = self.shared.try_read_state() else {
-            return false;
-        };
-        let _read = tracing::info_span!("render.store.read").entered();
-        self.finish_read(ReadOutcome::Miss, Some(state));
-        true
-    }
     #[tracing::instrument(name = "render.store.read", skip_all)]
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         let outcome = if self.shared.disabled.load(Ordering::Acquire) {
@@ -72,7 +61,7 @@ impl DocumentStore for DocumentWriter {
         } else {
             self.backend.load(key)
         };
-        self.finish_read(outcome, None)
+        self.finish_read(outcome)
     }
     fn offer(&self, key: StoreKey, document: NodeKey) -> OfferOutcome {
         let request = Request::new(key, document);
@@ -126,12 +115,8 @@ impl DocumentStore for DocumentWriter {
 }
 
 impl DocumentWriter {
-    /// Finalize each ordinary outcome or frozen miss through the same state and warnings.
-    fn finish_read<'a>(
-        &'a self,
-        outcome: ReadOutcome,
-        state: Option<ReadState<'a>>,
-    ) -> ReadOutcome {
+    /// Finalize one ordinary outcome through the shared state and warnings.
+    fn finish_read(&self, outcome: ReadOutcome) -> ReadOutcome {
         let entry_warning = match &outcome {
             ReadOutcome::Rejected(fault) | ReadOutcome::RejectedWithStoreFault(fault) => {
                 Some(*fault)
@@ -146,7 +131,7 @@ impl DocumentWriter {
         );
         let directory = directory && !self.shared.disabled.swap(true, Ordering::AcqRel);
         {
-            let mut state = state.unwrap_or_else(|| self.shared.read_state());
+            let mut state = self.shared.read_state();
             match &outcome {
                 ReadOutcome::Hit(_) | ReadOutcome::HitWithStoreFault(_) => {
                     state.pending.stats.hits += 1;
