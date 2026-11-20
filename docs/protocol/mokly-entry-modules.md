@@ -24,9 +24,9 @@ export name, which render requests use under the sidecar contract. It plays
 no other part: it never affects the path, `mockups` is an ordinary name, and
 a default export is collected like a named one, with the handle `#default`.
 
-A stories file matched by a root is not an entry module. The sidecar reads
-its stories under its [Storybook rules](./mokly-sidecar.md#storybook), and
-the file becomes one component entry whose stories are variants.
+A stories file matched by a root is not an entry module. It gives its entry
+under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 
 ```tsx
 // specs/account/billing/invoice.mockup.tsx

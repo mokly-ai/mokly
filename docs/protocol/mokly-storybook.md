@@ -1,6 +1,6 @@
 # Storybook Stories
 
-Status: CSF Factories files, the tag filter, the first story as the parent page, the arg rules for inferred argTypes and React elements, control hints for the props that a story does not set, Storybook story names, tags, and descriptions, setup before render, and the `mokly` parameter are not implemented yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
+Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 3](../../plans/storybook-support.md#milestone-3-story-reader) adds CSF Factories files, an untitled file's entry title, and control hints for the props that a story does not set. [Milestone 4](../../plans/storybook-support.md#milestone-4-story-args-names-tags-and-descriptions) adds the arg rules for inferred argTypes and React elements, Storybook story names, tags, the description, and the tag filter. [Milestone 5](../../plans/storybook-support.md#milestone-5-story-setup-before-render) adds loaders, `beforeEach`, and `beforeAll` before a render. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page, and no entry for a file without an included story. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
 
 ## Stories Files
 
@@ -127,18 +127,25 @@ own.
 Before each story render, the sidecar runs the story's loaders and
 `beforeEach` hooks, as Storybook's portable stories do. The render receives
 the loaded data. A `beforeEach` cleanup runs before the next story loads, as
-in Storybook. Each sidecar runs the preview's `beforeAll` hook once for each
-bundle generation that it loads, before the first story of that generation
-loads. Its cleanup runs when the sidecar disposes of the generation or shuts
-down. A loader, a hook, or a render that throws fails the render with
-[`render-failed`](./mokly-sidecar.md#fail-closed-rules). When the `beforeAll`
-hook throws, it does not run again for that generation, and each story render
-of that generation fails with its error. Mokly runs no `play` function and no
-`afterEach` hook.
+in Storybook. Each sidecar keeps at most one active setup from the preview's
+`beforeAll` hook. Before a story of a bundle generation loads, the sidecar
+checks the active setup. When the active setup belongs to another generation,
+the sidecar runs its cleanup first. Then it runs the `beforeAll` hook of the
+story's generation, and that setup becomes the active one. So a sidecar runs
+the hook once for each generation, and again only after the setup of another
+generation replaced it. The last setup gets no cleanup when the sidecar
+exits. A loader, a hook, a cleanup, or a render that throws fails the render
+with [`render-failed`](./mokly-sidecar.md#fail-closed-rules). When the
+`beforeAll` hook throws, it does not run again for that generation, and each
+story render of that generation fails with its error. Mokly runs no `play`
+function and no `afterEach` hook.
 
-Decision: Mokly also runs the preview's `beforeAll` hook, once for each
-generation, as Storybook's test runners do. Running only the loaders and the
-`beforeEach` hooks was rejected.
+Decision: Mokly also runs the preview's `beforeAll` hook, as Storybook's test
+runners do. Running only the loaders and the `beforeEach` hooks was rejected.
+Decision: one setup at a time is active in a sidecar, as in Storybook's own
+preview after a reload, because a setup changes globals that the whole process
+shares. A cleanup when the sidecar releases a generation was rejected, because
+two loaded generations would then keep two setups.
 
 ## Globals For Views
 

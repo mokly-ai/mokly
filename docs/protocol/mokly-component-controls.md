@@ -19,7 +19,8 @@ The inspector's Props tab lists controls derived from the
 `multipleOf` counted from zero, else 1 for `integer`, else none, and a select
 for `enum` and `oneOf` of constants whose options are labelled by `title`,
 else the string itself, else the JSON text of the value. A Storybook stories
-file's `argTypes` enrich the derived controls as the sidecar contract states.
+file's argTypes enrich the derived controls under the
+[Storybook stories contract](./mokly-storybook.md#controls).
 `defineScreen` and `defineComponent` may declare `controls` to replace the
 derived ones; a declared control must name a declared prop, and optionality
 and types come only from the schema. A prop whose shape has no control is

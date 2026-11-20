@@ -603,24 +603,27 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answer to decision B3, option C, to the other protocol
+- [x] Apply the answer to decision B3, option C, to the other protocol
       pages: replace each stale Storybook sentence with a link to
       `docs/protocol/mokly-storybook.md`, and keep only the exceptions that a
       page needs. The proposed edits are in
       `.context/storybook-support/b-out-of-scope-doc-edits.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Link each missing behaviour in the status line of
+- [x] Link each missing behaviour in the status line of
       `docs/protocol/mokly-storybook.md` to the heading of the milestone
       that owns it, as the `documentation` skill now asks.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B2 to the `beforeAll` rule of
+      `docs/protocol/mokly-storybook.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Apply the answers to decisions B1 and B4 to the protocol pages.
       Branch: `conductor/storybook-support-b-story-reading`.
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
-call. B1, B2, and B4 are open. B1 blocks Milestone 6, B2 blocks the
-`beforeAll` rules of Milestone 5, and B4 blocks the rule for malformed
-`mokly` parameter values in Milestone 7.
+call, and B2 on 2026-11-20 with option D. B1 and B4 are open. B1 blocks
+Milestone 6, and B4 blocks the rule for malformed `mokly` parameter values in
+Milestone 7.
 
 ### B1. Stories inherit the first story's args
 
@@ -694,6 +697,13 @@ call. B1, B2, and B4 are open. B1 blocks Milestone 6, B2 blocks the
   recorded decision covers that change.
 
 ### B2. Old `beforeAll` setups stack in a sidecar
+
+Answered on 2026-11-20: D. The orchestrator of this plan made this call,
+because design call 10 is its own design call. D changes design call 10: each
+sidecar process keeps at most one active `beforeAll` setup. Before a story of
+another generation renders, the cleanup of the old setup runs, and then the
+new generation's `beforeAll` runs. A hook that threw does not run again for
+its generation. The release of a generation no longer runs a cleanup.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation.
@@ -873,9 +883,10 @@ Design calls of track B, made on 2026-11-18:
   that generation, and each story render of that generation fails with its
   error. Reason: design call 10 runs the hook once, and a story without its
   setup would render wrong output.
-- B-b. Each sidecar process runs `beforeAll` once for each generation that it
-  loads. Reason: sidecar processes share no state, so one run cannot serve
-  them all.
+- B-b. Each sidecar process runs `beforeAll` for each generation whose
+  stories it renders, and again after another generation's setup replaced
+  it. Reason: sidecar processes share no state, so one run cannot serve them
+  all. Changed on 2026-11-20 by the answer to B2.
 - B-c. The globals of the `mokly` parameter win over a story's own
   `globals`. Reason: design call 11 applies them over the composed globals,
   and a Chromatic mode's viewport also wins over a story's own viewport
@@ -917,19 +928,24 @@ decision 5.
 - [ ] Map tags as design call 5 says, and the description as design call 7
       says.
 - [ ] Include stories as design call 8 says.
+- [ ] In the commit that builds story tags, add to
+      `docs/protocol/mokly-entry-props.md` and `docs/protocol/mokly-variants.md`
+      that a story variant takes its tags from its own story, with a link to
+      `docs/protocol/mokly-storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Test that Storybook's Button template passes `--strict`, and test the
       names, the tags, the description, and the skipped stories.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 5: Story setup before render
 
-Depends on: 3, and the answer to decision B2 for `beforeAll`
+Depends on: 3
 
 Loaders and `beforeEach` run before each story render, as decision 12 says.
 
 - [ ] Await `story.load()` before each story render, and run its cleanups as
       Storybook does.
-- [ ] Run `beforeAll` as design call 10 says.
+- [ ] Run `beforeAll` as the answer to decision B2 says.
 - [ ] Test that a loader story and a `beforeEach` story render their prepared
       data.
 - [ ] Update `docs/guides/authoring/storybook.md`.

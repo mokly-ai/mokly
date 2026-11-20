@@ -63,8 +63,9 @@ take precedence over schema property order, then first-seen own and variant
 prop keys. The core omits uneditable properties from the detail's order.
 Definitions and variants also carry optional `excludedProps` lists of non-data
 inference keys. The core emits their `props-not-data` warnings after it
-derives each final entry path. Storybook excludes non-prop args before it
-collects these keys.
+derives each final entry path. For a stories file, these lists leave out the
+args that the [Storybook stories contract](./mokly-storybook.md#args-and-props)
+excludes without a warning.
 Saved React slot values remain inside the loaded generation and serialize
 as slot-name to opaque handle records. Functions and React elements never
 serialize as data props. The core builds the catalogue and component registry
@@ -72,12 +73,10 @@ from these definitions and the HTML definitions.
 
 The component metadata includes its `element`, authored schema, own props,
 slots, control overrides, and saved variants. Screen variants carry their
-metadata overrides in authored order. Story control hints affect derived
-controls and live validation bounds, without changing the prop schema, under the
-[Storybook rules](./mokly-sidecar.md#storybook).
-The component parent's `argTypes` carries the meta's hints. Each story carries
-its merged hints separately, so a story override does not replace the parent's
-own labels and choices.
+metadata overrides in authored order. The
+[Storybook stories contract](./mokly-storybook.md#controls) defines the story
+control hints. The component parent's `argTypes` carries the parent's hints,
+and each story carries its own hints separately.
 
 After registration the core installs the resolved
 [handle table](./mokly-sidecar-render-records.md#resolved-bindings) before rendering.

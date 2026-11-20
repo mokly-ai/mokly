@@ -30,17 +30,20 @@ A variant is a props set under the
 a render over props, and each variant declares `slug`, `title`, and `props`
 that replace top-level keys of the parent's props and never deep merge. The
 variant renders the parent's render with the merged props and has no render of
-its own; a state that needs another tree is a separate entry.
+its own; a state that needs another tree is a separate entry. A story variant
+renders its own story under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 
 `defineScreen` and `defineComponent` accept an optional `variants` list.
 `.screen.html` and `.component.html` files declare `variants` in front matter
 under the [HTML screens](./mokly-html-screens.md#variants) and
-[HTML components](./mokly-html-components.md#variants) contracts, and each
-story of a stories file is a variant of its component entry under the
-[render sidecar contract](./mokly-sidecar.md#storybook). A screen variant may
-also declare `description`, `tags`, `colorSchemes`, `address`, `rationale`,
-`relatedDocs`, `useCasePaths`, and `movedFrom`; a component
-variant may also declare `description`, `tags`, `movedFrom`, and `slots`.
+[HTML components](./mokly-html-components.md#variants) contracts, and a
+stories file gives its variants under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+A screen variant may also declare `description`, `tags`, `colorSchemes`,
+`address`, `rationale`, `relatedDocs`, `useCasePaths`, and `movedFrom`; a
+component variant may also declare `description`, `tags`, `movedFrom`, and
+`slots`.
 
 ```tsx
 export default defineScreen({
@@ -122,10 +125,10 @@ defining module or file.
 ## Rendering And Catalogue Model
 
 A variant renders exactly as any entry of its kind: one document per effective
-viewport and color scheme through the parent's render with the merged props,
-with the same link rewriting, fragment validation, resource validation, and
-composition into the render cache. A component parent renders its own props
-first on its page, then each variant.
+viewport and color scheme with the merged props, with the same link rewriting,
+fragment validation, resource validation, and composition into the render
+cache. A component parent renders its own props first on its page, then each
+variant.
 
 The catalogue model records `variantOf` exactly on variant entries of either
 kind and holds the parent's path. Validation requires the named parent to be a
