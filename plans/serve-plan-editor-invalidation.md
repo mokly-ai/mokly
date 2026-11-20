@@ -197,6 +197,10 @@ On 2026-11-20 the user's request replaced the synthetic capacity gate with the p
 The check report and the calls stay in `.context/serve-plan-editor-invalidation/collector-overflow-options-check.md`.
 A fresh Opus check of 2026-11-20 kept A with the called D and E. Its G, H, and I need a new call, so the follow-ups hold them. The report stays in `.context/serve-plan-editor-invalidation/2026-11-20-options-check.md`.
 
+The performance orchestrator's integration call of 2026-11-20: after the repository suite passed, the branch merges main `e69db4ce8` before the measurement. That main replaces `cc0750d36` as the control of the measurement and of the strict byte proof.
+Main #448 adds guarded attempts. A planned edit compile lets esbuild resolve safe relative imports, and a failed proof falls back to the complete planned compile. So an edit with a current plan makes at most two esbuild calls.
+This supersedes the single planned attempt of decision 1 and Milestone 2. The path table, the candidate names, and the calls of decision 4 stay.
+
 ## Implementation design
 
 Full captured resolution evidence stays unchanged. Candidate names live with the plan, inside both existing serialized bounds.
@@ -303,6 +307,7 @@ Evidence: `.context/serve-plan-editor-invalidation/2026-11-19-main-code-integrat
 Main merge `01181fbd7` of 2026-11-20, with main `cc0750d36`: `code-merge-report.md`, `docs-merge-report.md`, and `merge-audit.txt` in the same folder.
 Decision 4 code: `.context/serve-plan-editor-invalidation/aed-implementation-report.md`. Docs and pointers: `aed-docs-report.md`.
 Repeated `main` fix: `.context/serve-plan-editor-invalidation/duplicate-main-fix-report.md`.
+Main merge of 2026-11-20 with main `e69db4ce8` (#448): `main448-code-merge-report.md` and `main448-docs-merge-report.md` in the same folder.
 
 - [x] Preserve current main's mapped-path capture, configured files, stamp checks, style memo, and watch-plan reuse. Recheck G after integration.
 - [x] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
@@ -319,10 +324,11 @@ Repeated `main` fix: `.context/serve-plan-editor-invalidation/duplicate-main-fix
 - [x] Record E in the plan protocol, A and D in the sidecar README, and B as a measured follow-up. Move the pointers that the 2026-11-20 merge left stale.
 - [x] Run the targeted candidate, attachment, limit, export, package-folder, and saved-plan Node tests. Run each new asynchronous test ten times.
 - [x] Run the Rust plan tests of `mokly-render`, `mokly-sidecar`, and `mokly-compare`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete `cargo xtask check`.
+- [ ] Rerun the targeted plan tests and `cargo xtask check --suite repository` on the merge of main `e69db4ce8`.
 - [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
-- [ ] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud. Audit rejected real manifests. Apply the margins of decision 4 and resolve failed conditions with it.
-- [ ] Prove strict published output byte for byte against main `cc0750d36`: examples/basic, the full default large HTML and large React fixtures, and the cloud mockups of the root `mokly.config.json`.
+- [ ] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud, against main `e69db4ce8`. Audit rejected real manifests. Apply the margins of decision 4 and resolve failed conditions with it.
+- [ ] Run the complete `cargo xtask check`.
+- [ ] Prove strict published output byte for byte against main `e69db4ce8`: examples/basic, the full default large HTML and large React fixtures, and the cloud mockups of the root `mokly.config.json`.
 - [ ] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
 - [ ] Delete this plan and the resolved editor-invalidation item after other TODOs and reviews. Update live references.
 - [ ] Open the pull request into `main`. Say that it continues workspace 54's branch. Preserve dated calls and a plan permalink.

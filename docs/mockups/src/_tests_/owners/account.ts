@@ -52,6 +52,12 @@ export const accountOwners = {
     region: "panelled",
     files: ["screens/account/entry-screen.tsx"],
   },
+  // Sign in in the Mac app draws the desktop entry; the window buttons over
+  // the header are the window's, and the header holds no control of its own.
+  "product/account/sign-in/mac-app": {
+    region: "panelled",
+    files: ["screens/account/desktop-entry-screen.tsx"],
+  },
   // The desktop app's window draws its own entry, and the browser draws the
   // connect page that hands the window its grant. Each is a module of its own:
   // the entry writes both of its labels, and the connect page every label of

@@ -9,7 +9,7 @@
 - **Source:** Review.
 - **Category:** Performance.
 - **Terms:**
-  - **Plan record:** the native import plan of a captured compile, with the reuse evidence of the same compile. A Serve edit with a current record makes one esbuild call.
+  - **Plan record:** the native import plan of a captured compile, with the reuse evidence of the same compile. A Serve edit with a current record makes no native attempt, and at most two esbuild calls under the guarded attempt rules.
   - **Candidate names:** the names that the plan check compares in a recorded directory. They are an optional layer of the plan.
   - **Pair bound:** the 8 MiB bound of one plan and its reuse evidence together.
   - **Frame limit:** the 64 MiB limit of one `bundle` response from the sidecar.

@@ -25,25 +25,31 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
-  records. esbuild resolves most imports itself, and
+  records. Each attempt takes its esbuild options and plugin order from
+  `bundleOptions` in [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
+  Only a native compile gets its log override, which makes a handled
+  `require` failure an error. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` records each planned import through
   `PlanBuilder` and reports whether the native compile is exact. It also
   records selected native targets for the candidate collector of a captured
-  compile. A failed native compile compiles again with full resolution. The
+  compile. An uncaptured native Serve edit leaves relative imports to esbuild
+  through a fixed filter. A skipped relative external edge makes its native
+  result inexact, so its fresh plan drives the complete planned compile.
+  Captured native attempts keep the broad consumer filter because the evidence
+  callback already needs the Go/Node packet. A failed native compile compiles
+  again with full resolution. The
   resolve callback of `consumerPlugins` in
   [`src/sidecar/plugins.ts`](./plugins.ts) applies the resolution
   mode of
   [`src/sidecar/native-resolution.ts`](./native-resolution.ts). A
-  planned compile resolves each import outside its plan with the full
+  complete planned compile resolves each import outside its plan with the full
   resolver. A `full` call keeps the native plan, also of an exact native
-  compile. A `serveEdit` call with a plan runs one planned compile with that
-  plan and no native compile. In a `full` call, one full capture owner and one
-  preparation serve every attempt. A `serveEdit` call creates no full capture
-  owner, no evidence plugin, and no durability check. It still records the
-  consumed sources, the module graph, the metadata digests, and the directory
-  lists.
+  compile. In a `full` call, one full capture owner and one preparation serve
+  every attempt. A `serveEdit` call creates no full capture owner, no evidence
+  plugin, and no durability check. It still records the consumed sources, the
+  module graph, the metadata digests, and the directory lists.
   [`src/sidecar/bundle-entry.ts`](./bundle-entry.ts) builds the
   virtual entry module. `configuredFiles` in
   [`src/sidecar/configured-files.ts`](./configured-files.ts), the
@@ -51,6 +57,78 @@ its requests and results. The paths below are relative to the package root.
   configured file or selected preview file, so TypeScript `paths` never apply
   to it. Without a captured preview selection, a `serveEdit` call selects only
   a regular preview file.
+- For a `serveEdit` call with a plan, `bundle` runs no native compile. It
+  starts with a guarded planned compile, in which esbuild itself resolves the
+  selected safe relative specifiers of the plan. `PlannedRelative.create` in
+  [`src/sidecar/planned-relative.ts`](./planned-relative.ts) classifies the
+  relative specifiers of the plan on each request. A specifier is safe when
+  none of its planned targets has distinct parse settings, such as a package
+  `type` or `tsconfig.json` settings. Each of its targets must also keep its
+  planned side-effect flag. `create` also counts the planned imports of each
+  safe specifier. The resolve callback of `consumerPlugins` takes every
+  specifier outside the selection. Its filters come from `specifierFilter` in
+  [`src/sidecar/specifier-filter.ts`](./specifier-filter.ts). The selection
+  comes from `selectSpecifiers` in
+  [`src/sidecar/specifier-selection.ts`](./specifier-selection.ts). It sorts
+  the safe specifiers once, by planned imports per character, highest first.
+  In that order, it adds a specifier to a trie only when its new nodes keep
+  the trie within 24,000 nodes. A specifier adds one node for each character
+  after the prefix that it shares with the trie. A specifier that does not fit
+  stays out, and a later specifier can still fit. So the selection prefers
+  frequent, short safe specifiers within its node bound. `specifierPatterns` in
+  [`src/sidecar/specifier-patterns.ts`](./specifier-patterns.ts) reuses that
+  trie. It measures each distinct subtree once. It then emits the exact
+  complement of the trie as disjoint patterns of bounded size, so no step
+  builds one large pattern. Together the patterns match every specifier except
+  the selected specifiers. When the patterns would pass their total bound,
+  `specifierFilter` keeps no specifier. It caches one result, keyed by a
+  digest of the freshly classified safe specifiers and their planned import
+  counts. Every request still checks the target parse settings and side-effect
+  flags. The cache keeps only that digest, the final patterns, and the
+  selected specifiers. It keeps no trie, subtree sizes, import counts, plan,
+  or filesystem facts. An unsafe specifier, a specifier outside the plan, and a
+  safe specifier that the selection leaves out keep the callback. So an edit
+  that adds a new specifier, such as `./new-file`, resolves it with the full
+  resolver in the same compile. When `create` keeps no specifier, the compile
+  is the complete planned compile. The callback records the importer,
+  specifier, and kind key of each outer import that it answers, never of an
+  inner resolution that a plugin requests. After the compile,
+  `PlannedRelative.verify` checks each internal relative edge between physical
+  files whose key the callback did not answer. When its key has a plan entry,
+  its target must equal the planned path. When the selection holds its specifier,
+  preparation already proved the parse settings and side-effect flag of that
+  target. Every other edge, also one without a plan entry, needs
+  `classifyNativeTarget`, which `planNative` also uses. Its target must map to
+  itself, with no distinct parse settings and no module fallback, and a
+  planned edge must keep its planned side-effect flag. So an omitted safe
+  specifier can pass, while a target with distinct parse settings or another
+  side-effect flag fails, even at the planned path. The metadata facts behind
+  these checks must also stay unchanged from before preparation until the end
+  of the proof. After its last metadata read, `MetadataProof` in
+  [`src/sidecar/metadata-proof.ts`](./metadata-proof.ts) stats each
+  `package.json`, `tsconfig.json`, and `jsconfig.json` that gave such a fact.
+  It also checks the directories and links that locate those facts.
+  Each must pass `mature`, the age guard of
+  [`src/sidecar/capture-runtime.ts`](./capture-runtime.ts), against a start
+  time. The sidecar takes that time before `PlannedRelative.create` reads any
+  fact. So a change after that start fails the proof, also when a later write
+  restores the old bytes. A change within the age guard before that start
+  fails it too. The same rule proves a file or directory that only the proof
+  reads, after the compile. A file or directory that the proof cannot stat
+  also fails the proof. The whole proof needs no esbuild call and never waits.
+  It creates no `CaptureDurability` and keeps no stamp after the request. A
+  failed proof discards the guarded result. Each external edge
+  whose specifier the selection holds also discards it, because such an edge has no
+  target. Examples are a relative `require.resolve` and a failed relative
+  `require` inside `try`. An external relative `require.resolve` or
+  `require` edge that the callback did not answer discards it too. `verify`
+  records the observations and the dependency usage of the unanswered internal
+  edges only after every edge passes.
+  After a discarded result or a failed guarded compile, `bundle` runs the
+  complete planned compile, in which the callback takes every import. That
+  compile gives the result or the error. A guarded result that stands has the
+  output, the evidence, the watch inputs, and the returned plan of the
+  complete planned compile.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and

@@ -34,12 +34,12 @@ pub(crate) fn metadata_observed(
             .sum::<usize>()
 }
 
-fn strings(strings: &Vec<String>) -> usize {
+pub(crate) fn strings(strings: &Vec<String>) -> usize {
     strings.capacity() * mem::size_of::<String>()
         + strings.iter().map(String::capacity).sum::<usize>()
 }
 
-fn warnings(warnings: &Vec<Warning>) -> usize {
+pub(crate) fn warnings(warnings: &Vec<Warning>) -> usize {
     warnings.capacity() * mem::size_of::<Warning>()
         + warnings
             .iter()

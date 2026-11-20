@@ -8,7 +8,7 @@ import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
 import { detail, protocol } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
-import { nativeImport } from "./native-resolution.js";
+import { nativeImport, nativeResolveFilter } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import type { PlanCandidates } from "./plan-candidates.js";
 import { PlanBuilder } from "./resolution-plan.js";
@@ -39,10 +39,12 @@ export interface NativePlan {
  * which a resolve callback result never carries. Only then does the native
  * result stand, so only then are the native imports' dependency lookups
  * recorded. An import that may have taken a fallback path stays unplanned.
+ * A relative external edge skipped by the hook makes the result inexact.
  */
 export async function planNative(
   metafile: Metafile,
   paths: ModulePaths,
+  skippedRelatives = false,
   candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
@@ -50,7 +52,7 @@ export async function planNative(
   const target = (file: string) => {
     let found = targets.get(file);
     if (!found) {
-      found = classify(paths, scope, file);
+      found = classifyNativeTarget(paths, scope, file);
       targets.set(file, found);
     }
     return found;
@@ -68,6 +70,12 @@ export async function planNative(
     if (!path.isAbsolute(file)) continue;
     const directory = path.dirname(file);
     for (const edge of input.imports) {
+      if (
+        skippedRelatives &&
+        edge.external &&
+        !nativeResolveFilter.test(edge.path)
+      )
+        exact = false;
       if (edge.external || !path.isAbsolute(edge.path)) continue;
       if (edge.original === undefined) exact = false;
       else if (nativeImport(paths, edge.original, directory))
@@ -135,7 +143,7 @@ export async function plannedResult(
 }
 
 /** A target that the full path rejects stays unplanned, so it reports there. */
-async function classify(
+export async function classifyNativeTarget(
   paths: ModulePaths,
   scope: PackageScope,
   file: string,

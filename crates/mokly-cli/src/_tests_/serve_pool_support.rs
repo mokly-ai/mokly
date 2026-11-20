@@ -2,12 +2,19 @@
 
 use std::sync::{Arc, Mutex};
 
+use mokly_server::background_capacity::FixedCapacity;
+use mokly_server::background_dispatch::Dispatch;
+use mokly_server::background_stage::Stages;
 use mokly_sidecar::methods::{Call, ProcessCss};
 use mokly_sidecar::pool::{PoolMock, SidecarPool};
 use mokly_sidecar::pool_admission::{CapacityMock, PoolCapacity};
 use mokly_sidecar::pool_claim::CallClaim;
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
+
+pub(super) fn dispatch(count: usize) -> Arc<Dispatch> {
+    Dispatch::new(Stages::new(Arc::new(FixedCapacity(count))))
+}
 
 /// Inject the exact capacity of an existing scheduling scenario.
 pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {

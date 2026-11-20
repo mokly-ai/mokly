@@ -11,6 +11,8 @@ browser app.
 - Keep the renderer isolated and catalogue HTML on its separate origin.
 - Receive desktop grants through `mokly` in one instance.
 - Keep window bounds and the Chromium session across launches.
+- Keep the native Mac window buttons centred in the app's top bar at each
+  page zoom.
 - Check the public pre-release feed in packaged builds.
 
 ## What This Package Does
@@ -147,6 +149,10 @@ credentials or publishing. The macOS package uses an ad-hoc signature with
 hardened runtime and notarization disabled. Each runner extracts the arm64 ZIP
 or Linux AppImage and runs `scripts/packaged-smoke.mjs` with Playwright. It
 proves the asar bundle renders **Try again** when the API is unreachable.
+It checks the window overlay and the app's inset on both platforms. On macOS
+it also attempts a native window screenshot that includes the buttons. The
+proof JSON records a capture failure without failing the smoke. The page
+screenshot stays available.
 Linux needs `xvfb-run`. Package artifacts are `desktop-macos` and
 `desktop-linux`; launch evidence is `desktop-smoke-macos` and
 `desktop-smoke-linux`, retained for 14 days.
@@ -195,7 +201,14 @@ The fallback needs the deployed app's public metadata, but no API or secret.
   equal to the Worker's copy.
 - [Permission policy](./src/permissions.ts)
 - [Window](./src/window.ts), [lifecycle and startup](./src/lifecycle.ts) and [menu](./src/menu.ts):
+  `createWindow` hides the Mac title bar and lets the overlay follow the native
+  button position. Linux keeps its native frame and default zoom roles.
   `startDesktop` owns startup, Dock activation and second-instance delivery.
+- [Mac window buttons](./src/window-buttons.ts): `windowButtonPosition` owns
+  the initial and zoomed positions for the app's 48px top bar.
+  `installWindowButtons` follows zoom, navigation and full-screen exit.
+  `zoomMenuItem` supplies the three Mac zoom commands with the default labels,
+  accelerators and half-level steps.
 - [Safe main-process diagnostics](./src/diagnostics.ts)
 - [Updater](./src/updates.ts)
 - [Build](./scripts/build.mjs) and [Electron smoke](./src/_tests_/desktop.spec.ts)

@@ -17,12 +17,21 @@
   align-items: center;
   flex-wrap: wrap;
 }
-/* 2. The identity sits in a compact top bar; the panel is what gets the room. */
+/* 2. The identity sits in a compact top bar; the panel is what gets the room.
+   In the Mac app the bar keeps clear of the window buttons at either edge. */
 .fo-account-header {
   justify-content: flex-end;
   gap: var(--mk-space-3) var(--mk-space-4);
   height: var(--mk-layout-topbar);
   padding: 0 var(--mk-layout-gutter-desktop);
+  padding-left: max(
+    var(--mk-layout-gutter-desktop),
+    var(--fo-window-inset, 0px)
+  );
+  padding-right: max(
+    var(--mk-layout-gutter-desktop),
+    var(--fo-window-inset-end, 0px)
+  );
 }
 .fo-account-header > a {
   display: inline-flex;
@@ -238,6 +247,14 @@
   }
   .fo-account-header {
     padding: 0 var(--mk-layout-gutter-mobile);
+    padding-left: max(
+      var(--mk-layout-gutter-mobile),
+      var(--fo-window-inset, 0px)
+    );
+    padding-right: max(
+      var(--mk-layout-gutter-mobile),
+      var(--fo-window-inset-end, 0px)
+    );
   }
   .fo-account-main {
     align-items: start;

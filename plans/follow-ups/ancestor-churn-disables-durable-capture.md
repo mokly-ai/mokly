@@ -15,7 +15,7 @@
   `crates/mokly-render/src/edit_plans.rs:60` to line 68,
   `crates/mokly-sidecar/src/durable_recipe.rs:31` to line 35,
   `docs/protocol/mokly-base-cache.md:175` to line 215,
-  `docs/protocol/mokly-sidecar-plans.md:70` to line 74 and line 110 to line
+  `docs/protocol/mokly-sidecar-plans.md:71` to line 75 and line 111 to line
   134, and `docs/protocol/mokly-sidecar-recipes.md:32` to line 35.
 - **Reason:** The performance orchestrator deferred this real-use
   investigation and authorized no product change in the branch that found
@@ -51,7 +51,9 @@
       compilation instead of compiling again.
     - The core keeps a plan record only from complete and durable evidence,
       at `edit_plans.rs:66`. A Serve edit with a current record sends the
-      plan and makes one esbuild call.
+      plan and makes no native attempt. It makes one esbuild call when its
+      guarded result stands, and never more than two, under the
+      [guarded attempt rules](../../docs/protocol/mokly-sidecar-plans.md#guarded-attempts).
     - Without a record, the edit starts with the native attempt, in which
       esbuild resolves each import itself. A planned attempt can follow.
       `docs/protocol/mokly-sidecar-plans.md` states these rules.
@@ -221,7 +223,7 @@
   5. Evaluate whether each ancestor witness of an absent lookup is necessary
      for coherence. Coherence means that a kept plan or a stored compilation
      never keeps a module selection that a fresh compile would change. The
-     decision at `docs/protocol/mokly-sidecar-plans.md:121` to line 124 states
+     decision at `docs/protocol/mokly-sidecar-plans.md:122` to line 125 states
      this need. Record the evidence for each kind of witness.
   6. Make no product change. Give the results to the performance
      orchestrator. Ask it before any change to a durability requirement in
