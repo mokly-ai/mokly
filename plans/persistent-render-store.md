@@ -1,6 +1,6 @@
 # Reuse rendered documents after Serve restarts
 
-Status: Active. CI startup-output repair remains. [PR #394](https://github.com/mokly-ai/mokly/pull/394) is open into `main` from `calummoore/mokly-first-changes-5-render-store-p3o6`. The parent accepted the final integrated performance result. Required CI remains the merge condition. The final work commit deletes this plan after the CI repair and preserves its dated record in the PR.
+Status: Active. Implementation and the focused startup-output repair review are complete. [PR #394](https://github.com/mokly-ai/mokly/pull/394) is open into `main` from `calummoore/mokly-first-changes-5-render-store-p3o6`. The parent accepted the final integrated performance result. Required CI remains pending and is the merge condition. The final Markdown-only work commit deletes this plan and preserves its dated record in the PR.
 
 Mokly renders every view again after a Serve restart. The first Changes on
 `mokly-cloud` takes about 12 to 14 seconds. The head usage pass renders 1,508
@@ -706,9 +706,9 @@ The macOS native CI failure supplies the existing assertion-red evidence.
       Preserve all 125 assertion texts and duration expressions. Run fmt and Clippy.
 - [x] Run the repository check on the combined tree. It passed with 2,974 Rust
       tests and the existing two child probes. All 3,344 Rust files meet the cap.
-- [ ] Commit and push the combined repair, then get a fresh focused review.
+- [x] Commit and push the combined repair, then get a fresh focused review.
       Required native CI remains the final PR merge gate.
-- [ ] Send the new SHA to the parent. Explain any startup work change separately
+- [x] Send the new SHA to the parent. Explain any startup work change separately
       from the notice ordering and test-only changes. The parent decides the rerun.
 
 The source handoff is complete. The existing progress owner queues one notice and
@@ -722,6 +722,9 @@ Evidence: `.context/persistent-render-store/m4e-implementation-report.md`,
 `m4e-assertion-preservation.json`, `m4e-source-hashes.json`, `m4e-repeats.json`, and
 `docs-m4e-alignment-report.md` record the handoff, checks, costs, and scope.
 The root repository check passed in `m4e-root-repository-gate.log`.
+The repair is pushed at `5d642b07d`. The fresh focused review found no concrete
+issue. Its report is `round-5-review.md` in the branch review folder. The final
+test-evidence inventory records every required behavior proof. Native CI is pending.
 
 Evidence: `.context/persistent-render-store/ci-macos-failure-6d.log` records the
 four failures in native job 136227864765. The live cache announcement reached
