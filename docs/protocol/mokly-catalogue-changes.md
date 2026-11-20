@@ -113,8 +113,10 @@ folder, historical folder, extra App root, or expandable Removed group.
 A removed row's identity is `removed:<path>`. It is unique because a removed
 record exists only while no current entry has that path.
 
-Removed page and document rows are hidden from All; removed screens stay
-visible there. Removed variant placement, fallback, and order follow
+Removed rows of every kind are hidden from All, which shows the current
+catalogue only. Decision: All does not keep removed screens or components,
+because a row in All for an entry that no longer exists confuses readers.
+Removed variant placement, fallback, and order follow
 [variant navigation](./mokly-variant-navigation.md). Search and tag filtering
 use base path segments, title, and tags like current leaves. Home totals and the tag picker use current entries.
 The home view recreates no removed folder.
