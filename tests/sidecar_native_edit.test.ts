@@ -40,6 +40,8 @@ test("an uncaptured native require.resolve keeps its fresh plan for one complete
     undefined,
     planCapture(root),
   );
+  const { metadataIdentity, ...capturedCompiled } = captured.result.compiled;
+  assert.equal(typeof metadataIdentity, "string");
   assert.ok(captured.result.plan);
   assert.equal(captured.result.compiled.reuseEvidence.complete, true);
   assert.equal(captured.result.compiled.reuseEvidence.durable, true);
@@ -53,12 +55,13 @@ test("an uncaptured native require.resolve keeps its fresh plan for one complete
     undefined,
     "serveEdit",
   );
+  assert.equal(edited.result.compiled.metadataIdentity, undefined);
   assert.deepEqual(
     editFingerprint(edited.result),
     editFingerprint({
       ...captured.result,
       compiled: {
-        ...captured.result.compiled,
+        ...capturedCompiled,
         reuseEvidence: {
           complete: false,
           durable: false,

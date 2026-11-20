@@ -48,6 +48,8 @@ test("dependency imports need no resolver round trip at one and four times the s
     const params = nativeParams(head);
     const counted = countedCompile();
     const { result } = await bundle(params, counted.compile);
+    const { metadataIdentity, ...capturedCompiled } = result.compiled;
+    assert.equal(typeof metadataIdentity, "string");
     await assertFullPathResult(params, result);
     const edited = countedCompile();
     const edit = await bundle(
@@ -57,12 +59,13 @@ test("dependency imports need no resolver round trip at one and four times the s
       undefined,
       "serveEdit",
     );
+    assert.equal(edit.result.compiled.metadataIdentity, undefined);
     assert.deepEqual(
       editFingerprint(edit.result),
       editFingerprint({
         ...result,
         compiled: {
-          ...result.compiled,
+          ...capturedCompiled,
           reuseEvidence: {
             complete: false,
             durable: false,
