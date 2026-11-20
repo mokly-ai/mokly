@@ -1,0 +1,43 @@
+# Escaped controls bypass configured token redaction
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from finding 1 of the post-push review of branch `calummoore/fu-list-diagnostic-authored-line-feeds-nuzh`.
+- **Location:** `packages/mokly/src/sidecar/describe.ts:95`, `crates/mokly-catalogue/src/identity.rs:246`, `crates/mokly-cli/src/redaction.rs:44`, `crates/mokly-publish/src/redaction.rs`, and `crates/mokly-cli/src/static_errors.rs:119`.
+- **Reason:** The producer fix cannot preserve token privacy under the current matching rule. A user decision must settle that rule before this branch merges.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Redactor:** The CLI type that removes configured tokens and escapes terminal controls before display.
+  - **SecretMatcher:** The shared matcher in `mokly-publish` that recognizes literal and percent-encoded credential bytes.
+  - **Structural line feed:** A separator that a list builder adds between its heading and source locations.
+- **Background:** The recorded decision of 2026-11-20 chose producer escaping for authored controls in catalogue diagnostic lists. Native `identity::list` and the sidecar duplicate-export builder now escape each authored part before joining structural lines. The task keeps the sidecar record and shared classifier unchanged. It also keeps terminal bytes for input without controls and preserves every diagnostic consumer requirement. `docs/protocol/mokly-upload.md:93` requires redaction of configured tokens, including malformed values.
+- **Problem:** Producer escaping changes a control-bearing token before Redactor can recognize it. A configured value made from `private`, LF, and `value` becomes visible as `private\u000avalue`. The current matcher recognizes literal and `%HH` bytes only.
+- **Impact if no action:** Terminal output exposes the configured token in a reversible form. A malformed value can contain a valid credential with an accidental control character.
+- **Root question:** How can list diagnostics hide configured tokens while keeping authored controls visible and preserving the required output behavior?
+- **Options:**
+  - **A.** Add control-escape matching inside the CLI Redactor. Use a decoded matching copy or per-byte matching to retain mixed literal and percent spellings. This keeps the record unchanged but duplicates matching logic. It also redacts literal escape text that previously stayed visible. Update the Token Exposure rule for the added spelling. Effort: Medium.
+  - **B.** Add an explicit control-escape mode to SecretMatcher and enable it from the CLI Redactor only. Keep the default matcher behavior unchanged. Preserve whole-message, literal, percent, mixed, and C1 control matching. This keeps the sidecar record and shared classifier unchanged. It also redacts literal escape text that previously stayed visible. Update the Token Exposure rule for the added spelling. Effort: Medium.
+  - **C.** Carry raw parts or separator positions to the final renderer. Redact the whole raw message, including printer prefixes, with boundary tracking. Then escape authored controls outside the separators that remain. Keep protection for literal-escape token values when final escaping forms them. This changes the sidecar diagnostic record and its protocol. Effort: Large.
+- **Shared assumptions:**
+  - Authored controls remain valid input. No option rejects line feeds.
+  - Credentials stay out of the sidecar, as `docs/protocol/mokly-upload.md:104` requires.
+  - Redaction keeps every literal, percent-encoded, and mixed spelling that the base redacts.
+  - A configured value can span a structural separator or a printer prefix. Matching each raw part separately would lose that behavior.
+  - The no-control byte requirement follows the authored-part instruction. Its purpose does not settle the malformed-token collision case. Approval of A or B must explicitly accept that literal escape text can become redacted in that case.
+- **Left out:**
+  - One matcher for a fully escaped credential misses mixed spellings. Token `A`, LF, `B`, TAB, `C` can appear as `A\u000aB%09C` after producer escaping.
+  - Producer-side redaction would expose credentials to a sidecar that must not receive them.
+  - Per-part redaction misses values that span structural lines or printer prefixes. For example, a value made from `twice:`, LF, two spaces, and `specs/x` matches a whole list but no single part.
+  - A lossless producer encoding would change the prescribed escape form or the bytes of literal backslashes.
+  - Rejecting controls adds unauthorized validation. Leaving the code unchanged keeps the exposure.
+- **Wider fix:** C. Raw data with boundary tracking preserves the distinction that a flat escaped message loses. B remains aware of the escape form and is the smaller direct fix.
+- **Previous examples:** `crates/mokly-cli/src/static_errors.rs:119` already escapes static output path controls before Redactor matches. It has the same control-bearing token defect on `main` since `d935e6a66`. This and the list builders give two occurrences of that class. Commit `e09bb3ba6` fixes malformed-token matching for literal percent signs. The host matcher mode recorded in `docs/protocol/mokly-upload-exchange.md` is a precedent for a scoped mode.
+- **Related:** [terminal-escaping-forms-literal-token.md](./terminal-escaping-forms-literal-token.md) shares the Redactor code but concerns the opposite order. Its final escape forms a literal token after matching. Preserve that distinction when choosing the fix.
+- **Recommendation:** B. It restores existing redactions while retaining the recorded producer, record, and classifier choices. This replaces the first-pass recommendation of C. Corrected C is Large and remains the structural wider fix.
+- **Action:** ask the user, because A and B add an escape spelling to the Token Exposure matching rule. No recorded decision covers that protocol change. C changes the sidecar record that the task explicitly preserves.
+
+- **Evidence:** Independent read-only probes used the built CLI and its existing Redactor. The raw LF token was redacted. The producer-escaped spelling printed without a redaction marker. A raw title and its literal backslash-u spelling create the same flat message, so message-only matching cannot distinguish them. Mixed percent spellings and whole-message matches across structural separators were also reproduced.
+- **Affected consumers:** Head build output, base Changes output, and watched diagnostics all match after producer escaping. Cloud stores and displays the terminal bytes. The failure parser still accepts only a leading code tag.
+- **Required regression:** Exercise configured malformed tokens through head and base printers for the native and sidecar messages. Keep raw and mixed percent spellings, C1 controls, and a match spanning a structural separator. Check the chosen outcome for literal escape text. Keep each existing assertion and the ten-run evidence for new asynchronous cases.
