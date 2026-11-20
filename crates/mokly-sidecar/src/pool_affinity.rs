@@ -1,5 +1,6 @@
-//! Context affinity and call-ready generations rank eligible same-root slots.
+//! Context, generation, and head compilation affinity rank same-root slots.
 
+use std::cmp::Reverse;
 use std::path::Path;
 
 use crate::methods::Call;
@@ -42,10 +43,16 @@ fn matching(state: &State, call: &Call, root: &Path, outside_pass: bool) -> Opti
             state.slots[*index]
                 .as_ref()
                 .filter(|slot| slot.source_root == root)
-                .map(|slot| (position, loaded(state, slot, call)))
+                .map(|slot| {
+                    let compilation = match call {
+                        Call::Bundle(_) => slot.last_compilation,
+                        _ => None,
+                    };
+                    (position, loaded(state, slot, call), compilation)
+                })
         })
-        .min_by_key(|(position, rank)| (*rank, *position))
-        .map(|(position, _)| position)
+        .min_by_key(|(position, rank, compilation)| (*rank, Reverse(*compilation), *position))
+        .map(|(position, _, _)| position)
 }
 
 pub(super) fn acquire(

@@ -16,7 +16,7 @@ use mokly_model::usage::CatalogueUsage;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
-use crate::comparison_input::RetainedComparisonInput;
+use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
@@ -110,6 +110,11 @@ pub trait RenderGeneration: GeneratedResources {
     /// Decode only retained inputs. No source IO, fallback, or failure log is allowed.
     /// Checking wrappers keep this default when forwarding would bypass their checks.
     fn retained_comparison_input(&self, _route: &str) -> Option<RetainedComparisonInput> {
+        None
+    }
+    /// Prove retained codec input without decoding, only when restoration cannot fail.
+    /// Checking wrappers decline this proof unless all of their checks still apply.
+    fn retained_document_evidence(&self, _route: &str) -> Option<RetainedDocumentEvidence> {
         None
     }
     /// Prove every observable input of one comparison read, or decline reuse.

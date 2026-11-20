@@ -11,7 +11,7 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
-use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
@@ -119,6 +119,15 @@ impl GeneratedResources for BaseReader {
 }
 
 impl RenderGeneration for BaseReader {
+    fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
+        self.state.check_cancelled().ok()?;
+        self.state
+            .reuse
+            .base
+            .generation
+            .retained_document_evidence(route)
+    }
+
     fn comparison_identity(
         &self,
         read: ComparisonRead,

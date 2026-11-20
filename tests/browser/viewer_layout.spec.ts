@@ -113,6 +113,12 @@ for (const width of [1440, 900, 390, 320]) {
         const target = await toggle.boundingBox();
         expect(target?.width).toBeGreaterThanOrEqual(30);
         expect(target?.height).toBeGreaterThanOrEqual(30);
+        const hostStart = await page
+          .getByRole("button", { name: "Host start" })
+          .elementHandle();
+        const hostEnd = await page
+          .getByRole("button", { name: "Host end" })
+          .elementHandle();
         await toggle.click();
         const search = page.getByRole("searchbox", {
           name: "Search catalogue",
@@ -120,6 +126,21 @@ for (const width of [1440, 900, 390, 320]) {
         await expect(search).toBeFocused();
         const input = await search.boundingBox();
         expect(input?.width).toBeGreaterThanOrEqual(160);
+        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
+          true,
+        );
+        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+        await search.press("Escape");
+        await expect(toggle).toBeVisible();
+
+        await toggle.click();
+        await expect(search).toBeVisible();
+        expect(await hostStart?.evaluate((node) => node.isConnected)).toBe(
+          true,
+        );
+        expect(await hostEnd?.evaluate((node) => node.isConnected)).toBe(true);
+        await page.getByRole("button", { name: "Close search" }).click();
+        await expect(toggle).toBeVisible();
       }
     });
   }

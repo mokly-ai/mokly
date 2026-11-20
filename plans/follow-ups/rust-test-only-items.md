@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the branch `calummoore/mokly-stamp-early-exit`: the blocked wider fix of the first finding of its first review, and a problem that the check of that finding found outside the scope.
-- **Location:** `crates/mokly-cli/src/serve_return.rs:21`, `:63`, and `:98`; `crates/mokly-compare/src/owned_style_instances.rs:212`; `crates/mokly-compare/src/owned_styles.rs:158`; `crates/mokly-css/src/containment.rs:21`; `crates/mokly-graph/src/requests.rs:14`, `:17`, `:62`, and `:94`; `crates/mokly-model/src/usage_schemas.rs:18`, `:33`, and `:59`; `crates/mokly-sidecar/src/pool_recipes.rs:154`; `crates/mokly-sidecar/src/pool_releases.rs:3`, `:15`, `:35`, and `:52`.
+- **Location:** `crates/mokly-cli/src/serve_return.rs:21`, `:63`, and `:98`; `crates/mokly-compare/src/owned_style_instances.rs:212`; `crates/mokly-compare/src/owned_styles.rs:158`; `crates/mokly-css/src/containment.rs:21`; `crates/mokly-graph/src/requests.rs:14`, `:17`, `:62`, and `:94`; `crates/mokly-model/src/usage_schemas.rs:18`, `:33`, and `:59`; `crates/mokly-sidecar/src/pool_recipes.rs:155` (`Recipes::len`); `crates/mokly-sidecar/src/pool_releases.rs:3`, `:15`, `:35`, and `:52`.
 - **Reason:** The fix that prevents new cases is a lint, and only the user can approve a new gate.
 
 - **Source:** Review.
