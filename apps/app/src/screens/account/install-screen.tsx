@@ -212,7 +212,6 @@ function InstallAction({
             block
             write={write}
             operation="Installing the Mokly app"
-            disabled={write.disabled}
             onPress={() =>
               onWeb ? openOnWeb(installStepPath(workspace.id)) : void install()
             }

@@ -70,7 +70,6 @@ export function ChangeVisibility({
             ? `Making ${project.name} public`
             : `Making ${project.name} private`
         }
-        disabled={publish.disabled}
         onPress={() => void change()}
         testID="confirm-visibility"
       />
