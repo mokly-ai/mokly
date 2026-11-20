@@ -27,7 +27,7 @@ fn prepare(fixture: &dyn Fixture) {
         "crates/mkc-fixture/src/lib.rs",
         "xtask/valid.rs",
         "packages/valid.ts",
-        "apps/app/src/valid.ts",
+        "packages/app/src/valid.ts",
     ] {
         fixture.write(path, "");
     }
@@ -57,7 +57,7 @@ fn ast_grep_stage_rejects_all_required_import_violations() {
 fn ast_grep_stage_rejects_a_control_that_answers_for_its_write() {
     let fixture = TemporaryFixtures.create();
     prepare(fixture.as_ref());
-    let pane = "apps/app/src/settings/panes/example.tsx";
+    let pane = "packages/app/src/settings/panes/example.tsx";
     fixture.write(
         pane,
         "export const Pane = () => <Action disabled={withdraw.disabled} />;\n",

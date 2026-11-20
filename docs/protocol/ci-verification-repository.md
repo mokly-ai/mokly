@@ -68,7 +68,8 @@ No `mokly-*` crate and no `xtask` depends on an `mkc-` crate. The check reads
 Cargo metadata and covers normal, dev, build, target-specific, and renamed
 dependencies.
 
-No MIT package under `packages/` depends on `apps/` or `packages/tokens/`.
+No MIT package under `packages/` depends on a cloud npm project: a project
+under `apps/`, or `packages/app/`, `packages/desktop/`, or `packages/tokens/`.
 The check covers normal, dev, peer, and optional manifest dependencies. It
 also checks source imports, exports, dynamic imports, CommonJS requests, and
 type imports. Relative paths and TypeScript aliases cannot cross the boundary.

@@ -40,9 +40,9 @@ __pycache__/
 *.tfplan
 gha-creds-*.json
 /infra/terraform/bootstrap/remote.backend.tf
-/apps/app/public/folio/
-/apps/app/public/mokly-viewer/
-/apps/app/.expo/
+/packages/app/public/folio/
+/packages/app/public/mokly-viewer/
+/packages/app/.expo/
 /apps/site/.astro/
 /apps/site/public/og/
 /apps/site/public/stage/
@@ -50,6 +50,6 @@ gha-creds-*.json
 /apps/worker/wrangler.test.json
 
 # Electron bundle and distribution outputs.
-apps/desktop/bundle/
-apps/desktop/release/
-apps/desktop/.expo/
+packages/desktop/bundle/
+packages/desktop/release/
+packages/desktop/.expo/

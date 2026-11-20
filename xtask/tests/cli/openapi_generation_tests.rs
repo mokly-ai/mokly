@@ -5,7 +5,7 @@ use std::fs;
 use super::support::{Fixture, FixtureFactory, TemporaryFixtures, failure, repository, success};
 
 const DOCUMENT: &str = "docs/api/openapi.json";
-const CLIENT: &str = "apps/app/src/api/generated/schema.ts";
+const CLIENT: &str = "packages/app/src/api/generated/schema.ts";
 const SOURCE: &str = r#"{
   "openapi": "3.1.0",
   "info": {"title": "Fixture", "version": "1"},
@@ -25,13 +25,13 @@ fn fixture() -> Box<dyn Fixture> {
     fixture.write("contract.json", SOURCE);
     fixture.write(
         "package.json",
-        r#"{"private":true,"workspaces":["apps/app"]}"#,
+        r#"{"private":true,"workspaces":["packages/app"]}"#,
     );
-    fixture.write("apps/app/package.json", r#"{"name":"@mokly-cloud/app","private":true,"scripts":{"api:generate":"openapi-typescript ../../docs/api/openapi.json -o src/api/generated/schema.ts"}}"#);
+    fixture.write("packages/app/package.json", r#"{"name":"@mokly-cloud/app","private":true,"scripts":{"api:generate":"openapi-typescript ../../docs/api/openapi.json -o src/api/generated/schema.ts"}}"#);
     fixture.tools();
     fixture.link(
-        "apps/app/node_modules",
-        &repository().join("apps/app/node_modules"),
+        "packages/app/node_modules",
+        &repository().join("packages/app/node_modules"),
     );
     success(fixture.run("cargo", &["generate-lockfile", "--offline"]));
     fixture
@@ -77,7 +77,7 @@ fn generation_is_idempotent_and_checks_both_files_without_rewriting_them() {
     );
     failure(
         fixture.xtask(&["openapi", "--check"]),
-        "apps/app/src/api/generated/schema.ts:",
+        "packages/app/src/api/generated/schema.ts:",
     );
     assert!(
         fs::read_to_string(fixture.root().join(CLIENT))
@@ -98,7 +98,7 @@ fn generation_is_idempotent_and_checks_both_files_without_rewriting_them() {
         "{diagnostics}"
     );
     assert!(
-        diagnostics.contains("apps/app/src/api/generated/schema.ts:"),
+        diagnostics.contains("packages/app/src/api/generated/schema.ts:"),
         "{diagnostics}"
     );
     assert!(diagnostics.contains("Rust changed."), "{diagnostics}");

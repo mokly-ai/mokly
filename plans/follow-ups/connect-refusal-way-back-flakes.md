@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-04, from the complete gate of branch `conductor/follow-ups-mockup-overlay-focus` on 2026-11-03, an unrelated flaky test.
-- **Location:** `apps/app/src/_tests_/connect.spec.ts:133-158`, `apps/app/src/screens/account/github-callback-screen.tsx:37` and `:67`, `apps/app/src/screens/app/workspace-route.tsx:38-40`, and `apps/app/src/screens/account/install-screen.tsx:246-250`.
+- **Location:** `packages/app/src/_tests_/connect.spec.ts:133-158`, `packages/app/src/screens/account/github-callback-screen.tsx:37` and `:67`, `packages/app/src/screens/app/workspace-route.tsx:38-40`, and `packages/app/src/screens/account/install-screen.tsx:246-250`.
 - **Reason:** The branch that met the flake changes no app code and no app test, and the flaky-test rule fixes an unrelated flaky test in its own branch.
 - **Checked:** The gate ran on 2026-11-03, on a mockup-only branch based on `main` at commit `50283907`. The test failed once and passed on its configured retry. On 2026-11-04, after `main` at commit `08b3a98b` merged, the test and its wait at line 163 were unchanged. Nobody ran a controlled reproduction.
 - **Category:** Test.

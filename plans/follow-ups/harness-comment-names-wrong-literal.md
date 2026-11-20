@@ -3,14 +3,14 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77), review finding 5.
-- **Location:** `apps/app/src/_tests_/harness.ts:18`.
+- **Location:** `packages/app/src/_tests_/harness.ts:18`.
 - **Reason:** Code structure findings wait for the user under the review-fix rule.
 - **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. Line 30 still reads "the Milestone 1 review found an `Workspace`". The problem is in a comment only, not in runtime behaviour.
 - **Category:** Code structure.
 
 - **Terms:**
-  - **`ApiBody`:** A helper type in `apps/app/src/_tests_/harness.ts` that types the answer body a browser test fakes for one API operation.
-- **Background:** The browser tests under `apps/app/src/_tests_` sometimes stand in for an API answer. The `ApiBody` type makes such an answer carry every field of the contract. Its doc comment records why: an earlier review found a hand-written literal without the `plan` field. The rename of PR #77 changed the noun in that sentence from `Organization` to `Workspace`.
+  - **`ApiBody`:** A helper type in `packages/app/src/_tests_/harness.ts` that types the answer body a browser test fakes for one API operation.
+- **Background:** The browser tests under `packages/app/src/_tests_` sometimes stand in for an API answer. The `ApiBody` type makes such an answer carry every field of the contract. Its doc comment records why: an earlier review found a hand-written literal without the `plan` field. The rename of PR #77 changed the noun in that sentence from `Organization` to `Workspace`.
 - **Problem:** Line 30 now reads "found an `Workspace` literal". The article "an" does not fit the new word. The sentence also names a type that did not exist when that review happened.
 - **Impact if no action:** No user sees the text. A reader of the comment stumbles on the grammar and may doubt the history it records.
 - **Root question:** How does the comment record the past review in correct words?

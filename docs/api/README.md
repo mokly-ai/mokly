@@ -52,7 +52,7 @@ cargo xtask openapi-lint
 ```
 
 `mkc-api openapi` prints pretty JSON. `cargo xtask openapi` writes
-`docs/api/openapi.json` and regenerates `apps/app/src/api/generated/schema.ts`.
+`docs/api/openapi.json` and regenerates `packages/app/src/api/generated/schema.ts`.
 Commit both files. Never hand-edit either output or hand-write frontend types
 for backend data. The `--check` mode regenerates both without rewriting them
 and reports the first differing line in either file. The `cloud-openapi`
@@ -136,10 +136,10 @@ Portal and webhook operations; read their shapes in the
 Field shapes, nullability, enums and the shared `EntryPath` schema are read
 from the [OpenAPI document](./openapi.json), not restated here.
 
-Keep the typed client reason list in `apps/app/src/api/reasons.ts` aligned with
+Keep the typed client reason list in `packages/app/src/api/reasons.ts` aligned with
 the generated `Error` inventory. The app logic tests compare these inventories
 and check each reason against the REST catalogue. They also compare the
-reasons that `apps/app/src/api/error-data.ts` parses `data` for with the
+reasons that `packages/app/src/api/error-data.ts` parses `data` for with the
 variants that carry it.
 
 ### Key Code
@@ -153,7 +153,7 @@ variants that carry it.
   [API crate guide](../../crates/mkc-api/README.md#key-code) names their entry points.
 - `mkc-api openapi` prints the derived document for the
   [xtask generator](../../xtask/README.md#quick-start).
-- `apps/app/src/api/generated/schema.ts` provides the generated paths and
-  components consumed by the [app client](../../apps/app/README.md#key-code).
-- `apps/app/src/api/error-data.ts` derives the app's `ApiErrorData` from the
+- `packages/app/src/api/generated/schema.ts` provides the generated paths and
+  components consumed by the [app client](../../packages/app/README.md#key-code).
+- `packages/app/src/api/error-data.ts` derives the app's `ApiErrorData` from the
   generated `Error` variants and parses the `data` of each reason.

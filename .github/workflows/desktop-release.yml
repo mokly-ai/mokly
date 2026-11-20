@@ -61,7 +61,7 @@ jobs:
       - name: Install npm
         run: npm install --global npm@11.21.0
       - name: Resolve main-preview build inputs
-        run: python3 apps/desktop/scripts/release-environment.py main-preview >> "$GITHUB_ENV"
+        run: python3 packages/desktop/scripts/release-environment.py main-preview >> "$GITHUB_ENV"
       - name: Install dependencies
         run: npm ci
       - name: Install Linux launch dependencies
@@ -76,26 +76,26 @@ jobs:
       - name: Build the bundled export
         run: npm run build --workspace @mokly-cloud/desktop
       - name: Package without release credentials
-        run: node apps/desktop/scripts/package.mjs preview
+        run: node packages/desktop/scripts/package.mjs preview
       - name: Launch the packaged app offline
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
-            xvfb-run -a node apps/desktop/scripts/packaged-smoke.mjs
+            xvfb-run -a node packages/desktop/scripts/packaged-smoke.mjs
           else
-            node apps/desktop/scripts/packaged-smoke.mjs
+            node packages/desktop/scripts/packaged-smoke.mjs
           fi
       - name: Upload desktop packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktop-${{ matrix.platform }}
           path: |
-            apps/desktop/release/*.dmg
-            apps/desktop/release/*.zip
-            apps/desktop/release/*.AppImage
-            apps/desktop/release/*.deb
-            apps/desktop/release/*.yml
-            apps/desktop/release/*.blockmap
+            packages/desktop/release/*.dmg
+            packages/desktop/release/*.zip
+            packages/desktop/release/*.AppImage
+            packages/desktop/release/*.deb
+            packages/desktop/release/*.yml
+            packages/desktop/release/*.blockmap
           if-no-files-found: error
           retention-days: 14
       - name: Retain packaged launch evidence
@@ -134,7 +134,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check the tag and resolve production build inputs
-        run: python3 apps/desktop/scripts/release-environment.py production --tag "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+        run: python3 packages/desktop/scripts/release-environment.py production --tag "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -159,9 +159,9 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node apps/desktop/scripts/package.mjs release
+        run: node packages/desktop/scripts/package.mjs release
       - name: Publish Linux packages
         if: runner.os == 'Linux'
         env:
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node apps/desktop/scripts/package.mjs release
+        run: node packages/desktop/scripts/package.mjs release

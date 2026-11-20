@@ -1,6 +1,7 @@
 /**
- * The ESLint rules of the Mokly Cloud projects under `apps/`. The root
- * `eslint.config.js` applies them after the repository-wide rules.
+ * The ESLint rules of the Mokly Cloud projects under `apps/`, `packages/app/`,
+ * and `packages/desktop/`. The root `eslint.config.js` applies them after the
+ * repository-wide rules.
  */
 
 import reactHooks from "eslint-plugin-react-hooks";
@@ -11,7 +12,7 @@ export default [
     // A hand-tuned dependency array is correct exactly once; the rule reads
     // the arrays the application writes, so an effect that stops seeing a
     // value it uses fails the lint.
-    files: ["apps/app/src/**/*.{ts,tsx}", "apps/app/app/**/*.tsx"],
+    files: ["packages/app/src/**/*.{ts,tsx}", "packages/app/app/**/*.tsx"],
     plugins: { "react-hooks": reactHooks },
     rules: {
       "react-hooks/rules-of-hooks": "error",
@@ -22,9 +23,11 @@ export default [
     // Node runs the cloud build configuration, scripts, and desktop shell.
     files: [
       "apps/**/*.cjs",
-      "apps/app/*.config.js",
+      "packages/{app,desktop}/**/*.cjs",
+      "packages/app/*.config.js",
       "apps/*/scripts/**",
-      "apps/desktop/**/*.ts",
+      "packages/{app,desktop}/scripts/**",
+      "packages/desktop/**/*.ts",
     ],
     languageOptions: { globals: globals.node },
     rules: { "@typescript-eslint/no-require-imports": "off" },
@@ -33,7 +36,7 @@ export default [
     // The browser defines these as globals on `window`, so a handler that
     // means a local `close` or `open` and is not bound to one ships as a
     // control that silently does nothing.
-    files: ["apps/app/src/**/*.{ts,tsx}", "apps/app/app/**/*.{ts,tsx}"],
+    files: ["packages/app/src/**/*.{ts,tsx}", "packages/app/app/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-globals": [
         "error",
@@ -71,7 +74,7 @@ export default [
     // both guard what the reader has typed on the way out. A pane asks its
     // host to leave instead of driving the router, and its external links
     // open a tab of their own.
-    files: ["apps/app/src/settings/panes/**"],
+    files: ["packages/app/src/settings/panes/**"],
     rules: {
       "no-restricted-syntax": [
         "error",

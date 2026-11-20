@@ -31,7 +31,7 @@ fn failure_sentences_use_the_floor_in_markdown_and_typescript() {
             "| `unsupported-mokly-version` | Update `@mokly/mokly` to 0.18.0 or later to publish. |\n",
         ),
         (
-            "apps/app/src/viewer/build-copy.ts",
+            "packages/app/src/viewer/build-copy.ts",
             "\"unsupported-mokly-version\":\n  \"Update `@mokly/mokly` to 0.18.0 or later to publish.\",\n",
         ),
         (

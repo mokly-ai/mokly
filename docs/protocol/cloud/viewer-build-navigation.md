@@ -108,7 +108,7 @@ Application regressions cover active, closed and fork stage order on both
 plans, reuse of route lists, a delayed read after Cancel, final-state fencing,
 `running` to `queued` retries and a reviewer's queued build with no Cancel.
 
-A logic matrix, `apps/app/src/_tests_/viewer/stage-plan.test.ts`, covers every
+A logic matrix, `packages/app/src/_tests_/viewer/stage-plan.test.ts`, covers every
 reference kind, both values of `publishingAllowed`, and both values of
 `buildsAvailable`. It proves that the waiting card appears only when the plan
 allows publishing, and that a plan-refused open pull request shows the card a
