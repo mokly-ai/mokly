@@ -90,3 +90,7 @@ mod trace_capture;
 #[cfg(test)]
 #[path = "_tests_/compiled_fixture.rs"]
 mod compiled_fixture;
+
+#[cfg(test)]
+#[path = "_tests_/fixture_leases.rs"]
+mod fixture_leases;

@@ -110,9 +110,9 @@ and formats it.
   shows the expired state and that a valid grant delivered next starts a fresh
   landing document and signs the window in. It opens the viewer route and
   proves that a public-origin product link is rewritten into the bundle, that a
-  site link and an external link reach the system-browser opener, and that a
-  route-controlled redirect from a round-trip host to a public-origin product
-  path is rewritten into the bundle. It proves
+  site link, an external link, a GitHub page and a Stripe page reach the
+  system-browser opener, and that a public-origin callback path is rewritten
+  into the bundle before any request reaches the hosted server. It proves
   Chromium sends `Origin: mokly-app://desktop`, the API admits it, and the
   `SameSite=None; Secure` session cookie is stored, sent and kept across a
   relaunch. It loads the catalogue index through CORS. It proves

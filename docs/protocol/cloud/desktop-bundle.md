@@ -31,8 +31,9 @@ The two baked origins stay the hosted ones. The public app origin supplies the
 addresses the product shows. [Outbound links](./web-product-shell.md#outbound-links)
 defines the site-link origins and the app-origin fallback. The page recognizes
 the shell by its own location protocol, `mokly-app:`. Inside the shell the app
-signs in through the browser and opens GitHub setup on the web, as
-[Desktop application](./desktop-app.md#sign-in) defines.
+signs in through the browser, opens GitHub setup on the web and opens Stripe's
+pages in the browser, as [Desktop application](./desktop-app.md#sign-in)
+defines.
 
 Renderer settings are fixed: context isolation on, sandbox on, Node
 integration off, web security on, no `webview` tag, no insecure content, and

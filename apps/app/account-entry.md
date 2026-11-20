@@ -13,9 +13,12 @@ browser's account and after **Open Mokly** hands the app a one-use grant
 through `mokly://auth/desktop/callback`, and `/auth/desktop/callback` in the
 window exchanges the grant with the verifier. In the shell the GitHub actions
 open their own routes on the web, and the window reads the session and the
-open screen's GitHub accounts again when it gets focus back. The rules are
-[Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md) and
-[web setup](../../docs/protocol/cloud/desktop-app.md#web-setup). An invitation link carries its route through sign-in,
+open screen's GitHub accounts again when it gets focus back. Its billing
+actions open Stripe's pages in the browser, and the Billing pane reads the plan
+again on focus, after Checkout until Stripe's webhook writes Team. The rules are
+[Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md),
+[web setup](../../docs/protocol/cloud/desktop-app.md#web-setup) and
+[desktop billing](../../docs/protocol/cloud/desktop-app.md#billing). An invitation link carries its route through sign-in,
 accepts with the invited account's session, and distinguishes an acceptance
 that succeeded from a workspace read that failed afterwards. After
 acceptance succeeds, the invitation screen keeps that success while it opens
