@@ -1,3 +1,5 @@
+import { mockLink } from "@mokly/mokly";
+
 import {
   BrowserFrame,
   PhoneFrame,
@@ -16,6 +18,8 @@ import { useFramePlacement } from "./frame_placement.js";
  * picture of itself. A light-only frame carries the shell's fallback mark,
  * whose note this component's stylesheet shows. The wrapper carries the
  * compact flag, which this component's stylesheet draws as the small phone.
+ * A frame with a retry destination depicts a document that failed to load,
+ * whose Try again links to that destination.
  */
 export function DeviceFrameView({
   address,
@@ -24,6 +28,7 @@ export function DeviceFrameView({
   device,
   expandable,
   lightOnly,
+  retryDestination,
   small,
 }: DeviceFrameProps) {
   const placement = useFramePlacement(
@@ -35,8 +40,14 @@ export function DeviceFrameView({
       data-compact={small && device === "phone" ? "" : undefined}
     >
       <PreviewFrame
+        error={retryDestination !== undefined}
         fallback={lightOnly}
         placement={placement}
+        retry={
+          retryDestination === undefined
+            ? undefined
+            : { href: mockLink(retryDestination) }
+        }
         scheme={dark ? "dark" : "light"}
       >
         {device === "phone" ? (
