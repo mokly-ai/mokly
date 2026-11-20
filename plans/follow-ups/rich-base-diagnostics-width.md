@@ -7,8 +7,8 @@
   the problem outside the scope of its first review.
 - **Location:** `crates/mokly-cli/src/changes_output.rs:95` to line 121,
   `crates/mokly-cli/src/one_shot/phases.rs:93` to line 106,
-  `docs/protocol/mokly-terminal-output.md:51` to line 58,
-  `docs/protocol/mokly-terminal-errors.md:150` to line 157, and
+  `docs/protocol/mokly-terminal-output.md:51` to line 59,
+  `docs/protocol/mokly-terminal-errors.md:150` to line 163, and
   `crates/mokly-cli/tests/changes_build_tests.rs:91` to line 126.
 - **Reason:** The mismatch is older than the branch that found it. Its review
   found it outside the diff.
@@ -26,15 +26,15 @@
     `review.baseInstallScripts` and `--base-install-scripts`. After a private
     base install with lifecycle scripts off, it is the last detail line.
   - **Width rule:** the paragraph at
-    `docs/protocol/mokly-terminal-output.md:51` to line 58. It cuts each rich
-    line at the terminal width and exempts only recovery paths.
-  - **Hint item:** `plans/follow-ups/rich-scripts-hint-cut.md`. On 2026-10-29
-    the user chose its option D, which makes the rich hint line of an error
-    never cut.
+    `docs/protocol/mokly-terminal-output.md:51` to line 59. It cuts each rich
+    line at the terminal width and exempts only recovery paths and the rich
+    hint line of an error.
+  - **Rich hint line:** the last line of a rich error block, which holds the
+    recovery action of the error and is never cut.
 - **Background:**
   - The width rule cuts every rich line at the width of stdout, or at 80
     columns when the width is unknown. Only recovery paths, such as a backup
-    path, are never cut.
+    path, and the rich hint line of an error are never cut.
   - `docs/protocol/mokly-base-preparation.md` says that base diagnostics are
     detail lines that name the full base commit and the original terminal
     code.
@@ -44,13 +44,19 @@
     the line.
   - The text before each message takes 71 columns for `build-invalid`. The
     scripts hint line has 176 columns.
-  - The hint rule at `docs/protocol/mokly-terminal-errors.md:150` to line 157
-    and the user's choice of 2026-10-29 for the hint item keep the scripts
-    hint whole.
+  - The hint rule at `docs/protocol/mokly-terminal-errors.md:150` to line 163
+    gives the scripts hint to every base failure in every command, as one
+    complete sentence.
+  - On 2026-10-29 the user chose that rich output shows the whole scripts
+    hint in every command, while plain output stays the same. The rich hint
+    line of every error is never cut. In Serve and in a failed `build` or
+    `publish`, the scripts hint is that line, in place of the hint of the code
+    in the rich error table of `docs/protocol/mokly-terminal-errors.md`.
   - Other rich lines go through `bounded` in `crates/mokly-cli/src/output.rs`.
     One is the `! Changes unavailable · {reason}` line on stdout.
   - Rich Serve shows the same base diagnostics in an error block and in a
-    reason line. It cuts both.
+    reason line. It cuts the detail line of the block and the reason line.
+    The reason line leaves the scripts hint out.
   - The test
     `base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagnostic`
     runs a rich `build` with an unknown width. It expects the full message
@@ -58,8 +64,8 @@
   - `origin/main` prints the details in the same way, since the Rust rebuild
     of 2026-10-25.
 - **Problem:** Rich `build` and `publish` print each base diagnostic in full.
-  The width rule cuts every rich line except recovery paths. The contract and
-  the output disagree.
+  The width rule cuts every rich line except recovery paths and the rich hint
+  line of an error. The contract and the output disagree.
 - **Impact if no action:** The contract does not describe the rich output. A
   later change that follows the contract can cut each base diagnostic to
   about 8 columns of its message.
@@ -98,11 +104,11 @@
     `:187`, and `:189`, `build_output.rs:32`, `one_shot/phases.rs:87`,
     `changes_output.rs:85`, `publish_errors.rs:185`, and
     `serve_progress.rs:242`. Three protocol rules change:
-    `docs/protocol/mokly-terminal-output.md:51` to line 58,
-    `docs/protocol/mokly-terminal-errors.md:54` to line 56, and
+    `docs/protocol/mokly-terminal-output.md:51` to line 59,
+    `docs/protocol/mokly-terminal-errors.md:52` to line 54, and
     `docs/protocol/mokly-build-warnings.md:115` to line 117. F also keeps the
-    whole rich hint line of an error, which the hint item's D requires. So
-    the D work still does not wait for this answer. Effort: Medium.
+    whole rich hint line of an error, which the user's choice of 2026-10-29
+    requires. Effort: Medium.
 - **Shared assumptions:** Every option except D shares five assumptions.
   - Each base diagnostic is one detail line that names the full base commit
     and its code. Source: `docs/protocol/mokly-base-preparation.md:91` to
@@ -111,9 +117,8 @@
     `docs/protocol/mokly-terminal-errors.md:154` to line 156. Every option
     keeps it.
   - The scripts hint line is never cut. Source:
-    `docs/protocol/mokly-terminal-errors.md:153` to line 154 with its status
-    line, and the user's choice of 2026-10-29 for the hint item. Every
-    option keeps it.
+    `docs/protocol/mokly-terminal-errors.md:153` to line 154, and the user's
+    choice of 2026-10-29. Every option keeps it.
   - Plain output does not change. Source:
     `docs/protocol/mokly-terminal-output.md:25` to line 26. Every option
     keeps it.
@@ -136,20 +141,15 @@
 - **Previous examples:** Commit `dafc5933` of 2026-10-16, which reached `main`
   in `d935e6a6`, added the recovery-path exception after a review found cut
   recovery paths. The first review of the base install fixes branch found
-  that rich mode cuts the scripts hint. That problem is now the hint item.
+  that rich mode cut the scripts hint in Serve and in a failed `build` or
+  `publish`. The fix that the user chose on 2026-10-29 added the rich hint
+  line of an error to the exception of the width rule.
 - **Related:**
-  - [rich-scripts-hint-cut.md](./rich-scripts-hint-cut.md) has the same code
-    and the same width rule. Its option D, which the user chose on
-    2026-10-29, changes the same sentence of
-    `docs/protocol/mokly-terminal-output.md`. When this item has an answer
-    before that D work starts, one pull request applies both, so that the
-    exception changes once. The D work does not wait for this answer,
-    because the user chose D for a later small pull request. Every option
-    here keeps the scripts hint whole, as that D requires.
-  - [base-diagnostic-location-lines.md](./base-diagnostic-location-lines.md)
-    changes the same code, `changes_output::diagnostics`, so one branch can
-    do both. The rich width of its following lines follows the answer here.
+  [base-diagnostic-location-lines.md](./base-diagnostic-location-lines.md)
+  changes the same code, `changes_output::diagnostics`, so one branch can do
+  both. The rich width of its following lines follows the answer here.
 - **Recommendation:** A. It is the smallest option that makes the contract
   match the full diagnostics on `origin/main`. E best protects the codebase.
 - **Action:** ask the user, because A changes the width rule for each base
-  diagnostic, and the hint item's chosen D covers only the scripts hint.
+  diagnostic, and the user's choice of 2026-10-29 covers only the scripts
+  hint.

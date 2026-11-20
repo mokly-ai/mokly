@@ -11,6 +11,11 @@ use crate::cache_types::Storage;
 use crate::error::{Error, InternalError, Result};
 use crate::storage_tree::vanished;
 
+/// Maximum cleanup wait after the final stop signal.
+pub(crate) const STOP_GRACE: Duration = Duration::from_millis(100);
+/// Polling interval for running and stopped package managers.
+pub(crate) const POLL_INTERVAL: Duration = Duration::from_millis(5);
+
 /// A shell-free package-manager invocation.
 #[derive(Clone, Debug)]
 pub struct Command {
@@ -57,6 +62,8 @@ pub trait Child: Send + Sync {
     fn kill(&mut self) -> Result<()>;
     /// Reap the process and drain its pipes.
     fn finish(&mut self) -> Result<Output>;
+    /// Detach remaining workers without waiting after a stopped command.
+    fn abandon(&mut self);
 }
 
 /// Process creation boundary.
@@ -108,7 +115,7 @@ impl Commands for TimedCommands {
                     let _ = child.terminate();
                 }
                 Some(Signal::Kill) => {
-                    let _ = child.kill();
+                    break Err(Error::Cancelled);
                 }
                 None => {}
             }
@@ -138,19 +145,29 @@ impl Commands for TimedCommands {
                         Ok(())
                     };
                 }
-                Ok(false) => self.clock.pause(Duration::from_millis(5)),
+                Ok(false) => self.clock.pause(POLL_INTERVAL),
                 Err(error) => break Err(error),
             }
         };
-        if result.is_err() && !settled {
-            let _ = child.kill();
+        if let Err(error) = result {
+            if settled {
+                let _ = child.finish();
+            } else {
+                let _ = child.kill();
+                let stopped = self.clock.now();
+                loop {
+                    if matches!(child.poll(), Ok(true))
+                        || self.clock.now().saturating_sub(stopped) >= STOP_GRACE
+                    {
+                        break;
+                    }
+                    self.clock.pause(POLL_INTERVAL);
+                }
+                child.abandon();
+            }
+            return Err(if cancelled { Error::Cancelled } else { error });
         }
-        let output = child.finish();
-        if cancelled {
-            return Err(Error::Cancelled);
-        }
-        result?;
-        let output = output?;
+        let output = child.finish()?;
         if !output.success {
             return Err(Error::InstallFailed {
                 status: output.status,
@@ -167,3 +184,7 @@ mod commands_tests;
 #[cfg(test)]
 #[path = "_tests_/commands_size_tests.rs"]
 mod commands_size_tests;
+
+#[cfg(test)]
+#[path = "_tests_/commands_stop_tests.rs"]
+mod commands_stop_tests;

@@ -1,0 +1,13 @@
+{
+  "error": {
+    "code": 404,
+    "message": "No such object: catalogue-fixture/missing",
+    "errors": [
+      {
+        "message": "No such object: catalogue-fixture/missing",
+        "domain": "global",
+        "reason": "notFound"
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+.art-tile {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 4px;
+  color: var(--mk-color-paper-ink);
+  gap: 10px;
+}
+.art-screens {
+  background: var(--mk-color-art-sage);
+}
+.art-flow {
+  background: var(--mk-color-art-mint);
+}
+.art-changes {
+  background: var(--mk-color-art-olive);
+}
+.mini-window {
+  width: 145px;
+  height: 92px;
+  background: var(--mk-color-paper-surface);
+  padding: 15px;
+  border: 1px solid var(--mk-color-paper-line);
+  border-radius: 3px;
+  transform: rotate(-5deg);
+}
+.mini-window span,
+.mini-phone span {
+  display: block;
+  width: 80%;
+  height: 5px;
+  background: var(--mk-color-paper-muted);
+  margin: 6px 0;
+}
+.mini-window .mini-heading {
+  width: 50%;
+  background: var(--mk-color-accent);
+  opacity: 0.65;
+}
+.mini-window b,
+.mini-phone b {
+  display: block;
+  width: 35px;
+  height: 12px;
+  background: var(--mk-color-accent);
+  border-radius: 2px;
+}
+.mini-phone {
+  width: 38px;
+  height: 85px;
+  border: 2px solid var(--mk-color-paper-line-strong);
+  border-radius: 8px;
+  transform: rotate(8deg);
+  padding: 6px 4px;
+  margin-top: 30px;
+  background: var(--mk-color-paper-surface);
+}
+.mini-phone b {
+  width: 100%;
+  height: 18px;
+  opacity: 0.3;
+}
+.mini-phone i {
+  display: block;
+  width: 10px;
+  height: 2px;
+  margin: auto;
+  background: var(--mk-color-paper-line-strong);
+}
+.mini-flow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 7px;
+}
+.mini-flow > span {
+  padding: 20px 8px;
+  border: 1px solid var(--mk-color-paper-line);
+  border-radius: 3px;
+  background: var(--mk-color-paper-surface);
+}
+.mini-flow > span:nth-of-type(2) {
+  transform: translateY(-15px);
+  background: var(--mk-color-paper-muted);
+}
+.mini-flow i {
+  font-style: normal;
+  color: var(--mk-color-paper-ink-muted);
+}
+.mini-comparison {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 8px;
+}
+.mini-comparison > div {
+  width: 80px;
+  height: 100px;
+  padding: 12px;
+  border: 1px solid var(--mk-color-paper-line);
+  border-radius: 3px;
+  background: var(--mk-color-paper-surface);
+  position: relative;
+}
+.mini-comparison i {
+  display: block;
+  height: 40px;
+  margin-top: 8px;
+  background: var(--mk-color-paper-muted);
+}
+.mini-comparison > div:last-child i {
+  background: var(--mk-color-accent);
+  opacity: 0.2;
+}
+.mini-comparison strong {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  border-radius: 50%;
+  background: var(--mk-color-accent);
+  color: var(--mk-color-on-accent);
+  padding: 2px 5px;
+}

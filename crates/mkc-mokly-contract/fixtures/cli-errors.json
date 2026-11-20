@@ -1,0 +1,15 @@
+{
+  "moklyVersion": "0.0.0",
+  "scenarios": [
+    {
+      "scenario": "uncommitted-file",
+      "code": "git-uncommitted",
+      "exitCode": 1
+    },
+    {
+      "scenario": "refused-upload",
+      "code": "upload-failed",
+      "exitCode": 1
+    }
+  ]
+}

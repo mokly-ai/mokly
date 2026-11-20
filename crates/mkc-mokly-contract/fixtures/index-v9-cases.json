@@ -1,0 +1,2507 @@
+{
+  "schemaVersion": 1,
+  "baseDocument": {
+    "base": "main",
+    "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "changesStatus": "ready",
+    "comparisonUrl": "mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/",
+    "components": [
+      {
+        "changes": {
+          "included": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "comparison": {
+          "eligible": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "controls": {
+          "label": {
+            "kind": "text",
+            "label": "Label"
+          }
+        },
+        "detailId": "7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260",
+        "details": {
+          "description": "The primary action.",
+          "relatedDocs": [],
+          "sourcePath": "packages/ui/src/action/index.mockup.tsx"
+        },
+        "kind": "component",
+        "path": "components/action",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "title": "Label",
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Go"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Action",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "56e815485c7d935a225b11e9d6f60e199bd9d3b5048cf315b58d1c62f7e1e7c0",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      {
+        "changes": {
+          "included": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "comparison": {
+          "status": "unavailable"
+        },
+        "controls": {
+          "label": {
+            "kind": "text",
+            "label": "Label"
+          }
+        },
+        "detailId": "43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f",
+        "details": {
+          "description": "The primary action.",
+          "relatedDocs": [],
+          "sourcePath": "packages/ui/src/action/index.mockup.tsx"
+        },
+        "kind": "component",
+        "path": "components/action/default",
+        "propSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "title": "Label",
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        },
+        "props": {
+          "label": [
+            "string",
+            "Continue"
+          ]
+        },
+        "slots": [],
+        "suppliedSlots": [],
+        "tags": [],
+        "title": "Default",
+        "variantOf": "components/action",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "19ddf7b8246b2b9114412ffb33fb768e3e67be42d06d4298ddb3bb712d5bec14",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee",
+            "viewport": "desktop"
+          }
+        ]
+      }
+    ],
+    "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+    "documents": [
+      {
+        "changes": {
+          "included": true,
+          "kind": "added",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "detailId": "390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e",
+        "details": {
+          "description": "",
+          "relatedDocs": [],
+          "sourcePath": "specs/product/README.md"
+        },
+        "documentKeys": [
+          {
+            "colorScheme": "light",
+            "documentKey": "21fff8a8d83300fe1cbf68c45310f455559402348b964236610d53d81f59d2d3"
+          }
+        ],
+        "kind": "document",
+        "path": "product",
+        "tags": [],
+        "title": "Product overview"
+      }
+    ],
+    "identity": {
+      "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+      "title": "Mokly"
+    },
+    "pages": [
+      {
+        "changes": {
+          "included": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "detailId": "00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813",
+        "details": {
+          "description": "The printable guide.",
+          "relatedDocs": [],
+          "sourcePath": "specs/guide.mockup.tsx"
+        },
+        "documentKey": "f85711f64c9215b6c902667ef6625c787d84a7334d826c219f4ef16dd716f219",
+        "kind": "page",
+        "path": "guide",
+        "tags": [],
+        "title": "Guide"
+      }
+    ],
+    "removedEntries": [
+      {
+        "entry": {
+          "changes": {
+            "included": true,
+            "kind": "removed",
+            "status": "ready"
+          },
+          "detailId": "4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1",
+          "details": {
+            "description": "A page that no longer exists.",
+            "relatedDocs": [],
+            "sourcePath": "specs/product/removed-page.mockup.tsx"
+          },
+          "documentKey": "4aac84d78b2cfbb2655a9714f3c17a3a0eaae8691e4e0ce58bdf57468dc9e4af",
+          "kind": "page",
+          "path": "product/removed-page",
+          "tags": [],
+          "title": "Removed page"
+        },
+        "folderTitles": [
+          "Product overview"
+        ],
+        "preview": {
+          "kind": "page"
+        },
+        "snapshotId": "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c"
+      },
+      {
+        "entry": {
+          "changes": {
+            "included": true,
+            "kind": "removed",
+            "status": "ready"
+          },
+          "colorSchemes": [
+            "light"
+          ],
+          "controls": {},
+          "detailId": "b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b",
+          "details": {
+            "description": "A screen that no longer exists.",
+            "relatedDocs": [],
+            "sourcePath": "specs/product/browse/home.mockup.tsx"
+          },
+          "kind": "screen",
+          "path": "product/browse/home/retired",
+          "propSchema": {
+            "additionalProperties": false,
+            "type": "object"
+          },
+          "props": {},
+          "tags": [],
+          "title": "Removed screen",
+          "useCasePaths": [],
+          "variantOf": "product/browse/home",
+          "views": [
+            {
+              "colorScheme": "light",
+              "comparison": {
+                "eligible": false,
+                "kind": "removed",
+                "status": "ready"
+              },
+              "documentKey": "6cc4f3b9cb9b11620ea02ab6cd2bc2893afe1b3e29aa8b113c0629e699a0fc28",
+              "viewport": "mobile"
+            },
+            {
+              "colorScheme": "light",
+              "comparison": {
+                "eligible": false,
+                "kind": "removed",
+                "status": "ready"
+              },
+              "documentKey": "24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9",
+              "viewport": "desktop"
+            }
+          ]
+        },
+        "folderTitles": [
+          "Product overview",
+          "Browse"
+        ],
+        "parentTitle": "Home",
+        "preview": {
+          "kind": "screen"
+        },
+        "snapshotId": "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e"
+      }
+    ],
+    "revision": 0,
+    "schemaVersion": 9,
+    "screens": [
+      {
+        "changes": {
+          "included": true,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "controls": {},
+        "detailId": "848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80",
+        "details": {
+          "description": "Details for one item.",
+          "relatedDocs": [],
+          "sourcePath": "specs/product/browse/details.mockup.tsx"
+        },
+        "kind": "screen",
+        "path": "product/browse/details",
+        "previousPath": "product/details",
+        "propSchema": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "props": {},
+        "tags": [],
+        "title": "Details",
+        "useCasePaths": [
+          "tour"
+        ],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "a282a0c2b046764132df13d7f13aa58a0b4437941a954b5c1701469790ec3702",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      {
+        "changes": {
+          "included": true,
+          "kind": "changed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "controls": {},
+        "detailId": "025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89",
+        "details": {
+          "description": "The landing screen.",
+          "relatedDocs": [],
+          "sourcePath": "specs/product/browse/home.mockup.tsx"
+        },
+        "kind": "screen",
+        "path": "product/browse/home",
+        "propSchema": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "props": {},
+        "tags": [
+          "landing"
+        ],
+        "title": "Home",
+        "useCasePaths": [
+          "tour"
+        ],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "changed",
+              "status": "ready"
+            },
+            "documentKey": "9ebd7dcb48a3c8d5aec1c62409102c48fd3661f5a50b2a7bd12771bde7fe320b",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": true,
+              "kind": "changed",
+              "status": "ready"
+            },
+            "documentKey": "e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83",
+            "viewport": "desktop"
+          }
+        ]
+      },
+      {
+        "changes": {
+          "included": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "controls": {},
+        "detailId": "62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16",
+        "details": {
+          "description": "The landing screen with no items.",
+          "relatedDocs": [],
+          "sourcePath": "specs/product/browse/home.mockup.tsx"
+        },
+        "kind": "screen",
+        "path": "product/browse/home/empty",
+        "propSchema": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "props": {},
+        "tags": [
+          "landing"
+        ],
+        "title": "Empty",
+        "useCasePaths": [],
+        "variantOf": "product/browse/home",
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "d9798c8389f200a0f04c444de0947c699ade546a210ad491e9ebf4b4c8009e0d",
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "unmodified",
+              "status": "ready"
+            },
+            "documentKey": "5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0",
+            "viewport": "desktop"
+          }
+        ]
+      }
+    ],
+    "tree": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "kind": "entry",
+                "path": "components/action/default"
+              }
+            ],
+            "kind": "entry",
+            "path": "components/action"
+          }
+        ],
+        "kind": "folder",
+        "path": "components",
+        "title": "Components"
+      },
+      {
+        "children": [
+          {
+            "kind": "entry",
+            "path": "product"
+          },
+          {
+            "children": [
+              {
+                "kind": "entry",
+                "path": "product/browse/details"
+              },
+              {
+                "children": [
+                  {
+                    "kind": "entry",
+                    "path": "product/browse/home/empty"
+                  }
+                ],
+                "kind": "entry",
+                "path": "product/browse/home"
+              }
+            ],
+            "kind": "folder",
+            "path": "product/browse",
+            "title": "Browse"
+          }
+        ],
+        "index": "product",
+        "kind": "folder",
+        "path": "product",
+        "title": "Product overview"
+      },
+      {
+        "kind": "entry",
+        "path": "guide"
+      },
+      {
+        "kind": "entry",
+        "path": "tour"
+      }
+    ],
+    "useCases": [
+      {
+        "changes": {
+          "included": false,
+          "kind": "unmodified",
+          "status": "ready"
+        },
+        "detailId": "bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e",
+        "details": {
+          "description": "A walk through the product.",
+          "relatedDocs": [],
+          "sourcePath": "specs/tour.mockup.tsx"
+        },
+        "kind": "use-case",
+        "path": "tour",
+        "steps": [
+          {
+            "screenPath": "product/browse/home",
+            "title": "Start"
+          },
+          {
+            "screenPath": "product/browse/details"
+          }
+        ],
+        "tags": [],
+        "title": "Tour"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "baseline-counts",
+      "patch": [],
+      "counts": {
+        "changed": 2,
+        "added": 1,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "214914061ea54d4246fc976087128ccb2bda650a0c3d36ea14e750f99d259407"
+    },
+    {
+      "name": "every-current-kind-and-variant-counts-once",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": true
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": true
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": true
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": true
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "added",
+            "included": true
+          }
+        }
+      ],
+      "counts": {
+        "changed": 6,
+        "added": 2,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "bfe0c3f3d42b79ba8c0668d003d085c4745cd4174ec795e627df20aa06e68b48"
+    },
+    {
+      "name": "added-kind",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "added",
+            "included": true
+          }
+        }
+      ],
+      "counts": {
+        "changed": 1,
+        "added": 2,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "342e4377834bbe9fc7e041afd4908387cbd2cb0ab51e87d6355f724d8f5c5e81"
+    },
+    {
+      "name": "changed-kind",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": true
+          }
+        }
+      ],
+      "counts": {
+        "changed": 3,
+        "added": 0,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "d4c09d974ba7bf8a1a7f4621d1a7cdc8d65db32b2959f9ca114fb4b27a3d5d82"
+    },
+    {
+      "name": "unmodified-included-counts-as-changed",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "unmodified",
+            "included": true
+          }
+        }
+      ],
+      "counts": {
+        "changed": 2,
+        "added": 1,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "6a674650e65b0021177ac003f3a49753b659fb6399ce15a3c0e9a9735936e9f9"
+    },
+    {
+      "name": "moved-is-a-subset",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/previousPath",
+          "value": "product/old-home"
+        }
+      ],
+      "counts": {
+        "changed": 2,
+        "added": 1,
+        "removed": 2,
+        "moved": 2
+      },
+      "documentSha256": "177dac734c7c0f45153402627704fbd8a64f4b1adc652c495f0781e6baae18c7"
+    },
+    {
+      "name": "excluded-unmodified-does-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "status": "ready",
+            "kind": "unmodified",
+            "included": false
+          }
+        }
+      ],
+      "counts": {
+        "changed": 1,
+        "added": 1,
+        "removed": 2,
+        "moved": 0
+      },
+      "documentSha256": "566e98f59138110f202deac5fdd2cab8f41964a9e380ede778d39c5f1f3cf279"
+    },
+    {
+      "name": "excluded-ready-current-records-do-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "included": false,
+            "kind": "changed",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "included": false,
+            "kind": "added",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 2,
+        "moved": 0
+      },
+      "documentSha256": "6f332f1ab8d9330ad840b37e19cc48cb37d4be94b3604cef3924c4b63a3002a2"
+    },
+    {
+      "name": "preparing-records-do-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "remove",
+          "path": "/baseCommit"
+        },
+        {
+          "op": "set",
+          "path": "/comparisonUrl",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/changesStatus",
+          "value": "preparing"
+        },
+        {
+          "op": "set",
+          "path": "/removedEntries",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/0/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/1/comparison",
+          "value": {
+            "status": "preparing"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 0,
+        "moved": 0
+      },
+      "documentSha256": "faad576a28228238df6e5cc2f56165ef4a3af3be855f235bb687040d78fc5b5e"
+    },
+    {
+      "name": "pending-records-do-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "remove",
+          "path": "/baseCommit"
+        },
+        {
+          "op": "set",
+          "path": "/comparisonUrl",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/changesStatus",
+          "value": "pending"
+        },
+        {
+          "op": "set",
+          "path": "/removedEntries",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/0/comparison",
+          "value": {
+            "status": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/1/comparison",
+          "value": {
+            "status": "pending"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 0,
+        "moved": 0
+      },
+      "documentSha256": "69f6b115b4f67d92eb302ba20e606c86d58f4d2772419f6299d627ecc09d17e3"
+    },
+    {
+      "name": "unavailable-records-do-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "remove",
+          "path": "/baseCommit"
+        },
+        {
+          "op": "set",
+          "path": "/comparisonUrl",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/changesStatus",
+          "value": "unavailable"
+        },
+        {
+          "op": "set",
+          "path": "/removedEntries",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/0/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/1/comparison",
+          "value": {
+            "status": "unavailable"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 0,
+        "moved": 0
+      },
+      "documentSha256": "e1441685de09013aac4782e81c0c44eda8cbc4f07a04fa06879f2f7f99152f60"
+    },
+    {
+      "name": "disabled-records-do-not-count",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "remove",
+          "path": "/baseCommit"
+        },
+        {
+          "op": "set",
+          "path": "/comparisonUrl",
+          "value": null
+        },
+        {
+          "op": "set",
+          "path": "/changesStatus",
+          "value": "disabled"
+        },
+        {
+          "op": "set",
+          "path": "/removedEntries",
+          "value": []
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/views/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/views/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/views/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/views/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/0/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/views/1/comparison",
+          "value": {
+            "status": "disabled"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 0,
+        "moved": 0
+      },
+      "documentSha256": "a3058cabc10c8fe9eecacc67a1348f69cfd00167141972d0394689bc321d641d"
+    },
+    {
+      "name": "removed-records-count-once",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/0/previousPath"
+        },
+        {
+          "op": "set",
+          "path": "/screens/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "included": false,
+            "kind": "changed",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/pages/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/documents/0/changes",
+          "value": {
+            "included": false,
+            "kind": "added",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/0/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        },
+        {
+          "op": "set",
+          "path": "/components/1/changes",
+          "value": {
+            "included": false,
+            "kind": "unmodified",
+            "status": "ready"
+          }
+        }
+      ],
+      "counts": {
+        "changed": 0,
+        "added": 0,
+        "removed": 2,
+        "moved": 0
+      },
+      "documentSha256": "6f332f1ab8d9330ad840b37e19cc48cb37d4be94b3604cef3924c4b63a3002a2"
+    },
+    {
+      "name": "ascii-path-case-is-preserved",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "product/browse/Home"
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/variantOf",
+          "value": "product/browse/Home"
+        },
+        {
+          "op": "set",
+          "path": "/screens/2/path",
+          "value": "product/browse/Home/empty"
+        },
+        {
+          "op": "set",
+          "path": "/tree/1/children/1/children/1/path",
+          "value": "product/browse/Home"
+        },
+        {
+          "op": "set",
+          "path": "/tree/1/children/1/children/1/children/0/path",
+          "value": "product/browse/Home/empty"
+        },
+        {
+          "op": "set",
+          "path": "/useCases/0/steps/0/screenPath",
+          "value": "product/browse/Home"
+        }
+      ],
+      "counts": {
+        "changed": 2,
+        "added": 1,
+        "removed": 2,
+        "moved": 1
+      },
+      "documentSha256": "eea34fa29bc10c86f25cd8bc6eeb9bffb4e1fffc07676c44163bdd3cabab4e9f"
+    },
+    {
+      "name": "version-previous",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": 8
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "69ce3b0e04bc2931e2e9b9f06f38daf7a720b75c1348c8963ac03762827d9ca8"
+    },
+    {
+      "name": "version-future",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": 10
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "822dc2e5b25a540a47489be2fdf98cdc995290515d18bf1524aadb421b542604"
+    },
+    {
+      "name": "version-string",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": "9"
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "96d860a14d16164a1197f09361e85b535ece18dd67e6ac0c6a37df444161fe95"
+    },
+    {
+      "name": "version-null",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": null
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "d2376c288a73c98e3a4d8a5f81e20b6e5f1bdaff4a7d38d535037e4aa80017e3"
+    },
+    {
+      "name": "version-fraction",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": 9.5
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "6f4369788498273666b740265860c4e2a9e6b569d7717067562b96246543c230"
+    },
+    {
+      "name": "version-boolean",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": true
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "f3447b6d87572b89113ae0ab29ac043f6c4ba02a9294e5b545841d35126c9726"
+    },
+    {
+      "name": "version-object",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": {}
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "dff037af94f1cd82c6e5766d827b04d9a72b59a2356feaab2bd94f95bc2534c0"
+    },
+    {
+      "name": "version-array",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": []
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "bbb9b901f519d4b47f1c6c09004b19ea818fa832962fbb340c6508299978e886"
+    },
+    {
+      "name": "version-gate-precedes-read-fields",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/schemaVersion",
+          "value": 8
+        },
+        {
+          "op": "remove",
+          "path": "/screens"
+        }
+      ],
+      "cloudRejection": "unsupported-version",
+      "viewerValid": false,
+      "documentSha256": "f97fb046966eb8173ab961a12bb0bb6f2d633f2946612f83e88ff126942a868c"
+    },
+    {
+      "name": "missing-version",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/schemaVersion"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": false,
+      "documentSha256": "4c1bdcd9c78aa270161edeb95a2e55ade22972d80c40451da8d6cd88c7e630c1"
+    },
+    {
+      "name": "array-root",
+      "patch": [
+        {
+          "op": "set",
+          "path": "",
+          "value": []
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": false,
+      "documentSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "null-root",
+      "patch": [
+        {
+          "op": "set",
+          "path": "",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": false,
+      "documentSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "name": "wrong-base",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/base",
+          "value": false
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "a06f065027aead23c01202d2b9b486ce1778ff508b6c7bd29688b0666d934c46"
+    },
+    {
+      "name": "wrong-baseCommit",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/baseCommit",
+          "value": 3
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "2333736f6cb823582dd6323ed929cf2d6e59783d8104b703d1b8a1a60cf00448"
+    },
+    {
+      "name": "wrong-changesStatus",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/changesStatus",
+          "value": "unknown"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "341d3264d7a23b10b0b9d1dc2c4f31882d91fecb0c14a775171a9395608488e6"
+    },
+    {
+      "name": "wrong-comparisonUrl",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/comparisonUrl",
+          "value": true
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7430ea7cb3f78e3259a583c0453d7aa7dded0883dda5e9f63328dfdd4479c3c7"
+    },
+    {
+      "name": "missing-changesStatus",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/changesStatus"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "a424fbf7cb4c263278c779aad8c1032a2ae8ff2c05603b9eb8c0baeac3e6ca3c"
+    },
+    {
+      "name": "missing-comparisonUrl",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/comparisonUrl"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "ebcad91a18f4fed25f08a0f94c9c3b0722cf14eee3566b7c25e59bcbc81c0004"
+    },
+    {
+      "name": "malformed-screens-read-field",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/0/title",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "527c20a478a00a9685a094f65fb7c7b32ad93aec342c25015712fc051aaa79a2"
+    },
+    {
+      "name": "malformed-pages-read-field",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/pages/0/title",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "6f844f119c28580f2b543e3cd7ddfb0c0df01ccecedfba70520b1604ebc6426c"
+    },
+    {
+      "name": "malformed-documents-read-field",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/documents/0/title",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "fdf5214d55bc684ac15dbad095bb7f97711275e97a6cc2fe125a6e5c1f3068b1"
+    },
+    {
+      "name": "malformed-useCases-read-field",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/useCases/0/title",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "ab49187a4f6133627033d6c90601caeeb32e268f2d2197ed5a65455470a4266c"
+    },
+    {
+      "name": "malformed-components-read-field",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/components/0/title",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "bce513d07535355ba3a30b973832b1cf1b20989146eff19136d135efc8fba69e"
+    },
+    {
+      "name": "missing-current-path",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/1/path"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "0cae4d006383fce397420326df09100e1b63df29dc971eff2695da698f28849b"
+    },
+    {
+      "name": "non-string-current-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": 9
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "0cbbdbc1326ff2bba37bbf1e67846a3d1d149cb6d6123a86e3f5b7fdf4e252af"
+    },
+    {
+      "name": "empty-current-title",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/title",
+          "value": ""
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "5e8a15b49d8d34154f49ff826ab7c7ddb112ca9cbf911e853a782d59918cb790"
+    },
+    {
+      "name": "missing-current-changes",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/1/changes"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "317b371c4952e8dd1e0d697dc998c6835748cd8fb4855962b80cd2fd2f4d6454"
+    },
+    {
+      "name": "malformed-previous-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/0/previousPath",
+          "value": "../home"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "ce82266a75fe2c8f5626ca6226cf4d0c4a8403c338107fd5a1c8e61461477e2d"
+    },
+    {
+      "name": "path-empty",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": ""
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "313b863be7ef1963ec337413442754d30272da7fece36b9f1376b8dd0846e55e"
+    },
+    {
+      "name": "path-leading-slash",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "/screen"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7c2daae142b7f11fa154f5db2e81946e85cf03fc68621ca330bab4ab44e43e05"
+    },
+    {
+      "name": "path-trailing-slash",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen/"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "28a947dd5331ab9c235d8c4405b98c51611dec3bdc595831cbdc4576e036d000"
+    },
+    {
+      "name": "path-empty-segment",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen//state"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "722e77e607f5fb9132812fa98d614032bc72707e41f66a40bf2757a5c150ec42"
+    },
+    {
+      "name": "path-dot",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen/../state"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "cbbabe9b4b45763f835d698b5a913fa8852b820853bb0eff83f123545b685cc6"
+    },
+    {
+      "name": "path-space",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "bad path"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "d28e8ba7fbffc82b95fe11721e80b7cedbf1fd105f4872df322e437c2ce99690"
+    },
+    {
+      "name": "path-escape",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen%2fstate"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "2e98d82d53c4d70efd07a5603823e5a638d3432143759b02be234e84fdbac8ef"
+    },
+    {
+      "name": "path-backslash",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen\\state"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "c7af6e36969cd63d56c123b04b1d82b89b30c446aa23047db61d9529925ac1a6"
+    },
+    {
+      "name": "path-colon",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen:state"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "cacc10b9aec92c03e08072572365500375747c86d01f5af7ded907e35157f971"
+    },
+    {
+      "name": "path-unicode",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "scréen"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7ed2521bacc0ec552b3918b133c5fd319a9b76ad19016c537e16a5ec72ebae0e"
+    },
+    {
+      "name": "path-device",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "screen/AUX"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "2b291381860b5a291a36ea0c4711255b427417e05289f8bd7f090f418ebdf769"
+    },
+    {
+      "name": "path-reserved-root",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "MOKLY-GENERATED/screen"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "5d3af903af8df1dab0e05b278d3f6f900f014ee94636d85e977df6b02e37306a"
+    },
+    {
+      "name": "duplicate-current-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "product/browse/details"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "91f6c2e8df343af781a46b889c55cd7cebf1f277d990f5dcab177de39f896745"
+    },
+    {
+      "name": "duplicate-current-path-ascii-case",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/path",
+          "value": "PRODUCT/BROWSE/DETAILS"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "755c350a0c4523f45e5c6145cebcf6475b87e8bea63ad8b9a839901525c2a83f"
+    },
+    {
+      "name": "duplicate-current-and-removed-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/removedEntries/0/entry/path",
+          "value": "PRODUCT/BROWSE/HOME"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "825ce76816490501b8b00645751b12a3375ce4a5173f27b08095c6736d4fbe33"
+    },
+    {
+      "name": "duplicate-removed-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/removedEntries/0/entry/path",
+          "value": "PRODUCT/BROWSE/HOME/RETIRED"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "b86daec1ded189fd1617d23666477461c88cf332bada5c78acc5bb25203194a8"
+    },
+    {
+      "name": "current-record-has-removed-kind",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "removed",
+            "included": true
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "e10ab7f0e14f8892c6420d9916fe38d34fa672319648759656611c1c9ff418a2"
+    },
+    {
+      "name": "changes-null",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "859528012ba9eb535f6b521ae957c99cfbaf2fdd33f6366344e89a6b75d64261"
+    },
+    {
+      "name": "changes-status",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "unknown"
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "c6f9c39744a545f9daa0aac8fbca574c8b896a25309c1bc5de2fa2ccfb39ad97"
+    },
+    {
+      "name": "changes-missing-kind",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "included": true
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "2da495d155e42deff9d41309c22b4015ac4a5d431732a987b1856f517b0f22f3"
+    },
+    {
+      "name": "changes-bad-kind",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "unknown",
+            "included": true
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "fefe98a882d629503dbf90918602cb5751483be14087727126824d1e69d67f33"
+    },
+    {
+      "name": "changes-missing-included",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed"
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "cc8a76994b111f6ed10e47052b943348c122ce7d162b7a2a12652d9b5cecd64b"
+    },
+    {
+      "name": "changes-bad-included",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/changes",
+          "value": {
+            "status": "ready",
+            "kind": "changed",
+            "included": 1
+          }
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7b396db08e282b0ba4aae9abe1d5b2bb0fdf83fdb012cfb2ba89532ed15357cb"
+    },
+    {
+      "name": "malformed-viewport",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/viewport",
+          "value": "tablet"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "4f991162d216b9f367783562b12e57357f432e029a2f649759de870a0a2edad6"
+    },
+    {
+      "name": "malformed-color-scheme",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/screens/1/views/0/colorScheme",
+          "value": "sepia"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "ddf44fe25e12669047a367168203981bfbeefb44189bf6089e18d643d89b45d2"
+    },
+    {
+      "name": "malformed-removed-title",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/removedEntries/0/entry/title",
+          "value": ""
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "0bddaca26b7771f9acc8510baccdaea2de50bdcf7dbe6dccc53e1eea82f39838"
+    },
+    {
+      "name": "malformed-removed-path",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/removedEntries/0/entry/path",
+          "value": ".."
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7e1d69c96070ff9fa0cf4bad933c544898e8a21272e64c0f72f71ce2f39b93fb"
+    },
+    {
+      "name": "malformed-removed-changes",
+      "patch": [
+        {
+          "op": "set",
+          "path": "/removedEntries/0/entry/changes",
+          "value": null
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "b252f503889e35ea2b9fc0c5cdb2b6a0e1001fe3e9079a1577cc52b701a3abdb"
+    },
+    {
+      "name": "missing-view-axis",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/screens/1/views/0/viewport"
+        }
+      ],
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "3d6ceda191d314f44ad4c73d4d4a7b522084af2abc89ff4d6f931d88399d80ee"
+    },
+    {
+      "name": "duplicate-root-key",
+      "rawDocument": "{\"base\":\"main\",\"baseCommit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"changesStatus\":\"ready\",\"comparisonUrl\":\"mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/\",\"components\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Go\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56e815485c7d935a225b11e9d6f60e199bd9d3b5048cf315b58d1c62f7e1e7c0\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"status\":\"unavailable\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action/default\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Continue\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Default\",\"variantOf\":\"components/action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"19ddf7b8246b2b9114412ffb33fb768e3e67be42d06d4298ddb3bb712d5bec14\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee\",\"viewport\":\"desktop\"}]}],\"deploymentId\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"documents\":[{\"changes\":{\"included\":true,\"kind\":\"added\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"detailId\":\"390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e\",\"details\":{\"description\":\"\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/README.md\"},\"documentKeys\":[{\"colorScheme\":\"light\",\"documentKey\":\"21fff8a8d83300fe1cbf68c45310f455559402348b964236610d53d81f59d2d3\"}],\"kind\":\"document\",\"path\":\"product\",\"tags\":[],\"title\":\"Product overview\"}],\"identity\":{\"id\":\"05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484\",\"title\":\"Mokly\"},\"pages\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813\",\"details\":{\"description\":\"The printable guide.\",\"relatedDocs\":[],\"sourcePath\":\"specs/guide.mockup.tsx\"},\"documentKey\":\"f85711f64c9215b6c902667ef6625c787d84a7334d826c219f4ef16dd716f219\",\"kind\":\"page\",\"path\":\"guide\",\"tags\":[],\"title\":\"Guide\"}],\"removedEntries\":[{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"detailId\":\"4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1\",\"details\":{\"description\":\"A page that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/removed-page.mockup.tsx\"},\"documentKey\":\"4aac84d78b2cfbb2655a9714f3c17a3a0eaae8691e4e0ce58bdf57468dc9e4af\",\"kind\":\"page\",\"path\":\"product/removed-page\",\"tags\":[],\"title\":\"Removed page\"},\"folderTitles\":[\"Product overview\"],\"preview\":{\"kind\":\"page\"},\"snapshotId\":\"ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c\"},{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b\",\"details\":{\"description\":\"A screen that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/retired\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Removed screen\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"6cc4f3b9cb9b11620ea02ab6cd2bc2893afe1b3e29aa8b113c0629e699a0fc28\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9\",\"viewport\":\"desktop\"}]},\"folderTitles\":[\"Product overview\",\"Browse\"],\"parentTitle\":\"Home\",\"preview\":{\"kind\":\"screen\"},\"snapshotId\":\"9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e\"}],\"revision\":0,\"schemaVersion\":9,\"schemaVersion\":9,\"screens\":[{\"changes\":{\"included\":true,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80\",\"details\":{\"description\":\"Details for one item.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/details.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/details\",\"previousPath\":\"product/details\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Details\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"a282a0c2b046764132df13d7f13aa58a0b4437941a954b5c1701469790ec3702\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89\",\"details\":{\"description\":\"The landing screen.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Home\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"9ebd7dcb48a3c8d5aec1c62409102c48fd3661f5a50b2a7bd12771bde7fe320b\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16\",\"details\":{\"description\":\"The landing screen with no items.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/empty\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Empty\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"d9798c8389f200a0f04c444de0947c699ade546a210ad491e9ebf4b4c8009e0d\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0\",\"viewport\":\"desktop\"}]}],\"tree\":[{\"children\":[{\"children\":[{\"kind\":\"entry\",\"path\":\"components/action/default\"}],\"kind\":\"entry\",\"path\":\"components/action\"}],\"kind\":\"folder\",\"path\":\"components\",\"title\":\"Components\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/details\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/home/empty\"}],\"kind\":\"entry\",\"path\":\"product/browse/home\"}],\"kind\":\"folder\",\"path\":\"product/browse\",\"title\":\"Browse\"}],\"index\":\"product\",\"kind\":\"folder\",\"path\":\"product\",\"title\":\"Product overview\"},{\"kind\":\"entry\",\"path\":\"guide\"},{\"kind\":\"entry\",\"path\":\"tour\"}],\"useCases\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e\",\"details\":{\"description\":\"A walk through the product.\",\"relatedDocs\":[],\"sourcePath\":\"specs/tour.mockup.tsx\"},\"kind\":\"use-case\",\"path\":\"tour\",\"steps\":[{\"screenPath\":\"product/browse/home\",\"title\":\"Start\"},{\"screenPath\":\"product/browse/details\"}],\"tags\":[],\"title\":\"Tour\"}]}",
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "b5dd2d1379f8fcf8e9b044927f8f34daa774eff5a3505c793d661be560dc8ee0"
+    },
+    {
+      "name": "duplicate-nested-key",
+      "rawDocument": "{\"base\":\"main\",\"baseCommit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"changesStatus\":\"ready\",\"comparisonUrl\":\"mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/\",\"components\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Go\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56e815485c7d935a225b11e9d6f60e199bd9d3b5048cf315b58d1c62f7e1e7c0\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"status\":\"unavailable\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action/default\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Continue\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Default\",\"variantOf\":\"components/action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"19ddf7b8246b2b9114412ffb33fb768e3e67be42d06d4298ddb3bb712d5bec14\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee\",\"viewport\":\"desktop\"}]}],\"deploymentId\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"documents\":[{\"changes\":{\"included\":true,\"kind\":\"added\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"detailId\":\"390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e\",\"details\":{\"description\":\"\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/README.md\"},\"documentKeys\":[{\"colorScheme\":\"light\",\"documentKey\":\"21fff8a8d83300fe1cbf68c45310f455559402348b964236610d53d81f59d2d3\"}],\"kind\":\"document\",\"path\":\"product\",\"tags\":[],\"title\":\"Product overview\"}],\"identity\":{\"id\":\"05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484\",\"title\":\"Mokly\"},\"pages\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813\",\"details\":{\"description\":\"The printable guide.\",\"relatedDocs\":[],\"sourcePath\":\"specs/guide.mockup.tsx\"},\"documentKey\":\"f85711f64c9215b6c902667ef6625c787d84a7334d826c219f4ef16dd716f219\",\"kind\":\"page\",\"path\":\"guide\",\"tags\":[],\"title\":\"Guide\"}],\"removedEntries\":[{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"detailId\":\"4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1\",\"details\":{\"description\":\"A page that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/removed-page.mockup.tsx\"},\"documentKey\":\"4aac84d78b2cfbb2655a9714f3c17a3a0eaae8691e4e0ce58bdf57468dc9e4af\",\"kind\":\"page\",\"path\":\"product/removed-page\",\"tags\":[],\"title\":\"Removed page\"},\"folderTitles\":[\"Product overview\"],\"preview\":{\"kind\":\"page\"},\"snapshotId\":\"ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c\"},{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b\",\"details\":{\"description\":\"A screen that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/retired\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Removed screen\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"6cc4f3b9cb9b11620ea02ab6cd2bc2893afe1b3e29aa8b113c0629e699a0fc28\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9\",\"viewport\":\"desktop\"}]},\"folderTitles\":[\"Product overview\",\"Browse\"],\"parentTitle\":\"Home\",\"preview\":{\"kind\":\"screen\"},\"snapshotId\":\"9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e\"}],\"revision\":0,\"schemaVersion\":9,\"screens\":[{\"changes\":{\"included\":true,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80\",\"details\":{\"description\":\"Details for one item.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/details.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/details\",\"previousPath\":\"product/details\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Details\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"a282a0c2b046764132df13d7f13aa58a0b4437941a954b5c1701469790ec3702\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89\",\"details\":{\"description\":\"The landing screen.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Home\",\"title\":\"Home\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"9ebd7dcb48a3c8d5aec1c62409102c48fd3661f5a50b2a7bd12771bde7fe320b\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16\",\"details\":{\"description\":\"The landing screen with no items.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/empty\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Empty\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"d9798c8389f200a0f04c444de0947c699ade546a210ad491e9ebf4b4c8009e0d\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0\",\"viewport\":\"desktop\"}]}],\"tree\":[{\"children\":[{\"children\":[{\"kind\":\"entry\",\"path\":\"components/action/default\"}],\"kind\":\"entry\",\"path\":\"components/action\"}],\"kind\":\"folder\",\"path\":\"components\",\"title\":\"Components\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/details\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/home/empty\"}],\"kind\":\"entry\",\"path\":\"product/browse/home\"}],\"kind\":\"folder\",\"path\":\"product/browse\",\"title\":\"Browse\"}],\"index\":\"product\",\"kind\":\"folder\",\"path\":\"product\",\"title\":\"Product overview\"},{\"kind\":\"entry\",\"path\":\"guide\"},{\"kind\":\"entry\",\"path\":\"tour\"}],\"useCases\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e\",\"details\":{\"description\":\"A walk through the product.\",\"relatedDocs\":[],\"sourcePath\":\"specs/tour.mockup.tsx\"},\"kind\":\"use-case\",\"path\":\"tour\",\"steps\":[{\"screenPath\":\"product/browse/home\",\"title\":\"Start\"},{\"screenPath\":\"product/browse/details\"}],\"tags\":[],\"title\":\"Tour\"}]}",
+      "cloudRejection": "invalid",
+      "viewerValid": true,
+      "documentSha256": "7d59eb06447f207da9c307e8b1ea80e6aa8b9a16b68df8db0ec46b8dc5f29cab"
+    },
+    {
+      "name": "utf8-bom",
+      "rawDocument": "﻿{\"base\":\"main\",\"baseCommit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"changesStatus\":\"ready\",\"comparisonUrl\":\"mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/\",\"components\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Go\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56e815485c7d935a225b11e9d6f60e199bd9d3b5048cf315b58d1c62f7e1e7c0\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"comparison\":{\"status\":\"unavailable\"},\"controls\":{\"label\":{\"kind\":\"text\",\"label\":\"Label\"}},\"detailId\":\"43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f\",\"details\":{\"description\":\"The primary action.\",\"relatedDocs\":[],\"sourcePath\":\"packages/ui/src/action/index.mockup.tsx\"},\"kind\":\"component\",\"path\":\"components/action/default\",\"propSchema\":{\"additionalProperties\":false,\"properties\":{\"label\":{\"title\":\"Label\",\"type\":\"string\"}},\"required\":[\"label\"],\"type\":\"object\"},\"props\":{\"label\":[\"string\",\"Continue\"]},\"slots\":[],\"suppliedSlots\":[],\"tags\":[],\"title\":\"Default\",\"variantOf\":\"components/action\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"19ddf7b8246b2b9114412ffb33fb768e3e67be42d06d4298ddb3bb712d5bec14\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee\",\"viewport\":\"desktop\"}]}],\"deploymentId\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"documents\":[{\"changes\":{\"included\":true,\"kind\":\"added\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"detailId\":\"390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e\",\"details\":{\"description\":\"\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/README.md\"},\"documentKeys\":[{\"colorScheme\":\"light\",\"documentKey\":\"21fff8a8d83300fe1cbf68c45310f455559402348b964236610d53d81f59d2d3\"}],\"kind\":\"document\",\"path\":\"product\",\"tags\":[],\"title\":\"Product overview\"}],\"identity\":{\"id\":\"05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484\",\"title\":\"Mokly\"},\"pages\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813\",\"details\":{\"description\":\"The printable guide.\",\"relatedDocs\":[],\"sourcePath\":\"specs/guide.mockup.tsx\"},\"documentKey\":\"f85711f64c9215b6c902667ef6625c787d84a7334d826c219f4ef16dd716f219\",\"kind\":\"page\",\"path\":\"guide\",\"tags\":[],\"title\":\"Guide\"}],\"removedEntries\":[{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"detailId\":\"4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1\",\"details\":{\"description\":\"A page that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/removed-page.mockup.tsx\"},\"documentKey\":\"4aac84d78b2cfbb2655a9714f3c17a3a0eaae8691e4e0ce58bdf57468dc9e4af\",\"kind\":\"page\",\"path\":\"product/removed-page\",\"tags\":[],\"title\":\"Removed page\"},\"folderTitles\":[\"Product overview\"],\"preview\":{\"kind\":\"page\"},\"snapshotId\":\"ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c\"},{\"entry\":{\"changes\":{\"included\":true,\"kind\":\"removed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b\",\"details\":{\"description\":\"A screen that no longer exists.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/retired\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Removed screen\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"6cc4f3b9cb9b11620ea02ab6cd2bc2893afe1b3e29aa8b113c0629e699a0fc28\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"removed\",\"status\":\"ready\"},\"documentKey\":\"24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9\",\"viewport\":\"desktop\"}]},\"folderTitles\":[\"Product overview\",\"Browse\"],\"parentTitle\":\"Home\",\"preview\":{\"kind\":\"screen\"},\"snapshotId\":\"9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e\"}],\"revision\":0,\"schemaVersion\":9,\"screens\":[{\"changes\":{\"included\":true,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80\",\"details\":{\"description\":\"Details for one item.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/details.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/details\",\"previousPath\":\"product/details\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[],\"title\":\"Details\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"a282a0c2b046764132df13d7f13aa58a0b4437941a954b5c1701469790ec3702\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89\",\"details\":{\"description\":\"The landing screen.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Home\",\"useCasePaths\":[\"tour\"],\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"9ebd7dcb48a3c8d5aec1c62409102c48fd3661f5a50b2a7bd12771bde7fe320b\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":true,\"kind\":\"changed\",\"status\":\"ready\"},\"documentKey\":\"e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83\",\"viewport\":\"desktop\"}]},{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"colorSchemes\":[\"light\"],\"controls\":{},\"detailId\":\"62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16\",\"details\":{\"description\":\"The landing screen with no items.\",\"relatedDocs\":[],\"sourcePath\":\"specs/product/browse/home.mockup.tsx\"},\"kind\":\"screen\",\"path\":\"product/browse/home/empty\",\"propSchema\":{\"additionalProperties\":false,\"type\":\"object\"},\"props\":{},\"tags\":[\"landing\"],\"title\":\"Empty\",\"useCasePaths\":[],\"variantOf\":\"product/browse/home\",\"views\":[{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"d9798c8389f200a0f04c444de0947c699ade546a210ad491e9ebf4b4c8009e0d\",\"viewport\":\"mobile\"},{\"colorScheme\":\"light\",\"comparison\":{\"eligible\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"documentKey\":\"5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0\",\"viewport\":\"desktop\"}]}],\"tree\":[{\"children\":[{\"children\":[{\"kind\":\"entry\",\"path\":\"components/action/default\"}],\"kind\":\"entry\",\"path\":\"components/action\"}],\"kind\":\"folder\",\"path\":\"components\",\"title\":\"Components\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/details\"},{\"children\":[{\"kind\":\"entry\",\"path\":\"product/browse/home/empty\"}],\"kind\":\"entry\",\"path\":\"product/browse/home\"}],\"kind\":\"folder\",\"path\":\"product/browse\",\"title\":\"Browse\"}],\"index\":\"product\",\"kind\":\"folder\",\"path\":\"product\",\"title\":\"Product overview\"},{\"kind\":\"entry\",\"path\":\"guide\"},{\"kind\":\"entry\",\"path\":\"tour\"}],\"useCases\":[{\"changes\":{\"included\":false,\"kind\":\"unmodified\",\"status\":\"ready\"},\"detailId\":\"bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e\",\"details\":{\"description\":\"A walk through the product.\",\"relatedDocs\":[],\"sourcePath\":\"specs/tour.mockup.tsx\"},\"kind\":\"use-case\",\"path\":\"tour\",\"steps\":[{\"screenPath\":\"product/browse/home\",\"title\":\"Start\"},{\"screenPath\":\"product/browse/details\"}],\"tags\":[],\"title\":\"Tour\"}]}",
+      "cloudRejection": "invalid",
+      "viewerValid": false,
+      "documentSha256": "7cddfa06d512a8bf010ae53b00aa8faba133e26705bb2e4a7f2dd2cbdd6885aa"
+    }
+  ]
+}

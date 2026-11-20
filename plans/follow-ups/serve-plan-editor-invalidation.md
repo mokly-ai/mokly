@@ -203,3 +203,6 @@
     narrow.
   - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code. Both
     items change the plan record, and C or D can change its size.
+  - `plans/follow-ups/ancestor-churn-disables-durable-capture.md`, the same
+    native-first fallback. There, the first capture keeps no plan record.
+    Here, a kept record goes stale at the edit check.

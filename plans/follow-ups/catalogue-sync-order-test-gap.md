@@ -1,0 +1,31 @@
+# Catalogue sync test skips request order
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, from the final review of the deleted Stripe catalogue sync plan. That review reported it on 2026-09-27 as its Low finding, and nobody applied it. Its text comes from the billing branch's merge reviews before PR #19 merged, which named it again.
+- **Location:** `crates/mkc-billing-stripe/src/bin/stripe-catalogue/stripe_catalogue/apply.rs:140-171`, the applied replacement branch of `reconcile_price`, and `crates/mkc-billing-stripe/src/bin/stripe-catalogue/stripe_catalogue/_tests_/sync_tests.rs:108-147`.
+- **Reason:** It is a missing-test finding, and missing-test findings wait for the user.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The Stripe catalogue command is now a binary of `mkc-billing-stripe`, with its unit tests. The old command tests and their Stripe double did not move, so no test covers a replacement with a repair.
+- **Category:** Test.
+
+- **Terms:**
+  - **Predecessor:** The old seat price that a catalogue sync replaces. The sync first repairs its seat metadata, then creates the replacement, which takes over the lookup key.
+  - **Stripe double:** The local HTTP server that the command tests of the old cloud `xtask` used in place of Stripe. It recorded each request. It is now in `crates/mkc-billing-stripe/tests/cli/stripe_catalogue_double/`.
+  - **Ordered mock clause:** A `next_call` clause of the `unimock` mocks in the unit tests. The mock expects such calls in the order of the clauses.
+- **Background:**
+  - `reconcile_price` in `crates/mkc-billing-stripe/src/bin/stripe-catalogue/stripe_catalogue/apply.rs` repairs a drifted predecessor before it creates the replacement price. The order matters: the repair must succeed before the lookup key moves.
+  - In the old cloud repository, the command test `drifted_predecessor_is_repaired_before_replacement`, at `xtask/tests/cli/stripe_catalogue/sync_tests.rs:98`, checked the report lines and the final Stripe state only.
+  - On 2026-11-17 the cloud moved into this repository. The command moved into the `stripe-catalogue` binary of `mkc-billing-stripe`, and `cargo xtask stripe-catalogue` starts it. The command tests and the Stripe double moved to `crates/mkc-billing-stripe/tests/cli/`, where `drifted_predecessor_is_repaired_before_replacement` is at `stripe_catalogue/sync_tests.rs:98`.
+  - The unit test `replacement_creates_one_linked_price_and_never_archives_the_predecessor`, at `sync_tests.rs:108-147`, covers a replacement without a repair, with ordered mock clauses. `decision_price_tests.rs:100` covers the decision to repair, not the order of the provider calls.
+- **Problem:** No test checks that the repair request comes before the create request, or that a refused repair stops the create.
+- **Impact if no action:** A refactor could move the lookup key before the repair, and no test would fail.
+- **Root question:** How does the test suite prove that the repair always comes before the replacement?
+- **Options:**
+  - **A.** Port the old command tests and their Stripe double into this repository. Then assert the recorded request order there, and add a case where the double refuses the repair and no create request follows. The ported command tests and their Stripe double are in `crates/mkc-billing-stripe/tests/cli/`. Effort: Small.
+  - **B.** Add a unit test of a replacement with a repair, beside the replacement test in `sync_tests.rs`. Its ordered mock clauses expect `update_price` for the predecessor before `create_price`. A second case lets `update_price` fail and expects no `create_price`. Effort: Small.
+- **Left out:** Changing nothing keeps the gap.
+- **Wider fix:** None. The unit test mocks already check the call order, so a direct test closes the gap.
+- **Previous examples:** None found.
+- **Related:** [`plans/follow-ups/unidentified-review-findings-need-verification.md`](https://github.com/mokly-ai/mokly-cloud/blob/10834d30c83cb54b5bdfdb719b99b98febf56fd0/plans/follow-ups/unidentified-review-findings-need-verification.md) listed this finding without its text until 2026-11-01.
+- **Recommendation:** B. It uses the existing unit test mocks, which check the call order. The earlier recommendation was A, which used the old Stripe double. That double is now in this repository, so A is also Small.
+- **Action:** ask the user, because condition 6 holds: missing-test findings wait for the user.

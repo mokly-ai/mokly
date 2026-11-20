@@ -120,14 +120,18 @@ has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
 - path traversal: a `dir`, `renderer`, `postcss`, package root, or local
-  stylesheet that resolves outside `repoRoot`, including through symlinks;
-  `..` segments that resolve inside `repoRoot` are accepted;
+  stylesheet whose lexical path or real path is outside the real path of
+  `repoRoot`; `..` segments that resolve inside it are accepted;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
   [module resolution rules](#module-resolution) below.
+
+Path traversal uses one limit for every field. A second limit at the lexical
+path of `repoRoot` was rejected, because a directory could then pass for one
+field and fail for another.
 
 Additional watch rules cannot override the package-owned classifications: the
 rebuild of configured sources and modules, the reload for configured and

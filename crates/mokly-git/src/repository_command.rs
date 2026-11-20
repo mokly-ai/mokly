@@ -24,6 +24,13 @@ impl GitRepository {
             .stdout)
     }
 
+    /// Disable monitor helpers while retaining promisor object-fetch ownership.
+    pub(crate) fn file_listing(&self, flags: &[&str]) -> Result<Vec<u8>> {
+        let mut args = vec!["-c", "core.fsmonitor=false", "ls-files"];
+        args.extend_from_slice(flags);
+        Ok(self.runner.run(&self.tree_request(&args))?.stdout)
+    }
+
     /// Own lazy-fetch helpers whenever this repository has a promisor remote.
     pub(crate) fn tree_request(&self, args: &[&str]) -> Request {
         let mode = if self.promisor_remotes.is_empty() {
@@ -56,3 +63,7 @@ impl GitRepository {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/file_listing_requests_tests.rs"]
+mod file_listing_requests_tests;

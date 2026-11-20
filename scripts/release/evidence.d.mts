@@ -2,8 +2,8 @@ import type { VerificationReport, WorkflowRun } from "./evidence_contract.mjs";
 import type { EvidenceGithub } from "./evidence_github.mjs";
 
 export interface EvidenceRecord {
-  mode: "evidence" | "complete";
-  outcome: "applicable" | "absent" | "invalid" | "complete";
+  mode: "evidence";
+  outcome: "applicable" | "absent" | "invalid";
   taggedCommit: string;
   taggedTree: string;
   selectedRunId: number | null;

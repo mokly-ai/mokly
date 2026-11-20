@@ -174,6 +174,7 @@ impl NativeDependencies {
             install_bytes: 2 * 1024 * 1024 * 1024,
             commands: Arc::new(TimedCommands {
                 spawner: Arc::new(SystemSpawner {
+                    clock: clock.clone(),
                     groups: Arc::new(SystemProcessGroups),
                 }),
                 clock,

@@ -17,6 +17,9 @@ const resultVariables = [
   "BROWSER_RESULT",
   "NATIVE_RESULT",
   "STATIC_DELIVERY_RESULT",
+  "CHECK_RESULT",
+  "IMAGE_RESULT",
+  "PLAN_RESULT",
 ] as const;
 
 interface WorkflowStep {

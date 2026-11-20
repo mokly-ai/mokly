@@ -1,13 +1,14 @@
 //! Disk recipes must observe earlier interpolated paths targets after restart.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use mokly_compare::bundle_store::CachedBundles;
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
 use mokly_sidecar::pool::{Pool, SidecarPool};
+use mokly_test_support::durable_fixture::{self, Owner};
 
 #[path = "../../../tests/rust/config_dir.rs"]
 mod config_dir;
@@ -27,9 +28,7 @@ fn cached_pool(source: &Path, cache: &Path, counts: Arc<config_dir::Counts>) -> 
 
 #[test]
 fn restarted_disk_recipes_reject_an_added_earlier_config_dir_paths_target() {
-    let scratch = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.context");
-    fs::create_dir_all(&scratch).unwrap();
-    let temporary = tempfile::tempdir_in(scratch).unwrap();
+    let temporary = durable_fixture::create(Owner::CompareConfigDir).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");

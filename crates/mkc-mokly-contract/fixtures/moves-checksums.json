@@ -1,0 +1,12 @@
+{
+  "moklyVersion": "0.0.0",
+  "viewerVersion": "0.0.0",
+  "corpusSha256": "5419535ec0ee56c28f046ba6389221911eed42b003a3f96227001040fcddd2b1",
+  "files": {
+    "moves-export.tar.gz": "50fd22c45c2f2d65a4d49ba3875f7469b54683f43c738393f0619a5a0ec55009",
+    "moves-index-v9.json": "ca6e8b5c47433fb1ef581746e2f9f5823d47aaf7a8b15701dd2603fca8e90197",
+    "moves-inventory.json": "69a7b0e115061925282bf673020465f21a9706fe893c72efa967d48777158ce6",
+    "moves-mokly-upload.json": "4c2d4c10dc645bcb69ae895fba64e6d5e515ebfc457a344b4563cc965a0806ab",
+    "moves-plan.tar.gz": "d03d5ebcff643c760fb9950a79266b54e89217ed37fcf0a396c87db53b91a143"
+  }
+}

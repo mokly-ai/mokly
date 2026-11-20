@@ -29,6 +29,11 @@ test("CI job limits keep the measured three-times timing contract", async () => 
     browser: 60,
     native: 60,
     "static-delivery": 60,
+    check: 120,
+    images: 60,
+    "cloud-provider-plan": 20,
+    plan: 5,
+    "site-lighthouse": 60,
     required: 30,
   });
 });

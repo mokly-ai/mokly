@@ -1,0 +1,86 @@
+/* The controls the marketing pages, the changelog and the policy documents
+   share: status badges, the inline link with its trailing glyph, the solid
+   and quiet action buttons, and the action row that repeats in the hero and
+   the closing. Ported from the promoted mockups in
+   the dogfood catalogue; every value resolves from the token workspace. */
+
+.site-badge {
+  align-items: center;
+  border-radius: var(--mk-radius-pill);
+  display: inline-flex;
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-medium);
+  gap: var(--mk-space-2);
+  line-height: var(--mk-type-caption-line);
+  padding: var(--mk-space-1) var(--mk-space-3);
+}
+
+.site-badge--success {
+  background: var(--mk-color-success-soft);
+  color: var(--mk-color-success);
+}
+
+.site-badge--neutral {
+  background: var(--mk-color-surface-muted);
+  color: var(--mk-color-text);
+}
+
+.site-badge-dot {
+  background: var(--mk-color-success);
+  border-radius: var(--mk-radius-pill);
+  height: 6px;
+  width: 6px;
+}
+
+.site-link {
+  align-items: center;
+  color: var(--mk-color-accent);
+  display: inline-flex;
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-link:hover {
+  color: var(--mk-color-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-link span {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.site-button--primary {
+  background: var(--mk-color-accent-solid);
+  border-color: var(--mk-color-accent-solid);
+  color: var(--mk-color-on-accent);
+}
+
+.site-button--primary:hover {
+  background: var(--mk-color-accent-hover);
+  border-color: var(--mk-color-accent-hover);
+}
+
+.site-button--primary:active {
+  background: var(--mk-color-accent-active);
+  border-color: var(--mk-color-accent-active);
+}
+
+.site-button--quiet {
+  border-color: var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+.site-button--quiet:hover {
+  background: var(--mk-color-surface-muted);
+  border-color: var(--mk-color-border-strong);
+}
+
+.site-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+}

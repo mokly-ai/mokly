@@ -1,10 +1,139 @@
 [
   {
+    "kind": "private-app",
+    "advisory": "GHSA-vcc3-ghjq-m6fr",
+    "package": "decode-uri-component",
+    "path": [
+      "apps/app",
+      "node_modules/expo-router",
+      "node_modules/query-string",
+      "node_modules/decode-uri-component"
+    ],
+    "until": "2026-12-18",
+    "reason": "Expo Router 56 uses query-string to decode browser navigation URLs. A crafted link can block the affected browser tab. Accept this client-side denial-of-service risk for 31 days pending SDK 58. No fixed release exists within query-string 7's decode-uri-component 0.2 range; 0.5.1 fixes both advisories.",
+    "tracking": "https://github.com/advisories/GHSA-vcc3-ghjq-m6fr"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-qr28-fpjm-wq7f",
+    "package": "decode-uri-component",
+    "path": [
+      "apps/app",
+      "node_modules/expo-router",
+      "node_modules/query-string",
+      "node_modules/decode-uri-component"
+    ],
+    "until": "2026-12-18",
+    "reason": "Expo Router 56 uses query-string to decode browser navigation URLs. A crafted link can block the affected browser tab. Accept this client-side denial-of-service risk for 31 days pending SDK 58. No fixed release exists within query-string 7's decode-uri-component 0.2 range; 0.5.1 fixes both advisories.",
+    "tracking": "https://github.com/advisories/GHSA-qr28-fpjm-wq7f"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-3g3m-2fjr-6pw4",
+    "package": "glob",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/@expo/config-plugins",
+      "node_modules/@expo/config-plugins/node_modules/glob"
+    ],
+    "until": "2026-12-18",
+    "reason": "@expo/config-plugins in Expo 56 uses glob 13 for local project discovery. Cloud users cannot supply its patterns or AbortSignals. Accept residual build traversal risk for 31 days pending SDK 58. No fixed glob 13 release exists; the fix is glob 14.0.2.",
+    "tracking": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-3g3m-2fjr-6pw4",
+    "package": "glob",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/@expo/config",
+      "node_modules/@expo/config/node_modules/glob"
+    ],
+    "until": "2026-12-18",
+    "reason": "@expo/config in Expo 56 uses glob 13 for local project discovery. Cloud users cannot supply its patterns or AbortSignals. Accept residual build traversal risk for 31 days pending SDK 58. No fixed glob 13 release exists; the fix is glob 14.0.2.",
+    "tracking": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-3g3m-2fjr-6pw4",
+    "package": "glob",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/@expo/fingerprint",
+      "node_modules/@expo/fingerprint/node_modules/glob"
+    ],
+    "until": "2026-12-18",
+    "reason": "@expo/fingerprint in Expo 56 uses glob 13 for local project discovery. Cloud users cannot supply its patterns or AbortSignals. Accept residual build traversal risk for 31 days pending SDK 58. No fixed glob 13 release exists; the fix is glob 14.0.2.",
+    "tracking": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-3g3m-2fjr-6pw4",
+    "package": "glob",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/@expo/metro-config",
+      "node_modules/@expo/metro-config/node_modules/glob"
+    ],
+    "until": "2026-12-18",
+    "reason": "@expo/metro-config in Expo 56 uses glob 13 for local project discovery. Cloud users cannot supply its patterns or AbortSignals. Accept residual build traversal risk for 31 days pending SDK 58. No fixed glob 13 release exists; the fix is glob 14.0.2.",
+    "tracking": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-3g3m-2fjr-6pw4",
+    "package": "glob",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/expo/node_modules/@expo/cli",
+      "node_modules/expo/node_modules/glob"
+    ],
+    "until": "2026-12-18",
+    "reason": "Expo CLI 56 uses glob 13 to discover local project files during builds. Cloud users cannot supply its patterns or AbortSignals. Accept residual build traversal risk for 31 days pending SDK 58. No fixed glob 13 release exists; the fix is glob 14.0.2.",
+    "tracking": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+  },
+  {
+    "kind": "private-app",
     "advisory": "GHSA-g3hv-75wg-m249",
     "package": "minimatch",
-    "path": ["node_modules/eslint-plugin-import-x", "node_modules/minimatch"],
-    "until": "2026-11-30",
-    "reason": "Dev-only ESLint plugin dependency. eslint-plugin-import-x 4.17.1, the latest release, accepts only minimatch 9 or 10, and no patched 9 or 10 release exists. Its no-internal-modules rule imports makeRe, which minimatch 11 removed, so an override stops ESLint from loading the plugin. The plugin matches only the repository's own lint configuration patterns, never untrusted patterns.",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/@expo/fingerprint",
+      "node_modules/minimatch"
+    ],
+    "until": "2026-12-18",
+    "reason": "Expo fingerprinting reaches hoisted minimatch 10.2.6 with repository-authored file patterns. It does not match uploaded catalogues or user-supplied patterns. No fixed minimatch 10 release exists; 11.0.1 is fixed. eslint-plugin-import-x 4.17.1 shares this install and cannot load minimatch 11 because its makeRe export was removed. Accept the shared-install risk for 31 days pending parent upgrades.",
     "tracking": "https://github.com/un-ts/eslint-plugin-import-x/issues/569"
+  },
+  {
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "package": "minimatch",
+    "path": [
+      "node_modules/@electron/universal",
+      "node_modules/@electron/universal/node_modules/minimatch"
+    ],
+    "until": "2026-12-18",
+    "reason": "Dev-only Electron universal packaging uses minimatch 9 for repository-authored archive merge patterns. It never matches untrusted patterns. No fixed minimatch 9 release exists; 11.0.1 is fixed. Accept packaging-tool risk for 31 days while its parent updates.",
+    "tracking": "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+  },
+  {
+    "kind": "private-app",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "package": "zod",
+    "path": [
+      "apps/app",
+      "node_modules/expo",
+      "node_modules/expo/node_modules/@expo/cli",
+      "node_modules/expo/node_modules/zod"
+    ],
+    "until": "2026-12-18",
+    "reason": "Expo CLI uses Zod 3 to validate project tooling inputs. The hosted browser app does not expose the CLI validator to API requests or uploaded catalogues. Accept residual build validation risk for 31 days pending SDK 58. No fixed Zod 3 release exists; the fix is Zod 4.6.6.",
+    "tracking": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
   }
 ]

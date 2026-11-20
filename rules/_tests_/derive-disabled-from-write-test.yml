@@ -1,0 +1,22 @@
+id: derive-disabled-from-write
+valid:
+  - "const a = <Action disabled={withdraw.disabled} />;"
+  - "const a = <Action disabled={removal.disabled || rename.pending} />;"
+  - "const a = <Action disabled={rename.disabled || removal.pending} />;"
+  - "const a = <Action disabled={deletion.disabled || !project.canAdmin} />;"
+  - "const a = <Action disabled={busy} />;"
+  # An input held still while the write works says exactly that.
+  - "const a = <Field disabled={link.working} />;"
+  - "const a = <Field disabled={rename.working || removal.working} />;"
+  # A `WriteState` built from a write names `pending` as one of its fields;
+  # the value is the object, not the reading.
+  - "const view = formFailure({ pending: github.pending, error: github.error }, {});"
+invalid:
+  - "const a = <Action disabled={withdraw.pending} />;"
+  - "const a = <Action disabled={rename.pending || removal.pending} />;"
+  - "const a = <Action disabled={busy || removal.pending} />;"
+  # A local standing in for a write's `pending`, which a control then reads
+  # instead of the write's own answer.
+  - "const sending = link.pending;"
+  - "const busy = rename.pending || removal.pending;"
+  - "const { pending } = rename;"

@@ -44,6 +44,8 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one static-delivery job on Node 22.15.0; and
 - native jobs on macOS and Windows at Node 22.15.0.
 
+The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
+
 For a same-repository Release Please pull request, the viewer job and every
 browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
@@ -82,21 +84,23 @@ event-selected runtime profiles.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in the browser and static-delivery
-jobs. In this workflow, only the viewer jobs set up Bun. Each viewer job sets
-it up before the viewer suite with the official `oven-sh/setup-bun` action.
+jobs and in the cloud jobs that run browser tests. In this workflow, only the
+viewer jobs set up Bun. Each viewer job sets it up before the viewer suite
+with the official `oven-sh/setup-bun` action.
 The action reads the version from `.bun-version`, so the workflow holds no
 second copy of the pin. The
 [cache rules](./ci-verification-security.md#dependency-cache-and-security)
 keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
-Clippy, and the complete Rust tests run in the repository job and in the native
-jobs. Native jobs build the checked-out `@mokly/mokly` sidecar package after
-`npm ci`, so Rust integration tests use matching sidecar sources. Every
+Clippy, and the complete Rust tests run in the repository job. The native jobs
+run them for the `mokly-*` crates and `xtask` only. Native jobs build the
+checked-out `@mokly/mokly` sidecar package after `npm ci`, so Rust
+integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
-before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.95.0 with
+before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout.
-Native jobs run workspace tests with `--no-fail-fast` so one job reports every
+Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
 failing test binary.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
@@ -110,6 +114,10 @@ cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
+
+Every CI job that does not run Electron sets
+`ELECTRON_SKIP_BINARY_DOWNLOAD=1`. Its install does not download Electron.
+The cloud desktop partition clears that setting and caches the binary.
 
 Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
 or newer: older versions drop the lockfile's `libc` fields, which select the
@@ -155,7 +163,9 @@ The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile job's selection: five
 viewer and browser reports for ordinary events and ten for a Release Please
-pull request.
+pull request. Every cloud verification partition is also required. The
+[cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
+provider plan only when its trusted main-push guard permits it.
 
 Static delivery is also required. It builds the example with Changes disabled
 and checks portable design journeys through static HTTP and `file://`.
@@ -180,6 +190,12 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## Cloud Jobs And Workflows
+
+The [cloud CI contract](./ci-workflow-cloud.md) defines the cloud jobs of this
+workflow, the cloud workflows, their fork rule, and the scope of Release
+Please.
+
 ## Design Attribution Matrix
 
 `.github/workflows/design-attribution.yml` runs nightly and through manual
@@ -199,8 +215,9 @@ artifact. This workflow is optional. `Required CI` does not depend on it.
 its triggers, job, runner, step order, and action revisions. Its job runs on a
 Blacksmith runner, because Testboxes exist only on Blacksmith. The job checks
 out with Blacksmith's checkout action, which keeps a Git mirror between runs.
-Its Node.js version equals the version of the CI native jobs. Its npm and Rust
-setup equals the setup of the CI repository job. Its workflow `env` equals the
+Its default Node.js version equals the version of the CI native jobs. Cloud
+commands use their separate pinned Node installation. Its npm and Rust setup
+equals the setup of the CI repository job. Its workflow `env` equals the
 workflow `env` of the CI workflow. It restores the Rust build cache with the
 options of the CI viewer, browser, and static-delivery jobs and never saves it.
 CI saves its cache on GitHub-hosted runners, so no job refreshes that cache.
@@ -211,6 +228,8 @@ hosted CI graph and its release profile keep their required jobs.
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [CI workflow: cloud jobs](./ci-workflow-cloud.md)
+- [Repository layout](./repository-layout.md)
 - [Remote verification](./remote-verification.md)
 - [CI and npm release](./npm-release.md)
 - [Release verification evidence](./npm-release-evidence.md)
