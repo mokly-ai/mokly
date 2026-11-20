@@ -2,7 +2,7 @@
  * Removed rows follow real background baselines in Serve: base moves add and
  * reconcile removed rows in place, a changed historical record replaces the
  * previous one rather than showing stale content, and a removed screen
- * variant joins its surviving parent's list.
+ * variant joins its surviving parent's list. Only Changes shows removed rows.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -61,7 +61,8 @@ test("background baselines reconcile removed rows and invalidate changed histori
 
   await changes.moveBase(withoutComponent);
   await combined.release();
-  await expect(removedRow(page, removedScreen)).toBeVisible();
+  await expect(removedRow(page, removedScreen)).toHaveCount(1);
+  await expect(removedRow(page, removedScreen)).toBeHidden();
   await expect(removedRow(page, removedPage)).toBeHidden();
   await expect(removedRow(page, removedComponent)).toHaveCount(0);
   const retained = await removedRow(page, removedScreen).elementHandle();
@@ -105,12 +106,13 @@ test("background baselines reconcile removed rows and invalidate changed histori
       .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-route"))),
   ).toEqual(flat);
   expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
-  await expect(removedRow(page, removedComponent)).toBeVisible();
-  await expect(removedRow(page, removedPage)).toBeHidden();
+  for (const entryPath of [removedScreen, removedPage, removedComponent])
+    await expect(removedRow(page, entryPath)).toBeHidden();
   await expect(root).toHaveAttribute("data-test-retained", "true");
 
   await chooseFilter(page, "changed");
-  await expect(removedRow(page, removedPage)).toBeVisible();
+  for (const entryPath of [removedScreen, removedPage, removedComponent])
+    await expect(removedRow(page, entryPath)).toBeVisible();
   expect(previews).toEqual([]);
   await removedRow(page, removedPage).click();
   await expect(
@@ -177,14 +179,16 @@ test("a background baseline places a removed variant under its parent", async ({
   await changes.moveBase(withVariant);
   await combined.release();
 
-  await expect(list.locator(row)).toHaveCount(1);
   await expect(parentRow).toHaveAttribute("aria-current", "page");
   await expect(parentRow).toHaveAttribute("data-changed-variants", "true");
   // The parent itself is unchanged, so only its removed variant marks it.
   await expect(parentRow).not.toHaveAttribute("data-changed", "true");
-  await expect(row).toBeHidden();
+  // All lists no removed row, so the parent shows no list there.
+  await expect(list).toHaveCount(0);
+  await expect(row).toHaveCount(0);
 
   await chooseFilter(page, "changed");
+  await expect(list.locator(row)).toHaveCount(1);
   await expect(row).toBeVisible();
   await expect(row).toContainText("Plain extra · Removed");
   await expect(parentRow).toBeVisible();
