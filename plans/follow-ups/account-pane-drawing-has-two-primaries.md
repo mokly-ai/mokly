@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from task M2e of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `docs/mockups/src/screens/product/settings/account-pane.tsx` (`GithubSection`, Connect GitHub around line 43) and `apps/app/src/settings/panes/account-pane.tsx`.
+- **Location:** `docs/mockups/src/screens/product/settings/account-pane.tsx` (`GithubSection`, Connect GitHub around line 43) and `packages/app/src/settings/panes/account-pane.tsx`.
 - **Reason:** The fix changes a drawing that is already on `origin/main` and decides which side of a mockup and app difference is right, which the user decides.
 - **Category:** Mockup.
 

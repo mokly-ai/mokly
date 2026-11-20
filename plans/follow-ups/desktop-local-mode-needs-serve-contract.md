@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from the post-merge tasks of the deleted `plans/desktop-app-shell.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `packages/mokly/src/index.ts`, `apps/desktop`, `docs/protocol/cloud/desktop-app.md:3-17` and the section "Local Mode", and `docs/product-direction.md:26-34`.
+- **Location:** `packages/mokly/src/index.ts`, `packages/desktop`, `docs/protocol/cloud/desktop-app.md:3-17` and the section "Local Mode", and `docs/product-direction.md:26-34`.
 - **Reason:** Local mode needs a host serve contract in `@mokly/mokly`, a new public interface that the owner must choose to start.
 - **Checked:** 2026-11-17, in the combined repository. The task is still open. `docs/protocol/cloud/desktop-app.md` still defers local mode, and `packages/mokly/src/index.ts` exports the authoring API only, with no host serve API.
 

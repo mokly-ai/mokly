@@ -3,12 +3,12 @@
 - **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 5 of the Milestone 26 review TODO in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/_tests_/viewer/stage-problems.ts:142-178` and `apps/app/src/_tests_/viewer/stage-drawings.test.ts:94-118`.
+- **Location:** `packages/app/src/_tests_/viewer/stage-problems.ts:142-178` and `packages/app/src/_tests_/viewer/stage-drawings.test.ts:94-118`.
 - **Reason:** PR #45 merged on 2026-10-20 with the finding open. The review-fix rule leaves its category to the user.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. `shownBodies` and `bodyProblems` still key a body by its action and its line kind only.
 - **Category:** Test.
 
-- **Background:** The app test `apps/app/src/_tests_/viewer/stage-drawings.test.ts` checks that each build-card body maps to a drawing. `shownBodies` and `bodyProblems` in `stage-problems.ts` key a body by its action and its line kind. The key has no build state. The review of 2026-10-20 found that two distinct cards with the same body then count as one. The comment at `stage-drawings.test.ts:94` says that bodies that differ by state stay apart. The key does not prove that for the state.
+- **Background:** The app test `packages/app/src/_tests_/viewer/stage-drawings.test.ts` checks that each build-card body maps to a drawing. `shownBodies` and `bodyProblems` in `stage-problems.ts` key a body by its action and its line kind. The key has no build state. The review of 2026-10-20 found that two distinct cards with the same body then count as one. The comment at `stage-drawings.test.ts:94` says that bodies that differ by state stay apart. The key does not prove that for the state.
 - **Problem:** The test can pass while one of two distinct cards is not drawn.
 - **Impact if no action:** A missing build card drawing stays unnoticed.
 - **Root question:** How does the drawing test tell distinct reader cards apart?

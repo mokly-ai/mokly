@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the post-merge tasks of the deleted `plans/desktop-app-shell.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `.github/workflows/desktop-release.yml:35-39` and `:111-116`, `apps/desktop`, `docs/protocol/cloud/desktop-app.md:3-17` and `docs/protocol/cloud/desktop-distribution.md:18-22`.
+- **Location:** `.github/workflows/desktop-release.yml:35-39` and `:111-116`, `packages/desktop`, `docs/protocol/cloud/desktop-app.md:3-17` and `docs/protocol/cloud/desktop-distribution.md:18-22`.
 - **Reason:** The desktop shell chose macOS and Linux first, and the plan for Windows closed unmerged without a recorded decision.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. Both release matrices still build macOS and Linux only, as the desktop contract allows.
 - **Category:** Process.

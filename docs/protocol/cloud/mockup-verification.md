@@ -94,7 +94,7 @@ Every empty-stage card kind has a drawing for branches and for pull requests.
 Every build-card body also has a drawing, under the
 [viewer inventory](./product-mockups-viewer.md#builds).
 
-An application test, `apps/app/src/_tests_/viewer/stage-drawings.test.ts`,
+An application test, `packages/app/src/_tests_/viewer/stage-drawings.test.ts`,
 enumerates each reachable card kind for both reference kinds and every
 build-card body, and maps each to a drawing path. A drawing is a screen or a
 variant that the authored product inventory declares:
@@ -155,7 +155,7 @@ build card's Try again reads Try again either way, which
 
 The refusing controls come from each card's own request controls: the
 `RequestControl` union and `requestControls` record of
-`apps/app/src/viewer/request-controls.ts`, through which the publishing card's
+`packages/app/src/viewer/request-controls.ts`, through which the publishing card's
 Publish and the build card's Try again and Cancel read their labels. A build
 card action joins the union when `buildActionControls`, keyed by every action,
 says its control sends a request. The drawing test enumerates them, including

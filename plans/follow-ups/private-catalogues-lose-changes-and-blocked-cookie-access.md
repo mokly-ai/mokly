@@ -3,7 +3,7 @@
 - **Severity:** High. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-01, from decision 5 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. It merges `plans/follow-ups/private-viewer-artifacts-lack-transport.md`, added on 2026-10-30 from Milestone 13V of the deleted `plans/mokly-cloud-follow-ups.md`.
-- **Location:** `apps/app/src/viewer/stage.tsx`, the `AccessBlocked` stage. `crates/mkc-catalogue-server/src/response.rs:180` and `:194`, the catalogue cookie and its clearing cookie. `docs/protocol/cloud/viewer.md` and `docs/protocol/cloud/catalogue-hosting.md`, section "Private Access".
+- **Location:** `packages/app/src/viewer/stage.tsx`, the `AccessBlocked` stage. `crates/mkc-catalogue-server/src/response.rs:180` and `:194`, the catalogue cookie and its clearing cookie. `docs/protocol/cloud/viewer.md` and `docs/protocol/cloud/catalogue-hosting.md`, section "Private Access".
 - **Reason:** On 2026-11-01 the user chose to remove the new-tab fallback during the upgrade and to restore private access in a later change.
 - **Category:** Product bug.
 
@@ -16,7 +16,7 @@
 - **Background:**
   - The catalogue server sets the cookie only in its answer to the app's `POST /_access`. The cookie is `__Host-mkc_catalogue` with `Secure`, `HttpOnly`, `SameSite=None` and `Max-Age=300`, and without `Partitioned`.
   - Chrome and Edge allow third-party cookies by default. Firefox keeps them in a separate store for each top-level site. Safari and iOS web views block them.
-  - The app uses the workspace `@mokly/viewer`. The app fetches the catalogue index and every entry detail itself, with the cookie, and passes them to the viewer as objects, at `apps/app/src/viewer/catalogue-source.web.ts:107`.
+  - The app uses the workspace `@mokly/viewer`. The app fetches the catalogue index and every entry detail itself, with the cookie, and passes them to the viewer as objects, at `packages/app/src/viewer/catalogue-source.web.ts:107`.
   - The embedded viewer sends its package-owned reads, such as comparison documents and removed-entry previews, without the cookie. A pinned delivery uses `credentials: "omit"`, and the `credentials: "same-origin"` of a live delivery sends no cookie to the cross-origin catalogue. `docs/protocol/mokly-viewer.md:68` and `docs/protocol/mokly-comparison-panes.md:28-30` hold these rules.
   - Since release 0.19.0, the standalone shell sends `credentials: "same-origin"` with every read, as `docs/protocol/mokly-shell-fences.md:53-55` requires. The 0.18.0 standalone shell used `credentials: "omit"`.
   - On 2026-11-01 the user chose to remove **Open catalogue in a new tab**. A blocked cookie now shows a final message, and a private-comparison error shows an overlay without an action.

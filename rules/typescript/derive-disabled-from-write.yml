@@ -13,7 +13,7 @@ message: >-
   `.pending` into a local first: a control reading the copy reads a second
   answer this rule cannot see through, which is the same drift one name away.
 files:
-  - apps/app/src/**
+  - packages/app/src/**
 rule:
   any:
     - kind: jsx_attribute
