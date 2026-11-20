@@ -1,5 +1,5 @@
 /**
- * A component whose own saved views stay the same, while a screen's use of it
+ * A component whose own variants stay the same, while a screen's use of it
  * renders differently, carries the `implementation` reason. Its Details name
  * that reason before any comparison is requested, at both inspector sizes,
  * and its affected screen, which its Affected screens link opens in Side by
@@ -68,7 +68,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     const documents = snapshotDocuments(page);
     await page.goto(`/view/${paths.component}/`);
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
-    // Its own saved views are unchanged, so it offers no comparison.
+    // Its own variants are unchanged, so it offers no comparison.
     await awaitRoutedDetail(page, paths.component);
     await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
     const evidence = await openEvidence(page);

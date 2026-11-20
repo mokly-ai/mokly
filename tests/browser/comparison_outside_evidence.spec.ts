@@ -3,7 +3,7 @@
  * under the CSS evidence presentation contract and its approved designs. A
  * consuming component shows its consumed component's styles in Current
  * before any comparison. A changed component keeps its own sentence beside
- * its saved view's sentence under one file. A screen with an outside match
+ * its variant's sentence under one file. A screen with an outside match
  * and an excluded-only screen repeat the copy and layout of
  * `design/components/states/shared-impact/style-outside` and
  * `design/changes/impact/styles/matched-excluded/excluded-only`.
@@ -101,7 +101,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator(".mbk-diff-view")).toHaveCount(0);
     });
 
-    test("the changed component keeps its own sentence beside its saved view's", async ({
+    test("the changed component keeps its own sentence beside its variant's", async ({
       page,
     }) => {
       for (const route of [

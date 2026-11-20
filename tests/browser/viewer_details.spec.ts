@@ -2,8 +2,8 @@
  * Details in an embedded viewer over the copied comparison output, under the
  * CSS evidence shell contract. The host supplies a public index without
  * `base`, so Details keep the "Comparison details" heading and the rest of
- * the evidence and show no branch-point sentence: for a screen, for a saved
- * view, and for a screen that the reader reaches by navigation, at both
+ * the evidence and show no branch-point sentence: for a screen, for a
+ * variant, and for a screen that the reader reaches by navigation, at both
  * inspector sizes.
  */
 
@@ -73,7 +73,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await openEvidence(page);
     });
 
-    test("an embedded saved view keeps its Details without the branch-point sentence", async ({
+    test("an embedded variant keeps its Details without the branch-point sentence", async ({
       page,
     }) => {
       await expectExcludedOnly(
