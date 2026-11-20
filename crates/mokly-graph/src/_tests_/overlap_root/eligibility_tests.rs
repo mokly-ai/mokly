@@ -53,7 +53,7 @@ fn budget_refusal_completes_the_successful_root_without_handoff_or_repeat() {
 }
 
 #[test]
-fn template_composition_enters_completion_and_never_signals_a_root_handoff() {
+fn template_composition_keeps_ordinary_ownership_and_never_signals_a_root_handoff() {
     let mut catalogue = catalogue();
     let source = document("<p>Template</p>");
     catalogue.templates.insert(
@@ -80,7 +80,7 @@ fn template_composition_enters_completion_and_never_signals_a_root_handoff() {
             .unwrap()
             .contains("<p>Template</p>")
     );
-    assert_eq!(counts.entered.load(Ordering::SeqCst), 1);
+    assert_eq!(counts.metadata.load(Ordering::SeqCst), 0);
     assert_eq!(counts.handed.load(Ordering::SeqCst), 0);
 }
 

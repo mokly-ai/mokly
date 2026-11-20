@@ -136,6 +136,24 @@ impl Stage {
         self.queue_bytes.store(bytes, Ordering::SeqCst);
     }
 
+    /// Admit prepared-root completion while its original dispatch worker remains owned.
+    pub(crate) fn enter(&self) {
+        if self
+            .state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .place
+            .is_some()
+        {
+            return;
+        }
+        let place = self.bound.acquire();
+        self.state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .place = Some(place);
+    }
+
     pub(crate) fn finish(&self) {
         let (released, priority) = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -154,23 +172,6 @@ impl Stage {
 }
 
 impl Completion for Stage {
-    fn enter(&self) {
-        if self
-            .state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .place
-            .is_some()
-        {
-            return;
-        }
-        let place = self.bound.acquire();
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .place = Some(place);
-    }
-
     fn handoff(&self, bytes: usize) {
         let charge = self.bound.reserve(bytes);
         self.enter();
@@ -221,3 +222,7 @@ mod overlap_worker_tests;
 #[cfg(test)]
 #[path = "_tests_/overlap_stage_tests.rs"]
 mod overlap_stage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap_native_tests.rs"]
+mod overlap_native_tests;

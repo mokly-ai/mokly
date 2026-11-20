@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_html::composition::ComposerMock;
 use mokly_html::fragment::{Fragment, FragmentRendererMock};
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::background::CompletionMock;
@@ -28,6 +29,10 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
                 let calls = calls.clone();
                 let order = order.clone();
                 move |_, _| {
+                    assert_eq!(
+                        tracing::Span::current().metadata().map(|span| span.name()),
+                        Some("render.document")
+                    );
                     assert_eq!(phase.load(Ordering::SeqCst), 0);
                     calls.fetch_add(1, Ordering::SeqCst);
                     order.lock().unwrap().push("root");
@@ -113,9 +118,12 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
     let state = Arc::get_mut(&mut session.state).unwrap();
     state.composer = Arc::new(custom.clone());
     state.workers = Arc::new(workers.clone());
-    let artifact = session
-        .render_background(&route("caller"), Arc::new(completion.clone()))
-        .unwrap();
+    let trace = Trace::default();
+    let artifact = trace.in_scope(|| {
+        session
+            .render_background(&route("caller"), Arc::new(completion.clone()))
+            .unwrap()
+    });
     assert!(
         String::from_utf8(artifact.bytes.clone())
             .unwrap()
@@ -123,4 +131,5 @@ fn prepared_root_runs_once_before_worker_and_completes_inside_its_single_consump
     );
     assert_eq!(calls.load(Ordering::SeqCst), 1);
     assert_eq!(*order.lock().unwrap(), ["root", "handoff", "compose"]);
+    assert_eq!(trace.closed("render.document").len(), 1);
 }

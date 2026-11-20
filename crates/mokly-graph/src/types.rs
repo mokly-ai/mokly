@@ -89,13 +89,12 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
-    /// Render one admitted background owner; nested validation keeps its existing path.
+    /// Render with optional prepared-root handoff; the default retains its original worker.
     fn render_background(
         &self,
         route: &str,
-        completion: Arc<dyn Completion>,
+        _completion: Arc<dyn Completion>,
     ) -> Result<Arc<Artifact>> {
-        completion.enter();
         self.render(route)
     }
     /// Return the generation's cancellation error before more view work starts.

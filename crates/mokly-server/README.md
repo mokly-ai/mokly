@@ -85,16 +85,21 @@ A view of a JavaScript entry leaves the window's bound when it
 after its own root fragment returns. The `Window` then starts the next view,
 and it still reports in catalogue order. Each pass has its own `Window`, so the
 window bound counts only the views of the current pass. One `Stages` bound of
-the same size limits the views that build their documents. It serves every
-pass of the `UsagePass`, so the views of a replaced generation keep their
-completion places, and the bound counts them with the views of the current
-pass.
+the same size limits the views whose own root fragment returned without
+failure, while they build their documents. It serves every pass of the
+`UsagePass`, so the views of a replaced generation keep their completion
+places, and the bound counts them with the views of the current pass. Every
+other view takes no completion place and builds its document under its worker
+permit.
 
 A replaced view that has not handed off keeps its worker permit until it ends,
 and its active sidecar call keeps its claim. New starts can overlap such views
-only within the free workers and the sidecar capacity. Each view's `Stage`
-owns its worker permit, its completion place, and its transient charge. A
-handoff releases the worker. `Workers::stop` takes every worker permit and then drains
+only within the free workers and the sidecar capacity. HTTP requests share
+these worker permits, so the permits and the `Stages` bound give the
+[limit of the worker count plus the completion bound](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
+Each view's `Stage` owns its worker permit. After its own root fragment
+returns, the `Stage` also owns the view's completion place and, when the charge
+fits, its transient charge. A handoff releases the worker. `Workers::stop` takes every worker permit and then drains
 the background jobs that released theirs. A `Documents` adapter that keeps the
 default `background_staged` keeps the original background call, so its view
 takes no completion place and keeps its worker for the whole call.
@@ -282,8 +287,10 @@ generations.
   completion bound and the 4 MiB transient budget that every pass of one
   `UsagePass` shares, and `Stage`, the owner of one view's worker permit,
   completion place, and transient charge. `Stage` implements the graph's
-  `Completion`. Its handoff takes a charge without waiting. A granted charge
-  releases the worker and wakes the window.
+  `Completion`. Its handoff takes a charge without waiting, then takes a
+  completion place through the crate-private `Stage::enter`, also when the
+  charge does not fit. A granted charge releases the worker and wakes the
+  window.
 - [`src/background_capacity.rs`](./src/background_capacity.rs) defines
   `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded

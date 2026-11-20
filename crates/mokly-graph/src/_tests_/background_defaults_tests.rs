@@ -1,4 +1,4 @@
-//! A synchronous custom generation enters completion before its ordinary render.
+//! A synchronous custom generation retains its ordinary worker for the whole render.
 
 use std::sync::{Arc, Mutex};
 
@@ -9,7 +9,7 @@ use crate::cache::Artifact;
 use crate::types::{RenderGeneration, RenderGenerationMock};
 
 #[test]
-fn custom_generation_default_enters_completion_before_render_and_never_hands_off() {
+fn custom_generation_default_renders_without_completion_admission_or_handoff() {
     let calls = Arc::new(Mutex::new(Vec::new()));
     let generation = Unimock::new(
         RenderGenerationMock::render
@@ -27,15 +27,26 @@ fn custom_generation_default_enters_completion_before_render_and_never_hands_off
                 }
             })),
     );
-    let completion = Unimock::new(CompletionMock::enter.each_call(matching!()).answers_arc(
-        Arc::new({
-            let calls = calls.clone();
-            move |_| calls.lock().unwrap().push("completion")
-        }),
+    let completion = Unimock::new((
+        CompletionMock::handoff
+            .each_call(matching!(_))
+            .answers_arc(Arc::new({
+                let calls = calls.clone();
+                move |_, _| calls.lock().unwrap().push("handoff")
+            })),
+        CompletionMock::metadata_bytes
+            .each_call(matching!())
+            .answers_arc(Arc::new({
+                let calls = calls.clone();
+                move |_| {
+                    calls.lock().unwrap().push("metadata");
+                    0
+                }
+            })),
     ))
     .no_verify_in_drop();
     generation
         .render_background("custom", Arc::new(completion.clone()))
         .unwrap();
-    assert_eq!(*calls.lock().unwrap(), ["completion", "render"]);
+    assert_eq!(*calls.lock().unwrap(), ["render"]);
 }

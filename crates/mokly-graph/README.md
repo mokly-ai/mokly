@@ -59,23 +59,28 @@ A prepared generation runs `check_cancelled` and opens the view's
 `render.document` span on the caller's thread. `RenderCache::contains` checks
 for the document without a count, a promotion, or a restore. A held document,
 a Markdown view, and a view that `Composer::prepare_root` does not prepare
-enter the view's completion place through `background::Completion::enter`.
-Otherwise `prepare_root` requests the own root fragment once, on the caller's
-thread, so its `render.fragment` span stays inside the view's span. A failed
-root returns its composition error at once, without a completion place.
+make no `background::Completion` call. They take no completion place, and the
+caller keeps its worker until the view ends. Otherwise `prepare_root` requests
+the own root fragment once, on the caller's thread, so its `render.fragment`
+span stays inside the view's span. A failed root returns its composition error
+at once, without a completion place.
 
 A successful root passes its byte charge to `Completion::handoff`: the
 capacities of the prepared inputs and the fragment, and the job and queue
-metadata, without JSON encoding. Each view that reaches completion runs in
-one private `BackgroundJob`, prepared or not, on the render workers, through
-`RenderWorkers::document`. The job takes its prepared root, or none, once. It
-makes the view's one counted cache read, composes, finishes, and inserts the
-document, inside the view's one `render.document` span. A second take returns
-`InternalError::PreparedRootConsumed` and renders nothing. A document that
-leaves the cache after the check composes in that job. Link checks of the view
-render inline in the same job and take no other completion place. The trait
-default enters the completion place and then calls `render`. So a wrapper that
-does not forward it keeps its worker and never hands off.
+metadata, without JSON encoding. `handoff` is the only way into the completion
+place. Every view then runs in one private `BackgroundJob` on the render
+workers, through `RenderWorkers::document`. The job of a prepared view keeps
+its root behind a one-shot lock and takes it once. A second take returns
+`InternalError::PreparedRootConsumed` and renders nothing. The job of an
+unprepared view holds no root and no lock. Each job makes the view's one
+counted cache read, composes, finishes, and inserts the document, inside the
+view's one `render.document` span. The view passes this job, not the `Session`,
+to `RenderWorkers::document`, because the `Session` worker opens a second
+`render.document` span. A document that leaves the cache after the check
+composes in that job. Link checks of the view render inline in the same job
+and take no completion place. The trait default only calls `render`. So a
+wrapper that does not forward it takes no completion place, keeps its worker,
+and never hands off.
 
 Resources found during composition enter a leased dependency index. Each
 recipe retains its first observed digests. Later preparations add changed
@@ -363,8 +368,8 @@ retention disabled.
 - [`src/types.rs`](./src/types.rs) defines `GraphFactory`, `RenderGraph`, and
   `RenderGeneration`, the boundaries that the CLI, Serve, comparison, and
   static output call. `RenderGeneration::render_background` renders one
-  admitted Serve background view, and its default enters completion before it
-  calls `render`.
+  admitted Serve background view. Its default only calls `render` and takes no
+  completion place.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
@@ -377,12 +382,14 @@ retention disabled.
   tiers. `RenderCache::contains` checks for a key without a count, a
   promotion, or a restore.
 - [`src/background.rs`](./src/background.rs) defines `Completion`, the
-  completion place and dispatch release of one Serve background view.
-  `Completion::handoff` receives the byte charge of a prepared root.
+  completion place and dispatch release of a Serve background view with a
+  prepared root. `Completion::handoff`, the only way into the completion place,
+  receives the byte charge of that root.
 - [`src/background_render.rs`](./src/background_render.rs) prepares the own
   root of one Serve background view on the caller's thread. Its private
   `BackgroundJob` then composes and finishes every background view on the
-  render workers, and it takes the view's prepared root, or none, once.
+  render workers. The job of a prepared view takes its root once, and the job
+  of an unprepared view holds no root.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
   charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,

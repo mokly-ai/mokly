@@ -1,12 +1,10 @@
-//! Per-view ownership of background completion and admitted fragment bytes.
+//! Per-view ownership of prepared-root completion and admitted fragment bytes.
 
 use std::fmt;
 
-/// A background view's completion place and optional early dispatch release.
+/// A prepared background root's completion place and optional dispatch release.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CompletionMock))]
 pub trait Completion: Send + Sync {
-    /// Enter completion while retaining the original document dispatch place.
-    fn enter(&self);
     /// Enter completion and release dispatch after a successful charged root.
     fn handoff(&self, bytes: usize);
     /// Retained scheduler and queue metadata that the root charge must include.

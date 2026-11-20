@@ -577,14 +577,16 @@ only for the requested HTML follow-up and its conditional correction.
 - [x] Attribute the cost with actual completion/query counters, wall intervals, and thread CPU in an isolated temporary probe. Preserve frozen arms and all diagnostic limits.
 - [x] Assess the empty-completion shortcut. Record its failed counter condition and the approved structural route. Keep fresh #330 checks for prepared roots.
 - [x] Run the fresh options check for decision 7 D. Keep D, add E, and incorporate its contract, API, and trace corrections.
-- [ ] Commit and push the updated plan before code.
-- [ ] Update the protocol and affected READMEs by delegation. Record the approved W plus C envelope, original worker retention, and prepared-only completion bound.
-- [ ] Implement decision 7 D by delegation. Prove native bypass red first. Prove the single document span and mixed/replacement ownership with deliberate mutations. Preserve existing Serve, pool, shrink, and owner assertions. Repeat changed asynchronous tests ten times.
+- [x] Commit and push the updated plan before code.
+- [x] Update the protocol and affected READMEs by delegation. Record the approved W plus C envelope, original worker retention, and prepared-only completion bound.
+- [x] Implement decision 7 D by delegation. Prove native bypass red first. Prove the single document span and mixed/replacement ownership with deliberate mutations. Preserve existing Serve, pool, shrink, and owner assertions. Repeat changed asynchronous tests ten times.
 - [ ] Repeat four balanced warm HTML pairs on the fix, with excluded primers. Run one React warm pair with excluded primers and preserve every row.
 - [ ] Run targeted tests, the Repository suite, complete-gate evidence, and a fresh implementation review on the corrected source.
 - [ ] Push the correction and send its implementation SHA and dist source commit. Obtain the performance orchestrator's confirming Cloud result before the pull request.
 
 Evidence: `.context/busier-sidecars/measurements/merged-preflight/html-warm-followup-result.md`.
+Implementation and docs: `.context/busier-sidecars/html-structural-fix/report.md`,
+`docs-report.md`, and `lifetime-fix-report.md` in that folder.
 The completed reduction still omits a full merged matrix, local ten-edit
 sessions, additional PID pairs, and the charge probe. The HTML addition is
 not permission for any other workload. A source correction gets its own dated

@@ -142,14 +142,6 @@ pub(super) fn refusing() -> (Unimock, Arc<CompletionCounts>) {
 fn completion_with(accept: bool) -> (Unimock, Arc<CompletionCounts>) {
     let counts = Arc::new(CompletionCounts::default());
     let mock = Unimock::new((
-        CompletionMock::enter
-            .each_call(matching!())
-            .answers_arc(Arc::new({
-                let counts = counts.clone();
-                move |_| {
-                    counts.entered.fetch_add(1, Ordering::SeqCst);
-                }
-            })),
         CompletionMock::handoff
             .each_call(matching!(_))
             .answers_arc(Arc::new({

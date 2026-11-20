@@ -76,39 +76,47 @@ as soon as the batch has fewer views than its bound, and views start in
 catalogue order: when several views wait for one free worker, the first in
 catalogue order starts.
 
-A view holds its batch place from its start until it hands off or ends. A view
-holds a completion place while it builds its document: its tree, its final
-checks, its bytes, and its cache entry. A render for a link check of the view
-runs inside that place and takes no other place. A view of a JavaScript entry
-without saved slots builds its document after the entry's own fragment
-returns. Every other view enters the completion stage before any tree work: a
-view with an HTML template or saved slots, and a Markdown view. A view whose
-document the cache already holds also enters the completion stage before it
-reads that document.
+A view holds its batch place from its start until it hands off or ends. Only a
+view of a JavaScript entry without saved slots enters the completion stage,
+and only after the entry's own fragment returns without failure, from the
+sidecar or from the render cache. That view holds a completion place while it
+builds its document: its tree, its final checks, its bytes, and its cache
+entry. Every other view takes no completion place: a view with an HTML
+template or saved slots, a Markdown view, and a view whose document the cache
+already holds. Such a view builds its document, or reads it from the cache,
+while it keeps its batch place and its worker. A view whose own fragment fails
+ends with that failure and takes no completion place. A render for a link
+check of a view runs inside the render of that view and takes no other place
+and no other worker.
 
-Only a view of a JavaScript entry without saved slots can hand off. It can hand
-off when the entry's own fragment returns without failure, from the sidecar or
-from the render cache. It hands off at most once, when it enters the completion
+A view in the completion stage hands off at most once, when it enters that
 stage with a charge that fits. At the handoff, the view leaves the batch and
-releases its worker. A failed own fragment, a later fragment, and a render for
-a link check of the view hand off no view. A view that does not hand off keeps
-its batch place and its worker until it ends. Foreground and base renders use
-neither stage.
+releases its worker. A later fragment and a render for a link check of the
+view hand off no view. A view that does not hand off keeps its batch place and
+its worker until it ends. Foreground and base renders use neither stage.
 
 The charge counts the allocated bytes of the state that the view keeps at its
 handoff, with its bookkeeping, against a transient budget of 4 MiB. The budget
 is outside the [render cache bound](./mokly-runtime.md#render-graph-and-cache),
 so a charge takes no cache room and removes no cached document. One budget and
 one completion bound serve every pass of a Serve process, so the views of a
-replaced pass that still complete count with the views of the current pass. A
-charge never waits, and it ends when its view ends, also on failure or
-cancellation. A view whose charge does not fit tries no second charge: it keeps
-its batch place and its worker, and it completes inside the completion bound.
+replaced pass that still hold a completion place count with the views of the
+current pass. A charge never waits, and it ends when its view ends, also on
+failure or cancellation. A view whose charge does not fit tries no second
+charge: it keeps its batch place and its worker, and it completes inside the
+completion bound.
 
 A view that waits to enter the completion stage keeps its batch place and its
 worker. It waits only for a completion place, never for foreground work or for
 another worker. It blocks no shared fragment render or link check that another
 completing view needs.
+
+At a constant capacity, at most the worker count plus the completion bound of
+renders hold a worker or a completion place at once. These are the foreground
+renders, the background views that keep their worker, and the views that
+handed off. A lower reading takes no worker or place from a render that holds
+one. So the renders that an earlier bound admitted can keep this number above
+the new limit until they end.
 
 The stages change no document, usage, resource, warning, or diagnostic, and
 they repeat no fragment request. Each view's build warnings and a failed
@@ -131,10 +139,11 @@ view leaves the other workers idle. Decision: both stages are bounded by the
 smaller of the worker count and the sidecar capacity. The worker count alone
 and the pool size alone were rejected for the batch, because its views beyond
 the capacity would wait for a sidecar while they hold workers that foreground
-renders need. A larger completion bound was rejected, because more document
-trees would then stay in memory at once. Keeping one worker free for
-foreground requests was rejected, because it slows every pass. Decision: a
-view start takes no claim. A claim for each started
+renders need. A larger completion bound was rejected, because it raises the
+limit of the worker count plus the completion bound. More views that released
+their worker would then keep document trees in memory at once. Keeping one
+worker free for foreground requests was rejected, because it slows every pass.
+Decision: a view start takes no claim. A claim for each started
 view was rejected, because an HTML view would hold sidecar capacity that it
 never uses, and the call order of sidecar admission already keeps foreground
 priority. Decision: warnings and
@@ -145,11 +154,20 @@ Decision: a view of a JavaScript entry without saved slots hands off after its
 own fragment returns. A batch place for the whole render was rejected, because
 the sidecars then wait while the batch completes its documents. A handoff for a
 view with an HTML template or saved slots was rejected, because that view
-builds part of its tree before or between its fragment calls, outside the
-completion bound. Decision: the
+builds part of its tree before or between its fragment calls, and a view that
+hands off builds its whole tree inside the completion stage. Decision: the
 handoff releases the worker. A worker for the completion stage was rejected,
 because the next view would then wait for it, and the stages would not
 overlap.
+
+Decision: only a view whose own fragment returned without failure enters the
+completion stage. A completion place for every view was rejected, because each
+entry reads the current capacity. That reading adds work to each view without
+such a fragment, and the worker that this view keeps already bounds it. Both
+choices have the same limit of the worker count plus the completion bound.
+With either choice, foreground renders can hold every worker while the views
+that handed off hold every completion place. With this rule, background views
+alone can build more documents at once than the completion bound.
 
 Decision: a waiting view waits only for a completion place. A wait for
 foreground work or for a worker was rejected, because a foreground render of

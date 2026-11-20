@@ -1,4 +1,4 @@
-//! Every unprepared input enters completion before its ordinary worker read.
+//! Unprepared inputs retain ordinary worker ownership without completion admission.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -11,21 +11,21 @@ use mokly_html::parse;
 use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::EntryContent;
 use mokly_model::usage::CatalogueUsage;
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::background::CompletionMock;
 use crate::cache::{Artifact, MemoryCache, RenderCache, RenderCacheMock};
 use crate::key::NodeKey;
 use crate::types::RenderGeneration;
 use crate::workers::RenderWorkersMock;
 
-use super::support::{catalogue, document, route, session};
+use super::support::{catalogue, completion, document, route, session};
 
 #[test]
-fn cached_markdown_template_and_custom_views_enter_before_worker_without_early_fragment() {
+fn unprepared_views_use_ordinary_workers_without_completion_or_early_fragment() {
     for kind in ["cached", "custom-cache", "markdown", "template", "custom"] {
         let phase = Arc::new(AtomicUsize::new(0));
-        let entered = Arc::new(AtomicUsize::new(0));
+        let (completion, completion_counts) = completion();
         let calls = Arc::new(AtomicUsize::new(0));
         let provider = Unimock::new(
             FragmentRendererMock::render
@@ -124,11 +124,16 @@ fn cached_markdown_template_and_custom_views_enter_before_worker_without_early_f
                 .some_call(matching!(_, _))
                 .answers_arc(Arc::new({
                     let phase = phase.clone();
-                    let entered = entered.clone();
+                    let completion_counts = completion_counts.clone();
                     let calls = calls.clone();
                     let cache = cache.clone();
                     move |_, route, job| {
-                        assert_eq!(entered.load(Ordering::SeqCst), 1, "{kind}");
+                        assert_eq!(completion_counts.handed.load(Ordering::SeqCst), 0, "{kind}");
+                        assert_eq!(
+                            completion_counts.metadata.load(Ordering::SeqCst),
+                            0,
+                            "{kind}"
+                        );
                         assert_eq!(calls.load(Ordering::SeqCst), 0, "{kind}");
                         assert_eq!(
                             cache.stats().hits + cache.stats().misses,
@@ -141,16 +146,6 @@ fn cached_markdown_template_and_custom_views_enter_before_worker_without_early_f
                 })),
         ))
         .no_verify_in_drop();
-        let completion = Unimock::new(CompletionMock::enter.some_call(matching!()).answers_arc(
-            Arc::new({
-                let phase = phase.clone();
-                let entered = entered.clone();
-                move |_| {
-                    assert_eq!(phase.load(Ordering::SeqCst), 0);
-                    entered.fetch_add(1, Ordering::SeqCst);
-                }
-            }),
-        ));
         let state = Arc::get_mut(&mut session.state).unwrap();
         if kind == "custom" {
             state.composer = Arc::new(custom.clone());
@@ -159,9 +154,12 @@ fn cached_markdown_template_and_custom_views_enter_before_worker_without_early_f
             state.cache = Arc::new(custom_cache.clone());
         }
         state.workers = Arc::new(workers.clone());
-        let artifact = session
-            .render_background(&route("caller"), Arc::new(completion.clone()))
-            .unwrap();
+        let trace = Trace::default();
+        let artifact = trace.in_scope(|| {
+            session
+                .render_background(&route("caller"), Arc::new(completion.clone()))
+                .unwrap()
+        });
         let expected = match kind {
             "cached" | "custom-cache" => "Cached",
             "markdown" => "Notes",
@@ -174,7 +172,13 @@ fn cached_markdown_template_and_custom_views_enter_before_worker_without_early_f
                 .contains(expected),
             "{kind}"
         );
-        assert_eq!(entered.load(Ordering::SeqCst), 1, "{kind}");
+        assert_eq!(completion_counts.handed.load(Ordering::SeqCst), 0, "{kind}");
+        assert_eq!(
+            completion_counts.metadata.load(Ordering::SeqCst),
+            0,
+            "{kind}"
+        );
+        assert_eq!(trace.closed("render.document").len(), 1, "{kind}");
         assert_eq!(
             calls.load(Ordering::SeqCst),
             usize::from(kind == "custom"),

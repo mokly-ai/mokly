@@ -91,14 +91,17 @@ candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
 The usage pass reads the current sidecar capacity before each view starts.
-Its sliding window bounds the current pass, and its completion bound also
-counts the views of a replaced pass that still complete. Both use the smaller
-of that capacity and the worker count. Both source roots share that capacity. A
+Its sliding window bounds the current pass. Its completion bound limits only
+the views whose own root fragment returned without failure, and it also counts
+such views of a replaced pass that still complete. Both use the smaller of that
+capacity and the worker count. Both source roots share that capacity. A
 background view of a JavaScript entry without saved slots waits for its own
-root fragment on its admitted blocking thread. Every background
-view builds its document on the shared render workers, as HTTP renders, build,
-and comparison do. So a view that waits for its own root fragment holds no
-render worker that another view needs. A shared admission
+root fragment on its admitted blocking thread, unless the cache already holds
+its document. A view without such a fragment keeps its worker permit until it
+ends and takes no completion place. Every background view builds its document
+on the shared render workers, as HTTP renders, build, and comparison do. So a
+view that waits for its own root fragment holds no render worker that another
+view needs. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background

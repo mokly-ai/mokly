@@ -18,7 +18,7 @@ use crate::key::NodeKey;
 use crate::requests::Requests;
 use crate::types::RenderGeneration;
 
-use super::support::{catalogue, document, route, session};
+use super::support::{catalogue, completion, document, route, session};
 
 #[test]
 fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_signal() {
@@ -56,7 +56,6 @@ fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_sig
     );
     *anchors.lock().unwrap() = Some(session.state.anchor_flights.clone());
     let handed = Arc::new(AtomicUsize::new(0));
-    let entered = Arc::new(AtomicUsize::new(0));
     let completion = Unimock::new((
         CompletionMock::metadata_bytes
             .each_call(matching!())
@@ -68,14 +67,6 @@ fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_sig
                 move |_, _| {
                     assert_eq!(flights.len(), 0);
                     handed.fetch_add(1, Ordering::SeqCst);
-                }
-            })),
-        CompletionMock::enter
-            .each_call(matching!())
-            .answers_arc(Arc::new({
-                let entered = entered.clone();
-                move |_| {
-                    entered.fetch_add(1, Ordering::SeqCst);
                 }
             })),
     ))
@@ -99,22 +90,22 @@ fn own_root_handoff_releases_fragment_flight_and_nested_anchor_render_cannot_sig
     );
     assert!(session.state.anchor_flights.is_empty());
     assert_eq!(handed.load(Ordering::SeqCst), 1);
-    assert_eq!(entered.load(Ordering::SeqCst), 0);
 }
 
 #[test]
-fn cached_owner_enters_completion_before_nested_anchor_work_without_handoff() {
-    let entered = Arc::new(AtomicUsize::new(0));
+fn cached_owner_keeps_ordinary_ownership_during_nested_anchor_work_without_handoff() {
+    let (completion, counts) = completion();
     let rendered = Arc::new(AtomicUsize::new(0));
     let provider = Unimock::new(
         FragmentRendererMock::render
             .some_call(matching!(_))
             .answers_arc(Arc::new({
-                let entered = entered.clone();
+                let counts = counts.clone();
                 let rendered = rendered.clone();
                 move |_, request| {
                     assert_eq!(request.entry_path, "target");
-                    assert_eq!(entered.load(Ordering::SeqCst), 1);
+                    assert_eq!(counts.handed.load(Ordering::SeqCst), 0);
+                    assert_eq!(counts.metadata.load(Ordering::SeqCst), 0);
                     rendered.fetch_add(1, Ordering::SeqCst);
                     Ok(Fragment {
                         html: document("<p id=summary>Target</p>"),
@@ -145,19 +136,11 @@ fn cached_owner_enters_completion_before_nested_anchor_work_without_handoff() {
         }),
     );
     let (session, _) = session(catalogue(), Arc::new(provider.clone()), cache);
-    let completion = Unimock::new(CompletionMock::enter.each_call(matching!()).answers_arc(
-        Arc::new({
-            let entered = entered.clone();
-            move |_| {
-                entered.fetch_add(1, Ordering::SeqCst);
-            }
-        }),
-    ))
-    .no_verify_in_drop();
     session
         .render_background(&route("caller"), Arc::new(completion.clone()))
         .unwrap();
     assert_eq!(rendered.load(Ordering::SeqCst), 1);
-    assert_eq!(entered.load(Ordering::SeqCst), 1);
+    assert_eq!(counts.handed.load(Ordering::SeqCst), 0);
+    assert_eq!(counts.metadata.load(Ordering::SeqCst), 0);
     assert!(session.state.anchor_flights.is_empty());
 }

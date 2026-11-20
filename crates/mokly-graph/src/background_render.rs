@@ -70,16 +70,13 @@ impl Session {
                     .saturating_add(mem::size_of::<BackgroundJob<'_>>())
                     .saturating_add(completion.metadata_bytes());
                 completion.handoff(bytes);
-                Some(prepared)
+                Some(Mutex::new(Some(prepared)))
             }
-            None => {
-                completion.enter();
-                None
-            }
+            None => None,
         };
         let job = BackgroundJob {
             session: self,
-            prepared: Mutex::new(Some(prepared)),
+            prepared,
         };
         self.state.workers.document(route, &job)
     }
@@ -87,17 +84,20 @@ impl Session {
 
 struct BackgroundJob<'a> {
     session: &'a Session,
-    prepared: Mutex<Option<Option<PreparedRoot>>>,
+    prepared: Option<Mutex<Option<PreparedRoot>>>,
 }
 
 impl ArtifactWorker for BackgroundJob<'_> {
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let prepared = {
-            self.prepared
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .take()
-                .ok_or(InternalError::PreparedRootConsumed)?
+        let prepared = match &self.prepared {
+            Some(prepared) => Some(
+                prepared
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .take()
+                    .ok_or(InternalError::PreparedRootConsumed)?,
+            ),
+            None => None,
         };
         let composed = self.session.raw_prepared(route, prepared)?;
         self.session.finish_artifact(route, composed)
