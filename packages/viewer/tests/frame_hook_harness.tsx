@@ -64,6 +64,7 @@ interface FrameHookHarness {
   rerender(id: string): void;
   resolveMount(id: string): void;
   resolveUpdate(id: string): void;
+  retry(id: string): void;
   snapshot(id: string): FrameHookSnapshot;
   start(
     id: string,
@@ -161,6 +162,7 @@ export function installFrameHookHarness(): void {
       pending.resolve(createMountedFrame(host));
     },
     resolveUpdate: (id) => requiredHost(id).pendingUpdates.shift()?.resolve(),
+    retry: (id) => requiredHost(id).retry?.(),
     snapshot: (id) => {
       const host = requiredHost(id);
       const session = host.registry?.values()[0];
@@ -202,6 +204,7 @@ export function installFrameHookHarness(): void {
         pendingUpdates: [],
         receive: undefined,
         registry: undefined,
+        retry: undefined,
         root: createRoot(element),
         source: "/static/mokly-generated/frame-hook/index.html",
         status: "unavailable",
@@ -257,6 +260,7 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
     usage,
   });
   host.status = mounted.status;
+  host.retry = mounted.retry;
   return (
     <iframe
       data-frame-hook-status={mounted.status}

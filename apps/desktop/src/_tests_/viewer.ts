@@ -30,9 +30,11 @@ export async function viewerProof(page: Page): Promise<string> {
   await expect(page.getByTestId("viewer-project")).toBeVisible();
   await expect(page.getByTestId("viewer-share")).toBeVisible();
   // This assertion must change after the upstream pin bump fixes desktop hosts.
+  // The failed line also offers Try again, so it is found by its role.
   await expect(
     page
-      .getByText("This preview could not be loaded.", { exact: true })
+      .getByRole("status")
+      .filter({ hasText: "This preview could not be loaded." })
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
