@@ -29,6 +29,11 @@ test("CLI documentation packing keeps the full guide, protocol, fixture and chan
   const pack = () =>
     create({ cwd: root, file: archive, gzip: true }, ["package"]);
   await fs.cp(source, packed, { recursive: true });
+  const cloudFile = "docs/protocol/cloud/repository-layout.md";
+  await fs.mkdir(path.dirname(path.join(source, cloudFile)), {
+    recursive: true,
+  });
+  await fs.writeFile(path.join(source, cloudFile), "private app protocol");
   await pack();
   await inspectPublishedDocs(archive, source);
   for (const file of Object.keys(contents)) {
@@ -54,6 +59,16 @@ test("CLI documentation packing keeps the full guide, protocol, fixture and chan
     path.join(packed, "docs/protocol/extra.md"),
     "not in source",
   );
+  await pack();
+  await assert.rejects(
+    inspectPublishedDocs(archive, source),
+    /complete source/,
+  );
+  await fs.rm(path.join(packed, "docs/protocol/extra.md"));
+  await fs.mkdir(path.dirname(path.join(packed, cloudFile)), {
+    recursive: true,
+  });
+  await fs.copyFile(path.join(source, cloudFile), path.join(packed, cloudFile));
   await pack();
   await assert.rejects(
     inspectPublishedDocs(archive, source),

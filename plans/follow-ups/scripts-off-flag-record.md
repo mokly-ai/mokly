@@ -8,7 +8,7 @@
 - **Location:** `crates/mokly-compare/src/base_render.rs:48` to line 79,
   `crates/mokly-compare/src/base_render.rs:114`,
   `crates/mokly-compare/src/base_classification.rs:103` to line 233,
-  `crates/mokly-cli/src/changes_base.rs:42` and `:130`,
+  `scripts_off` at `crates/mokly-cli/src/changes_base.rs:42` and `:131`,
   `crates/mokly-cli/src/changes_static.rs:24` and `:30`, and
   `crates/mokly-cli/src/serve_changes_base.rs:129` and `:135`.
 - **Reason:** On 2026-10-29 the user kept this wider fix out of the pull

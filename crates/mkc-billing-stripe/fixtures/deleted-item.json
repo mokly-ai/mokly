@@ -1,0 +1,12 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_item_delete_fixture"
+  },
+  "body": {
+    "id": "si_collaborator_fixture",
+    "object": "subscription_item",
+    "deleted": true
+  }
+}

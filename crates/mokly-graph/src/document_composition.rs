@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_html::composition::ComposeRequest;
 use mokly_html::error::HtmlError;
+use mokly_html::prepared_root::PreparedRoot;
 use mokly_model::axes::Viewport;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 
@@ -17,6 +18,7 @@ pub(crate) fn document(
     session: &Session,
     plan: &DocumentPlan,
     entry: &ModelEntry,
+    prepared: Option<PreparedRoot>,
 ) -> Result<Arc<Artifact>> {
     let route = plan.route.as_str();
     let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
@@ -30,13 +32,12 @@ pub(crate) fn document(
         };
         rendering::markdown(&session.state.catalogue, entry, plan, &resolver)?
     } else {
-        match session.state.composer.compose(&ComposeRequest {
-            catalogue: &session.state.catalogue,
-            entry,
-            viewport: plan.viewport.unwrap_or(Viewport::Desktop),
-            color_scheme: plan.color_scheme,
-            stylesheets: plan.stylesheets.clone(),
-        }) {
+        let request = request(session, plan, entry);
+        let result = match prepared {
+            Some(prepared) => session.state.composer.compose_prepared(&request, prepared),
+            None => session.state.composer.compose(&request),
+        };
+        match result {
             Ok(composed) => composed,
             Err(source) => {
                 return Err(GraphError::Html {
@@ -73,4 +74,18 @@ pub(crate) fn document(
         styles::install(&mut composed.tree, &hrefs);
     }
     rendering::finish(composed, plan, entry, &session.state.catalogue)
+}
+
+pub(crate) fn request<'a>(
+    session: &'a Session,
+    plan: &DocumentPlan,
+    entry: &'a ModelEntry,
+) -> ComposeRequest<'a> {
+    ComposeRequest {
+        catalogue: &session.state.catalogue,
+        entry,
+        viewport: plan.viewport.unwrap_or(Viewport::Desktop),
+        color_scheme: plan.color_scheme,
+        stylesheets: plan.stylesheets.clone(),
+    }
 }

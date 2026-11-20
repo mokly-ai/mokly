@@ -1,0 +1,21 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  role="img"
+  aria-labelledby="mokly-icon-title"
+>
+  <title id="mokly-icon-title">Mokly</title>
+  <g fill="#a3cdb4" transform="scale(2)">
+    <rect x="3" y="3" width="20" height="21" rx="4" opacity=".3" />
+    <rect x="9" y="8" width="20" height="21" rx="4" />
+    <path
+      d="M14 15h10M14 20h7"
+      fill="none"
+      stroke="#17221b"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>

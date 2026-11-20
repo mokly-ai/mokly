@@ -109,8 +109,8 @@ const DARK = palette(
 
 /**
  * The colour a role paints. A role a theme does not restate keeps its Light
- * value, and a public role that defers to an overridable default is followed
- * one step, so the pair compared is the one the shell actually paints.
+ * value, and a role that names another role is followed one step, so the
+ * pair compared is the one the shell actually paints.
  */
 function resolve(
   role: string,
@@ -250,11 +250,14 @@ test("a public override foreground only sits on the accent it pairs with", () =>
   // Only a rule painting both in one block can be judged without a cascade
   // model, which is exactly the case an override breaks: the background stays
   // pinned while the foreground follows the consumer's brand.
-  // An embedded use carries the default of its appearance as its fallback.
+  // Each use carries the default of its appearance as its fallback, and a
+  // wrapped declaration reads as one line here.
   const accentBackground =
     /^var\(--mokly-accent(?:-soft)?(?:, var\(--_mokly-private-accent(?:-soft)?-default\))?\)$/u;
   const failures: string[] = [];
-  for (const css of [STANDALONE_CSS, EMBEDDED_CSS]) {
+  for (const css of [STANDALONE_CSS, EMBEDDED_CSS].map((styles) =>
+    styles.replace(/\s+/gu, " ").replace(/\(\s/gu, "(").replace(/\s\)/gu, ")"),
+  )) {
     let judged = 0;
     for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
       const color = /(?:^|;|\{)\s*color:\s*([^;]+)/

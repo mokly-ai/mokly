@@ -2,6 +2,7 @@
 
 #![warn(unreachable_pub)]
 pub mod config;
+mod config_inputs;
 mod config_links;
 mod config_paths;
 mod config_postcss;

@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_css::types::{Bundle, StylesheetRoot};
+use mokly_graph::background::{BackgroundRead, BackgroundWorker};
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_stream::ComparisonConsumer;
@@ -143,6 +144,10 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 }
 
 impl RenderWorkers for CancellableWorkers {
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        check(self.cancellation.as_ref())?;
+        self.inner.background(route, worker)
+    }
     /// The supplied task checks both generations and stores their own errors.
     fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
         self.inner.comparison_stream(task, consumer);

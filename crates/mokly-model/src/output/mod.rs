@@ -2,8 +2,10 @@
 
 pub mod artifact;
 pub mod error;
+pub mod inventory;
 mod json;
 pub mod ownership;
+pub mod paths;
 pub mod repository;
 mod semver;
 pub mod upload;

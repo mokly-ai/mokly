@@ -15,9 +15,9 @@ use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::bundle_store::{BundleStoreMock, ReadMiss, ReadOutcome, WriteOutcome};
-use mokly_sidecar::methods::{BundleCapture, Call};
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::operations::Operation;
-use mokly_sidecar::pool::Pool;
+use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
@@ -26,6 +26,7 @@ use mokly_sidecar::workers::Diagnostics;
 use tempfile::TempDir;
 use unimock::{MockFn, Unimock, matching};
 
+use super::plan_capture::{InitialCapture, PlanPool};
 use super::support::{CapturedPool, package_version, workspace};
 
 #[derive(Default)]
@@ -46,17 +47,17 @@ pub(super) struct Fixture {
     _directory: TempDir,
     root: PathBuf,
     pub(super) runtime: Runtime,
-    pool: Arc<CapturedPool>,
+    pool: Arc<PlanPool>,
     counts: Arc<Counts>,
 }
 
 impl Fixture {
-    pub(super) fn new() -> Self {
-        let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    pub(super) fn in_parent(parent: &Path) -> Self {
+        let directory = tempfile::tempdir_in(parent).unwrap();
         let root = dunce::canonicalize(directory.path()).unwrap();
         let counts = Arc::new(Counts::default());
         let clock = Arc::new(SystemClock::new());
-        let pool = Arc::new(CapturedPool {
+        let pool = Arc::new(PlanPool::new(CapturedPool {
             calls: Mutex::new(vec![]),
             inner: Arc::new(
                 Pool::new(
@@ -88,7 +89,7 @@ impl Fixture {
                         .returns(WriteOutcome::Written),
                 )))),
             ),
-        });
+        }));
         let runtime = Runtime::new(
             Arc::new(WorkingTree),
             Arc::new(WorkingTree),
@@ -129,6 +130,7 @@ impl Fixture {
             input: Config::default(),
             file: self.root.join("mokly.config.json"),
             repo_root: self.root.clone(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         };
@@ -157,22 +159,15 @@ impl Fixture {
         self.counts.0.load(Ordering::SeqCst)
     }
     pub(super) fn sent_plan(&self) -> bool {
-        self.pool
-            .calls
-            .lock()
-            .unwrap()
-            .iter()
-            .rev()
-            .find_map(|call| match call {
-                Call::Bundle(request) => Some(request.plan.is_some()),
-                _ => None,
-            })
-            .unwrap()
+        self.pool.sent_plan()
+    }
+    pub(super) fn initial_capture(&self) -> Option<InitialCapture> {
+        self.pool.initial_capture()
     }
 }
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        self.pool.inner.shutdown().unwrap();
+        self.pool.shutdown().unwrap();
     }
 }

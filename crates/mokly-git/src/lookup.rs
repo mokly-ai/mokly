@@ -3,7 +3,6 @@
 use std::ffi::OsString;
 
 use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
-use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -16,9 +15,9 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        let entries = self.lookup_metadata(commit, paths, limits)?;
-        if self.ensure_checkout_objects(commit, &entries)? {
-            return self.lookup_metadata(commit, paths, limits);
+        let entries = self.lookup_metadata(commit, paths, limits, false, false)?;
+        if self.ensure_checkout_objects(commit, &entries)? || !self.promisor_remotes.is_empty() {
+            return self.lookup_metadata(commit, paths, limits, true, false);
         }
         Ok(entries)
     }
@@ -28,35 +27,28 @@ impl GitRepository {
         commit: &ObjectId,
         paths: &[RepoPath],
         limits: Limits,
+        with_sizes: bool,
+        include_trees: bool,
     ) -> Result<Vec<Entry>> {
-        let prefix: Vec<_> = [
-            "--no-optional-locks",
-            "--literal-pathspecs",
-            "ls-tree",
-            "-l",
-            "-z",
-            "--full-tree",
-            commit.as_str(),
-            "--",
-        ]
-        .into_iter()
-        .map(OsString::from)
-        .collect();
+        let mut arguments = vec!["ls-tree", "-l"];
+        if include_trees {
+            arguments.push("-t");
+        }
+        arguments.extend(["-z", "--full-tree", commit.as_str(), "--"]);
+        let mut request = self.tree_request(&arguments);
         let paths: Vec<_> = paths
             .iter()
             .map(|path| OsString::from(path.as_str()))
             .collect();
         let mut entries = Vec::new();
-        for args in batches::split(&prefix, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
-            let output = self.runner.run(&Request {
-                process_mode: ProcessMode::PlainGroup,
-                directory: self.directory.clone(),
-                args,
-                stdin: Vec::new(),
-                output_limit: DEFAULT_OUTPUT_LIMIT,
-                stderr_limit: DEFAULT_STDERR_LIMIT,
-            })?;
-            entries.extend(tree::parse(&output.stdout, limits)?);
+        for args in batches::split(&request.args, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
+            request.args = args;
+            let output = if with_sizes {
+                self.runner.run(&request)?.stdout
+            } else {
+                self.initial_tree_listing(&request)?
+            };
+            entries.extend(tree::parse(&output, limits)?);
         }
         Ok(entries)
     }

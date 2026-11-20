@@ -100,6 +100,10 @@ impl GraphError {
 /// Internal failures retain their error type.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// A prepared root can be consumed by its owning worker only once.
+    #[error("prepared root was already consumed")]
+    PreparedRootConsumed,
+
     /// An injected runtime adapter failed.
     #[error("runtime adapter failed: {source}")]
     Provider {

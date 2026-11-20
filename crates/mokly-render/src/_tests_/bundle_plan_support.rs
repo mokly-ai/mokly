@@ -58,10 +58,12 @@ pub(super) fn result(
         generation: "generation".into(),
         epoch: 1,
         cache: None,
+        compile_count: 1,
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: evidence,
             identity: "identity".into(),
             code: String::new(),

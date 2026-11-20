@@ -1,0 +1,17 @@
+# PR APIs select the log mailer and omit all Postmark mounts.
+environment: preview-pr
+desktopClient: false
+database:
+  mode: namespace
+api:
+  trustedProxyHops: 2
+  # The shared cloudflare.trustedProxyCidrs are appended by the helper.
+  trustedProxyCidrs:
+    - 10.24.0.0/14
+scaling:
+  minReplicas: 1
+  maxReplicas: 1
+pdb:
+  enabled: false
+preview:
+  signInEmail: preview@mokly.ai

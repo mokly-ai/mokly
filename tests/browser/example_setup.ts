@@ -37,7 +37,9 @@ export async function startExampleHosts(
         await ready(host.url, signal);
       } catch (error) {
         abort.abort(error);
-        throw error;
+        throw new Error(`Example Serve worker ${index + 1} setup failed`, {
+          cause: error,
+        });
       }
     }),
   );

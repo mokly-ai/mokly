@@ -1,0 +1,22 @@
+/* Account entry controls: the GitHub/email stack sign in and sign up share. */
+.fo-account-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-4);
+}
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+  margin: var(--mk-space-1) 0;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.or-divider::before,
+.or-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--mk-color-border);
+}

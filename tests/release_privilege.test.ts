@@ -52,7 +52,6 @@ test("release audit and builds complete without publication credentials", async 
   const preparation = steps(builder);
   for (const name of [
     "Audit Rust dependencies",
-    "Run complete verification",
     "Prepare exact publish artifacts",
     "Smoke-test exact publish artifacts",
   ])

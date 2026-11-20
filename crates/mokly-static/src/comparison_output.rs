@@ -8,15 +8,16 @@ use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::nullable::Nullable;
 use mokly_model::output::artifact::File;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::routes;
 
+use crate::admission::AdmissionResult;
 use crate::comparison_files::{checkpoint, compare, side};
 use crate::error::Result;
 use crate::identity;
-use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
 
 #[tracing::instrument(name = "review.capture", skip_all, err)]
@@ -46,20 +47,24 @@ pub(crate) fn append(
         cancellation,
     )?;
     for preview in projection_removed::previews(result) {
-        inventory.insert(
-            routes::comparison_preview(&preview.path),
-            identity::json(&preview).into(),
-        )?;
+        inventory
+            .insert(
+                routes::comparison_preview(&preview.path),
+                identity::json(&preview).into(),
+            )
+            .admit()?;
     }
     let records = projection_removed::records(result, historical);
     for record in records {
         checkpoint(cancellation)?;
         let path = record.entry.path().to_owned();
         index.removed_entries.push(record);
-        output.insert(format!("view/{path}/index.html"), stub.to_vec().into())?;
+        output
+            .insert(format!("view/{path}/index.html"), stub.to_vec().into())
+            .admit()?;
     }
     compare(projection_workspace::apply(&mut details, result))?;
-    let (generation, files) = finalize(inventory, &mut details);
+    let (generation, files) = finalize(&inventory, &mut details);
     for record in &mut index.removed_entries {
         if let Some(detail) = details.get(record.entry.path()) {
             record.entry.set_detail_id(&detail.detail_id);
@@ -67,19 +72,21 @@ pub(crate) fn append(
     }
     index.comparison_url = Nullable(Some(routes::comparison_generation(&generation)));
     let prefix = routes::comparison_generation(&generation);
-    for file in files {
-        output.insert(format!("{prefix}{}", file.path), file.bytes)?;
+    for file in inventory.files().chain(files.iter()) {
+        output
+            .insert(format!("{prefix}{}", file.path), file.bytes.clone())
+            .admit()?;
     }
     Ok(())
 }
 
 fn finalize(
-    inventory: Inventory,
+    inventory: &Inventory,
     details: &mut BTreeMap<String, EntryDetailV4>,
 ) -> (String, Vec<File>) {
-    let mut files = inventory.into_files();
-    let mut hashes: Vec<_> = files
-        .iter()
+    let mut files = Vec::new();
+    let mut hashes: Vec<_> = inventory
+        .files()
         .map(|file| (file.path.clone(), digest(&file.bytes)))
         .collect();
     for (path, detail) in details {

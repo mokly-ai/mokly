@@ -173,13 +173,17 @@ fn run_install(version: &str, _ci: bool, _actions: bool) {
         10 * 1024 * 1024,
     ));
     let extraction: &dyn Extraction = &CachedExtraction {
+        steps: Arc::new(support::IgnoredSteps),
         repository,
         cache: Arc::clone(&cache),
         files: Limits::default().files,
     };
     let source = extraction.acquire(&commit).unwrap();
     let commands: Arc<dyn Commands> = Arc::new(TimedCommands {
-        spawner: Arc::new(SystemSpawner { groups }),
+        spawner: Arc::new(SystemSpawner {
+            groups,
+            clock: clock.clone(),
+        }),
         clock: clock.clone(),
         cancellation: token,
         storage: storage(temporary.path()),
@@ -197,6 +201,7 @@ fn run_install(version: &str, _ci: bool, _actions: bool) {
         resolution: ModuleResolution::default(),
     };
     let resolved = DependencyTiers {
+        steps: Arc::new(support::IgnoredSteps),
         cache,
         commands,
         storage: storage(temporary.path()),

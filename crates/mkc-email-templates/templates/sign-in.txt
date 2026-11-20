@@ -1,0 +1,7 @@
+Sign in to Mokly
+
+Sign in: {{{link}}}
+
+The link is valid for {{{expiry}}} and works once.
+
+If you didn’t request it, ignore this email.

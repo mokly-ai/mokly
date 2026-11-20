@@ -1,0 +1,27 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": ""
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "api-6c9fd6f8d7-first",
+        "namespace": "mkc-preview-pr-42",
+        "uid": "42345678-1234-4234-8234-123456789abc"
+      },
+      "apiVersion": "v1",
+      "kind": "Pod"
+    },
+    {
+      "metadata": {
+        "name": "api-6c9fd6f8d7-second",
+        "namespace": "mkc-preview-pr-42",
+        "uid": "52345678-1234-4234-8234-123456789abc"
+      },
+      "apiVersion": "v1",
+      "kind": "Pod"
+    }
+  ]
+}

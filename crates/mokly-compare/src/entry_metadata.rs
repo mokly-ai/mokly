@@ -7,6 +7,7 @@ use mokly_model::canonical;
 use mokly_model::catalogue::{CatalogueModel, EntryContent, ModelEntry, UseCaseStep, VisualEntry};
 use mokly_model::controls::ComponentControl;
 use mokly_model::data::Props;
+use mokly_model::projection;
 use mokly_model::prop_schema::PropSchema;
 use serde::Serialize;
 
@@ -99,23 +100,6 @@ pub(crate) fn projection(
             .iter()
             .find(|entry| entry.metadata.path.eq_ignore_ascii_case(path))
     });
-    let related_docs = metadata
-        .related_docs
-        .iter()
-        .map(|label| {
-            catalogue
-                .entries
-                .iter()
-                .find(|entry| {
-                    matches!(entry.content, EntryContent::Document { .. })
-                        && entry.metadata.source.path == *label
-                })
-                .map_or_else(
-                    || label.clone(),
-                    |entry| format!("mock:{}", mapped(&entry.metadata.path, paths)),
-                )
-        })
-        .collect();
     canonical::to_string(&Metadata {
         path: {
             let path = mapped(&metadata.path, paths);
@@ -129,7 +113,9 @@ pub(crate) fn projection(
         description: &metadata.description,
         rationale: &metadata.rationale,
         tags: &metadata.tags,
-        related_docs,
+        related_docs: projection::related_docs(catalogue, &metadata.related_docs, |path| {
+            mapped(path, paths)
+        }),
         variant_of: metadata.variant_of.as_ref().map(|path| mapped(path, paths)),
         parent_title: parent.map(|entry| entry.metadata.title.as_str()),
         content,

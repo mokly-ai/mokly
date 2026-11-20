@@ -20,9 +20,11 @@
     when the generation drops.
   - **`PostcssStop`:** the operation record that the test helper counts
     when a PostCSS context stops.
-  - **Windows native job:** the job `Native (blacksmith-8vcpu-windows-2025)`
-    of `.github/workflows/ci.yml`. Its step `Run native verification` runs
-    the Rust tests of the workspace.
+  - **Windows native job:** the job `Native (windows-2025)` of
+    `.github/workflows/ci.yml`, on GitHub-hosted `windows-2025`. Its step
+    `Run native verification` runs the Rust tests of the workspace. The
+    original failure, the reproduction, and the run of option D below ran on
+    the earlier runner, `blacksmith-8vcpu-windows-2025`.
   - **`CapturedPool`:** the integration test wrapper in
     `crates/mokly-render/tests/integration/support.rs` that records sidecar
     calls before it forwards them.

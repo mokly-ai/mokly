@@ -251,6 +251,7 @@ function validateCliOrNative(metadata, name) {
       "README.md",
       "docs/guides",
       "docs/protocol",
+      "!docs/protocol/cloud/**",
     ].sort(),
   );
 }

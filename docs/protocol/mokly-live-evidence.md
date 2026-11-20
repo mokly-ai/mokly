@@ -42,8 +42,7 @@ section and folder disclosure, focus, the drawer, and scroll positions. It
 updates the Changes count and status, the changed-entry marks, and the
 removed rows from the same state: retained removed rows keep their identity,
 and additions and removals follow the canonical server order after the
-current tree. Removed screens and components stay in All, and removed pages
-and documents appear only in Changes.
+current tree. Removed rows of every kind appear only in Changes.
 
 A frame whose `documentKey` is unchanged keeps its document, scroll, and
 selection. A removed entry's detail is fetched from the generation the

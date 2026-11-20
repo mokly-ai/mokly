@@ -14,8 +14,18 @@ export function isPackageName(value) {
   );
 }
 
-function installPackageName(location) {
+export function installPackageName(location) {
   return location.match(/(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)$/u)?.[1];
+}
+
+/** Accept a Cloud app workspace: a project under `apps/`, `packages/app`, or `packages/desktop`. */
+export function isCloudAppLocation(value) {
+  return (
+    typeof value === "string" &&
+    /^(?:apps\/[a-zA-Z0-9_-][a-zA-Z0-9_.-]*|packages\/(?:app|desktop))$/u.test(
+      value,
+    )
+  );
 }
 
 /** Accept canonical relative lockfile install locations. */
@@ -35,12 +45,20 @@ export function isInstallLocation(value) {
   );
 }
 
-const DEPENDENCY_SCOPES = [
+export const DEPENDENCY_SCOPES = [
   "dependencies",
   "devDependencies",
   "optionalDependencies",
   "peerDependencies",
 ];
+
+/** Local package entries include workspaces and linked native packages. */
+export function workspaceLocations(packages) {
+  return Object.keys(packages).filter(
+    (location) =>
+      location !== "" && !location.split("/").includes("node_modules"),
+  );
+}
 
 /** Reject missing package inventories and malformed dependency maps. */
 export function lockfileErrors(lockfile) {
@@ -77,6 +95,15 @@ export function lockfileErrors(lockfile) {
       );
       continue;
     }
+    if (
+      entry.link === true &&
+      (typeof entry.resolved !== "string" ||
+        !Object.hasOwn(lockfile.packages, entry.resolved) ||
+        lockfile.packages[entry.resolved]?.link === true)
+    )
+      errors.push(
+        `Invalid lockfile link ${location}. Restore its local package entry with npm.`,
+      );
     for (const scope of DEPENDENCY_SCOPES) {
       if (entry[scope] === undefined) continue;
       if (
@@ -96,7 +123,7 @@ export function lockfileErrors(lockfile) {
   return errors;
 }
 
-function resolveDependency(packages, owner, name) {
+export function resolveDependency(packages, owner, name) {
   let directory = owner;
   while (true) {
     if (path.posix.basename(directory) !== "node_modules") {
@@ -113,7 +140,7 @@ function resolveDependency(packages, owner, name) {
 export function exceptionPathErrors(exception, nodes, packages) {
   const errors = [];
   const locations = exception.path;
-  if (nodes.length !== 1 || nodes[0] !== locations.at(-1))
+  if (!nodes.includes(locations.at(-1)))
     errors.push(
       `reported install locations ${nodes.join(", ")} differ from the reviewed path`,
     );

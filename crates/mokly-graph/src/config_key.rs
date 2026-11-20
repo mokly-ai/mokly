@@ -9,6 +9,8 @@ use crate::key::{NodeKey, NodeKind, data_key};
 pub(crate) fn resolved(config: &ResolvedConfig, version: &str) -> NodeKey {
     let mut input = config.input.clone();
     input.repo_root = Some(".".into());
+    input.renderer = config.renderer();
+    input.postcss = config.postcss();
     let settings = serde_json::to_value(&input)
         .expect("configuration fields contain only JSON values and string keys");
     let roots: Vec<_> = config.roots.iter().map(|root| json!({"directory":relative(&root.directory,&config.repo_root),"identity":relative(&root.identity,&config.repo_root)})).collect();

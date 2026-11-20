@@ -1,0 +1,29 @@
+@import "./product-scene.css";
+@import "./art-tiles.css";
+@import "./browser-scene.css";
+@import "./review-panel.css";
+.review-illustration {
+  width: 100%;
+  min-width: 0;
+  color: var(--mk-color-text);
+}
+.component-example > .review-illustration {
+  max-width: 1200px;
+}
+.component-example > .illustration-full {
+  max-width: 620px;
+  padding-right: 20px;
+}
+
+.illustration-symbol {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  color: var(--mk-color-accent);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.illustration-symbol svg {
+  width: 100%;
+  height: 100%;
+}

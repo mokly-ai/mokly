@@ -1,0 +1,58 @@
+[package]
+name = "mkc-publications"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mkc-domain = { workspace = true }
+mkc-store-interface = { workspace = true }
+mkc-file-store-interface = { workspace = true }
+mkc-mokly-contract = { workspace = true }
+mkc-github-interface = { workspace = true }
+mkc-auth = { workspace = true }
+mkc-build-interface = { workspace = true }
+sandbox-interface = { workspace = true }
+internal-error = { workspace = true }
+thiserror = "2.0.20"
+unimock = "0.6.8"
+mime_guess = "2.0.5"
+hmac = "0.13.0"
+sha2 = "0.11.0"
+hex = "0.4.3"
+url = "2.5.8"
+serde_json = "1.0.151"
+chrono = { version = "0.4.45", features = ["serde"] }
+serde = { version = "1.0.229", features = ["derive"] }
+uuid = { version = "1.26.1", features = ["serde", "v7"] }
+tracing = "0.1.44"
+bytes = "1.12.1"
+async-trait = "0.1.92"
+tokio = { version = "1.53.2", features = ["rt", "time", "macros", "sync"] }
+
+[features]
+test-support = []
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mkc-test-pg = { workspace = true }
+mkc-db = { workspace = true }
+mkc-file-store-local = { workspace = true }
+diesel = { version = "2.3.13", features = ["postgres"] }
+mkc-store-pg = { workspace = true }
+mkc-upload-memory = { workspace = true }
+tempfile = "3.27.0"
+tokio = { version = "1.53.2", features = ["rt-multi-thread", "test-util"] }
+
+[[test]]
+name = "maintenance"
+path = "tests/maintenance/mod.rs"
+
+[[test]]
+name = "builds"
+path = "tests/builds/mod.rs"

@@ -1,7 +1,7 @@
 //! Render generation plans are metadata; rendered documents stay in the cache.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -13,10 +13,11 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
+use crate::background::BackgroundRead;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
-use crate::comparison_input::RetainedComparisonInput;
+use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
@@ -88,6 +89,10 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Perform the ordinary worker lookup, completing a hit or deferring its real miss.
+    fn read_background(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
+    }
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;
 
@@ -110,6 +115,11 @@ pub trait RenderGeneration: GeneratedResources {
     /// Decode only retained inputs. No source IO, fallback, or failure log is allowed.
     /// Checking wrappers keep this default when forwarding would bypass their checks.
     fn retained_comparison_input(&self, _route: &str) -> Option<RetainedComparisonInput> {
+        None
+    }
+    /// Prove retained codec input without decoding, only when restoration cannot fail.
+    /// Checking wrappers decline this proof unless all of their checks still apply.
+    fn retained_document_evidence(&self, _route: &str) -> Option<RetainedDocumentEvidence> {
         None
     }
     /// Prove every observable input of one comparison read, or decline reuse.
@@ -211,6 +221,14 @@ pub trait RenderGeneration: GeneratedResources {
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.
     fn stylesheet_directories(&self) -> &[DirectoryDependency];
+    /// Exact physical CSS resolution probes, including absent candidates.
+    fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
+        BTreeSet::new()
+    }
+    /// Admitting dependency folders for exact physical stylesheet watch candidates.
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        BTreeMap::new()
+    }
     /// All authored files reached by completed documents of this generation.
     fn public_files(&self) -> BTreeSet<String>;
     /// Lexical resource inputs, including targets that need repair.

@@ -1,10 +1,14 @@
 //! Real filesystem changes permit direct plans only while resolution facts match.
 
+use mokly_test_support::durable_fixture::{self, Owner};
+
+use super::plan_capture::InitialCapture;
 use super::plan_support::Fixture;
 use super::support::{link_directory, unlink_directory};
 
 #[test]
 fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes() {
+    let directory = durable_fixture::create(Owner::RenderPlanChanges).unwrap();
     for name in [
         "content",
         "existing import",
@@ -16,7 +20,7 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
         "paths",
         "link",
     ] {
-        let mut fixture = Fixture::new();
+        let mut fixture = Fixture::in_parent(directory.path());
         match name {
             "existing import" => fixture.write("existing.ts", "export const extra=1;"),
             "index priority" => {
@@ -50,6 +54,17 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
             _ => {}
         }
         fixture.prepare();
+        assert_eq!(
+            fixture.initial_capture(),
+            Some(InitialCapture {
+                complete: true,
+                durable: true,
+                uncaptured: None,
+                plan: true,
+                toolchain: true,
+            }),
+            "initial capture {name}"
+        );
         assert_eq!(fixture.attempts(), 2, "initial {name}");
         fixture.edit();
         let expected = match name {
@@ -110,11 +125,56 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
         };
         assert_eq!(fixture.prepare(), expected, "modules {name}");
         let direct = name == "content" || name == "existing import";
-        assert_eq!(fixture.sent_plan(), direct, "plan {name}");
+        assert_eq!(
+            fixture.sent_plan(),
+            direct,
+            "plan {name}, initial capture: {:?}",
+            fixture.initial_capture()
+        );
         assert_eq!(
             fixture.attempts(),
             if direct { 3 } else { 4 },
             "attempts {name}"
         );
     }
+}
+
+#[test]
+fn serve_plans_reject_an_added_earlier_absolute_paths_target() {
+    let directory = durable_fixture::create(Owner::RenderAbsolutePaths).unwrap();
+    let mut fixture = Fixture::in_parent(directory.path());
+    let written = fixture
+        .root()
+        .join("written.js")
+        .to_string_lossy()
+        .replace('\\', "/");
+    fixture.write("one/.keep", "");
+    fixture.write("two/value.js", "export const value='two';");
+    fixture.write(
+        "entry.ts",
+        &format!(
+            "export {{value}} from {};",
+            serde_json::to_string(&written).unwrap()
+        ),
+    );
+    fixture.write("tsconfig.json", &serde_json::to_string(&serde_json::json!({
+        "compilerOptions": { "strict": true, "paths": { written: ["./one/value.js", "./two/value.js"] } }
+    })).unwrap());
+    assert_eq!(fixture.prepare(), ["entry.ts", "two/value.js"]);
+    assert_eq!(fixture.attempts(), 2);
+    fixture.edit();
+    assert_eq!(fixture.prepare(), ["entry.ts", "two/value.js"]);
+    assert!(
+        fixture.sent_plan(),
+        "unchanged resolution must use the saved plan"
+    );
+    assert_eq!(fixture.attempts(), 2);
+    fixture.write("one/value.js", "export const value='one';");
+    let changed = fixture.prepare();
+    assert!(
+        !fixture.sent_plan(),
+        "an earlier mapped target must reject the saved plan"
+    );
+    assert_eq!(changed, ["entry.ts", "one/value.js"]);
+    assert_eq!(fixture.attempts(), 4);
 }

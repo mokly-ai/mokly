@@ -11,6 +11,7 @@ use mokly_watch::observer::{Observer, ObserverMock};
 use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::WatchInputs;
+use super::serve_watch_coverage_tests::adoptable;
 use super::serve_watch_tests::{catalogue, prepared, watch};
 use crate::serve_watch_files::ObserversMock;
 
@@ -155,5 +156,32 @@ fn an_uncovered_candidate_replays_only_after_its_second_preparation() {
     watch
         .recheck(&mut candidate, &prepared("next", generation()))
         .unwrap();
+    assert_eq!(*events.lock().unwrap(), [changed()]);
+}
+
+#[test]
+fn an_equal_candidate_still_replays_a_file_changed_during_its_preparation() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::new(Unimock::new((
+        observes(),
+        ObserverMock::replace
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
+        replayed(events.clone()),
+    )));
+    let factory = Unimock::new((
+        clock(at(100), at(110)),
+        clock(at(200), at(210)),
+        modified(Some(at(205))),
+    ));
+    let watch = watch(observer, factory);
+    watch.begin();
+    let first = prepared("specs", Unimock::new(adoptable()));
+    let candidate = watch.candidate(&first).unwrap();
+    watch.clone().adopt(candidate, &first);
+    assert_eq!(events.lock().unwrap().len(), 0);
+    watch.begin();
+    let candidate = watch.candidate(&prepared("specs", generation())).unwrap();
+    assert!(!candidate.recheck);
     assert_eq!(*events.lock().unwrap(), [changed()]);
 }

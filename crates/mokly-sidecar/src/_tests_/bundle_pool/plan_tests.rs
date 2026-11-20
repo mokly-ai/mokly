@@ -37,7 +37,10 @@ fn a_warm_plan_is_returned_only_for_the_runtime_key_the_sidecar_accepted() {
                 .returns(WriteOutcome::Written),
         ));
         let events = Arc::new(Mutex::new(vec![]));
-        let pool = pool(store, worker(events.clone(), accepted));
+        let pool = pool(
+            store,
+            worker(events.clone(), accepted, u64::from(accepted != "seed")),
+        );
         let result = bundle(&pool);
         assert_eq!(result.plan, expected, "accepted runtime {accepted}");
         assert_eq!(

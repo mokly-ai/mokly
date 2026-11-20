@@ -1,0 +1,10 @@
+[package]
+name = "mkc-email-templates"
+version.workspace = true
+edition.workspace = true
+license = "AGPL-3.0-only"
+authors.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true

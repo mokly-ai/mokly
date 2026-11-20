@@ -1,0 +1,297 @@
+/* Account: one raised panel for entry and every onboarding step. The panel is
+   the screen's subject, so the page around it carries only the identity and the
+   two legal links, and nothing about the frame moves through the flow. */
+.fo-account {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: radial-gradient(
+    var(--mk-color-border) 1px,
+    transparent 1px
+  );
+  background-size: var(--mk-space-6) var(--mk-space-6);
+}
+.fo-account-header,
+.fo-account-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+/* 2. The identity sits in a compact top bar; the panel is what gets the room.
+   In the Mac app the bar keeps clear of the window buttons at either edge. */
+.fo-account-header {
+  justify-content: flex-end;
+  gap: var(--mk-space-3) var(--mk-space-4);
+  height: var(--mk-layout-topbar);
+  padding: 0 var(--mk-layout-gutter-desktop);
+  padding-left: max(
+    var(--mk-layout-gutter-desktop),
+    var(--fo-window-inset, 0px)
+  );
+  padding-right: max(
+    var(--mk-layout-gutter-desktop),
+    var(--fo-window-inset-end, 0px)
+  );
+}
+.fo-account-header > a {
+  display: inline-flex;
+  align-items: center;
+  height: var(--mk-layout-row-min);
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+}
+.fo-account-main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: var(--mk-space-6) var(--mk-space-5) var(--mk-space-16);
+}
+.fo-account-panel {
+  width: 100%;
+  max-width: var(--mk-layout-entry-max);
+  background: var(--mk-color-surface);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  box-shadow: var(--mk-shadow-medium);
+}
+.fo-account-content {
+  padding: var(--mk-space-10);
+}
+.fo-account-mark {
+  display: inline-flex;
+  margin-bottom: var(--mk-space-8);
+}
+.fo-account-heading {
+  display: grid;
+  gap: var(--mk-space-2);
+  margin-bottom: var(--mk-space-8);
+}
+.fo-account-heading h1 {
+  font-size: var(--mk-type-heading3-size);
+  line-height: var(--mk-type-heading3-line);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-account-detail {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-account-address {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}
+.fo-account-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-5);
+}
+.fo-account-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mk-space-3);
+}
+/* A selection field and the line that says where its list is changed are one
+   block: the body's own gap between them would read as two unrelated items. */
+.fo-account-selector {
+  display: grid;
+  gap: var(--mk-space-1);
+}
+.fo-selector-note {
+  margin: 0;
+}
+/* The field an open list hangs from: the list is placed beneath the field
+   rather than beneath the line that follows it. */
+.fo-selector-anchor {
+  position: relative;
+}
+/* Every action in the panel is full width, including the one a refused write
+   wraps as its way back. */
+.fo-account-body .fo-write-failure {
+  justify-items: stretch;
+}
+/* Facts sit across the panel rather than in a label column: at 360px a fixed
+   column strands the values mid-panel, and the value is what the reader checks. */
+.fo-account .fo-facts-ruled > div {
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+}
+.fo-account .fo-facts dd {
+  font-weight: var(--mk-font-medium);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+/* The panel is already the card a state body would draw for itself, and two
+   borders around one sentence is two frames for one message. */
+.fo-account .fo-state {
+  padding: var(--mk-space-4) 0 var(--mk-space-2);
+  background: none;
+  border: 0;
+}
+.fo-account .fo-panel {
+  box-shadow: none;
+}
+.fo-account-switch {
+  margin-top: var(--mk-space-6);
+  text-align: center;
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-account-switch a {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}
+/* The line's link while its target is not known: the same words in the same
+   box, as text, so nothing moves when the link arrives. */
+.fo-account-switch-text {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}
+.fo-account-progress {
+  padding: var(--mk-space-5) var(--mk-space-4);
+  background: var(--mk-color-surface-muted);
+  border-top: 1px solid var(--mk-color-border);
+  border-radius: 0 0 var(--mk-radius-medium) var(--mk-radius-medium);
+}
+.fo-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mk-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fo-steps > li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mk-space-2);
+  text-align: center;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-steps > li[aria-current] {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-step-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--mk-space-6);
+  height: var(--mk-space-6);
+  border: 1px solid var(--mk-color-border-strong);
+  border-radius: var(--mk-radius-pill);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  font-weight: var(--mk-font-regular);
+}
+.fo-steps > li[aria-current] > .fo-step-number {
+  background: var(--mk-color-text);
+  border-color: var(--mk-color-text);
+  color: var(--mk-color-background);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-step-count {
+  display: none;
+  gap: var(--mk-space-3);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  color: var(--mk-color-text-muted);
+}
+.fo-step-count-label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mk-space-3);
+}
+.fo-step-count-label > strong {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+.fo-step-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mk-space-1);
+}
+.fo-step-track > span {
+  height: var(--mk-space-1);
+  border-radius: var(--mk-radius-pill);
+  background: var(--mk-color-border);
+}
+.fo-step-track > [data-complete] {
+  background: var(--mk-color-border-strong);
+}
+.fo-step-track > [aria-current] {
+  background: var(--mk-color-text);
+}
+.fo-account-footer {
+  justify-content: center;
+  gap: 0 var(--mk-space-5);
+  padding: var(--mk-space-6) var(--mk-layout-gutter-desktop);
+  color: var(--mk-color-text-muted);
+}
+.fo-account-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--mk-layout-row-min);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+@media (max-width: 767px) {
+  /* The panel goes edge-to-edge: the canvas it was raised off is the phone. */
+  .fo-account {
+    background-image: none;
+  }
+  .fo-account-header {
+    padding: 0 var(--mk-layout-gutter-mobile);
+    padding-left: max(
+      var(--mk-layout-gutter-mobile),
+      var(--fo-window-inset, 0px)
+    );
+    padding-right: max(
+      var(--mk-layout-gutter-mobile),
+      var(--fo-window-inset-end, 0px)
+    );
+  }
+  .fo-account-main {
+    align-items: start;
+    padding: var(--mk-space-8) var(--mk-layout-gutter-mobile) var(--mk-space-12);
+  }
+  .fo-account-panel {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .fo-account-content {
+    padding: 0;
+  }
+  .fo-account-switch a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--mk-layout-row-min);
+  }
+  .fo-account-switch-text {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--mk-layout-row-min);
+  }
+  .fo-account-progress {
+    margin-top: var(--mk-space-8);
+    padding: var(--mk-space-5) 0 0;
+    background: none;
+    border-radius: 0;
+  }
+  .fo-steps {
+    display: none;
+  }
+  .fo-step-count {
+    display: grid;
+  }
+  .fo-account-footer {
+    padding: var(--mk-space-5) var(--mk-layout-gutter-mobile);
+  }
+}

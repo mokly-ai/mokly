@@ -141,6 +141,7 @@ test(
       /Base dependency/u,
     );
     const calls = await fs.readFile(fixture.calls, "utf8");
+    assert.notEqual(calls.trim(), "");
     assert.equal(calls.trim().split("\n").length, 1, calls);
   },
 );

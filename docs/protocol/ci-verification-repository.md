@@ -7,22 +7,33 @@ Continuation of [CI Verification](./ci-verification.md).
 The repository suite runs these checks in this order:
 
 1. The live npm dependency audit, in baseline or strict mode.
-2. The Rust advisory audit.
-3. The generated TypeScript byte-identity check.
-4. Prettier.
-5. ESLint.
-6. The changed-file source and protocol [length audit](#length-audits).
-7. The four [repository ratchets](./verification-ratchets.md): JavaScript and
-   TypeScript file length, protocol document caps, unused internal exports,
-   and public package exports.
-8. Rust formatting.
-9. Workspace Clippy with warnings denied.
-10. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
-11. The `@mokly/ui` build, then the `@mokly/model` build, then the
-    `@mokly/frame` build, then the `@mokly/viewer` build, then the
-    `@mokly/mokly` build.
-12. The Rust tests of every crate.
-13. The Rust file-length audit.
+2. The root npm lockfile install.
+3. The Rust advisory audit.
+4. The MIT dependency [boundary check](#dependency-boundary).
+5. Whitespace checks on every Git-visible text file.
+6. The generated TypeScript byte-identity check.
+7. Prettier and ESLint, once for the whole repository.
+8. ast-grep rule tests and the Rust and npm source scan.
+9. The unit tests of the npm boundary and cloud skip validator.
+10. The changed-file source and protocol [length audit](#length-audits).
+11. The four [repository ratchets](./verification-ratchets.md): JavaScript and
+    TypeScript file length, protocol document caps, unused internal exports,
+    and public package exports.
+12. Rust formatting for every crate.
+13. Clippy with warnings denied for `mokly-*` and `xtask`.
+14. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
+15. `cargo xtask build-native`, then the `@mokly/ui`, `@mokly/model`,
+    `@mokly/frame`, `@mokly/viewer`, and `@mokly/mokly` builds, in that order.
+16. The Rust tests of `mokly-*` and `xtask`.
+17. The Rust file-length audit of every crate and xtask.
+
+The [cloud suites](./ci-verification.md#cloud-suites) own Clippy and tests for
+`mkc-` crates. The whole-repository Markdown link test runs once in Viewer.
+Whitespace rejects trailing spaces, trailing tabs, missing final newlines,
+and final blank lines. One `git check-attr` call reads the attributes of every
+file. `-text` preserves fixture bytes. `whitespace=-blank-at-eol` permits
+trailing whitespace, and `-blank-at-eof` permits final blank lines. All other
+checks still apply. Binary files are outside the whitespace check.
 
 The suite compiles and lints the feature-gated design matrix target but does
 not run it; the nightly
@@ -42,12 +53,30 @@ Generated TypeScript must match the Rust-owned types byte for byte. Missing,
 changed, or extra generated files fail the repository suite and its CI job.
 The check writes no files. Authors regenerate and commit changed output.
 
-The repository and native suites build the five JavaScript packages in the
-order of item 11 before `cargo test --workspace`. The real sidecar smoke tests
-require these fresh package outputs on every host, including a clean checkout.
+The repository and native suites build the host native package and the five
+JavaScript packages in the order of item 15 before the Mokly Rust tests. The
+real sidecar smoke tests and the `xtask` fixtures that run the workspace
+`mokly` command require these fresh outputs on every host, including a clean
+checkout.
 
 Every xtask subprocess starts at the workspace root, even when xtask starts
 elsewhere.
+
+## Dependency Boundary
+
+No `mokly-*` crate and no `xtask` depends on an `mkc-` crate. The check reads
+Cargo metadata and covers normal, dev, build, target-specific, and renamed
+dependencies.
+
+No MIT package under `packages/` depends on a cloud npm project: a project
+under `apps/`, or `packages/app/`, `packages/desktop/`, or `packages/tokens/`.
+The check covers normal, dev, peer, and optional manifest dependencies. It
+also checks source imports, exports, dynamic imports, CommonJS requests, and
+type imports. Relative paths and TypeScript aliases cannot cross the boundary.
+`packages/tokens/` is a cloud package and may use cloud code.
+
+The cloud-owned `stripe-catalogue` binary may depend on cloud crates. Its
+xtask entry point starts it as a subprocess. Xtask has no cloud crate dependency.
 
 ## Length Audits
 

@@ -20,7 +20,7 @@ other crate depends on it.
 - Keep one captured base in Serve between classifications, and reuse it while
   its key and its freshness checks hold.
 - Compose one rendering runtime, sidecar pool, bundle store, and render cache
-  per command.
+  per command, and the render store in Serve.
 
 ## What This Crate Does
 
@@ -70,7 +70,11 @@ head renders, under the
 [cache directory rule](../../docs/protocol/mokly-terminal-cache.md#cache-directory).
 In Serve, the `ServeDirectory` of the bundle cache
 and the base cache notice of each comparison attempt share one flag.
-`ServeDirectory` does not depend on a comparison attempt.
+`ServeDirectory` does not depend on a comparison attempt. Both write through
+`Terminal::cache_notice`. `ServeProgress` holds one such notice while Serve
+starts. `Progress::ready` writes the readiness layout and then releases it. A
+startup that fails or is cancelled drops the notice, and a later notice prints
+at once.
 Serve prepares its head in the `full` mode of the
 [capture modes](../../docs/protocol/mokly-sidecar-recipes.md#capture-modes)
 until it publishes its first state. After that publication, and before Serve
@@ -78,6 +82,21 @@ reports readiness, `ServeServices::head_published` switches each later head
 preparation to `serveEdit`. Those preparations capture no reuse evidence and
 offer nothing to the bundle cache. The base side of Serve, `build`, and
 `publish` keep the `full` mode.
+
+Serve also composes the
+[render store](../../docs/protocol/mokly-render-store.md). `render_store_runtime`
+builds one `DocumentWriter` over the `renders` kind at the same cache location,
+with the `CAPACITY` bound, and `Runtime::with_document_store` gives it to the
+head and base graphs. The writer reads the native build identity and indexes
+the store while Serve starts. `serve_changes` calls `resume` after each
+completed Changes result, so the store writes nothing before the first one.
+`render_store_runtime::bind` gives the writer the Changes status of the current
+publication as its `WriteReadiness`. The sidecar gate and pool, the rebuilds,
+the head-return worker, and the server's work, captures, and Changes reference
+probes each hold a lease of the writer's `WriteActivity` while they run. So the writer starts new work only
+while Serve is idle. The writer prints the cache warnings through the command's
+diagnostics, and its state reaches `--debug-timings` as `render.store` records.
+`build` and `publish` compose no render store.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -90,9 +109,21 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
-The usage pass reads the current sidecar capacity before each view starts.
-Its sliding window uses the smaller of that capacity and the worker count.
-Both source roots share that capacity. A shared admission
+The usage pass starts its views in a sliding window of the worker count. Each
+view first looks up its document on the shared render workers, and a cache or
+store hit ends there without a batch or completion admission reading. A sidecar
+call of its link checks still passes the gate checks below. A miss waits for a
+batch place. The completion bound limits only the misses whose own root fragment
+returned without failure. The batch and completion bounds read the current
+sidecar capacity at each entry, and both use the smaller of that capacity and
+the worker count. Both bounds also count the views of a replaced pass that
+still render or complete. Both source roots share that capacity. A miss of a
+JavaScript entry without saved slots waits for its own root fragment on its
+resumed blocking thread. Any other miss keeps its worker permit until it ends
+and takes no completion place. Every background view reads or builds its
+document on the shared render workers, as HTTP renders, build, and comparison
+do. So a view that waits for its own root fragment holds no render worker that
+another view needs. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background
@@ -155,7 +186,9 @@ the classification, its capture scope, and the command stop can cancel it.
 `ServeBase::keep` installs an eligible base in the slot inside the
 classification's commit callback, and it detaches the lifetime there. After
 that, only the command stop cancels the work of the kept base. A base that
-Serve does not keep stays on the classification lifetime.
+Serve does not keep stays on the classification lifetime. In every command,
+`NativeBase` builds the base runtime with `Runtime::for_base`, so the base
+shares the style memo of the head runtime.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate
@@ -219,6 +252,12 @@ and process-recovery fixtures. Publish cleanup tests cover the allocated
 private directory and symbolic-link boundaries. The Windows MSVC binary
 reserves an 8 MiB main-thread stack through its linker settings in
 [`build.rs`](./build.rs), matching Linux and macOS main-thread headroom.
+`build.rs` also embeds `MOKLY_NATIVE_BUILD`, a new nonce for each native build,
+in the build identity of the render store. Linux adds the digest of the running
+executable. Other targets use only the nonce, so `build.rs` names an invocation
+marker that never exists. Cargo then runs the build script and relinks the
+binary on every build of those targets, also when only a dependency feature
+changed.
 
 ### Key Code
 
@@ -238,16 +277,26 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
   of one command over a `DiskCache` that the command's cancellation stops,
   and maps each store outcome to its warning lines.
+- [`src/render_store_runtime.rs`](./src/render_store_runtime.rs) composes the
+  render store of Serve: the paused `DocumentWriter` over the `renders` kind,
+  its `Startup` identity, its warning lines, and the binding of its
+  `WriteReadiness` to the current Changes status.
 - [`src/changes_runtime.rs`](./src/changes_runtime.rs) composes the Changes
   service of `build` and `publish`. Its `reporter` gives the one-shot
   `OnceReporter` that the bundle store shares.
 - [`src/cache_directory.rs`](./src/cache_directory.rs) defines
-  `ServeDirectory`, the cache directory announcement of the bundle cache in
-  Serve.
+  `ServeDirectory`, the cache directory announcement of the bundle cache and
+  the render store in Serve. It writes through `Terminal::cache_notice` of
+  [`src/terminal.rs`](./src/terminal.rs), which writes at once by default.
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
   `entry_serve.rs` passes the terminal output of Serve to
-  `ServeServices::new`.
+  `ServeServices::new`, and it calls `Progress::ready` with the readiness
+  layout inside the serve phase.
+- [`src/serve_progress.rs`](./src/serve_progress.rs) defines `ServeProgress`,
+  the one terminal owner of Serve. It erases progress before each durable
+  line, holds one cache notice until `Progress::ready` writes the readiness
+  layout, and drops that notice when startup fails or is cancelled.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
   cache across Serve preparation and live views. It gives the sidecar gate
   the command's `Diagnostics` reporter. `ServeServices::new` takes that
@@ -261,7 +310,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
   the admission gate around the shared pool. Its narrow `BaseCompletion`
   capability schedules the return pass. Each head or base handle passes the
   caller's `RenderClass` to the gate and runs the admitted call through
-  `SidecarPool::request_claimed`.
+  `SidecarPool::request_claimed`. A handle forwards a store-served record to
+  `SidecarPool::record_served_render` without admission or a write lease.
 - [`src/serve_gate.rs`](./src/serve_gate.rs) defines `Gate`, which admits each
   call with a `CallClaim` from `PoolCapacity::try_claim`. Waiting
   `RenderClass::Background` calls go after the other waiting head calls, and
@@ -277,8 +327,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
   `--debug-timings` layer of every command and writes its records.
   [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the
-  bounded allow-lists of the record fields, such as the `cache` values and
-  the view comparison reuse fields.
+  bounded allow-lists of the record fields, such as the `cache` values, the
+  view comparison reuse fields, and the `render.store` state fields.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -333,7 +383,10 @@ reserves an 8 MiB main-thread stack through its linker settings in
   provider and its cancellations. Its `Source::comparison_attempt` begins one
   fenced reuse attempt.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
-  `comparison_reuse::MemoryComparisons` service.
+  `comparison_reuse::MemoryComparisons` service. It also composes `UsagePass`,
+  whose `UsageCapacity` gives both background stages the smaller of the worker
+  count and the sidecar limit. It gives the writer's `WriteActivity` to
+  `Workers`, `MemoryComparisons`, and `ChangesPass`.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.
@@ -355,7 +408,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [Terminal output](../../docs/protocol/mokly-terminal-output.md),
   [cache output](../../docs/protocol/mokly-terminal-cache.md), and
   [comparison steps](../../docs/protocol/mokly-terminal-steps.md).
-- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
+- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+  and the [render store](../../docs/protocol/mokly-render-store.md).
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).

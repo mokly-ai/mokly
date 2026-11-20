@@ -60,7 +60,7 @@ fn oversized_comparison_metadata_does_not_offer_retry() {
         "[mokly/build-invalid] Comparison data exceeds the 64 MiB limit.\n"
     );
     assert_eq!(
-        changes_reason(&ServerError::ComparisonMetadataTooLarge),
+        changes_reason(&ServerError::ComparisonMetadataTooLarge, Mode::Plain),
         "Comparison data exceeds the 64 MiB limit."
     );
 }

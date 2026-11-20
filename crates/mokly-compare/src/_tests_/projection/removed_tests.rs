@@ -79,6 +79,47 @@ fn removed_records_and_previews_share_the_pinned_identity_and_metadata() {
 }
 
 #[test]
+fn removed_related_docs_keep_authored_labels_after_base_index_projection() {
+    let mut screen = entry("screen", EntryKind::Screen, None);
+    screen.metadata.related_docs = vec!["docs/notes.md".into(), "specs/guide.md".into()];
+    let mut guide = entry("guide", EntryKind::Document, None);
+    guide.metadata.source.path = "specs/guide.md".into();
+    let mut result = result(
+        vec![screen, guide.clone()],
+        vec![guide],
+        vec![
+            classified("screen", EntryKind::Screen, ReviewState::Removed),
+            classified("guide", EntryKind::Document, ReviewState::Unchanged),
+        ],
+    );
+    let catalogue = result.before.catalogue().clone();
+    result.before = Arc::new(Unimock::new((
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(catalogue),
+        RenderGenerationMock::plans
+            .each_call(matching!())
+            .returns(BTreeMap::new()),
+    )));
+    let state = projection_index::publication("mokly.config.json".into(), "base");
+
+    let historical = projection_index::base_index(&result, &state);
+
+    assert_eq!(
+        historical.screens[0].entry.details.related_docs,
+        ["docs/notes.md", "mock:guide"]
+    );
+    let records = projection_removed::records(&result, historical);
+    let CatalogueRecord::Screen(screen) = &records[0].entry else {
+        panic!("the selected removed entry is a screen")
+    };
+    assert_eq!(
+        screen.entry.details.related_docs,
+        ["docs/notes.md", "specs/guide.md"]
+    );
+}
+
+#[test]
 fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidence() {
     let removed = entry("removed", EntryKind::Screen, None);
     let mut change = classified("removed", EntryKind::Screen, ReviewState::Removed);

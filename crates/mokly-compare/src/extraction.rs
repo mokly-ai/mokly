@@ -9,6 +9,7 @@ use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
 
 use crate::cache_types::{Builder, Cache, Kind, Lease};
+use crate::comparison_steps::{Step, Steps};
 use crate::error::{GitResult, Result};
 
 /// Base extraction API used only when JavaScript needs sources on disk.
@@ -26,12 +27,15 @@ pub struct CachedExtraction {
     pub repository: Arc<dyn Repository>,
     /// Shared external cache.
     pub cache: Arc<dyn Cache>,
+    /// Receives the extracting step when a source cache build starts.
+    pub steps: Arc<dyn Steps>,
     /// Maximum source tree nodes.
     pub files: usize,
 }
 
 struct Extract<'a> {
     repository: &'a dyn Repository,
+    steps: &'a dyn Steps,
     commit: &'a ObjectId,
     limits: Limits,
     built: AtomicBool,
@@ -42,6 +46,7 @@ impl Builder for Extract<'_> {
         self.repository.conversion_warnings().is_empty()
     }
     fn build(&self, destination: &Path) -> Result<()> {
+        self.steps.step(Step::Extracting);
         self.built.store(true, Ordering::Relaxed);
         self.repository
             .extract(self.commit, destination, self.limits)
@@ -67,6 +72,7 @@ impl Extraction for CachedExtraction {
         };
         let builder = Extract {
             repository: self.repository.as_ref(),
+            steps: self.steps.as_ref(),
             commit,
             limits,
             built: AtomicBool::new(false),
@@ -106,3 +112,7 @@ impl Extraction for CachedExtraction {
         Ok(lease)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/extraction_tests.rs"]
+mod extraction_tests;

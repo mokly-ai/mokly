@@ -11,6 +11,7 @@ import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.j
 import type { Generation } from "./bundle.js";
 import { componentOutput } from "./component-output.js";
 import { SidecarError, detail, handleLocation } from "./errors.js";
+import { HtmlInput } from "./html_input.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
 import type { StoredStory } from "./story-reader.js";
@@ -137,12 +138,13 @@ export async function render(
         !generation.stories.has(name) &&
         !session.componentOutput
       )
-        collected.html =
+        collected.input = new HtmlInput(
           server.renderToStaticMarkup(
             componentOutput(generation.runtime, session, null),
-          ) + collected.html;
+          ) + collected.input.html,
+        );
       const result = finishMarkup(
-        collected.html,
+        collected.input,
         session,
         true,
         collected.inlineAttribution,

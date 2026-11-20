@@ -100,6 +100,30 @@ test(
           }
         }
       }
+      const starts = records.filter(
+        (record) => record.role === "core" && record.event === "start",
+      );
+      const byId = new Map(
+        starts.map((record) => [`${record.session}:${record.id}`, record]),
+      );
+      const documents = starts.filter(
+        (record) => record.stage === "render.document",
+      );
+      assert.ok(documents.length > 0, "core document renders were recorded");
+      for (const document of documents) {
+        const ancestors: string[] = [];
+        let parentId = document.parentId;
+        while (parentId !== undefined) {
+          const parent = byId.get(`${document.session}:${parentId}`);
+          assert.ok(parent, `missing parent of render.document ${document.id}`);
+          ancestors.push(parent.stage);
+          parentId = parent.parentId;
+        }
+        assert.ok(
+          ancestors.includes("review.capture-side"),
+          `render.document ${document.id} must have a review.capture-side ancestor: ${ancestors.join(" -> ")}`,
+        );
+      }
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }

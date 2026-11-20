@@ -1,0 +1,78 @@
+/* The catalogue frame around a delivered message.
+
+   The message brings its own canvas, type and color with it, inlined from the
+   tokens, so this sheet draws only what an inbox puts around it: the subject
+   line, the line a list previews beneath it, and the rule between that chrome
+   and the message. Every value is a shared --mk-* role; the message itself
+   depends on nothing linked.
+
+   Contents
+     1  The screen and its inbox chrome
+     2  The message region
+     3  Mobile composition */
+
+/* 1 -- The screen and its inbox chrome ----------------------------------- */
+
+.email-screen {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.email-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.email-inbox {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: grid;
+  gap: var(--mk-space-1);
+  padding: var(--mk-space-6) var(--mk-layout-gutter-desktop);
+}
+
+.email-subject {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-title-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-ui-title-line);
+  max-width: none;
+}
+
+.email-preheader {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  max-width: none;
+}
+
+/* 2 -- The message region ------------------------------------------------ */
+
+/* The message owns the canvas beneath the chrome, as it owns the whole window
+   of a mail client: the table stretches rather than ending in the page's own
+   background halfway down the artboard. */
+
+.email-message {
+  display: flex;
+  flex: 1;
+}
+
+/* A mail client applies none of the catalogue's own reading rules, so the
+   message is released from the ones it would otherwise inherit here. The
+   fallback link keeps its own wrapping, which it declares inline. */
+
+.email-message,
+.email-message * {
+  overflow-wrap: normal;
+  text-underline-offset: auto;
+  text-wrap: wrap;
+}
+
+/* 3 -- Mobile composition ------------------------------------------------ */
+
+[data-email-viewport="mobile"] .email-inbox {
+  padding: var(--mk-space-4) var(--mk-layout-gutter-mobile);
+}

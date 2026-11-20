@@ -8,15 +8,15 @@ The watch set derives from the resolved configuration, the [source inventory](./
 the sidecar's module graph, and the resources the composed documents
 reference. Each input maps to the render graph node it feeds:
 
-| Input                                                                                                            | Node                              |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| the configuration file                                                                                           | config                            |
-| HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root | entry source                      |
-| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports               | bundle generation, render inputs  |
-| the consumer PostCSS module and the file and directory dependencies `processCss` reports                         | stylesheet bundle                 |
-| configured stylesheets, imported CSS, their nested imports, and the assets they reference                        | stylesheet bundle                 |
-| fonts, images, embedded documents, and other files in the public closure of a composed document                  | the documents that reference them |
-| paths named by a `watch.rules` entry of the [configuration contract](./mokly-configuration.md)                   | the rule's action                 |
+| Input                                                                                                                                                              | Node                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| the configuration file                                                                                                                                             | config                            |
+| HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root                                                   | entry source                      |
+| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports                                                                 | bundle generation, render inputs  |
+| the consumer PostCSS module and the file and directory dependencies `processCss` reports                                                                           | stylesheet bundle                 |
+| configured stylesheets, imported CSS, their nested imports, the assets they reference, and the files and candidates, present or absent, that resolve those imports | stylesheet bundle                 |
+| fonts, images, embedded documents, and other files in the public closure of a composed document                                                                    | the documents that reference them |
+| paths named by a `watch.rules` entry of the [configuration contract](./mokly-configuration.md)                                                                     | the rule's action                 |
 
 A created, renamed, moved, or deleted regular file below a root that matches
 one of its `files` globs re-runs discovery before the rebuild, so the file set
@@ -124,6 +124,13 @@ repository and never watched.
   discovery cannot accept it.
   A required ancestor's move or removal invalidates its required descendants.
   Each confined ancestor remains observed so directory repairs are visible.
+  An exact input inside a
+  [selected dependency root](./mokly-sidecar-modules.md#source-and-dependency-files)
+  is confined to that root, also outside the repository. The same holds for
+  a nested `node_modules` directory that package lookup reaches. The cache
+  directory rule above and the escaped-target rule for public watch inputs
+  below still apply. When Serve cannot resolve the cache directory, it
+  watches no such input outside the repository.
 - Package source under `node_modules` or an npx cache is never consumer
   source.
 
@@ -152,7 +159,9 @@ manifests, also invalidates compilation reuse. It is not a watch input and
 moves no render input key, so a change to it takes effect at the next bundle.
 A Serve edit compilation records none of this other evidence. Of these
 inputs, only its consumed files, its resolution metadata, and the membership
-of its consumed-module directories invalidate its reuse.
+of its consumed-module directories and of its
+[mapped target folders](./mokly-sidecar-recipes.md#reuse-and-identity)
+invalidate its reuse.
 Linux renews a registration after its directory is replaced. Vanished directories
 are skipped. A new matching file in a watched directory causes one rebuild.
 Notifications coalesce by path. A classifier exception is reported once, that

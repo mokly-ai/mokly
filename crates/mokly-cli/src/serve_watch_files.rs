@@ -51,15 +51,6 @@ impl Observers for NativeObservers {
     }
 }
 
-/// Targets of `plan` other than roots whose directory `active` does not watch.
-pub(super) fn unobserved(plan: &Plan, active: &dyn Observer) -> Vec<PathBuf> {
-    plan.targets()
-        .into_iter()
-        .filter(|path| !plan.roots.contains(path))
-        .filter(|path| path.parent().is_none_or(|parent| !active.observes(parent)))
-        .collect()
-}
-
 /// A change event for each regular file among `paths` modified after `started`, up to now.
 pub(super) fn changed(
     paths: &[PathBuf],

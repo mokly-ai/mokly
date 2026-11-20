@@ -9,7 +9,7 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_sidecar::methods::Call;
 
-use super::support::Consumer;
+use super::support::{Consumer, link_directory};
 
 const BADGE: &str = r#"import { defineComponent } from "@mokly/mokly";
 
@@ -55,11 +55,12 @@ fn document(generation: &dyn RenderGeneration, route: &str) -> String {
 }
 
 #[test]
-fn a_renderer_named_through_a_parent_segment_keeps_its_stylesheet() {
+fn a_renderer_named_through_a_parent_segment_and_link_keeps_its_stylesheet() {
     let consumer = Consumer::new();
+    link_directory(consumer.root(), &consumer.root().join("modules"));
     let generation = nested(
         &consumer,
-        r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"colorSchemes":["light"],"renderer":"../renderer.tsx","postcss":"../postcss.mjs"}"#,
+        r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"colorSchemes":["light"],"renderer":"../modules/renderer.tsx","postcss":"../postcss.mjs"}"#,
     );
     assert!(
         generation
@@ -114,12 +115,13 @@ fn a_configured_stylesheet_named_through_a_parent_segment_can_also_be_declared()
 }
 
 #[test]
-fn a_postcss_module_named_through_a_parent_segment_reaches_the_sidecar_normalized() {
+fn a_postcss_module_named_through_a_parent_segment_and_link_reaches_the_sidecar_resolved() {
     let consumer = Consumer::new();
+    link_directory(consumer.root(), &consumer.root().join("modules"));
     consumer.replace(
         "mokly.config.json",
         r#""postcss": "postcss.mjs""#,
-        r#""postcss": "tools/../postcss.mjs""#,
+        r#""postcss": "tools/../modules/postcss.mjs""#,
     );
     let generation = consumer.generation(consumer.prepare().unwrap());
     document(generation.as_ref(), "screen/index.mobile.html");

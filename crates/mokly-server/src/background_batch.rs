@@ -2,20 +2,37 @@
 
 use std::collections::BTreeMap;
 use std::future::{Future, poll_fn};
+use std::mem;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::Poll;
 
 use mokly_catalogue::diagnostic::Warning;
 
+use crate::background_dispatch::Dispatch;
 use crate::error::Result;
 
 /// One pending background render; it ends with its unreported warnings or a failure.
 pub(crate) type Render<'a> = Pin<Box<dyn Future<Output = Result<Vec<Warning>>> + Send + 'a>>;
 
-/// At most `limit` renders in flight, kept in start order with their catalogue positions.
+struct Pending<'a> {
+    position: usize,
+    render: Render<'a>,
+    stage: Option<Arc<Dispatch>>,
+    observed: bool,
+}
+
+/// A dispatch release admits another sidecar-stage owner before the document ends.
+pub(crate) enum Event {
+    Handoff,
+    Completed(usize, Result<Vec<Warning>>),
+}
+
+/// At most `limit` current-pass owners before handoff. Shared stages bound completion.
+/// Superseded unsignalled jobs retain their original workers and sidecar claims.
 pub(crate) struct Window<'a> {
     limit: usize,
-    renders: Vec<(usize, Render<'a>)>,
+    renders: Vec<Pending<'a>>,
     held: BTreeMap<usize, Result<Vec<Warning>>>,
 }
 
@@ -29,14 +46,18 @@ impl<'a> Window<'a> {
         }
     }
 
-    /// Whether another render can start.
+    /// Whether another sidecar-stage owner can start.
     pub(crate) fn has_room(&self) -> bool {
-        self.renders.len() < self.limit
-    }
-
-    /// Refresh admission without cancelling renders that already started.
-    pub(crate) fn set_limit(&mut self, limit: usize) {
-        self.limit = limit.max(1);
+        self.renders
+            .iter()
+            .filter(|pending| {
+                !pending
+                    .stage
+                    .as_ref()
+                    .is_some_and(|stage| stage.handed_off())
+            })
+            .count()
+            < self.limit
     }
 
     /// Whether every started render has ended.
@@ -45,18 +66,65 @@ impl<'a> Window<'a> {
     }
 
     /// Start the render at a catalogue position after every position already started.
+    pub(crate) fn start_dispatched(
+        &mut self,
+        position: usize,
+        render: Render<'a>,
+        stage: Arc<Dispatch>,
+    ) {
+        stage.queue_bytes(
+            mem::size_of_val(render.as_ref().get_ref()) + 4 * mem::size_of::<Pending<'_>>(),
+        );
+        self.renders.push(Pending {
+            position,
+            render,
+            stage: Some(stage),
+            observed: false,
+        });
+    }
+
+    /// Start an ordinary render that retains its window place until completion.
+    #[cfg(test)]
     pub(crate) fn start(&mut self, position: usize, render: Render<'a>) {
-        self.renders.push((position, render));
+        self.renders.push(Pending {
+            position,
+            render,
+            stage: None,
+            observed: false,
+        });
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn next(&mut self) -> (usize, Result<Vec<Warning>>) {
+        loop {
+            if let Event::Completed(position, result) = self.next_event().await {
+                return (position, result);
+            }
+        }
     }
 
     /// Wait for the first render to end. Polling in start order lets the earliest
     /// queued render take a free worker first.
-    pub(crate) async fn next(&mut self) -> (usize, Result<Vec<Warning>>) {
+    pub(crate) async fn next_event(&mut self) -> Event {
         poll_fn(|context| {
             for index in 0..self.renders.len() {
-                if let Poll::Ready(result) = self.renders[index].1.as_mut().poll(context) {
-                    let (position, _) = self.renders.remove(index);
-                    return Poll::Ready((position, result));
+                let pending = &mut self.renders[index];
+                if let Some(stage) = &pending.stage {
+                    stage.register(context.waker());
+                }
+                if !pending.observed
+                    && pending
+                        .stage
+                        .as_ref()
+                        .is_some_and(|stage| stage.handed_off())
+                {
+                    pending.observed = true;
+                    return Poll::Ready(Event::Handoff);
+                }
+                if let Poll::Ready(result) = pending.render.as_mut().poll(context) {
+                    let pending = self.renders.remove(index);
+                    self.renders.shrink_to(self.limit.saturating_mul(2));
+                    return Poll::Ready(Event::Completed(pending.position, result));
                 }
             }
             Poll::Pending
@@ -77,7 +145,7 @@ impl<'a> Window<'a> {
         let earliest = self
             .renders
             .first()
-            .map_or(usize::MAX, |(position, _)| *position);
+            .map_or(usize::MAX, |pending| pending.position);
         let mut ready = Vec::new();
         while let Some(entry) = self.held.first_entry()
             && *entry.key() < earliest

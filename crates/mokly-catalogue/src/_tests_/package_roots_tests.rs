@@ -8,7 +8,7 @@ use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::config_paths::validate_inputs;
+use crate::config_inputs::validate_inputs;
 use crate::config_types::{Config, ModuleResolution, ResolvedConfig};
 use crate::error::CatalogueError;
 
@@ -23,6 +23,7 @@ fn config(roots: &[&str]) -> ResolvedConfig {
         },
         file: "/repo/tools/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     }

@@ -1,0 +1,60 @@
+id: derive-disabled-from-write
+language: Tsx
+severity: error
+message: >-
+  A control backed by a `useWrite` passes it to `Action` as `write`, with its
+  `operation`, and `Action` takes from it the answer to "is it working, or is
+  there nothing to send" and draws the wait. Naming `.pending` here is the
+  second answer that drifted apart from the first in three consecutive
+  reviews. Bind this control's own write instead, and keep `disabled` for the
+  control's other reasons. A control or an input that is only held still
+  while a write works, its own or a neighbouring one, reads
+  `<write>.working`, which says that and nothing else. Do not copy a write's
+  `.pending` into a local first: a control reading the copy reads a second
+  answer this rule cannot see through, which is the same drift one name away.
+files:
+  - packages/app/src/**
+rule:
+  any:
+    - kind: jsx_attribute
+      all:
+        - has:
+            kind: property_identifier
+            regex: ^disabled$
+        - has:
+            kind: jsx_expression
+            pattern: $EXPR
+            stopBy: end
+            has:
+              kind: member_expression
+              regex: \.pending\b
+              stopBy: end
+        - not:
+            has:
+              kind: jsx_expression
+              stopBy: end
+              has:
+                kind: member_expression
+                regex: \.disabled\b
+                stopBy: end
+    # A local standing in for a write's `pending`, however it is spelled. The
+    # value has to be the reading itself, so building a `WriteState` from a
+    # write — which names `pending` as one of its fields — is not this.
+    - kind: variable_declarator
+      has:
+        field: value
+        any:
+          - kind: member_expression
+            regex: \.pending\b
+          - kind: binary_expression
+            has:
+              kind: member_expression
+              stopBy: end
+              regex: \.pending\b
+    - kind: variable_declarator
+      has:
+        field: name
+        kind: object_pattern
+        has:
+          kind: shorthand_property_identifier_pattern
+          regex: ^pending$

@@ -108,6 +108,7 @@ fn authoring_metadata_is_preserved_until_catalogue_validation() {
 fn duplicate_result_fields_keep_the_last_payload_value() {
     let request = Request {
         id: 1,
+        quiet: false,
         call: Call::Hello(Hello::default()),
     };
     let response: Response =
