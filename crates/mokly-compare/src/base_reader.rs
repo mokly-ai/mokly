@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -260,6 +261,13 @@ impl RenderGeneration for BaseReader {
             .base
             .generation
             .stylesheet_resolution_files()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.state
+            .reuse
+            .base
+            .generation
+            .stylesheet_resolution_roots()
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.state.reuse.base.generation.public_files()

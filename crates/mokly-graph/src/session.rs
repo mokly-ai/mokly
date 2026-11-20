@@ -1,6 +1,7 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -46,6 +47,7 @@ pub(crate) struct State {
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) generation_key: String,
     pub(crate) document_keys: BTreeSet<String>,
     pub(crate) matchers: Arc<styles::Matchers>,
@@ -66,6 +68,7 @@ pub(crate) struct State {
 
 pub(crate) struct SessionInput {
     pub(crate) stylesheet_resolution_files: BTreeSet<String>,
+    pub(crate) stylesheet_resolution_roots: BTreeMap<String, PathBuf>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) config: ResolvedConfig,
     pub(crate) catalogue: PreparedCatalogue,
@@ -107,6 +110,7 @@ impl Session {
                 generation_key: input.generation_key,
                 directories: input.directories,
                 stylesheet_resolution_files: input.stylesheet_resolution_files,
+                stylesheet_resolution_roots: input.stylesheet_resolution_roots,
                 document_keys,
                 matchers: Arc::new(input.matchers),
                 reference_index: Arc::new(MemoryReferenceIndex::new(
@@ -231,6 +235,9 @@ impl RenderGeneration for Session {
     }
     fn stylesheet_resolution_files(&self) -> BTreeSet<String> {
         self.state.stylesheet_resolution_files.clone()
+    }
+    fn stylesheet_resolution_roots(&self) -> BTreeMap<String, PathBuf> {
+        self.state.stylesheet_resolution_roots.clone()
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()

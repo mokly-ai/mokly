@@ -15,6 +15,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::source_paths;
 use crate::transport_values;
+use crate::watch_candidate::{Candidate, optional};
 
 /// A base extraction and its selected dependency tier stay leased together.
 /// The base runtime and the source trees of its graphs hold this value, so both
@@ -161,7 +162,7 @@ impl SideInputs {
         path: &str,
         sources: &dyn SourceTree,
         root: &Path,
-    ) -> Result<BTreeSet<PathBuf>> {
+    ) -> Result<BTreeSet<Candidate>> {
         let dependency = if path == "node_modules" {
             Some((0, ""))
         } else {
@@ -175,24 +176,50 @@ impl SideInputs {
             })
         };
         let mut candidates = BTreeSet::new();
+        let dependency_root;
         if let Some((index, rest)) = dependency
             && let Some(selected) = self.dependency_roots.get(index)
         {
-            candidates.insert(selected.join(rest));
+            dependency_root = Some(selected.clone());
+            candidates.insert(Candidate {
+                path: if rest.is_empty() {
+                    selected.clone()
+                } else {
+                    selected.join(rest)
+                },
+                dependency_root: dependency_root.clone(),
+            });
             let logical = ancestor_roots::logical(index);
             candidates.extend(
                 self.dependency_aliases
                     .iter()
                     .filter(|(_, prefix)| *prefix == &logical)
-                    .map(|(authored, _)| self.source_root.join(authored).join(rest)),
+                    .map(|(authored, _)| Candidate {
+                        path: self.source_root.join(authored).join(rest),
+                        dependency_root: dependency_root.clone(),
+                    }),
             );
             if rest.is_empty() {
                 return Ok(candidates);
             }
         } else {
-            candidates.insert(self.source_root.join(path));
+            dependency_root = ancestor_roots::dependency_directory(path).and_then(|directory| {
+                self.module_resolution
+                    .dependency_root
+                    .as_ref()
+                    .map(|root| Path::new(root).join(directory))
+            });
+            candidates.insert(Candidate {
+                path: self.source_root.join(path),
+                dependency_root: dependency_root.clone(),
+            });
         }
-        candidates.insert(self.physical_source(path, sources, root)?);
+        if let Some(path) = optional(self.physical_source(path, sources, root))? {
+            candidates.insert(Candidate {
+                path,
+                dependency_root,
+            });
+        }
         Ok(candidates)
     }
 

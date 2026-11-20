@@ -11,6 +11,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use crate::error::Result;
 use crate::event::{Action, Event, Kind};
 use crate::pattern::{self, DEFAULT_GLOBS};
+use crate::stylesheet_inputs;
 
 /// Resolved watch inputs and precomputed ancestor lookup for one catalogue state.
 #[derive(Clone)]
@@ -25,6 +26,7 @@ pub struct Plan {
     pub ancestors: HashMap<PathBuf, Action>,
     /// Effective recursive roots, including empty PostCSS directories.
     pub roots: BTreeSet<PathBuf>,
+    pub(crate) dependency_roots: BTreeMap<PathBuf, PathBuf>,
     resolution_directories: BTreeMap<PathBuf, BTreeSet<String>>,
     root_index: HashSet<PathBuf>,
     waypoints: HashSet<PathBuf>,
@@ -62,6 +64,7 @@ impl Plan {
             resolution_directories: BTreeMap::new(),
             waypoints: HashSet::new(),
             roots: BTreeSet::new(),
+            dependency_roots: BTreeMap::new(),
             source_roots: Vec::new(),
             directories: Vec::new(),
             rules: Vec::new(),
@@ -140,6 +143,24 @@ impl Plan {
         }
     }
 
+    /// Exact stylesheet candidates retain only their own admitting dependency folder.
+    pub fn stylesheet_resolution(
+        &mut self,
+        files: &BTreeSet<String>,
+        roots: &BTreeMap<String, PathBuf>,
+        cache: Option<&Path>,
+        namespace: Option<&Path>,
+    ) {
+        for (path, root) in
+            stylesheet_inputs::admitted(&self.repository, files, roots, cache, namespace)
+        {
+            self.required(path.clone(), Action::Rebuild);
+            if let Some(root) = root {
+                self.dependency_roots.insert(path, root);
+            }
+        }
+    }
+
     /// Newly rendered closures become observable before the background pass completes.
     pub fn resources(&mut self, paths: &BTreeSet<String>) {
         for path in paths {
@@ -151,6 +172,11 @@ impl Plan {
     pub fn extend_required(&mut self, previous: &Self) {
         for (path, action) in &previous.exact {
             self.required(path.clone(), *action);
+        }
+        for (path, root) in &previous.dependency_roots {
+            self.dependency_roots
+                .entry(path.clone())
+                .or_insert_with(|| root.clone());
         }
     }
 

@@ -42,6 +42,7 @@ mod stylesheet_watch;
 mod stylesheet_weight;
 mod stylesheets;
 mod transport_values;
+mod watch_candidate;
 
 #[cfg(test)]
 #[path = "_tests_/nested_tests.rs"]

@@ -47,7 +47,8 @@ fn generation(consumer: &Consumer, misses: &[&str]) -> Arc<dyn RenderGeneration>
 
 #[test]
 fn resolution_watch_files_keep_all_dependency_root_aliases_on_compile_and_reuse() {
-    let consumer = Consumer::single();
+    let mut consumer = Consumer::single();
+    consumer.runtime = Arc::new((*consumer.runtime).clone().with_stylesheet_watching());
     consumer.without_installation();
     consumer.write(
         "app/mokly.config.json",
@@ -123,4 +124,17 @@ fn resolution_watch_files_keep_all_dependency_root_aliases_on_compile_and_reuse(
     );
     let cached = generation(&consumer, &[]);
     assert_eq!(cached.stylesheet_resolution_files(), files);
+    assert_eq!(
+        cached.stylesheet_resolution_roots(),
+        first.stylesheet_resolution_roots()
+    );
+    for (file, root) in [
+        ("install-one/primary-theme/package.json", "install-one"),
+        ("install-two/secondary-theme/package.json", "install-two"),
+    ] {
+        assert_eq!(
+            cached.stylesheet_resolution_roots().get(file),
+            Some(&consumer.repository().join(root))
+        );
+    }
 }

@@ -1,0 +1,76 @@
+//! Build and historical preparations do no physical watch-only projection.
+
+use std::collections::BTreeSet;
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+use mokly_catalogue::working_tree::WorkingTree;
+use mokly_render::runtime::Runtime;
+use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
+use unimock::{MockFn, Unimock, matching};
+
+use super::support::Consumer;
+
+#[test]
+fn build_and_historical_runtimes_deliver_css_without_watch_projections() {
+    for historical in [false, true] {
+        let mut consumer = Consumer::single();
+        consumer.write(
+            "mokly.config.json",
+            r#"{
+              "roots":[{"dir":"specs","files":["**/*.screen.html"]}],
+              "stylesheets":[{"match":"**","stylesheets":["theme.css"]}]
+            }"#,
+        );
+        consumer.write(
+            "specs/mixed.screen.html",
+            "---\ntitle: Home\n---\n<p>Home</p>\n",
+        );
+        consumer.write("theme.css", ".home { color: red }\n");
+        let projections = Arc::new(AtomicUsize::new(0));
+        let observed = projections.clone();
+        let inventory = Arc::new(Unimock::new(
+            SourceTreeMock::project
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| {
+                    observed.fetch_add(1, Ordering::SeqCst);
+                    Ok(None)
+                }))
+                .at_least_times(0),
+        ));
+        inventory.project(Path::new("/inventory-probe")).unwrap();
+        projections.store(0, Ordering::SeqCst);
+        let mut runtime = Runtime::new(
+            inventory.clone(),
+            Arc::new(WorkingTree),
+            consumer.runtime.physical_inputs.clone(),
+            consumer.pool.clone(),
+            consumer.runtime.cache.clone(),
+            consumer.runtime.workers.clone(),
+            consumer.runtime.version.clone(),
+            None,
+        );
+        if historical {
+            runtime = runtime.with_stylesheet_watching().for_base(
+                inventory,
+                consumer.runtime.version.clone(),
+                None,
+            );
+        }
+        consumer.runtime = Arc::new(runtime.with_tree(Arc::new(WorkingTree)));
+        let generation = consumer.generation(consumer.prepare().unwrap());
+        let css = generation.resource("styles/theme.css").unwrap().unwrap();
+        assert_eq!(
+            String::from_utf8(css).unwrap(),
+            ".home {\n  color: red;\n}\n"
+        );
+        assert_eq!(
+            projections.load(Ordering::SeqCst),
+            0,
+            "historical={historical} must not project watch inputs"
+        );
+        assert_eq!(generation.stylesheet_resolution_files(), BTreeSet::new());
+        assert!(generation.stylesheet_resolution_roots().is_empty());
+    }
+}

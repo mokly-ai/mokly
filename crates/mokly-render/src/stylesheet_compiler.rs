@@ -11,6 +11,7 @@ use mokly_css::resolver::{ImportResolver, SourceResolver};
 use mokly_css::types::{
     Bundle, CssProcessor, IdentityProcessor, StylesheetBundler, StylesheetRoot,
 };
+use mokly_css::watch_inputs::WatchInputs;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::postcss::PostCss;
@@ -26,8 +27,11 @@ pub(crate) struct Compilation {
 #[cfg_attr(test, unimock::unimock(api = [CompileRoot, WatchFiles]))]
 pub(crate) trait RootCompiler: Send + Sync {
     fn compile(&self, root: &StylesheetRoot) -> Result<Compilation>;
-    fn watch_files(&self, files: &BTreeSet<String>) -> Result<BTreeSet<String>> {
-        Ok(files.clone())
+    fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
+        Ok(WatchInputs {
+            files: files.clone(),
+            ..WatchInputs::default()
+        })
     }
 }
 
@@ -75,12 +79,16 @@ impl RootCompiler for CapturingCompiler {
             .collect();
         Ok(Compilation { bundle, capture })
     }
-    fn watch_files(&self, files: &BTreeSet<String>) -> Result<BTreeSet<String>> {
+    fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
         match &self.watch_sources {
             Some(sources) => {
                 stylesheet_watch::files(files, &self.root, &self.side, sources.as_ref())
             }
-            None => Ok(BTreeSet::new()),
+            None => Ok(WatchInputs::default()),
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_watch_tests.rs"]
+mod stylesheet_watch_tests;
