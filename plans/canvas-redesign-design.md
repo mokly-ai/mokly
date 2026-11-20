@@ -84,6 +84,9 @@ existing React, HTML and CSS components.`
   the diff read and those targeted tests. One full test pass runs on the
   primary branch when every milestone is merged. Then the pull request into
   `main` opens, and its CI is the final check.
+- 2026-11-20, in this workspace: delegated workspaces open no pull request.
+  Each pushes its branch and reports, and the primary branch merges the
+  branch directly after the review.
 
 ## Design calls
 
