@@ -1,0 +1,27 @@
+# Stage keeps imported stylesheets external
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the review of the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431), finding 3.
+- **Location:** `apps/site/scripts/stage/stylesheets.ts`, the `@import` branch of `stylesheetResources` and `rebaseStylesheet`. `apps/site/scripts/stage/fragments.ts`, the links that `shouldInlineStylesheet` leaves external. `apps/site/scripts/stage.mjs`, the pass that copies the dependencies of each copied `.css` file. `apps/site/tests/stage_fragments.test.ts`, the inlining test that expects a rebased `@import`. `apps/site/tests/stage.test.ts`, the published-output test.
+- **Reason:** The best option adds a build error and removes the import copy that `origin/main` has, and both need the user's approval.
+
+- **Terms:**
+  - **Home stage:** the sandboxed frame on the home page of the public site, `apps/site`, that shows one screen of the dogfood catalogue. `apps/site/scripts/stage.mjs` publishes its four documents under `public/stage/`.
+  - **`@import`:** a CSS rule that makes one stylesheet load another stylesheet, with optional media, supports, and layer conditions.
+- **Background:** On 2026-11-20 the user chose to publish each stage document with its stylesheets inline, because Chrome counted the styled layout of the frame as a layout shift when the stylesheets were external files. The Home Stage rule of `docs/protocol/cloud/site-delivery.md` now says that a published stage document loads no external stylesheet. The stage inlines each local stylesheet link. Mokly bundles each configured stylesheet and inlines its local imports, as `docs/protocol/mokly-imported-styles.md` says, so the seven current stage bundles hold no `@import`.
+- **Problem:** The stage still has a path that loads an external stylesheet. When an inlined sheet holds an `@import`, the stage rebases its URL and copies the imported sheet as a separate file. It also leaves `alternate`, `disabled`, and remote stylesheet links as they are. Such a document breaks the Home Stage rule. The published-output test in `apps/site/tests/stage.test.ts` rejects it, but only in the site gate, after the build. The inlining test expects the rebased `@import`, so it reads as if the rule allowed one.
+- **Impact if no action:** A future input with an import or a remote stylesheet builds without an error, and then fails the site gate with a test message, not a build message. `npm run dev` shows the stage without the imported styles.
+- **Root question:** How does the stage make sure that each published document loads no external stylesheet, for every stylesheet input that it accepts?
+- **Options:**
+  - **A.** Fail the build when a linked sheet still holds a local `@import`. It finds imports with the CSS dependency analysis that `apps/site/scripts/links/documents.ts` uses, because the stage's own pattern counts `@import url(...)` as a plain URL. Remote imports and remaining links still reach the gate. Effort: Small.
+  - **B.** Expand each local import in the stage rewriter, in its order and under its media, supports, and layer conditions, and rebase each asset from its own sheet. It keeps the import support with more pattern code. Effort: Medium.
+  - **C.** Bundle each linked sheet with Lightning CSS and a catalogue-root resolver, and inline the bundle. On 2026-11-20 a Lightning CSS reprint changed the declaration order in all seven real bundles, changed `blue` to `#00f`, merged rules, and merged `grid-column` and `grid-row` into `grid-area`. So C changes the CSS text of every stage document, against the rule that only the URLs change. Effort: Medium.
+  - **D.** Check the output of the stage build: fail when a published document still has a stylesheet link or an `@import`, and name the document and the reference. Move the style reader of the published-output test into the stage code, so that the build and the test share one rule. Delete the import branch and the CSS-copy pass, because no imported sheet can then remain. Change the inlining test to expect the error. Effort: Small.
+  - **E.** Rely on the Mokly bundle contract with no new check: delete the import branch and the CSS-copy pass, and keep the published-output test and `site:links` as the guards. A future import then fails only in the gate. Effort: Small.
+  - **F.** Bundle with Lightning CSS only a linked sheet that has a local `@import`, and inline every other sheet as today. The stage gets two CSS paths, and the bundled sheet gets the Lightning CSS reprint. Effort: Medium.
+- **Left out:** Preloading the imported sheet, or keeping it as a copied file. Each still loads a separate stylesheet, so each fails the goal.
+- **Wider fix:** D. It checks the published documents for every shape of the problem: a local or remote import, and a remote or alternate link.
+- **Previous examples:** None found. Mokly's own bundler inlines local imports before delivery, in `crates/mokly-css/src/delivery.rs`.
+- **Recommendation:** D. It gives an early, clear build error for every shape at Small effort, and the current bundles cannot meet it. When the user accepts the removal but not a new build error, E. When the user keeps the import support, F, not C, because F leaves the seven current sheets unchanged.
+- **Action:** ask the user, because D adds a build error and removes the import copy of `origin/main`, and the user decides both.
