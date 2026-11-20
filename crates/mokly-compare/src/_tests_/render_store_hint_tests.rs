@@ -14,7 +14,7 @@ use crate::render_store::{CachedDocuments, DocumentBackend};
 fn a_miss_hint_does_no_io_and_preserves_absent_key_faults_and_lock_fallbacks() {
     let store = CachedDocuments::new(Arc::new(Unimock::new(())), "current".into());
     let key = StoreKey::new(&NodeKey("absent".into()), "build");
-    assert!(store.known_missing(&key));
+    assert!(!store.known_missing(&key));
     *store.index.lock().unwrap() = Some(BTreeMap::new());
     assert!(store.known_missing(&key));
     {

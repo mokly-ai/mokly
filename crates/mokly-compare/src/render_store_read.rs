@@ -18,10 +18,10 @@ impl CachedDocuments {
         let Ok(index) = self.index.try_lock() else {
             return false;
         };
-        if index
-            .as_ref()
-            .is_some_and(|entries| entries.contains_key(key))
-        {
+        let Some(index) = index.as_ref() else {
+            return false;
+        };
+        if index.contains_key(key) {
             return false;
         }
         let Ok(faults) = self.faults.try_lock() else {

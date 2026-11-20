@@ -125,8 +125,8 @@ segments, so a read scans no entries. Only a segment publication scans the
 kind, to make room under the bound.
 `DocumentBackend::known_missing` proves a miss from the index alone, and its
 trait default answers `false`. `CachedDocuments` answers `true` when the store
-is off, or when the index and fault locks are free, the index has no entry for
-the key, and no entry fault waits. It opens no file and takes no queued fault,
+is off, or when the index and fault locks are free, the completed index has no
+entry for the key, and no entry fault waits. It opens no file and takes no queued fault,
 so the next `load` still reports that fault.
 `DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
 only keys, under the bounds of `WriterLimits`. `DocumentWriter::try_miss`

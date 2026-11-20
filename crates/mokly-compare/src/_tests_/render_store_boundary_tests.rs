@@ -144,7 +144,7 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
             .answers_arc(Arc::new(move |_, _| Ok(entry(bytes.clone())))),
     )));
     let store = CachedDocuments::new(cache, "current".into());
-    assert!(store.known_missing(&documents[0].key));
+    let before_preparation = store.known_missing(&documents[0].key);
     assert!(matches!(store.load(&documents[0].key), ReadOutcome::Miss));
     assert!(matches!(
         DocumentBackend::initialize(&store),
@@ -154,6 +154,7 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
         matches!(store.load(&documents[0].key), ReadOutcome::Miss),
         "a lookup must not retry contended index preparation"
     );
+    let after_contended_preparation = store.known_missing(&documents[0].key);
     assert!(matches!(
         DocumentBackend::initialize(&store),
         ReadOutcome::Miss
@@ -163,6 +164,11 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
         panic!("explicit preparation must recover the still-enabled store")
     };
     assert_eq!(artifact.bytes, b"complete");
+    assert_eq!(
+        (before_preparation, after_contended_preparation),
+        (false, false),
+        "an unprepared index cannot prove absence of a stored key"
+    );
 }
 
 #[test]
