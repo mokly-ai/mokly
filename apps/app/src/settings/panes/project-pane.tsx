@@ -202,7 +202,6 @@ export function ProjectPane({ project }: { project: Project }) {
               size="md"
               write={rename}
               operation="Saving settings"
-              disabled={rename.disabled}
               onPress={() => void save()}
               testID="save-project"
             />

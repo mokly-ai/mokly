@@ -63,7 +63,6 @@ export function MemberDetails({
               size="md"
               write={rename}
               operation="Saving role"
-              disabled={rename.disabled}
               onPress={() =>
                 void rename.run(() =>
                   updateMember(workspace.id, member.id, {
