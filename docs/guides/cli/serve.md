@@ -64,9 +64,10 @@ not follow later edits. If an imported stylesheet asset changes, its request
 fails and the terminal names the asset. Restart Serve or use watching to
 load the edited asset.
 
-When the complete generated output finishes, Serve prints that generation's
-build warnings once on standard error. Previews you open afterwards are not
-reported again, and Serve never stops for a warning.
+Serve prints build warnings on standard error. It prints preparation warnings
+before `Catalogue ready`. It prints new warnings from later renders once
+when they are reported. Opening a preview does not repeat an already reported
+warning. Serve never stops for a warning.
 `--strict` is not a Serve option; use it with `build` or `publish` when warnings must fail automation.
 
 ## Access
@@ -78,7 +79,9 @@ whole catalogue. Rendering requests additionally require the exact matching
 origin and the render token.
 
 Warnings name the page or authored input that needs attention. Serve reports
-each warning once for its current build attempt before Catalogue ready. A
-failed attempt reports its collected warnings before its error. Late warnings
-from older attempts stay silent. New warnings from temporary component edits
-use the current attempt and never repeat an already reported warning.
+each warning once for its current build attempt. It prints preparation
+warnings before `Catalogue ready` and warnings from later renders when
+reported. A failed attempt reports its collected warnings before its error.
+Late warnings from older attempts stay silent. New warnings from temporary
+component edits use the current attempt and never repeat an already reported
+warning.
