@@ -183,6 +183,11 @@ Replaced ways:
 - Separate Node HTML parses become one per-render exact-input owner.
   Consumers: registry styles, style collection, markup finalization, render,
   session rendering, and direct registry tests. Migrate them in Milestone 2.
+- Unconditional staged dispatch becomes per-view static selection.
+  Consumers: UsagePass dispatch, the composer and generation boundaries,
+  GraphDocuments, the overlap Renders test helper, and the entry-point docs.
+  Migrate them in Milestone 5b. Keep staged APIs for eligible views and ordinary
+  APIs for ineligible views. Keep no catalogue switch or all-views converter.
 
 ## Acceptance update, 2026-11-20
 
@@ -412,27 +417,28 @@ repair this finished sample. Preserve the new-three and combined-four results.
 
 ### 7. Remove a redundant completion capacity query
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation.
 - **Category:** Performance.
-- **Location:** `crates/mokly-graph/src/background_render.rs` and `crates/mokly-server/src/background_stage.rs`.
+- **Location:** `crates/mokly-server/src/background.rs`, `crates/mokly-graph/src/background_render.rs`, and the shared composer eligibility boundary.
 - **Terms:** A completion place bounds a prepared-root document's core work. Its capacity is the smaller of the current memory-permitted sidecar count and worker count, with a minimum of one.
-- **Background:** Four balanced HTML pairs show a real regression. HTML renders no sidecar fragment. Every document still enters completion and adds a current-capacity query. The timed probe attributes most added CPU to those queries.
-- **Problem:** The empty-entry shortcut removes only about 22% of the added queries. Nonzero entries still need fresh capacity under #330. The unprepared path has no sidecar payload that needs an early handoff.
+- **Background:** Option D removed native completion queries and passed the Cloud confirmation. Its fresh four-pair HTML median still exceeds the criterion. Saved phase data locate recurring extra work in usage. No individual Small owner is proven.
+- **Problem:** Native views still allocate Stage and waker state and enter the graph preparation wrapper. That path probes the cache, builds a preparation request, and owns a different outer span. None can hand off in this case.
 - **Impact if no action:** The branch fails the HTML first-Changes criterion despite its accepted Cloud gain.
-- **Root question:** How can first Changes on HTML return within 200 ms of main, while output stays exact and every background document keeps a bounded owner?
+- **Root question:** How can views that cannot hand off cost what they cost on main, in every catalogue, while views that hand off keep their accepted gain and bounds?
 - **Options:**
   - **A.** Skip the capacity query at zero active places. Keep every count and byte owner and update the protocol. This was conditionally approved before counters existed. It removes only the measured empty-entry share and cannot recover most query cost. Effort: Small.
   - **B.** Expose a fresh guaranteed reservation floor from the pool. This avoids host reads when the floor settles admission. An HTML pool without claims or reservations still has a floor of one, so it gives A's result here. Effort: Medium.
   - **C.** Reduce the cost of fresh host and cgroup reads in the shared memory provider. This reaches all default pool users and needs platform profiling. It keeps the unnecessary HTML completion boundary. Effort: Medium.
   - **D.** Keep unprepared, cached, and native documents on the ordinary document path with their original worker. Only prepared-root completion enters Stages, including refused-charge fallback. Keep fresh capacity checks, one shared count, and the 4 MiB handoff budget. Remove graph completion entry from its trait and custom default. Keep entry private to Stage for prepared fallback. Record the W plus C envelope in the protocol. Validate mixed/replacement ownership. Effort: Small.
-  - **E.** Choose static eligibility before the view job through new composer, generation, and document methods. Ineligible views then bypass Stage allocation and preparation too. This removes unmeasured per-view work but widens API and dispatch changes. Use only if D fails the four-pair criterion. Effort: Medium.
-- **Left out:** A cached nonzero capacity or TTL breaks #330's current-growth rule. Keeping all completion places but bypassing preparation retains the measured calls. Raising a bound, adding a thread, or dropping memory admission breaks the task. No change fails the measured criterion.
-- **Shared assumptions:** Exact output, foreground priority, root order, #330, render pool, cache bounds, and shared handoff accounting remain task requirements. A through C preserve the branch's background-only completion bound. D drops that branch-added assumption under the performance orchestrator's explicit approval of 2026-11-20. The absolute Serve owner envelope remains worker-retaining jobs plus admitted handoffs, already permitted for foreground jobs plus handoffs.
-- **Wider fix:** D. Admission follows the ownership that creates extra in-flight state instead of applying to every document kind.
+  - **E.** Choose static eligibility before the view job through new composer, generation, and document methods. Ineligible views use the exact ordinary Work background path, with no Stage, preparation, or outer wrapper. One pure predicate serves preparation and static selection. Default false preserves custom and unknown implementations. Selection is per view, including mixed catalogues. D has now failed the required four-pair criterion. Effort: Medium.
+  - **F.** Compute static eligibility once per generation and store it in each RenderRoute while building the snapshot. This removes the Documents forwarder but adds a dispatch fact to an evidence record. Its small extra gain is unmeasured. Effort: Medium.
+- **Left out:** A cached nonzero capacity or TTL breaks #330's current-growth rule. Keeping all completion places but bypassing preparation retains the measured calls. Raising a bound, adding a thread, or dropping memory admission breaks the task. No change fails the measured criterion. A catalogue-wide switch leaves mixed-catalogue native overhead and is explicitly rejected by the performance orchestrator. A graph-only fallback retains Stage and waker work and does not give the approved exact ordinary dispatch path. A cheaper Stage for every view retains the wrapper. A cache-aware choice violates the no-probe rule and takes the cache mutex on the async task. A new attribution workload is not granted.
+- **Shared assumptions:** Exact output, foreground priority, root order, #330, render pool, cache bounds, and shared handoff accounting remain task requirements. A through C preserve the branch's background-only completion bound. D drops that branch-added assumption under the performance orchestrator's explicit approval of 2026-11-20. The absolute Serve owner envelope remains worker-retaining jobs plus admitted handoffs, already permitted for foreground jobs plus handoffs. E uses the existing static entry rule, no cache read, and false defaults. These follow the approved per-view path and avoid locks on the async task. E targets usage only. Ready, base preparation, and capture code stay unchanged. Its three trait boundaries are design mechanics, not requirements. F replaces the Documents boundary with stored metadata.
+- **Wider fix:** E. Select the owning dispatch path before allocating handoff machinery. Ineligible views cannot inherit per-view staging overhead.
 - **Previous examples:** Decision 3's original-pool diagnostic removed the pure-HTML allocator increase. The accepted design already permits foreground worker-retaining jobs alongside background handoffs.
-- **Recommendation:** D replaces provisional A after timed attribution and the counter condition failed. D removes all extra native completion queries while keeping prepared-root admission unchanged.
-- **Action:** fix now, apply D. This is the performance orchestrator's approved call of 2026-11-20. Its message explicitly authorizes the changed branch-added contract. The fresh check kept D and added E as a fallback.
+- **Recommendation:** E replaces D after saved-record attribution of the remaining HTML delay. D removed the query cost. E removes the remaining native wrapper by construction. It keeps the accepted JavaScript path and all bounds. The fresh check kept E and added F, whose extra metadata and small unmeasured gain are not needed.
+- **Action:** fix now, apply E. This is the performance orchestrator's approved follow-on call of 2026-11-20 after D failed the HTML criterion. It permits Medium effort and rejects a catalogue-wide switch. The fresh options check is complete. Its report is `.context/busier-sidecars/exact-native-dispatch-options-check.md`.
 
 The original options check kept A only if empty entries dominated. They did not.
 The timed diagnostic and ownership assessment are under
@@ -445,11 +451,16 @@ It kept D, added E, and confirmed the narrow graph-private worker shape.
 Do not change the capacity provider or combine A with D without another call.
 
 Only prepared-root completion waits for a Stage place. A refused charge keeps
-its original worker and still enters that bound. Unprepared documents use the
-existing `RenderWorkers::document` path with a graph-private ordinary worker.
-Do not pass Session as that worker: its raw span would nest a second document span.
-The native worker has no prepared-root mutex. It shares the raw/finish pipeline
-with the prepared worker and performs one counted cache read.
+its original worker and still enters that bound. Statically ineligible views
+use the ordinary Work background method, ordinary generation render, and the
+existing Session worker. They allocate no Stage and call no preparation API.
+They use main's ordinary document span and one counted cache read.
+
+A statically eligible view can find its document cached when it runs. It still
+uses D's staged path and graph-private job, with no completion place and its
+original worker. Do not pass Session as that staged job: its raw span would
+nest a second document span. The optional prepared-root lock and shared
+raw/finish body remain unchanged for this path.
 They repeat no fragment and start no thread. Nested validation stays inline.
 All started blocking jobs remain drainable after their async callers disappear.
 At constant capacity, total owners stay within W worker-retaining calls plus
@@ -461,6 +472,29 @@ one React proxy pair. Preserve all observations. Require the HTML paired median
 first Changes to stay within +200 ms of main. Send the pushed fix SHA and dist
 source commit for the performance orchestrator's brief confirming Cloud check.
 Do not open the pull request before that result.
+
+D's approved call and implementation remain history at `33b63f5aa`. Its Cloud
+confirmation passed. Its HTML criterion failed. The completed report and
+read-only phase split are under
+`.context/busier-sidecars/measurements/postfix-confirmation-01/`.
+Root read both complete reports before selecting E. The saved records cannot
+separate individual allocation, waker, cache-probe, request, or span costs.
+They do not prove E's future gain. The new balanced sample must do that.
+
+E's eligibility has one home in the existing pure root eligibility predicate.
+The composer exposes that predicate without calling preparation. The generation
+looks up one immutable view and asks the composer. The document adapter forwards
+it to dispatch. Every default returns false. Eligibility reads no render cache,
+performs no IO, acquires no claim, and renders no root. Custom composers remain
+ineligible unless they explicitly opt in. Ineligible choices depend on the
+view, never on whether another view in the catalogue can hand off.
+
+Use the existing ordinary Window start path for false and the existing staged
+start path for true. The Window already has optional Stage ownership. Preserve
+its start order, reporting, foreground priority, and capacity reads. Keep
+original worker lifetimes across replacement and cancellation in both paths.
+Keep the shared prepared count and 4 MiB budget. No new process, setting,
+gate, retry, sleep, timeout, allocator option, pool change, or public frontend type change belongs here.
 
 ## Milestone 1: Documentation and contracts
 
@@ -580,9 +614,9 @@ only for the requested HTML follow-up and its conditional correction.
 - [x] Commit and push the updated plan before code.
 - [x] Update the protocol and affected READMEs by delegation. Record the approved W plus C envelope, original worker retention, and prepared-only completion bound.
 - [x] Implement decision 7 D by delegation. Prove native bypass red first. Prove the single document span and mixed/replacement ownership with deliberate mutations. Preserve existing Serve, pool, shrink, and owner assertions. Repeat changed asynchronous tests ten times.
-- [ ] Repeat four balanced warm HTML pairs on the fix, with excluded primers. Run one React warm pair with excluded primers and preserve every row.
-- [ ] Run targeted tests, the Repository suite, complete-gate evidence, and a fresh implementation review on the corrected source.
-- [ ] Push the correction and send its implementation SHA and dist source commit. Obtain the performance orchestrator's confirming Cloud result before the pull request.
+- [x] Repeat four balanced warm HTML pairs on the fix, with excluded primers. Run one React warm pair with excluded primers and preserve every row.
+- [x] Run targeted tests, the Repository suite, complete-gate evidence, and a fresh implementation review on the corrected source.
+- [x] Push the correction and send its implementation SHA and dist source commit. Obtain the performance orchestrator's confirming Cloud result before the pull request.
 
 Evidence: `.context/busier-sidecars/measurements/merged-preflight/html-warm-followup-result.md`.
 Implementation and docs: `.context/busier-sidecars/html-structural-fix/report.md`,
@@ -592,9 +626,36 @@ sessions, additional PID pairs, and the charge probe. The HTML addition is
 not permission for any other workload. A source correction gets its own dated
 call before implementation. The slower branch does not authorize the PR.
 
+## Milestone 5b: Exact ordinary dispatch for ineligible views
+
+Depends on: 5a
+
+The performance orchestrator approved this Medium follow-on on 2026-11-20.
+Milestone 5a is complete. Its Cloud check passed but its HTML criterion failed.
+The saved phase attribution identifies no individual Small owner. Apply decision
+7 E. Do not reopen the earlier completed milestones.
+
+- [x] Run a fresh read-only options check of 7 E and merge its corrections. Keep E, add F, and record the purity, defaults, shared guard, and per-view test needs.
+- [ ] Commit and push the updated plan before code.
+- [ ] Update server, graph, and HTML README entry points for per-view selection. The protocol stays unchanged because completion membership and every boundary rule stay the same. Check the CLI README and update it only if it contradicts the new entry points.
+- [ ] Share one pure static eligibility predicate between composer preparation and dispatch selection. Add conservative defaults and migrate all consumers. Keep the defensive Markdown rule in a shared graph helper. The GraphDocuments choice takes no per-route usage mutex.
+- [ ] Promote the existing test-only Window::start to the ordinary production path, with its doc comment. Select ordinary Work and Window paths for every ineligible view, even in a mixed catalogue. Allocate no Stage and perform no preparation/cache probe merely to select that path.
+- [ ] Keep eligible roots on D's path, including cached eligible views, refused charges, failures, and single-attempt consumption. Preserve counts, budget, worker order, priority, cancellation, replacement, and draining.
+- [ ] Add regression cases red first at the eligibility and mixed-dispatch boundaries. Preserve existing Serve/pool tests and assertions. Prove any new asynchronous cases with ten explicit trials and mutation evidence where needed.
+- [ ] Run targeted tests and the Repository suite. Commit and push. Send the implementation SHA and dist build commit immediately. Obtain complete-gate CI evidence and a fresh whole-diff review.
+- [ ] Build the new release arm without overwriting frozen evidence. Run four balanced warm large-HTML pairs and one React warm pair, with excluded primers, unchanged observation rules, and fresh immutable provenance. Compare the saved seven output pairs without extra starts.
+- [ ] Apply the unchanged +200 ms HTML paired-median criterion and React no-regression check. Preserve every row, CPU bins, memory, and gauge. If HTML fails, send the pairs before any PR.
+- [ ] Send the new SHA for the performance orchestrator's brief Cloud recheck. Keep its accepted 0.93 s gain. Open no PR before its result. Do not merge main again.
+
+Evidence: `.context/busier-sidecars/measurements/postfix-confirmation-01/report.md`
+and `phase-attribution-readonly.md` in that folder. The next run gets its own
+immutable descriptor and new output folder. Reuse no old-source observation
+in the new fixed-source statistic. No other local matrix, probe, PID series,
+or edit session is authorized.
+
 ## Milestone 6: Commit, review, and pull request
 
-Depends on: 5
+Depends on: 5b
 
 - [x] Commit with Conventional Commits and push. Send the implementation SHA and dist source commit immediately.
 - [x] After the accepted fixed SHA, merge main once. Preserve incoming content and check #363 affinity with #351 warm-up and overlap. Run their tests and obtain complete gate evidence with Rust 1.98.1. The pull request targets main.
