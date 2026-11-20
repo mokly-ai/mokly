@@ -16,6 +16,13 @@ const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
   ),
 ]);
 
+/** Each public accent override as a rule reads it, with its theme default. */
+const ACCENT = "var(--mokly-accent, var(--_mokly-private-accent-default))";
+const ACCENT_CONTRAST =
+  "var(--mokly-accent-contrast, var(--_mokly-private-accent-contrast-default))";
+const ACCENT_SOFT =
+  "var(--mokly-accent-soft, var(--_mokly-private-accent-soft-default))";
+
 test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(STANDALONE_CSS, /--_mokly-private-accent-default: #4f7864/);
   assert.match(STANDALONE_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
@@ -92,14 +99,14 @@ test("both split dividers share one grip shape and pointer look, and rest in the
       `.mbk-${handle}-resize:focus-visible::after,`,
       `.mbk.mbk-${handle}-resizing ` +
         `.mbk-${handle}-resize::after ` +
-        "{ background: var(--mokly-accent); " +
-        "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
+        `{ background: ${ACCENT}; ` +
+        `box-shadow: 0 0 0 3px ${ACCENT_SOFT}; }`,
     ])
       assert.ok(css.includes(state), `${handle}: ${state}`);
   assert.ok(
     css.includes(
       ".mbk-inspector-resize:focus-visible " +
-        "{ box-shadow: inset 0 2px 0 var(--mokly-accent); }",
+        `{ box-shadow: inset 0 2px 0 ${ACCENT}; }`,
     ),
   );
   for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
@@ -143,20 +150,18 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):not(.active):hover { background: var(--mokly-accent-soft); }",
+      `.mbk-chip.tag:is(a, button):not(.active):hover { background: ${ACCENT_SOFT}; }`,
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
-        "border-color: var(--mokly-accent); " +
-        "color: var(--mokly-accent-contrast); }",
+      `.mbk-chip.tag.active { background: ${ACCENT}; ` +
+        `border-color: ${ACCENT}; ` +
+        `color: ${ACCENT_CONTRAST}; }`,
     ),
   );
   assert.ok(
-    css.includes(
-      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
-    ),
+    css.includes(`.mbk-chip.tag.active svg { color: ${ACCENT_CONTRAST}; }`),
   );
   assert.ok(
     css.includes(

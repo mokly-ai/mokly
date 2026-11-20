@@ -63,18 +63,24 @@
 }
 
 .mbk-nav-row:hover::before {
-  background: var(--mokly-accent-soft);
+  background: var(
+    --mokly-accent-soft,
+    var(--_mokly-private-accent-soft-default)
+  );
 }
 
 .mbk-nav-row.active,
 .mbk-nav-row[aria-current="page"] {
-  color: var(--mokly-accent-contrast);
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
   font-weight: 600;
 }
 
 .mbk-nav-row.active::before,
 .mbk-nav-row[aria-current="page"]::before {
-  background: var(--mokly-accent);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 .mbk-nav-label {
@@ -92,7 +98,7 @@
 }
 
 .mbk-nav-ico.flow {
-  color: var(--mokly-accent);
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 .mbk-nav-ico.folder {
@@ -117,12 +123,20 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-ico,
 .mbk-nav-row[aria-current="page"] .mbk-nav-ico {
-  color: color-mix(in srgb, var(--mokly-accent-contrast) 90%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--mokly-accent-contrast, var(--_mokly-private-accent-contrast-default))
+      90%,
+    transparent
+  );
 }
 
 .mbk-nav-row.active .mbk-nav-label,
 .mbk-nav-row[aria-current="page"] .mbk-nav-label {
-  color: var(--mokly-accent-contrast);
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
 }
 
 .mbk-nav-count {
@@ -134,7 +148,12 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-count,
 .mbk-nav-row[aria-current="page"] .mbk-nav-count {
-  color: color-mix(in srgb, var(--mokly-accent-contrast) 75%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--mokly-accent-contrast, var(--_mokly-private-accent-contrast-default))
+      75%,
+    transparent
+  );
 }
 
 .mbk-nav-row[hidden],
@@ -211,7 +230,10 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 
 .mbk-nav-leaf:has(> .mbk-nav-row[aria-current="page"])
   .mbk-nav-variants-toggle {
-  color: var(--mokly-accent-contrast);
+  color: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
 }
 
 .mbk-nav-variants-toggle svg {
@@ -255,7 +277,7 @@ span[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after {
   flex-shrink: 0;
   margin-left: auto;
   border-radius: 50%;
-  background: var(--mokly-accent);
+  background: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 a[data-nav-row][aria-current="page"][data-changed="true"]:where(
@@ -270,7 +292,10 @@ span[data-nav-row][aria-current="page"][data-changed="true"]:where(
 span[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
     .mbk-reset
   )::after {
-  background: var(--mokly-accent-contrast);
+  background: var(
+    --mokly-accent-contrast,
+    var(--_mokly-private-accent-contrast-default)
+  );
 }
 
 a[data-nav-row][data-changed="true"]:not([data-nav-removed])
