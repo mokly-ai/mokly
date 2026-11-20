@@ -1,0 +1,24 @@
+---
+title: "Adopted"
+description: "Before move."
+element: "fixture-container-adopted"
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Parent" }
+variants:
+  [
+    { "slug": "left", "title": "Baseline left", "props": { "label": "Left" } },
+    {
+      "slug": "right",
+      "title": "Baseline right",
+      "props": { "label": "Right" },
+    },
+  ]
+---
+
+<p>{{ label }}</p>

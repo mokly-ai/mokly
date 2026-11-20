@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "headers": {
+    "x-ratelimit-limit": "5000",
+    "x-ratelimit-remaining": "4999",
+    "x-ratelimit-used": "1",
+    "x-ratelimit-reset": "1789563600",
+    "x-ratelimit-resource": "core",
+    "content-type": "application/json; charset=utf-8",
+    "x-github-request-id": "C0DE:1234:5678:ABCD:TEST"
+  },
+  "body": {
+    "error": "bad_verification_code",
+    "error_description": "The code passed is incorrect or expired.",
+    "error_uri": "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-oauth-app-access-token-request-errors/#bad-verification-code"
+  }
+}

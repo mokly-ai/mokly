@@ -1,0 +1,8 @@
+id: no-inline-use
+valid:
+  - "use std::fmt; fn main() {}"
+  - "mod nested { use std::fmt; }"
+invalid:
+  - "fn main() { use std::fmt; }"
+  - "fn main() { if true { use std::fmt; } }"
+  - "impl Thing { fn run() { use std::fmt; } }"

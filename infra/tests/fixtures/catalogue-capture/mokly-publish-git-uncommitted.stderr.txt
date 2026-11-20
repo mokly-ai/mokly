@@ -1,0 +1,3 @@
+[mokly/git-uncommitted] The checkout has uncommitted changes.
+  - untracked.txt
+Commit, stash or ignore these files, then publish again.

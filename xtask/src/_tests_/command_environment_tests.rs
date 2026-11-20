@@ -53,3 +53,33 @@ fn local_commands_remove_git_repository_variables() {
         assert!(!command.get_envs().any(|(key, _)| key == name));
     }
 }
+
+#[test]
+fn database_suite_plan_preserves_strict_commands_and_child_environment() {
+    let spec = CommandSpec::isolated_database(
+        "cloud-app",
+        vec![
+            CommandSpec::new("npm")
+                .args(["run", "test:browser", "--workspace", "@mokly-cloud/app"])
+                .with_environment("MKC_APP_SHARD", Some("2/4"))
+                .with_environment("REMOVE_ME", None)
+                .reject_skips(),
+        ],
+    );
+    let command = build_command(&spec);
+    let args: Vec<_> = command.get_args().collect();
+    assert_eq!(args[0], "xtask/scripts/isolated-postgres.mjs");
+    assert_eq!(args[1], "cloud-app");
+    let plan: serde_json::Value = serde_json::from_str(args[2].to_str().unwrap()).unwrap();
+    assert_eq!(plan[0]["program"], "node");
+    assert_eq!(plan[0]["args"][0], "xtask/scripts/strict-command.mjs");
+    assert_eq!(plan[0]["args"][2], "run");
+    assert_eq!(
+        plan[0]["environment"][0],
+        serde_json::json!(["MKC_APP_SHARD", "2/4"])
+    );
+    assert_eq!(
+        plan[0]["environment"][1],
+        serde_json::json!(["REMOVE_ME", null])
+    );
+}

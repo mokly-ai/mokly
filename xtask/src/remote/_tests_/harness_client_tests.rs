@@ -116,7 +116,7 @@ pub(super) fn client(
                 }
                 return Ok(result);
             }
-            assert_eq!(probes.load(Ordering::SeqCst), 7);
+            assert_eq!(probes.load(Ordering::SeqCst), 14);
             assert!(
                 log.unwrap()
                     .to_string_lossy()

@@ -1,0 +1,11 @@
+[
+  {
+    "name": "mokly-cloud",
+    "namespace": "mkc-preview-pr-42",
+    "revision": "7",
+    "updated": "2026-09-22 20:00:00.000000000 +0000 UTC",
+    "status": "deployed",
+    "chart": "mokly-cloud-0.1.0",
+    "app_version": "0.1.0"
+  }
+]

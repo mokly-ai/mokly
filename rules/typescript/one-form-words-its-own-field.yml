@@ -1,0 +1,36 @@
+id: one-form-words-its-own-field
+language: Tsx
+severity: error
+message: >-
+  A form declares which reasons its own fields own; the sentence that field
+  draws is the shared one in `api/form-error.ts`, so no form invents its own
+  copy for a reason every form shares. `FieldOwner`'s `says` is the one
+  exception, and the whole justification for the type is that there is one:
+  sign in and sign up ask for a complete email address where the shared table
+  says to check the values. A second one is a decision, not an edit — make it
+  in `docs/protocol/cloud/product-mockups.md` and in the rule's `ignores` first. A
+  text scan read this pair in one spelling and missed the same object with its
+  two keys the other way round, which is why it is a shape here.
+files:
+  - apps/app/src/**
+ignores:
+  # The one form that words its own field, recorded in `product-mockups.md`:
+  # an address the API refused asks for a complete email address, which is what
+  # the registered input's invalid variant draws.
+  - apps/app/src/screens/account/entry-screen.tsx
+rule:
+  kind: pair
+  all:
+    - has:
+        field: key
+        regex: ^["']?says["']?$
+    # Only inside a `FieldOwner`: a `says` beside the field that owns the
+    # reason. A `says` that means something else to some other object is not
+    # this, whichever order its keys are written in.
+    - inside:
+        kind: object
+        has:
+          kind: pair
+          has:
+            field: key
+            regex: ^["']?field["']?$

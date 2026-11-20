@@ -1,0 +1,4 @@
+environment: main-preview
+desktopClient: true
+database:
+  mode: cloudsql

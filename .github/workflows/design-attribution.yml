@@ -8,6 +8,8 @@ permissions:
 concurrency:
   group: design-attribution-${{ github.ref }}
   cancel-in-progress: false
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 jobs:
   design-attribution:
     name: Design attribution matrix

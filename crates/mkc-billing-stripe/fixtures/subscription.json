@@ -1,0 +1,61 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_subscription_fixture"
+  },
+  "body": {
+    "id": "sub_fixture",
+    "object": "subscription",
+    "customer": "cus_fixture",
+    "status": "trialing",
+    "items": {
+      "object": "list",
+      "data": [
+        {
+          "id": "si_editor_fixture",
+          "object": "subscription_item",
+          "price": {
+            "id": "price_editor_fixture",
+            "lookup_key": "mokly_team_editor_usd_month",
+            "object": "price",
+            "created": 1790380800,
+            "metadata": {
+              "mokly_seat_kind": "editor"
+            }
+          },
+          "quantity": 3,
+          "current_period_end": 1790596800
+        },
+        {
+          "id": "si_collaborator_fixture",
+          "object": "subscription_item",
+          "price": {
+            "id": "price_collaborator_fixture",
+            "lookup_key": "mokly_team_collaborator_usd_month",
+            "object": "price",
+            "created": 1790380801,
+            "metadata": {
+              "mokly_seat_kind": "collaborator"
+            }
+          },
+          "quantity": 2,
+          "current_period_end": 1790596800
+        }
+      ],
+      "has_more": false,
+      "url": "/v1/subscription_items?subscription=sub_fixture"
+    },
+    "cancel_at_period_end": false,
+    "trial_end": 1790596800,
+    "latest_invoice": {
+      "id": "in_fixture",
+      "object": "invoice",
+      "attempted": false,
+      "status": "draft"
+    },
+    "metadata": {
+      "organization_id": "01998a00-0000-7000-8000-000000000001"
+    }
+  }
+}

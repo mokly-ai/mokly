@@ -1,0 +1,12 @@
+{
+  "bindings": [
+    {
+      "members": ["serviceAccount:foundation@example.iam.gserviceaccount.com"],
+      "role": "roles/storage.legacyBucketReader"
+    }
+  ],
+  "etag": "BwYQ8HmVnW8=",
+  "kind": "storage#policy",
+  "resourceId": "projects/_/buckets/mokly-508518-preview-blobs",
+  "version": 3
+}
