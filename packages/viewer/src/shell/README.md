@@ -79,8 +79,8 @@ current parent the lookup resolves, including a moved or case-renamed parent,
 as a Removed row. `nav_removed_variants.ts` records actual attachment before
 removing the row from flat fallback, so a former parent that is now a variant
 or another kind cannot make its historical child disappear and every removed
-entry remains represented once. A removed page or document is a flat row
-that only Changes shows; All and search hide it. Current section nodes use the
+entry remains represented once. A removed page or document is a flat row.
+Only Changes shows removed rows of any kind; All and search hide them. Current section nodes use the
 shared folder-first comparator. Flat removed rows keep `removedEntries` order,
 with each removed parent's variants directly after it, under the
 [serialization contract](../../../../docs/protocol/mokly-catalogue-serialization.md#canonical-bytes).
