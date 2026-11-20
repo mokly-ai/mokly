@@ -20,8 +20,8 @@ async fn background_equal_usage_is_complete_without_a_revision() {
             .answers(&|_, _| Some(ready()))
             .n_times(2),
         WorkMock::background
-            .each_call(matching!(_, _))
-            .answers(&|_, _, _| Ok(Vec::new()))
+            .each_call(matching!(_, _, _))
+            .answers(&|_, _, _, _| Ok(Vec::new()))
             .n_times(2),
     ));
     let origin = unrecorded_ready(2, Arc::new(mock.clone()));

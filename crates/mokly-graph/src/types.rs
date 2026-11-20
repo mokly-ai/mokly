@@ -13,6 +13,7 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
+use crate::background::BackgroundRead;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
@@ -88,6 +89,10 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Perform the ordinary worker lookup, completing a hit or deferring its real miss.
+    fn read_background(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
+    }
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;
 
