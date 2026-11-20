@@ -37,6 +37,18 @@ the artboard scaffolds render in every family: `design.css` imports the theme
 and the reset class first, `design-component-workspace.css` the shell and
 workspace layouts after the component sheets, as the package's `styles.css`
 orders them, and `design-stage.css` the highlight's labels and mask.
+
+The Canvas viewer's shared sheets follow the same order, through the sheets
+that every design route links: `design-stage.css` imports `design-canvas.css`,
+which imports Geist from `design-fonts/` and holds the roles that the Canvas
+palette lacks and the stage, and `design-canvas-inspect.css`, Inspect's
+sections; `design-component-workspace.css` imports `design-canvas-shell.css`,
+the shell's layout and the package parts that it restyles, and then
+`design-canvas-compact.css`, its compact form. The Canvas part sheets under
+`canvas/`, `panels/`, and `inspector/frames-filter.css` read the `--cv-*`
+roles, and a frame's document reads the preview tokens of its own scheme. No
+Canvas sheet names a colour: a role that the Canvas palette lacks mixes Canvas
+roles with `color-mix()`.
 Keep shared host resets at zero specificity so component styles render
 identically in standalone samples and in-screen compositions.
 Declared sheets reload automatically in Serve, including after an edit.

@@ -3,9 +3,12 @@
    workspace holds the header, the variant bar, and the preview pane beside
    the inspector. A static artboard runs no script, so the mockup rules below
    size the preview pane with a native sizer, scroll it independently, and
-   dock the inspector. */
+   dock the inspector. The Canvas viewer's shell and its compact form follow
+   the component sheets too, from their own sheets. */
 @import "../../packages/ui/src/shell-layout/shell-layout.css";
 @import "../../packages/ui/src/workspace-layout/workspace-layout.css";
+@import "./design-canvas-shell.css";
+@import "./design-canvas-compact.css";
 
 /* A document view scrolls in the main region; a workspace scrolls its panes. */
 .ce-design .mbk-main {

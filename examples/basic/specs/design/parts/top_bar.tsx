@@ -3,16 +3,28 @@ import { optional, useDesignInstance } from "../library/composition.js";
 
 import { useRenderedAppearance, type AppearanceChoice } from "./appearance.js";
 import { useDesignNavigation } from "./design_navigation.js";
-import { DESTINATIONS } from "./destinations.js";
+import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { tagPickerTarget } from "./navigation_states.js";
 import type { ArtboardViewport } from "./shell.js";
 import { designTagRecords } from "./tag_filter.js";
+
+/**
+ * The brand's and the menu's destinations of a family whose artboards link
+ * only to each other, such as the Canvas viewer. A menu without one is a
+ * picture of itself.
+ */
+export interface TopBarLinks {
+  brand: DesignDestination;
+  menu?: DesignDestination | undefined;
+}
 
 interface TopBarProps {
   activeTag?: string | undefined;
   /** Overrides the depicted setting; defaults to the rendered scheme. */
   appearanceChoice?: AppearanceChoice | undefined;
   appearanceChanged?: boolean | undefined;
+  /** The family's own brand and menu destinations; Browse's when absent. */
+  links?: TopBarLinks | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
@@ -25,6 +37,7 @@ export function TopBar({
   appearanceChoice,
   appearanceChanged,
   drawerOpen,
+  links,
   searchValue,
   tagPickerOpen,
   viewport,
@@ -32,6 +45,11 @@ export function TopBar({
   const navigation = useDesignNavigation();
   const rendered = useRenderedAppearance();
   const open = navigation.drawer?.open ?? drawerOpen;
+  const menuDestination =
+    links === undefined
+      ? (navigation.drawer?.to ??
+        (open ? DESTINATIONS.home : DESTINATIONS.navigation))
+      : links.menu;
   return (
     <topBar.Component
       moklyInstance={useDesignInstance("top-bar")}
@@ -41,11 +59,8 @@ export function TopBar({
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearanceChoice ?? rendered}
       {...optional("appearanceChanged", appearanceChanged)}
-      brandDestination={DESTINATIONS.home}
-      menuDestination={
-        navigation.drawer?.to ??
-        (open ? DESTINATIONS.home : DESTINATIONS.navigation)
-      }
+      brandDestination={links?.brand ?? DESTINATIONS.home}
+      {...optional("menuDestination", menuDestination)}
       {...optional("query", searchValue)}
       {...optional("activeTag", activeTag)}
       {...optional("pickerDestination", tagPickerTarget(navigation.tags))}

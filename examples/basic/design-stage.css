@@ -4,7 +4,8 @@
    body, the stage, the document stage, the use-case flow, a removed entry's
    previous version and its states, and the highlight's labels and mask are
    the shipped ones, from their @mokly/ui stylesheets, in the package's
-   order. */
+   order. The Canvas viewer's stage and Inspect follow, from their own
+   sheets. */
 @import "../../packages/ui/src/details-panel/details-panel.css";
 @import "../../packages/ui/src/scheme-fallback/scheme-fallback.css";
 @import "../../packages/ui/src/stage/stage.css";
@@ -15,6 +16,8 @@
 @import "../../packages/ui/src/highlight-label/highlight-label.css";
 @import "../../packages/ui/src/highlight-mask/highlight-mask.css";
 @import "./design-shots.css";
+@import "./design-canvas.css";
+@import "./design-canvas-inspect.css";
 
 /* A mobile render draws the one-column details body at every width. Below the
    breakpoint the package stylesheet draws it on its own, as the shell does. */

@@ -56,7 +56,23 @@
       "missing-current"
     ],
     "preview/empty-state": ["home", "missing-route", "no-changes"],
-    "preview/flow-step": ["first", "second"]
+    "preview/flow-step": ["first", "second"],
+    "canvas/canvas-frame": [
+      "desktop-light",
+      "mobile-dark",
+      "component",
+      "document"
+    ],
+    "canvas/zoom-pill": ["fitted", "zoomed", "fit"],
+    "panels/floating-panel": ["catalogue", "panel", "sheet"],
+    "panels/panel-tabs": ["changed", "unchanged"],
+    "panels/phone-dock": ["inspect", "home"],
+    "inspector/frames-filter": [
+      "screen",
+      "component",
+      "light-only",
+      "dark-hidden"
+    ]
   },
   "links": [
     {
@@ -304,6 +320,133 @@
       "source": "example/screens/details",
       "name": "Return to welcome",
       "target": "example/screens/welcome"
+    },
+    {
+      "source": "design/canvas/overview",
+      "name": "Mokly",
+      "target": "design/canvas/stage/home"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": "design/canvas/stage/zoomed"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "name": "Fit",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/overview",
+      "name": "Catalogue",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["mobile"],
+      "name": "Open catalogue navigation",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["mobile"],
+      "name": "Close catalogue navigation",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["mobile"],
+      "name": "Close catalogue",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "viewports": ["mobile"],
+      "name": "Close catalogue",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Welcome",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Profile",
+      "target": "design/canvas/inspect/unchanged"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Payment terms",
+      "target": "design/canvas/stage/document"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "within": "mbk-nav",
+      "name": "Details",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "within": "mbk-nav",
+      "name": "Example tour",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Open the first screen",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "namePattern": "^Changes\\d+$",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/inspect/unchanged",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/inspect/unchanged"
     }
   ],
   "tagStates": [

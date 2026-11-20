@@ -48,6 +48,9 @@ const SHELL_STATES: Readonly<Record<string, HighlightSwitch>> = {
   // Changes.
   "design/browse/index-entries/screen": EMPTY,
   "design/browse/index-entries/member-changes": EMPTY,
+  // The Canvas viewer's Frames filter holds the switch. Profile renders no
+  // registered component, on a desktop and in a phone's panel sheet.
+  "design/canvas/inspect/unchanged": EMPTY,
   // Component pages. Only Toolbar's example renders a registered component.
   "design/components/pages/toolbar": AVAILABLE,
   "design/components/overview": EMPTY,

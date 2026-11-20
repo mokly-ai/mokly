@@ -64,3 +64,42 @@
 .mbk-library[data-library-component="flow-step"] .mbk-library-host {
   padding: 16px;
 }
+/* A Canvas part's sample stands on the canvas, as it does in a Canvas
+   artboard. A frame leaves room for the label above it, and a floating panel
+   takes the height of a short panel. */
+.mbk-library.cv .mbk-library-host {
+  background: var(--cv-background);
+}
+.mbk-library[data-library-component="canvas-frame"] .mbk-library-host {
+  padding: 34px 16px 16px;
+}
+.mbk-library[data-library-component="zoom-pill"] .mbk-library-host,
+.mbk-library[data-library-component="phone-dock"] .mbk-library-host {
+  min-height: 0;
+  padding: 16px;
+}
+.mbk-library[data-library-component="floating-panel"] .mbk-library-host {
+  display: flex;
+  height: 420px;
+  padding: 8px;
+}
+.mbk-library[data-library-component="panel-tabs"] .mbk-library-host {
+  background: var(--cv-surface);
+  border-bottom: 1px solid var(--cv-border);
+  display: flex;
+  height: 44px;
+  max-width: 312px;
+  min-height: 0;
+  padding: 0 4px;
+}
+.mbk-library[data-library-component="frames-filter"] .mbk-library-host {
+  background: var(--cv-surface);
+  max-width: 312px;
+  padding: 14px;
+}
+.cv-float-sample {
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  margin: 0;
+  padding: 14px;
+}

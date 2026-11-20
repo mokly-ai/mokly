@@ -8,7 +8,7 @@ import type { ViewControlsProps } from "./view-controls.js";
  * The shell's own sentence for each reason that disables Highlight
  * components, word for word, so a depicted toggle reads as the shell's does.
  */
-const reasons = {
+export const HIGHLIGHT_REASONS = {
   empty: "No registered components are used in this view.",
   unavailable: "Component inspection is unavailable for this view.",
   loading: "Waiting for the component preview.",
@@ -32,7 +32,7 @@ export function ViewControlsView({
   changedViews,
 }: ViewControlsProps) {
   const markId = useId();
-  const reason = unavailable ? reasons[unavailable] : undefined;
+  const reason = unavailable ? HIGHLIGHT_REASONS[unavailable] : undefined;
   return (
     <ViewControls
       highlight={{ active: highlight, available: reason === undefined, reason }}

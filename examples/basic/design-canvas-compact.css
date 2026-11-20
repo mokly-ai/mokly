@@ -1,0 +1,156 @@
+/* The compact form of a Canvas root, below the shell's breakpoint and in
+   every mobile render: the floating panels close, and an open one is a
+   bottom sheet; the entry bar names the entry over the canvas and picks its
+   frame; the stage shows that one frame, large enough to read; and the dock
+   takes the place of the zoom pill. The frame picker and the frames are
+   native, so the picker switches the frame in place. */
+@container cv (width < 56.25rem) {
+  .cv-work > .cv-float:not([data-sheet]) {
+    display: none;
+  }
+
+  .cv-work > .cv-float[data-sheet] {
+    bottom: 0;
+    height: 64%;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: auto;
+    z-index: 25;
+  }
+
+  .cv-zoom-place {
+    display: none;
+  }
+
+  .cv-dock-place {
+    bottom: 14px;
+    display: block;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+    z-index: 20;
+  }
+
+  .cv-work:has(> .cv-float[data-sheet]) .cv-dock-place {
+    display: none;
+  }
+
+  /* The entry bar: the dark title tag and the status, and the frame
+     picker, over the top of the canvas. */
+  .cv-entry-bar {
+    align-items: center;
+    background: linear-gradient(var(--cv-background) 62%, transparent);
+    display: flex;
+    gap: 8px;
+    height: 52px;
+    justify-content: space-between;
+    left: 0;
+    padding: 0 12px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 8;
+  }
+
+  .cv-entry-title {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  /* The stage: one frame, centred below the entry bar. */
+  .cv-view,
+  .cv-view[data-cv-pan="start"] {
+    align-items: flex-start;
+    bottom: 0;
+    justify-content: center;
+    left: 0;
+    padding: 84px 12px 0;
+    right: 0;
+  }
+
+  .cv-section,
+  .cv-section[data-cv-kind="component"] {
+    background: none;
+    box-shadow: none;
+    outline: 0;
+    padding: 0;
+  }
+
+  .cv-section-head {
+    display: none;
+  }
+
+  .cv-frames[data-cv-kind="screen"] {
+    display: block;
+  }
+
+  .cv-frames[data-cv-kind="screen"] > .cv-frame {
+    display: none;
+  }
+
+  .cv-work:has(option[value="mobile-light"]:checked)
+    .cv-frame[data-cv-frame="mobile-light"],
+  .cv-work:has(option[value="mobile-dark"]:checked)
+    .cv-frame[data-cv-frame="mobile-dark"],
+  .cv-work:has(option[value="desktop-light"]:checked)
+    .cv-frame[data-cv-frame="desktop-light"],
+  .cv-work:has(option[value="desktop-dark"]:checked)
+    .cv-frame[data-cv-frame="desktop-dark"] {
+    display: block;
+  }
+
+  .cv-frame[data-cv-viewport="mobile"] {
+    --cv-zoom: 0.72;
+  }
+
+  .cv-frame[data-cv-viewport="desktop"] {
+    --cv-zoom: 0.27;
+  }
+
+  .cv-frame[data-cv-kind="component"] {
+    --cv-zoom: 0.5;
+  }
+
+  .cv-frames[data-cv-kind="component"] {
+    column-gap: 16px;
+    row-gap: 34px;
+  }
+
+  /* A reading frame is responsive: on a phone it takes the canvas width and
+     reflows its document instead of scaling it. */
+  .cv-frame[data-cv-kind="document"] {
+    --cv-zoom: 1;
+    width: calc(100cqw - 24px);
+  }
+
+  .cv-frame[data-cv-kind="document"] .cv-frame-scale {
+    width: 100%;
+  }
+
+  .cv-frame[data-cv-kind="document"] .mbk-markdown {
+    font-size: 14px;
+    padding: 22px 18px 28px;
+  }
+
+  .cv-frame[data-cv-kind="document"] .mbk-markdown h1 {
+    font-size: 22px;
+  }
+
+  /* One frame of a screen stands for the entry, so its label leads with the
+     entry's slug. */
+  .cv-frame-label {
+    font-size: 11px;
+  }
+
+  .cv-frame[data-cv-viewport] .cv-frame-entry {
+    display: inline;
+  }
+
+  /* The open catalogue sheet keeps its close control clear of the head. */
+  .cv-float[data-sheet] .mbk-nav-head {
+    padding-right: 56px;
+  }
+}

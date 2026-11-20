@@ -1,0 +1,152 @@
+/* The Frames filter of Inspect: a grid of frame toggles and the Highlight
+   components switch. A shown frame's toggle draws its solid edge on the
+   muted surface; a hidden frame's toggle a dashed edge over struck text.
+   Each native checkbox lies transparent over its toggle. */
+.cv-ff-group {
+  display: grid;
+  gap: 10px;
+}
+
+.cv-ff-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.cv-ff {
+  align-items: center;
+  border: 1px dashed var(--cv-border-strong);
+  border-radius: 8px;
+  color: var(--cv-text-muted);
+  column-gap: 7px;
+  display: grid;
+  font-size: 12.5px;
+  font-weight: 540;
+  grid-template-columns: auto 1fr;
+  min-height: 34px;
+  padding: 7px 9px;
+  position: relative;
+  row-gap: 3px;
+}
+
+.cv-ff > input {
+  cursor: pointer;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.cv-ff-name {
+  text-decoration: line-through;
+}
+
+.cv-ff-size {
+  color: var(--cv-text-muted);
+  font: 11px/1 var(--cv-mono);
+  grid-column: 2;
+}
+
+.cv-ff:has(> input:checked) {
+  background: var(--cv-surface-muted);
+  border-color: var(--cv-border-strong);
+  border-style: solid;
+  color: var(--cv-text);
+}
+
+.cv-ff:has(> input:checked) > .cv-glyph {
+  color: var(--cv-signal-deep);
+}
+
+.cv-ff:has(> input:checked) > .cv-ff-name {
+  text-decoration: none;
+}
+
+.cv-ff:has(> input:focus-visible) {
+  outline: 2px solid var(--cv-signal-deep);
+  outline-offset: 2px;
+}
+
+/* A toggle without frames to show, such as Dark for a light-only screen,
+   names why instead of striking its name. */
+.cv-ff > input:disabled {
+  cursor: default;
+}
+
+.cv-ff:has(> input:disabled) > .cv-ff-name {
+  text-decoration: none;
+}
+
+/* The Highlight components switch: its name, then a drawn track and knob
+   under a transparent native switch. */
+.cv-switch {
+  align-items: center;
+  color: var(--cv-text-secondary);
+  display: flex;
+  font-size: 12.5px;
+  gap: 7px;
+  min-height: 30px;
+  position: relative;
+}
+
+.cv-switch-name {
+  flex: 1;
+}
+
+.cv-switch > input {
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.cv-switch-track {
+  background: var(--cv-surface);
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 999px;
+  flex: none;
+  height: 18px;
+  position: relative;
+  width: 32px;
+}
+
+.cv-switch-track::after {
+  background: var(--cv-border-strong);
+  border-radius: 50%;
+  content: "";
+  height: 12px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  width: 12px;
+}
+
+.cv-switch > input:checked + .cv-switch-track {
+  background: var(--cv-signal-deep);
+  border-color: var(--cv-signal-deep);
+}
+
+.cv-switch > input:checked + .cv-switch-track::after {
+  background: var(--cv-surface);
+  transform: translateX(14px);
+}
+
+.cv-switch > input:focus-visible + .cv-switch-track {
+  outline: 2px solid var(--cv-signal-deep);
+  outline-offset: 2px;
+}
+
+.cv-switch:has(> input:disabled) {
+  color: var(--cv-text-muted);
+}
+
+.cv-switch > input:disabled {
+  cursor: default;
+}
+
+.cv-switch > input:disabled + .cv-switch-track {
+  opacity: 0.55;
+}

@@ -1,0 +1,224 @@
+/* The Canvas viewer's shell: the work area under the top bar, where the
+   catalogue and the right panel float over the full-bleed canvas, the zoom
+   pill sits between them, and the stage centres the selected entry. The
+   rules follow the component sheets, so they place the Canvas parts and
+   restyle the package parts that a Canvas root renders. Below the shell's
+   breakpoint, and in every mobile render, the Canvas root draws its compact
+   form, from design-canvas-compact.css, which follows this sheet. */
+
+/* An artboard's root fills its window; a mobile render is a phone-wide
+   column. Its width decides the compact form, so a library sample, which no
+   artboard root holds, keeps the form its props give. */
+.cv-root {
+  container: cv / inline-size;
+  overflow: hidden;
+}
+
+.cv-root[data-cv-layout="compact"] {
+  margin-inline: auto;
+  max-width: 392px;
+}
+
+/* The work area fills the main region and holds the canvas and the floating
+   parts. */
+.cv-work {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The stage: the canvas between the floating panels, above the zoom pill,
+   where the selected entry stands centred or, once zoomed, panned onto its
+   first frame. */
+.cv-view {
+  align-items: center;
+  bottom: 56px;
+  display: flex;
+  justify-content: center;
+  left: 260px;
+  position: absolute;
+  right: 320px;
+  top: 0;
+}
+
+.cv-view[data-cv-pan="start"] {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 24px 0 0 24px;
+}
+
+.cv-work:not(:has(> .cv-float[data-side="right"])) .cv-view {
+  right: 0;
+}
+
+/* The floating panels, 8px from the work area's edges. */
+.cv-work > .cv-float {
+  bottom: 8px;
+  position: absolute;
+  top: 8px;
+  z-index: 10;
+}
+
+.cv-work > .cv-float[data-side="left"] {
+  left: 8px;
+}
+
+.cv-work > .cv-float[data-side="right"] {
+  right: 8px;
+}
+
+/* The zoom pill sits at the bottom centre of the canvas between the panels;
+   the dock and the compact header show only in the compact form. */
+.cv-zoom-place {
+  bottom: 12px;
+  left: calc(260px + (100% - 580px) / 2);
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 12;
+}
+
+.cv-work:not(:has(> .cv-float[data-side="right"])) .cv-zoom-place {
+  left: calc(260px + (100% - 260px) / 2);
+}
+
+.cv-dock-place,
+.cv-entry-bar {
+  display: none;
+}
+
+/* The Frames filter hides, in place, the frames of each viewport and scheme
+   that it turns off. */
+.cv:has([data-cv-frames="mobile"]:not(:checked))
+  .cv-frame[data-cv-viewport="mobile"],
+.cv:has([data-cv-frames="desktop"]:not(:checked))
+  .cv-frame[data-cv-viewport="desktop"],
+.cv:has([data-cv-frames="light"]:not(:checked))
+  .cv-frame[data-cv-scheme="light"],
+.cv:has([data-cv-frames="dark"]:not(:checked))
+  .cv-frame[data-cv-scheme="dark"] {
+  display: none;
+}
+
+/* Small laptops narrow the panels, so the canvas keeps its room. */
+@container cv (width < 73.75rem) {
+  .cv-work > .cv-float[data-side="left"] {
+    width: 224px;
+  }
+
+  .cv-work > .cv-float[data-side="right"] {
+    width: 284px;
+  }
+
+  .cv-view {
+    left: 232px;
+    right: 292px;
+  }
+
+  .cv-zoom-place {
+    left: calc(232px + (100% - 524px) / 2);
+  }
+}
+
+/* ---- The catalogue in its panel ------------------------------------ */
+
+/* The shipped catalogue navigation fills the floating panel at every width:
+   no column edge, no drawer, and no resize separator. */
+.cv .cv-float .mbk-nav-frame > .mbk-nav {
+  background: transparent;
+  border-right: 0;
+  box-shadow: none;
+  display: flex;
+  height: 100%;
+  inset: auto;
+  max-width: none;
+  overflow: hidden;
+  position: relative;
+  width: auto;
+}
+
+.cv.mbk .cv-float .mbk-nav[data-resize-ready] .mbk-nav-resize {
+  display: none;
+}
+
+/* Canvas draws the catalogue as a Layers panel: a panel head with its
+   title, a full-width filter, mono section labels, and the current row on
+   the soft signal fill in ink. */
+.cv .cv-float .mbk-nav-head {
+  align-items: center;
+  border-bottom: 1px solid var(--cv-border);
+  color: var(--cv-text);
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  height: 44px;
+  letter-spacing: -0.005em;
+  padding: 0 14px;
+  text-transform: none;
+}
+
+.cv .cv-float .mbk-nav-collapse {
+  color: var(--cv-text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.cv .cv-float .mbk-nav-filter {
+  align-self: stretch;
+  display: flex;
+  margin: 10px 10px 4px;
+}
+
+.cv .cv-float .mbk-nav-filter-opt {
+  flex: 1;
+  justify-content: center;
+  padding-block: 6px;
+}
+
+.cv .cv-float .mbk-nav-section-head {
+  font-family: var(--cv-mono);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.cv .cv-float .mbk-nav-row {
+  font-size: 13px;
+}
+
+.cv .cv-float .mbk-nav-row[aria-current="page"] {
+  color: var(--cv-text);
+}
+
+.cv .cv-float .mbk-nav-row[aria-current="page"]::before {
+  background: var(--cv-signal-soft);
+}
+
+.cv .cv-float .mbk-nav-row[aria-current="page"] .mbk-nav-ico {
+  color: var(--cv-signal-deep);
+}
+
+.cv
+  .cv-float
+  .mbk-nav-leaf:has(> .mbk-nav-row[aria-current="page"])
+  .mbk-nav-variants-toggle {
+  color: var(--cv-text-muted);
+}
+
+.cv .cv-float a[data-nav-row][aria-current="page"][data-changed="true"]::after {
+  background: var(--cv-signal-deep);
+}
+
+/* The catalogue's foot names the base of the Changes filter. */
+.cv-base {
+  align-items: center;
+  color: var(--cv-text-muted);
+  display: flex;
+  font-size: 12px;
+  gap: 7px;
+}
+
+.cv-base > b {
+  color: var(--cv-text-secondary);
+  font-family: var(--cv-mono);
+  font-weight: 500;
+}

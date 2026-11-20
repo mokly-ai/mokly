@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { boundaryContrast, designPalette } from "./helpers/design_palette.js";
+import { markedBoundaryRules } from "./helpers/design_boundary_rules.js";
+import {
+  auditPalettes,
+  boundaryContrast,
+  designPalette,
+} from "./helpers/design_palette.js";
 import {
   boundaryOf,
   designStyleRules,
@@ -9,27 +14,6 @@ import {
   type ColorReference,
   type StyleRule,
 } from "./helpers/design_styles.js";
-
-/**
- * Selectors that mark a control state. A boundary drawn only in one of these
- * states is the state's own indicator, so it carries the 3:1 requirement.
- */
-const STATE_SELECTOR =
-  /:hover|:focus|:checked|:has\(input:checked\)|:disabled|\[open\]|\.active|aria-pressed|aria-current/u;
-
-/**
- * Fills that mark a selected, active or status surface, derived from the
- * palette so a new accent or status role joins the audit without an edit here.
- */
-function markedFillTokens(tokens: Map<string, string>): string[] {
-  return [...tokens.keys()].filter(
-    (token) =>
-      token.startsWith("--mbk-accent-") ||
-      token === "--mbk-danger-bg" ||
-      token === "--chrome-disabled-bg" ||
-      (token.startsWith("--mbk-status-") && token.endsWith("-bg")),
-  );
-}
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
@@ -108,6 +92,12 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-action:disabled",
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
+  "design-canvas.css .cv :is(a, select, summary):focus-visible",
+  "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
+  "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
+  "design-library/inspector/frames-filter.css .cv-ff:has(> input:focus-visible)",
+  "design-library/inspector/frames-filter.css .cv-switch > input:checked + .cv-switch-track",
+  "design-library/inspector/frames-filter.css .cv-switch > input:focus-visible + .cv-switch-track",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
   "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
@@ -144,35 +134,8 @@ function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
 }
 
-/**
- * Rules whose boundary is a control or state indicator: either the selector
- * names a state, or the rule fills itself with a marked surface.
- */
-async function markedBoundaryRules() {
-  const palette = await designPalette();
-  const marked = new Set(
-    markedFillTokens(palette.light).flatMap((token) => [
-      token,
-      palette.light.get(token)?.toLowerCase() ?? token,
-      palette.dark.get(token)?.toLowerCase() ?? token,
-    ]),
-  );
-  return (await designStyleRules()).flatMap((rule) => {
-    const boundary = boundaryOf(rule.body);
-    if (!boundary) return [];
-    const fill = fillOf(rule.body);
-    const fillMark = fill?.token ?? fill?.literal?.toLowerCase();
-    if (
-      !STATE_SELECTOR.test(rule.selector) &&
-      !(fillMark && marked.has(fillMark))
-    )
-      return [];
-    return [{ ...rule, boundary, fill }];
-  });
-}
-
 test("every marked boundary is visible against an adjacent colour", async () => {
-  const palette = await designPalette();
+  const palettesOf = await auditPalettes();
   const rules = await markedBoundaryRules();
   assert.deepEqual(
     rules.map((rule) => `${rule.file} ${rule.selector}`).sort(),
@@ -194,24 +157,28 @@ test("every marked boundary is visible against an adjacent colour", async () => 
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
     if (isExemptSurface(rule.file, rule.selector)) continue;
     if (keepsHairline(rule)) continue;
-    for (const appearance of ["light", "dark"] as const) {
-      const tokens = palette[appearance];
-      const reached = boundaryContrast(rule.boundary, rule.fill, tokens);
-      assert.ok(
-        reached !== undefined,
-        `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${appearance} palette`,
-      );
-      if (reached < 3)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${appearance}`,
+    for (const { name, tokens } of palettesOf(rule.file))
+      for (const appearance of ["light", "dark"] as const) {
+        const reached = boundaryContrast(
+          rule.boundary,
+          rule.fill,
+          tokens[appearance],
         );
-    }
+        assert.ok(
+          reached !== undefined,
+          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${name} ${appearance} palette`,
+        );
+        if (reached < 3)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${name} ${appearance}`,
+          );
+      }
   }
   assert.deepEqual(failures, []);
 });
 
 test("every control boundary is a readable control edge", async () => {
-  const palette = await designPalette();
+  const palettesOf = await auditPalettes();
   const rules = await designStyleRules();
   for (const [surface, reason] of EXEMPT_CONTROL_SURFACES)
     assert.ok(
@@ -236,21 +203,22 @@ test("every control boundary is a readable control edge", async () => {
       );
       continue;
     }
-    for (const appearance of ["light", "dark"] as const) {
-      const reached = boundaryContrast(
-        boundary,
-        fillOf(rule.body),
-        palette[appearance],
-      );
-      if (reached === undefined)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(boundary)} is not in the ${appearance} palette`,
+    for (const { name, tokens } of palettesOf(rule.file))
+      for (const appearance of ["light", "dark"] as const) {
+        const reached = boundaryContrast(
+          boundary,
+          fillOf(rule.body),
+          tokens[appearance],
         );
-      else if (reached < 3)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(boundary)} reaches only ${reached}:1 in ${appearance}`,
-        );
-    }
+        if (reached === undefined)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(boundary)} is not in the ${name} ${appearance} palette`,
+          );
+        else if (reached < 3)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(boundary)} reaches only ${reached}:1 in ${name} ${appearance}`,
+          );
+      }
   }
   assert.deepEqual(failures, []);
 });

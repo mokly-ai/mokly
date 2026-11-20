@@ -27,6 +27,13 @@ const LIBRARY_ROOTS: readonly (readonly string[])[] = [
   ["mb-pane"],
   ["mbk-empty"],
   ["flow-step"],
+  ["cv-frame"],
+  ["cv-zoom"],
+  ["cv-zoom-fit"],
+  ["cv-float"],
+  ["cv-ptabs"],
+  ["cv-dock"],
+  ["cv-ff-group"],
 ];
 
 /** The end of the brace group that opens at `start`. */

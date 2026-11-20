@@ -3,7 +3,8 @@
     "browse": "^design/browse/(views|states|index-entries|variants|pages|publication)/",
     "changes": "^design/changes/",
     "components": "^design/components/(?!controls/)",
-    "appearance": "^design/browse/appearance/"
+    "appearance": "^design/browse/appearance/",
+    "canvas": "^design/canvas/"
   },
   "parts": [
     {
@@ -231,6 +232,114 @@
         "design/browse/appearance/status/home",
         "design/browse/appearance/workspaces/drawer"
       ]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/canvas-frame",
+      "reason": "Home selects no entry, so its canvas holds no frame.",
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/zoom-pill",
+      "reason": "Home has no frames to zoom; a phone draws the pill's Fit in the dock.",
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/phone-dock",
+      "reason": "Every Canvas state has the compact dock: a phone draws it, and a desktop window draws it below the breakpoint.",
+      "except": []
+    },
+    {
+      "family": "canvas",
+      "component": "panels/floating-panel",
+      "reason": "A desktop window floats the catalogue and the right panel over the canvas.",
+      "viewports": ["desktop"],
+      "except": []
+    },
+    {
+      "family": "canvas",
+      "component": "panels/floating-panel",
+      "reason": "A phone draws a panel only as the sheet that a state opens.",
+      "only": [
+        "design/canvas/inspect/unchanged",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/home"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "chrome/catalogue-navigation",
+      "reason": "A phone draws the catalogue in the sheet that these states open.",
+      "only": ["design/canvas/stage/catalogue", "design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/panel-tabs",
+      "reason": "Home selects no entry, so no right panel shows.",
+      "viewports": ["desktop"],
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/panel-tabs",
+      "reason": "A phone draws the right panel's tabs in the panel sheet.",
+      "only": ["design/canvas/inspect/unchanged"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/metadata-row",
+      "reason": "Inspect draws the entry's Details rows; home selects no entry.",
+      "viewports": ["desktop"],
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/metadata-row",
+      "reason": "A phone draws Inspect in the panel sheet.",
+      "only": ["design/canvas/inspect/unchanged"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/frames-filter",
+      "reason": "A document opens as one reading frame, and home selects no entry.",
+      "viewports": ["desktop"],
+      "except": ["design/canvas/stage/document", "design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/frames-filter",
+      "reason": "A phone draws the Frames filter in the panel sheet.",
+      "only": ["design/canvas/inspect/unchanged"]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/change-status",
+      "reason": "The states of Welcome, which the canonical branch changed.",
+      "only": [
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/tag-chip",
+      "reason": "Inspect lists the tags of Welcome and of the Action.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "preview/empty-state",
+      "reason": "Home shows the catalogue home's guidance on the canvas.",
+      "only": ["design/canvas/stage/home"]
     }
   ]
 }

@@ -51,4 +51,18 @@ export const designLibrary = [
   ],
   ["preview", "empty-state", ["home", "missing-route", "no-changes"]],
   ["preview", "flow-step", ["first", "second"]],
+  [
+    "canvas",
+    "canvas-frame",
+    ["desktop-light", "mobile-dark", "component", "document"],
+  ],
+  ["canvas", "zoom-pill", ["fitted", "zoomed", "fit"]],
+  ["panels", "floating-panel", ["catalogue", "panel", "sheet"]],
+  ["panels", "panel-tabs", ["changed", "unchanged"]],
+  ["panels", "phone-dock", ["inspect", "home"]],
+  [
+    "inspector",
+    "frames-filter",
+    ["screen", "component", "light-only", "dark-hidden"],
+  ],
 ] as const;

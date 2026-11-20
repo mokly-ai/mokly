@@ -2,15 +2,17 @@
 
 ## Scope
 
-These sixteen components render both Mokly's design artboards and
+These twenty-two components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
-library. Each component renders the `@mokly/ui` component that the shipped
-shell uses: each view imports its component, and each component sheet imports
-the package stylesheets of the component and of each package component that
-it renders, each by its repository path under `packages/ui/src`, so each side
-of a comparison renders its own package files. The Mokly browser shell itself
-remains in the package source.
+library. Sixteen render the `@mokly/ui` component that the shipped shell
+uses: each view imports its component, and each component sheet imports the
+package stylesheets of the component and of each package component that it
+renders, each by its repository path under `packages/ui/src`, so each side of
+a comparison renders its own package files. The six parts of the Canvas
+viewer, which `@mokly/ui` does not provide yet, implement their own markup;
+[Canvas viewer parts](#canvas-viewer-parts) describes them. The Mokly browser
+shell itself remains in the package source.
 
 The artboards follow the same rule for every other part that a package
 component provides, such as the shell and workspace scaffolds of
@@ -190,6 +192,47 @@ static comparison draws each version's document on the shipped opaque
 surface, at a drawn scroll position, with a drawn scrollbar where the document
 is taller than the viewport.
 
+## Canvas viewer parts
+
+The `canvas` group, the `panels` group, and the inspector's Frames filter
+draw the Canvas viewer that the `design/canvas/**` family depicts:
+`canvas/canvas-frame`, a bare frame with its mono label and size tag that
+holds a screen at its nominal size scaled by the zoom, in the frame's own
+scheme; `canvas/zoom-pill`, zoom out, the zoom level, zoom in and Fit, whose
+Fit-only form the dock holds; `panels/floating-panel`, the floating
+catalogue and right panel, and their bottom sheets with a grabber and a close
+control; `panels/panel-tabs`, the right panel's text tabs, Inspect and, on a
+changed entry, Changes; `panels/phone-dock`, the phone's dock with Catalogue,
+the current tab, and Fit; and `inspector/frames-filter`, the viewport and
+scheme toggles of Inspect with the Highlight components switch. The
+`CANVAS_SAMPLES` set of `metadata.ts` names them, and `LibraryHost` gives
+their sample root the Canvas palette scope that a Canvas artboard's root
+carries. A static artboard runs no script, so each control links to the
+Canvas artboard that shows its outcome, a control without one is a picture
+of itself, and the toggles, the switch, and the compact frame picker are
+native controls that the Canvas stylesheets read in place.
+
+The palette scope is `canvasScope` of `../parts/canvas_palette.ts`, the one
+module that maps the Canvas palette of `@mokly/ui`, imported by repository
+path, to custom properties: the Canvas roles as `--cv-*`, and the shell tokens
+that the package components read, each mapped from a Canvas role, so the
+package's top bar, catalogue, chips, and metadata rows draw in Canvas. The
+scope declares them in the root's inline style. A role that the palette lacks,
+such as the hover fill, the frame ring, and the shadows, mixes Canvas roles in
+`design-canvas.css`; the change and removal statuses keep the theme's values.
+
+The Canvas scaffolds live in `../canvas/parts/`: `CanvasShell` draws the top
+bar, the floating panels over the dot-grid canvas, the zoom pill, and the
+dock, and turns compact below the shell's breakpoint and in every mobile
+render, where only the sheet that a state opens is drawn; `CanvasStage` draws
+the selected entry's section with its frames, and the compact entry bar with
+the frame picker. They take the destination, the viewport, the catalogue's
+filter and row, the entry's title, path, and status, a render of each frame's
+sketch by viewport and scheme, and the Inspect body. Canvas links stay inside
+the Canvas family: `../canvas/parts/destinations.ts` names its artboards, and
+the `canvas` transitions of each artboard's navigation state name the
+artboards that its tabs, zoom controls, Fit, dock, and sheet close open.
+
 ## Authoring
 
 For each component, `{group}/{slug}.tsx` calls `defineComponent` with a
@@ -247,8 +290,8 @@ nearest `DesignNavigation` artboard. The component explorer's narrow shortcuts
 compare with the artboard that their shell renders. Only the top bar's brand
 link on the home screen opens its own artboard without the mark.
 
-No screen draws its own frame caption. The device frame and the component
-canvas name their viewport, as the shell's frames do.
+No screen draws its own frame caption. The device frame, the component
+canvas, and the Canvas frame name their viewport, as the shell's frames do.
 
 ## Styles And Hosts
 
@@ -283,10 +326,13 @@ cargo xtask check
 `build --strict` renders every library sample and every design screen, and
 fails on any error or warning. `tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
-pairs, and that the palette declares every token that an imported `@mokly/ui`
+pairs, that the Canvas palette scope maps its roles to pairs that meet theirs,
+and that the palette declares every token that an imported `@mokly/ui`
 stylesheet reads. `tests/design_boundaries.test.ts` checks that marked
 boundaries and control edges stay visible, and that only palette sources name
-colours.
+colours. It audits a Canvas sheet's rules against the Canvas palette, which it
+reads from the built `@mokly/ui` palette module through the palette scope, and
+a `@mokly/ui` sheet's rules against both palettes.
 `tests/design_catalogue.test.ts` serves the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that

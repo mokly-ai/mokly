@@ -1,3 +1,7 @@
+import {
+  CANVAS_NAVIGATION_STATES,
+  type CanvasTransitions,
+} from "../canvas/parts/navigation_states.js";
 import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_states.js";
 
 import {
@@ -20,6 +24,8 @@ export interface NavigationState {
   changes?: DesignDestination;
   comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
   tags?: TagState;
+  /** The transitions of a Canvas artboard's stage, panels, and dock. */
+  canvas?: CanvasTransitions;
 }
 
 const welcomeFilters = { all: D.welcome, changes: D.current };
@@ -49,6 +55,7 @@ export const appearanceModes = {
 /** Canonical states for the entire design registry, never inferred from labels. */
 export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   ...COMPONENT_NAVIGATION_STATES,
+  ...CANVAS_NAVIGATION_STATES,
   [D.home]: {},
   [D.exampleOverview]: {},
   [D.document]: {},
