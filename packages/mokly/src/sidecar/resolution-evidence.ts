@@ -11,7 +11,7 @@ import { jsonObject } from "./config-json.js";
 import { importerDirectory } from "./importer-resolution.js";
 import { mappedPaths } from "./mapped-paths.js";
 import type { ModulePaths } from "./module-paths.js";
-import { substitution } from "./path-pattern.js";
+import { substituteTarget, substitution } from "./path-pattern.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { resolutionOptions } from "./resolution.js";
@@ -229,27 +229,32 @@ export class ResolutionEvidence {
     pkg: string,
     value: unknown,
     requested: string,
-    matched: string | undefined,
+    pattern: string | undefined,
     depth: number,
   ): void {
     if (!this.physical.complete) return;
     if (depth > 32) throw new Error("package export evidence limit");
     if (typeof value === "string") {
-      if (value.includes("*") && matched === undefined)
+      if (value.includes("*") && pattern === undefined)
         throw new Error("unmapped export pattern");
-      this.candidate(path.resolve(pkg, value.replaceAll("*", matched ?? "")));
+      const target = substituteTarget(
+        pattern ?? requested,
+        value,
+        requested,
+        "all",
+      );
+      if (target !== undefined) this.candidate(path.resolve(pkg, target));
     } else if (Array.isArray(value)) {
       for (const item of value)
-        this.exports(pkg, item, requested, matched, depth + 1);
+        this.exports(pkg, item, requested, pattern, depth + 1);
     } else if (jsonObject(value)) {
       for (const [key, target] of Object.entries(value)) {
         if (key.startsWith(".")) {
           if (key.split("*").length > 2)
             throw new Error("unsupported export pattern");
-          const match = substitution(key, requested);
-          if (match !== undefined)
-            this.exports(pkg, target, requested, match, depth + 1);
-        } else this.exports(pkg, target, requested, matched, depth + 1);
+          if (substitution(key, requested) !== undefined)
+            this.exports(pkg, target, requested, key, depth + 1);
+        } else this.exports(pkg, target, requested, pattern, depth + 1);
       }
     } else if (value !== undefined && value !== null)
       throw new Error("unsupported package exports");
