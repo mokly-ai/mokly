@@ -142,9 +142,9 @@ impl Runtime {
         )
     }
 
-    /// The runtime of one base preparation over `tree`. It shares the dependency reader,
-    /// the physical inputs, the sidecar pool, the render cache, the workers, and the style
-    /// memo of this runtime, and it starts its own stores.
+    /// The runtime of one base preparation over `tree`. It shares the dependency reader, physical
+    /// inputs, sidecar pool, render cache, workers, and style memo of this runtime. It starts its
+    /// own stores and reads the original head's stylesheet store only through a weak reference.
     pub fn for_base(
         &self,
         tree: Arc<dyn SourceTree>,

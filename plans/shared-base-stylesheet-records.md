@@ -169,6 +169,8 @@ Depends on: 2
 
 Evidence: `.context/shared-base-stylesheets/evidence/` holds test commands, the red proof, timing costs, and repeated-run results. `origin-options.md` records the second options check.
 
+The later checked prerequisite `e63a48c9b` is integrated. Its Serve-only watch option stays off by default. Its metadata forwarding and advisory candidate mapping stay complete. The cache origin is independent. The final documentation reconciliation is complete. Merge evidence: `.context/shared-base-stylesheets/evidence/round2-merge-decisions.md`.
+
 ## Milestone 4: Performance, output, and memory proof
 
 Depends on: 3
@@ -191,11 +193,14 @@ The earlier 0.25-second base stylesheet figure comes from Mokly Cloud, which has
 Depends on: 1, 2, 3, 4
 
 - [x] Smoke-test the strict example through Serve. Save any browser screenshot under `.context/`.
-- [ ] Integrate later correctness fixes from the prerequisite owner before final verification and measurements. Keep their review and pull request with that owner.
+- [x] Integrate later correctness fixes from the prerequisite owner before final verification and measurements. Keep their review and pull request with that owner.
+- [x] Reconcile the final render README and public runtime comment with the combined source. Keep default-off watching and the independent origin.
+- [x] Update the live source pointers that this change moves in inherited follow-up items. Preserve every outcome.
+- [x] Integrate current `main` at `525b4d7e5` for final pull request preparation. Preserve its comparison channels, UI sizing, diagnostics, and session reads. Use that commit for the final local control.
 - [ ] Send the final combined SHA for the performance orchestrator's confirming check before the pull request. The initial Cloud result is accepted.
 - [x] Separate cache origin from the new Serve watch option. Prove non-watching heads, no-extraction bases, and expired original-head references.
 - [x] Run targeted tests and each new asynchronous test ten times. Record test costs and assertion-failure proofs.
-- [ ] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate. Use Git 2.45 or later, Git LFS, pinned Bun, and locked Cargo dependencies.
+- [x] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate. Use Git 2.45 or later, Git LFS, pinned Bun, and locked Cargo dependencies.
 - [x] Merge current `origin/main` with the `git-merge` skill before the final pull request. It now holds step 2. Target the fix branch until its pull request merges, then target `main`.
 - [ ] Commit with Conventional Commits and push this branch. Send the implementation SHA to the performance orchestrator.
 - [ ] Review the complete local diff against the stacked base with the `implementation-review` skill after the push. Fix confirmed `fix now` findings, record follow-ups for the rest, and re-review. Use at most two fix rounds.

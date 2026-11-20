@@ -128,11 +128,21 @@ replays the captured read results beside the PostCSS read evidence. The
 capture adds digests and nodes, not file bytes. The store charges them under
 its existing bound.
 Serve watches each captured path as an exact input, including resolution
-files and absent candidates. An edit to only a package's `style` or `exports`
-entry therefore starts a rebuild, which compiles each affected stylesheet
-again. A record keeps these paths as logical paths. Each delivery, also a
-cache hit, maps them to their current lexical, physical, and canonical paths.
-A base runtime maps no watch paths.
+files and absent candidates, within the
+[watch denial rules](../../docs/protocol/mokly-watch.md#denial-rules). An
+edit to only a package's `style` or `exports` entry therefore starts a
+rebuild, which compiles each affected stylesheet again. A record keeps these
+paths as logical paths. Physical watch mapping is off by default.
+`Runtime::with_stylesheet_watching` turns it on for a runtime without a
+`BaseSide`, and Serve calls it for its working side. In that runtime, each
+delivery, also a cache hit, maps the logical paths to their current lexical,
+physical, and canonical paths. Each dependency candidate also carries the
+folder that admits it: the selected dependency root, or the first
+`node_modules` directory of its repository path. Mapping keeps a candidate
+only inside the repository or inside that folder. A failed projection or
+physical lookup skips only its candidate. A cancellation still fails the
+delivery. Every other runtime, such as one for a static build or a base
+preparation, maps no watch paths.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
@@ -184,8 +194,11 @@ probe, and absence that selected its inputs by logical path.
 
 `Runtime::for_base` gives each base runtime its own stylesheet store and a
 weak read-only reference to the stylesheet store of the original head
-runtime. A base runtime that `for_base` makes from another base runtime keeps
-that reference, so a base never reads the store of another base. The
+runtime. An original head lends its store whether or not it maps watch
+paths. A base runtime that `for_base` makes from another base runtime keeps
+that reference, also when it is empty or expired, so a base never reads the
+store of another base. A runtime that `Runtime::new` builds with a
+`BaseSide` has an empty reference, so it finds no head candidate. The
 reference does not keep the head store alive. A base lookup checks its
 attempt-local store, the shared store of the base runtime, and then the head
 store. The base keeps no index of head records. A head candidate must pass
@@ -310,11 +323,14 @@ view after the edit and counts real process starts and hello calls.
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
   the head runtime of Serve its plan record owner. A base runtime never gets
-  one. `Runtime::for_base` builds the runtime of one base preparation, which
+  one. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
+  mapping for a runtime without a `BaseSide`. Serve calls it for its working
+  side. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime. It starts its
-  own stores and turns off physical watch mapping. Its `head_styles` field
-  keeps a weak read-only reference to the stylesheet store of the original
-  head runtime, also when `for_base` starts from another base runtime.
+  own stores and keeps watch mapping off. The `head_styles` field marks the
+  origin. It is `None` in an original head. In a base, it holds a weak
+  read-only reference to the stylesheet store of the original head, also
+  when that reference is empty or expired.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
@@ -382,9 +398,13 @@ view after the edit and counts real process starts and hello calls.
   read evidence that the tree returns.
 - [`src/stylesheet_watch.rs`](./src/stylesheet_watch.rs) maps the logical
   paths that a record captured to the exact lexical, physical, and canonical
-  paths that Serve watches on the current side. Each delivery, also a cache
-  hit, reaches it through `CapturingCompiler::watch_files`. In a base
-  runtime, that method returns no paths.
+  paths that Serve watches on the current side. It returns `WatchInputs`,
+  which also holds the admitting folder of each dependency candidate.
+  `SideInputs::watch_candidates` lists the candidates of one path, and
+  [`watch_candidate::optional`](./src/watch_candidate.rs) ignores a failed
+  projection, but it still returns a cancellation. Each delivery, also a
+  cache hit, reaches it through `CapturingCompiler::watch_files`. Without
+  watch mapping, that method returns no paths.
 - [`src/input_stamp.rs`](./src/input_stamp.rs) defines `InputStamp`, the
   recorded input results that `InputStamp::matches` checks again before a
   record is reused.
