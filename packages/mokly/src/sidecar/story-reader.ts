@@ -13,13 +13,14 @@ type ArgTypes = Record<string, Record<string, unknown>>;
 interface ReadStory {
   exportName: string;
   title: string;
-  inputArgTypes: ArgTypes;
+  tags: string[];
   story: PortableStory;
   compose: () => PortableStory;
 }
 
 interface ReadStories {
   title: string;
+  description: string;
   args: Record<string, unknown>;
   argTypes: ArgTypes;
   composeParent: () => PortableStory;
@@ -42,7 +43,7 @@ export function readStories(
   const annotations = csf.isPreview(preview)
     ? preview.composed
     : record(preview);
-  const title = entryTitle(meta, file);
+  const title = entryTitle(meta, file, factory !== undefined);
 
   // Storybook's runtime also accepts factory modules without a default export.
   const composeStories = storybook.composeStories as (
@@ -51,7 +52,7 @@ export function readStories(
   const compose = () => {
     // Project annotations are global. Reset them for every composition, also
     // when renders from different generations are interleaved.
-    storybook.setProjectAnnotations(annotations);
+    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
     const copied = Object.fromEntries(
       Object.entries(module).map(([name, value]) => [
         name,
@@ -69,30 +70,64 @@ export function readStories(
     return composeStories(copied);
   };
   const composed = compose();
-  return {
-    title,
-    args: record(meta.args),
-    argTypes: argTypes(meta.argTypes),
-    composeParent: () => {
-      storybook.setProjectAnnotations(annotations);
-      return storybook.composeStory({}, { ...meta }, undefined, "MoklyDefault");
-    },
-    stories: orderedExports(
-      generation.sources.get(file) ?? "",
-      composed,
-      file,
-    ).map(([exportName]) => {
+  const composeParent = () => {
+    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
+    return storybook.composeStory({}, { ...meta }, undefined, "MoklyDefault");
+  };
+  const stories = orderedExports(
+    generation.sources.get(file) ?? "",
+    composed,
+    file,
+  )
+    .filter(([exportName]) => {
+      const tags = composed[exportName]!.tags;
+      return tags.includes("dev") && tags.includes("mokly");
+    })
+    .map(([exportName]) => {
       const value = module[exportName];
-      const input = record(csf.isStory(value) ? value.input : value);
+      const authored = csf.isStory(value) ? value.input : value;
+      const input = record(authored);
       return {
         exportName,
-        title: typeof input.name === "string" ? input.name : exportName,
-        inputArgTypes: argTypes(input.argTypes),
+        title:
+          (typeof authored !== "function" && typeof input.name === "string"
+            ? input.name
+            : undefined) ??
+          (typeof input.storyName === "string" ? input.storyName : undefined) ??
+          csf.storyNameFromExport(exportName),
+        tags: customTags(composed[exportName]!.tags),
         story: composed[exportName]!,
         compose: () => compose()[exportName]!,
       };
-    }),
+    });
+  const docs = record(stories[0]?.story.parameters.docs);
+  const description = record(docs.description).component;
+  return {
+    title,
+    description: typeof description === "string" ? description : "",
+    args: record(meta.args),
+    argTypes: stories.length ? argTypes(composeParent().argTypes) : {},
+    composeParent,
+    stories,
   };
+}
+
+const builtInTags = new Set([
+  "dev",
+  "test",
+  "mokly",
+  "autodocs",
+  "play-fn",
+  "test-fn",
+  "manifest",
+  "attached-mdx",
+  "unattached-mdx",
+]);
+
+function customTags(tags: readonly string[]): string[] {
+  return tags.filter(
+    (tag) => !builtInTags.has(tag) && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(tag),
+  );
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -111,10 +146,15 @@ function argTypes(value: unknown): ArgTypes {
   );
 }
 
-function entryTitle(meta: Record<string, unknown>, file: string): string {
+function entryTitle(
+  meta: Record<string, unknown>,
+  file: string,
+  factory: boolean,
+): string {
   const component = record(meta.component);
   return (
-    (typeof meta.title === "string"
+    (typeof meta.title === "string" &&
+    !(factory && meta.title === "ComposedStory")
       ? meta.title.split("/").at(-1)
       : undefined) ??
     (typeof component.displayName === "string"

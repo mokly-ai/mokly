@@ -79,7 +79,9 @@ prefix and plays no other part.
 
 A variant's `title` is its own. Its `description`, `tags`, `relatedDocs`, and
 `colorSchemes` default to the parent's, and a screen variant's `address` does
-too; a declared list replaces rather than merges the inherited one. A
+too; a declared list replaces rather than merges the inherited one. A story
+variant takes its tags from its own story under the
+[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description). A
 component variant's declared slots default to the parent's and its supplied
 slots to empty. `useCasePaths` defaults to an empty list and is never
 inherited, because membership is reciprocal with the flow's steps; a flow that

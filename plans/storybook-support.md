@@ -911,7 +911,7 @@ design call 2 says. It fixes findings 2, 10, and 11.
       export to `composeStories` unchanged, and takes a factory's meta and
       preview from its stories.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Move `describeStories` onto the reader. The title fallback then never
+- [x] Move `describeStories` onto the reader. The title fallback then never
       reads "ComposedStory", which fixes finding 10.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [x] Take each variant's control hints from its composed argTypes, which
@@ -931,20 +931,25 @@ Stories keep Storybook's names, tags, and description, and the standard
 Storybook files pass `--strict`. Decisions 7 and 14, and the `!mokly` tag of
 decision 5.
 
-- [ ] Leave out of the props, without a warning, each arg that the composed
+- [x] Leave out of the props, without a warning, each arg that the composed
       argTypes type as a function, and each React element arg, as design
       call 4 says.
-- [ ] Name each story as design call 6 says.
-- [ ] Map tags as design call 5 says, and the description as design call 7
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Name each story as design call 6 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Map tags as design call 5 says, and the description as design call 7
       says.
-- [ ] Include stories as design call 8 says.
-- [ ] In the commit that builds story tags, add to
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Include stories as design call 8 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] In the commit that builds story tags, add to
       `docs/protocol/mokly-entry-props.md` and `docs/protocol/mokly-variants.md`
       that a story variant takes its tags from its own story, with a link to
       `docs/protocol/mokly-storybook.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Test that Storybook's Button template passes `--strict`, and test the
+- [x] Test that Storybook's Button template passes `--strict`, and test the
       names, the tags, the description, and the skipped stories.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 5: Story setup before render
@@ -969,7 +974,8 @@ The first included story becomes the parent page, as decision 3 says.
 - [ ] Render the first included story in source order as the parent page,
       with its composed args as the parent's props.
 - [ ] Make the other included stories the parent's variants.
-- [ ] Give a file without an included story no entry, as design call 3 says.
+- [x] Give a file without an included story no entry, as design call 3 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Delete the meta-only composition and move each consumer that "Replaced
       ways" lists.
 - [ ] Test that a meta without args builds, and that no base state repeats.

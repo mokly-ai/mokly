@@ -145,7 +145,9 @@ A variant's `title` is its own. The
 [Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description)
 gives the titles of a stories file entry and its variants. A variant's
 description, tags, related docs, colour schemes, and declared slots default to
-the parent's; its supplied slots default to empty.
+the parent's; its supplied slots default to empty. A story variant takes its
+tags from its own story under the
+[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description).
 
 ## Validation
 

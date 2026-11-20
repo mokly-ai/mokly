@@ -14,6 +14,8 @@ export async function describeStories(
   if (!Object.keys(exports.stories).length) return;
   for (const [file, module] of Object.entries(exports.stories)) {
     const read = readStories(generation, exports, file, module);
+    const first = read.stories[0];
+    if (!first) continue;
     generation.stories.set(`${file}#default`, {
       compose: read.composeParent,
     });
@@ -22,10 +24,10 @@ export async function describeStories(
       excludedProps,
       handle: `${file}#default`,
       title: read.title,
-      description: "",
+      description: read.description,
       relatedDocs: [],
-      tags: [],
-      props: storyProps(read.args, read.argTypes, excludedProps),
+      tags: first.tags,
+      props: storyProps(generation, read.args, read.argTypes, excludedProps),
       argTypes: {} as Record<string, StoryHints>,
       variants: [] as Definitions["components"][number]["variants"],
       slots: [],
@@ -35,9 +37,13 @@ export async function describeStories(
       controlOrder: [] as string[],
     };
     const variants = read.stories.map((entry) => {
-      const hints = { ...read.argTypes, ...entry.inputArgTypes };
       const excludedProps: string[] = [];
-      const props = storyProps(entry.story.args, hints, excludedProps);
+      const props = storyProps(
+        generation,
+        entry.story.args,
+        entry.story.argTypes,
+        excludedProps,
+      );
       return { ...entry, props, excludedProps };
     });
     const dataKeys = new Set([
@@ -47,6 +53,7 @@ export async function describeStories(
     for (const {
       exportName,
       title,
+      tags,
       story,
       compose,
       props,
@@ -67,6 +74,7 @@ export async function describeStories(
         excludedProps,
         slug: exportName,
         title,
+        tags,
         props: props as Definitions["stories"][number]["props"],
         slots: {},
       });
@@ -86,27 +94,40 @@ export async function describeStories(
 }
 
 function storyProps(
+  generation: Generation,
   args: Record<string, unknown>,
   hints: Record<string, Record<string, unknown>>,
   excluded: string[],
 ) {
+  const element = generation.runtime.react.isValidElement;
   const kept = Object.fromEntries(
-    Object.entries(args).filter(([key]) => {
+    Object.entries(args).filter(([key, value]) => {
       const hint = hints[key];
-      const table = hint?.table as { disable?: boolean } | undefined;
       const type = hint?.type;
       return !(
-        hint &&
-        (hint.control === false ||
-          table?.disable === true ||
-          hint.action ||
-          type === "function" ||
-          (typeof type === "object" &&
-            type !== null &&
-            "name" in type &&
-            type.name === "function"))
+        element(value) ||
+        (Array.isArray(value) && value.length > 0 && value.every(element)) ||
+        (hint &&
+          (hint.control === false ||
+            disabled(hint.control) ||
+            disabled(hint.table) ||
+            hint.action ||
+            type === "function" ||
+            (typeof type === "object" &&
+              type !== null &&
+              "name" in type &&
+              type.name === "function")))
       );
     }),
   );
   return dataProps(kept, false, excluded);
+}
+
+function disabled(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "disable" in value &&
+    value.disable === true
+  );
 }

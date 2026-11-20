@@ -181,11 +181,11 @@ the packed contents of the package.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/story-reader.ts`](./src/sidecar/story-reader.ts) holds
-  `readStories`, which reads CSF 2, CSF 3, and CSF Factories through Storybook
-  composition and reads the entry title before composition.
+  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It selects
+  stories by their tags and keeps Storybook names, tags, and descriptions.
 - [`src/sidecar/stories.ts`](./src/sidecar/stories.ts) holds `describeStories`,
-  which builds story definitions and takes control hints from composed
-  argTypes for every data prop of the entry.
+  which classifies args by composed argTypes and gives data props their hints.
+  It omits function and React element args without warnings.
 - [`src/sidecar/render.ts`](./src/sidecar/render.ts) holds `render`, which
   renders entries and the reader's portable stories to static markup.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
