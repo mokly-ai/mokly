@@ -214,7 +214,7 @@ excluded with the `props-not-data` warning of the
 ## Consumer PostCSS
 
 The [PostCSS context and evidence contract](./mokly-sidecar-postcss.md) defines
-consumer processing, context lifetime, read witnesses, and incomplete coverage.
+consumer processing, context preparation and lifetime, read witnesses, and incomplete coverage.
 
 ## Cancellation And Timeouts
 

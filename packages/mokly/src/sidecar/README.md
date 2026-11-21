@@ -1,5 +1,7 @@
 # Render Sidecar
 
+Status: The sidecar does not prepare PostCSS contexts during `bundle` yet. [Milestone 2 of the PostCSS preparation plan](../../../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the preparation.
+
 The render sidecar is the Node process that the Mokly binary starts to bundle,
 describe, and render catalogue modules. The
 [package README](../../README.md#key-code) names the other key code of
@@ -17,8 +19,9 @@ its requests and results. The paths below are relative to the package root.
   the original writer, and its `quiet` control drops every other write.
 - [`src/sidecar/session.ts`](./session.ts) holds `Session`, which
   dispatches each sidecar request to its method. It removes the request-only
-  `capture` and `plan` values of a `bundle` request before the reuse check,
-  the compile, the identity, and the restore see the settings. It gives a
+  `capture`, `plan`, and PostCSS preparation values of a `bundle` request
+  before the reuse check, the compile, the identity, and the restore see the
+  settings. It starts that preparation before the reuse check. It gives a
   `CaptureDurability` only to a `full` request.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
@@ -371,7 +374,8 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/capture-volumes.ts`](./capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
 - [`src/sidecar/postcss.ts`](./postcss.ts) holds `PostcssWorkers`,
-  which owns the PostCSS child processes.
+  which owns the PostCSS child processes, also the child of a
+  [prepared context](../../../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
 - The [Rust sidecar pool](../../../../crates/mokly-sidecar/README.md) starts and

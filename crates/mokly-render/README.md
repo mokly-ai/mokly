@@ -1,5 +1,7 @@
 # mokly-render
 
+Status: Head Serve edits do not prepare PostCSS contexts during `bundle` yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the preparation.
+
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -39,6 +41,8 @@ resolves their physical input on the chosen side. Each PostCSS request names
 the PostCSS module by `ResolvedConfig::postcss`, in the same form as the
 renderer. Each PostCSS context uses an owned child process in that side's
 source root. Runtime allocates context ids from one process-wide sequence.
+A head Serve edit can start that child during its `bundle` request, under the
+[prepared context rules](../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
 A per-context request lock keeps the sidecar requests of one context one at a
 time, and equal inputs make one request. The shared PostCSS cache lock covers
 only lookups, inserts, and the dependency inventory. Round trips and read
@@ -79,7 +83,7 @@ The private JavaScript generation exposes those digests so static builds can
 verify their captured inputs against the bundled bytes.
 HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
 class maps remain equal. A changed map uses a separate evaluated lifetime.
-Graph leases retain old maps, bindings, and PostCSS contexts until the final
+Graph leases retain old maps, bindings, and used PostCSS contexts until the final
 request releases them. Final drops enqueue epoch-specific pool release and
 cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include

@@ -117,15 +117,20 @@ Evidence lives under `.context/edit-critical-path/` and
   D avoids platform code and helper restoration risks.
 - **Action:** apply D, approved by the user on 2026-11-21. Priority lowering cannot be safely restored for every thread and helper on ordinary Unix users.
 
-## Milestone 1: Documentation and contract
+## Milestone 1: Documentation and contract — completed
 
 Depends on: none
 
 - [x] Run the fresh Claude Opus max options check over this plan.
 - [x] Merge the options check into the plan. Evidence: `.context/postcss-reuse-across-edits/options-check.md`.
-- [ ] State the approved preparation, affinity, fresh-state, and release rules in the protocol.
-- [ ] Update the memory contract for children created by Bundle.
-- [ ] Update the relevant README entry points.
+- [x] State the approved preparation, affinity, fresh-state, and release rules in the protocol.
+- [x] Update the memory contract for children created by Bundle.
+- [x] Update the relevant README entry points.
+
+The new contract lives in the prepared-context section of the PostCSS page.
+My design call, 2026-11-21: add the field name to the Methods table after the
+generated type exists. This keeps the existing 250-line page within its cap.
+Evidence: `.context/postcss-reuse-across-edits/m1-docs-report.md`.
 
 ## Milestone 2: Fresh preparation and ownership
 
@@ -150,6 +155,7 @@ Depends on: 2
 
 - [x] Record the user's priority decision: D. Existing priority behavior needs no protocol change.
 - [x] Keep the original priority. D adds no priority or scheduler code, so no restoration test is needed.
+- [ ] Align the final field name and helper entry points. Remove the preparation status lines after implementation.
 - [ ] Build matching main and branch toolchains with the required resource checks.
 - [ ] Run targeted tests and the repository suite.
 - [ ] Run the complete repository gate.

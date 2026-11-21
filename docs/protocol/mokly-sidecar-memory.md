@@ -1,5 +1,7 @@
 # Sidecar Memory
 
+Status: No `bundle` request starts a PostCSS child yet, so no sample discovers one. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the discovery of prepared children.
+
 This page expands the [sidecar lifecycle](./mokly-sidecar.md#lifecycle). It
 defines the memory limit of each sidecar, the memory admission of a default
 pool, and the claims that Serve holds for its sidecar calls.
@@ -11,9 +13,12 @@ descendants. Native helpers are excluded when the root executable is known.
 Unknown root identity includes all descendants conservatively.
 
 A sample measures only processes that the sidecar owns. It discovers new
-descendants at spawn, at the first sample after `processCss`, and every 64
-samples. A Node binary started through a symlink matches its forked
-children.
+descendants at spawn, at the first sample after `processCss`, at the first
+sample after the start of a
+[prepared PostCSS child](./mokly-sidecar-postcss.md#prepared-contexts), and
+every 64 samples. So recycling and default admission count a child that a
+`bundle` request starts. A Node binary started through a symlink matches its
+forked children.
 
 A fresh worker finishes one request before memory recycling can start.
 After a memory recycle, the slot doubles the completed requests before the

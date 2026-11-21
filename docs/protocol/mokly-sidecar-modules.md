@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: No `bundle` request prepares a PostCSS context yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the process of a prepared context.
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -27,9 +29,16 @@ A process serves one source root. A request for another root replaces the
 process before replay, and a debug event records the slot and both roots. All
 roots share the configured pool bound, so a one-worker pool replaces its
 process when the source root changes. All requests of one live PostCSS context
-reach the same process. The
+reach the same process. A
+[prepared context](./mokly-sidecar-postcss.md#prepared-contexts) lives in the
+process that runs its `bundle` request, so its later requests and its release
+reach that process. The
 [source root scheduling rules](./mokly-sidecar-root-scheduling.md) choose the
 process that changes root.
+
+Decision: the process of the `bundle` request keeps the prepared child.
+Placement at the first `processCss` request was rejected, because that request
+usually reaches another idle process, which has no prepared child.
 
 ## Source And Dependency Files
 
