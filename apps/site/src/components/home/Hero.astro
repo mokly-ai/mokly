@@ -1,16 +1,62 @@
 ---
 /**
- * The home hero: the heading, the lead, and Get started and Download for
- * Mac. The copy is the approved home copy in docs/protocol/cloud/site-copy.md,
- * held in src/home.ts so the page description and social cards repeat it.
+ * The home hero on the canvas: the heading `Design in code.` as the selected
+ * text layer, then the lead with Get started and Download for Mac, and the
+ * spread of the depicted acme/storefront app under them. The copy is the
+ * approved home copy in docs/protocol/cloud/site-copy.md, held in
+ * `src/home.ts` so the page description and the social cards repeat it.
  * The `hero` id is the target of the Specs panel's Hero row.
+ *
+ * The heading's selection has its eight handles, the name tag `Heading`, the
+ * measured size tag and, on the desktop composition, the type badge with the
+ * measured font size; Maya's cursor rests on its resize handle. The redline
+ * under it measures the gap from the heading to the lead. The heading keeps
+ * its last two words together, so a phone breaks it as `Design` over
+ * `in code.`. The selection, the cursor and the redline are depictions; the
+ * heading, the lead and the actions stay readable. When motion is allowed,
+ * the selection draws on load and the spread's artboards settle, once. The
+ * rules, the load motion included, are in `src/styles/home-hero.css`.
  */
 import { HOME_HERO } from "../../home.js";
 import Actions from "../Actions.astro";
+import Cursor from "../Cursor.astro";
+import Redline from "../Redline.astro";
+import Selection from "../Selection.astro";
+
+import Spread from "./Spread.astro";
+
+import "../../styles/home-hero.css";
+
+/** The heading with a no-break space before its last word. */
+const heading = HOME_HERO.heading.replace(/ (?=\S+$)/, "\u00a0");
 ---
 
-<section class="site-hero" id="hero">
-  <h1>{HOME_HERO.heading}</h1>
-  <p class="site-hero-lead">{HOME_HERO.lead}</p>
-  <Actions secondary="download" />
+<section aria-labelledby="home-title" class="site-hero" id="hero">
+  <div class="site-home-hero-inner">
+    <div class="site-home-title-layer">
+      <h1 id="home-title">{heading}</h1>
+      <Selection
+        badge="Geist Semibold"
+        class="site-home-title-sel"
+        handles="all"
+        measure="home-title"
+        name="Heading"
+      />
+      <Cursor class="site-home-hero-maya" person="maya" />
+    </div>
+    <div class="site-home-hero-group">
+      <div class="site-home-hero-copy">
+        <Redline
+          class="site-home-hero-redline"
+          from="home-title"
+          to="home-lead"
+        />
+        <p class="site-hero-lead" id="home-lead">
+          {HOME_HERO.lead}
+        </p>
+      </div>
+      <Actions secondary="download" />
+    </div>
+  </div>
+  <Spread />
 </section>
