@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type * as ReactDOMServer from "react-dom/server";
 
+import { DataError } from "../authoring/data.js";
 import { definitionData } from "../authoring/runtime.js";
 import type { Renderer } from "../authoring/types.js";
 import type { RenderComponentParams } from "../generated/sidecar/RenderComponentParams.js";
@@ -176,9 +177,10 @@ export async function render(
       };
     });
   } catch (error) {
-    if (error instanceof SidecarError) throw error;
+    if (error instanceof SidecarError && !(error instanceof DataError))
+      throw error;
     throw new SidecarError(
-      "render-failed",
+      error instanceof DataError ? error.code : "render-failed",
       `${handleLocation(name)} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
     );
   }

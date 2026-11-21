@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 
-export class DataError extends Error {
+import { SidecarError } from "../sidecar/errors.js";
+
+export class DataError extends SidecarError {
   constructor(
     readonly path: string,
     reason: string,
   ) {
-    super(`${path || "/"}: ${reason}`);
+    super("component-props", `${path || "/"}: ${reason}`);
   }
 }
 

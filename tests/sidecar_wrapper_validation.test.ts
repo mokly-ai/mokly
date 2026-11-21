@@ -81,6 +81,62 @@ test("dynamic wrapper props fail the profile before the adapter runs", async (co
   await sidecar.call("shutdown");
 });
 
+for (const { name, value, message } of [
+  {
+    name: "a function prop",
+    value: "() => 1",
+    message: "/count: value is not plain data",
+  },
+  {
+    name: "a class instance prop",
+    value: "new (class Count {})()",
+    message: "/count: value is not plain data",
+  },
+  {
+    name: "a symbol-keyed prop",
+    value: "{ [Symbol('count')]: 1 }",
+    message: "/count: value is not plain data",
+  },
+  {
+    name: "a cyclic prop",
+    value: "(() => { const cycle = {}; cycle.self = cycle; return cycle; })()",
+    message: "/count/self: value is not plain data",
+  },
+]) {
+  test(`wrapper rejects ${name} with component-props`, async (context) => {
+    const root = await callbackConsumer(
+      context,
+      `${source}
+export const invalid = defineScreen({...metadata,path:'invalid',title:'Invalid',
+  render:()=> <leaf.Component count={${value}}/>});`,
+    );
+    const sidecar = startSidecar(context, root);
+    await sidecar.call("hello");
+    const { generation } = await describeCallbacks(sidecar, root);
+    await assert.rejects(
+      sidecar.call("renderScreen", {
+        generation,
+        handle: `${callbackEntry}#invalid`,
+        entry: { path: "invalid", title: "Invalid" },
+        viewport: "mobile",
+        colorScheme: "light",
+        props: {},
+      }),
+      (error: Error) => {
+        assert.deepEqual(
+          { code: Reflect.get(error, "code"), message: error.message },
+          {
+            code: "component-props",
+            message: `${callbackEntry} export invalid (mobile, light): ${message}`,
+          },
+        );
+        return true;
+      },
+    );
+    await sidecar.call("shutdown");
+  });
+}
+
 test("renderPage preserves authored ignore elements for core composition", async (context) => {
   const root = await callbackConsumer(context, source);
   const sidecar = startSidecar(context, root);
