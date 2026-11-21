@@ -35,7 +35,7 @@ use crate::serve_eager_cancel::{OriginCancellation, OriginScope};
 use crate::serve_eager_diagnostics::DiagnosticRouting;
 use crate::serve_eager_events::{OrderedEvents, PreparationEvents};
 use crate::serve_eager_lookup::EagerLookup;
-use crate::serve_eager_source_gate::{SourceAttempt, SourceBound, SourceStarts, SourceWait};
+use crate::serve_eager_source_gate::{SourceStarts, SourceWait};
 use crate::serve_eager_task::{NativeTasks, PreparationTask, PreparationTasks};
 use crate::serve_eager_validation::ProvenValidation;
 use crate::serve_eager_work::{NativePreparation, PendingProviders, PendingServices};
@@ -59,7 +59,6 @@ pub(super) struct NativeEagerFactory {
 
 impl EagerFactory for NativeEagerFactory {
     fn start(&self, config: &ResolvedConfig) -> Arc<dyn PendingBase> {
-        let source_attempt = self.source_starts.begin();
         let phase: Arc<dyn EagerAdmission> = Arc::new(PreparationAdmission::default());
         let origin: Arc<dyn OriginScope> = Arc::new(OriginCancellation::default());
         let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::owned(
@@ -104,7 +103,6 @@ impl EagerFactory for NativeEagerFactory {
             }),
             providers: Arc::new(NativeProviders {
                 source_starts: self.source_starts.clone(),
-                source_attempt,
                 runtime: self.runtime.clone(),
                 sidecars: self.sidecars.clone(),
                 lifetime: lifetime.clone(),
@@ -142,7 +140,6 @@ impl EagerFactory for NativeEagerFactory {
 
 struct NativeProviders {
     source_starts: Arc<dyn SourceStarts>,
-    source_attempt: SourceAttempt,
     installs: Arc<dyn InstallInputs>,
     runtime: Arc<Runtime>,
     sidecars: Arc<dyn PoolScheduling>,
@@ -174,12 +171,7 @@ impl PendingProviders for NativeProviders {
             .sidecars
             .eager_pool(self.lifetime.clone(), self.phase.clone());
         PendingServices {
-            source_admission: SourceWait::shared(
-                self.source_starts.clone(),
-                self.lifetime.clone(),
-                SourceBound::selected(),
-                self.source_attempt,
-            ),
+            source_admission: SourceWait::shared(self.source_starts.clone(), self.lifetime.clone()),
             workers,
             validation: validation.clone(),
             provider: Arc::new(NativeBase {

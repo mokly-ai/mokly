@@ -7,8 +7,11 @@ This change moves independent base preparation into head startup and head usage.
 Base capture, comparison, and publication still require completed head usage.
 
 The performance orchestrator owns the acceptance measurements and every merge.
-The user requires a cold first Changes gain of at least 1.5 seconds on `mokly-cloud`.
-The warm restart gain must be at least 0.5 seconds.
+The initial target was a cold first Changes gain of at least 1.5 seconds on `mokly-cloud`.
+The warm restart target is at least 0.5 seconds.
+On 2026-11-21 the performance orchestrator accepted Ready-only with a 0.72-second cold gain.
+It chose readiness and first-edit safety over the larger cold gain of the rejected bundle-end bound.
+The accepted warm gains are 0.65 seconds for one-line rounds and 0.54 seconds for unchanged rounds.
 The means come from interleaved rounds against the control.
 The targets of 2026-11-20 named `main` as the control.
 On 2026-11-21 the performance orchestrator set the frozen step 1 runtime `fb8b20f77` as the control of this stacked round.
@@ -385,27 +388,60 @@ Label `Ready` as unmeasured locally.
 The performance orchestrator measures both against that main control and selects the final policy.
 The final gate, byte proof, implementation review, and pull request still remain required.
 
+## Final policy acceptance, 2026-11-21
+
+The performance orchestrator accepted Ready-only `2b7b1b9b5be8b62333d701839595d1df1b6354fa` against main `36cfd7cf7`.
+It rejected HeadBundleOrReady because cold readiness was slower.
+Cold discovery and extraction therefore wait for successful Serve readiness unless a complete extraction lease already exists.
+The pin, checkout sample, and configuration load keep their early start.
+The warm path and every other base rule stay unchanged.
+The cold 0.72-second gain replaces the original 1.5-second acceptance target for this change.
+The accepted readiness and edit differences are within the performance orchestrator's noise bound.
+The accepted cold ten-edit whole-tree peak is 3,166 MiB against its own 3,171 MiB control.
+The performance orchestrator owns the final PR merge after Required CI.
+
+Orchestrator call, 2026-11-21: keep one sticky readiness latch and remove the unselected bundle-end policy and its producer callbacks.
+The Ready-only admission never uses the recorded bundle or attempt state.
+Keep every live readiness, warm lease, cancellation, and later-attempt assertion.
+Retire only the test of the discarded bundle-completion producer.
+
+On 2026-11-21 the performance orchestrator approved that cleanup and requested its SHA before the complete gate.
+After the targeted checks, push the cleanup for four warm one-line and four warm unchanged confirming rounds.
+The performance orchestrator runs those rounds against main `36cfd7cf7` while this workspace runs the gate.
+It requires no new byte proof when the runtime diff only removes the unused producer and its experiment test.
+The pull request must state that scope.
+
+Large React contention remains a post-merge task owned by Cal.
+Its first option is an idle-slot base bundle bound.
+Local runner load prevents a conclusion about small scale regressions.
+The PR includes the local means and their spread and does not claim local Ready-only timing measurements.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/official-ready-acceptance.md` holds the complete official table. `four-fixture-proof-summary.json` there gives the exact real publication proof on basic and cloud and the full static artifact proof on the two large fixtures. Both large fixtures exceed the unchanged Publish file-count limit.
+
 ## Milestone 3: Measurements and byte proof
 
 Depends on: 2
 
 - [x] Build the main control `77021d88c`, its matching dist, and the candidate with identical native profile, Node, npm, and esbuild. Keep the earlier frozen step 1 evidence separately.
-- [ ] Record cold and warm first Changes, readiness, and head usage on basic and the full large React fixture.
-- [ ] Use stable caches outside the repository and `/tmp`. Retain every interleaved sample, cache state, source SHA, and binary digest.
-- [ ] Compare exact file membership, size, and digest for every published file on basic, large HTML, large React, and `mokly-cloud`.
-- [ ] Include deployment metadata, comparison data, removed routes, assets, and encoding variants without normalization or exclusions.
-- [ ] Measure startup and cold ten-edit whole-tree memory with the same process accounting as the orchestrator.
-- [ ] Send the candidate SHA to the performance orchestrator for its cloud speed, edit, and memory acceptance.
+- [x] Record cold and warm first Changes, readiness, and head usage on basic and the full large React fixture.
+- [x] Use stable caches outside the repository and `/tmp`. Retain every interleaved sample, cache state, source SHA, and binary digest.
+- [x] Compare exact file membership, size, digest, and actual bytes on all four fixtures. Use full native Build artifacts for the large fixtures, which exceed the unchanged Publish limit.
+- [x] Include every emitted metadata, comparison, removed, and asset file without normalization or exclusions. Prove real publication envelope and encoding bytes on basic and cloud.
+- [x] Measure startup and cold ten-edit whole-tree memory with the same process accounting as the orchestrator.
+- [x] Send the candidate SHA to the performance orchestrator for its cloud speed, edit, and memory acceptance.
 - [x] Finish the active cold-source bound measurements with red tests and warm bypass. Record the parent stop of the unstarted Ready and idle-slot measurement sets.
-- [ ] Push both cold-source candidate SHAs with targeted checks passing after the main `36cfd7cf7` integration. Mark Ready as unmeasured locally.
-- [ ] Report measured option effects and receive the performance orchestrator's final policy choice.
-- [ ] Apply the chosen phase or resource bound and rerun affected proofs before acceptance.
+- [x] Push both cold-source candidate SHAs with targeted checks passing after the main `36cfd7cf7` integration. Mark Ready as unmeasured locally.
+- [x] Report measured option effects and receive the performance orchestrator's final policy choice.
+- [x] Apply the chosen phase or resource bound and rerun affected proofs before acceptance.
 
 ## Milestone 4: Verification, review, and pull request
 
 Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request waits for performance acceptance.
 
-- [ ] Run the repository suite and complete gate from `AGENTS.md`, one heavy job at a time.
+- [x] Run the merged-tree repository suite, one heavy job at a time.
+- [x] Remove the unselected bundle-end experiment and its unused state, while preserving the accepted Ready-only behavior and every live assertion.
+- [ ] Receive the performance orchestrator's warm confirmation after the cleanup SHA is pushed.
+- [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [ ] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
 - [ ] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.

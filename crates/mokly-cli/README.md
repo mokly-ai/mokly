@@ -223,9 +223,11 @@ the thread before it releases the sources and leases. The source phase pins
 the base, samples the checkout, loads the base configuration, discovers the
 base sources, and reads both clean dependency identities with the extraction
 that a sidecar base needs. A complete extraction lease bypasses the cold
-source wait. Otherwise discovery and extraction wait for the startup milestone
-through `SourceAdmission`. It stops after the pin when the key matches the
-kept base. The adopted head, after any watch recheck, starts the validation
+source wait. Otherwise discovery, the extraction, and the identity reads wait
+through `SourceAdmission` until `ServeServices::head_published` reports the
+first successful readiness. The attempts after that readiness do not wait. The
+source phase stops after the pin when the key matches the kept base. The
+adopted head, after any watch recheck, starts the validation
 phase: dependency selection, the install, and graph validation. With a kept
 base of another key, that phase also waits for the classification.
 `ProvenValidation` holds graph validation until adoption when it cannot prove
@@ -358,7 +360,8 @@ changed.
   `ServeOutput` and creates the one announcement flag of the Serve process.
   `ServeServices::head_published` sets the flag that gives each later head
   preparation the `ServeEdit` capture mode. `entry_serve.rs` calls it after
-  the first successful publication and the readiness timing span. Its
+  the first successful publication and the readiness timing span. That call
+  also ends the cold source wait of eager base preparation. Its
   `AttemptPreparation` starts, adopts, and discards the eager base
   preparation of each head attempt through `EagerStarts`.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
@@ -440,7 +443,8 @@ changed.
   [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
   defines `SourceAdmission`, and
   [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)
-  binds the cold wait to its head attempt, startup milestone, and cancellation.
+  defines `SourceWait`, which holds the cold wait until `StartupSources`
+  records the first successful readiness or the preparation is cancelled.
   [`src/changes_validation_admission.rs`](./src/changes_validation_admission.rs)
   defines `GraphPreparationAdmission`, the check before base graph validation.
 - [`src/base_dependencies.rs`](./src/base_dependencies.rs) defines

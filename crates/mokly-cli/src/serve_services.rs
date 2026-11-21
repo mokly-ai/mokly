@@ -136,7 +136,6 @@ impl ServeServices {
         let source_starts: Arc<dyn SourceStarts> = Arc::new(StartupSources::default());
         let sidecars: Arc<dyn PoolScheduling> = Arc::new(
             ServePool::new(services.pool.clone(), services.pool)
-                .with_source_starts(source_starts.clone())
                 .with_diagnostics(diagnostics.clone())
                 .with_activity(documents.activity()),
         );

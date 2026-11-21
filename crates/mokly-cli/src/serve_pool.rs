@@ -17,7 +17,6 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 
 use crate::serve_eager_admission::EagerAdmission;
-use crate::serve_eager_source_gate::SourceStarts;
 use crate::serve_gate::Gate;
 use crate::serve_return::{self, ReturnAdmission};
 
@@ -47,7 +46,6 @@ pub(super) trait PoolScheduling: Foreground + BaseCompletion {
 pub(super) struct ServePool {
     inner: Arc<dyn SidecarPool>,
     gate: Arc<Gate>,
-    source_starts: Option<Arc<dyn SourceStarts>>,
 }
 
 impl ServePool {
@@ -62,16 +60,7 @@ impl ServePool {
             .return_wake
             .lock()
             .unwrap_or_else(|error| error.into_inner()) = Some(wake);
-        Self {
-            inner,
-            gate,
-            source_starts: None,
-        }
-    }
-
-    pub(super) fn with_source_starts(mut self, source_starts: Arc<dyn SourceStarts>) -> Self {
-        self.source_starts = Some(source_starts);
-        self
+        Self { inner, gate }
     }
 
     /// Use the process diagnostic reporter for background return failures.
@@ -117,7 +106,6 @@ impl PoolScheduling for ServePool {
         cancel.observe(Arc::downgrade(&signal));
         phase.observe(Arc::downgrade(&signal));
         Arc::new(ScheduledPool {
-            source_starts: self.source_starts.clone(),
             inner: self.inner.clone(),
             gate: self.gate.clone(),
             base: Some(cancel),
@@ -131,7 +119,6 @@ impl PoolScheduling for ServePool {
             cancel.observe(Arc::downgrade(&signal));
         }
         Arc::new(ScheduledPool {
-            source_starts: self.source_starts.clone(),
             inner: self.inner.clone(),
             gate: self.gate.clone(),
             base,
@@ -144,7 +131,6 @@ impl PoolScheduling for ServePool {
 }
 
 struct ScheduledPool {
-    source_starts: Option<Arc<dyn SourceStarts>>,
     inner: Arc<dyn SidecarPool>,
     gate: Arc<Gate>,
     base: Option<Arc<dyn ChangeCancellation>>,
@@ -168,11 +154,6 @@ impl SidecarPool for ScheduledPool {
         self.inner.observe_head_return(wake);
     }
     fn request(&self, call: Call) -> Result<MethodResult> {
-        let bundle = self
-            .source_starts
-            .as_ref()
-            .filter(|_| self.base.is_none() && matches!(&call, Call::Bundle(_)))
-            .map(|starts| (starts, starts.current()));
         let _activity = self.gate.activity();
         let _foreground = self.base.is_none().then(|| self.gate.foreground());
         let admission = match (&self.base, &self.phase) {
@@ -184,13 +165,7 @@ impl SidecarPool for ScheduledPool {
                 .gate
                 .acquire(self.base.as_deref(), RenderClass::current())?,
         };
-        let result = self.inner.request_claimed(call, &admission.claim);
-        if result.is_ok()
-            && let Some((starts, attempt)) = bundle
-        {
-            starts.bundle_finished(attempt);
-        }
-        result
+        self.inner.request_claimed(call, &admission.claim)
     }
     fn release_generation(&self, generation: &str, epoch: u64) {
         self.inner.release_generation(generation, epoch);
@@ -267,7 +242,3 @@ mod serve_warmup_activity_tests;
 #[cfg(test)]
 #[path = "_tests_/eager_gate_tests.rs"]
 mod eager_gate_tests;
-
-#[cfg(test)]
-#[path = "_tests_/eager_bundle_ready_tests.rs"]
-mod eager_bundle_ready_tests;

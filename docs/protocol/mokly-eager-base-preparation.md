@@ -14,13 +14,26 @@ owns the order of the background pass and the base renders. `build` and
 
 Serve starts eager preparation when the working configuration of a head
 preparation attempt validates, with and without watch. The work that needs no
-head dependency evidence can then run during startup: the pin of the
-merge-base commit, the checkout settings, the base sources, the lease of an
-existing extraction, the base configuration, discovery, and the clean
-dependency identities of both sides. It builds an extraction only when
-discovery shows that the base needs a sidecar, under the
+head dependency evidence can then run: the pin of the merge-base commit, the
+checkout settings, the base sources, the lease of an existing complete
+extraction, the base configuration, discovery, and the clean dependency
+identities of both sides. It builds an extraction only when discovery shows
+that the base needs a sidecar, under the
 [source rules](./mokly-base-preparation.md#sources). So an HTML base without a
 renderer or PostCSS builds no extraction and starts no sidecar.
+
+The pin, the checkout settings, the base sources, the lease, and the base
+configuration run at once. Discovery, the extraction, and the dependency
+identities also run at once when the preparation holds the lease of a complete
+extraction. Without that lease, they wait until Serve is
+[ready](./mokly-runtime.md#serve) for the first time. After that first
+readiness, the preparations of later head attempts do not wait for it. A
+cancelled preparation ends its wait at once.
+
+Decision: cold discovery waits for the first readiness of Serve. Rejected:
+cold discovery during startup, because cold base reads and extraction compete
+with head startup and delay readiness. Rejected: a start when the head bundle
+ends, because head startup work continues after the bundle.
 
 Head dependency evidence is the set of dependency directories that the head
 preparation used. The
