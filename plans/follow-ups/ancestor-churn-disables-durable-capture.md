@@ -242,9 +242,14 @@
   coherence evaluation, and the performance orchestrator has answered
   whether a durability requirement changes.
 - **Related:**
-  - [serve-plan-editor-invalidation.md](./serve-plan-editor-invalidation.md):
-    another cause of the same native-attempt fallback. There, a kept record
-    goes stale at the edit check. Here, the first capture keeps no record.
+  - [Candidate names](../../docs/protocol/mokly-sidecar-plans.md#candidate-names)
+    in the plan protocol: in a recorded directory with candidate names, the
+    plan check ignores an added entry whose name is not a candidate, such as
+    an editor swap file. So a kept record stays usable through unrelated
+    additions in its recorded directories. The core still keeps a record only
+    from a durable capture, and a `serveEdit` request keeps none. So candidate
+    names cannot give plan reuse to a session whose first captures kept no
+    record. That case stays with this item.
   - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md):
     it records the stale module selections that the durable check keeps out
     of the bundle cache. A narrower witness rule from this task must still

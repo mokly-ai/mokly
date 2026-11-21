@@ -201,6 +201,38 @@ The performance orchestrator's integration call of 2026-11-20: after the reposit
 Main #448 adds guarded attempts. A planned edit compile lets esbuild resolve safe relative imports, and a failed proof falls back to the complete planned compile. So an edit with a current plan makes at most two esbuild calls.
 This supersedes the single planned attempt of decision 1 and Milestone 2. The path table, the candidate names, and the calls of decision 4 stay.
 
+The performance orchestrator's acceptance call of 2026-11-21 accepts `3450ee997` against main `e69db4ce8`.
+Its real mokly-cloud check kept candidate names on both sides, in 276 directories, with 50,725 head names and 50,691 base names.
+The head pair has 2,040,976 B of headroom under 8 MiB. The retained head record has 2,040,269 B.
+The base pair has 1,036,005 B, 12,571 B below 1 MiB. The retained base record has 1,035,171 B, 13,405 B below 1 MiB.
+This met the stop condition of decision 2. The call accepts the base without a runtime reserve.
+It replaces the base margin of decision 2 and of the calls of 2026-11-19 above. The head margin stays.
+Its reason: the margin protected against the loss of a whole plan when its names made it too large. A and E now remove the names before the pair bound drops the plan.
+The head keeps its names and at least 1 MiB under both bounds. Both bounds stay at 8 MiB. No runtime rule strips names to create a reserve.
+Editor-file edits fell from 2.73 s to 2.06 s, with one compile instead of two. Normal edits kept one compile, at 2.14 s against 2.11 s.
+The acceptance and both result tables stay in `.context/serve-plan-editor-invalidation/performance-acceptance-2026-11-21.md`.
+
+The performance orchestrator's second call of 2026-11-21 lets the pull request open before its audit of rejected real manifests at `3450ee997`.
+The audit result goes into the pull request when it arrives. Until then, the audit TODO stays open and this plan stays.
+
+The audit passed on 2026-11-21 on `3450ee997`, before the pull request opened.
+A fresh strict `--base HEAD` build of mokly-cloud used the core and dist of that commit. Workspace 54's manifest audit tool then read the records.
+The head had 25 physical `package.json` inputs and the base had 28. All were accepted, with none rejected and none unverified.
+Selectors were present on both sides. The audit gave the same pair and retained-record headroom as above, and the orchestrator repeated its base acceptance.
+The tool counts candidate callbacks. It does not rebuild attachment or live memory, and it does not find the first global fallback. This audit gives no wider proof.
+The result, its two tables, and its digests stay in `.context/serve-plan-editor-invalidation/manifest-audit-2026-11-21.md`.
+
+The performance orchestrator's gate call of 2026-11-21 keeps the passed suites after the local Node pin failure.
+The first complete gate passed the Mokly suites, then `cloud-toolchain-pins` required Node 24.21.0 and found 24.22.1.
+The exact pin is installed, and the pin suite passed on its rerun. Only the 15 unrun cloud suites continue.
+Product code is unchanged, so the passed Node, browser, and static-delivery results stay valid.
+The pull request records the failed invocation, the passing pin rerun, and the remaining suite results.
+
+The performance orchestrator's draft call of 2026-11-21 authorizes the final documentation cleanup before the local cloud suites finish.
+It requires the final SHA to be pushed and opened as a draft pull request while those suites run.
+The pull request becomes ready only after local gate coverage passes. The performance orchestrator merges after Required CI and a conflict check.
+This call deletes the plan now. The pull request and workspace ledger retain the unfinished gate and CI tasks.
+
 ## Implementation design
 
 Full captured resolution evidence stays unchanged. Candidate names live with the plan, inside both existing serialized bounds.
@@ -308,6 +340,10 @@ Main merge `01181fbd7` of 2026-11-20, with main `cc0750d36`: `code-merge-report.
 Decision 4 code: `.context/serve-plan-editor-invalidation/aed-implementation-report.md`. Docs and pointers: `aed-docs-report.md`.
 Repeated `main` fix: `.context/serve-plan-editor-invalidation/duplicate-main-fix-report.md`.
 Main merge of 2026-11-20 with main `e69db4ce8` (#448): `main448-code-merge-report.md` and `main448-docs-merge-report.md` in the same folder.
+Acceptance of 2026-11-21: `.context/serve-plan-editor-invalidation/performance-acceptance-2026-11-21.md`. Output proofs: `byte-proof-v2/result.json` and `byte-proof-cloud-published/result.json` in the same folder.
+In the cloud output proof, Changes was unavailable in both arms, because the Git base has no `packages/ui/dist` files. `plans/follow-ups/ui-design-package-import.md` records that limit.
+Review round 1, with no findings: `.context/reviews/calummoore/mokly-plan-reuse-editor-files-2-4oor/round-1-review.md`.
+Manifest audit of 2026-11-21, passed: `.context/serve-plan-editor-invalidation/manifest-audit-2026-11-21.md`.
 
 - [x] Preserve current main's mapped-path capture, configured files, stamp checks, style memo, and watch-plan reuse. Recheck G after integration.
 - [x] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
@@ -325,11 +361,14 @@ Main merge of 2026-11-20 with main `e69db4ce8` (#448): `main448-code-merge-repor
 - [x] Run the targeted candidate, attachment, limit, export, package-folder, and saved-plan Node tests. Run each new asynchronous test ten times.
 - [x] Run the Rust plan tests of `mokly-render`, `mokly-sidecar`, and `mokly-compare`.
 - [x] Rerun the targeted plan tests and `cargo xtask check --suite repository` on the merge of main `e69db4ce8`.
-- [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
-- [ ] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud, against main `e69db4ce8`. Audit rejected real manifests. Apply the margins of decision 4 and resolve failed conditions with it.
-- [ ] Run the complete `cargo xtask check`.
-- [ ] Prove strict published output byte for byte against main `e69db4ce8`: examples/basic, the full default large HTML and large React fixtures, and the cloud mockups of the root `mokly.config.json`.
-- [ ] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
+- [x] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
+- [x] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud, against main `e69db4ce8`. Apply the margins of decision 4 and resolve failed conditions with it.
+- [x] Obtain the performance orchestrator's audit of rejected real manifests at `3450ee997`. Record its result in the pull request. Its call of 2026-11-21 lets the pull request open first.
+- [ ] Complete every gate suite. Keep the passed suites and continue the unrun cloud suites under the gate call of 2026-11-21.
+- [x] Prove strict published output byte for byte against main `e69db4ce8`: examples/basic, the full default large HTML and large React fixtures, and the cloud mockups of the root `mokly.config.json`.
+- [x] Review against `origin/main` with `implementation-review`. Run finding checks and two fix rounds when needed. Record follow-ups.
 - [ ] Delete this plan and the resolved editor-invalidation item after other TODOs and reviews. Update live references.
 - [ ] Open the pull request into `main`. Say that it continues workspace 54's branch. Preserve dated calls and a plan permalink.
 - [ ] Wait for CI with `scripts/ci-wait.sh`. Fix each failure that the branch causes. Rerun Site Lighthouse at most once and record it as unrelated. Report to the performance orchestrator. Do not merge.
+
+Evidence for the gate continuation: `.context/serve-plan-editor-invalidation/main448-complete-gate.log`, `cloud-toolchain-pins-rerun.log`, `continued-gate.log`, and `continued-gate-results.json`.
