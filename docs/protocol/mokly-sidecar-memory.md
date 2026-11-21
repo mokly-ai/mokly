@@ -142,10 +142,11 @@ together now. They fit when the estimate is at least their budgets, the unused
 budgets of the existing reservations, the budgets that live claims hold, and
 the spare host memory. The core count bounds the capacity. It is at least one,
 and never less than the reservations and the budgets that live claims hold.
-Serve bounds its sidecar admission and its background batch by the capacity
-under the
-[on-demand rules](./mokly-on-demand.md#background-work-and-replacement). A
-capacity reading takes no claim and makes no reservation.
+Serve bounds its sidecar admission by the capacity under the
+[on-demand rules](./mokly-on-demand.md#background-work-and-replacement), and
+its background batch and completion stage under the
+[background pass rules](./mokly-on-demand-background.md#batch-and-completion).
+A capacity reading takes no claim and makes no reservation.
 
 Decision: the capacity counts the new reservations that fit now. Rejected: the
 existing reservations alone, because Serve would then keep one call at a time

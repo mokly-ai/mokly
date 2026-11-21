@@ -135,7 +135,7 @@ Change a doc only when a requirement or a decision changes.
   Cloudflare Pages workflow.
 - [Site deployment](./site-deployment.md) — Pages workflow, PR cleanup and legacy redirects.
 - [Marketing boundary](./marketing-site.md) — route ownership and
-  cross-origin links between `apps/site` and `apps/app`.
+  cross-origin links between `apps/site` and `packages/app`.
 
 - [Product navigation](./product-navigation.md) — routes, resolution and
   fallbacks, and the navigation shell;
@@ -174,8 +174,9 @@ Change a doc only when a requirement or a decision changes.
 - [Product mockups](./product-mockups.md) — complete screen/state inventory and journeys.
 - Product inventories: [account](./product-mockups-account.md) with its
   [desktop app](./product-mockups-account-desktop.md) drawings,
-  [settings](./product-mockups-settings.md) and [viewer](./product-mockups-viewer.md)
-  with its [builds](./product-mockups-viewer-builds.md).
+  [settings](./product-mockups-settings.md), [viewer](./product-mockups-viewer.md)
+  with its [builds](./product-mockups-viewer-builds.md), and
+  [Mac app](./product-mockups-mac-app.md).
 - [Product API](../../api/README.md) — the OpenAPI document generated from the
   Rust contract, and its conventions.
 

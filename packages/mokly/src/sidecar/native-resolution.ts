@@ -20,6 +20,9 @@ export type Resolution =
 /** A handled `require` failure ends the native compile like other errors. */
 export const nativeLogOverride = { "ignored-dynamic-import": "error" } as const;
 
+/** An uncaptured native hook leaves relative strings to esbuild. */
+export const nativeResolveFilter = /^(?:$|[^.]|\.[^./\\]|\.\.[^/\\])/;
+
 /** Only a bare import from a repository-owned file can need the base remap. */
 export function nativeImport(
   paths: ModulePaths,
@@ -30,7 +33,7 @@ export function nativeImport(
 }
 
 /**
- * The outer resolution of an import can stay native. An inner resolution
+ * An import that reaches the consumer hook can stay native. An inner resolution
  * that another plugin requests, and `require.resolve`, whose target the
  * metafile omits, keep the full path.
  */

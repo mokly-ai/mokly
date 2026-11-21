@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Rare. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 3 of the Milestone 26 review TODO in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/viewer/reference-stage.ts:51-57`, `apps/app/src/viewer/build-action.ts:31-58`, `apps/app/src/viewer/build-copy.ts:98-114` and `docs/protocol/cloud/viewer-builds.md:70-98` and `:206-210`.
+- **Location:** `packages/app/src/viewer/reference-stage.ts:51-57`, `packages/app/src/viewer/build-action.ts:31-58`, `packages/app/src/viewer/build-copy.ts:98-114` and `docs/protocol/cloud/viewer-builds.md:70-98` and `:206-210`.
 - **Reason:** The recommended fix changes the plan guidance that the viewer contract requires, so it needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. A code read confirms the stale guidance path. Nobody reproduced it with a real upgrade.
 - **Category:** Product bug.

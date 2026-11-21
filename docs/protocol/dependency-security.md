@@ -109,7 +109,8 @@ preceding entry as its dependent. All dependency scopes count, including
 `devDependencies`, so a new direct development edge rejects coverage.
 The first entry is the reviewed boundary. Its dependents may differ.
 
-A private-app path starts at a private workspace directly under `apps/`.
+A private-app path starts at a private cloud app workspace: a workspace
+directly under `apps/`, or `packages/app` or `packages/desktop`.
 Its actual `package.json` must have `"private": true`. Each later entry must
 be an installed package reached by a real lockfile dependency edge.
 Development, production, optional, and peer edges can form this path.

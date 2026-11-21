@@ -13,6 +13,7 @@ use mokly_model::usage::CatalogueUsage;
 use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
 use crate::assets::{File, content_type};
 use crate::backend_preview::ArtifactBytes;
+use crate::background_read::BackgroundRead;
 use crate::error::{Result, ServerError};
 use crate::public_read::{OpenedFile, PublicReader};
 use crate::warnings::RenderWarnings;
@@ -30,6 +31,10 @@ pub struct PreviewDocument {
 /// Graph work; HTTP runs IO outside its event loop.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
+    /// Complete the real worker read or return only a deferred miss.
+    fn background_read(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
+    }
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
     /// Reserve shared storage with no IO before foreground worker admission.
@@ -57,7 +62,7 @@ pub struct GraphDocuments {
     /// Verified-capture boundary used after foreground admission.
     pub(crate) streams: Arc<dyn AssetStreams>,
     warnings: Arc<dyn RenderWarnings>,
-    locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
+    pub(crate) locks: BTreeMap<String, Arc<Mutex<Option<CatalogueUsage>>>>,
     /// Only live requests and responses own the capture and its temporary file.
     pub(crate) asset_copies: Mutex<BTreeMap<String, Weak<Capture>>>,
 }
@@ -73,7 +78,7 @@ impl GraphDocuments {
         let locks = generation
             .plans()
             .keys()
-            .map(|route| (route.clone(), Mutex::new(None)))
+            .map(|route| (route.clone(), Arc::new(Mutex::new(None))))
             .collect();
         Self {
             generation,
@@ -91,7 +96,8 @@ impl GraphDocuments {
             return Ok(None);
         };
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
-        match self.generation.render(route) {
+        let rendered = self.generation.render(route);
+        match rendered {
             Ok(artifact) => {
                 if let Some(document) = &artifact.document
                     && report
@@ -122,6 +128,10 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
+    fn background_read(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background(route).map(Some)
+    }
+
     fn asset_request(&self, route: &str) -> Box<dyn AssetRequest> {
         self.reserve_asset(route)
     }
@@ -150,23 +160,7 @@ impl Documents for GraphDocuments {
         }
     }
     fn background(&self, route: &str) -> Result<Vec<Warning>> {
-        if self.locks.get(route).is_some_and(|state| {
-            state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .is_some()
-        }) {
-            return Ok(Vec::new());
-        }
-        Ok(self
-            .render(route, false)?
-            .and_then(|artifact| {
-                artifact
-                    .document
-                    .as_ref()
-                    .map(|document| document.warnings.clone())
-            })
-            .unwrap_or_default())
+        self.background_document(route)
     }
     fn report(&self, warnings: &[Warning], failed: bool) {
         self.warnings.report(warnings, failed);
@@ -200,6 +194,28 @@ impl Documents for GraphDocuments {
             .map_or(&[][..], |document| document.warnings.as_slice());
         self.warnings.report(warnings, result.is_err());
         result
+    }
+}
+
+impl GraphDocuments {
+    fn background_document(&self, route: &str) -> Result<Vec<Warning>> {
+        if self.locks.get(route).is_some_and(|state| {
+            state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .is_some()
+        }) {
+            return Ok(Vec::new());
+        }
+        Ok(self
+            .render(route, false)?
+            .and_then(|artifact| {
+                artifact
+                    .document
+                    .as_ref()
+                    .map(|document| document.warnings.clone())
+            })
+            .unwrap_or_default())
     }
 }
 #[cfg(test)]

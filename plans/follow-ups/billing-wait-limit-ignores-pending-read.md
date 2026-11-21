@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from finding 5 of the round 3 review of `calummoore/stripe-loading-outside-app-mrlb`.
-- **Location:** `apps/app/src/settings/panes/billing-watch.ts` (`readUntilTeam` and the focus lock in `useFocusReads`).
+- **Location:** `packages/app/src/settings/panes/billing-watch.ts` (`readUntilTeam` and the focus lock in `useFocusReads`).
 - **Reason:** The review found it after the second fix round, so the fix rule gives it `fix after merge`.
 - **Category:** Product bug.
 

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-04, from task M2e of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/settings/surface.tsx` (the desktop dialog frame; only the layer at line 182 sets `fo-settings-screen`) and `docs/mockups/styles/product/settings.css` (the `.fo-settings-screen .fo-state` rule).
+- **Location:** `packages/app/src/settings/surface.tsx` (the desktop dialog frame; only the layer at line 182 sets `fo-settings-screen`) and `docs/mockups/styles/product/settings.css` (the `.fo-settings-screen .fo-state` rule).
 - **Reason:** The difference is in the dialog frame, which the loading-states change did not need to touch.
 - **Category:** Product bug.
 

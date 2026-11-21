@@ -146,7 +146,7 @@ Chromium is required for the catalogue, site and app browser tests; on
 supported Linux hosts, add `--with-deps` to its install command to install the
 system libraries too. The `cloud-desktop` suite also needs Electron's GTK 3,
 NSS and ALSA libraries and `xvfb-run` on Linux; see the
-[desktop development guide](../../apps/desktop/README.md#development). The platform
+[desktop development guide](../../packages/desktop/README.md#development). The platform
 integration tests use Postgres 16, Python 3 and `psql`, and read
 `MKC_TEST_DATABASE_URL` to select the database. An unreachable database fails
 the run when `MKC_TEST_DATABASE_URL` or `CI` is set; an unconfigured
@@ -278,16 +278,16 @@ directories and the [architecture doc](../architecture/cloud.md) the components.
 The [cloud npm projects README](../../apps/README.md) describes the cloud
 projects of the root npm workspace and their shared scripts.
 
-| Area                                               | Owns                                                                                    |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [apps/app](../../apps/app/README.md)               | The Expo application: account entry, onboarding, settings and the hosted viewer         |
-| [apps/desktop](../../apps/desktop/README.md)       | The Electron desktop shell: the bundled web export, the sign-in handoff and the updater |
-| [apps/mockups](../../apps/mockups/README.md)       | The workspace Mokly packages and the scripts that build and verify the catalogue        |
-| [apps/site](../../apps/site/README.md)             | The static Astro marketing, documentation, changelog and legal site                     |
-| [packages/tokens](../../packages/tokens/README.md) | The design tokens, surface families, CSS custom properties and control theme            |
-| [apps/worker](../../apps/worker/README.md)         | The Cloudflare Worker that routes the shared public origin                              |
-| [docs/mockups](../mockups/README.md)               | The design specification: the dogfood catalogue of design material and screens          |
-| [infra](../../infra/README.md)                     | Terraform, the workload images, Helm, the deployment scripts and their tests            |
+| Area                                                 | Owns                                                                                    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [packages/app](../../packages/app/README.md)         | The Expo application: account entry, onboarding, settings and the hosted viewer         |
+| [packages/desktop](../../packages/desktop/README.md) | The Electron desktop shell: the bundled web export, the sign-in handoff and the updater |
+| [apps/mockups](../../apps/mockups/README.md)         | The workspace Mokly packages and the scripts that build and verify the catalogue        |
+| [apps/site](../../apps/site/README.md)               | The static Astro marketing, documentation, changelog and legal site                     |
+| [packages/tokens](../../packages/tokens/README.md)   | The design tokens, surface families, CSS custom properties and control theme            |
+| [apps/worker](../../apps/worker/README.md)           | The Cloudflare Worker that routes the shared public origin                              |
+| [docs/mockups](../mockups/README.md)                 | The design specification: the dogfood catalogue of design material and screens          |
+| [infra](../../infra/README.md)                       | Terraform, the workload images, Helm, the deployment scripts and their tests            |
 
 ## Related Docs
 

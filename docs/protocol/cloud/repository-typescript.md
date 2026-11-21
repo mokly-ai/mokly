@@ -7,8 +7,8 @@ formatting, lint and import rules.
 
 ## Packages
 
-- The root `package.json` declares the cloud npm workspaces `apps/app`,
-  `apps/desktop`, `apps/mockups`, `packages/tokens`, `apps/site` and
+- The root `package.json` declares the cloud npm workspaces `packages/app`,
+  `packages/desktop`, `apps/mockups`, `packages/tokens`, `apps/site` and
   `apps/worker` beside the Mokly packages, with the single root lockfile
   `package-lock.json`. Its `cloud:typecheck` and `cloud:test` scripts run
   every cloud workspace.
@@ -20,13 +20,13 @@ formatting, lint and import rules.
   and tests.
 - `packages/tokens` is `@mokly-cloud/tokens`, the one source of the typed token
   tables, the palette scopes, the generated token CSS and the `@firna/ui`
-  theme mapping. `docs/mockups`, `apps/app` and `apps/site` import it through its
+  theme mapping. `docs/mockups`, `packages/app` and `apps/site` import it through its
   subpath entry points (`/tokens`, `/palettes`, `/token-css`,
   `/shared-ui-theme`); none keeps a copy. It is private to the npm workspace,
   so consuming it adds no separately published dependency. Its contract is
   [Design tokens](./design-tokens.md).
 - `apps/mockups` and `apps/site` use the workspace `@mokly/mokly` package.
-  `apps/app`, `apps/mockups` and `apps/site` use the workspace
+  `packages/app`, `apps/mockups` and `apps/site` use the workspace
   `@mokly/viewer`, and `apps/mockups` uses the workspace `@mokly/ui`, because
   the viewer drawings in `docs/mockups` compose its public parts. The root
   lockfile links each of them to its path under `packages/`, so no cloud
@@ -51,12 +51,12 @@ formatting, lint and import rules.
   [Shared controls](./shared-controls.md#dependencies) requires. React pins
   also live at the npm workspace root to keep every peer on one hoisted
   runtime. The lockfile records them; there is no separate install root, and
-  the Electron shell under `apps/desktop` adds no React or React Native
+  the Electron shell under `packages/desktop` adds no React or React Native
   dependency of its own.
-- `apps/desktop` is `@mokly-cloud/desktop`, the Electron shell that ships the
+- `packages/desktop` is `@mokly-cloud/desktop`, the Electron shell that ships the
   application's web export and serves it from `mokly-app://desktop` on macOS
   and Linux, so the product opens offline. Its exact pins are in
-  [`apps/desktop/package.json`](../../../apps/desktop/package.json). It holds no
+  [`packages/desktop/package.json`](../../../packages/desktop/package.json). It holds no
   product screen and no viewer code; its contract is
   [Desktop application](./desktop-app.md). The shell uses Electron.
   Tauri was rejected because WebKit blocks the catalogue grant cookie across
@@ -65,7 +65,7 @@ formatting, lint and import rules.
 
 ## Application
 
-- `apps/app` is an Expo application (SDK 56, the release whose peer set matches
+- `packages/app` is an Expo application (SDK 56, the release whose peer set matches
   the runtime in [Shared controls](./shared-controls.md#dependencies))
   with Expo Router and a typed API client generated from
   `docs/api/openapi.json`. It targets the web: its screens are DOM
@@ -73,7 +73,7 @@ formatting, lint and import rules.
   build in a web view rather than reusing them. It serves no marketing or docs
   routes; those belong to `apps/site`, as the
   [marketing boundary](./marketing-site.md) defines. Its exact pins are in
-  [`apps/app/package.json`](../../../apps/app/package.json), and its viewer is
+  [`packages/app/package.json`](../../../packages/app/package.json), and its viewer is
   the workspace `@mokly/viewer`.
 
   The shared React, React Native and React Native Web runtime installs once,
@@ -82,7 +82,7 @@ formatting, lint and import rules.
   come from `@mokly-cloud/tokens`, and the Folio stylesheets have one
   authored source, `docs/mockups/styles`; the app's generated copy stays
   git-ignored, so the app keeps no second source. The
-  [app guide](../../../apps/app/README.md) documents compiler selection and
+  [app guide](../../../packages/app/README.md) documents compiler selection and
   stylesheet preparation.
 
 - Expo Router paths are root-relative; the app sets no base URL and has no
@@ -130,7 +130,7 @@ formatting, lint and import rules.
   be pressed" for itself when the write behind it already answers that, and
   `one-form-words-its-own-field` and `write-failure-through-the-fragment`
   hold the form and write-failure shapes. Rule cases live in
-  `rules/_tests_/`, and the scan covers `crates`, `xtask` and `apps/app/src`.
+  `rules/_tests_/`, and the scan covers `crates`, `xtask` and `packages/app/src`.
   ESLint owns the navigation rules of settings panes: a pane uses no `href`,
   opens each `ExternalLink` with `newTab`, and imports nothing from
   `expo-router`. The ast-grep rules own the write and form shapes.

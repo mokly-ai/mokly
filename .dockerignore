@@ -10,3 +10,5 @@ target
 gha-creds-*.json
 docs
 apps
+packages/app
+packages/desktop

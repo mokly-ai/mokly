@@ -14,7 +14,7 @@ Contract owners:
 
 - [Viewer read model](../docs/protocol/cloud/viewer-read-model.md), [catalogue hosting](../docs/protocol/cloud/catalogue-hosting.md), [viewer address state](../docs/protocol/cloud/viewer-address-state.md) and [product navigation](../docs/protocol/cloud/product-navigation.md).
 - [GitHub App](../docs/protocol/cloud/github-app.md), [publication upload](../docs/protocol/cloud/publication-upload.md), [publication storage](../docs/protocol/cloud/persistence-publication-storage.md), [retention](../docs/protocol/cloud/retention.md) and [viewer builds](../docs/protocol/cloud/viewer-builds.md), when an answer changes them.
-- The [store README](../crates/mkc-store-pg/README.md), the [publications README](../crates/mkc-publications/README.md), the [catalogue server README](../crates/mkc-catalogue-server/README.md) and the [app README](../apps/app/README.md).
+- The [store README](../crates/mkc-store-pg/README.md), the [publications README](../crates/mkc-publications/README.md), the [catalogue server README](../crates/mkc-catalogue-server/README.md) and the [app README](../packages/app/README.md).
 
 ## Earlier Work
 
@@ -94,13 +94,13 @@ Replaced ways:
   - The index `publications_project_branch` at `crates/mkc-db/migrations/202609162000_publications/up.sql:35`. A forward migration in Milestone 5 drops it only when the chosen design leaves it unused. Each index that the admission-order reads of History need stays.
   - The rule text at `docs/protocol/cloud/viewer-read-model.md:56-75`, `catalogue-hosting.md:55-60`, `viewer-address-state.md:13-18`, `product-navigation.md:39-41` and `docs/architecture/cloud-data-flows.md:20`. Moved in Milestone 2.
   - The README text at `crates/mkc-store-pg/README.md:72` and `:196-197`, `crates/mkc-catalogue-server/README.md:14-15` and `crates/mkc-publications/README.md:258`. Moved in Milestone 5.
-  - The app readers at `apps/app/src/viewer/entry.ts:193-194`, `resolution.ts:100-113`, `latest.ts:21-29` and `panels/switcher.tsx:44` and `:52`. They follow `latestPublicationId`. Milestone 5 confirms that they need no change. Milestone 6 moves them only when an answer changes the viewer.
+  - The app readers at `packages/app/src/viewer/entry.ts:193-194`, `resolution.ts:100-113`, `latest.ts:21-29` and `panels/switcher.tsx:44` and `:52`. They follow `latestPublicationId`. Milestone 5 confirms that they need no change. Milestone 6 moves them only when an answer changes the viewer.
 - Admission-order newest attempt in reference rows → the order of item 1, only under option D of item 4. Consumers: the queries at `crates/mkc-store-pg/src/viewer/branches.sql:37-43` and `crates/mkc-store-pg/src/viewer/pull_requests.sql:14-20`, and the rule text at `docs/protocol/cloud/viewer-read-model.md:67-75`. Moved in Milestones 2 and 5.
 - One ready publication for each project, head and config path → a ready identity that also holds the reference, only under option F of item 2. The reference is the branch and the pull request number. Each publication row stays immutable. Consumers:
   - The store identity query `publication_by_identity` at `crates/mkc-store-pg/src/publication.rs:109-127`, with its trait method at `crates/mkc-store-interface/src/publication.rs:171`, its mocks and its tests, such as `crates/mkc-publications/tests/maintenance/lifecycle_tests.rs:38`. Also the unique index `publications_ready_identity` at `crates/mkc-db/migrations/202609162000_publications/up.sql:34`. Moved in Milestones 3 and 5.
   - The reservation replay at `crates/mkc-publications/src/reservation/reserve.rs:68-85`, and the completion replay at `crates/mkc-publications/src/completion_outcome.rs:56-104`. Moved in Milestone 5.
   - The build duplicate checks of the scheduler at `crates/mkc-publications/src/build_scheduler.rs:84-93`, and of the member build request at `crates/mkc-api/src/builds/scheduling.rs:109-128`. Both use `publication_by_identity` and `active_build`, whose trait method is at `crates/mkc-store-interface/src/build.rs:108`. Their tests are under `crates/mkc-publications/src/_tests_/build_scheduler/` and `crates/mkc-api/tests/github/build_api/`. They keep today's global duplicate policy unless the user answers the build question of F. Keeping that policy still needs both checks, their mocks and their tests adapted to the changed upload identity. Moved in Milestone 5.
-  - The `build-already-published` refusal of the member build request, which names one publication row. The app opens that row at `apps/app/src/viewer/build-target.ts:26-29`. Moved in Milestone 5 under the row rule that the user settles.
+  - The `build-already-published` refusal of the member build request, which names one publication row. The app opens that row at `packages/app/src/viewer/build-target.ts:26-29`. Moved in Milestone 5 under the row rule that the user settles.
   - The active-build key `(project, head SHA)` of both checks, and its unique index `builds_active_head` at `crates/mkc-db/migrations/202610100900_cloud_builds/up.sql:45`. They move only under a build answer that lets a second reference build the head. Moved in Milestones 3 and 5 after that answer.
   - The receipt `replay` flag at `crates/mkc-publications/src/completion_outcome.rs:106-119`, and the CLI message for a published commit. Moved in Milestone 5.
   - The check of a head, whose runs `github_check_runs` keys by head at `crates/mkc-db/migrations/202609161530_github_app/up.sql:96-105`. Moved in Milestone 5 under the check rule that the user settles.
@@ -253,12 +253,12 @@ Prefetching is a rollout choice. Until the chosen source has its data, the rule 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/cloud/viewer-address-state.md:22-26` and `:158-161`, `apps/app/src/screens/app/viewer-route.tsx:28-35`, `apps/app/src/screens/viewer/subject.tsx:93-98` and `apps/app/src/screens/viewer/viewer-screen.tsx:106-115`.
-- **Background:** Alias resolution replaces the alias with the publication address and drops the `branch` key. The resolved address names no reference, at `apps/app/src/screens/app/viewer-route.tsx:28-35`. The chrome then names the publication's own branch, and View latest polls that branch. So after a pull request address resolves, View latest polls the head branch, not the pull request.
+- **Location:** `docs/protocol/cloud/viewer-address-state.md:22-26` and `:158-161`, `packages/app/src/screens/app/viewer-route.tsx:28-35`, `packages/app/src/screens/viewer/subject.tsx:93-98` and `packages/app/src/screens/viewer/viewer-screen.tsx:106-115`.
+- **Background:** Alias resolution replaces the alias with the publication address and drops the `branch` key. The resolved address names no reference, at `packages/app/src/screens/app/viewer-route.tsx:28-35`. The chrome then names the publication's own branch, and View latest polls that branch. So after a pull request address resolves, View latest polls the head branch, not the pull request.
 - **Problem:** The viewer loses the reference that the reader opened. Under options B to F of item 2, a branch can also open a catalogue that another branch uploaded. The viewer then names that other branch.
 - **Impact if no action:** A reader who opens `main` gets no offer when `main` moves. The same reader gets offers for feature commits that `main` does not hold. A deleted feature branch keeps its target, so its poll offers nothing.
 - **Root question:** When an address of a reference resolves to a catalogue, which reference does the viewer stay inside, for its name and for View latest? The options check widened the first question, which asked only about the name. This question also covers the pull request poll that the check found.
-- **Shared assumptions:** The plan-wide assumptions, and two more. View latest polls the reference that the chrome names. Source: `apps/app/src/screens/viewer/viewer-screen.tsx:106-115`. That is not a requirement, because `docs/protocol/cloud/viewer-address-state.md:158-161` says only "its current reference", so D drops it. The opened reference can survive resolution only in the URL. Source: `docs/protocol/cloud/viewer-address-state.md:22-26`.
+- **Shared assumptions:** The plan-wide assumptions, and two more. View latest polls the reference that the chrome names. Source: `packages/app/src/screens/viewer/viewer-screen.tsx:106-115`. That is not a requirement, because `docs/protocol/cloud/viewer-address-state.md:158-161` says only "its current reference", so D drops it. The opened reference can survive resolution only in the URL. Source: `docs/protocol/cloud/viewer-address-state.md:22-26`.
 
   That is not a requirement either, so E drops it.
 
@@ -284,7 +284,7 @@ Prefetching is a rollout choice. Until the chosen source has its data, the rule 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `apps/app/src/viewer/entry.ts:193-194`, `crates/mkc-store-pg/src/viewer/branches.sql:37-43` and `docs/protocol/cloud/viewer-builds.md`, section "References Without A Ready Publication".
+- **Location:** `packages/app/src/viewer/entry.ts:193-194`, `crates/mkc-store-pg/src/viewer/branches.sql:37-43` and `docs/protocol/cloud/viewer-builds.md`, section "References Without A Ready Publication".
 - **Background:** After each push, the tip has no ready catalogue for a while, and its build or upload can fail. The stage order of `viewer-builds.md` applies only when a reference has no ready catalogue at all. Its last rule says "No publications yet", at `docs/protocol/cloud/viewer-builds.md:214-219`. The switcher row already shows the newest attempt and build.
 - **Problem:** Commit order needs a rule for this period.
 - **Impact if no action:** The plan cannot define the target for much of the time after each push.
@@ -322,7 +322,7 @@ Prefetching is a rollout choice. Until the chosen source has its data, the rule 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `crates/mkc-store-pg/src/github_refs.rs:45-56` and `apps/app/src/viewer/latest.ts:21-29`.
+- **Location:** `crates/mkc-store-pg/src/github_refs.rs:45-56` and `packages/app/src/viewer/latest.ts:21-29`.
 - **Background:** A force push, a rebase or a reset moves a reference to a commit that does not descend from its target. The stored tip follows such moves both ways, because its guard compares observation times, not ancestry. A deleted branch keeps a row with no tip, and a recreated branch reuses the name. View latest already offers any changed target, also an older one.
 - **Problem:** The order must say what happens to catalogues of commits that the reference no longer holds.
 - **Impact if no action:** A rebased pull request, a reset branch or a recreated branch can keep opening content that its history no longer holds.
@@ -620,12 +620,12 @@ Depends on: 1 and 5, or 5 when Milestone 1 is deleted
 Keep this milestone under the UI rule of "Implementation Order". Build the states that Milestone 1 draws.
 
 - [ ] Read the `product-ui` and `typescript` skills.
-- [ ] Build the changed states under the UI rules of `AGENTS.md` and `apps/app/README.md`.
+- [ ] Build the changed states under the UI rules of `AGENTS.md` and `packages/app/README.md`.
 - [ ] Build the stage card for each empty target that the answers can leave.
 - [ ] Under any option of item 3 except A, keep View latest inside the opened reference. This also holds after a pull request address resolves.
 - [ ] Keep exact addresses, and keep View latest as an offer only.
 - [ ] Check parity with the drawings, keyboard focus and mobile widths.
-- [ ] Update `apps/app/README.md`.
+- [ ] Update `packages/app/README.md`.
 
 ## Milestone 7: Verification, Commit, Review, And Pull Request
 

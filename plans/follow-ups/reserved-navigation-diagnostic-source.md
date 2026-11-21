@@ -3,9 +3,9 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the implementation review of 2026-10-28. Updated 2026-11-01 on branch `conductor/rust-rebuild-87-diagnostics-and-html-messages`.
-- **Location:** `crates/mokly-html/src/source_checks.rs:15`,
+- **Location:** `crates/mokly-html/src/source_checks.rs:53`,
   `crates/mokly-html/src/source_locations.rs:11`, and
-  `crates/mokly-html/src/javascript.rs:130`.
+  `crates/mokly-html/src/javascript.rs:132`.
 - **Reason:** The implementation review of 2026-10-28 found this wording
   outside its change, so a separate branch fixes it.
 

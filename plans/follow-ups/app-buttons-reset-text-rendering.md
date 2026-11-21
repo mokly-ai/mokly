@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from task M2f of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `docs/mockups/styles/base.css` (the text-rendering rule) and the app's button elements under `apps/app/`.
+- **Location:** `docs/mockups/styles/base.css` (the text-rendering rule) and the app's button elements under `packages/app/`.
 - **Reason:** The difference is older than the change that found it, and it touches every app button.
 - **Category:** Product bug.
 

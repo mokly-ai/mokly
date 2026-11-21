@@ -2,6 +2,7 @@
 
 mod cancellation_tests;
 mod capacity_tests;
+mod dispatch_tests;
 mod failure_tests;
 mod priority_tests;
 mod script;

@@ -23,14 +23,23 @@ export type DesktopEntryState = "default" | "waiting";
 export function DesktopEntryPage({
   mode,
   state,
+  screen,
+  macApp,
 }: {
   mode: EntryMode;
   state: DesktopEntryState;
+  /** The path of a drawing of this entry that names itself. */
+  screen?: string;
+  /** Whether the page draws the Mac app window around the account canvas. */
+  macApp?: boolean;
 }) {
   const waiting = state === "waiting";
   return (
     <AccountShell
-      id={stateScreenPath("product/account/" + mode + "/desktop", state)}
+      id={
+        screen ?? stateScreenPath("product/account/" + mode + "/desktop", state)
+      }
+      macApp={macApp}
       title={waiting ? "Check your browser" : entryCopy[mode].title}
       identity={entryCopy[mode].identity}
     >
