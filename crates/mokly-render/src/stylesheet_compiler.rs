@@ -18,6 +18,7 @@ use crate::postcss::PostCss;
 use crate::side::SideInputs;
 use crate::sources::SideTree;
 use crate::stylesheet_capture::{Capture, RecordingTree};
+use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_usage::BufferedUsage;
 use crate::stylesheet_watch;
 
@@ -47,6 +48,14 @@ pub(crate) trait RootCompiler: Send + Sync {
     fn deferred(&self) -> Option<DeferredCompiler> {
         None
     }
+}
+
+/// Attempt-local stylesheet reuse also identifies useful PostCSS preparation.
+pub(crate) trait StylesheetPreparation: ClassMapCompiler {
+    /// A retained PostCSS root whose current evidence rejects reuse.
+    fn stale_postcss(&self) -> bool;
+    /// Every compiled or reused root remains in this attempt's bounded store.
+    fn kept_every_record(&self) -> bool;
 }
 
 pub(crate) struct CapturingCompiler {

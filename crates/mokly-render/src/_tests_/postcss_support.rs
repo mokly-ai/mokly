@@ -1,6 +1,5 @@
 //! Shared PostCSS adapter fixtures with a mocked pool and source tree.
 
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -36,12 +35,12 @@ pub(super) fn css(modules: Vec<String>) -> MethodResult {
 pub(super) fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -> PostCss {
     PostCss {
         usage: Arc::new(Unimock::new(())),
-        lease: Arc::new(ContextLease {
-            id: "context".into(),
-            pool: pool.clone(),
-            released: CssCache::default().releases,
-            used: AtomicBool::new(false),
-        }),
+        lease: Arc::new(ContextLease::new(
+            "context".into(),
+            "settings".into(),
+            pool.clone(),
+            CssCache::default().releases,
+        )),
         pool,
         tree,
         inventory_tree: Arc::new(Unimock::new(())),

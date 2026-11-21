@@ -239,6 +239,8 @@ queue order. A successful `bundle` counts as a compile unless its
 [`cache` value](./mokly-timings.md#core-spans) is `memory` or `hit`. A compile
 belongs to its process, so a new process in the same slot has none. The
 bundle never waits for a busy process while another slot can run it.
+A PostCSS preparation does not change this rank. Its context belongs to the
+slot of the bundle from the start of the bundle.
 
 Decision: a head `bundle` prefers the process that compiled last, so fewer
 processes keep an idle compiler in memory. Rejected: the queue order, because

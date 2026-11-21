@@ -13,6 +13,7 @@ pub(super) fn call(process: usize, label: &str) -> Event {
 
 pub(super) fn bundle(generation: &str) -> Call {
     Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: Bundle {
             source_root: "/head".into(),

@@ -15,6 +15,7 @@ use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn bundle() -> Call {
     Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: Bundle {
             evaluation: None,
