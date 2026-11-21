@@ -1,0 +1,41 @@
+---
+/**
+ * A size tag, such as `390 × 844`: mono tabular figures on the signal green,
+ * or on a person's colour. A depiction: hidden from assistive technology.
+ *
+ * - `measure`: the id of the element whose rendered size the tag shows, as
+ *   `W × H` in CSS pixels. The measurements island writes it and follows
+ *   resizing; without script the tag does not show. Without `measure`, the
+ *   slot is the tag's static text, such as `12 notes`.
+ * - `person`: the tag takes that person's colour.
+ * - `class`: the area's class, which places the tag.
+ *
+ * Use: `<SizeTag measure="home-title" />`, or `<SizeTag>12 notes</SizeTag>`.
+ * The rules are in `src/styles/canvas-tags.css`.
+ */
+import Measurements from "./Measurements.astro";
+import { measureSize } from "./measurements.js";
+import type { Person } from "./people.js";
+
+interface Props {
+  readonly class?: string;
+  readonly measure?: string | undefined;
+  readonly person?: Person | undefined;
+}
+
+const { class: className, measure, person } = Astro.props;
+const measured = measure === undefined ? {} : measureSize(measure);
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "site-size-tag",
+    person && `site-size-tag--${person}`,
+    className,
+  ]}
+  {...measured}
+>
+  {measure === undefined && <slot />}
+</span>
+{measure !== undefined && <Measurements />}

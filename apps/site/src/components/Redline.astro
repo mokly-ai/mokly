@@ -1,0 +1,52 @@
+---
+/**
+ * A spacing redline in the signal green: a 1px rule with a tick at each end
+ * and a mono value tag beside its middle. It is vertical by default, and
+ * `horizontal` draws it along the other axis. The area's class sets its
+ * place and its length. A depiction: hidden from assistive technology, and
+ * it takes no pointer.
+ *
+ * - `value`: the value tag's static text, such as `24`.
+ * - `from` and `to`: the ids of the two elements whose gap the value tag
+ *   shows, in CSS pixels: the top of `to` minus the bottom of `from`, or with
+ *   `horizontal` the left of `to` minus the right of `from`. The
+ *   measurements island writes it and follows resizing; without script the
+ *   value does not show. Pass `value`, or `from` with `to`; with neither,
+ *   the redline draws no value tag.
+ *
+ * Use: `<Redline class="site-home-hero-redline" from="home-title" to="home-lead" />`.
+ * The rules are in `src/styles/canvas-tags.css`.
+ */
+import Measurements from "./Measurements.astro";
+import { measureGap } from "./measurements.js";
+
+interface Props {
+  readonly class?: string;
+  readonly from?: string;
+  readonly horizontal?: boolean;
+  readonly to?: string;
+  readonly value?: string;
+}
+
+const { class: className, from, horizontal = false, to, value } = Astro.props;
+const measured = from !== undefined || to !== undefined;
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "site-redline",
+    horizontal ? "site-redline--h" : "site-redline--v",
+    className,
+  ]}
+>
+  {measured ? (
+    <span
+      class="site-redline-value"
+      {...measureGap(horizontal ? "horizontal" : "vertical", from, to)}
+    />
+  ) : (
+    value !== undefined && <span class="site-redline-value">{value}</span>
+  )}
+</span>
+{measured && <Measurements />}

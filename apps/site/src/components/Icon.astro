@@ -5,9 +5,10 @@
  * technology and takes no focus, and the text or the label beside it names
  * the control.
  *
- * Use: `<Icon name="branch" size={13} />`. `icons.ts` holds the drawings.
+ * Use: `<Icon name="branch" size={13} />`. `icons.ts` holds the drawings, on
+ * the 16px grid or the view box that `VIEW_BOXES` gives.
  */
-import { ICONS, type IconName } from "./icons.js";
+import { ICONS, VIEW_BOXES, type IconName } from "./icons.js";
 
 interface Props {
   readonly class?: string;
@@ -28,7 +29,7 @@ const { class: className, name, size = 16 } = Astro.props;
   stroke-linecap="round"
   stroke-linejoin="round"
   stroke-width="1.5"
-  viewBox="0 0 16 16"
+  viewBox={VIEW_BOXES[name] ?? "0 0 16 16"}
   width={size}
   set:html={ICONS[name]}
 />

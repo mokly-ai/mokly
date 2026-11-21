@@ -65,7 +65,7 @@
 
 .site-home-terminal-out {
   align-items: center;
-  color: color-mix(in srgb, var(--mk-color-signal) 60%, currentColor);
+  color: color-mix(in srgb, currentColor 40%, var(--mk-color-signal));
   display: flex;
   gap: 9px;
 }

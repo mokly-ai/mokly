@@ -1,8 +1,9 @@
 /* The people and agents in the depicted design file: the avatars and the
-   presence group that Avatar.astro and Presence.astro draw. Maya is pink,
-   Sam blue, Claude orange and Codex violet; each avatar's initial or spark
-   takes the ink role of its colour. The rules match
-   docs/mockups/styles/site/people.css. */
+   presence group that Avatar.astro and Presence.astro draw, and the cursors
+   that Cursor.astro draws. Maya is pink, Sam blue, Claude orange and Codex
+   violet; each avatar's initial or spark and each cursor's name tag take
+   the ink role of its colour. The Mokly avatar draws the mark on the
+   surface. The rules match docs/mockups/styles/site/people.css. */
 
 /* Avatars, on a ring of the surface they sit on */
 
@@ -45,6 +46,12 @@
   color: var(--mk-color-people-violet-ink);
 }
 
+.site-avatar--mokly {
+  background: var(--mk-color-surface);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
 /* The presence group: the avatars overlap */
 
 .site-presence {
@@ -58,4 +65,117 @@
 
 .site-presence--small .site-avatar + .site-avatar {
   margin-left: -3px;
+}
+
+/* Cursors: the arrow in the person's colour and the name label */
+
+.site-cursor {
+  height: 22px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 20px;
+  z-index: 6;
+}
+
+.site-cursor-arrow {
+  display: block;
+  filter: drop-shadow(var(--mk-shadow-small));
+  overflow: visible;
+}
+
+.site-cursor-arrow path {
+  stroke: var(--mk-color-surface);
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+/* A dark arrow is edged with the text role. The mockups key it on the
+   pinned scheme; the site is dark through the scheme choice or, without a
+   choice, through the system scheme. */
+
+:root[data-color-scheme="dark"] .site-cursor-arrow path {
+  stroke: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-cursor-arrow path {
+    stroke: var(--mk-color-text);
+  }
+}
+
+.site-cursor-tag {
+  align-items: center;
+  border-radius: 4px 11px 11px;
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-surface),
+    var(--mk-shadow-medium);
+  display: inline-flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-semibold);
+  gap: 5px;
+  height: 23px;
+  left: 15px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 0 8px;
+  position: absolute;
+  top: 19px;
+  white-space: nowrap;
+}
+
+.site-cursor--flip .site-cursor-tag {
+  border-radius: 11px 4px 11px 11px;
+  left: auto;
+  right: 6px;
+}
+
+.site-cursor-agent {
+  background: color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+  font-family: var(--mk-font-mono);
+  font-size: 0.625rem;
+  font-style: normal;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.02em;
+  margin-left: 2px;
+  padding: 3px 5px;
+  text-transform: uppercase;
+}
+
+.site-cursor--maya .site-cursor-arrow path {
+  fill: var(--mk-color-people-pink-fill);
+}
+
+.site-cursor--maya .site-cursor-tag {
+  background: var(--mk-color-people-pink-fill);
+  color: var(--mk-color-people-pink-ink);
+}
+
+.site-cursor--sam .site-cursor-arrow path {
+  fill: var(--mk-color-people-blue-fill);
+}
+
+.site-cursor--sam .site-cursor-tag {
+  background: var(--mk-color-people-blue-fill);
+  color: var(--mk-color-people-blue-ink);
+}
+
+.site-cursor--claude .site-cursor-arrow path {
+  fill: var(--mk-color-people-orange-fill);
+}
+
+.site-cursor--claude .site-cursor-tag {
+  background: var(--mk-color-people-orange-fill);
+  color: var(--mk-color-people-orange-ink);
+}
+
+.site-cursor--codex .site-cursor-arrow path {
+  fill: var(--mk-color-people-violet-fill);
+}
+
+.site-cursor--codex .site-cursor-tag {
+  background: var(--mk-color-people-violet-fill);
+  color: var(--mk-color-people-violet-ink);
 }
