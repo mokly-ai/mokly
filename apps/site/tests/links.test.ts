@@ -150,6 +150,14 @@ for (const [name, html, message] of [
     "<style>p { background: url(/missing.svg); }</style>",
     "missing file",
   ],
+  [
+    "asset URL in an inlined stylesheet",
+    `<style ${INLINED_STYLESHEET_ATTRIBUTE}>p { background: url(./missing.png); }</style>`,
+    {
+      message:
+        'site:links failed:\nindex.html: "./missing.png" — missing file /missing.png',
+    },
+  ],
   ["poster", '<video poster="/missing.jpg"></video>', "missing file"],
   ["object", '<object data="/missing.pdf"></object>', "missing file"],
   ["malformed encoding", '<a href="/%zz">Invalid</a>', "malformed"],
@@ -173,7 +181,9 @@ for (const [name, html, message] of [
     });
     await assert.rejects(
       checkLinks(root, origin),
-      new RegExp(`index.html:.*${message}`),
+      typeof message === "string"
+        ? new RegExp(`index.html:.*${message}`)
+        : message,
     );
   });
 }

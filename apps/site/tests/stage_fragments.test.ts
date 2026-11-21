@@ -50,7 +50,10 @@ test("linked stylesheets inline in place and reference copied resources", () => 
   const stylesheets = new Map([
     [
       "styles/first.css",
-      `@import  "more.css" screen;\n.card { mask: url( '../art/card.svg#mark' ); }`,
+      `@import  "more.css" screen;
+.card { mask: url( '../art/card.svg#mark' ); }
+.card { background-image: image-set("../art/a.svg" 1x, url("../art/b.svg") 2x, "../art/c.avif" type("image/avif")); }
+.x { --caption: @import"./theme.css"; }`,
     ],
     [
       "themes/second.css",
@@ -60,8 +63,8 @@ test("linked stylesheets inline in place and reference copied resources", () => 
   const rewritten = rewriteWelcome(
     `<head><title>Welcome</title>
       <style>.before{color:red}</style>
-      <link rel=" StyleSheet&#9;next " href="../styles/first.css">
       <link rel="stylesheet" href="../themes/second.css" media="print">
+      <link rel=" StyleSheet&#9;next " href="../styles/first.css">
       <style>.after{color:blue}</style>
     </head><body><main></main></body>`,
     (file) => {
@@ -76,9 +79,12 @@ test("linked stylesheets inline in place and reference copied resources", () => 
     styles.map((style) => serializeOuter(style)),
     [
       "<style>.before{color:red}</style>",
-      `<style data-inlined-stylesheet="">@import  "./styles/more.css" screen;\n.card { mask: url( './art/card.svg#mark' ); }</style>`,
       String.raw`<style media="print" data-inlined-stylesheet="">.label::after { content: "<\/style> <\/STYLE>"; }
 .icon { mask: url(#icon); }</style>`,
+      `<style data-inlined-stylesheet="">@import  "./styles/more.css" screen;
+.card { mask: url( './art/card.svg#mark' ); }
+.card { background-image: image-set("./art/a.svg" 1x, url("./art/b.svg") 2x, "./art/c.avif" type("image/avif")); }
+.x { --caption: @import"./theme.css"; }</style>`,
       "<style>.after{color:blue}</style>",
     ],
   );
@@ -88,6 +94,9 @@ test("linked stylesheets inline in place and reference copied resources", () => 
     [
       ["styles/more.css", "styles/more.css"],
       ["art/card.svg", "art/card.svg"],
+      ["art/a.svg", "art/a.svg"],
+      ["art/b.svg", "art/b.svg"],
+      ["art/c.avif", "art/c.avif"],
     ],
   );
 });
@@ -96,13 +105,30 @@ test("stylesheet resources include imports and nested URLs", () => {
   assert.deepEqual(
     stylesheetResources(
       "styles/product/inventory.css",
-      '@import "account.css";\n@import"compact.css";\n@import url("records.css");\n.card { background-image: url(../art/card.svg#mark); }',
+      String.raw`@import "account.css";
+@import url("records.css");
+@import"compact.css";
+.card {
+  background-image: url(../art/card.svg#mark);
+  background-image: image-set("../art/a.svg" 1x, url("../art/b.svg") 2x, "../art/c.avif" type("image/avif"));
+  background-image: -webkit-image-set("../art/legacy.svg" 1x);
+  --caption: @import"./theme.css";
+  --label: @import url("./nested.css");
+  --unknown: fake-url(ignored.svg);
+  content: "escaped quote: \"; url(ignored.svg)";
+}
+/* url(comment.svg) @import"comment.css"; */
+.label { content: "url(unterminated.svg)`,
     ),
     [
       "styles/product/account.css",
-      "styles/product/compact.css",
       "styles/product/records.css",
+      "styles/product/compact.css",
       "styles/art/card.svg",
+      "styles/art/a.svg",
+      "styles/art/b.svg",
+      "styles/art/c.avif",
+      "styles/art/legacy.svg",
     ],
   );
 });

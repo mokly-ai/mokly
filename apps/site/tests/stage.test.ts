@@ -15,7 +15,10 @@ import {
   catalogueTrail,
   stagedEntry,
 } from "../scripts/stage/catalogue.js";
-import { INLINED_STYLESHEET_ATTRIBUTE } from "../scripts/stage/stylesheets.js";
+import {
+  INLINED_STYLESHEET_ATTRIBUTE,
+  safeTarget,
+} from "../scripts/stage/stylesheets.js";
 import {
   parseStageManifest,
   readStageManifest,
@@ -24,7 +27,7 @@ import {
 } from "../src/stage.js";
 import { repositoryPath, sitePath } from "../src/workspace.js";
 
-import { documentStyles } from "./helpers/stage-styles.js";
+import { analyzeStylesheet, documentStyles } from "./helpers/stage-styles.js";
 
 const ENTRIES: readonly CatalogueEntry[] = [
   { path: "example/screens/welcome", kind: "screen", title: "Welcome" },
@@ -154,8 +157,17 @@ test("the build published every screen document and its resources", () => {
       assert.match(html, new RegExp(`data-color-scheme="${scheme}"`));
       const { head, links, styles } = documentStyles(html);
       assert.deepEqual(links, [], `${document.file} loads a stylesheet link`);
-      const css = styles.map((style) => serialize(style)).join("\n");
-      assert.doesNotMatch(css, /@import\b/i, `${document.file} uses @import`);
+      const analyzed = new Map(
+        styles.map((style) => {
+          const sheet = analyzeStylesheet(serialize(style), document.file);
+          assert.deepEqual(
+            sheet.dependencies.filter(({ type }) => type === "import"),
+            [],
+            `${document.file} contains a stylesheet import`,
+          );
+          return [style, sheet];
+        }),
+      );
 
       const sourcePath = currentDocumentPath(
         viewRoute(manifest.screenPath, viewport, scheme),
@@ -164,7 +176,8 @@ test("the build published every screen document and its resources", () => {
         repositoryPath("mokly-static", sourcePath),
         "utf8",
       );
-      const expected = documentStyles(source).head.map((element) =>
+      const sourceHead = documentStyles(source).head;
+      const expected = sourceHead.map((element) =>
         element.tagName === "link"
           ? "inlined stylesheet"
           : { text: serialize(element) },
@@ -183,6 +196,22 @@ test("the build published every screen document and its resources", () => {
         `${document.file} head styles differ from the source`,
       );
 
+      for (const [index, element] of sourceHead.entries()) {
+        if (element.tagName !== "link") continue;
+        const href = element.attrs.find(({ name }) => name === "href")?.value;
+        assert.ok(href, `${sourcePath} stylesheet link has no href`);
+        const sheet = safeTarget(sourcePath, href);
+        const css = readFileSync(repositoryPath("mokly-static", sheet), "utf8");
+        const style = head[index];
+        assert.ok(style, `${document.file} has no style for ${sheet}`);
+        assert.deepEqual(
+          analyzed.get(style),
+          analyzeStylesheet(css, sheet),
+          `${document.file} inlined stylesheet differs from ${sheet}`,
+        );
+      }
+
+      const css = styles.map((style) => serialize(style)).join("\n");
       const faces = css.match(/@font-face\s*\{[^}]*\}/gi) ?? [];
       assert.ok(
         faces.some((face) => cssReferences(face).includes(`./${font}`)),

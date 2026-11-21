@@ -1,6 +1,8 @@
+import { transform } from "lightningcss";
 import { type DefaultTreeAdapterMap, parse } from "parse5";
 
 import { walkTree } from "../../scripts/script-elements.js";
+import { local, safeTarget } from "../../scripts/stage/stylesheets.js";
 
 type Element = DefaultTreeAdapterMap["element"];
 
@@ -26,4 +28,27 @@ export function documentStyles(html: string) {
     }
   });
   return { head, links, styles };
+}
+
+export function analyzeStylesheet(css: string, file: string) {
+  const result = transform({
+    filename: file,
+    code: Buffer.from(css),
+    analyzeDependencies: true,
+  });
+  let code = Buffer.from(result.code).toString("utf8");
+  const dependencies = [];
+  for (const [index, dependency] of (result.dependencies ?? []).entries()) {
+    if (dependency.type !== "import" && dependency.type !== "url") continue;
+    const { type, url, placeholder } = dependency;
+    const hash = url.indexOf("#");
+    const fragment = hash < 0 ? "" : url.slice(hash);
+    dependencies.push({
+      type,
+      url: local(url) ? safeTarget(file, url) + fragment : url,
+    });
+    // Repeated URLs can share a placeholder. Replace one occurrence per dependency.
+    code = code.replace(`"${placeholder}"`, `"dependency-${index}"`);
+  }
+  return { code, dependencies };
 }
