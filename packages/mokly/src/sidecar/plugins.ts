@@ -86,7 +86,7 @@ export function consumerPlugins(
           if (loader === "asset")
             return {
               contents: assetModule(paths.name(args.path), inputs.files),
-              loader: "js",
+              loader: "text",
             };
           return { contents, loader: loader as Loader };
         });

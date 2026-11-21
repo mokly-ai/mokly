@@ -95,6 +95,17 @@ test("asset defaults export stable logical tokens and digest their original byte
   assert.notEqual(after.result.generation, before.result.generation);
 });
 
+test("import and require return the same asset token in one bundle", async (context) => {
+  const root = await fixture(context);
+  await fs.writeFile(path.join(root, "logo.png"), Buffer.from([0, 255, 128]));
+  const { value } = await compile(
+    root,
+    'import logo from "./logo.png"; const required = require("./logo.png");',
+    "[logo, required]",
+  );
+  assert.deepEqual(value, ["mokly-asset:[logo.png]", "mokly-asset:[logo.png]"]);
+});
+
 test("consumer suffixes and explicit attributes precede the asset default", async (context) => {
   const cases: Array<{
     file: string;
@@ -245,11 +256,11 @@ test("asset path sets belong to one compile and keep readable closed tokens", ()
   const second = new Map<string, Uint8Array>();
   assert.equal(
     assetModule("node_modules/@icons/logo.png", first),
-    'export default "mokly-asset:[node_modules/@icons/logo.png]";',
+    "mokly-asset:[node_modules/@icons/logo.png]",
   );
   assert.equal(
     assetModule("node_modules/@icons/logo.png", first),
-    'export default "mokly-asset:[node_modules/@icons/logo.png]";',
+    "mokly-asset:[node_modules/@icons/logo.png]",
   );
   assert.deepEqual(
     [...importedAssetPaths(first)],

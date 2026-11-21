@@ -106,9 +106,9 @@ output.
 
 Generated opaque assets follow the
 [CSS assets contract](../../docs/protocol/mokly-imported-styles-assets.md).
-Generated asset responses use the JavaScript asset content-type table,
-including media and document types. Comparison resource routes use the same
-table. Other authored files retain their MIME fallback.
+Browse, edited previews, and comparison resource routes use the JavaScript
+asset content-type table for generated assets, including media and document
+types. Authored files retain their MIME fallback.
 `GraphDocuments::asset_request` reserves the capture of a route before
 foreground worker admission, without IO. `GraphDocuments` keeps a weak entry
 for each route, so concurrent requests of its generation join one capture.

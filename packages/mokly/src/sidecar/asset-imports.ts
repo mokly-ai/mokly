@@ -70,7 +70,7 @@ export function assetModule(
     assets.set(files, paths);
   }
   paths.add(file);
-  return `export default ${JSON.stringify(assetToken(file))};`;
+  return assetToken(file);
 }
 
 export function importedAssetPaths(
