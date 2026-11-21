@@ -1,9 +1,10 @@
 /* Page layout for the public site: the home's full-measure main, the
    centered document column and its ruled intro, the document type that the
-   legal pages, the documentation and the changelog share, and the home hero
-   type. Kept in parity with the promoted mockups under
-   docs/mockups/styles/site/, whose prose.css holds the shared document type;
-   the mobile composition is the default and 768px raises the desktop one. */
+   legal pages, the documentation and the changelog share, the location
+   trail set as the mono eyebrow above a page title, and the home hero type.
+   Kept in parity with the promoted mockups under docs/mockups/styles/site/,
+   whose prose.css holds the shared document type and the trail; the mobile
+   composition is the default and 768px raises the desktop one. */
 
 .site-main {
   width: 100%;
@@ -205,6 +206,36 @@
   border-left: 2px solid var(--mk-color-border);
   color: var(--mk-color-text-muted);
   padding-left: var(--mk-space-4);
+}
+
+/* The location trail: the mono eyebrow above a page title, its last step in
+   the signal ink. Trail.astro draws it above the title of a documentation
+   page. */
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.site-trail-step {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-trail .site-trail-step:last-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-trail-sep {
+  padding: 0 var(--mk-space-2);
 }
 
 .site-hero {

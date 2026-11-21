@@ -1,0 +1,57 @@
+---
+/**
+ * The head of a release frame: the title, Mokly CLI and the version, the
+ * release date from the heading with Latest on the newest release, and
+ * Read release details, which opens the heading's link, beside the compare
+ * range. A release whose heading has no link shows no link.
+ *
+ * - `compact`: the head of a compact frame hides the product from sight,
+ *   holds the count chips and leaves out the compare range.
+ * - `latest`: adds the Latest chip to the newest release.
+ *
+ * Use: `<ReleaseHead latest release={release} />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Button from "../Button.astro";
+import Chip from "../Chip.astro";
+
+import { compareRange } from "./facts.js";
+import ReleaseCounts from "./ReleaseCounts.astro";
+
+interface Props {
+  readonly compact?: boolean;
+  readonly latest?: boolean;
+  readonly release: PublishedRelease;
+}
+
+const { compact = false, latest = false, release } = Astro.props;
+const range = compact ? undefined : compareRange(release.link);
+---
+
+<div class="site-release-meta">
+  <h2 id={release.titleId}>
+    <span
+      class:list={["site-release-product", compact && "site-visually-hidden"]}
+    >
+      Mokly CLI
+    </span>{" "}
+    <span class="site-release-version">{release.version}</span>
+  </h2>
+  <p class="site-release-date">
+    <time datetime={release.date}>{release.readableDate}</time>
+    {latest && (
+      <Chip dot tone="signal">
+        Latest
+      </Chip>
+    )}
+  </p>
+  {compact && <ReleaseCounts compact release={release} />}
+  {release.link !== null && (
+    <p class="site-release-links">
+      <Button class="site-release-link" href={release.link} kind="secondary">
+        Read release details <span aria-hidden="true">&#8599;</span>
+      </Button>
+      {range !== undefined && <span class="site-release-compare">{range}</span>}
+    </p>
+  )}
+</div>

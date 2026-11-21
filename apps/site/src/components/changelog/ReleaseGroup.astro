@@ -1,0 +1,56 @@
+---
+/**
+ * One group of a release's notes on its rail: the heading with the group's
+ * icon and count, then the notes. Breaking changes are a callout pinned to
+ * the frame like a comment, with `Read before you upgrade.`, because they
+ * need action. The group's `data-kind` and `data-notes` tell the changelog
+ * island its kind and how many notes it shows.
+ *
+ * Use: `<ReleaseGroup group={group} />`, for each group of a release.
+ */
+import type { AnchoredGroup } from "../../changelog/anchors.js";
+import Icon from "../Icon.astro";
+
+import { GROUP_ICONS, groupTitle } from "./facts.js";
+import ReleaseNote from "./ReleaseNote.astro";
+
+interface Props {
+  readonly group: AnchoredGroup;
+}
+
+const { group } = Astro.props;
+const breaking = group.kind === "breaking";
+---
+
+<section
+  class:list={[
+    "site-release-group",
+    breaking && "site-release-group--breaking",
+  ]}
+  data-kind={group.kind}
+  data-notes={group.notes.length}
+  id={group.id}
+>
+  {breaking && (
+    <span aria-hidden="true" class="site-release-pin">
+      !
+    </span>
+  )}
+  <div class="site-release-group-head">
+    <h3 class="site-release-group-title">
+      <Icon name={GROUP_ICONS[group.kind]} />
+      <span>
+        {groupTitle(group)}{" "}
+        <span class="site-release-group-count">{group.notes.length}</span>
+      </span>
+    </h3>
+    {breaking && (
+      <p class="site-release-group-hint">Read before you upgrade.</p>
+    )}
+  </div>
+  <ul>
+    {group.notes.map((note) => (
+      <ReleaseNote note={note} />
+    ))}
+  </ul>
+</section>

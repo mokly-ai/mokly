@@ -1,9 +1,12 @@
 ---
 /**
- * One release note, rendered from the typed segments the changelog parser
- * produced so the page never inserts raw Markdown or unchecked markup.
+ * The text of a release note, an item or an upgrade note, from the typed
+ * segments of the changelog parser, so the page never inserts raw Markdown
+ * or unchecked markup: its text, its code spans, its bold and its links.
+ *
+ * Use: `<span class="site-release-note-text"><Segments segments={note.text} /></span>`.
  */
-import type { NoteSegment } from "../changelog/notes.js";
+import type { NoteSegment } from "../../changelog/notes.js";
 
 interface Props {
   readonly segments: readonly NoteSegment[];

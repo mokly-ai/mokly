@@ -1,0 +1,35 @@
+---
+/**
+ * A list of note items with the items nested under each: the layer tree
+ * under a note, such as a workspace dependency bump, or a list of the
+ * upgrade notes.
+ *
+ * - `class`: the class of the list and of each list nested in it, such as
+ *   `site-release-tree` for the layer tree of a note.
+ *
+ * Use: `<Items class="site-release-tree" items={note.items} />`.
+ */
+import type { NoteItem } from "../../changelog/items.js";
+
+import Segments from "./Segments.astro";
+
+interface Props {
+  readonly class?: string | undefined;
+  readonly items: readonly NoteItem[];
+}
+
+const { class: className, items } = Astro.props;
+---
+
+<ul class={className}>
+  {items.map((item) => (
+    <li>
+      <span class="site-release-note-text">
+        <Segments segments={item.text} />
+      </span>
+      {item.items.length > 0 && (
+        <Astro.self class={className} items={item.items} />
+      )}
+    </li>
+  ))}
+</ul>

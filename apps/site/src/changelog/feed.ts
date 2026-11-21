@@ -1,17 +1,30 @@
 /**
  * The Atom feed the changelog publishes at `/changelog.xml`. Every entry
  * carries one release: its version as the title, its date, the release link
- * when the changelog names one, and the grouped notes as plain text.
+ * when the changelog names one, and as plain text a line for each group of
+ * notes, then a line that names the topics of the upgrade notes, which the
+ * page holds in full.
  */
 
 import { canonicalUrl } from "../metadata.js";
 import { SITE_PATHS } from "../navigation.js";
 
+import type { NoteItem, ReleaseNote } from "./items.js";
 import { noteText } from "./notes.js";
+import type { ReleaseGroup } from "./parse.js";
 import type { PublishedRelease } from "./releases.js";
 
 /** The site path the feed is published at. */
 export const FEED_PATH = "/changelog.xml";
+
+/** The feed's name of a release-tool group heading. */
+const HEADINGS: Readonly<Record<string, string>> = {
+  "⚠ BREAKING CHANGES": "Breaking changes",
+  "Bug Fixes": "Bug fixes",
+  Features: "Features",
+  "Performance Improvements": "Performance",
+  Reverts: "Reverts",
+};
 
 function escapeXml(value: string): string {
   return value.replace(
@@ -27,13 +40,38 @@ function escapeXml(value: string): string {
   );
 }
 
+function heading(group: ReleaseGroup): string {
+  return HEADINGS[group.heading] ?? group.heading.replace(/^⚠\s*/, "");
+}
+
+/** Each nested item, depth first, as ` * text`. */
+function nested(items: readonly NoteItem[]): string {
+  return items
+    .map((item) => ` * ${noteText(item.text)}${nested(item.items)}`)
+    .join("");
+}
+
+/**
+ * A note as one line of text: its scope, its text, its issue and commit
+ * labels in parentheses and its nested items, in the order the release tool
+ * wrote them.
+ */
+function noteLine(note: ReleaseNote): string {
+  const scope = note.scope === undefined ? "" : `${note.scope}: `;
+  const refs = note.refs.map((ref) => ` (${ref.label})`).join("");
+  return `${scope}${noteText(note.text)}${refs}${nested(note.items)}`;
+}
+
 function summary(release: PublishedRelease): string {
-  return release.sections
-    .map(
-      (section) =>
-        `${section.heading}: ${section.items.map((item) => noteText(item)).join("; ")}`,
-    )
-    .join("\n");
+  const topics = release.upgrade.flatMap((topic) =>
+    topic.title === undefined ? [] : [noteText(topic.title)],
+  );
+  return [
+    ...release.groups.map(
+      (group) => `${heading(group)}: ${group.notes.map(noteLine).join("; ")}`,
+    ),
+    ...(topics.length > 0 ? [`Upgrade notes: ${topics.join("; ")}`] : []),
+  ].join("\n");
 }
 
 function entry(release: PublishedRelease, origin: string): string {

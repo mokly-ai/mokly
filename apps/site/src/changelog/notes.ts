@@ -1,8 +1,9 @@
 /**
  * The inline Markdown a release note may contain. Release notes are written
- * by the release tool, so only links and code spans appear; everything else
- * is text. Parsing them into typed segments keeps the rendered page free of
- * raw markup and keeps every link destination checked.
+ * by the release tool, so only links, code spans and the bold of a commit
+ * scope appear; everything else is text. Parsing them into typed segments
+ * keeps the rendered page free of raw markup and keeps every link
+ * destination checked.
  */
 
 /** One piece of a release note. */
@@ -12,10 +13,19 @@ export type NoteSegment =
   | { readonly kind: "strong"; readonly value: string }
   | { readonly kind: "text"; readonly value: string };
 
+/**
+ * Where a note's link may lead on the page: the destination to publish, or
+ * `undefined` when the page keeps only the link's text.
+ */
+export type LinkResolver = (destination: string) => string | undefined;
+
 const INLINE = /\[([^\]]*)\]\(([^)\s]+)\)|`([^`]+)`|\*\*([^*]+)\*\*/g;
 
-/** A destination the site is willing to publish from a release note. */
-function href(value: string): string | undefined {
+/**
+ * The destinations the site publishes from a release note without help: a
+ * site path, a fragment of the page, or an HTTP(S) address.
+ */
+export function publishedHref(value: string): string | undefined {
   if (value.startsWith("/") || value.startsWith("#")) return value;
   return /^https?:\/\//i.test(value) ? value : undefined;
 }
@@ -25,7 +35,10 @@ function href(value: string): string | undefined {
  * unpublishable destination keeps its text and loses the link, so a malformed
  * entry never becomes a dead or dangerous reference.
  */
-export function parseNote(markdown: string): readonly NoteSegment[] {
+export function parseNote(
+  markdown: string,
+  resolve: LinkResolver = publishedHref,
+): readonly NoteSegment[] {
   const segments: NoteSegment[] = [];
   let index = 0;
   const push = (value: string): void => {
@@ -44,7 +57,7 @@ export function parseNote(markdown: string): readonly NoteSegment[] {
       segments.push({ kind: "strong", value: strong });
       continue;
     }
-    const destination = href(target ?? "");
+    const destination = resolve(target ?? "");
     if (destination === undefined) push(text ?? "");
     else segments.push({ href: destination, kind: "link", text: text ?? "" });
   }

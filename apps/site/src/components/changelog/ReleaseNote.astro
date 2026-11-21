@@ -1,0 +1,67 @@
+---
+/**
+ * One note of a release, drawn from the Markdown that the release tool
+ * wrote: the scope as a mono chip, the text with its code spans and links,
+ * the issue and commit links, and the nested items as a small layer tree.
+ * The scope's colon is spoken only, and a commit link names itself as a
+ * commit.
+ *
+ * Use: `<ReleaseNote note={note} />`, inside a group's list.
+ */
+import type { ReleaseNote } from "../../changelog/items.js";
+import Icon from "../Icon.astro";
+
+import Items from "./Items.astro";
+import Segments from "./Segments.astro";
+
+interface Props {
+  readonly note: ReleaseNote;
+}
+
+const { note } = Astro.props;
+---
+
+<li>
+  <span class="site-release-note-body">
+    {note.scope !== undefined && (
+      <>
+        <span class="site-release-scope">
+          {note.scope}
+          <span class="site-visually-hidden">:</span>
+        </span>{" "}
+      </>
+    )}
+    <span class="site-release-note-text">
+      <Segments segments={note.text} />
+    </span>
+  </span>
+  {note.refs.length > 0 && (
+    <>
+      {" "}
+      <span class="site-release-refs">
+        {note.refs.map((ref, index) => (
+          <>
+            {index > 0 && " "}
+            {ref.kind === "commit" ? (
+              <a
+                aria-label={`Commit ${ref.label}`}
+                class="site-release-ref site-release-ref--commit"
+                href={ref.href}
+              >
+                <Icon name="commit" size={14} />
+                {ref.label}
+              </a>
+            ) : (
+              <a class="site-release-ref" href={ref.href}>
+                {ref.label}
+              </a>
+            )}
+          </>
+        ))}
+      </span>
+    </>
+  )}
+  {note.items.length > 0 && (
+    <Items class="site-release-tree" items={note.items} />
+  )}
+</li>
