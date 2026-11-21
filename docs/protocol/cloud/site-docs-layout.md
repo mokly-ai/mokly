@@ -1,6 +1,6 @@
 # Site Docs Layout
 
-Status: The Canvas docs layout and the HTML sample band are not built yet. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Layers panel, the page frame, the Inspect panel, the code panels and the narrow layout, [Milestone 7](../../../plans/canvas-redesign.md#milestone-7-html-sample-fence) renders the HTML samples beside their code, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the sample band.
+Status: The Canvas docs layout and the HTML sample band are not built yet. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Layers panel, the page frame, the Inspect panel, the code panels and the narrow layout, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the sample band.
 
 This is the layout sub-contract of [Site docs](./site-docs.md). Each docs page
 is a page of a design file: the section tree is the Layers panel, the

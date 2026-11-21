@@ -1,6 +1,6 @@
 # Site Delivery Islands
 
-Status: The scheme, measurement, home demo, tree sheet, docs scroll spy, sample and changelog islands are not built yet, and no HTML sample view is rendered. [Milestone 4](../../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) builds the scheme island, [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and the measurements, [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the tree sheet and the docs scroll spy, [Milestone 7](../../../plans/canvas-redesign.md#milestone-7-html-sample-fence) renders the sample views, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the sample and changelog islands.
+Status: The scheme, measurement, home demo, tree sheet, docs scroll spy, sample and changelog islands are not built yet. [Milestone 4](../../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) builds the scheme island, [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and the measurements, [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the tree sheet and the docs scroll spy, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the sample and changelog islands.
 
 This is the script sub-contract of [Site delivery](./site-delivery.md). It
 fixes the small same-origin scripts of the site and the rendering of the HTML
@@ -58,6 +58,8 @@ renders that file under the default configuration: one view for each
 viewport and saved state, in the light scheme, with no stylesheet. The build
 records the element that each source line renders in each view. Each view
 shows in a sandboxed frame that runs no script and loads nothing from another
-origin. Each frame has a title that names the screen, the viewport and the
-saved state. [Site docs layout](./site-docs-layout.md#html-samples) fixes how
+origin. Each frame keeps the site origin, so that the sample island can find
+the element of a line; an opaque frame would hide its elements, and boxes
+measured at build time do not match the reader's fonts. Each frame has a
+title that names the screen, the viewport and the saved state. [Site docs layout](./site-docs-layout.md#html-samples) fixes how
 the band draws the sample.

@@ -1,6 +1,6 @@
 # Site Docs
 
-Status: The Canvas docs layout and the HTML samples are not built yet. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the layout, and [Milestone 7](../../../plans/canvas-redesign.md#milestone-7-html-sample-fence) adds the samples to the Markdown pipeline and to the site's guide checks.
+Status: The Canvas docs layout is not built yet. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds it.
 
 The `/docs` section is the canonical documentation for the CLI, catalogue and
 Mokly Cloud. The installed `@mokly/mokly` package owns CLI guides and published

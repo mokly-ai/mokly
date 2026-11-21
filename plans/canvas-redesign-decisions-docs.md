@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 20 to 22
+# Canvas redesign: decisions 20 to 23
 
 These decisions came from Milestone 2, the protocol docs, of the
 [Canvas redesign plan](./canvas-redesign.md). They keep the item numbers of
@@ -114,3 +114,33 @@ of the plan, and the pull request that deletes the plan deletes it too.
   path to the site, also in the desktop app.
 - **Action:** ask the user, because a requirement and a merged mockup
   disagree.
+
+## 23. Component frame size while it compares
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-shell-device-chrome.md:17-18`, `docs/protocol/mokly-comparison-panes.md:85`, `docs/protocol/mokly-comparison-scrolling.md:29`
+- **Background:** On the canvas, a component frame takes the size of its
+  document. The comparison rules say that no frame size depends on a
+  measurement, so that a measurement cannot feed back into a document.
+- **Problem:** The Before and Current documents of a component can differ in
+  size, and the two rules conflict.
+- **Impact if no action:** Milestone 12 chooses alone.
+- **Root question:** How large is a component's frame while it compares two
+  versions?
+- **Options:**
+  - **A.** The larger width and height of the two versions, measured once when
+    both load. It relaxes the measurement rule for component frames only.
+    Effort: Small.
+  - **B.** The desktop width and the larger measured height. A narrow
+    component gets a wide frame. Effort: Small.
+  - **C.** Each version keeps its own size. The Swipe divider then crosses a
+    size edge. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** None, because one rule settles it.
+- **Previous examples:** None found.
+- **Recommendation:** A. It fits both versions and limits the measurement to
+  one pass.
+- **Action:** ask the user, because A changes the rule that no comparison
+  frame size depends on a measurement.
