@@ -249,9 +249,6 @@ Depends on: 3
       Catalogue, the current tab and Fit, and the panels as sheets.
 - [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
       search.
-- [ ] Link the Canvas design sheets and `design-review.css` through a
-      `design/canvas/**` route in `examples/basic/mokly.config.json`, in
-      place of the `@import` lines in the shared design sheets.
 
 ## Milestone 12: Right panel and compare
 

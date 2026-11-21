@@ -176,10 +176,14 @@ Replaced ways:
   a named palette for the mockups. Milestone 3 adds the source, moves every
   consumer to it and deletes the Folio values.
 - The inspector below the preview → the right panel (decision 7).
-  Consumers: the shell layout, the compact sheet, the inspector browser
-  specs and the Browse design mockups. Moved and deleted in Milestone 12.
+  Consumers: the shell layout, the compact sheet and the inspector browser
+  specs. Moved and deleted in Milestone 12. The older Browse design mockups
+  that draw it move as decision 11 says.
 - The one-frame stage → the canvas stage (decision 6). Consumers: the shell,
-  the view controls, the comparison stage, the cloud stage overlay and their
-  specs. Moved in Milestones 11 and 12. Deleted in Milestone 12.
+  the view controls, the comparison stage, the cloud stage overlay, their
+  specs and the older Browse design mockups (decision 11). Moved in
+  Milestones 11 and 12. Deleted in Milestone 12.
+- After Milestone 12, a mockup milestone moves the Canvas design library parts
+  onto the new `@mokly/ui` components, as pull requests #249 to #254 did.
 - The real dogfood stage on the home page → the Canvas spread, under decision 2. Consumers: `apps/site/scripts/stage.mjs`, `src/stage.ts` and their
   tests. Moved and deleted in Milestone 5.
