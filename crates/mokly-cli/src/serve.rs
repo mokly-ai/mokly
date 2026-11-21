@@ -27,6 +27,10 @@ pub struct PreparedServe {
 pub trait ServePreparation: Send + Sync {
     /// Validate all source and route identities before binding a port.
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError>;
+    /// Supply only the final preparation after its watcher inputs are adopted.
+    fn adopted(&self, _prepared: &PreparedServe) {}
+    /// Cancel and join a failed or abandoned preparation attempt.
+    fn discard(&self) {}
 }
 
 /// Catalogue preparation through the shared definition and render factories.
