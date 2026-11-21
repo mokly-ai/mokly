@@ -210,6 +210,56 @@ fn ranged_cache_results_keep_their_late_whole_file_stamp_and_original_ranges() {
 }
 
 #[test]
+fn ranges_without_a_whole_file_baseline_cannot_seed_cross_generation_reuse() {
+    let mut old = bundle();
+    old.read_evidence.inputs.clear();
+    old.read_evidence.insert(
+        "tokens.txt".into(),
+        ReadBaseline::ObservedRange {
+            identity: None,
+            offset: 0,
+            length: 3,
+            eof: false,
+            digest: digest(b"old"),
+        },
+    );
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let first = CachedStylesheets::new(
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: old.clone(),
+                capture: Default::default(),
+            }),
+        ))),
+        Arc::new(Unimock::new(())),
+        "/repo".into(),
+        "same".into(),
+        shared.clone(),
+    );
+    let mut fresh = bundle();
+    fresh.css = "a{color:blue}".into();
+    let second = CachedStylesheets::new(
+        Arc::new(Unimock::new(CompileRoot.next_call(matching!(_)).returns(
+            Ok(Compilation {
+                bundle: fresh,
+                capture: Default::default(),
+            }),
+        ))),
+        Arc::new(Unimock::new(())),
+        "/repo".into(),
+        "same".into(),
+        shared,
+    );
+    for _ in 0..2 {
+        assert_eq!(
+            first.bundle(&root()).unwrap().read_evidence,
+            old.read_evidence
+        );
+    }
+    assert_eq!(second.bundle(&root()).unwrap().css, "a{color:blue}");
+}
+
+#[test]
 fn finding_3_failed_context_observation_remains_failed_on_a_local_hit() {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
     let compiler = CachedStylesheets::new(

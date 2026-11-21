@@ -53,8 +53,8 @@ one preparation overlap that work. A failed input keeps its diagnostic for the
 rest of its context. A timeout or a crash after its retry also fails every
 request of the context that already waits for its turn. The cache keeps a running byte charge, so
 an insert charges one record instead of recounting the cache. A context
-projects and hashes each of its modules once, and its later results reuse
-those late digests.
+projects and hashes each of its private PostCSS inputs once, and its later
+results reuse those late digests.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
@@ -177,8 +177,9 @@ preparation, maps no watch paths.
 PostCSS read evidence retains observed whole-file and byte-range digests for
 one generation beside late baselines. Cache hits replay the validated result
 that belongs to their generation.
-Both cache layers replay the original evidence to static admission. Selected
-module inputs remain separate from plugin privacy and catalogue membership.
+Both cache layers replay the original evidence to static admission. Private
+PostCSS inputs remain separate from plugin privacy and catalogue membership.
+They include the selected modules and the mapped reads that no plugin declares.
 Base witnesses compare with pinned Git bytes through the shared admission
 observer. They never enter the head path ledger.
 Conflicting versions cannot seed cross-generation stylesheet reuse.
@@ -188,9 +189,9 @@ File-object stamps invalidate same-byte replacements. Base identity checks
 retain the extracted-file identity beside the pinned Git content proof.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
-Each record keeps the read evidence of its own inputs. The module evidence of
-a PostCSS context is kept once. When a later result of the context carries
-more module evidence, its entry links to the earlier entry and keeps only the
+Each record keeps the read evidence of its own inputs. The private PostCSS
+evidence of a context is kept once. When a later result of the context carries
+more private evidence, its entry links to the earlier entry and keeps only the
 added versions. Each entry has its own stamp and is charged once. An attempt
 checks the stamp of each entry once and replays its observations once.
 When the shared store removes records under its bound, or keeps a record in

@@ -185,6 +185,8 @@ This section keeps the item as it stood before the decisions of
 - **Previous examples:** PR #242 made the stylesheet cache serve later
   attempts in one process.
 - **Related:**
+  - [postcss-probes-external-reads-environment.md](./postcss-probes-external-reads-environment.md):
+    stored PostCSS records need discovery, external-read, and environment evidence.
   - The [bundle cache](../../docs/protocol/mokly-base-cache.md#bundle-entries)
     of compiled JavaScript: the change that adds it moved the 1.5 s target
     here on 2026-11-16. A stored stylesheet kind can follow its entry format,
