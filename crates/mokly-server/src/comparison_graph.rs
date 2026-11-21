@@ -83,6 +83,10 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn prepare_render_reuse(&self) {
+        self.inner.prepare_render_reuse();
+    }
+
     fn comparison_document_proof(&self, route: &str) -> Option<DocumentProof> {
         let artifact = self.comparison_document(route).ok()?;
         Some(DocumentProof {

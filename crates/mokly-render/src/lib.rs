@@ -32,6 +32,7 @@ mod postcss_scan;
 mod postcss_turns;
 mod render_call;
 mod render_environment;
+mod render_keys;
 pub mod runtime;
 mod runtime_factories;
 pub mod side;
@@ -41,9 +42,12 @@ mod source_paths;
 mod sources;
 mod stylesheet_cache;
 mod stylesheet_capture;
+mod stylesheet_class_maps;
+mod stylesheet_commit;
 mod stylesheet_compiler;
 mod stylesheet_record;
 mod stylesheet_store;
+mod stylesheet_usage;
 mod stylesheet_watch;
 mod stylesheet_weight;
 mod stylesheets;
@@ -79,6 +83,9 @@ mod source_precedence_tests;
 #[cfg(test)]
 #[path = "_tests_/graph_tests.rs"]
 mod graph_tests;
+#[cfg(test)]
+#[path = "_tests_/render_reuse_tests.rs"]
+mod render_reuse_tests;
 #[cfg(test)]
 #[path = "_tests_/stored_call_tests.rs"]
 mod stored_call_tests;

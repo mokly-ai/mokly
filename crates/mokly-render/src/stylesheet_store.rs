@@ -66,6 +66,11 @@ impl StylesheetCache {
         Self::new(self.limit)
     }
 
+    /// An empty store has no records, context entries, or remembered miss reasons.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.records.is_empty() && self.contexts.is_empty() && self.misses.is_empty()
+    }
+
     pub(crate) fn record(&self, key: &str) -> Option<Arc<Record>> {
         self.records.get(key).cloned()
     }

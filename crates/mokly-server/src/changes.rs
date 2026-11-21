@@ -101,6 +101,9 @@ pub trait ChangeProgress: Send + Sync {
 /// Command-owned base preparation and terminal reporting for an immutable head.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeSourceMock))]
 pub trait ChangeSource: Send + Sync {
+    /// Prepare optional evidence after an accepted terminal completion returns.
+    fn settled(&self) {}
+
     /// Start command progress for one accepted background attempt.
     fn started(&self, _cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         None

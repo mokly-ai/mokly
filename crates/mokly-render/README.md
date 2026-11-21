@@ -108,6 +108,20 @@ no notice. The head runtime of Serve also keeps the plan records of the
 [Serve edit plan rules](../../docs/protocol/mokly-sidecar-plans.md). It keeps
 a record from a `full` result, and it sends the plan of a current record with
 each `serveEdit` request.
+The head runtime of Serve also keeps one weak reference to its latest render
+input keys. The runtime copies of all its attempts share it. A `full` head
+preparation, such as the first one or its recheck, calls
+`RenderKeys::build_unseeded_with_workers`. It calculates every key, leaves the
+fact cell of those keys empty, and stores the keys in the reference. Their
+generation seeds that cell through `RenderGeneration::prepare_render_reuse`
+after its Changes complete as Ready or Unavailable. A `serveEdit` preparation
+passes the referenced keys to `RenderKeys::build_reusing_with_workers` while
+their generation lives, so the build copies only the keys whose inputs stayed
+equal. When their seed has not finished, the build calculates every key and
+keeps its own facts without waiting. Base runtimes, static builds, and publish
+have no reference, and their keys keep no reuse facts and no fact cell. The
+reference keeps no generation alive, and a seed never changes it. After the
+earlier generation goes, the next preparation calculates every key.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -118,6 +132,13 @@ captured results of its compilation. Empty directory recipes observe later
 additions.
 Each stylesheet root compiles through its own recording tree, resolver, and
 compiler, so roots that compile in parallel never share captured results.
+Class-map preparation compiles cold plain-CSS roots in bounded parallel chunks
+when both stylesheet stores are empty and no head store is live. It needs at
+least two distinct roots and two available workers. The worker
+bound is the available parallelism, four, or the root count, whichever is
+smallest. Other cases use serial preparation. Maps, records, observations,
+watch inputs, and dependency usage follow root order. A failed chunk can finish
+up to three later roots, but their dependency usage and records are discarded.
 The recording tree keeps each read, digest, unretained digest, and projection
 of the core CSS compiler, its resolver, and the nested-import check of
 PostCSS. A read keeps the digest of the returned bytes, so a `package.json`
@@ -325,8 +346,9 @@ view after the edit and counts real process starts and hello calls.
   `bundle_capture` field holds the `BundleCapture` of each core `bundle`
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
-  the head runtime of Serve its plan record owner. A base runtime never gets
-  one. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
+  the head runtime of Serve its plan record owner and the shared weak
+  reference to its latest render input keys. A base runtime never gets
+  either. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
   mapping for a runtime without a `BaseSide`. Serve calls it for its working
   side. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime. It starts its
@@ -377,6 +399,12 @@ view after the edit and counts real process starts and hello calls.
   same composition path. It gives the `Fragments` of each side that side's own
   source root, so a base graph records nothing as head, also with an equal
   generation id.
+- [`src/render_keys.rs`](./src/render_keys.rs) builds the render input keys of
+  each graph. With the Serve head reference, it calls
+  `RenderKeys::build_unseeded_with_workers` in the `Full` mode and passes the
+  live earlier keys to `RenderKeys::build_reusing_with_workers` in the
+  `ServeEdit` mode. Without the reference, it calls
+  `RenderKeys::build_with_workers`, which keeps no facts.
 - [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
   adapter over the pool. Its `record_served` passes a store-served request to
   `SidecarPool::record_served_render`.
@@ -416,6 +444,14 @@ view after the edit and counts real process starts and hello calls.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
+- [`src/stylesheet_class_maps.rs`](./src/stylesheet_class_maps.rs) defines
+  `ClassMapCompiler`, the bounded preparation boundary for class-map roots.
+  It keeps serial preparation for warm stores, live head stores, and PostCSS.
+- [`src/stylesheet_commit.rs`](./src/stylesheet_commit.rs) gives serial and
+  parallel preparation one record insertion and delivery path.
+- [`src/stylesheet_usage.rs`](./src/stylesheet_usage.rs) defines
+  `BufferedUsage`, which retains raw dependency calls until their root's
+  serial position, including the partial calls of a failing root.
 - [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) defines
   `RootCompiler`, which compiles one stylesheet root, and `CapturingCompiler`.
   For each root, `CapturingCompiler` makes a new recording tree, resolver, and
@@ -448,6 +484,7 @@ view after the edit and counts real process starts and hello calls.
 - [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Render input keys in Serve](../../docs/protocol/mokly-watch.md#invalidation-through-the-render-graph).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
 - [Stylesheet dependency retention](../../docs/protocol/mokly-imported-styles-postcss.md#dependency-retention).
 - [Timing records](../../docs/protocol/mokly-timings.md#core-spans).
