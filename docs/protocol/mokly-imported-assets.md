@@ -1,5 +1,7 @@
 # JavaScript Asset Imports
 
+Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them.
+
 This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each
 composed document gets the URL of the delivered file in place of the token.
@@ -55,8 +57,9 @@ and no import attribute applies, under the
 | `.vtt`                    | `text/vtt`                  |
 | `.webmanifest`            | `application/manifest+json` |
 
-Serve and the static output use the content types of this table and of the
-stylesheet asset table. A stylesheet `url()` keeps the extension list of the
+Serve sends the content types of this table and of the stylesheet asset table.
+A host of the static output sends the same types, under the
+[static delivery contract](./mokly-export-delivery.md#hosting-contract). A stylesheet `url()` keeps the extension list of the
 stylesheet asset table. The types of this table are assets only when
 JavaScript imports them.
 
@@ -98,10 +101,9 @@ document after the replacement, as after
 
 Only a URL in a reference position of the
 [comparison resource rule](./mokly-comparison.md#resources) makes the asset a
-resource reference of the referenced closure and of Changes. These positions
-are `src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
-`url()`. The core also replaces a token in another position, such as
-`data-src`, but that URL is not a resource reference.
+resource reference of the referenced closure and of Changes. The core also
+replaces a token in another position, such as `data-src`, but that URL is not
+a resource reference.
 
 The replacement does not depend on the assets of the generation. A string in
 token form also becomes a URL when its path names no asset of the generation.

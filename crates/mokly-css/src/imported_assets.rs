@@ -1,7 +1,6 @@
-//! JavaScript asset content types, independent of the narrower CSS url() list.
+//! Content types for stylesheet assets and additional JavaScript imports.
 
-/// Case-sensitive JavaScript asset extensions and their delivered content types.
-pub const TYPES: &[(&str, &str)] = &[
+const STYLESHEET_TYPES: &[(&str, &str)] = &[
     (".avif", "image/avif"),
     (".bmp", "image/bmp"),
     (".gif", "image/gif"),
@@ -16,6 +15,9 @@ pub const TYPES: &[(&str, &str)] = &[
     (".ttf", "font/ttf"),
     (".woff", "font/woff"),
     (".woff2", "font/woff2"),
+];
+
+const IMPORT_ONLY_TYPES: &[(&str, &str)] = &[
     (".apng", "image/apng"),
     (".cur", "image/x-icon"),
     (".jfif", "image/jpeg"),
@@ -39,10 +41,29 @@ pub const TYPES: &[(&str, &str)] = &[
 
 /// Content type for an imported opaque asset without decoding its contents.
 pub fn content_type(path: &str) -> Option<&'static str> {
-    let extension = path.rfind('.').map(|index| &path[index..])?;
-    TYPES
+    let (_, extension) = path.rsplit_once('.')?;
+    find_content_type(STYLESHEET_TYPES, extension)
+        .or_else(|| find_content_type(IMPORT_ONLY_TYPES, extension))
+}
+
+/// Content type of a CSS `url()` target, with the existing bare-name fallback.
+pub(crate) fn stylesheet_content_type(path: &str) -> Option<&'static str> {
+    find_content_type(STYLESHEET_TYPES, path.rsplit('.').next()?)
+}
+
+/// List the supported CSS extensions for the unsupported-extension diagnostic.
+pub(crate) fn stylesheet_extensions() -> String {
+    let Some(((last, _), preceding)) = STYLESHEET_TYPES.split_last() else {
+        return String::new();
+    };
+    let extensions: Vec<_> = preceding.iter().map(|(extension, _)| *extension).collect();
+    format!("{} or {last}", extensions.join(", "))
+}
+
+fn find_content_type(types: &[(&str, &'static str)], extension: &str) -> Option<&'static str> {
+    types
         .iter()
-        .find_map(|(known, mime)| (*known == extension).then_some(*mime))
+        .find_map(|(known, mime)| (known.strip_prefix('.') == Some(extension)).then_some(*mime))
 }
 
 #[cfg(test)]

@@ -1,6 +1,7 @@
 //! A JavaScript edit moves exactly the document keys whose render inputs changed.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 
 use mokly_sidecar::methods::Call;
 
@@ -109,7 +110,7 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
         "t/t",
         "u/u",
     ];
-    let steps: [Step; 8] = [
+    let steps: [Step; 10] = [
         (
             "module edit",
             Box::new(|c| append(c, "specs/h.ts", "// edit\n")),
@@ -149,6 +150,32 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
             "renderer edit",
             Box::new(|c| c.replace("theme.ts", "\"plain\"", "\"dark\"")),
             vec!["c", "c/filled", "html", "p", "s/s", "t/t", "u/u"],
+        ),
+        (
+            "add imported PNG",
+            Box::new(|consumer| {
+                fs::write(
+                    consumer.root().join("specs/image.png"),
+                    b"\x89PNG\r\n\x1a\n\x01",
+                )
+                .unwrap();
+                consumer.write(
+                    "specs/h.ts",
+                    "import image from \"./image.png\";\nexport const greeting = image;\n",
+                );
+            }),
+            vec!["s/s"],
+        ),
+        (
+            "edit imported PNG bytes",
+            Box::new(|consumer| {
+                fs::write(
+                    consumer.root().join("specs/image.png"),
+                    b"\x89PNG\r\n\x1a\n\x02",
+                )
+                .unwrap();
+            }),
+            vec!["s/s"],
         ),
     ];
     let mut before = keys(&consumer);

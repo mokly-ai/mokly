@@ -6,9 +6,8 @@
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: the wider fix of review finding 2 of round 1.
 - **Location:** `crates/mokly-server/src/assets.rs:118-142`,
-  `crates/mkc-publications/src/reservation/reserve.rs:204`,
-  `crates/mokly-css/src/imported_assets.rs`, and
-  `crates/mokly-css/src/paths.rs:57-74`.
+  `crates/mkc-publications/src/reservation/reserve.rs:204`, and
+  `crates/mokly-css/src/imported_assets.rs:43-67`.
 - **Reason:** The fix changes the content types of authored files in Serve
   and adds a dependency of a Mokly Cloud crate on a `mokly-*` crate, which
   needs the user and the orchestrator of the primary branch.
@@ -90,3 +89,6 @@
 - **Action:** ask the user, because E changes the types that Serve sends for
   authored files, and it changes a Mokly Cloud crate outside the scope of the
   branch that found it.
+- **Done when:** the status lines of `docs/protocol/mokly-imported-assets.md`
+  and `docs/protocol/mokly-imported-styles-assets.md` are gone, because Mokly
+  Cloud sends the content types of the asset tables.

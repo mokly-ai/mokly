@@ -1,6 +1,6 @@
 //! Imported media types do not broaden CSS url() extension validation.
 
-use crate::{imported_assets, paths};
+use crate::imported_assets;
 
 #[test]
 fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets() {
@@ -31,7 +31,11 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
             Some(expected),
             "{file}"
         );
-        assert_eq!(paths::content_type(&file), None, "{file}");
+        assert_eq!(
+            imported_assets::stylesheet_content_type(&file),
+            None,
+            "{file}"
+        );
     }
     assert_eq!(
         imported_assets::content_type("assets/file.png"),

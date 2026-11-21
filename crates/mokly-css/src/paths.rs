@@ -53,23 +53,3 @@ pub fn external(value: &str) -> bool {
         || value.starts_with("//")
         || value.starts_with('#')
 }
-
-/// Supported opaque asset content type, with case-sensitive extensions.
-pub fn content_type(path: &str) -> Option<&'static str> {
-    Some(match path.rsplit('.').next()? {
-        "avif" => "image/avif",
-        "bmp" => "image/bmp",
-        "gif" => "image/gif",
-        "ico" => "image/vnd.microsoft.icon",
-        "jpeg" | "jpg" => "image/jpeg",
-        "png" => "image/png",
-        "svg" => "image/svg+xml",
-        "webp" => "image/webp",
-        "eot" => "application/vnd.ms-fontobject",
-        "otf" => "font/otf",
-        "ttf" => "font/ttf",
-        "woff" => "font/woff",
-        "woff2" => "font/woff2",
-        _ => return None,
-    })
-}
