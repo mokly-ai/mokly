@@ -140,6 +140,19 @@ Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
 
+## Upgrade to frame wire version 4
+
+The frame probe can now measure the box model of one instance, so its wire
+version changes from 3 to 4. Version 4 adds the `measure` request and the
+`box-model` reply. Pages that an earlier release built and the viewer of this
+release reject one another.
+
+- Rebuild and republish every hosted catalogue with this release. Upgrade
+  `@mokly/viewer` in each embedding application to the same release at the
+  same time.
+- Update each custom frame adapter that sends wire messages to the frame
+  probe. Use version 4.
+
 ## Upgrade to the frame probe
 
 The script that `build` and `publish` add to their pages for
@@ -164,7 +177,7 @@ report catalogue links.
 - Replace the earlier script path in each host rule that names it, such as a
   file allowlist or a content security policy.
 - Update each custom frame adapter that sends wire messages to the script. Use
-  the channel `mokly-frame-probe` and version 3.
+  the channel `mokly-frame-probe` and version 4.
 - Remove `data-mokly-frame-probe` and `data-mokly-frame-probe-link` attributes
   from your markup. The build reserves both and fails when your markup uses
   one.

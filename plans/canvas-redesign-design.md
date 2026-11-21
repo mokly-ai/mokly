@@ -181,6 +181,18 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
     details.
   - The Changes tab's host slot is `changesStart`.
 
+- Calls on Milestones 10 and 15, 2026-11-21:
+  - Box model: a single element root ignores comments and whitespace text;
+    an element with no client rects has no box model; the content size comes
+    from unrounded values, clamped at zero, then rounded. The probe now fills
+    its 9 KiB budget.
+  - The upgrade guide and the release cutover runbook name frame wire
+    version 4, with an upgrade step from 3.
+  - The HTML sample band keeps its natural height in each view, so the page
+    below it moves when the reader switches views.
+  - Ordinary docs code panels show no line numbers. Only the HTML sample
+    fence numbers its lines.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),

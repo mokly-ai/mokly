@@ -15,20 +15,21 @@ specification the site is checked against; a drawing kept anywhere else would
 drift from both. Git ignores those generated documents; commit their authored
 sources.
 
-| Entry path                      | Screen                                                                          |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| `design/site/home`              | Home with the hero, the demo spread, the feature frames and the open foundation |
-| `design/site/home/menu`         | The home's `menu` state: the mobile menu open over it                           |
-| `design/site/docs`              | The Install guide between the Layers and Inspect panels                         |
-| `design/site/docs/first-screen` | The Your first screen guide with its HTML sample fence                          |
-| `design/site/docs/layers`       | The docs `layers` state: the mobile tree sheet open                             |
-| `design/site/changelog`         | Changelog with Version history and the depicted releases                        |
-| `design/site/pricing`           | Pricing with the plans, the comparison and the questions                        |
-| `design/site/terms`             | Terms of Service document                                                       |
-| `design/site/privacy`           | Privacy Policy document                                                         |
-| `design/site/complaints`        | Complaints process                                                              |
-| `design/site/security`          | Security controls and reporting                                                 |
-| `design/site/tour`              | Home → Docs → Changelog → Pricing → four legal documents                        |
+| Entry path                              | Screen                                                                           |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| `design/site/home`                      | Home with the hero, the demo spread, the feature frames and the open foundation  |
+| `design/site/home/menu`                 | The home's `menu` state: the mobile menu open over it                            |
+| `design/site/docs`                      | The Install guide between the Layers and Inspect panels                          |
+| `design/site/docs/first-screen`         | The Your first screen guide with its HTML sample fence                           |
+| `design/site/docs/first-screen-desktop` | The docs `first-screen-desktop` state: the HTML sample fence on its Desktop view |
+| `design/site/docs/layers`               | The docs `layers` state: the mobile tree sheet open                              |
+| `design/site/changelog`                 | Changelog with Version history and the depicted releases                         |
+| `design/site/pricing`                   | Pricing with the plans, the comparison and the questions                         |
+| `design/site/terms`                     | Terms of Service document                                                        |
+| `design/site/privacy`                   | Privacy Policy document                                                          |
+| `design/site/complaints`                | Complaints process                                                               |
+| `design/site/security`                  | Security controls and reporting                                                  |
+| `design/site/tour`                      | Home → Docs → Changelog → Pricing → four legal documents                         |
 
 Every site entry records the shared related documents, declared once for all of
 them. The pricing entry adds [Billing](./billing.md) and
