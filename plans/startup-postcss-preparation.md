@@ -48,8 +48,11 @@ This workspace opens one pull request into `main` and does not merge it.
   The original observation item is closed. The remaining probes, external
   reads, and environment inputs stay in the
   [separate evidence item](follow-ups/postcss-probes-external-reads-environment.md).
-- PR #461 changes the base startup order. This change must work with that
-  order too. Later integration follows the repository merge rules.
+- 2026-11-21: PR #461 merged as `87e8984cf` after the first local freeze
+  started. The orchestrator changed the required baseline to that commit.
+  This branch merged it at `88c1253da`. Every incoming path matches main.
+  The earlier freeze is superseded and supplies no accepted measurement.
+  Fresh toolchains and inputs must use the updated baseline.
 
 Contract owners:
 
@@ -163,6 +166,20 @@ scope. The minimum code change stays in `crates/mokly-render/src/bundle.rs`.
   timeout, retry, sleep, or skip.
 - Update `crates/mokly-render/README.md` in the same change. Its PostCSS
   paragraph and its `src/bundle.rs` entry describe the edit-only rule.
+
+### Eager base integration
+
+The updated baseline of 2026-11-21 is `87e8984cf`, which includes both
+the observed-read correction and eager base preparation.
+
+- The base can prepare while the head starts. It keeps its base runtime,
+  so the startup PostCSS predicate still excludes it.
+- A base bundle can now finish before `serve.ready`. Attribute the head
+  bundle through core span ancestry. A base hit cannot satisfy a head hit.
+- Report the head bundle hit duration beside the readiness gain. Retain
+  other bundle records and both whole and head CSS unions as separate data.
+- Eager base work must not retain the readiness span. First Changes and the
+  kernel peak include the updated scheduling in both comparison arms.
 
 ### Design calls
 
@@ -452,6 +469,8 @@ into `main`.
       branch.
 - [x] Rerun the stylesheet and PostCSS tests on the merged tree, as the
       orchestrator requested after the `134d1c04b` merge signal.
+- [x] Merge `87e8984cf` after the updated baseline signal. Preserve all
+      incoming paths. Rerun renderer, eager-base, and PostCSS checks.
 - [x] Run each new asynchronous test ten times. Record the pass counts.
 - [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
@@ -459,6 +478,8 @@ into `main`.
       earlier gate receipt separate from the merged candidate identity.
 - [x] Run the strict example build and a Serve smoke test of a startup with
       PostCSS, with the commands of `AGENTS.md`.
+- [ ] Confirm startup, ready Changes, exact timing attribution, and drained
+      writer work in the first frozen seed on the updated baseline.
 - [ ] Prove all raw output bytes equal between `main` and this branch.
   - [ ] Static Build with `--strict --no-changes --sidecars 2` on Basic, the
         current monorepo cloud configuration, large HTML, and large React.
@@ -486,14 +507,19 @@ The merged targeted test receipt is
 `.context/startup-postcss-preparation/merged-render-01.json`.
 The merged stability, Node preparation, and document checks are in
 `.context/startup-postcss-preparation/merged-targeted-01.json`.
+The updated renderer and eager-base/PostCSS receipts are
+`.context/startup-postcss-preparation/merged-render-87-01.json` and
+`.context/startup-postcss-preparation/merged-eager-postcss-87-01.json`.
 The merge preservation audit is
 `.context/startup-postcss-preparation/main-134-merge-preservation.md`.
+The updated baseline audit is
+`.context/startup-postcss-preparation/main-87-merge-preservation.md`.
 The live build and smoke evidence is
 `.context/startup-postcss-preparation/live-prepare-01.json`,
 `.context/startup-postcss-preparation/merged-strict-example-01.json`, and
 `.context/startup-postcss-preparation/npm-dev-smoke-134-01/`.
 The predeclared arm order is
-`.context/startup-postcss-preparation/measurement-order-134d1c04b.json`.
+`.context/startup-postcss-preparation/measurement-order-87e8984cf.json`.
 Basic warm pairs run before the large output proofs. A missed acceptance
 criterion stops the dependent work under the stop rule above.
 
