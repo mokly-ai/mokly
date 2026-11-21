@@ -105,7 +105,6 @@ fn mockup_stage_builds_before_checks_and_propagates_real_failures() {
 fn site_stage_runs_the_complete_gate_and_propagates_output_failures() {
     let expected = [
         "node xtask/scripts/strict-command.mjs npm run build",
-        "node xtask/scripts/strict-command.mjs npm run mockups:build",
         "node xtask/scripts/strict-command.mjs npm run site:check",
     ];
     for index in 0..expected.len() {
