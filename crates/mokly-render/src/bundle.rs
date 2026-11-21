@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Weak};
 use std::thread;
 
@@ -77,7 +78,9 @@ pub(crate) fn describe(
         })
         .collect();
     candidates.sort_by_key(|state| !state.reuse_evidence.captured());
-    let compiler = stylesheets::compiler(runtime, config, &side);
+    let attempt = stylesheets::attempt(runtime, config, &side);
+    let compiler = attempt.compiler;
+    let context = attempt.context;
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
         let maps = class_maps(compiler.as_ref(), &previous.modules, &params)?;
@@ -87,7 +90,7 @@ pub(crate) fn describe(
             .find(|state| state.class_maps_digest == digest)
         {
             bundle_attempt::served(runtime, &existing.lease);
-            return bundle_finish::finish(runtime, side, compiler, existing.clone());
+            return bundle_finish::finish(runtime, side, compiler, context, existing.clone());
         }
         prepared_maps = Some(maps);
     }
@@ -96,7 +99,18 @@ pub(crate) fn describe(
         evaluation.push_str(&maps_digest(maps));
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
-    let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
+    let preparation = if runtime.bundle_capture == BundleCapture::ServeEdit
+        && runtime.base.is_none()
+        && runtime.head_styles.is_none()
+    {
+        context
+            .as_ref()
+            .filter(|lease| !lease.used.load(Ordering::Relaxed) && compiler.stale_postcss())
+            .and_then(|lease| config.postcss().and_then(|postcss| lease.prepare(postcss)))
+    } else {
+        None
+    };
+    let (mut result, mut lease) = bundle_attempt::request(runtime, &params, preparation)?;
     record_usage(runtime, &side, &result);
     let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
@@ -108,7 +122,7 @@ pub(crate) fn describe(
         .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
     {
         params.evaluation = Some(digest(format!("{cache_key}{class_maps_digest}").as_bytes()));
-        (result, lease) = bundle_attempt::request(runtime, &params)?;
+        (result, lease) = bundle_attempt::request(runtime, &params, None)?;
         record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
@@ -147,7 +161,7 @@ pub(crate) fn describe(
             reuse_evidence: result.compiled.reuse_evidence.clone(),
         });
         bundle_attempt::remember(runtime, &existing);
-        return bundle_finish::finish(runtime, side, compiler, existing);
+        return bundle_finish::finish(runtime, side, compiler, context, existing);
     }
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
@@ -177,7 +191,7 @@ pub(crate) fn describe(
         reuse_evidence: result.compiled.reuse_evidence.clone(),
     });
     bundle_attempt::remember(runtime, &state);
-    bundle_finish::finish(runtime, side, compiler, state)
+    bundle_finish::finish(runtime, side, compiler, context, state)
 }
 
 fn maps_digest(maps: &ClassMaps) -> String {

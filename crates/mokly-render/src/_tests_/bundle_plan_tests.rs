@@ -29,7 +29,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
         calls.clone(),
     )
     .with_serve_edit_plans();
-    let (first, lease) = request(&runtime, &params()).unwrap();
+    let (first, lease) = request(&runtime, &params(), None).unwrap();
     drop((first, lease));
     assert_eq!(
         Arc::strong_count(&evidence),
@@ -39,7 +39,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     runtime.bundle_capture = BundleCapture::ServeEdit;
     for expected in [true, false, true] {
         current.store(expected, Ordering::Release);
-        let (_, lease) = request(&runtime, &params()).unwrap();
+        let (_, lease) = request(&runtime, &params(), None).unwrap();
         assert_eq!(
             calls.lock().unwrap().last().unwrap().plan,
             expected.then(|| plan.clone())
@@ -53,7 +53,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     );
     let mut evaluation = params();
     evaluation.evaluation = Some("new evaluation".into());
-    let _ = request(&runtime, &evaluation).unwrap();
+    let _ = request(&runtime, &evaluation, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan));
 }
 
@@ -72,7 +72,7 @@ fn plan_records_match_resolution_settings_and_require_current_evidence() {
         calls.clone(),
     )
     .with_serve_edit_plans();
-    let _ = request(&runtime, &params()).unwrap();
+    let _ = request(&runtime, &params(), None).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let original = params();
     let mut resolution = original.module_resolution.clone();
@@ -137,7 +137,7 @@ fn plan_records_match_resolution_settings_and_require_current_evidence() {
     ] {
         for valid in [true, false, true] {
             current.store(valid, Ordering::Release);
-            let _ = request(&runtime, &params).unwrap();
+            let _ = request(&runtime, &params, None).unwrap();
             assert_eq!(
                 calls.lock().unwrap().last().unwrap().plan,
                 (reusable && valid).then(plan),
@@ -145,7 +145,7 @@ fn plan_records_match_resolution_settings_and_require_current_evidence() {
             );
         }
     }
-    let _ = request(&runtime, &original).unwrap();
+    let _ = request(&runtime, &original, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan()));
 }
 
@@ -173,10 +173,10 @@ fn only_a_serve_head_retains_complete_durable_captured_records() {
         if enabled {
             runtime = runtime.with_serve_edit_plans();
         }
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(Arc::strong_count(&evidence), 1, "{name}");
         runtime.bundle_capture = BundleCapture::ServeEdit;
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(calls.lock().unwrap().last().unwrap().plan, None, "{name}");
     }
 }

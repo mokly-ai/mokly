@@ -75,6 +75,16 @@ impl StylesheetCache {
         self.records.get(key).cloned()
     }
 
+    /// Retained PostCSS roots with this attempt's complete stylesheet settings.
+    pub(crate) fn postcss_keys(&self, settings: &str) -> Vec<String> {
+        let prefix = format!("{settings}:");
+        self.records
+            .iter()
+            .filter(|(key, record)| key.starts_with(&prefix) && record.context.is_some())
+            .map(|(key, _)| key.clone())
+            .collect()
+    }
+
     /// A stored context entry with this evidence digest.
     pub(crate) fn context(&self, digest: &str) -> Option<Arc<ContextEvidence>> {
         self.contexts

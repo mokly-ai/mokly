@@ -43,6 +43,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                 pool: pool.clone(),
                 released: CssCache::default().releases,
                 used: AtomicBool::new(false),
+                prepared: AtomicBool::new(false),
             }),
             pool,
             tree: Arc::new(Unimock::new(())),

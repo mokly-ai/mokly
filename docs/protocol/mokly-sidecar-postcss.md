@@ -1,7 +1,5 @@
 # Consumer PostCSS Contexts And Evidence
 
-Status: No `bundle` request prepares a PostCSS context yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the prepared contexts of this page.
-
 ## Contexts
 
 `processCss` runs consumer PostCSS in an owned child process with `sourceRoot` as its working directory.
@@ -41,9 +39,10 @@ the child. The diagnostic does not include authored CSS text.
 
 ## Prepared Contexts
 
-A `bundle` request can carry an optional PostCSS preparation. It names one
-context with its PostCSS module, source root, repository roots, and resolution
-settings, as the later `processCss` requests of that context name them. Like
+A `bundle` request can carry an optional PostCSS `preparation`. It names one
+`context` and its `postcss` module. The prepared child takes the source root,
+repository roots, and resolution settings of the `bundle` request. They equal
+those of the later `processCss` requests of that context. Like
 [`capture`](./mokly-sidecar-recipes.md#capture-modes), the preparation is a
 request-only value and not a bundle setting. No settings comparison,
 compilation identity, generation id, recipe, `restoreGeneration` request, or

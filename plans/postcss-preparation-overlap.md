@@ -24,7 +24,9 @@ Contract owners:
 ## Design and recorded choices
 
 The initial measurements used main `e69db4ce8`.
-The branch now includes main `e331ad64b`, which reduces bundle reuse reads.
+The branch now includes main `783d7919b`, with bundle reuse reads, edit plans,
+early base capture, and ordered background requests. Earlier measurements used
+the recorded earlier tips.
 Final comparisons must use matching toolchains from the current main and branch.
 
 ### Chosen approach
@@ -132,22 +134,27 @@ My design call, 2026-11-21: add the field name to the Methods table after the
 generated type exists. This keeps the existing 250-line page within its cap.
 Evidence: `.context/postcss-reuse-across-edits/m1-docs-report.md`.
 
-## Milestone 2: Fresh preparation and ownership
+## Milestone 2: Fresh preparation and ownership — completed — completed
 
 Depends on: 1
 
-- [ ] Add failing event-order and lifecycle tests before implementation.
-- [ ] Add optional Rust-owned preparation metadata and regenerate TypeScript.
-- [ ] Prepare the child during Bundle without delaying the bundle on configuration loading.
-- [ ] Pin subsequent stylesheet calls and disposal to the preparation's sidecar.
-- [ ] Prepare eligible sidecar bundle-reuse calls, and keep rendering placement ready without unnecessary restore work.
-- [ ] Keep read evidence, errors, source roots, and class-map behavior equal to fresh processing.
-- [ ] Release on failure, cancellation, replacement, and unused attempt completion.
-- [ ] Count the prepared child in memory admission and retain bounded process ownership.
-- [ ] Compare class addition and removal with fresh output.
-- [ ] Compare config, plugin, imported-file, and toolchain changes with fresh output.
-- [ ] Cover head and base with different configs, and stop during processing.
-- [ ] Run each new asynchronous test ten times without changing its runner policy.
+- [x] Add failing event-order and lifecycle tests before implementation.
+- [x] Add optional Rust-owned preparation metadata and regenerate TypeScript.
+- [x] Prepare the child during Bundle without delaying the bundle on configuration loading.
+- [x] Pin subsequent stylesheet calls and disposal to the preparation's sidecar.
+- [x] Prepare eligible sidecar bundle-reuse calls, and keep rendering placement ready without unnecessary restore work.
+- [x] Keep read evidence, errors, source roots, and class-map behavior equal to fresh processing.
+- [x] Release on failure, cancellation, replacement, and unused attempt completion.
+- [x] Count the prepared child in memory admission and retain bounded process ownership.
+- [x] Compare class addition and removal with fresh output.
+- [x] Compare config, plugin, imported-file, and toolchain changes with fresh output.
+- [x] Cover head and base with different configs, and stop during processing.
+- [x] Run each new asynchronous test ten times without changing its runner policy.
+
+Evidence: `.context/postcss-reuse-across-edits/m2-handoff.md` and its linked logs.
+
+Evidence: `.context/postcss-reuse-across-edits/m2-handoff.md` and
+`.context/postcss-reuse-across-edits/main85-adaptation.md`.
 
 ## Milestone 3: Scheduling policy, verification, and performance confirmation
 
@@ -155,7 +162,7 @@ Depends on: 2
 
 - [x] Record the user's priority decision: D. Existing priority behavior needs no protocol change.
 - [x] Keep the original priority. D adds no priority or scheduler code, so no restoration test is needed.
-- [ ] Align the final field name and helper entry points. Remove the preparation status lines after implementation.
+- [x] Align the final field name and helper entry points. Remove the preparation status lines after implementation.
 - [ ] Build matching main and branch toolchains with the required resource checks.
 - [ ] Run targeted tests and the repository suite.
 - [ ] Run the complete repository gate.

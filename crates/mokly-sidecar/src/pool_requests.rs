@@ -46,9 +46,9 @@ impl Pool {
         if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        if let Call::ProcessCss(params) = call {
-            self.lock().contexts.insert(params.context.clone());
-            slot.contexts.insert(params.context.clone());
+        if let Some(context) = call.postcss_context() {
+            self.lock().contexts.insert(context.into());
+            slot.contexts.insert(context.into());
         }
         let mut result = slot.worker.request(
             &Request {

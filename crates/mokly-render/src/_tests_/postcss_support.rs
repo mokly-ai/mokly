@@ -41,6 +41,7 @@ pub(super) fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -
             pool: pool.clone(),
             released: CssCache::default().releases,
             used: AtomicBool::new(false),
+            prepared: AtomicBool::new(false),
         }),
         pool,
         tree,

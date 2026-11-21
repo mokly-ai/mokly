@@ -1,7 +1,5 @@
 # mokly-render
 
-Status: Head Serve edits do not prepare PostCSS contexts during `bundle` yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the preparation.
-
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -398,15 +396,25 @@ view after the edit and counts real process starts and hello calls.
   notice only at its direct return of a retained state. Its `BundleState`
   shares the reuse evidence of the actual result through an `Arc` and keeps
   its toolchain identity. It tries retained states with captured evidence
-  first, and it admits a marked state only in the `ServeEdit` mode.
+  first, and it admits a marked state only in the `ServeEdit` mode. In a
+  `ServeEdit` attempt of an original head runtime, it adds a
+  `PostcssPreparation` to the first `bundle` request when the context is
+  unused and `stale_postcss` finds a stale PostCSS root. The second request of
+  an evaluation change carries none.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
-  request with the `capture` mode of the runtime in its `catalogue.bundle`
-  span, gives each result's lifetime epoch to a `BundleLease`, and sends the
-  served-generation notice after a core reuse, only in the `Full` mode.
+  request with the `capture` mode of the runtime and its optional
+  `PostcssPreparation` in its `catalogue.bundle` span, gives each result's
+  lifetime epoch to a `BundleLease`, and sends the served-generation notice
+  after a core reuse, only in the `Full` mode.
   Before a `ServeEdit` request of a head runtime, it runs the plan check on
   the record of the request's resolution settings, and it sends the plan when
   the check passes. It offers each `Full` result with a plan and a toolchain
   identity to `Records`.
+- [`src/leases.rs`](./src/leases.rs) defines the graph-owned leases.
+  `ContextLease::prepare` reserves the one preparation of the PostCSS context
+  of an attempt. `FinishPreparation`, which `JavaScriptGraph::prepare` in
+  [`src/graph.rs`](./src/graph.rs) holds, ends an unused preparation when graph
+  preparation ends. A used context keeps the lease of its graph.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -416,14 +424,18 @@ view after the edit and counts real process starts and hello calls.
   side-specific context before scoping.
 - [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler
   of one side and the key of its records, and lists the stylesheet roots of a
-  module graph. It passes the head store reference of the runtime to
-  `CachedStylesheets::with_head`. Only a base runtime has one.
+  module graph. Its `attempt` also returns the `ContextLease` of the PostCSS
+  context that the compiler shares. It passes the head store reference of the
+  runtime to `CachedStylesheets::with_head`. Only a base runtime has one.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
   attempt-local store, the shared store of its runtime, and, in a base
   runtime, the head store that `CachedStylesheets::with_head` adds as the
   last read-only source. It times each real bundle as `css.bundle` with its
-  miss reason.
+  miss reason. Its `stale_postcss`, from the `StylesheetPreparation` trait of
+  [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs), checks the kept
+  PostCSS roots of the attempt's settings and stops at the first stale root.
+  The later lookup of that root reuses the miss without a second check.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.

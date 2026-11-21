@@ -9,7 +9,7 @@ use mokly_sidecar::definitions::Definitions;
 
 use crate::bundle::BundleState;
 use crate::error::Result;
-use crate::leases::PreparedLease;
+use crate::leases::{ContextLease, PreparedLease};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
 
@@ -17,12 +17,14 @@ pub(crate) fn finish(
     runtime: &Runtime,
     side: SideInputs,
     compiler: Arc<dyn StylesheetBundler>,
+    context: Option<Arc<ContextLease>>,
     bundle: Arc<BundleState>,
 ) -> Result<(JavaScriptGeneration, Definitions)> {
     let lease = Arc::new(PreparedLease {
         bundle: bundle.clone(),
         side,
         compiler,
+        context,
     });
     let mut prepared = runtime.prepared.lock().unwrap_or_else(|e| e.into_inner());
     prepared.retain(|_, value| value.strong_count() > 0);

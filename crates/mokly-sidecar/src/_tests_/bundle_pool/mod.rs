@@ -165,6 +165,7 @@ fn live(pool: &Pool, id: &str, epoch: u64, complete: bool, installed: bool) {
 fn bundle(pool: &Pool) -> results::Bundle {
     let MethodResult::Bundle(result) = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: params(),
             capture: None,

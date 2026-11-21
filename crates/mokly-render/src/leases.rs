@@ -8,6 +8,7 @@ use std::sync::mpsc::Sender;
 use mokly_catalogue::render_sources::GenerationLease;
 use mokly_css::types::StylesheetBundler;
 use mokly_sidecar::pool::SidecarPool;
+use mokly_sidecar::postcss_preparation::PostcssPreparation;
 
 use crate::bundle::BundleState;
 use crate::side::SideInputs;
@@ -29,13 +30,39 @@ pub(crate) struct ContextLease {
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) released: Sender<String>,
     pub(crate) used: AtomicBool,
+    /// The attempt has reserved its one preparation.
+    pub(crate) prepared: AtomicBool,
+}
+
+impl ContextLease {
+    /// Reserve the attempt's only preparation before its first real stylesheet request.
+    pub(crate) fn prepare(&self, postcss: String) -> Option<PostcssPreparation> {
+        if self.used.load(Ordering::Relaxed) || self.prepared.swap(true, Ordering::Relaxed) {
+            return None;
+        }
+        Some(PostcssPreparation {
+            context: self.id.clone(),
+            postcss,
+        })
+    }
+
+    /// Unused preparation ends with its attempt, while later lazy CSS can start again.
+    pub(crate) fn finish_preparation(&self) {
+        if self.prepared.swap(false, Ordering::Relaxed) && !self.used.load(Ordering::Relaxed) {
+            self.release();
+        }
+    }
+
+    fn release(&self) {
+        let _ = self.released.send(self.id.clone());
+        self.pool.release_context(&self.id);
+    }
 }
 
 impl Drop for ContextLease {
     fn drop(&mut self) {
-        if self.used.load(Ordering::Relaxed) {
-            let _ = self.released.send(self.id.clone());
-            self.pool.release_context(&self.id);
+        if self.used.load(Ordering::Relaxed) || self.prepared.load(Ordering::Relaxed) {
+            self.release();
         }
     }
 }
@@ -44,6 +71,19 @@ pub(crate) struct PreparedLease {
     pub(crate) bundle: Arc<BundleState>,
     pub(crate) side: SideInputs,
     pub(crate) compiler: Arc<dyn StylesheetBundler>,
+    /// Context ownership through description and complete graph preparation.
+    pub(crate) context: Option<Arc<ContextLease>>,
+}
+
+/// Keep an unused preparation alive through every configured and imported graph stylesheet.
+pub(crate) struct FinishPreparation(pub(crate) Option<Arc<ContextLease>>);
+
+impl Drop for FinishPreparation {
+    fn drop(&mut self) {
+        if let Some(context) = &self.0 {
+            context.finish_preparation();
+        }
+    }
 }
 
 impl fmt::Debug for PreparedLease {

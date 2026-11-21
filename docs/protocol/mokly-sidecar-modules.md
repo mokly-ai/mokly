@@ -1,7 +1,5 @@
 # Sidecar Module Sources
 
-Status: No `bundle` request prepares a PostCSS context yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the process of a prepared context.
-
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.

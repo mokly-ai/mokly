@@ -1,7 +1,5 @@
 # Sidecar Memory
 
-Status: No `bundle` request starts a PostCSS child yet, so no sample discovers one. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the discovery of prepared children.
-
 This page expands the [sidecar lifecycle](./mokly-sidecar.md#lifecycle). It
 defines the memory limit of each sidecar, the memory admission of a default
 pool, and the claims that Serve holds for its sidecar calls.

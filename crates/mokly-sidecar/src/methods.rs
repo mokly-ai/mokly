@@ -10,6 +10,7 @@ use ts_rs::TS;
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
+use crate::postcss_preparation::PostcssPreparation;
 use crate::resolution_plan::ResolutionPlan;
 
 /// A request with no method parameters.
@@ -103,6 +104,10 @@ pub struct BundleRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub plan: Option<Arc<ResolutionPlan>>,
+    /// Fresh PostCSS context for this request's attempt, absent from bundle settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub preparation: Option<PostcssPreparation>,
 }
 
 /// Preview colour scheme.

@@ -1,7 +1,5 @@
 # Sidecar Source Root Scheduling
 
-Status: No `bundle` request prepares a PostCSS context yet. [Milestone 2 of the PostCSS preparation plan](../../plans/postcss-preparation-overlap.md#milestone-2-fresh-preparation-and-ownership) adds the slot of a prepared context.
-
 This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool

@@ -58,6 +58,7 @@ fn final_leases_return_while_a_pool_request_and_cache_lock_are_held() {
                     id: "used".into(),
                     pool: pool.clone(),
                     used: AtomicBool::new(true),
+                    prepared: AtomicBool::new(false),
                     released: releases.clone(),
                 };
             }
@@ -66,6 +67,7 @@ fn final_leases_return_while_a_pool_request_and_cache_lock_are_held() {
                     id: "unused".into(),
                     pool: pool.clone(),
                     used: AtomicBool::new(false),
+                    prepared: AtomicBool::new(false),
                     released: releases,
                 };
             }

@@ -23,6 +23,7 @@ use mokly_sidecar::methods::Call;
 use crate::declarations;
 use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
+use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
 use crate::{definition_handle, sources, stylesheets};
@@ -38,6 +39,17 @@ impl RenderGraph for JavaScriptGraph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> mokly_graph::error::Result<Arc<dyn RenderGeneration>> {
+        let _preparation = FinishPreparation(catalogue.javascript.generation.as_ref().and_then(
+            |generation| {
+                self.runtime
+                    .prepared
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .get(&generation.css_context)
+                    .and_then(Weak::upgrade)
+                    .and_then(|prepared| prepared.context.clone())
+            },
+        ));
         if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)

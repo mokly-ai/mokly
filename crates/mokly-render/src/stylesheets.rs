@@ -16,13 +16,29 @@ use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
 use crate::stylesheet_class_maps::ClassMapCompiler;
-use crate::stylesheet_compiler::CapturingCompiler;
+use crate::stylesheet_compiler::{CapturingCompiler, StylesheetPreparation};
+
+/// Stylesheet services and context ownership for one attempt.
+pub(crate) struct StylesheetAttempt {
+    /// Compilation and its retained preparation probe.
+    pub(crate) compiler: Arc<dyn StylesheetPreparation>,
+    /// Optional PostCSS context shared with the compiler.
+    pub(crate) context: Option<Arc<ContextLease>>,
+}
 
 pub(crate) fn compiler(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
 ) -> Arc<dyn ClassMapCompiler> {
+    attempt(runtime, config, side).compiler
+}
+
+pub(crate) fn attempt(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    side: &SideInputs,
+) -> StylesheetAttempt {
     let tree = sources::reader(runtime, config, side);
     let module_resolution = &side.module_resolution;
     let resolution = Resolution {
@@ -51,6 +67,7 @@ pub(crate) fn compiler(
                     cache.releases.clone()
                 },
                 used: AtomicBool::new(false),
+                prepared: AtomicBool::new(false),
             }),
             pool: runtime.pool.clone(),
             tree: tree.clone(),
@@ -63,6 +80,7 @@ pub(crate) fn compiler(
             module_digests: Default::default(),
         })
     });
+    let context = postcss.as_ref().map(|postcss| postcss.lease.clone());
     let settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
@@ -72,7 +90,7 @@ pub(crate) fn compiler(
         dependency_roots(side),
         side.repository_roots
     );
-    Arc::new(
+    let compiler = Arc::new(
         CachedStylesheets::new(
             Arc::new(CapturingCompiler {
                 tree: tree.clone(),
@@ -91,7 +109,8 @@ pub(crate) fn compiler(
             runtime.styles.clone(),
         )
         .with_head(runtime.head_styles.clone().unwrap_or_default()),
-    )
+    );
+    StylesheetAttempt { compiler, context }
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]

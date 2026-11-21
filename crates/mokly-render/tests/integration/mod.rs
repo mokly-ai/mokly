@@ -29,6 +29,7 @@ mod plan_invalidation_tests;
 mod plan_results;
 mod plan_support;
 mod postcss_contract_tests;
+mod postcss_preparation_tests;
 mod process_counts;
 mod rebuild_tests;
 mod registry_matrix_tests;

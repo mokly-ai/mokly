@@ -97,7 +97,7 @@ fn actual_bundle_requests_record_the_cache_outcome_and_success_status() {
                 .returns(()),
         )));
         capture.in_scope(|| {
-            let (result, lease) = request(&runtime, &params()).unwrap();
+            let (result, lease) = request(&runtime, &params(), None).unwrap();
             assert_eq!(result.generation, "generation");
             assert_eq!(lease.epoch, 7);
         });
