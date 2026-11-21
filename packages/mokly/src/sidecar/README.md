@@ -348,8 +348,8 @@ its requests and results. The paths below are relative to the package root.
   `PhysicalInputReader` with no capture cache and no saved kind. Its
   `pathKinds` map holds the first-touch kinds, of the `CaptureKind` type in
   [`src/sidecar/capture-kind.ts`](./capture-kind.ts).
-  [`src/sidecar/file-digests.ts`](./file-digests.ts) streams each
-  file digest through one 64 KiB buffer and checks inputs with four workers.
+  [`src/sidecar/file-digests.ts`](./file-digests.ts) hashes 64 KiB chunks.
+  Four workers overlap first reads. Other reads are synchronous, with yields.
 - [`src/sidecar/capture-durability.ts`](./capture-durability.ts)
   holds `CaptureDurability`, which decides the `durable` flag of the reuse
   evidence when `hello` carries a `capture` hint. Before the first observation
