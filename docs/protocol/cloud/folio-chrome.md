@@ -1,5 +1,7 @@
 # Folio Chrome
 
+Status: The Canvas palette and Geist, the avatar trigger, and the deep shadow of the viewer's panels and dialog are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and Geist, and [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) builds the avatar trigger and the Canvas panels and dialog.
+
 The composition rules for Mokly Cloud's product surfaces. Every value here comes
 from [Design tokens](./design-tokens.md); this document says how those values
 are arranged. Controls inside these compositions follow
@@ -7,16 +9,18 @@ are arranged. Controls inside these compositions follow
 [Settings dialog](./settings-dialog.md). The catalogue that must satisfy these
 rules is listed in [Product mockups](./product-mockups.md).
 
-These rules keep the Folio catalogue in step with the open-source Mokly Browse
-shell: the same Inter face, the same 13px chrome density, the same hairline
-discipline and the same restraint with color. No screen adds a layout rule of
-its own; a screen that needs a new arrangement adds it here first.
+These rules keep the cloud's product screens in step with the open-source
+Mokly Browse shell: one Canvas palette, the same Geist face, the same 13px
+chrome density, the same hairline discipline and the same restraint with
+color. No screen adds a layout rule of its own; a screen that needs a new
+arrangement adds it here first.
 
 The viewer is the application, so the only chrome the cloud owns sits in the
-hosted package's top bar slots, which the host contract in
+hosted package's slots, which the host contract in
 [Viewer host](./viewer-host.md) defines. The stage, the viewer top bar, the
-panel, the publication row, the build card, the settings dialog and its mobile
-layer are in [Folio viewer compositions](./folio-viewer.md). The one account
+publication pill, the account menu, the panel, the publication row, the build
+card, the check card, the settings dialog and its mobile layer are in
+[Viewer compositions](./folio-viewer.md). The one account
 panel every account screen shares is in
 [Folio chrome: account entry](./folio-chrome-account.md). The compositions
 below are the vocabulary those pages and every product screen are built from.
@@ -26,7 +30,9 @@ below are the vocabulary those pages and every product screen are built from.
 **Section**. A 15px semibold title, an optional 12px muted description beneath
 it, and an optional compact action on the same top edge. Sections are separated
 by a hairline with 32px above and 16px to their content; the first section in a
-stack is flush. Stacked sections are 32px apart, 24px on mobile.
+stack is flush. Stacked sections are 32px apart, 24px on mobile. The settings
+dialog sets its sections tighter, as its **Dialog** composition in
+[Viewer compositions](./folio-viewer.md#compositions) defines.
 
 **Record row**. Rows live in a `surface` panel with a 10px radius, a hairline
 and `shadow.small`; the package draws the hairline between rows and never after
@@ -64,12 +70,14 @@ stylesheet, so its 44px target and its marker are declared once for both
 surfaces.
 
 **Accessible name**. A control's accessible name contains the words it shows.
-A label shortened to fit — the compact bar's account trigger, which shows the
-local part of an address the row cannot hold — takes the whole value as its
-accessible name, which contains what is on screen; a label that is already
-whole takes no other name, so the name a reader says is the name the control
-answers to. The property holds wherever a label is shortened: the visible text
-finds the control by role.
+A label shortened to fit — the compact bar's publication trigger, which shows
+a pull request's number or the last segment of a branch that the row cannot
+hold whole — takes the whole value as its accessible name, which contains what
+is on screen; a label that is already whole takes no other name, so the name a
+reader says is the name the control answers to. The property holds wherever a
+label is shortened: the visible text finds the control by role. A control that
+shows a picture in place of its label, as the account trigger shows the
+reader's avatar, takes the whole value as its accessible name and its tooltip.
 
 **Wait**. What a region draws while a read that it needs runs: the layout that
 it waits for, in the shape that the answer fills. A screen draws this wait for
@@ -173,11 +181,14 @@ second primary action on the screen.
 
 ## Density And Discipline
 
-Chrome text is 13px with 12px muted detail; page and pane titles are the
-display sizes in [Design tokens](./design-tokens.md). Icons are 16px in rows,
-13px inline and 20px in a state tile, all on the same stroke. Boundaries are one
-hairline in `border`; `shadow.small` lifts a panel, `shadow.medium` the account
-panel and `shadow.large` the dialog. Hover fills use the accent ink at 9% or
+Chrome text is 13px with 12px muted detail; page titles are the display sizes
+in [Design tokens](./design-tokens.md), and the titles of the viewer's panels,
+the settings dialog and its layer take the 15px `uiTitle` size, as
+[Viewer compositions](./folio-viewer.md#compositions) defines. Icons are 16px
+in rows, 13px inline and 20px in a state tile, all on the same stroke.
+Boundaries are one hairline in `border`; `shadow.small` lifts a panel and
+`shadow.medium` the account panel, and the dialog and the viewer's panels take
+the deep shadow of Viewer compositions. Hover fills use the accent ink at 9% or
 the ink at 5%; nothing else tints a surface. At most one `accentSolid` fill per
 screen marks the primary action when one exists, and nothing else on the screen
 takes the accent as a fill. Every interactive row

@@ -11,7 +11,9 @@ under `src/screens/product/viewer/`; each screen's entry is
 `src/entries/product/viewer/<screen>.mockup.tsx`, with the screens of
 Standalone and Pull request in `standalone/` and `pull-request/` directories
 matching their folders. Every one
-renders the same chrome, so the family reads as one application.
+renders the same chrome, so the family reads as one application. Every viewer
+drawing draws the cloud's own chrome, panels and cards in the Canvas palette
+with Geist, and its `@mokly/ui` parts with the package's own stylesheet.
 
 | Path                          | Canonical content and action                                                   | Empty / missing data                           | Error recovery                                 |
 | ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
@@ -37,7 +39,9 @@ differs.
 
 The ready drawing is a static depiction composed of workspace `@mokly/ui`
 parts. Its embedded layout holds the cloud chrome in the
-`topBarStart` and `topBarEnd` host slots around the package top bar.
+`topBarStart` and `topBarEnd` host slots around the package top bar, which
+takes no end control, because the cloud's bar has no theme toggle, and whose
+search field ends with the `⌘K` hint.
 The layout also holds the catalogue navigation and the
 workspace layout, with its screen header and view controls.
 The stage holds the phone and browser frames, and a sample screen is the
@@ -64,9 +68,35 @@ share panel, because it leaves the app for the site's CI setup guide.
 Every account is created by an email address, so a reader who has not set a
 display name is called by theirs. `product/viewer/standalone/account` draws that bar as
 a screen beside `product/viewer/standalone`, pairing a long workspace display
-name with a long address. The full bar keeps every action on one row and truncates
-the variable labels while their complete accessible names and tooltips remain;
-the compact bar keeps the address's identifying local part.
+name with a reader named by a long address. The full bar keeps every action on
+one row: the project switcher truncates the long name while its complete
+accessible name and tooltip remain, and the avatar shows the address's
+initials, with the whole address as its accessible name and tooltip.
+
+The account menu has its own screen beside `product/viewer/standalone`:
+`product/viewer/standalone/account-menu` draws it open under the avatar, with
+who is signed in, Theme with Light and Dark, Settings and Sign out. A desktop
+drawing whose bar is too narrow for the full composition opens **More** under
+its trigger instead, with the project, History and Share above the same
+account rows. Both are non-modal popovers, so the viewer beneath keeps its
+heading and landmark. The phone opens More as the panel's bottom sheet, titled
+More, whose rows are 44px targets, and the sheet takes the document's `main`
+and `h1`, as a panel does. Catalogue-only links below the artboard lead to the
+settings index, the sign-in screen and the settings drawing.
+`product/viewer/standalone/settings`, another screen beside
+`product/viewer/standalone`, draws the settings dialog over the viewer in
+Canvas, on the Members pane that its rail opens, because the menu's Settings
+opens the index, which shows no pane. The phone shows the same pane in the
+settings layer.
+
+The desktop drawing of `product/viewer/pull-request` fills the embedded
+layout's `sidePanel` slot with the cloud's Mokly check: a floating panel
+headed Changes around the check card, which says the check succeeded, gives
+the changed, added and removed counts of the drawing's catalogue, and links the
+pull request's checks on GitHub. The panel shows only where the full bar
+shows, and the phone drawing and every branch drawing have none.
+[Viewer chrome](./viewer-chrome.md#check-slot) places the check in the
+package's Changes tab, whose check slot the drawn package parts lack.
 
 A read that never produced the publication is not the same as one that is gone:
 `product/viewer/standalone/unreadable` draws the address that named a publication the

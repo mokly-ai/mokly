@@ -168,6 +168,29 @@ Props tab's controls, and the Read-only and recovery gallery under
 `specs/design/components/controls/limits/` draws the states without editing
 and the recovery states that keep the edits.
 
+`specs/design/canvas/` holds the Canvas viewer family: 29 screens and states.
+A screen opens as four frames on a dot-grid canvas, between the floating
+catalogue and the right panel. The family also draws zoom, a component's
+variant set, a document, the catalogue and its home, Inspect with a
+selection, its sections, Props and the Frames filter, the five compare modes
+of Changes, and an added entry. Each mobile view draws the compact layout: one
+frame and the dock. The family's scaffolds, instance records and destinations
+live in `specs/design/canvas/parts/`. Its eleven shared parts, the `canvas` and
+`panels` groups of `specs/design/library/` and the inspector's Frames filter
+and box model, implement their own markup, because `@mokly/ui` does not
+provide them yet. The
+[library README](./specs/design/library/README.md#canvas-viewer-parts)
+describes them. `specs/design/parts/canvas_palette.ts` maps the Canvas
+palette of `@mokly/ui`, imported by repository path, to the custom properties
+of a Canvas root. The Canvas sheets reach every design route through the
+shared design sheets. `design-stage.css` imports `design-canvas.css`,
+`design-canvas-inspect.css`, `design-canvas-sections.css` and
+`design-canvas-changes.css`, and `design-canvas.css` imports Geist from
+`design-fonts/`. `design-component-workspace.css` imports
+`design-canvas-shell.css` and `design-canvas-compact.css`. The
+[design library stylesheets README](./design-library/README.md) gives their
+order. The browse, changes and components families draw the shipped shell.
+
 `tests/design_catalogue.test.ts` serves this configuration once with
 `--no-watch` and the unresolved base `refs/mokly/browser-suite-no-base`, so
 Changes stays unavailable. It checks the design catalogue against the
@@ -185,12 +208,18 @@ comparison pane, an empty state, or the tag picker, lists those screens in its
 the set.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
+[canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md),
+[device chrome](../../docs/protocol/mokly-shell-device-chrome.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
+[Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md),
 [depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md),
 [design links](../../docs/protocol/mokly-design-links.md),
 [design components](../../docs/protocol/mokly-design-components.md),
 [component library](../../docs/protocol/mokly-design-component-library.md),
+[Canvas library parts](../../docs/protocol/mokly-design-component-library-canvas.md),
 [component design](../../docs/protocol/mokly-component-design.md),
+[inspector design](../../docs/protocol/mokly-component-inspector-design.md),
+[comparison panes](../../docs/protocol/mokly-comparison-panes.md),
 [palette](../../docs/protocol/mokly-viewer-palette.md), and
 [appearance](../../docs/protocol/mokly-viewer-appearance.md) contracts own
 the details of these designs.
@@ -227,10 +256,10 @@ npm run dev
 Before Serve starts, it installs the dependencies with `npm ci` when they are
 missing or `package-lock.json` changed after the last install. It builds with
 `npm run build` when a build output is missing or older than the install. The
-build covers the native binary, the UI package, the viewer, the shim, and the
-sidecar. After you change Mokly's own sources, run `npm run build` before
-`npm run dev`. Put Serve options after `--`, for example
-`npm run dev -- --port 0`.
+build covers the native binary, the UI, model, and frame packages, the
+viewer, the shim, and the sidecar. After you change Mokly's own sources, run
+`npm run build` before `npm run dev`. Put Serve options after `--`, for
+example `npm run dev -- --port 0`.
 
 To validate the catalogue and write the static site:
 
@@ -256,9 +285,10 @@ To check the packed packages against this example:
 npm run package:smoke
 ```
 
-It packs the UI package, the viewer, the CLI, and the host's native package and
-installs them into a copy of this example outside the repository. The copy also
-holds the UI package sources that the design mockups import by repository path.
+It packs the UI, model, and frame packages, the viewer, the CLI, and the host's
+native package and installs them into a copy of this example outside the
+repository. The copy also holds the UI package sources that the design
+mockups import by repository path.
 It starts the installed `mokly serve` in a directory below `mokly.config.json`
 and opens a React, a design, and an HTML screen and a Markdown document in
 headless Chrome. It builds the copy with `--strict` and opens the same entries

@@ -1,81 +1,106 @@
 # Mokly Shell Design Contract
 
+Status: The Canvas palette with the Geist faces, the canvas stage with its floating panels and its compact layout, the search keys, and the right panel with compare on every frame are not built yet. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and the fonts, [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels, the compact layout and the search keys, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
+
 ## Scope
 
-This document records the design for the package-owned Browse shell
-and the optional in-place screen comparisons. The visual source of truth is the
-design catalogue in the basic example, whose entry paths start with `design/`;
-this contract fixes the tokens, dimensions, and responsive behavior that
-implementation and tests must preserve. Runtime behavior stays in
+This document records the design of the package-owned Browse shell and its
+in-place comparisons. The shell draws the Canvas design language: a dot-grid
+canvas, labelled frames, panels that float over the canvas, Geist type and one
+signal green. The visual source of truth is the design catalogue in the basic
+example, whose entry paths start with `design/`. This contract fixes the
+palette, the type, the dimensions and the responsive behaviour that the
+implementation and the tests must keep. Runtime behaviour stays in
 [mokly-runtime.md](./mokly-runtime.md).
 
 ## Design Mockups
 
 The design screens are authored in `examples/basic/specs/design/`. The
+[Canvas design inventory](./mokly-shell-canvas-inventory.md) lists the
+`design/canvas` screens. They depict the canvas stage, the floating panels,
+Inspect, Changes and the compact layout. The
 [shell design inventory](./mokly-shell-design-inventory.md) lists every Browse
 and Changes design screen with its folder and depicted state, describes the
 fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
 the [component design inventory](./mokly-component-design.md#owning-catalogue)
 lists the component explorer screens.
 
+A state that the Canvas screens do not draw keeps the requirements of its own
+contract and the content that its Browse, Changes or component explorer screen
+depicts. These states include a use-case flow, a removed or moved entry,
+loading and recovery, the tag picker and most component explorer pages.
+
 ## Consumer-Tunable Custom Properties
 
 Consumers may set exactly these CSS custom properties to tune the shell accent.
-The shell reads them with the defaults below; every other shell style is
-package-owned and not a compatibility surface.
+Every other shell style is package-owned and not a compatibility surface.
 
-| Property                  | Default                   | Used for                      |
-| ------------------------- | ------------------------- | ----------------------------- |
-| `--mokly-accent`          | `#4f7864`                 | Active pills and rows         |
-| `--mokly-accent-contrast` | `#ffffff`                 | Text and glyphs on the accent |
-| `--mokly-accent-soft`     | `rgba(79, 120, 100, 0.1)` | Hover and highlight surfaces  |
+| Property                  | Used for                                       |
+| ------------------------- | ---------------------------------------------- |
+| `--mokly-accent`          | Selected marks, pressed pills, links and focus |
+| `--mokly-accent-contrast` | Text and glyphs on the accent                  |
+| `--mokly-accent-soft`     | Selected rows, hover and highlight surfaces    |
 
-A consumer accent pair must keep at least WCAG AA contrast between
+An unset property takes its default from the Canvas palette in the current
+appearance. The [viewer palette](./mokly-viewer-palette.md) gives each
+default. A consumer accent pair must keep at least WCAG AA contrast between
 `--mokly-accent` and `--mokly-accent-contrast`; the shell does not
 recompute contrast at runtime. The [Mokly shell brand](./mokly-shell-brand.md)
 is package-owned identity and ignores these consumer accent overrides.
 
 ## Package-Owned Tokens
 
-The shell chrome supports Light and Dark independently of the preview's color
-scheme. Light uses the neutral/sage family; Dark uses Mokly Cloud's Folio
-neutrals, the neutral Graphite greys, with sage accents. The
-[semantic palette](./mokly-viewer-palette.md#swatches) holds the value of every
-token in both appearances and their recorded contrast.
+The shell draws the `canvas` palette of `@mokly/ui` in Light and Dark. The
+interface appearance chooses the scheme of the chrome. Each frame on the canvas
+keeps its own scheme, as the
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme) say. The
+palette module is the one source of the shell's theme stylesheet. The
+[viewer palette](./mokly-viewer-palette.md) holds the roles, their values in
+both schemes and their recorded contrast. Decision: one Canvas look serves
+Serve, the static build and every React host, the cloud included, not a second
+palette that a host selects, because the site shows the open-source shell in
+this look and one palette source cannot drift.
 
-Typography is **Inter** (a variable font packaged with the shell and served at
-`/mokly-viewer/fonts/InterVariable.woff2` under its SIL OFL license) via
-`--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
-`--mono: "SFMono-Regular", Consolas, …` for ids, addresses, and paths.
-The [brand contract](./mokly-shell-brand.md) owns the system-serif wordmark
-exception; no serif font file is packaged.
-The nav indent guides use the faint `--mbk-guide` tint. The shell
-ships no consumer product fonts beyond Inter, and no consumer-specific color,
-name, or route family may appear in shell styles or copy.
+Typography is **Geist** for the interface at a 13px shell base, and **Geist
+Mono** for ids, addresses, paths, frame labels and size tags. The shell
+packages both faces under the SIL Open Font License and serves them under
+`/mokly-viewer/fonts/`. The shell loads no font from another host and ships no
+other face. The [brand contract](./mokly-shell-brand.md) owns the mark and the
+Geist wordmark. The catalogue's indent guides use the faint guide tint of the
+palette. No consumer-specific color, name, or route family may appear in shell
+styles or copy.
 
 ## Layout
 
 The shell fills the viewport (`100vh`, document scrolling disabled); every
-scrollable region scrolls internally:
+scrollable region scrolls internally. Below the top bar, a full-bleed dot-grid
+canvas fills the window, and the panels float over it. The
+[canvas stage](./mokly-shell-canvas-stage.md) fixes the canvas, the floating
+panels, the selected entry's section, pan, zoom and Fit.
+[Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
+scheme and the compact layout.
 
 - **Top bar** — 48px, surface background, hairline bottom border: the
-  [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search field
-  (max-width 440px, led by a 15px stroked magnifier icon that holds its size while the field flexes)
-  that flexes down to whatever room the bar leaves it. Below the breakpoint a menu button opens the
-  catalogue drawer. Search uses
-  `Search catalogue` as its accessible name and `Search catalogue…` as its
-  placeholder in both viewport sizes, covering screens, pages, and flows.
-  The bar carries no preview mode switch; the Auto/Light/Dark Appearance
-  control is the one setting that belongs here.
-  Matching uses the single [search rule](./mokly-folders.md#titles).
-  Filtering hides empty groups and opens retained groups, and composes with
-  the All/Changes filter.
+  [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search
+  field (max-width 440px, led by a 15px stroked magnifier icon that holds its
+  size while the field flexes) that flexes down to whatever room the bar
+  leaves it. Below the breakpoint a menu button opens the catalogue sheet, and
+  closes an open sheet. Search uses `Search catalogue` as its accessible name
+  and `Search catalogue…` as its placeholder in both viewport sizes, covering
+  screens, pages, and flows. `⌘K` and Ctrl+K move focus to the search field
+  from anywhere in the shell. `/` does the same while focus is not in a text
+  field. The bar carries no preview mode switch; the Auto/Light/Dark
+  Appearance control is the one setting that belongs here. Decision: the
+  standalone shell keeps Appearance in its top bar, not in an account menu,
+  because it has no account menu. Matching uses the single
+  [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
+  opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
   on hover. It opens a panel anchored under the field and aligned to its width
   (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
   radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
-  `Tags` head above a wrapping row of the details inspector's tag chips. The
+  `Tags` head above a wrapping row of the Details Tags row's chips. The
   panel lists every tag the catalogue declares, in alphabetical order, and
   scrolls internally once that set outgrows it. Selecting a chip enters
   `tag:<tag>` in the search field, replacing any tag term already entered, and
@@ -93,57 +118,46 @@ scrollable region scrolls internally:
   closes it and returns focus only if the panel held focus. Selecting a Details
   tag closes an open picker and focuses its toggle. A catalogue that declares
   no tags renders neither the control nor the panel.
-- **Navigation** — the catalogue column with its All/Changes filter and its
-  tree, under the [navigation column design](./mokly-shell-design-navigation.md).
-- **Screen head** — surface band with the breadcrumb trail (11.5px, `›`
-  separators; a folder crumb opens the folder's own page when one exists and
-  otherwise expands that folder in the tree) and a title row: 19px heading plus
-  a monospace path button showing the entry's path as written, with no `#`
-  prefix. The button uses the
-  standard pointer cursor, moves down 1px with an inset shadow while pressed,
-  and copies the path without navigating.
-  A selected screen places one right-aligned group of icon controls here:
-  Mobile/Desktop/Both dropdown and component highlighting when applicable.
-  Tooltips name each action. The head band carries no scheme control; the
-  catalogue's one Appearance control lives in the top bar.
-  A control whose axis hides a changed view carries a 6px accent dot in its
-  top-right corner, ringed 1.5px in the surface colour: Appearance when a
-  changed view uses another scheme and the viewport dropdown when another
-  viewport changed. Both never marks the viewport dropdown. The control names
-  a visually hidden `Other theme changed` or `Other viewport changed` through
-  `aria-describedby`; the dot stays distinct from selection and draws no rail.
-- **Stage** — dotted-grid background (22px radial dots), centred frames with
-  40px gap that stack from the top below 760px, internal `overflow: auto`,
-  safe centring (a row or frame wider than the stage starts at its left edge),
-  `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
-- **Details inspector** — the shared icon footer opens the chosen tab in place;
-  closing it leaves no icon selected. Desktop uses a centered grip on the divider
-  and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
-  grabber. The footer owns that sheet's surface and shadow while its dock owns
-  placement and height. Only panel content scrolls within the bounded workspace.
-  Details contains a two-column body (`1.35fr / 1fr`) with description and
-  `Why this screen —` rationale on the left and uppercase-labelled metadata
-  rows (Source, Moved from, Schemes, Changed views, Tags, Related docs,
-  Dependencies, Used by) on the right. Paths render as monospace chips; use
-  cases render as pill chips with the flow icon; a related doc that is itself a
-  catalogue document links to its entry; the Schemes row is plain text
-  naming the schemes the screen renders in (`light, dark`). The Changed views
-  row is plain text naming the views a ready classification marked changed
-  (`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
-  dark; it is hidden while no view is named. The Tags row lists the tags the entry
-  declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
-  the search field, so the filter stays visible and clearable there, and the
-  chip whose tag is in the entered query carries the accent active state with
-  contrast text and glyph. An entry that declares no tags omits the row.
+- **Catalogue** — the floating catalogue panel with its All/Changes filter and
+  its tree, under the
+  [navigation design](./mokly-shell-design-navigation.md).
+- **Canvas** — the selected entry's section and its frames on the dot grid,
+  with the zoom pill at the bottom centre, under the
+  [canvas stage](./mokly-shell-canvas-stage.md).
+- **Right panel** — while an entry is selected, a panel floats at the right
+  edge of the canvas, with the Inspect tab and, where the entry has a
+  comparison, the Changes tab. The
+  [component inspector design](./mokly-component-inspector-design.md) fixes
+  the panel, its tabs and its sections.
+- **Breadcrumbs** — the breadcrumb trail names the selected entry's folders,
+  with `›` separators. A folder crumb opens the folder's own page when one
+  exists, and otherwise expands that folder in the catalogue.
 
-Details has no rendered-file or route row: every file derives from the entry's
+Inspect's head names the entry, its kind and its change status, and shows its
+description and its Details rows: Path, Source, Moved from, Schemes, Changed
+views, Tags, Related docs, Dependencies and Used by, in that order. A section
+named for the entry's kind, such as `Why this screen`, holds its rationale.
+Paths render as monospace chips that may wrap after each `/`; use cases
+render as pill chips with the flow icon; a related doc that is itself a
+catalogue document links to its entry; the Schemes row is plain text naming
+the schemes the screen renders in (`light, dark`). The Changed views row is
+plain text naming the views a ready classification marked changed
+(`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
+dark; it is hidden while no view is named. The Tags row lists the tags the
+entry declares as pill chips with the tag icon: selecting one enters
+`tag:<tag>` in the search field, so the filter stays visible and clearable
+there, and the chip whose tag is in the entered query carries the accent active
+state with contrast text and glyph. An entry that declares no tags omits the
+row.
+
+Details have no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
-document's Details show its description, tags, and Markdown source file; a
-component's Details add the shown entry's path above its source.
+document's Details show its description, path, tags, and Markdown source file.
 
 Shared home guidance asks visitors to choose an item from the navigation.
+With nothing selected, the canvas holds the guidance and no right panel shows.
 Its summary counts current catalogue records of every entry kind, including
 screen and component variant records, independent of the active tree filters.
 The summary lists the kinds in this order: screens, components, user flows,
@@ -157,9 +171,10 @@ catalogue.
 
 ## Device Chrome And Color Scheme
 
-The phone and browser frames, the use-case flow layout, the document pane, and
-the dark preview tokens with their containment and light-only rules are defined
-by [shell device chrome and preview scheme](./mokly-shell-device-chrome.md).
+[Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+defines the canvas frames, the device frames of the states that the Canvas
+screens do not draw, the use-case flow layout, and the preview scheme with its
+containment and light-only rules.
 
 ## Responsive Behavior
 
@@ -167,30 +182,38 @@ See [responsive shell behavior](./mokly-shell-device-chrome.md#responsive-behavi
 
 ## In-place Comparisons
 
-The catalogue is the only shell. Eligible shown views place Current, Side
-by side, Overlay, and Difference below the heading; Current starts selected.
-Diffs load on demand in the same main region while navigation, details,
-viewport, scheme, Refresh, and Retry stay available. The band appears for a
-changed shown view, removed component variant, or verified affected consumer,
-and is absent from Browse, Added, Unmodified, removed-screen, evidence-only,
-and empty states. Static catalogues without comparison data omit it.
+The catalogue is the only shell. The right panel's Changes tab holds the
+compare modes, which apply to every frame on the canvas: Current, Side by side,
+Overlay, Difference and Swipe, with the keys 1 to 5. Current starts selected.
+Overlay and Difference hold both versions in each frame, Swipe splits each
+frame at one divider, and Side by side shows one frame's two versions next to
+each other. Diffs load on demand on the same canvas while navigation, Inspect,
+Refresh, and Retry stay available. Static catalogues without comparison data
+have no Changes tab. Decision: compare on every frame, not on one chosen view,
+because the canvas shows every viewport and scheme at once.
 
-Both viewports reuse their device frames. Overlay and Difference keep both
-script-disabled versions inside one opaque chrome; Side by side keeps one
-captioned chrome per version. Missing component-variant panes stay explicit
-and fall back to Side by side. Loading, failure, evidence, and ignored details
-stay secondary and never invent pixel measurements. Exact presentation,
-scrolling, switch geometry, responsive wrapping, app-shell dimensions, and
-fixed-row depictions live in the linked comparison contracts above.
+Loading, failure, evidence, and ignored details stay secondary and never report
+a count or a percentage of changed pixels. The
+[comparison panes](./mokly-comparison-panes.md) and the
+[Changes controls](./mokly-changes-controls.md) fix each mode's presentation,
+scrolling and controls, and the
+[Changes tab](./mokly-changes-controls.md#changes-tab) section of the Changes
+controls fixes the tab.
 
-The canonical states are `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
-`design/changes/diff-controls/overlay-long`, `design/changes/diff-controls/overlay-panel`, and
-`design/changes/diff-controls/side-by-side-apart`, each with path-derived
-`index.<viewport>.html` documents and mobile and desktop artboards. See
-[Changes](./mokly-changes.md), [component designs](./mokly-component-design.md),
-and [CSS evidence](./mokly-css-evidence-shell.md).
+The canonical Canvas states are `design/canvas/changes/current`,
+`design/canvas/changes/side-by-side`, `design/canvas/changes/overlay`,
+`design/canvas/changes/difference` and `design/canvas/changes/swipe`, each with
+path-derived `index.<viewport>.html` documents and mobile and desktop
+artboards. `design/canvas/outcomes/added/changes` depicts an added entry, which
+offers Current alone. The `design/changes/**` screens depict the comparison
+states that the Canvas screens do not draw. See [Changes](./mokly-changes.md),
+[component designs](./mokly-component-design.md), and
+[CSS evidence](./mokly-css-evidence-shell.md).
 
 ## Related Docs
 
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Package and authoring contract](./mokly-package.md)
+- [Shell canvas stage](./mokly-shell-canvas-stage.md)
+- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Canvas design inventory](./mokly-shell-canvas-inventory.md)

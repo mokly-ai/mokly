@@ -291,7 +291,12 @@ import each package component that they show, with its stylesheets, from
 `src/` by repository path, not from `dist`: the base side of a Changes
 comparison renders from Git, which holds no build output. A change here
 therefore also changes their design mockups, so run the mockup check of
-[`AGENTS.md`](../../AGENTS.md) after it.
+[`AGENTS.md`](../../AGENTS.md) after it. The Canvas design family there
+imports the palette module by repository path too, and
+`@mokly-cloud/tokens` imports `@mokly/ui/palette` for the Canvas drawings of
+the cloud mockups under `docs/mockups`. After a change of a palette value,
+also run the check that the [mockups README](../../docs/mockups/README.md)
+gives.
 
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpath in the `exports` map is `./<name>`, with `types` and
@@ -314,8 +319,9 @@ Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
 embeds the viewer sets that size, so a `rem` width can change from host to
 host. An `em` width follows the element's own font size instead. The
-[device chrome contract](../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
-requires the navigation drawer's `max-width: 20rem`, so that width uses `rem`.
+navigation drawer's `max-width: 20rem` is the one `rem` width. The
+[compact layout](../../docs/protocol/mokly-shell-device-chrome.md#compact-layout)
+of the device chrome contract replaces that drawer with sheets.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
@@ -500,4 +506,18 @@ override the desktop layout rules.
 - [Shared UI package contract](../../docs/protocol/mokly-ui-package.md)
 - [Package and consumer boundary](../../docs/architecture/package-boundary.md)
 - [Design components](../../docs/protocol/mokly-design-components.md)
-- [Viewer appearance](../../docs/protocol/mokly-viewer-appearance.md)
+- [Viewer appearance](../../docs/protocol/mokly-viewer-appearance.md) and
+  [Viewer palette](../../docs/protocol/mokly-viewer-palette.md), the Canvas
+  palette and the theme that the package draws in
+- [Shell design](../../docs/protocol/mokly-shell-design.md),
+  [Shell canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md) and
+  [Shell device chrome](../../docs/protocol/mokly-shell-device-chrome.md), the
+  Canvas stage, its frames, pan, zoom and Fit, and the compact layout
+- [Component inspector design](../../docs/protocol/mokly-component-inspector-design.md),
+  the right panel with Inspect and Changes,
+  [Canvas selection](../../docs/protocol/mokly-viewer-selection-canvas.md),
+  the selection on a frame and its box model, and
+  [Comparison panes](../../docs/protocol/mokly-comparison-panes.md), the
+  compare modes
+- [Shell brand](../../docs/protocol/mokly-shell-brand.md), the mark that the
+  top bar draws

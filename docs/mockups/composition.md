@@ -2,10 +2,12 @@
 
 This is the detailed composition guide for the [Mockup catalogue](./README.md).
 
-## Selected Folio Style
+## Selected Folio And Canvas Styles
 
 Product components live under `src/screens/product/`; shared fixtures remain
-mockup-only.
+mockup-only. The account, recovery and settings families draw in Folio. The
+viewer family draws its cloud parts in Canvas, around the `@mokly/ui` parts,
+which keep the package's own look.
 [`src/screens/product/viewer/published-viewer.tsx`](./src/screens/product/viewer/published-viewer.tsx)
 and its `published-*` modules own the published package stage with cloud slots
 filled. Their doc comments describe how the stage is drawn. Its rows and
@@ -38,11 +40,23 @@ stage, `settings.css` the overlay, `account.css` the account
 panel with its canvas, progress strip and mobile edge-to-edge rules,
 `entry.css` the shared sign-in/sign-up field stack, `recovery.css` the
 app-owned unmatched-path state, and `chrome.css` the wordmark, identity and
-heading primitives. `styles/fonts/` holds the self-hosted Inter variable face
-and its SIL Open Font License, copied from the pinned `@mokly/mokly` package.
-`styles/email/` holds the inbox frame and byte-identical copies of the
-published logo lockups in `apps/site/public/brand/`. The message table uses
-separate borders with zero spacing so the card border follows its corners.
+heading primitives. The viewer drawings add the Canvas sheets, which their own
+modules import and the application never loads: `viewer-canvas.css` the bar,
+the publication pill, the avatar and the search hint,
+`viewer-canvas-stage.css` the dot-grid stage and its floating cards,
+`viewer-canvas-depth.css` the shade, the radius and the shadows of a floating
+surface, `viewer-canvas-panels.css` the panels that the slots open,
+`viewer-canvas-menu.css` the open account and More menus,
+`viewer-canvas-check.css` the Mokly check beside the stage, and
+`viewer-canvas-settings.css` the settings dialog over the viewer.
+`styles/fonts/` holds the self-hosted Inter variable face, copied from the
+pinned `@mokly/mokly` package, and the Geist and Geist Mono variable faces of
+the Canvas palette, copied from the `geist` npm package, with the SIL Open
+Font License of each family. `styles/site/fonts/` holds the Instrument Serif
+face of the site's drawn demo app with its license. `styles/email/` holds the
+inbox frame and byte-identical copies of the published logo lockups in
+`apps/site/public/brand/`. The message table uses separate borders with zero
+spacing so the card border follows its corners.
 Its fixtures use the app callback, sign-in and member settings routes.
 
 Every standard owning screen in the account, recovery, settings and viewer
@@ -243,7 +257,10 @@ from an effect and draws nothing in static markup. Table's optional large
 density uses Firna Body for ordinary cells; its earlier saved variants keep
 their density.
 Folio binds the shared semantic roles through `.folio-scope` and its derived
-Firna theme across every product screen. Component previews retain paper.
+Firna theme across the account, recovery and settings screens. Canvas binds
+them through `.canvas-scope` and its own Firna theme, whose solid fill is the
+signal green, across the viewer family and the site screens. Component
+previews retain paper.
 `textarea` stays registered with its variants while the screen that consumed
 it waits for the review phase; `switch` draws the project pane's Automatic
 builds setting, with its `working` word beside the label while that setting

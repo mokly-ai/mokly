@@ -40,12 +40,17 @@ to depict a different setting, as the `auto-appearance` sample does.
 | preview / empty-state         | `home`, `missing-route`, `no-changes`                                                                                                         |
 | preview / flow-step           | `first`, `second`                                                                                                                             |
 
+The [Canvas viewer parts](./mokly-design-component-library-canvas.md) page
+lists the other eleven components: the `canvas` and `panels` groups, and the
+Frames filter and the box model of the `inspector` group.
+
 Each variant depicts the corresponding screen state with complete explicit
 props, apart from the render-context fallback a dual-scheme sample uses above.
 A sample never renders its complete owning artboard. All selected-screen
-footers use the icon panel and the viewport control uses the grouped icons. No
-disclosure variant or segmented viewport presentation is supported.
-Comparison modes keep their segments.
+footers of the Browse, Changes and component explorer screens use the icon
+panel and the viewport control uses the grouped icons. No disclosure variant
+or segmented viewport presentation is supported. Comparison modes keep their
+segments.
 
 ## Data, Slots And Controls
 
@@ -223,3 +228,4 @@ scenario data and no other full-screen component.
 | Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit          |
 | Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                |
 | Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the navigation, header, frame, inspector, comparison and empty components |
+| Canvas viewer                                        | Top bar, floating panel and phone dock; frame, zoom pill and panel tabs with an entry; the other parts a state shows      |

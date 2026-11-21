@@ -16,7 +16,7 @@ that requested scheme. Rendered pages must not read the building or viewing
 machine's system theme; the Auto example uses the requested scheme as its
 deterministic system-theme fixture.
 
-Each artboard draws exactly one scheme control: the registered
+Each artboard draws exactly one appearance control: the registered
 `chrome/appearance-selector` composed into the top bar. It depicts the
 standalone control and has no authored transitions. The depicted top bar
 component owns it, so every artboard drawing a top bar shows it rather than
@@ -25,7 +25,8 @@ no preview theme icon, and depicted component toolbars carry no scheme switch.
 The Auto artboard's selector reads Auto in both renders; every other
 artboard's selector reads the name of the scheme it was rendered for.
 
-Previews follow the artboard. Subjects with a dark render, such as Welcome, the
+Outside the Canvas family, previews follow the artboard. Subjects with a dark
+render, such as Welcome, the
 comparison panes and the flow's first step, use the dark device-screen
 treatment in the Dark render and the light one in the Light render. The
 light-only Details subject keeps its light frames in both renders and shows the
@@ -54,10 +55,23 @@ exact entries are listed in the
 `design/browse/views/screen/dark-scheme` and
 `design/browse/views/screen/light-only` are Welcome variants with Light and
 Dark artboards; they, `design/browse/views/screen` and
-`design/browse/views/details-screen` follow the one Appearance selector. No
-design entry depicts a separate preview-scheme control,
-`controls/view-controls` carries no scheme control, and the design catalogue
-authors no scheme link pairs. Keep notes outside the screens.
+`design/browse/views/details-screen` follow the one Appearance selector. Apart
+from the Frames filter of the Canvas family below, no design entry depicts a
+separate preview-scheme control, `controls/view-controls` carries no scheme
+control, and the design catalogue authors no scheme link pairs. Keep notes
+outside the screens.
+
+## Canvas Family
+
+The Canvas viewer designs under `design/canvas` follow the same render rules:
+each artboard renders once per scheme, its interface takes the rendered
+scheme, and its top bar draws the same Appearance selector. Its frames do not
+follow the artboard. Each frame draws its own scheme, so a screen's Light and
+Dark frames and a variant set's Light and Dark variants show in both renders.
+Only a Markdown document's reading frame takes the rendered scheme. Inspect's
+Frames filter draws the Light and Dark toggles, which choose frames and are
+not an appearance control. A light-only screen, such as Profile, holds its
+Light frames and draws the filter's Dark toggle disabled with Light only.
 
 ## Related Docs
 

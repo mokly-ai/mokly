@@ -1,5 +1,7 @@
 # Frame Probe Handshake And Wire Protocol
 
+Status: Wire protocol v4 is not built yet, so both peers use version 3. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds it.
+
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the [frame probe](./mokly-frame-probe.md).
@@ -115,6 +117,30 @@ from the catalogue in the host, not DOM text. Host validation rejects unknown
 keys even after a valid handshake; the nonce binds a mount, not content honesty.
 The viewer uses the same `geometry` notification and `list` response to redraw
 the highlight mask and the package labels and to refresh host marker placement.
+
+## Wire Protocol v4
+
+Version 4 keeps every rule of [version 3](#wire-protocol-v3) and adds one
+request, which measures the box model of an instance for Inspect. Its envelope
+carries `version: 4`. Each peer accepts only its own version, so a page that
+carries a version 3 frame probe and a version 4 viewer reject each other's
+handshake.
+
+| Type        | Direction | Additional fields                                 |
+| ----------- | --------- | ------------------------------------------------- |
+| `measure`   | H → F     | `requestId`, `key`                                |
+| `box-model` | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null` |
+
+`measure` returns `box-model` or `error`. `InstanceBoxModel` has exactly the
+fields `box`, `border` and `padding`. `border` and `padding` each have exactly
+the fields `top`, `right`, `bottom` and `left`. `box` follows the box bounds of
+version 3, and each side is a finite number from 0 to 1,000,000. A null
+`boxModel` means that the instance has no box model. The
+[box model rules](./mokly-frame-adapter.md#box-model) define every value. A key
+outside the mount's validated usage gets `error` with `missing-instance`, and a
+measurement outside the bounds gets `error` with `limit`. The reply carries
+numbers only. The host measures again after a `geometry` event, as it lists
+boundaries again.
 
 ## Frame Probe Script
 

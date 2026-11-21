@@ -4,7 +4,8 @@
 
 The design screens are authored in `examples/basic/specs/design/` and
 rendered as each entry's path-derived `index.<viewport>.html` views under the
-[artifact path contract](./mokly-artifact-paths.md). This Browse/Changes table and the
+[artifact path contract](./mokly-artifact-paths.md). This Browse/Changes table,
+the [Canvas design inventory](./mokly-shell-canvas-inventory.md) and the
 [component design inventory](./mokly-component-design.md#owning-catalogue)
 together define the complete set of Mokly shell design screens and match the
 example's catalogue index. The Entry column names each
@@ -208,6 +209,16 @@ destinations and the
 boundary between linked states and local runtime controls. Those links are
 mockup navigation, separate from the outer shell that the
 [shell design contract](./mokly-shell-design.md) describes.
+
+## Canvas Family
+
+The `design/canvas` family depicts the Canvas viewer: the canvas stage, the
+floating panels, Inspect, Changes and the compact layout. The
+[Canvas design inventory](./mokly-shell-canvas-inventory.md) lists its
+seventeen screens and twelve variants and owns its rules. Every Canvas screen
+renders in both schemes. The Browse and Changes screens above depict the
+states that the Canvas family does not draw, such as a use-case flow, a
+removed or moved entry, loading and recovery, and the tag picker.
 
 ## Loading State Retries
 

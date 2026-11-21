@@ -1,10 +1,12 @@
 # Marketing Site
 
+Status: The site does not publish `/pricing` or link to `/sign-up` yet. [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) builds both.
+
 The public website and documentation live in this repository as the static
 Astro npm workspace `apps/site`. Marketing lives here, not in `apps/app`,
-because the site documents the cloud from the cloud protocol docs, stages the
-cloud dogfood catalogue and consumes the cloud design tokens, while the
-product app serves only the signed-in application and its account routes. The site and app share one
+because the site documents the cloud from the cloud protocol docs and consumes
+the cloud design tokens, while the product app serves only the signed-in
+application and its account routes. The site and app share one
 public origin; the site's explicit first segments take precedence over
 workspace slugs. This document fixes route ownership and links.
 [Site](./site.md), [Site design](./site-design.md),
@@ -13,11 +15,11 @@ implementation contract.
 
 ## Ownership
 
-| Public surface                | Owner         | Routes                                                                         |
-| ----------------------------- | ------------- | ------------------------------------------------------------------------------ |
-| Shared app/site origin        | `apps/site`   | `/`, `/docs/…`, `/changelog`, `/terms`, `/privacy`, `/complaints`, `/security` |
-| Shared app/site origin        | `apps/app`    | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`        |
-| Catalogue publication origins | Rust workload | per-publication sandbox subdomains, see [Viewer](./viewer.md)                  |
+| Public surface                | Owner         | Routes                                                                                     |
+| ----------------------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| Shared app/site origin        | `apps/site`   | `/`, `/docs/…`, `/changelog`, `/pricing`, `/terms`, `/privacy`, `/complaints`, `/security` |
+| Shared app/site origin        | `apps/app`    | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`                    |
+| Catalogue publication origins | Rust workload | per-publication sandbox subdomains, see [Viewer](./viewer.md)                              |
 
 The internal app-origin hostname is an app-workload endpoint used only by the
 Worker. It is not a public surface and is never linked or navigated directly.
@@ -37,10 +39,11 @@ generated inventory, the built output and the reserved names fails the checks.
 
 ## Links From The Site To The App
 
-The site links to no application route. The launch leads with the
-open-source CLI, so **Get started** opens the Install guide at
-`/docs/start/install/` and the site has no **Sign in** link. The links return
-with the cloud launch. [Site](./site.md#get-started) owns this rule.
+The site links one application route: **Create an account** and **Start a
+7-day trial** on the pricing page open `/sign-up`. **Get started** opens the
+Install guide at `/docs/start/install/`, and the site has no **Sign in** link.
+[Site](./site.md#get-started) owns these rules and the link check's exception
+for application routes.
 
 ## Public Repository Link
 
@@ -83,10 +86,10 @@ caching and security headers.
 
 ## Shared Design
 
-The site uses the Folio system, header/footer composition and wordmark. It
-consumes this repository's private `@mokly-cloud/tokens` npm workspace directly;
-the site and mockups declare no token and keep no copied palette. Semantic
-mapping is in [Site design](./site-design.md), canonical values in
+The site and the app share one look and one brand. The site consumes this
+repository's private `@mokly-cloud/tokens` npm workspace directly; the site and
+mockups declare no token and keep no copied palette. The site's look is in
+[Site design](./site-design.md), canonical values in
 [Design tokens](./design-tokens.md), and copy on both origins follows
 [Product copy](./product-copy.md).
 
@@ -96,14 +99,17 @@ The site describes the product direction (browse, review, edit, open
 foundation) and documents cloud behavior from this repository's protocol docs
 before the cloud ships. [Site](./site.md#ahead-of-release-pages) owns the
 `status: ahead` convention and the alignment that happens before the apex
-domain goes live.
+domain goes live. Until then the [source rule](./site.md#boundary) lets the
+site draw a fictional demo app and depict features that the product does not
+have yet.
 
 ## Mockups
 
-The home, docs, changelog, Terms, Privacy, Complaints and Security screens
-live in the dogfood catalogue's `Design › Site` folder with stable
-`design/site/*` paths. A seven-step site tour reuses those owning screen
+The home, docs, changelog, pricing, Terms, Privacy, Complaints and Security
+screens live in the dogfood catalogue's `Design › Site` folder with stable
+`design/site/*` paths. An eight-step site tour reuses those owning screen
 components. Each screen renders mobile/desktop and light/dark, and the site
 and the mockups share selectors as [Site mockups](./site-mockups.md#mockups)
 requires. Sign-in and sign-up remain product screens under the
-`Product › Account` folder; see [Product mockups](./product-mockups.md).
+`Product › Account` folder, and the pricing screen's plan actions link the
+sign-up screen; see [Product mockups](./product-mockups.md).

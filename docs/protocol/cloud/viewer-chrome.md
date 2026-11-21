@@ -1,40 +1,54 @@
 # Viewer Chrome
 
+Status: The five-action bar, the account trigger and its menu, and the Mokly check in the Changes tab are not built yet. [Milestone 12](../../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, and [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) builds the bar, the account trigger and its menu, and the check in that slot.
+
 This is the slot and publication-chrome sub-contract of [Viewer](./viewer.md).
 The slots are those of the workspace `@mokly/viewer` of
-[Viewer host](./viewer-host.md).
+[Viewer host](./viewer-host.md). The account trigger, the account menu and its
+Theme choice are in
+[Viewer chrome: account menu](./viewer-chrome-account.md).
 
 ## Slot Inventory
 
 The package exposes `topBarStart`, `topBarEnd`, `railStart`, `railEnd`,
-`sidePanel`, `stageOverlay` and `emptyState`. Cloud composes its six existing
-actions into the first two. When the bar's own width fits all six beside the
-package's own controls, project and publication fill `topBarStart`; history,
-share, settings and account fill `topBarEnd`. Cloud-owned
-wrappers constrain variable workspace, project, reference and account labels
+`sidePanel`, `stageOverlay` and `emptyState`, and its Changes tab holds one
+host slot for a check. Cloud composes its five actions into the first two:
+the workspace and project switcher, the publication, History, Share and the
+account. When the bar's own width fits all five beside the package's own
+controls, project and publication fill `topBarStart`; history, share and
+account fill `topBarEnd`. The bar has no Settings action and no theme toggle:
+Settings and Theme are rows of the
+[account menu](./viewer-chrome-account.md#account-menu). Decision: Settings and
+Theme sit in the account menu rather than in the bar, so that the bar holds
+only the navigation, the publication and the actions on it.
+Cloud-owned wrappers constrain variable workspace, project and reference labels
 to one line with truncation when needed, while preserving their complete
-accessible names and tooltips. Fixed actions and the package's own controls remain readable
-and never overlap at supported widths. Workspace display names remain
-separate from route slugs; a reader without workspace metadata can use the
-project response's real workspace slug as its label. When the bar's own width
-is too narrow for all six, as on mobile,
-the publication remains in `topBarStart` and a Firna **More** menu in
-`topBarEnd` carries project, history, share, settings and account. This keeps
-the package's own menu, search and 48px top bar intact instead of adding a
-second package row. The choice between the two layouts follows the bar's own
-width rather than the window width or a higher compact breakpoint, because
-that breakpoint also moves settings and touch targets across the product.
-Choosing a menu item closes the menu and opens the same
-cloud overlay as its desktop control. Dismissing an overlay returns focus to
-the current trigger of the cloud action that opened it: **More** while the
-compact bar groups that action, or the action's own trigger while the bar
-shows it. That focus obligation belongs to the logical action across the
-cloud fallback, the package loader, the ready package shell and a change
-between the two layouts. Restoration is
-bounded: it ends when the reader focuses another control, interacts again,
-opens another overlay or leaves the route. The package keeps its own top bar
-and rail. Cloud does not fill the remaining slots in this scope. Each trigger
-opens one cloud overlay, and only one overlay is open at a time.
+accessible names and tooltips. Fixed actions and the package's own controls
+remain readable and never overlap at supported widths. Workspace display names
+remain separate from route slugs; a reader without workspace metadata can use
+the project response's real workspace slug as its label. When the bar's own
+width is too narrow for all five, as on mobile, the publication remains in
+`topBarStart` and a Firna **More** menu in `topBarEnd` carries the project,
+history and share, then the
+[account rows](./viewer-chrome-account.md#more). This keeps the package's own
+controls and its 48px top bar intact instead of adding a second package row.
+The choice between the two layouts follows the bar's own width rather than the
+window width or a higher compact breakpoint, because that breakpoint also
+moves settings and touch targets across the product. Choosing a menu item
+closes the menu and opens the same cloud overlay as its desktop control.
+Dismissing an overlay returns focus to the current trigger of the cloud action
+that opened it: **More** while the compact bar groups that action, or the
+action's own trigger while the bar shows it. That focus obligation belongs to
+the logical action across the cloud fallback, the package loader, the ready
+package shell and a change between the two layouts. Restoration is bounded: it
+ends when the reader focuses another control, interacts again, opens another
+overlay or leaves the route. The package keeps its own top bar and catalogue.
+Cloud also fills the Changes tab's [check slot](#check-slot) and, for a private
+comparison, `stageOverlay`, as the
+[private artifact limit](./viewer.md#private-artifact-limit) defines. It leaves
+`railStart`, `railEnd`, `sidePanel` and `emptyState` empty. Each panel trigger
+opens one cloud overlay, the account trigger and **More** open a menu, and only
+one overlay is open at a time.
 
 A press that begins on a cloud fallback control also finishes on that logical
 slot. If access becomes ready while the primary pointer or Space/Enter
@@ -47,37 +61,29 @@ loader. A settled package control remains package-owned for its complete
 native pointer or keyboard activation and never causes the host to render the
 fallback again.
 
-| Slot          | Trigger                                    | Opens                                                                                                           |
-| ------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `project`     | Workspace and project, with the mark       | The workspaces the user can access, their projects, Create project, and Workspace settings for administrators   |
-| `publication` | The branch or pull request, with its state | Branches with the default first, then pull requests, each row showing its publication state, time and short SHA |
-| `history`     | History                                    | This branch's publications and, for members, its builds, newest first, each an immutable link                   |
-| `share`       | Share                                      | The canonical publication link with the API-supported screen/view projection and Copy link                      |
-| `settings`    | Settings                                   | The [settings dialog](./settings-dialog.md) over the stage                                                      |
-| `account`     | The signed-in person                       | Account settings and sign out                                                                                   |
+| Slot          | Trigger                                                    | Opens                                                                                                           |
+| ------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `project`     | Workspace and project                                      | The workspaces the user can access, their projects, Create project, and Workspace settings for administrators   |
+| `publication` | The publication pill: the branch or pull request and state | Branches with the default first, then pull requests, each row showing its publication state, time and short SHA |
+| `history`     | History                                                    | This branch's publications and, for members, its builds, newest first, each an immutable link                   |
+| `share`       | Share                                                      | The canonical publication link with the API-supported screen/view projection and Copy link                      |
+| `account`     | The reader's avatar                                        | The account menu: who is signed in, Theme, Settings and Sign out                                                |
 
-Every account is created by an email address, so the `account` trigger names a
-person who has not set a display name by their address. A compact bar shows the
-local part of it, because the whole address is wider than the row and pushes the
-publication off a 320px screen; the whole address stays that control's
-accessible name, so nothing is only reachable by hovering. A reader who has set
-a name is called by it on every width, and it is their trigger's whole
-accessible name: only a shortened label is given a longer one to answer to.
 The project trigger uses the workspace display name when its authorized
 read succeeds and the readable slug while that optional read is pending or
 unavailable.
 
-Every direct overlay trigger says what it opens and whether it is open with
-`aria-haspopup="dialog"` and `aria-expanded`. On compact widths, **More** uses
-`aria-haspopup="menu"` and reports the dropdown itself as expanded; its rows
-then open the same dialogs as the desktop triggers. One cloud overlay is open
-at a time. While an overlay is open the whole chrome beneath it is
-`aria-hidden`, which is what makes the overlay the only thing on the page: the
-expanded value is recorded rather than announced, and what the reader hears is
-the dialog's own name. The cloud stage's stable `div` gives up its landmark and
-heading while the overlay owns the document. The stage and its trigger controls
-stay mounted. The published package's main and skip-link limit is recorded in
-[Web product shell](./web-product-shell.md#viewer).
+Every panel trigger says what it opens and whether it is open with
+`aria-haspopup="dialog"` and `aria-expanded`. The account trigger and, on
+compact widths, **More** use `aria-haspopup="menu"` and report the menu itself
+as expanded; More's rows open the same dialogs as the desktop triggers. One
+cloud overlay is open at a time. While an overlay is open the whole chrome
+beneath it is `aria-hidden`, which is what makes the overlay the only thing on
+the page: the expanded value is recorded rather than announced, and what the
+reader hears is the dialog's own name. The cloud stage's stable `div` gives up
+its landmark and heading while the overlay owns the document. The stage and its
+trigger controls stay mounted. The published package's main and skip-link
+limit is recorded in [Web product shell](./web-product-shell.md#viewer).
 
 Every panel is total over the states the route can be in: a panel that needs a
 publication the address does not have says so in its own body — share offers
@@ -133,6 +139,24 @@ The chrome stays mounted in every state, so the user is never outside the viewer
 The cloud read operations, ordering and share validation are defined in
 [Viewer read model](./viewer-read-model.md).
 
+## Check Slot
+
+The package's Changes tab holds one host slot between the change stepper and
+Compared, as [Changes screen controls](../mokly-changes-controls.md#changes-tab)
+defines, and shows it only on a changed entry. Cloud fills it with the check
+card of a pull request's publication: the Mokly check that
+[Changes check](./changes-check.md#result) posts for that publication. A
+branch's publication leaves the slot empty. The card shows the success glyph,
+the check's name, Mokly, and the count lines of the check's summary, without
+its View Changes link, because the reader is already in Changes. Its foot
+links the pull request's checks on GitHub with the number and title, and
+carries the external glyph, because it leaves the app; the bar already links
+the pull request itself. The card's composition is in
+[Viewer compositions](./folio-viewer.md#compositions). Decision: the check
+fills a host slot inside the package's Changes tab, not a cloud panel in
+`sidePanel`, because a cloud panel beside the package's Changes would copy it,
+and the cloud never reimplements Browse or Changes.
+
 ## Chrome And Publication Identity
 
 Standalone entry chooses the project's default branch; pull request entry
@@ -154,8 +178,8 @@ member access, switcher rows and history also carry
 Failed, and history reads `listHistory`, which joins the reference's builds to
 its publications.
 
-The package's Browse rail is not cloud navigation. The switchers, history,
-share, settings and account sit in the two package top-bar slots around the
+The package's catalogue is not cloud navigation. The switchers, history,
+share and the account sit in the two package top-bar slots around the
 package's own mark and search above its stage, which takes the full remaining
 width. On mobile the publication stays visible and the other cloud actions are
 grouped under **More** as defined above. The switcher, history and share
@@ -166,20 +190,23 @@ The live app makes the screen behind an overlay inert, traps focus and returns
 it to the trigger. Static mockups use the registered overlay layout described
 in [Shared controls](./shared-controls.md), because the package modal requires
 a browser portal. The exact geometry is the viewer top bar and panel
-compositions in [Folio viewer compositions](./folio-viewer.md).
+compositions in [Viewer compositions](./folio-viewer.md).
 
 ## Mockup Representation
 
 The ready canvas is a static depiction composed of the workspace
 `@mokly/ui` parts that the viewer renders its shell from, drawn with
 `interactive={false}`: the cloud controls sit in the embedded layout's host
-slots, and a sample screen fills the phone and browser frames.
+slots, and a sample screen fills the phone and browser frames. The package top
+bar draws no theme toggle, and its search field ends with the `⌘K` hint.
 Non-ready cloud states stay cloud-owned.
 The six entries adopt `product/viewer/standalone`, `product/viewer/pull-request`,
 `product/viewer/projects`, `product/viewer/switcher`, `product/viewer/history` and
 `product/viewer/share`. Each renders the cloud chrome in the two
 top-bar slots around that depiction, in both viewports and schemes, with
-canonical, empty, loading and error entries.
+canonical, empty, loading and error entries. The open account menu, the check
+and the settings dialog over the viewer have their own drawings, which the
+[viewer inventory](./product-mockups-viewer.md#viewer) lists.
 A desktop drawing chooses the full or the compact bar from its own width and
 switches at the same width as the application's bar, so a narrow catalogue
 frame draws **More** instead of clipping controls. Phone drawings keep the

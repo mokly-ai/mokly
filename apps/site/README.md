@@ -1,21 +1,30 @@
 # Mokly Site
 
+Status: The site does not draw Canvas yet. The [palette source, fonts and brand milestone](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) makes the `@mokly/ui` palette the source of the tokens, self-hosts Geist and draws the new brand. The [site chrome and legal pages milestone](../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) builds the Canvas chrome and the footer scheme control, and restyles the legal pages. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs milestone](../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Canvas docs. The [HTML sample fence milestone](../../plans/canvas-redesign.md#milestone-7-html-sample-fence) adds the fence to the Markdown pipeline. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog. The [site pricing milestone](../../plans/canvas-redesign.md#milestone-9-site-pricing) builds `/pricing/` and its links to the app.
+
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
 chrome and delivery. Product and account routes remain in `apps/app`.
 
 ## Responsibilities
 
-- Build `/`, `/docs/…`, `/changelog/`, `/terms/`, `/privacy/`, `/complaints/`,
-  `/security/`, the 404 page, feeds, sitemap, robots file, favicon, public logo
-  assets and per-page social cards.
+- Build `/`, `/docs/…`, `/changelog/`, `/pricing/`, `/terms/`, `/privacy/`,
+  `/complaints/`, `/security/`, the 404 page, feeds, sitemap, robots file,
+  favicon, public logo assets and per-page social cards.
+- Draw every page in the Canvas look that
+  [Site design](../../docs/protocol/cloud/site-design.md) defines, from the
+  `@mokly-cloud/tokens` roles and self-hosted faces.
 - Render CLI guides, reference documents, version and changelog from the exact
-  installed `@mokly/mokly` package.
+  installed `@mokly/mokly` package. Render each HTML sample fence of a guide
+  at build time, as its code beside its sample.
 - Render Mokly Cloud and Review documentation from this repository's Markdown.
-- Stage one real dogfood-catalogue screen on the home page.
-- Link every page's shared header to the public Mokly GitHub repository.
+- Draw the home page's spread and demos of a fictional demo app as static
+  components at build time.
+- Link every page's shared header to the public Mokly GitHub repository, and
+  the Pricing page's plan actions to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
-  scripts.
+  scripts. The footer's scheme control keeps the reader's choice in
+  `localStorage`.
 
 ## What This Package Does
 
@@ -38,6 +47,12 @@ The site consumes the private `@mokly-cloud/tokens` package from the npm workspa
 directly and emits its responsive CSS scoped per color scheme; site styles use
 only semantic `--mk-*` properties. There is no second published token
 dependency or copied palette.
+
+Every page reads fully without script. Each script, such as the scheme
+control, the changelog filter, a scroll spy, a home demo or the controls of an
+HTML sample fence, is a small same-origin island. Every animation honours
+reduced motion and shows its finished state.
+[Site delivery](../../docs/protocol/cloud/site-delivery.md) owns these rules.
 
 The home stage is generated after the dogfood catalogue. It publishes the
 four mobile/desktop and light/dark documents of
@@ -109,8 +124,11 @@ environment and are read once:
 The origin must be an absolute HTTP(S) origin without credentials, path, query or
 fragment. The stage label accepts safe letters, digits, `.`, `_`, `/` and `-`,
 with no leading slash or `..` path segment. Explicit empty values fail the
-build. Get started uses the relative path `/docs/start/install/`; the site
-links to no application route.
+build. Get started uses the relative path `/docs/start/install/`. The Pricing
+page's Create an account and Start a 7-day trial use the app's relative path
+`/sign-up`, and the link check accepts that app path.
+[Marketing site](../../docs/protocol/cloud/marketing-site.md) names every link
+from the site to the app.
 
 ## Development
 
@@ -198,6 +216,15 @@ repository Markdown link test, `tests/markdown_links.test.ts`, fails the link
 when the site has no route there. It checks the fragment against the
 headings of the Markdown that the route renders.
 
+The home page's demo app, `acme/storefront`, is fictional. Every claim about
+Mokly stays real, and the source rule of
+[Public site](../../docs/protocol/cloud/site.md) lets the site depict a
+feature that ships before go-live. Before go-live, check each depicted
+feature against the product, and remove each one that did not ship. The
+Pricing page states only the plan facts of
+[Billing](../../docs/protocol/cloud/billing.md) and
+[Billing plan gates](../../docs/protocol/cloud/billing-plan-gates.md).
+
 Terms, Privacy, Complaints and Security are Markdown documents under
 `src/content/legal/`. Their effective dates, provider details, retention
 statements and security claims stay aligned with the cloud protocols and
@@ -264,13 +291,25 @@ Pages project and attach the domain are in the
 - [Repository setup](../../docs/development/cloud.md#developer-get-started) and the
   [TypeScript npm workspace](../README.md)
 - [Public site](../../docs/protocol/cloud/site.md),
+  [Site chrome](../../docs/protocol/cloud/site-chrome.md),
   [Site home copy](../../docs/protocol/cloud/site-copy.md),
+  [Site pricing](../../docs/protocol/cloud/site-pricing.md),
+  [Site changelog](../../docs/protocol/cloud/site-changelog.md),
   [Site docs](../../docs/protocol/cloud/site-docs.md),
+  [Site docs layout](../../docs/protocol/cloud/site-docs-layout.md),
   [Site design](../../docs/protocol/cloud/site-design.md),
+  [Site design components](../../docs/protocol/cloud/site-design-components.md),
+  [Site design pages](../../docs/protocol/cloud/site-design-pages.md),
   [Site mockups](../../docs/protocol/cloud/site-mockups.md),
   [Site legal](../../docs/protocol/cloud/site-legal.md),
   [Site delivery](../../docs/protocol/cloud/site-delivery.md),
+  [Site delivery islands](../../docs/protocol/cloud/site-delivery-islands.md),
   [Site deployment](../../docs/protocol/cloud/site-deployment.md) and
   [Marketing site](../../docs/protocol/cloud/marketing-site.md)
+- [Design tokens](../../docs/protocol/cloud/design-tokens.md) and the
+  [viewer palette](../../docs/protocol/mokly-viewer-palette.md), which hold
+  the Canvas values
+- [Guides](../../docs/protocol/mokly-guides.md), which define the HTML sample
+  fence
 - [Billing](../../docs/protocol/cloud/billing.md)
 - [Deployment runbook](../../docs/ops/deploy.md#public-site)
