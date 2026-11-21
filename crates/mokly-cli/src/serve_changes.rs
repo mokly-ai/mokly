@@ -90,6 +90,10 @@ pub(super) struct Source {
     pub(super) warnings: Arc<dyn AttemptWarnings>,
 }
 impl ChangeSource for Source {
+    fn settled(&self) {
+        self.head.prepare_render_reuse();
+    }
+
     fn started(&self, cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         let phase = RefCell::new(None);
         cancel.commit(&TerminalEvent(&|| {

@@ -86,6 +86,10 @@ pub(crate) struct SessionInput {
 }
 
 impl RenderGeneration for Session {
+    fn prepare_render_reuse(&self) {
+        self.prepare_render_inputs();
+    }
+
     fn read_background(&self, route: &str) -> Result<Option<BackgroundRead>> {
         self.read_background_document(route).map(Some)
     }

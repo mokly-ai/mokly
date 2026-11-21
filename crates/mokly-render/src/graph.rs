@@ -12,7 +12,7 @@ use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
 use mokly_graph::key::NodeKey;
-use mokly_graph::render_inputs::{RenderInputs, RenderKeys};
+use mokly_graph::render_inputs::with_catalogue_inputs;
 use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
@@ -147,26 +147,9 @@ impl JavaScriptGraph {
                 .as_bytes(),
             );
             let renderer = config.renderer();
-            let declaring: BTreeMap<_, _> = catalogue
-                .model
-                .entries
-                .iter()
-                .filter_map(|entry| {
-                    let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
-                    Some((source.handle.clone(), entry.metadata.source.path.clone()))
-                })
-                .collect();
-            let keys = Arc::new(RenderKeys::build_with_workers(
-                &RenderInputs {
-                    generation,
-                    bindings: &catalogue.javascript.bindings,
-                    renderer: renderer.as_deref(),
-                    entries: &catalogue.javascript.entries,
-                    declarations: &declaring,
-                },
-                NodeKey(fingerprint),
-                self.runtime.workers.as_ref(),
-            ));
+            let keys = with_catalogue_inputs(config, catalogue, generation, |inputs| {
+                self.runtime.render_keys(inputs, NodeKey(fingerprint))
+            });
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
                 Arc::new(Fragments {

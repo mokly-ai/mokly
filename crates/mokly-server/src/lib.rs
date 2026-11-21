@@ -26,6 +26,7 @@ pub mod changes_background;
 mod changes_detail;
 mod changes_execution;
 pub mod changes_install;
+mod changes_seed;
 pub mod changes_signal;
 mod clients;
 pub mod clock;

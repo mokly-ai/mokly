@@ -9,6 +9,7 @@ writes no files.
 ## Responsibilities
 
 - Compute content-addressed node keys before document rendering.
+- Copy an earlier render input key when all of its inputs stayed equal.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
 - Encode documents losslessly for the compact tier, the comparison capture,
@@ -75,6 +76,31 @@ routing inventory serves each generation. Opaque entries share its complete
 key. Explicit case spellings, moved aliases, and missing targets keep their
 requested identities in the document key.
 
+`RenderKeys::build_reusing_with_workers` gives the same keys as
+`RenderKeys::build` and keeps compact facts about the inputs of each key. With
+earlier keys as `previous`, it copies an earlier key only when every input of
+that key is equal, and it calculates the other keys. With `None`, or with
+earlier keys whose facts are not complete, it calculates every key and keeps
+the facts of the new keys. It never waits for a seed that has not finished.
+The facts live as long as their keys and keep no module graph, catalogue,
+earlier keys, or lease.
+
+`RenderKeys::build_unseeded_with_workers` calculates every key like
+`RenderKeys::build_with_workers` and adds an empty fact cell to the keys.
+`RenderGeneration::prepare_render_reuse` seeds that cell once. It reads the
+config and catalogue that the prepared generation already holds, and it keeps
+no copy of them. It changes no key and runs no key job. It does nothing when
+the keys of the generation have no empty cell. Serve calls it after the
+Changes of that generation complete as Ready or Unavailable.
+
+`RenderKeys::build` and `RenderKeys::build_with_workers` keep no facts and no
+cell. `RenderKeys::reuse_facts_bytes` reports the size of the cell, which
+holds the facts value, and the capacities of the vectors and strings of its
+facts. It leaves out allocator headers and the key map. It is zero for keys
+without a cell. The `render.inputs` span records the `reused` key count and
+that size as `retained_bytes`. The seed records that size in its own timing
+stage, so a seed never appears as a key calculation.
+
 `MemoryCache` implements `dyn RenderCache`. It keeps rendered artifacts in a
 full tier and evicted documents in a lossless compact tier, under one total
 byte bound. The [cache and retained comparison](./cache.md) page holds the
@@ -136,6 +162,11 @@ comparison work on the generation's render workers. The
 [render workers](./workers.md#comparison-tasks-and-streams) guidance holds
 their rules, the `RenderClass` that `ThreadWorkers` carries, and the
 [forwards](./workers.md#wrapper-forwards) that wrappers of these methods need.
+`RenderKeys::build_with_workers` runs one key job for each exporting module
+that gets its own key, through `comparison_tasks` on the shared render workers.
+`RenderKeys::build_reusing_with_workers` runs a job only for each such module
+whose key it does not copy. Without the `comparison_tasks` forward, the key
+calculation runs one module at a time.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
@@ -289,6 +320,13 @@ retention disabled.
   closure, resolution files, bindings, and bundle environment.
   `RenderKeys::build_with_workers` calculates the same keys as
   `RenderKeys::build` on injected `RenderWorkers`.
+  `RenderKeys::build_unseeded_with_workers` also adds an empty fact cell for a
+  later seed. `RenderKeys::build_reusing_with_workers` keeps reuse facts and
+  copies each unchanged key from the `previous` keys.
+  `RenderKeys::reuse_facts_bytes` reports the bytes of the cell and its facts.
+  The private `render_preparation` module encodes the records of every builder,
+  and the private `render_reuse` module compares the facts and finds the keys
+  to calculate again.
 - [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
   the leased closure-file records shared by equal document keys across
   generations.
@@ -337,6 +375,7 @@ retention disabled.
   [background pass](../../docs/protocol/mokly-on-demand-background.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Render input keys in Serve](../../docs/protocol/mokly-watch.md#invalidation-through-the-render-graph).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).
