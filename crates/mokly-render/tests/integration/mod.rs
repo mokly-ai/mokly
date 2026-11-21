@@ -28,6 +28,7 @@ mod plan_directory_tests;
 mod plan_invalidation_tests;
 mod plan_results;
 mod plan_support;
+mod postcss_config_reuse_tests;
 mod postcss_contract_tests;
 mod postcss_preparation_tests;
 mod postcss_retirement_tests;

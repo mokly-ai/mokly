@@ -178,17 +178,24 @@ drops the witnesses of earlier generations. A reused result keeps its
 witnesses, also after its worker is replaced or disposed. Conflicting versions
 use the static build's [input-change outcome](./mokly-export.md).
 
+The core keeps each observed read that maps through the side's source root or
+selected dependency roots, including a read that no plugin declares as a
+dependency. It retains the read as private stylesheet evidence. A read alone
+does not add a file to the catalogue source inventory or to plugin public-file
+protection. Known readable inputs retain an explicitly late digest beside their
+witnesses. A late digest cannot overwrite an observed digest. A byte-range
+witness keeps its range and is checked against that late whole-file baseline
+without claiming an observed whole-file read.
+
 The core maps module evidence through the selected source and dependency roots
 for each side. Base source witnesses compare with the pinned Git bytes. They
-never use a head source baseline. Module evidence does not add installed packages to the catalogue
-or to plugin public-file protection. Plugin read evidence uses the
-[dependency inventory](./mokly-imported-styles-postcss.md#dependency-inventory).
-Unread declarations and directory matches remain declarations, not read records.
-Known readable inputs retain an explicitly late digest beside their witnesses.
-A late digest cannot overwrite an observed digest. Read evidence counts toward
-the 64 MiB PostCSS and stylesheet cache bounds and the frame bound. The
-stylesheet cache keeps one copy of a context's module evidence for all bundles
-of that context and counts it once.
+never use a head source baseline. Module evidence does not add installed
+packages to the catalogue or to plugin public-file protection. Unread
+declarations and directory matches remain declarations, not read records.
+
+Read evidence counts toward the 64 MiB PostCSS and stylesheet cache bounds and
+the frame bound. The stylesheet cache keeps one copy of a context's private
+evidence for all bundles of that context and counts it once.
 
 ## Incomplete Coverage
 
