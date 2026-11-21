@@ -1,14 +1,18 @@
 # Base Preparation Cache
 
+Status: The stylesheet kind does not exist yet. [Milestone 2](../../plans/persistent-stylesheet-records.md#milestone-2-red-tests-and-reusable-storage) adds it.
+
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 It also defines the bundle cache of compiled JavaScript, which both comparison
 sides use. The render kind keeps the documents of the
 [render store](./mokly-render-store.md) under the common rules of the next section.
+The stylesheet kind keeps the snapshots of the
+[stylesheet store](./mokly-stylesheet-cache.md) under the same rules.
 
 ## Cache Location And Ownership
 
-The source, dependency, bundle, and render kinds live in a SHA-256 namespace under the
+The source, dependency, bundle, render, and stylesheet kinds live in a SHA-256 namespace under the
 operating system's cache directory. Windows honors an absolute `LOCALAPPDATA`
 value. The key hashes the canonical repository path's OS encoding. On Windows,
 canonical paths use the plain drive form without the `\\?\` prefix when that
@@ -18,7 +22,7 @@ the repository is invalid. Below that canonical root, directory links are
 rejected before writes. Dependency links remain data entries; traversal does
 not follow them.
 
-Source, dependency, bundle, and render namespaces have separate byte bounds. Each
+Source, dependency, bundle, render, and stylesheet namespaces have separate byte bounds. Each
 complete entry reserves 1,024 bytes for its receipt. Retained size counts
 regular-file bytes and link targets without following links. A hit checks the
 bounded completion receipt and recounts the data bytes. Only receipt schema 1 is
@@ -213,7 +217,9 @@ observation.
 A compilation with unstable evidence keeps every in-process reuse rule of the
 [compiled recipe rules](./mokly-sidecar-recipes.md).
 A later process cannot reuse it, no Serve edit reuses its plan, and Mokly
-prints nothing for it.
+prints nothing for it. The
+[stylesheet store](./mokly-stylesheet-cache.md#admission) uses the same
+admission standard for stylesheet evidence.
 Decision: stability decides whether the bundle cache stores a compilation and
 whether a Serve edit can reuse its plan. It never limits the reuse of a
 compiled result inside a process. A rule that also limits that reuse was
