@@ -1,8 +1,9 @@
 /* The documentation's intermediate desktop steps, between 700px and the
    1440px design width: below 1280px the Inspect panel leaves and On this
    page sits under the lead; below 1024px the Layers panel leaves for the
-   sub-bar and the page frame takes the width. The sample fence stacks while
-   the page frame is too narrow to set the screen beside its code. */
+   sub-bar and the page frame takes the width. The sample fence sets the
+   screen beside its code, with the wire, where the page frame is wide
+   enough, and stacks without the wire while it is too narrow. */
 
 /* The desktop document draws the sub-bar and the On this page disclosure,
    and shows each only below its step */
@@ -76,9 +77,57 @@
   }
 }
 
+/* The sample fence's wire, which only the desktop document draws: it
+   leaves the code panel's edge at the lit line and ends on the frame's
+   edge at the heading's middle. Each view places its own box and ends. */
+
+.site-docs-sample-wire {
+  color: var(--mk-color-signal);
+  height: 257px;
+  left: -40px;
+  position: absolute;
+  top: 49.5px;
+  width: 56px;
+}
+
+.site-docs-sample-wire svg {
+  display: block;
+}
+
+.site-docs-sample-end {
+  background: var(--mk-color-surface);
+  border: 1.5px solid currentColor;
+  border-radius: var(--mk-radius-pill);
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  position: absolute;
+  width: 7px;
+}
+
+.site-docs-sample-end--source {
+  left: 0;
+  top: 256.1px;
+}
+
+.site-docs-sample-end--element {
+  left: 56px;
+  top: 0.8px;
+}
+
+.site-docs-sample-wire--desktop {
+  height: 291px;
+  top: 15.9px;
+}
+
+.site-docs-sample-wire--desktop .site-docs-sample-end--source {
+  top: 289.7px;
+}
+
 /* The sample fence stacks the code, the controls and the frame while the
    page frame is narrower than about 846px, the width that the screen and
-   its code need side by side; the wire leaves with that layout */
+   its code need side by side; the wire leaves with that layout. The
+   Desktop view's frame then takes the band's width, up to the canvas zoom
+   of 60% that the Mobile view keeps. */
 
 @media (max-width: 1169px), (min-width: 1280px) and (max-width: 1429px) {
   [data-site-viewport="desktop"] .site-docs-sample {
@@ -99,6 +148,15 @@
     justify-self: center;
     margin-top: 26px;
     padding-left: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-stage--desktop {
+    justify-self: stretch;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-frame--desktop {
+    margin-inline: auto;
+    width: min(100%, 768px);
   }
 
   [data-site-viewport="desktop"] .site-docs-sample-wire {

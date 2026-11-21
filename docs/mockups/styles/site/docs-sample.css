@@ -2,8 +2,9 @@
    frame that sets the sample's code, under the screen's section header,
    beside the screen it renders, under the viewport and saved-state
    controls. A green wire ties the lit line to the element it renders. The
-   screen is drawn at the canvas zoom of 60%, with the browser's default
-   type because the sample has no CSS. */
+   Mobile view is drawn at the canvas zoom of 60%; the Desktop view scales
+   with its frame. Both keep the browser's default type, because the sample
+   has no CSS. */
 
 .site-docs-sample {
   align-items: start;
@@ -134,7 +135,7 @@
 }
 
 /* The drawn frame: its label, the screen and its selection with the size
-   tag; the wire leaves the code panel's edge at the lit line */
+   tag; docs-steps.css draws the wire beside it */
 
 .site-docs-sample-stage {
   grid-area: stage;
@@ -147,42 +148,9 @@
   width: 234px;
 }
 
-.site-docs-sample-wire {
-  color: var(--mk-color-signal);
-  height: 257px;
-  left: -40px;
-  position: absolute;
-  top: 49.5px;
-  width: 56px;
-}
-
-.site-docs-sample-wire svg {
-  display: block;
-}
-
-.site-docs-sample-end {
-  background: var(--mk-color-surface);
-  border: 1.5px solid currentColor;
-  border-radius: var(--mk-radius-pill);
-  height: 7px;
-  margin: -3.5px 0 0 -3.5px;
-  position: absolute;
-  width: 7px;
-}
-
-.site-docs-sample-end--source {
-  left: 0;
-  top: 256.1px;
-}
-
-.site-docs-sample-end--element {
-  left: 56px;
-  top: 0.8px;
-}
-
-/* The screen the sample renders, at the canvas zoom: the phone's status
-   band, then the body in the browser's default type, on the paper and the
-   ink that a page without CSS takes in both schemes */
+/* The Mobile view at the canvas zoom: the phone's status band, then the
+   body, on the paper and the ink that a page without CSS takes in both
+   schemes; the Desktop view's window shares the paper and the ink */
 
 .site-docs-sample-screen {
   background: var(--mk-color-surface);
@@ -191,11 +159,13 @@
     0 0 0 1px var(--mk-color-border),
     var(--mk-shadow-medium);
   color: var(--mk-color-text);
+  font-size: 9.6px;
   height: 506.4px;
   overflow: hidden;
 }
 
-[data-color-scheme="dark"] .site-docs-sample-screen {
+[data-color-scheme="dark"] .site-docs-sample-screen,
+[data-color-scheme="dark"] .site-docs-sample-address {
   background: var(--mk-color-text);
   color: var(--mk-color-background);
 }
@@ -239,22 +209,76 @@
   width: 13.8px;
 }
 
+/* The Desktop view: the 1280 × 800 view in the browser window, scaled to
+   the frame's width. Each length inside it is a share of that width, so
+   the window keeps its proportions at every size. The bar and its three
+   lights, one dot and two copies, take tints of the view's ink, as the
+   Mobile view's status glyphs do, so the window stays light in both
+   schemes. */
+
+.site-docs-sample-frame--desktop {
+  container-type: inline-size;
+}
+
+.site-docs-sample-screen--desktop {
+  aspect-ratio: 1280 / 800;
+  border-radius: 0.625cqw;
+  font-size: 1.25cqw;
+  height: auto;
+}
+
+.site-docs-sample-browser {
+  align-items: center;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 0.9375cqw;
+  height: 3.125cqw;
+  padding: 0 1.09375cqw;
+}
+
+.site-docs-sample-lights {
+  background: currentColor;
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    1.328125cqw 0,
+    2.65625cqw 0;
+  color: color-mix(in srgb, currentColor 30%, transparent);
+  flex: none;
+  height: 0.859375cqw;
+  margin-right: 2.65625cqw;
+  width: 0.859375cqw;
+}
+
+.site-docs-sample-address {
+  background: var(--mk-color-surface);
+  border-radius: 0.46875cqw;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+  height: 2.03125cqw;
+  width: 40.625cqw;
+}
+
+/* The body in the browser's default type: its sizes are the defaults in
+   em, so each view's screen sets only the base, 60% of 16px for the Mobile
+   view and 16px of 1280 for the Desktop view. Where a view draws the body
+   smaller, its margins keep the room that the heading's selection takes
+   on the canvas, so the selection stays inside the frame. */
+
 .site-docs-sample-page {
   display: flow-root;
   font-family: "Times New Roman", Times, "Liberation Serif", serif;
-  font-size: 9.6px;
   line-height: 1.15;
-  padding: 0 4.8px;
+  padding: 0 max(0.5em, 4px);
 }
 
 .site-docs-sample-heading {
-  font-size: 19.2px;
+  font-size: 2em;
   font-weight: var(--mk-font-bold);
-  margin: 12.864px 0;
+  margin: max(0.67em, 6px) 0;
 }
 
 .site-docs-sample-text {
-  margin: 9.6px 0;
+  margin: 1em 0;
 }
 
 /* The rendered heading, selected and tagged as the lit line's element */

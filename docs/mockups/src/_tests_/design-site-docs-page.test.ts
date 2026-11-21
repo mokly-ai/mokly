@@ -146,6 +146,24 @@ for (const viewport of ["mobile", "desktop"] as const) {
         [...page.ids],
       );
       assert.deepEqual(codePanels(main), guide.fences, page.entry);
+      // A fence carries only its language: an ordinary panel's one tab names
+      // it, with no file tab and no path. Only the sample band names a file.
+      const sample = byClass(main, "site-docs-sample").flatMap((band) =>
+        byClass(band, "site-code"),
+      );
+      const ordinary = byClass(main, "site-code").flatMap((panel, index) =>
+        sample.includes(panel)
+          ? []
+          : [{ language: guide.fences[index]!.language, panel }],
+      );
+      assert.deepEqual(
+        ordinary.map(({ panel }) => ({
+          paths: byClass(panel, "site-code-meta").map(label),
+          tabs: byClass(panel, "site-code-tab").map(label),
+        })),
+        ordinary.map(({ language }) => ({ paths: [], tabs: [language] })),
+        page.entry,
+      );
       for (const panel of byClass(main, "site-code")) {
         const shell = ["bash", "sh", "shell"].includes(
           label(one(panel, "site-code-language")),

@@ -41,6 +41,7 @@ test("the Site folder holds the eight canonical screens, the open menu and their
     [
       ...screens,
       "design/site/docs/first-screen",
+      "design/site/docs/first-screen-desktop",
       "design/site/docs/layers",
       "design/site/home/menu",
       "design/site/tour",

@@ -1,7 +1,7 @@
 /**
- * The two variants of the documentation screen: Your first screen, whose
- * first code block is the HTML sample fence with a dimmed code line, and the
- * mobile tree sheet.
+ * The variants of the documentation screen: Your first screen, whose first
+ * code block is the HTML sample fence with a dimmed code line, in its Mobile
+ * view and in its Desktop view, and the mobile tree sheet.
  */
 
 import assert from "node:assert/strict";
@@ -31,6 +31,7 @@ import {
 test("the documentation variants keep the shared landmarks in both schemes", () => {
   for (const id of [
     "design/site/docs/first-screen",
+    "design/site/docs/first-screen-desktop",
     "design/site/docs/layers",
   ]) {
     const entry = siteEntry(id);
@@ -68,75 +69,126 @@ function radios(control: Element) {
   ]);
 }
 
-for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: Your first screen renders its HTML sample beside its code`, () => {
-    const { document } = siteDocument(
-      "design/site/docs/first-screen",
-      viewport,
-    );
-    const sample = one(document, "site-docs-sample");
-    const section = tags(one(document, "site-document-body"), "section")[0]!;
-    assert.equal(attribute(tags(section, "h2")[0]!, "id"), "add-one-html-file");
-    assert.equal(
-      childElements(section).indexOf(sample),
-      3,
-      "after the first paragraph",
-    );
-    const head = one(sample, "site-docs-sample-head");
-    assert.equal(attribute(head, "aria-hidden"), "true");
-    assert.deepEqual(childElements(head).map(label), ["Welcome", "welcome"]);
-    const code = one(sample, "site-code");
-    assert.deepEqual(byClass(code, "site-code-tab").map(label), [
-      "welcome.screen.html",
-    ]);
-    assert.equal(label(one(code, "site-code-language")), "html");
-    const lines = byClass(code, "site-code-line");
-    const marked = (kind: string) =>
-      lines.flatMap((line, index) =>
-        attribute(line, "class")?.split(" ").includes(kind) ? [index + 1] : [],
-      );
-    // The drawing shows Mobile and Welcome: the heading's line is wired, and
-    // the desktop paragraph, which the mobile view leaves out, is dimmed.
-    assert.deepEqual(marked("site-code-line--lit"), [12]);
-    assert.deepEqual(marked("site-code-line--dim"), [15]);
-    const controls = byClass(sample, "site-docs-sample-control");
-    assert.deepEqual(
-      controls.map((node) => [node.tagName, attribute(node, "aria-label")]),
-      [
-        ["fieldset", "Viewport"],
-        ["fieldset", "Saved state"],
-      ],
-    );
-    assert.deepEqual(controls.map(radios), [
-      [
-        ["mobile", true, "Mobile"],
-        ["desktop", false, "Desktop"],
-      ],
-      [
-        ["welcome", true, "Welcome"],
-        ["first-visit", false, "First visit"],
-      ],
-    ]);
-    const stage = one(sample, "site-docs-sample-stage");
-    assert.equal(attribute(stage, "aria-hidden"), "true");
-    assert.equal(
-      elements(stage, (node) => ["a", "button", "input"].includes(node.tagName))
-        .length,
-      0,
-    );
-    assert.equal(label(one(stage, "site-frame-name")), "Mobile");
-    assert.equal(label(one(stage, "site-sel-size")), "390 × 844");
-    assert.equal(label(one(stage, "site-docs-sample-pick")), "Welcome, Adah1");
-    assert.deepEqual(byClass(stage, "site-docs-sample-text").map(label), [
-      "Your workspace is ready.",
-      "Compact navigation",
-    ]);
-    assert.equal(
-      byClass(stage, "site-docs-sample-wire").length,
-      viewport === "desktop" ? 1 : 0,
-    );
-  });
+/** The shapes of an icon's drawing, without the size of its `svg`. */
+function drawing(icon: Element) {
+  return elements(icon, () => true)
+    .slice(1)
+    .map((node) => [node.tagName, node.attrs]);
 }
+
+/**
+ * The two views of the sample band. Each lights and wires the heading's line,
+ * and each leaves out the other viewport's paragraph: that line is dimmed,
+ * and the body shows the view's own navigation line.
+ */
+const SAMPLE_VIEWS = [
+  {
+    body: ["Your workspace is ready.", "Compact navigation"],
+    dimmed: [15],
+    entry: "design/site/docs/first-screen",
+    name: "Mobile",
+    size: "390 × 844",
+    viewports: [
+      ["mobile", true, "Mobile"],
+      ["desktop", false, "Desktop"],
+    ],
+  },
+  {
+    body: ["Your workspace is ready.", "Full navigation"],
+    dimmed: [14],
+    entry: "design/site/docs/first-screen-desktop",
+    name: "Desktop",
+    size: "1280 × 800",
+    viewports: [
+      ["mobile", false, "Mobile"],
+      ["desktop", true, "Desktop"],
+    ],
+  },
+] as const;
+
+for (const viewport of ["mobile", "desktop"] as const)
+  for (const view of SAMPLE_VIEWS)
+    test(`${viewport}: Your first screen renders its HTML sample beside its code in the ${view.name} view`, () => {
+      const { document } = siteDocument(view.entry, viewport);
+      const sample = one(document, "site-docs-sample");
+      const section = tags(one(document, "site-document-body"), "section")[0]!;
+      assert.equal(
+        attribute(tags(section, "h2")[0]!, "id"),
+        "add-one-html-file",
+      );
+      assert.equal(
+        childElements(section).indexOf(sample),
+        3,
+        "after the first paragraph",
+      );
+      const head = one(sample, "site-docs-sample-head");
+      assert.equal(attribute(head, "aria-hidden"), "true");
+      assert.deepEqual(childElements(head).map(label), ["Welcome", "welcome"]);
+      const code = one(sample, "site-code");
+      assert.deepEqual(byClass(code, "site-code-tab").map(label), [
+        "welcome.screen.html",
+      ]);
+      assert.equal(label(one(code, "site-code-language")), "html");
+      const lines = byClass(code, "site-code-line");
+      const marked = (kind: string) =>
+        lines.flatMap((line, index) =>
+          attribute(line, "class")?.split(" ").includes(kind)
+            ? [index + 1]
+            : [],
+        );
+      // The drawing shows Welcome: the heading's line is wired, and the
+      // paragraph that the chosen view leaves out is dimmed.
+      assert.deepEqual(marked("site-code-line--lit"), [12]);
+      assert.deepEqual(marked("site-code-line--dim"), view.dimmed);
+      const controls = byClass(sample, "site-docs-sample-control");
+      assert.deepEqual(
+        controls.map((node) => [node.tagName, attribute(node, "aria-label")]),
+        [
+          ["fieldset", "Viewport"],
+          ["fieldset", "Saved state"],
+        ],
+      );
+      assert.deepEqual(controls.map(radios), [
+        view.viewports,
+        [
+          ["welcome", true, "Welcome"],
+          ["first-visit", false, "First visit"],
+        ],
+      ]);
+      const stage = one(sample, "site-docs-sample-stage");
+      assert.equal(attribute(stage, "aria-hidden"), "true");
+      assert.equal(
+        elements(stage, (node) =>
+          ["a", "button", "input"].includes(node.tagName),
+        ).length,
+        0,
+      );
+      // The frame's label names the checked viewport with its option's icon.
+      const frameName = one(stage, "site-frame-name");
+      assert.equal(label(frameName), view.name);
+      const checked = byClass(controls[0]!, "site-docs-sample-option").filter(
+        (option) =>
+          attribute(tags(option, "input")[0]!, "checked") !== undefined,
+      );
+      assert.equal(checked.length, 1);
+      assert.deepEqual(
+        drawing(tags(frameName, "svg")[0]!),
+        drawing(tags(checked[0]!, "svg")[0]!),
+      );
+      assert.equal(label(one(stage, "site-sel-size")), view.size);
+      assert.equal(
+        label(one(stage, "site-docs-sample-pick")),
+        "Welcome, Adah1",
+      );
+      assert.deepEqual(
+        byClass(stage, "site-docs-sample-text").map(label),
+        view.body,
+      );
+      assert.equal(
+        byClass(stage, "site-docs-sample-wire").length,
+        viewport === "desktop" ? 1 : 0,
+      );
+    });
 
 /** The syntax token kinds of a code panel, each with its own colour rule. */
 const TOKEN_KINDS = [
