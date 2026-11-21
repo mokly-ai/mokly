@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 and 16 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 17 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -23,7 +23,7 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 3, 15
+Depends on: 15, 17
 
 - [ ] Restyle the catalogue, the top bar, the compare toolbar and the search
       in Canvas.
@@ -105,3 +105,17 @@ their code.
       Branch: `calummoore/canvas-redesign-m16-protocol-docs-second-6n73`.
 - [x] Run the Markdown checks. Branch:
       `calummoore/canvas-redesign-m16-protocol-docs-second-6n73`.
+
+## Milestone 17: Canvas default in the open-source shell
+
+Depends on: 3
+
+Starts after Cal answers decision 11, which decides whether the older Browse
+design screens are re-themed here or removed first.
+
+- [ ] Generate the `@mokly/ui` theme stylesheet and the `mokly-html` Markdown
+      style from the palette module, with Canvas as the default.
+- [ ] Add the drift check that compares the generated files with the module.
+- [ ] Replace Inter with Geist in `packages/viewer/src/shell/assets/fonts/`,
+      `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
+- [ ] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.

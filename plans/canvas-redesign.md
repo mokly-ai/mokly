@@ -125,17 +125,14 @@ a status line that links its milestone.
 
 Depends on: 2
 
-Starts after Cal answers decision 11, which decides whether the older Browse
-design screens are re-themed here or removed first.
+The cloud surfaces take Canvas here. The open-source shell's default look
+changes in Milestone 17, after decision 11.
 
-- [ ] Make the `@mokly/ui` palette module the source. Generate the theme
-      stylesheet and the `mokly-html` Markdown style from it.
-- [ ] Make `packages/tokens` import its shared values from the module. Make
-      Canvas the default, and delete the Folio values.
-- [ ] Add the drift check that compares the generated files with the module.
-- [ ] Self-host Geist and Geist Mono for the site, the app, the mockups and
-      the shell. Replace Inter in `packages/viewer/src/shell/assets/fonts/`,
-      `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
+- [ ] Make `packages/tokens` import its shared values from the `@mokly/ui`
+      palette module. Make Canvas the default for the site, the app and the
+      cloud mockups, and delete the Folio values.
+- [ ] Self-host Geist and Geist Mono for the site, the app and the cloud
+      mockups.
 - [ ] Self-host the Instrument Serif 400 face for the site's drawn demo app,
       as the mockups do in `docs/mockups/styles/site/fonts/`.
 - [ ] Lower the button pair to 3:1 in the three contrast tests.
@@ -235,9 +232,9 @@ Depends on: 4
       the link check accept the app paths. Add the page to the sitemap, the
       cards, the browser walk and the Lighthouse pages.
 
-## Milestones 10 to 13, 15 and 16
+## Milestones 10 to 13 and 15 to 17
 
-The viewer milestones and the added Milestones 15 and 16 are in
+The viewer milestones and the added Milestones 15 to 17 are in
 [the viewer milestones file](./canvas-redesign-milestones-viewer.md).
 
 ## Milestone 14: Verification, commit, review and pull request
