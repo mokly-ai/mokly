@@ -4,8 +4,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use mkc_auth::runtime::RuntimeMock;
-use mkc_auth::service::AuthenticatorMock;
 use mkc_file_store_interface::error;
 use mkc_file_store_interface::seed::SeedStoreMock;
 use serde_json::{Value, json};
@@ -15,11 +13,9 @@ use crate::action::Action;
 use crate::payload::Reply;
 use crate::platform::error::Error;
 use crate::platform::service::ExecutePlatformMock;
-use crate::preview_seed::catalogue::SeedCatalogueMock;
-use crate::preview_seed::service::{PreviewSeeder, SeedService};
-use crate::preview_seed::upload::CatalogueUploadMock;
+use crate::preview_seed::service::PreviewSeeder;
 
-use super::fixtures::{HEAD, locations, now, project, publication, token, user, workspace};
+use super::fixtures::{HEAD, project, service, token, workspace};
 
 #[test]
 fn revocation_or_proof_failure_keeps_failed_status_and_returns_failure() {
@@ -73,33 +69,7 @@ fn revocation_or_proof_failure_keeps_failed_status_and_returns_failure() {
                     }
                 })),
         ));
-        let seed = SeedService {
-            auth: Arc::new(Unimock::new((
-                AuthenticatorMock::preview_sign_in_available
-                    .some_call(matching!())
-                    .returns(true),
-                AuthenticatorMock::preview_account
-                    .some_call(matching!())
-                    .returns(Ok(user())),
-            ))),
-            platform: Arc::new(platform),
-            files: Arc::new(files),
-            catalogue: Arc::new(Unimock::new(
-                SeedCatalogueMock::read
-                    .some_call(matching!((run, revision) if *run == "run" && *revision == HEAD))
-                    .returns(Ok(vec![])),
-            )),
-            uploader: Arc::new(Unimock::new(
-                CatalogueUploadMock::publish
-                    .some_call(matching!(_, _, _, _))
-                    .returns(Ok(publication())),
-            )),
-            runtime: Arc::new(Unimock::new(
-                RuntimeMock::now.each_call(matching!()).returns(now()),
-            )),
-            locations: locations(),
-            revision: "development",
-        };
+        let seed = service(platform, files);
         let result = seed.run("run");
         assert!(result.is_err());
         let recorded = events.lock().unwrap();

@@ -1,5 +1,7 @@
 """PR comment states, input validation and the one permitted credential."""
 
+import contextlib
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -11,6 +13,9 @@ from support import load
 comment = load("preview-comment")
 RUN = "https://github.com/mokly-ai/mokly-cloud/actions/runs/123"
 SECRET = "a" * 64
+PROOF = '{"publicationId":"0b7c2c1e-4a59-4f0e-9a52-3d1e0c6f8a11","cookie":"must-not-appear"}'
+PATTERN = "- Catalogue: `https://p-<publication-id>.pr-42.preview.catalogues.net`"
+PUBLISHED = "- Catalogue: https://p-0b7c2c1e-4a59-4f0e-9a52-3d1e0c6f8a11.pr-42.preview.catalogues.net/"
 
 
 class PreviewCommentTests(unittest.TestCase):
@@ -19,7 +24,7 @@ class PreviewCommentTests(unittest.TestCase):
         state,
         sign_in=None,
         project="failed",
-        proof=False,
+        proof=None,
         private=True,
         **changes,
     ):
@@ -53,9 +58,9 @@ class PreviewCommentTests(unittest.TestCase):
                         }
                     )
                 )
-            if proof:
+            if proof is not None:
                 proof_file = root / "seed-proof.json"
-                proof_file.write_text('{"cookie":"must-not-appear"}')
+                proof_file.write_text(proof)
             return comment.comment(
                 state,
                 inputs["environment"],
@@ -71,49 +76,78 @@ class PreviewCommentTests(unittest.TestCase):
 
     def test_every_outcome_row_selects_its_exact_links(self):
         cases = (
-            ("running", {}, "Checks running", False, False),
-            ("failed", {}, "Checks failed. Open the run for details.", False, False),
+            ("running", {}, "Checks running", False, False, PATTERN),
+            ("failed", {}, "Checks failed. Open the run for details.", False, False, PATTERN),
             (
                 "failed",
                 {"sign_in": "accepted"},
                 "Checks failed. Open the run for details.",
                 True,
                 False,
+                PATTERN,
+            ),
+            (
+                "failed",
+                {"sign_in": "accepted", "proof": PROOF},
+                "Checks failed. Open the run for details.",
+                True,
+                False,
+                PATTERN,
             ),
             (
                 "success",
-                {"sign_in": "accepted", "project": "seeded", "proof": True},
+                {"sign_in": "accepted", "project": "seeded", "proof": PROOF},
                 "Checks passed",
                 True,
                 True,
+                PUBLISHED,
             ),
-            ("removed", {}, "Preview removed", False, False),
+            ("removed", {}, "Preview removed", False, False, PATTERN),
             (
                 "cleanup-failed",
                 {},
                 "Cleanup failed. Rerun the workflow.",
                 False,
                 False,
+                PATTERN,
             ),
         )
-        for state, inputs, expected, open_preview, sample_project in cases:
-            with self.subTest(state=state, inputs=inputs):
+        for state, inputs, expected, open_preview, sample_project, catalogue in cases:
+            with self.subTest(state=state, inputs=inputs), contextlib.redirect_stderr(io.StringIO()) as errors:
                 body = self.render(state, **inputs)
+                self.assertEqual(errors.getvalue(), "")
                 self.assertTrue(body.startswith("<!-- mokly-preview -->\n### Mokly preview\n"))
                 self.assertIn(f"Status: **{expected}**", body)
                 self.assertIn("- Commit: `" + "b" * 40 + "`", body)
                 self.assertIn("- App: https://pr-42.preview.example.com/sign-in", body)
                 self.assertIn("- API: https://pr-42.preview.api.example.com", body)
-                self.assertIn(
-                    "`https://p-<publication-id>.pr-42.preview.catalogues.net`", body
+                self.assertEqual(
+                    [line for line in body.splitlines() if line.startswith("- Catalogue:")],
+                    [catalogue],
                 )
                 self.assertIn(f"- Workflow evidence: {RUN}", body)
                 self.assertEqual("- Open preview:" in body, open_preview)
                 self.assertEqual("- Sample project:" in body, sample_project)
 
+    def test_success_uses_catalogue_pattern_and_warns_for_invalid_proof(self):
+        kept = "; the Catalogue line keeps its pattern\n"
+        invalid_id = "Preview comment: warning: seed proof publication ID is not a canonical UUID" + kept
+        cases = (
+            ("{", "Preview comment: warning: seed-proof.json is not a readable JSON object" + kept),
+            ('{"cookie":"must-not-appear"}', invalid_id),
+            ('{"publicationId":"0B7C2C1E-4A59-4F0E-9A52-3D1E0C6F8A11"}', invalid_id),
+        )
+        for proof, warning in cases:
+            with self.subTest(proof=proof), contextlib.redirect_stderr(io.StringIO()) as errors:
+                body = self.render(
+                    "success", sign_in="accepted", project="seeded", proof=proof
+                )
+                self.assertIn(PATTERN, body.splitlines())
+                self.assertEqual(errors.getvalue(), warning)
+
     def test_public_repository_never_receives_the_credential_link(self):
         body = self.render(
-            "success", sign_in="accepted", project="seeded", proof=True, private=False
+            "success", sign_in="accepted", project="seeded", proof=PROOF, private=False
         )
         self.assertNotIn("#secret=", body)
         self.assertIn("- Sample project:", body)
@@ -123,7 +157,7 @@ class PreviewCommentTests(unittest.TestCase):
 
     def test_proof_content_and_other_credentials_never_appear(self):
         body = self.render(
-            "success", sign_in="accepted", project="seeded", proof=True
+            "success", sign_in="accepted", project="seeded", proof=PROOF
         )
         self.assertEqual(body.count(SECRET), 1)
         for forbidden in ("must-not-appear", "csrf", "mkc_session", "mkc_"):
@@ -141,7 +175,7 @@ class PreviewCommentTests(unittest.TestCase):
             ("success", {"run_url": "https://attacker.example/actions/runs/123"}),
             ("success", {"run_url": RUN + "#token=secret"}),
         ):
-            inputs = {"sign_in": "accepted", "project": "seeded", "proof": True}
+            inputs = {"sign_in": "accepted", "project": "seeded", "proof": PROOF}
             inputs.update(changes)
             with self.subTest(state=state, changes=changes), self.assertRaises(ValueError):
                 self.render(state, **inputs)

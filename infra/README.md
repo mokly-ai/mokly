@@ -236,7 +236,7 @@ collects the seed status and proof.
 [Preview seed Job](../docs/protocol/cloud/preview-seed-job.md) defines the steps,
 the cleanup and the failure messages.
 
-An installed local checkout can capture and seed its own private sample
+An installed local checkout can capture and seed its own public sample
 project. `scripts/cloud/dev-api.sh preview-seed` stages the captured catalogue in
 the local store and runs the API's seed command. The
 [workspace README](../docs/development/cloud.md#local-preview-stack) gives the commands. The

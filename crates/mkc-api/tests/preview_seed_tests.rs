@@ -11,7 +11,7 @@ use seed_support::evidence::{assert_failed, assert_seeded, assert_timestamp};
 use seed_support::harness::Harness;
 
 #[test]
-fn fresh_seed_writes_exact_evidence_and_private_publication() {
+fn fresh_seed_writes_exact_evidence_and_public_publication() {
     for pull_request in [Some(123), None] {
         let harness = Harness::new();
         harness.stage("fresh", pull_request);

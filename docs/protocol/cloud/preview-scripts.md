@@ -197,10 +197,11 @@ Grant `pull-requests: write` only to the trusted comment step's job alongside
 its existing scoped permissions. Upsert a bot-authored comment with marker
 `<!-- mokly-preview -->` (distinct from `<!-- mokly-site -->`). Paginate
 comments, never edit a human comment, and include the current tested SHA,
-`https://pr-N.preview.D/sign-in`, `https://pr-N.preview.api.D`, the catalogue
-pattern `https://p-<publication-id>.pr-N.preview.C` and the workflow evidence
-URL. The base catalogue suffix is not a working publication link. The exact
-outcome/link matrix is in [Preview seed](./preview-seed.md); status never
+`https://pr-N.preview.D/sign-in`, `https://pr-N.preview.api.D`, the
+**Catalogue** line and the workflow evidence URL. The base catalogue suffix is
+not a working publication link. The exact outcome/link matrix, which also
+gives the **Catalogue** pattern and link, is in
+[Preview seed](./preview-seed.md#workflow-comment-and-failures); status never
 implicitly enables a link. Never include mail links, tokens or raw API logs;
 the private-repository-gated preview sign-in link is the one credential the
 comment may carry.
@@ -211,8 +212,9 @@ comment may carry.
 passes `--secret-file PATH` (mode 0600) and
 `--seed-status .context/seed-status.json`; it passes
 `--seed-proof .context/seed-proof.json` only when the nonempty proof exists.
-The script parses status, uses proof only as a presence flag, validates the
-matrix and derives both links from the other trusted inputs. It reads the
+The script parses status, uses the proof as a presence flag, and reads from it
+only the `publicationId` of the success **Catalogue** link. It validates the
+matrix and derives the other links from the trusted inputs. It reads the
 secret only when rendering Open preview. The trusted release job posts a
 running comment before deployment and a final comment even after a failed
 build, capture, seed or cleanup.

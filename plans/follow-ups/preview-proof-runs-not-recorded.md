@@ -17,8 +17,8 @@
   - Six later plans each left a preview proof for after their merge. The repository records none of them. An absent record does not prove that no run happened.
   - After the deploy evidence, the release job of `.github/workflows/preview.yml` runs `infra/scripts/preview-seed-job.py`.
   - The script stages `request.json` and the captured catalogue in `pr-N/seed/<run>/` of the preview bucket. It creates the seed Job from the suspended CronJob `preview-seed` and waits up to 25 minutes.
-  - The script then prints the Job's log, collects `seed-status.json` and `seed-proof.json`, and deletes the Job. The pull request comment then shows **Sample project**.
-  - `infra/scripts/preview-comment.py` adds **Open preview**, the link that signs in the shared account `preview@mokly.ai`, only when the repository is private. This repository, `mokly-ai/mokly`, is public, so its comment has no **Open preview** link. A reviewer requests a sign-in link for `preview@mokly.ai` on Sign in of the preview app and reads it with `MKC_DOMAIN=mokly.ai python3 infra/scripts/preview-link.py preview-pr-N --email preview@mokly.ai`, or asks an operator to do this. `docs/ops/preview.md`, section "Read A Sign-In Link", gives the steps.
+  - The script then prints the Job's log, collects `seed-status.json` and `seed-proof.json`, and deletes the Job. The pull request comment then shows **Sample project**, and its **Catalogue** line links the pull request's publication.
+  - `infra/scripts/preview-comment.py` adds **Open preview**, the link that signs in the shared account `preview@mokly.ai`, only when the repository is private. This repository, `mokly-ai/mokly`, is public, so its comment has no **Open preview** link. To use the app, a reviewer requests a sign-in link for `preview@mokly.ai` on Sign in of the preview app and reads it with `MKC_DOMAIN=mokly.ai python3 infra/scripts/preview-link.py preview-pr-N --email preview@mokly.ai`, or asks an operator to do this. `docs/ops/preview.md`, section "Read A Sign-In Link", gives the steps.
   - The local stack proved the seed command on 2026-10-30.
   - An API image from a branch without the seed command fails at once and writes no status. The release script then reports `The seed wrote no status. If this revision predates the API preview seed, merge main into the pull request and rerun the workflow.`
   - In that case **Preview required** fails, and the comment shows no **Sample project** link.
@@ -31,7 +31,7 @@
   - **Preview required** passes, and the workflow's seed step prints the seed Job's log.
   - The run's artifact `preview-evidence-pr-N` holds `deployment-smoke.json` with passing DNS/TLS, revision, health and isolation results, and the seed status and proof.
   - The sample project has no repository link.
-  - The comment has no **Open preview** link. A sign-in link for `preview@mokly.ai`, read with `infra/scripts/preview-link.py`, signs in the shared account. **Sample project** opens the sample project on the pull request's publication, with Changes against `main`.
+  - The comment has no **Open preview** link. **Catalogue** opens the pull request's publication signed out, with Changes against `main`. A sign-in link for `preview@mokly.ai`, read with `infra/scripts/preview-link.py`, signs in the shared account. **Sample project** then opens the sample project on the pull request's publication, with Changes against `main`.
   - The seed's upload duration, the seed Job's duration, and the capture duration against the 15-minute publish limit on the hosted runner.
   - The capture runs against a derived `main` with complete v9 output, in the 0.14.0 format.
   - A push adds a publication to the history.

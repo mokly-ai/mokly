@@ -18,16 +18,14 @@ operator commands below remain available for investigation and recovery.
    Deployment smoke and the sample project seed must pass; open the run to see
    a failing check. The seed step prints the seed Job's log, which names the
    failed step and its reason. Rerun the workflow to seed again.
-3. Sign in as the shared account `preview@mokly.ai`. This public repository
-   gets no **Open preview** link. Open **App**
-   (`https://pr-N.preview.D/sign-in`, where `D` is `MKC_DOMAIN`, `mokly.ai`),
-   and request a link for that address on Sign in. Then
-   [read the link](#read-a-sign-in-link), or ask an operator to read it. Only
-   the shared account can open **Sample project**, because the seed creates
-   that private **Mokly Cloud** project in its workspace. The publication carries this PR's mockups and its
-   comparison against `main`. The viewer cannot load a private comparison, so
-   Changes show an overlay without an action. Browse the current catalogue,
-   and do not treat unavailable private Changes as a seed failure.
+3. Open **Catalogue** signed out. It opens this PR's publication in the public
+   **Mokly Cloud** sample project, with its mockups and their Changes against
+   `main`. Sign in only to use the app. This public repository gets no
+   **Open preview** link. So open **App** (`https://pr-N.preview.D/sign-in`,
+   where `D` is `MKC_DOMAIN`, `mokly.ai`), and request a link for the shared
+   account `preview@mokly.ai` on Sign in. Then
+   [read the link](#read-a-sign-in-link), or ask an operator to read it. After
+   the sign-in, **Sample project** opens this PR in the app.
 4. Review your change. Data survives pushes, including accounts and publications.
    Removing the label or closing the PR deletes that data; save anything you
    need first.
@@ -39,7 +37,8 @@ the repository is private. That link signs in the shared account without a
 request. Anyone who can read the PR can use it until the preview is removed.
 Sample project appears only with a completed seed proof. A failed capture or
 later seed step can therefore keep Open preview without claiming the sample
-project succeeded. Catalogue shows
+project succeeded. After a fully successful run, Catalogue links this PR's
+publication, `https://p-<publicationId>.pr-N.preview.C/`. Otherwise it shows
 `p-<publication-id>.pr-N.preview.C` as a pattern; the base suffix alone is not
 a publication. `C` is `MKC_CATALOGUE_BASE_DOMAIN`
 (`moklyusercontent.com`). Updates replace the same comment. A failed update

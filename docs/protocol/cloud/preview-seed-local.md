@@ -36,11 +36,10 @@ runs `serve` when it gets none.
   before any upload; capture it again.
 
 The [workspace README](../../development/cloud.md#local-preview-stack) gives the commands.
-Sign in by opening `<app origin>/auth/preview/callback#secret=<secret>` with
-the local secret. The project remains private. The viewer reads
-comparison documents without credentials, so its private comparison stops at
-the documented
-[private artifact limit](./viewer.md#private-artifact-limit).
-The viewer then shows an overlay without an action for
-Changes, and it does not claim that private Changes loaded. The
-current catalogue stays browsable.
+The local sample project is public too, so its Changes load. A signed-out
+reader opens its publication at `http://p-<publicationId>.localhost:8082/`,
+with the `publicationId` of `seed/local/seed-proof.json` under
+`MKC_FILE_STORE_ROOT`. The local scripts default that root to `.context/blobs`
+and the catalogue origin to `http://localhost:8082`. To use the app, sign in by
+opening `<app origin>/auth/preview/callback#secret=<secret>` with the local
+secret.

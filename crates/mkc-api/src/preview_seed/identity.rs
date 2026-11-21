@@ -1,9 +1,10 @@
 //! Find or create the fixed sample identities through the HTTP routes' actions.
 
 use mkc_domain::ids::{OrganizationId, ProjectId, UserId};
+use mkc_domain::values::Visibility;
 
 use crate::action::Action;
-use crate::input::{CreateWorkspace, Name};
+use crate::input::{CreateWorkspace, Name, UpdateProject};
 use crate::pagination::Pagination;
 use crate::payload::Payload;
 use crate::platform::error;
@@ -12,7 +13,7 @@ use crate::views::projects::ProjectSlugLookupView;
 use crate::views::tokens::TokenCreated;
 use crate::views::workspaces::WorkspaceSlugLookupView;
 
-use super::error::{Error, ErrorResultExt, Failure, Result};
+use super::error::{Error, ErrorResultExt, Failure, Result, require};
 use super::identity_validation::{project, workspace};
 use super::service::SeedService;
 
@@ -90,7 +91,28 @@ impl SeedService {
             _ => return Err(Error::internal(Failure::UnexpectedReply)),
         };
         project(&found, workspace_id)?;
-        Ok(found.project.id)
+        let stored = found.project;
+        let seeded = if stored.visibility == Visibility::Private {
+            let input = UpdateProject {
+                automatic_builds: None,
+                name: stored.name,
+                slug: stored.slug,
+                visibility: Visibility::Public,
+                require_approval: stored.require_approval,
+                version: stored.version,
+            };
+            let Payload::Project(updated) = self
+                .execute(actor, Action::UpdateProject(stored.id, input))
+                .context("make seed project public")?
+            else {
+                return Err(Error::internal(Failure::UnexpectedReply));
+            };
+            updated
+        } else {
+            stored
+        };
+        require("project visibility", "public", seeded.visibility.as_str())?;
+        Ok(seeded.id)
     }
 
     pub(super) fn token(&self, actor: UserId, project: ProjectId) -> Result<TokenCreated> {
