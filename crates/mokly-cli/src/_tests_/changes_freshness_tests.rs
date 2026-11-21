@@ -19,6 +19,7 @@ use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 
 #[test]
@@ -57,6 +58,7 @@ fn checkout_change_after_first_base_read_preserves_the_sample_and_invalidates_re
         working: Arc::new(Unimock::new(())),
     });
     let provider: &dyn BaseProvider = &NativeBase {
+        admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(

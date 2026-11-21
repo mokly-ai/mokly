@@ -3,26 +3,33 @@ import path from "node:path";
 import type { Metafile, OnResolveArgs, OnResolveResult } from "esbuild";
 
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { PlannedImportKind } from "../generated/sidecar/PlannedImportKind.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
-import { detail } from "./errors.js";
+import { detail, protocol } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
-import {
-  nativeImport,
-  nativeResolveFilter,
-  planKey,
-} from "./native-resolution.js";
+import { nativeImport, nativeResolveFilter } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
+import type { PlanCandidates } from "./plan-candidates.js";
+import { PlanBuilder } from "./resolution-plan.js";
 
-interface Target extends PlannedImport {
+interface Target {
+  path: string;
+  sideEffects: boolean;
   /** esbuild's own resolution differs from a resolve callback result. */
   distinct: boolean;
+}
+
+/** A native compile that is not final: its plan, or none after a failure. */
+export interface NativeOutcome {
+  plan?: ResolutionPlan;
 }
 
 /** The classified imports of one native compile. */
 export interface NativePlan {
   /** The native compile produced the full path's result. */
   exact: boolean;
-  imports: Map<string, PlannedImport>;
+  plan: ResolutionPlan;
 }
 
 /**
@@ -38,6 +45,7 @@ export async function planNative(
   metafile: Metafile,
   paths: ModulePaths,
   skippedRelatives = false,
+  candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
   const targets = new Map<string, Promise<Target | undefined>>();
@@ -50,10 +58,10 @@ export async function planNative(
     return found;
   };
   const edges: Array<{
-    key: string;
+    importer: string;
     specifier: string;
     directory: string;
-    kind: string;
+    kind: PlannedImportKind;
     file: string;
     target: Promise<Target | undefined>;
   }> = [];
@@ -72,7 +80,7 @@ export async function planNative(
       if (edge.original === undefined) exact = false;
       else if (nativeImport(paths, edge.original, directory))
         edges.push({
-          key: planKey(file, edge.original, edge.kind),
+          importer: file,
           specifier: edge.original,
           directory,
           kind: edge.kind,
@@ -81,7 +89,7 @@ export async function planNative(
         });
     }
   }
-  const imports = new Map<string, PlannedImport>();
+  const builder = new PlanBuilder();
   const usage: Array<() => Promise<void>> = [];
   const automaticMain = paths.settings.mainFields.length === 0;
   for (const edge of edges) {
@@ -96,10 +104,14 @@ export async function planNative(
       exact = false;
       continue;
     }
-    imports.set(edge.key, {
-      path: resolved.path,
-      sideEffects: resolved.sideEffects,
-    });
+    candidates?.selected(edge.file);
+    builder.addImport(
+      edge.importer,
+      edge.specifier,
+      edge.kind,
+      resolved.path,
+      resolved.sideEffects,
+    );
     usage.push(() =>
       paths.dependencyUsage.resolved(
         edge.specifier,
@@ -109,23 +121,22 @@ export async function planNative(
     );
   }
   if (exact) await Promise.all(usage.map((record) => record()));
-  return { exact, imports };
+  return { exact, plan: builder.plan };
 }
 
 /** The full path's result for a planned import, without a round trip. */
 export async function plannedResult(
   paths: ModulePaths,
   args: OnResolveArgs,
+  plan: ResolutionPlan,
   planned: PlannedImport,
 ): Promise<OnResolveResult> {
   try {
-    paths.observe(planned.path);
-    await paths.dependencyUsage.resolved(
-      args.path,
-      args.resolveDir,
-      planned.path,
-    );
-    return { path: planned.path, sideEffects: planned.sideEffects };
+    const file = plan.paths[planned[3]];
+    if (file === undefined) protocol("invalid resolution plan reference");
+    paths.observe(file);
+    await paths.dependencyUsage.resolved(args.path, args.resolveDir, file);
+    return { path: file, sideEffects: planned[4] };
   } catch (error) {
     return { errors: [{ text: detail(error) }] };
   }

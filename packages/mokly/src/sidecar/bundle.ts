@@ -11,7 +11,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
@@ -24,12 +24,13 @@ import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { metadataRuntime } from "./metadata-proof.js";
 import { ModulePaths } from "./module-paths.js";
-import { planNative } from "./native-plan.js";
+import { planNative, type NativeOutcome } from "./native-plan.js";
 import { nativeResolveFilter } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { PlannedRelative } from "./planned-relative.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
+import { PlanLookup } from "./resolution-plan.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
 
 export interface Generation {
@@ -66,11 +67,6 @@ export interface Bundled {
   result: BundleResult;
 }
 
-/** A native compile that is not final: its plan, or none after a failure. */
-interface NativeOutcome {
-  plan?: ReadonlyMap<string, PlannedImport>;
-}
-
 interface BundleCaptureState {
   started: bigint;
   mode: BundleCapture;
@@ -78,7 +74,7 @@ interface BundleCaptureState {
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
-  plan?: ReadonlyMap<string, PlannedImport>;
+  plan?: ResolutionPlan;
   editImports?: ServeEditImports;
 }
 
@@ -108,7 +104,7 @@ export async function bundle(
       measurements,
       {
         mode: "planned",
-        plan: new Map(Object.entries(requestedPlan.imports)),
+        plan: new PlanLookup(requestedPlan),
       },
       capture,
     );
@@ -124,7 +120,9 @@ export async function bundle(
     params,
     compile,
     measurements,
-    native.plan ? { mode: "planned", plan: native.plan } : { mode: "full" },
+    native.plan
+      ? { mode: "planned", plan: new PlanLookup(native.plan) }
+      : { mode: "full" },
     capture,
     true,
   );
@@ -264,12 +262,12 @@ async function bundleAttempt(
       const { metafile } = compiled;
       const plan = await measurements
         .run("sidecar.bundle.classify", () =>
-          planNative(metafile, paths, nativeRelatives),
+          planNative(metafile, paths, nativeRelatives, evidence?.candidates),
         )
         .catch(() => undefined);
       if (!plan) return {};
-      if (capture.mode === "full") capture.plan = plan.imports;
-      if (!plan.exact) return { plan: plan.imports };
+      if (capture.mode === "full") capture.plan = plan.plan;
+      if (!plan.exact) return { plan: plan.plan };
     }
     return await bundleRecipe(
       {

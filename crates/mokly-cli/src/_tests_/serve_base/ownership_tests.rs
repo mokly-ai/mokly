@@ -10,6 +10,7 @@ use mokly_model::public_metadata::ChangesStatus;
 use mokly_server::changes::{ChangeProgress, ChangeProgressMock};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::serve_changes_base::{AttemptBase, PreparingDependencies};
 use crate::warning_support::config;
@@ -45,6 +46,7 @@ fn last_slot_owner_drops_newer_entry_while_old_reader_keeps_only_its_base() {
                     warnings: Arc::default(),
                     progress: progress.clone(),
                     inner: Arc::new(NativeBase {
+                        admission: Arc::new(ImmediateBaseRenders),
                         runtime,
                         cancellation: first.lifetime.clone(),
                         freshness: None,

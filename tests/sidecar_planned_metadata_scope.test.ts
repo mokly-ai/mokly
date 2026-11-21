@@ -6,9 +6,10 @@ import test from "node:test";
 import { build } from "esbuild";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
+import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
@@ -67,12 +68,10 @@ test("a restored parsing scope first read after compilation rejects native outpu
   const original = await fs.readFile(manifest, "utf8");
   matureMetadata(context, new Set([manifest]));
   const params = nativeParams(root);
-  const plan = new Map([
-    [
-      planKey(path.join(known, "index.mjs"), "./impl.js", "import-statement"),
-      { path: path.join(known, "impl.js"), sideEffects: true },
-    ],
-  ]);
+  const plan: ResolutionPlan = {
+    paths: [path.join(known, "index.mjs"), path.join(known, "impl.js")],
+    imports: [[0, "./impl.js", "import-statement", 1, true]],
+  };
   let compiles = 0;
   const compile: typeof build = async (options) => {
     compiles++;
@@ -96,11 +95,11 @@ test("a restored parsing scope first read after compilation rejects native outpu
     unmeasured,
     undefined,
     "serveEdit",
-    { imports: Object.fromEntries(plan) },
+    plan,
   );
   const complete = await bundleWith(params, build, unmeasured, {
     mode: "planned",
-    plan,
+    plan: new PlanLookup(plan),
   });
   assert.equal(value(complete.result), "cjs-default");
   assert.equal(value(guarded.result), "cjs-default");
@@ -129,16 +128,18 @@ test("an unused prepared target does not add its young metadata to the native pr
     new Set([path.join(unused, "package.json")]),
   );
   const params = nativeParams(root);
-  const plan = new Map([
-    [
-      planKey(path.join(known, "index.mjs"), "./impl.js", "import-statement"),
-      { path: path.join(known, "impl.js"), sideEffects: true },
+  const plan: ResolutionPlan = {
+    paths: [
+      path.join(known, "index.mjs"),
+      path.join(known, "impl.js"),
+      path.join(unused, "index.mjs"),
+      path.join(unused, "never.js"),
     ],
-    [
-      planKey(path.join(unused, "index.mjs"), "./never.js", "import-statement"),
-      { path: path.join(unused, "never.js"), sideEffects: true },
+    imports: [
+      [0, "./impl.js", "import-statement", 1, true],
+      [2, "./never.js", "import-statement", 3, true],
     ],
-  ]);
+  };
   const counted = countedCompile();
   const guarded = await bundle(
     params,
@@ -146,11 +147,11 @@ test("an unused prepared target does not add its young metadata to the native pr
     unmeasured,
     undefined,
     "serveEdit",
-    { imports: Object.fromEntries(plan) },
+    plan,
   );
   const complete = await bundleWith(params, build, unmeasured, {
     mode: "planned",
-    plan,
+    plan: new PlanLookup(plan),
   });
   assert.equal(value(guarded.result), "known");
   assert.equal(code(guarded.result), code(complete.result));

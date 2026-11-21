@@ -26,6 +26,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::changes_freshness::PreparedDependencies;
 
@@ -150,6 +151,7 @@ fn prepare(
         "node_modules/x.js",
     );
     let base = NativeBase {
+        admission: Arc::new(ImmediateBaseRenders),
         runtime: head,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         dependencies: Arc::new(dependencies),

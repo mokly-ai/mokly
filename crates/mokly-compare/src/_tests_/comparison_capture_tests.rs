@@ -249,7 +249,7 @@ fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_sou
             .answers_arc(Arc::new(move |_, route, input| {
                 received_for_mock.lock().unwrap().push((
                     route.to_owned(),
-                    input.artifact.bytes.clone(),
+                    input.document.restore().unwrap().bytes,
                     input.closure.files.clone(),
                 ));
                 Ok(())

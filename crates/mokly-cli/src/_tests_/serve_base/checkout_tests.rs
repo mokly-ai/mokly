@@ -13,6 +13,7 @@ use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::serve_base::BaseSlot;
 use crate::warning_support::config;
@@ -28,6 +29,7 @@ fn native(slot: Arc<BaseSlot>, freshness: Arc<dyn Freshness>, runtime: Arc<Runti
         runtime.clone(),
     );
     Arc::get_mut(&mut fixture.provider).unwrap().inner = Arc::new(NativeBase {
+        admission: Arc::new(ImmediateBaseRenders),
         runtime,
         freshness: Some(freshness),
         cancellation: fixture.lifetime.clone(),

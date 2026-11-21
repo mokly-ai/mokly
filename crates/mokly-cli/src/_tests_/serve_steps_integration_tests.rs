@@ -55,11 +55,14 @@ fn classification_reports_reading_with_its_own_token_before_the_first_git_comman
         services: ServeChanges {
             reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: Arc::default(),
-            sidecars: Arc::new(Unimock::new(
+            sidecars: Arc::new(Unimock::new((
                 PoolSchedulingMock::pool
                     .some_call(matching!(Some(_)))
                     .returns(pool),
-            )),
+                PoolSchedulingMock::limit
+                    .some_call(matching!())
+                    .returns(1_usize),
+            ))),
             progress: Arc::new(boundaries.clone()),
             refreshes: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),

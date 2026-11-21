@@ -4,9 +4,9 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
+import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 
 import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
@@ -62,9 +62,7 @@ test("safe planned relative imports remove callbacks as the graph grows and keep
       undefined,
       undefined,
       "serveEdit",
-      {
-        imports: Object.fromEntries(native.plan),
-      },
+      native.plan,
     );
     const full = await bundle(params, build, undefined, undefined, "serveEdit");
     assert.deepEqual(
@@ -112,13 +110,9 @@ for (const [name, actual] of [
       path.join(root, "planned.mjs"),
       'export const value = "planned";',
     );
-    const plan = {
-      imports: {
-        [planKey(entry, "./value.mjs", "import-statement")]: {
-          path: path.join(root, "planned.mjs"),
-          sideEffects: true,
-        },
-      },
+    const plan: ResolutionPlan = {
+      paths: [entry, path.join(root, "planned.mjs")],
+      imports: [[0, "./value.mjs", "import-statement", 1, true]],
     };
     const counted = countedCompile();
     const planned = await bundle(
@@ -165,12 +159,8 @@ for (const [name, source] of [
     const counted = countedCompile();
     await assert.rejects(
       bundle(params, counted.compile, undefined, undefined, "serveEdit", {
-        imports: {
-          [planKey(entry, "./value.mjs", "import-statement")]: {
-            path: path.join(root, "value.mjs"),
-            sideEffects: true,
-          },
-        },
+        paths: [entry, path.join(root, "value.mjs")],
+        imports: [[0, "./value.mjs", "import-statement", 1, true]],
       }),
       { code: "bundle-failed", message: expected },
     );
@@ -204,12 +194,8 @@ test("new strings keep the full callback and a safe string from a new importer i
     undefined,
     "serveEdit",
     {
-      imports: {
-        [planKey(entry, "./value.mjs", "import-statement")]: {
-          path: path.join(root, "value.mjs"),
-          sideEffects: true,
-        },
-      },
+      paths: [entry, path.join(root, "value.mjs")],
+      imports: [[0, "./value.mjs", "import-statement", 1, true]],
     },
   );
   const full = await bundle(params, build, undefined, undefined, "serveEdit");
