@@ -81,7 +81,7 @@ Options:
       --sidecars <SIDECARS>      Sidecar count; defaults to MOKLY_SIDECARS or the core count
       --debug-timings            Write timing JSON to stderr and select plain output
       --out <OUT>                Static output directory (default mokly-static/)
-      --strict                   Fail on warnings before writing output
+      --strict                   Fail on warnings except base-dependencies before writing output
       --no-changes               Skip comparisons and base lookup
   -h, --help                     Print help
 ```
@@ -117,7 +117,7 @@ Options:
       --upload-concurrency <UPLOAD_CONCURRENCY>
           Maximum parallel Blob requests, 1 through 32 [default: 8]
       --strict
-          Fail on every build warning before uploading
+          Fail on build warnings except base-dependencies before uploading
       --no-changes
           Skip comparisons and base lookup
   -h, --help

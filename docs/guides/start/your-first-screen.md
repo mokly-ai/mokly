@@ -40,8 +40,8 @@ npx mokly build --strict --no-changes
 ```
 
 The build renders every view and checks links and resources. Strict mode
-also fails on warnings. It writes the static catalogue to `mokly-static` by
-default. Keep that directory ignored by Git.
+also fails on warnings other than `base-dependencies`. It writes the static
+catalogue to `mokly-static` by default. Keep that directory ignored by Git.
 
 ## Open the catalogue
 

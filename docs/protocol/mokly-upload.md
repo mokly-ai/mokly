@@ -60,7 +60,8 @@ uses normal discovery. Comparisons are included by default: `--base` overrides
 comparison generation, including removed entries and comparison assets and
 controls. It rejects an explicit `--base`. Both modes build and validate the
 catalogue. Build warnings fail the command before output installation or upload
-only with `--strict`. Without it, warnings print and publication continues.
+only with [`--strict`](./mokly-build-warnings.md#strict-mode), which does not
+count `base-dependencies`. Without it, warnings print and publication continues.
 Strict mode is opt-in so recoverable authoring warnings do not block publication.
 
 After a successful publication or an already-published response, delete exactly
