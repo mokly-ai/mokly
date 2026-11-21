@@ -1,6 +1,6 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: Writer resumes do not emit the required store state record yet. The [writer resume state item](../../plans/follow-ups/render-store-resume-state-record.md) adds it. The stylesheet store does not exist yet, so its budgets do not apply. [Milestone 2](../../plans/persistent-stylesheet-records.md#milestone-2-red-tests-and-reusable-storage) adds the store.
+Status: Writer resumes do not emit the required store state record yet. The [writer resume state item](../../plans/follow-ups/render-store-resume-state-record.md) adds it.
 
 ## Opt-In Timings
 
@@ -220,8 +220,6 @@ CI's small correctness fixtures have
 | bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
 | render store namespace             | 128 MiB (134,217,728 bytes) per repository, complete and staged entries together                                               |
 | render store writer                | 4 MiB (4,194,304 bytes) for the batch and the segment buffer of the [render store](./mokly-render-store.md#writes) writer      |
-| stylesheet store namespace         | 256 MiB (268,435,456 bytes) per repository, complete and staged entries together                                               |
-| stylesheet store entry             | 64 MiB (67,108,864 bytes) for one snapshot of the [stylesheet store](./mokly-stylesheet-cache.md#entry-format)                 |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

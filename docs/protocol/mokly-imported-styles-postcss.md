@@ -138,12 +138,3 @@ the module evidence of one PostCSS context is kept and checked once for all
 bundles of that context. A larger stylesheet cache bound was rejected, because
 a copy of that evidence in each bundle fills any fixed bound at a few hundred
 stylesheet roots.
-
-This reuse applies inside one process. A later process can reuse a stylesheet
-bundle only through the [stylesheet store](./mokly-stylesheet-cache.md#admission),
-which admits each record on its own complete and stable evidence. A bundle with
-a PostCSS result whose [read evidence](./mokly-sidecar-postcss.md#read-evidence)
-reports incomplete coverage stays in memory only. Under the read evidence rules,
-every PostCSS result reports incomplete coverage. A later process compiles each
-such bundle again. The reuse rule above still applies to these bundles inside
-their process.
