@@ -1,6 +1,6 @@
 # Render Store
 
-Status: The sidecar release thread and finite file response bodies do not pause the writer yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them. A read still takes an index lock, so another operation that reads or updates the index can turn the read into a miss. The [index publication milestone](../../plans/render-store-read-lock.md#milestone-2-regression-and-index-publication) removes that lock from reads.
+Status: The sidecar release thread and finite file response bodies do not pause the writer yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
 
 The render store keeps the complete documents that `mokly serve` renders, so
 that a later Serve process reuses them instead of rendering them again. It is

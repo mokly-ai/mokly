@@ -135,15 +135,17 @@ Evidence: `.context/render-store-read-lock/docs-milestone-1-report.md`.
 
 Depends on: 1
 
-- [ ] Add a deterministic regression with concurrent ordinary reads while
+- [x] Add a deterministic regression with concurrent ordinary reads while
       another thread holds the maintenance mutex. Observe assertion failure
       against the old implementation before any production change.
-- [ ] Implement immutable index publication with mutually exclusive startup,
+- [x] Implement immutable index publication with mutually exclusive startup,
       writes, and replacement adoption. Move every index consumer.
-- [ ] Preserve complete-document, replacement, damage, index-cap, and startup
+- [x] Preserve complete-document, replacement, damage, index-cap, and startup
       behavior. Add a focused case only where existing tests leave a gap.
-- [ ] Run the targeted compare tests and Clippy. Run each new concurrent test
+- [x] Run the targeted compare tests and Clippy. Run each new concurrent test
       ten times. Record assertion-red output and the test cost under `.context/`.
+
+Evidence: `.context/render-store-read-lock/implementation-report.md`.
 
 ## Milestone 3: Local proofs and measurement handoff
 
@@ -156,6 +158,11 @@ Depends on: 2
 - [ ] Report the large React index size, snapshot copies per update, and the
       memory cost of those copies. Distinguish measured allocations from
       estimates and from the parent's complete-process memory measurement.
+- [ ] Verify one snapshot per completed writer batch or flush, never per key.
+      Compare the large React cold seed on main and the candidate: writer CPU,
+      session CPU, peak RSS, writes, and drops. Report populated-block misses
+      against newly durable keys in both arms. The performance orchestrator
+      requested these checks on 2026-11-21.
 - [ ] Prove strict byte equality on examples/basic, large HTML, large React,
       and mokly-cloud. Compare every relative file and raw byte without
       normalization. Save manifests, document keys, and a summary.

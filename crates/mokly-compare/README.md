@@ -527,10 +527,12 @@ development dependencies, and no test uses the internet.
   [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory.
   [`src/render_store_state.rs`](./src/render_store_state.rs) prepares the
   index from that inventory and handles entry and store faults.
-  [`src/render_store_read.rs`](./src/render_store_read.rs) serves one document
-  through the index and records its new position when its segment was
-  replaced. [`src/render_store_write.rs`](./src/render_store_write.rs)
-  publishes a built segment and adds its documents to the index.
+  [`src/render_store_read.rs`](./src/render_store_read.rs) reads one position
+  from the published snapshot before segment IO.
+  [`src/render_store_index.rs`](./src/render_store_index.rs) adopts validated
+  replacement positions in one snapshot while preserving keys that moved.
+  [`src/render_store_write.rs`](./src/render_store_write.rs) publishes a built
+  segment and adds its batch to the index with one snapshot copy.
 - [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
   segment: the prefix, the bounded header, and the digests.
   [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines

@@ -39,6 +39,7 @@ pub mod render_segment_buffer;
 mod render_segment_header;
 mod render_sequence;
 pub mod render_store;
+mod render_store_index;
 mod render_store_read;
 mod render_store_state;
 mod render_store_write;

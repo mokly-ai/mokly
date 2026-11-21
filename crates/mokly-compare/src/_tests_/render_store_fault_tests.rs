@@ -14,7 +14,7 @@ use crate::render_store::{CachedDocuments, DocumentBackend};
 fn ordinary_reads_consume_queued_faults_once_and_preserve_them_while_disabled() {
     let store = CachedDocuments::new(Arc::new(Unimock::new(())), "current".into());
     let key = StoreKey::new(&NodeKey("absent".into()), "build");
-    *store.index.lock().unwrap() = Some(BTreeMap::new());
+    store.index.store(Some(Arc::new(BTreeMap::new())));
     store
         .faults
         .lock()
@@ -36,7 +36,7 @@ fn ordinary_reads_consume_queued_faults_once_and_preserve_them_while_disabled() 
         .push_back(EntryFault::Unreadable);
     store.enabled.store(false, Ordering::Release);
     {
-        let _index = store.index.lock().unwrap();
+        let _maintenance = store.maintenance.lock().unwrap();
         let _faults = store.faults.lock().unwrap();
         assert!(matches!(store.load(&key), ReadOutcome::Miss));
     }
