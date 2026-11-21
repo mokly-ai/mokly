@@ -961,9 +961,9 @@ file and the review reports are in
 
 - [x] Remove each status line whose page this track completes. Branch:
       conductor/storybook-support-c-imported-assets
-- [ ] Run the targeted tests and `cargo xtask check`. Branch:
+- [x] Run the targeted tests and `cargo xtask check`. Branch:
       conductor/storybook-support-c-imported-assets
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: conductor/storybook-support-c-imported-assets
 
