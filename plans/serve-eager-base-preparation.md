@@ -457,6 +457,7 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Receive the performance orchestrator's warm confirmation after the cleanup SHA is pushed.
 - [x] Record the remaining pre-readiness work and the accepted warm readiness cost in a post-merge follow-up.
 - [x] Restore the existing dependency error timing span on an input read limit, with its unchanged static regression test.
+- [ ] Resolve the Browser gate's watch-capacity failure and invalid-base host exit, with the existing tests unchanged.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.

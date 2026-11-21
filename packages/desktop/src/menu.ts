@@ -2,7 +2,10 @@ import type { Menu, MenuItem, MenuItemConstructorOptions } from "electron";
 
 import { zoomMenuItem, type ButtonWindow } from "./window-buttons.js";
 
-/** Retain the platform menu; Mac zoom commands also align the native buttons. */
+/**
+ * Keep the platform menu and align the native Mac buttons on zoom.
+ * Add the update action to Help and disable it when updates are unavailable.
+ */
 export function installMenu(
   dependencies: {
     current(): Menu | null;
@@ -11,7 +14,7 @@ export function installMenu(
     set(menu: Menu): void;
     focusedWindow(): ButtonWindow | null;
   },
-  check: () => void,
+  updates: { available: boolean; check(): unknown },
   platform: NodeJS.Platform,
 ): void {
   let menu = dependencies.current();
@@ -38,7 +41,11 @@ export function installMenu(
     (item) => item.role === "help" || /help/i.test(item.label),
   )?.submenu;
   (help ?? menu).append(
-    dependencies.item({ label: "Check for updates", click: check }),
+    dependencies.item({
+      label: "Check for updates",
+      enabled: updates.available,
+      click: () => void updates.check(),
+    }),
   );
   if (platform === "darwin") dependencies.set(menu);
 }
