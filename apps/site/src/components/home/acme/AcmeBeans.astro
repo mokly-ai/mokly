@@ -1,0 +1,23 @@
+---
+/**
+ * The coffee beans scattered at the foot of the depicted acme welcome art.
+ * A hidden drawing; `acme-bag.ts` places each bean.
+ *
+ * Use: `<AcmeBeans />`, inside the welcome art.
+ */
+import { ACME_BEANS } from "./acme-bag.js";
+---
+
+<svg
+  aria-hidden="true"
+  class="site-acme-beans"
+  focusable="false"
+  viewBox="0 0 390 420"
+>
+  {ACME_BEANS.map(([x, y, scale, turn]) => (
+    <g transform={`translate(${x} ${y}) rotate(${turn}) scale(${scale})`}>
+      <ellipse class="site-acme-bean" rx="6" ry="4.3" />
+      <path class="site-acme-bean-crease" d="M-4.7.5c2.3-1.7 5.2-1.7 9.4-.5" />
+    </g>
+  ))}
+</svg>

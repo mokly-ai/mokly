@@ -1,0 +1,43 @@
+---
+/**
+ * The depicted acme `checkout/review-order` screen on a phone, at
+ * 390 × 844, in the app's dark screen: step 3 of 3, the order lines, the
+ * address and the card, the totals and Place order.
+ *
+ * Use: `<AcmeReviewOrder />`.
+ */
+import AcmeButton from "./AcmeButton.astro";
+import AcmeCheckoutBar from "./AcmeCheckoutBar.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import AcmeOrderLines from "./AcmeOrderLines.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeStatus from "./AcmeStatus.astro";
+import AcmeTotals from "./AcmeTotals.astro";
+---
+
+<AcmeRoot dark kind="phone">
+  <AcmeStatus />
+  <AcmeCheckoutBar step={3} />
+  <div class="site-acme-checkout">
+    <div class="site-acme-title">Review order</div>
+    <AcmeOrderLines />
+    <div class="site-acme-line-card">
+      <AcmeIcon name="pin" />
+      <span class="site-acme-lines">
+        <i>Deliver to</i>
+        <b>12 Harbour Street, Leith</b>
+      </span>
+    </div>
+    <div class="site-acme-line-card">
+      <AcmeIcon name="card" />
+      <span class="site-acme-lines">
+        <i>Pay with</i>
+        <b>Card ending 4242</b>
+      </span>
+    </div>
+    <AcmeTotals />
+    <AcmeButton block class="site-acme-pay" size="large">
+      Place order
+    </AcmeButton>
+  </div>
+</AcmeRoot>

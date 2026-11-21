@@ -1,0 +1,41 @@
+---
+/**
+ * The depicted acme `checkout/payment` screen on a phone, at 390 × 844:
+ * step 2 of 3, the two items, Payment, the methods and the card form.
+ *
+ * - `dark`: the app's dark screen.
+ *
+ * Use: `<AcmePaymentPhone dark />`.
+ */
+import AcmeCardForm from "./AcmeCardForm.astro";
+import AcmeCheckoutBar from "./AcmeCheckoutBar.astro";
+import AcmeMethods from "./AcmeMethods.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeStatus from "./AcmeStatus.astro";
+import AcmeTile from "./AcmeTile.astro";
+
+interface Props {
+  readonly dark?: boolean;
+}
+
+const { dark = false } = Astro.props;
+---
+
+<AcmeRoot dark={dark} kind="phone">
+  <AcmeStatus />
+  <AcmeCheckoutBar step={2} />
+  <div class="site-acme-checkout">
+    <div class="site-acme-mini-summary">
+      <AcmeTile roast="guji" size="small" />
+      <AcmeTile roast="huila" size="small" />
+      <span class="site-acme-lines">
+        <b>2 items</b>
+        <i>Guji, Huila</i>
+      </span>
+      <b>$42.00</b>
+    </div>
+    <div class="site-acme-title">Payment</div>
+    <AcmeMethods />
+    <AcmeCardForm />
+  </div>
+</AcmeRoot>

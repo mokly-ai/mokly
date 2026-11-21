@@ -1,0 +1,27 @@
+---
+/**
+ * The heading block above the plans of the depicted acme pricing screens:
+ * the Subscriptions eyebrow, Pick your plan in Instrument Serif, the line
+ * and the Monthly and Yearly switch.
+ *
+ * - `large`: the desktop's display size of the title.
+ *
+ * Use: `<AcmePricingHead large />`.
+ */
+import AcmeSegmented from "./AcmeSegmented.astro";
+
+interface Props {
+  readonly large?: boolean;
+}
+
+const { large = false } = Astro.props;
+---
+
+<div class="site-acme-eyebrow">Subscriptions</div>
+<div class:list={["site-acme-title", large && "site-acme-title--display"]}>
+  Pick your plan
+</div>
+<div class="site-acme-sub">
+  Fresh roasts at your door. Pause or skip any month.
+</div>
+<AcmeSegmented />

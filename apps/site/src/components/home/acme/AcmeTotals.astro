@@ -1,0 +1,31 @@
+---
+/**
+ * The totals of the depicted acme order: the lines above the total, each a
+ * label and an amount, then the total, $42.00.
+ *
+ * - `lines`: the lines above the total; the subtotal and the shipping by
+ *   default. `acme-checkout.ts` holds both orders.
+ *
+ * Use: `<AcmeTotals />`, or `<AcmeTotals lines={ACME_ITEMISED} />`.
+ */
+import { ACME_SUBTOTAL, type AcmeTotalLines } from "./acme-checkout.js";
+
+interface Props {
+  readonly lines?: AcmeTotalLines;
+}
+
+const { lines = ACME_SUBTOTAL } = Astro.props;
+---
+
+<div class="site-acme-totals">
+  {lines.map(([label, amount]) => (
+    <span>
+      {label}
+      <span>{amount}</span>
+    </span>
+  ))}
+  <span class="site-acme-totals-sum">
+    Total
+    <span>$42.00</span>
+  </span>
+</div>

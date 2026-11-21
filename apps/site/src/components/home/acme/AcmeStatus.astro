@@ -1,0 +1,39 @@
+---
+/**
+ * The phone status bar of the depicted acme/storefront app: the time, the
+ * signal, the Wi-Fi and the battery, in the screen's ink. A depiction:
+ * plain text and a hidden drawing.
+ *
+ * Use: `<AcmeStatus />`, first in a phone screen.
+ */
+---
+
+<div class="site-acme-status">
+  <b>9:41</b>
+  <svg
+    aria-hidden="true"
+    fill="currentColor"
+    focusable="false"
+    viewBox="0 0 72 13"
+  >
+    <rect height="4" rx="1" width="3" x="0" y="8.5"></rect>
+    <rect height="6" rx="1" width="3" x="5" y="6.5"></rect>
+    <rect height="8.5" rx="1" width="3" x="10" y="4"></rect>
+    <rect height="11" rx="1" width="3" x="15" y="1.5"></rect>
+    <path
+      d="M8 10.6 9.6 9a2.3 2.3 0 0 0-3.2 0zM4.6 7.2a4.8 4.8 0 0 1 6.8 0l1.2-1.2a6.5 6.5 0 0 0-9.2 0zM2 4.6a8.5 8.5 0 0 1 12 0l1.2-1.2a10.2 10.2 0 0 0-14.4 0z"
+      transform="translate(24 0.5)"
+    ></path>
+    <rect
+      fill="none"
+      height="11.8"
+      rx="3.6"
+      stroke="currentColor"
+      stroke-width="1.2"
+      width="24.8"
+      x="46.6"
+      y="0.6"
+    ></rect>
+    <rect height="7" rx="1.6" width="17.5" x="49" y="3"></rect>
+  </svg>
+</div>

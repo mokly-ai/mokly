@@ -18,12 +18,8 @@
   );
   color: color-mix(
     in srgb,
-    var(--mk-color-people-pink-fill) 8%,
-    color-mix(
-      in srgb,
-      var(--mk-color-people-orange-fill) 11%,
-      var(--mk-color-on-signal)
-    )
+    var(--mk-color-people-orange-fill) 7%,
+    var(--mk-color-people-orange-ink)
   );
   font-family: var(--mk-font-sans);
   font-size: 15px;
@@ -37,12 +33,8 @@
 .site-acme--dark {
   background: color-mix(
     in srgb,
-    var(--mk-color-people-pink-fill) 8%,
-    color-mix(
-      in srgb,
-      var(--mk-color-people-orange-fill) 3%,
-      var(--mk-color-on-signal)
-    )
+    var(--mk-color-people-pink-fill) 9%,
+    var(--mk-color-on-signal)
   );
   color: color-mix(
     in srgb,
@@ -60,13 +52,9 @@
 .site-acme-toast .site-acme-toast-undo,
 .site-acme--dark .site-acme-button--primary {
   color: color-mix(
-    in hsl,
-    var(--mk-color-people-orange-fill) 86%,
-    color-mix(
-      in srgb,
-      var(--mk-color-signal-fill) 70%,
-      var(--mk-color-on-signal-fill)
-    )
+    in srgb,
+    var(--mk-color-people-orange-fill) 72%,
+    var(--mk-color-signal)
   );
 }
 
@@ -92,12 +80,7 @@
 .site-acme-avatar--plum {
   color: color-mix(
     in srgb,
-    color-mix(
-        in srgb,
-        var(--mk-color-people-pink-fill) 70%,
-        var(--mk-color-people-violet-fill)
-      )
-      55%,
+    var(--mk-color-people-pink-fill) 49%,
     var(--mk-color-on-signal)
   );
 }
@@ -108,12 +91,7 @@
 .site-acme-stepper-done .site-acme-icon {
   color: color-mix(
     in srgb,
-    color-mix(
-        in srgb,
-        var(--mk-color-signal-fill) 72%,
-        var(--mk-color-people-orange-fill)
-      )
-      55%,
+    var(--mk-color-signal-fill) 48%,
     var(--mk-color-on-signal-fill)
   );
 }
@@ -123,12 +101,8 @@
 .site-acme-field-note {
   color: color-mix(
     in srgb,
-    var(--mk-color-people-pink-fill) 45%,
-    color-mix(
-      in srgb,
-      var(--mk-color-people-orange-fill) 70%,
-      var(--mk-color-on-signal)
-    )
+    var(--mk-color-people-pink-fill) 59%,
+    var(--mk-color-people-orange-fill)
   );
 }
 

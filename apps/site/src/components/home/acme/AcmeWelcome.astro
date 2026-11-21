@@ -1,0 +1,60 @@
+---
+/**
+ * The depicted acme `onboarding/welcome` screen on a phone, at 390 × 844: a
+ * saffron art panel with three bags under a sun and scattered beans, then
+ * the welcome copy, the brew choices with Filter chosen, and Continue.
+ *
+ * Use: `<AcmeWelcome />`.
+ */
+import { ACME_BREWS } from "./acme-screens.js";
+import AcmeBag from "./AcmeBag.astro";
+import AcmeBeans from "./AcmeBeans.astro";
+import AcmeButton from "./AcmeButton.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeStatus from "./AcmeStatus.astro";
+---
+
+<AcmeRoot kind="phone">
+  <div class="site-acme-welcome-art">
+    <AcmeStatus />
+    <span class="site-acme-welcome-sun"></span>
+    <AcmeBag
+      class="site-acme-welcome-bag site-acme-welcome-bag--left"
+      roast="huila"
+    />
+    <AcmeBag
+      class="site-acme-welcome-bag site-acme-welcome-bag--centre"
+      roast="guji"
+    />
+    <AcmeBag
+      class="site-acme-welcome-bag site-acme-welcome-bag--right"
+      roast="nyeri"
+    />
+    <AcmeBeans />
+  </div>
+  <div class="site-acme-welcome-body">
+    <span class="site-acme-dots">
+      <i class="site-acme-dots-on"></i>
+      <i></i>
+      <i></i>
+    </span>
+    <div class="site-acme-title">Welcome to Acme</div>
+    <div class="site-acme-sub">
+      Coffee roasted to order and sent to your door.
+    </div>
+    <div class="site-acme-label">How do you brew?</div>
+    <div class="site-acme-chips">
+      {ACME_BREWS.map((brew, index) => (
+        <span class={index === 0 ? "site-acme-chips-on" : undefined}>
+          <span>
+            {index === 0 && <AcmeIcon name="check" />}
+            {brew}
+          </span>
+        </span>
+      ))}
+    </div>
+    <AcmeButton block>Continue</AcmeButton>
+    <span class="site-acme-link">I already have an account</span>
+  </div>
+</AcmeRoot>
