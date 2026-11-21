@@ -1,0 +1,168 @@
+/* The catalogue column of the depicted viewer in the home Browse frame:
+   the All and Changes filter, the Specs and Components sections, and the
+   rows of folders, screens, components and variants, with the open screen
+   selected and a dot on each changed or added entry.
+
+   The class names and the rules match docs/mockups/styles/site/shell-tree.css
+   and the Browse rules of home-responsive.css. The mockups pin a composition
+   with data-site-viewport; the site resolves the same switch at 768px. So
+   each base rule is the mobile composition, and the desktop values follow
+   under the 768px query. On a phone the column folds over the open screen:
+   it stops at 228px with its foot faded into the column's tone, and the
+   filter's options take the 44px target size. */
+
+.site-tree {
+  background: var(--mk-color-surface-muted);
+  border-bottom: 1px solid var(--mk-color-border);
+  border-right: 0;
+  max-height: 228px;
+  overflow: hidden;
+  padding: 12px;
+  position: relative;
+}
+
+.site-tree::after {
+  background: linear-gradient(transparent, var(--mk-color-surface-muted) 85%);
+  bottom: 0;
+  content: "";
+  height: 56px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.site-filter {
+  background: var(--mk-color-background);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+}
+
+.site-filter-option {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: 550;
+  gap: 6px;
+  height: 44px;
+  justify-content: center;
+}
+
+.site-filter-option--current {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+
+.site-filter-count {
+  background: var(--mk-color-warning-soft);
+  border-radius: 5px;
+  color: var(--mk-color-warning);
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-semibold);
+  line-height: 1;
+  padding: 3px 5px;
+}
+
+.site-tree-scroll {
+  margin-top: 8px;
+}
+
+.site-tree-section-head {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding: 12px 6px 6px;
+  text-transform: uppercase;
+}
+
+.site-row {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  gap: 7px;
+  height: 29px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.site-row--group {
+  padding-left: 6px;
+}
+
+.site-row[data-site-depth="1"] {
+  padding-left: 25px;
+}
+
+.site-row[data-site-depth="2"] {
+  color: var(--mk-color-text-muted);
+  padding-left: 45px;
+}
+
+.site-row--group .site-row-label {
+  font-weight: var(--mk-font-medium);
+}
+
+.site-tree-chevron {
+  color: var(--mk-color-text-muted);
+  display: inline-grid;
+  flex: none;
+}
+
+.site-row-ico {
+  color: color-mix(in srgb, var(--mk-color-text-muted) 72%, transparent);
+  display: inline-grid;
+  flex: none;
+}
+
+.site-row--current {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-row--current .site-row-ico {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-dot {
+  background: var(--mk-color-warning);
+  border-radius: var(--mk-radius-pill);
+  flex: none;
+  height: 7px;
+  margin-left: auto;
+  width: 7px;
+}
+
+.site-home-dot--added {
+  background: var(--mk-color-signal-deep);
+}
+
+/* The desktop composition from the breakpoint upward: the column stands
+   beside the open screen at the body's full height. */
+
+@media (min-width: 768px) {
+  .site-tree {
+    border-bottom: 0;
+    border-right: 1px solid var(--mk-color-border);
+    max-height: none;
+  }
+
+  .site-tree::after {
+    display: none;
+  }
+
+  .site-filter-option {
+    height: 32px;
+  }
+}

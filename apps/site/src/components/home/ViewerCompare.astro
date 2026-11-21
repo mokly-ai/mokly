@@ -1,0 +1,72 @@
+---
+/**
+ * The open screen of the depicted Mokly viewer in the home's Browse frame:
+ * the screen head with `Payment`, its path and its Changed status, the
+ * compare toolbar with the product's five modes and Swipe chosen, which
+ * `compare-modes.ts` holds, and the stage, where the Swipe divider shows
+ * `main` on its left and `feat/checkout-v2` on its right. Sam's cursor
+ * rests on the divider's grip.
+ *
+ * The divider and the cursor sit on one track over the compared screens,
+ * which the Browse demo slides once, while the branch screen's clip follows
+ * it; the built page rests at 50%. A depiction: the viewer that holds it is
+ * hidden from assistive technology, and its modes are drawn, not controls.
+ *
+ * Use: `<ViewerCompare />` in `Viewer.astro`. The rules are in
+ * `src/styles/home-viewer-frame.css` and `src/styles/home-viewer-stage.css`.
+ */
+import Chip from "../Chip.astro";
+import Cursor from "../Cursor.astro";
+import Icon from "../Icon.astro";
+
+import AcmePaymentDesktop from "./acme/AcmePaymentDesktop.astro";
+import { CHOSEN_MODE, COMPARE_MODES } from "./compare-modes.js";
+
+import "../../styles/home-viewer-frame.css";
+import "../../styles/home-viewer-stage.css";
+---
+
+<div class="site-shell-main">
+  <div class="site-screen-head">
+    <span class="site-screen-title-row">
+      <span class="site-screen-title">Payment</span>
+      <span class="site-idchip">checkout/payment</span>
+      <Chip tone="changed">Changed</Chip>
+    </span>
+    <span class="site-home-modes">
+      {COMPARE_MODES.map((mode) => (
+        <span
+          class:list={[
+            "site-home-mode",
+            mode === CHOSEN_MODE && "site-home-mode--chosen",
+          ]}
+        >
+          {mode}
+        </span>
+      ))}
+    </span>
+  </div>
+  <div class="site-stage">
+    <div class="site-stage-frame">
+      <div class="site-stage-screen">
+        <AcmePaymentDesktop version="main" />
+      </div>
+      <div class="site-stage-screen site-home-swipe-branch">
+        <AcmePaymentDesktop version="branch" />
+      </div>
+      <span class="site-stage-label">main</span>
+      <span class="site-stage-label site-home-tag-branch">
+        feat/checkout-v2
+      </span>
+      <span class="site-home-swipe-track">
+        <span class="site-home-swipe">
+          <span class="site-home-swipe-grip">
+            <Icon name="caret" size={13} />
+            <Icon name="caret" size={13} />
+          </span>
+        </span>
+        <Cursor class="site-home-compare-sam" person="sam" />
+      </span>
+    </div>
+  </div>
+</div>
