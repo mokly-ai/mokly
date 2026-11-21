@@ -46,6 +46,14 @@ impl ChangesPass {
         .await;
         let task_failed = work.is_err();
         let mut completed = false;
+        let accepted = work.as_ref().is_ok_and(|result| result.is_ok());
+        let pending = source.clone();
+        if let Err(source) =
+            tokio::task::spawn_blocking(move || pending.settle_pending(accepted)).await
+        {
+            self.diagnostics
+                .failed(&ServerError::Internal(InternalError::Task { source }));
+        }
         let result = match work {
             Ok(result) => result,
             Err(source) => Err(InternalError::Task { source }.into()),

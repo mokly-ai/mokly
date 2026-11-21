@@ -7,6 +7,7 @@ use mokly_compare::error::{Error, Result};
 use mokly_graph::types::RenderGeneration;
 
 /// One preparation checks its host's prerequisites before it starts early renders.
+#[cfg_attr(test, unimock::unimock(api = BaseRenderAdmissionMock))]
 pub(super) trait BaseRenderAdmission: Send + Sync {
     /// Validate the evidence required before any base document callback.
     fn check(&self) -> Result<()>;

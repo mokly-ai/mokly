@@ -157,7 +157,11 @@ impl NodeFactory {
             startup: Arc::downgrade(&startup),
         });
         child.attached(Arc::clone(&control));
-        let diagnostics = Arc::clone(&self.diagnostics);
+        let reporting = self
+            .diagnostics
+            .for_source_root(&launch.repository)
+            .unwrap_or_else(|| self.diagnostics.clone());
+        let diagnostics = reporting.clone();
         let timings = self.timings;
         let phases = PhaseState::default();
         let compile_count = Arc::new(AtomicU64::new(0));
@@ -195,7 +199,7 @@ impl NodeFactory {
         let client = Client::new(
             Box::new(transport),
             Box::new(ForwardEvents {
-                diagnostics: Arc::clone(&self.diagnostics),
+                diagnostics: reporting.clone(),
                 phases: phases.clone(),
                 compile_count: compile_count.clone(),
             }),
@@ -210,7 +214,7 @@ impl NodeFactory {
         startup.hand_off();
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
-                diagnostics: self.diagnostics.clone(),
+                diagnostics: reporting,
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
                 memory,

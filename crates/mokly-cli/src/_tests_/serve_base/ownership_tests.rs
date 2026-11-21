@@ -6,13 +6,15 @@ use mokly_compare::base_freshness::FreshnessMock;
 use mokly_compare::base_render::BaseProvider;
 use mokly_compare::base_retention::BaseRetentionRequest;
 use mokly_compare::comparison_types::ComparisonMock;
+use mokly_compare::error::Error;
 use mokly_model::public_metadata::ChangesStatus;
-use mokly_server::changes::{ChangeProgress, ChangeProgressMock};
+use mokly_server::changes::{ChangeCancellation, ChangeProgress, ChangeProgressMock, ChangeToken};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
-use crate::serve_changes_base::{AttemptBase, PreparingDependencies};
+use crate::serve_base_cancel::PreparingBase;
+use crate::serve_changes_base::{AttemptBase, CombinedCancel, PreparingDependencies};
 use crate::warning_support::config;
 
 use super::flow_support::{classify, result};
@@ -46,6 +48,7 @@ fn last_slot_owner_drops_newer_entry_while_old_reader_keeps_only_its_base() {
                     warnings: Arc::default(),
                     progress: progress.clone(),
                     inner: Arc::new(NativeBase {
+                        validation: None,
                         admission: Arc::new(ImmediateBaseRenders),
                         runtime,
                         cancellation: first.lifetime.clone(),
@@ -118,4 +121,78 @@ fn last_slot_owner_drops_newer_entry_while_old_reader_keeps_only_its_base() {
         old
     };
     assert!(old.upgrade().is_none());
+}
+
+#[test]
+fn eager_cancelled_owner_cannot_detach_before_its_classification_token_is_cancelled() {
+    let mut fixture = Fixture::new(
+        Arc::default(),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        runtime(),
+    );
+    let owner = Arc::new(ChangeToken::default());
+    owner.cancel();
+    Arc::get_mut(&mut fixture.provider).unwrap().lifetime =
+        Arc::new(PreparingBase::new(Arc::new(CombinedCancel {
+            command: fixture.command.clone(),
+            generation: owner,
+            operation: Arc::new(ChangeToken::default()),
+        })));
+    let config = config();
+    let selected = selected("a");
+    let head = head(false);
+    let result = fixture.provider.keep(
+        &BaseRetentionRequest {
+            selected: &selected,
+            working_config: &config,
+            head: head.as_ref(),
+            install_scripts: false,
+        },
+        base(Some(inputs(false))),
+    );
+    assert!(matches!(result, Err(Error::Cancelled)));
+    assert!(!fixture.origin.cancelled());
+    assert!(fixture.slot.lock().unwrap().is_none());
+}
+
+#[test]
+fn eager_keep_uses_the_pending_owners_atomic_commit_veto() {
+    let mut fixture = Fixture::new(
+        Arc::default(),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        runtime(),
+    );
+    let owner: Arc<dyn ChangeCancellation> = Arc::new(
+        Unimock::new(
+            mokly_server::changes::ChangeCancellationMock::commit
+                .some_call(matching!(_))
+                .returns(false),
+        )
+        .no_verify_in_drop(),
+    );
+    Arc::get_mut(&mut fixture.provider).unwrap().lifetime = Arc::new(PreparingBase::owned(
+        Arc::new(CombinedCancel {
+            command: fixture.command.clone(),
+            generation: fixture.origin.clone(),
+            operation: Arc::new(ChangeToken::default()),
+        }),
+        owner,
+    ));
+    let config = config();
+    let selected = selected("a");
+    let head = head(false);
+    let result = fixture.provider.keep(
+        &BaseRetentionRequest {
+            selected: &selected,
+            working_config: &config,
+            head: head.as_ref(),
+            install_scripts: false,
+        },
+        base(Some(inputs(false))),
+    );
+    assert!(matches!(result, Err(Error::Cancelled)));
+    assert!(!fixture.origin.cancelled());
+    assert!(fixture.slot.lock().unwrap().is_none());
 }

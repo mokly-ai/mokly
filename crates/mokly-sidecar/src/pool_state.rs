@@ -43,6 +43,13 @@ pub(super) struct Waiting {
     pub(super) claim: Option<u64>,
 }
 
+pub(super) struct EagerSlot {
+    pub(super) index: usize,
+    pub(super) fresh: bool,
+    pub(super) source_claim: Option<u64>,
+    pub(super) taken: bool,
+}
+
 #[derive(Default)]
 pub(super) struct State {
     pub(super) head: Head,
@@ -51,6 +58,7 @@ pub(super) struct State {
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) claims: BTreeMap<u64, usize>,
+    pub(super) eager: BTreeMap<u64, EagerSlot>,
     pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
     /// Unused indexes have no reservation and never enter ordinary available selection.
