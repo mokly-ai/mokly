@@ -64,12 +64,14 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
 - [x] Add `design/site/pricing` and add it to the tour. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
-- [ ] Redraw the Browse shell mockups under `examples/basic/specs/design`:
+- [x] Redraw the Browse shell mockups under `examples/basic/specs/design`:
       the canvas stage with four frames, zoom and Fit, the floating catalogue
       and right panel, and the phone dock and sheets (decision 6).
-- [ ] Draw the right panel states: Inspect with the selection, the props and
+      Branch: `calummoore/canvas-redesign-m1-browse-shell-mockups-5cqm`.
+- [x] Draw the right panel states: Inspect with the selection, the props and
       the box model, Usage and the component tree as sections, and Changes
       with every compare mode and Swipe (decisions 7 and 8).
+      Branch: `calummoore/canvas-redesign-m1-browse-shell-mockups-5cqm`.
 - [x] Redraw the cloud viewer mockups under
       `docs/mockups/src/entries/product/viewer/`: the bar, the account menu
       with Theme, Settings and Sign out, the compact More menu, the check in
