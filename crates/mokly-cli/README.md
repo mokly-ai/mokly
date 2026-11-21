@@ -404,7 +404,9 @@ changed.
   `Source`, one Serve comparison source. `Source::finished` accepts or
   discards the reuse attempt, and `Source::discarded` drops staging that
   `finished` never took. After it reports the result, `Source::finished` also
-  schedules the sidecar return pass.
+  schedules the sidecar return pass. `Source::settled` forwards to
+  `RenderGeneration::prepare_render_reuse` on the original head of the source.
+  `mokly-graph` owns what that hook prepares.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
   base references and composes each classification with its `ServeBase`
   provider, its cancellations, and its capture workers. Its

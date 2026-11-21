@@ -91,6 +91,9 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Prepare optional generation-owned reuse evidence without changing keys or rendering.
+    fn prepare_render_reuse(&self) {}
+
     /// Perform the ordinary worker lookup, completing a hit or deferring its real miss.
     fn read_background(&self, _route: &str) -> Result<Option<BackgroundRead>> {
         Ok(None)

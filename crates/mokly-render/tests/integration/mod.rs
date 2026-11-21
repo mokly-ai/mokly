@@ -33,6 +33,7 @@ mod process_counts;
 mod rebuild_tests;
 mod registry_matrix_tests;
 mod render_key_tests;
+mod render_reuse_tests;
 mod render_tests;
 mod renderer_path_tests;
 mod reuse_evidence_tests;

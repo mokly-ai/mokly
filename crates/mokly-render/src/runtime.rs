@@ -14,6 +14,7 @@ use mokly_graph::cache::RenderCache;
 use mokly_graph::delivery_inputs::STYLE_REFERENCE_BYTES;
 use mokly_graph::document_store::DocumentStore;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
+use mokly_graph::render_inputs::RenderKeys;
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::workers::RenderWorkers;
 use mokly_sidecar::methods::BundleCapture;
@@ -74,6 +75,7 @@ pub struct Runtime {
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
     pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
+    pub(crate) render_keys: Option<Arc<Mutex<Weak<RenderKeys>>>>,
 }
 
 impl Runtime {
@@ -91,10 +93,13 @@ impl Runtime {
         self
     }
 
-    /// Keep bounded captured plans for the head preparations of one Serve command.
+    /// Keep captured plans and weak render-key lookup for one Serve head.
     pub fn with_serve_edit_plans(mut self) -> Self {
-        if self.base.is_none() && self.edit_plans.is_none() {
-            self.edit_plans = Some(Arc::new(Mutex::new(Records::default())));
+        if self.base.is_none() && self.head_styles.is_none() {
+            self.edit_plans
+                .get_or_insert_with(|| Arc::new(Mutex::new(Records::default())));
+            self.render_keys
+                .get_or_insert_with(|| Arc::new(Mutex::new(Weak::new())));
         }
         self
     }
@@ -214,6 +219,7 @@ impl Runtime {
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
             edit_plans: None,
+            render_keys: None,
         }
     }
 
