@@ -10,7 +10,7 @@ order: 3
 Create `specs/welcome.screen.html`. Its file name gives it the catalogue
 path `welcome`.
 
-```html
+```html sample=specs/welcome.screen.html
 ---
 title: Welcome
 description: The first screen after sign-in.

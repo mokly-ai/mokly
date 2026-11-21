@@ -5,6 +5,7 @@ import { defineConfig } from "astro/config";
 import { codePanel } from "./src/docs/code-panel.ts";
 import { guideDocument } from "./src/docs/guides.ts";
 import { referenceDocument } from "./src/docs/reference.ts";
+import { sampleFence, sampleTransformer } from "./src/docs/sample-fence.ts";
 import { settings } from "./src/settings.ts";
 
 const contentSecurityPolicy =
@@ -14,12 +15,13 @@ export default defineConfig({
   integrations: [react()],
   markdown: {
     processor: satteri({
-      hastPlugins: [codePanel, guideDocument, referenceDocument],
+      hastPlugins: [sampleFence, codePanel, guideDocument, referenceDocument],
     }),
     // The high-contrast GitHub themes keep highlighted tokens at 4.5:1 against
     // the code panel surface in each scheme, as docs/protocol/cloud/site-docs.md
     // requires of every fence the guides use.
     shikiConfig: {
+      transformers: [sampleTransformer],
       defaultColor: false,
       themes: {
         dark: "github-dark-high-contrast",
