@@ -79,12 +79,16 @@ Depends on: 2
 Milestone 2 found three mismatches between the protocol docs and the merged
 mockups. Decision 11 may add more work to this milestone.
 
-- [ ] Give the site scheme control's chosen segment a `borderStrong` ring, and
-      raise the Browse sheet grabber to 3:1 (Milestone 2 item 24).
-- [ ] Draw ordinary docs code panels with the language tab only, without a
-      file tab (item 26).
-- [ ] Draw the HTML sample band's Desktop view (item 28).
-- [ ] Run the mockup checks of the changed catalogues.
+- [x] Give the site scheme control's chosen segment a `borderStrong` ring, and
+      raise the Browse sheet grabber to 3:1 (Milestone 2 item 24). Branch:
+      `calummoore/canvas-redesign-m15-mockup-fixes-phap`.
+- [x] Draw ordinary docs code panels with the language tab only, without a
+      file tab (item 26). Branch:
+      `calummoore/canvas-redesign-m15-mockup-fixes-phap`.
+- [x] Draw the HTML sample band's Desktop view (item 28). Branch:
+      `calummoore/canvas-redesign-m15-mockup-fixes-phap`.
+- [x] Run the mockup checks of the changed catalogues. Branch:
+      `calummoore/canvas-redesign-m15-mockup-fixes-phap`.
 
 ## Milestone 16: Protocol docs second pass
 

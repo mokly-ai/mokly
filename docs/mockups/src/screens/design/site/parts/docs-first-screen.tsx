@@ -1,7 +1,8 @@
 /**
  * The Your first screen guide, word for word from the workspace package's
  * `docs/guides/start/your-first-screen.md`. Its first code block,
- * `specs/welcome.screen.html`, renders as the HTML sample fence.
+ * `specs/welcome.screen.html`, renders as the HTML sample fence, which the
+ * page draws in its Mobile view and its variant in its Desktop view.
  */
 
 import { CodePanel, type CodeLine } from "./code_panel.js";
@@ -12,7 +13,7 @@ import {
   VALIDATE,
 } from "./docs-first-screen-code.js";
 import type { DocsPage } from "./docs-pages.js";
-import { DocsSample } from "./docs-sample.js";
+import { DocsSample, type SampleView } from "./docs-sample.js";
 
 /** Shell commands under their fence language, each with its prompt. */
 function Shell({
@@ -23,6 +24,24 @@ function Shell({
   lines: readonly CodeLine[];
 }) {
   return <CodePanel language={language} lines={lines} prompt />;
+}
+
+/** The first section's body, with the sample band in the chosen view. */
+function AddOneHtmlFile({ view }: { view: SampleView }) {
+  return (
+    <>
+      <p>
+        Create <code>specs/welcome.screen.html</code>. Its file name gives it
+        the catalogue path <code>welcome</code>.
+      </p>
+      <DocsSample view={view} />
+      <p>
+        The YAML block supplies the title, data, and one saved state. The HTML
+        body renders at mobile and desktop. Substituted values are escaped. The
+        variant uses the same body with its own prop overrides.
+      </p>
+    </>
+  );
 }
 
 /** The Your first screen page, the third guide of Getting started. */
@@ -42,20 +61,7 @@ export const FIRST_SCREEN_PAGE: DocsPage = {
   section: "Getting started",
   sections: [
     {
-      body: (
-        <>
-          <p>
-            Create <code>specs/welcome.screen.html</code>. Its file name gives
-            it the catalogue path <code>welcome</code>.
-          </p>
-          <DocsSample />
-          <p>
-            The YAML block supplies the title, data, and one saved state. The
-            HTML body renders at mobile and desktop. Substituted values are
-            escaped. The variant uses the same body with its own prop overrides.
-          </p>
-        </>
-      ),
+      body: <AddOneHtmlFile view="mobile" />,
       id: "add-one-html-file",
       title: "Add one HTML file",
     },
@@ -100,13 +106,7 @@ export const FIRST_SCREEN_PAGE: DocsPage = {
             the default <code>specs</code> root, use{" "}
             <code>specs/account/account-home.mockup.tsx</code>:
           </p>
-          <CodePanel
-            files={["account-home.mockup.tsx"]}
-            language="tsx"
-            lines={ACCOUNT_HOME_SCREEN}
-            meta="specs/account"
-            numbered
-          />
+          <CodePanel language="tsx" lines={ACCOUNT_HOME_SCREEN} numbered />
           <p>
             Export one definition per export. A named export and a default
             export both register. Arrays are not definitions. Helper functions
@@ -163,4 +163,18 @@ export const FIRST_SCREEN_PAGE: DocsPage = {
   ],
   size: { desktop: "856 × 3927", mobile: "370 × 5231" },
   title: "Your first screen",
+};
+
+/**
+ * The same guide with its sample band on the Desktop view. The band is
+ * shorter, so the page frame's size tag shows its own rendered size.
+ */
+export const FIRST_SCREEN_DESKTOP_PAGE: DocsPage = {
+  ...FIRST_SCREEN_PAGE,
+  sections: FIRST_SCREEN_PAGE.sections.map((section) =>
+    section.id === "add-one-html-file"
+      ? { ...section, body: <AddOneHtmlFile view="desktop" /> }
+      : section,
+  ),
+  size: { desktop: "856 × 3805", mobile: "370 × 4938" },
 };

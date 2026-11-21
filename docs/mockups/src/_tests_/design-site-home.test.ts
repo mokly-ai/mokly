@@ -149,12 +149,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the Browse compare lists the five modes with Swipe chosen`, () => {
     const { document } = siteDocument("design/site/home", viewport);
     const viewer = only(only(document, "site-module--browse"), "site-frame");
+    // The product's order of the compare modes.
     assert.deepEqual(byClass(viewer, "site-home-mode").map(label), [
       "Current",
       "Side by side",
       "Overlay",
-      "Swipe",
       "Difference",
+      "Swipe",
     ]);
     assert.deepEqual(byClass(viewer, "site-home-mode--chosen").map(label), [
       "Swipe",

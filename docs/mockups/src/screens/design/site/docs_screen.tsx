@@ -10,7 +10,10 @@
  */
 
 import { SiteLayout } from "./parts/chrome.js";
-import { FIRST_SCREEN_PAGE } from "./parts/docs-first-screen.js";
+import {
+  FIRST_SCREEN_DESKTOP_PAGE,
+  FIRST_SCREEN_PAGE,
+} from "./parts/docs-first-screen.js";
 import { DocsInspect } from "./parts/docs-inspect.js";
 import { INSTALL_PAGE } from "./parts/docs-install.js";
 import { DocsPageFrame } from "./parts/docs-page.js";
@@ -67,6 +70,15 @@ export function SiteDocsScreen({ viewport }: { viewport: Viewport }) {
 /** The Your first screen guide, with its HTML sample fence. */
 export function SiteDocsFirstScreen({ viewport }: { viewport: Viewport }) {
   return <SiteDocs page={FIRST_SCREEN_PAGE} viewport={viewport} />;
+}
+
+/** The Your first screen guide, its HTML sample showing the Desktop view. */
+export function SiteDocsFirstScreenDesktop({
+  viewport,
+}: {
+  viewport: Viewport;
+}) {
+  return <SiteDocs page={FIRST_SCREEN_DESKTOP_PAGE} viewport={viewport} />;
 }
 
 /** The Install guide with the mobile tree sheet open over it. */

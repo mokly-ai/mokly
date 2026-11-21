@@ -243,5 +243,10 @@ test("focus and meaningful control boundaries use semantic tokens", () => {
     /outline: 2px solid var\(--mk-color-focus\)/,
   );
   assert.match(focus.declarations, /outline-offset: 3px/);
-  assertStrongBoundaries([".site-button--quiet"]);
+  // The chosen segment of the footer's scheme control is a control boundary
+  // too: it sits raised with a strong ring.
+  assertStrongBoundaries([
+    ".site-button--quiet",
+    ".site-scheme-option:has(.site-scheme-input:checked)",
+  ]);
 });

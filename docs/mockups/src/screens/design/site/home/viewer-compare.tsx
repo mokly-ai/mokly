@@ -11,13 +11,13 @@ import { SiteCursor } from "../parts/people.js";
 
 import { AcmePaymentDesktop } from "./acme/acme-payment.js";
 
-/** The compare modes of the product, in order. */
+/** The compare modes of the product, in the product's order. */
 const COMPARE_MODES = [
   "Current",
   "Side by side",
   "Overlay",
-  "Swipe",
   "Difference",
+  "Swipe",
 ] as const;
 
 /** The mode that the depicted compare draws. */

@@ -50,7 +50,8 @@
 }
 
 /* The sheet: the rounded top, the grabber above the head, and the close
-   control at the head's end. */
+   control at the head's end. The grabber expands the sheet, so it draws the
+   control edge. */
 .cv-float[data-sheet] {
   border-radius: 18px 18px 0 0;
   box-shadow:
@@ -66,7 +67,7 @@
 }
 
 .cv-float-grab {
-  background: var(--cv-line-strong);
+  background: var(--cv-border-strong);
   border-radius: 2px;
   height: 4px;
   left: calc(50% - 18px);

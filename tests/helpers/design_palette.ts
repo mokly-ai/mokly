@@ -87,6 +87,49 @@ export function isCanvasStylesheet(file: string): boolean {
   );
 }
 
+/** A role that the Canvas palette lacks: two scope roles mixed in sRGB. */
+const SRGB_MIX =
+  /^color-mix\(\s*in srgb,\s*var\((--[\w-]+)\)\s+(\d+(?:\.\d+)?)%,\s*var\((--[\w-]+)\)\s*\)$/u;
+
+/** Two opaque `#rrggbb` colours mixed in sRGB, as `color-mix()` mixes them. */
+function srgbMix(first: string, share: number, second: string): string {
+  const channels = (color: string) =>
+    [1, 3, 5].map((at) => Number.parseInt(color.slice(at, at + 2), 16));
+  const other = channels(second);
+  return `#${channels(first)
+    .map((value, index) =>
+      Math.round(value * share + other[index]! * (1 - share))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+/**
+ * The colour of one role on a Canvas root in one appearance: a role that its
+ * palette scope declares, or an opaque role that the root's rule in a shared
+ * Canvas sheet mixes from two scope roles, such as the stronger hairline.
+ */
+export async function canvasRoleColor(
+  role: string,
+  appearance: Appearance,
+): Promise<string | undefined> {
+  const tokens = canvasScopeTokens(appearance);
+  const declared = tokens.get(role);
+  if (declared) return declared;
+  const roots = new Set([".cv", `.cv[data-mbk-appearance="${appearance}"]`]);
+  const value = (await designStyleRules())
+    .filter((rule) => isCanvasStylesheet(rule.file) && roots.has(rule.selector))
+    .flatMap((rule) => [...rule.body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/gu)])
+    .findLast(([, name]) => name === role)?.[2];
+  const mix = SRGB_MIX.exec(value?.trim() ?? "");
+  if (!mix) return undefined;
+  const [first, second] = [tokens.get(mix[1]!), tokens.get(mix[3]!)];
+  return first && second
+    ? srgbMix(first, Number(mix[2]) / 100, second)
+    : undefined;
+}
+
 /** A palette that a rule draws in, by appearance, named for a failure. */
 export interface AuditPalette {
   name: "design" | "Canvas";
