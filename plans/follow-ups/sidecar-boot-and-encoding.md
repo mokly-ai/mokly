@@ -7,7 +7,7 @@
   user answered "ignore for now". Narrowed on 2026-11-21 by
   `calummoore/mokly-sidecar-bundle-tail-mge9`, which made the response
   encoder faster with the same bytes.
-- **Location:** `packages/mokly/src/sidecar/export-order.ts:1` and
+- **Location:** `packages/mokly/src/sidecar/export-name-cache.ts:1` and
   `packages/mokly/src/sidecar/postcss-context.ts:2`.
 - **Reason:** The user set this finding aside on 2026-10-27, and its gain
   after the later performance work is not measured.
@@ -25,9 +25,9 @@
   - On 2026-10-27, a release build on `examples/basic` measured a sidecar
     `hello` answer after 230 to 290 ms. Imports of the Babel parser and
     traverse took 168 ms of that.
-  - `export-order.ts:1` imports `@babel/parser` at the top of the module,
-    and `describe.ts` and `stories.ts` import it. `postcss-context.ts:2`
-    imports `@babel/traverse`.
+  - `export-name-cache.ts:1` imports `@babel/parser` at the top of the
+    module, and `export-order.ts`, `describe.ts`, and `stories.ts` import
+    it. `postcss-context.ts:2` imports `@babel/traverse`.
   - Serve starts sidecars at startup and on each root switch. On
     2026-10-30, `sidecar.spawn` took 0.24 s before the first bundle of a
     Serve start on a slow machine.

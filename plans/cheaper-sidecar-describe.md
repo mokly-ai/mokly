@@ -65,6 +65,23 @@ Contract owners:
     `examples/basic`, and the HTML and React fixtures of the
     [large fixture README](../tests/fixtures/large/README.md).
 
+## Decisions after implementation
+
+- 2026-11-21, orchestrator: Part A at `e8f38aab3` is accepted. Its fixed
+  rule held. On `mokly-cloud`, every unchanged entry hit after the first
+  generation in each sidecar. The basic cold memory peak, pooled over 8 pairs,
+  was +1.53%. Cloud edits, pooled over 4 blocks, were -42 ms.
+- 2026-11-21, orchestrator: Part B is not built. In warm edits, render
+  sidecars describe after Changes publishes, and Part B cannot keep the Rust
+  definitions check.
+- 2026-11-21, orchestrator: the large-catalogue cap item is added only when one
+  generation charges more than the cap. Large React charged 165,162 bytes, and
+  large HTML starts no sidecar, so no item was added.
+- 2026-11-21, orchestrator: during the Codex outage, a Codex action that runs
+  no command within about 5 minutes runs on Claude Opus at `max` effort in a
+  fresh context. This Claude session resolved the one prose conflict of the
+  `main` merge.
+
 ## Design
 
 - `orderedExports` asks the cache for the names of one parser mode and one
@@ -252,22 +269,29 @@ Depends on: 3
 - [x] Let `describe` take an optional instance and pass it to `orderedExports`
       and `describeStories`. Add the cache to the sidecar README Key Code.
       Permit bounded export-name retention in the protocol purpose paragraph.
-- [ ] Run the new tests and the describe tests with `npm test -- {file}`, then
+- [x] Run the new tests and the describe tests with `npm test -- {file}`, then
       `cargo xtask check --suite repository`.
+      Evidence: `.context/cheaper-describe/part-a-report.md` and
+      `.context/cheaper-describe/repository.log`.
 
 ## Milestone 5: Early push and the measurement decision
 
 Depends on: 4
 
-- [ ] Commit with the `git-commit` skill and push. Give the source SHA to the
+- [x] Commit with the `git-commit` skill and push. Give the source SHA to the
       orchestrator for the official measurements.
-- [ ] Compare local warm Cloud edits with `main`. Save the result under
+- [x] Compare local warm Cloud edits with `main`. Save the result under
       `.context/cheaper-describe/`.
-- [ ] When Part A saves at least 30 ms of mean time per warm Cloud edit, ask
+      Evidence: `.context/cheaper-describe/local-timings.md`.
+- [x] When Part A saves at least 30 ms of mean time per warm Cloud edit, ask
       the orchestrator whether Part B gets its own pull request. When it does,
       move the Milestone 6 TODOs to a follow-up item.
+      Evidence: `.context/cheaper-describe/stats-heap-report.md`.
 
 ## Milestone 6: Part B, prepare-only describe
+
+On 2026-11-21 the orchestrator chose not to build Part B. Its work moved to
+[prepare-only-describe.md](follow-ups/prepare-only-describe.md).
 
 Depends on: 5, the merges of workspaces 220 and 221 into `main`, and the
 orchestrator's answer when Milestone 5 asks.
