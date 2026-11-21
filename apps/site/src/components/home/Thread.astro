@@ -1,0 +1,58 @@
+---
+/**
+ * The comment thread of the home's Review frame, pinned to the PriceCard of
+ * the depicted pricing screen: its head, Maya's note and Sam's answer,
+ * Reply, the pull request that it keeps in step with, and the filled
+ * Approve. Maya's cursor rests under it, near Approve. A depiction: hidden
+ * from assistive technology, and its controls are drawn, not buttons.
+ *
+ * The messages are in `thread.ts`. `ReviewModule.astro` places the thread,
+ * and the Review demo shows the messages one after the other and brings
+ * Maya's cursor to rest. The rules are in `src/styles/home-modules.css`.
+ */
+import Avatar from "../Avatar.astro";
+import Cursor from "../Cursor.astro";
+import Icon from "../Icon.astro";
+import { PERSON } from "../people.js";
+
+import { THREAD_MESSAGES } from "./thread.js";
+
+import "../../styles/home-modules.css";
+---
+
+<div aria-hidden="true" class="site-comment">
+  <div class="site-comment-head">
+    <span class="site-home-thread-on">
+      <Icon name="component" size={14} />
+      PriceCard
+    </span>
+    <span class="site-home-thread-where">pricing · mobile</span>
+  </div>
+  <div class="site-home-thread-messages">
+    {THREAD_MESSAGES.map((message) => (
+      <div class="site-home-message">
+        <Avatar person={message.person} />
+        <div>
+          <p class="site-home-message-meta">
+            <b>{PERSON[message.person].name}</b>
+            <span>{message.role}</span>
+            <span class="site-home-message-age">{message.age}</span>
+          </p>
+          <p class="site-home-message-text">{message.text}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+  <span class="site-home-thread-reply">Reply</span>
+  <div class="site-home-thread-foot">
+    <span class="site-home-thread-sync">
+      <Icon name="pullRequest" size={14} />
+      In step with #482
+    </span>
+    <span class="site-comment-approve">
+      <Icon name="check" size={15} />
+      Approve
+    </span>
+  </div>
+  <Cursor class="site-home-review-maya" person="maya" />
+</div>

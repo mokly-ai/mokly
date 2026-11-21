@@ -1,0 +1,300 @@
+/* The home Edit window's title bar and its canvas, where the module's copy
+   sits as a text layer beside the pricing artboard, then the artboard's
+   part of the Edit demo. home-modules.css holds the window and the chat,
+   home-agent.css the chat's messages and home-bar.css the bar's parts.
+
+   The class names and the rules match docs/mockups/styles/site/home-edit.css,
+   the Edit steps of modules.css and the Edit rules of home-responsive.css,
+   mobile first: the desktop values and steps follow under the 768px query,
+   in the mockup's order. A step takes the module's class to outweigh the
+   base rules, as the mockups' pinned composition does. */
+
+.site-home-edit-bar {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  font-size: 15px;
+  gap: 12px;
+  height: 50px;
+  padding: 0 12px 0 14px;
+  white-space: nowrap;
+}
+
+/* A phone's bar leaves out the crumbs, the people and the live session,
+   which the mockups' mobile document does not draw */
+
+.site-home-edit-bar .site-home-edit-crumbs,
+.site-home-edit-bar .site-home-viewer-people,
+.site-home-edit-bar .site-home-edit-live {
+  display: none;
+}
+
+.site-home-edit-tools {
+  border-left: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: 2px;
+  margin-left: 2px;
+  padding-left: 10px;
+}
+
+.site-home-edit-tool {
+  border-radius: 8px;
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  height: 30px;
+  place-items: center;
+  width: 30px;
+}
+
+.site-home-edit-tool--active {
+  background: var(--mk-color-signal-fill);
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-home-edit-live {
+  align-items: center;
+  background: var(--mk-color-signal-soft);
+  border-radius: var(--mk-radius-pill);
+  color: var(--mk-color-signal-deep);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  height: 28px;
+  line-height: 1;
+  padding: 0 11px;
+}
+
+.site-home-edit-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-home-edit-canvas {
+  align-items: start;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-size: 20px 20px;
+  display: grid;
+  gap: 60px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  padding: 36px 20px 40px;
+}
+
+.site-home-edit-canvas .site-module-text {
+  justify-self: stretch;
+  max-width: none;
+  padding-top: 2px;
+}
+
+/* The heading takes the module's class to outweigh the module heading's
+   size in home.css, which the page loads after this sheet */
+
+.site-module--edit .site-home-edit-canvas h3 {
+  font-size: 28px;
+}
+
+.site-home-edit-board {
+  position: relative;
+}
+
+.site-home-edit-board .site-home-edit-claude {
+  left: 54%;
+  top: 61%;
+}
+
+@media (min-width: 768px) {
+  .site-home-edit-bar .site-home-edit-crumbs,
+  .site-home-edit-bar .site-home-viewer-people,
+  .site-home-edit-bar .site-home-edit-live {
+    display: inline-flex;
+  }
+
+  .site-home-edit-body {
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  .site-home-edit-canvas {
+    gap: 32px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 54px 40px 44px 44px;
+  }
+
+  .site-home-edit-canvas .site-module-text {
+    max-width: 380px;
+  }
+
+  .site-module--edit .site-home-edit-canvas h3 {
+    font-size: 36px;
+  }
+}
+
+/* The desktop steps: the heading scales below 1440px; below 1280px the chat
+   moves under the canvas; below 900px the copy leads the artboard and the
+   bar leaves out the live session, as the prototype does. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-module--edit .site-home-edit-canvas h3 {
+    font-size: clamp(28px, 2.5vw, 36px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-module--edit .site-home-edit-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .site-module--edit .site-home-edit-canvas {
+    gap: 60px;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    padding: 36px 20px 40px;
+  }
+
+  .site-module--edit .site-home-edit-canvas .site-module-text {
+    justify-self: stretch;
+    max-width: none;
+  }
+
+  .site-home-edit-bar .site-home-edit-live {
+    display: none;
+  }
+}
+
+/* The artboard stacks the screen before the change and the one after it in
+   one cell, under the scan line, each with its PriceCard selection. The
+   finished state shows the after layer; the before layer rests clear. */
+
+.site-home-edit-board .site-home-board-screen {
+  display: grid;
+}
+
+.site-home-edit-layer,
+.site-home-edit-scan {
+  grid-area: 1 / 1;
+}
+
+.site-home-edit-layer--before,
+.site-home-edit-sel--before,
+.site-home-edit-scan {
+  opacity: 0;
+}
+
+.site-home-edit-layer--after {
+  clip-path: inset(0 0 0%);
+}
+
+.site-home-edit-scan {
+  background: linear-gradient(
+    transparent 70%,
+    color-mix(in srgb, var(--mk-color-signal) 14%, transparent) 97%,
+    var(--mk-color-signal)
+  );
+}
+
+/* The Edit demo, in seconds from the moment it comes into view; the chat's
+   steps are in home-agent.css. Prompt 0.3, Claude's edit 1.4; Claude's
+   cursor glides onto the card from 2 and its selection shows at 2.6; from
+   3.2 the scan line sweeps down for 1.15, reveals the after layer and swaps
+   the selections; answer 4.7, Publish ready 5.3. No padding animates. */
+
+[data-home-demo="edit"][data-home-demo-state="armed"] .site-home-edit-claude,
+[data-home-demo="edit"][data-home-demo-state="armed"]
+  .site-home-edit-sel--after,
+[data-home-demo="edit"][data-home-demo-state="armed"] .site-home-card-claude {
+  opacity: 0;
+}
+
+[data-home-demo="edit"][data-home-demo-state="armed"]
+  .site-home-edit-layer--before,
+[data-home-demo="edit"][data-home-demo-state="armed"]
+  .site-home-edit-sel--before {
+  opacity: 1;
+}
+
+[data-home-demo="edit"][data-home-demo-state="armed"]
+  .site-home-edit-layer--after {
+  clip-path: inset(0 0 100%);
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"] .site-home-edit-claude {
+  animation: site-home-edit-arrive 1s var(--mk-motion-easing) 2s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-edit-sel--before
+  .site-home-card-claude {
+  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 2.6s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"] .site-home-edit-scan {
+  animation: site-home-edit-scan 1.15s var(--mk-motion-easing) 3.2s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-edit-layer--after {
+  animation: site-home-edit-reveal 1.15s var(--mk-motion-easing) 3.2s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-edit-sel--before {
+  animation: site-home-edit-hide 0.25s var(--mk-motion-easing) 3.7s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-edit-sel--after {
+  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 3.8s both;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-edit-layer--before {
+  animation: site-home-edit-hide 4.35s steps(1, end) both;
+}
+
+@keyframes site-home-edit-arrive {
+  from {
+    opacity: 0;
+    transform: translate(140px, 180px);
+  }
+
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes site-home-edit-show {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes site-home-edit-hide {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes site-home-edit-reveal {
+  from {
+    clip-path: inset(0 0 100%);
+  }
+}
+
+@keyframes site-home-edit-scan {
+  from {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+
+  85% {
+    opacity: 1;
+  }
+}
