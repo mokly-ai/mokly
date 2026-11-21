@@ -172,38 +172,55 @@ terms, the summary table and the notes about the options check.
 
 ## 11. Canvas designs for the remaining Browse states
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Effort:** Large.
 - **Source:** Implementation.
 - **Category:** Mockup.
-- **Location:** `examples/basic/specs/design/` (`browse/`, `changes/` and `components/`)
+- **Location:** `examples/basic/specs/design/` (`browse/`, `changes/`, `components/` and `parts/`)
 - **Background:** Milestone 1 drew Canvas as a new family of 29 Browse screens
-  and states. Tests tie each of the 130 older design screens to the shipped
-  package, so those screens kept today's look.
-- **Problem:** Some states of today's shell have no Canvas design yet: the
-  removed and moved outcomes, use-case flows, loading and recovery, search with
-  the tag picker, and most component explorer pages.
+  and states. The 130 older design screens render today's package parts, so
+  they kept today's look. Milestone 3 moves their palette to Canvas anyway, and
+  Milestone 12 deletes the package parts that their scaffolds render.
+- **Problem:** Some states have no Canvas design: the removed and moved
+  outcomes, use-case flows, loading and recovery, tag search, and most
+  component explorer pages. Seven shared library parts are used only by the
+  older screens. About 53 tests and fixtures name older design paths.
 - **Impact if no action:** Milestones 11 and 12 build those states without a
-  design, and the catalogue shows two shell looks until Milestone 12.
-- **Root question:** When does each remaining state of the shell get its
-  Canvas design?
+  design, and the older screens break when Milestone 12 removes their parts.
+- **Root question:** How does the design catalogue move from today's Browse
+  designs to one Canvas family before Milestones 11 and 12 build the shell?
 - **Options:**
   - **A.** Keep both families. Each implementation milestone draws the Canvas
-    form of the states that it changes. Effort: Small now, more in each
-    implementation milestone.
-  - **B.** Add a second mockup milestone before Milestone 11 for every state
-    whose layout changes. States that change only colour follow the package.
-    Effort: Medium.
-  - **C.** Redraw all 130 older screens now and retire the old family. Effort:
-    Large.
-- **Left out:** A colour-only re-theme of the older screens, because the
-  result matches neither the shipped shell nor the target. Deleting the older
-  screens now, because they depict shipped behaviour.
-- **Wider fix:** None, because this is a choice of scope.
-- **Previous examples:** None found.
-- **Recommendation:** B. The plans rule asks for a design before the
-  implementation, and B covers every changed layout in about a day.
-- **Action:** ask the user, because each option has a real cost and no plan
-  TODO covers these states.
+    form of the states that it changes. It breaks the rule that only a mockup
+    milestone holds mockup work. Effort: Small now, more later.
+  - **B.** A second mockup milestone before Milestone 11 draws every state
+    whose layout changes. The older family stays. Effort: Medium.
+  - **C.** Redraw all 130 older screens now and retire the old family.
+    Effort: Large.
+  - **D.** A second mockup milestone, run now. It maps each older screen to a
+    Canvas successor or names it obsolete, draws one Canvas screen for each
+    state kind that has none, removes the older screens, scaffolds, sheets,
+    the seven library-only parts and their fixtures, and moves the specs that
+    use them to Canvas or example entries. It also links the Canvas sheets
+    through a `design/canvas/**` route. A docs TODO updates the design
+    inventory pages. It deletes drawings of the shipped shell before the
+    shell changes. Effort: Large.
+  - **E.** B, plus a Milestone 12 TODO that removes the older family in the
+    change that deletes the old inspector layout and one-frame stage. Today's
+    shell stays drawn until it changes, but Milestone 3 re-themes 130 screens
+    that the plan deletes later. Effort: Medium now, plus later work.
+- **Left out:** Older screens kept after Milestone 12 with copies of the
+  deleted package parts, because an artboard must render the package
+  component. Deletion without successors, because it fails the goal.
+- **Wider fix:** D, because one family that renders the package parts leaves
+  nothing to delete later.
+- **Previous examples:** Pull requests #249 to #254 moved design library parts
+  onto package components.
+- **Recommendation:** D, changed from B by the options check of 2026-11-21. It
+  draws the same states as B and does now the removal that Milestone 12 must
+  do anyway. E is the choice if today's shell must stay drawn until it
+  changes.
+- **Action:** ask the user, because D deletes drawings of shipped behaviour
+  and each option has a real cost.
 
 ## 12. New automatic checks from the mockup reviews
 
@@ -213,24 +230,38 @@ terms, the summary table and the notes about the options check.
 - **Location:** `docs/mockups/src/_tests_/`, `apps/site/tests/`, `xtask/`
 - **Background:** The site mockup review fixed four defects: dim code below
   4.5:1, an Edit on GitHub link to an ignored path, an unhosted font and an
-  unused module. For each class it proposed a wider check. Cal decided on
-  2026-11-20 to reduce testing.
-- **Problem:** Each wider check is a new gate, and new gates need Cal's
-  approval.
-- **Impact if no action:** The same classes of defect can return in later
-  site work, and only review finds them.
-- **Root question:** Which new checks guard the Canvas pages?
+  unused module. It also found a toolbar that broke between 700px and
+  1440px. For each class it proposed a wider check. The mockup regression
+  tests read the mockups, not `apps/site`.
+- **Problem:** A class-wide check is a new gate, and new gates need Cal. The
+  site code that Milestones 3 to 9 rebuild has no test for these classes.
+- **Impact if no action:** Later site work can bring the same defects back.
+- **Root question:** How does later site work keep out the defect classes
+  that the site mockup review found?
 - **Options:**
-  - **A.** Add none now. Record each as a follow-up item. Effort: Small.
-  - **B.** Add the two cheap Node checks: every first font family is hosted,
+  - **A.** Add no check now. Record each as a follow-up item. Effort: Small.
+  - **B.** Add two class-wide Node checks: every first font family is hosted,
     and every GitHub file link in the site mockups names a tracked file.
-    Record the rest. Effort: Small.
-  - **C.** Add all five: B, plus a contrast check of every site page, a
-    browser check of the toolbar between 700px and 1440px, and the
-    unused-export ratchet over `docs/mockups/src/`. Effort: Medium.
-- **Left out:** None.
-- **Wider fix:** C, because it covers every class.
+    Effort: Small.
+  - **C.** Add all five class-wide checks: B, plus a contrast check of every
+    site page, a toolbar width check and the unused-export ratchet over
+    `docs/mockups/src/`. Effort: Medium.
+  - **D.** No new gate. Each site milestone tests the part that it rebuilds:
+    Milestone 3 the hosted faces, Milestone 4 the header widths in the
+    existing page walk, Milestone 6 the Edit on GitHub target, Milestone 8
+    the dimmed sample line. Record the class-wide checks as one follow-up.
+    Effort: Small.
+  - **E.** Remove the wrong case at its source: the palette module ships each
+    font stack with its hosted faces, the guide build records the tracked
+    source path for Edit on GitHub, and muted code text is a named colour with
+    a checked contrast pair. Effort: Medium.
+- **Left out:** A separate site contrast check, because the report-only
+  Lighthouse run already audits contrast on the site pages.
+- **Wider fix:** E for fonts, links and dimmed text. C for widths and dead
+  modules.
 - **Previous examples:** `plans/follow-ups/test-helper-unused-exports.md`.
-- **Recommendation:** A. It follows Cal's choice to test less, and the
-  regression tests of the four fixes stay.
-- **Action:** ask the user, because every option except A adds a gate.
+- **Recommendation:** D, changed from A by the options check of 2026-11-21. It
+  adds no gate and protects the site code itself. E best protects the
+  codebase.
+- **Action:** ask the user, because B and C add gates, and E changes the
+  palette and guide contracts.
