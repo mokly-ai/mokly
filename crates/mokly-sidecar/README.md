@@ -559,9 +559,13 @@ spawn the built sidecar and render a component, screen, story, and page. The
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
   payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
-  `BundleCapture`, `Full` by default or `ServeEdit`, and the optional
-  request-only `plan` of a Serve edit. `results::Bundle` carries the optional
-  `plan` beside `compiled`. Pool state, store calls, and restore requests take
+  `BundleCapture`, `Full` by default or `ServeEdit`, the optional
+  request-only `plan` of a Serve edit, and the optional request-only
+  `preparation`. [`src/postcss_preparation.rs`](./src/postcss_preparation.rs)
+  defines that `PostcssPreparation` and `Call::postcss_context`, which gives
+  the PostCSS context of a `processCss` call or of a prepared `bundle` call.
+  The pool uses that context for its slot affinity and its release.
+  `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
   the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)

@@ -24,7 +24,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::edit_plans::Records;
-use crate::leases::PreparedLease;
+use crate::leases::{ContextLease, PreparedLease};
 use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side;
@@ -65,6 +65,8 @@ pub struct Runtime {
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
+    /// Weak Serve head contexts, including those retained after local record loss.
+    pub(crate) contexts: Arc<Mutex<Vec<Weak<ContextLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     /// None marks an original head. Some marks a base, including an empty or expired source.
     pub(crate) head_styles: Option<Weak<Mutex<StylesheetCache>>>,
@@ -214,6 +216,7 @@ impl Runtime {
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
+            contexts: Arc::new(Mutex::new(Vec::new())),
             styles: Arc::new(Mutex::new(StylesheetCache::default())),
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),

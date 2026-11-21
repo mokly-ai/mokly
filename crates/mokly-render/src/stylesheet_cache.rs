@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard, Weak};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 
 use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
@@ -29,6 +29,8 @@ pub(crate) struct CachedStylesheets {
     pub(super) head: Weak<Mutex<StylesheetCache>>,
     /// An attempt's local records and miss reasons must be empty for a batch.
     pub(super) local: Mutex<StylesheetCache>,
+    /// The eligibility probe stops at its first stale root, so its miss needs one key.
+    pub(super) probe: OnceLock<Mutex<Option<String>>>,
     /// Non-owning indexes let the bounded stores control context payload lifetimes.
     contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
     /// The stored context entries whose stamp this attempt checked, with the result.
@@ -54,6 +56,7 @@ impl CachedStylesheets {
             shared,
             head: Weak::new(),
             local,
+            probe: OnceLock::new(),
             contexts: Mutex::default(),
             checked: Mutex::default(),
             replayed: Mutex::default(),
@@ -67,9 +70,16 @@ impl CachedStylesheets {
     }
 
     /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
-    fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
+    pub(super) fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
         if let Some(record) = lock(&self.local).record(key) {
             return Ok(record);
+        }
+        if self
+            .probe
+            .get()
+            .is_some_and(|probe| lock(probe).as_deref() == Some(key))
+        {
+            return Err(Miss::StampMismatch);
         }
         let mut miss = lock(&self.shared).miss(key);
         for source in [Some(self.shared.clone()), self.head.upgrade()]
@@ -203,6 +213,12 @@ impl StylesheetBundler for CachedStylesheets {
             Err(miss) => miss,
         };
         let compilation = self.compile(root, miss, self.inner.as_ref())?;
+        if let Some(probe) = self.probe.get() {
+            let mut probe = lock(probe);
+            if probe.as_deref() == Some(key.as_str()) {
+                *probe = None;
+            }
+        }
         self.commit(key, compilation, None)
     }
 }
@@ -262,3 +278,11 @@ mod stylesheet_retention_tests;
 #[cfg(test)]
 #[path = "_tests_/class_maps/mod.rs"]
 mod class_maps_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_preparation_tests.rs"]
+mod stylesheet_preparation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_retirement_tests.rs"]
+mod stylesheet_retirement_tests;

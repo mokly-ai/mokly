@@ -9,7 +9,9 @@ it against `sourceRoot` or the selected dependency root before setting PostCSS
 `from`. Request labels keep the logical path. Each context and module pair has
 isolated plugin state. The core sends the same source root, repository roots,
 and resolution settings in every request of one context. `disposeContext`
-kills and reaps only that context's process; bundle creation and disposal do not reset it.
+kills and reaps only that context's process. Bundle creation and generation
+disposal do not reset a context that a `processCss` request used.
+[Used Contexts](#used-contexts) defines when such a context ends.
 CSS-only catalogues need no bundle. The result
 contains transformed text, resolved packages, and plugin dependencies for watching.
 Class-map changes and restored JavaScript generations follow the
@@ -35,6 +37,121 @@ deterministic timings for child spawn, configuration load, plugin construction,
 and the latest stylesheet run. Each phase reports its elapsed milliseconds or
 its running state. A running timeout also names the last module URL observed by
 the child. The diagnostic does not include authored CSS text.
+
+## Prepared Contexts
+
+A `bundle` request can carry an optional PostCSS `preparation`. It names one
+`context` and its `postcss` module. The prepared child takes the source root,
+repository roots, and resolution settings of the `bundle` request. They equal
+those of the later `processCss` requests of that context. Like
+[`capture`](./mokly-sidecar-recipes.md#capture-modes), the preparation is a
+request-only value and not a bundle setting. No settings comparison,
+compilation identity, generation id, recipe, `restoreGeneration` request, or
+bundle cache entry contains it.
+Decision: the preparation stays outside the bundle settings. A preparation
+inside them was rejected, because each preparation names a new context, so no
+recipe, cache entry, or generation id would match an earlier one.
+
+An attempt is one head preparation of Serve that sends `serveEdit` in its
+`bundle` requests. The core adds a preparation only for the context of an
+attempt. The configuration must name a PostCSS module. The head must also keep
+a PostCSS stylesheet bundle that the attempt cannot reuse under the
+[dependency retention rules](./mokly-imported-styles-postcss.md#dependency-retention).
+Only one `bundle` request of the attempt carries the preparation, and only
+when no `processCss` request of the context came before it. No older used head
+context of the same configuration may still be live under the
+[used context rules](#used-contexts). A catalogue
+without PostCSS, the base side, `build`, `publish`, and a return warm-up
+prepare no context. A context without a preparation starts its child at its
+first `processCss` request.
+Decision: only an attempt with a stale PostCSS stylesheet bundle prepares a
+context. A preparation in every attempt was rejected, because an attempt whose
+stylesheets all stay reusable would start a child that no request uses.
+Decision: an attempt prepares no context while an older used head context of
+its configuration stays live. A preparation beside that context was rejected,
+because the attempt would then hold two children during its bundle.
+
+The sidecar that runs the `bundle` request starts the preparation when the
+request starts, also when it reuses a compilation. The prepared child loads
+the PostCSS module and constructs its plugins. It processes no stylesheet
+before the first `processCss` request of its context. The `bundle` request
+never waits for that load. A preparation failure never changes the result or
+the error of the `bundle` request.
+Decision: the child starts with the `bundle` request and runs no stylesheet
+early. Processing the stylesheet roots during the bundle was rejected, because
+it needs speculative roots and later evidence checks. A later start was
+rejected, because it hides less of the module load behind the bundle.
+
+A prepared context gives each `processCss` request the text, dependencies,
+read evidence, and failure that a context without preparation gives. Its read
+evidence includes the reads of its configuration load. A configuration that
+fails to load fails the first `processCss` request of the context with its
+typed `postcss` failure. Preparation changes no published byte. It changes no
+deadline, retry, or failure rule of this page, and it moves or reorders no
+`processCss` request.
+
+When a prepared child fails or exits before the first `processCss` request of
+its context, that request fails with the failure of the child. The sidecar
+starts no replacement child for that request. Later requests of the context
+follow the failed-child rule in [Contexts](#contexts).
+Decision: the first request receives the failure of its prepared child. A
+silent replacement child was rejected, because it could hide a failure that a
+child started by the request reports.
+
+Each attempt prepares a new context. The child loads the consumer modules only
+after its attempt starts, in the fresh isolated module context of the
+[PostCSS module rules](./mokly-imported-styles-postcss.md#postcss-module). No
+module, plugin instance, or plugin state passes to another context or attempt.
+A newer attempt never uses the prepared context of an older attempt. A change
+to the PostCSS module, a plugin, a dependency, or the toolchain reaches each
+later attempt as it does without preparation.
+Decision: every attempt loads the consumer modules again. Processors or module
+instances kept across edits were rejected, because Tailwind keeps removed
+candidates in module-level state. A load before the edit also cannot prove
+that opaque native load-time inputs stayed unchanged.
+
+A prepared context is live from the start of its `bundle` request. The
+[source root workers](./mokly-sidecar-modules.md#source-root-workers) place it.
+It is unused until its first `processCss` request. The core releases an unused
+prepared context at once when its `bundle` request fails, when its attempt is
+cancelled, or when a newer attempt replaces its attempt. An unused prepared
+context also ends when its attempt ends, also when the attempt succeeds and
+its graph stays retained. A used context follows the
+[used context rules](#used-contexts). When a release comes before the child starts, the
+preparation starts no child. A later `processCss` request of a released context
+starts a new child. A prepared child counts toward its sidecar under the
+[memory sampling rules](./mokly-sidecar-memory.md#sampling-and-recycling).
+Decision: an unused prepared context ends with its attempt. The lifetime of the
+retained graph was rejected, because the unused child would then stay idle
+after its edit.
+
+## Used Contexts
+
+A used context is a context that a `processCss` request used. In Serve, each
+head graph preparation, at startup or after an edit, uses its own context. That
+context ends when its graph preparation succeeds, if the graph kept every
+stylesheet bundle that it compiled or reused. The graph keeps these bundles
+under the existing 64 MiB stylesheet cache bound and keeps no bundle beyond it.
+A later request of the graph receives its unchanged kept bundle before any
+compile, also after the
+[render cache](./mokly-runtime.md#render-graph-and-cache) drops its bytes. So
+the end changes no published byte, dependency, read evidence, or failure. It
+changes only when the child process ends.
+
+When that bound drops a kept bundle or refuses an oversize bundle, the context
+stays live until the final graph or request that holds it releases it. Every
+other used context keeps the same graph lifetime. This covers the base side,
+`build`, `publish`, other commands, and a failed or cancelled graph
+preparation. So when each graph preparation succeeds and keeps its bundles, a
+Serve head holds no PostCSS child while it waits for a change, and at most one
+while it rebuilds.
+
+Decision: a used head context ends with its graph preparation when no later
+request can reach it. The lifetime of the retained graph was rejected, because
+the next graph preparation would then hold the idle old child beside its new
+child. An end without the kept-bundle condition was rejected, because a compile
+after the bound drops a bundle needs the plugin state of the old context, and a
+new child can give other bytes.
 
 ## Read Evidence
 

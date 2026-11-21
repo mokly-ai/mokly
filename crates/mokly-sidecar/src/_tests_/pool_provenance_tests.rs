@@ -93,6 +93,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
     );
     for evaluation in ["first", "second"] {
         pool.request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: Bundle {
                 evaluation: Some(evaluation.into()),

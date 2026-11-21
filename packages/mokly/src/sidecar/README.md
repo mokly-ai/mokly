@@ -17,9 +17,12 @@ its requests and results. The paths below are relative to the package root.
   the original writer, and its `quiet` control drops every other write.
 - [`src/sidecar/session.ts`](./session.ts) holds `Session`, which
   dispatches each sidecar request to its method. It removes the request-only
-  `capture` and `plan` values of a `bundle` request before the reuse check,
-  the compile, the identity, and the restore see the settings. It gives a
-  `CaptureDurability` only to a `full` request.
+  `capture`, `plan`, and `preparation` values of a `bundle` request before the
+  reuse check, the compile, the identity, and the restore see the settings. It
+  passes the `preparation` to `PostcssWorkers.prepare` before the reuse check
+  and does not wait for it. When the bundle fails, it disposes that context
+  before it returns the error. It gives a `CaptureDurability` only to a `full`
+  request.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
@@ -398,7 +401,12 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/capture-volumes.ts`](./capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
 - [`src/sidecar/postcss.ts`](./postcss.ts) holds `PostcssWorkers`,
-  which owns the PostCSS child processes.
+  which owns the PostCSS child processes. Its `prepare` starts the child of a
+  [prepared context](../../../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts)
+  with the roots and resolution settings of the `bundle` request. That child
+  processes no stylesheet before the first `process` call of its context, and
+  that call takes the child, also after the child failed. `dispose` also stops
+  a start whose path lookup still runs, so that start forks no child.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
 - The [Rust sidecar pool](../../../../crates/mokly-sidecar/README.md) starts and

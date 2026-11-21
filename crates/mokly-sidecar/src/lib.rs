@@ -53,6 +53,7 @@ mod pool_warmup_state;
 pub mod postcss_evidence;
 pub mod postcss_failure;
 mod postcss_phase;
+pub mod postcss_preparation;
 mod presentation;
 pub mod process_clock;
 mod process_completion;

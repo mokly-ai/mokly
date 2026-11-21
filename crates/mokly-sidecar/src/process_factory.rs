@@ -166,9 +166,10 @@ impl NodeFactory {
         let phases = PhaseState::default();
         let compile_count = Arc::new(AtomicU64::new(0));
         let diagnostic_phases = phases.clone();
+        let frame_discovery = discover_memory.clone();
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
-            Box::new(move || read_frames(stdout, incoming_frames)),
+            Box::new(move || read_frames(stdout, incoming_frames, frame_discovery)),
             Box::new(move || {
                 read_diagnostics(stderr, diagnostics, timings, diagnostic_phases);
                 let _ = drained.send(());

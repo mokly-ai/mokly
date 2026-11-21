@@ -189,6 +189,7 @@ impl Fixture {
         let MethodResult::Bundle(result) = self
             .pool
             .request(Call::Bundle(BundleRequest {
+                preparation: None,
                 plan: None,
                 params: settings(entry, id),
                 capture: Some(capture),

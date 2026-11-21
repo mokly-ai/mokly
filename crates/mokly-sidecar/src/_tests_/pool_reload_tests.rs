@@ -207,6 +207,7 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     pool.release_generation("g", 0);
     pool.synchronize_releases();
     pool.request(Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: bundle(),
         capture: None,
