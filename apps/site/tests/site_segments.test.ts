@@ -26,7 +26,6 @@ const expected = [
   "robots.txt",
   "security",
   "sitemap.xml",
-  "stage",
   "terms",
 ];
 

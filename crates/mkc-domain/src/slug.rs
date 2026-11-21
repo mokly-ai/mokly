@@ -32,7 +32,6 @@ pub const SITE_FIRST_SEGMENTS: &[&str] = &[
     "robots.txt",
     "security",
     "sitemap.xml",
-    "stage",
     "terms",
 ];
 

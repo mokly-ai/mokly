@@ -30,7 +30,6 @@ export const SITE_OUTPUT_FIRST_SEGMENTS = Object.freeze([
   "pagefind",
   "robots.txt",
   "sitemap.xml",
-  "stage",
 ] as const);
 
 /** One of the site's own routes. */

@@ -18,6 +18,5 @@ export const SITE_FIRST_SEGMENTS = [
   "robots.txt",
   "security",
   "sitemap.xml",
-  "stage",
   "terms",
 ] as const;

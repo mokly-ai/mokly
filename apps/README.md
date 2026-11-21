@@ -38,7 +38,8 @@ of this repository, and they share its one `package-lock.json`. The root
 
 `npm run cloud:test` runs the tests of every cloud project. The application's
 browser tests start the real API and print a skip reason when Postgres is
-unreachable; the site stays static and stages a built dogfood screen.
+unreachable; the site stays static, and its home draws its demo app at build
+time.
 
 ## Quick Start
 
@@ -74,7 +75,7 @@ npm exec --workspace @mokly-cloud/mockups -- playwright install chromium
   to 19.2.3 at the repository root as well as in the projects, so every peer
   and the renderer share one hoisted runtime; policy tests reject duplicate
   runtime copies and mismatched lockfile versions.
-- Build the mockups before mockup tests, disk inspection or site commands.
+- Build the mockups before mockup tests or disk inspection.
   [Mockup tooling](../docs/protocol/cloud/mockup-tooling.md) owns the commands
   and the output rules, and
   [Repository generated files](../docs/protocol/cloud/repository-generated-files.md)
