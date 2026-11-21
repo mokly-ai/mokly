@@ -1235,6 +1235,10 @@ Depends on: 14
 
 Depends on: 13, 14, 15, 16
 
+Merge justifications of the merge of the primary branch with `main`, on
+2026-11-20: `.context/storybook-support/merge-justifications.md`. The pull
+request description copies them.
+
 - [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
