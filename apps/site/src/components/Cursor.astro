@@ -1,0 +1,44 @@
+---
+/**
+ * The cursor of one person or agent in the depicted design file: the arrow
+ * in that person's colour, and beside it the name tag on that colour. An
+ * agent's tag leads with the spark and ends with an `Agent` badge. `flip`
+ * puts the tag on the arrow's left, for a cursor near the right edge. A
+ * depiction: hidden from assistive technology, and it takes no pointer. The
+ * cursor sits at the top-left corner of its positioned parent; an area's
+ * rule moves it.
+ *
+ * Use: `<Cursor class="site-home-hero-maya" person="maya" />`. The rules are
+ * in `src/styles/people.css`.
+ */
+import Icon from "./Icon.astro";
+import { PERSON, type Person } from "./people.js";
+
+interface Props {
+  readonly class?: string;
+  readonly flip?: boolean;
+  readonly person: Person;
+}
+
+const { class: className, flip = false, person } = Astro.props;
+const { agent, name } = PERSON[person];
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "site-cursor",
+    `site-cursor--${person}`,
+    flip && "site-cursor--flip",
+    className,
+  ]}
+>
+  <svg class="site-cursor-arrow" height="22" viewBox="0 0 20 22" width="20">
+    <path d="M2.6 2.2 17 9.9l-6.3 1.8-2.9 6.5z"></path>
+  </svg>
+  <span class="site-cursor-tag">
+    {agent && <Icon name="spark" size={11} />}
+    {name}
+    {agent && <em class="site-cursor-agent">Agent</em>}
+  </span>
+</span>

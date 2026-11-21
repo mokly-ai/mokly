@@ -1,8 +1,10 @@
 /* The Canvas parts that sit on the dot grid: the frame label that
    FrameLabel.astro draws over the top-left corner of its positioned frame,
-   and the selection box with its square handles that Selection.astro draws
-   over its positioned parent. The rules match the frame label and the
-   selection of docs/mockups/styles/site/canvas.css. */
+   and the selection box with its square handles, its name tag and its type
+   badge that Selection.astro draws over its positioned parent. Selections
+   use the signal green, or a person's colour. canvas-tags.css holds the
+   filled tags and the spacing redline. The rules match
+   docs/mockups/styles/site/canvas.css. */
 
 .site-frame-name {
   align-items: center;
@@ -57,6 +59,22 @@
 .site-sel--soft {
   box-shadow: inset 0 0 0 1.5px
     color-mix(in srgb, currentColor 42%, transparent);
+}
+
+.site-sel--maya {
+  color: var(--mk-color-people-pink-fill);
+}
+
+.site-sel--sam {
+  color: var(--mk-color-people-blue-fill);
+}
+
+.site-sel--claude {
+  color: var(--mk-color-people-orange-fill);
+}
+
+.site-sel--codex {
+  color: var(--mk-color-people-violet-fill);
 }
 
 .site-sel-handle {
@@ -115,4 +133,48 @@
 .site-sel-handle--s,
 .site-sel-handle--se {
   top: 100%;
+}
+
+/* The name tag over the top-left corner, such as T Heading */
+
+.site-sel-name {
+  align-items: center;
+  bottom: calc(100% + 9px);
+  color: var(--mk-color-signal-deep);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  left: -1px;
+  line-height: 1;
+  position: absolute;
+  white-space: nowrap;
+}
+
+/* The type badge over the top-right corner, such as Geist Semibold 162 */
+
+.site-sel-badge {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: 6px;
+  bottom: calc(100% + 7px);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  position: absolute;
+  right: -1px;
+  white-space: nowrap;
+}
+
+.site-sel-badge b {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
 }
