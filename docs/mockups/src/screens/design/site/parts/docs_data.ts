@@ -38,6 +38,7 @@ export const DOCS_SECTIONS: readonly DocsSection[] = [
       "Styles",
       "Props and variants",
       "Storybook stories",
+      "Vite",
     ],
     title: "Authoring",
   },
