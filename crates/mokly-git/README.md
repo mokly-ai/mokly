@@ -33,6 +33,11 @@ escalates to a forceful kill, reaps the child, and drains both pipes. Only an
 operation that acted on cancellation returns `Cancelled`. Other typed failures
 keep their own category.
 
+The runner sets `GIT_OPTIONAL_LOCKS=0` for every Git process, and an
+environment that a caller passes cannot replace it. Git then skips each
+optional step that takes a lock, so the `git status` of the `mokly-publish`
+checkout check does not rewrite `.git/index`.
+
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
 `rev-list` with lazy fetch disabled, read-only `config`, `check-attr`,

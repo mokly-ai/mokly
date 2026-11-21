@@ -41,3 +41,4 @@ features = ["mock"]
 
 [dev-dependencies.mokly-platform]
 workspace = true
+features = ["mock"]

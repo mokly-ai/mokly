@@ -1,6 +1,7 @@
 //! Publication unit tests with explicit IO and timing boundaries.
 
 mod blob_body_tests;
+mod checkout_locks_tests;
 mod checkout_tests;
 mod completion_tests;
 mod concurrency_tests;
