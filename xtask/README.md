@@ -35,7 +35,7 @@ internal task runner and is not published to npm or crates.io.
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `cargo xtask check`                     | Runs the local suites in sequence, in one checkout. Native runs only when selected. `--suite <name>` runs one suite.                   |
 | `cargo xtask executor`                  | Prints the executor that `check` selects, without warming boxes or running suites.                                                     |
-| `cargo xtask build-native`              | Builds the `mokly` binary for the host target.                                                                                         |
+| `cargo xtask build-native`              | Builds the `mokly` binary for the host target and copies it, with its runtime inventory, into the host native package.                 |
 | `cargo xtask generate-types`            | Writes the TypeScript types that the model and sidecar crates generate.                                                                |
 | `cargo xtask mokly-fixtures [--check]`  | Builds workspace Mokly and regenerates the cloud contract fixtures, or rejects fixture drift.                                          |
 | `cargo xtask openapi [--check]`         | Generates the Rust-owned OpenAPI document and app client, or rejects drift.                                                            |
@@ -268,6 +268,14 @@ commands use `target/`, and native artifact builds use `target/native/`.
 These separate directories prevent workspace tests from replacing the running
 xtask executable on Windows.
 
+`build-native` removes `bin/.runtime-inventory.json` of the host native package
+before it copies the binary there. After the copy, it writes the file again
+with the SHA-256 digest of the binary, in the schema of the npm package builds.
+This runtime inventory is dev-preparation metadata that stays local to the
+checkout, and the package does not pack it.
+[`npm run dev`](../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+builds again when it is missing or does not match the binary.
+
 The CLI integration fixtures use the built workspace packages and host native
 binary. After `npm ci`, prepare those outputs before standalone crate tests.
 Repository and Native prepare these outputs before their Rust tests.
@@ -300,6 +308,8 @@ code.
   [`src/main.rs`](./src/main.rs) calls its CLI entry point.
 - [`src/artifacts.rs`](./src/artifacts.rs) owns native package builds,
   generated TypeScript, and the standalone generated-byte check.
+  [`src/runtime_inventory.rs`](./src/runtime_inventory.rs) writes the runtime
+  inventory of the host binary.
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
   Its `run_at` entry point supplies a workspace to isolated integration
   fixtures. The binary retains its build-time workspace root.

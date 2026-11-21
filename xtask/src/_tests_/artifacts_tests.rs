@@ -6,9 +6,26 @@ use std::sync::Arc;
 use mokly_model::typescript;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::artifacts::{Artifacts, CopyMock, DefaultArtifacts, Host, WriteMock};
+use crate::artifacts::{
+    Artifacts, CopyMock, DefaultArtifacts, DigestMock, Host, RemoveMock, WriteMock,
+};
 use crate::command::CommandRunnerRunMock;
 use crate::error::Error;
+use crate::runtime_inventory::native_inventory;
+
+#[test]
+fn native_inventory_uses_the_package_inventory_schema() {
+    let digest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    assert_eq!(
+        native_inventory("mokly", digest.into()).unwrap(),
+        concat!(
+            "{\n  \"schemaVersion\": 1,\n  \"files\": [\n    {\n",
+            "      \"path\": \"mokly\",\n",
+            "      \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\"\n",
+            "    }\n  ]\n}\n"
+        )
+    );
+}
 
 #[test]
 fn maps_exactly_the_five_supported_targets() {
@@ -31,7 +48,10 @@ fn maps_exactly_the_five_supported_targets() {
 fn build_runs_cargo_before_copying_to_the_host_package() {
     let mock = Arc::new(Unimock::new((
         CommandRunnerRunMock.next_call(matching!((spec) if spec.display().starts_with("cargo build --locked ") && spec.display().contains("--target x86_64-unknown-linux-gnu") && spec.display().contains("--bin mokly") && spec.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        RemoveMock.next_call(matching!((path) if *path == Path::new("/workspace/packages/native-linux-x64-gnu/bin/.runtime-inventory.json"))).returns(Ok(())),
         CopyMock.next_call(matching!((source, destination) if *source == Path::new("/workspace/target/native/x86_64-unknown-linux-gnu/debug/mokly") && *destination == Path::new("/workspace/packages/native-linux-x64-gnu/bin/mokly"))).returns(Ok(())),
+        DigestMock.next_call(matching!((path) if *path == Path::new("/workspace/packages/native-linux-x64-gnu/bin/mokly"))).returns(Ok("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".into())),
+        WriteMock.next_call(matching!((path, text) if *path == Path::new("/workspace/packages/native-linux-x64-gnu/bin/.runtime-inventory.json") && *text == native_inventory("mokly", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".into()).unwrap())).returns(Ok(())),
     )));
     let tasks: &dyn Artifacts = &DefaultArtifacts {
         workspace: "/workspace".into(),

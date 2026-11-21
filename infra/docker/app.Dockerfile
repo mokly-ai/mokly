@@ -7,6 +7,7 @@ WORKDIR /build
 # target is not needed by the web export.
 COPY package.json package-lock.json tsconfig.json ./
 COPY packages ./packages
+COPY scripts/write-runtime-inventory.mjs scripts/runtime-inventory.mjs ./scripts/
 COPY apps ./apps
 COPY docs/mockups/styles ./docs/mockups/styles
 COPY infra/docker/app-build-config.mjs ./infra/docker/app-build-config.mjs

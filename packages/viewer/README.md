@@ -238,6 +238,16 @@ The embedded `styles.css` needs no `@scope` rule, because no package rule
 reaches the host page or host slot content. The build records every browser
 output in the browser module inventory, `dist/browser.manifest.json`;
 `mokly build` copies exactly those files, and Serve serves exactly them.
+
+The `build` script of `package.json` ends with the root
+[`write-runtime-inventory.mjs`](../../scripts/write-runtime-inventory.mjs),
+which writes `dist/.runtime-inventory.json`. This runtime inventory lists every
+other file in `dist` with its SHA-256 digest. Unlike the browser module
+inventory, it is dev-preparation metadata that stays local to the checkout.
+Serve and `mokly build` never read it.
+[`npm run dev`](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+builds again when it is missing or does not match `dist`.
+
 `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse

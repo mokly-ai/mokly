@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { developmentInventoryDirectories } from "./development-inventories.mjs";
+import { runtimeInventoryComplete } from "./runtime-inventory.mjs";
 import { ExpectedFailure } from "./verification/expected-failure.mjs";
 import { missingPreparedOutputs } from "./verification/prepared.mjs";
 
@@ -47,6 +49,10 @@ async function buildReason(repositoryRoot) {
   const built = await modified(repositoryRoot, BUILD_RECORD);
   if (installed !== undefined && built !== undefined && installed > built)
     return "the dependencies changed after the last build";
+  for (const directory of developmentInventoryDirectories()) {
+    if (!(await runtimeInventoryComplete(path.join(repositoryRoot, directory))))
+      return `${directory} has no complete runtime inventory`;
+  }
   return undefined;
 }
 

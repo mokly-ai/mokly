@@ -209,14 +209,22 @@ The repository's `npm run dev` command runs watched Serve on
 for example `npm run dev -- --port 0`. Before Serve starts, the command runs
 `npm ci` when no install completed or `package-lock.json` changed after the
 last install. It then runs `npm run build` when an output that Serve needs is
-missing or an install completed after the last build. Each step prints its
+missing or an install completed after the last build. It also runs
+`npm run build` when it cannot confirm that the runtime files of each package
+that the build covers are complete. Runtime files are the files that a package
+build generates for use at run time, such as scripts, stylesheets, and the
+binary. They are complete when they are exactly the files that the last finished
+build of the package wrote, with the same content. Each step prints its
 reason first. A failed step stops the command with exit status 1, and Serve
 does not start. A change to Mokly's own sources does not start a build; run
 `npm run build` after it.
-Decision: the command builds only when an output is missing or older than the
-install. A build on every start was rejected, because every start then waits
-for a complete build, and the build cannot replace the binary that another
-Serve runs.
+Decision: the command builds only when an output is missing, incomplete, or
+older than the install. A build on every start was rejected, because every
+start then waits for a complete build, and the build cannot replace the binary
+that another Serve runs.
+Decision: completeness covers every runtime file of each package. A fixed list
+alone was rejected, because it misses a truncated file and needs an update for
+each new file that Serve reads.
 
 Rebuild actions, configuration changes, Git observation, publication, and
 shutdown continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).

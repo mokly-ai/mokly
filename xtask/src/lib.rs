@@ -12,6 +12,7 @@ mod error;
 mod executor;
 mod policy;
 mod remote;
+mod runtime_inventory;
 mod rust_file_length;
 
 #[cfg(test)]
