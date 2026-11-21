@@ -6,10 +6,4 @@
  * milestone of the Canvas redesign plan removes the difference.
  */
 
-const FOUNDATION =
-  "Canvas home: the open foundation wires its source to the rendered artboard and draws the steps as a flow of frames; Milestone 5 rebuilds the home";
-
-export const HOME_DIFFERENCES: Readonly<Record<string, string>> = {
-  ".site-closing": FOUNDATION,
-  ".site-closing-copy h2": FOUNDATION,
-};
+export const HOME_DIFFERENCES: Readonly<Record<string, string>> = {};
