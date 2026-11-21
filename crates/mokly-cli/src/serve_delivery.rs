@@ -25,6 +25,7 @@ use mokly_server::snapshot::{Projector, Snapshot};
 use mokly_server::work::Workers;
 
 use crate::serve_changes::ServeChanges;
+use crate::serve_eager_native::NativeEagerFactory;
 use crate::serve_git::GitWork;
 use crate::serve_pool::PoolScheduling;
 use crate::serve_progress::Progress;
@@ -54,25 +55,42 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
         tree: input.services.tree.clone(),
     };
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
+    let changes = Arc::new(ServeChanges {
+        eager: Some(input.services.eager.clone()),
+        diagnostics: input.services.diagnostics.clone(),
+        routing: Some(input.services.diagnostics.clone()),
+        reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
+        kept_base: Arc::default(),
+        sidecars: input.services.sidecars.clone(),
+        progress: input.progress,
+        refreshes: input.reporter,
+        cache_announced: input.services.cache_announced.clone(),
+        extraction_snapshots: Arc::new(ProcessSnapshots::default()),
+        warnings: input.warnings,
+        runtime: input.services.runtime.clone(),
+        git: input.git,
+        cancellation: input.cancellation,
+        terminal: input.terminal,
+        style: input.style.clone(),
+        redactor: input.redactor,
+        base: input.common.base.clone(),
+        install_scripts: input.common.base_install_scripts_override(),
+    });
+    input.services.eager.configure(Arc::new(NativeEagerFactory {
+        source_starts: input.services.source_starts.clone(),
+        runtime: changes.runtime.clone(),
+        sidecars: changes.sidecars.clone(),
+        slot: Arc::downgrade(&changes.kept_base),
+        git: changes.git.clone(),
+        command: changes.cancellation.clone(),
+        snapshots: changes.extraction_snapshots.clone(),
+        diagnostics: input.services.diagnostics.clone(),
+        activity: input.services.activity(),
+        base: changes.base.clone(),
+        install_scripts: changes.install_scripts,
+    }));
     Ok(Arc::new(NativeServeState {
-        changes: Arc::new(ServeChanges {
-            reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
-            kept_base: Arc::default(),
-            sidecars: input.services.sidecars.clone(),
-            progress: input.progress,
-            refreshes: input.reporter,
-            cache_announced: input.services.cache_announced.clone(),
-            extraction_snapshots: Arc::new(ProcessSnapshots::default()),
-            warnings: input.warnings,
-            runtime: input.services.runtime.clone(),
-            git: input.git,
-            cancellation: input.cancellation,
-            terminal: input.terminal,
-            style: input.style.clone(),
-            redactor: input.redactor,
-            base: input.common.base.clone(),
-            install_scripts: input.common.base_install_scripts_override(),
-        }),
+        changes,
         tree: input.services.tree.clone(),
         projector: Arc::new(Projector {
             deployment_id: input.entropy.secret(),

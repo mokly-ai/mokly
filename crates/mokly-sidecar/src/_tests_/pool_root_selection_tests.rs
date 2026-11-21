@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::methods::{Call, ProcessCss};
 use crate::pool::{Pool, SidecarPool};
+use crate::pool_admission::PoolCapacity;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::wire::MethodResult;
 use crate::workers::{ControlMock, FactoryMock, Spawned, WorkerMock};
@@ -102,6 +103,81 @@ fn new_contexts_reuse_two_workers_across_alternating_source_roots() {
             "{pairs} pairs without an existing affinity"
         );
     }
+}
+
+fn eager_call(root: &str) -> Call {
+    Call::ProcessCss(ProcessCss {
+        source_root: root.into(),
+        context: format!("{root}:eager"),
+        repository_roots: Vec::new(),
+        module_resolution: Default::default(),
+        postcss: "postcss.mjs".into(),
+        source_path: "style.css".into(),
+        text: String::new(),
+    })
+}
+
+fn unstarted_pool(size: usize) -> Pool {
+    Pool::new(
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Launch {
+            capture_durability: false,
+            repository: "/head".into(),
+            node: "node".into(),
+            entry: "/package/sidecar.js".into(),
+            version: "test".into(),
+        },
+        PoolOptions {
+            size: size.try_into().unwrap(),
+            timeout_ms: None,
+        },
+    )
+}
+
+#[test]
+fn eager_claim_uses_no_head_or_different_base_slot() {
+    let (pool, _) = pool(2);
+    request(&pool, "/head", 0);
+    request(&pool, "/other-base", 0);
+    let claim = pool.try_eager_claim(&eager_call("/base")).unwrap();
+    let admitted = claim.is_some();
+    pool.abort().unwrap();
+    assert!(
+        !admitted,
+        "eager work must preserve both occupied source roots"
+    );
+}
+
+#[test]
+fn eager_claim_is_serial_at_capacity_one() {
+    let pool = unstarted_pool(1);
+    let claim = pool.try_eager_claim(&eager_call("/base")).unwrap();
+    let admitted = claim.is_some();
+    pool.abort().unwrap();
+    assert!(
+        !admitted,
+        "capacity one must leave base work for classification"
+    );
+}
+
+#[test]
+fn eager_claim_is_single_and_shares_the_call_budget() {
+    let pool = unstarted_pool(3);
+    let eager = pool.try_eager_claim(&eager_call("/base")).unwrap();
+    let duplicate = pool.try_eager_claim(&eager_call("/base")).unwrap();
+    let head = pool.try_claim().unwrap();
+    let final_head = pool.try_claim().unwrap();
+    let overflow = pool.try_claim().unwrap();
+    let actual = [
+        eager.is_some(),
+        duplicate.is_some(),
+        head.is_some(),
+        final_head.is_some(),
+        overflow.is_some(),
+    ];
+    pool.abort().unwrap();
+    assert_eq!(actual, [true, false, true, true, false]);
 }
 
 #[test]

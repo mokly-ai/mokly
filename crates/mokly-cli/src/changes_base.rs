@@ -3,35 +3,37 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
-use mokly_catalogue::discovery::{Discoverer, Discovery, Inventory, SourceKind};
+use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::discovery::{Discovery, Inventory};
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_cli::cancellation::Cancellation;
-use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
 use mokly_compare::base_freshness::Freshness;
 use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
-use mokly_compare::cache_types::Lease;
+use mokly_compare::base_sources::BaseSourcesRequest;
 use mokly_compare::comparison_steps::Step;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
-use mokly_git::error;
+use mokly_git::identity::ObjectId;
+use mokly_git::repository::Repository;
 use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::types::GraphFactory;
 use mokly_render::runtime::Runtime;
-use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::BaseDependencies;
 use crate::base_render_admission::BaseRenderAdmission;
+use crate::changes_base_sources::{NativePhases, NativeSources};
 use crate::changes_freshness::{SelectionRequest, html_dependencies, reusable, working_roots};
+use crate::changes_source_admission::SourceAdmission;
+use crate::changes_validation_admission::{GraphPreparationAdmission, ValidationRequest};
 
 /// Prepare the base generation through a second `Runtime` over the base tree. It reuses
 /// the supplied pool, render cache, and capture scheduler. A base that needs a sidecar gets a
 /// `BaseSide`, which keeps its source and dependency leases while the base graph lives.
 pub(super) struct NativeBase {
+    pub(super) validation: Option<Arc<dyn GraphPreparationAdmission>>,
     pub(super) admission: Arc<dyn BaseRenderAdmission>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -41,21 +43,54 @@ pub(super) struct NativeBase {
 
 impl BaseProvider for NativeBase {
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
-        let mut scripts_off = false;
-        let checkout = match &self.freshness {
-            Some(_) => match request.repository.checkout_identity(&request.commit) {
-                Ok(checkout) => Some(checkout),
-                Err(error::Error::Cancelled) => {
-                    return Err(BasePreparationError::new(false, Error::Cancelled));
-                }
-                Err(error) => {
-                    tracing::debug!(%error, "base checkout evidence is unavailable");
-                    None
-                }
-            },
-            None => None,
+        self.admit(self.validate(request)?)
+    }
+}
+
+impl NativePhases for NativeBase {
+    fn admit(&self, prepared: PreparedBase) -> BasePreparationResult {
+        let mut admitted = self
+            .admission
+            .admit(prepared.generation, prepared.scripts_off)?;
+        admitted.freshness = prepared.freshness;
+        Ok(admitted)
+    }
+
+    fn validate(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        let checkout = match self.checkout(request.repository.as_ref(), &request.commit) {
+            Ok(checkout) => checkout,
+            Err(source) => return Err(BasePreparationError::new(false, source)),
         };
-        match self.prepare_generation(request, &mut scripts_off, checkout) {
+        let sources = match self.sources(&request.source_request(), checkout, None) {
+            Ok(sources) => sources,
+            Err(source) => return Err(BasePreparationError::new(false, source)),
+        };
+        self.validate_sources(request, sources)
+    }
+    fn checkout(
+        &self,
+        repository: &dyn Repository,
+        commit: &ObjectId,
+    ) -> Result<Option<CheckoutIdentity>> {
+        self.checkout_sample(repository, commit)
+    }
+
+    fn sources(
+        &self,
+        request: &BaseSourcesRequest<'_>,
+        checkout: Option<CheckoutIdentity>,
+        admission: Option<Arc<dyn SourceAdmission>>,
+    ) -> Result<NativeSources> {
+        self.source_generation(request, checkout, admission.as_deref())
+    }
+
+    fn validate_sources(
+        &self,
+        request: &BaseRequest<'_>,
+        sources: NativeSources,
+    ) -> BasePreparationResult {
+        let mut scripts_off = false;
+        match self.prepare_generation(request, &mut scripts_off, sources) {
             Ok(prepared) => Ok(prepared),
             Err(source) => Err(BasePreparationError::new(scripts_off, source)),
         }
@@ -67,43 +102,19 @@ impl NativeBase {
         &self,
         request: &BaseRequest<'_>,
         scripts_off: &mut bool,
-        checkout: Option<CheckoutIdentity>,
+        sources: NativeSources,
     ) -> Result<PreparedBase> {
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
-        let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
-            inner: request.sources.tree.clone(),
-            cancellation: self.cancellation.clone(),
-        });
-        let early = self.early_sources(request)?;
-        let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
-        let file = request.working_config.file.to_string_lossy();
-        let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
-            ResolvedConfig {
-                input: Config::default(),
-                roots: Vec::new(),
-                modules: Default::default(),
-                authored_inputs: Vec::new(),
-                ..request.working_config.clone()
-            }
-        } else {
-            match loader.load(&request.working_config.repo_root, Some(&file)) {
-                Ok(config) => config,
-                Err(source) => return Err(Error::Catalogue { source }),
-            }
-        };
-        let discovery: &dyn Discovery = &Discoverer { tree: tree.clone() };
-        let inventory = match discovery.discover(&config, None) {
-            Ok(inventory) => inventory,
-            Err(source) => return Err(Error::Catalogue { source }),
-        };
-        let needs_sidecar = config.modules.postcss.is_some()
-            || config.modules.renderer.is_some()
-            || inventory.files.iter().any(|file| {
-                !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
-            });
-        let (base, selection, warning) = if needs_sidecar {
+        let NativeSources {
+            tree,
+            config,
+            inventory,
+            checkout,
+            dependencies,
+        } = sources;
+        let (base, selection, warning) = if let Some(dependencies) = dependencies {
             let prepared = self.dependencies.prepare(
                 request,
                 &config,
@@ -112,7 +123,7 @@ impl NativeBase {
                     unmapped: &self.runtime.dependency_usage.unmapped_directories(),
                     record: checkout.is_some(),
                 },
-                early,
+                dependencies,
             )?;
             (Some(prepared.side), prepared.selection, None)
         } else {
@@ -138,6 +149,14 @@ impl NativeBase {
         }
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
+        }
+        if let Some(validation) = &self.validation {
+            validation.enter(&ValidationRequest {
+                config: &config,
+                checkout: checkout.as_ref(),
+                selection: selection.as_ref(),
+                base: base.as_ref(),
+            })?;
         }
         request.steps.step(Step::Rendering);
         let runtime = Arc::new(
@@ -175,9 +194,11 @@ impl NativeBase {
             Ok(generation) => generation,
             Err(source) => return Err(Error::Graph { source }),
         };
-        let mut prepared = match self.admission.admit(generation, *scripts_off) {
-            Ok(prepared) => prepared,
-            Err(error) => return Err(*error.source),
+        let mut prepared = PreparedBase {
+            generation,
+            prefetch: None,
+            scripts_off: *scripts_off,
+            freshness: None,
         };
         let generation = &prepared.generation;
         let roots = roots.map(|mut roots| {
@@ -213,35 +234,6 @@ impl NativeBase {
         prepared.freshness = freshness;
         Ok(prepared)
     }
-
-    /// Before the base configuration loads, leases an existing complete extraction
-    /// and attaches it to the base sources, when the working configuration names a
-    /// renderer or PostCSS. This optional step never builds an extraction, and a
-    /// failure other than cancellation leaves the base reads on Git.
-    fn early_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
-        let modules = &request.working_config.modules;
-        if modules.renderer.is_none() && modules.postcss.is_none() {
-            return Ok(None);
-        }
-        let attached = self
-            .dependencies
-            .existing_sources(request)
-            .and_then(|lease| match lease {
-                Some(lease) => {
-                    request.sources.sources.attach(lease.clone())?;
-                    Ok(Some(lease))
-                }
-                None => Ok(None),
-            });
-        match attached {
-            Err(Error::Cancelled) => Err(Error::Cancelled),
-            Err(error) => {
-                tracing::debug!(%error, "base reads stay on Git before the dependency step");
-                Ok(None)
-            }
-            result => result,
-        }
-    }
 }
 
 struct Discovered(Inventory);
@@ -270,3 +262,11 @@ mod changes_freshness_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_evidence_tests.rs"]
 mod changes_evidence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_source_support.rs"]
+mod base_source_support;
+
+#[cfg(test)]
+#[path = "_tests_/eager_cold_sources_tests.rs"]
+mod eager_cold_sources_tests;

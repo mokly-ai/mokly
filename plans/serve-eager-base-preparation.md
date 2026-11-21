@@ -9,24 +9,49 @@ Base capture, comparison, and publication still require completed head usage.
 The performance orchestrator owns the acceptance measurements and every merge.
 The user requires a cold first Changes gain of at least 1.5 seconds on `mokly-cloud`.
 The warm restart gain must be at least 0.5 seconds.
-The means come from interleaved rounds against `main`.
+The means come from interleaved rounds against the control.
+The targets of 2026-11-20 named `main` as the control.
+On 2026-11-21 the performance orchestrator set the frozen step 1 runtime `fb8b20f77` as the control of this stacked round.
+After the step 1 merge at 03:10 UTC, the control is core and dist built from main `77021d88c`.
 Readiness, head usage, and edits must not become slower beyond measurement noise.
-The whole-process-tree peak of cold ten-edit sessions must remain within 2% of `main`.
+The whole-process-tree peak of cold ten-edit sessions must remain within 2% of the control.
 Every published byte must remain equal on all four required fixtures.
 
 ## Authority and implementation hold
 
 The task message of 2026-11-20 authorizes this approach and its ordering protocol change.
-It does not authorize product code before the performance orchestrator confirms that step 1 has merged.
+On 2026-11-20 it held product code until the performance orchestrator confirmed that step 1 had merged.
 Step 1 is the miss-first base capture change from workspace 193.
 It changes `changes_base.rs`, `base_render.rs`, `base_classification.rs`, and graph collection.
-After the signal, integrate that `origin/main` before writing red tests or product code.
-The current source audit uses `cb233fb50af71725ed464bfb1df08ab5463c5280`.
-Recheck this design against the integrated source before implementation.
+The baseline source audit used `cb233fb50af71725ed464bfb1df08ab5463c5280`.
 The performance orchestrator accepted owner 1C, phases 2B, and admission 3B on 2026-11-20 under the user's delegation.
+
+On 2026-11-21 the performance orchestrator authorized stacked implementation before the step 1 merge.
+This replaces the hold of 2026-11-20. Red tests and product code start on the stacked branch.
+The branch merged the frozen step 1 runtime `fb8b20f77d65642602f773e322ee5e6e9846a27f` once.
+The local merge is `32852f553271c2b263d7c47c72af565699386aef`, and its remerge audit is clean.
+That frozen runtime contains main `cb233fb50`. The branch already held main `1a5d2b241`.
+`origin/main` `e69db4ce8` also holds the sidecar-only #448. The branch does not merge it yet.
+Take no later step 1 commit by hand.
+When the performance orchestrator reports that step 1 has merged, merge `origin/main` once more and audit it.
+Open no pull request before that signal.
+The performance orchestrator owns every merge and the cloud speed and memory acceptance.
+The recheck of the stacked source on 2026-11-21 kept the dependency boundary, the kept-base rules, and the test seams.
+It found one new boundary: step 1 starts early base renders inside base preparation, as the next section says.
+
+At 03:10 UTC on 2026-11-21, the performance orchestrator confirmed that step 1 merged in PR #452 as `77021d88c`.
+The branch then merged `origin/main` once at `068ba0629d0570e753ef360d243fab364649d671`.
+The merge has two parents and no remerge diff.
+It keeps the wire types and plan reuse changes of #449 and #450.
+The eager code changes none of those wire types.
+The branch removes the inherited step 1 plan, which its completed pull request already removed from main.
+Rerun the targeted tests and the repository suite on this merged tree.
+Use the new main control and matching dist for local measurements and byte proof.
+Open the pull request only after the performance orchestrator accepts the candidate.
 
 Contract owners:
 
+- [Eager base preparation](../docs/protocol/mokly-eager-base-preparation.md).
 - [On-demand Serve](../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
 - [Base preparation](../docs/protocol/mokly-base-preparation.md#serve-base-lifetime).
 - [Sidecar memory](../docs/protocol/mokly-sidecar-memory.md#claims).
@@ -34,6 +59,7 @@ Contract owners:
 - [Comparison package selection](../docs/protocol/mokly-comparison-packages.md).
 - [Terminal comparison steps](../docs/protocol/mokly-terminal-steps.md).
 - [Changes state](../docs/protocol/mokly-changes.md).
+- [Review timing records](../docs/protocol/mokly-review-timings.md).
 - [CLI crate](../crates/mokly-cli/README.md) and [comparison crate](../crates/mokly-compare/README.md).
 
 ## Current sequence and data dependencies
@@ -51,6 +77,14 @@ Only then does `AfterUsage::run`, implemented by `ChangesPass`, start Changes.
 `Changes::classify_base` pins the merge base and checks for a kept base.
 On a miss, it creates historical sources and calls `NativeBase::prepare`.
 It immediately captures that prepared generation, keeps eligible bases, compares, and publishes.
+
+Step 1 starts early base renders inside `NativeBase::prepare`.
+After graph preparation, the default `BaseRenderAdmission::admit` calls `prefetch_comparison`.
+Serve uses `ImmediateBaseRenders`, and `PreparedBase` carries `prefetch: Option<PrefetchGuard>`.
+Eager preparation stops before that admission, not only before `capture_base`.
+No base prefetch, render callback, or capture runs before head usage completes.
+Validation and graph preparation can still read catalogue and graph metadata.
+After adoption, keep the step 1 prefetch guard, admission, miss-first capture, and early render lifetime unchanged.
 
 The independent work includes pinned Git sources, extraction, and historical configuration discovery.
 It also includes dependency identity reads, dependency selection, and catalogue validation when their head inputs exist.
@@ -99,6 +133,17 @@ It remains attached to the originating head attempt until the normal successful 
 A replacement cancels uncaptured work and joins its task before releasing process and lease owners.
 A command stop cancels both pending and kept work and drains Git and sidecar work under existing rules.
 A new key discards the pending result and releases the old kept identity before a new preparation.
+
+Clarification of 2026-11-21, a root call under the existing classification-release rule and the unchanged-status inventory:
+The normal post-usage classification keeps an existing kept base and its freshness decision.
+Eager work never releases a kept base. The plan chose no earlier release point.
+With the kept key, eager work does no base configuration or source work after the pin.
+With another key, eager work can run the source phase.
+It runs no dependency or graph phase until the classification releases the old base.
+A first start without a kept base keeps the full eager work.
+This avoids repeated preparation on ordinary kept reuse and keeps the reuse and status states of an edit and its revert.
+Adoption still rechecks the exact key, head dependency evidence, and working inputs.
+
 A failed Git ref lookup preserves the existing kept base.
 Late results carry both the originating generation and pinned key.
 Only that current generation can consume or publish them.
@@ -142,6 +187,7 @@ Keep its status, step, and diagnostic events in one ordered record.
 Current post-usage classification replays that record through the normal publication guard and reporting paths.
 Keep the existing event order, text, deduplication, and cancelled-attempt suppression.
 Do not replace the record with only its latest step.
+Clarification of 2026-11-21: an existing kept base stays with the post-usage classification, as [Retained inputs and cancellation](#retained-inputs-and-cancellation) says.
 
 ### 2. Prepare independently before head usage completes
 
@@ -232,6 +278,11 @@ Add the eager scheduling exception that protects head processes while views rema
 The user's design calls authorize this protocol change on 2026-11-20.
 Any further protocol requirement goes to the performance orchestrator before dependent work.
 
+Docs call, 2026-11-21: the eager rules live on one new protocol page, and the named pages link to it.
+Reason: base preparation and source root scheduling are at the 250-line protocol cap.
+The pages state the phase gate at capacities two and three.
+A measured relaxation of that gate changes the requirement and its page.
+
 Options check: fresh Claude Opus 5.5 max, 2026-11-20.
 It kept the split and shared admission, refined their safety rules, and changed the pending owner from A to C.
 The report is `.context/eager-base-preparation/options-check.md`.
@@ -278,58 +329,92 @@ They authorize no copy change or event-order change.
   Consumers are startup, replacement, ref refresh, no-watch Serve, and shutdown.
   Remove obsolete preparation state and move affected tests with every assertion preserved.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Documentation and protocol (complete)
 
-Depends on: step 1 merge signal and plan approval
+Depends on: none. The stacked authorization of 2026-11-21 replaces the step 1 merge signal.
 
-- [ ] Integrate the signalled `origin/main` and audit its additions before implementation.
-- [ ] Recheck the dependency boundary, kept-base rules, and test seams after step 1.
-- [ ] Update the on-demand and base preparation contracts with the authorized order and reason.
-- [ ] Update Changes state, source root scheduling, and terminal steps for silent work and adoption.
-- [ ] Update crate entry points and status lines for requirements not yet implemented.
+- [x] Integrate the frozen step 1 runtime `fb8b20f77` once, under the stacked authorization, and audit the merge.
+- [x] Recheck the dependency boundary, kept-base rules, and test seams after step 1.
+- [x] Update the on-demand and base preparation contracts with the authorized order and reason.
+- [x] Update Changes state, source root scheduling, and terminal steps for silent work and adoption.
+- [x] Add protocol status lines for the requirements not yet implemented.
 
 Evidence: `.context/eager-base-preparation/` holds the timeline audit, options check, and baseline provenance.
+Evidence: `.context/eager-base-preparation/stack-merge-audit.log` holds the stacked merge audit, and `ledger.md` there records the recheck.
 
-## Milestone 2: Cancellable eager preparation
+## Milestone 2: Cancellable eager preparation (complete)
 
 Depends on: 1
 
-- [ ] Write red tests at the existing server, provider, and pool boundaries before product code.
-- [ ] Prove preparation can start before head usage ends while capture and comparison remain blocked.
-- [ ] Prove queued head priority, capacity-one fallback, shared claim limits, and warm-head protection.
-- [ ] Prove replacement, base-key changes, and stop cancel pending work and reject stale results.
-- [ ] Preserve kept-base reuse, detachment, freshness, failed-ref behavior, and exact-identity release.
-- [ ] Split preparation from capture and start safe phases during head startup and usage.
-- [ ] Own and join the eager task through initial failure, watcher replacement, ref refresh, and stop.
-- [ ] Preserve typed failures, warnings, progress publication, and render store write suppression.
-- [ ] Keep eager status and diagnostics silent until the current classification adopts them.
-- [ ] Preserve every inventory row, including ordered replay of buffered statuses, progress steps, cache notices, and warnings.
-- [ ] Remove the obsolete serial-only start and any unused state.
-- [ ] Run targeted tests, async tests ten times, and a real Serve smoke test.
+- [x] Write red tests at the existing server, provider, and pool boundaries before product code.
+- [x] Prove preparation can start before head usage ends while capture and comparison remain blocked.
+- [x] Prove queued head priority, capacity-one fallback, shared claim limits, and warm-head protection.
+- [x] Prove replacement, base-key changes, and stop cancel pending work and reject stale results.
+- [x] Preserve kept-base reuse, detachment, freshness, failed-ref behavior, and exact-identity release.
+- [x] Split preparation from capture and start safe phases during head startup and usage.
+- [x] Own and join the eager task through initial failure, watcher replacement, ref refresh, and stop.
+- [x] Preserve typed failures, warnings, progress publication, and render store write suppression.
+- [x] Keep eager status and diagnostics silent until the current classification adopts them.
+- [x] Preserve every inventory row, including ordered replay of buffered statuses, progress steps, cache notices, and warnings.
+- [x] Remove the obsolete serial-only start and any unused state.
+- [x] Update the CLI and comparison crate README entry points after the eager code exists.
+- [x] Qualify the Serve parent context in the review timing contract when eager spans start before `changes.classify`.
+- [x] Run targeted tests, async tests ten times, and a real Serve smoke test.
+
+Evidence: `.context/eager-base-preparation/source-ready-fix-report.md` records the final cancellation fix, targeted tests, and repeated concurrency checks. The basic cold and warm pilot summaries record the real Serve smoke test.
+
+## Diagnostic bounds requested on 2026-11-21
+
+The first four interleaved rounds found slower cold readiness on both local fixtures.
+The performance orchestrator requires removal of that cost before acceptance.
+It prefers a cold bound at the end of the head bundle, or at readiness.
+It requires the warm path and the basic warm gain to stay.
+Each diagnostic bound will run on basic and large React, cold and warm.
+If neither meets the conditions, it also requests an idle-slot bound for the base bundle.
+The final scheduling policy waits for the performance orchestrator's decision after these measurements.
+No OS priority change, early equal-identity validation, pool-size change, or visible output change is authorized by this diagnostic request.
+The source-only options check is `.context/eager-base-preparation/cold-overlap-check/report.md`.
+Its report separates facts, single observations, and predictions.
+The completed unbounded means and phase analysis are under `.context/eager-base-preparation/interleaved-main770-results/`.
+
+On 2026-11-21 the performance orchestrator stopped further local timing rounds because the workspace runner uses substantial CPU.
+Finish the active `HeadBundleOrReady` set and retain every sample and its spread.
+Do not start the planned `Ready` set or the idle-slot diagnostic.
+Push both cold-source policies after their targeted checks pass on main `36cfd7cf7`.
+Label `Ready` as unmeasured locally.
+The performance orchestrator measures both against that main control and selects the final policy.
+The final gate, byte proof, implementation review, and pull request still remain required.
 
 ## Milestone 3: Measurements and byte proof
 
 Depends on: 2
 
-- [ ] Build a frozen main control and candidate with identical native profile, Node, npm, and esbuild.
+- [x] Build the main control `77021d88c`, its matching dist, and the candidate with identical native profile, Node, npm, and esbuild. Keep the earlier frozen step 1 evidence separately.
 - [ ] Record cold and warm first Changes, readiness, and head usage on basic and the full large React fixture.
 - [ ] Use stable caches outside the repository and `/tmp`. Retain every interleaved sample, cache state, source SHA, and binary digest.
 - [ ] Compare exact file membership, size, and digest for every published file on basic, large HTML, large React, and `mokly-cloud`.
 - [ ] Include deployment metadata, comparison data, removed routes, assets, and encoding variants without normalization or exclusions.
 - [ ] Measure startup and cold ten-edit whole-tree memory with the same process accounting as the orchestrator.
 - [ ] Send the candidate SHA to the performance orchestrator for its cloud speed, edit, and memory acceptance.
-- [ ] Apply any required phase or resource bound and rerun affected proofs before acceptance.
+- [x] Finish the active cold-source bound measurements with red tests and warm bypass. Record the parent stop of the unstarted Ready and idle-slot measurement sets.
+- [ ] Push both cold-source candidate SHAs with targeted checks passing after the main `36cfd7cf7` integration. Mark Ready as unmeasured locally.
+- [ ] Report measured option effects and receive the performance orchestrator's final policy choice.
+- [ ] Apply the chosen phase or resource bound and rerun affected proofs before acceptance.
 
 ## Milestone 4: Verification, review, and pull request
 
-Depends on: 3
+Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request waits for performance acceptance.
 
 - [ ] Run the repository suite and complete gate from `AGENTS.md`, one heavy job at a time.
 - [ ] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
 - [ ] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
+- [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.
+- [x] Rerun the targeted tests and repository suite after the main integration.
 - [ ] Await final CI with `scripts/ci-wait.sh` after each push and after PR creation.
 - [ ] Rerun unrelated Site Lighthouse at most once and record its result separately from Required CI.
 - [ ] Report the PR link, tested SHA, measurement acceptance, checks, and remaining items. Do not merge.
 - [ ] Delete this plan when the `plans` skill permits it.
 - [ ] Open the pull request into `main`. Preserve the dated design calls and plan permalink in its description.
+
+Evidence: `.context/eager-base-preparation/main-integration-merge-audit.log` and `main-integration-preservation.md` record the main integration and preservation check.

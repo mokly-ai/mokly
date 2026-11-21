@@ -16,6 +16,8 @@ use mokly_sidecar::pool_admission::PoolCapacity;
 use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 
+use crate::serve_eager_admission::EagerAdmission;
+use crate::serve_eager_source_gate::SourceStarts;
 use crate::serve_gate::Gate;
 use crate::serve_return::{self, ReturnAdmission};
 
@@ -31,6 +33,12 @@ pub(super) trait BaseCompletion: Send + Sync {
 pub(super) trait PoolScheduling: Foreground + BaseCompletion {
     /// Current work has priority; a base handle observes its attempt's cancellation.
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool>;
+    /// Pending work uses only spare claims and eligible slots until adoption.
+    fn eager_pool(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        phase: Arc<dyn EagerAdmission>,
+    ) -> Arc<dyn SidecarPool>;
     /// The number of sidecar calls that admission runs at once, at least one.
     fn limit(&self) -> usize;
 }
@@ -39,6 +47,7 @@ pub(super) trait PoolScheduling: Foreground + BaseCompletion {
 pub(super) struct ServePool {
     inner: Arc<dyn SidecarPool>,
     gate: Arc<Gate>,
+    source_starts: Option<Arc<dyn SourceStarts>>,
 }
 
 impl ServePool {
@@ -47,11 +56,22 @@ impl ServePool {
         let gate = Arc::new(Gate::new(capacity));
         let admission: Arc<dyn ReturnAdmission> = gate.clone();
         let wake = serve_return::start(&inner, Arc::downgrade(&admission));
+        let observer: Arc<dyn ReturnWake> = wake.clone();
+        gate.capacity.observe_admission(Arc::downgrade(&observer));
         *gate
             .return_wake
             .lock()
             .unwrap_or_else(|error| error.into_inner()) = Some(wake);
-        Self { inner, gate }
+        Self {
+            inner,
+            gate,
+            source_starts: None,
+        }
+    }
+
+    pub(super) fn with_source_starts(mut self, source_starts: Arc<dyn SourceStarts>) -> Self {
+        self.source_starts = Some(source_starts);
+        self
     }
 
     /// Use the process diagnostic reporter for background return failures.
@@ -77,7 +97,7 @@ impl ServePool {
 
 impl Foreground for ServePool {
     fn enter(&self) -> Box<dyn ForegroundLease> {
-        Box::new(self.gate.foreground())
+        Box::new(self.gate.http())
     }
 }
 
@@ -88,15 +108,34 @@ impl BaseCompletion for ServePool {
 }
 
 impl PoolScheduling for ServePool {
+    fn eager_pool(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        phase: Arc<dyn EagerAdmission>,
+    ) -> Arc<dyn SidecarPool> {
+        let signal: Arc<dyn ChangeSignal> = self.gate.clone();
+        cancel.observe(Arc::downgrade(&signal));
+        phase.observe(Arc::downgrade(&signal));
+        Arc::new(ScheduledPool {
+            source_starts: self.source_starts.clone(),
+            inner: self.inner.clone(),
+            gate: self.gate.clone(),
+            base: Some(cancel),
+            phase: Some(phase),
+        })
+    }
+
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool> {
         if let Some(cancel) = &base {
             let signal: Arc<dyn ChangeSignal> = self.gate.clone();
             cancel.observe(Arc::downgrade(&signal));
         }
         Arc::new(ScheduledPool {
+            source_starts: self.source_starts.clone(),
             inner: self.inner.clone(),
             gate: self.gate.clone(),
             base,
+            phase: None,
         })
     }
     fn limit(&self) -> usize {
@@ -105,9 +144,11 @@ impl PoolScheduling for ServePool {
 }
 
 struct ScheduledPool {
+    source_starts: Option<Arc<dyn SourceStarts>>,
     inner: Arc<dyn SidecarPool>,
     gate: Arc<Gate>,
     base: Option<Arc<dyn ChangeCancellation>>,
+    phase: Option<Arc<dyn EagerAdmission>>,
 }
 
 impl SidecarPool for ScheduledPool {
@@ -127,12 +168,29 @@ impl SidecarPool for ScheduledPool {
         self.inner.observe_head_return(wake);
     }
     fn request(&self, call: Call) -> Result<MethodResult> {
+        let bundle = self
+            .source_starts
+            .as_ref()
+            .filter(|_| self.base.is_none() && matches!(&call, Call::Bundle(_)))
+            .map(|starts| (starts, starts.current()));
         let _activity = self.gate.activity();
         let _foreground = self.base.is_none().then(|| self.gate.foreground());
-        let admission = self
-            .gate
-            .acquire(self.base.as_deref(), RenderClass::current())?;
-        self.inner.request_claimed(call, &admission.claim)
+        let admission = match (&self.base, &self.phase) {
+            (Some(cancel), Some(phase)) => {
+                self.gate
+                    .acquire_eager(cancel.as_ref(), phase.as_ref(), &call)?
+            }
+            _ => self
+                .gate
+                .acquire(self.base.as_deref(), RenderClass::current())?,
+        };
+        let result = self.inner.request_claimed(call, &admission.claim);
+        if result.is_ok()
+            && let Some((starts, attempt)) = bundle
+        {
+            starts.bundle_finished(attempt);
+        }
+        result
     }
     fn release_generation(&self, generation: &str, epoch: u64) {
         self.inner.release_generation(generation, epoch);
@@ -205,3 +263,11 @@ mod serve_claim_retirement_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_warmup_activity_tests.rs"]
 mod serve_warmup_activity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_gate_tests.rs"]
+mod eager_gate_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_bundle_ready_tests.rs"]
+mod eager_bundle_ready_tests;

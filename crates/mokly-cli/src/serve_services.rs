@@ -31,11 +31,18 @@ use crate::bundle_runtime::Reporting;
 use crate::cache_directory::ServeDirectory;
 use crate::render_runtime::Services;
 use crate::render_store_runtime;
+use crate::serve_eager::{EagerAttempts, EagerStarts};
+use crate::serve_eager_diagnostics::{DiagnosticRouting, RootDiagnostics};
+use crate::serve_eager_directory::RootDirectory;
+use crate::serve_eager_source_gate::{SourceStarts, StartupSources};
 use crate::serve_pool::{PoolScheduling, ServePool};
 use crate::terminal::Terminal;
 use mokly_cli::options;
 
 pub(super) struct ServeServices {
+    pub(super) source_starts: Arc<dyn SourceStarts>,
+    pub(super) eager: Arc<dyn EagerStarts>,
+    pub(super) diagnostics: Arc<dyn DiagnosticRouting>,
     documents: Arc<DocumentWriter>,
     pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) runtime: Arc<Runtime>,
@@ -65,6 +72,7 @@ impl ServeServices {
     /// Only an installed initial head and successful Serve readiness end startup capture.
     pub(super) fn head_published(&self) {
         self.head_published.store(true, Ordering::Release);
+        self.source_starts.ready();
     }
 
     pub(super) fn new(
@@ -75,13 +83,17 @@ impl ServeServices {
         cache: Arc<dyn RenderCache>,
         output: ServeOutput,
     ) -> Result<Self, BuildError> {
+        let diagnostics: Arc<dyn DiagnosticRouting> = Arc::new(RootDiagnostics::new(diagnostics));
         let cache_announced = Arc::new(AtomicBool::new(false));
         let reporting = Reporting {
-            directory: Arc::new(ServeDirectory {
-                announced: cache_announced.clone(),
-                terminal: output.terminal,
-                style: output.style.clone(),
-                redactor: output.redactor,
+            directory: Arc::new(RootDirectory {
+                routing: diagnostics.clone(),
+                inner: Arc::new(ServeDirectory {
+                    announced: cache_announced.clone(),
+                    terminal: output.terminal,
+                    style: output.style.clone(),
+                    redactor: output.redactor,
+                }),
             }),
             mode: output.style.mode,
         };
@@ -121,9 +133,11 @@ impl ServeServices {
                 });
             }
         };
+        let source_starts: Arc<dyn SourceStarts> = Arc::new(StartupSources::default());
         let sidecars: Arc<dyn PoolScheduling> = Arc::new(
             ServePool::new(services.pool.clone(), services.pool)
-                .with_diagnostics(diagnostics)
+                .with_source_starts(source_starts.clone())
+                .with_diagnostics(diagnostics.clone())
                 .with_activity(documents.activity()),
         );
         let pool = sidecars.pool(None);
@@ -135,13 +149,18 @@ impl ServeServices {
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
         let head_published = Arc::new(AtomicBool::new(false));
+        let eager: Arc<dyn EagerStarts> = Arc::new(EagerAttempts::default());
         let preparation = Arc::new(AttemptPreparation {
+            eager: Some(eager.clone()),
             tree: tree.clone(),
             runtime: runtime.clone(),
             settings: ServeSettings::new(&config),
             head_published: head_published.clone(),
         });
         Ok(Self {
+            source_starts,
+            eager,
+            diagnostics,
             documents,
             sidecars,
             runtime,
@@ -162,21 +181,47 @@ impl Drop for ServeServices {
 }
 
 struct AttemptPreparation {
+    eager: Option<Arc<dyn EagerStarts>>,
     settings: ServeSettings,
     tree: Arc<dyn SourceTree>,
     runtime: Arc<Runtime>,
     head_published: Arc<AtomicBool>,
 }
+
+#[cfg(test)]
+#[path = "_tests_/eager_startup_tests.rs"]
+mod eager_startup_tests;
 impl ServePreparation for AttemptPreparation {
+    fn adopted(&self, prepared: &PreparedServe) {
+        if let Some(eager) = &self.eager {
+            eager.adopted(prepared);
+        }
+    }
+
+    fn discard(&self) {
+        if let Some(eager) = &self.eager {
+            eager.discard();
+        }
+    }
+
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError> {
         let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
         let loader = Loader { tree: tree.clone() };
         let mut config = match loader.load(cwd, options.config.as_deref()) {
             Ok(config) => config,
-            Err(source) => return Err(BuildError::Catalogue { source }),
+            Err(source) => {
+                self.discard();
+                return Err(BuildError::Catalogue { source });
+            }
         };
         options::apply_base_install_scripts(&mut config, options.base_install_scripts_override());
-        self.settings.validate(&config)?;
+        if let Err(error) = self.settings.validate(&config) {
+            self.discard();
+            return Err(error);
+        }
+        if let Some(eager) = &self.eager {
+            eager.start(&config);
+        }
         let mut runtime = self.runtime.with_tree(tree.clone());
         runtime.bundle_capture = if self.head_published.load(Ordering::Acquire) {
             BundleCapture::ServeEdit
@@ -193,7 +238,11 @@ impl ServePreparation for AttemptPreparation {
             }),
             graphs: runtime,
         };
-        preparation.prepare(cwd, options)
+        let result = preparation.prepare(cwd, options);
+        if result.is_err() {
+            self.discard();
+        }
+        result
     }
 }
 

@@ -59,11 +59,13 @@ pub(super) fn service(
             snapshots: Arc::new(ProcessSnapshots::default()),
         }),
         provider: Arc::new(NativeBase {
+            validation: None,
             admission: Arc::new(StaticBase { inputs }),
             runtime,
             cancellation,
             freshness: None,
             dependencies: Arc::new(NativeDependencies {
+                routing: None,
                 cancellation: token,
                 reporter,
             }),
