@@ -7,6 +7,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
+use mokly_graph::prefetch::PrefetchGuard;
 use mokly_graph::types::RenderGeneration;
 use mokly_source_interface::tree::SourceTree;
 
@@ -45,6 +46,8 @@ pub trait BaseSourceFactory: Send + Sync {
 
 /// A base preparation result with the state needed for its later diagnostics.
 pub struct PreparedBase {
+    /// Early work remains owned by this preparation until capture ends.
+    pub prefetch: Option<PrefetchGuard>,
     /// Prepared historical render generation.
     pub generation: Arc<dyn RenderGeneration>,
     /// True only when a tier-two install supplied dependencies with scripts off.

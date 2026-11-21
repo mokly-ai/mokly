@@ -131,6 +131,7 @@ impl BaseProvider for AttemptBase {
             ));
         }
         Ok(PreparedBase {
+            prefetch: prepared.prefetch,
             generation: Arc::new(FrozenResources::new(prepared.generation)),
             scripts_off: prepared.scripts_off,
             freshness: prepared.freshness,

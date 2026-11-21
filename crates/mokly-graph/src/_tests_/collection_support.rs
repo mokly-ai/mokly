@@ -17,6 +17,7 @@ use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::{RenderCache, RenderCacheMock};
+use crate::collection::ComparisonCollectorMock;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::graph::Graph;
 use crate::key::NodeKey;
@@ -24,7 +25,7 @@ use crate::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use crate::resource_inputs::ResourceInputsMock;
 use crate::session::{Session, SessionInput};
 use crate::styles::Matchers;
-use crate::types::DocumentPlan;
+use crate::types::{DocumentPlan, RenderGeneration};
 use crate::workers::RenderWorkersMock;
 
 pub(super) struct Probe {
@@ -53,6 +54,17 @@ pub(super) fn probe(count: usize) -> Probe {
     probe_with_closures(count, Arc::new(MemoryClosureInputs::default()))
 }
 
+pub(super) fn warm(probe: &Probe) {
+    probe.session.render_all().unwrap();
+    let mut collector = Unimock::new(
+        ComparisonCollectorMock::collect
+            .each_call(matching!(_, _))
+            .answers(&|_, _, _| Ok(())),
+    );
+    probe.session.collect_comparison(&mut collector).unwrap();
+    probe.renders.lock().unwrap().clear();
+}
+
 pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>) -> Probe {
     probe_with_cache(count, closures, None)
 }
@@ -75,7 +87,7 @@ pub(super) fn probe_with_cache(
         ResourceInputsMock::paths.each_call(matching!(_)).returns(BTreeMap::new()),
         RenderWorkersMock::run.each_call(matching!(_, _)).answers(&|_, routes, worker| routes.iter().map(|route| worker.validate(route)).collect()).at_least_times(0),
         RenderWorkersMock::cancelled.each_call(matching!()).answers_arc(Arc::new(move |_| check.load(Ordering::SeqCst))).at_least_times(0),
-        RenderWorkersMock::comparison_parallelism.each_call(matching!()).returns(2_usize),
+        RenderWorkersMock::capture_parallelism.each_call(matching!()).returns(2_usize),
         ComposerMock::compose.each_call(matching!(_)).answers_arc(Arc::new(move |_, request| {
             let path = &request.entry.metadata.path;
             recorded.lock().unwrap().push(path.clone());

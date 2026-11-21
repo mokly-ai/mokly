@@ -32,16 +32,21 @@ and the stream default prepares and consumes one index at a time.
 
 ## Wrapper forwards
 
-Wrappers forward `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to their inner
-generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
-`comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
+Wrappers forward `comparison_parallelism`, `capture_parallelism`,
+`schedule_capture_window`, `schedule_comparison_tasks`, and
+`schedule_comparison_stream` to their inner generation. A capture wrapper and
+a checking wrapper keep these forwards too. `RenderWorkers` wrappers forward
+`comparison_parallelism`, `capture_parallelism`, `capture_window`,
+`prefetch_tasks`, `comparison_tasks`, and `comparison_stream` in the same way.
 Without these forwards, the comparison runs one view at a time. A scheduled
 task still calls the wrapper's own methods, so the wrapper's checks stay
-active. `RenderKeys::build_with_workers` also runs one key job for each
-exporting module through `comparison_tasks` on the shared render workers.
-Without the `comparison_tasks` forward, the key calculation runs one module at
-a time.
+active. A wrapper that checks capture inputs wraps the `ComparisonEncoder` of
+`ComparisonCollector::encoder`, so its checks run on the worker before the
+encoding. It forwards `ComparisonCollector::remaining`, so the waiting views
+keep the same byte bound. `RenderKeys::build_with_workers` also runs one key
+job for each exporting module through `comparison_tasks` on the shared render
+workers. Without the `comparison_tasks` forward, the key calculation runs one
+module at a time.
 
 `RenderWorkers` wrappers also forward `background` to their inner workers.
 Without that forward, the trait default runs the lookup of a Serve background

@@ -265,7 +265,7 @@
   - The reuse check of the sidecar checks consumed file digests and
     directory lists with four workers through `everyInput`, at
     `packages/mokly/src/sidecar/file-digests.ts:52`.
-  - `plans/follow-ups/capture-batch-window.md` records a similar scheduling
+  - [plans/follow-ups/capture-batch-window.md](https://github.com/mokly-ai/mokly/blob/fb8b20f77d65642602f773e322ee5e6e9846a27f/plans/follow-ups/capture-batch-window.md) records a similar scheduling
     cost of fixed batches when Mokly captures rendered views.
 - **Related:**
   - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code: a
