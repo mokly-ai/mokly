@@ -1,11 +1,30 @@
 ---
 /**
  * Frame 02 Review of the home: the module's copy and its labelled frame,
- * the root of the `review` demo. The frame is empty: it does not draw the
- * demo yet.
+ * the root of the `review` demo. On desktop the frame sits left and the
+ * copy right: the frame's wash holds the desktop pricing artboards, light
+ * and dark, behind the phone one, whose PriceCard is selected with its 16px
+ * padding redline and Maya's pin, and the comment thread spills out of the
+ * wash onto the canvas. A phone stacks the copy, the wash with the phone
+ * artboard alone, and the thread. The copy is the page's own text; the
+ * rest of the frame is a depiction, hidden from assistive technology.
+ *
+ * The demo plays once in view: the selection draws, the pin drops in, the
+ * two messages appear one after the other, and Maya's cursor comes to rest
+ * near Approve. The built page draws its finished state, the thread waiting
+ * for Approve. The wash is in `src/styles/home-modules.css`; the layout and
+ * the demo are in `src/styles/home-review.css`.
  */
+import AcmePricingDesktop from "./acme/AcmePricingDesktop.astro";
+import AcmePricingPhone from "./acme/AcmePricingPhone.astro";
+import Artboard from "./Artboard.astro";
+import CardSelection from "./CardSelection.astro";
 import ModuleFrame from "./ModuleFrame.astro";
 import ModuleText from "./ModuleText.astro";
+import Thread from "./Thread.astro";
+
+import "../../styles/home-modules.css";
+import "../../styles/home-review.css";
 ---
 
 <article
@@ -23,5 +42,21 @@ import ModuleText from "./ModuleText.astro";
     layout changes. Approve when it is right, in step with the pull request
     review.
   </ModuleText>
-  <ModuleFrame demo="review" name="02 Review" />
+  <ModuleFrame demo="review" name="02 Review">
+    <div aria-hidden="true" class="site-detail">
+      <div class="site-home-review-desk">
+        <Artboard device="desktop" name="pricing">
+          <AcmePricingDesktop padding={16} tone="secondary" />
+        </Artboard>
+        <Artboard dark device="desktop" name="pricing">
+          <AcmePricingDesktop dark padding={16} tone="secondary" />
+        </Artboard>
+      </div>
+      <Artboard class="site-home-review-phone" device="phone" name="pricing">
+        <AcmePricingPhone padding={16} tone="secondary" />
+        <CardSelection padding="16" pin slot="overlay" />
+      </Artboard>
+    </div>
+    <Thread />
+  </ModuleFrame>
 </article>
