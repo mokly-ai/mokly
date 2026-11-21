@@ -1,0 +1,219 @@
+/* The frames of the HTML sample band that src/docs/sample-stage.ts draws,
+   one for each view: its label, its screen and its selection with the size
+   tag of the view's full size. The screen holds the device chrome and the
+   view's own document, a srcdoc frame at its viewport width, which a
+   transform scales down to the frame. The Mobile view is drawn at the canvas
+   zoom of 60%; the Desktop view scales with its frame. Both keep the
+   browser's default style, because the sample has no CSS, on the light paper
+   and ink of the mockup's drawn frames in both schemes.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-sample.css and the frame rules of docs-responsive.css and
+   docs-steps.css. The view, its document and the mark of a lit element are
+   the site's own parts, because the mockup draws the body in place of a
+   frame. The mobile composition is the base rule, the desktop one follows
+   at 768px, and the stacked step follows it as ranges from 768px. */
+
+.site-docs-sample-frame {
+  position: relative;
+  width: 234px;
+}
+
+/* The Mobile view at the canvas zoom: the phone's status band, then the
+   view, on the paper and the ink that a page without CSS takes in both
+   schemes; the Desktop view's window shares the paper and the ink */
+
+.site-docs-sample-screen {
+  background: var(--mk-color-surface);
+  border-radius: 15.6px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-text);
+  font-size: 9.6px;
+  height: 506.4px;
+  overflow: hidden;
+}
+
+:root[data-color-scheme="dark"] .site-docs-sample-screen,
+:root[data-color-scheme="dark"] .site-docs-sample-address {
+  background: var(--mk-color-text);
+  color: var(--mk-color-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-docs-sample-screen,
+  :root:not([data-color-scheme="light"]) .site-docs-sample-address {
+    background: var(--mk-color-text);
+    color: var(--mk-color-background);
+  }
+}
+
+.site-docs-sample-status {
+  align-items: center;
+  display: flex;
+  font-size: 8.1px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-semibold);
+  height: 26.4px;
+  justify-content: space-between;
+  line-height: 1;
+  padding: 7.2px 16.8px 0 19.2px;
+}
+
+.site-docs-sample-glyphs {
+  align-items: center;
+  display: flex;
+  gap: 3px;
+}
+
+.site-docs-sample-glyphs span {
+  background: currentColor;
+  display: block;
+  height: 6.6px;
+}
+
+.site-docs-sample-glyphs span:nth-child(1) {
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  width: 9.6px;
+}
+
+.site-docs-sample-glyphs span:nth-child(2) {
+  clip-path: polygon(50% 100%, 0 20%, 100% 20%);
+  width: 9px;
+}
+
+.site-docs-sample-glyphs span:nth-child(3) {
+  border-radius: 2px;
+  width: 13.8px;
+}
+
+/* The view: the document under the device chrome, which takes the rest of
+   the screen, as the shell's phone frame lays out its screen. The document
+   keeps its viewport's width, 390px under the 44px status band, and the
+   transform scales its box to the view, 60% on the Mobile view, so the
+   frame lays out the scaled size. The document takes no pointer: the sample
+   island reads the element under the pointer. It keeps the light scheme of
+   the view, so the browser draws no canvas of its own behind it and the
+   screen's paper shows through. */
+
+.site-docs-sample-view {
+  height: 480px;
+  position: relative;
+}
+
+.site-docs-sample-document {
+  border: 0;
+  color-scheme: light;
+  display: block;
+  height: 800px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  transform: scale(0.6);
+  transform-origin: 0 0;
+  width: 390px;
+}
+
+/* The mark of the lit element, which the sample island places over the
+   element's content: its selection and the tag of its tag name */
+
+.site-docs-sample-mark {
+  pointer-events: none;
+  position: absolute;
+}
+
+.site-docs-sample-mark > .site-sel {
+  inset: -3px -4px;
+}
+
+.site-docs-sample-tag {
+  left: calc(100% + 10px);
+  position: absolute;
+  top: -1.5px;
+}
+
+/* The Desktop view: the 1280 × 800 view in the browser window, scaled to
+   the frame's width. Each length inside it is a share of that width, so
+   the window keeps its proportions at every size. The bar and its three
+   lights, one dot and two copies, take tints of the view's ink, as the
+   Mobile view's status glyphs do, so the window stays light in both
+   schemes. Below the 40px bar the document keeps 1280px by 760px, and the
+   scale is the frame's width over 1280px: tan(atan2()) divides one length
+   by another. */
+
+.site-docs-sample-frame--desktop {
+  container-type: inline-size;
+  margin-inline: auto;
+  width: min(100%, 768px);
+}
+
+.site-docs-sample-screen--desktop {
+  aspect-ratio: 1280 / 800;
+  border-radius: 0.625cqw;
+  font-size: 1.25cqw;
+  height: auto;
+}
+
+.site-docs-sample-browser {
+  align-items: center;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 0.9375cqw;
+  height: 3.125cqw;
+  padding: 0 1.09375cqw;
+}
+
+.site-docs-sample-lights {
+  background: currentColor;
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    1.328125cqw 0,
+    2.65625cqw 0;
+  color: color-mix(in srgb, currentColor 30%, transparent);
+  flex: none;
+  height: 0.859375cqw;
+  margin-right: 2.65625cqw;
+  width: 0.859375cqw;
+}
+
+.site-docs-sample-address {
+  background: var(--mk-color-surface);
+  border-radius: 0.46875cqw;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+  height: 2.03125cqw;
+  width: 40.625cqw;
+}
+
+.site-docs-sample-screen--desktop .site-docs-sample-view {
+  height: 59.375cqw;
+}
+
+.site-docs-sample-screen--desktop .site-docs-sample-document {
+  height: 760px;
+  transform: scale(tan(atan2(100cqw, 1280px)));
+  width: 1280px;
+}
+
+/* Beside the code, the Desktop view's frame keeps the Mobile view's column,
+   so the code does not move */
+
+@media (min-width: 768px) {
+  .site-docs-sample-frame--desktop {
+    margin-inline: 0;
+    width: 234px;
+  }
+}
+
+/* Stacked, the Desktop view's frame takes the band's width, up to the canvas
+   zoom of 60% */
+
+@media (min-width: 768px) and (max-width: 1169px),
+  (min-width: 1280px) and (max-width: 1429px) {
+  .site-docs-sample-frame--desktop {
+    margin-inline: auto;
+    width: min(100%, 768px);
+  }
+}

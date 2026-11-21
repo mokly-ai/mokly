@@ -1,7 +1,5 @@
 # Public Site
 
-Status: The home and changelog pages do not read as the depicted design file yet, and the site does not have the home's Download for Mac and hidden depictions. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the changelog.
-
 This contract defines the public Mokly website: the marketing home, the
 documentation, the changelog, the pricing page and the legal documents. The
 site is built from this repository and deployed as static files. Every page

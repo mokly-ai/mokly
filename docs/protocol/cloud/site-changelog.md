@@ -1,7 +1,5 @@
 # Site Changelog
 
-Status: The changelog does not have Version history, the timeline, the note filter, the release frames with pinned breaking changes and upgrade notes, or Earlier releases yet. [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds them.
-
 This is the changelog sub-contract of [Site](./site.md). The page reads as the
 version history of the depicted design file. [Site design](./site-design.md)
 owns its look, and [Site mockups](./site-mockups.md) owns the depicted release

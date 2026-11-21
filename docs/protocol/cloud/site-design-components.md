@@ -1,7 +1,5 @@
 # Site Design Components
 
-Status: The tags of a selection, the size tag, the redline, the section box, the cursor and the changelog document frames are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the tags, redlines, section boxes and cursors that the home draws, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the changelog frames.
-
 This is the components sub-contract of [Site design](./site-design.md), which
 owns the roles, the type, the layout and the brand. [Site](./site.md) owns the
 contents and the order of the header, the menu and the footer.

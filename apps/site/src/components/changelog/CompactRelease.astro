@@ -1,0 +1,50 @@
+---
+/**
+ * A compact release frame of Earlier releases: its anchor label, the
+ * version, the date, the count chips and Read release details in one row,
+ * and its notes in a closed native disclosure whose summary counts them.
+ * The notes stay in the document, so a count chip or a search reaches them.
+ * A release without notes draws no disclosure.
+ *
+ * Use: `<CompactRelease release={release} />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import FrameLabel from "../FrameLabel.astro";
+import Icon from "../Icon.astro";
+
+import { counted, noteCount } from "./facts.js";
+import ReleaseHead from "./ReleaseHead.astro";
+import ReleaseNotes from "./ReleaseNotes.astro";
+
+interface Props {
+  readonly release: PublishedRelease;
+}
+
+const { release } = Astro.props;
+const notes = noteCount(release);
+---
+
+<article
+  aria-labelledby={release.titleId}
+  class="site-release site-release--compact"
+  data-notes={counted(notes, "note")}
+  id={release.anchor}
+>
+  <FrameLabel
+    icon="hash"
+    name={`v${release.version} · ${release.readableDate}`}
+  />
+  <ReleaseHead compact release={release} />
+  {(notes > 0 || release.upgrade.length > 0) && (
+    <details class="site-release-details site-release-more">
+      <summary class="site-button site-button--secondary site-release-summary site-release-toggle">
+        <span class="site-release-when-closed">
+          Show {counted(notes, "note")}
+        </span>
+        <span class="site-release-when-open">Hide notes</span>
+        <Icon class="site-release-chevron" name="chevronDown" size={15} />
+      </summary>
+      <ReleaseNotes release={release} />
+    </details>
+  )}
+</article>

@@ -1,7 +1,5 @@
 # Site Design Pages
 
-Status: The Canvas home and changelog are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the changelog.
-
 This is the page sub-contract of [Site design](./site-design.md). It fixes
 the look of the home, the changelog and the pricing page from the parts of
 [Site design components](./site-design-components.md). [Site](./site.md) owns

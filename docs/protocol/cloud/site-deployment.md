@@ -1,7 +1,5 @@
 # Site Deployment
 
-Status: The deploy jobs still build the mockups before the site, and they read the repository variable `SITE_STAGE_PR` for the home stage label. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) removes the mockups build and `SITE_STAGE_PR` with the stage.
-
 This is the deployment sub-contract of [Site delivery](./site-delivery.md).
 The maintainer steps that create the Pages project, attach the production
 domain and verify the legacy redirects are in the

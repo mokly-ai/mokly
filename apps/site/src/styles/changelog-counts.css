@@ -1,0 +1,82 @@
+/* The count chips of a release frame: one per group, each a link to that
+   group, and one for the upgrade notes. The rules match the count rules of
+   docs/mockups/styles/site/changelog-release.css and
+   changelog-responsive.css; changelog.css says how the site writes the
+   compositions, and changelog-earlier.css draws the chips that the filter
+   quiets. */
+
+/* The count chips: one per group, each a link to that group; the link's
+   44px box centres its 32px chip */
+
+.site-release-counts {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  list-style: none;
+  padding: 0 20px 16px;
+}
+
+.site-release-count {
+  align-items: center;
+  border-radius: 8px;
+  display: inline-flex;
+  min-height: var(--mk-layout-control-min);
+  text-decoration: none;
+}
+
+.site-release-count .site-chip {
+  border-radius: 8px;
+  font-size: 0.84375rem;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 11px 0 9px;
+  transition: box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-release-count .site-chip--neutral {
+  background: var(--mk-color-surface-muted);
+}
+
+.site-release-count .site-chip--neutral svg {
+  color: var(--mk-color-text-muted);
+}
+
+.site-release-count .site-chip--changed {
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-warning) 34%, transparent);
+}
+
+.site-release-count b {
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+}
+
+.site-release-count .site-chip--changed b {
+  color: inherit;
+}
+
+.site-release-count:hover .site-chip--neutral {
+  box-shadow: inset 0 0 0 1px
+    color-mix(
+      in srgb,
+      var(--mk-color-border-strong) 45%,
+      var(--mk-color-border)
+    );
+  color: var(--mk-color-text);
+}
+
+.site-release-count:hover .site-chip--changed {
+  box-shadow: inset 0 0 0 1px var(--mk-color-warning);
+}
+
+/* The desktop composition: the wide frame's chips */
+
+@media (min-width: 768px) {
+  .site-release-counts {
+    gap: 0 8px;
+    padding: 0 40px 22px;
+  }
+}

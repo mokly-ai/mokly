@@ -1,7 +1,5 @@
 # Site Delivery
 
-Status: The drawn home demos are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build.
-
 This contract fixes how the public site is built, tested and deployed. The
 site package, its checks and its workflow must satisfy every rule here.
 Routes are in [Site](./site.md); the repository gate is in

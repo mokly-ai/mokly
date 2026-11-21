@@ -1,7 +1,5 @@
 # Site Docs Layout
 
-Status: The HTML sample band is not drawn yet. [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws it.
-
 This is the layout sub-contract of [Site docs](./site-docs.md). Each docs page
 is a page of a design file: the section tree is the Layers panel, the
 document is a page frame on the canvas, and the page's facts and outline form

@@ -1,7 +1,5 @@
 # Site Home Copy
 
-Status: The home does not have the hero, the demo spread, the Specs panel, the feature frames or the open-foundation frame of this page yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds them.
-
 This is the approved home-copy sub-contract of [Site](./site.md). The
 [source rule](./site.md#boundary) lets the home draw the demo app, and
 [Site design](./site-design.md) owns the look.

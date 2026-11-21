@@ -1,0 +1,244 @@
+/* The changelog timeline, a keyframe track with its ruler, keyframes,
+   legend and playhead. The rules match the timeline rules of
+   docs/mockups/styles/site/changelog-timeline.css and
+   changelog-responsive.css; changelog.css says how the site writes the
+   compositions. */
+
+/* The timeline frame */
+
+.site-changelog-timeline {
+  background: var(--mk-color-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  font-size: 0.75rem;
+  margin-top: 28px;
+  padding: 12px 14px 14px;
+}
+
+.site-changelog-timeline-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.site-changelog-timeline-title {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mk-font-semibold);
+  gap: 7px;
+}
+
+.site-changelog-timeline-title svg {
+  color: var(--mk-color-text-muted);
+}
+
+.site-changelog-timeline-legend {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  gap: 5px;
+  line-height: 1;
+}
+
+.site-changelog-timeline-legend .site-changelog-key {
+  margin-left: 10px;
+  position: relative;
+  translate: none;
+}
+
+.site-changelog-timeline-legend .site-changelog-key:first-child {
+  margin-left: 0;
+}
+
+/* The ruler: a tick and a name for each month, a tick for each week */
+
+.site-changelog-timeline-area {
+  position: relative;
+}
+
+.site-changelog-ruler {
+  border-bottom: 1px solid var(--mk-color-border);
+  height: 24px;
+  position: relative;
+}
+
+.site-changelog-tick {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  bottom: 0;
+  height: 5px;
+  position: absolute;
+  width: 1px;
+}
+
+.site-changelog-tick--month {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-text-muted) 55%,
+    var(--mk-color-border)
+  );
+  height: 24px;
+}
+
+.site-changelog-tick b {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  left: 6px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  position: absolute;
+  text-transform: uppercase;
+  top: 0;
+}
+
+/* The keyframes on their lanes, joined by a bar from the oldest release to
+   the newest. A keyframe is a diamond: filled, hollow for a patch, amber for
+   breaking changes and green for the release in view. One page serves both
+   compositions, so each keyframe carries its lane in each, and the track
+   its height in each, as --lane-narrow, --lane-wide, --lanes-narrow and
+   --lanes-wide in its style: an 18px lane, the first centred 16px down. */
+
+.site-changelog-keys {
+  margin-top: 4px;
+  position: relative;
+}
+
+.site-changelog-timeline-area > .site-changelog-keys {
+  height: calc(var(--lanes-narrow) * 18px + 14px);
+}
+
+.site-changelog-keys > .site-changelog-key {
+  top: calc(16px + var(--lane-narrow) * 18px);
+}
+
+.site-changelog-bar {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  border-radius: 1px;
+  height: 1.5px;
+  position: absolute;
+  top: 16px;
+  translate: 0 -50%;
+}
+
+.site-changelog-key {
+  display: inline-grid;
+  height: 18px;
+  place-items: center;
+  position: absolute;
+  translate: -50% -50%;
+  width: 18px;
+}
+
+.site-changelog-key::before {
+  background: var(--mk-color-text-muted);
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--mk-color-surface);
+  content: "";
+  height: 10px;
+  rotate: 45deg;
+  width: 10px;
+}
+
+.site-changelog-key--patch::before {
+  background: var(--mk-color-surface);
+  box-shadow:
+    inset 0 0 0 1.5px var(--mk-color-text-muted),
+    0 0 0 2px var(--mk-color-surface);
+  height: 8px;
+  width: 8px;
+}
+
+.site-changelog-key--breaking::before {
+  background: var(--mk-color-warning);
+}
+
+.site-changelog-key--current::before {
+  background: var(--mk-color-signal);
+  box-shadow:
+    0 0 0 2px var(--mk-color-surface),
+    0 0 0 4.5px color-mix(in srgb, var(--mk-color-signal) 45%, transparent);
+  scale: 1.2;
+}
+
+/* The playhead on the release in view, with its version tag */
+
+.site-changelog-playhead {
+  background: var(--mk-color-signal);
+  bottom: 0;
+  margin-left: -0.75px;
+  position: absolute;
+  top: 10px;
+  width: 1.5px;
+  z-index: 2;
+}
+
+.site-changelog-playhead b {
+  background: var(--mk-color-signal);
+  border-radius: 4px;
+  color: var(--mk-color-on-signal);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  height: 18px;
+  left: 50%;
+  line-height: 18px;
+  padding: 0 6px;
+  position: absolute;
+  top: 0;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+/* The desktop composition: the wider track and its lanes */
+
+@media (min-width: 768px) {
+  .site-changelog-timeline {
+    margin-top: var(--mk-space-10);
+    padding: 12px 18px 16px;
+  }
+
+  .site-changelog-timeline-legend {
+    font-size: 0.71875rem;
+    gap: 6px;
+  }
+
+  .site-changelog-timeline-area > .site-changelog-keys {
+    height: calc(var(--lanes-wide) * 18px + 14px);
+  }
+
+  .site-changelog-keys > .site-changelog-key {
+    top: calc(16px + var(--lane-wide) * 18px);
+  }
+}
+
+/* Below 830px the keyframes step down, so that releases two days apart
+   still stand clear */
+
+@media (min-width: 768px) and (max-width: 829px) {
+  .site-changelog-keys .site-changelog-key::before {
+    height: 8px;
+    width: 8px;
+  }
+
+  .site-changelog-keys .site-changelog-key--patch::before {
+    height: 6px;
+    width: 6px;
+  }
+}

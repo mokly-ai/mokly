@@ -1,7 +1,5 @@
 # CI Verification
 
-Status: The `cloud-site` suite still builds the mockups before the site checks. [Milestone 5](../../plans/canvas-redesign.md#milestone-5-site-home) removes that build.
-
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository gate. The local

@@ -1,7 +1,5 @@
 # Repository TypeScript Layout
 
-Status: The site does not draw its home demos as static components yet; its home stage reads the dogfood catalogue. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) draws the demos and removes the stage.
-
 This is the TypeScript npm workspace sub-contract of
 [Repository layout](./repository-layout.md): the npm workspace, its packages
 and their pins, the generated API client, the app layout, and the
