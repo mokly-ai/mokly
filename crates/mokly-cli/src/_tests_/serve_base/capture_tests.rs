@@ -116,6 +116,7 @@ fn kept_reader_survives_origin_replacement_and_later_captures_after_one_running_
                 Arc::new(move |_, _| {
                     calls.prepares.fetch_add(1, Ordering::Relaxed);
                     Ok(PreparedBase {
+                        prefetch: None,
                         generation: generation.clone(),
                         scripts_off: false,
                         freshness: Some(inputs(false)),

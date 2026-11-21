@@ -99,11 +99,13 @@ fn reads(count: usize) -> (usize, usize, usize) {
             })),
     )));
     let store = CachedDocuments::new(cache, "current".into());
+    assert!(!store.contains(&records[0].key));
     assert!(matches!(
         DocumentBackend::initialize(&store),
         ReadOutcome::Miss
     ));
     for record in &records {
+        assert!(store.contains(&record.key));
         let ReadOutcome::Hit(artifact) = store.load(&record.key) else {
             panic!("retained document")
         };
@@ -143,6 +145,7 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
             .answers_arc(Arc::new(move |_, _| Ok(entry(bytes.clone())))),
     )));
     let store = CachedDocuments::new(cache, "current".into());
+    assert!(!store.contains(&documents[0].key));
     assert!(matches!(store.load(&documents[0].key), ReadOutcome::Miss));
     assert!(matches!(
         DocumentBackend::initialize(&store),
@@ -160,6 +163,13 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
         panic!("explicit preparation must recover the still-enabled store")
     };
     assert_eq!(artifact.bytes, b"complete");
+    assert!(store.contains(&documents[0].key));
+    {
+        let _index = store.index.lock().unwrap();
+        assert!(!store.contains(&documents[0].key));
+    }
+    store.enabled.store(false, Ordering::Release);
+    assert!(!store.contains(&documents[0].key));
 }
 
 #[test]

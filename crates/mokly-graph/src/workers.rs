@@ -13,6 +13,7 @@ use rayon::prelude::*;
 
 use crate::background::{BackgroundRead, BackgroundWorker};
 use crate::cache::Artifact;
+use crate::capture_window::{self, CaptureConsumer};
 use crate::closure::Closure;
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::{GraphError, InternalError, Result};
@@ -46,6 +47,7 @@ impl fmt::Debug for dyn ComparisonWorker + '_ {
 }
 
 /// A document action scheduled on a standard worker thread.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ArtifactWorkerMock))]
 pub trait ArtifactWorker: Send + Sync {
     /// Compose and validate one document without scheduling another worker.
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>>;
@@ -101,6 +103,27 @@ impl fmt::Debug for dyn StylesheetWorker + '_ {
 /// Worker scheduling is an injectable runtime boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
+    /// Run a bounded capture window and join every admitted task before returning.
+    fn capture_window(
+        &self,
+        _limit: usize,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        capture_window::sequential(task, consumer);
+    }
+    /// Capacity of capture inputs, including the runtime's sidecar bound.
+    fn capture_parallelism(&self) -> usize {
+        self.comparison_parallelism()
+    }
+    /// Run early document jobs on the same workers as bounded capture.
+    fn prefetch_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.capture_window(
+            self.capture_parallelism(),
+            task,
+            &mut capture_window::All { count },
+        );
+    }
     /// Run one background lookup on an existing worker and retain its typed outcome.
     fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
         worker.read(route)
@@ -118,17 +141,9 @@ pub trait RenderWorkers: Send + Sync {
     fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
         comparison_stream::sequential(task, consumer);
     }
-    /// Existing capacity for bounded comparison batches.
+    /// Worker capacity for bounded comparison preparation.
     fn comparison_parallelism(&self) -> usize {
         1
-    }
-    /// Retain input order and failures while collecting a bounded caller-owned batch.
-    fn comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        routes.iter().map(|route| worker.input(route)).collect()
     }
     /// Whether the command has cancelled preparation and queued document work.
     fn cancelled(&self) -> bool {
@@ -175,6 +190,14 @@ impl ThreadWorkers {
 }
 
 impl RenderWorkers for ThreadWorkers {
+    fn capture_window(
+        &self,
+        limit: usize,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        capture_window::parallel(&self.pool, limit, task, consumer);
+    }
     fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
         let context = WorkerContext::current();
         self.pool
@@ -193,19 +216,6 @@ impl RenderWorkers for ThreadWorkers {
     }
     fn comparison_parallelism(&self) -> usize {
         self.pool.current_num_threads()
-    }
-    fn comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        let context = WorkerContext::current();
-        self.pool.install(|| {
-            routes
-                .par_iter()
-                .map(|route| context.in_scope(|| worker.input(route)))
-                .collect()
-        })
     }
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
         let context = WorkerContext::current();

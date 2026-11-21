@@ -3,12 +3,12 @@
 use std::path::PathBuf;
 
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::error::{GraphError, Result};
-use mokly_graph::types::ComparisonDocument;
 
 struct ReleasedInputs;
 impl ComparisonCollector for ReleasedInputs {
-    fn collect(&mut self, _: &str, _: ComparisonDocument) -> Result<()> {
+    fn collect(&mut self, _: &str, _: EncodedComparisonDocument) -> Result<()> {
         Ok(())
     }
 }
@@ -40,7 +40,7 @@ fn collected_validation_retains_the_same_public_files_as_document_capture() {
 fn a_failed_collection_keeps_its_files_private() {
     struct RejectedInputs;
     impl ComparisonCollector for RejectedInputs {
-        fn collect(&mut self, _: &str, _: ComparisonDocument) -> Result<()> {
+        fn collect(&mut self, _: &str, _: EncodedComparisonDocument) -> Result<()> {
             Err(GraphError::InputsChanged {
                 path: "collector".into(),
             })

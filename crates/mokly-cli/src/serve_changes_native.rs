@@ -23,9 +23,11 @@ use mokly_server::changes::{ChangeCancellation, ChangeProgress};
 use mokly_server::error::{Result, ServerError};
 
 use crate::base_dependencies::NativeDependencies;
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::serve_base::ServeBase;
 use crate::serve_base_cancel::{BaseLifetime, PreparingBase};
+use crate::serve_capture_workers;
 use crate::serve_changes::Source;
 use crate::serve_changes_base::{
     AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
@@ -118,7 +120,10 @@ impl Source {
             generation: cancel.clone(),
         });
         let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::new(cancellation.clone()));
-        let runtime = self.classification_runtime(lifetime.clone());
+        let runtime = match self.classification_runtime(lifetime.clone()) {
+            Ok(runtime) => runtime,
+            Err(source) => return Err(ServerError::Render { source }),
+        };
         let freshness: Arc<dyn Freshness> = Arc::new(FreshnessChecks {
             working: Arc::new(SystemWorkingInputs),
             installs: Arc::new(SystemInstallInputs {
@@ -148,6 +153,7 @@ impl Source {
                 inner: Arc::new(AttemptBase {
                     warnings: self.pending.clone(),
                     inner: Arc::new(NativeBase {
+                        admission: Arc::new(ImmediateBaseRenders),
                         runtime,
                         cancellation: lifetime.clone(),
                         freshness: Some(freshness),
@@ -226,16 +232,19 @@ impl Source {
     pub(super) fn classification_runtime(
         &self,
         cancellation: Arc<dyn BaseLifetime>,
-    ) -> Arc<Runtime> {
+    ) -> mokly_graph::error::Result<Arc<Runtime>> {
         let mut runtime = (*self.services.runtime).clone();
         runtime.workers = Arc::new(CancellableWorkers {
             inner: Arc::new(SerialStylesheets {
-                inner: runtime.workers.clone(),
+                inner: serve_capture_workers::workers(
+                    runtime.workers.clone(),
+                    self.services.sidecars.clone(),
+                )?,
             }),
             cancellation: cancellation.clone(),
         });
         runtime.pool = self.services.sidecars.pool(Some(cancellation));
-        Arc::new(runtime)
+        Ok(Arc::new(runtime))
     }
 }
 

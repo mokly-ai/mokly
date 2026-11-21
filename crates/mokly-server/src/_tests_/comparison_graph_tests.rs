@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::collection::ComparisonCollectorMock;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::types::{
@@ -215,18 +216,22 @@ fn validated_collection_preserves_frozen_document_and_resource_checks() {
                 collector.summary(&summary);
                 collector.collect(
                     "sample/index.html",
-                    ComparisonDocument {
-                        artifact: Arc::new(Artifact {
-                            bytes: b"before".to_vec(),
-                            content_type: "text/html".into(),
-                            document: None,
-                            fragment: None,
-                        }),
-                        closure: Closure {
-                            edges: BTreeMap::from([("static/image.png".into(), vec![])]),
-                            ..Default::default()
+                    EncodedComparisonDocument::encode(
+                        "sample/index.html",
+                        ComparisonDocument {
+                            artifact: Arc::new(Artifact {
+                                bytes: b"before".to_vec(),
+                                content_type: "text/html".into(),
+                                document: None,
+                                fragment: None,
+                            }),
+                            closure: Closure {
+                                edges: BTreeMap::from([("static/image.png".into(), vec![])]),
+                                ..Default::default()
+                            },
                         },
-                    },
+                        collector.encoder().as_ref(),
+                    )?,
                 )?;
                 Ok(summary)
             }),
@@ -247,7 +252,7 @@ fn validated_collection_preserves_frozen_document_and_resource_checks() {
     ))));
     let mut collector = Unimock::new((
         ComparisonCollectorMock::summary.next_call(matching!((summary) if summary.documents == 1)).returns(()),
-        ComparisonCollectorMock::collect.next_call(matching!((route, input) if *route == "sample/index.html" && input.artifact.bytes == b"before")).returns(Ok(())),
+        ComparisonCollectorMock::collect.next_call(matching!((route, input) if *route == "sample/index.html" && input.document.restore().unwrap().bytes == b"before")).returns(Ok(())),
     ));
     assert_eq!(
         graph.collect_comparison(&mut collector).unwrap().documents,

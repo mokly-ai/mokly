@@ -38,6 +38,7 @@ fn equal_classifications_prepare_once_and_key_moves_release_before_preparation()
                             .is_some(),
                     );
                     Ok(PreparedBase {
+                        prefetch: None,
                         generation: Arc::new(Unimock::new(
                             RenderGenerationMock::catalogue
                                 .some_call(matching!())
