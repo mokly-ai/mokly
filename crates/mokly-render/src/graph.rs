@@ -12,7 +12,7 @@ use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
 use mokly_graph::key::NodeKey;
-use mokly_graph::render_inputs::{RenderInputs, RenderKeys};
+use mokly_graph::render_inputs::RenderInputs;
 use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
@@ -144,7 +144,7 @@ impl JavaScriptGraph {
                     Some((source.handle.clone(), entry.metadata.source.path.clone()))
                 })
                 .collect();
-            let keys = Arc::new(RenderKeys::build_with_workers(
+            let keys = self.runtime.render_keys(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
@@ -153,8 +153,7 @@ impl JavaScriptGraph {
                     declarations: &declaring,
                 },
                 NodeKey(fingerprint),
-                self.runtime.workers.as_ref(),
-            ));
+            );
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
                 Arc::new(Fragments {

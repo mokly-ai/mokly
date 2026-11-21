@@ -9,6 +9,7 @@ writes no files.
 ## Responsibilities
 
 - Compute content-addressed node keys before document rendering.
+- Copy an earlier render input key when all of its inputs stayed equal.
 - Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
   tier for evicted documents.
 - Encode documents losslessly for the compact tier, the comparison capture,
@@ -65,6 +66,18 @@ including when a prop reaches it through another component. One immutable
 routing inventory serves each generation. Opaque entries share its complete
 key. Explicit case spellings, moved aliases, and missing targets keep their
 requested identities in the document key.
+
+`RenderKeys::build_reusing_with_workers` gives the same keys as
+`RenderKeys::build` and keeps compact facts about the inputs of each key. With
+earlier keys as `previous`, it copies an earlier key only when every input of
+that key is equal, and it calculates the other keys. With `None`, or with
+earlier keys that hold no facts, it calculates every key and seeds the facts.
+The facts live as long as their keys and keep no module graph, earlier keys,
+or lease. `RenderKeys::build` and `RenderKeys::build_with_workers` keep no
+facts. `RenderKeys::reuse_facts_bytes` reports the size of the facts value and
+the capacities of its vectors and strings. It leaves out allocator headers and
+the key map, and it is zero without facts. The `render.inputs` span records
+the `reused` and `recomputed` key counts and that size as `reuse_bytes`.
 
 `MemoryCache` implements `dyn RenderCache`. It keeps rendered artifacts in a
 full tier and evicted documents in a lossless compact tier, under one total
@@ -130,9 +143,10 @@ generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
 Without these forwards, the comparison runs one view at a time. A scheduled
 task still calls the wrapper's own methods, so the wrapper's checks stay
 active. `RenderKeys::build_with_workers` also runs one key job for each
-exporting module through `comparison_tasks` on the shared render workers.
-Without the `comparison_tasks` forward, the key calculation runs one module at
-a time.
+exporting module that gets its own key, through `comparison_tasks` on the
+shared render workers. `RenderKeys::build_reusing_with_workers` runs a job only
+for each such module whose key it does not copy. Without the
+`comparison_tasks` forward, the key calculation runs one module at a time.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
@@ -255,6 +269,11 @@ retention disabled.
   closure, resolution files, bindings, and bundle environment.
   `RenderKeys::build_with_workers` calculates the same keys as
   `RenderKeys::build` on injected `RenderWorkers`.
+  `RenderKeys::build_reusing_with_workers` also keeps reuse facts and copies
+  each unchanged key from the `previous` keys. `RenderKeys::reuse_facts_bytes`
+  reports the bytes of those facts. The private `render_preparation` module
+  encodes the records of every builder, and the private `render_reuse` module
+  compares the facts and finds the keys to calculate again.
 - [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
   the leased closure-file records shared by equal document keys across
   generations.
@@ -292,6 +311,7 @@ retention disabled.
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Render input keys in Serve](../../docs/protocol/mokly-watch.md#invalidation-through-the-render-graph).
 - [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).

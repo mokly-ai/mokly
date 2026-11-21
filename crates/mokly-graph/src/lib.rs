@@ -45,6 +45,8 @@ pub mod render_class;
 mod render_closure;
 mod render_exporters;
 pub mod render_inputs;
+mod render_preparation;
+mod render_reuse;
 pub mod route_inventory;
 pub mod source_snapshot;
 pub mod types;

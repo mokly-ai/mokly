@@ -4,6 +4,8 @@ Status: Active. On branch `calummoore/mokly-incremental-render-keys-38ts`, no pu
 
 Serve computes every exporter key after each edit. Reuse the previous key when every input of that key remains equal. Keep the existing key format, published bytes, protocol, and render store identity. The user authorized this scope and autonomous design calls on 2026-11-20. The parent performance orchestrator owns cloud measurements and every merge.
 
+User steering, 2026-11-20: keep `3e09c6150` as the frozen base for the gate, byte proof, and parent measurement. Do not rebase. After the parent accepts the Cloud result, merge `origin/main` once and rerun the gate. Repeat the byte proof only if that merge changes graph render-key or closure code. Then open the pull request. The user authorized this one branch integration. The parent still owns the pull request merge.
+
 Contract owners:
 
 - [Watched catalogue development](../docs/protocol/mokly-watch.md#invalidation-through-the-render-graph).
@@ -57,7 +59,7 @@ Depends on: none
 
 - [x] Check the key-input contract and confirm that this change needs no protocol update.
 - [x] Run the fresh read-only options check. Merge its result into the design.
-- [ ] Validate, commit, and push this plan before implementation. Continue under the user's authorization.
+- [x] Validate, commit, and push this plan before implementation. Continue under the user's authorization.
 
 Evidence: `.context/incremental-render-keys/options-check.md`.
 
@@ -65,14 +67,14 @@ Evidence: `.context/incremental-render-keys/options-check.md`.
 
 Depends on: 1
 
-- [ ] Delegate the non-UI implementation in this workspace.
-- [ ] Write red tests first. Assert exporter jobs are avoided after an isolated edit and unchanged generation.
-- [ ] Compare incremental and full keys over generated edit sequences. Cover content, import addition and removal, moves, shared inputs, renamed exports, bindings, resolution, CSS Modules, stories, fallback transitions, and cycles.
-- [ ] Cover common-root switches, startup rechecks, missing modules that appear or disappear, declarer moves, longest handle-prefix changes, runtime manifests leaving chains, and unattributed bindings.
-- [ ] Implement compact facts, invalidation, generation lifetime, and Serve wiring.
-- [ ] Preserve full startup and base calculations. Test retention release and side isolation.
-- [ ] Update crate README entry points if needed. Keep the protocol unchanged.
-- [ ] Run targeted tests and record each added test's runtime and red assertion.
+- [x] Delegate the non-UI implementation in this workspace.
+- [x] Write red tests first. Assert exporter jobs are avoided after an isolated edit and unchanged generation.
+- [x] Compare incremental and full keys over generated edit sequences. Cover content, import addition and removal, moves, shared inputs, renamed exports, bindings, resolution, CSS Modules, stories, fallback transitions, and cycles.
+- [x] Cover common-root switches, startup rechecks, missing modules that appear or disappear, declarer moves, longest handle-prefix changes, runtime manifests leaving chains, and unattributed bindings.
+- [x] Implement compact facts, invalidation, generation lifetime, and Serve wiring.
+- [x] Preserve full startup and base calculations. Test retention release and side isolation.
+- [x] Update crate README entry points if needed. Keep the protocol unchanged.
+- [x] Run targeted tests and record each added test's runtime and red assertion.
 
 Evidence: `.context/incremental-render-keys/implementation.md`.
 
@@ -86,8 +88,8 @@ Depends on: 2
 - [ ] Measure three title edits in the current Mokly Cloud catalogue's `slug-editor.tsx` against `origin/main`. Also measure a renderer-closure edit.
 - [ ] Prove byte-identical published files on `examples/basic`, large HTML, large React, and `mokly-cloud`.
 - [ ] Compare incremental and full render keys over the real JavaScript fixtures and generated edits.
+- [ ] Audit preservation against the frozen base, commit with Conventional Commits, and push the candidate.
 - [ ] Measure retained fact bytes on `mokly-cloud`. Send the candidate SHA to the parent for its six-round A/B and ten-edit memory sessions.
-- [ ] Record the parent's speed, output, and memory results when available. Fix branch-caused failures.
 
 Evidence: `.context/incremental-render-keys/verification.md`.
 
@@ -95,8 +97,12 @@ Evidence: `.context/incremental-render-keys/verification.md`.
 
 Depends on: 3
 
-- [ ] Audit preservation, commit with Conventional Commits, and push.
-- [ ] Run `implementation-review` against `origin/main` after the push. Check each new finding. Apply its fix rounds and re-review.
+Review can run while the parent measures the frozen candidate. Integration waits for the parent's acceptance.
+
+- [ ] Run `implementation-review` against the frozen base after the push. Check each new finding. Apply its fix rounds and re-review.
+- [ ] Record the parent's speed, output, and memory results. Fix branch-caused failures.
+- [ ] After the parent accepts the Cloud result, merge `origin/main` once with the `git-merge` skill. Rerun the complete gate on the merged tree.
+- [ ] Repeat the byte proof if integration changes graph render-key or closure code. Audit, commit, and push the final tree.
 - [ ] Record any remaining findings with the required follow-up items.
 - [ ] Delete this plan under the `plans` skill. Preserve its dated calls and permalink in the pull request description.
 - [ ] Open the pull request into `main`. Watch final CI with `scripts/ci-wait.sh`. Fix branch-caused failures. Report PR and SHA. Do not merge.
