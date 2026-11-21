@@ -17,8 +17,36 @@ const HEADER_LINKS = [
   GET_STARTED_PATH,
 ];
 
-/** What the header row lists above the breakpoint and the menu below it. */
-const DESTINATIONS = ["Docs", "Changelog", "GitHub", "Get started"];
+/** What the navigation lists above the breakpoint and the menu below it. */
+const DESTINATIONS = ["Docs", "Changelog", "GitHub"];
+
+/**
+ * The banner of a documentation page as assistive technology reads it in
+ * each composition. The desktop bar also draws the file title and the
+ * people in the file, but they are depictions, so the banner holds nothing
+ * else. The search control is the bar's last control.
+ */
+const BANNER = {
+  narrow: `
+    - banner:
+      - /children: equal
+      - link "Mokly home"
+      - link "Get started"
+      - button "Menu"
+      - button "Search docs"
+  `,
+  wide: `
+    - banner:
+      - /children: equal
+      - link "Mokly home"
+      - navigation "Main":
+        - link "Docs"
+        - link "Changelog"
+        - link "GitHub"
+      - link "Get started"
+      - button "Search docs"
+  `,
+};
 
 const FOOTER_LINKS = [
   SITE_PATHS.home,
@@ -39,12 +67,15 @@ async function hrefs(anchors: Locator): Promise<string[]> {
 }
 
 /**
- * A region's anchors. The banner's are the header row's, the brand and its
- * navigation; the menu's own links are checked with the menu.
+ * A region's anchors. The banner's are the tool bar's: the brand, its
+ * navigation and Get started; the menu's own links are checked with the
+ * menu.
  */
 function anchors(page: Page, region: "banner" | "contentinfo"): Locator {
   return region === "banner"
-    ? page.getByRole("banner").locator(".site-brand, .site-nav a")
+    ? page
+        .getByRole("banner")
+        .locator(".site-brand, .site-nav a, .site-header-cta")
     : page.getByRole("contentinfo").locator("a");
 }
 
@@ -76,8 +107,10 @@ for (const region of ["banner", "contentinfo"] as const) {
 
 test("Get started opens the first Getting started guide", async ({ page }) => {
   await page.goto(SITE_PATHS.home);
-  const header = await headerDestinations(page);
-  await header.getByRole("link", { name: "Get started" }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Get started" })
+    .click();
   await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
@@ -89,6 +122,14 @@ test("the header composition follows the viewport", async ({ page }) => {
   await page.goto(SITE_PATHS.home);
   const header = page.getByRole("banner");
   await expect(header.getByRole("link", { name: "Mokly home" })).toBeVisible();
+  await expect(header.getByRole("link", { name: "Get started" })).toBeVisible();
+  // The desktop bar draws the file title of the page with its branch chip,
+  // and the people in the file.
+  for (const depiction of [/^mokly\.ai\s*—\s*Home$/, "main", "M"]) {
+    await expect(header.getByText(depiction, { exact: true })).toBeVisible({
+      visible: wide,
+    });
+  }
   const control = header.getByRole("button", {
     exact: true,
     includeHidden: true,
@@ -96,37 +137,50 @@ test("the header composition follows the viewport", async ({ page }) => {
   });
   await expect(control).toHaveCount(1);
   await expect(control).toBeVisible({ visible: !wide });
-  // The row keeps every destination; only the viewport decides whether it
-  // is drawn. Its text includes the decorative arrow after Get started.
+  // The navigation keeps every destination; only the viewport decides
+  // whether it is drawn. The menu lists them and Get started.
   const row = header.locator(".site-nav");
-  await expect(row.locator("a")).toHaveText(
-    DESTINATIONS.map((name) => new RegExp(`^${name}`)),
-  );
+  await expect(row.locator("a")).toHaveText(DESTINATIONS);
   await expect(row).toBeVisible({ visible: wide });
   const visible = wide ? row : await openMenu(page);
-  for (const name of DESTINATIONS) {
+  const listed = wide ? DESTINATIONS : [...DESTINATIONS, "Get started"];
+  for (const name of listed) {
     await expect(
       visible.getByRole("link", { exact: true, name }),
     ).toBeVisible();
   }
 });
 
+test("the header hides its depictions from assistive technology", async ({
+  page,
+}) => {
+  await page.goto(SITE_PATHS.docs);
+  await expect(page.getByRole("banner")).toMatchAriaSnapshot(
+    narrow(page) ? BANNER.narrow : BANNER.wide,
+  );
+});
+
 test("the search control appears on documentation routes only", async ({
   page,
 }) => {
-  const search = page
-    .getByRole("banner")
-    .getByRole("button", { name: "Search docs" });
+  const banner = page.getByRole("banner");
+  const search = banner.getByRole("button", { name: "Search docs" });
   await page.goto(SITE_PATHS.docs);
   await expect(search).toBeVisible();
-  // Below the breakpoint the search takes the row beneath the brand.
-  const brand = await page
-    .getByRole("banner")
+  // It is the bar's last control. Below the breakpoint it takes the row
+  // beneath the bar, and above it it follows Get started in the bar.
+  const brand = await banner
     .getByRole("link", { name: "Mokly home" })
+    .boundingBox();
+  const start = await banner
+    .getByRole("link", { name: "Get started" })
     .boundingBox();
   const field = await search.boundingBox();
   expect((field?.y ?? 0) >= (brand?.y ?? 0) + (brand?.height ?? 0)).toBe(
     narrow(page),
+  );
+  expect((field?.x ?? 0) >= (start?.x ?? 0) + (start?.width ?? 0)).toBe(
+    !narrow(page),
   );
   for (const route of [SITE_PATHS.home, SITE_PATHS.changelog]) {
     await page.goto(route);
@@ -167,16 +221,31 @@ test("the current route is marked in the header and footer", async ({
   ).toHaveAttribute("aria-current", "page");
 });
 
-/** Every link and button in a region is at least 44px tall. */
+/**
+ * Every link and button in a region has a target at least 44px tall: a press
+ * 21px above or below the middle of its box, on the outer whole pixels of a
+ * 44px target, still lands on it. A control drawn smaller, such as a 36px
+ * navigation link, reaches 44px through its transparent band.
+ */
 async function assertTargets(region: Locator): Promise<void> {
   for (const role of ["link", "button"] as const) {
     for (const control of await region.getByRole(role).all()) {
-      const box = await control.boundingBox();
+      // Reading the topmost element at a point needs the page's own hit
+      // testing, which no locator exposes.
+      const reached = await control.evaluate((node) => {
+        node.scrollIntoView({ block: "center" });
+        const box = node.getBoundingClientRect();
+        const x = box.left + box.width / 2;
+        const middle = box.top + box.height / 2;
+        return [middle - 21, middle + 21].map((y) =>
+          node.contains(document.elementFromPoint(x, y)),
+        );
+      });
       expect(
-        box?.height ?? 0,
+        reached,
         (await control.getAttribute("aria-label")) ??
           (await control.innerText()),
-      ).toBeGreaterThanOrEqual(44);
+      ).toEqual([true, true]);
     }
   }
 }

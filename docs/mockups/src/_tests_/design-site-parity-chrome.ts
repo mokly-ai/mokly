@@ -8,14 +8,8 @@
  * which milestone of the Canvas redesign plan removes the difference.
  */
 
-const TOOL_BAR =
-  "Canvas draws the header as the design file's sticky white tool bar with the file title, the people in the file and a green rule under the current page; Milestone 4 rebuilds the site chrome";
-const SKIP =
-  "the skip link shows on the ink fill above the sticky tool bar; Milestone 4 rebuilds the site chrome";
-const BUTTONS =
-  "Canvas buttons: the signal fill with its white label of decision 4, a lift on hover and the strong border around the outlined buttons; Milestone 4 rebuilds the site chrome";
 const MENU =
-  "the menu is the prototype's sheet below the tool bar over a scrim, its close control in the menu control's place; Milestone 4 rebuilds the site chrome";
+  "the mockup draws the open sheet in place, and the site opens it as a modal dialog in the top layer: the sheet also transitions its display and its top-layer overlay so it can fade out, it settles 8px by its top edge rather than a translate, which would make it the containing block of the fixed close control and move that control with the sheet, and it scrolls within the window below the bar";
 const FOOTER =
   "the footer is the last frame on the canvas, with the scheme control under the brand and the status bar beneath; Milestone 4 rebuilds the site chrome";
 const LEGAL =
@@ -28,34 +22,8 @@ const TRAIL =
   "the trail is the design file's mono uppercase eyebrow; Milestone 6 rebuilds the docs and Milestone 8 the changelog";
 
 export const CHROME_DIFFERENCES: Readonly<Record<string, string>> = {
-  ".site-band": TOOL_BAR,
-  ".site-header": TOOL_BAR,
-  ".site-nav": TOOL_BAR,
-  ".site-nav-link": TOOL_BAR,
-  ".site-nav-link:hover": TOOL_BAR,
-  ".site-skip": SKIP,
-  ".site-skip:focus": SKIP,
-  ".site-button": BUTTONS,
-  ".site-button--primary": BUTTONS,
-  ".site-button--primary:hover": BUTTONS,
-  ".site-button--quiet": BUTTONS,
-  ".site-button--quiet:hover": BUTTONS,
-  ".site-button--secondary": BUTTONS,
-  ".site-button--secondary:hover": BUTTONS,
   ".site-menu": MENU,
   ".site-menu[open]": MENU,
-  ".site-menu-panel": MENU,
-  ".site-menu-head": MENU,
-  ".site-menu-nav": MENU,
-  ".site-menu-link": MENU,
-  ".site-menu-link:hover": MENU,
-  '.site-menu-link[aria-current="page"]': MENU,
-  ".site-menu-actions": MENU,
-  ".site-menu-actions .site-button": MENU,
-  ".site-menu-button": MENU,
-  ".site-menu-button:hover": MENU,
-  ".site-menu-close": MENU,
-  ".site-menu-close:hover": MENU,
   ".site-footer": FOOTER,
   ".site-footer-inner": FOOTER,
   ".site-footer-brand": FOOTER,

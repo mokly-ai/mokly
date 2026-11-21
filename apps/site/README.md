@@ -37,11 +37,14 @@ allowlisted `docs/protocol/cloud/` files. Package guides keep their authored
 Reference destinations; only published Reference documents have their links
 rewritten.
 
-Below 768px the shared header holds the brand and a Menu control that opens
-the site's destinations in a modal dialog sliding in from the right edge. The
-desktop docs tree keeps its scroll position across pages within a tab and
-reveals the current page when a direct link, search result or pager opens a
-page outside the visible tree.
+Every page draws on the dot-grid canvas under one sticky tool bar: the brand,
+the depicted file title and people, the navigation and Get started. Below
+768px the bar holds the brand, Get started and a Menu control, which opens the
+site's destinations in a modal sheet that drops in below the bar. On
+documentation routes the bar's last control is the docs search. The desktop
+docs tree keeps its scroll position across pages within a tab and reveals the
+current page when a direct link, search result or pager opens a page outside
+the visible tree.
 
 The site consumes the private `@mokly-cloud/tokens` package from the npm workspace
 directly and emits its responsive CSS scoped per color scheme; site styles use
@@ -267,7 +270,9 @@ Pages project and attach the domain are in the
 - `src/docs/headings.ts` — stable heading ids, the duplicate-heading check and the on-this-page list.
 - `src/components/docs/Search.tsx` and `scripts/index-search.mjs` — the search dialog island, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
 - `src/components/docs/tree-scroll.ts` — tab-scoped desktop tree scroll restoration and current-page reveal.
-- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal dialog it opens.
+- `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
+- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
+- The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Brand.astro`, `Button.astro`, `Chip.astro`, `FrameLabel.astro`, and `Avatar.astro` and `Presence.astro` with the people of `people.ts`, all under `src/components/`.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
 - `src/changelog/` — the typed changelog parser, the release model, note rendering and the Atom feed.
@@ -278,7 +283,7 @@ Pages project and attach the domain are in the
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
-- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the Folio stylesheets (`base.css`, `chrome.css`, `menu.css`, `layout.css`, `footer.css` and the page sheets), each loaded once by a layout.
+- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets, each loaded once by a layout: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css` and `footer.css`), `layout.css` and the page sheets. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map and the build errors.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.

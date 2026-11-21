@@ -18,12 +18,7 @@ const { description, title } = PAGE_METADATA[SITE_PATHS.home];
 const stage = readStageManifest();
 ---
 
-<Site
-  description={description}
-  route={SITE_PATHS.home}
-  ruled={false}
-  title={title}
->
+<Site description={description} route={SITE_PATHS.home} title={title}>
   <Hero />
   <div class="site-frame-wrap">
     <Stage manifest={stage} />

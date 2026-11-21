@@ -1,0 +1,30 @@
+---
+/**
+ * The presence group: the overlapping avatars of everyone in the depicted
+ * design file, 6px apart at the 28px size and 3px apart with `small`. A
+ * depiction: hidden from assistive technology.
+ *
+ * Use: `<Presence class="site-header-presence" />`, or
+ * `<Presence small />` in the status bar. `people` defaults to everyone, in
+ * the order of `PEOPLE`.
+ */
+import Avatar from "./Avatar.astro";
+import { PEOPLE, type Person } from "./people.js";
+
+interface Props {
+  readonly class?: string;
+  readonly people?: readonly Person[];
+  readonly small?: boolean;
+}
+
+const { class: className, people = PEOPLE, small = false } = Astro.props;
+---
+
+<span
+  aria-hidden="true"
+  class:list={["site-presence", small && "site-presence--small", className]}
+>
+  {people.map((person) => (
+    <Avatar person={person} small={small} />
+  ))}
+</span>

@@ -1,10 +1,11 @@
 ---
 /**
- * The page shell every route renders: the document metadata, the skip link,
- * the header band, one `main` landmark and the footer. The `main` landmark
- * carries `tabindex="-1"` so the skip link moves focus to it. A layout that
- * places its own landmark inside a wider composition, as the documentation
- * does beside its section tree, renders unwrapped and owns that element.
+ * The page shell every route renders: the document metadata, then on the
+ * dot-grid canvas the skip link, the header band, one `main` landmark and
+ * the footer. The `main` landmark carries `tabindex="-1"` so the skip link
+ * moves focus to it. A layout that places its own landmark inside a wider
+ * composition, as the documentation does beside its section tree, renders
+ * unwrapped and owns that element.
  */
 import { FEED_PATH } from "../changelog/feed.js";
 import Footer from "../components/Footer.astro";
@@ -22,6 +23,10 @@ import { SITE_TOKEN_CSS } from "../styles/token-styles.js";
 import "../fonts/fonts.css";
 import "../styles/base.css";
 import "../styles/controls.css";
+import "../styles/buttons.css";
+import "../styles/canvas.css";
+import "../styles/labels.css";
+import "../styles/people.css";
 import "../styles/chrome.css";
 import "../styles/menu.css";
 import "../styles/layout.css";
@@ -31,7 +36,6 @@ interface Props {
   readonly title: string;
   readonly description: string;
   readonly route: string;
-  readonly ruled?: boolean;
   readonly indexed?: boolean;
   readonly main?: string;
   readonly wrapped?: boolean;
@@ -41,7 +45,6 @@ const {
   title,
   description,
   route,
-  ruled = true,
   indexed = true,
   main = "site-main",
   wrapped = true,
@@ -83,9 +86,9 @@ const image = socialImageUrl(
     <meta name="twitter:description" content={description} />
     {image && <meta name="twitter:image" content={image} />}
   </head>
-  <body>
+  <body class="site-root">
     <SkipLink />
-    <Header route={route} ruled={ruled} />
+    <Header route={route} />
     {wrapped ? (
       <main class={main} id="main" tabindex="-1">
         <slot />

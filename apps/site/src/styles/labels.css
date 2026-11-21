@@ -1,0 +1,56 @@
+/* The chip that Chip.astro draws: a short label on a pill, for a version, a
+   status or a branch. The rules match docs/mockups/styles/site/labels.css. */
+
+.site-chip {
+  align-items: center;
+  border-radius: var(--mk-radius-pill);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  line-height: 1;
+  min-height: 22px;
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.site-chip--mono {
+  font-family: var(--mk-font-mono);
+}
+
+.site-chip--signal {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-signal-deep);
+}
+
+.site-chip--changed {
+  background: var(--mk-color-warning-soft);
+  color: var(--mk-color-warning);
+}
+
+.site-chip--removed {
+  background: var(--mk-color-danger-soft);
+  color: var(--mk-color-danger);
+}
+
+.site-chip--neutral {
+  background: var(--mk-color-background);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+}
+
+.site-chip svg {
+  flex: none;
+}
+
+.site-chip-dot {
+  background: currentColor;
+  border-radius: var(--mk-radius-pill);
+  flex: none;
+  height: 6px;
+  width: 6px;
+}
+
+.site-chip--signal .site-chip-dot {
+  background: var(--mk-color-signal);
+}

@@ -1,0 +1,34 @@
+---
+/**
+ * One icon of the Canvas icon set, at `size` pixels (16 by default), stroked
+ * in the current colour. An icon is decorative: it is hidden from assistive
+ * technology and takes no focus, and the text or the label beside it names
+ * the control.
+ *
+ * Use: `<Icon name="branch" size={13} />`. `icons.ts` holds the drawings.
+ */
+import { ICONS, type IconName } from "./icons.js";
+
+interface Props {
+  readonly class?: string;
+  readonly name: IconName;
+  readonly size?: number;
+}
+
+const { class: className, name, size = 16 } = Astro.props;
+---
+
+<svg
+  aria-hidden="true"
+  class={className}
+  fill="none"
+  focusable="false"
+  height={size}
+  stroke="currentColor"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="1.5"
+  viewBox="0 0 16 16"
+  width={size}
+  set:html={ICONS[name]}
+/>

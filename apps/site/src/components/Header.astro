@@ -1,11 +1,13 @@
 ---
 /**
- * The shared header: the brand, the menu control, the navigation and Get
- * started, inside a band aligned to the wide measure. Above the
- * breakpoint the row lists every destination. Below it the row holds the
- * brand and the menu control, and the menu lists the destinations. The
- * documentation search control appears on documentation routes and nowhere
- * else; below the breakpoint it takes the row beneath.
+ * The shared header: the tool bar of the depicted design file, a sticky
+ * band on every page. It holds the brand; the file title `mokly.ai — {page}`
+ * with its `main` branch chip; the people in the file; the navigation; Get
+ * started; and the menu control. The file title and the people are
+ * depictions, hidden from assistive technology. Below the breakpoint the bar
+ * keeps the brand, Get started and the menu control, and the menu lists the
+ * destinations. The documentation search control follows on documentation
+ * routes only; below the breakpoint it takes the row under the bar.
  */
 import {
   EXTERNAL_LINKS,
@@ -16,43 +18,67 @@ import {
 } from "../navigation.js";
 
 import Brand from "./Brand.astro";
+import Button from "./Button.astro";
+import Chip from "./Chip.astro";
 import Menu from "./Menu.astro";
+import Presence from "./Presence.astro";
 import Search from "./docs/Search.tsx";
+import { pageName } from "./page-name.js";
 
 interface Props {
   readonly route: string;
-  readonly ruled?: boolean;
 }
 
-const { route, ruled = true } = Astro.props;
+const { route } = Astro.props;
+const search = isDocsRoute(route);
 ---
 
-<div class={ruled ? "site-band site-band--ruled" : "site-band"}>
+<div class:list={["site-band", search && "site-band--search"]}>
   <header class="site-header">
-    <Brand route={route} />
-    <Menu route={route} />
-    {isDocsRoute(route) && <Search client:idle />}
-    <nav aria-label="Main" class="site-nav">
-      <a
-        aria-current={currentPage(route, SITE_PATHS.docs)}
-        class="site-nav-link"
-        href={SITE_PATHS.docs}
+    <div class="site-header-start">
+      <Brand route={route} />
+    </div>
+    <div aria-hidden="true" class="site-header-title">
+      <span class="site-file">
+        <span class="site-file-team">mokly.ai</span>
+        <span class="site-file-dash">—</span>
+        <span class="site-file-name">{pageName(route)}</span>
+      </span>
+      <Chip icon="branch" mono>
+        main
+      </Chip>
+    </div>
+    <div class="site-header-end">
+      <Presence class="site-header-presence" />
+      <nav aria-label="Main" class="site-nav">
+        <a
+          aria-current={currentPage(route, SITE_PATHS.docs)}
+          class="site-nav-link"
+          href={SITE_PATHS.docs}
+        >
+          Docs
+        </a>
+        <a
+          aria-current={currentPage(route, SITE_PATHS.changelog)}
+          class="site-nav-link"
+          href={SITE_PATHS.changelog}
+        >
+          Changelog
+        </a>
+        <a class="site-nav-link" href={EXTERNAL_LINKS.github}>
+          GitHub
+        </a>
+      </nav>
+      <Button
+        arrow
+        class="site-header-cta"
+        href={GET_STARTED_PATH}
+        kind="primary"
       >
-        Docs
-      </a>
-      <a
-        aria-current={currentPage(route, SITE_PATHS.changelog)}
-        class="site-nav-link"
-        href={SITE_PATHS.changelog}
-      >
-        Changelog
-      </a>
-      <a class="site-nav-link" href={EXTERNAL_LINKS.github}>
-        GitHub
-      </a>
-      <a class="site-button site-button--secondary" href={GET_STARTED_PATH}>
-        Get started <span aria-hidden="true">&#8594;</span>
-      </a>
-    </nav>
+        Get started
+      </Button>
+      <Menu route={route} />
+      {search && <Search client:idle />}
+    </div>
   </header>
 </div>

@@ -14,6 +14,38 @@ const styles = path.resolve(import.meta.dirname, "..", "src", "styles");
 const NAMED_COLORS =
   /(?<![\w-])(?:aqua|black|blue|brown|fuchsia|gold|gray|green|grey|lime|maroon|navy|olive|orange|pink|purple|red|silver|teal|violet|white|yellow)(?![\w-])/i;
 
+/** A role, as a site sheet names one. */
+const ROLE = String.raw`var\(--mk-[\w-]+\)`;
+
+/**
+ * The one tint that docs/protocol/cloud/site-design.md allows: a role or the
+ * current colour, mixed in sRGB with another role or with transparent.
+ */
+const TINT = new RegExp(
+  String.raw`^color-mix\(in srgb, (?:${ROLE}|currentColor) \d+(?:\.\d+)?%, (?:${ROLE}|transparent)\)$`,
+);
+
+/** Every `color-mix()` call in a sheet, on one line, as Prettier spaces it. */
+function mixes(source: string): string[] {
+  const found: string[] = [];
+  for (const { index } of source.matchAll(/color-mix\(/g)) {
+    let depth = 0;
+    for (let end = index; end < source.length; end++) {
+      if (source[end] === "(") depth++;
+      if (source[end] === ")" && --depth === 0) {
+        found.push(
+          source
+            .slice(index, end + 1)
+            .replace(/\s+/g, " ")
+            .replace(/\( | \)/g, (space) => space.trim()),
+        );
+        break;
+      }
+    }
+  }
+  return found;
+}
+
 /**
  * The composition switches: the 768px breakpoint every page shares, and the
  * width at which the documentation hangs its on-this-page rail, both fixed by
@@ -104,8 +136,9 @@ test("site styles consume workspace tokens without declaring another palette", a
     const source = await readFile(path.join(styles, name), "utf8");
     assert.doesNotMatch(source, /--site-/, name);
     assert.doesNotMatch(source, /--mk-[\w-]+\s*:/, name);
+    for (const mix of mixes(source)) assert.match(mix, TINT, `${name}: ${mix}`);
     assert.doesNotMatch(source, /#[0-9a-fA-F]{3,8}\b/, name);
-    assert.doesNotMatch(source, /\b(?:rgba?|hsla?|color-mix|oklch)\(/, name);
+    assert.doesNotMatch(source, /\b(?:rgba?|hsla?|oklch)\(/, name);
     for (const [, value] of source.matchAll(/^\s*[\w-]+:\s*([^;]+);/gm)) {
       const literal = (value ?? "")
         .replace(/(?<![\w-])(?:transparent|currentColor)(?![\w-])/gi, "")

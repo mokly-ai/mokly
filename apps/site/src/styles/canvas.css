@@ -1,0 +1,42 @@
+/* The Canvas parts that sit on the dot grid: the frame label that
+   FrameLabel.astro draws over the top-left corner of its positioned frame.
+   The rules match the frame label of docs/mockups/styles/site/canvas.css. */
+
+.site-frame-name {
+  align-items: center;
+  bottom: calc(100% + 10px);
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  left: 0;
+  line-height: 1;
+  position: absolute;
+  right: 0;
+  white-space: nowrap;
+}
+
+.site-frame-name svg {
+  flex: none;
+}
+
+.site-frame-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-frame-name-text b {
+  color: var(--mk-color-text-secondary);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-frame-name-size {
+  margin-left: auto;
+}
+
+.site-frame-name--selected {
+  color: var(--mk-color-signal-deep);
+}

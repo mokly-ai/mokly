@@ -1,5 +1,5 @@
-/* Foundations for the public site: the reset, the type roles from the Folio
-   type table, the shared measures and section rhythm, the focus ring, the
+/* Foundations for the public site: the reset, the dot-grid canvas behind
+   every page, the type roles, the shared measures, the focus ring, the
    minimum target size, and the forced-colors and reduced-motion rules.
 
    Every value here resolves from a semantic --mk-* property emitted by the
@@ -18,15 +18,34 @@ html {
 }
 
 body {
-  background: var(--mk-color-background);
+  margin: 0;
+}
+
+/* The canvas: a 24px dot grid on the background role. The layout gives the
+   body this class, as the mockups give their root. Its column keeps the
+   footer at the foot of a short page, and it clips what a part draws past
+   the page's sides, so no page scrolls sideways. The rule matches
+   docs/mockups/styles/site/base.css. */
+
+.site-root {
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-position: -1px -1px;
+  background-size: 24px 24px;
   color: var(--mk-color-text);
   display: flex;
   flex-direction: column;
   font-family: var(--mk-font-sans);
+  font-feature-settings: "ss01" on;
   font-size: var(--mk-type-body-size);
   line-height: var(--mk-type-body-line);
-  margin: 0;
   min-height: 100vh;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 

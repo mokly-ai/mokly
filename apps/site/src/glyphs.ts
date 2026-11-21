@@ -1,22 +1,19 @@
 /**
- * The line glyphs the home's framed catalogue, its feature details and the
- * header's menu controls draw. They mirror the catalogue shell's own icon set
- * so the depicted product reads as the same tool, and they inherit color so
- * the tokens decide every stroke. Each entry is the inside of a 24×24 stroked
- * SVG.
+ * The line glyphs the home's framed catalogue and its feature details draw.
+ * They mirror the catalogue shell's own icon set so the depicted product
+ * reads as the same tool, and they inherit color so the tokens decide every
+ * stroke. Each entry is the inside of a 24×24 stroked SVG.
  */
 
 /** Every glyph the site draws, by name. */
 export const GLYPHS = {
   chevron: '<polyline points="9 6 15 12 9 18" />',
-  close: '<path d="M6 6l12 12M18 6L6 18" />',
   component:
     '<path d="m8 1 6 3.5v7L8 15l-6-3.5v-7L8 1Zm0 7 6-3.5M8 8v7M8 8 2 4.5" />',
   flow: '<rect height="6" rx="1.5" width="7" x="2" y="4" /><rect height="6" rx="1.5" width="7" x="15" y="14" /><path d="M9 7h5a2 2 0 0 1 2 2v5" />',
   folder:
     '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />',
   mark: '<path d="M6.5 5.5V5a2 2 0 0 1 2-2H20a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2h-8" stroke-linecap="butt" /><rect height="13" rx="1.75" width="8.5" x="1.5" y="7" />',
-  menu: '<path d="M4 7h16M4 12h16M4 17h16" />',
   page: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" />',
   screen:
     '<rect height="16" rx="2" width="18" x="3" y="4" /><path d="M3 9h18" />',
@@ -31,12 +28,10 @@ export type GlyphName = keyof typeof GLYPHS;
 /** The default size, in pixels, each glyph is drawn at. */
 export const GLYPH_SIZES: Readonly<Record<GlyphName, number>> = {
   chevron: 12,
-  close: 20,
   component: 13,
   flow: 13,
   folder: 13,
   mark: 15,
-  menu: 20,
   page: 13,
   screen: 13,
   search: 14,
