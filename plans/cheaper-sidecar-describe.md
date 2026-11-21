@@ -48,6 +48,10 @@ Contract owners:
   `calummoore/mokly-restored-bundle-reuse-answer-pspj`, and workspace 221,
   `calummoore/mokly-sidecar-bundle-tail-mge9`, merge into `main`. Then this
   branch merges `origin/main` once.
+- User confirmation: LRU with the canonical stored source key and bounded
+  export-name retention in the protocol are approved. Official timing counts
+  every edit, including the first after a warm start. Local reports include
+  that first edit separately and an all-edit mean, even with a warm-up summary.
 - The parent orchestrator owns the official measurements and every merge. This
   branch does not merge its own pull request.
 - Acceptance:
@@ -220,19 +224,19 @@ Depends on: 2
 The `non-ui implementor` action writes these tests first. The count and bound
 tests fail on `main`. The differential tests pass before and after Part A.
 
-- [ ] Compare cached and uncached `orderedExports` on a first and a second
+- [x] Compare cached and uncached `orderedExports` on a first and a second
       call. Cover default exports, string names, export lists, `export *`,
       type-only exports, unnamed declarations, duplicate names, and JSX in
       each mode.
-- [ ] Call twice for one text with different namespace values. Each result
+- [x] Call twice for one text with different namespace values. Each result
       follows its own values. A change to a returned list does not reach the
       cache.
-- [ ] With an injected parse operation, show that equal text and mode parse
+- [x] With an injected parse operation, show that equal text and mode parse
       once, and that a changed text or the other mode parses again.
-- [ ] With a small injected cap, show that the charge never passes the cap,
+- [x] With a small injected cap, show that the charge never passes the cap,
       the least recently used entry goes first, an oversized entry is returned but not kept,
       and a failed parse keeps nothing and throws the same error.
-- [ ] Compare byte-identical describe results and identical registrations with
+- [x] Compare byte-identical describe results and identical registrations with
       and without the cache across a sequence of generations in one process.
       Include an unchanged entry, a changed entry, a new export, a removed
       export, a duplicated value across two entry modules, TypeScript, and JSX.
@@ -242,10 +246,10 @@ tests fail on `main`. The differential tests pass before and after Part A.
 
 Depends on: 3
 
-- [ ] Add the cache class and its default instance in a helper file, as the
+- [x] Add the cache class and its default instance in a helper file, as the
       bound, owner, and key calls settle them. Take the names in
       `orderedExports` from it, and keep the namespace work on every call.
-- [ ] Let `describe` take an optional instance and pass it to `orderedExports`
+- [x] Let `describe` take an optional instance and pass it to `orderedExports`
       and `describeStories`. Add the cache to the sidecar README Key Code.
       Permit bounded export-name retention in the protocol purpose paragraph.
 - [ ] Run the new tests and the describe tests with `npm test -- {file}`, then

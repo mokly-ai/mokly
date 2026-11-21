@@ -25,6 +25,9 @@ its requests and results. The paths below are relative to the package root.
   request.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
+- [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
+  which restores source order with a bounded process cache of parsed names.
+  Each call reads the current namespace values.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
