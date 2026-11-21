@@ -39,7 +39,8 @@ resolves their physical input on the chosen side. Each PostCSS request names
 the PostCSS module by `ResolvedConfig::postcss`, in the same form as the
 renderer. Each PostCSS context uses an owned child process in that side's
 source root. Runtime allocates context ids from one process-wide sequence.
-A head Serve edit can start that child during its `bundle` request, under the
+A Serve head can start that child during its `bundle` request, at startup or
+after an edit, under the
 [prepared context rules](../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
 A successful Serve head graph preparation ends its used context when its
 attempt-local stylesheet store kept every record, under the
@@ -432,10 +433,11 @@ view after the edit and counts real process starts and hello calls.
   shares the reuse evidence of the actual result through an `Arc` and keeps
   its toolchain identity. It tries retained states with captured evidence
   first, and it admits a marked state only in the `ServeEdit` mode. In a
-  `ServeEdit` attempt of an original head runtime, it adds a
-  `PostcssPreparation` to the first `bundle` request when the context is
-  unused, `Runtime::older_used_head_context` finds no older used head context
-  with the same settings, and `stale_postcss` finds a stale PostCSS root. The
+  `Full` attempt of an original head runtime with Serve edit plans, it adds a
+  `PostcssPreparation` to the first `bundle` request without a stale-root
+  check. A `ServeEdit` attempt still requires `stale_postcss` to find a stale
+  PostCSS root. Both require an unused context and no older used head context
+  with the same settings, as `Runtime::older_used_head_context` checks. The
   second request of an evaluation change carries none.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
   request with the `capture` mode of the runtime and its optional

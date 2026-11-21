@@ -1,21 +1,19 @@
-//! CSS before a bundle and repeated evaluation cannot prepare another child.
+//! Startup preparation keeps full evidence and respects the existing attempt guards.
 
 use std::collections::BTreeMap;
-use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_css::types::StylesheetRoot;
 use mokly_model::material::digest;
-use mokly_sidecar::definitions::Definitions;
-use mokly_sidecar::methods::{BundleCapture, Call};
+use mokly_sidecar::methods::BundleCapture::{Full, ServeEdit};
+use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::postcss_evidence::Evidence;
 use mokly_sidecar::results::{Css, Dependency, DependencyKind, Module};
 use mokly_sidecar::wire::MethodResult;
-use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
+use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle::BundleState;
@@ -25,81 +23,30 @@ use crate::physical_inputs::PhysicalInputsMock;
 use crate::runtime::Runtime;
 use crate::{bundle_inputs, render_environment, stylesheets};
 
-use super::bundle_plan_support::{evidence, result};
-
-fn definitions() -> Definitions {
-    Definitions {
-        screens: vec![],
-        pages: vec![],
-        use_cases: vec![],
-        folders: vec![],
-        components: vec![],
-        stories: vec![],
-        diagnostics: vec![],
-    }
-}
-
-fn tree(changed: Arc<AtomicBool>) -> Arc<dyn SourceTree> {
-    let read = |path: &Path, changed: bool| match path.file_name().unwrap().to_str().unwrap() {
-        "theme.module.css" => b".token {color:red}".to_vec(),
-        "input.txt" if changed => b"new".to_vec(),
-        _ => b"old".to_vec(),
-    };
-    let content = changed.clone();
-    Arc::new(Unimock::new((
-        SourceTreeMock::project
-            .each_call(matching!(_))
-            .answers(&|_, path| {
-                let kind = if path == Path::new("/repo") {
-                    Some(FileKind::Directory)
-                } else if ["theme.module.css", "postcss.mjs", "input.txt"]
-                    .iter()
-                    .any(|name| path == Path::new("/repo").join(name))
-                {
-                    Some(FileKind::File)
-                } else {
-                    None
-                };
-                Ok(kind.map(|kind| Node {
-                    identity: path.into(),
-                    lexical_kind: kind,
-                    kind,
-                }))
-            }),
-        SourceTreeMock::read
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(read(path, content.load(Ordering::Relaxed)))
-            }))
-            .at_least_times(0),
-        SourceTreeMock::digest
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(digest(&read(path, changed.load(Ordering::Relaxed))))
-            }))
-            .at_least_times(0),
-        SourceTreeMock::observe_inputs
-            .each_call(matching!(_, _))
-            .answers(&|_, _, _| Ok(()))
-            .at_least_times(0),
-    )))
-}
+use super::bundle_plan_support::{evidence, plan, result};
+use super::bundle_preparation_support::{config, definitions, tree};
 
 #[test]
 fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
-    for (css_before_bundle, capture, base, older_head, expected) in [
-        (false, BundleCapture::ServeEdit, false, false, true),
-        (true, BundleCapture::ServeEdit, false, false, false),
-        (false, BundleCapture::Full, false, false, false),
-        (false, BundleCapture::ServeEdit, true, false, false),
-        (false, BundleCapture::ServeEdit, false, true, false),
+    for (css_before_bundle, capture, base, older_head, startup, cached_css, postcss, expected) in [
+        (false, ServeEdit, false, false, false, true, true, true),
+        (true, ServeEdit, false, false, false, true, true, false),
+        (false, Full, false, false, false, true, true, false),
+        (false, ServeEdit, true, false, false, true, true, false),
+        (false, ServeEdit, false, true, false, true, true, false),
+        (false, Full, false, false, true, false, true, true),
+        (true, Full, false, false, true, false, true, false),
+        (false, Full, true, false, true, false, true, false),
+        (false, Full, false, true, true, true, true, false),
+        (false, ServeEdit, false, false, false, false, true, false),
+        (false, Full, false, false, true, false, false, false),
     ] {
         let changed = Arc::new(AtomicBool::new(false));
         let calls = Arc::new(Mutex::new(Vec::new()));
         let observed = calls.clone();
         let requests = Arc::new(Mutex::new(0));
         let bundled = requests.clone();
-        let pool = Unimock::new((
+        let pool_calls = (
             PoolMock::request
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, call| {
@@ -123,7 +70,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                         Call::Bundle(_) => {
                             let mut count = bundled.lock().unwrap();
                             *count += 1;
-                            let mut reply = result(None, evidence());
+                            let mut reply = result(startup.then(plan), evidence());
                             reply.generation = if *count == 1 { "old" } else { "new" }.into();
                             reply.modules = vec![Module {
                                 path: "renderer.ts".into(),
@@ -141,11 +88,18 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                 .each_call(matching!(_, _))
                 .returns(())
                 .at_least_times(0),
-            PoolMock::release_context
-                .each_call(matching!(_))
-                .returns(())
-                .at_least_times(0),
-        ));
+        );
+        let pool = if postcss {
+            Unimock::new((
+                pool_calls,
+                PoolMock::release_context
+                    .each_call(matching!(_))
+                    .returns(())
+                    .at_least_times(0),
+            ))
+        } else {
+            Unimock::new(pool_calls)
+        };
         let mut runtime = Runtime::new(
             tree(changed.clone()),
             Arc::new(Unimock::new(
@@ -170,33 +124,24 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
             None,
         );
         runtime.bundle_capture = capture;
+        if startup {
+            runtime = runtime.with_serve_edit_plans();
+        }
         runtime.head_styles = base.then(Weak::new);
-        runtime.watch_stylesheets = older_head;
-        let config = ResolvedConfig {
-            input: Config {
-                renderer: Some("renderer.ts".into()),
-                postcss: Some("postcss.mjs".into()),
-                ..Default::default()
-            },
-            file: "/repo/mokly.config.json".into(),
-            repo_root: "/repo".into(),
-            modules: ResolvedModules {
-                renderer: Some("renderer.ts".into()),
-                postcss: Some("postcss.mjs".into()),
-            },
-            authored_inputs: vec![],
-            roots: vec![],
-        };
+        runtime.watch_stylesheets = older_head || startup;
+        let config = config(postcss);
         let side = runtime.side(&config);
         let compiler = stylesheets::attempt(&runtime, &config, &side).compiler;
-        compiler
-            .bundle(&StylesheetRoot {
-                path: "theme.module.css".into(),
-                stylesheets: vec!["theme.module.css".into()],
-                excluded: Default::default(),
-                local_css: true,
-            })
-            .unwrap();
+        if cached_css {
+            compiler
+                .bundle(&StylesheetRoot {
+                    path: "theme.module.css".into(),
+                    stylesheets: vec!["theme.module.css".into()],
+                    excluded: Default::default(),
+                    local_css: true,
+                })
+                .unwrap();
+        }
         let params = bundle_inputs::params(&config, &[], &side);
         let previous = result(None, evidence());
         let state = Arc::new(BundleState {
@@ -249,8 +194,22 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
         assert_eq!(
             preparations,
             [expected, false],
-            "capture={capture:?}, base={base}, css_before_bundle={css_before_bundle}, older_head={older_head}"
+            "capture={capture:?}, base={base}, css_before_bundle={css_before_bundle}, older_head={older_head}, startup={startup}, cached_css={cached_css}, postcss={postcss}"
         );
+        for request in calls.iter().filter_map(|call| match call {
+            Call::Bundle(request) => Some(request),
+            _ => None,
+        }) {
+            assert_eq!(request.capture, Some(capture));
+            let retained = runtime
+                .edit_plans
+                .as_ref()
+                .and_then(|records| records.lock().unwrap().get(&request.params));
+            assert_eq!(
+                retained.map(|record| (record.plan.clone(), record.evidence.clone())),
+                startup.then(|| (plan(), evidence()))
+            );
+        }
         assert_eq!(
             matches!(calls.first(), Some(Call::ProcessCss(_))),
             css_before_bundle

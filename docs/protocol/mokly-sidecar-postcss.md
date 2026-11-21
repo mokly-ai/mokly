@@ -47,32 +47,42 @@ those of the later `processCss` requests of that context. Like
 [`capture`](./mokly-sidecar-recipes.md#capture-modes), the preparation is a
 request-only value and not a bundle setting. No settings comparison,
 compilation identity, generation id, recipe, `restoreGeneration` request, or
-bundle cache entry contains it.
+bundle cache entry contains it. A preparation changes neither the `capture`
+value of its request nor the reuse evidence that the request records.
 Decision: the preparation stays outside the bundle settings. A preparation
 inside them was rejected, because each preparation names a new context, so no
 recipe, cache entry, or generation id would match an earlier one.
 
-An attempt is one head preparation of Serve that sends `serveEdit` in its
-`bundle` requests. The core adds a preparation only for the context of an
-attempt. The configuration must name a PostCSS module. The head must also keep
-a PostCSS stylesheet bundle that the attempt cannot reuse under the
+An attempt is one head graph preparation of Serve, in either
+[capture mode](./mokly-sidecar-recipes.md#capture-modes). A startup attempt is
+an attempt that starts before Serve publishes its first state. Every other
+attempt is a later attempt. The core adds a preparation only for the context
+of an attempt. The configuration must name a PostCSS module. The head of a
+later attempt must also keep a PostCSS stylesheet bundle that the attempt
+cannot reuse under the
 [dependency retention rules](./mokly-imported-styles-postcss.md#dependency-retention).
-Only one `bundle` request of the attempt carries the preparation, and only
-when no `processCss` request of the context came before it. No older used head
-context of the same configuration may still be live under the
-[used context rules](#used-contexts). A catalogue
+A startup attempt needs no such bundle. Only one `bundle` request of the
+attempt carries the preparation, and only when no `processCss` request of the
+context came before it. No older used head context of the same configuration
+may still be live under the [used context rules](#used-contexts). A catalogue
 without PostCSS, the base side, `build`, `publish`, and a return warm-up
 prepare no context. A context without a preparation starts its child at its
 first `processCss` request.
-Decision: only an attempt with a stale PostCSS stylesheet bundle prepares a
-context. A preparation in every attempt was rejected, because an attempt whose
-stylesheets all stay reusable would start a child that no request uses.
+Decision: a later attempt prepares a context only when its head keeps a stale
+PostCSS stylesheet bundle. A preparation in every later attempt was rejected,
+because an attempt whose stylesheets all stay reusable would start a child
+that no request uses. A startup attempt needs no stale bundle, because a new
+process starts with no kept stylesheet bundle. A startup check for a
+PostCSS stylesheet root was rejected, because the module graph that names the
+roots comes with the `bundle` result. So a startup attempt whose stylesheets
+need no `processCss` request starts a child that ends unused with its attempt.
 Decision: an attempt prepares no context while an older used head context of
 its configuration stays live. A preparation beside that context was rejected,
 because the attempt would then hold two children during its bundle.
 
 The sidecar that runs the `bundle` request starts the preparation when the
-request starts, also when it reuses a compilation. The prepared child loads
+request reaches it, before it checks a compilation for reuse. It starts the
+preparation also when it reuses a compilation. The prepared child loads
 the PostCSS module and constructs its plugins. It processes no stylesheet
 before the first `processCss` request of its context. The `bundle` request
 never waits for that load. A preparation failure never changes the result or
@@ -109,6 +119,15 @@ Decision: every attempt loads the consumer modules again. Processors or module
 instances kept across edits were rejected, because Tailwind keeps removed
 candidates in module-level state. A load before the edit also cannot prove
 that opaque native load-time inputs stayed unchanged.
+
+No process keeps a stylesheet bundle or a PostCSS result for a later process.
+So the startup attempt of each Serve process processes every stylesheet root
+that it needs from the current inputs.
+Decision: stylesheet processing results stay inside their process. A store
+for later processes was rejected, because no result has complete and stable
+evidence, so a later process cannot check every input of a result. Reuse under
+an age limit and reuse that compiles again after readiness were rejected,
+because stale styles or wrong Changes could then reach the user.
 
 A prepared context is live from the start of its `bundle` request. The
 [source root workers](./mokly-sidecar-modules.md#source-root-workers) place it.
