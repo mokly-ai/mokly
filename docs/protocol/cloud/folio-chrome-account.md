@@ -1,5 +1,7 @@
 # Folio Chrome: Account Entry
 
+Status: The new mark and wordmark are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
+
 The account entry composition of [Folio chrome](./folio-chrome.md): the one
 panel every account screen shares. Every value comes from
 [Design tokens](./design-tokens.md); the screens that draw it are listed in
@@ -14,9 +16,9 @@ moves as the user walks the flow: one panel width, one header height and one
 footer, signed in or not. The panel is the screen's subject; the page around
 it carries only the identity and the two legal links.
 
-- **Canvas**. A `folio` page, 100vh minimum, carrying a 1px `border` dot on a
-  24px grid across the whole page, header and footer included; the panel is
-  the only surface that covers it. Mobile drops the dots.
+- **Canvas**. A `background` page, 100vh minimum, carrying a 1px `border` dot
+  on a 24px grid across the whole page, header and footer included; the panel
+  is the only surface that covers it. Mobile drops the dots.
 - **Header**. A fixed 48px bar (`layout.topbar`) with no hairline, holding at
   most one trailing item, itself a 44px target: the account identity when
   signed in, one ink link on the magic-link screen (Sign in), and nothing on
@@ -39,7 +41,8 @@ it carries only the identity and the two legal links.
 - **Mark**. The wordmark sits inside the panel, 32px above the title. The brand
   belongs to the form the reader came for, not to a header that holds one link.
   It leaves for the site's home on the logged-out screens and is inert once the
-  user is signed in; the mark keeps its accent, the wordmark stays ink.
+  user is signed in; the mark and the wordmark keep the brand's colours, as
+  [Shell brand](../mokly-shell-brand.md) defines.
 - **Title**. One line of `heading3` in sentence case, one color, 32px above the
   body. An optional 13px muted line sits under it only when it changes a
   decision.

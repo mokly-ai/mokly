@@ -84,30 +84,40 @@ State the new requirements and the answered decisions. Read the
 `documentation` skill first. Each page whose behaviour is not built yet gets
 a status line that links its milestone.
 
-- [ ] `site.md`: routes, header, footer, scheme control, Download for Mac,
+- [x] `site.md`: routes, header, footer, scheme control, Download for Mac,
       the desktop exception to the left-out list, Pricing and the app links.
       Relax the source rule until go-live: the site may draw a fictional demo
       app and features that ship before go-live. Remove "no plan prices".
-- [ ] `site-copy.md`: the new hero, features, closing and Storybook label.
-- [ ] `site-design.md`: Canvas surfaces, type, layout, components, the new
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `site-copy.md`: the new hero, features, closing and Storybook label.
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `site-design.md`: Canvas surfaces, type, layout, components, the new
       brand and the 3:1 button pair. Replace the Plan cards section, which no
-      site code implements.
-- [ ] `site-docs.md`: the Layers panel, search in the panel, the Inspect
+      site code implements. Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `site-docs.md`: the Layers panel, search in the panel, the Inspect
       panel, dark code panels, the mobile tree sheet and the sample fence.
-- [ ] `site-delivery.md`: the script islands for the scheme control, the
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `site-delivery.md`: the script islands for the scheme control, the
       changelog filter, the scroll spies, the home demos and the sample fence.
-- [ ] `site-mockups.md`, `marketing-site.md`: pricing, routes, app links.
-- [ ] The token and palette docs (`design-tokens*.md`, `mokly-viewer-palette.md`,
-      `mokly-viewer-appearance.md`): Canvas values from `@mokly/ui`.
-- [ ] `mokly-shell-design.md` and `mokly-shell-device-chrome.md`: the canvas
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `site-mockups.md`, `marketing-site.md`: pricing, routes, app links.
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] The token and palette docs (`design-tokens*.md`, `mokly-viewer-palette.md`,
+      `mokly-viewer-appearance.md`): Canvas values from `@mokly/ui`. Branch:
+      `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `mokly-shell-design.md` and `mokly-shell-device-chrome.md`: the canvas
       stage, frame labels, size tags, pan, zoom, Fit, floating panels and the
-      phone dock.
-- [ ] `mokly-component-inspector-design.md`, `mokly-viewer-selection.md` and
+      phone dock. Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `mokly-component-inspector-design.md`, `mokly-viewer-selection.md` and
       the frame probe docs: the right panel, the selection and the box model.
-- [ ] `mokly-comparison-panes.md` (Swipe, compare on every frame) and
-      `mokly-guides.md` (the HTML sample fence).
-- [ ] The cloud viewer docs: the bar, the account menu and the check slot.
-- [ ] Update the site, UI package and mockups README files.
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] `mokly-comparison-panes.md` (Swipe, compare on every frame) and
+      `mokly-guides.md` (the HTML sample fence). Branch:
+      `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] The cloud viewer docs: the bar, the account menu and the check slot.
+      Branch: `calummoore/canvas-redesign-m2-protocol-docs-445q`.
+- [x] Update the site, UI package and mockups README files. Branch:
+      `calummoore/canvas-redesign-m2-protocol-docs-445q`.
 
 ## Milestone 3: Palette source, fonts and brand
 

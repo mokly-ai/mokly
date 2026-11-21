@@ -1,5 +1,7 @@
 # Viewer Frame Adapter
 
+Status: The `boxModel` method, its types and its measurement are not built yet. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds them.
+
 ## Public Interface
 
 The [frame package](./mokly-frame-package.md) defines these types and the
@@ -16,6 +18,17 @@ interface Box {
 interface InstanceBoundary {
   key: string;
   ranges: readonly { id: string; boxes: readonly Box[] }[];
+}
+interface BoxSides {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+interface InstanceBoxModel {
+  box: Box;
+  border: BoxSides;
+  padding: BoxSides;
 }
 interface FrameMount {
   url: URL;
@@ -56,6 +69,7 @@ interface MountedFrame {
     mode: "off" | "highlight" | "pick",
   ): Promise<void>;
   scrollTo(key: string): Promise<void>;
+  boxModel?(key: string): Promise<InstanceBoxModel | null>;
   subscribe(listener: (event: FrameEvent) => void): () => void;
   dispose(): void;
 }
@@ -169,79 +183,53 @@ listeners, observers and scheduled work, rejects pending operations, and is
 idempotent. Host-side errors use the codes above; diagnostics are not
 extracted from consumer text.
 
+## Box Model
+
+`boxModel(key)` measures one instance of the mount's ready usage, so that
+Inspect can show the instance's size, padding and content size. It resolves
+with the instance's box model, or with null when the instance has no single
+element root or that element renders no box. An instance has a single element
+root when it has exactly one range and that range holds exactly one element,
+apart from comments and whitespace-only text.
+
+`box` is the element's border box in CSS pixels, relative to the frame's
+visible content viewport and before host scaling. Unlike the boxes of an
+`InstanceBoundary`, clipping and occlusion do not cut it. `border` and
+`padding` hold the element's border and padding widths on each side, in CSS
+pixels. The content size is the size of `box` less the border and the padding
+on each axis, and it is never less than zero. `box` follows the box bounds of
+the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v3), and each
+side is a finite number from 0 to 1,000,000. A value outside these bounds
+rejects with `limit`. A key outside the mount's ready
+usage rejects with `missing-instance`, and unavailable usage rejects as the
+other inspection requests do. A result describes the document when the adapter
+measured it, so the viewer measures again after a `geometry` event.
+
+Both built-in adapters implement `boxModel` and give the same result for the
+same document. A custom adapter that omits it shows no box model, and the rest
+of inspection stays available. Decision: the adapter reports these bounded
+numbers, not computed styles or elements, because consumer content never
+leaves the frame and the host validates every value it receives.
+
 ## Same-Origin Documents
 
-A loaded document must retain the exact origin, query and decoded resource
-path. A provider may canonicalize a final `.html` suffix to the otherwise
-identical extensionless path; no other path redirect is accepted. The URL
-fragment is client-only positioning rather than resource identity, so the
-adapter authenticates the document first and then applies a missing or changed
-validated fragment. An authenticated document reload renews every
-document-scoped listener and observer without replacing the outer frame
-session. Range authentication, including a component page's markerless root
-region, follows the [range markers](./mokly-frame-probe.md#range-markers);
-ownership, clipping, pick handling, scroll restoration and logical-link
-classification match the frame probe. Ready usage is required for instance
-inspection; absent usage does not disable valid navigation.
-
-While a same-origin replacement loads, valid marked activations in the
-still-visible document stay host-owned only when a previous same-origin mount
-authenticated that exact document for the frame. A document that no mount
-authenticated, including one the frame reached through its own native
-navigation, keeps portable native-link behavior until the replacement
-authenticates. Document identity, not URL equality, decides this transfer:
-scripts are disabled, so a document cannot change its resource identity, and
-every frame navigation commits a new document.
-
-Only the first same-origin mount of a frame may authenticate an already
-rendered starting document whose resource exactly matches the assignment: the
-document that the frame's initial `src` started loading. On every later mount,
-a starting document that no earlier mount authenticated never passes
-assigned-resource authentication, even when its URL exactly equals the new
-assignment. Only a different replacement document may then pass the resource
-check. A rejected starting document must trigger a fresh history-replacing
-navigation even when both its URL and the iframe's `src` equal the assignment;
-URL equality alone cannot justify reuse or waiting for a load that is not in
-progress. This decision is independent of document readiness: rejected starting
-documents and different assigned resources are replaced while loading or
-interactive as well as after completion. Changing the assigned resource also
-cancels any earlier navigation, even when the still-visible authenticated
-document already matches the new choice. A delayed superseded response must
-never overwrite the latest preview selection.
-
-Authenticated matching documents and the matching document of the initial
-`src` are reused without reloading; incomplete accepted documents wait only
-for their own load completion. Only the first mount may wait for a
-startup-assigned recorded fragment that has not committed yet.
-
-The adapter authenticates the exact origin, decoded resource path and query of
-the new immediate document as soon as that document becomes
-same-origin-accessible. Host-owned navigation of the new document starts then,
-so slower subresources that delay the iframe `load` event cannot delay it. A
-previously authenticated identity never lets a transferred document satisfy a
-new mount. Readiness installs inspection and geometry over the authenticated
-document. Unsubscribing or disposing removes the receiver, so an unenhanced
-document continues to use its portable native links.
-
-The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) and
-[comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
-viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
-Local memory previews use their authenticated private transport.
-No frame probe handshake, extra badge, pick control, or visible affordance
-appears locally. Panes gain no inspection, geometry, markers, or navigation messages.
+`sameOriginAdapter` mounts documents on the viewer's origin. The
+[same-origin frame documents](./mokly-frame-adapter-same-origin.md) contract
+defines how it authenticates, reuses and replaces them, and which viewer-owned
+documents bypass it.
 
 ## Cross-Origin Adapter
 
 `postMessageAdapter` mounts a frame on a separate origin. The
 [frame probe handshake and wire protocol](./mokly-frame-probe-wire.md) define
-its mount, its handshake with the frame probe, and wire protocol v3. The
+its mount, its handshake with the frame probe, and its wire protocol. The
 [frame probe contract](./mokly-frame-probe.md) defines the frame probe script
 that the static build injects.
 
 ## Related Docs
 
 - [Frame package](./mokly-frame-package.md)
+- [Same-origin frame documents](./mokly-frame-adapter-same-origin.md)
 - [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
 - [Frame probe](./mokly-frame-probe.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)

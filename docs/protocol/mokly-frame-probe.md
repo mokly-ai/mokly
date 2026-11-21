@@ -1,5 +1,7 @@
 # Frame Probe
 
+Status: The frame probe does not measure box models yet. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds the measurement.
+
 The frame probe is the in-frame script of the cross-origin
 [frame adapter](./mokly-frame-adapter.md). The
 [frame package](./mokly-frame-package.md) builds it. Decision: the script and
@@ -64,12 +66,16 @@ no root region; content outside every region belongs to the screen.
 The script draws nothing in the preview document: no mask, no outline, and no
 label. It reports instance boundaries, geometry notifications, hovers, and
 picks, under the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v3).
-The shell draws the
+On request it measures the box model of one instance, under the
+[box model rules](./mokly-frame-adapter.md#box-model) and the
+[`measure` request](./mokly-frame-probe-wire.md#wire-protocol-v4). The shell
+draws the
 [Highlight components](./mokly-component-explorer.md#highlight-components)
 visuals from the reported boxes, for highlights and picks alike, as the
-[frame adapter contract](./mokly-frame-adapter.md) requires. Host labels and
-keyboard-accessible instance lists use public catalogue titles. Do not clone
-or restyle consumer content.
+[frame adapter contract](./mokly-frame-adapter.md) requires. It draws the
+[canvas selection](./mokly-viewer-selection-canvas.md) from the reported boxes
+and the box model. Host labels and keyboard-accessible instance lists use
+public catalogue titles. Do not clone or restyle consumer content.
 
 Outgoing fields contain only validated ASCII identities/control values and
 numeric geometry.

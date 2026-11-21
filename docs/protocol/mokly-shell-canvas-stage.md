@@ -1,0 +1,111 @@
+# Shell Canvas Stage
+
+Status: The canvas, its section and frames, pan, zoom, Fit, the floating panels and the Frames filter are not built yet. [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, its section and frames, pan, zoom, Fit and the panels, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the Frames filter in Inspect.
+
+This continues the [shell design contract](./mokly-shell-design.md#layout). It
+fixes the canvas below the top bar: the panels that float over it, the selected
+entry's section with its frames, the Frames filter, and pan, zoom and Fit.
+[Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
+scheme, and the compact layout below the layout breakpoint.
+
+## Canvas
+
+- The canvas fills the window below the top bar, full bleed, under the floating
+  panels. It draws a grid of small dots at a 24px pitch, in the palette's dot
+  colour on its background colour. The grid moves with the canvas when it pans.
+- The catalogue floats at the left edge and the right panel at the right edge,
+  each 8px from the canvas's top, bottom and outer edges, with a 12px radius, a
+  hairline and a soft shadow. The catalogue is 252px wide and the right panel
+  312px. While the shell is narrower than 73.75rem (1180px), they are 224px and
+  284px wide. The [navigation design](./mokly-shell-design-navigation.md) lets
+  the reader resize the catalogue.
+- The right panel shows only while an entry is selected. With nothing selected,
+  the canvas holds the home guidance of the
+  [shell design](./mokly-shell-design.md#layout) and no section.
+- The stage is the part of the canvas between the floating panels and above
+  the zoom pill. Fit and centring use the stage. Panning can move a frame under
+  a panel.
+- The zoom pill floats at the bottom centre of the stage, 12px above the
+  canvas's bottom edge. It is a group named `Zoom` that holds Zoom out, the
+  zoom as a whole percentage, Zoom in, and Fit.
+- The panels, the zoom pill, the section head, and the frames' labels and size
+  tags keep their size at every zoom.
+
+Decision: the full canvas with pan and zoom, not a restyled one-frame stage or
+a fitted view without zoom, because a reader compares every viewport and scheme
+of a screen at once, as frames in a design file.
+
+## Section
+
+The selected entry stands on the canvas as one section.
+
+- A screen's or a document's section is a box with a 16px radius, a faint fill
+  and a hairline ring. A component's section is a dashed outline with no fill.
+- The section's head, at its top left, names the entry: its title in a dark
+  tag, a `Component` kind tag for a component, a monospace path chip with the
+  entry's path as written and no `#` prefix, and its change status. The path
+  chip copies the path without navigating. It uses the standard pointer cursor
+  and moves down 1px with an inset shadow while pressed.
+- A screen opens as its frames at one zoom: Desktop beside Mobile, and the
+  Light row above the Dark row. A screen without a dark view has the Light row
+  alone. The [canvas frames](./mokly-shell-device-chrome.md#canvas-frames) give
+  each frame's size and label.
+- A component opens as its variant set: one row for each saved variant, in the
+  variants' order, with its Light frame beside its Dark frame. A component
+  without saved variants has one row for its own example.
+- A page or a Markdown document opens as one reading frame.
+- A use case, a removed entry's previous version, and a preview that loads or
+  failed keep the presentation that their own contracts give.
+
+## Frames Filter
+
+The Frames filter in [Inspect](./mokly-component-inspector-design.md) turns the
+frames of each viewport and each scheme on and off. It replaces the viewport
+choice. Decision: one filter of the shown frames, not a viewport dropdown with
+a scheme control, because the canvas shows every frame at once and the reader
+hides only the frames that they do not compare.
+
+- A frame that the filter turns off leaves the canvas, and the stage refits
+  around the frames that stay.
+- The section keeps one row for each shown scheme, Light above Dark. With one
+  viewport turned off, the frames of the other viewport form one column.
+- A variant set has no viewport toggles, because its frames have no viewport.
+- A screen without a dark view disables the Dark toggle, which reads
+  `Light only`.
+- The filter holds the Highlight components switch. With the switch on, every
+  shown frame draws the highlight of its view's registered instances.
+- A toggle that hides a changed view carries the change dot: a 6px accent dot
+  in its top-right corner, ringed 1.5px in the surface colour. The toggle names
+  a visually hidden `Other viewport changed` or `Other theme changed` through
+  `aria-describedby`. The dot stays distinct from selection and draws no rail.
+
+## Pan, Zoom And Fit
+
+- An entry opens fitted. Fit chooses the largest zoom, up to 100%, at which
+  every shown frame and its label fit the stage, and it centres the section.
+- A drag on the canvas around the frames pans it. The wheel and a two-finger
+  trackpad scroll over the canvas pan it too. On a touch screen, one finger
+  pans.
+- The wheel and a swipe over a frame scroll that frame's document. They do not
+  pan the canvas, also at either end of the document.
+- ⌘ or Ctrl with the wheel, a trackpad pinch, and a two-finger pinch on a touch
+  screen zoom the canvas about the pointer or the pinch.
+- The pill's Zoom in and Zoom out, and the keys `+` (or `=`) and `-`, step the
+  zoom about the stage's centre. Shift+0 shows 100%. Shift+1 and the pill's
+  Fit refit the stage. These keys act while focus is not in a text field, and
+  not while ⌘, Ctrl or Alt is held.
+- Opening another entry fits it. Changing the Frames filter refits the stage.
+  While the stage stays fitted, it refits when the stage changes size. After
+  the reader pans or zooms, the stage keeps its zoom and its position until the
+  next Fit.
+- The zoom scales each frame with its document. A frame's document lays out at
+  the frame's nominal size at every zoom.
+
+## Related Docs
+
+- [Shell design contract](./mokly-shell-design.md)
+- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell navigation design](./mokly-shell-design-navigation.md)
+- [Component inspector design](./mokly-component-inspector-design.md)
+- [Comparison panes](./mokly-comparison-panes.md)
+- [Canvas design inventory](./mokly-shell-canvas-inventory.md)

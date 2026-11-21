@@ -94,6 +94,39 @@ All filter and comparison modes, the document's overdue-invoice link, the
 comparison modes have no depicted state, so they stay non-links. Folder crumbs
 and a parent entry's crumb stay text in Changes states and on removed entries.
 
+## Canvas States
+
+The [Canvas screens](./mokly-shell-canvas-inventory.md) browse the same
+catalogue on the canonical branch, so their Changes filter counts ten entries:
+
+- Welcome, which the branch changed, stands on the overview as four frames,
+  with its Changes tab and the five compare modes.
+- Details, which the branch added, depicts an added entry, whose Changes tab
+  offers Current alone.
+- Profile, which the branch did not modify and which renders in Light only,
+  depicts an entry with the Inspect tab alone and the Light frames alone.
+- Payment terms, which moved unchanged, opens as one reading frame, and its
+  right panel also has Changes.
+- The Action and the Toolbar, two unmodified components, open as their variant
+  sets.
+
+Canvas links stay inside the Canvas family. A control opens the Canvas artboard
+that shows its outcome, and a control without one is a picture of itself:
+
+- The brand opens `design/canvas/stage/home`. The top bar's menu and the dock's
+  Catalogue open `design/canvas/stage/catalogue`, whose All filter returns to
+  `design/canvas/overview`.
+- Welcome's Changes tab opens `design/canvas/changes/current`, each compare
+  mode opens the Welcome artboard of that mode, and the Inspect tab there
+  returns to the overview. Details' tabs move between
+  `design/canvas/outcomes/added` and `design/canvas/outcomes/added/changes`.
+- Zoom in on the overview opens `design/canvas/stage/zoomed`, whose Fit
+  returns to the overview. Every other Fit opens its own fitted artboard.
+- An instance in a component tree, a highlight label and a variant in Inspect
+  open the artboard that shows that selection. A sheet's close opens the
+  artboard that shows the sheet closed.
+- Payment terms has no Changes artboard, so its Changes tab is a picture.
+
 ## Related Docs
 
 - [Shell design inventory](./mokly-shell-design-inventory.md)

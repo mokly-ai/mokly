@@ -1,34 +1,46 @@
 # Viewer Appearance
 
-## One Control In Standalone, Two Inputs When Embedded
+Status: The shell does not take its palette from the `@mokly/ui` palette module yet, and it has no canvas stage, right panel or Frames filter. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette source, [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
 
-The model has two inputs: the interface appearance around previews and the
-preview colour scheme inside them. Standalone Browse exposes one control that
-sets both, so the catalogue reads all light or all dark. An embedded host
-supplies the appearance, and the viewer keeps its own preview control.
+## Interface Appearance And Frame Schemes
 
-| Input                 | Values                  | Standalone Browse                                  | Embedded viewer                                  |
-| --------------------- | ----------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| Interface appearance  | `auto`, `light`, `dark` | **Appearance** control and saved preference        | `theme` prop; `auto` when omitted                |
-| Preview colour scheme | `light`, `dark`         | Follows the effective appearance; no other control | `selection.colorScheme` and the preview controls |
+The model has two inputs: the interface appearance around the frames, and the
+preview colour scheme of a view that shows one scheme. Standalone Browse
+exposes one Appearance control. An embedded host supplies the appearance, and
+the viewer keeps its own preview controls.
+
+| Input                 | Values                  | Standalone Browse                           | Embedded viewer                                  |
+| --------------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------ |
+| Interface appearance  | `auto`, `light`, `dark` | **Appearance** control and saved preference | `theme` prop; `auto` when omitted                |
+| Preview colour scheme | `light`, `dark`         | Follows the effective appearance            | `selection.colorScheme` and the preview controls |
 
 The effective appearance resolves Auto through the browser's
 `prefers-color-scheme`, including changes while open; a browser that reports no
 preference resolves to Light. Explicit Light or Dark wins over the system.
 Auto is the default in both contexts.
 
-In standalone Browse the effective preview scheme equals the effective
-appearance. Dark shows each entry's dark views where they exist, so the
-catalogue, its device screens, component samples and comparisons change
-together; a Markdown document, rendered once per scheme with no viewport axis,
-opens its dark render. A screen with no dark view keeps its light frames and
-the fallback caption when the catalogue has dark views elsewhere; a catalogue
-with no dark views shows light previews with no captions under a dark
-interface. That light-only fallback does not change the document's effective
-Dark appearance: the shell renders under the Dark appearance while its preview
-selection independently normalizes to the available Light views. The
-standalone top bar, head band and component workspace carry no separate
-preview scheme control.
+The [canvas stage](./mokly-shell-canvas-stage.md) shows both schemes at once.
+Each frame renders its own scheme's view, whatever the interface appearance: a
+screen opens as its Light and Dark frames, and a component opens as its
+variant set, with each variant in Light beside Dark. The
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) in Inspect turns
+the Light frames and the Dark frames on and off. It chooses frames and never
+changes the interface appearance. A screen with no dark view holds only its
+Light frames, and the Frames filter's Dark toggle is disabled and reads Light
+only. A Markdown document opens as one reading frame in the preview colour
+scheme, so standalone Browse shows the document in the catalogue's
+appearance. A page has no scheme axis and keeps the Light context.
+
+A view outside the canvas stage, such as a use-case flow, shows one preview
+colour scheme. In standalone Browse that scheme equals the effective
+appearance: Dark shows each dark view where it exists, so the view's device
+screens, component samples and comparisons change together. A view with no
+dark view keeps its light frames and the fallback caption when the catalogue
+has dark views elsewhere; a catalogue with no dark views shows light previews
+with no captions under a dark interface. That light-only fallback does not
+change the document's effective Dark appearance: the shell renders under the
+Dark appearance while its preview selection independently normalizes to the
+available Light views.
 
 In an embedded root, `selection.colorScheme` keeps its preview meaning and
 stays independent of `theme`: a dark interface around a light preview and the
@@ -43,13 +55,19 @@ adapter wire carry no appearance field.
 
 ## Changed Preview Indicators
 
-A change confined to another preview scheme marks the standalone Appearance
-selector with the shared change dot and an `Other theme changed` description.
-The viewport dropdown keeps the separate other-viewport indicator. Embedded
-viewers mark their Dark preview control instead. The active workspace supplies
-both controls from one entry-owned evidence and view resolution, including
-Light fallback and later detail updates. Leaving a workspace clears its mark;
-no control depends on a second evidence fetch.
+On the canvas stage, a screen and a component show the frames of both
+schemes, so the Appearance control marks no change for them. Instead, a
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) toggle that hides
+a changed view carries the shared change dot and names `Other theme changed`
+or `Other viewport changed`. A Markdown document and a view outside the canvas
+stage show one preview scheme. There, a change confined to another preview
+scheme marks the standalone Appearance selector with the shared change dot and
+an `Other theme changed` description, and the viewport dropdown keeps the
+separate other-viewport indicator. Embedded viewers mark their Dark preview
+control instead. The active workspace supplies these marks from one
+entry-owned evidence and view resolution, including Light fallback and later
+detail updates. Leaving a workspace clears its mark; no control depends on a
+second evidence fetch.
 
 ## React API
 
@@ -77,87 +95,39 @@ Embedded hosts own their appearance controls and persistence, normally passing
 the same theme as their surrounding application. The embedded viewer adds no
 second application appearance selector, `defaultTheme`, change callback, router
 state or storage access. Hosts may place their own control in an existing slot.
-The viewer's own preview controls stay, and their accessible names and tooltips
-identify **Preview color scheme** or **Dark preview** rather than saying Dark
-mode. Changing or removing `theme` takes effect on the mounted root at once.
+The viewer's own preview and frame controls stay. Their accessible names and
+tooltips name the frames or the preview scheme, such as **Frames**, **Dark** or
+**Dark preview**, and never say Dark mode. Changing or removing `theme` takes
+effect on the mounted root at once.
 
 Apply the theme to loading, unavailable-selection, error/retry and ready roots.
 Changing `theme` preserves the runtime, frame elements and sessions, selected
-entry, comparison mode, temporary props, inspector disclosure/width,
-navigation and scroll. It emits no selection, navigation or pick events and
-does not cancel active picking or lose highlights and markers. Geometry
-updates may run when needed, without triggering fragment requests or
-comparison generation. An explicit mode is present in the root's first render;
-Auto resolves through CSS, with no script guess and no light render before
-dark styling.
+entry, comparison mode, temporary props, the Frames filter, the canvas's pan
+and zoom, the right panel's tab and sections, navigation and scroll. It emits
+no selection, navigation or pick events and does not cancel active picking or
+lose highlights and markers. Geometry updates may run when needed, without
+triggering fragment requests or comparison generation. An explicit mode is
+present in the root's first render; Auto resolves through CSS, with no script
+guess and no light render before dark styling.
 
 ## Standalone Appearance Control
 
-Serve and the static build expose one compact native selector labelled
-**Appearance**, with **Auto**, **Light** and **Dark** options, in the global
-top bar. It is the only scheme control in the standalone shell: there is no
-top-bar or head-band `Light | Dark` preview switch and no Dark mode button in
-the component workspace, and it is present even when the catalogue has no
-dark views. It stays reachable on home, pages, documents, flows, empty and
-unavailable routes, and at narrow widths, and preserves catalogue search and
-menu access.
-
-Choosing a value applies the interface appearance and the effective preview
-scheme together: the shell root's appearance mark, every screen and flow
-frame's light or dark document swap, component samples and comparison frames.
-The swap rules apply unchanged, including the light-only fallback caption.
-In-shell navigation, Back and Forward keep the current reader choice, even
-when the destination URL contains an older or conflicting `scheme` pin.
-Before any reader choice, a scheme-bearing in-shell destination applies its
-pin to the whole appearance without saving it; an unpinned destination keeps
-the current document appearance. Only the appearance controller interprets
-these pins; route installation never independently overwrites preview
-selection. A standalone appearance change swaps only document sources and
-keeps the navigation, viewport, inspector, scroll and search state.
-
-On a full page load the effective appearance is resolved in this order: a
-`scheme` URL parameter of `light` or `dark` pins the appearance for that
-document without saving it; otherwise a valid stored override applies;
-otherwise Auto. A user selection wins for the lifetime of the current
-document, replacing a URL pin, even if storage is unavailable. A link without
-`scheme` follows each reader's own appearance, so two readers can see
-different views; a link with `scheme` shows the same views to everyone.
-
-Standalone preferences use the origin-local key `mokly:theme`. Store only
-explicit `light` or `dark`; selecting Auto removes the override. Invalid
-stored values are ignored. Read, write and remove failures do not break
-navigation or show a catalogue error. No credentials or cookies are involved.
-
-The shell bundle resolves the effective appearance before its first render,
-as the [shell delivery contract](./mokly-shell-delivery.md) requires: the
-shell root carries the appearance mark from its first render, and every frame
-mounts with the document of the effective preview scheme. No frame loads a
-light document and swaps to dark at startup, and no pre-paint script exists.
-Under Auto the appearance follows system changes while the document is open.
-Later choices and system changes update the shell root and the preview
-selection together, and only the frame adapters navigate preview documents.
-Appearance changes never add iframe history entries or consume catalogue
-Back/Forward actions. A second installation of the appearance behaviour
-duplicates no callback or storage write. A page that the browser's
-back-forward cache restores refreshes its appearance. In-shell navigation,
-detail updates and Serve publications carry the current effective appearance
-forward rather than a separate preview state.
-
-Before the bundle runs, and without JavaScript, the stub shows only its
-`<noscript>` sentence. The shell stylesheet gives the stub's `mbk-document` class
-the Auto interface appearance through `prefers-color-scheme`. The selector
-exists only once the bundle installs its behaviour, so no control without a
-change handler is ever shown. Persisted overrides need the bundle.
+Serve and the static build expose one **Appearance** control, with **Auto**,
+**Light** and **Dark** options, in the global top bar. The
+[standalone appearance control](./mokly-viewer-appearance-standalone.md)
+defines it: what a choice changes, the `scheme` URL pin, the stored
+preference, and the first render.
 
 ## Palette And Ownership
 
-The [shared UI package](./mokly-ui-package.md#theme-and-host-pages) owns the
-one semantic palette, which supplies both the standalone shell stylesheet and
-the embedded stylesheet. Dark interface backgrounds, text and boundaries align
-with Mokly Cloud's Folio palette, whose dark neutrals are the neutral Graphite
-greys, with sage reserved for accents and status. The [semantic palette](./mokly-viewer-palette.md#cloud-alignment)
-records the role mapping, the approved swatches and their recorded contrast;
-Mokly Cloud is a design reference, not a runtime dependency.
+The [Canvas palette](./mokly-viewer-palette.md#canvas-palette) of the
+`@mokly/ui` palette module is the one semantic palette. The
+[shared UI package](./mokly-ui-package.md#theme-and-host-pages) generates its
+theme from it, and that theme supplies both the standalone shell stylesheet
+and the embedded stylesheet. The [semantic palette](./mokly-viewer-palette.md)
+records the role mapping, the values and their recorded contrast. One Canvas
+look serves every Mokly surface, the open-source shell included, and no host
+package or network request is needed to render it.
 
 Provide Light and Dark values for these responsibilities:
 
@@ -165,8 +135,8 @@ Provide Light and Dark values for these responsibilities:
   muted and disabled text; decorative and interactive borders; focus indicators.
 - Accent fills, contrast text, tint and text links; Added, Changed, Removed and
   Ignored status text/background pairs; validation and unavailable states.
-- Navigation guides, stage dots, browser toolbar/address controls, tooltips,
-  backdrops, shadows, inspector tabs, native fields and scrollbars.
+- Navigation guides, canvas dots, browser toolbar/address controls, tooltips,
+  backdrops, shadows, panel tabs, native fields and scrollbars.
 
 Theme-dependent colours in the components and stylesheets of the shared UI
 package use semantic roles, not a dark-mode override sheet. A
@@ -177,7 +147,12 @@ Keep the public overrides `--mokly-accent`, `--mokly-accent-contrast` and
 `--mokly-accent-soft`. Unset overrides receive the current theme's defaults;
 host-supplied values, including inherited values, win in both themes. The
 stylesheet builder does not depend on one hardcoded Light fallback set.
-Internal tokens and selectors stay private; no general palette API exists.
+Internal tokens and selectors stay private. No custom property other than
+these three is a theming API, and `@mokly/ui/palette` exports the palette as
+data that applies nothing. Decision: one built-in Canvas look, not documented
+theme properties for a host's own palette or a second built-in palette that a
+host selects (decision 1, options B and E), because one look from one source
+cannot drift between the cloud and the open-source shell.
 
 Embedded theme attributes and CSS stay on each `.mokly-viewer` root. Never
 mutate the host's `html`/`body`, neighbouring viewers or slot content. No
@@ -187,8 +162,9 @@ content keeps its styles, including host-owned markers.
 
 Support readable default palettes in both modes: normal text at least 4.5:1,
 large text at least 3:1, and required control, state and focus graphics at
-least 3:1 against adjacent colours. Decorative hairlines are not control
-boundaries. These targets follow
+least 3:1 against adjacent colours. The label of a filled button needs 3:1 on
+its fill, as the [Canvas palette](./mokly-viewer-palette.md#canvas-palette)
+decides. Decorative hairlines are not control boundaries. These targets follow
 [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 and [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 Consumer overrides keep the consumer contrast responsibility.
@@ -199,29 +175,30 @@ forced colours and reduced motion, without animated theme changes.
 
 ## Preview Isolation
 
-The interface and a preview can still differ: an embedded host may pair any
-`theme` with any `selection.colorScheme`, and a standalone light-only screen
-keeps its light frames under a dark interface. Viewer surfaces, the browser
-toolbar and the workspace inspector follow appearance. Phone status and home
-indicators, phone-screen surfaces and preview loading surfaces follow that
-frame's effective preview scheme. Use independent preview tokens rather than
-deriving a light phone's text from dark shell ink. Fixed phone hardware and
+The interface and a preview often differ: the canvas shows Light and Dark
+frames under either appearance, an embedded host may pair any `theme` with
+any `selection.colorScheme`, and a light-only screen keeps its light frames
+under a dark interface. The floating catalogue and right panel, the frame
+labels and size tags, and the browser toolbar follow appearance. Phone status
+and home indicators, phone-screen surfaces and preview loading surfaces follow
+their frame's scheme. Use independent preview tokens rather than deriving a
+light phone's text from dark shell ink. Fixed phone hardware and
 traffic-light artwork keep their intended colours.
 
 One preview stylesheet owns iframe colour schemes and the opaque backgrounds
 behind transparent preview content. Screen, page, component, flow, historical
-and comparison canvases use the selected preview's Light or Dark surface;
+and comparison backgrounds use their frame's Light or Dark preview surface;
 layout styles must not override them with an interface surface or a fixed
 colour. Switching interface appearance alone must preserve the pixels of a
 transparent preview, including its loading surface and comparison base.
 
-Set each managed iframe's CSS `color-scheme` to its effective preview scheme
-before loading it, including page, document, component, flow and comparison
-frames; a page has no scheme axis and keeps the Light context. Frame wrappers
-record the selected document's scheme independently of the outer document and
-of fallback captions; iframe context, device-screen styling and comparison
-bases read that per-frame value. CSS colour scheme can otherwise affect an
-embedded document's media queries, even across origins; see
+Set each managed iframe's CSS `color-scheme` to its frame's scheme before
+loading it, including page, document, component, flow and comparison frames;
+a page has no scheme axis and keeps the Light context. Frame wrappers record
+the selected document's scheme independently of the outer document and of
+fallback captions; iframe context, device-screen styling and comparison bases
+read that per-frame value. CSS colour scheme can otherwise affect an embedded
+document's media queries, even across origins; see
 [MDN embedded color schemes](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme#embedded_elements).
 
 Changing the interface appearance alone must not change a preview's media-query
@@ -231,10 +208,10 @@ Appearance never injects a theme stylesheet into authored documents or
 fabricates dark output. Inspection overlays must stay readable over both
 preview schemes without restyling the underlying screen.
 
-Preserve Before/Current comparison scheme selection and Difference/Overlay
-compositing. Give comparison canvases an opaque base appropriate to their
-preview scheme so changing the outer appearance alone cannot change the visual
-difference result.
+Preserve each frame's Before and Current scheme in a comparison, the Overlay
+and Difference compositing, and the Swipe split. Give comparison backgrounds
+an opaque base appropriate to their frame's scheme, so that changing the outer
+appearance alone cannot change the visual difference result.
 
 ## Mockup Contract
 
@@ -244,5 +221,7 @@ the design screens of the appearance and their owning folders.
 ## Related Docs
 
 - [Viewer semantic palette](./mokly-viewer-palette.md)
+- [Standalone appearance control](./mokly-viewer-appearance-standalone.md)
+- [Viewer preview palette](./mokly-viewer-palette-preview.md)
 - [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
 - [Embeddable viewer](./mokly-viewer.md)

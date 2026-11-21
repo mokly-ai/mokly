@@ -9,7 +9,7 @@ paths match the current source and generated catalogue.
 A cloud build is drawn as the build card [Viewer builds](./viewer-builds.md)
 specifies, following its failure copy rules, inside the stage of the address
 the reader is on; its composition is in
-[Folio viewer compositions](./folio-viewer.md#compositions). Standalone's `build/` folder
+[Viewer compositions](./folio-viewer.md#compositions). Standalone's `build/` folder
 holds nine screens, whose modules sit in
 `src/entries/product/viewer/standalone/build/`; its `index.mockup.tsx` owns the
 folder. `product/viewer/standalone/build` is a running build's card on a newer
@@ -94,7 +94,7 @@ project publishes from CI.” above the control, which keeps its label. At 320px
 with enlarged text the guide wraps beneath the control and stays above Details.
 
 Every build drawing's output box is the labelled, focusable Output region of
-[Folio viewer compositions](./folio-viewer.md#compositions), and its title is the focus
+[Viewer compositions](./folio-viewer.md#compositions), and its title is the focus
 target Cancel hands focus to. The build fixtures take each cause's sentence
 from the cause table of [Viewer builds](./viewer-builds.md#build-card).
 
