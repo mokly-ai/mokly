@@ -94,6 +94,7 @@
 - **Wider fix:** E, for the class of early work that can exhaust memory. A reservation makes that bound part of admission. It does not prove the paired 5% bound, which still needs paired evidence.
 - **Previous examples:** On the closed branch, a headroom rule with a serial fallback was proposed three times and not chosen, because no threshold was proved. An earlier cloud run had already shown a 2.4 s cold gain and a 0.45 s warm gain for an earlier candidate. The new runs repeat a cold gain for the narrowed design.
 - **Related:**
+  - [early-base-capture-evicted-results.md](./early-base-capture-evicted-results.md): its bounded handoff must account for retained early results. Its accepted step 1 diagnostic does not approve a new memory rule for this separate overlap work.
   - [background-base-render-pool.md](./background-base-render-pool.md): it covers the shared-worker stall. Like main, the closed attempt captured only after usage, so its capture did not compete with usage for render workers. A browser request during that capture can still wait, because waiting base jobs can hold every shared render worker.
   - [default-sidecar-count.md](./default-sidecar-count.md): the pool size sets the sidecar memory that any early base work must fit beside.
   - [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md): it would return bundler memory after each bundle, which option D can test. An older sampled peak showed more memory in a head esbuild process during an edit, with no causal proof.
