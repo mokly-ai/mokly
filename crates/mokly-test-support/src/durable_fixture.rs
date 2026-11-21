@@ -21,6 +21,8 @@ pub enum Owner {
     RenderPlanChanges,
     /// Serve plans reject an earlier absolute mapped target.
     RenderAbsolutePaths,
+    /// Serialized editor-file scenarios preserve checked plans and native output.
+    RenderPlanCandidates,
 }
 
 const OWNERS: &[Owner] = &[
@@ -30,6 +32,7 @@ const OWNERS: &[Owner] = &[
     Owner::CompareConfigDir,
     Owner::RenderPlanChanges,
     Owner::RenderAbsolutePaths,
+    Owner::RenderPlanCandidates,
 ];
 
 impl Owner {
@@ -41,6 +44,7 @@ impl Owner {
             Self::CompareConfigDir => "compare-config-dir",
             Self::RenderPlanChanges => "render-plan-changes",
             Self::RenderAbsolutePaths => "render-absolute-paths",
+            Self::RenderPlanCandidates => "render-plan-candidates",
         }
     }
 }

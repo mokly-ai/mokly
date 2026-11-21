@@ -8,6 +8,7 @@ import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import {
   nativeParams,
@@ -48,7 +49,9 @@ test("a catch-all paths key cannot redirect generated entries, stories, renderer
             params,
             build,
             unmeasured,
-            mode === "planned" ? { mode, plan: new Map() } : { mode },
+            mode === "planned"
+              ? { mode, plan: new PlanLookup({ paths: [], imports: [] }) }
+              : { mode },
           );
     assert.ok("generation" in result, mode);
     const exports = evaluate(result.generation);

@@ -7,8 +7,9 @@ import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import { MetadataProof, metadataRuntime } from "./metadata-proof.js";
 import type { ModulePaths } from "./module-paths.js";
 import { classifyNativeTarget } from "./native-plan.js";
-import { planKey } from "./native-resolution.js";
+import { importCallbackKey } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
+import type { PlanLookup } from "./resolution-plan.js";
 import { specifierFilter } from "./specifier-filter.js";
 
 /** The planned relative strings that can use esbuild's own resolution. */
@@ -18,25 +19,19 @@ export class PlannedRelative {
   private constructor(
     readonly filters: readonly RegExp[],
     private readonly skipped: ReadonlySet<string>,
-    private readonly plan: ReadonlyMap<string, PlannedImport>,
+    private readonly plan: PlanLookup,
     private readonly scope: PackageScope,
     private readonly metadata: MetadataProof,
   ) {}
 
   static async create(
-    plan: ReadonlyMap<string, PlannedImport>,
+    plan: PlanLookup,
     started = metadataRuntime.now(),
   ): Promise<PlannedRelative | undefined> {
     const candidates = new Map<string, PlannedImport[]>();
-    for (const [key, target] of plan) {
-      let parts: unknown;
-      try {
-        parts = JSON.parse(key);
-      } catch {
-        continue;
-      }
-      const name: unknown = Array.isArray(parts) ? parts[1] : undefined;
-      if (typeof name !== "string" || !relative(name)) continue;
+    for (const target of plan.plan.imports) {
+      const name = target[1];
+      if (!relative(name)) continue;
       const files = candidates.get(name) ?? [];
       files.push(target);
       candidates.set(name, files);
@@ -47,16 +42,17 @@ export class PlannedRelative {
     for (const [name, files] of candidates) {
       let distinct = false;
       for (const target of files) {
-        let parsed = settings.get(target.path);
+        const file = plan.plan.paths[target[3]]!;
+        let parsed = settings.get(file);
         if (!parsed) {
           parsed = scope
-            .parseSettings(target.path)
+            .parseSettings(file)
             .then((distinct) =>
-              distinct ? undefined : scope.sideEffects(target.path),
+              distinct ? undefined : scope.sideEffects(file),
             );
-          settings.set(target.path, parsed);
+          settings.set(file, parsed);
         }
-        if ((await parsed) !== target.sideEffects) {
+        if ((await parsed) !== target[4]) {
           distinct = true;
           break;
         }
@@ -90,17 +86,18 @@ export class PlannedRelative {
           edge.external &&
           relative(edge.path) &&
           (edge.kind === "require-resolve" || edge.kind === "require-call") &&
-          !this.handled.has(planKey(importer, edge.path, edge.kind))
+          !this.handled.has(importCallbackKey(importer, edge.path, edge.kind))
         )
           return false;
         if (edge.external || !path.isAbsolute(edge.path)) continue;
         if (edge.original === undefined) return false;
         if (!relative(edge.original)) continue;
-        const key = planKey(importer, edge.original, edge.kind);
+        const key = importCallbackKey(importer, edge.original, edge.kind);
         if (this.handled.has(key)) continue;
         if (edge.kind === "require-resolve") return false;
-        const planned = this.plan.get(key);
-        if (planned && planned.path !== edge.path) return false;
+        const planned = this.plan.get(importer, edge.original, edge.kind);
+        if (planned && this.plan.plan.paths[planned[3]] !== edge.path)
+          return false;
         if (!planned || !this.skipped.has(edge.original)) {
           let target = targets.get(edge.path);
           if (!target) {
@@ -111,7 +108,7 @@ export class PlannedRelative {
           if (
             !resolved ||
             resolved.distinct ||
-            (planned && resolved.sideEffects !== planned.sideEffects) ||
+            (planned && resolved.sideEffects !== planned[4]) ||
             (paths.settings.mainFields.length === 0 &&
               edge.kind !== "require-call" &&
               (await this.scope.moduleFallback(edge.path)))

@@ -193,13 +193,17 @@ head. Each view supplies its validated document and closure without a second
 render. `Comparison::compare_prepared` classifies the prepared base and head.
 An uncaptured fallback uses the source generation, so a summary that exceeds
 the capture bound does not start another pass. The capture keeps exact document
-bytes, generated CSS, and trusted annotations in compressed form. It encodes
-documents with `mokly_graph::document_codec::EncodedView`, the codec that the
-compact tier of the render cache also uses. Each kept view also keeps the
-32-byte identity of its codec input from `EncodedView::encode_identified`,
-and the capture budget charges it. The render cache keeps no identity. Inputs
-that do not fit the capture budget, and kept views that fail to restore, read
-from their side's source.
+bytes, generated CSS, and trusted annotations in compressed form. Its collector
+gives the graph workers a `ComparisonEncoder` through
+`ComparisonCollector::encoder`. So each worker encodes its view with
+`mokly_graph::document_codec::EncodedView`, the codec that the compact tier of
+the render cache also uses. The encoder calls `EncodedView::encode_identified`,
+so each view also gets the 32-byte identity of its codec input.
+`ComparisonCollector::remaining` gives the bytes that the capture bound has
+left for the views that wait for their turn. Each waiting view and each kept
+view holds its identity, and the capture budget charges it. The render cache
+keeps no identity. Inputs that do not fit the capture budget, and kept views
+that fail to restore, read from their side's source.
 A usage read of a kept view returns its retained usage without a restore, so
 it needs no source fallback. Serve head reads use the bounded render cache and
 render again on the head root only when neither cache tier holds the document.
@@ -457,7 +461,8 @@ development dependencies, and no test uses the internet.
   pin the base, prepare its sources, report whether its tier-two install ran
   with lifecycle scripts off, carry its freshness evidence, and compare it with
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
-  methods keep nothing.
+  methods keep nothing. `PreparedBase::prefetch` holds the `PrefetchGuard` of
+  the early renders of a fresh base.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -475,7 +480,8 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse.
+  reuse. It holds the `PrefetchGuard` of a fresh base until the capture of
+  that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,

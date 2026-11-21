@@ -31,9 +31,10 @@ its requests and results. The paths below are relative to the package root.
   `require` failure an error. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
-  the bundle. Its `planNative` keys each planned import by importer,
-  specifier, and import kind, and it reports whether the native compile is
-  exact. An uncaptured native Serve edit leaves relative imports to esbuild
+  the bundle. Its `planNative` records each planned import through
+  `PlanBuilder` and reports whether the native compile is exact. It also
+  records selected native targets for the candidate collector of a captured
+  compile. An uncaptured native Serve edit leaves relative imports to esbuild
   through a fixed filter. A skipped relative external edge makes its native
   result inexact, so its fresh plan drives the complete planned compile.
   Captured native attempts keep the broad consumer filter because the evidence
@@ -191,6 +192,30 @@ its requests and results. The paths below are relative to the package root.
   proves or contains, or staged paths above the 8 MiB `EVIDENCE_LIMIT` make
   `accept` return false. `ServeEditPaths.cachedScope` lends each valid
   configuration scope that it read to the folder pass with no new read.
+- [`src/sidecar/resolution-plan.ts`](./resolution-plan.ts) holds
+  `PlanBuilder`, which interns importer and target paths in one table, and
+  `PlanLookup`, which indexes imports by importer position, specifier, and
+  import kind. Planned resolution reads each target through the same table.
+- [`src/sidecar/plan-candidates.ts`](./plan-candidates.ts) holds
+  `PlanCandidates`, the bounded collector of plan-only candidate names for
+  esbuild 0.28.2. It consumes the requests, paths, canonical mappings, and
+  metadata bytes of the existing evidence capture. It adds no physical read.
+  Matching absolute `paths` mappings and other unproved forms keep whole
+  comparisons. Collector overflow keeps the plan without candidate names.
+  [`src/sidecar/plan-candidate-directories.ts`](./plan-candidate-directories.ts)
+  merges lexical names into recorded canonical directories and adds their
+  table positions. It skips each canonical directory that the evidence does
+  not list as a directory. It adds new table rows only after every charge
+  succeeds, so a failed charge keeps the original plan. Captured non-ASCII
+  members and folded-name collisions keep whole comparisons. A selected native
+  target absent from the merged names keeps its directory's whole comparison.
+  [`src/sidecar/plan-candidate-metadata.ts`](./plan-candidate-metadata.ts)
+  derives main-target names and checks export forms from already-read
+  manifests. It reads them with `parsePackageJson`, so each repeated main
+  field and `exports` value counts, in order. `bundleRecipe` attaches the
+  names before the combined byte check.
+  When the plan with names does not fit, it removes the names and their added
+  table rows, and it checks the plan again.
 - [`src/sidecar/captured-plan.ts`](./captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
   only with complete, durable, and unmarked evidence. The plan and the
@@ -213,8 +238,10 @@ its requests and results. The paths below are relative to the package root.
   `paths` step records every target of each matching key from `mappedPaths`,
   also for an absolute import. Its package step records the main-field and
   package-map targets of the own, PnP, installed, linked, and configured
-  packages through the shared package-map description below. With a PnP
-  data file, its `finish` lets `PnpInputs` check each native bare selection.
+  packages through the shared package-map description below. Each folder
+  target of an `exports` map also marks candidate narrowing unproved, and an
+  exact key keeps its priority over a folder key. With a PnP data file, its
+  `finish` lets `PnpInputs` check each native bare selection.
   [`src/sidecar/resolution-request.ts`](./resolution-request.ts)
   applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./config-inputs.ts) records
@@ -348,8 +375,8 @@ its requests and results. The paths below are relative to the package root.
   `PhysicalInputReader` with no capture cache and no saved kind. Its
   `pathKinds` map holds the first-touch kinds, of the `CaptureKind` type in
   [`src/sidecar/capture-kind.ts`](./capture-kind.ts).
-  [`src/sidecar/file-digests.ts`](./file-digests.ts) streams each
-  file digest through one 64 KiB buffer and checks inputs with four workers.
+  [`src/sidecar/file-digests.ts`](./file-digests.ts) hashes 64 KiB chunks.
+  Four workers overlap first reads. Other reads are synchronous, with yields.
 - [`src/sidecar/capture-durability.ts`](./capture-durability.ts)
   holds `CaptureDurability`, which decides the `durable` flag of the reuse
   evidence when `hello` carries a `capture` hint. Before the first observation

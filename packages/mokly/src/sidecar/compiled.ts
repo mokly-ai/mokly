@@ -11,7 +11,7 @@ import type { Module } from "../generated/sidecar/Module.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
 import type { Generation } from "./bundle.js";
-import { everyInput, fileDigest } from "./file-digests.js";
+import { currentFileInputs, everyInput } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import {
@@ -148,10 +148,7 @@ export async function reuse(
     )
       continue;
     const current =
-      (await everyInput(
-        Object.entries(generation.compiled.inputs),
-        async ([file, digest]) => (await fileDigest(file)) === digest,
-      )) &&
+      (await currentFileInputs(generation.compiled.inputs)) &&
       (await everyInput(
         Object.entries(generation.compiled.inputDirectories),
         async ([directory, names]) =>

@@ -21,6 +21,8 @@ mod input_stamp;
 mod leases;
 mod persistent_identity;
 pub mod physical_inputs;
+mod plan_directory;
+mod plan_inputs;
 mod postcss;
 mod postcss_cache;
 mod postcss_inventory;

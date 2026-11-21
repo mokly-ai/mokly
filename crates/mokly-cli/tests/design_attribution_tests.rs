@@ -8,6 +8,8 @@ use tempfile::TempDir;
 
 #[path = "../src/base_dependencies.rs"]
 mod base_dependencies;
+#[path = "../src/base_render_admission.rs"]
+mod base_render_admission;
 #[path = "../src/changes_base.rs"]
 mod changes_base;
 #[path = "../src/changes_freshness.rs"]

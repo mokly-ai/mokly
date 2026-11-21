@@ -71,10 +71,19 @@ then classifies Changes, which renders the base side under the
 [background pass](./mokly-on-demand-background.md) defines how this pass
 starts, looks up, renders, reports, and stops its views.
 
+No base work of a classification, its
+[early renders](./mokly-base-preparation.md#shared-render-runtime) included,
+starts before the background pass of its state ends.
+Decision: base work waits for the background pass. Rejected: base preparation
+or early renders during the pass, because the memory of head and base work
+would then add up.
+
 Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. The
-queued calls of started background views go after the other queued head calls,
-such as the calls of HTTP renders. The later calls of a view in the
+Queued base calls wait until those requests finish their sidecar work. While
+those of a base capture or its early renders wait, they hold no render worker
+that foreground renders use. The queued calls of started background views go
+after the other queued head calls, such as the calls of HTTP renders. The
+later calls of a view in the
 [completion stage](./mokly-on-demand-background.md#batch-and-completion) are
 such calls. So a batch view can wait behind them while it holds its worker. A
 call of a started view does not wait for the end of an HTTP request. Active
@@ -96,6 +105,11 @@ before memory fell, or while base calls held the sidecars, would then delay a
 foreground render. A wait for the end of each HTTP request was rejected,
 because that request can share the render of the view, and neither would then
 finish.
+
+Decision: a base capture and its early renders wait for admission without a
+shared render worker. Rejected: a claim before each base job, because a claim
+covers one call, not a whole job. Rejected: a separate pool for foreground
+renders, because it changes how a foreground request waits for a busy worker.
 
 Decision: a batch view can wait behind the later calls of the completion
 stage. A batch place for each later call was rejected, because waiting batch

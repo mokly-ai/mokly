@@ -9,7 +9,7 @@
 - **Location:** `plans/follow-ups/sequential-evidence-capture-cost.md:10`,
   lines 11, 12, 13, 54, 59, 69, 78, 81, 83, and 218,
   `plans/follow-ups/ancestor-churn-disables-durable-capture.md:8`, lines 9,
-  10, 68, 70, 72, and 74,
+  10, 70, 72, 74, and 76,
   `plans/follow-ups/bundle-recipe-query-suffix.md:7`, line 8, and line 28,
   `plans/follow-ups/css-bundling-global-pool.md:9` and line 73,
   `plans/follow-ups/fallback-keys-checkout-folder.md:10`, line 72, and line
@@ -18,9 +18,7 @@
   `plans/follow-ups/marked-package-entry-targets.md:10`, lines 11, 78, 79,
   99, and 102,
   `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
-  `plans/follow-ups/serve-plan-editor-invalidation.md:8`, lines 9, 10, 47,
-  49, and 51, and
-  `plans/follow-ups/stylesheet-roots-span-parent.md:9`.
+  and `plans/follow-ups/stylesheet-roots-span-parent.md:9`.
 - **Reason:** The workspace orchestrator chose on 2026-11-20 to record these
   pointers and not to fix them in the folder evidence branch, because the
   fix adds a scope round of about thirty minutes before the final gate.
@@ -61,11 +59,28 @@
       `crates/mokly-render/src/bundle.rs:177` at lines 8 and 30 of the
       [earlier version](https://github.com/mokly-ai/mokly/blob/a2f61eb53ddaa76f5ce08b60a30932207f5b6ebc/plans/follow-ups/installed-module-watch-paths.md?plain=1),
       are no longer in the item.
-  - The **Location** holds the other 47 pointers in 10 items. Main and the
-    branch left these items unchanged since the merge base, apart from a
-    two-line change of `stylesheet-roots-span-parent.md` that kept its
-    recorded line 9. So the item lines are exact. No later check confirmed
-    the cited source lines.
+  - The plan reuse change on branch
+    `calummoore/mokly-plan-reuse-editor-files-2-4oor` closed 6 more. It
+    completed and deleted the
+    [editor invalidation item at `3450ee997`](https://github.com/mokly-ai/mokly/blob/3450ee9970a80d21c39cc29a7d8a92fb18165e64/plans/follow-ups/serve-plan-editor-invalidation.md?plain=1),
+    which held them at lines 8, 9, 10, 47, 49, and 51 on 2026-11-21.
+  - The **Location** holds the other 41 pointers in 9 items. When this item
+    was added, main and the folder evidence branch had left these items
+    unchanged since the merge base, apart from a two-line change of
+    `stylesheet-roots-span-parent.md` that kept its recorded line 9. So the
+    item lines were exact then. No later check confirmed the cited source
+    lines.
+  - Later edits of these items, from their Git history:
+    - #408 changed two other lines of `css-bundling-global-pool.md` in place.
+    - #448 replaced line 54 of `ancestor-churn-disables-durable-capture.md`
+      with three lines. So its pointers at the recorded item lines 68, 70,
+      72, and 74 moved to lines 70, 72, 74, and 76. The **Location** gives
+      the new lines.
+    - The plan reuse change edited `ancestor-churn-disables-durable-capture.md`
+      and `marked-package-entry-targets.md`, and it moved no cited line. It
+      changed the text at the cited lines 10, 11, and 99 of
+      `marked-package-entry-targets.md`, and no cited line of the other item.
+    - Nobody checked the cited source lines after these edits.
   - The record started in `plans/follow-ups/follow-up-line-pointer-drift.md`.
     Main deleted that item in #410 on 2026-11-20, after it re-anchored the
     two pointers that the item itself named, with a symbol beside each. The
@@ -81,15 +96,15 @@
     class: a doc that contradicts the changed code gets fixed, and a change
     that removes or renames a name searches `docs/`, `plans/`, and every
     `README.md` for it.
-- **Problem:** 47 line pointers in 10 follow-up items cite source lines that
+- **Problem:** 41 line pointers in 9 follow-up items cite source lines that
   the folder evidence branch moved.
 - **Impact if no action:** A reader who follows such a pointer opens the
   wrong code and must search for the target. A wrong pointer can also
   mislead a fix.
-- **Root question:** How do these 10 items get true source pointers again
+- **Root question:** How do these 9 items get true source pointers again
   after the folder evidence branch moved the code?
 - **Options:**
-  - **A.** In a later branch, re-anchor the 47 pointers at that branch's
+  - **A.** In a later branch, re-anchor the 41 pointers at that branch's
     commit. Cost: the next move can break them again. Effort: Small.
   - **B.** Apply A, and name the symbol beside each pointer, as #410 did. A
     reader then finds a moved target by its name, and a search for the name
@@ -115,7 +130,7 @@
     the seven pointers that it moved, with a symbol beside each.
   - On 2026-11-20, #410 re-anchored two stale pointers with a symbol beside
     each.
-- **Recommendation:** B. It fixes the 47 recorded pointers and keeps them
+- **Recommendation:** B. It fixes the 41 recorded pointers and keeps them
   easy to find after the next move.
 - **Action:** fix after merge, apply B, because the workspace orchestrator
   chose on 2026-11-20 to record these pointers instead of a fix in the
