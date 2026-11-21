@@ -18,6 +18,13 @@ The performance orchestrator accepted option C and the protocol amendment on
 bookkeeping locks retain their rules. The orchestrator also requested the
 large React index size, copies per update, and snapshot memory cost.
 
+The performance orchestrator accepted product `4ab7e9da7` on 2026-11-21.
+It requested a measurement follow-up for the unexplained Serve readiness
+cost, with no further index optimization. After the frozen local proofs, it
+authorized one main integration and migration of the new base-only probe to
+snapshot access. It will confirm the merged warm counters before the merge
+of the pull request.
+
 Contract owners:
 
 - [Render store](../docs/protocol/mokly-render-store.md).
@@ -151,38 +158,55 @@ Evidence: `.context/render-store-read-lock/implementation-report.md`.
 
 Depends on: 2
 
-- [ ] Save the main binary and generate full HTML and React large fixtures.
-- [ ] Measure warm unchanged store hits and misses on examples/basic and the
+- [x] Save the main binary and generate full HTML and React large fixtures.
+- [x] Measure warm unchanged store hits and misses on examples/basic and the
       5,850-document React fixture before and after. Use separate stable caches
       outside `/tmp`, identical source trees, and a completed writer drain.
-- [ ] Report the large React index size, snapshot copies per update, and the
+- [x] Report the large React index size, snapshot copies per update, and the
       memory cost of those copies. Distinguish measured allocations from
       estimates and from the parent's complete-process memory measurement.
-- [ ] Verify one snapshot per completed writer batch or flush, never per key.
+- [x] Verify one snapshot per completed writer batch or flush, never per key.
       Compare the large React cold seed on main and the candidate: writer CPU,
       session CPU, peak RSS, writes, and drops. Report populated-block misses
       against newly durable keys in both arms. The performance orchestrator
       requested these checks on 2026-11-21.
-- [ ] Prove strict byte equality on examples/basic, large HTML, large React,
+- [x] Prove strict byte equality on examples/basic, large HTML, large React,
       and mokly-cloud. Compare every relative file and raw byte without
       normalization. Save manifests, document keys, and a summary.
-- [ ] Send the measurement SHA and local evidence to the performance
+- [x] Send the measurement SHA and local evidence to the performance
       orchestrator. Record its cloud hit counters, first Changes, edit, and
       memory acceptance when supplied.
+
+Evidence: `.context/render-store-read-lock/LOCAL-EVIDENCE.md` and
+`.context/render-store-read-lock/CLOUD-ACCEPTANCE.md`.
 
 ## Milestone 4: Verification, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Run the repository suite and complete gate from `AGENTS.md`. Check disk
+- [x] Run the repository suite and complete gate from `AGENTS.md`. Check disk
       and memory before each large Cargo build. Run one heavy job at a time.
-- [ ] Commit with Conventional Commits and push the workspace branch.
+- [x] Integrate main once after the frozen proofs. Migrate its base-only
+      contains probe and held-maintenance fixture to the snapshot contract.
+      Preserve every upstream change and audit the merge.
+- [x] Extend the concurrency regression to the probe. Observe assertion-red
+      with the old acquisition and rerun focused tests and Clippy.
+- [x] Run the repository suite on the merged tree. Use final Required CI as
+      the complete remote verification of that tree.
+- [x] Record the readiness measurement follow-up. Remove the resolved index
+      contention item and update its related reference.
+- [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Check each finding, apply
       its fix rule, and re-review the fixes. Save reports under `.context/`.
-- [ ] Wait for CI with the shared `scripts/ci-wait.sh`. Fix branch-caused
-      failures. Rerun unrelated Site Lighthouse at most once and record it.
 - [ ] Delete this plan when the `plans` skill permits. Keep its dated record
       and a permalink in the pull request description.
-- [ ] Open the pull request into `main`. Send its link and final SHA to the
-      performance orchestrator. Leave it open and do not merge it.
+- [ ] Open the pull request into `main`. Wait for CI with the shared
+      `scripts/ci-wait.sh` and fix branch-caused failures. Rerun unrelated
+      Site Lighthouse at most once and record it. Record the performance
+      orchestrator's merged warm-counter confirmation. Send the link and final
+      SHA to the performance orchestrator. Leave the pull request open. Do not
+      merge it.
+
+Evidence: `.context/render-store-read-lock/main-merge-audit.log` and
+`.context/render-store-read-lock/merge-contains/report.md`.
