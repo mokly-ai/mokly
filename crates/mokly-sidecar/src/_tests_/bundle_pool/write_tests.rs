@@ -126,6 +126,7 @@ fn failed_bundle_requests_never_publish_the_unserved_live_recipe() {
     let pool = pool(store, worker);
     live(&pool, "old", 1, true, false);
     let result = pool.request(Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: super::params(),
         capture: None,
@@ -188,6 +189,7 @@ fn edit_requests_never_offer_even_captured_results_and_full_requests_still_offer
     live(&pool, "old", 1, true, false);
     let edited = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: super::params(),
             capture: Some(BundleCapture::ServeEdit),

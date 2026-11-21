@@ -32,8 +32,10 @@ export class Session {
     private readonly operation: (operation: Operation) => void = () => {},
     private readonly measurements: Measurements = unmeasured,
     phase: (line: string) => void = () => {},
+    workers?: PostcssWorkers,
   ) {
-    this.workers = new PostcssWorkers(diagnostic, operation, undefined, phase);
+    this.workers =
+      workers ?? new PostcssWorkers(diagnostic, operation, undefined, phase);
   }
 
   async call(request: Request): Promise<unknown> {
@@ -66,29 +68,41 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const { capture = "full", plan, ...params } = request.params;
-        const previous = await reuse(
-          this.generations.values(),
-          params,
-          capture,
-        );
-        const { generation, result } = previous
-          ? { generation: previous, result: bundleResult(previous) }
-          : await bundle(
-              params,
-              (options) => {
-                this.operation("esbuild");
-                return this.compile(options);
-              },
-              this.measurements,
-              capture === "full" && this.capture
-                ? new CaptureDurability(this.capture)
-                : undefined,
-              capture,
-              plan,
-            );
-        this.generations.set(generation.id, generation);
-        return result;
+        const {
+          capture = "full",
+          plan,
+          preparation,
+          ...params
+        } = request.params;
+        if (preparation) this.workers.prepare({ ...params, ...preparation });
+        try {
+          const previous = await reuse(
+            this.generations.values(),
+            params,
+            capture,
+          );
+          const { generation, result } = previous
+            ? { generation: previous, result: bundleResult(previous) }
+            : await bundle(
+                params,
+                (options) => {
+                  this.operation("esbuild");
+                  return this.compile(options);
+                },
+                this.measurements,
+                capture === "full" && this.capture
+                  ? new CaptureDurability(this.capture)
+                  : undefined,
+                capture,
+                plan,
+              );
+          this.generations.set(generation.id, generation);
+          return result;
+        } catch (error) {
+          if (preparation)
+            await this.workers.dispose(preparation.context).catch(() => {});
+          throw error;
+        }
       }
       case "restoreGeneration": {
         const { generation, params, compiled, modules } = request.params;

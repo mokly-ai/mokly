@@ -133,6 +133,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
     let scheduler = ServePool::new(pool.clone(), pool).with_activity(Arc::new(activity.clone()));
     let head = scheduler.pool(None);
     head.request(Call::Bundle(BundleRequest {
+        preparation: None,
         params: Bundle {
             source_root: "/head".into(),
             configuration_directory: ".".into(),
