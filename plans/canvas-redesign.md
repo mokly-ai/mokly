@@ -223,17 +223,21 @@ Tags: ui
 
 Depends on: 6, 7, 15
 
-- [ ] Draw the sample fence: the frame label, the size tag, the viewport and
+- [x] Draw the sample fence: the frame label, the size tag, the viewport and
       state controls, and the wires between lines and elements. The scaled frames fit at
       320px, so the guide page does not overflow. Reuse the line helper of
       `code-panel.ts` in `sample-band.ts`, so the band draws no blank row
-      after each line.
-- [ ] Build Version history with its scroll spy, and the release timeline.
-- [ ] Build the filter for Breaking, Features, Fixes and Performance.
-- [ ] Build the release frames, with breaking notes as pinned callouts. Move
+      after each line. Branch:
+      `calummoore/canvas-redesign-m8-site-docs-sample-and-omtn`.
+- [x] Build Version history with its scroll spy, and the release timeline.
+      Branch: `calummoore/canvas-redesign-m8-site-docs-sample-and-omtn`.
+- [x] Build the filter for Breaking, Features, Fixes and Performance.
+      Branch: `calummoore/canvas-redesign-m8-site-docs-sample-and-omtn`.
+- [x] Build the release frames, with breaking notes as pinned callouts. Move
       the trail rules from the docs sheet into a shared sheet. The page must
       not scroll sideways from 768px to 797px, and the panels sit below the
-      sticky bar.
+      sticky bar. Branch:
+      `calummoore/canvas-redesign-m8-site-docs-sample-and-omtn`.
 
 ## Milestone 9: Site pricing
 

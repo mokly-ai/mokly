@@ -1,6 +1,6 @@
 # Mokly Site
 
-Status: The site draws the Canvas chrome, the legal pages, the docs and the pricing page, but not the Canvas home and changelog pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
+Status: The site draws the Canvas chrome, the legal pages, the docs, the changelog and the pricing page, but not the Canvas home page yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage.
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,

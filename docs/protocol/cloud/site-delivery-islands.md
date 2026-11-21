@@ -1,6 +1,6 @@
 # Site Delivery Islands
 
-Status: The measurement, home demo, sample and changelog islands are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and the measurements, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the sample and changelog islands.
+Status: The measurement and home demo islands are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and the measurements.
 
 This is the script sub-contract of [Site delivery](./site-delivery.md). It
 fixes the small same-origin scripts of the site and the rendering of the HTML
