@@ -1,5 +1,7 @@
 # CI Verification
 
+Status: The `cloud-site` suite still builds the mockups before the site checks. [Milestone 5](../../plans/canvas-redesign.md#milestone-5-site-home) removes that build.
+
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository gate. The local
@@ -105,7 +107,7 @@ Each worker attempts every assigned suite and reports each failure.
 | `cloud-typecheck`      | Type checks of every cloud npm project                                    |
 | `cloud-app`            | App logic, web export, and browser tests                                  |
 | `cloud-mockups`        | Mockup build, compilation, determinism, policy, browser smoke, and types  |
-| `cloud-site`           | Mockup build, site build, types, unit tests, links, and browser checks    |
+| `cloud-site`           | Site build, types, unit tests, links, and browser checks                  |
 | `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
 | `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
 | `cloud-emails`         | Email template drift and mutation tests                                   |
@@ -116,10 +118,6 @@ Each worker attempts every assigned suite and reports each failure.
 | `cloud-infrastructure` | Infrastructure contracts, BuildKit storage evidence, and workload images  |
 | `cloud-desktop`        | Electron logic, bundled export, and real-API smoke                        |
 | `cloud-toolchain-pins` | Protocol pins, manifests, images, and installed tool versions             |
-
-Repository formats and length-checks every Rust crate. Its Clippy and tests
-cover `mokly-*` and `xtask`. Whitespace, Prettier, ESLint, and ast-grep run once
-in Repository. The whole-repository Markdown link check runs once in Viewer.
 
 Cloud Rust, app, and desktop create a database per invocation (role: `CREATEDB`).
 `MKC_TEST_DATABASE_URL` selects the server. Cloud Rust needs `libpq`; missing tools and skips fail.

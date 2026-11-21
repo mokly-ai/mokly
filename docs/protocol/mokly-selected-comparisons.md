@@ -1,11 +1,10 @@
 # Selected live comparisons
 
-A selected comparison compares one shown view in Serve on demand: the screen
-or component entry the reader opened, at the selected viewport and colour
-scheme, head against base. It reads only that entry's views and their
-resources. It never renders the whole catalogue, reclassifies Changes, or
-compares other entries; `build` and the background Changes calculation stay
-exhaustive.
+A selected comparison compares, in Serve on demand, the screen or component
+entry that the reader opened, head against base, in each view that the shell
+shows. It reads only that entry's views and their resources. It never renders
+the whole catalogue, reclassifies Changes, or compares other entries; `build`
+and the background Changes calculation stay exhaustive.
 
 ## Requests and evidence
 
@@ -31,9 +30,9 @@ resolve relative to that root and only from that generation; unknown paths, trav
 are unavailable through this route. No comparison directory is written.
 
 Serve uses live delivery, and a static build and a React host use pinned
-delivery. In live delivery, changing viewport or colour scheme inside a
-comparison, or switching between diff modes, first renews the loaded
-generation with a non-cached HEAD request to its root. A successful response
+delivery. In live delivery, a change of the shown views inside a comparison,
+or a switch between diff modes, first renews the loaded generation with a
+non-cached HEAD request to its root. A successful response
 at that same URL extends the server's retention and lets the shell reuse the
 generation before it displays the requested panes. If the generation is
 missing or the response resolves to a different generation, the shell

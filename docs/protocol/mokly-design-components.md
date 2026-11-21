@@ -44,10 +44,11 @@ inspector comes from the entry detail Mokly records, not from those pictured
 fixtures. Samples and artboards add no consumer scripts.
 
 Each Browse, Changes and component explorer screen uses the shared Details
-inspector and viewport toolbar. Each Canvas screen uses the floating panels,
-the zoom pill and the phone dock, and its Inspect holds the Frames filter.
-Top-bar Appearance owns the scheme. The footer has one current form; no
-alternative disclosure, presentation or behavior fields are supported.
+inspector and viewport toolbar. Each Canvas screen uses the floating panels
+and the phone dock, and the zoom pill while an entry is selected. Top-bar
+Appearance owns the scheme. The
+footer has one current form; no alternative disclosure, presentation or
+behavior fields are supported.
 Comparison-mode controls keep their segments. Component entry metadata stays
 outside the rendered sample. Samples contain no implementation notes,
 environment badges or extra footers.
@@ -117,15 +118,16 @@ evidence.
 On a Browse, Changes or component explorer screen, selected-screen view
 options appear once in the header: a viewport dropdown
 and the Highlight components toggle, which every screen and component page
-draws in the state that the shell shows for its view. A Canvas screen holds
-the Frames filter with the Highlight components switch in Inspect, in the
-state that the shell shows for its view. The top-bar Appearance
-selector owns the catalogue-wide scheme; there is no second scheme icon in the
-header and no authored light/dark link pair. Unsupported transitions stay
-disabled. Viewport changes select the actual mobile/desktop previews without
-scrolling the whole page. Simultaneous previews reserve their intrinsic minimum
-width and wrap when needed; full-size phone frames must never overlap adjacent
-desktop content. Comparison mode segments stay comparison controls.
+draws in the state that the shell shows for its view. When a Canvas screen
+depicts a screen or a component, its Inspect holds the Frames filter. The
+filter holds the Highlight components switch, in the state that the shell
+shows for its view. The top-bar Appearance selector owns the catalogue-wide
+scheme; there is no second scheme icon in the header and no authored
+light/dark link pair. Unsupported transitions stay disabled. Viewport changes
+select the actual mobile/desktop previews without scrolling the whole page.
+Simultaneous previews reserve their intrinsic minimum width and wrap when
+needed; full-size phone frames must never overlap adjacent desktop content.
+Comparison mode segments stay comparison controls.
 
 Every owning screen has separate desktop and mobile React components. Flows
 compose their owning screen components, with links back to those screens. No

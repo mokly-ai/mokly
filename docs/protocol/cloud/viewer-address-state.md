@@ -56,11 +56,11 @@ The address maps losslessly to the package selection:
 | `snapshotId`  | `catalogueSnapshot`, only beside `catalogueScreen`     |
 | `view`        | `view=changes`; All is omitted                         |
 | `viewport`    | `viewport=mobile` or `both`; desktop is omitted        |
-| `colorScheme` | `scheme=light` or `dark`; reader preference is omitted |
+| `colorScheme` | `scheme=light` or `dark`; system preference is omitted |
 | `search`      | `search=<text>`; an empty search is omitted            |
 | `tags`        | one `tag=<value>` per normalized tag, in package order |
 
-The complete defaults are catalogue home, All, desktop, the signed-in color
+The complete defaults are catalogue home, All, desktop, the system color
 preference (otherwise light), empty search and no tags. Cloud intentionally
 keeps desktop as its URL default even though the standalone package defaults to
 Both. `viewport=both` is first-class and is never collapsed. Search and tag

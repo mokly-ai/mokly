@@ -1,5 +1,7 @@
 # Mockup Tooling
 
+Status: The `@mokly/ui` stylesheet does not name Geist and Geist Mono yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the fonts.
+
 This is the configuration and command sub-contract of [Mockups](./mockups.md).
 
 ## Configuration And Scripts
@@ -50,9 +52,10 @@ with a side-effect import. Mokly bundles imported CSS into the
 entry's stylesheet and links it after the configured sheets. No mockup imports
 `@mokly/viewer/styles.css` or a component stylesheet of `@mokly/ui`.
 
-The package stylesheet names the Inter family and loads no font file, so the
-viewer drawings use the catalogue's own self-hosted Inter. Mokly
-mirrors each file that imported CSS references at
+The package stylesheet names Geist and Geist Mono, the faces of the
+[Canvas palette](../mokly-viewer-palette.md#canvas-palette), and loads no font
+file, so the viewer drawings use the catalogue's own self-hosted Geist and
+Geist Mono. Mokly mirrors each file that imported CSS references at
 `static/mokly-generated/assets/<repository-relative source path>` in the build
 output. The receiver adopts these asset paths per
 [hosting policy](./publication-upload-validation.md#hosting-policy).
@@ -68,7 +71,7 @@ The output holds the shell, the catalogue index at
 `mokly-viewer/entries/`, and every view at
 `static/mokly-generated/<path>/index.<viewport>[.dark].html` with its bundled
 styles and assets. Decision: the local build runs without
-Changes, not with a comparison, because its tests and the site stage read
+Changes, not with a comparison, because its tests read
 current content only. A comparison would make every build read
 Git history and possibly install the base's dependencies.
 

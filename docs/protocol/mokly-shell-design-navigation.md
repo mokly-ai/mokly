@@ -19,8 +19,10 @@ Served pages remember the last chosen width, which replaces the starting width.
 The grip turns accent-colored with a soft accent halo while hovered,
 keyboard-focused, or being dragged, and its resting color follows the
 [palette contract](./mokly-viewer-palette.md#recorded-contrast). The
-[workspace inspector divider](./mokly-component-workspace-design.md) reuses the
-grip's shape and accent look, rotated. The separator is absent from the
+inspector divider of the `design/components/**` artboards reuses the grip's
+shape and accent look, rotated, as the
+[workspace design](./mokly-component-workspace-design.md#fixed-shell-divider-and-panel-sheet)
+says. The separator is absent from the
 catalogue sheet and without JavaScript. Decision: the floating panel keeps the
 resize, its keys and the remembered width, which the mockups do not draw,
 because the resize is shipped behaviour and a deep tree needs the width.

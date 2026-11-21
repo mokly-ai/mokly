@@ -1,5 +1,7 @@
 # Mokly Design Mockup Links
 
+Status: The outer viewer's canvas, which shows the Light and Dark frames of a design screen at once, is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds it.
+
 Two linked pages hold the destination tables: the [navigation
 links](./mokly-design-links-navigation.md) cover the navigation controls and the
 screen variants, and the [scheme, comparison, and tag
@@ -30,13 +32,17 @@ documents, including artboards depicting a dark product screen, except the
 appearance screens (the `design/browse/appearance/**` entries), the loading and
 recovery screens (`design/browse/loading/**`), the canonical
 `design/browse/views/screen` and `design/browse/views/details-screen`, their two
-Welcome appearance variants, and the Welcome comparison family. These
-render in both schemes so the outer Appearance control switches the depicted
-catalogue. Link targets name design entry paths, not the example paths printed
-in the depicted shell's metadata. `example/screens/farewell` is an
-intentionally absent product entry.
-This depicted dark set is representative; the runtime's single Appearance
-preference, rather than per-screen dark renders, keeps a whole session dark.
+Welcome appearance variants, the Welcome comparison family, and the Canvas
+screens (`design/canvas/**`). These render in both schemes. The outer viewer's
+canvas shows the Light and Dark frames of each of these screens at once. It
+shows every other design screen as its Light frames alone, under the
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme). The outer
+Appearance control colours the outer viewer's chrome, not the frames of a
+screen. This depicted dark set is representative. The shell's one Appearance
+preference, not a dark render of each screen, sets the appearance of its
+chrome for a whole session. Link targets name design entry paths, not the
+example paths printed in the depicted shell's metadata.
+`example/screens/farewell` is an intentionally absent product entry.
 
 ## Link Behavior
 

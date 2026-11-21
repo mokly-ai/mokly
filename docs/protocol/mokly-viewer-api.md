@@ -1,5 +1,7 @@
 # Embeddable Viewer API
 
+Status: The `changesStart` slot is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
+
 These declarations define the props, event payloads, and imperative handle of
 the [embeddable viewer contract](./mokly-viewer.md). The contract defines their
 behavior and delivery rules.
@@ -58,6 +60,7 @@ interface ViewerSlots {
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;
+  changesStart?: ReactNode;
   sidePanel?: { content: ReactNode; width: CSSProperties["width"] };
   stageOverlay?: { content: ReactNode; pointerEvents: "none" | "auto" };
   emptyState?: ReactNode;

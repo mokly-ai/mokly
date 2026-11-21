@@ -15,11 +15,13 @@ and only its variants and the screens that compose it fill slots.
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
 composes it, whose own subject is the catalogue's appearance: those render in
-both schemes so the outer Appearance control switches them like the appearance
-screens. A dual-scheme sample derives the props whose own subject is the scheme
-from its render context rather than pinning them in its fixture, so the top
-bar's samples name the scheme they rendered for; a fixture sets such a prop only
-to depict a different setting, as the `auto-appearance` sample does.
+both schemes like the appearance screens, and the outer viewer shows both
+renders under the [preview scheme
+rules](./mokly-shell-device-chrome.md#color-scheme). A dual-scheme sample
+derives the props whose own subject is the scheme from its render context
+rather than pinning them in its fixture, so the top bar's samples name the
+scheme they rendered for; a fixture sets such a prop only to depict a different
+setting, as the `auto-appearance` sample does.
 
 | Group / slug                  | Variant names                                                                                                                                 |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,7 +68,7 @@ below use text, boolean, number and primitive enum selections only.
    navigation destinations; and an `auto/light/dark` interface appearance that
    falls back to the render context's scheme. Controls: query,
    picker-open, menu state and appearance. The appearance setting is the
-   catalogue's own and is the only scheme control in the design catalogue. This
+   catalogue's own and is the design catalogue's only appearance control. This
    component owns it, so every artboard with a top bar draws it; screens do not
    opt in. The value defaults to the scheme the file was rendered for and is
    overridden only to depict a different setting, as the Auto artboard does.
@@ -190,9 +192,10 @@ below use text, boolean, number and primitive enum selections only.
     markup.
 16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
     compact flag for narrow bars. Controls: setting and compact. It is a native
-    selection control named Appearance, holding one value; it is the catalogue's
-    single setting, so the value it holds is also the scheme the previews
-    around it follow, and it does not fabricate a native open list.
+    selection control named Appearance, holding one value. It is the
+    catalogue's single appearance setting, and the [standalone appearance
+    control](./mokly-viewer-appearance-standalone.md#choosing-a-value) says
+    which previews follow it. It does not fabricate a native open list.
 
 Screens map their scenario data to these semantic fields. No component takes
 an uncontrolled catch-all object, a per-screen CSS string, or a function prop.

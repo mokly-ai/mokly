@@ -1,12 +1,15 @@
 # Comparison Scroll Together
 
+Status: The switch in the Changes tab, and Scroll together in Swipe and on every frame of the canvas, are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
+
 ## Reader Control
 
-The comparison toolbar places a native `input type="checkbox"` with
-`role="switch"` immediately after the comparison-mode group and before
-Refresh. Its visible label, accessible name, and product copy are all
-**Scroll together**. It is visible in Side by side, Overlay, and Difference,
-including loading or failure states, and absent in Current. It is on by default.
+The Scroll together switch is a native `input type="checkbox"` with
+`role="switch"`. Its visible label, accessible name, and product copy are all
+**Scroll together**. The [Changes tab](./mokly-changes-controls.md#changes-tab)
+places it after the mode tiles and before Refresh in every compare mode other
+than Current, including loading or failure states. Current has no switch. The
+switch is on by default.
 
 The standalone shell of Serve and the static build stores `on` or `off` under the origin-local key
 `mokly:comparison-scroll-together`; missing, invalid, or unreadable means on,
@@ -17,11 +20,13 @@ comparisons, and source replacement for that mount. It resets to on after the
 viewer root remounts; independent roots have independent choices.
 
 - In Side by side, on mirrors page viewports and paired regions; off leaves
-  each version's page and regions independent. Each viewport still drives and
-  clamps only its own document, and both viewports keep the pair maximum range.
-- In Overlay and Difference, on mirrors paired regions. Off stops region
-  mirroring, but the page still has one structural offset because both layers
-  remain in one chrome and its lower layer has no separate page scrollbar.
+  each version's page and regions independent. Each page viewport still drives
+  and clamps only its own document, and both page viewports keep the pair
+  maximum range.
+- In Overlay, Difference, and Swipe, on mirrors paired regions. Off stops
+  region mirroring, but the page still has one structural offset because both
+  layers remain in one page viewport and its lower layer has no separate page
+  scrollbar.
 - Current has one version, so the hidden preference has no behavioral effect.
 
 Changing the switch applies to the open comparison without refetching,
@@ -42,33 +47,30 @@ switch draws these [palette](./mokly-viewer-palette.md) values in each
 appearance. It never uses the consumer-tunable `--mokly-accent-contrast`. The
 knob has a border, so forced colours keep it visible without opting out.
 
-The band keeps 16px between controls on a row and 8px between rows. Desktop
-places the switch after the mode group and Refresh at the far end. At the
-narrow breakpoint, the mode group fills the first row, then the switch starts
-the second and Refresh ends it. Every diff-mode artboard shows the switch on
-except `design/changes/diff-controls/side-by-side-apart`; Current shows none.
+Every diff-mode artboard shows the switch on except
+`design/changes/diff-controls/side-by-side-apart`; Current shows none.
 
 ## Last-Scrolled Version
 
 Track one last-scrolled version, Before or Current, per open comparison; every
-viewport section of that comparison shares it. A non-echo page, document, or
-region offset change owns it; Side by side assigns its viewport to its sole
-version, and a pointer press, wheel, touch, key, or focus that begins in a pane
-document, or an anchor followed there, assigns that pane. Dragging a stack's
-one shared scrollbar has no version and leaves the owner unchanged. Viewer
-writes, echoes, measurement reapplication, clamping, and switch-on realignment
-never change it. Initialize it to Current, or Before when Current does not
-exist, so the no-scroll case is deterministic.
+compared view of that comparison shares it. A non-echo page, document, or
+region offset change owns it; Side by side assigns each page viewport to its
+sole version, and a pointer press, wheel, touch, key, or focus that begins in a
+pane document, or an anchor followed there, assigns that pane. Dragging a
+stack's one shared scrollbar has no version and leaves the owner unchanged.
+Viewer writes, echoes, measurement reapplication, clamping, and switch-on
+realignment never change it. Initialize it to Current, or Before when Current
+does not exist, so the no-scroll case is deterministic.
 
 ## Realignment
 
-Turning the switch on uses that version as authority. For each viewport
-section independently, copy its page offset to every other version, then visit
-all of its inner regions in document order, resolve any match not cached since
-the last measurement with the
+Turning the switch on uses that version as authority. For each compared view
+independently, copy its page offset to every other version, then visit all of
+its inner regions in document order, resolve any match not cached since the
+last measurement with the
 [normal algorithm](./mokly-comparison-region-pairing.md), and copy both settled
 offsets to every counterpart. This includes zero offsets, so a counterpart is
-reset when the authoritative region is at its start. When Both is shown, the
-chosen version is shared but mobile and desktop offsets are never copied to
-each other. A missing authoritative version in one section falls back to the
-version that exists there.
+reset when the authoritative region is at its start. When several views are
+compared, they share the chosen version, but the offsets of one view are never
+copied to another view. A missing authoritative version in one view falls back
+to the version that exists there.
