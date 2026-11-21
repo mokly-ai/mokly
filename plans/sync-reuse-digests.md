@@ -1,6 +1,6 @@
 # Synchronous bundle reuse reads
 
-Status: Active. On branch `calummoore/mokly-sync-reuse-digests-8fcm`, no pull request yet. The completing pull request deletes this plan.
+Status: Active. [PR #449](https://github.com/mokly-ai/mokly/pull/449) is open. The completing pull request deletes this plan.
 
 The Node sidecar checks a stored compilation before it reuses it. Per-file
 asynchronous filesystem calls cost time on warm Serve restarts and edits.
@@ -10,6 +10,10 @@ yields. Keep all reuse results, evidence, identities, and publication bytes.
 The task message of 2026-11-20 authorizes this plan and its implementation.
 The performance orchestrator owns the six interleaved cloud measurements,
 the ten-edit memory measurements, and the merge. This branch never merges.
+
+On 2026-11-21, the performance orchestrator accepted the official speed,
+edit, and memory results of `10784499f`. The PR body keeps the accepted
+table. Final commits change documentation only. Product code stays fixed.
 
 Contract owners:
 
@@ -146,26 +150,27 @@ Depends on: 2
 - [x] Write red overlap tests without weakening the existing assertions.
 - [x] Implement the selected overlap path with reusable worker buffers.
 - [x] Rerun targeted checks and ten repeats for new asynchronous tests.
-- [ ] Record reuse and slice times locally.
-- [ ] Compare whole cold-page-cache reuse checks with the four-worker baseline.
+- [x] Record reuse and slice times locally.
+- [x] Compare whole cold-page-cache reuse checks with the four-worker baseline.
       Record file and directory phases apart. Keep the fixed directory reader.
-- [ ] Measure warm restarts on the basic and large React catalogues.
-- [ ] Compare edit `sidecar.bundle.resolution` and bundle-start to
+- [x] Measure warm restarts on the basic and large React catalogues.
+- [x] Compare edit `sidecar.bundle.resolution` and bundle-start to
       `sidecar.bundle.compile` start for main and branch.
-- [ ] Compare edit compile times and explain any measured difference.
-- [ ] Prove exact published bytes on basic, large HTML, large React, and cloud.
-- [ ] Run the repository suite and the complete gate.
-- [ ] Send the implementation SHA to the performance orchestrator for cloud
+- [x] Compare edit compile times and explain any measured difference.
+- [x] Prove exact published bytes on basic, large HTML, large React, and cloud.
+- [x] Run the repository suite and the complete gate.
+- [x] Send the implementation SHA to the performance orchestrator for cloud
       warm restart, edit, and memory measurements.
 
 Evidence: `.context/sync-reuse-digests/ledger.md` links the proof and measurement files.
+Gate evidence: `.context/sync-reuse-digests/complete-gate-final.log`.
 
 ## Milestone 4: Commit, review, and pull request
 
 Depends on: 3
 
-- [ ] Commit with Conventional Commits and push this branch.
-- [ ] Review the complete diff against `origin/main` with `implementation-review`.
+- [x] Commit with Conventional Commits and push this branch.
+- [x] Review the complete diff against `origin/main` with `implementation-review`.
       Check findings, apply the fix rule, and run the required review fix rounds.
 - [ ] Delete this plan after all required work and review rounds finish.
 - [ ] Open the pull request into `main`. Watch final required CI with
