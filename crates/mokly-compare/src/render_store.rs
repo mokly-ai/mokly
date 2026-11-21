@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+use arc_swap::ArcSwapOption;
 use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_sidecar::bundle_store::RecordToken;
 
@@ -86,7 +87,10 @@ pub trait DocumentBackend: Send + Sync {
 pub struct CachedDocuments {
     pub(crate) cache: Arc<dyn SegmentCache>,
     pub(crate) version: String,
-    pub(crate) index: Mutex<Option<BTreeMap<StoreKey, SegmentPosition>>>,
+    /// Complete bounded metadata, absent until startup inventory has finished.
+    pub(crate) index: ArcSwapOption<BTreeMap<StoreKey, SegmentPosition>>,
+    /// Startup, writer inspection, and adoption publish only while this owner is held.
+    pub(crate) maintenance: Mutex<()>,
     pub(crate) faults: Mutex<VecDeque<EntryFault>>,
     pub(crate) enabled: AtomicBool,
 }
@@ -113,7 +117,8 @@ impl CachedDocuments {
         Self {
             cache,
             version,
-            index: Mutex::new(None),
+            index: ArcSwapOption::empty(),
+            maintenance: Mutex::new(()),
             faults: Mutex::new(VecDeque::new()),
             enabled: AtomicBool::new(true),
         }
@@ -126,11 +131,11 @@ impl DocumentBackend for CachedDocuments {
     }
     fn contains(&self, key: &StoreKey) -> bool {
         self.enabled.load(Ordering::Acquire)
-            && self.index.try_lock().is_ok_and(|index| {
-                index
-                    .as_ref()
-                    .is_some_and(|entries| entries.contains_key(key))
-            })
+            && self
+                .index
+                .load()
+                .as_ref()
+                .is_some_and(|entries| entries.contains_key(key))
     }
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         self.read_document(key)
@@ -150,3 +155,11 @@ mod render_store_boundary_tests;
 #[cfg(test)]
 #[path = "_tests_/render_store_fault_tests.rs"]
 mod render_store_fault_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_concurrency_tests.rs"]
+mod render_store_concurrency_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_adoption_tests.rs"]
+mod render_store_adoption_tests;
