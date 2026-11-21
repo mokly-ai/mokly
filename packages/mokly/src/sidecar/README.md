@@ -22,7 +22,18 @@ its requests and results. The paths below are relative to the package root.
   passes the `preparation` to `PostcssWorkers.prepare` before the reuse check
   and does not wait for it. When the bundle fails, it disposes that context
   before it returns the error. It gives a `CaptureDurability` only to a `full`
-  request.
+  request. It ignores a `restoreGeneration` request for an id that it already
+  holds. It adds each generation that a `restoreGeneration` request installs
+  to a `WeakSet`. Both reply forms of `bundle` follow the same checks of
+  `reuse` and the same size check of `bundleResult`. The reply is a short
+  `RestoredBundle` under the
+  [restored reuse rules](../../../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse)
+  only when `reuse` selected a generation of that set, the size check kept the
+  same reuse evidence, and the result has no plan. Every other `bundle` reply
+  is the full result, such as after a fresh compile or after the reuse of a
+  generation that a `bundle` request installed. A generation that a `bundle`
+  request installs replaces the generation of an equal id, and it is never in
+  that set.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
@@ -230,7 +241,10 @@ its requests and results. The paths below are relative to the package root.
   captured compilations first, and also checks their reuse evidence. Then a
   `serveEdit` request tries the marked compilations with these live checks
   and their private folder files. A `full` request never takes a marked
-  compilation. Its `restore` installs a recipe without a compile.
+  compilation. `reuse` gives the generation whose compilation passed these
+  checks to its optional `selected` callback. `restore` installs a recipe
+  without a compile. `bundleResult` builds the full result of a generation and
+  runs the size check on it.
 - [`src/sidecar/toolchain.ts`](./toolchain.ts) holds
   `toolchainIdentity`, which each sidecar process computes once from the
   package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
@@ -409,5 +423,7 @@ its requests and results. The paths below are relative to the package root.
   a start whose path lookup still runs, so that start forks no child.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
+  `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short
+  `RestoredBundle`.
 - The [Rust sidecar pool](../../../../crates/mokly-sidecar/README.md) starts and
   stops the sidecar processes.

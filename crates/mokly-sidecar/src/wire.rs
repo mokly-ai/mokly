@@ -6,6 +6,7 @@ use serde_json::Value;
 use serde_json::value::RawValue;
 use ts_rs::TS;
 
+use crate::bundle_reply::BundleReply;
 use crate::definitions::Definitions;
 use crate::error::{Error, ProtocolError, RemoteCode, Result};
 use crate::methods::Call;
@@ -114,8 +115,11 @@ pub enum MethodResult {
 }
 
 impl Response {
-    /// Decode the result selected by the pending request method.
-    pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
+    pub(crate) fn decode_bundle(self) -> Result<BundleReply> {
+        decode(&self.payload()?)
+    }
+
+    fn payload(self) -> Result<Box<RawValue>> {
         match self {
             Self::Failure {
                 error:
@@ -129,22 +133,28 @@ impl Response {
                 code: error.code,
                 message: error.message,
             }),
-            Self::Success { result, .. } => match &request.call {
-                Call::Hello(_) => Ok(MethodResult::Hello(decode(&result)?)),
-                Call::Bundle(_) => Ok(MethodResult::Bundle(decode(&result)?)),
-                Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
-                Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
-                    Ok(MethodResult::Render(decode(&result)?))
-                }
-                Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
-                Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
-                Call::CssModules(_)
-                | Call::RestoreGeneration(_)
-                | Call::Bindings(_)
-                | Call::DisposeContext(_)
-                | Call::Dispose(_)
-                | Call::Shutdown(_) => Ok(MethodResult::Empty),
-            },
+            Self::Success { result, .. } => Ok(result),
+        }
+    }
+
+    /// Decode the result selected by the pending request method.
+    pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
+        let result = self.payload()?;
+        match &request.call {
+            Call::Hello(_) => Ok(MethodResult::Hello(decode(&result)?)),
+            Call::Bundle(_) => Ok(MethodResult::Bundle(decode(&result)?)),
+            Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
+            Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
+                Ok(MethodResult::Render(decode(&result)?))
+            }
+            Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
+            Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
+            Call::CssModules(_)
+            | Call::RestoreGeneration(_)
+            | Call::Bindings(_)
+            | Call::DisposeContext(_)
+            | Call::Dispose(_)
+            | Call::Shutdown(_) => Ok(MethodResult::Empty),
         }
     }
 }

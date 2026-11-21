@@ -4,12 +4,12 @@ use std::sync::Arc;
 
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::ReadOutcome;
+use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::durable_recipe::DurableRecipe;
 use crate::error::{Error, Result};
 use crate::methods::{BundleCapture, BundleRequest, Call};
 use crate::pool::Pool;
-use crate::pool_state::Slot;
-use crate::resolution_plan::ResolutionPlan;
+use crate::pool_state::{Slot, State};
 use crate::results;
 use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
 
@@ -18,11 +18,11 @@ pub(super) struct BundleAttempt {
     disk: Option<DiskCompilation>,
     cause: CacheOutcome,
     disk_checked: bool,
+    retained: Vec<(Arc<CompiledGeneration>, Arc<Vec<results::Module>>)>,
 }
 
 struct DiskCompilation {
-    runtime: String,
-    plan: Option<Arc<ResolutionPlan>>,
+    recipe: Box<DurableRecipe>,
 }
 
 impl Default for BundleAttempt {
@@ -31,7 +31,31 @@ impl Default for BundleAttempt {
             disk: None,
             cause: CacheOutcome::Unavailable,
             disk_checked: false,
+            retained: Vec::new(),
         }
+    }
+}
+
+impl BundleAttempt {
+    pub(super) fn pin_loaded(&mut self, state: &State, slot: &Slot) {
+        self.retained.clear();
+        for (id, epoch) in &slot.generations {
+            if state.epochs.get(id) == Some(epoch) {
+                self.pin(&state.compiled[id], &state.modules[id]);
+            }
+        }
+    }
+
+    pub(super) fn pin_restore(&mut self, recipe: &RestoreGeneration) {
+        self.pin(&recipe.compiled, &recipe.modules);
+    }
+
+    pub(super) fn pin(
+        &mut self,
+        compiled: &Arc<CompiledGeneration>,
+        modules: &Arc<Vec<results::Module>>,
+    ) {
+        self.retained.push((compiled.clone(), modules.clone()));
     }
 }
 
@@ -43,7 +67,7 @@ impl Pool {
         attempt: &mut BundleAttempt,
     ) -> Result<()> {
         attempt.disk = None;
-        if self.seed_compilation(slot, request)? {
+        if self.seed_compilation(slot, request, attempt)? {
             attempt.cause = CacheOutcome::StampMismatch;
             return Ok(());
         }
@@ -77,10 +101,7 @@ impl Pool {
         match restored {
             Ok(_) => {
                 slot.generations.insert(generation, 0);
-                attempt.disk = Some(DiskCompilation {
-                    runtime: recipe.compiled().runtime_key.clone(),
-                    plan: recipe.plan().cloned(),
-                });
+                attempt.disk = Some(DiskCompilation { recipe });
                 attempt.cause = CacheOutcome::StampMismatch;
                 Ok(())
             }
@@ -111,7 +132,7 @@ impl Pool {
             if attempt
                 .disk
                 .as_ref()
-                .is_some_and(|disk| &disk.runtime == runtime)
+                .is_some_and(|disk| &disk.recipe.compiled().runtime_key == runtime)
             {
                 CacheOutcome::Hit
             } else {
@@ -119,9 +140,9 @@ impl Pool {
             }
         });
         if let Some(disk) = &attempt.disk
-            && &disk.runtime == runtime
+            && &disk.recipe.compiled().runtime_key == runtime
         {
-            result.plan = disk.plan.clone();
+            result.plan = disk.recipe.plan().cloned();
         }
         let mut cause = attempt.cause;
         if request.capture.unwrap_or_default() == BundleCapture::Full

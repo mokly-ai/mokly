@@ -28,7 +28,7 @@ fn response(id: u64) -> Frame {
             epoch: 0,
             cache: None,
             compile_count: 0,
-            modules: vec![],
+            modules: Default::default(),
             unmapped_dependency_directories: None,
         })
         .unwrap(),

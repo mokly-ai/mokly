@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { BundleReply } from "../packages/mokly/src/generated/sidecar/BundleReply.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
@@ -112,7 +113,7 @@ for (const tier of ["working", "installed"]) {
       classMaps: {},
     });
     await installBindings(restored, result.generation, entries);
-    const replay = await restored.call<BundleResult>("bundle", params);
+    const replay = await restored.call<BundleReply>("bundle", params);
     assert.equal(replay.generation, result.generation);
     await restored.call("cssModules", {
       generation: replay.generation,

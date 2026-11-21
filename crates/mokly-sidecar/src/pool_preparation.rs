@@ -7,6 +7,7 @@ use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
 use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation};
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
@@ -58,6 +59,7 @@ impl Pool {
         &self,
         slot: &mut Slot,
         request: &BundleRequest,
+        attempt: &mut BundleAttempt,
     ) -> Result<bool> {
         let params = &request.params;
         let capture = request.capture.unwrap_or_default();
@@ -111,6 +113,15 @@ impl Pool {
             (stored, candidate, fallback)
         };
         let complete = stored.is_some() || candidate.is_some();
+        if let Some(recipe) = &stored {
+            attempt.pin_restore(recipe);
+        }
+        if let Some((_, preparation, _)) = &candidate {
+            preparation.pin(attempt);
+        }
+        if let Some((_, preparation)) = &fallback {
+            preparation.pin(attempt);
+        }
         if stored
             .as_ref()
             .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
@@ -227,10 +238,16 @@ pub(super) struct Preparation {
 struct Recipe {
     params: Bundle,
     compiled: Arc<CompiledGeneration>,
-    modules: Vec<Module>,
+    modules: Arc<Vec<Module>>,
 }
 
 impl Preparation {
+    fn pin(&self, attempt: &mut BundleAttempt) {
+        if let Some(recipe) = &self.recipe {
+            attempt.pin(&recipe.compiled, &recipe.modules);
+        }
+    }
+
     /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
     pub(super) fn snapshot(
         state: &State,

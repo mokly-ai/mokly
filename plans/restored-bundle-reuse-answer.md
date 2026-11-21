@@ -1,6 +1,6 @@
 # Return a reference after restored bundle reuse
 
-Status: Active. On branch `calummoore/mokly-restored-bundle-reuse-answer-pspj`, no pull request yet. The pull request that completes this work deletes this plan. The design awaits the user's answer before implementation.
+Status: Active. On branch `calummoore/mokly-restored-bundle-reuse-answer-pspj`, no pull request yet. The pull request that completes this work deletes this plan. The user approved A at `a7ee7ddfc` on 2026-11-21. Milestones 1 to 3 and the early repository suite are complete. Full verification and performance evidence are in progress.
 
 Mokly's core restores a stored JavaScript compilation into a Node sidecar.
 The next bundle request checks its inputs and can reuse that compilation.
@@ -17,6 +17,7 @@ Contract owners:
 
 - [Render sidecar](../docs/protocol/mokly-sidecar.md).
 - [Compiled recipes and release](../docs/protocol/mokly-sidecar-recipes.md).
+- [Released recipes](../docs/protocol/mokly-sidecar-release.md).
 - [Base preparation cache](../docs/protocol/mokly-base-cache.md).
 - The [Rust sidecar README](../crates/mokly-sidecar/README.md).
 - The [Node sidecar README](../packages/mokly/src/sidecar/README.md).
@@ -57,7 +58,19 @@ Contract owners:
 - **Wider fix:** A. A typed reference represents data already owned by both processes. It avoids another recipe copy for every restored reuse.
 - **Previous examples:** `plans/follow-ups/bundle-response-single-encoding.md` records repeated recipe encoding. `plans/follow-ups/bundle-cache-request-cost.md` records unprofiled cache-path costs. Commit `a16a623e6` classifies reuse from observed compiles.
 - **Recommendation:** A, with the loaded-origin mirror and shared graph. The final options check returns to the initial A after considering D. A keeps the existing request shape and covers every restored compilation without graph copies.
-- **Action:** ask the user, because the user requested the design before implementation and must choose the protocol change.
+- **Action:** The user approved A on 2026-11-21, with the rules below.
+
+The approval keeps the full answer whenever reuse fails or the full size
+check changes anything. Reconstructed `compiled` and `modules` share the
+named restore through `Arc`, without another decoded copy. The pool must
+already hold the shared data. Memory evidence must show no added retained
+recipe data. Red tests must cover equal ids, ignored duplicate restores,
+dispose and process loss, unknown and disposed references, and evidence
+replacement by the size check. Invalid references remain protocol errors
+with current recovery, without a silent fallback. The optional cache reader
+cut needs exact fault classes and precedence, including combined faults.
+Both protocol pages and generated TypeScript change in this pull request.
+The official control is main `793d0c77d`.
 
 All options share the task's output, warning, diagnostic, frame-limit, and
 memory requirements. The sidecar remains responsible for the reuse proof in
@@ -103,7 +116,8 @@ restore provenance merely because it shares code. Two installed restores
 remain distinct, and each result names the one actually used.
 
 The core mirrors each loaded id as `Compiled` or `Restored` in the client.
-Only `Restored` retains rebuild data. Compiled data shares its existing `Arc`.
+Only `Restored` refers to rebuild data, through weak references. The pool's
+request attempt pins the already-owned compilation and graph through `Arc`.
 The module graph shares an `Arc` with the pool and the restore request.
 Successful restores of absent ids install `Restored`. A restore of any loaded
 id changes nothing, including an id installed by a bundle.
@@ -144,6 +158,14 @@ Evidence: `.context/restored-bundle-reuse/field-proof.md`.
 - **Agent call, 2026-11-21:** Keep sidecar edits in reuse provenance and request
   dispatch. The separate bundle-tail workspace owns recipe-size and transport
   encoding. Keep PostCSS preparation and Serve scheduling outside this change.
+- **Agent call, 2026-11-21:** Move the existing Released Recipes section to
+  its own linked protocol page. Keep its old heading as a link target. This
+  preserves every rule and anchor while the two changed pages meet their caps.
+- **Agent call, 2026-11-21:** Use weak restore references in the client and
+  pin existing recipe allocations in the pool's request attempt. Strong client
+  references could outlive concurrent pool release or recipe eviction. The
+  pins preserve an active reply. They end with the request, so the client adds
+  no retained recipe body. The disk attempt owns its already-loaded recipe.
 
 ## Milestone 1: Documentation and protocol
 
@@ -151,10 +173,12 @@ Depends on: none
 
 State the approved wire contract and its preservation requirements.
 
-- [ ] Record the user's answer and the options-check result.
-- [ ] Update both sidecar protocol pages with the short form and size rules.
-- [ ] Keep protocol pages within their caps. Preserve existing rules and links.
-- [ ] Update the affected area READMEs with current entry points and behavior.
+- [x] Record the user's answer and the options-check result.
+- [x] Update both sidecar protocol pages with the short form and size rules.
+- [x] Keep protocol pages within their caps. Preserve existing rules and links.
+- [x] Update the affected area READMEs with current entry points and behavior.
+
+Documentation evidence: `.context/restored-bundle-reuse/docs/`.
 
 ## Milestone 2: Restored reuse response
 
@@ -162,20 +186,24 @@ Depends on: 1
 
 Implement the typed response and exact client reconstruction as one working change.
 
-- [ ] Add red boundary tests for the short form and exact reconstruction.
-- [ ] Cover stored head and base reuse, equal state, output, and warnings.
-- [ ] Cover changed inputs and the unchanged full fresh answer.
-- [ ] Cover damaged entries, crash recovery, and stop during reuse.
-- [ ] Cover two restores, each reused correctly, duplicate ids, and disposal.
-- [ ] Cover frame-limit evidence reduction and the full-answer fallback.
-- [ ] Add restore provenance and the short response without changing the reuse proof.
-- [ ] Share the pool and restore module graph through `Arc`, with unchanged serialized data.
-- [ ] Add the process-local loaded-origin mirror and exact reconstruction before replacement.
-- [ ] Decode full and short replies without an extra tree or parse pass on full results.
-- [ ] Keep the full wire result for fresh compiles and sidecar-compiled reuse.
-- [ ] Regenerate shared types with `cargo xtask generate-types`.
-- [ ] Run focused Node, client, pool, and real-sidecar integration tests.
-- [ ] Run each new asynchronous test ten times and record its red failure and cost.
+- [x] Add red boundary tests for the short form and exact reconstruction.
+- [x] Cover stored head and base reuse, equal state, output, and warnings.
+- [x] Cover changed inputs and the unchanged full fresh answer.
+- [x] Cover damaged entries, crash recovery, and stop during reuse.
+- [x] Cover two restores, each reused correctly, duplicate ids, and disposal.
+- [x] Cover frame-limit evidence reduction and the full-answer fallback.
+- [x] Add restore provenance and the short response without changing the reuse proof.
+- [x] Share the pool and restore module graph through `Arc`, with unchanged serialized data.
+- [x] Add the process-local loaded-origin mirror and exact reconstruction before replacement.
+- [x] Decode full and short replies without an extra tree or parse pass on full results.
+- [x] Keep the full wire result for fresh compiles and sidecar-compiled reuse.
+- [x] Regenerate shared types with `cargo xtask generate-types`.
+- [x] Remove planned-behavior status lines and update the READMEs after GREEN.
+- [x] Run focused Node, client, pool, and real-sidecar integration tests.
+- [x] Run each new asynchronous test ten times and record its red failure and cost.
+
+Red evidence: `.context/restored-bundle-reuse/red/report.md`.
+Implementation and focused evidence: `.context/restored-bundle-reuse/m2-report.md`.
 
 ## Milestone 3: Bounded cache payload decoding
 
@@ -183,11 +211,13 @@ Depends on: 2
 
 Evaluate the smaller cache-reader cut without changing cache semantics.
 
-- [ ] Confirm the hot caller in `bundle_codec_read.rs` with local evidence.
-- [ ] Use a bounded temporary byte buffer for the existing second read.
-- [ ] Keep all fault classes, version gates, digests, size limits, and cache bytes.
-- [ ] Run existing codec fault and real bundle-store integration tests.
-- [ ] Compare timing and memory. Keep the cut only when it meets acceptance.
+- [x] Confirm the hot caller in `bundle_codec_read.rs` with local evidence.
+- [x] Use a bounded temporary byte buffer for the existing second read.
+- [x] Keep all fault classes, version gates, digests, size limits, and cache bytes.
+- [x] Run existing codec fault and real bundle-store integration tests.
+- [x] Hand the fault-proved cut to the shared performance checks.
+
+Fault and focused evidence: `.context/restored-bundle-reuse/m3-report.md`.
 
 ## Milestone 4: Verification and performance evidence
 
@@ -197,16 +227,18 @@ Prove preservation and supply a measured branch to the performance orchestrator.
 
 - [ ] Run targeted tests, the repository suite, and the complete `cargo xtask check` gate.
 - [ ] Smoke-test cloud and basic with this branch's release core and dist.
-- [ ] Ask the performance orchestrator for workspace 206's four-fixture proof helper.
+- [x] Ask the performance orchestrator for workspace 206's four-fixture proof helper.
 - [ ] Compare local warm restarts, first Changes, and edits in interleaved rounds against main.
 - [ ] Prove exact published bytes, Changes state, warnings, and diagnostics on all four fixtures.
 - [ ] Check local whole-tree memory for warm restarts and cold ten-edit sessions.
+- [ ] Keep the cache-reader cut only when timing and memory evidence meets acceptance.
 - [ ] Commit and push. Send the SHA for the official restart and memory pairs.
 - [ ] Record the performance orchestrator's acceptance or resolve each regression.
 
 Baseline evidence and setup failures stay under
 `.context/restored-bundle-reuse/measurements/` and in `ledger.md` beside it.
 No measurement timer or generated build output enters the commit.
+Early repository evidence: `.context/restored-bundle-reuse/repository-m2-summary.json`.
 
 ## Milestone 5: Review and pull request
 

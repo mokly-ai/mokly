@@ -129,7 +129,8 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                                 path: "renderer.ts".into(),
                                 imports: vec!["theme.module.css".into()],
                                 digest: None,
-                            }];
+                            }]
+                            .into();
                             MethodResult::Bundle(Box::new(reply))
                         }
                         Call::Describe(_) => MethodResult::Definitions(definitions()),
