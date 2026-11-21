@@ -457,17 +457,15 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Receive the performance orchestrator's warm confirmation after the cleanup SHA is pushed.
 - [x] Record the remaining pre-readiness work and the accepted warm readiness cost in a post-merge follow-up.
 - [x] Restore the existing dependency error timing span on an input read limit, with its unchanged static regression test.
-- [ ] Resolve the Browser gate's watch-capacity failure and invalid-base host exit, with the existing tests unchanged.
+- [x] Provision the Browser gate's OS watch capacity and record the known Example teardown failure and full rerun, with every test unchanged.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
 - [ ] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
 - [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.
 - [x] Rerun the targeted tests and repository suite after the main integration.
-- [ ] Await final CI with `scripts/ci-wait.sh` after each push and after PR creation.
-- [ ] Rerun unrelated Site Lighthouse at most once and record its result separately from Required CI.
-- [ ] Report the PR link, tested SHA, measurement acceptance, checks, and remaining items. Do not merge.
 - [ ] Delete this plan when the `plans` skill permits it.
-- [ ] Open the pull request into `main`. Preserve the dated design calls and plan permalink in its description.
+- [ ] Open the pull request into `main` with the dated design calls and plan permalink. Await final CI with `scripts/ci-wait.sh` after each push and PR creation. Rerun unrelated Site Lighthouse at most once and record it separately from Required CI. Report the PR link, tested SHA, acceptance, checks, and remaining items. Do not merge.
 
 Evidence: `.context/eager-base-preparation/main-integration-merge-audit.log` and `main-integration-preservation.md` record the main integration and preservation check.
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/desktop-main-integration/` records preservation of the later desktop release merge. Its sibling `browser-git-exit/browser-7f4220e7a-summary.json` records the full Browser pass and zero exits of the shared process chain. The existing Example teardown follow-up keeps the earlier failure and its unknown cause.
