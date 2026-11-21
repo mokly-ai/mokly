@@ -177,11 +177,11 @@ Depends on: 2
 - [x] Run the complete repository gate.
 - [x] Run local basic label and utility edits, plus the large React fixture comparison.
 - [x] Prove every published byte on basic, large HTML, large React, and the cloud catalogue.
-- [ ] Compare Serve HTTP stylesheet and affected-document bytes after start, label edit, class addition, class removal, and restore, on both toolchains. Stop and report any difference.
+- [x] Compare Serve HTTP stylesheet and affected-document bytes after start, label edit, class addition, class removal, and restore, on both toolchains. Stop and report any difference.
 - [x] Count PostCSS children and measure cold ten-edit tree memory.
 - [x] Commit and push the implementation and send the SHA and harness commands to the orchestrator.
 - [x] Receive official basic, cloud, and memory confirmation. The user accepted the measured 202 ms gain on 2026-11-21, below the initial 0.4 s goal.
-- [ ] Receive the final quiet-machine cold-session memory decision. Keep the PR in draft until that result and the Serve HTTP proof settle.
+- [x] Receive the final quiet-machine cold-session memory decision. Keep the PR in draft until that result and the Serve HTTP proof settle.
 
 Local comparison evidence: `.context/postcss-reuse-across-edits/local-measurement-index.json`
 and `local-memory-peak-and-large-inventory.json`. Report the local limits with
@@ -243,11 +243,18 @@ Evidence: `.context/postcss-reuse-across-edits/memory-bound-options.md`,
 - [x] Implement the conditional retirement and older-context guard with idempotent release.
 - [x] Keep base, build, failures, cancellation, and normal priority behavior.
 - [x] Run targeted checks and repeat each new asynchronous case ten times.
-- [ ] Build and freeze the bounded candidate with the resource guard.
-- [ ] Measure basic speed, child counts, and the cold five-edit/five-restore RSS sequence.
-- [ ] Repeat the Serve raw HTTP proof and strict four-fixture static output proof.
-- [ ] Push the bounded product and send the SHA and commands for the official gate.
-- [ ] Receive the new official memory and speed confirmation.
+- [x] Build and freeze the bounded candidate with the resource guard.
+- [x] Measure basic speed, child counts, and the cold five-edit/five-restore RSS sequence.
+- [x] Repeat the Serve raw HTTP proof and strict four-fixture static output proof.
+- [x] Push the bounded product and send the SHA and commands for the official gate.
+- [x] Receive the new official memory and speed confirmation.
+- [x] Run the complete bounded-product gate before the test-only review fix.
+
+User acceptance, 2026-11-21: accept bounded `b67c27ef9`. Warm edits improve
+by 299 ms. Cold whole-tree peak falls by 4.8%. Cloud has no regression.
+This acceptance supersedes the initial speed target and the rejected unbounded result.
+Evidence: `.context/postcss-reuse-across-edits/official-m5-acceptance.md` and
+`m5-gate-b67c27ef9.log`.
 
 ## Milestone 4: Review and pull request
 

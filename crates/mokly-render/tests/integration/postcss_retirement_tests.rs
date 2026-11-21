@@ -1,13 +1,11 @@
 //! Successful Serve head graphs serve retained CSS after their child is retired.
 
-use std::collections::BTreeMap;
 use std::fs;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use mokly_graph::cache::{Artifact, RenderCache, RenderCacheMock};
+use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::key::NodeKey;
 use mokly_sidecar::methods::Call;
-use unimock::{MockFn, Unimock, matching};
 
 use super::postcss_preparation_tests::{fixture, releases};
 
@@ -19,24 +17,6 @@ fn css_contexts(calls: &[Call]) -> Vec<String> {
             _ => None,
         })
         .collect()
-}
-
-fn cache(records: Arc<Mutex<BTreeMap<NodeKey, Arc<Artifact>>>>) -> Arc<dyn RenderCache> {
-    let writes = records.clone();
-    Arc::new(Unimock::new((
-        RenderCacheMock::get
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, key| {
-                records.lock().unwrap().get(key).cloned()
-            }))
-            .at_least_times(0),
-        RenderCacheMock::insert
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, key, value| {
-                writes.lock().unwrap().insert(key, value);
-            }))
-            .at_least_times(0),
-    )))
 }
 
 #[test]
@@ -51,9 +31,9 @@ fn serve_head_retirement_keeps_exact_css_after_an_artifact_cache_miss() {
             );
         }
         consumer.write("postcss.mjs", "let count=0;export default {plugins:[{postcssPlugin:'counter',Once(root){++count;root.walkDecls('color',declaration=>{declaration.value=String(count);});}}]};");
-        let records = Arc::new(Mutex::new(BTreeMap::new()));
+        let cache = Arc::new(MemoryCache::new(64 * 1024, 0));
         let runtime = Arc::make_mut(&mut consumer.runtime);
-        runtime.cache = cache(records.clone());
+        runtime.cache = cache.clone();
         *runtime = runtime.clone().with_stylesheet_watching();
         let generation = consumer.generation(consumer.prepare().unwrap());
         let contexts = css_contexts(&consumer.pool.calls.lock().unwrap());
@@ -63,13 +43,48 @@ fn serve_head_retirement_keeps_exact_css_after_an_artifact_cache_miss() {
             1,
             "javascript={javascript}"
         );
-        let retained = records.lock().unwrap().len();
+        let retained = cache.stats().entries;
         assert_ne!(retained, 0);
-        records.lock().unwrap().clear();
+        let before_hit = cache.stats();
+        let _ = generation.resource("styles/theme.css").unwrap().unwrap();
+        let after_hit = cache.stats();
+        assert_eq!(
+            after_hit.hits - before_hit.hits,
+            1,
+            "javascript={javascript}"
+        );
+        assert_eq!(
+            after_hit.misses - before_hit.misses,
+            0,
+            "javascript={javascript}"
+        );
+        for index in 0..64 {
+            cache.insert(
+                NodeKey(format!("retirement-filler-{index}")),
+                Arc::new(Artifact {
+                    bytes: vec![0; 1024],
+                    document: None,
+                    fragment: None,
+                    content_type: "application/octet-stream".into(),
+                }),
+            );
+        }
+        let before_miss = cache.stats();
         let before = consumer.pool.calls.lock().unwrap().len();
         assert_eq!(
             generation.resource("styles/theme.css").unwrap().unwrap(),
             b"p {\n  color: 1;\n}\n"
+        );
+        let after_miss = cache.stats();
+        assert_eq!(
+            after_miss.misses - before_miss.misses,
+            1,
+            "javascript={javascript}"
+        );
+        assert_eq!(
+            after_miss.hits - before_miss.hits,
+            0,
+            "javascript={javascript}"
         );
         let later = css_contexts(&consumer.pool.calls.lock().unwrap()[before..]);
         assert_eq!(later, Vec::<String>::new());
