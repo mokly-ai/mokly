@@ -29,9 +29,20 @@ struct LookupJob {
     documents: Arc<dyn Documents>,
     route: String,
     parent: tracing::Span,
+    worker: HeldWorker,
+    lifetime: Lifetime,
+}
+
+/// The worker permit and the priority guard of a lookup job. The job returns them, so after
+/// a successful join the render's task, not the job's thread, frees the worker and then asks
+/// for a batch place. That request can yield first, and a later render's lookup can take the
+/// worker in between. A caller that polls its renders in request order, as the usage pass
+/// does, still keeps that order: the earlier miss queues before a later render can handle its
+/// own lookup result. After a panic or a cancelled render, the job's thread drops them. The
+/// permit drops before the guard, so the worker is free when the guard wakes the waiters.
+struct HeldWorker {
     _permit: OwnedSemaphorePermit,
     _guard: Guard,
-    lifetime: Lifetime,
 }
 
 struct ResumeJob {
@@ -44,12 +55,12 @@ struct ResumeJob {
 }
 
 impl LookupJob {
-    fn run(self) -> (Result<Option<BackgroundRead>>, Lifetime) {
+    fn run(self) -> (Result<Option<BackgroundRead>>, Lifetime, HeldWorker) {
         let read = RenderClass::Background.in_scope(|| {
             self.parent
                 .in_scope(|| self.documents.background_read(&self.route))
         });
-        (read, self.lifetime)
+        (read, self.lifetime, self.worker)
     }
 }
 
@@ -94,15 +105,17 @@ impl Workers {
             documents,
             route: route.clone(),
             parent: tracing::Span::current(),
-            _permit: permit,
-            _guard: self.priority.enter(false),
+            worker: HeldWorker {
+                _permit: permit,
+                _guard: self.priority.enter(false),
+            },
             lifetime: Lifetime {
                 _activity: activity,
                 _active: self.background_jobs.start(),
             },
         };
         let (read, lifetime) = match tokio::task::spawn_blocking(move || lookup.run()).await {
-            Ok(value) => value,
+            Ok((read, lifetime, _worker)) => (read, lifetime),
             Err(source) => return Err(InternalError::Task { source }.into()),
         };
         let miss = match read? {
