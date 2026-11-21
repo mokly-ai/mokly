@@ -43,6 +43,11 @@ This workspace opens one pull request into `main` and does not merge it.
   correctness fix of `plans/follow-ups/stylesheet-observed-plugin-config-reads.md`.
   Never fix it here. F work continues meanwhile. Merge `main` when that pull
   request merges, before the final verification.
+- 2026-11-21: PR #462 merged as `134d1c04b`. This branch merged that main once
+  at `6efd5b164`. Its product code and regression tests remain unchanged.
+  The original observation item is closed. The remaining probes, external
+  reads, and environment inputs stay in the
+  [separate evidence item](follow-ups/postcss-probes-external-reads-environment.md).
 - PR #461 changes the base startup order. This change must work with that
   order too. Later integration follows the repository merge rules.
 
@@ -442,13 +447,17 @@ Implementation and test evidence: `.context/startup-postcss-preparation/implemen
 Depends on: 4, and the merge of the workspace 223 correctness pull request
 into `main`.
 
-- [ ] Merge `origin/main` after workspace 223 fixes observed configuration
+- [x] Merge `origin/main` after workspace 223 fixes observed configuration
       reuse. Keep that product fix and its regression test in the correctness
-      branch. Run every check below on the merged tree.
-- [ ] Run each new asynchronous test ten times. Record the pass counts.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+      branch.
+- [x] Rerun the stylesheet and PostCSS tests on the merged tree, as the
+      orchestrator requested after the `134d1c04b` merge signal.
+- [x] Run each new asynchronous test ten times. Record the pass counts.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Run the strict example build and a Serve smoke test of a startup with
+- [ ] Verify the final merged candidate with the complete gate. Keep the
+      earlier gate receipt separate from the merged candidate identity.
+- [x] Run the strict example build and a Serve smoke test of a startup with
       PostCSS, with the commands of `AGENTS.md`.
 - [ ] Prove all raw output bytes equal between `main` and this branch.
   - [ ] Static Build with `--strict --no-changes --sidecars 2` on Basic, the
@@ -471,6 +480,22 @@ into `main`.
       way. Confirm that it prepares nothing and changes nothing beyond noise.
 - [ ] Measure the whole-tree kernel `memory.peak` of cold sessions with 5
       edits and 5 restores, and of warm restarts. Confirm the 2% limit.
+
+The first local complete gate covers the F tree before the main merge.
+The merged targeted test receipt is
+`.context/startup-postcss-preparation/merged-render-01.json`.
+The merged stability, Node preparation, and document checks are in
+`.context/startup-postcss-preparation/merged-targeted-01.json`.
+The merge preservation audit is
+`.context/startup-postcss-preparation/main-134-merge-preservation.md`.
+The live build and smoke evidence is
+`.context/startup-postcss-preparation/live-prepare-01.json`,
+`.context/startup-postcss-preparation/merged-strict-example-01.json`, and
+`.context/startup-postcss-preparation/npm-dev-smoke-134-01/`.
+The predeclared arm order is
+`.context/startup-postcss-preparation/measurement-order-134d1c04b.json`.
+Basic warm pairs run before the large output proofs. A missed acceptance
+criterion stops the dependent work under the stop rule above.
 
 Before each large Cargo build, check the disk and the memory. Require at
 least 15 GiB of free disk. Use `CARGO_INCREMENTAL=0` and

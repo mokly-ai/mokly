@@ -51,6 +51,10 @@
     performance orchestrator parked it. The sections below give the dated
     decisions, the rejected options, the input classes, the census, the
     parked protocol text, and the parked test plan.
+  - PR #462 merged on 2026-11-21 at `134d1c04b`. It retains mapped observed
+    plugin configuration reads as private evidence. This closes the dropped
+    Browserslist-read bug. Coverage remains incomplete, so this correction
+    supplies no complete and stable certificate for a stored PostCSS result.
 - **Problem:** No stored record can prove that a later process checks every
   input that its compile read. So a strict store can admit no PostCSS
   record, and no core-only record has a certificate yet.
@@ -96,9 +100,9 @@
     certificate is the admission guard that this store needs.
   - [confined-postcss-inputs.md](./confined-postcss-inputs.md): the confined
     input design that option B needs for opaque reads.
-  - [stylesheet-observed-plugin-config-reads.md](./stylesheet-observed-plugin-config-reads.md):
-    the core drops the observed Browserslist read today. No store starts
-    before that fix merges.
+  - [postcss-probes-external-reads-environment.md](./postcss-probes-external-reads-environment.md):
+    the input classes that remain after the mapped observed-read correction.
+    A stored record must also check them across restarts.
   - [postcss-config-inputs-per-record.md](./postcss-config-inputs-per-record.md):
     each record copies the configuration inputs, which a stored format would
     copy too.
