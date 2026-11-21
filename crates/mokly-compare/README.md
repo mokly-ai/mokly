@@ -305,7 +305,13 @@ The CLI implements `BaseProvider`, which supplies the base render generation
 through the common graph. A JavaScript provider uses the same request's source
 and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
-sidecar pool, and cancellation.
+sidecar pool, and cancellation. `BaseRequest::source_request` gives the
+source-only `BaseSourcesRequest`, which carries no head. So a provider can
+start source work as soon as the working configuration validates.
+A fresh preparation first asks `BaseProvider::historical_sources`, after the
+kept-base lookup misses. A
+provider that adopts a pending preparation returns its source readers there.
+The default returns `None`, and `Changes` creates the sources itself.
 
 `BaseProvider` can also keep one captured base between classifications. After
 the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
@@ -462,7 +468,11 @@ development dependencies, and no test uses the internet.
   with lifecycle scripts off, carry its freshness evidence, and compare it with
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
   methods keep nothing. `PreparedBase::prefetch` holds the `PrefetchGuard` of
-  the early renders of a fresh base.
+  the early renders of a fresh base. `BaseProvider::historical_sources` lets a
+  provider adopt pending source readers.
+- [`src/base_sources.rs`](./src/base_sources.rs) defines
+  `BaseSourcesRequest`, the inputs of base source work that need no head
+  generation, and `BaseRequest::source_request`.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -480,8 +490,9 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse. It holds the `PrefetchGuard` of a fresh base until the capture of
-  that base returns, so each exit stops its early renders and waits for them.
+  reuse. Each fresh preparation takes the provider's historical sources when
+  it has them. It holds the `PrefetchGuard` of a fresh base until the capture
+  of that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,
@@ -596,6 +607,7 @@ development dependencies, and no test uses the internet.
 - [Comparison serving](../../docs/protocol/mokly-comparison-serving.md) and
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
   [render store](../../docs/protocol/mokly-render-store.md),
   [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),

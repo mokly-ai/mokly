@@ -130,6 +130,7 @@ mod base_reader;
 pub mod base_render;
 pub mod base_retention;
 pub mod base_selection;
+pub mod base_sources;
 pub mod comparison;
 pub mod install_inputs;
 

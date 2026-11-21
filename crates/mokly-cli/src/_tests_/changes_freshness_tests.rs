@@ -58,6 +58,7 @@ fn checkout_change_after_first_base_read_preserves_the_sample_and_invalidates_re
         working: Arc::new(Unimock::new(())),
     });
     let provider: &dyn BaseProvider = &NativeBase {
+        validation: None,
         admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
