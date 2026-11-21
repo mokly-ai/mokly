@@ -6,8 +6,20 @@ These records use the schema and privacy rules in
 and what it measures.
 
 Review spans use the same session, role, and parent context as their caller:
-under `changes.classify` in Serve and under `output.write` in `build`. The
-`review.capture-side` span carries `side`, with `base` for the base generation
+under `changes.classify` in Serve and under `output.write` in `build`. In
+Serve, [eager base preparation](./mokly-eager-base-preparation.md) runs its
+source and validation work in its own root context, with the same session and
+role. Its spans have no parent outside that work. So its
+`review.base-extraction` and `review.base-dependencies` spans can start
+before `changes.classify`. Capture and comparison spans stay under
+`changes.classify` after the background pass, also when the classification
+adopts the eager preparation.
+
+Decision: eager spans use their own root context. Rejected: the context of
+the head preparation attempt, because the eager work would then keep
+`serve.ready` or `watch.action` open and delay its end record.
+
+The `review.capture-side` span carries `side`, with `base` for the base generation
 and `head` for the head generation. Build and publish emit the head capture
 under `output.write` before `changes.classify`. The base capture appears under
 `review.base-tree`. `review.base-tree` carries `action`: `prepare` for a new

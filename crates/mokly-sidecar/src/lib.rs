@@ -34,6 +34,7 @@ mod pool_affinity;
 mod pool_bundle_cache;
 pub mod pool_claim;
 mod pool_cleanup;
+mod pool_eager;
 mod pool_exchange;
 mod pool_head;
 mod pool_leases;

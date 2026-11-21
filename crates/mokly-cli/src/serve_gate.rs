@@ -8,16 +8,20 @@ use mokly_server::changes::ChangeCancellation;
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::foreground::ForegroundLease;
 use mokly_sidecar::error::{Error, Result};
+use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool_admission::PoolCapacity;
 use mokly_sidecar::pool_claim::CallClaim;
 use mokly_sidecar::workers::Diagnostics;
 
+use crate::serve_eager_admission::EagerAdmission;
 use crate::serve_return::{self, ReturnAdmission};
 
 #[derive(Default)]
 pub(super) struct State {
     pub(super) active: usize,
     pub(super) foreground: usize,
+    pub(super) http: usize,
+    eager: usize,
     pub(super) waiting: usize,
     pub(super) waiting_base: usize,
     waiting_http: usize,
@@ -56,14 +60,24 @@ impl Gate {
     }
 
     pub(super) fn foreground(self: &Arc<Self>) -> ForegroundGuard {
+        self.enter(false)
+    }
+
+    pub(super) fn http(self: &Arc<Self>) -> ForegroundGuard {
+        self.enter(true)
+    }
+
+    fn enter(self: &Arc<Self>, http: bool) -> ForegroundGuard {
         let activity = self.activity();
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .foreground += 1;
+        {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.foreground += 1;
+            state.http += usize::from(http);
+        }
         self.changed.notify_all();
         ForegroundGuard {
             gate: self.clone(),
+            http,
             _activity: activity,
         }
     }
@@ -82,6 +96,24 @@ impl Gate {
         base: Option<&dyn ChangeCancellation>,
         class: RenderClass,
     ) -> Result<CallLease> {
+        self.acquire_call(base, class, None)
+    }
+
+    pub(super) fn acquire_eager(
+        self: &Arc<Self>,
+        cancel: &dyn ChangeCancellation,
+        phase: &dyn EagerAdmission,
+        call: &Call,
+    ) -> Result<CallLease> {
+        self.acquire_call(Some(cancel), RenderClass::Background, Some((phase, call)))
+    }
+
+    fn acquire_call(
+        self: &Arc<Self>,
+        base: Option<&dyn ChangeCancellation>,
+        class: RenderClass,
+        preparation: Option<(&dyn EagerAdmission, &Call)>,
+    ) -> Result<CallLease> {
         let http = base.is_none() && class == RenderClass::Foreground;
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         state.waiting += 1;
@@ -98,10 +130,24 @@ impl Gate {
                 self.wake_return();
                 return Err(failure);
             }
-            if state.active < self.capacity.capacity()
-                && (base.is_none() || state.foreground == 0)
+            let capacity = self.capacity.capacity();
+            let eager = preparation.is_some_and(|(phase, _)| !phase.adopted());
+            let eligible = if eager {
+                preparation.is_some_and(|(phase, _)| phase.allowed(capacity))
+                    && state.http == 0
+                    && state.eager == 0
+                    && state.waiting == state.waiting_base
+            } else {
+                base.is_none() || state.foreground == 0
+            };
+            if state.active < capacity
+                && eligible
                 && (base.is_some() || class != RenderClass::Background || state.waiting_http == 0)
-                && let Some(claim) = (match self.capacity.try_claim() {
+                && let Some(claim) = (match if let Some((_, call)) = preparation.filter(|_| eager) {
+                    self.capacity.try_eager_claim(call)
+                } else {
+                    self.capacity.try_claim()
+                } {
                     Ok(claim) => claim,
                     Err(error) => {
                         failure = error;
@@ -111,13 +157,17 @@ impl Gate {
                 })
             {
                 state.active += 1;
+                state.eager += usize::from(eager);
                 state.waiting -= 1;
                 state.waiting_base -= usize::from(base.is_some());
                 state.waiting_http -= usize::from(http);
                 self.wake_return();
                 return Ok(CallLease {
                     claim,
-                    _active: ActiveGuard { gate: self.clone() },
+                    _active: ActiveGuard {
+                        gate: self.clone(),
+                        eager,
+                    },
                 });
             }
             state = self
@@ -137,6 +187,10 @@ impl Gate {
 }
 
 impl ReturnAdmission for Gate {
+    fn changed(&self) {
+        let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        self.changed.notify_all();
+    }
     fn activity(&self) -> Option<Box<dyn WriteLease>> {
         self.activity()
     }
@@ -183,6 +237,7 @@ pub(super) struct CallLease {
 
 struct ActiveGuard {
     gate: Arc<Gate>,
+    eager: bool,
 }
 
 impl Drop for ActiveGuard {
@@ -193,6 +248,7 @@ impl Drop for ActiveGuard {
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         state.active -= 1;
+        state.eager -= usize::from(self.eager);
         self.gate.changed.notify_all();
         self.gate.wake_return();
     }
@@ -200,6 +256,7 @@ impl Drop for ActiveGuard {
 
 pub(super) struct ForegroundGuard {
     gate: Arc<Gate>,
+    http: bool,
     _activity: Option<Box<dyn WriteLease>>,
 }
 
@@ -213,6 +270,7 @@ impl Drop for ForegroundGuard {
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         state.foreground -= 1;
+        state.http -= usize::from(self.http);
         self.gate.changed.notify_all();
         self.gate.wake_return();
     }

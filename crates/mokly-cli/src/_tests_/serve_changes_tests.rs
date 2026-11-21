@@ -75,6 +75,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
             })),
     ));
     let service = Source {
+        preparation: None,
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
@@ -89,6 +90,9 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
         )))),
         warnings: old,
         services: ServeChanges {
+            routing: None,
+            eager: None,
+            diagnostics: Arc::new(Unimock::new(())),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),

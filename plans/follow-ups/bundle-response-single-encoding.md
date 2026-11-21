@@ -1,10 +1,10 @@
-# Each bundle response is serialized twice
+# Reused bundle responses are serialized twice
 
-- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`. It is the wider fix of the size-check item of that change.
-- **Location:** `packages/mokly/src/sidecar/recipe-size.ts`, `packages/mokly/src/sidecar.ts:26` (`send`), `packages/mokly/src/sidecar/transport.ts:38`, and `packages/mokly/src/sidecar/json.ts:2`.
-- **Reason:** One shared text changes which code owns the response encoding, and the bundle change kept its size check local.
+- **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`. It is the wider fix of the size-check item of that change. Narrowed on 2026-11-21 by `calummoore/mokly-sidecar-bundle-tail-mge9`, which applied option B to new compile responses.
+- **Location:** `packages/mokly/src/sidecar/session.ts:85` (the reuse branch), `packages/mokly/src/sidecar/compiled.ts:97` (`bundleResult`), `packages/mokly/src/sidecar/recipe-size.ts:8` (`recipeBytes`), `packages/mokly/src/sidecar/recipe-encoding.ts:3` (`prepareRecipeEncoding`), and `packages/mokly/src/sidecar/transport.ts:49` (`encodeResponse`).
+- **Reason:** The user's scope for the 2026-11-21 change kept the reuse branch of `session.ts` unchanged, so that change shared text only for new compiles.
 
 - **Source:** Review.
 - **Category:** Performance.
@@ -12,23 +12,24 @@
   - **Sidecar:** Mokly's Node process under `packages/mokly/src/sidecar` that bundles catalogue modules with esbuild.
   - **Recipe:** the compiled bundle result, its `compiled` member and its `modules` graph, which the core can install again later with `restoreGeneration`.
   - **`jsonText`:** the transport encoder in `json.ts`. It sorts object keys in UTF-16 order and writes negative zero as `-0`.
+  - **Reuse branch:** the path of the `bundle` case in `session.ts` that answers from an earlier compilation, which `reuse` in `compiled.ts` accepted, with no compile.
 - **Background:**
   - Each bundle response and each `restoreGeneration` request must fit the 64 MiB frame limit of `docs/protocol/mokly-sidecar.md`. `docs/protocol/mokly-sidecar-recipes.md` requires the rejection before the sidecar installs the generation. `checkRecipeSize` in `recipe-size.ts` checks both envelopes.
-  - Since 2026-11-18, the check serializes the compiled recipe and the module graph once each with `JSON.stringify` and counts their bytes. The recipe types hold no numbers, so these counts equal the `jsonText` bytes.
-  - After the check, `send` in `sidecar.ts:26` encodes the whole response again with `encodeFrame` and `jsonText`.
+  - Since 2026-11-18, the check serializes the compiled recipe and the module graph once each and counts their bytes. The recipe types hold no numbers, so a `JSON.stringify` count equals the `jsonText` bytes.
+  - Since 2026-11-21, a new compile shares its texts. `bundleRecipe` in `bundle-recipe.ts` passes a request-local map through `bundleResult`, and the check fills it with the `jsonText` texts of both members. As its last step, `bundleRecipe` stores the map with `prepareRecipeEncoding` in `recipe-encoding.ts`, keyed by the result object. `send` in `sidecar.ts:26` calls `encodeResponse`, which takes the entry and lets `jsonText` write the saved texts. The wire bytes stay the same.
+  - The reuse branch calls `bundleResult(previous)` with no map. Its check counts the `JSON.stringify` texts of both members. `encodeResponse` then finds no entry and encodes the whole response again with `jsonText`.
+  - When the check removes complete reuse evidence to fit a frame, the late identity step of `bundleRecipe` (`bundle-recipe.ts:216`) deletes `metadataIdentity` and writes a new compilation identity and generation id. Saved texts would then be stale, so `bundleRecipe` stores none, and that response gets the normal encoding. Only an oversized `full` compile reaches this step, because Serve edit evidence is never complete.
   - On 2026-11-18, on a synthetic result with the `mokly-cloud` head bundle shape, the check took about 11 ms. The shape is 2.58 MB of code, 4,638 modules, and 15,251 import edges. The `jsonText` send pass took 20 to 34 ms for a Serve edit bundle and 48 to 94 ms with full reuse evidence. `JSON.stringify` of the whole result took about 20 ms and 23 ms.
-  - The check also runs when the sidecar reuses an earlier compilation, in the `bundle` case of `session.ts`.
-  - `bundleRecipe` in `bundle-recipe.ts` can change the identity and the generation id after the check. A shared text must come after that change.
-- **Problem:** Every bundle response pays for two serializations of the same recipe: one to count its bytes and one to send it.
-- **Impact if no action:** Each bundle keeps about 11 ms of counting work beside the send pass.
-- **Root question:** How can the sidecar size and send one bundle response with one serialization, with the same accepted limit and rejection text?
+  - On 2026-11-21, isolated warm rounds at `beb87a53a` measured the shared text of a new compile on one recorded result of `mokly-ai/mokly-cloud` at `194fdb78`. It saved about 9 ms after the faster `jsonText` of the same change. The saving varied from 1.7 to 15.9 ms between rounds. These rounds do not show an end-to-end gain.
+- **Problem:** A reuse response still pays for two serializations of the same recipe: a `JSON.stringify` count of its members and the `jsonText` send pass.
+- **Impact if no action:** Each reuse response keeps its separate count beside the send pass. That count took about 11 ms on the 2026-11-18 `mokly-cloud` shape.
+- **Root question:** How can the sidecar size and send a reuse response with one serialization, with the same wire bytes, accepted limit, and rejection text?
 - **Options:**
   - **A.** Change nothing. Effort: Small.
-  - **B.** Encode each shared member once with `jsonText`, count both envelopes from those texts, and send a frame built from the same texts. The wire bytes stay the same. The result must carry its texts to `send`, also on reuse. Effort: Medium (estimate).
-  - **C.** As B, but with `JSON.stringify` texts. This also removes the slower `jsonText` pass. Bundle frames then lose the sorted key order that the transport gives every other frame. Effort: Medium (estimate).
-- **Left out:** Removing the check, because an oversized frame would then fail after the sidecar installs the generation. A byte counter inside the transport encoder, because B shares the text itself and needs no second pass.
-- **Wider fix:** B. The count then measures the text that the transport sends, so the two cannot drift.
-- **Previous examples:** #312 replaced the sorted copies of the check with `JSON.stringify`. The bundle change of 2026-11-18 counts the shared members once.
-- **Related:** `plans/follow-ups/sidecar-boot-and-encoding.md` proposes a faster byte-identical encoder for every response. A faster `jsonText` makes B cheaper, and C needs no faster encoder.
-- **Recommendation:** B. It removes one serialization and keeps the wire bytes. C is faster, but it changes the bytes of one frame kind.
-- **Action:** fix after merge, apply B, because it moves the response encoding between the session and the transport, outside the local cut of the bundle change.
+  - **B.** Give the reuse branch the shared encoding of a new compile. Pass a request-local map to `bundleResult`, and store it with `prepareRecipeEncoding` before the response. The count then uses the `jsonText` texts, and the send reuses them. The wire bytes stay the same. It changes the reuse branch of `session.ts`. Effort: Small (estimate).
+  - **C.** As B, but with the `JSON.stringify` texts of the current count. This also removes the slower `jsonText` pass of both members. Reuse frames then lose the sorted key order that the transport gives every other frame, also a new compile frame of the same recipe. Effort: Small (estimate).
+- **Left out:** Removing the check, because an oversized frame would then fail after the sidecar installs the generation. A byte counter inside the transport encoder, because B shares the text itself and needs no second pass. Texts kept with each retained generation, because they would live as long as the generation, and a change inside its objects would make them stale. Shared text after the late identity step, because it must know which members that step changes, and only an oversized `full` compile reaches that step.
+- **Wider fix:** B. The reuse count then measures the text that the transport sends, so the two cannot drift.
+- **Previous examples:** #312 replaced the sorted copies of the check with `JSON.stringify`. The bundle change of 2026-11-18 counts the shared members once. The change of 2026-11-21 shares the `jsonText` texts of new compile responses.
+- **Recommendation:** B. It removes the second serialization and keeps the wire bytes. C is faster, but it changes the bytes of reuse frames.
+- **Action:** fix after merge, apply B, because it changes the reuse branch of `session.ts`, which the user's scope for the 2026-11-21 change kept unchanged.

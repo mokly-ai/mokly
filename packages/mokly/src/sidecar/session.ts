@@ -93,7 +93,12 @@ export class Session {
           const { generation, result } = previous
             ? {
                 generation: previous,
-                result: bundleResult(previous, undefined, this.checkSize),
+                result: bundleResult(
+                  previous,
+                  undefined,
+                  undefined,
+                  this.checkSize,
+                ),
               }
             : await bundle(
                 params,

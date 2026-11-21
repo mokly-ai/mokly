@@ -22,12 +22,14 @@ it.
 A base request takes the warm head process only when no other idle process
 and no empty slot is available to it. So base work still uses every slot
 while the other slots are busy. A pool of one slot has no other slot, so a
-base request replaces its only process.
+base request replaces its only process. An
+[eager base request](./mokly-eager-base-preparation.md#admission) is the
+exception: it takes no head process.
 
-Decision: the warm head process never makes a base request wait. Rejected: a
-wait for another process, because base work would then run on one process
-fewer. With two sidecars, the sidecar calls of base capture could take twice
-as long.
+Decision: the warm head process never makes a base request wait, except an
+eager request. Rejected: a wait for another process, because base work would
+then run on one process fewer. With two sidecars, the sidecar calls of base
+capture could take twice as long.
 
 ## Background Return
 

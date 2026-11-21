@@ -50,6 +50,17 @@ fill the capacity. Otherwise it atomically holds a place for one call in a
 `SidecarPool::request_claimed` runs a call with its claim. When that
 call starts a new slot, it takes a held budget without a new memory check.
 Dropping the `CallClaim` ends the claim.
+`PoolCapacity::try_eager_claim` holds a claim for one eager base call of
+Serve and reserves its slot in the same step. The slot is an idle slot that
+is empty or in the call's base root, or a new slot within the slot limit, so
+the call never takes the warm head worker or another head worker. It returns
+`Ok(None)` at a capacity of one, while another eager reservation exists, when
+the claims fill the capacity, for a call in the head root, and when it finds
+no eligible slot. The call that holds the claim takes the reserved slot, and
+dropping an unused claim returns it. Serve registers a weak wake through
+`PoolCapacity::observe_admission` when it creates an eager handle. A
+released claim or a returned slot then wakes its waiting admission. Without
+eager preparation, Serve registers no such wake.
 
 `WorkerFactory::spawn` returns `Spawned` or a `SpawnFailure`. The
 `SpawnFailure::NotStarted` variant means that the factory created no child
@@ -431,7 +442,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_leases.rs`](./src/pool_leases.rs) defines `Pool::acquire`, the
   root-aware FIFO queue of waiting requests. It protects the warm head worker
   from base requests, removes each taken slot from the return pass, and fails
-  a call affine to a retired slot.
+  a call affine to a retired slot. A call with an eager claim takes its
+  reserved slot first. [`src/pool_eager.rs`](./src/pool_eager.rs) reserves
+  that slot in `Pool::eager_claim` and hands it over in `Pool::take_eager`.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
   generation state that a call needs. For a `bundle` call, it then prefers the
@@ -464,9 +477,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `PoolOptions`, the launch settings and the pool size and deadline override.
   The pool sets `Launch::capture_durability` when it keeps a bundle store.
 - [`src/pool_admission.rs`](./src/pool_admission.rs) defines `PoolCapacity`,
-  with the read-only `capacity` and the atomic `try_claim`, and the shared slot
-  reservation calculation. [`src/pool_claim.rs`](./src/pool_claim.rs) defines
-  `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
+  with the read-only `capacity`, the atomic `try_claim` and `try_eager_claim`,
+  and `observe_admission`, and the shared slot reservation calculation.
+  [`src/pool_claim.rs`](./src/pool_claim.rs) defines `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
   that a claimed call takes when it starts a new slot.
 - [`src/pool_start.rs`](./src/pool_start.rs) defines `StartLease`, which holds
   the admission of a new slot until a process starts in it. `Pool::acquire`
@@ -541,6 +554,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
   `Worker`, `Clock`, and `Diagnostics` traits. It also defines `SpawnFailure`,
   the factory error that says whether a child process started.
+  `Diagnostics::for_source_root` lets the caller route the diagnostic text of
+  one source root. `NodeFactory` asks for it with the source root of each
+  process that it starts. A routed reporter still forwards timing lines and
+  operation counts at once.
 - [`src/process_clock.rs`](./src/process_clock.rs) and
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
@@ -602,5 +619,6 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
   [module sources](../../docs/protocol/mokly-sidecar-modules.md).
-- [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
+- [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md)
+  and [eager admission](../../docs/protocol/mokly-eager-base-preparation.md#admission).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

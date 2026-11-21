@@ -97,6 +97,7 @@ export function restore(
 export function bundleResult(
   generation: Generation,
   plan?: ResolutionPlan,
+  encoding?: Map<object, string>,
   checkSize = checkRecipeSize,
 ): BundleResult {
   const result: BundleResult = {
@@ -107,7 +108,7 @@ export function bundleResult(
     modules: generation.modules,
     compiled: generation.compiled,
   };
-  checkSize(generation.params, result);
+  checkSize(generation.params, result, undefined, encoding);
   return result;
 }
 
