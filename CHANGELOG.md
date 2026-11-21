@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.22.0](https://github.com/mokly-ai/mokly/compare/v0.21.0...v0.22.0) (2026-11-21)
+
+
+### Features
+
+* **desktop:** put the Mac window buttons in the app's top bar ([#397](https://github.com/mokly-ai/mokly/issues/397)) ([1a5d2b2](https://github.com/mokly-ai/mokly/commit/1a5d2b2418b82556afebdaaf35e8506e6c04c79f))
+* **desktop:** release from a release pull request with safe Mac updates ([#423](https://github.com/mokly-ai/mokly/issues/423)) ([e75947e](https://github.com/mokly-ai/mokly/commit/e75947e27e580ac7b840f95a65f059d812b36810))
+
+
+### Bug Fixes
+
+* **render:** preserve store hits during index maintenance ([#456](https://github.com/mokly-ai/mokly/issues/456)) ([85af99d](https://github.com/mokly-ai/mokly/commit/85af99d752d81376d9802dcf878be13b2fd86ee7))
+* **serve:** keep queued background renders in request order ([#447](https://github.com/mokly-ai/mokly/issues/447)) ([783d791](https://github.com/mokly-ai/mokly/commit/783d7919b9e3c12564b4eff9fdd5c1449adee7cd))
+
+
+### Performance Improvements
+
+* **changes:** integrate miss-first base capture with render store ([#452](https://github.com/mokly-ai/mokly/issues/452)) ([77021d8](https://github.com/mokly-ai/mokly/commit/77021d88cf483f56943b7ebaea462ca787c29951))
+* **graph:** reuse unchanged render keys after Serve edits ([#455](https://github.com/mokly-ai/mokly/issues/455)) ([6c203b9](https://github.com/mokly-ai/mokly/commit/6c203b9154a3ea8169b9eda31612ed26e707a30c))
+* **render:** compile independent startup class-map stylesheets in parallel ([#451](https://github.com/mokly-ai/mokly/issues/451)) ([8ce9a1e](https://github.com/mokly-ai/mokly/commit/8ce9a1ee8250cb42ded55fdf463997f93b4129e3))
+* **serve:** keep sidecars busy during the head usage pass ([#408](https://github.com/mokly-ai/mokly/issues/408)) ([cb233fb](https://github.com/mokly-ai/mokly/commit/cb233fb50af71725ed464bfb1df08ab5463c5280))
+* **serve:** overlap fresh PostCSS setup with bundling ([#459](https://github.com/mokly-ai/mokly/issues/459)) ([793d0c7](https://github.com/mokly-ai/mokly/commit/793d0c77d1b096eb988e681963be4bca7a8df353))
+* **serve:** reuse plans across editor file additions ([#450](https://github.com/mokly-ai/mokly/issues/450)) ([45a5f33](https://github.com/mokly-ai/mokly/commit/45a5f33e3d106ae8c4faa5802d039f3d6f7d3203))
+* **sidecar:** reduce bundle reuse read overhead ([#449](https://github.com/mokly-ai/mokly/issues/449)) ([e331ad6](https://github.com/mokly-ai/mokly/commit/e331ad64bb684b0c6049ef6b0a7ec92af44f4dde))
+* **sidecar:** resolve safe relative imports in esbuild during planned edit compiles ([#448](https://github.com/mokly-ai/mokly/issues/448)) ([e69db4c](https://github.com/mokly-ai/mokly/commit/e69db4ce847412d5807cff4f7d56c3bc705704a5))
+
 ## [0.21.0](https://github.com/mokly-ai/mokly/compare/v0.20.0...v0.21.0) (2026-11-20)
 
 
