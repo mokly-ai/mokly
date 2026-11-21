@@ -1,0 +1,293 @@
+/* The home spread: the whole acme/storefront app on the canvas, zoomed out
+   to 36 percent. Its canvas starts at the heading's left edge, the Specs and
+   Components boxes bleed off the right edge, and the spread clips them so
+   the page never scrolls sideways. Each artboard and component set sits at
+   its own spot. A phone draws three phones at 42 percent, the middle one
+   centred under the copy, in the Specs box without its wash.
+
+   The class names and the rules match docs/mockups/styles/site/home-spread.css
+   and the spread rules of home-responsive.css, mobile first, as
+   home-hero.css says. The mockup passes each artboard's spot inline. The
+   site sends one page to every width, so this sheet sets the spots of both
+   compositions, and site-home-spread-wide marks the parts that only the
+   desktop composition draws. */
+
+.site-home-spread {
+  height: 460px;
+  margin-top: 56px;
+  overflow-x: clip;
+  position: relative;
+}
+
+.site-home-spread-canvas {
+  height: 100%;
+  left: 50%;
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+.site-home-spread-canvas .site-home-spread-specs {
+  height: 40px;
+  left: -175px;
+  position: absolute;
+  top: 0;
+  width: 350px;
+}
+
+/* On a phone the Specs box draws its tag and its meta line without its
+   wash. The selector outweighs the section box's own wash. */
+
+.site-home-spread .site-home-spread-specs {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.site-home-spread-canvas .site-home-spread-components {
+  height: 520px;
+  left: 1028px;
+  position: absolute;
+  top: 0;
+  width: 500px;
+}
+
+/* The parts that only the desktop composition draws: five artboards, the
+   Components box and the cursors of Codex and Sam */
+
+.site-home-spread-wide {
+  display: none;
+}
+
+/* The quiet works with Storybook label beside the Components tag */
+
+.site-home-spread-components .site-section-box-meta {
+  font-family: var(--mk-font-sans);
+  overflow: visible;
+}
+
+.site-home-works {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+}
+
+.site-home-works b {
+  color: var(--mk-color-text-secondary);
+  font-weight: 560;
+}
+
+.site-home-storybook-shape {
+  fill: var(--mk-color-people-pink-fill);
+}
+
+.site-home-storybook-letter {
+  fill: var(--mk-color-on-signal-fill);
+}
+
+.site-home-spread .site-home-board {
+  position: absolute;
+}
+
+.site-home-spread .site-home-board--phone .site-home-board-frame {
+  height: 354.48px;
+  width: 163.8px;
+}
+
+.site-home-spread .site-home-board--desktop .site-home-board-frame {
+  height: 288px;
+  width: 460.8px;
+}
+
+.site-home-spread .site-home-board-screen {
+  transform: scale(0.42);
+}
+
+/* The spot of each artboard in the Specs box. A phone shows the first
+   three phones in a row. */
+
+.site-home-spread-welcome {
+  left: -87px;
+  top: 52px;
+}
+
+.site-home-spread-payment {
+  left: 93px;
+  top: 52px;
+}
+
+.site-home-spread-review {
+  left: 273px;
+  top: 52px;
+}
+
+.site-home-board .site-home-spread-peer {
+  border-radius: 3px;
+  inset: -4px;
+}
+
+/* The component sets at half size, on a light backing in both schemes */
+
+.site-home-set {
+  position: absolute;
+}
+
+.site-home-set-label {
+  align-items: center;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.site-home-set-box {
+  background: color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--mk-color-text) 22%, transparent);
+  outline-offset: 3px;
+  padding: 10px;
+}
+
+/* A dark backing is the text role. The mockups key it on the pinned scheme;
+   the site is dark through the scheme choice or, without a choice, through
+   the system scheme. */
+
+:root[data-color-scheme="dark"] .site-home-set-box {
+  background: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-home-set-box {
+    background: var(--mk-color-text);
+  }
+}
+
+.site-home-set-inner {
+  zoom: 0.5;
+}
+
+.site-home-set .site-home-set-peer {
+  border-radius: 3px;
+  inset: 13px -7px -7px;
+}
+
+/* The people at work in the spread. The page loads this sheet before the
+   shared cursor rules, so each selector takes the canvas's class too, to
+   outweigh the cursor's own place. */
+
+.site-home-spread-canvas .site-home-spread-claude {
+  left: 20px;
+  top: 300px;
+}
+
+.site-home-spread-canvas .site-home-spread-codex {
+  left: 1116px;
+  top: 116px;
+}
+
+.site-home-spread-canvas .site-home-spread-sam {
+  left: 262px;
+  top: 340px;
+}
+
+/* The desktop composition from the 768px breakpoint upward: the Specs box
+   draws its wash again, with the section box's own values, and holds all
+   eight artboards. */
+
+@media (min-width: 768px) {
+  .site-home-spread {
+    height: 830px;
+    margin-top: 76px;
+  }
+
+  .site-home-spread-canvas {
+    left: max(78px, calc((100% - 1440px) / 2 + 78px));
+  }
+
+  .site-home-spread-canvas .site-home-spread-specs {
+    height: 806px;
+    left: -30px;
+    width: 1026px;
+  }
+
+  .site-home-spread .site-home-spread-specs {
+    background: color-mix(in srgb, var(--mk-color-surface) 42%, transparent);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+    padding: 14px;
+  }
+
+  .site-home-spread-wide {
+    display: block;
+  }
+
+  .site-home-spread .site-home-board--phone .site-home-board-frame {
+    height: 303.84px;
+    width: 140.4px;
+  }
+
+  .site-home-spread .site-home-board-screen {
+    transform: scale(0.36);
+  }
+
+  .site-home-spread-welcome {
+    left: 30px;
+    top: 78px;
+  }
+
+  .site-home-spread-payment {
+    left: 198px;
+    top: 78px;
+  }
+
+  .site-home-spread-review {
+    left: 366px;
+    top: 78px;
+  }
+
+  .site-home-spread-pricing {
+    left: 534px;
+    top: 78px;
+  }
+
+  .site-home-spread-settings {
+    left: 30px;
+    top: 462px;
+  }
+
+  .site-home-spread-pricing-phone {
+    left: 519px;
+    top: 462px;
+  }
+
+  .site-home-spread-pricing-dark {
+    left: 687px;
+    top: 462px;
+  }
+
+  .site-home-spread-payment-dark {
+    left: 855px;
+    top: 462px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-claude {
+    left: 692px;
+    top: 270px;
+  }
+}
+
+/* Below 1440px the canvas starts at the narrower gutter of the heading and
+   keeps bleeding off the right edge, clipped by the spread. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-home-spread-canvas {
+    left: clamp(20px, 5.4vw, 80px);
+  }
+}

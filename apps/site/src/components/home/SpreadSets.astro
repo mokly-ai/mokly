@@ -1,0 +1,51 @@
+---
+/**
+ * The component sets in the spread's Components box: Button, PriceCard,
+ * Badge, Avatar, Input and Toast of the depicted acme/storefront app, each a
+ * labelled box that draws the component's variants at half size, at its
+ * spot in the box. Codex has the Button set selected. A depiction: the
+ * spread hides it from assistive technology.
+ *
+ * Use: `<SpreadSets />`, in the Components box of `Spread.astro`. The rules
+ * are in `src/styles/home-spread.css`.
+ */
+import Icon from "../Icon.astro";
+import Selection from "../Selection.astro";
+
+import type { AcmeSetName } from "./acme/acme-sets.js";
+import AcmeSet from "./acme/AcmeSet.astro";
+import { type CanvasSpot, spotStyle } from "./artboard.js";
+
+/** One component set: its spot in the box, its label and its variants. */
+interface SpreadSet {
+  readonly at: CanvasSpot;
+  readonly label: string;
+  readonly name: AcmeSetName;
+}
+
+const SETS: readonly SpreadSet[] = [
+  { at: { x: 30, y: 78 }, label: "Button", name: "button" },
+  { at: { x: 30, y: 172 }, label: "PriceCard", name: "priceCard" },
+  { at: { x: 226, y: 78 }, label: "Badge", name: "badge" },
+  { at: { x: 226, y: 172 }, label: "Avatar", name: "avatar" },
+  { at: { x: 226, y: 270 }, label: "Input", name: "input" },
+  { at: { x: 30, y: 404 }, label: "Toast", name: "toast" },
+];
+---
+
+{SETS.map((set) => (
+  <div class="site-home-set" style={spotStyle(set.at)}>
+    <span class="site-home-set-label">
+      <Icon name="component" size={12} />
+      {set.label}
+    </span>
+    <div class="site-home-set-box">
+      <div class="site-home-set-inner">
+        <AcmeSet name={set.name} />
+      </div>
+    </div>
+    {set.name === "button" && (
+      <Selection class="site-home-set-peer" handles="none" person="codex" />
+    )}
+  </div>
+))}
