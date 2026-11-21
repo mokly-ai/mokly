@@ -24,7 +24,10 @@ its requests and results. The paths below are relative to the package root.
   before it returns the error. It gives a `CaptureDurability` only to a `full`
   request.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
-  the binary's typed requests and limits the size of each response.
+  the binary's typed requests and limits the size of each response. Its
+  `encodeResponse` encodes each response with `jsonText` from
+  [`src/sidecar/json.ts`](./json.ts), which sorts object keys in UTF-16
+  order and keeps negative zero.
 - [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
   which restores source order with a bounded process cache of parsed names.
   Each call reads the current namespace values.
@@ -142,12 +145,28 @@ its requests and results. The paths below are relative to the package root.
   when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
-  result before it drops the evidence. A `serveEdit` compile gets incomplete
-  evidence with the `uncaptured: "serveEdit"` marker, and its inputs hold only
-  its private folder files. A compile without a toolchain identity gets no
-  marker. A `serveEdit` compile also gets no marker when
+  result before it drops the evidence. For a new compile, `bundleRecipe`
+  passes a request-local map through `bundleResult` in
+  [`src/sidecar/compiled.ts`](./compiled.ts). The check then encodes the
+  `compiled` and `modules` members once each with `jsonText` and counts the
+  bytes of those texts. It keeps both texts when it drops the plan, and it
+  encodes `compiled` again when it drops the evidence. A `serveEdit` compile
+  gets incomplete evidence with the `uncaptured: "serveEdit"` marker, and its
+  inputs hold only its private folder files. A compile without a toolchain
+  identity gets no marker. A `serveEdit` compile also gets no marker when
   `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
+- [`src/sidecar/recipe-encoding.ts`](./recipe-encoding.ts) keeps the texts
+  of a new compile from its size check until its response. As its last
+  step, `bundleRecipe` stores its request-local map with
+  `prepareRecipeEncoding`, in a `WeakMap` keyed by the result object. When
+  the check drops complete evidence, the recipe gets its fresh identity after
+  the check, so `bundleRecipe` stores no texts. `encodeResponse` takes and
+  removes the entry. `jsonText` then writes each saved text in place of its
+  member object. A member object that code replaced after the check gets the
+  normal encoding, and no text stays with a retained generation. The reuse
+  branch of `Session` calls `bundleResult` with no map. Its check counts
+  `JSON.stringify` texts, and its response gets the normal encoding.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
