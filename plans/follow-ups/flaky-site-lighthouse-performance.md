@@ -259,3 +259,19 @@ site:lighthouse / at 1440px scored 0.93 for performance, under the 0.95 threshol
 - Step 4 changed no `apps/site` or `.github` file before this integration.
 - The branch's earlier record suspected shared-runner speed. That cause was not proven. The investigation above supersedes that hypothesis.
 - This appendix preserves the branch's observations. It changes no threshold, option, recommendation, or pending decision above.
+
+## Eager base CI occurrence, 2026-11-21
+
+On commit `10a28ba3bc3b21816fdcdfcc9d19ab42801b8343` of PR #461,
+[CI run 44906326812](https://github.com/mokly-ai/mokly/actions/runs/44906326812)
+failed only Site Lighthouse. The failure was:
+
+```text
+site:lighthouse / at 1440px scored 0.93 for performance, under the 0.95 threshold.
+```
+
+Required CI passed on that commit. No site or CI source file changed in the
+branch. A newer audited merge superseded the commit before a rerun. This
+occurrence used no Lighthouse rerun. The user permits at most one rerun and
+classifies this known Site Lighthouse failure separately from Required CI.
+The item keeps its existing decision, options, recommendation, and cause limits.

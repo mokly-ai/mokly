@@ -460,6 +460,11 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Provision the Browser gate's OS watch capacity and record the known Example teardown failure and full rerun, with every test unchanged.
 - [x] Open the requested draft at `7a423c250` and run fresh read-only review beside the gate and CI.
 - [x] Keep the prepared result behind one Box allocation to satisfy Windows clippy, without a lint allowance or behavior change.
+- [x] Integrate main PostCSS preparation #459 once and preserve both startup paths, then push its targeted-green SHA for the combined performance check.
+- [ ] Diagnose the combined PostCSS first-edit and two-sidecar memory regressions before marking the pull request ready.
+- [ ] Compare the pre-PostCSS feature `10a28ba3b` with main `beb87a53a` on basic, using two sidecars, the equal-lockfile base, and ten edits.
+- [ ] Prove which eager owners, base contexts, and sidecar work remain after classification, then fix the cause or obtain approval for a measured bound.
+- [ ] Receive the performance orchestrator's new combined speed, edit, and two-percent memory acceptance for the next runtime SHA.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
@@ -483,3 +488,18 @@ This representation change moves no read or work.
 The other gate results stay valid, and no new measurement is required.
 
 Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/windows-enum-layout/` records the source audit and targeted checks.
+
+The performance orchestrator requested the main PostCSS preparation integration on 2026-11-21.
+Its combined check compares the merged feature with main `793d0c77d`.
+Review fixes to runtime source must be reported before a push while that check runs.
+The direct review fixes strengthen only the two gate tests and their lease-state caller case.
+The shared testing-guidance proposal stays an open post-merge decision in its own follow-up.
+The performance orchestrator explicitly says that proposal does not block PR #461.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/postcss-main-integration/` records the merge preservation and targeted checks. The branch review folder holds the independent checks and the test-only fix proofs.
+
+On 2026-11-21 the combined check of `92b909be4` with PostCSS preparation reopened performance acceptance on basic.
+The clean two-sidecar cold ten-edit sessions exceed the memory limit, and their edits and warm first edits are slower.
+The performance orchestrator requires a comparison without PostCSS preparation and a cause with evidence before the next fix or bound.
+The pull request stays draft until that check passes.
+No further product source change has been made for this investigation.

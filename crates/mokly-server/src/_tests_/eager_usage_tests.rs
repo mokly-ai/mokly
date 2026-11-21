@@ -93,7 +93,12 @@ async fn eager_dispatch_and_classification_wait_for_their_usage_boundaries() {
             })),
     ))
     .no_verify_in_drop();
-    let origin = publication_support::snapshot(1, Arc::new(Unimock::new(())));
+    let origin = publication_support::snapshot(3, Arc::new(Unimock::new(())));
+    let routes: Vec<_> = origin
+        .routes
+        .iter()
+        .map(|route| route.route.clone())
+        .collect();
     let owner = events.clone();
     let publications = Unimock::new((
         PublicationsMock::current
@@ -113,18 +118,26 @@ async fn eager_dispatch_and_classification_wait_for_their_usage_boundaries() {
             })),
     ));
     let owner = events.clone();
+    let dispatch_at_render = Arc::new(Mutex::new(Vec::new()));
+    let rendered = dispatch_at_render.clone();
     let pass = UsagePass {
         capacity: Arc::new(FixedCapacity(2)),
         changes: Some(Arc::new(changes)),
         publications: Arc::new(publications),
-        work: Arc::new(Unimock::new(
+        work: Arc::new(Unimock::new((
+            WorkMock::parallelism.each_call(matching!()).returns(1usize),
             WorkMock::background
-                .some_call(matching!(_, _, _))
-                .answers_arc(Arc::new(move |_, _, _, _| {
-                    owner.lock().unwrap().push("usage");
+                .each_call(matching!(_, _, _))
+                .answers_arc(Arc::new(move |_, _, route, _| {
+                    let mut events = owner.lock().unwrap();
+                    rendered
+                        .lock()
+                        .unwrap()
+                        .push((route.clone(), events.contains(&"dispatched")));
+                    events.push("usage");
                     Ok(Vec::new())
                 })),
-        )),
+        ))),
         diagnostics: Arc::new(Unimock::new(())),
     };
     pass.run(stopping).await;
@@ -140,6 +153,20 @@ async fn eager_dispatch_and_classification_wait_for_their_usage_boundaries() {
             .filter(|event| **event == "dispatched")
             .count(),
         1
+    );
+    let rendered = dispatch_at_render.lock().unwrap();
+    assert_eq!(
+        rendered
+            .iter()
+            .map(|(route, _)| route.clone())
+            .collect::<Vec<_>>(),
+        routes
+    );
+    assert!(
+        rendered[..rendered.len() - 1]
+            .iter()
+            .all(|(_, dispatched)| !dispatched),
+        "only the last route may observe the dispatch signal: {rendered:?}"
     );
 }
 
