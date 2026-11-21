@@ -11,7 +11,6 @@ use crate::leases::ContextLease;
 use crate::postcss::PostCss;
 use crate::postcss_cache::CssCache;
 use crate::side::SideInputs;
-use std::sync::atomic::AtomicBool;
 
 #[test]
 fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
@@ -38,13 +37,12 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
         )));
         let postcss = PostCss {
             usage: Arc::new(Unimock::new(())),
-            lease: Arc::new(ContextLease {
-                id: "base".into(),
-                pool: pool.clone(),
-                released: CssCache::default().releases,
-                used: AtomicBool::new(false),
-                prepared: AtomicBool::new(false),
-            }),
+            lease: Arc::new(ContextLease::new(
+                "base".into(),
+                "settings".into(),
+                pool.clone(),
+                CssCache::default().releases,
+            )),
             pool,
             tree: Arc::new(Unimock::new(())),
             inventory_tree: Arc::new(Unimock::new(())),

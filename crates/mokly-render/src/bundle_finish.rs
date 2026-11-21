@@ -4,7 +4,6 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use mokly_catalogue::render_sources::JavaScriptGeneration;
-use mokly_css::types::StylesheetBundler;
 use mokly_sidecar::definitions::Definitions;
 
 use crate::bundle::BundleState;
@@ -12,11 +11,12 @@ use crate::error::Result;
 use crate::leases::{ContextLease, PreparedLease};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
+use crate::stylesheet_compiler::StylesheetPreparation;
 
 pub(crate) fn finish(
     runtime: &Runtime,
     side: SideInputs,
-    compiler: Arc<dyn StylesheetBundler>,
+    compiler: Arc<dyn StylesheetPreparation>,
     context: Option<Arc<ContextLease>>,
     bundle: Arc<BundleState>,
 ) -> Result<(JavaScriptGeneration, Definitions)> {

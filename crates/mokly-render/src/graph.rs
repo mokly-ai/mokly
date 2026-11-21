@@ -26,6 +26,7 @@ use crate::fragments::Fragments;
 use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
+use crate::stylesheets::StylesheetAttempt;
 use crate::{definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
@@ -56,7 +57,7 @@ impl RenderGraph for JavaScriptGraph {
         {
             catalogue.warnings.push(warning);
         }
-        let graph = match self.graph(&config, &mut catalogue) {
+        let (graph, attempt) = match self.graph(&config, &mut catalogue) {
             Ok(graph) => graph,
             Err(source) => {
                 return Err(GraphError::Attempt {
@@ -72,7 +73,12 @@ impl RenderGraph for JavaScriptGraph {
         };
         let warnings = catalogue.warnings.clone();
         match graph.prepare(config, catalogue, output) {
-            Ok(generation) => Ok(generation),
+            Ok(generation) => {
+                if self.runtime.serve_head() {
+                    attempt.retire_used();
+                }
+                Ok(generation)
+            }
             Err(source) => Err(GraphError::Attempt {
                 failures: vec![source],
                 warnings,
@@ -86,7 +92,7 @@ impl JavaScriptGraph {
         &self,
         config: &ResolvedConfig,
         catalogue: &mut PreparedCatalogue,
-    ) -> Result<Arc<dyn RenderGraph>> {
+    ) -> Result<(Arc<dyn RenderGraph>, StylesheetAttempt)> {
         let mut side = self.runtime.side(config);
         let mut inputs = DeliveryInputs {
             persistence: None,
@@ -99,7 +105,7 @@ impl JavaScriptGraph {
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),
         };
-        let mut compiler = None;
+        let mut attempt = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;
         let mut fragments: Arc<dyn FragmentRenderer> = Arc::new(DeferredFragments);
         if let Some(generation) = &catalogue.javascript.generation {
@@ -112,7 +118,10 @@ impl JavaScriptGraph {
                 .get(&generation.css_context)
                 .and_then(Weak::upgrade)
             {
-                compiler = Some(prepared.compiler.clone());
+                attempt = Some(StylesheetAttempt {
+                    compiler: prepared.compiler.clone(),
+                    context: prepared.context.clone(),
+                });
             }
             let bindings = Bindings {
                 generation: generation.id.clone(),
@@ -201,7 +210,8 @@ impl JavaScriptGraph {
                     .as_ref()
                     .and_then(|generation| generation.persistence_identity.clone()),
             });
-        Ok(Arc::new(Graph {
+        let attempt = attempt.unwrap_or_else(|| stylesheets::attempt(&self.runtime, config, &side));
+        let graph: Arc<dyn RenderGraph> = Arc::new(Graph {
             inputs,
             tree: Arc::new(LeasedTree {
                 tree: self.runtime.tree.clone(),
@@ -209,11 +219,11 @@ impl JavaScriptGraph {
                 _base: self.runtime.base.clone(),
             }),
             composer: Arc::new(HtmlComposer { fragments }),
-            stylesheets: compiler
-                .unwrap_or_else(|| stylesheets::compiler(&self.runtime, config, &side)),
+            stylesheets: attempt.compiler.clone(),
             cache: self.runtime.cache.clone(),
             workers: self.runtime.workers.clone(),
             version: self.runtime.version.clone(),
-        }))
+        });
+        Ok((graph, attempt))
     }
 }

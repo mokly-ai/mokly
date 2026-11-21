@@ -41,6 +41,9 @@ renderer. Each PostCSS context uses an owned child process in that side's
 source root. Runtime allocates context ids from one process-wide sequence.
 A head Serve edit can start that child during its `bundle` request, under the
 [prepared context rules](../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
+A successful Serve head graph preparation ends its used context when its
+attempt-local stylesheet store kept every record, under the
+[used context rules](../../docs/protocol/mokly-sidecar-postcss.md#used-contexts).
 A per-context request lock keeps the sidecar requests of one context one at a
 time, and equal inputs make one request. The shared PostCSS cache lock covers
 only lookups, inserts, and the dependency inventory. Round trips and read
@@ -82,7 +85,8 @@ verify their captured inputs against the bundled bytes.
 HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
 class maps remain equal. A changed map uses a separate evaluated lifetime.
 Graph leases retain old maps, bindings, and used PostCSS contexts until the final
-request releases them. Final drops enqueue epoch-specific pool release and
+request releases them. The one exception is a Serve head context that its
+successful graph preparation already ended. Final drops enqueue epoch-specific pool release and
 cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
@@ -360,6 +364,12 @@ view after the edit and counts real process starts and hello calls.
   when that reference is empty or expired.
   `Runtime::with_document_store` gives the Serve runtime its render store, and
   `Runtime::for_base` copies it, so the head and base graphs share one store.
+- [`src/context_retention.rs`](./src/context_retention.rs) keeps the weak
+  registry of Serve head PostCSS contexts in `Runtime`. `Runtime::serve_head`
+  identifies a Serve head runtime, at startup and after edits.
+  `Runtime::track_head_context` registers a context without holding it.
+  `Runtime::older_used_head_context` finds another used, live context with the
+  same stylesheet settings.
 - [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
   JavaScript part of a render store identity: the toolchain identity and the
   metadata identity of a compilation with captured and durable reuse evidence,
@@ -400,7 +410,10 @@ view after the edit and counts real process starts and hello calls.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
   same composition path. It gives the `Fragments` of each side that side's own
   source root, so a base graph records nothing as head, also with an equal
-  generation id.
+  generation id. `JavaScriptGraph::graph` builds each graph on the
+  `StylesheetAttempt` of its attempt, also for a catalogue without JavaScript.
+  After a successful `graph.prepare` of a Serve head,
+  `JavaScriptGraph::prepare` calls `StylesheetAttempt::retire_used`.
 - [`src/render_keys.rs`](./src/render_keys.rs) builds the render input keys of
   each graph. With the Serve head reference, it calls
   `RenderKeys::build_unseeded_with_workers` in the `Full` mode and passes the
@@ -420,8 +433,9 @@ view after the edit and counts real process starts and hello calls.
   first, and it admits a marked state only in the `ServeEdit` mode. In a
   `ServeEdit` attempt of an original head runtime, it adds a
   `PostcssPreparation` to the first `bundle` request when the context is
-  unused and `stale_postcss` finds a stale PostCSS root. The second request of
-  an evaluation change carries none.
+  unused, `Runtime::older_used_head_context` finds no older used head context
+  with the same settings, and `stale_postcss` finds a stale PostCSS root. The
+  second request of an evaluation change carries none.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
   request with the `capture` mode of the runtime and its optional
   `PostcssPreparation` in its `catalogue.bundle` span, gives each result's
@@ -433,9 +447,13 @@ view after the edit and counts real process starts and hello calls.
   identity to `Records`.
 - [`src/leases.rs`](./src/leases.rs) defines the graph-owned leases.
   `ContextLease::prepare` reserves the one preparation of the PostCSS context
-  of an attempt. `FinishPreparation`, which `JavaScriptGraph::prepare` in
+  of an attempt. `ContextLease::begin_use` marks each real stylesheet request,
+  and `ContextLease::used_live` reports a used context whose child has not
+  ended. `FinishPreparation`, which `JavaScriptGraph::prepare` in
   [`src/graph.rs`](./src/graph.rs) holds, ends an unused preparation when graph
-  preparation ends. A used context keeps the lease of its graph.
+  preparation ends. `ContextLease::retire` ends a used context that no later
+  compile can reach. Any other used context keeps the lease of its graph. A
+  context releases its child once, at the first of these ends or its final drop.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -443,23 +461,31 @@ view after the edit and counts real process starts and hello calls.
   props, controls, owners, and source coordinates into catalogue records.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
-- [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler
-  of one side and the key of its records, and lists the stylesheet roots of a
-  module graph. Its `attempt` also returns the `ContextLease` of the PostCSS
-  context that the compiler shares. It passes the head store reference of the
-  runtime to `CachedStylesheets::with_head`. Only a base runtime has one.
+- [`src/stylesheets.rs`](./src/stylesheets.rs) lists the stylesheet roots of a
+  module graph. Its `attempt` builds the stylesheet compiler of one side, the
+  key of its records, and the `ContextLease` of the PostCSS context that the
+  compiler shares. It registers that context with
+  `Runtime::track_head_context` and returns both as a `StylesheetAttempt`.
+  `StylesheetAttempt::retire_used` retires a used context when the compiler
+  kept every record. `attempt` passes the head store reference of the runtime
+  to `CachedStylesheets::with_head`. Only a base runtime has one.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
   attempt-local store, the shared store of its runtime, and, in a base
   runtime, the head store that `CachedStylesheets::with_head` adds as the
   last read-only source. It times each real bundle as `css.bundle` with its
-  miss reason. Its `stale_postcss`, from the `StylesheetPreparation` trait of
-  [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs), checks the kept
-  PostCSS roots of the attempt's settings and stops at the first stale root.
-  The later lookup of that root reuses the miss without a second check.
+  miss reason.
+- [`src/stylesheet_preparation.rs`](./src/stylesheet_preparation.rs)
+  implements the `StylesheetPreparation` trait of
+  [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) for
+  `CachedStylesheets`. Its `stale_postcss` checks the kept PostCSS roots of the
+  attempt's settings and stops at the first stale root. The later lookup of
+  that root reuses the miss without a second check. Its `kept_every_record`
+  reads the attempt-local store.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
-  entries, and miss reasons.
+  entries, and miss reasons. Its `kept_every_record` turns false after an
+  eviction, an oversize record, or a rejection removes a record.
 - [`src/stylesheet_class_maps.rs`](./src/stylesheet_class_maps.rs) defines
   `ClassMapCompiler`, the bounded preparation boundary for class-map roots.
   It keeps serial preparation for warm stores, live head stores, and PostCSS.

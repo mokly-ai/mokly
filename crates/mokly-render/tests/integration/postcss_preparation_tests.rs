@@ -18,7 +18,7 @@ fn page(label: &str, imported: bool) -> String {
     )
 }
 
-fn fixture(configured: bool) -> Consumer {
+pub(super) fn fixture(configured: bool) -> Consumer {
     let consumer = Consumer::single();
     fs::remove_dir_all(consumer.root().join("specs")).unwrap();
     consumer.write("mokly.config.json", if configured {
@@ -45,7 +45,7 @@ fn preparations(consumer: &Consumer, after: usize) -> Vec<String> {
         .collect()
 }
 
-fn releases(consumer: &Consumer, context: &str) -> usize {
+pub(super) fn releases(consumer: &Consumer, context: &str) -> usize {
     consumer
         .pool
         .calls

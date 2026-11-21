@@ -1,6 +1,6 @@
 # Prepare fresh PostCSS contexts during Serve bundles
 
-Status: Active. On branch `calummoore/mokly-postcss-reuse-across-edits-pra6`, no pull request yet. The pull request that completes this work deletes this plan.
+Status: Active. [PR #459](https://github.com/mokly-ai/mokly/pull/459) is open as a draft. The pull request that completes this work deletes this plan.
 
 Serve starts a fresh PostCSS child after each changed JavaScript bundle.
 Module loading dominates the first stylesheet request on `examples/basic`.
@@ -75,6 +75,15 @@ The final target is at least 0.4 seconds per warm basic label edit.
 The bundle must not become slower.
 The cold ten-edit whole-tree peak must stay within 2% of main.
 The performance orchestrator confirms these measurements on an idle machine.
+
+User acceptance, 2026-11-21: accept product `e4e7ff5d6`. Warm label edits improved
+by 202 ms in all four interleaved pairs. Whole-tree warm peak increased 0.7%.
+Cloud had no repeatable regression. This acceptance supersedes the initial
+0.4-second target. The final PR records the official tables without claiming 0.4 seconds.
+
+User direction, 2026-11-21: push the final product before the remaining suites
+finish, so official measurements can run in parallel. After the Bun setup
+fix, retain passed suites and run only unrun suites on unchanged product code.
 
 The frozen diagnostic bridge and full PostCSS proxy are not production proofs.
 They do not implement direct affinity or overlap all Rust root work.
@@ -163,14 +172,25 @@ Depends on: 2
 - [x] Record the user's priority decision: D. Existing priority behavior needs no protocol change.
 - [x] Keep the original priority. D adds no priority or scheduler code, so no restoration test is needed.
 - [x] Align the final field name and helper entry points. Remove the preparation status lines after implementation.
-- [ ] Build matching main and branch toolchains with the required resource checks.
-- [ ] Run targeted tests and the repository suite.
-- [ ] Run the complete repository gate.
-- [ ] Run local basic label and utility edits, plus the large React fixture comparison.
-- [ ] Prove every published byte on basic, large HTML, large React, and the cloud catalogue.
-- [ ] Count PostCSS children and measure cold ten-edit tree memory.
-- [ ] Commit and push the implementation and send the SHA and harness commands to the orchestrator.
-- [ ] Receive official basic, cloud, and memory confirmation without weakening the targets.
+- [x] Build matching main and branch toolchains with the required resource checks.
+- [x] Run targeted tests and the repository suite.
+- [x] Run the complete repository gate.
+- [x] Run local basic label and utility edits, plus the large React fixture comparison.
+- [x] Prove every published byte on basic, large HTML, large React, and the cloud catalogue.
+- [ ] Compare Serve HTTP stylesheet and affected-document bytes after start, label edit, class addition, class removal, and restore, on both toolchains. Stop and report any difference.
+- [x] Count PostCSS children and measure cold ten-edit tree memory.
+- [x] Commit and push the implementation and send the SHA and harness commands to the orchestrator.
+- [x] Receive official basic, cloud, and memory confirmation. The user accepted the measured 202 ms gain on 2026-11-21, below the initial 0.4 s goal.
+- [ ] Receive the final quiet-machine cold-session memory decision. Keep the PR in draft until that result and the Serve HTTP proof settle.
+
+Local comparison evidence: `.context/postcss-reuse-across-edits/local-measurement-index.json`
+and `local-memory-peak-and-large-inventory.json`. Report the local limits with
+the final quiet-machine decision.
+
+Verification evidence: `.context/postcss-reuse-across-edits/remaining-gate-status.jsonl`,
+`freeze-main6c-candidate89/result.json`, and
+`byte-proof/remaining-main6c-candidate89-a/result.json`. Local suites use retained
+passes after setup fixes, as directed. Canonical integrated CI passes.
 
 Before every large Cargo build, check `df -h` and `free -m`.
 Require at least 15 GB of free disk.
@@ -179,13 +199,64 @@ Run one heavy job at a time.
 Do not add a timeout, retry, or sleep.
 Do not skip a test or weaken an assertion.
 
+## Milestone 5: Bound used head contexts
+
+Depends on: 2
+
+The official cold-session gate rejected the first product on 2026-11-21.
+The warm speed saving remains accepted. The memory limit remains 2%.
+
+User direction, 2026-11-21: propose and implement a bound, measure alternatives,
+and send a new SHA for an eight-pair cold memory gate. The request explicitly
+names early release, skipping preparation while an older child stays live,
+and deferring consumer loading. This direction authorizes this milestone.
+
+Design call, 2026-11-21: apply options-check item 1 B and item 2 B.
+After successful Serve head graph preparation, retire its used context only
+when the attempt-local stylesheet store dropped no record. This supersedes
+the general graph-lifetime sentence above for that exact case. Every resource
+plan then has its record in the existing bounded store. An artifact-cache miss
+cannot reach PostCSS. Keep the current graph lifetime after an eviction or
+an oversize record. Skip preparation while an older head context of the same
+configuration must stay live. Do not pin records or raise a cache bound.
+
+The child starts with Bundle as before, so this keeps the full overlap window.
+It should remove the old child from the next attempt's bundle and late windows.
+The exactness condition and retirement point are design calls within the user's
+latest early-release request. The performance orchestrator explicitly approved
+both protocol rules on 2026-11-21 and requested the RED tests listed below.
+
+The alternatives are GC compaction, conditional release at the next bundle,
+worker bootstrap only, and config bundling without consumer evaluation.
+Partial loading loses about half of the first-stylesheet saving. A live-child
+skip alone loses the warm basic saving. Unconditional release can change a
+lazy recompilation after a cache eviction. These alternatives are not selected.
+
+Evidence: `.context/postcss-reuse-across-edits/memory-bound-options.md`,
+`official-cold-memory-failed.md`, `five-pair-process-overlap.json`, and
+`memory-bound-prototypes-handoff.md`.
+
+- [x] Obtain the fresh Opus max options check and check its lazy-recompile argument.
+- [x] Measure the exact five-edit/five-restore process overlap and private partial-load alternatives.
+- [x] Align the context lifetime and fallback eligibility contract before implementation.
+- [x] Add RED tests for record loss, conditional retirement, lazy delivery, and fallback eligibility.
+- [x] Implement the conditional retirement and older-context guard with idempotent release.
+- [x] Keep base, build, failures, cancellation, and normal priority behavior.
+- [x] Run targeted checks and repeat each new asynchronous case ten times.
+- [ ] Build and freeze the bounded candidate with the resource guard.
+- [ ] Measure basic speed, child counts, and the cold five-edit/five-restore RSS sequence.
+- [ ] Repeat the Serve raw HTTP proof and strict four-fixture static output proof.
+- [ ] Push the bounded product and send the SHA and commands for the official gate.
+- [ ] Receive the new official memory and speed confirmation.
+
 ## Milestone 4: Review and pull request
 
-Depends on: 3
+Depends on: 3, 5
 
-- [ ] Review the pushed diff against `origin/main` with `implementation-review`.
+- [x] Review the pushed diff against `origin/main` with `implementation-review`.
       Check findings, apply the fix rounds, and record each outcome.
-- [ ] Run checks for fixes, commit, push, and complete the required re-review.
+- [x] Run checks for fixes and complete any required re-review. The fresh review raised no finding, so no fix round or re-review was needed.
+- [ ] Review the final bounded implementation and complete its required fix rounds.
 - [ ] Delete this plan after all earlier tasks and review rounds finish.
 - [ ] Open the pull request into main with dated decisions and a permalink to this plan.
 

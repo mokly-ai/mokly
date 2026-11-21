@@ -1,6 +1,5 @@
 //! Final leases queue release while workers and the PostCSS cache remain busy.
 
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, mpsc};
 
 use mokly_sidecar::methods::{Call, Generation};
@@ -54,22 +53,17 @@ fn final_leases_return_while_a_pool_request_and_cache_lock_are_held() {
                 };
             }
             {
-                let _lease = ContextLease {
-                    id: "used".into(),
-                    pool: pool.clone(),
-                    used: AtomicBool::new(true),
-                    prepared: AtomicBool::new(false),
-                    released: releases.clone(),
-                };
+                let lease = ContextLease::new(
+                    "used".into(),
+                    "settings".into(),
+                    pool.clone(),
+                    releases.clone(),
+                );
+                lease.begin_use();
             }
             {
-                let _lease = ContextLease {
-                    id: "unused".into(),
-                    pool: pool.clone(),
-                    used: AtomicBool::new(false),
-                    prepared: AtomicBool::new(false),
-                    released: releases,
-                };
+                let _lease =
+                    ContextLease::new("unused".into(), "settings".into(), pool.clone(), releases);
             }
             notices.extend(cache.released.try_iter());
             cache.purge();

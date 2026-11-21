@@ -87,11 +87,12 @@ fn tree(changed: Arc<AtomicBool>) -> Arc<dyn SourceTree> {
 
 #[test]
 fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
-    for (css_before_bundle, capture, base, expected) in [
-        (false, BundleCapture::ServeEdit, false, true),
-        (true, BundleCapture::ServeEdit, false, false),
-        (false, BundleCapture::Full, false, false),
-        (false, BundleCapture::ServeEdit, true, false),
+    for (css_before_bundle, capture, base, older_head, expected) in [
+        (false, BundleCapture::ServeEdit, false, false, true),
+        (true, BundleCapture::ServeEdit, false, false, false),
+        (false, BundleCapture::Full, false, false, false),
+        (false, BundleCapture::ServeEdit, true, false, false),
+        (false, BundleCapture::ServeEdit, false, true, false),
     ] {
         let changed = Arc::new(AtomicBool::new(false));
         let calls = Arc::new(Mutex::new(Vec::new()));
@@ -170,6 +171,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
         );
         runtime.bundle_capture = capture;
         runtime.head_styles = base.then(Weak::new);
+        runtime.watch_stylesheets = older_head;
         let config = ResolvedConfig {
             input: Config {
                 renderer: Some("renderer.ts".into()),
@@ -186,7 +188,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
             roots: vec![],
         };
         let side = runtime.side(&config);
-        let compiler = stylesheets::compiler(&runtime, &config, &side);
+        let compiler = stylesheets::attempt(&runtime, &config, &side).compiler;
         compiler
             .bundle(&StylesheetRoot {
                 path: "theme.module.css".into(),
@@ -247,7 +249,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
         assert_eq!(
             preparations,
             [expected, false],
-            "capture={capture:?}, base={base}, css_before_bundle={css_before_bundle}"
+            "capture={capture:?}, base={base}, css_before_bundle={css_before_bundle}, older_head={older_head}"
         );
         assert_eq!(
             matches!(calls.first(), Some(Call::ProcessCss(_))),

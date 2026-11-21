@@ -44,6 +44,8 @@ pub(crate) struct StylesheetCache {
     contexts: Vec<Arc<ContextEvidence>>,
     misses: BTreeMap<String, Miss>,
     limit: usize,
+    /// A lost record prevents early context retirement for the rest of this store's lifetime.
+    dropped: bool,
 }
 
 impl Default for StylesheetCache {
@@ -59,11 +61,17 @@ impl StylesheetCache {
             contexts: Vec::new(),
             misses: BTreeMap::new(),
             limit,
+            dropped: false,
         }
     }
 
     pub(crate) fn empty_peer(&self) -> Self {
         Self::new(self.limit)
+    }
+
+    /// Every inserted record remains available to this attempt.
+    pub(crate) fn kept_every_record(&self) -> bool {
+        !self.dropped
     }
 
     /// An empty store has no records, context entries, or remembered miss reasons.
@@ -107,7 +115,7 @@ impl StylesheetCache {
 
     /// Remember that the record of `key` stayed in its attempt.
     pub(crate) fn reject(&mut self, key: String) {
-        self.records.remove(&key);
+        self.dropped |= self.records.remove(&key).is_some();
         self.prune();
         self.misses
             .insert(digest(key.as_bytes()), Miss::InconsistentEvidence);
@@ -127,6 +135,7 @@ impl StylesheetCache {
             .as_ref()
             .map_or(0, |context| self.context_chain_charge(context, false));
         if alone > self.limit {
+            self.dropped = true;
             self.misses.insert(miss_key, Miss::Evicted);
         } else {
             if self.retained() + self.record_charge(&key, &record) > self.limit {
@@ -180,6 +189,7 @@ impl StylesheetCache {
 
     /// Remove every record and context entry, and remember the removed keys.
     fn evict(&mut self) {
+        self.dropped = true;
         let removed = std::mem::take(&mut self.records);
         self.contexts.clear();
         self.misses.extend(

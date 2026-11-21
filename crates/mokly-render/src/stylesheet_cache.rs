@@ -9,7 +9,7 @@ use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::read_evidence::ReadEvidence;
 use mokly_source_interface::tree::SourceTree;
 
-use crate::stylesheet_compiler::{Compilation, RootCompiler, StylesheetPreparation};
+use crate::stylesheet_compiler::{Compilation, RootCompiler};
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
@@ -30,7 +30,7 @@ pub(crate) struct CachedStylesheets {
     /// An attempt's local records and miss reasons must be empty for a batch.
     pub(super) local: Mutex<StylesheetCache>,
     /// The eligibility probe stops at its first stale root, so its miss needs one key.
-    probe: OnceLock<Mutex<Option<String>>>,
+    pub(super) probe: OnceLock<Mutex<Option<String>>>,
     /// Non-owning indexes let the bounded stores control context payload lifetimes.
     contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
     /// The stored context entries whose stamp this attempt checked, with the result.
@@ -70,7 +70,7 @@ impl CachedStylesheets {
     }
 
     /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
-    fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
+    pub(super) fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
         if let Some(record) = lock(&self.local).record(key) {
             return Ok(record);
         }
@@ -223,19 +223,6 @@ impl StylesheetBundler for CachedStylesheets {
     }
 }
 
-impl StylesheetPreparation for CachedStylesheets {
-    fn stale_postcss(&self) -> bool {
-        let keys = lock(&self.shared).postcss_keys(&self.settings);
-        keys.into_iter().any(|key| {
-            if !matches!(self.lookup(&key), Err(Miss::StampMismatch)) {
-                return false;
-            }
-            *lock(self.probe.get_or_init(Mutex::default)) = Some(key);
-            true
-        })
-    }
-}
-
 pub(super) fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(|error| error.into_inner())
 }
@@ -295,3 +282,7 @@ mod class_maps_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_preparation_tests.rs"]
 mod stylesheet_preparation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_retirement_tests.rs"]
+mod stylesheet_retirement_tests;

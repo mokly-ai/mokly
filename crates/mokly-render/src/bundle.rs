@@ -105,7 +105,11 @@ pub(crate) fn describe(
     {
         context
             .as_ref()
-            .filter(|lease| !lease.used.load(Ordering::Relaxed) && compiler.stale_postcss())
+            .filter(|lease| {
+                !lease.used.load(Ordering::Relaxed)
+                    && !runtime.older_used_head_context(lease)
+                    && compiler.stale_postcss()
+            })
             .and_then(|lease| config.postcss().and_then(|postcss| lease.prepare(postcss)))
     } else {
         None

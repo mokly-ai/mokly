@@ -54,6 +54,8 @@ pub(crate) trait RootCompiler: Send + Sync {
 pub(crate) trait StylesheetPreparation: ClassMapCompiler {
     /// A retained PostCSS root whose current evidence rejects reuse.
     fn stale_postcss(&self) -> bool;
+    /// Every compiled or reused root remains in this attempt's bounded store.
+    fn kept_every_record(&self) -> bool;
 }
 
 pub(crate) struct CapturingCompiler {

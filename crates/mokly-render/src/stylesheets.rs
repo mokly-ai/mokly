@@ -2,7 +2,6 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
@@ -15,7 +14,6 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
-use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_compiler::{CapturingCompiler, StylesheetPreparation};
 
 /// Stylesheet services and context ownership for one attempt.
@@ -26,12 +24,16 @@ pub(crate) struct StylesheetAttempt {
     pub(crate) context: Option<Arc<ContextLease>>,
 }
 
-pub(crate) fn compiler(
-    runtime: &Runtime,
-    config: &ResolvedConfig,
-    side: &SideInputs,
-) -> Arc<dyn ClassMapCompiler> {
-    attempt(runtime, config, side).compiler
+impl StylesheetAttempt {
+    /// Retire a used context after successful Serve head preparation when every root remains.
+    pub(crate) fn retire_used(&self) {
+        if let Some(context) = &self.context
+            && context.used_live()
+            && self.compiler.kept_every_record()
+        {
+            context.retire();
+        }
+    }
 }
 
 pub(crate) fn attempt(
@@ -52,23 +54,34 @@ pub(crate) fn attempt(
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
     };
+    let settings = format!(
+        "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
+        config.input,
+        config.modules,
+        config.postcss().map(|_| &side.source_root),
+        side.module_resolution,
+        dependency_roots(side),
+        side.repository_roots
+    );
     let postcss = config.postcss().map(|module| {
+        let released = {
+            let mut cache = runtime
+                .css
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            cache.purge();
+            cache.releases.clone()
+        };
+        let lease = Arc::new(ContextLease::new(
+            side.context.clone(),
+            settings.clone(),
+            runtime.pool.clone(),
+            released,
+        ));
+        runtime.track_head_context(&lease);
         Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
-            lease: Arc::new(ContextLease {
-                id: side.context.clone(),
-                pool: runtime.pool.clone(),
-                released: {
-                    let mut cache = runtime
-                        .css
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner());
-                    cache.purge();
-                    cache.releases.clone()
-                },
-                used: AtomicBool::new(false),
-                prepared: AtomicBool::new(false),
-            }),
+            lease,
             pool: runtime.pool.clone(),
             tree: tree.clone(),
             inventory_tree: runtime.inventory_tree.clone(),
@@ -81,15 +94,6 @@ pub(crate) fn attempt(
         })
     });
     let context = postcss.as_ref().map(|postcss| postcss.lease.clone());
-    let settings = format!(
-        "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
-        config.input,
-        config.modules,
-        config.postcss().map(|_| &side.source_root),
-        side.module_resolution,
-        dependency_roots(side),
-        side.repository_roots
-    );
     let compiler = Arc::new(
         CachedStylesheets::new(
             Arc::new(CapturingCompiler {
