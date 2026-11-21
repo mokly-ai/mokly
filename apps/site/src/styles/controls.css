@@ -58,14 +58,17 @@
   color: var(--mk-color-on-accent);
 }
 
+/* A hovered or pressed filled button keeps its fill and its white label,
+   because the accent's hover and pressed roles are inks, not fills. A hover
+   lifts it by a pixel instead, so the hover does not rely on colour alone,
+   and a press sets it back down. The reduced-motion rule of base.css takes
+   the transition away. */
 .site-button--primary:hover {
-  background: var(--mk-color-accent-hover);
-  border-color: var(--mk-color-accent-hover);
+  transform: translateY(-1px);
 }
 
 .site-button--primary:active {
-  background: var(--mk-color-accent-active);
-  border-color: var(--mk-color-accent-active);
+  transform: translateY(0) scale(0.985);
 }
 
 .site-button--quiet {

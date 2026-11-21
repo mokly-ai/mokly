@@ -2,7 +2,6 @@ import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { canvasColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import { expect, test } from "@playwright/test";
 
@@ -18,7 +17,6 @@ import {
   screenView,
 } from "./catalogue-paths";
 import type { Scheme, Viewport } from "./catalogue-paths";
-import { drawnPalette } from "./catalogue-reads";
 import {
   controlDocumentViolations,
   controlPolicyInput,
@@ -173,12 +171,9 @@ for (const { file, path, viewport, scheme } of views) {
         controlPolicyInput(disabledByDesign(path)),
       ),
     ).toEqual([]);
-    // A primary action's label takes the on-accent colour of the document's
-    // palette: the Canvas signal fill carries its own label colour.
-    const foreground =
-      drawnPalette(path) === "canvas"
-        ? canvasColors(scheme).onAccent
-        : tokens.color[scheme].onAccent;
+    // A primary action's label takes the on-accent colour of the tokens: the
+    // Canvas signal fill carries its own white label in both schemes.
+    const foreground = tokens.color[scheme].onAccent;
     const rgb = [1, 3, 5]
       .map((start) => Number.parseInt(foreground.slice(start, start + 2), 16))
       .join(", ");

@@ -1,11 +1,17 @@
 import { tokens } from "@mokly-cloud/tokens/tokens";
-import type { CSSProperties } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
 import { Button } from "../../entries/design/button.mockup";
 
 export function TokensScreen() {
+  const colors = Object.entries(tokens.color.light).flatMap(([name, value]) =>
+    typeof value === "string"
+      ? [name]
+      : Object.entries(value).flatMap(([person, roles]) =>
+          Object.keys(roles).map((role) => name + "-" + person + "-" + role),
+        ),
+  );
   return (
     <main data-mkc-screen="design/tokens" className="tokens-page">
       <p className="eyebrow">Mokly design</p>
@@ -13,17 +19,13 @@ export function TokensScreen() {
       <section>
         <h2>Color</h2>
         <div className="swatch-grid">
-          {Object.keys(tokens.color.light).map((name) => {
+          {colors.map((name) => {
             const variable =
               "--mk-color-" +
               name.replace(/[A-Z]/g, (letter) => "-" + letter.toLowerCase());
             return (
               <div className="swatch" key={name}>
-                <span
-                  style={
-                    { background: "var(" + variable + ")" } as CSSProperties
-                  }
-                />
+                <span style={{ background: "var(" + variable + ")" }} />
                 <code>{name}</code>
               </div>
             );

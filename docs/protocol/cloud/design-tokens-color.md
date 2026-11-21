@@ -1,7 +1,5 @@
 # Design Token Colors
 
-Status: The token tables do not take their Canvas values from the `@mokly/ui` palette module yet, the Folio surfaces remain, and the product chrome does not draw the new mark. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
-
 The color tables of [Design tokens](./design-tokens.md): the semantic roles in
 both schemes and their Canvas sources, the accent family and its one-fill
 rule, the Canvas surfaces of the product and marketing screens, and the paper

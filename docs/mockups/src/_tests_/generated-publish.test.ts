@@ -173,14 +173,14 @@ test("Publish uploads the bundled CSS and font of its own build and writes nothi
     for (const style of styles) {
       const cssPath = path.posix.join(path.posix.dirname(document), style[1]);
       const css = files.get(cssPath)?.toString("utf8") ?? "";
-      if (!css.includes("InterVariable.woff2")) continue;
+      if (!css.includes("Geist-Variable.woff2")) continue;
       assert.match(
         css,
         /font-family:\s*Fixture/,
         "the imported CSS is bundled",
       );
       const fonts = [
-        ...css.matchAll(/url\(["']?([^\s)"']*InterVariable\.woff2)["']?\)/g),
+        ...css.matchAll(/url\(["']?([^\s)"']*Geist-Variable\.woff2)["']?\)/g),
       ];
       assert.ok(fonts.length > 0);
       for (const font of fonts)

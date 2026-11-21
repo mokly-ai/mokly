@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 
-import { canvasColors } from "@mokly-cloud/tokens/palettes";
+import { tokens } from "@mokly-cloud/tokens/tokens";
 import { expect, test } from "@playwright/test";
 
 import { sample } from "../fixtures/product";
@@ -54,9 +54,9 @@ for (const viewport of ["desktop", "mobile"] as const)
       "every viewer screen keeps the chrome over one stage: " + label,
       async ({ page }) => {
         await page.setViewportSize(size);
-        // The viewer documents draw in the Canvas palette, whose solid accent
-        // is the signal fill of a filled button.
-        const fill = rgb(canvasColors(scheme).accentSolid);
+        // The solid accent of the Canvas tokens is the signal fill of a
+        // filled button.
+        const fill = rgb(tokens.color[scheme].accentSolid);
         for (const [screen, panel] of family)
           for (const state of ["", "empty", "loading", "error"]) {
             await page.goto(url(screen, state || undefined));

@@ -1,13 +1,17 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the down chevron of a
 // select, the closed / open folder icons for collapsible folders, the screen /
-// page / use-case leaf icons, the top bar's brand, search and tag controls,
-// the device chrome's copy and expand / collapse controls, and the workspace
+// page / use-case leaf icons, the top bar's search and tag controls, the
+// device chrome's copy and expand / collapse controls, and the workspace
 // controls' icons. Icons are stroke-based on a 24-unit viewBox and inherit
-// `currentColor`; the brand mark is the filled Mokly logo on its own 32-unit
-// grid. Authored folder groups swap closed and open folder icons; top-level
-// catalogue sections and the details inspector use the disclosure chevron.
+// `currentColor`. The brand mark, the Mokly logo on its own 32-unit grid,
+// lives with the top bar that draws and colours it, and this module, the
+// package's icons entry, exports it too. Authored folder groups swap closed
+// and open folder icons; top-level catalogue sections and the details
+// inspector use the disclosure chevron.
 
 import type { ReactNode } from "react";
+
+export { BrandIcon } from "../top-bar/brand-icon.js";
 
 export function IconSvg(props: { children: ReactNode; size: number }) {
   return (
@@ -24,42 +28,6 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
       width={props.size}
     >
       {props.children}
-    </svg>
-  );
-}
-
-/**
- * Mokly's brand mark: two overlapping rounded screens, the front one carrying
- * two short rules. The screens fill with `currentColor`; the `mbk-mark-rules`
- * class paints the rules in the surface color behind the mark.
- */
-export function BrandIcon(props: { size?: number }) {
-  const size = props.size ?? 22;
-  return (
-    <svg
-      aria-hidden="true"
-      className="mbk-reset"
-      height={size}
-      viewBox="0 0 32 32"
-      width={size}
-    >
-      <rect
-        fill="currentColor"
-        height={21}
-        opacity={0.3}
-        rx={4}
-        width={20}
-        x={3}
-        y={3}
-      />
-      <rect fill="currentColor" height={21} rx={4} width={20} x={9} y={8} />
-      <path
-        className="mbk-mark-rules"
-        d="M14 15h10M14 20h7"
-        fill="none"
-        strokeLinecap="round"
-        strokeWidth={2}
-      />
     </svg>
   );
 }

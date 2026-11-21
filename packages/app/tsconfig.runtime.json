@@ -18,6 +18,9 @@
       "@firna/ui/theme": ["../../node_modules/@firna/ui/dist/node/theme.js"],
       "@firna/ui/*": ["../../node_modules/@firna/ui/dist/node/*/index.js"],
       "@mokly-cloud/tokens/*": ["../../packages/tokens/src/*.ts"],
+      "@mokly/ui/palette": [
+        "../../node_modules/@mokly/ui/dist/palette/palette.js"
+      ],
       "lucide-react-native": [
         "../../node_modules/lucide-react-native/dist/esm/lucide-react-native.js"
       ]

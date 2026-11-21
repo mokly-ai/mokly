@@ -3,8 +3,8 @@ import type { DocumentPalette } from "@mokly-cloud/tokens/palettes";
 import { variantParent } from "./catalogue-variants";
 import type { InventoryRecord } from "./catalogue-variants";
 
-/** The screens that keep permanent paths and their Product folders after Milestone 11D. */
-export const folioScreens = [
+/** The account and settings screens with permanent paths and Product folders. */
+const accountScreens = [
   {
     path: "product/account/sign-up",
     folder: ["Product", "Account", "Sign up"],
@@ -25,7 +25,7 @@ export const folioScreens = [
  * The viewer's permanent screens, which keep their paths and Product folders
  * and render in the Canvas palette.
  */
-export const canvasScreens = [
+const viewerScreens = [
   {
     path: "product/viewer/standalone",
     folder: ["Product", "Viewer", "Standalone"],
@@ -36,10 +36,9 @@ export const canvasScreens = [
 ] as const;
 
 /** Every permanent screen, with the palette its rendered documents carry. */
-export const permanentScreens = [
-  ...folioScreens.map((screen) => ({ ...screen, palette: "folio" as const })),
-  ...canvasScreens.map((screen) => ({ ...screen, palette: "canvas" as const })),
-];
+export const permanentScreens = [...accountScreens, ...viewerScreens].map(
+  (screen) => ({ ...screen, palette: "default" as const }),
+);
 
 /**
  * Product families the catalogue no longer owns. Explore, the former Marketing
@@ -53,7 +52,7 @@ const retired = ["explore", "marketing", "review", "workspace"] as const;
 
 /**
  * The permanent screens are canonical screens at their permanent paths whose
- * rendered documents carry their palette, Folio or Canvas, and no record of a
+ * rendered documents carry the default Canvas palette, and no record of a
  * retired family remains. `palette` gives the palette of an entry's rendered
  * documents.
  */

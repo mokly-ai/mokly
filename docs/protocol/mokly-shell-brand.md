@@ -1,6 +1,6 @@
 # Mokly Shell Brand
 
-Status: The shell, the site, the cloud app, the emails, the brand files, the favicon, the social cards and the desktop icon do not draw the new mark and the Geist wordmark yet. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) draws them.
+Status: The shell's theme does not hold the Canvas roles and Geist yet, so the shell draws the mark in its current palette with surface-coloured rules, and sets the wordmark in its current sans face. [Milestone 17](../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) moves the theme.
 
 ## Identity Boundary
 

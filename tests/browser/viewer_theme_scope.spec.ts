@@ -71,9 +71,13 @@ test("host accent overrides and interactive overlay stay within the viewer", asy
     "stroke",
     "rgb(255, 255, 255)",
   );
+  await expect(page.locator("#one .mbk-name-dot")).toHaveCSS(
+    "color",
+    "rgb(47, 89, 69)",
+  );
   await expect(page.locator("#one .mbk-name")).toHaveCSS(
     "font-family",
-    'Georgia, "Times New Roman", serif',
+    '"Mokly Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   );
   await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");

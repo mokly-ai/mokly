@@ -54,7 +54,7 @@ export function MockupDocument({
       data-viewport={viewport}
     >
       <style>{domBackendCss}</style>
-      <style>{tokenCss(colorScheme, viewport, palette)}</style>
+      <style>{tokenCss(colorScheme, viewport)}</style>
       <MockupRenderContext.Provider
         value={{ colorScheme, viewport, path: entry.path }}
       >

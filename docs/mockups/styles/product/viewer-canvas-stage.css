@@ -2,13 +2,14 @@
    the fallback bar, and each card that the stage holds floating on it. Only
    the drawings load this sheet: `chrome.tsx` and the settings sheet import
    it, so Mokly bundles it into those entries' own stylesheets, and the
-   application never loads it. Every rule is scoped to the Canvas palette's
-   wrapper and to the cloud's stage. The package's own stage keeps its own
-   look. */
+   application never loads it. Every rule is scoped to the renderer's
+   wrapper, the element that carries `data-color-scheme`, and to the cloud's
+   stage, so it outweighs a product sheet's rule for the same element. The
+   package's own stage keeps its own look. */
 @import "viewer-canvas-depth.css";
 
 /* The canvas: the background with a dot grid on a 24px pitch. */
-.canvas-scope .fo-stage-canvas {
+[data-color-scheme] .fo-stage-canvas {
   background-color: var(--mk-color-background);
   background-image: radial-gradient(
     circle at 1px 1px,
@@ -20,14 +21,14 @@
 
 /* The blank bar above the stage that the settings dialog opens over takes
    the bar's surface, as the viewer's own bar does. */
-.canvas-scope .fo-stage-bar {
+[data-color-scheme] .fo-stage-bar {
   background: var(--mk-color-surface);
 }
 
 /* A State card, its waiting form and a build card float on the canvas as a
    Canvas surface: the hairline, the 12px radius and a soft shadow. */
-.canvas-scope .fo-stage-canvas .fo-state,
-.canvas-scope .fo-stage-canvas .fo-build {
+[data-color-scheme] .fo-stage-canvas .fo-state,
+[data-color-scheme] .fo-stage-canvas .fo-build {
   border-color: var(--mk-color-border);
   border-radius: var(--fo-canvas-radius);
   box-shadow: var(--fo-canvas-shadow-float);

@@ -109,7 +109,7 @@ for (const viewport of ["desktop", "mobile"] as const)
             "data-preview-color-scheme",
             shown,
           );
-          const palette = paletteColors(shown, "canvas");
+          const palette = paletteColors(shown);
           const screen = frame.locator(
             '[data-mkc-sample-screen="' + currentScreen.path + '"]',
           );

@@ -81,8 +81,8 @@ test("static documents carry the React Native Web atomic stylesheet", () => {
 
 test("static documents keep the theme boundary inside the wrapper and emit Firna CSS first", () => {
   for (const [path, viewport, scheme, palette] of [
-    ["product/settings/tokens", "desktop", "light", "folio-scope"],
-    ["product/viewer/standalone", "mobile", "dark", "canvas-scope"],
+    ["product/settings/tokens", "desktop", "light", undefined],
+    ["product/viewer/standalone", "mobile", "dark", undefined],
     ["design/tokens", "mobile", "dark", undefined],
     [
       "design/button/primary",
@@ -120,22 +120,10 @@ test("static documents keep the theme boundary inside the wrapper and emit Firna
   }
 });
 
-test("every document's wrapper carries the palette of its entry's kind and path", () => {
-  const canvas = ["product/viewer", "design/site"];
-  const folio = ["product/", "design/email/"];
+test("every document's wrapper uses paper for components and default Canvas for screens", () => {
   for (const record of catalogueEntries()) {
     if (record.kind !== "screen" && record.kind !== "component") continue;
-    const palette =
-      record.kind === "component"
-        ? "paper"
-        : canvas.some(
-              (root) =>
-                record.path === root || record.path.startsWith(root + "/"),
-            )
-          ? "canvas"
-          : folio.some((root) => record.path.startsWith(root))
-            ? "folio"
-            : "default";
+    const palette = record.kind === "component" ? "paper" : "default";
     for (const { viewport, colorScheme } of record.views)
       assert.equal(
         viewPalette(record.path, viewport, colorScheme),

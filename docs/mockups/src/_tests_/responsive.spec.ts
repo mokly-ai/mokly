@@ -126,7 +126,7 @@ for (const scheme of ["light", "dark"] as const) {
         const headerBounds = await contentBounds(header);
         const content = page.locator(".fo-account-content");
         const panelBounds = await contentBounds(content);
-        for (const font of ["var(--mk-font-display)", "serif"]) {
+        for (const font of ["var(--mk-font-sans)", "sans-serif"]) {
           await page.addStyleTag({
             content: ".review-brand { font-family: " + font + "; }",
           });

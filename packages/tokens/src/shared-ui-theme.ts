@@ -9,28 +9,16 @@ import type {
   SharedUiTheme,
 } from "@firna/ui/theme";
 
-import {
-  canvasColors,
-  documentPalettes,
-  paletteColors,
-  paletteFonts,
-} from "./palettes";
-import type { DocumentPalette, PaletteRoles } from "./palettes";
+import { paletteColors } from "./palettes";
+import type { DocumentPalette } from "./palettes";
 import { tokens } from "./tokens";
 
-/**
- * Every Firna color comes from the matching canonical surface family. The
- * canvas family also takes its accent roles from the Canvas palette, so its
- * solid fill is the signal green of a filled button.
- */
+/** Every Firna color comes from the selected token surface family. */
 export function sharedUiColors(
   scheme: SharedUiScheme,
-  palette: PaletteRoles = "paper",
+  palette: DocumentPalette = "default",
 ): SharedUiColors {
-  const color =
-    palette === "canvas"
-      ? { ...tokens.color[scheme], ...canvasColors(scheme) }
-      : tokens.color[scheme];
+  const color = tokens.color[scheme];
   const roles = paletteColors(scheme, palette);
   return {
     amber: color.warning,
@@ -76,7 +64,7 @@ export const sharedUiRadii = {
 };
 
 /**
- * Control geometry derived from shared radii. The Folio and canvas scopes take
+ * Control geometry derived from shared radii. The default family takes
  * the chrome radius for a control and the medium radius for a surface, so a
  * control is 8px and a surface 10px, as the radius contract assigns by
  * component class.
@@ -87,10 +75,8 @@ const chromeRadii = {
   lg: parseFloat(tokens.radius.medium),
 };
 const paletteRadii: Record<DocumentPalette, Partial<typeof sharedUiRadii>> = {
-  default: {},
+  default: chromeRadii,
   paper: {},
-  folio: chromeRadii,
-  canvas: chromeRadii,
 };
 
 /**
@@ -98,35 +84,35 @@ const paletteRadii: Record<DocumentPalette, Partial<typeof sharedUiRadii>> = {
  * roles; a theme built from the light preset with only `scheme` changed is
  * not a dark theme.
  */
-function theme(scheme: SharedUiScheme, palette: PaletteRoles): SharedUiTheme {
-  const fonts = paletteFonts(palette);
+function theme(
+  scheme: SharedUiScheme,
+  palette: DocumentPalette,
+): SharedUiTheme {
+  const fonts = tokens.font;
   return createSharedUiTheme(
     {
       colors: sharedUiColors(scheme, palette),
       fonts: { sans: fonts.sans, mono: fonts.mono },
-      radii: sharedUiRadii,
+      radii: { ...sharedUiRadii, ...paletteRadii[palette] },
     },
     scheme === "dark" ? darkSharedUiTheme : defaultSharedUiTheme,
   );
 }
 
-/** Shared mapping for mockups and the future product app. */
+/** Default Canvas themes shared by the catalogue and the application. */
 export const sharedUiThemes = {
-  light: theme("light", "paper"),
-  dark: theme("dark", "paper"),
+  light: theme("light", "default"),
+  dark: theme("dark", "default"),
 };
 
 /** One document palette's complete control theme: its colors, type and geometry. */
 export function paletteUiTheme(
   scheme: SharedUiScheme,
-  palette: DocumentPalette,
+  palette: DocumentPalette = "default",
 ): SharedUiTheme {
-  const roles =
-    palette === "default" ? "paper" : documentPalettes[palette].roles;
-  return createSharedUiTheme(
-    { radii: paletteRadii[palette] },
-    roles === "paper" ? sharedUiThemes[scheme] : theme(scheme, roles),
-  );
+  return palette === "default"
+    ? sharedUiThemes[scheme]
+    : theme(scheme, palette);
 }
 
 /** Static pages need the package's browser-outline fallback without hydration. */
@@ -143,4 +129,12 @@ export function staticUiTheme(
 /** The editorial header uses the same control with the shared pill radius. */
 export function pillUiTheme(base: SharedUiTheme): SharedUiTheme {
   return createSharedUiTheme({ radii: { md: sharedUiRadii.pill } }, base);
+}
+
+/** Primary actions keep their resting solid fill on hover. */
+export function primaryActionUiTheme(base: SharedUiTheme): SharedUiTheme {
+  return createSharedUiTheme(
+    { colors: { primaryDeep: base.colors.primary } },
+    base,
+  );
 }

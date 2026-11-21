@@ -1,6 +1,6 @@
 # Mokly Shell Design Contract
 
-Status: The Canvas palette with the Geist faces, the canvas stage with its floating panels and its compact layout, the search keys, and the right panel with compare on every frame are not built yet. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and the fonts, [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels, the compact layout and the search keys, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
+Status: The Canvas palette with the Geist faces, the canvas stage with its floating panels and its compact layout, the search keys, and the right panel with compare on every frame are not built yet. [Milestone 17](../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) builds the palette and the fonts, [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels, the compact layout and the search keys, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
 
 ## Scope
 

@@ -16,9 +16,9 @@ const variants = [
     svgSize: [192, 64],
     pngSize: [768, 256],
     colors: [
-      tokens.color.light.accent,
       tokens.color.light.text,
-      tokens.color.light.surface,
+      tokens.color.light.signal,
+      tokens.color.light.onSignal,
     ],
   },
   {
@@ -26,22 +26,30 @@ const variants = [
     svgSize: [192, 64],
     pngSize: [768, 256],
     colors: [
-      tokens.color.dark.accent,
       tokens.color.dark.text,
-      tokens.color.dark.surface,
+      tokens.color.dark.signal,
+      tokens.color.dark.onSignal,
     ],
   },
   {
     name: "mokly-icon-light",
     svgSize: [64, 64],
     pngSize: [512, 512],
-    colors: [tokens.color.light.accent, tokens.color.light.surface],
+    colors: [
+      tokens.color.light.text,
+      tokens.color.light.signal,
+      tokens.color.light.onSignal,
+    ],
   },
   {
     name: "mokly-icon-dark",
     svgSize: [64, 64],
     pngSize: [512, 512],
-    colors: [tokens.color.dark.accent, tokens.color.dark.surface],
+    colors: [
+      tokens.color.dark.text,
+      tokens.color.dark.signal,
+      tokens.color.dark.onSignal,
+    ],
   },
 ] as const;
 const aliases = [

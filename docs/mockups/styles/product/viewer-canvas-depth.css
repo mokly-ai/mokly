@@ -4,8 +4,11 @@
    mixes the near-black background, because a light ink would glow around a
    dark card. Only the drawings load this sheet: each Canvas sheet that draws
    a floating surface imports it, so Mokly bundles it into that entry's own
-   stylesheet, and the application never loads it. */
-.canvas-scope {
+   stylesheet, and the application never loads it. The properties sit on the
+   renderer's wrapper, the element that carries `data-color-scheme`, and the
+   dark rule follows the light rule, which it overrides by order. No other
+   sheet declares these properties. */
+[data-color-scheme] {
   --fo-canvas-shade: var(--mk-color-text);
   --fo-canvas-radius: 12px;
   --fo-canvas-shadow-float:
@@ -25,7 +28,7 @@
     transparent
   );
 }
-.canvas-scope[data-color-scheme="dark"] {
+[data-color-scheme="dark"] {
   --fo-canvas-shade: var(--mk-color-background);
   --fo-canvas-shadow-float:
     0 6px 14px -4px color-mix(in srgb, var(--fo-canvas-shade) 50%, transparent),

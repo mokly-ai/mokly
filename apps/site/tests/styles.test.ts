@@ -147,13 +147,16 @@ test("the generated favicon draws the mark from workspace colors", async () => {
   assert.match(response.headers.get("content-type") ?? "", /image\/svg\+xml/);
   const source = await response.text();
   for (const value of [
-    tokens.color.light.accent,
-    tokens.color.light.folioSurface,
-    tokens.color.dark.accent,
-    tokens.color.dark.folioSurface,
+    tokens.color.light.text,
+    tokens.color.light.signal,
+    tokens.color.light.onSignal,
+    tokens.color.dark.text,
+    tokens.color.dark.signal,
+    tokens.color.dark.onSignal,
   ])
     assert.ok(source.includes(value), value);
-  assert.match(source, /var\(--accent\)/);
+  for (const role of ["text", "signal", "on-signal"])
+    assert.match(source, new RegExp(`var\\(--${role}\\)`), role);
   assert.match(source, /@media\(prefers-color-scheme:dark\)/);
 });
 

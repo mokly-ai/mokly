@@ -4,7 +4,9 @@
  * depiction that runs no script.
  */
 
-import { BrandIcon, IconSvg } from "../icons/icons.js";
+import { IconSvg } from "../icons/icons.js";
+
+import { BrandIcon } from "./brand-icon.js";
 
 function MenuIcon() {
   return (
@@ -72,14 +74,19 @@ export function Menu({
   );
 }
 
-/** The brand: the mark and the wordmark, as a link or a picture. */
+/**
+ * The brand: the mark and the wordmark `mokly.`, whose period is its own
+ * element so that it takes the brand colour, as a link or a picture.
+ */
 export function Brand({ href }: { href: string | undefined }) {
   const content = (
     <>
       <span aria-hidden="true" className="mbk-mark mbk-reset">
         <BrandIcon />
       </span>
-      <span className="mbk-name mbk-reset">mokly.</span>
+      <span className="mbk-name mbk-reset">
+        mokly<span className="mbk-name-dot mbk-reset">.</span>
+      </span>
     </>
   );
   if (href === undefined)

@@ -60,7 +60,7 @@
   border-radius: 9px;
   color: var(--mk-color-text);
   display: inline-flex;
-  font-family: var(--mk-font-display);
+  font-family: var(--mk-font-sans);
   gap: 8px;
   height: 44px;
   padding: 0 10px 0 6px;
