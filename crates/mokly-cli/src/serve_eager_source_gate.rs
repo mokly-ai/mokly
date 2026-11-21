@@ -8,7 +8,7 @@ use mokly_server::changes_signal::ChangeSignal;
 
 use crate::changes_source_admission::{SourceAdmission, SourceCache};
 
-const WAIT_FOR_READY: bool = false;
+const WAIT_FOR_READY: bool = true;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// The startup milestone that permits cold historical discovery.
