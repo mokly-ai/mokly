@@ -90,7 +90,7 @@ No line holds a token, the credential file's contents or a redaction marker.
 
 `site.ts` holds the shared site origin, the site and app routes derived from it
 — among them `publishFromCi`, the CI setup guide every Publish from CI link
-opens — and the approved stage label/status. The site implementation emits relative
+opens. The site implementation emits relative
 `/sign-in` and `/sign-up` paths. The mockup fixture depicts them as
 absolute URLs beneath `siteOrigin` because a generated static page opened from
 disk cannot resolve a root-relative app path. Account entry, onboarding and the

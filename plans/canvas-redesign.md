@@ -3,12 +3,13 @@
 Status: Active. On branch `calummoore/mokly-website-redesign-plan-af84`, no
 pull request yet. The pull request that completes the work deletes this plan
 and its parts: the [design record](./canvas-redesign-design.md), the
+[site design calls](./canvas-redesign-design-site.md), the
 [viewer milestones](./canvas-redesign-milestones-viewer.md),
 [decisions 1 to 5](./canvas-redesign-decisions.md),
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
 [decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
-[decisions 27 to 29](./canvas-redesign-decisions-site.md). Decisions 11, 12
-and 20 to 29 wait for Cal.
+[decisions 27 to 32](./canvas-redesign-decisions-site.md). Decisions 11, 12
+and 20 to 32 wait for Cal.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a
@@ -289,5 +290,7 @@ Depends on: every other milestone
 
 - [ ] Check the deployed site and the deployed app in both schemes on a real
       phone and in Safari.
+- [ ] Measure the home with Lighthouse again, now that the stage frame is
+      gone, and narrow `plans/follow-ups/flaky-site-lighthouse-performance.md`.
 - [ ] Before go-live, check every depicted feature on the site against the
       product, and remove what did not ship, as the relaxed source rule says.

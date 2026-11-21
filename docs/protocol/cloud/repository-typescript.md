@@ -94,7 +94,7 @@ formatting, lint and import rules.
 - `apps/site` is static Astro output. It reads guides, reference documents,
   version and changelog from the installed `@mokly/mokly` package and reads
   Cloud/Review Markdown from this repository. It depends directly on the token
-  npm workspace, draws its [home demos](./site-delivery.md#home-stage) as
+  npm workspace, draws its [home demos](./site-delivery.md#home-demos) as
   static components and has no runtime API, cookies or third-party scripts.
   Its contract is [Site](./site.md).
 

@@ -21,8 +21,9 @@
   3. Both docs islands import the whole icon set, about 2.5 KB after gzip.
   4. The light Shiki theme stays configured, but no panel uses it.
   5. Each code block keeps a tab stop, though it no longer scrolls.
-  6. The shell language set and the band's class helpers exist twice, in
-     `code-panel.ts` and `sample-band.ts`.
+  6. The shell language set exists twice: in `code-panel.ts` and in
+     `components/CodePanel.astro`. Milestone 8 already shares the helpers of
+     `sample-band.ts`.
 - **Problem:** Each item is small, and none breaks a page today.
 - **Impact if no action:** Slightly larger islands, one wasted tab stop per
   code block, and two copies of the same helpers that can drift.
@@ -31,7 +32,8 @@
   - **A.** Fix all six in one change: reset the Copied timer on each press,
     fall back to "text" for an unknown language, import single icons, drop
     the light theme, remove the tab stop when a block does not scroll, and
-    share the helpers from `code-panel.ts`. Effort: Small.
+    let `CodePanel.astro` import the language set from `code-panel.ts`.
+    Effort: Small.
   - **B.** Fix only 5 and 6, which affect readers and maintainers most.
     Effort: Small.
 - **Left out:** Leaving all six, because 5 costs keyboard readers a stop on
@@ -39,5 +41,4 @@
 - **Wider fix:** A.
 - **Previous examples:** None found.
 - **Recommendation:** A. Each fix is a few lines.
-- **Action:** fix after merge, apply A. Milestone 8 shares the helpers of
-  item 6 when it changes `sample-band.ts`.
+- **Action:** fix after merge, apply A.

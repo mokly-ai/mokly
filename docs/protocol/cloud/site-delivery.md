@@ -91,7 +91,7 @@ declared site segments to Pages unchanged.
   and the documentation search under the deployed policy without a policy
   violation.
 
-## Home Stage
+## Home Demos
 
 The home draws its demo app and its product demos as static components at
 build time: the spread, the Browse, Review and Edit demos and the open
