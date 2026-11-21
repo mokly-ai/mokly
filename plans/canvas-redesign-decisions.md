@@ -1,6 +1,6 @@
 # Canvas redesign: decisions 1 to 5
 
-This file and [decisions 6 to 10](./canvas-redesign-decisions-viewer.md) hold
+This file and [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) hold
 the open decisions of the [Canvas redesign plan](./canvas-redesign.md). They
 are a part of that plan, and the pull request that deletes the plan deletes
 them too. The [design record](./canvas-redesign-design.md) holds the design

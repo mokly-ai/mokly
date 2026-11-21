@@ -4,7 +4,7 @@ This file holds the design source, Cal's decisions in force and my design
 calls for the [Canvas redesign plan](./canvas-redesign.md). It is a part of
 that plan, and the pull request that deletes the plan deletes this file too.
 The open decisions are in [decisions 1 to 5](./canvas-redesign-decisions.md)
-and [decisions 6 to 10](./canvas-redesign-decisions-viewer.md).
+and [decisions 6 to 12](./canvas-redesign-decisions-viewer.md).
 
 ## Design source
 

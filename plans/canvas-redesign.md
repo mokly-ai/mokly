@@ -4,7 +4,7 @@ Status: Active. On branch `calummoore/mokly-website-redesign-plan-af84`, no
 pull request yet. The pull request that completes the work deletes this plan,
 its [design record](./canvas-redesign-design.md) and its two decisions files,
 [decisions 1 to 5](./canvas-redesign-decisions.md) and
-[decisions 6 to 10](./canvas-redesign-decisions-viewer.md), as the `plans` skill
+[decisions 6 to 12](./canvas-redesign-decisions-viewer.md), as the `plans` skill
 says. Cal answered the ten decisions on 2026-11-20.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss

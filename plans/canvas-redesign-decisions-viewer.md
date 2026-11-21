@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 6 to 10
+# Canvas redesign: decisions 6 to 12
 
 This file continues [decisions 1 to 5](./canvas-redesign-decisions.md) of the
 [Canvas redesign plan](./canvas-redesign.md). That file holds the shared
