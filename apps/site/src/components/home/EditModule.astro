@@ -1,0 +1,26 @@
+---
+/**
+ * Frame 03 Edit of the home: the module's copy and its labelled frame, the
+ * root of the `edit` demo. The copy sits above the frame, which is empty: it
+ * does not draw the tool window yet.
+ */
+import ModuleFrame from "./ModuleFrame.astro";
+import ModuleText from "./ModuleText.astro";
+---
+
+<article
+  aria-labelledby="edit-title"
+  class="site-module site-module--edit"
+  id="edit"
+>
+  <ModuleText
+    headingId="edit-title"
+    index="03"
+    kicker="Edit"
+    title="Ask for the change beside the screen."
+  >
+    An agent edits the mockup source in a live branch session. Click an element
+    to bring it into the conversation, then publish back to the branch.
+  </ModuleText>
+  <ModuleFrame demo="edit" name="03 Edit" />
+</article>

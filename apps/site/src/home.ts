@@ -6,8 +6,8 @@
  * to the hero reaches search results and shared links in the same edit.
  */
 
-/** The approved home hero: its one-line heading and lead. */
+/** The approved home hero: its heading and lead. */
 export const HOME_HERO = {
-  heading: "Mockup your entire app.",
-  lead: "Prevent AI slop and accidental clobbers, by codifying your design and forcing agents to align their implementation with it.",
+  heading: "Design in code.",
+  lead: "Generate an interactive mockup of your entire app using your existing React, HTML and CSS components.",
 } as const;

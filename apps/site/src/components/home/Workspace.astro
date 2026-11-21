@@ -1,0 +1,41 @@
+---
+/**
+ * The home workspace under the hero. From 1200px the Specs panel floats on
+ * the left and lists the page's sections; the frames column takes the rest
+ * of the width: the features intro with the Browse, Review and Edit
+ * modules, then the open foundation. Below 1200px the frames take the whole
+ * width, and a phone stacks them without the panel. The workspace loads the
+ * home demos island, `home-island.ts`, which marks the section in view in
+ * Specs and plays each demo once in view. The rules are in
+ * `src/styles/home.css`.
+ */
+import BrowseModule from "./BrowseModule.astro";
+import EditModule from "./EditModule.astro";
+import Foundation from "./Foundation.astro";
+import ReviewModule from "./ReviewModule.astro";
+import SpecsPanel from "./SpecsPanel.astro";
+---
+
+<div class="site-home-workspace">
+  <SpecsPanel />
+  <div class="site-home-frames">
+    <section aria-labelledby="features-title" class="site-modules">
+      <div class="site-section-head" id="features">
+        <h2 id="features-title">
+          Browse, review, edit.
+          <br />
+          <span>One place for all of it.</span>
+        </h2>
+        <p>Every branch becomes a catalogue your whole team can open.</p>
+      </div>
+      <div class="site-module-grid">
+        <BrowseModule />
+        <ReviewModule />
+        <EditModule />
+      </div>
+    </section>
+    <Foundation />
+  </div>
+</div>
+
+<script src="./home-island.ts"></script>

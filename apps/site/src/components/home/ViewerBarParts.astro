@@ -1,0 +1,53 @@
+---
+/**
+ * The start of a depicted Mokly window's bar, which the Browse viewer and
+ * the Edit window share: the box of the Mokly mark, the crumb trail and the
+ * branch chip, in that order. A depiction: each part is hidden from
+ * assistive technology and takes no focus.
+ *
+ * - `crumbs`: the trail's segments, such as `["acme", "storefront"]`. A `/`
+ *   separator leads each segment after the first.
+ * - `crumbsClass`: the area's own class on the trail, such as
+ *   `site-home-edit-crumbs`.
+ * - `branch`: the name on the branch chip, such as `feat/checkout-v2`.
+ * - `chevron`: the chip ends in the chevron of the branch menu, as the
+ *   viewer's chip does; the Edit window's chip has none.
+ *
+ * The bar draws the people in the file after these parts, with
+ * `<Presence class="site-home-viewer-people" people={…} />`, whose size and
+ * place `src/styles/home-bar.css` also sets. A phone's bar leaves the trail
+ * out: the bar's own sheet hides it there.
+ *
+ * Use: `<ViewerBarParts branch="feat/checkout-v2" chevron crumbs={["acme", "storefront"]} />`.
+ */
+import Icon from "../Icon.astro";
+import Mark from "../Mark.astro";
+
+import "../../styles/home-bar.css";
+
+interface Props {
+  readonly branch: string;
+  readonly chevron?: boolean;
+  readonly crumbs: readonly string[];
+  readonly crumbsClass?: string;
+}
+
+const { branch, chevron = false, crumbs, crumbsClass } = Astro.props;
+---
+
+<span aria-hidden="true" class="site-topbar-mark">
+  <Mark size={24} />
+</span>
+<span aria-hidden="true" class:list={["site-crumbs", crumbsClass]}>
+  {crumbs.map((crumb, index) => (
+    <span class="site-crumb">
+      {index > 0 && <span class="site-crumb-sep">/</span>}
+      {crumb}
+    </span>
+  ))}
+</span>
+<span aria-hidden="true" class="site-home-viewer-branch">
+  <Icon name="branch" size={14} />
+  {branch}
+  {chevron && <Icon name="chevronDown" size={12} />}
+</span>

@@ -1,0 +1,58 @@
+/* The parts of a depicted Mokly window's bar that the home's Browse viewer
+   and Edit window share, which ViewerBarParts.astro draws: the box of the
+   mark, the crumb trail with its separators and the branch chip with its
+   optional chevron; then the people in the file, which the bar draws with
+   Presence.astro and the class site-home-viewer-people. Each is a
+   depiction.
+
+   The class names and the rules match the bar parts of
+   docs/mockups/styles/site/shell-frame.css. The mockups give these parts no
+   phone or step rules of their own. */
+
+.site-topbar-mark {
+  display: inline-grid;
+  flex: none;
+}
+
+.site-crumbs {
+  display: inline-flex;
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-crumb {
+  display: inline-flex;
+}
+
+.site-crumb-sep {
+  color: var(--mk-color-text-muted);
+  font-weight: var(--mk-font-regular);
+  margin: 0 6px;
+}
+
+.site-home-viewer-branch {
+  align-items: center;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12.5px;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 30px;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.site-home-viewer-branch svg + svg {
+  color: var(--mk-color-text-muted);
+}
+
+.site-home-viewer-people {
+  margin: 0 4px 0 auto;
+}
+
+.site-home-viewer-people .site-avatar {
+  font-size: 11px;
+  height: 26px;
+  width: 26px;
+}
