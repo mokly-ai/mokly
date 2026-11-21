@@ -27,6 +27,7 @@ pub struct AdoptedPreparation {
 }
 
 /// One head attempt's cancellable result until its classification consumes it.
+#[cfg_attr(test, unimock::unimock(api = PendingBaseMock))]
 pub trait PendingBase: PendingChanges {
     /// The validated configuration that owns the pending result.
     fn config(&self) -> &ResolvedConfig;
@@ -44,6 +45,7 @@ pub trait PendingBase: PendingChanges {
 }
 
 /// Compose one attempt without running a source operation on the caller.
+#[cfg_attr(test, unimock::unimock(api = EagerFactoryMock))]
 pub trait EagerFactory: Send + Sync {
     /// Start independent source work for the validated configuration.
     fn start(&self, config: &ResolvedConfig) -> Arc<dyn PendingBase>;
@@ -51,7 +53,7 @@ pub trait EagerFactory: Send + Sync {
 
 #[cfg_attr(test, unimock::unimock(api = EagerStartsMock))]
 pub(super) trait EagerStarts: Send + Sync {
-    fn configure(&self, factory: Arc<dyn EagerFactory>);
+    fn configure(&self, sidecars: Option<usize>, factory: Arc<dyn EagerFactory>);
     fn start(&self, config: &ResolvedConfig);
     fn adopted(&self, prepared: &PreparedServe);
     fn discard(&self);
@@ -70,11 +72,11 @@ struct Attempts {
 pub(super) struct EagerAttempts(Mutex<Attempts>);
 
 impl EagerStarts for EagerAttempts {
-    fn configure(&self, factory: Arc<dyn EagerFactory>) {
+    fn configure(&self, sidecars: Option<usize>, factory: Arc<dyn EagerFactory>) {
         self.0
             .lock()
             .unwrap_or_else(|error| error.into_inner())
-            .factory = Some(factory);
+            .factory = sidecars.is_some_and(|count| count >= 3).then_some(factory);
     }
     fn start(&self, config: &ResolvedConfig) {
         let (previous, factory) = {
@@ -152,3 +154,7 @@ impl EagerStarts for EagerAttempts {
             .map(|pending| -> Arc<dyn PendingChanges> { pending })
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/eager_configuration_tests.rs"]
+mod eager_configuration_tests;

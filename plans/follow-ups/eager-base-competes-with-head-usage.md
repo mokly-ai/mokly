@@ -39,7 +39,9 @@
     the head usage pass ends.
   - Current `main` runs the accepted Ready-only policy in this order:
     - Serve starts eager base preparation when the working configuration of
-      a head preparation attempt validates.
+      a head preparation attempt validates and the configured sidecar size is
+      at least three. At a configured size of one or two, the classification
+      prepares the base serially after the head usage pass.
     - The Git pin, the checkout sample, and the load of the base
       configuration start at once.
     - When the working configuration names a renderer or PostCSS, the
@@ -65,9 +67,9 @@
     - The call needs a free claim and an eligible slot together. An eligible
       slot is an empty slot or an idle process of a base source root. An
       eager call never takes the warm head process or another head process.
-    - At a capacity of one, eager preparation makes no sidecar call. At two
-      or three, an eager call waits until the pass has started its last view.
-      At four or more, it has no such wait.
+    - At a current capacity of one, eager preparation makes no sidecar call.
+      At two or three, an eager call waits until the pass has started its
+      last view. At four or more, it has no such wait.
     - Eager work adds no head reservation, no new worker, no OS priority
       change, no timer, no retry, and no sleep.
   - The owner, under the delegation of the user, made this decision on

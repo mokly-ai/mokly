@@ -54,8 +54,6 @@ impl ServePool {
         let gate = Arc::new(Gate::new(capacity));
         let admission: Arc<dyn ReturnAdmission> = gate.clone();
         let wake = serve_return::start(&inner, Arc::downgrade(&admission));
-        let observer: Arc<dyn ReturnWake> = wake.clone();
-        gate.capacity.observe_admission(Arc::downgrade(&observer));
         *gate
             .return_wake
             .lock()
@@ -102,6 +100,18 @@ impl PoolScheduling for ServePool {
         cancel: Arc<dyn ChangeCancellation>,
         phase: Arc<dyn EagerAdmission>,
     ) -> Arc<dyn SidecarPool> {
+        let wake = self
+            .gate
+            .return_wake
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone();
+        if let Some(wake) = wake {
+            let observer: Arc<dyn ReturnWake> = wake;
+            self.gate
+                .capacity
+                .observe_admission(Arc::downgrade(&observer));
+        }
         let signal: Arc<dyn ChangeSignal> = self.gate.clone();
         cancel.observe(Arc::downgrade(&signal));
         phase.observe(Arc::downgrade(&signal));
@@ -242,3 +252,7 @@ mod serve_warmup_activity_tests;
 #[cfg(test)]
 #[path = "_tests_/eager_gate_tests.rs"]
 mod eager_gate_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_observer_tests.rs"]
+mod eager_observer_tests;

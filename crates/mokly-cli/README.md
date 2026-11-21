@@ -213,7 +213,13 @@ each exit stops the early renders and waits for them.
 
 Serve also starts the
 [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md)
-of each head preparation attempt when its working configuration validates.
+of each head preparation attempt when its working configuration validates and
+the configured sidecar size in `Common::sidecars` is at least three.
+`serve_delivery::states` gives that size and the `NativeEagerFactory` to
+`EagerStarts::configure`, and `EagerAttempts` keeps the factory only when the
+size is at least three. Without that factory, `EagerAttempts::start` starts
+nothing, no `Source` has pending work, and `Source::classify_native` prepares
+the base serially after the usage pass.
 `EagerAttempts` first cancels and joins the pending work of the earlier
 attempt. One owned `mokly-base-prepare` thread runs the work under its own
 `PreparingBase` lifetime, which the command stop also cancels. A failed or
@@ -365,15 +371,19 @@ changed.
   `AttemptPreparation` starts, adopts, and discards the eager base
   preparation of each head attempt through `EagerStarts`.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
-  base caches of Serve Changes, and it composes the `NativeEagerFactory`.
+  base caches of Serve Changes. Its `states` composes the `NativeEagerFactory`
+  and gives it to `EagerStarts::configure` with the configured sidecar size.
 - [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, which puts
   the admission gate around the shared pool. Its narrow `BaseCompletion`
   capability schedules the return pass. Each head or base handle passes the
   caller's `RenderClass` to the gate and runs the admitted call through
   `SidecarPool::request_claimed`. A handle forwards a store-served record to
   `SidecarPool::record_served_render` without admission or a write lease.
-  `PoolScheduling::eager_pool` gives eager preparation a handle whose calls
-  take eager admission until the classification adopts the preparation.
+  `ServePool::new` registers the wake of the return worker for head return
+  only. `PoolScheduling::eager_pool` gives eager preparation a handle whose
+  calls take eager admission until the classification adopts the preparation.
+  It also registers that wake through `PoolCapacity::observe_admission`, so a
+  Serve without eager preparation receives no pool admission wakes.
 - [`src/serve_gate.rs`](./src/serve_gate.rs) defines `Gate`, which admits each
   call with a `CallClaim` from `PoolCapacity::try_claim`. Waiting
   `RenderClass::Background` calls go after the other waiting head calls, and
@@ -499,6 +509,8 @@ changed.
 - [`src/serve_eager.rs`](./src/serve_eager.rs) defines `EagerStarts`, the
   attempt hooks of eager base preparation, and `PendingBase`, the pending
   result of one head attempt until its classification adopts it.
+  `EagerAttempts::configure` keeps the factory only for a configured sidecar
+  size of at least three.
   [`src/serve_eager_native.rs`](./src/serve_eager_native.rs) composes that
   work with its own lifetime, eager pool handle, and ordered record.
   [`src/serve_eager_task.rs`](./src/serve_eager_task.rs) runs it on one owned

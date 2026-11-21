@@ -58,8 +58,9 @@ the call never takes the warm head worker or another head worker. It returns
 the claims fill the capacity, for a call in the head root, and when it finds
 no eligible slot. The call that holds the claim takes the reserved slot, and
 dropping an unused claim returns it. Serve registers a weak wake through
-`PoolCapacity::observe_admission`, so a released claim or a returned slot
-wakes its waiting admission.
+`PoolCapacity::observe_admission` when it creates an eager handle. A
+released claim or a returned slot then wakes its waiting admission. Without
+eager preparation, Serve registers no such wake.
 
 `WorkerFactory::spawn` returns `Spawned` or a `SpawnFailure`. The
 `SpawnFailure::NotStarted` variant means that the factory created no child

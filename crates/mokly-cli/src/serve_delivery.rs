@@ -76,19 +76,22 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
         base: input.common.base.clone(),
         install_scripts: input.common.base_install_scripts_override(),
     });
-    input.services.eager.configure(Arc::new(NativeEagerFactory {
-        source_starts: input.services.source_starts.clone(),
-        runtime: changes.runtime.clone(),
-        sidecars: changes.sidecars.clone(),
-        slot: Arc::downgrade(&changes.kept_base),
-        git: changes.git.clone(),
-        command: changes.cancellation.clone(),
-        snapshots: changes.extraction_snapshots.clone(),
-        diagnostics: input.services.diagnostics.clone(),
-        activity: input.services.activity(),
-        base: changes.base.clone(),
-        install_scripts: changes.install_scripts,
-    }));
+    input.services.eager.configure(
+        input.common.sidecars,
+        Arc::new(NativeEagerFactory {
+            source_starts: input.services.source_starts.clone(),
+            runtime: changes.runtime.clone(),
+            sidecars: changes.sidecars.clone(),
+            slot: Arc::downgrade(&changes.kept_base),
+            git: changes.git.clone(),
+            command: changes.cancellation.clone(),
+            snapshots: changes.extraction_snapshots.clone(),
+            diagnostics: input.services.diagnostics.clone(),
+            activity: input.services.activity(),
+            base: changes.base.clone(),
+            install_scripts: changes.install_scripts,
+        }),
+    );
     Ok(Arc::new(NativeServeState {
         changes,
         tree: input.services.tree.clone(),

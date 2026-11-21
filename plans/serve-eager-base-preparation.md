@@ -462,8 +462,10 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Keep the prepared result behind one Box allocation to satisfy Windows clippy, without a lint allowance or behavior change.
 - [x] Integrate main PostCSS preparation #459 once and preserve both startup paths, then push its targeted-green SHA for the combined performance check.
 - [ ] Diagnose the combined PostCSS first-edit and two-sidecar memory regressions before marking the pull request ready.
-- [ ] Compare the pre-PostCSS feature `10a28ba3b` with main `beb87a53a` on basic, using two sidecars, the equal-lockfile base, and ten edits.
+- [x] Compare the pre-PostCSS feature `10a28ba3b` with main `beb87a53a` on basic, using two sidecars, the equal-lockfile base, and ten edits.
 - [ ] Prove which eager owners, base contexts, and sidecar work remain after classification, then fix the cause or obtain approval for a measured bound.
+- [ ] Apply approved decision 4B with red tests and aligned protocol text, then send its targeted-green SHA for basic at two and four sidecars and for cloud.
+- [x] Trace the surviving startup compiler's ordinary owners, last-render protection, and RSS. Record the performance orchestrator's acceptance of no eager-owner release and no process-count test.
 - [ ] Receive the performance orchestrator's new combined speed, edit, and two-percent memory acceptance for the next runtime SHA.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
@@ -502,4 +504,58 @@ On 2026-11-21 the combined check of `92b909be4` with PostCSS preparation reopene
 The clean two-sidecar cold ten-edit sessions exceed the memory limit, and their edits and warm first edits are slower.
 The performance orchestrator requires a comparison without PostCSS preparation and a cause with evidence before the next fix or bound.
 The pull request stays draft until that check passes.
-No further product source change has been made for this investigation.
+The performance orchestrator approved decision 4B as the next measured bound.
+Its runtime change and protocol text go in the same SHA.
+
+## 4. Protect edits and memory in a small pool
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** performance.
+- **Location:** `crates/mokly-cli/src/serve_services.rs`, `serve_eager_native.rs`, `serve_pool.rs`, and the eager protocol admission rules.
+- **Terms:** The configured pool size is the selected maximum number of sidecars. Effective capacity can fall under memory admission.
+- **Background:** The combined two-sidecar basic check fails the memory limit and slows edits. The cloud check still gains time with a larger pool. A pre-PostCSS cold pair shows the same cost direction, while its warm latency reverses. Extra eager pinning and admission wakeups are confirmed work. No leaked graph or active base PostCSS CPU cause is proved.
+- **Problem:** The current scheduling policy does not meet the required edit and worst-case memory bounds on basic.
+- **Impact if no action:** PR #461 cannot leave draft or merge.
+- **Root question:** How can Serve keep the cloud first-Changes gain while edits and worst-case memory stay within the control bounds at every pool size?
+- **Options:**
+  - **A.** Skip speculative preparation on watched attempts while a kept base already exists. Keep ordinary post-usage classification authoritative for key changes and freshness. This removes the repeated eager thread, Git pin, and key work from edits. It keeps startup overlap, but does not bound its resident processes or prove the memory fix. Effort: Small.
+  - **B.** Use ordinary serial base preparation when the configured pool maximum is below three. Register pool admission wakeups only when an eager pool is actually requested. This gives the two-sidecar path the ordinary scheduler and avoids eager startup and edit work there. It loses the basic cold gain in that configuration. The larger cloud pool keeps the current policy. This also disables eager work on default one- and two-core hosts. Return notices still wake the gate, and claim drops still notify head return when return work waits. Dynamic memory capacity still follows existing admission rules. A measurement must prove the fallback. Effort: Small.
+  - **C.** Keep source preparation early with two sidecars, but delay validation until post-usage classification. Bind the ordinary validation and stylesheet workers at that boundary. This preserves some source overlap and aims to restore process ordering. Its peak and first-edit result remain unproved. It needs more phase and scheduler work than B. Effort: Medium.
+  - **D.** Separate admission notices from maintenance notices without a pool-size fallback. Keep callbacks asynchronous to preserve lock order. This removes unnecessary maintenance passes and addresses the observed test-lifetime path. It does not explain the retained idle services or prove the performance bound. Effort: Medium.
+  - **E.** At an effective capacity of two, hold each eager sidecar call until adoption, then use ordinary base admission. An idle-head hold is a variant of the same seam. This covers memory-constrained default pools, but leaves early sources, repeated Git work, and eager worker binding. It may also need A to protect edits. Effort: Small.
+  - **F.** Release eager-only wrappers and the redundant task head reference at settlement. Keep the kept base and its normal contents. Source already owns the same head, so source inspection predicts no RSS gain. It is not a resource bound by itself. Effort: Small.
+- **Left out:** Keep the current policy, because it fails the measured two-percent gate. Retire a kept base context early, because the task keeps that lifetime rule unchanged and the control retains the same kept graph. Change the configured size, because the inventory preserves the selected capacity. A separate pool breaks the one-budget decision. OS priority cannot bound memory.
+- **Assumptions:** The first-Changes target applies to the cloud catalogue. All published bytes, statuses, cancellation, kept-base rules, and head priority stay the same. The configured maximum is an assumption of B, not a requirement shared by every option. E instead reads effective capacity per call. Default small pools add memory admission, unlike the explicit measured pool. A sidecar bound may trade the small-pool gain for resource parity. Capacity three has no acceptance measurement. The performance orchestrator selected B for the next measured SHA.
+- **Wider fix:** E covers admission that falls to two under memory pressure. It does not remove repeated pinning. D addresses notification structure separately. B remains the next controlled fallback to measure.
+- **Previous examples:** The accepted Ready-only startup bound trades some overlap for readiness and memory protection.
+- **Related:** The shared testing-guidance decision remains a separate, non-blocking post-merge item.
+- **Recommendation:** B for the next measured candidate, as the fresh options check recommended and the performance orchestrator selected. It offers the smallest controlled fallback for the failing configuration through the existing optional factory. It does not claim a measured cause or a successful fix.
+- **Action:** apply B, as the performance orchestrator approved on 2026-11-21. Keep the pull request draft until its new performance checks pass.
+
+The fresh options check kept recommendation B and added E and F on 2026-11-21.
+B gives the ordinary serial base path, not complete parity for every branch wake.
+If B fails the gate, the remaining wake paths are a separate next target.
+No published byte, status text, warning text, or non-timing output order changes under this proposal.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/combined-postcss-regression/options-check-small-pool.md` holds the full check. W224 retains the measured process and phase counters separately.
+
+On 2026-11-21 the performance orchestrator selected B for the next measured SHA.
+The configured maximum below three uses serial base preparation, including default one- and two-core hosts.
+It requires source and process evidence for the startup compiler that survives in the candidate.
+If an eager owner keeps that process, release it at settlement in the same SHA.
+A regression test must count compiler processes after first Changes for any such release.
+The next performance check covers basic with two and four sidecars and the cloud catalogue.
+Every setup must keep worst-case peak memory within two percent and edits within the control bounds.
+If basic with four sidecars still fails, C or E is the next decision.
+Published bytes, status text and order, warnings, and progress stay unchanged.
+
+The performance orchestrator accepted the completed compiler audit on 2026-11-21.
+The surviving process is an ordinary head sidecar and its esbuild service.
+Ordinary pool slots and controls own it; the last-head-render marker is weak.
+The observed last render order fits the ordinary protection of a warm head process in each arm.
+No eager-only compiler owner was found.
+The performance orchestrator therefore requested no release and no process-count test.
+The pull request body must include the owners, render order, and RSS at readiness, first Changes, and the first edit.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/small-pool-bound/startup-compiler-trace.md` records the audit and its limits. The W224 handoff retains the four frozen release builds, per-process snapshots, and all paired sessions.

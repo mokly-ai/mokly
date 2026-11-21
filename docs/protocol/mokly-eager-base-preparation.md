@@ -13,7 +13,8 @@ owns the order of the background pass and the base renders. `build` and
 ## Start
 
 Serve starts eager preparation when the working configuration of a head
-preparation attempt validates, with and without watch. The work that needs no
+preparation attempt validates, with and without watch, and the configured size
+of its sidecar pool is at least three. The work that needs no
 head dependency evidence can then run: the pin of the merge-base commit, the
 checkout settings, the base sources, the lease of an existing complete
 extraction, the base configuration, discovery, and the clean dependency
@@ -21,6 +22,23 @@ identities of both sides. It builds an extraction only when discovery shows
 that the base needs a sidecar, under the
 [source rules](./mokly-base-preparation.md#sources). So an HTML base without a
 renderer or PostCSS builds no extraction and starts no sidecar.
+
+The configured size is the exact size from `--sidecars` or `MOKLY_SIDECARS`,
+or the core count that bounds a
+[default pool](./mokly-sidecar-memory.md#default-admission). At a configured
+size of one or two, Serve starts no eager preparation. Each classification then
+prepares its base after the background pass of its state, under the
+[base preparation contract](./mokly-base-preparation.md). The current
+[capacity](./mokly-sidecar-memory.md#capacity) of the pool never changes this
+choice. A pool with a configured size of three or more keeps eager preparation
+when its capacity falls, and the [admission](#admission) rules then bound its
+sidecar calls.
+
+Decision: a configured size below three starts no eager preparation. Rejected:
+eager preparation at a configured size of two, because there it exceeds the
+memory and edit bounds of serial preparation. Rejected: the current capacity as
+the condition, because a temporary memory shortage would then turn off the
+eager preparation of a larger pool.
 
 The pin, the checkout settings, the base sources, the lease, and the base
 configuration run at once. Discovery, the extraction, and the dependency
@@ -151,9 +169,12 @@ never waits for a slot. An eligible slot is an empty slot or an idle process of
 a base root. An eager call never takes the warm head process or another head
 process.
 
-At a capacity of one, eager preparation makes no sidecar call. At a capacity of
-two or three, an eager call also waits until the background pass has started
-its last view. A wait for admission ends at once when its preparation is
+These rules use the current capacity of a pool whose configured size is at
+least three, because a smaller pool runs no eager preparation, as
+[Start](#start) says. At a capacity of one, eager preparation makes no sidecar
+call. At a capacity of two or three, an eager call also waits until the
+background pass has started its last view. A wait for admission ends at once
+when its preparation is
 cancelled. An admitted call finishes under its existing deadline. Eager
 preparation adds no deadline, no retry, and no timed wait. After adoption, its
 calls follow the base call rules of the on-demand contract.
