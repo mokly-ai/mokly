@@ -32,14 +32,7 @@ pub struct SystemPhysicalInputs;
 
 impl PhysicalInputs for SystemPhysicalInputs {
     fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool> {
-        match self.read(path, expected) {
-            Ok(matches) => Ok(matches),
-            Err(source) => Err(SourceError::Io {
-                operation: "check physical compilation input",
-                path: path.into(),
-                source,
-            }),
-        }
+        checked_result(path, self.read(path, expected))
     }
 
     fn matches_candidates(
@@ -51,14 +44,7 @@ impl PhysicalInputs for SystemPhysicalInputs {
         if !matches!(expected, PhysicalInput::Directory { .. }) {
             return self.matches(path, expected);
         }
-        match plan_directory::matches(path, expected, names) {
-            Ok(matches) => Ok(matches),
-            Err(source) => Err(SourceError::Io {
-                operation: "check physical compilation input",
-                path: path.into(),
-                source,
-            }),
-        }
+        checked_result(path, plan_directory::matches(path, expected, names))
     }
 }
 
@@ -130,6 +116,18 @@ impl SystemPhysicalInputs {
                     && real_path(path)? == *target)
             }
         }
+    }
+}
+
+/// Keep the physical input path and operation on each native read error.
+pub(crate) fn checked_result<T>(path: &Path, result: io::Result<T>) -> Result<T> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(source) => Err(SourceError::Io {
+            operation: "check physical compilation input",
+            path: path.into(),
+            source,
+        }),
     }
 }
 

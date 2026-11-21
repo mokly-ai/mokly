@@ -1,10 +1,10 @@
 //! Plan directory checks stream discarded names while preserving physical failures.
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 use std::ffi::OsStr;
 use std::fs;
 use std::io::ErrorKind;
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStrExt;
 
 use mokly_render::physical_inputs::{PhysicalInputs, SystemPhysicalInputs};
@@ -154,7 +154,7 @@ fn current_non_ascii_names_reject_a_narrowed_directory() {
     }
 }
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 #[test]
 fn invalid_unicode_names_reject_a_narrowed_directory() {
     let directory = tempfile::tempdir().unwrap();

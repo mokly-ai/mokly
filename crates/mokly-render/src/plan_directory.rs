@@ -1,6 +1,7 @@
 //! Stream plan-only directory checks against a bounded candidate index.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsStr;
 use std::fs;
 use std::io::{self, ErrorKind};
 use std::path::Path;
@@ -36,9 +37,7 @@ pub(crate) fn matches(path: &Path, expected: &PhysicalInput, names: &[String]) -
             None
         };
         let file_name = entry.file_name();
-        let name = file_name
-            .to_str()
-            .ok_or(io::Error::from(ErrorKind::InvalidData))?;
+        let name = utf8_name(&file_name)?;
         if !name.is_ascii() {
             return Ok(false);
         }
@@ -64,3 +63,11 @@ pub(crate) fn matches(path: &Path, expected: &PhysicalInput, names: &[String]) -
     }
     Ok(seen.into_iter().all(|value| value) && Path::new(&real_path(path)?) == path)
 }
+
+fn utf8_name(name: &OsStr) -> io::Result<&str> {
+    name.to_str().ok_or(io::Error::from(ErrorKind::InvalidData))
+}
+
+#[cfg(test)]
+#[path = "_tests_/plan_directory_tests.rs"]
+mod plan_directory_tests;
