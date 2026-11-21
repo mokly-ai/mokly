@@ -61,6 +61,13 @@ const { route } = Astro.props;
         >
           Changelog
         </a>
+        <a
+          aria-current={currentPage(route, SITE_PATHS.pricing)}
+          class="site-nav-link"
+          href={SITE_PATHS.pricing}
+        >
+          Pricing
+        </a>
         <a class="site-nav-link" href={EXTERNAL_LINKS.github}>
           GitHub
         </a>

@@ -1,0 +1,98 @@
+---
+/**
+ * The plans: two section boxes on the canvas, as the design file groups its
+ * frames. Mokly CLI holds the open-source frame, and Mokly Cloud holds the
+ * Free and Team frames. Each box is a group that its dark tag names. Team is
+ * the selected frame: its corner handles, its size tag with the frame's
+ * rendered size and Maya's cursor are depictions. Get started opens the
+ * Install guide; Create an account and the filled Start a trial open the
+ * app's sign-up route. The hero's redline measures down to the plan grid,
+ * `pricing-plan-grid`.
+ */
+import { APP_PATHS, GET_STARTED_PATH } from "../../navigation.js";
+import Button from "../Button.astro";
+import Cursor from "../Cursor.astro";
+import SectionBox from "../SectionBox.astro";
+import Selection from "../Selection.astro";
+
+import { TRIAL_SPAN } from "./plan-facts.js";
+import PlanFrame from "./PlanFrame.astro";
+import PlanPrice from "./PlanPrice.astro";
+import TeamPrice from "./TeamPrice.astro";
+
+import "../../styles/pricing-plans.css";
+---
+
+<section aria-labelledby="pricing-plans-title" class="site-pricing-plans">
+  <h2 class="site-visually-hidden" id="pricing-plans-title">
+    Plans
+  </h2>
+  <div class="site-pricing-plan-grid" id="pricing-plan-grid">
+    <SectionBox
+      class="site-pricing-box site-pricing-box--cli"
+      meta="@mokly/mokly"
+      tag="Mokly CLI"
+      tagId="pricing-box-cli"
+    >
+      <PlanFrame
+        features={[
+          "Author and build locally.",
+          "Keep your screens in Git.",
+          "Host the static catalogue anywhere.",
+        ]}
+        id="open-source"
+        name="Open source"
+        summary="For building catalogues locally."
+      >
+        <PlanPrice amount="$0" note="MIT license" slot="price" />
+        <Button arrow href={GET_STARTED_PATH} kind="secondary" slot="action">
+          Get started
+        </Button>
+      </PlanFrame>
+    </SectionBox>
+    <SectionBox
+      class="site-pricing-box site-pricing-box--cloud"
+      meta="Every workspace is on a plan"
+      tag="Mokly Cloud"
+      tagId="pricing-box-cloud"
+    >
+      <PlanFrame
+        features={[
+          "Unlimited projects and seats.",
+          "Publish and build public projects in the cloud.",
+          "An owner can upgrade to Team in Settings.",
+        ]}
+        id="free"
+        name="Free"
+        summary="For open-source catalogues."
+      >
+        <PlanPrice amount="$0" note="Every project is public." slot="price" />
+        <Button href={APP_PATHS.signUp} kind="secondary" slot="action">
+          Create an account
+        </Button>
+      </PlanFrame>
+      <PlanFrame
+        features={[
+          "Private projects in the same workspace.",
+          "New projects start private.",
+          "Publish and build private projects in the cloud.",
+          "One trial per workspace.",
+        ]}
+        id="team"
+        name="Team"
+        selected
+        summary="For teams with private catalogues."
+      >
+        <TeamPrice slot="price" />
+        <Fragment slot="action">
+          <Button arrow href={APP_PATHS.signUp} kind="primary">
+            Start a {TRIAL_SPAN} trial
+          </Button>
+          <p class="site-pricing-fine">In US dollars, before tax.</p>
+        </Fragment>
+        <Selection handles="corners" measure="pricing-frame-team" />
+        <Cursor class="site-pricing-cursor" person="maya" />
+      </PlanFrame>
+    </SectionBox>
+  </div>
+</section>

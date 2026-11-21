@@ -1,0 +1,221 @@
+/* The heads, the groups and the cells of the pricing compare table. The
+   column heads set the product line in mono over the plan, the groups head
+   their rows like the sections of a props table, and a value is a check, a
+   dash, a token or lines of text. pricing-compare.css holds the frame and
+   the table's layout.
+
+   The class names and the rules match the cells of
+   docs/mockups/styles/site/pricing-compare.css and the mobile composition
+   of pricing-responsive.css. Each base rule is the mobile composition, and
+   the desktop values and the desktop step follow under the 768px query, in
+   the mockup's order. */
+
+.site-pricing-props th,
+.site-pricing-props td {
+  border-bottom: 1px solid var(--mk-color-border);
+  font-weight: var(--mk-font-regular);
+  padding: 15px 22px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.site-pricing-props tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* The column heads: the product line in mono over the plan */
+
+.site-pricing-props thead th {
+  background: var(--mk-color-surface);
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  color: var(--mk-color-text);
+  font-size: 1.0625rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.02em;
+  padding: 14px 12px 13px 14px;
+  position: static;
+  top: 56px;
+  z-index: 2;
+}
+
+.site-pricing-props small {
+  color: var(--mk-color-text-muted);
+  display: block;
+  font-size: 0.78125rem;
+  margin-top: 3px;
+}
+
+.site-pricing-props thead small,
+.site-pricing-props thead .site-pricing-props-property,
+.site-pricing-props-group th {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.site-pricing-props thead small {
+  display: none;
+  margin: 0 0 7px;
+}
+
+.site-pricing-props thead .site-pricing-props-property {
+  vertical-align: bottom;
+  width: 31%;
+}
+
+/* On mobile the property head is read, not shown */
+
+.site-pricing-props thead th.site-pricing-props-property {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* The groups, like the sections of a props table, and the rows: on mobile
+   each row is its property line over three cells */
+
+.site-pricing-props-group th {
+  background: var(--mk-color-surface-muted);
+  grid-column: 1 / -1;
+  letter-spacing: 0.06em;
+  padding: 24px 14px 9px;
+}
+
+.site-pricing-props th[scope="row"] {
+  border-bottom: 0;
+  color: var(--mk-color-text);
+  font-weight: 540;
+  grid-column: 1 / -1;
+  padding: 15px 14px 4px;
+}
+
+.site-pricing-props td {
+  color: var(--mk-color-text-secondary);
+  padding: 6px 8px 15px 14px;
+}
+
+/* Every cell is 14px on mobile, the heads and the groups too: the mockup's
+   mobile rule outweighs their own sizes through its viewport attribute, and
+   the canvas root, .site-root on body, gives this rule the same weight. */
+
+.site-root .site-pricing-props th,
+.site-root .site-pricing-props td {
+  font-size: 0.875rem;
+}
+
+.site-pricing-props .site-pricing-props-team {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-signal) 6%,
+    var(--mk-color-surface)
+  );
+  color: var(--mk-color-text);
+}
+
+.site-pricing-props thead .site-pricing-props-team small {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-pricing-props tr:not(.site-pricing-props-group) > * {
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-pricing-props
+  tbody
+  tr:not(.site-pricing-props-group):hover
+  > :not(.site-pricing-props-team) {
+  background: var(--mk-color-surface-muted);
+}
+
+/* The values: a check, a dash, a token or lines of text */
+
+.site-pricing-check {
+  color: var(--mk-color-signal-deep);
+  display: block;
+  margin-top: 2px;
+  stroke-width: 1.8;
+}
+
+.site-pricing-dash {
+  color: var(--mk-color-text-muted);
+}
+
+.site-pricing-line {
+  display: block;
+}
+
+/* The desktop composition from the breakpoint up. Each cell takes the
+   table's size again, and the heads and the groups their own, at the
+   weight of the mobile size above. */
+
+@media (min-width: 768px) {
+  .site-pricing-props thead th {
+    padding: 20px 22px 16px;
+    position: sticky;
+  }
+
+  .site-pricing-props thead small {
+    display: block;
+  }
+
+  .site-pricing-props thead th.site-pricing-props-property {
+    clip-path: none;
+    height: auto;
+    overflow: visible;
+    position: sticky;
+    white-space: normal;
+    width: 31%;
+  }
+
+  .site-pricing-props-group th {
+    grid-column: auto;
+    padding: 26px 22px 9px;
+  }
+
+  .site-pricing-props th[scope="row"] {
+    border-bottom: 1px solid var(--mk-color-border);
+    grid-column: auto;
+    padding: 15px 22px;
+  }
+
+  .site-pricing-props td {
+    padding: 15px 22px;
+  }
+
+  .site-root .site-pricing-props th,
+  .site-root .site-pricing-props td {
+    font-size: inherit;
+  }
+
+  .site-root .site-pricing-props thead th {
+    font-size: 1.0625rem;
+  }
+
+  .site-root .site-pricing-props thead .site-pricing-props-property,
+  .site-root .site-pricing-props-group th {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Below 1100px the cells pad less, so that each plan column keeps a
+   readable measure. As in the mockup, the rule outweighs the heads' own
+   padding. */
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-root .site-pricing-props th,
+  .site-root .site-pricing-props td {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

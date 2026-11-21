@@ -1,0 +1,154 @@
+/* The contents of a pricing plan frame: the plan's name and summary, the
+   price, the action and the list of what the plan holds. pricing-plans.css
+   holds the frame and its place in the section boxes.
+
+   The class names and the rules match the frame contents of
+   docs/mockups/styles/site/pricing-plans.css and the mobile composition of
+   pricing-responsive.css. Each base rule is the mobile composition, and the
+   desktop values and the desktop step follow under the 768px query, in the
+   mockup's order. */
+
+.site-pricing-plan .site-pricing-plan-name {
+  font-size: 1.5rem;
+  letter-spacing: -0.034em;
+  line-height: 1.1;
+}
+
+.site-pricing-plan .site-pricing-plan-for {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.96875rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+/* The price: one amount with a note, or Team's two seat rows, whose
+   amounts share a right-aligned column */
+
+.site-pricing-plan-price {
+  margin-top: 28px;
+}
+
+.site-pricing-amount {
+  color: var(--mk-color-text);
+  font-size: 3rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+
+.site-pricing-plan .site-pricing-price-note {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  margin-top: 12px;
+}
+
+.site-pricing-seats {
+  align-content: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.site-pricing-seat {
+  display: contents;
+}
+
+.site-pricing-seats .site-pricing-amount {
+  justify-self: end;
+}
+
+.site-pricing-seat-unit {
+  align-self: center;
+  color: var(--mk-color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.site-pricing-seat-unit small {
+  color: var(--mk-color-text-muted);
+  display: block;
+  font-size: 0.8125rem;
+  margin-top: 2px;
+}
+
+/* The action spans the frame; Team's currency line sits under it */
+
+.site-pricing-plan-action {
+  margin-top: 28px;
+}
+
+.site-pricing-plan-action .site-button {
+  min-height: 50px;
+  width: 100%;
+}
+
+.site-pricing-plan .site-pricing-fine {
+  color: var(--mk-color-text-muted);
+  font-size: 0.78125rem;
+  line-height: 1.4;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* What the plan holds, each line after a check */
+
+.site-pricing-plan .site-pricing-features {
+  align-content: start;
+  border-top: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  font-size: 0.9375rem;
+  gap: 11px;
+  line-height: 1.45;
+  list-style: none;
+  margin-top: 28px;
+  padding: 24px 0 0;
+}
+
+.site-pricing-features li {
+  display: flex;
+  gap: 10px;
+}
+
+.site-pricing-features svg {
+  color: var(--mk-color-signal-deep);
+  flex: none;
+  margin-top: 3px;
+  stroke-width: 1.8;
+}
+
+/* The desktop composition from the breakpoint up */
+
+@media (min-width: 768px) {
+  .site-pricing-plan .site-pricing-plan-name {
+    font-size: 1.625rem;
+  }
+
+  .site-pricing-amount {
+    font-size: 3.375rem;
+  }
+
+  .site-pricing-plan-action .site-button {
+    min-height: 48px;
+  }
+}
+
+/* Below 1100px the Mokly CLI frame sets its list in a second inner column,
+   beside the head, the price and the action. */
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-pricing-box--cli .site-pricing-plan-action {
+    align-self: start;
+  }
+
+  .site-pricing-box--cli .site-pricing-features {
+    border-top: 0;
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin-top: 0;
+    padding-top: 0;
+  }
+}

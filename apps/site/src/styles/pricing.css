@@ -1,0 +1,176 @@
+/* The pricing page: its column, the hero and the section headings. The
+   page is one 1240px column, the footer frame's width, on three plan
+   tracks: the open-source frame, the Free frame and the Team frame, with a
+   64px gap after the first and a 24px gap between the cloud frames. The
+   hero, the plans and the questions use these tracks. pricing-plans.css,
+   pricing-compare.css and pricing-questions.css hold the sections.
+
+   The class names and the rules match docs/mockups/styles/site/pricing.css
+   and the mobile composition of pricing-responsive.css. The mockups pin a
+   composition with data-site-viewport; the site resolves the same switch at
+   768px. So each base rule is the mobile composition, and the desktop
+   values and the desktop steps follow under the 768px query, in the
+   mockup's order. */
+
+.site-pricing {
+  margin: 0 auto;
+  max-width: calc(1240px + 156px);
+  padding: 0 20px;
+  width: 100%;
+}
+
+/* The hero stands on the plan grid: the heading spans the first two
+   tracks and the lead sits in the Team track, on the heading's last
+   baseline. On mobile the hero stacks, and the lead follows the heading.
+   A redline measures the space under the heading. Each layout draws its
+   own, because the space ends at the plan grid from 1100px up and at the
+   lead below 1100px, so one of the two redlines shows at each width. */
+
+.site-pricing-hero {
+  align-items: last baseline;
+  display: block;
+  grid-template-columns:
+    minmax(0, 1fr) 64px minmax(0, 1fr) 24px
+    minmax(0, 1fr);
+  padding-top: 48px;
+}
+
+.site-pricing-hero > .site-kicker {
+  grid-column: 1 / 4;
+  grid-row: 1;
+}
+
+.site-pricing-heading {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  margin-top: 20px;
+  position: relative;
+}
+
+.site-pricing-heading .site-pricing-title {
+  font-size: 2.625rem;
+  letter-spacing: -0.054em;
+  line-height: 1;
+}
+
+.site-pricing-title span,
+.site-pricing-section-title span {
+  color: var(--mk-color-text-muted);
+}
+
+.site-pricing-redline {
+  height: 44px;
+  left: 4px;
+  top: 100%;
+}
+
+.site-pricing-redline--wide {
+  display: none;
+}
+
+.site-pricing-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.09375rem;
+  grid-column: 5;
+  grid-row: 2;
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  margin-top: 44px;
+}
+
+/* The section headings, a step below the page heading */
+
+.site-pricing .site-pricing-section-title {
+  font-size: 2.25rem;
+  letter-spacing: -0.046em;
+  line-height: 1.02;
+}
+
+/* The desktop composition from the breakpoint up */
+
+@media (min-width: 768px) {
+  .site-pricing {
+    padding: 0 78px;
+  }
+
+  .site-pricing-hero {
+    display: grid;
+    padding-top: 64px;
+  }
+
+  .site-pricing-heading .site-pricing-title {
+    font-size: 4.75rem;
+    line-height: 0.98;
+  }
+
+  .site-pricing-redline {
+    height: 64px;
+  }
+
+  .site-pricing-redline--wide {
+    display: block;
+  }
+
+  .site-pricing-redline--stacked {
+    display: none;
+  }
+
+  .site-pricing-lead {
+    font-size: 1.125rem;
+    line-height: 1.55;
+    margin-top: 0;
+  }
+
+  .site-pricing .site-pricing-section-title {
+    font-size: 3.5rem;
+  }
+}
+
+/* Narrower desktops. From 1439px down, the column's gutter, the hero and
+   the section headings follow the viewport, and each meets its 1440px size
+   at the top of the range. Below 1100px the hero stacks: the lead moves
+   under the heading, and the redline measures the 36px between them. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-pricing {
+    max-width: calc(1240px + 10.8vw);
+    padding: 0 5.4vw;
+  }
+
+  .site-pricing-hero {
+    padding-top: clamp(3rem, 4.4vw, 4rem);
+  }
+
+  .site-pricing-heading .site-pricing-title {
+    font-size: clamp(2.625rem, 5.3vw, 4.75rem);
+  }
+
+  .site-pricing .site-pricing-section-title {
+    font-size: clamp(2.25rem, 3.9vw, 3.5rem);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-pricing-hero {
+    display: block;
+  }
+
+  .site-pricing-lead {
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    margin-top: 36px;
+    max-width: 60ch;
+  }
+
+  .site-pricing-redline {
+    height: 36px;
+  }
+
+  .site-pricing-redline--wide {
+    display: none;
+  }
+
+  .site-pricing-redline--stacked {
+    display: block;
+  }
+}

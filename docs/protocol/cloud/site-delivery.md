@@ -1,6 +1,6 @@
 # Site Delivery
 
-Status: The drawn home demos and the audit of the pricing page are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the pricing page to the audited pages.
+Status: The drawn home demos are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build.
 
 This contract fixes how the public site is built, tested and deployed. The
 site package, its checks and its workflow must satisfy every rule here.
@@ -153,9 +153,9 @@ it. Missing or stale site output fails rather than skips.
   derived brand asset drifts.
 - The link check walks the built HTML and CSS: every internal href, anchor,
   asset (including responsive images and CSS URLs) and frame source resolves
-  in the output. The relative `/sign-in` and `/sign-up` entry links are the
-  only internal paths accepted without a site file, because the app router
-  owns them. External URLs are not fetched. Missing output, an output tree
+  in the output. The relative `/sign-up` link of the pricing page is the only
+  internal path accepted without a site file, because the app router owns
+  it. External URLs are not fetched. Missing output, an output tree
   without HTML, and a search index that is missing or one build behind the
   pages all fail.
 - The browser check serves the built output through a local preview and opens

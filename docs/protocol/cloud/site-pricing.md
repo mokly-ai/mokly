@@ -1,7 +1,5 @@
 # Site Pricing
 
-Status: The site does not publish `/pricing` yet. [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) builds it.
-
 This is the pricing-page sub-contract of [Site](./site.md).
 [Billing](./billing.md) owns every plan fact: the plans, the seat kinds and the
 roles that hold them, the prices, the currency, tax and the trial.

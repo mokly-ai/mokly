@@ -1,7 +1,7 @@
 /**
- * The public site's routes and the application routes it links to. The
- * header, the footer, the sitemap and the browser walk all read this module
- * so one table decides where the site can go.
+ * The public site's routes, root outputs, Get started path and application
+ * route. The header, menu, footer, sitemap, route generator, link check and
+ * browser walk read this module.
  */
 
 /** Every site route, in the reading order the footer's Product column uses. */
@@ -9,6 +9,7 @@ export const SITE_PATHS = {
   home: "/",
   docs: "/docs/",
   changelog: "/changelog/",
+  pricing: "/pricing/",
   terms: "/terms/",
   privacy: "/privacy/",
   complaints: "/complaints/",
@@ -35,11 +36,22 @@ export const SITE_OUTPUT_FIRST_SEGMENTS = Object.freeze([
 /** One of the site's own routes. */
 export type SitePath = (typeof SITE_PATHS)[keyof typeof SITE_PATHS];
 
+/**
+ * The one application route that the pricing page's plan actions open.
+ * This relative path shares the site origin, and the origin router sends it
+ * to the app. The link check accepts it without a site file.
+ */
+export const APP_PATHS = { signUp: "/sign-up" } as const;
+
+/** The application route linked from the site. */
+export type AppPath = (typeof APP_PATHS)[keyof typeof APP_PATHS];
+
 /** The routes published in `sitemap.xml`; the 404 document is excluded. */
 export const SITEMAP_PATHS: readonly SitePath[] = Object.freeze([
   SITE_PATHS.home,
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   SITE_PATHS.terms,
   SITE_PATHS.privacy,
   SITE_PATHS.complaints,

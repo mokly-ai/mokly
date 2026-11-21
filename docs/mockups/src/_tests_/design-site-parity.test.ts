@@ -17,6 +17,7 @@ import { CHANGELOG_DIFFERENCES } from "./design-site-parity-changelog";
 import { CHROME_DIFFERENCES } from "./design-site-parity-chrome";
 import { DOCS_DIFFERENCES } from "./design-site-parity-docs";
 import { HOME_DIFFERENCES } from "./design-site-parity-home";
+import { PRICING_DIFFERENCES } from "./design-site-parity-pricing";
 import {
   repositoryRoot,
   siteStyles as mockupSiteStyles,
@@ -41,6 +42,7 @@ const INTENTIONAL: Readonly<Record<string, string>> = {
   ...HOME_DIFFERENCES,
   ...DOCS_DIFFERENCES,
   ...CHANGELOG_DIFFERENCES,
+  ...PRICING_DIFFERENCES,
 };
 
 interface Rule {

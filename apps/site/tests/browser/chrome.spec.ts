@@ -13,12 +13,13 @@ const HEADER_LINKS = [
   SITE_PATHS.home,
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   EXTERNAL_LINKS.github,
   GET_STARTED_PATH,
 ];
 
 /** What the navigation lists above the breakpoint and the menu below it. */
-const DESTINATIONS = ["Docs", "Changelog", "GitHub"];
+const DESTINATIONS = ["Docs", "Changelog", "Pricing", "GitHub"];
 
 /**
  * The banner of a documentation page as assistive technology reads it in
@@ -41,6 +42,7 @@ const BANNER = {
       - navigation "Main":
         - link "Docs"
         - link "Changelog"
+        - link "Pricing"
         - link "GitHub"
       - link "Get started"
   `,
@@ -51,6 +53,7 @@ const FOOTER_LINKS = [
   SITE_PATHS.home,
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   SITE_PATHS.terms,
   SITE_PATHS.privacy,
   SITE_PATHS.complaints,
@@ -188,6 +191,13 @@ test("the current route is marked in the header and footer", async ({
   await page.goto(SITE_PATHS.security);
   await expect(
     page.getByRole("contentinfo").getByRole("link", { name: "Security" }),
+  ).toHaveAttribute("aria-current", "page");
+  await page.goto(SITE_PATHS.pricing);
+  await expect(
+    page.getByRole("contentinfo").getByRole("link", { name: "Pricing" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    (await headerDestinations(page)).getByRole("link", { name: "Pricing" }),
   ).toHaveAttribute("aria-current", "page");
 });
 

@@ -21,6 +21,7 @@ const expected = [
   "favicon.svg",
   "og",
   "pagefind",
+  "pricing",
   "privacy",
   "robots.txt",
   "security",

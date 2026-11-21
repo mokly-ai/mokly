@@ -235,15 +235,16 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Add `/pricing` to `src/navigation.ts`, then run `npm run site:routes`.
+- [x] Add `/pricing` to `src/navigation.ts`, then run `npm run site:routes`.
       `pricing` is already a reserved workspace name. Add Pricing to the
       header, the menu and the footer. Correct the module comment about app
-      routes.
-- [ ] Build the plan frames, the compare table and the questions from
-      `billing.md`.
-- [ ] Link Create an account and Start a 7-day trial to `/sign-up`, and let
+      routes. Branch: `calummoore/canvas-redesign-m9-site-pricing-5q33`.
+- [x] Build the plan frames, the compare table and the questions from
+      `billing.md`. Branch: `calummoore/canvas-redesign-m9-site-pricing-5q33`.
+- [x] Link Create an account and Start a 7-day trial to `/sign-up`, and let
       the link check accept the app paths. Add the page to the sitemap, the
-      cards, the browser walk and the Lighthouse pages.
+      cards, the browser walk and the Lighthouse pages. Branch:
+      `calummoore/canvas-redesign-m9-site-pricing-5q33`.
 
 ## Milestones 10 to 13 and 15 to 17
 

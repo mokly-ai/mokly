@@ -30,6 +30,7 @@ test("the budget audits the contracted pages at both viewports", () => {
       "/docs/authoring/config/",
       "/docs/cli/serve/",
       SITE_PATHS.changelog,
+      SITE_PATHS.pricing,
       SITE_PATHS.terms,
     ],
   );
