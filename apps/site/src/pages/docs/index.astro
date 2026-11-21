@@ -4,6 +4,8 @@
  * install command and the shape of the rest of the documentation.
  */
 import Install from "../../components/docs/Install.astro";
+import { LANDING_SOURCE } from "../../components/docs/page-source.js";
+import { DOCUMENTATION } from "../../components/docs/pager-entries.js";
 import type { DocsHeading } from "../../docs/headings.js";
 import { DOCS_OVERVIEW, DOCS_SECTIONS } from "../../docs/pages.js";
 import { SECTION_SUMMARIES } from "../../docs/sections.js";
@@ -19,7 +21,8 @@ const headings: readonly DocsHeading[] = [
   description={DOCS_OVERVIEW.description}
   headings={headings}
   route={DOCS_OVERVIEW.route}
-  section="Documentation"
+  section={DOCUMENTATION}
+  source={LANDING_SOURCE}
   title={DOCS_OVERVIEW.title}
 >
   <h2 id="install-mokly">Install Mokly</h2>

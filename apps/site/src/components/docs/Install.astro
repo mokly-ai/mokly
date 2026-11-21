@@ -1,26 +1,23 @@
 ---
 /**
  * The install snippet, written once from `INSTALL_COMMAND` so every page
- * names the same command.
+ * names the same command. It is highlighted as a `shell` fence and drawn in
+ * the code panel that every Markdown fence takes.
  */
 import { Code } from "astro:components";
 
+import { codePanelTransformer } from "../../docs/code-panel.js";
 import { INSTALL_COMMAND } from "../../docs/version.js";
 ---
 
-<div class="site-code">
-  <div class="site-code-head">
-    <span class="site-code-language">shell</span>
-    <span class="site-code-copy-slot"></span>
-  </div>
-  <Code
-    code={INSTALL_COMMAND}
-    defaultColor={false}
-    lang="shell"
-    themes={{
-      dark: "github-dark-high-contrast",
-      light: "github-light-high-contrast",
-    }}
-    wrap
-  />
-</div>
+<Code
+  code={INSTALL_COMMAND}
+  defaultColor={false}
+  lang="shell"
+  themes={{
+    dark: "github-dark-high-contrast",
+    light: "github-light-high-contrast",
+  }}
+  transformers={[codePanelTransformer]}
+  wrap
+/>

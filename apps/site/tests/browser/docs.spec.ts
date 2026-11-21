@@ -2,21 +2,32 @@ import { type Page, expect, test } from "@playwright/test";
 
 import { DOCS_OVERVIEW, neighbours } from "../../src/docs/pages.js";
 
-import { BREAKPOINT } from "./routes.js";
 import { openSearch } from "./search.js";
 
 const PAGE = "/docs/cli/serve/";
 
-/** The composition a viewport resolves: the tree is a disclosure below it. */
-function narrow(page: Page): boolean {
-  return (page.viewportSize()?.width ?? 0) < BREAKPOINT;
+/** The width from which the Layers panel shows beside the page frame. */
+const LAYERS_PANEL = 1024;
+
+/** The width from which the Inspect panel shows beside the page frame. */
+const INSPECT_PANEL = 1280;
+
+/** The page's width, which decides the composition. */
+function width(page: Page): number {
+  return page.viewportSize()?.width ?? 0;
 }
 
-/** The section tree, opening the disclosure first on a narrow viewport. */
+/**
+ * The section tree: the Layers panel, or below 1024px the tree sheet, which
+ * the sub-bar's Layers control opens. The control is named by the section
+ * and the page.
+ */
 async function tree(page: Page) {
-  if (!narrow(page)) return page.locator(".site-docs-side .site-doc-tree");
-  await page.locator("details.site-doc-disclosure > summary").click();
-  return page.locator("details.site-doc-disclosure .site-doc-tree");
+  if (width(page) < LAYERS_PANEL) {
+    await page.getByRole("button", { name: "CLI reference serve" }).click();
+    await expect(page.getByRole("dialog", { name: "Layers" })).toBeVisible();
+  }
+  return page.getByRole("navigation", { name: "Documentation" });
 }
 
 test("the documentation page renders the tree, the lead and the pager", async ({
@@ -108,7 +119,11 @@ test("the tree carries the published version and links the changelog", async ({
 
 test("on this page reaches the heading it names", async ({ page }) => {
   await page.goto(PAGE);
-  const list = page.locator(".site-onpage:visible").first();
+  // Below 1280px On this page sits in a disclosure, closed as the page opens.
+  if (width(page) < INSPECT_PANEL) {
+    await page.locator("summary", { hasText: "On this page" }).click();
+  }
+  const list = page.getByRole("navigation", { name: "On this page" });
   await expect(list).toBeVisible();
   const link = list.getByRole("link", { name: "The port" });
   await link.click();

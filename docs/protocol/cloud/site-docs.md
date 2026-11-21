@@ -1,7 +1,5 @@
 # Site Docs
 
-Status: The Canvas docs layout is not built yet. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds it.
-
 The `/docs` section is the canonical documentation for the CLI, catalogue and
 Mokly Cloud. The installed `@mokly/mokly` package owns CLI guides and published
 protocol references; this repository owns the Cloud and Review and edit

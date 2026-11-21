@@ -1,6 +1,6 @@
 # Site Chrome
 
-Status: The site does not have the docs sub-bar yet, the header of a docs page still holds the docs search, and the header, menu and footer have no Pricing link. [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the docs sub-bar and moves the search into the docs layout, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the Pricing links.
+Status: The header, menu and footer have no Pricing link yet. [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the Pricing links.
 
 This is the chrome sub-contract of [Site](./site.md): the header, the menu,
 the footer and the scheme control that every page shares. The header is the
