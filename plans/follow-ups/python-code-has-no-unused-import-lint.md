@@ -5,7 +5,7 @@
 - **Added:** 2026-10-30, from the review of the closed [PR #72](https://github.com/mokly-ai/mokly-cloud/pull/72), finding 3.
 - **Location:** `sgconfig.yml:1-5`, the ast-grep commands of the Repository suite at `xtask/src/check/commands.rs:60-62`, and the repository gate list of `docs/protocol/ci-verification-repository.md`.
 - **Reason:** Every option except changing nothing adds a lint to the gate, which only the user can approve.
-- **Checked:** 2026-11-17, in this repository after the cloud moved in. The decision is still open. No suite or configuration lints Python, and the two dead imports remain. PR #81 of the old cloud repository deleted three of the files of the dated scan. No new lint is approved.
+- **Checked:** 2026-11-20, in this repository after the cloud moved in. The decision is still open. No suite or configuration lints Python. The cleanup on 2026-11-20 removed the two dead imports. PR #81 of the old cloud repository deleted three of the files of the dated scan. No new lint is approved.
 - **Category:** Dead code.
 
 - **Terms:**
@@ -21,7 +21,7 @@
   - The gate already needs `python3`, because the `cloud-helm` and `cloud-infrastructure` suites run Python scripts.
   - Each lint option changes the repository gate list of `docs/protocol/ci-verification-repository.md`, a protocol doc.
   - Each lint option also reports one import that no code reads on purpose: `import support` at `infra/tests/test_catalogue_capture_receiver.py:18`.
-- **Problem:** No check catches a Python import that the module never reads. A review found all three cases of the class by hand, after the imports reached a branch. The cases hold eight dead imports: six on the closed branch and two in this repository.
+- **Problem:** No check catches a Python import that the module never reads. A review found all three cases of the class by hand, after the imports reached a branch. The cases held eight dead imports: six removed on the closed branch and two removed on 2026-11-20.
 - **Impact if no action:** Each split or edit of a Python module can leave dead imports again. An unused import also runs its module: on the closed branch, an unused `smoke` import made the refusal tests load every smoke module.
 - **Root question:** How do the Python scripts and tests stay free of unused imports?
 - **Options:**
@@ -39,9 +39,8 @@
   - The sixth is `json` at `scripts/cloud/_tests_/publication_smoke_fixture_tests.py:3`.
   - The unused `smoke` import loaded every smoke module, and `scripts/cloud/publication_smoke_desktop.py:9` reads a fixture file when it loads.
   - Commit `7587f54c` on the same branch removed all six.
-  - In this repository, `infra/tests/test_catalogue_capture.py:4` imports `json` and `infra/tests/test_runtime_settings.py:3` imports `Path`. Neither module reads the name.
-- **Related:** `plans/follow-ups/infra-tests-import-unused-names.md`, shared class. Its option B, Ruff rule F401, is option D here. Its direct fix deletes the two dead imports, which each lint option here would report.
-- **Recommendation:** B. It finds all eight dead imports of the three cases, and it adds no dependency to the gate.
+  - The cleanup on 2026-11-20 removed `json` from `infra/tests/test_catalogue_capture.py` and `Path` from `infra/tests/test_runtime_settings.py`. Neither module read the name.
+- **Recommendation:** B. It detects the class shown by the three resolved cases, and it adds no dependency to the gate.
 - **Action:** ask the user, because condition 3 holds: option B adds a lint to the gate, which the always-on rules reserve for the user.
 
 Facts for the work:
