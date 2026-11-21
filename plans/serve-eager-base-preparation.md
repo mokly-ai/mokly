@@ -450,7 +450,7 @@ Depends on: 2
 
 ## Milestone 4: Verification, review, and pull request
 
-Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request waits for performance acceptance.
+Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The performance orchestrator accepted B after its eight-pair repeat. Final documentation and readiness remain.
 
 - [x] Run the merged-tree repository suite, one heavy job at a time.
 - [x] Remove the unselected bundle-end experiment and its unused state, while preserving the accepted Ready-only behavior and every live assertion.
@@ -461,16 +461,17 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Open the requested draft at `7a423c250` and run fresh read-only review beside the gate and CI.
 - [x] Keep the prepared result behind one Box allocation to satisfy Windows clippy, without a lint allowance or behavior change.
 - [x] Integrate main PostCSS preparation #459 once and preserve both startup paths, then push its targeted-green SHA for the combined performance check.
-- [ ] Diagnose the combined PostCSS first-edit and two-sidecar memory regressions before marking the pull request ready.
+- [x] Resolve the combined PostCSS edit and memory gate through the approved measured B bound, with the remaining edit-peak uncertainty recorded after merge.
 - [x] Compare the pre-PostCSS feature `10a28ba3b` with main `beb87a53a` on basic, using two sidecars, the equal-lockfile base, and ten edits.
-- [ ] Prove which eager owners, base contexts, and sidecar work remain after classification, then fix the cause or obtain approval for a measured bound.
+- [x] Trace ordinary owners, base contexts, and sidecar work after classification, then obtain acceptance of measured B without an unsupported release.
 - [x] Apply approved decision 4B with red tests and aligned protocol text, then send its targeted-green SHA for basic at two and four sidecars and for cloud.
 - [x] Trace the surviving startup compiler's ordinary owners, last-render protection, and RSS. Record the performance orchestrator's acceptance of no eager-owner release and no process-count test.
-- [ ] Receive the performance orchestrator's new combined speed, edit, and two-percent memory acceptance for the next runtime SHA.
-- [ ] Trace the remaining four-sidecar PostCSS peak, choose its next bound with the performance orchestrator, and implement that choice with aligned protocol text and red tests.
-- [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
+- [x] Receive the performance orchestrator's combined speed, edit, and two-percent memory acceptance for production `487601e1e` under its predeclared repeat rule.
+- [x] Trace the four-sidecar PostCSS peak and receive the eight-pair repeat. Keep B without a further bound.
+- [x] Record the requested non-blocking follow-up for occasional higher edit peaks, with both the accepted repeat and pooled result.
+- [x] Complete gate verification through Required CI on `0db837069`, with all local cloud suites completed one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
-- [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
+- [x] Review the complete pushed diff with `implementation-review` against frozen main `793d0c77d`, as the performance orchestrator requested.
 - [x] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
 - [x] Resolve the fresh reservation-handoff test finding after its independent check, with a behavior-red proof and unchanged production source.
 - [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.
@@ -514,10 +515,10 @@ Its runtime change and protocol text go in the same SHA.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** performance.
-- **Location:** `crates/mokly-cli/src/serve_services.rs`, `serve_eager_native.rs`, `serve_pool.rs`, and the eager protocol admission rules.
-- **Terms:** The configured pool size is the selected maximum number of sidecars. Effective capacity can fall under memory admission.
-- **Background:** The combined two-sidecar basic check fails the memory limit and slows edits. The cloud check still gains time with a larger pool. A pre-PostCSS cold pair shows the same cost direction, while its warm latency reverses. Extra eager pinning and admission wakeups are confirmed work. No leaked graph or active base PostCSS CPU cause is proved.
-- **Problem:** The current scheduling policy does not meet the required edit and worst-case memory bounds on basic.
+- **Location:** `crates/mokly-cli/src/serve_eager_validation.rs`, `changes_base_sources.rs`, `changes_base.rs`, `serve_eager.rs`, and the eager protocol admission rules.
+- **Terms:** The configured pool size is the selected maximum number of sidecars. Effective capacity can fall under memory admission. A subtree is a sidecar process with its esbuild service and PostCSS children. A cold preparation finds no complete extraction lease.
+- **Background:** B passes basic with two sidecars and cloud with four. The predeclared eight-pair basic-four repeat also passes. Its warm memory and edits pass. The warm basic path and cloud gain stay. The cause of occasional higher edit peaks remains unknown.
+- **Problem:** The initial four basic-four pairs exceeded the memory gate. The accepted eight-pair repeat is within two percent, while the pooled twelve-pair mean remains above it. Both arms hold at most four sidecar subtrees.
 - **Impact if no action:** PR #461 cannot leave draft or merge.
 - **Root question:** How can Serve keep the cloud first-Changes gain while edits and worst-case memory stay within the control bounds at every pool size?
 - **Options:**
@@ -527,13 +528,21 @@ Its runtime change and protocol text go in the same SHA.
   - **D.** Separate admission notices from maintenance notices without a pool-size fallback. Keep callbacks asynchronous to preserve lock order. This removes unnecessary maintenance passes and addresses the observed test-lifetime path. It does not explain the retained idle services or prove the performance bound. Effort: Medium.
   - **E.** At an effective capacity of two, hold each eager sidecar call until adoption, then use ordinary base admission. An idle-head hold is a variant of the same seam. This covers memory-constrained default pools, but leaves early sources, repeated Git work, and eager worker binding. It may also need A to protect edits. Effort: Small.
   - **F.** Release eager-only wrappers and the redundant task head reference at settlement. Keep the kept base and its normal contents. Source already owns the same head, so source inspection predicts no RSS gain. It is not a resource bound by itself. Effort: Small.
-- **Left out:** Keep the current policy, because it fails the measured two-percent gate. Retire a kept base context early, because the task keeps that lifetime rule unchanged and the control retains the same kept graph. Change the configured size, because the inventory preserves the selected capacity. A separate pool breaks the one-budget decision. OS priority cannot bound memory.
-- **Assumptions:** The first-Changes target applies to the cloud catalogue. All published bytes, statuses, cancellation, kept-base rules, and head priority stay the same. The configured maximum is an assumption of B, not a requirement shared by every option. E instead reads effective capacity per call. Default small pools add memory admission, unlike the explicit measured pool. A sidecar bound may trade the small-pool gain for resource parity. Capacity three has no acceptance measurement. The performance orchestrator selected B for the next measured SHA.
-- **Wider fix:** E covers admission that falls to two under memory pressure. It does not remove repeated pinning. D addresses notification structure separately. B remains the next controlled fallback to measure.
+- **G.** Start no eager preparation when the working configuration names PostCSS. Cloud keeps its current path. Basic loses its cold and warm gains. This needs a waiver of the warm basic requirement. Effort: Small.
+- **H.** Hold base validation until adoption when either configuration names PostCSS. Sources stay early. All base sidecar calls and the base graph use ordinary post-usage admission. This gives ordinary acquisition order, not a guaranteed root switch. It keeps early extraction and any installed-tier dependency install. It needs a waiver of the warm basic requirement. Effort: Small.
+- **I.** Make every capacity wait for the final head view dispatch. This shortens overlap but still permits early base slot occupancy. It can reduce the accepted cloud gain. Effort: Small.
+- **J.** Hold only base PostCSS calls until adoption. Early base JavaScript, esbuild, and slot occupancy stay. Use this only if the trace isolates the cost to PostCSS children. Effort: Medium.
+- **K.** After the final head view dispatch, switch an idle non-warm head slot for eager work instead of growing the pool. This changes the rule that eager calls take no head process. It can delay HTTP rendering and reduce the cloud gain. Effort: Medium.
+- **L.** Hold validation until adoption for every catalogue at every eager pool size. This is the all-catalogue hold, distinct from C at two sidecars. It can remove the accepted warm cloud gain. Effort: Small.
+- **M.** Apply H only when no complete extraction lease existed at source admission. Cold PostCSS validation waits for adoption. Warm lease-backed PostCSS preparation and cloud keep their current paths. Carry the original lease state to validation. Early extraction and any installed-tier install remain. Effort: Small.
+- **N.** Apply G only when no complete extraction lease existed. End that eager attempt after the pin, then use ordinary classification. Warm lease-backed preparation stays early. Use this if early core, Git, or npm work explains the cost. Effort: Small.
+- **Left out:** Keep the current policy, because basic four fails the measured gate. Retire ordinary head or kept base contexts early, because their lifetime stays unchanged. Change the configured size, because the inventory preserves the selected maximum. A separate pool breaks the one-budget decision. OS priority cannot bound memory. Timers, sleeps, and retries violate the scheduling requirements. A memory headroom rule has no calibrated threshold, and explicit pools read no memory. A catalogue-size rule has no attributed cause. E at every capacity is a variant of L.
+- **Assumptions:** The cloud gain and the warm basic path stay, as the accepted warm policy requires. B waived the basic gain only below three sidecars. All published bytes, statuses, warnings, progress, cancellation, kept-base rules, head priority, ordinary process lifetimes, and the shared budget stay. PostCSS is a configuration proxy until the trace supports it. Only cold basic four fails, so M and N avoid a new warm-path trade-off. C and E retain their recorded two-sidecar scopes. Explicit four never reaches E's threshold. The parent delegated the next bound to Root after the trace.
+- **Wider fix:** L keeps base graph work out of head usage for every catalogue. It can cost the required cloud gain. D remains the separate structural fix for unnecessary notices.
 - **Previous examples:** The accepted Ready-only startup bound trades some overlap for readiness and memory protection.
 - **Related:** The shared testing-guidance decision remains a separate, non-blocking post-merge item.
-- **Recommendation:** B for the next measured candidate, as the fresh options check recommended and the performance orchestrator selected. It offers the smallest controlled fallback for the failing configuration through the existing optional factory. It does not claim a measured cause or a successful fix.
-- **Action:** apply B, as the performance orchestrator approved on 2026-11-21. Keep the pull request draft until its new performance checks pass.
+- **Recommendation:** B, accepted by the performance orchestrator on 2026-11-21 under the predeclared eight-pair repeat rule. The trace does not support the proposed early PostCSS overlap. The earlier conditional M recommendation remains unselected.
+- **Action:** Keep B without a further runtime bound. Record the occasional edit-peak increase as a non-blocking follow-up. Finish documentation and mark the pull request ready, as the performance orchestrator requested.
 
 The fresh options check kept recommendation B and added E and F on 2026-11-21.
 B gives the ordinary serial base path, not complete parity for every branch wake.
@@ -549,7 +558,8 @@ If an eager owner keeps that process, release it at settlement in the same SHA.
 A regression test must count compiler processes after first Changes for any such release.
 The next performance check covers basic with two and four sidecars and the cloud catalogue.
 Every setup must keep worst-case peak memory within two percent and edits within the control bounds.
-If basic with four sidecars still fails, C or E is the next decision.
+The first proposed next choices were C or E.
+The four-sidecar options check below replaces that shortlist and preserves their original two-sidecar scopes.
 Published bytes, status text and order, warnings, and progress stay unchanged.
 
 The performance orchestrator accepted the completed compiler audit on 2026-11-21.
@@ -571,3 +581,55 @@ No PostCSS-specific bound is chosen yet.
 The reserved-claim review fix adds only a regression test and keeps all production Rust bytes unchanged.
 
 Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/small-pool-bound/verification.md` records the targeted checks. The W224 four-sidecar trace and the next source options report are separate from its earlier two-sidecar samples.
+
+The independent options check on 2026-11-21 added L, M, and N.
+M keeps the required warm basic path while holding cold PostCSS validation.
+Both explicit-four arms have at most four main sidecar subtrees.
+The trace must inspect their history, because both arms can contain only head processes after base return.
+Holding validation gives ordinary acquisition order, not a guaranteed root switch.
+No two-sidecar memory residual predicts the four-sidecar result.
+The hold keeps early extraction and any installed-tier install.
+
+W224 entered API state `error` before it produced the requested four-sidecar trace.
+The authorized local fallback uses isolated frozen release builds and one cold pair.
+It makes no acceptance claim from that single pair.
+The performance orchestrator accepts M if the trace supports it and cloud keeps its gain.
+Its next gate covers eight basic-four cold pairs, four basic-four warm pairs, four basic-two cold pairs, and a short cloud block.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/postcss-four-bound/` retains the brainstorm and independent options-check transcript. Its sibling `fallback-basic4/` retains the frozen local diagnostic.
+
+The local frozen cold pair completed on 2026-11-21 without reproducing the large peak increase.
+Source extraction ended after head usage in its candidate session.
+Graph admission had not been reached during usage, and neither arm had an early base sidecar.
+This pair therefore does not support an early PostCSS graph overlap or prove that M fixes the measured gate.
+The performance orchestrator requested no runtime change before eight alternating cold pairs on its own machine.
+That repeat retains the full timing logs and a quarter-second process RSS series in unique gate folders.
+The earlier four-pair summary remains, but its event logs were overwritten by later gates and cannot establish phase timing.
+If the repeat meets the two-percent bound, the performance orchestrator accepts B without a further bound.
+
+The performance orchestrator requested that main's later PostCSS read-evidence change stay unmerged unless GitHub reports a conflict.
+The repeated measurement stays pinned to production `487601e1e` and main `793d0c77d`.
+GitHub reports PR #461 as mergeable without a conflict.
+The final read-only review checked pushed `0db837069` against the same frozen main and found no new issue.
+
+Required CI passed on exact head `0db837069` and validated the complete suite evidence.
+All sixteen cloud suites also passed in the sequential local continuation.
+Those local runs span preceding heads, rather than one complete local gate on the final tree.
+The separate Site Lighthouse job retains its known unrelated failure and was not rerun.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/review-claim-handoff/ci-0db837069-summary.json` and `ci-final-state-0db837069-corrected.log` retain CI results. The local four-sidecar diagnostic is `fallback-basic4/report.md` beside that evidence folder.
+
+## Final acceptance of B, 2026-11-21
+
+The performance orchestrator accepted B under the eight-pair repeat rule that it set before the repeat.
+The repeat meets the two-percent mean peak bound.
+The earlier four-pair result and the pooled twelve-pair result remain disclosed in the pull request.
+The pooled mean remains above two percent, so it is not the accepted gate result.
+All sixteen repeated runs first sample their final peak during edits.
+Every candidate base validation starts after head usage ends.
+The occasional positive edit-peak delta has no established cause and becomes a non-blocking follow-up.
+No further runtime bound or process-lifetime change is selected.
+Basic two and cloud retain their preceding acceptance.
+The performance orchestrator requested readiness and will merge only after Required CI passes on the final SHA.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/final-readiness/acceptance.json` retains the reported table and trace limits. The retained external run patterns are `runs/w201t-*.procs`, `*.cgseries`, and `*.serve.log.gz`.

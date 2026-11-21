@@ -217,6 +217,7 @@
   shipped change to the eager admission rules updates the Admission section
   of `docs/protocol/mokly-eager-base-preparation.md` in the same change.
 - **Related:**
+  - [eager-base-postcss-edit-peak-variance.md](./eager-base-postcss-edit-peak-variance.md): occasional higher edit peaks after head usage. That task covers memory spread, while this item covers CPU contention during usage.
   - [eager-base-warm-readiness-cost.md](./eager-base-warm-readiness-cost.md):
     the accepted warm readiness cost before usage. Its options can move more
     base work into usage, so both measurements must check head usage.
