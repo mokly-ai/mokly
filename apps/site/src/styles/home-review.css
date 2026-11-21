@@ -213,20 +213,20 @@
 [data-home-demo="review"][data-home-demo-state="play"]
   .site-home-card-sel
   .site-sel {
-  animation: site-home-review-draw 0.6s var(--mk-motion-easing) 0.1s both;
+  animation: site-home-review-draw 0.6s var(--mk-motion-easing) 0.1s backwards;
 }
 
 [data-home-demo="review"][data-home-demo-state="play"] .site-home-card-pad {
-  animation: site-home-review-show 0.3s var(--mk-motion-easing) 0.55s both;
+  animation: site-home-review-show 0.3s var(--mk-motion-easing) 0.55s backwards;
 }
 
 [data-home-demo="review"][data-home-demo-state="play"] .site-pin {
-  animation: site-home-review-drop 0.5s var(--mk-motion-easing) 0.75s both;
+  animation: site-home-review-drop 0.5s var(--mk-motion-easing) 0.75s backwards;
   transform-origin: 0 100%;
 }
 
 [data-home-demo="review"][data-home-demo-state="play"] .site-home-message {
-  animation: site-home-review-rise 0.45s var(--mk-motion-easing) 1.25s both;
+  animation: site-home-review-rise 0.45s var(--mk-motion-easing) 1.25s backwards;
 }
 
 [data-home-demo="review"][data-home-demo-state="play"]
@@ -236,7 +236,7 @@
 }
 
 [data-home-demo="review"][data-home-demo-state="play"] .site-home-review-maya {
-  animation: site-home-review-arrive 0.9s var(--mk-motion-easing) 2.6s both;
+  animation: site-home-review-arrive 0.9s var(--mk-motion-easing) 2.6s backwards;
 }
 
 @keyframes site-home-review-draw {

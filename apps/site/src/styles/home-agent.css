@@ -204,7 +204,7 @@
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"] .site-home-agent-step {
-  animation: site-home-agent-rise 0.45s var(--mk-motion-easing) both;
+  animation: site-home-agent-rise 0.45s var(--mk-motion-easing) backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
@@ -223,7 +223,7 @@
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"] .site-home-publish {
-  animation: site-home-agent-ready 0.4s var(--mk-motion-easing) 5.3s both;
+  animation: site-home-agent-ready 0.4s var(--mk-motion-easing) 5.3s backwards;
 }
 
 @keyframes site-home-agent-rise {

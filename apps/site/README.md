@@ -1,6 +1,6 @@
 # Mokly Site
 
-Status: The site draws the Canvas chrome, the legal pages, the docs and the pricing page, but not the Canvas home and changelog pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
+Status: The site draws the Canvas chrome, the home, the legal pages, the docs and the pricing page, but not the Canvas changelog page yet. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
@@ -76,6 +76,15 @@ writes the rendered size, font size or gap into each measured size tag, type
 badge and redline value and follows resizing; without script those values do
 not show. Every animation honours reduced motion and shows its finished state.
 [Site delivery](../../docs/protocol/cloud/site-delivery.md) owns these rules.
+
+The home draws a fictional demo app, the coffee shop `acme/storefront`, as
+static components at build time: the hero's heading as a selected text
+layer, the spread of the app's screens and component sets, and the depicted
+product in the Browse, Review and Edit frames and the open foundation. The
+home demos island plays each frame's demo once when it comes into view, and
+marks the section in view in the Specs panel. The built page draws each demo
+in its finished state, so a reader without script or with reduced motion
+sees that state.
 
 Generated social cards, Astro output and search output are not committed.
 `public/_headers` and the Astro preview configuration both add
@@ -288,6 +297,8 @@ Pages project and attach the domain are in the
 - `src/components/Panel.astro`, `PanelRow.astro` and `src/styles/panels.css` — the floating panel with its head, body and optional foot, and its 44px rows, which link with `href` and mark the current row with `aria-current`.
 - `src/components/CodePanel.astro`, `code-lines.ts`, `src/styles/code.css` and `code-tokens.css` — the dark code panel, drawn at build time from typed lines of syntax tokens, with tabs, line numbers, a prompt, lit and dimmed lines and a foot, without a Copy control or a script.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
+- `src/pages/index.astro` and `src/components/home/` — the home: `Hero.astro` with `Spread.astro`, `SpreadSets.astro` and `StorybookMark.astro`; `Workspace.astro` with `SpecsPanel.astro`; the modules `BrowseModule.astro` (with `CheckCard.astro`, `Viewer.astro`, `ViewerTree.astro`, `ViewerCompare.astro` and `FitConnector.astro`), `ReviewModule.astro` (with `Thread.astro`), `EditModule.astro` (with `AgentChat.astro`) and `Foundation.astro` (with `Steps.astro`, `Terminal.astro` and `FitWire.astro`), built on `ModuleText.astro`, `ModuleFrame.astro` and `ViewerBarParts.astro`; and the demo app under `home/acme/`, which `Artboard.astro` frames and `CardSelection.astro` selects. Their sheets are `src/styles/home*.css`.
+- `src/components/home/home-island.ts`, `specs-spy.ts` and `demos.ts` — the home demos island: the Specs scroll spy, and the demo states that each frame's sheet animates. `tests/home_island.test.ts` drives it against a stub page, and `tests/browser/home*.spec.ts` check the home in a browser.
 - `src/pages/pricing.astro` and `src/components/pricing/` — the pricing page: `Hero.astro` with the two measured redlines under the heading, `Plans.astro` with the two section boxes and the three `PlanFrame.astro` frames (Team selected, with its measured size tag and Maya's cursor), `Compare.astro` with the props table, and `Questions.astro` with the resolved threads of `Thread.astro`. `hero-copy.ts` holds the approved hero copy, which the page description repeats. `plan-facts.ts` keeps Team's seat prices in USD cents, the trial length and the currency, and derives the shown amounts; `compare-rows.ts` and `questions.ts` hold the compare rows and the threads. The page and its parts load `src/styles/pricing*.css`.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
 - `src/components/Policy.astro` and `src/styles/document.css` — one legal document in its page frame, and the sheet of the legal pages, which `src/pages/404.astro` shares.

@@ -182,13 +182,14 @@
   .site-home-title-sel .site-sel-name,
   .site-home-title-sel .site-sel-badge,
   .site-home-title-sel .site-sel-size {
-    animation: site-home-tag-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+    animation: site-home-tag-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.6s
+      backwards;
   }
 
   .site-home-spread .site-home-board,
   .site-home-spread .site-home-spread-components {
     animation: site-home-board-settle 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.25s
-      both;
+      backwards;
   }
 
   .site-home-spread .site-home-spread-payment {

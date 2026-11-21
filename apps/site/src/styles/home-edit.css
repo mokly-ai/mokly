@@ -226,37 +226,37 @@
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"] .site-home-edit-claude {
-  animation: site-home-edit-arrive 1s var(--mk-motion-easing) 2s both;
+  animation: site-home-edit-arrive 1s var(--mk-motion-easing) 2s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
   .site-home-edit-sel--before
   .site-home-card-claude {
-  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 2.6s both;
+  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 2.6s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"] .site-home-edit-scan {
-  animation: site-home-edit-scan 1.15s var(--mk-motion-easing) 3.2s both;
+  animation: site-home-edit-scan 1.15s var(--mk-motion-easing) 3.2s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
   .site-home-edit-layer--after {
-  animation: site-home-edit-reveal 1.15s var(--mk-motion-easing) 3.2s both;
+  animation: site-home-edit-reveal 1.15s var(--mk-motion-easing) 3.2s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
   .site-home-edit-sel--before {
-  animation: site-home-edit-hide 0.25s var(--mk-motion-easing) 3.7s both;
+  animation: site-home-edit-hide 0.25s var(--mk-motion-easing) 3.7s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
   .site-home-edit-sel--after {
-  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 3.8s both;
+  animation: site-home-edit-show 0.3s var(--mk-motion-easing) 3.8s backwards;
 }
 
 [data-home-demo="edit"][data-home-demo-state="play"]
   .site-home-edit-layer--before {
-  animation: site-home-edit-hide 4.35s steps(1, end) both;
+  animation: site-home-edit-hide 4.35s steps(1, end) backwards;
 }
 
 @keyframes site-home-edit-arrive {

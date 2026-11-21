@@ -9,10 +9,12 @@
  * draws the demo's start state under that value. Once an armed demo comes
  * into view, the island sets `"play"` once, and the sheet runs the demo's
  * keyframes from the start state to the finished state under that value,
- * with `animation-fill-mode: both`. A demo that is in view at start stays
- * as built. Under `prefers-reduced-motion: reduce` the island sets no
- * state, and a guard in `src/styles/home.css` turns every animation under a
- * demo off. `home-island.ts` starts the demos on the home.
+ * with `animation-fill-mode: backwards`: when the keyframes end, the base
+ * rules draw the finished state again, so no finished animation keeps a
+ * layer of its own that changes how the text renders. A demo that is in
+ * view at start stays as built. Under `prefers-reduced-motion: reduce` the
+ * island sets no state, and a guard in `src/styles/home.css` turns every
+ * animation under a demo off. `home-island.ts` starts the demos on the home.
  */
 
 /** The attribute that names a demo on its root. */
