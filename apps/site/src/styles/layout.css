@@ -1,9 +1,9 @@
 /* Page layout for the public site: the home's full-measure main, the
-   centered document column and its ruled intro, the document type that the
-   legal pages, the documentation and the changelog share, and the home hero
-   type. Kept in parity with the promoted mockups under
-   docs/mockups/styles/site/, whose prose.css holds the shared document type;
-   the mobile composition is the default and 768px raises the desktop one. */
+   centered document column and its ruled intro, and the document type that
+   the legal pages, the documentation and the changelog share. Kept in parity
+   with the promoted mockups under docs/mockups/styles/site/, whose prose.css
+   holds the shared document type; the mobile composition is the default and
+   768px raises the desktop one. */
 
 .site-main {
   width: 100%;
@@ -207,24 +207,6 @@
   padding-left: var(--mk-space-4);
 }
 
-.site-hero {
-  display: grid;
-  gap: var(--mk-space-4);
-  justify-items: start;
-  margin: 0 auto;
-  max-width: 62rem;
-  padding: var(--mk-space-10) var(--mk-layout-gutter-mobile) var(--mk-space-8);
-  text-align: left;
-  width: 100%;
-}
-
-.site-hero h1 {
-  font-size: var(--mk-type-hero-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: -0.05em;
-  line-height: var(--mk-type-hero-line);
-}
-
 /* The desktop composition from the 768px breakpoint upward. */
 @media (min-width: 768px) {
   .site-document {
@@ -243,13 +225,5 @@
   .site-document-body li {
     font-size: 1.0625rem;
     line-height: 1.7;
-  }
-
-  .site-hero {
-    gap: var(--mk-space-5);
-    justify-items: center;
-    padding: var(--mk-space-20) var(--mk-layout-gutter-desktop)
-      var(--mk-space-12);
-    text-align: center;
   }
 }

@@ -125,6 +125,15 @@
   white-space: nowrap;
 }
 
+/* The site's base rule caps an svg at its box's width. The tag takes the
+   width of its content, so an agent's spark would shrink to nothing: it
+   keeps its own size here. The mockups have no such base rule. */
+
+.site-cursor-tag svg {
+  flex: none;
+  max-width: none;
+}
+
 .site-cursor--flip .site-cursor-tag {
   border-radius: 11px 4px 11px 11px;
   left: auto;

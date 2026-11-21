@@ -14,6 +14,7 @@
     0 0 0 1px var(--mk-color-border),
     var(--mk-shadow-medium);
   font-size: 13px;
+  margin-top: 0;
   max-width: 100%;
   position: relative;
   width: 420px;
@@ -116,9 +117,11 @@
   font-weight: var(--mk-font-semibold);
   gap: 6px;
   height: 34px;
-  margin-left: auto;
+  justify-content: center;
+  margin: 0 0 0 auto;
   padding: 0 12px;
   white-space: nowrap;
+  width: auto;
 }
 
 /* The connector, drawn in pixels of the module, over everything in it */

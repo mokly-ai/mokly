@@ -52,8 +52,7 @@
 }
 
 .site-actions {
-  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--mk-space-3);
+  gap: 12px;
 }
