@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_sidecar::bundle_outcomes::EntryFault;
 use mokly_sidecar::reusable_recipe::disk_seed_request;
+use serde_json::json;
 use sha2::{Digest, Sha256};
 
 use crate::bundle_codec::{Codec, HEADER_BYTES, Header, StoredBundle, StoredKind, hex};
@@ -70,6 +71,16 @@ fn foreign_versions_reject_before_any_payload_read_or_parse() {
 
 #[test]
 fn damage_wrong_settings_and_incomplete_evidence_never_supply_a_disk_seed() {
+    let mut invalid_plan = serde_json::to_value(restore()).unwrap();
+    invalid_plan["plan"] = json!({
+        "paths": ["/repo/entry.ts", "/repo/value.ts"],
+        "imports": [[0, "./value.ts", "import-statement", 2, true]]
+    });
+    let invalid_plan = serde_json::to_vec(&StoredBundle {
+        kind: StoredKind::Bundles,
+        recipe: invalid_plan,
+    })
+    .unwrap();
     let mut other = restore();
     other.params.source_root = "/another-repository".into();
     let mut incomplete = restore();
@@ -117,6 +128,11 @@ fn damage_wrong_settings_and_incomplete_evidence_never_supply_a_disk_seed() {
     bad_digest.push(b' ');
     for (name, bytes, fault) in [
         ("digest", bad_digest, EntryFault::Damaged),
+        (
+            "out-of-range plan reference",
+            file(1, "current", &invalid_plan),
+            EntryFault::Damaged,
+        ),
         (
             "unverified capture",
             file(1, "current", &unverified),

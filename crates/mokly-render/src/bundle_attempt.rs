@@ -13,7 +13,7 @@ use crate::bundle::BundleState;
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::BundleLease;
-use crate::physical_inputs;
+use crate::plan_inputs;
 use crate::runtime::Runtime;
 
 /// Request a bundle and immediately own its returned lifetime epoch.
@@ -67,8 +67,12 @@ fn edit_plan(runtime: &Runtime, params: &Bundle) -> Option<Arc<ResolutionPlan>> 
         .lock()
         .unwrap_or_else(|error| error.into_inner())
         .get(params)?;
-    physical_inputs::current(&record.evidence, runtime.physical_inputs.as_ref())
-        .then(|| record.plan.clone())
+    plan_inputs::current(
+        &record.plan,
+        &record.evidence,
+        runtime.physical_inputs.as_ref(),
+    )
+    .then(|| record.plan.clone())
 }
 
 /// Apply disk publication when the core serves a retained state directly.
@@ -149,3 +153,7 @@ mod bundle_plan_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_plan_bound_tests.rs"]
 mod bundle_plan_bound_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_plan_candidate_tests.rs"]
+mod bundle_plan_candidate_tests;

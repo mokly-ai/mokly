@@ -108,6 +108,7 @@ export class PhysicalInputs extends PhysicalPathInputs {
         value.input,
       );
       this.observedFiles.add(file);
+      if (value.bytes) this.observer?.metadata(file, value.bytes);
       return value;
     } catch {
       this.complete = false;
@@ -165,11 +166,13 @@ export class PhysicalInputs extends PhysicalPathInputs {
         Infinity,
         this.pathKinds.get(directory),
       );
-      if (value)
-        this.save(
-          value.kind === "absent" ? directory : this.realPath(directory),
-          value,
-        );
+      if (value) {
+        const canonical =
+          value.kind === "absent" ? directory : this.realPath(directory);
+        this.save(canonical, value);
+        if (value.kind === "directory")
+          this.observer?.directory(directory, canonical);
+      }
     } catch {
       this.complete = false;
     }

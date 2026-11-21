@@ -342,16 +342,30 @@ view after the edit and counts real process starts and hello calls.
   or none.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
-  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
-  captured and durable evidence, replaces the record of equal settings, and
-  removes the oldest records to keep the serialized total within
-  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
-  place.
+  with the `ReuseEvidence` of its compilation. `Records` keeps each record by
+  the resolution settings of its request: the bundle settings without the
+  entry files, the stories files, the renderer, and the evaluation digest.
+  `Records::insert` keeps only captured and durable evidence, replaces the
+  record of equal resolution settings, and removes the oldest records to keep
+  the serialized total within `RECORD_BYTES`. A record that it cannot keep
+  leaves the older record in place.
 - [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
   `PhysicalInputs`, the reader that checks the captured reuse evidence of a
   compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
-  filesystem implementation. Its `current` check rejects marked evidence. It
-  does not read the `durable` flag of the evidence.
+  filesystem implementation. Its `current` check rejects marked evidence and
+  compares whole directories. It does not read the `durable` flag of the
+  evidence. Its `matches_candidates` method defaults to the whole comparison
+  for readers without a candidate implementation.
+- [`src/plan_inputs.rs`](./src/plan_inputs.rs) holds `current`, the plan
+  check that `bundle_attempt.rs` runs before a Serve edit. It selects
+  candidate comparisons for the recorded directories that have candidate
+  names, under the
+  [candidate name rules](../../docs/protocol/mokly-sidecar-plans.md#candidate-names).
+  Other observations keep the whole comparison.
+- [`src/plan_directory.rs`](./src/plan_directory.rs) holds `matches`, the
+  streaming candidate comparison that `SystemPhysicalInputs` uses. It checks
+  each current entry and link before filtering unrelated ASCII names. It
+  compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -378,9 +392,10 @@ view after the edit and counts real process starts and hello calls.
   request with the `capture` mode of the runtime in its `catalogue.bundle`
   span, gives each result's lifetime epoch to a `BundleLease`, and sends the
   served-generation notice after a core reuse, only in the `Full` mode.
-  Before a `ServeEdit` request of a head runtime, it sends the plan of a
-  record whose evidence `physical_inputs::current` accepts. It offers each
-  `Full` result with a plan and a toolchain identity to `Records`.
+  Before a `ServeEdit` request of a head runtime, it runs the plan check on
+  the record of the request's resolution settings, and it sends the plan when
+  the check passes. It offers each `Full` result with a plan and a toolchain
+  identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
