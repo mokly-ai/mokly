@@ -2,14 +2,54 @@
 /**
  * The open foundation that closes the home: its kicker, its heading with the
  * muted second line, its body and the action pair that ends in View on
- * GitHub, then the frame labelled `Open foundation`, the root of the
- * `foundation` demo. The frame is empty: it does not draw the source, the
- * artboard, the facts or the steps yet.
+ * GitHub, then the frame labelled `Open foundation`, the four facts of the
+ * open-source CLI and the three steps.
+ *
+ * The frame is the root of the `foundation` demo. It sets the source of
+ * `pricing.mockup.tsx` in the dark code panel, with the build in a terminal
+ * under it, beside the `pricing` artboard that the source renders, where the
+ * PriceCard is selected and Codex's cursor rests. A wire joins the lit
+ * PriceCard lines to the card: from 1440px the wide wire, below it the fit
+ * wire of each artboard width, and below 960px, where the artboard follows
+ * the code, no wire. The frame carries only its label, with no selection.
+ * Its code panel, artboard, cursor and wires are depictions, hidden from
+ * assistive technology, and nothing in it takes focus; the code panel sits
+ * in its own hidden box, as the artboard does. The copy, the actions, the
+ * facts and the steps are the page's own content.
+ *
+ * With motion allowed, the demo plays once in view: the wired lines light,
+ * the wire draws to the card and the card's selection appears. The built
+ * page draws that finished state. The rules of the copy, the facts and the
+ * steps are in `src/styles/home-closing.css`, and those of the frame and its
+ * demo in `src/styles/home-foundation.css`.
  */
 import Actions from "../Actions.astro";
+import CodePanel from "../CodePanel.astro";
+import Cursor from "../Cursor.astro";
+import Icon from "../Icon.astro";
+import type { IconName } from "../icons.js";
 import Kicker from "../Kicker.astro";
 
+import AcmePricingPhone from "./acme/AcmePricingPhone.astro";
+import Artboard from "./Artboard.astro";
+import CardSelection from "./CardSelection.astro";
+import FitWire from "./FitWire.astro";
+import { PRICING_SOURCE, WIRED_LINES } from "./foundation-source.js";
+import { WIDE_WIRE, WIRE_END_RADIUS, wirePath } from "./foundation-wires.js";
 import ModuleFrame from "./ModuleFrame.astro";
+import Steps from "./Steps.astro";
+import Terminal from "./Terminal.astro";
+
+import "../../styles/home-closing.css";
+import "../../styles/home-foundation.css";
+
+/** The facts of the open-source CLI, each after its icon. */
+const FACTS: ReadonlyArray<readonly [IconName, string]> = [
+  ["cube", "@mokly/mokly"],
+  ["checkCircle", "MIT license"],
+  ["terminal", "The CLI runs locally"],
+  ["globe", "Host the catalogue anywhere"],
+];
 ---
 
 <section
@@ -33,5 +73,55 @@ import ModuleFrame from "./ModuleFrame.astro";
       <Actions secondary="github" />
     </div>
   </div>
-  <ModuleFrame demo="foundation" name="Open foundation" />
+  <ModuleFrame
+    class="site-home-source"
+    demo="foundation"
+    name="Open foundation"
+  >
+    <div aria-hidden="true">
+      <CodePanel
+        files={["pricing.mockup.tsx", "price-card.tsx"]}
+        language="tsx"
+        lines={PRICING_SOURCE}
+        lit={WIRED_LINES}
+        meta="src/mockups"
+        numbered
+      >
+        <Terminal slot="foot" />
+      </CodePanel>
+    </div>
+    <div aria-hidden="true" class="site-home-source-board">
+      <Artboard device="phone" name="pricing">
+        <AcmePricingPhone />
+        <CardSelection slot="overlay" tall />
+      </Artboard>
+      <Cursor class="site-home-source-codex" person="codex" />
+    </div>
+    <svg aria-hidden="true" class="site-home-wire" focusable="false">
+      <path class="site-home-wire-path" d={wirePath(WIDE_WIRE)}></path>
+      <circle
+        class="site-home-wire-end"
+        cx={WIDE_WIRE.from.x}
+        cy={WIDE_WIRE.from.y}
+        r={WIRE_END_RADIUS}
+      ></circle>
+      <circle
+        class="site-home-wire-end"
+        cx={WIDE_WIRE.to.x}
+        cy={WIDE_WIRE.to.y}
+        r={WIRE_END_RADIUS}
+      ></circle>
+    </svg>
+    <FitWire size="large" />
+    <FitWire size="small" />
+  </ModuleFrame>
+  <ul class="site-home-facts">
+    {FACTS.map(([icon, fact]) => (
+      <li>
+        <Icon name={icon} />
+        {fact}
+      </li>
+    ))}
+  </ul>
+  <Steps />
 </section>

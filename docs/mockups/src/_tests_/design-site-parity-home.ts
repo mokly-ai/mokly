@@ -8,13 +8,9 @@
 
 const HERO =
   "Canvas home: Design in code. is a selected text layer at 162px with the lead and both actions under it, on the canvas; Milestone 5 rebuilds the home";
-const FOUNDATION =
-  "Canvas home: the open foundation wires its source to the rendered artboard and draws the steps as a flow of frames; Milestone 5 rebuilds the home";
 
 export const HOME_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-actions": HERO,
   ".site-hero": HERO,
   ".site-hero h1": HERO,
-  ".site-closing": FOUNDATION,
-  ".site-closing-copy h2": FOUNDATION,
 };

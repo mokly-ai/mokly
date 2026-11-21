@@ -77,12 +77,15 @@
   line-height: 1.5;
   margin-top: 8px;
 }
-/* On a phone the steps stack in one column, with the arrows running down
-   between the frames */
+/* On a phone the steps stack in one column, closer to the facts, with the
+   arrows running down between the frames */
 
 [data-site-viewport="mobile"] .site-steps {
   gap: 40px;
   grid-template-columns: minmax(0, 1fr);
+}
+
+[data-site-viewport="mobile"] .site-closing .site-steps {
   margin-top: 64px;
 }
 
