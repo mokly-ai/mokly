@@ -165,8 +165,8 @@ fn a_lookup_after_contended_preparation_never_inventories_and_explicit_preparati
     assert_eq!(artifact.bytes, b"complete");
     assert!(store.contains(&documents[0].key));
     {
-        let _index = store.index.lock().unwrap();
-        assert!(!store.contains(&documents[0].key));
+        let _maintenance = store.maintenance.lock().unwrap();
+        assert!(store.contains(&documents[0].key));
     }
     store.enabled.store(false, Ordering::Release);
     assert!(!store.contains(&documents[0].key));
@@ -214,7 +214,7 @@ fn a_full_startup_index_keeps_recent_positions_and_the_newest_duplicate() {
         "the most recent position must survive the index bound"
     );
     assert!(matches!(store.load(&documents[0].key), ReadOutcome::Hit(_)));
-    let index = store.index.lock().unwrap();
+    let index = store.index.load();
     assert_eq!(index.as_ref().unwrap().len(), 16_384);
     assert_eq!(
         index.as_ref().unwrap()[&documents[0].key].segment.key,
