@@ -53,6 +53,11 @@ This workspace opens one pull request into `main` and does not merge it.
   This branch merged it at `88c1253da`. Every incoming path matches main.
   The earlier freeze is superseded and supplies no accepted measurement.
   Fresh toolchains and inputs must use the updated baseline.
+- 2026-11-21: The performance orchestrator accepted `d39ed86c0` against
+  `87e8984cf`. It accepted the 169 ms warm gain below the original 300 ms
+  target and the 384 ms cold gain. It classed the 23 ms edit and 63 ms
+  restore increases as noise. Product code remains unchanged after that
+  measurement. The official measurements replace duplicate local samples.
 
 Contract owners:
 
@@ -64,6 +69,12 @@ Contract owners:
 ## Acceptance
 
 These criteria come from the answer of 2026-11-21 to decision 2:
+
+The performance orchestrator accepted the measured performance and memory
+on 2026-11-21. The warm gain is below the original target. That acceptance
+waives the original warm threshold and the dependent stop rule. The official
+receipt is `.context/startup-postcss-preparation/official-acceptance-d39.md`.
+The byte proofs, merged complete gate, review, and Required CI still apply.
 
 - Basic warm unchanged restarts reach `serve.ready` at least 0.3 s sooner on
   average than `main`, in interleaved pairs.
@@ -211,9 +222,8 @@ My calls of 2026-11-21:
 - A plugin that writes files while it loads now writes during the `full`
   capture. A write into a consumed directory can make the capture unstable, so
   the bundle cache skips the store. The output stays equal.
-- When the gain misses 0.3 s or a peak passes 2%, stop and send the parent the
-  measured split. Do not widen the scope. A start before the native cache
-  read is outside the approved scope.
+- The orchestrator accepted the measured warm gain below 0.3 s. The scope
+  stays unchanged. A start before the native cache read stays outside it.
 
 ## Decision 2: Tailwind evidence cannot enter the store
 
@@ -236,7 +246,8 @@ My calls of 2026-11-21:
   Scanner controls, native resolution probes, external inputs, and context
   state can escape the existing record. A strict store cannot admit those
   results. A separate main red test also confirmed a dropped observed
-  Browserslist configuration read. Workspace 223 owns that correctness fix.
+  Browserslist configuration read. Merged PR #462 fixes that observed-read
+  defect. Missing probes and external inputs remain separate work.
 - **Impact if no action:** The approved strict store cannot provide the
   required Basic gain with the current evidence producer.
 - **Root question:** Which restart improvement should this task pursue while
@@ -284,8 +295,9 @@ My calls of 2026-11-21:
   records from entering the strict store. It does not make Tailwind complete.
 - **Previous examples:** The bundle cache has a separate durable recipe type.
   `plans/follow-ups/confined-postcss-inputs.md` already records the broader
-  input-domain design. The observed configuration bug is a separate
-  correctness record in `plans/follow-ups/stylesheet-observed-plugin-config-reads.md`.
+  input-domain design. Merged PR #462 fixes the observed configuration bug.
+  `plans/follow-ups/postcss-probes-external-reads-environment.md` records the
+  remaining observation limits.
 - **Assumptions:** The original Basic goal is at least 0.5 seconds.
   Strict complete-and-stable admission remains approved. A late digest is
   not a consumed-read witness. The store remains Serve-only. In-process reuse
@@ -307,7 +319,8 @@ The read-only options check and its correction are
 The orchestrator's checked disposition, input-class matrix, estimated gains,
 and validation-cost limits are
 `.context/persistent-stylesheet-records/eligibility-options-disposition.md`.
-No measured candidate speed gain or complete validator exists yet.
+The accepted F measurement is recorded below. No complete stored-record
+validator exists.
 
 For D, the age bound controls admission at restart only. Unless a forced
 refresh is added, an admitted record can remain in memory throughout that
@@ -478,28 +491,30 @@ into `main`.
       earlier gate receipt separate from the merged candidate identity.
 - [x] Run the strict example build and a Serve smoke test of a startup with
       PostCSS, with the commands of `AGENTS.md`.
-- [ ] Confirm startup, ready Changes, exact timing attribution, and drained
-      writer work in the first frozen seed on the updated baseline.
-- [ ] Prove all raw output bytes equal between `main` and this branch.
-  - [ ] Static Build with `--strict --no-changes --sidecars 2` on Basic, the
+- [x] Confirm cold startup and a real head disk hit on warm restart in the
+      frozen HTTP proof. Use the accepted official drained sessions for
+      ready Changes, exact timing attribution, and writer-drain evidence.
+- [x] Prove all raw output bytes equal between `main` and this branch.
+  - [x] Static Build with `--strict --no-changes --sidecars 2` on Basic, the
         current monorepo cloud configuration, large HTML, and large React.
         Generate both large fixtures with 30 areas, 40 screens per area,
         12 rows, 4 shared stylesheets, and share 0.5.
-  - [ ] Basic Serve over HTTP: a cold start, a warm restart, a label edit, a
+  - [x] Basic Serve over HTTP: a cold start, a warm restart, a label edit, a
         class add, a class removal, and a restore. Fetch every document,
         stylesheet, and asset body at each step, unlinked roots included. Use
         a fresh static CSS inventory. Preserve exact indexes and live dist.
-  - [ ] Adapt the verified WS206 helper transport under
+  - [x] Adapt the verified WS206 helper transport under
         `.context/postcss-reuse-across-edits/` to the commits and scopes of
         this branch. Keep every manifest and raw comparison under
         `.context/`. Make no Publish claim from the Build proof.
-- [ ] Measure interleaved `main` and branch pairs on Basic with the release
+- [x] Use the accepted official interleaved `main` and branch pairs on Basic
+      with the release
       native core and built dist: warm `serve.ready`, the `catalogue.bundle`
       hit duration, the first `css.postcss`, the CSS span union, first
       Changes, the label edit, and the restore.
-- [ ] Measure the isolated `mokly-cloud` consumer at `194fdb78` in the same
+- [x] Use the accepted official isolated `mokly-cloud` pairs at `194fdb78` in the same
       way. Confirm that it prepares nothing and changes nothing beyond noise.
-- [ ] Measure the whole-tree kernel `memory.peak` of cold sessions with 5
+- [x] Use the accepted official whole-tree kernel `memory.peak` of cold sessions with 5
       edits and 5 restores, and of warm restarts. Confirm the 2% limit.
 
 The first local complete gate covers the F tree before the main merge.
@@ -520,8 +535,13 @@ The live build and smoke evidence is
 `.context/startup-postcss-preparation/npm-dev-smoke-134-01/`.
 The predeclared arm order is
 `.context/startup-postcss-preparation/measurement-order-87e8984cf.json`.
-Basic warm pairs run before the large output proofs. A missed acceptance
-criterion stops the dependent work under the stop rule above.
+The performance orchestrator completed and accepted its official pairs
+before the final local proofs. No local timing or memory sample launched
+successfully. The earlier local seed failed its pristine-dist mode check.
+That failed setup stays failed. Independent builds proved identical raw
+bytes and modes. Fresh static and HTTP proofs then passed with those modes.
+Static evidence is `.context/postcss-reuse-across-edits/ws218-static-f87-02/`.
+HTTP evidence is `.context/postcss-reuse-across-edits/ws218-serve-f87-02/`.
 
 Before each large Cargo build, check the disk and the memory. Require at
 least 15 GiB of free disk. Use `CARGO_INCREMENTAL=0` and
@@ -533,12 +553,18 @@ assertion.
 
 Depends on: 5
 
-- [ ] Commit with Conventional Commits and push the branch. Send the SHA, the
+- [x] Commit with Conventional Commits and push the branch. Send the SHA, the
       local results, and the evidence paths to the performance orchestrator
       for the official gate and measurements.
-- [ ] Receive the official result, and add a short summary here. Send the
+- [x] Receive the official result, and add a short summary here. Send the
       parent each failed criterion with its measured split. Do not widen the
       scope without a new decision.
+
+Official performance and memory acceptance for `d39ed86c0`, against
+`87e8984cf`, arrived on 2026-11-21. The warm gain is below the original goal
+and is accepted. The parent owns those timing and kernel-memory results.
+The full report is `.context/startup-postcss-preparation/official-acceptance-d39.md`.
+The remaining local gate and review do not change the measured product code.
 
 ## Milestone 7: Review and pull request
 
