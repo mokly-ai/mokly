@@ -189,13 +189,17 @@ Tags: ui
 
 Depends on: 4, 15
 
-- [ ] Build the Layers panel with search, the version chip and the
-      Changelog foot. Keep 44px rows.
-- [ ] Frame the document, and add the Inspect panel with page facts, Edit on
+- [x] Build the Layers panel with search, the version chip and the
+      Changelog foot. Keep 44px rows. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Frame the document, and add the Inspect panel with page facts, Edit on
       GitHub and On this page. Edit on GitHub opens the tracked guide
-      source under `docs/guides/`, not the generated package copy.
-- [ ] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
-- [ ] Build the mobile sub-bar and the tree sheet.
+      source under `docs/guides/`, not the generated package copy. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
+      Branch: `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Build the mobile sub-bar and the tree sheet. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
 
 ## Milestone 7: HTML sample fence
 
