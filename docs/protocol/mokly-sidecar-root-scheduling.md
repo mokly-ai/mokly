@@ -215,7 +215,9 @@ process that holds its generation while another slot can run the request. So
 concurrent independent requests still
 [spread across sidecars](./mokly-sidecar.md#transport), and sequential
 requests of one generation can reuse one process. The rank starts no process
-and keeps no state of its own.
+and keeps no state of its own. The
+[older generation rule](./mokly-sidecar-edit-preparation.md#requests-of-an-older-generation)
+of early preparation is the one case in which such a request waits.
 
 Decision: a request prefers an idle process that holds its generation and
 inputs. Rejected: the queue order alone, because a request then often reaches
@@ -223,7 +225,8 @@ a process that must restore and describe a generation that another idle
 process holds. Rejected: the most recently used process first, because recency
 only approximates the loaded state.
 
-Decision: a request never waits for a busy process that holds its generation.
+Decision: outside the early preparation exception, a request never waits for
+a busy process that holds its generation.
 Rejected: a wait for that process, because idle slots would then stay unused
 while requests wait.
 

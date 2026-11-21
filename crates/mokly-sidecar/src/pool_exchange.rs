@@ -12,6 +12,18 @@ use crate::pool_releases::Release;
 use crate::wire::MethodResult;
 
 impl SidecarPool for Pool {
+    fn begin_head_attempt(&self, context: &str) {
+        self.begin_early_attempt(context);
+    }
+    fn end_head_attempt(&self) {
+        self.end_early_attempt();
+    }
+    fn head_published(&self) {
+        self.publish_head();
+    }
+    fn maintain_head_preparation(&self) -> Result<bool> {
+        Ok(self.maintain_early())
+    }
     fn record_served_render(&self, source_root: &Path, call: Call) {
         self.record_stored_render(source_root, call);
     }
@@ -58,13 +70,25 @@ impl SidecarPool for Pool {
 
 impl Pool {
     fn request_call(&self, call: Call, claim: Option<&CallClaim>) -> Result<MethodResult> {
+        let serial = self.begin_head_bundle(&call);
+        let outcome = self.run_call(&call, claim, serial);
+        self.end_head_bundle(serial, &outcome);
+        outcome
+    }
+
+    fn run_call(
+        &self,
+        call: &Call,
+        claim: Option<&CallClaim>,
+        serial: Option<u64>,
+    ) -> Result<MethodResult> {
         if matches!(call, Call::Shutdown(_)) {
             self.shutdown()?;
             return Ok(MethodResult::Empty);
         }
-        let source_root = self.source_root(&call);
+        let source_root = self.source_root(call);
         let claim = claim.and_then(|claim| claim.id(&self.state));
-        let (index, mut slot, mut start) = self.acquire(&call, source_root.as_deref(), claim)?;
+        let (index, mut slot, mut start) = self.acquire(call, source_root.as_deref(), claim)?;
         if let Err(error) = self.isolate(index, &mut slot, source_root.as_deref()) {
             self.release(index, slot, start);
             return Err(error);
@@ -95,9 +119,10 @@ impl Pool {
                     }
                 },
             };
-            outcome = self.execute(&mut current, &call, deadline, &mut bundle_attempt);
+            outcome = self.execute(index, &mut current, call, deadline, &mut bundle_attempt);
             if let Ok(result) = &outcome {
-                self.record_head(index, &current, &call, result);
+                self.record_head(index, &current, call, result);
+                self.record_early_bundle(serial, index, &current, call, result);
             }
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
             if outcome.as_ref().is_err_and(|error| !reusable(error)) {
@@ -117,7 +142,7 @@ impl Pool {
         let cancelled = self.lock().stopped;
         self.release(index, slot, start);
         if matches!(outcome, Err(Error::Crashed)) {
-            let kind = FailureKind::for_call(&call);
+            let kind = FailureKind::for_call(call);
             outcome = Err(Error::RequestCrashed {
                 kind,
                 call: Box::new(call.clone()),
@@ -125,7 +150,7 @@ impl Pool {
         }
         if let Err(Error::Timeout { deadline_ms, phase }) = outcome {
             outcome = Err(Error::RequestTimeout {
-                call: Box::new(call),
+                call: Box::new(call.clone()),
                 deadline_ms,
                 phase,
             });

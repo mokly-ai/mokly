@@ -115,6 +115,7 @@ pub enum MethodResult {
 
 impl Response {
     /// Decode the result selected by the pending request method.
+    #[tracing::instrument(name = "sidecar.response.decode", skip_all, err)]
     pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
         match self {
             Self::Failure {

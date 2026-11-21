@@ -14,6 +14,7 @@ impl Pool {
             state.stopped = true;
             state.recipes.clear();
             state.head.candidates.clear();
+            state.head.early.abort();
             let busy: Vec<_> = state
                 .controls
                 .keys()
@@ -62,6 +63,7 @@ impl Pool {
             state.stopped = true;
             state.recipes.clear();
             state.head.candidates.clear();
+            state.head.early.abort();
             self.ready.notify_all();
             state.controls.values().cloned().collect::<Vec<_>>()
         };

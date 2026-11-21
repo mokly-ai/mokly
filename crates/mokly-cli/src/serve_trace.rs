@@ -148,6 +148,22 @@ where
                 .stderr(&format!("{}\n", self.redactor.safe(&line)));
             return;
         }
+        if event.metadata().target() == "mokly::early_preparation" {
+            let mut record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"sidecar.early-preparation","event":"counts","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed()});
+            for key in [
+                "started",
+                "aborted",
+                "adopted",
+                "publishedWaits",
+                "publishedWaitMs",
+            ] {
+                if let Some(value) = fields.values.get(key) {
+                    record[key] = value.clone();
+                }
+            }
+            self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
+            return;
+        }
         if event.metadata().target() == "mokly::render_store"
             && fields.values.get("event").is_some()
         {
@@ -208,6 +224,10 @@ where
 #[cfg(test)]
 #[path = "_tests_/bundle_timing_tests.rs"]
 mod bundle_timing_tests;
+
+#[cfg(test)]
+#[path = "_tests_/early_preparation_trace_tests.rs"]
+mod early_preparation_trace_tests;
 
 #[cfg(test)]
 #[path = "_tests_/cache_trace_tests.rs"]

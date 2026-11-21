@@ -41,6 +41,16 @@ pub trait SidecarPool: Send + Sync {
     fn served_generation(&self, generation: &str, epoch: u64);
     /// Record a store-served render without sending a call or starting a process.
     fn record_served_render(&self, _source_root: &Path, _call: Call) {}
+    /// Identify the current head attempt's affine PostCSS context.
+    fn begin_head_attempt(&self, _context: &str) {}
+    /// End unadopted preparation after a failed head attempt.
+    fn end_head_attempt(&self) {}
+    /// End pending early work only after the head snapshot is adopted.
+    fn head_published(&self) {}
+    /// Send at most one bounded early preparation call on an existing head process.
+    fn maintain_head_preparation(&self) -> Result<bool> {
+        Ok(false)
+    }
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
     /// Record one return pass without waiting for a process.
@@ -198,6 +208,7 @@ impl Pool {
             slot = None;
         }
         let mut state = self.lock();
+        state.running_claims.retain(|_, running| *running != index);
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
@@ -217,6 +228,7 @@ impl Pool {
 
     /// End a process that a failure left unusable, so that the next request replaces it.
     pub(super) fn replace(&self, index: usize, control: &dyn WorkerControl) -> Result<()> {
+        self.discard_early_process(index);
         let stopped = {
             let mut state = self.lock();
             state.replacement_reasons.insert(index, Reason::Replacement);

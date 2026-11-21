@@ -94,7 +94,23 @@ impl Pool {
                     }
                     state.epochs.remove(&id);
                     state.maps.remove(&id);
+                    state.map_epochs.remove(&id);
                     state.bindings.remove(&id);
+                    if state
+                        .head
+                        .early
+                        .marker
+                        .as_ref()
+                        .is_some_and(|marker| marker.generation == id)
+                        || state
+                            .head
+                            .early
+                            .pending
+                            .as_ref()
+                            .is_some_and(|pending| pending.generation == id)
+                    {
+                        state.head.early.abort();
+                    }
                 }
             }
             Release::Context(id) => {
@@ -146,6 +162,15 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> bo
         let mut state = pool_cleanup::lock(state);
         if slot.is_none() {
             state.replacement_reasons.insert(index, Reason::Replacement);
+            if state
+                .head
+                .early
+                .marker
+                .as_ref()
+                .is_some_and(|marker| marker.process.index == index)
+            {
+                state.head.early.abort();
+            }
         }
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {

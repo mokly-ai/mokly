@@ -65,6 +65,7 @@ impl ServeServices {
     /// Only an installed initial head and successful Serve readiness end startup capture.
     pub(super) fn head_published(&self) {
         self.head_published.store(true, Ordering::Release);
+        self.pool.head_published();
     }
 
     pub(super) fn new(
@@ -193,7 +194,11 @@ impl ServePreparation for AttemptPreparation {
             }),
             graphs: runtime,
         };
-        preparation.prepare(cwd, options)
+        let result = preparation.prepare(cwd, options);
+        if result.is_err() {
+            self.runtime.pool.end_head_attempt();
+        }
+        result
     }
 }
 

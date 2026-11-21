@@ -13,6 +13,7 @@ use crate::serve_warnings::AttemptWarnings;
 
 impl ManualRebuilds {
     fn failed_catalogue(&self, batch: &Batch, attempt: &dyn AttemptWarnings, error: &BuildError) {
+        self.states.discarded();
         if let Some(watch) = &self.watching {
             watch.failed();
         }
@@ -36,6 +37,7 @@ impl ManualRebuilds {
         warnings: &[Warning],
         error: &ServerError,
     ) {
+        self.states.discarded();
         if let Some(watch) = &self.watching {
             watch.failed();
         }
@@ -121,6 +123,7 @@ impl ManualRebuilds {
             };
         while self.candidates.active() {
             if self.writer.replace(snapshot.clone()) {
+                self.states.published();
                 if let (Some(watch), Some(candidate)) = (&self.watching, candidate.take()) {
                     watch.clone().adopt(candidate, &prepared);
                 }

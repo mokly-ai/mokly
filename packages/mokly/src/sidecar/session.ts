@@ -100,7 +100,10 @@ export class Session {
         return null;
       }
       case "describe":
-        return describe(this.generation(request.params.generation));
+        return describe(
+          this.generation(request.params.generation),
+          this.measurements,
+        );
       case "cssModules": {
         const generation = this.generation(request.params.generation);
         generation.maps = Object.fromEntries(

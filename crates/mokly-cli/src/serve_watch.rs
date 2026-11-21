@@ -116,6 +116,7 @@ impl WatchInputs for WatchedInputs {
         let started = self.factory.now();
         self.state.lock().unwrap_or_else(|e| e.into_inner()).started = started;
     }
+    #[tracing::instrument(name = "watch.candidate", skip_all, err)]
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch> {
         let (recorded, active) = {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());

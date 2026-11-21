@@ -6,6 +6,8 @@ import type { StoryHints } from "../generated/sidecar/StoryHints.js";
 import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
 import { orderedExports } from "./export-order.js";
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 import { storyHints } from "./story-hints.js";
 
 interface StoryAnnotations {
@@ -25,6 +27,7 @@ export async function describeStories(
   generation: Generation,
   exports: BundleExports,
   result: Definitions,
+  measurements: Measurements = unmeasured,
 ): Promise<void> {
   if (!Object.keys(exports.stories).length) return;
   const storybook = generation.require("@storybook/react") as typeof Storybook;
@@ -79,6 +82,7 @@ export async function describeStories(
       generation.sources.get(file) ?? "",
       composed,
       file,
+      measurements,
     )) {
       const story = value as PortableStory;
       const annotation = module[exportName] as StoryAnnotations;

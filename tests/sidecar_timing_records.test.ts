@@ -19,6 +19,9 @@ test("sidecar spans use a fake clock and fixed categories without request data",
   const cases: Array<[Request["method"], string, string?]> = [
     ["bundle", "sidecar.bundle"],
     ["describe", "sidecar.describe"],
+    ["restoreGeneration", "sidecar.restore"],
+    ["cssModules", "sidecar.css-modules"],
+    ["bindings", "sidecar.bindings"],
     ["processCss", "sidecar.process-css"],
     ["renderScreen", "sidecar.render", "screen"],
     ["renderComponent", "sidecar.render", "component"],
@@ -33,6 +36,7 @@ test("sidecar spans use a fake clock and fixed categories without request data",
     clock = 190;
     const status = index === 1 ? "error" : "ok";
     finish(status);
+    assert.equal(lines.length, (index + 1) * 2);
     const common = {
       schemaVersion: 1,
       session: "sidecar-session",
@@ -55,12 +59,12 @@ test("sidecar spans use a fake clock and fixed categories without request data",
       status,
     });
   }
-  for (const method of ["restoreGeneration", "cssModules", "shutdown"] as const)
+  for (const method of ["shutdown"] as const)
     timing.begin({ method }, timing.received())("ok");
-  assert.equal(lines.length, 14);
+  assert.equal(lines.length, 20);
   timing.enable(false);
   timing.begin({ method: "renderPage" }, timing.received())("error");
-  assert.equal(lines.length, 14);
+  assert.equal(lines.length, 20);
 });
 
 test("bundle phases keep their parent and record results without source data", async () => {

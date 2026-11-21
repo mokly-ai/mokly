@@ -442,6 +442,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   epoch. [`src/pool_render_equality.rs`](./src/pool_render_equality.rs)
   compares two render calls exactly, signed zero included, without
   serializing them.
+- [`src/pool_early.rs`](./src/pool_early.rs) selects bounded early edit work.
+  [`src/pool_early_lifetime.rs`](./src/pool_early_lifetime.rs) fences attempts,
+  publication, and first-render adoption. The existing maintenance worker
+  calls it through `SidecarPool::maintain_head_preparation`.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
   runs one step in `Pool::maintain_return`. The start of a pass enrolls the
   existing head workers that need a warm-up. `Pool::retire_return` kills and
@@ -578,4 +582,6 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
   [module sources](../../docs/protocol/mokly-sidecar-modules.md).
 - [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
+- [Return warm-up](../../docs/protocol/mokly-sidecar-return-warmup.md) and
+  [early edit preparation](../../docs/protocol/mokly-sidecar-edit-preparation.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

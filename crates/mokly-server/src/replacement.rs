@@ -17,6 +17,7 @@ use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
 
+#[tracing::instrument(name = "detail.reuse", skip_all)]
 pub(crate) fn reuse_usage(
     details: &mut BTreeMap<String, EntryDetailV4>,
     index: &CatalogueReadModel,
@@ -67,6 +68,7 @@ pub(crate) fn reuse_usage(
     completed
 }
 
+#[tracing::instrument(name = "detail.encode", skip_all, err)]
 pub(crate) fn encode_details(
     details: BTreeMap<String, EntryDetailV4>,
     index: &mut CatalogueReadModel,

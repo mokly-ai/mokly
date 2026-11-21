@@ -24,7 +24,9 @@ const timings = new Timings(performance, output, process.pid, randomUUID());
 globalThis.console = new Console(process.stderr, process.stderr);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 const send = async (id: number, outcome: object) => {
-  const frame = encodeFrame({ id, ...outcome });
+  const frame = timings.runSync("sidecar.response.encode", () =>
+    encodeFrame({ id, ...outcome }),
+  );
   await new Promise<void>((resolve, reject) =>
     write(frame, (error) => (error ? reject(error) : resolve())),
   );
@@ -52,7 +54,7 @@ const session = new Session(
 );
 const input = parentInput();
 try {
-  for await (const value of frames(input.stream)) {
+  for await (const value of frames(input.stream, timings)) {
     // The same-version Rust binary writes typed requests with ids 0 and 1.
     const call = value as Request;
     const received = timings.received();

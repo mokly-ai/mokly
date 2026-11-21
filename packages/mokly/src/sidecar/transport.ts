@@ -1,11 +1,14 @@
 import { protocol } from "./errors.js";
 import { jsonText } from "./json.js";
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 
 export const FRAME_LIMIT = 64 * 1024 * 1024;
 
 /** Decode byte chunks before UTF-8, so split multibyte characters are valid. */
 export async function* frames(
   stream: AsyncIterable<Uint8Array>,
+  measurements: Measurements = unmeasured,
 ): AsyncGenerator<unknown> {
   const pieces: Buffer[] = [];
   let bytes = 0;
@@ -22,7 +25,9 @@ export async function* frames(
       start = i + 1;
       let parsed: unknown;
       try {
-        parsed = JSON.parse(body.toString("utf8"));
+        parsed = measurements.runSync("sidecar.request.decode", () =>
+          JSON.parse(body.toString("utf8")),
+        );
       } catch {
         protocol("invalid JSON frame");
       }

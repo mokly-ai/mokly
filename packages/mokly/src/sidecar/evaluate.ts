@@ -9,9 +9,14 @@ import { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleExports, Generation } from "./bundle.js";
 import { cssModulePrefix, namedClasses } from "./css-modules.js";
 import { SidecarError, detail } from "./errors.js";
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 
 /** Evaluate only after the generation's complete class-map table is installed. */
-export function evaluate(generation: Generation): BundleExports {
+export function evaluate(
+  generation: Generation,
+  measurements: Measurements = unmeasured,
+): BundleExports {
   if (generation.exports) return generation.exports;
   try {
     let react: typeof React | undefined;
@@ -44,21 +49,27 @@ export function evaluate(generation: Generation): BundleExports {
         : classes.has(name)
           ? classes.get(name)
           : generation.require(name);
-    const execute = new Function(
-      "module",
-      "exports",
-      "require",
-      "__dirname",
-      "__filename",
-      generation.code,
+    const execute = measurements.runSync(
+      "sidecar.describe.compile",
+      () =>
+        new Function(
+          "module",
+          "exports",
+          "require",
+          "__dirname",
+          "__filename",
+          generation.code,
+        ),
     );
-    execute(
-      module,
-      module.exports,
-      require,
-      generation.params.sourceRoot,
-      path.join(generation.params.sourceRoot, "package.json"),
-    );
+    measurements.runSync("sidecar.describe.execute", () => {
+      execute(
+        module,
+        module.exports,
+        require,
+        generation.params.sourceRoot,
+        path.join(generation.params.sourceRoot, "package.json"),
+      );
+    });
     return (generation.exports = {
       ...module.exports,
       styleAdapters,

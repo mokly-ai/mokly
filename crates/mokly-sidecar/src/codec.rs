@@ -59,6 +59,7 @@ impl Decoder {
 }
 
 /// Encode one frame and append LF after checking the UTF-8 byte size.
+#[tracing::instrument(name = "sidecar.request.encode", skip_all, fields(encoded_bytes), err)]
 pub fn encode(request: &Request) -> Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec(request)
         .expect("sidecar requests contain only JSON values and string-keyed maps");
@@ -68,6 +69,7 @@ pub fn encode(request: &Request) -> Result<Vec<u8>> {
         }));
     }
     bytes.push(b'\n');
+    tracing::Span::current().record("encoded_bytes", bytes.len() as u64);
     Ok(bytes)
 }
 

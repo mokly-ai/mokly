@@ -59,7 +59,8 @@ the scoped protocol exceptions on 2026-11-21. The check has the same date.
 The ranking and measurement details live under `.context/edit-critical-path/`.
 The separate compile-digest experiment found no helper or reuse read in a
 compile window. The parent closed it after its quiet official rerun found
-equal compile time. The current control is `origin/main` at `e331ad64b`.
+equal compile time. The current control is `origin/main` at `77021d88c`,
+after the clean integration of the compact plan and base capture changes.
 
 The candidate starts after the first Changes publication and a successful
 head edit bundle. It uses the
@@ -87,7 +88,7 @@ attempt or a failed bundle. Publication, final release, and stop end pending wor
 An in-flight call cannot authorize work for another lifetime. Its return
 uses the existing cleanup and stop paths.
 
-The early calls are quiet. The bundling process supplies evaluation output.
+The early calls are quiet. The core's ordinary describe supplies evaluation output.
 The first rendered document that uses a prepared generation counts one
 adoption. Diagnostics count started, aborted, and adopted preparations.
 They also count published-state waits and sum their milliseconds.
@@ -95,6 +96,23 @@ They also count published-state waits and sum their milliseconds.
 Full capture and first startup keep their current schedule. The change
 adds no timeout, retry, sleep, process, cache persistence, or wire field.
 It retains the diagnostic spans that explain the measured waits.
+
+Agent design call, 2026-11-21: yield only the early quiet description until
+the core starts its visible description. This preserves evaluation output
+without another request wait. Restore and class-map installation can run sooner.
+
+Agent design call, 2026-11-21: end pending return warm-up on each successful
+bundle lifetime, also with the same content id. Old inputs cannot warm a new
+lifetime. Keep its idle, admission, and replay policy.
+
+Agent design call, 2026-11-21: end early work from serialized head failure
+paths. A failed same-id candidate can retain the published state's lease,
+so final release alone cannot end that work.
+
+The bounded H and C investigations stopped on 2026-11-21 without a production
+candidate. Their local diagnostics do not support a safe 30 ms saving.
+D remains the measured prototype. The selected parts do not establish the
+250 ms combined target on two sidecars.
 
 ### 1. Bound early preparation without stale publication
 
@@ -138,8 +156,8 @@ Depends on: none
 - [x] Finish the local measurement ranking and retain useful timing spans.
 - [x] Run the fresh second-pass options check and record its corrected report.
 - [x] Record the performance orchestrator's protocol choice and its date.
-- [ ] Write the accepted scheduling and memory requirements in a focused protocol page.
-- [ ] Update the area READMEs for new entry points and diagnostic spans.
+- [x] Write the accepted scheduling and memory requirements in a focused protocol page.
+- [x] Link the area README to the accepted scheduling protocol.
 
 Evidence: `.context/edit-critical-path/baseline-report.md`,
 `postcss-candidate.md`, and `options-check.md`.
@@ -148,17 +166,20 @@ Evidence: `.context/edit-critical-path/baseline-report.md`,
 
 Depends on: 1
 
-- [ ] Write failing pool tests through the existing public request and maintenance boundaries.
-- [ ] Prove restore and describe can run before the first render, after their required inputs arrive.
-- [ ] Prove older loaded head state is disposed before early loading and remains recoverable from live recipes.
-- [ ] Prove a newer attempt, failed compile, final release, and stop end pending work.
-- [ ] Prove ordinary queue and admission work prevent another early call.
-- [ ] Implement the accepted pool policy without a new worker or wire field.
-- [ ] Add counters for starts, aborts, first-render adoption, and published-state wait count and summed milliseconds.
-- [ ] Check the startup and full-capture paths retain their schedule.
-- [ ] Run each new asynchronous test ten times without changing the test.
-- [ ] Run targeted cancellation and stale-publication checks. The parent explicitly defers the full gate until acceptance.
-- [ ] Commit and push the prototype. Send its SHA to the performance orchestrator.
+- [x] Write failing pool tests through the existing public request and maintenance boundaries.
+- [x] Prove restore and describe can run before the first render, after their required inputs arrive.
+- [x] Prove older loaded head state is disposed before early loading and remains recoverable from live recipes.
+- [x] Prove a newer attempt, failed compile, final release, and stop end pending work.
+- [x] Prove ordinary queue and admission work prevent another early call.
+- [x] Implement the accepted pool policy without a new worker or wire field.
+- [x] Add counters for starts, aborts, first-render adoption, and published-state wait count and summed milliseconds.
+- [x] Check the startup and full-capture paths retain their schedule.
+- [x] Run each new asynchronous test ten times without changing the test.
+- [x] Run targeted cancellation and stale-publication checks. The parent explicitly defers the full gate until acceptance.
+- [x] Commit and push the prototype. Send its SHA to the performance orchestrator.
+
+Evidence: `.context/edit-critical-path/prototype/` holds the red tests,
+targeted checks, stability counts, test costs, and main integration audit.
 
 ## Milestone 3: Official prototype acceptance
 
@@ -176,6 +197,7 @@ logs, byte manifests, and the official measurement report.
 Depends on: 3
 
 - [ ] Complete production fixes and run their targeted checks.
+- [ ] Close or update the head-preload and older-generation-disposal follow-ups for the accepted scope.
 - [ ] Run the repository suite and the complete gate.
 - [ ] Compare local basic and full large React edit timelines with the current main control.
 - [ ] Prove every published file is byte-identical on all four catalogues.

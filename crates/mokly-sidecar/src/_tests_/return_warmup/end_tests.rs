@@ -6,10 +6,27 @@ use std::thread;
 use crate::error::Error;
 use crate::pool::SidecarPool;
 
-use super::calls::{call, css, prepared, render, replayed, views};
+use super::calls::{bundle, call, css, prepared, render, replayed, views};
 use super::support::{Event, Gate, Harness};
 
 type Action = fn(&Harness);
+
+#[test]
+fn a_successful_same_id_bundle_ends_a_warm_up_of_the_previous_epoch() {
+    let harness = Harness::plain(1);
+    harness.head("same", &[]);
+    harness.pool.schedule_head_return();
+    harness.pool.request(bundle("same")).unwrap();
+    let before = harness.events.read();
+    let worked = harness.pool.maintain_head_return().unwrap();
+    let after = harness.events.read();
+    harness.pool.abort().unwrap();
+    assert!(
+        !worked,
+        "the old warm-up cannot install maps for a new lifetime"
+    );
+    assert_eq!(after, before);
+}
 
 const CANCEL: Action = |harness| harness.pool.cancel_requests().unwrap();
 const SHUTDOWN: Action = |harness| harness.pool.shutdown().unwrap();

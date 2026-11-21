@@ -38,6 +38,7 @@ pub(super) struct Affinity {
 }
 
 pub(super) struct Waiting {
+    pub(super) generation: Option<String>,
     pub(super) context: Option<String>,
     pub(super) root: PathBuf,
     pub(super) claim: Option<u64>,
@@ -51,6 +52,7 @@ pub(super) struct State {
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) claims: BTreeMap<u64, usize>,
+    pub(super) running_claims: BTreeMap<u64, usize>,
     pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
     /// Unused indexes have no reservation and never enter ordinary available selection.
@@ -65,6 +67,7 @@ pub(super) struct State {
     pub(super) recipes: Recipes,
     pub(super) leases: BTreeMap<String, BTreeSet<u64>>,
     pub(super) maps: BTreeMap<String, CssModules>,
+    pub(super) map_epochs: BTreeMap<String, u64>,
     pub(super) bindings: BTreeMap<String, Arc<Bindings>>,
     pub(super) contexts: BTreeSet<String>,
     pub(super) affinity: BTreeMap<String, Affinity>,

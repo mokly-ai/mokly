@@ -53,8 +53,10 @@ head generation also warms up. Rejected: a warm-up only of the processes that a
 return pass starts, because a warm restart serves head documents from the store
 and leaves the existing processes cold for the first edit.
 
-Each warm-up call is a quiet call: its request has `quiet: true`, and every
-other request omits the field. From the start of a quiet call until its reply,
+Each warm-up call is a quiet call: its request has `quiet: true`. Each early
+call of [early edit preparation](./mokly-sidecar-edit-preparation.md#output)
+is a quiet call too, and every other request omits the field. From the start
+of a quiet call until its reply,
 the sidecar drops each console, standard output, and standard error write of
 the code that the call runs. Timing records of the call still appear. Two kinds
 of output stay visible: the report that Node writes when a warm-up call crashes
@@ -93,6 +95,8 @@ Decision: the warm-up runs only while the pool is idle. Rejected: a warm-up
 beside requests, because CPU work beside a bundle competes with the core and
 can cancel the gain. Rejected: a stop only when a request waits, because a call
 that Serve admitted could then run on another process beside the warm-up.
+[Early edit preparation](./mokly-sidecar-edit-preparation.md#admission) has
+its own admission rule.
 
 Decision: an interrupted warm-up continues later. Rejected: an end at the first
 request, because one request after the publication could then leave the
@@ -167,6 +171,8 @@ the newer generation, because the renders of the edit load it, and the warm-up
 would compete with them. Rejected: a warm-up on a process that holds another
 head generation, because an attempt that held two evaluated head generations on
 one process raised the peak memory demand by 8%.
+[Early edit preparation](./mokly-sidecar-edit-preparation.md) is a separate
+policy that loads the newer generation before those renders.
 
 Decision: a failed warm-up call stays silent. Rejected: a diagnostic, because
 the failure changes no result, and the request that needs the input reports a

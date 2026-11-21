@@ -10,7 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::error::Result;
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
-use crate::workers::{ClockMock, FactoryMock, Spawned};
+use crate::workers::{Clock, ClockMock, FactoryMock, Spawned};
 
 use super::calls::{bindings, bundle, css, maps, render};
 use super::process::process;
@@ -116,28 +116,36 @@ pub(super) struct Harness {
 impl Harness {
     /// A pool of `size` slots whose factory starts journaled processes on demand.
     pub(super) fn new(size: usize, hook: Hook) -> Self {
+        Self::clocked(
+            size,
+            hook,
+            Arc::new(
+                Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(100_u64))
+                    .no_verify_in_drop(),
+            ),
+        )
+    }
+
+    pub(super) fn clocked(size: usize, hook: Hook, clock: Arc<dyn Clock>) -> Self {
         let events = Arc::new(Journal::default());
         let journal = events.clone();
         let started = AtomicUsize::new(0);
-        let factory = Unimock::new((
-            FactoryMock::spawn
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, launch| {
-                    let id = started.fetch_add(1, Ordering::SeqCst);
-                    let root = launch.repository.to_string_lossy().into_owned();
-                    journal.emit(Event::Spawn(id, root));
-                    let process = process(id, &journal, hook.clone());
-                    Ok(Spawned {
-                        worker: Box::new(process.clone()),
-                        control: Arc::new(process),
-                    })
-                })),
-            ClockMock::now_ms.each_call(matching!()).returns(100_u64),
+        let factory = Unimock::new(FactoryMock::spawn.each_call(matching!(_)).answers_arc(
+            Arc::new(move |_, launch| {
+                let id = started.fetch_add(1, Ordering::SeqCst);
+                let root = launch.repository.to_string_lossy().into_owned();
+                journal.emit(Event::Spawn(id, root));
+                let process = process(id, &journal, hook.clone());
+                Ok(Spawned {
+                    worker: Box::new(process.clone()),
+                    control: Arc::new(process),
+                })
+            }),
         ))
         .no_verify_in_drop();
         let pool = Pool::new(
             Arc::new(factory.clone()),
-            Arc::new(factory.clone()),
+            clock,
             Launch {
                 capture_durability: false,
                 repository: "/head".into(),

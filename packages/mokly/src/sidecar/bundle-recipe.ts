@@ -89,136 +89,147 @@ export async function bundleRecipe(
       }
     }
   });
-  for (const file of params.storiesFiles.length ? previewCandidates : []) {
-    const absolute = path.resolve(params.sourceRoot, file);
-    metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
-      absolute,
-      physicalInputs,
-    );
-  }
-  for (const root of paths.dependencyRoots) {
-    const file = path.join(root, "react/package.json");
-    metadataInputs[paths.name(file)] = physicalInputs[file] =
-      await metadataDigest(file, physicalInputs);
-  }
   let reactVersion: string | null = null;
-  try {
-    const file = require.resolve("react/package.json");
-    const bytes = await fs.readFile(file);
-    reactVersion = JSON.parse(bytes.toString()).version;
-    metadataInputs[paths.name(file)] = physicalInputs[file] =
-      await metadataDigest(file, physicalInputs, bytes);
-  } catch (error) {
-    if (!(
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "MODULE_NOT_FOUND"
-    ))
-      throw error;
-  }
+  await measurements.run("sidecar.bundle.metadata", async () => {
+    for (const file of params.storiesFiles.length ? previewCandidates : []) {
+      const absolute = path.resolve(params.sourceRoot, file);
+      metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
+        absolute,
+        physicalInputs,
+      );
+    }
+    for (const root of paths.dependencyRoots) {
+      const file = path.join(root, "react/package.json");
+      metadataInputs[paths.name(file)] = physicalInputs[file] =
+        await metadataDigest(file, physicalInputs);
+    }
+    try {
+      const file = require.resolve("react/package.json");
+      const bytes = await fs.readFile(file);
+      reactVersion = JSON.parse(bytes.toString()).version;
+      metadataInputs[paths.name(file)] = physicalInputs[file] =
+        await metadataDigest(file, physicalInputs, bytes);
+    } catch (error) {
+      if (!(
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "MODULE_NOT_FOUND"
+      ))
+        throw error;
+    }
+  });
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
   const peers = require.snapshot();
   evidence?.peers(peers);
-  const reuseEvidence: ReuseEvidence = evidence
-    ? await evidence.finish(compiled.metafile!)
-    : (folderEvidence ?? {
-        complete: false,
-        durable: false,
-        inputs: {},
-      });
-  const toolchain = await toolchainIdentity();
-  if (!toolchain) {
-    reuseEvidence.complete = false;
-    delete reuseEvidence.uncaptured;
-  }
-  const reusable = reuseEvidence.complete;
-  if (!reusable) hash.update(JSON.stringify(runtimeKey));
-  hash.update(
-    JSON.stringify([
-      toolchain,
-      [...(evidence?.physical.identityInputs ?? [])].sort(([a], [b]) =>
-        a < b ? -1 : a > b ? 1 : 0,
-      ),
-      Object.entries(peers).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-    ]),
+  const reuseEvidence: ReuseEvidence = await measurements.run(
+    "sidecar.bundle.evidence",
+    async () =>
+      evidence
+        ? evidence.finish(compiled.metafile!)
+        : (folderEvidence ?? {
+            complete: false,
+            durable: false,
+            inputs: {},
+          }),
   );
-  hash.update(JSON.stringify(metadataInputs));
-  hash.update(
-    JSON.stringify([
-      params.sourceRoot,
-      paths.dependencyRoots,
-      params.entryFiles,
-      params.storiesFiles,
-      preview,
-      params.renderer,
-      params.configurationDirectory,
-      params.repositoryRoots,
-      resolution,
-      reactVersion,
-    ]),
+  const toolchain = await measurements.run(
+    "sidecar.bundle.toolchain",
+    toolchainIdentity,
   );
-  const compilation: CompiledGeneration = {
-    toolchain: toolchain ?? "",
-    ...(reuseEvidence.complete
-      ? {
-          metadataIdentity: createHash("sha256")
-            .update(
-              JSON.stringify(
-                [...(evidence?.physical.identityInputs ?? [])]
-                  .map(([file, value]): [string, string | null] => [
-                    path
-                      .relative(paths.sourceRoot, file)
-                      .split(path.sep)
-                      .join("/"),
-                    value,
-                  ])
-                  .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-              ),
-            )
-            .digest("hex"),
-        }
-      : {}),
-    reuseEvidence,
-    identity: hash.digest("hex"),
-    code: compiled.outputFiles![0]!.text,
-    runtimeKey,
-    dependencyRoots: paths.dependencyRoots,
-    cssModules: [...inputs.cssModules],
-    sources: Object.fromEntries(
-      [...inputPaths].map(([file, physical]) => [
-        file,
-        Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
+  return measurements.runSync("sidecar.bundle.recipe", () => {
+    if (!toolchain) {
+      reuseEvidence.complete = false;
+      delete reuseEvidence.uncaptured;
+    }
+    const reusable = reuseEvidence.complete;
+    if (!reusable) hash.update(JSON.stringify(runtimeKey));
+    hash.update(
+      JSON.stringify([
+        toolchain,
+        [...(evidence?.physical.identityInputs ?? [])].sort(([a], [b]) =>
+          a < b ? -1 : a > b ? 1 : 0,
+        ),
+        Object.entries(peers).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
       ]),
-    ),
-    peers,
-    unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
-    ...directories,
-    inputs: physicalInputs,
-    metadataInputs,
-  };
-  const generation = restore(params, compilation, graph);
-  const originalPathCount = plan?.paths.length ?? 0;
-  const namedPlan = evidence
-    ? evidence.candidates.attach(plan, reuseEvidence)
-    : plan;
-  let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
-  if (!retainedPlan && namedPlan?.candidates) {
-    namedPlan.paths.length = originalPathCount;
-    delete namedPlan.candidates;
-    retainedPlan = capturedPlan(namedPlan, reuseEvidence);
-  }
-  const result = bundleResult(generation, retainedPlan);
-  if (reusable && !compilation.reuseEvidence.complete) {
-    delete compilation.metadataIdentity;
-    compilation.identity = createHash("sha256")
-      .update(compilation.identity)
-      .update(runtimeKey)
-      .digest("hex");
-    generation.id = generationId(compilation.identity, params.evaluation);
-    result.generation = generation.id;
-  }
-  return { generation, result };
+    );
+    hash.update(JSON.stringify(metadataInputs));
+    hash.update(
+      JSON.stringify([
+        params.sourceRoot,
+        paths.dependencyRoots,
+        params.entryFiles,
+        params.storiesFiles,
+        preview,
+        params.renderer,
+        params.configurationDirectory,
+        params.repositoryRoots,
+        resolution,
+        reactVersion,
+      ]),
+    );
+    const compilation: CompiledGeneration = {
+      toolchain: toolchain ?? "",
+      ...(reuseEvidence.complete
+        ? {
+            metadataIdentity: createHash("sha256")
+              .update(
+                JSON.stringify(
+                  [...(evidence?.physical.identityInputs ?? [])]
+                    .map(([file, value]): [string, string | null] => [
+                      path
+                        .relative(paths.sourceRoot, file)
+                        .split(path.sep)
+                        .join("/"),
+                      value,
+                    ])
+                    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+                ),
+              )
+              .digest("hex"),
+          }
+        : {}),
+      reuseEvidence,
+      identity: hash.digest("hex"),
+      code: compiled.outputFiles![0]!.text,
+      runtimeKey,
+      dependencyRoots: paths.dependencyRoots,
+      cssModules: [...inputs.cssModules],
+      sources: Object.fromEntries(
+        [...inputPaths].map(([file, physical]) => [
+          file,
+          Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
+        ]),
+      ),
+      peers,
+      unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
+      ...directories,
+      inputs: physicalInputs,
+      metadataInputs,
+    };
+    const generation = restore(params, compilation, graph);
+    const originalPathCount = plan?.paths.length ?? 0;
+    const namedPlan = evidence
+      ? evidence.candidates.attach(plan, reuseEvidence)
+      : plan;
+    let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+    if (!retainedPlan && namedPlan?.candidates) {
+      namedPlan.paths.length = originalPathCount;
+      delete namedPlan.candidates;
+      retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+    }
+    const result = bundleResult(generation, retainedPlan);
+    if (reusable && !compilation.reuseEvidence.complete) {
+      delete compilation.metadataIdentity;
+      compilation.identity = createHash("sha256")
+        .update(compilation.identity)
+        .update(runtimeKey)
+        .digest("hex");
+      generation.id = generationId(compilation.identity, params.evaluation);
+      result.generation = generation.id;
+    }
+    return { generation, result };
+  });
 }

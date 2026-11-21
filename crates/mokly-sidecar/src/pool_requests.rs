@@ -15,6 +15,7 @@ use crate::wire::{MethodResult, Request};
 impl Pool {
     pub(super) fn execute(
         &self,
+        index: usize,
         slot: &mut Slot,
         call: &Call,
         deadline: u64,
@@ -50,6 +51,10 @@ impl Pool {
             self.lock().contexts.insert(params.context.clone());
             slot.contexts.insert(params.context.clone());
         }
+        if is_render(call) {
+            self.adopt_early(index, slot, call);
+        }
+        self.start_visible_description(index, slot, call);
         let mut result = slot.worker.request(
             &Request {
                 id: 1,
@@ -69,6 +74,7 @@ impl Pool {
                     let epoch = state.next_epoch;
                     result.epoch = epoch;
                     state.epochs.insert(result.generation.clone(), epoch);
+                    state.map_epochs.remove(&result.generation);
                     state
                         .modules
                         .insert(result.generation.clone(), result.modules.clone());
@@ -97,6 +103,9 @@ impl Pool {
                 }
                 (Call::CssModules(maps), _) => {
                     state.maps.insert(maps.generation.clone(), maps.clone());
+                    if let Some(epoch) = slot.generations.get(&maps.generation) {
+                        state.map_epochs.insert(maps.generation.clone(), *epoch);
+                    }
                     slot.maps.insert(maps.generation.clone());
                 }
                 (Call::Bindings(bindings), _) => {
@@ -126,11 +135,21 @@ impl Pool {
                     state.leases.remove(&generation.generation);
                     state.epochs.remove(&generation.generation);
                     state.maps.remove(&generation.generation);
+                    state.map_epochs.remove(&generation.generation);
                     state.bindings.remove(&generation.generation);
                     slot.generations.remove(&generation.generation);
                     slot.maps.remove(&generation.generation);
                     slot.described.remove(&generation.generation);
                     slot.bindings.remove(&generation.generation);
+                    if state
+                        .head
+                        .early
+                        .marker
+                        .as_ref()
+                        .is_some_and(|marker| marker.generation == generation.generation)
+                    {
+                        state.head.early.abort();
+                    }
                 }
                 (Call::Describe(generation), _) => {
                     slot.described.insert(generation.generation.clone());
@@ -146,6 +165,7 @@ impl Pool {
                 slot.last_compilation = Some(bundle.epoch);
             }
         }
+        self.complete_visible_description(index, slot, call);
         Ok(result)
     }
     pub(super) fn cleanup(&self, slot: &mut Slot) -> Result<()> {
@@ -165,4 +185,14 @@ pub(super) fn generation(call: &Call) -> Option<&str> {
         Call::CssModules(value) => Some(&value.generation),
         _ => None,
     }
+}
+
+pub(super) fn is_render(call: &Call) -> bool {
+    matches!(
+        call,
+        Call::RenderScreen(_)
+            | Call::RenderComponent(_)
+            | Call::RenderStory(_)
+            | Call::RenderPage(_)
+    )
 }

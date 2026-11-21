@@ -47,6 +47,9 @@ impl Visit for Fields {
     fn record_u64(&mut self, field: &Field, value: u64) {
         match field.name() {
             "sequence"
+            | "started"
+            | "aborted"
+            | "adopted"
             | "queued"
             | "active"
             | "hits"
@@ -74,6 +77,8 @@ impl Visit for Fields {
                 self.counts.insert(name.into(), json!(value));
             }
             "worker"
+            | "published_waits"
+            | "published_wait_ms"
             | "tier"
             | "input_paths"
             | "read_bytes"
@@ -91,6 +96,8 @@ impl Visit for Fields {
             | "admitted_views"
             | "recording_identity_reads" => {
                 let name = match field.name() {
+                    "published_waits" => "publishedWaits",
+                    "published_wait_ms" => "publishedWaitMs",
                     "input_paths" => "inputPaths",
                     "read_bytes" => "readBytes",
                     "retained_bytes" => "retainedBytes",

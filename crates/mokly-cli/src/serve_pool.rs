@@ -111,6 +111,18 @@ struct ScheduledPool {
 }
 
 impl SidecarPool for ScheduledPool {
+    fn begin_head_attempt(&self, context: &str) {
+        self.inner.begin_head_attempt(context);
+    }
+    fn end_head_attempt(&self) {
+        self.inner.end_head_attempt();
+    }
+    fn head_published(&self) {
+        self.inner.head_published();
+    }
+    fn maintain_head_preparation(&self) -> Result<bool> {
+        self.inner.maintain_head_preparation()
+    }
     fn record_served_render(&self, source_root: &Path, call: Call) {
         self.inner.record_served_render(source_root, call);
     }

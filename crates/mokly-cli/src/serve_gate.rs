@@ -77,6 +77,7 @@ impl Gate {
         activity.map(|activity| activity.enter())
     }
 
+    #[tracing::instrument(name = "serve.sidecar.admit", skip_all, err)]
     pub(super) fn acquire(
         self: &Arc<Self>,
         base: Option<&dyn ChangeCancellation>,
@@ -137,6 +138,10 @@ impl Gate {
 }
 
 impl ReturnAdmission for Gate {
+    fn early_ready(&self) -> bool {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        !state.closed && state.waiting == 0
+    }
     fn activity(&self) -> Option<Box<dyn WriteLease>> {
         self.activity()
     }

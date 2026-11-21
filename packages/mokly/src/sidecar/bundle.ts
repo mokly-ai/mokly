@@ -253,13 +253,17 @@ async function bundleAttempt(
       if (relative) return retryPlanned();
       throw error;
     }
+    const { metafile } = compiled;
     if (
       relative &&
-      !(await relative.verify(compiled.metafile, paths).catch(() => false))
+      !(await measurements
+        .run("sidecar.bundle.verify", () =>
+          relative.verify(metafile, paths, measurements),
+        )
+        .catch(() => false))
     )
       return retryPlanned();
     if (resolution.mode === "native") {
-      const { metafile } = compiled;
       const plan = await measurements
         .run("sidecar.bundle.classify", () =>
           planNative(metafile, paths, nativeRelatives, evidence?.candidates),

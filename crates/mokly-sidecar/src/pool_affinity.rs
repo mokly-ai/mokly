@@ -5,6 +5,7 @@ use std::path::Path;
 
 use crate::methods::Call;
 use crate::pool_cleanup::stale_generation;
+use crate::pool_early_wait;
 use crate::pool_preparation::Prerequisites;
 use crate::pool_requests::generation;
 use crate::pool_state::{Affinity, Slot, State};
@@ -39,6 +40,7 @@ fn matching(state: &State, call: &Call, root: &Path, outside_pass: bool) -> Opti
         .iter()
         .enumerate()
         .filter(|(_, index)| !outside_pass || !state.head.candidates.contains_key(*index))
+        .filter(|(_, index)| pool_early_wait::allowed(state, **index, root, generation(call)))
         .filter_map(|(position, index)| {
             state.slots[*index]
                 .as_ref()
@@ -80,10 +82,10 @@ pub(super) fn acquire(
             .then(|| matching(state, call, root, true))
             .flatten();
         let matching = matching(state, call, root, false);
-        let unspawned = state
-            .available
-            .iter()
-            .position(|index| state.slots[*index].is_none());
+        let unspawned = state.available.iter().position(|index| {
+            state.slots[*index].is_none()
+                && pool_early_wait::allowed(state, *index, root, generation(call))
+        });
         if let Some(position) = reused.or(matching).or(unspawned) {
             state.available.remove(position)?
         } else if state.allocated() < limit {
@@ -95,8 +97,15 @@ pub(super) fn acquire(
             let position = state
                 .available
                 .iter()
-                .position(|index| Some(*index) != protected)
-                .unwrap_or(0);
+                .position(|index| {
+                    Some(*index) != protected
+                        && pool_early_wait::allowed(state, *index, root, generation(call))
+                })
+                .or_else(|| {
+                    state.available.iter().position(|index| {
+                        pool_early_wait::allowed(state, *index, root, generation(call))
+                    })
+                })?;
             state.available.remove(position)?
         }
     };
@@ -119,6 +128,24 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
     } else {
         !state.available.is_empty() || state.allocated() < limit
     }
+}
+
+/// A generation exclusion can leave an otherwise idle slot unavailable to this request.
+pub(super) fn runnable_generation(
+    state: &State,
+    context: Option<&str>,
+    root: &Path,
+    generation: Option<&str>,
+    limit: usize,
+) -> bool {
+    if context.is_some() {
+        return runnable(state, context, limit);
+    }
+    state
+        .available
+        .iter()
+        .any(|index| pool_early_wait::allowed(state, *index, root, generation))
+        || state.allocated() < limit
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 import type { Request } from "../generated/sidecar/Request.js";
 
-import type { BundlePhase, Measurements } from "./measurements.js";
+import type { MeasurementPhase, Measurements } from "./measurements.js";
 
 interface Clock {
   now(): number;
@@ -9,6 +9,9 @@ interface Clock {
 const stages: Record<string, { stage: string; kind?: string }> = {
   bundle: { stage: "sidecar.bundle" },
   describe: { stage: "sidecar.describe" },
+  restoreGeneration: { stage: "sidecar.restore" },
+  cssModules: { stage: "sidecar.css-modules" },
+  bindings: { stage: "sidecar.bindings" },
   processCss: { stage: "sidecar.process-css" },
   renderScreen: { stage: "sidecar.render", kind: "screen" },
   renderComponent: { stage: "sidecar.render", kind: "component" },
@@ -46,7 +49,7 @@ export class Timings implements Measurements {
     return fields ? this.start(fields, received) : () => {};
   }
 
-  async run<T>(stage: BundlePhase, work: () => Promise<T>): Promise<T> {
+  async run<T>(stage: MeasurementPhase, work: () => Promise<T>): Promise<T> {
     const finish = this.start({ stage }, this.received());
     try {
       const result = await work();
@@ -58,7 +61,7 @@ export class Timings implements Measurements {
     }
   }
 
-  runSync<T>(stage: BundlePhase, work: () => T): T {
+  runSync<T>(stage: MeasurementPhase, work: () => T): T {
     const finish = this.start({ stage }, this.received());
     try {
       const result = work();

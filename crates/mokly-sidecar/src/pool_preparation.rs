@@ -133,6 +133,7 @@ impl Pool {
         Ok(complete)
     }
 
+    #[tracing::instrument(name = "sidecar.prepare", skip_all, err)]
     pub(super) fn prepare(
         &self,
         slot: &mut Slot,

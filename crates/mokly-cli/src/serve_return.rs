@@ -17,6 +17,10 @@ pub(super) trait ReturnAdmission: Send + Sync {
     }
     /// Check admission without retaining its lock during process work.
     fn ready(&self) -> bool;
+    /// Early calls yield to every admission wait, including head calls.
+    fn early_ready(&self) -> bool {
+        false
+    }
     /// Report a background failure through the existing sidecar output owner.
     fn failed(&self, error: &Error);
 }
@@ -84,7 +88,19 @@ pub(super) fn start(
                     let _activity = admission
                         .upgrade()
                         .and_then(|admission| admission.activity());
-                    match pool.maintain_head_return() {
+                    let early = admission
+                        .upgrade()
+                        .is_some_and(|admission| admission.early_ready());
+                    let outcome = if early {
+                        match pool.maintain_head_preparation() {
+                            Ok(true) => continue,
+                            Ok(false) => pool.maintain_head_return(),
+                            Err(error) => Err(error),
+                        }
+                    } else {
+                        pool.maintain_head_return()
+                    };
+                    match outcome {
                         Ok(false) => break,
                         Ok(true) => {}
                         Err(error) => {

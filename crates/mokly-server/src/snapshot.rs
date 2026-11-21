@@ -137,6 +137,7 @@ impl SnapshotFactory for Projector {
 }
 
 impl Projector {
+    #[tracing::instrument(name = "serve.project", skip_all, err)]
     fn project(
         &self,
         generation: Arc<dyn RenderGeneration>,
@@ -153,7 +154,8 @@ impl Projector {
             changes_status: ChangesStatus::Pending,
             live_generation: Some(live_generation.clone()),
         };
-        let mut index = projection::index(&generation.catalogue().model, &keys, &state);
+        let mut index = tracing::info_span!("index.project")
+            .in_scope(|| projection::index(&generation.catalogue().model, &keys, &state));
         let mut assets = input.assets;
         let mut files = BTreeMap::new();
         let document_keys = generation
@@ -161,7 +163,8 @@ impl Projector {
             .iter()
             .map(|(route, plan)| (route.clone(), plan.key.0.clone()))
             .collect();
-        let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
+        let mut details = tracing::info_span!("detail.project")
+            .in_scope(|| projection::pending_details(&generation.catalogue().model, &index, &keys));
         let completed = replacement::reuse_usage(&mut details, &index, &document_keys, previous);
         let mut recent_details = previous
             .map(|snapshot| snapshot.recent_details.clone())

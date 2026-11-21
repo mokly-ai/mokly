@@ -1,6 +1,7 @@
 //! Return warm-up scenarios use journaled process mocks and explicit gates, never elapsed time.
 
 mod calls;
+mod early_preparation;
 mod end_tests;
 mod failure_tests;
 mod process;

@@ -17,6 +17,7 @@ use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_pool::{PoolScheduling, ServePool};
+use crate::serve_return::ReturnAdmission;
 
 use super::serve_pool_support::{css, dispatch};
 
@@ -124,6 +125,10 @@ async fn priority_after_a_busy_call(base_overlap: bool) {
         }
     });
     queued(scheduler.clone(), 2).await;
+    assert!(
+        !scheduler.gate.early_ready(),
+        "a head request waiting for admission stops early work"
+    );
     let http = tokio::spawn({
         let work = work.clone();
         async move { work.generated(documents, "http".into()).await }
@@ -137,6 +142,7 @@ async fn priority_after_a_busy_call(base_overlap: bool) {
     busy.join().unwrap();
     background.await.unwrap().unwrap();
     assert!(http.await.unwrap().unwrap().is_none());
+    assert!(scheduler.gate.early_ready());
     work.stop().await;
     assert_eq!([first, second], [2, 1]);
     assert_eq!(

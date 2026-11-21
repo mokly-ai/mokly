@@ -1,15 +1,23 @@
 import { parse } from "@babel/parser";
 
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
+
 /** Module namespace keys are sorted by JavaScript; source order needs the AST. */
 export function orderedExports(
   source: string,
   values: Record<string, unknown>,
   module: string,
+  measurements: Measurements = unmeasured,
 ): [string, unknown][] {
-  const ast = parse(source, {
-    sourceType: "unambiguous",
-    plugins: /\.[cm]?ts$/.test(module) ? ["typescript"] : ["typescript", "jsx"],
-  });
+  const ast = measurements.runSync("sidecar.describe.parse-exports", () =>
+    parse(source, {
+      sourceType: "unambiguous",
+      plugins: /\.[cm]?ts$/.test(module)
+        ? ["typescript"]
+        : ["typescript", "jsx"],
+    }),
+  );
   const names: string[] = [];
   for (const node of ast.program.body) {
     if (node.type === "ExportDefaultDeclaration") names.push("default");

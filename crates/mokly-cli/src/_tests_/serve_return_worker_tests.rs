@@ -42,3 +42,43 @@ fn waiting_base_admission_defers_maintenance_without_retaining_the_pool() {
     drop(pool);
     assert!(weak.upgrade().is_none());
 }
+
+#[test]
+fn early_maintenance_rechecks_serve_admission_before_each_call() {
+    let allowed = Arc::new(AtomicBool::new(true));
+    let ready = allowed.clone();
+    let admission: Arc<dyn ReturnAdmission> = Arc::new(Unimock::new((
+        ReturnAdmissionMock::ready
+            .each_call(matching!())
+            .returns(true),
+        ReturnAdmissionMock::early_ready
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| ready.load(Ordering::SeqCst)))
+            .at_least_times(0),
+    )));
+    let calls = Arc::new(AtomicUsize::new(0));
+    let counted = calls.clone();
+    let block = allowed.clone();
+    let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(
+        PoolMock::maintain_head_preparation
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                counted.fetch_add(1, Ordering::SeqCst);
+                block.store(false, Ordering::SeqCst);
+                Ok(true)
+            }))
+            .at_least_times(0),
+    ));
+    let worker = start(&pool, Arc::downgrade(&admission));
+    worker.notify();
+    worker.synchronize();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        1,
+        "the second step waits for admission"
+    );
+    allowed.store(true, Ordering::SeqCst);
+    worker.notify();
+    worker.synchronize();
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+}

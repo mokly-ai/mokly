@@ -46,6 +46,9 @@ pub(crate) fn describe(
     files: &[SourceFile],
 ) -> Result<(JavaScriptGeneration, Definitions)> {
     let side = runtime.side(config);
+    if runtime.base.is_none() && runtime.bundle_capture == BundleCapture::ServeEdit {
+        runtime.pool.begin_head_attempt(&side.context);
+    }
     let mut params = bundle_inputs::params(config, files, &side);
     let cache_key =
         bundle_inputs::cache_key(config, &params, &side, runtime.dependency_tree.as_ref())?;

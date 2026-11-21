@@ -4,6 +4,8 @@ import type { Metafile } from "esbuild";
 
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 import { MetadataProof, metadataRuntime } from "./metadata-proof.js";
 import type { ModulePaths } from "./module-paths.js";
 import { classifyNativeTarget } from "./native-plan.js";
@@ -72,60 +74,83 @@ export class PlannedRelative {
   }
 
   /** Prove skipped edges before recording their full-path observations. */
-  async verify(metafile: Metafile, paths: ModulePaths): Promise<boolean> {
+  async verify(
+    metafile: Metafile,
+    paths: ModulePaths,
+    measurements: Measurements = unmeasured,
+  ): Promise<boolean> {
     const observed: Array<{ name: string; directory: string; file: string }> =
       [];
     const targets = new Map<string, ReturnType<typeof classifyNativeTarget>>();
     const directories = new Set<string>();
-    for (const [importer, input] of Object.entries(metafile.inputs)) {
-      if (!path.isAbsolute(importer)) continue;
-      const directory = path.dirname(importer);
-      for (const edge of input.imports) {
-        if (edge.external && this.skipped.has(edge.path)) return false;
-        if (
-          edge.external &&
-          relative(edge.path) &&
-          (edge.kind === "require-resolve" || edge.kind === "require-call") &&
-          !this.handled.has(importCallbackKey(importer, edge.path, edge.kind))
-        )
-          return false;
-        if (edge.external || !path.isAbsolute(edge.path)) continue;
-        if (edge.original === undefined) return false;
-        if (!relative(edge.original)) continue;
-        const key = importCallbackKey(importer, edge.original, edge.kind);
-        if (this.handled.has(key)) continue;
-        if (edge.kind === "require-resolve") return false;
-        const planned = this.plan.get(importer, edge.original, edge.kind);
-        if (planned && this.plan.plan.paths[planned[3]] !== edge.path)
-          return false;
-        if (!planned || !this.skipped.has(edge.original)) {
-          let target = targets.get(edge.path);
-          if (!target) {
-            target = classifyNativeTarget(paths, this.scope, edge.path);
-            targets.set(edge.path, target);
+    const proved = await measurements.run(
+      "sidecar.bundle.verify.classify",
+      async () => {
+        for (const [importer, input] of Object.entries(metafile.inputs)) {
+          if (!path.isAbsolute(importer)) continue;
+          const directory = path.dirname(importer);
+          for (const edge of input.imports) {
+            if (edge.external && this.skipped.has(edge.path)) return false;
+            if (
+              edge.external &&
+              relative(edge.path) &&
+              (edge.kind === "require-resolve" ||
+                edge.kind === "require-call") &&
+              !this.handled.has(
+                importCallbackKey(importer, edge.path, edge.kind),
+              )
+            )
+              return false;
+            if (edge.external || !path.isAbsolute(edge.path)) continue;
+            if (edge.original === undefined) return false;
+            if (!relative(edge.original)) continue;
+            const key = importCallbackKey(importer, edge.original, edge.kind);
+            if (this.handled.has(key)) continue;
+            if (edge.kind === "require-resolve") return false;
+            const planned = this.plan.get(importer, edge.original, edge.kind);
+            if (planned && this.plan.plan.paths[planned[3]] !== edge.path)
+              return false;
+            if (!planned || !this.skipped.has(edge.original)) {
+              let target = targets.get(edge.path);
+              if (!target) {
+                target = classifyNativeTarget(paths, this.scope, edge.path);
+                targets.set(edge.path, target);
+              }
+              const resolved = await target;
+              if (
+                !resolved ||
+                resolved.distinct ||
+                (planned && resolved.sideEffects !== planned[4]) ||
+                (paths.settings.mainFields.length === 0 &&
+                  edge.kind !== "require-call" &&
+                  (await this.scope.moduleFallback(edge.path)))
+              )
+                return false;
+            }
+            observed.push({ name: edge.original, directory, file: edge.path });
+            directories.add(path.dirname(edge.path));
           }
-          const resolved = await target;
-          if (
-            !resolved ||
-            resolved.distinct ||
-            (planned && resolved.sideEffects !== planned[4]) ||
-            (paths.settings.mainFields.length === 0 &&
-              edge.kind !== "require-call" &&
-              (await this.scope.moduleFallback(edge.path)))
-          )
-            return false;
         }
-        observed.push({ name: edge.original, directory, file: edge.path });
-        directories.add(path.dirname(edge.path));
+        return true;
+      },
+    );
+    if (!proved) return false;
+    await measurements.run("sidecar.bundle.verify.metadata", async () => {
+      for (const directory of directories)
+        this.metadata.use(await this.scope.metadata(directory));
+    });
+    if (
+      !measurements.runSync("sidecar.bundle.verify.current", () =>
+        this.metadata.current(),
+      )
+    )
+      return false;
+    await measurements.run("sidecar.bundle.verify.observe", async () => {
+      for (const { name, directory, file } of observed) {
+        paths.observe(file);
+        await paths.dependencyUsage.resolved(name, directory, file);
       }
-    }
-    for (const directory of directories)
-      this.metadata.use(await this.scope.metadata(directory));
-    if (!this.metadata.current()) return false;
-    for (const { name, directory, file } of observed) {
-      paths.observe(file);
-      await paths.dependencyUsage.resolved(name, directory, file);
-    }
+    });
     return true;
   }
 }

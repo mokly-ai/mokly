@@ -39,6 +39,7 @@ impl Pool {
         if current.renders < RENDER_LIMIT && pressure.is_none() {
             return;
         }
+        self.discard_early_process(index);
         let stopped = {
             let mut state = self.lock();
             state.replacement_reasons.insert(index, Reason::Recycle);

@@ -62,3 +62,29 @@ No stop is emitted when startup created no process. Command shutdown and
 cancellation are outside these replacement stages. The stages and reasons are
 diagnostic details within the timing record version of the
 [format inventory](./mokly-format-versions.md#version-inventory).
+
+## Early Preparation Counts
+
+The core writes `sidecar.early-preparation` records with `event: "counts"`.
+Each record carries deltas, so the sum of the records of a session gives its
+totals. A missing key adds zero. Each count belongs to one
+[early edit preparation](./mokly-sidecar-edit-preparation.md): one prepared
+lifetime on one selected process.
+
+- `started` adds one when a preparation sends its first call, including an
+  older-generation disposal. A pause and a resume add nothing.
+- `adopted` adds one when the first render request of the prepared lifetime
+  runs on its process after the preparation is complete. A failed render
+  counts. A publication alone does not count.
+- `aborted` adds one when a started preparation can no longer be adopted.
+  The publication of its generation aborts it only while it is incomplete. A
+  later head bundle, a failed head bundle, the final release, a disposal, a
+  replacement of the process, a failed early call, or a pool stop aborts it
+  before its first render, also when it is complete.
+- `publishedWaits` adds one for each request that waits under the
+  [older generation rule](./mokly-sidecar-edit-preparation.md#requests-of-an-older-generation).
+- `publishedWaitMs` adds the time that this rule holds such a request, in
+  milliseconds. Other queue time does not count.
+
+So `started` equals `adopted` plus `aborted` plus the preparations that are
+still open. After the pool stops, no preparation stays open.

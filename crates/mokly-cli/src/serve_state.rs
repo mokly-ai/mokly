@@ -12,6 +12,7 @@ use mokly_server::backend::GraphDocuments;
 use mokly_server::error::{Result, ServerError};
 use mokly_server::public_read::ConfinedReader;
 use mokly_server::snapshot::{Snapshot, SnapshotFactory, SnapshotInput};
+use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::serve_changes::ChangeSources;
@@ -19,6 +20,10 @@ use crate::serve_warnings::AttemptWarnings;
 
 #[cfg_attr(test, unimock::unimock(api = ServeStateFactoryMock))]
 pub(super) trait ServeStateFactory: Send + Sync {
+    /// End early preparation after the state writer adopted its snapshot.
+    fn published(&self) {}
+    /// End early work when the serialized head candidate fails.
+    fn discarded(&self) {}
     fn create(
         &self,
         prepared: &PreparedServe,
@@ -37,6 +42,7 @@ pub(super) trait ServeStateFactory: Send + Sync {
 }
 
 pub(super) struct NativeServeState {
+    pub(super) pool: Arc<dyn SidecarPool>,
     pub(super) changes: Arc<dyn ChangeSources>,
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) projector: Arc<dyn SnapshotFactory>,
@@ -45,6 +51,12 @@ pub(super) struct NativeServeState {
 }
 
 impl ServeStateFactory for NativeServeState {
+    fn published(&self) {
+        self.pool.head_published();
+    }
+    fn discarded(&self) {
+        self.pool.end_head_attempt();
+    }
     fn create(
         &self,
         prepared: &PreparedServe,
@@ -64,6 +76,7 @@ impl ServeStateFactory for NativeServeState {
     }
 }
 impl NativeServeState {
+    #[tracing::instrument(name = "serve.snapshot", skip_all, err)]
     fn project(
         &self,
         prepared: &PreparedServe,

@@ -6,6 +6,7 @@ use std::sync::{Arc, Weak};
 
 use crate::methods::Call;
 use crate::pool::{Pool, ReturnWake};
+use crate::pool_early_state::Early;
 use crate::pool_requests::generation;
 use crate::pool_state::Slot;
 use crate::pool_warmup_state::Warmups;
@@ -20,6 +21,7 @@ pub(super) struct WarmHead {
 
 #[derive(Default)]
 pub(super) struct Head {
+    pub(super) early: Early,
     pub(super) warm: Option<WarmHead>,
     pub(super) pass: u64,
     pub(super) candidates: BTreeMap<usize, u64>,
@@ -33,7 +35,7 @@ pub(super) struct Head {
 impl Head {
     /// The wake records work only; it never runs maintenance under the state lock.
     pub(super) fn notify(&self) {
-        if (!self.candidates.is_empty() || self.warmups.waiting())
+        if (!self.candidates.is_empty() || self.warmups.waiting() || self.early.waiting())
             && let Some(wake) = self.wake.as_ref().and_then(Weak::upgrade)
         {
             wake.notify();
@@ -60,6 +62,7 @@ impl Pool {
             (Call::Bundle(bundle), MethodResult::Bundle(result))
                 if Path::new(&bundle.params.source_root) == self.launch.repository =>
             {
+                state.head.warmups.pending.clear();
                 if state
                     .head
                     .warm

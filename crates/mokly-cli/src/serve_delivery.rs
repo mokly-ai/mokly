@@ -55,6 +55,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     };
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
     Ok(Arc::new(NativeServeState {
+        pool: input.services.pool.clone(),
         changes: Arc::new(ServeChanges {
             reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: Arc::default(),

@@ -15,6 +15,7 @@ impl Pool {
         if state.stopped || state.head.return_disabled {
             return;
         }
+        state.head.early.enabled = true;
         state.head.pass += 1;
         let pass = state.head.pass;
         state.head.candidates = state
@@ -149,6 +150,7 @@ impl Pool {
             state.head.return_disabled = true;
             state.head.candidates.clear();
             state.head.warmups.reset();
+            state.head.early.abort();
             if state.retired.len() == self.options.size.get() {
                 state.stopped = true;
                 state.recipes.clear();

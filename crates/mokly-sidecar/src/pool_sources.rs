@@ -30,6 +30,7 @@ impl Pool {
         if let (Some(current), Some(root)) = (slot.as_ref(), root)
             && root != current.source_root
         {
+            self.discard_early_process(index);
             if self.lock().stopped {
                 current.control.kill()?;
             } else {

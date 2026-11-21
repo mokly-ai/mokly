@@ -1,6 +1,7 @@
 //! Rebuild projection yields to serving and reuses a candidate after a revision race.
 
 use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
@@ -73,6 +74,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
     let serving_polled = Arc::new(Notify::new());
     let published = Arc::new(Notify::new());
     let release = Arc::new((Mutex::new(false), Condvar::new()));
+    let adopted = Arc::new(AtomicBool::new(false));
     let config = ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
@@ -142,16 +144,34 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
             .next_call(matching!((value) if value.index.revision == 3))
             .answers_arc(Arc::new({
                 let candidate = candidate.clone();
+                let adopted = adopted.clone();
                 move |_, value| {
+                    assert!(
+                        !adopted.load(Ordering::SeqCst),
+                        "a rejected revision must not end early preparation"
+                    );
                     assert!(Arc::ptr_eq(&candidate.generation, &value.generation));
                     true
+                }
+            })),
+        ServeStateFactoryMock::published
+            .some_call(matching!())
+            .answers_arc(Arc::new({
+                let adopted = adopted.clone();
+                move |_| {
+                    adopted.store(true, Ordering::SeqCst);
                 }
             })),
         RebuildReporterMock::completed
             .next_call(matching!(_, _))
             .answers_arc(Arc::new({
                 let published = published.clone();
+                let adopted = adopted.clone();
                 move |_, _, _| {
+                    assert!(
+                        adopted.load(Ordering::SeqCst),
+                        "early work ends only after successful head adoption"
+                    );
                     published.notify_one();
                 }
             })),

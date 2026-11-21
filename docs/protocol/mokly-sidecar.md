@@ -38,7 +38,7 @@ protection, including on the historical side.
 
 Frames are newline-delimited UTF-8 JSON, with at most 64 MiB of JSON bytes
 per frame, excluding its LF delimiter. A request has `id`, `method`, and
-`params`, and a [warm-up](./mokly-sidecar-return-warmup.md#warm-up-steps) call also has `quiet: true`; a method without parameters uses `{}`. A response repeats `id` with
+`params`, and a [quiet call](./mokly-sidecar-return-warmup.md#warm-up-steps) also has `quiet: true`; a method without parameters uses `{}`. A response repeats `id` with
 exactly one of `result` or `error`; a method without a return value uses
 `result: null`. An event has `event` and `params` and no `id`. Requests on one
 sidecar run in order; the pool spreads independent requests across sidecars. A request waiting for its affine slot does not block the first later request that can use another slot.
