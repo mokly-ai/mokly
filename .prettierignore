@@ -34,7 +34,6 @@ packages/app/public/folio/
 packages/app/dist/
 apps/site/.astro/
 apps/site/public/og/
-apps/site/public/stage/
 apps/worker/wrangler.json
 apps/worker/wrangler.test.json
 

@@ -1,0 +1,107 @@
+---
+/**
+ * The Claude chat docked in the home's Edit window: its head, the session's
+ * log, the composer, and Publish with Replay. The log ends with the turn
+ * that the Edit demo plays: the prompt with the PriceCard chip, Claude's
+ * edit of `pricing.mockup.tsx` with its diff, and its answer. The built page
+ * draws the finished session, with Publish ready. A depiction: hidden from
+ * assistive technology, and its controls are drawn, not buttons.
+ *
+ * The log and the diff are in `agent-chat.ts`. Each entry of the played
+ * turn carries `site-home-agent-step` and its step's modifier, which the
+ * demo's rules read. The rules are in `src/styles/home-modules.css` (the
+ * chat) and `src/styles/home-agent.css` (its messages and their demo).
+ */
+import Avatar from "../Avatar.astro";
+import Icon from "../Icon.astro";
+
+import {
+  CHAT_LOG,
+  type ChatStep,
+  DIFF_FILE,
+  DIFF_LINES,
+  diffCount,
+} from "./agent-chat.js";
+
+import "../../styles/home-modules.css";
+import "../../styles/home-agent.css";
+
+/** The classes of an entry that the Edit demo plays at `step`. */
+function stepClasses(step: ChatStep | undefined): string | undefined {
+  return step === undefined
+    ? undefined
+    : `site-home-agent-step site-home-agent-step--${step}`;
+}
+---
+
+<div aria-hidden="true" class="site-agent">
+  <div class="site-home-agent-head">
+    <Avatar person="claude" small />
+    <b>Claude</b>
+    <span class="site-home-agent-badge">Agent</span>
+  </div>
+  <div class="site-home-agent-log">
+    {CHAT_LOG.map((entry) =>
+      entry.kind === "note" ? (
+        <span class="site-home-agent-note">{entry.text}</span>
+      ) : entry.kind === "prompt" ? (
+        <span class:list={["site-agent-turn", stepClasses(entry.step)]}>
+          <span class="site-home-chip">
+            <Icon name="component" size={11} />
+            PriceCard
+          </span>
+          {entry.text}
+        </span>
+      ) : (
+        <span
+          class:list={[
+            "site-agent-turn site-agent-turn--reply",
+            stepClasses(entry.step),
+          ]}
+        >
+          <Avatar person="claude" small />
+          <span class="site-home-reply-body">
+            {entry.text.map((part) =>
+              typeof part === "string" ? part : <code>{part.code}</code>,
+            )}
+            {entry.diff && (
+              <span class="site-home-diff">
+                <span class="site-home-diff-head">
+                  {DIFF_FILE}
+                  <span>
+                    <span class="site-home-diff-add">+{diffCount("add")}</span>
+                    <span class="site-home-diff-del">−{diffCount("del")}</span>
+                  </span>
+                </span>
+                {DIFF_LINES.map((line) => (
+                  <span
+                    class={`site-home-diff-line site-home-diff-line--${line.kind}`}
+                  >
+                    {line.text}
+                  </span>
+                ))}
+              </span>
+            )}
+          </span>
+        </span>
+      ),
+    )}
+  </div>
+  <span class="site-agent-input">
+    <span class="site-home-agent-placeholder">
+      Click an element on the screen, then ask
+    </span>
+    <span class="site-agent-send">
+      <Icon name="send" size={17} />
+    </span>
+  </span>
+  <span class="site-home-agent-foot">
+    <span class="site-home-publish">
+      <Icon name="branch" size={15} />
+      Publish to feat/checkout-v2
+    </span>
+    <span class="site-home-replay">
+      <Icon name="replay" size={17} />
+    </span>
+  </span>
+</div>

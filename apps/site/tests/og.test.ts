@@ -52,7 +52,7 @@ test("every card closes with the home hero heading", () => {
   for (const [file, document] of cards())
     assert.match(
       document,
-      /<text [^>]*>Mockup your entire app\.<\/text><\/svg>$/,
+      /<text [^>]*>Design in code\.<\/text><\/svg>$/,
       file,
     );
 });

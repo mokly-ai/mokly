@@ -1,0 +1,27 @@
+---
+/**
+ * The card form of the depicted acme checkout, as the phone and the
+ * desktop payment steps draw it: the card number in focus, the expiry and
+ * the CVC, Save card for next time, and Pay $42.00.
+ *
+ * Use: `<AcmeCardForm />`, after `AcmeMethods`.
+ */
+import AcmeButton from "./AcmeButton.astro";
+import AcmeField from "./AcmeField.astro";
+import AcmeToggleRow from "./AcmeToggleRow.astro";
+---
+
+<AcmeField
+  icon="card"
+  label="Card number"
+  state="focus"
+  value="4242 4242 4242 4242"
+/>
+<div class="site-acme-pair">
+  <AcmeField label="Expiry" value="08 / 28" />
+  <AcmeField label="CVC" value="•••" />
+</div>
+<AcmeToggleRow label="Save card for next time" />
+<AcmeButton block class="site-acme-pay" icon="lock" size="large">
+  Pay $42.00
+</AcmeButton>

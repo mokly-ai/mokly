@@ -1,0 +1,248 @@
+/* The parts that the Review and Edit modules share: the detail of each
+   frame, then the depicted conversations, the comment thread of the Review
+   frame, pinned to the PriceCard, which Thread.astro draws, and the Claude
+   chat of the Edit frame, which AgentChat.astro draws; its messages are in
+   home-agent.css. Both modules load this sheet.
+
+   The class names and the rules match docs/mockups/styles/site/modules.css,
+   the detail rules of home-review.css and home-edit.css, and the chat rule
+   of home-responsive.css. The mockups pin a composition with
+   data-site-viewport; the site resolves the same switch at 768px. So each
+   base rule is the mobile composition, and the desktop values and the
+   desktop step follow under the 768px query, in the mockup's order. The
+   Edit window's own steps sit beside its rules in home-edit.css. */
+
+/* The detail: the Review frame's wash and, built on it, the Edit window.
+   The mockups' phone rule gives the bare detail a flex layout that their
+   desktop rule leaves unset; a mobile-first rule of the bare selector would
+   have to reset it, which the parity check reads as a difference from the
+   mockups. So these selectors name the frame, and home-review.css sets that
+   layout on the Review wash alone. */
+
+.site-module-detail > .site-detail {
+  background: color-mix(in srgb, var(--mk-color-surface) 50%, transparent);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  overflow: hidden;
+  position: relative;
+}
+
+.site-module-detail > .site-detail--split {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-large);
+  min-height: 0;
+}
+
+/* The comment thread */
+
+.site-comment {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-large);
+  font-size: 14px;
+  position: relative;
+  width: 318px;
+}
+
+.site-comment-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  height: 46px;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
+.site-home-thread-on {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mk-font-semibold);
+  gap: 7px;
+}
+
+.site-home-thread-on svg,
+.site-home-thread-where,
+.site-home-message-meta span,
+.site-home-thread-reply,
+.site-home-thread-sync,
+.site-home-agent-note,
+.site-home-agent-placeholder {
+  color: var(--mk-color-text-muted);
+}
+
+.site-home-thread-where,
+.site-home-agent-note {
+  font-family: var(--mk-font-mono);
+  font-size: 11.5px;
+}
+
+.site-home-thread-messages {
+  padding: 6px 14px 2px;
+}
+
+.site-home-message {
+  display: flex;
+  gap: 11px;
+  padding: 10px 0;
+}
+
+.site-home-message-meta {
+  align-items: baseline;
+  display: flex;
+  font-size: 13px;
+  gap: 7px;
+  line-height: 1.2;
+}
+
+.site-home-message-meta span {
+  font-size: 12px;
+}
+
+.site-home-message-meta .site-home-message-age {
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+}
+
+.site-comment .site-home-message-text {
+  font-size: 14.5px;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.site-home-thread-reply {
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: flex;
+  font-size: 13.5px;
+  height: 40px;
+  margin: 2px 14px 14px;
+  padding: 0 12px;
+}
+
+.site-home-thread-foot {
+  align-items: center;
+  background: var(--mk-color-surface-muted);
+  border-radius: 0 0 14px 14px;
+  border-top: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 12px 12px 12px 14px;
+}
+
+.site-home-thread-sync {
+  align-items: center;
+  display: inline-flex;
+  font-size: 12.5px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.site-comment-approve,
+.site-home-publish {
+  align-items: center;
+  background: var(--mk-color-signal-fill);
+  border-radius: 10px;
+  color: var(--mk-color-on-signal-fill);
+  display: inline-flex;
+  font-size: 13.5px;
+  font-weight: var(--mk-font-semibold);
+  gap: 6px;
+  height: 40px;
+  justify-content: center;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.site-comment-approve {
+  min-width: 160px;
+}
+
+/* Maya's cursor rests under the thread, near Approve. The selector takes
+   the thread's class too, to outweigh the shared place of a cursor, which
+   the page loads after this sheet. */
+
+.site-comment .site-home-review-maya {
+  bottom: -30px;
+  left: auto;
+  right: 34px;
+  top: auto;
+}
+
+/* The Claude chat: on desktop it docks at the right of the Edit window,
+   ruled off at its left; a phone and the desktop steps below 1280px set it
+   under the canvas, ruled off above */
+
+.site-agent {
+  background: var(--mk-color-surface);
+  border-left: 0;
+  border-top: 1px solid var(--mk-color-border);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-home-agent-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  height: 56px;
+  padding: 0 16px;
+}
+
+.site-home-agent-badge {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 12%,
+    var(--mk-color-surface)
+  );
+  border-radius: 5px;
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 55%,
+    var(--mk-color-text)
+  );
+  font-family: var(--mk-font-mono);
+  font-size: 10px;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 4px 6px;
+  text-transform: uppercase;
+}
+
+.site-home-agent-log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: flex-end;
+  padding: 16px 16px 18px;
+}
+
+.site-home-agent-note {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .site-agent {
+    border-left: 1px solid var(--mk-color-border);
+    border-top: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-agent {
+    border-left: 0;
+    border-top: 1px solid var(--mk-color-border);
+  }
+}

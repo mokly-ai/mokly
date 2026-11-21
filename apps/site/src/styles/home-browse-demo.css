@@ -1,0 +1,121 @@
+/* The Browse demo, which the home demos island plays once in view, as
+   src/components/home/demos.ts says. The base rules draw the finished
+   state: the connector drawn and the Swipe divider at 50%. An armed demo
+   draws the start state, before the connector is drawn. A playing demo
+   draws the connector in from View changes into the Changes filter, 1.2s
+   after a 0.4s beat. Then Sam's cursor sweeps the divider to 26% and to 74%
+   and back to 50%, as the keys of the prototype's sweep do, while the
+   branch screen's clip follows the divider. Only clip-path and transform
+   move, and each animation fills backwards only, so the demo rests where the
+   base rules draw it. Under reduced motion the island sets no state, and
+   home.css stops every animation of a demo. */
+
+/* The connector, wiped in from View changes: right to left on the desktop
+   layouts and top to bottom on a phone, each wipe across its own layout's
+   drawing. The 1440px drawing and the wide one start 77px from the frame's
+   right edge, the stacked one 363px from its left edge; each ends on the
+   Changes filter, 175px from the frame's left edge. */
+
+[data-home-demo-state="armed"] .site-home-connector--full,
+[data-home-demo-state="armed"] .site-home-fit-connector--wide {
+  clip-path: inset(-100px -20px -20px calc(100% - 65px));
+}
+
+[data-home-demo-state="armed"] .site-home-fit-connector--stacked {
+  clip-path: inset(-100px -20px -20px 375px);
+}
+
+[data-home-demo-state="armed"] .site-home-fit-connector--phone {
+  clip-path: inset(-100px -20px calc(100% + 70px) -20px);
+}
+
+[data-home-demo-state="play"] .site-home-connector--full,
+[data-home-demo-state="play"] .site-home-fit-connector--wide {
+  animation: site-home-browse-draw-wide 1.2s var(--mk-motion-easing) 0.4s
+    backwards;
+}
+
+[data-home-demo-state="play"] .site-home-fit-connector--stacked {
+  animation: site-home-browse-draw-stacked 1.2s var(--mk-motion-easing) 0.4s
+    backwards;
+}
+
+[data-home-demo-state="play"] .site-home-fit-connector--phone {
+  animation: site-home-browse-draw-phone 1.2s var(--mk-motion-easing) 0.4s
+    backwards;
+}
+
+@keyframes site-home-browse-draw-wide {
+  from {
+    clip-path: inset(-100px -20px -20px calc(100% - 65px));
+  }
+
+  to {
+    clip-path: inset(-100px -20px -20px 160px);
+  }
+}
+
+@keyframes site-home-browse-draw-stacked {
+  from {
+    clip-path: inset(-100px -20px -20px 375px);
+  }
+
+  to {
+    clip-path: inset(-100px -20px -20px 160px);
+  }
+}
+
+@keyframes site-home-browse-draw-phone {
+  from {
+    clip-path: inset(-100px -20px calc(100% + 70px) -20px);
+  }
+
+  to {
+    clip-path: inset(-100px -20px calc(100% - 70px) -20px);
+  }
+}
+
+/* The sweep, once the connector is drawn: the divider's track slides by a
+   share of the compared screens' width, and the branch screen's clip moves
+   with it, each leg eased in and out. The start and the end are the
+   divider at 50%, which the base rules draw. */
+
+[data-home-demo-state="play"] .site-home-swipe-track {
+  animation: site-home-browse-swipe 3.8s cubic-bezier(0.65, 0, 0.35, 1) 1.6s
+    backwards;
+}
+
+[data-home-demo-state="play"] .site-home-swipe-branch {
+  animation: site-home-browse-branch 3.8s cubic-bezier(0.65, 0, 0.35, 1) 1.6s
+    backwards;
+}
+
+@keyframes site-home-browse-swipe {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  31.579% {
+    transform: translateX(-24%);
+  }
+
+  68.421% {
+    transform: translateX(24%);
+  }
+}
+
+@keyframes site-home-browse-branch {
+  0%,
+  100% {
+    clip-path: inset(0 0 0 50%);
+  }
+
+  31.579% {
+    clip-path: inset(0 0 0 26%);
+  }
+
+  68.421% {
+    clip-path: inset(0 0 0 74%);
+  }
+}

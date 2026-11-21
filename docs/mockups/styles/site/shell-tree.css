@@ -5,9 +5,12 @@
 
 .site-tree {
   background: var(--mk-color-surface-muted);
+  border-bottom: 0;
   border-right: 1px solid var(--mk-color-border);
+  max-height: none;
   overflow: hidden;
   padding: 12px;
+  position: relative;
 }
 
 .site-filter {

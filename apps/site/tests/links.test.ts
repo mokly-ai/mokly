@@ -204,7 +204,7 @@ test("the CLI returns nonzero and names the failing document", async (t) => {
       ["--import", "tsx", "scripts/check-links.mjs", root],
       {
         cwd: path.resolve(import.meta.dirname, ".."),
-        env: { ...process.env, SITE_ORIGIN: origin, SITE_STAGE_PR: "71" },
+        env: { ...process.env, SITE_ORIGIN: origin },
         timeout: 30_000,
       },
     ),

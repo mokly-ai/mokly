@@ -170,19 +170,28 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Build the hero: the selected heading layer with live size and
-      redline tags, the lead and the two actions.
-- [ ] Draw the Specs and Components spread as static components, with the
-      Storybook label.
-- [ ] Build the Specs panel with its scroll spy.
-- [ ] Build the Browse, Review and Edit frames and their demos.
-- [ ] Build the open-foundation frame, the code-to-screen wires, the facts
-      and the steps.
-- [ ] Update `src/home.ts`, the page description and the social cards.
-- [ ] Remove the mockups build from the site checks and deployment, and
-      `SITE_STAGE_PR` from the delivery docs and workflow.
-- [ ] Delete the old stage and its tests. Remove `stage` from
-      `SITE_OUTPUT_FIRST_SEGMENTS` and run `npm run site:routes`.
+- [x] Build the hero: the selected heading layer with live size and
+      redline tags, the lead and the two actions. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Draw the Specs and Components spread as static components, with the
+      Storybook label. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Build the Specs panel with its scroll spy. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Build the Browse, Review and Edit frames and their demos. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Build the open-foundation frame, the code-to-screen wires, the facts
+      and the steps. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Update `src/home.ts`, the page description and the social cards.
+      Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Remove the mockups build from the site checks and deployment, and
+      `SITE_STAGE_PR` from the delivery docs and workflow. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
+- [x] Delete the old stage and its tests. Remove `stage` from
+      `SITE_OUTPUT_FIRST_SEGMENTS` and run `npm run site:routes`. Branch:
+      `calummoore/canvas-redesign-m5-site-home-hb2n`.
 
 ## Milestone 6: Site docs
 

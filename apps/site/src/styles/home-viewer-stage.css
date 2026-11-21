@@ -1,0 +1,209 @@
+/* The stage of the depicted viewer's open screen in the home Browse frame:
+   the dotted canvas where the Swipe divider with its grip splits main on
+   the left from feat/checkout-v2 on the right, and Sam's cursor rests on
+   the grip. The compared acme payment screens draw at 49 percent, and
+   smaller on a narrower stage; their own rules are in
+   home-acme-checkout.css. home-browse-demo.css sweeps the divider when the
+   demo plays.
+
+   The class names and the rules match docs/mockups/styles/site/shell-stage.css
+   and the Browse rules of home-responsive.css. The mockups pin a composition
+   with data-site-viewport; the site resolves the same switch at 768px. So
+   each base rule is the mobile composition, and the desktop values and the
+   desktop steps follow under the 768px query, in the mockup's order. The
+   mockups key the dark tag on the pinned scheme; the site keys it on the
+   chosen scheme and, without a choice, on the system scheme. */
+
+.site-stage {
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-size: 20px 20px;
+  display: grid;
+  flex: 1;
+  padding: 46px 14px 20px;
+  place-items: center;
+}
+
+.site-stage-frame {
+  aspect-ratio: 1280 / 800;
+  position: relative;
+  width: 322px;
+}
+
+.site-stage-screen {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mk-color-text) 8%, transparent),
+    var(--mk-shadow-medium);
+  inset: 0;
+  overflow: hidden;
+  position: absolute;
+}
+
+.site-stage-screen > .site-acme {
+  transform: scale(0.251563);
+  transform-origin: 0 0;
+}
+
+.site-stage-frame .site-home-swipe-branch {
+  clip-path: inset(0 0 0 50%);
+}
+
+.site-stage-label {
+  align-items: center;
+  background: color-mix(in srgb, var(--mk-color-text) 82%, transparent);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  height: 22px;
+  left: 0;
+  line-height: 1;
+  padding: 0 8px;
+  position: absolute;
+  top: -32px;
+  z-index: 2;
+}
+
+/* The branch tag keeps its signal fill in the dark scheme, as the mockups'
+   later rule keeps it there. */
+
+:root[data-color-scheme="dark"] .site-stage-label:not(.site-home-tag-branch) {
+  background: var(--mk-color-surface-raised);
+  color: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"])
+    .site-stage-label:not(.site-home-tag-branch) {
+    background: var(--mk-color-surface-raised);
+    color: var(--mk-color-text);
+  }
+}
+
+.site-stage-frame .site-home-tag-branch {
+  background: var(--mk-color-signal);
+  color: var(--mk-color-on-signal);
+  left: auto;
+  right: 0;
+}
+
+/* The Swipe divider: a green rule with its round grip, on the track that
+   the demo slides with Sam's cursor over the compared screens. The track
+   takes the divider's place in the stage's stack. */
+
+.site-home-swipe-track {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+}
+
+.site-home-swipe {
+  bottom: -12px;
+  left: calc(50% - 22px);
+  position: absolute;
+  top: -12px;
+  width: 44px;
+  z-index: 3;
+}
+
+.site-home-swipe::before {
+  background: var(--mk-color-signal);
+  bottom: 0;
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
+  content: "";
+  left: 21px;
+  position: absolute;
+  top: 0;
+  width: 2px;
+}
+
+.site-home-swipe-grip {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    0 0 0 2px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-text);
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  left: 3px;
+  position: absolute;
+  top: calc(50% - 19px);
+  width: 38px;
+}
+
+.site-home-swipe-grip svg {
+  margin: 0 -2px;
+  stroke-width: 2;
+}
+
+.site-home-swipe-grip svg:first-child {
+  transform: scaleX(-1);
+}
+
+/* Sam's cursor, 12px right of the divider. The shared cursor rule sets the
+   cursor at its parent's corner, so this rule names the stage frame. */
+
+.site-stage-frame .site-home-compare-sam {
+  left: calc(50% + 12px);
+  top: 58%;
+}
+
+/* The desktop composition from the breakpoint upward */
+
+@media (min-width: 768px) {
+  .site-stage {
+    padding: 48px 30px 28px;
+  }
+
+  .site-stage-frame {
+    width: 632px;
+  }
+
+  .site-stage-screen > .site-acme {
+    transform: scale(0.49375);
+  }
+}
+
+/* The intermediate desktop steps: the compared screens draw at 44, 38 and
+   25 percent as the stage narrows. */
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-stage-frame {
+    width: 560px;
+  }
+
+  .site-stage-screen > .site-acme {
+    transform: scale(0.4375);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-stage-frame {
+    width: 480px;
+  }
+
+  .site-stage-screen > .site-acme {
+    transform: scale(0.375);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .site-stage-frame {
+    width: 320px;
+  }
+
+  .site-stage-screen > .site-acme {
+    transform: scale(0.25);
+  }
+}

@@ -7,7 +7,10 @@
   padding-top: 64px;
 }
 
-[data-site-viewport="mobile"] .site-home-hero-inner,
+[data-site-viewport="mobile"] .site-home-hero-inner {
+  padding: 0 20px;
+}
+
 [data-site-viewport="mobile"] .site-home-workspace {
   display: block;
   padding: 0 20px;
@@ -57,12 +60,15 @@
 }
 
 [data-site-viewport="mobile"] .site-home-spread-canvas .site-home-spread-specs {
-  background: none;
-  box-shadow: none;
   height: 40px;
   left: -175px;
-  padding: 0;
   width: 350px;
+}
+
+[data-site-viewport="mobile"] .site-home-spread .site-home-spread-specs {
+  background: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 [data-site-viewport="mobile"]
@@ -269,6 +275,6 @@
   padding: 12px 16px 14px;
 }
 
-[data-site-viewport="mobile"] .site-home-facts {
+[data-site-viewport="mobile"] .site-closing .site-home-facts {
   margin-top: 40px;
 }

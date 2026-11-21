@@ -684,10 +684,8 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Build workspace packages
         run: npm run build
-      - name: Build mockups and site
-        run: |
-          npm run mockups:build --workspace @mokly-cloud/mockups
-          npm run site:build
+      - name: Build site
+        run: npm run site:build
       - name: Run Lighthouse budget
         shell: bash
         run: |

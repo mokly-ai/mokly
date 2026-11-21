@@ -37,11 +37,7 @@ test("Lighthouse uses the workspace tools and retains a failing report", async (
     await selection.rootFiles("environment"),
     /^CHROME_PATH=\/.*chromium/m,
   );
-  assert.equal(
-    workflowStep(job, "Build mockups and site").run,
-    "npm run mockups:build --workspace @mokly-cloud/mockups\n" +
-      "npm run site:build\n",
-  );
+  assert.equal(workflowStep(job, "Build site").run, "npm run site:build");
   const budget = workflowStep(job, "Run Lighthouse budget");
   assert.equal(budget["continue-on-error"] ?? false, false);
   assert.equal(budget.shell, "bash");

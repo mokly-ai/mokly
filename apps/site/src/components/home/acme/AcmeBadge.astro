@@ -1,0 +1,22 @@
+---
+/**
+ * A small pill of the depicted acme/storefront app, such as `Most popular`,
+ * tinted from its hue.
+ *
+ * - `tone`: `saffron` (the default), `sage`, `plum` or `muted`.
+ *
+ * Use: `<AcmeBadge tone="sage">Default</AcmeBadge>`. The label is the slot.
+ */
+
+interface Props {
+  readonly tone?: "muted" | "plum" | "saffron" | "sage";
+}
+
+const { tone = "saffron" } = Astro.props;
+---
+
+<span class={`site-acme-badge site-acme-badge--${tone}`}>
+  <span>
+    <slot />
+  </span>
+</span>

@@ -13,7 +13,7 @@
   - `docs/protocol/cloud/site-delivery.md:165-182`: the Performance Budget requirement. Options B, C, and E change it. Options D and F keep it.
   - `apps/site/README.md:128`, `:251`, and `:258`: the command table and the Key Code entries of the budget. Options B, C, and E update them.
   - `apps/site/tests/site_ci.test.ts:62`: the test that no Lighthouse result can fail Required CI. Every option keeps it.
-  - `apps/site/src/components/home/Stage.astro` and `apps/site/scripts/stage.mjs`: the sandboxed stage frame of the home page, and the script that publishes its documents. Option D investigated there.
+  - `apps/site/src/pages/index.astro`: the home page. It draws its demos as static components at build time and embeds no frame. The sandboxed stage frame, where option D investigated, and the script that published its documents are deleted.
   - `apps/site/scripts/stage/fragments.ts:187`: `rewriteStage`, which rewrites each stage document and collects the resources that it links. Option F inlines the stylesheets there.
   - `docs/protocol/cloud/site-delivery.md:97-133`: the Home Stage requirement. Lines 102-103 copy each stylesheet beside the stage documents. Option F changes that rule.
   - `apps/site/tests/stage.test.ts:94` and `:224`: the tests that publish the stage stylesheets and other resources beside the documents. Option F changes them.

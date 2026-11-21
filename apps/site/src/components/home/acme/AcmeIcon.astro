@@ -1,0 +1,30 @@
+---
+/**
+ * One icon of the depicted acme/storefront app, 20px unless the stylesheet
+ * sizes it, stroked in the current colour. It sits inside a depiction, so it
+ * is hidden from assistive technology and takes no focus.
+ *
+ * Use: `<AcmeIcon name="bag" />`. `acme-icons.ts` holds the drawings, and
+ * `src/styles/home-acme.css` sizes the icon.
+ */
+import { ACME_ICONS, type AcmeIconName } from "./acme-icons.js";
+
+interface Props {
+  readonly name: AcmeIconName;
+}
+
+const { name } = Astro.props;
+---
+
+<svg
+  aria-hidden="true"
+  class="site-acme-icon"
+  fill="none"
+  focusable="false"
+  stroke="currentColor"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="1.6"
+  viewBox="0 0 20 20"
+  set:html={ACME_ICONS[name]}
+/>

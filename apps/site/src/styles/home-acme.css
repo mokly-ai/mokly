@@ -1,0 +1,239 @@
+/* The depicted acme/storefront app of the home: its palette, type and
+   shared parts. The coffee shop keeps its own warm palette in both page
+   schemes, so that it reads as another company's product: cream,
+   espresso, saffron, terracotta, plum and sage, each a single mix of the
+   people and signal roles. Each hue is written once, for every part that
+   takes it; a part fills from currentColor, and the label nested in it
+   takes its own text colour. The serif titles, logo and prices use
+   Instrument Serif, which src/fonts/fonts.css hosts. Screens draw at their
+   native size (390 x 844 or 1280 x 800), and the place that shows a
+   screen scales it into its artboard.
+
+   AcmeRoot.astro loads the six acme sheets in this order: home-acme.css,
+   home-acme-screens.css, home-acme-parts.css, home-acme-checkout.css,
+   home-acme-pricing.css and home-acme-spread.css. A later sheet's rule
+   wins a tie with an earlier one, as in the mockups. The rules match
+   docs/mockups/styles/site/home-acme.css. */
+
+.site-acme {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 7%,
+    var(--mk-color-on-signal-fill)
+  );
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 7%,
+    var(--mk-color-people-orange-ink)
+  );
+  font-family: var(--mk-font-sans);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  overflow: hidden;
+  position: relative;
+  text-align: left;
+}
+
+.site-acme--dark {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-people-pink-fill) 9%,
+    var(--mk-color-on-signal)
+  );
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 12%,
+    var(--mk-color-on-signal-fill)
+  );
+}
+
+/* Saffron, terracotta, plum, sage and the shop's danger red */
+
+.site-acme-tone--guji,
+.site-acme-badge--saffron,
+.site-acme-welcome-art,
+.site-acme-line-card .site-acme-icon,
+.site-acme-toast .site-acme-toast-undo,
+.site-acme--dark .site-acme-button--primary {
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 72%,
+    var(--mk-color-signal)
+  );
+}
+
+.site-acme-tone--huila,
+.site-acme-avatar--terra,
+.site-acme-logo svg,
+.site-acme-eyebrow,
+.site-acme-price-card-list .site-acme-icon,
+.site-acme-apply,
+.site-acme-cart i,
+.site-acme-switch--on,
+.site-acme-steps .site-acme-steps-on,
+.site-acme-input--focus::after {
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-orange-fill) 85%,
+    var(--mk-color-people-violet-fill)
+  );
+}
+
+.site-acme-tone--nyeri,
+.site-acme-badge--plum,
+.site-acme-avatar--plum {
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-pink-fill) 49%,
+    var(--mk-color-on-signal)
+  );
+}
+
+.site-acme-tone--decaf,
+.site-acme-badge--sage,
+.site-acme-avatar--sage,
+.site-acme-stepper-done .site-acme-icon {
+  color: color-mix(
+    in srgb,
+    var(--mk-color-signal-fill) 48%,
+    var(--mk-color-on-signal-fill)
+  );
+}
+
+.site-acme-button--danger,
+.site-acme-input--error::after,
+.site-acme-field-note {
+  color: color-mix(
+    in srgb,
+    var(--mk-color-people-pink-fill) 59%,
+    var(--mk-color-people-orange-fill)
+  );
+}
+
+/* Sizes and the reset of the app's own text */
+
+.site-acme--phone {
+  height: 844px;
+  width: 390px;
+}
+
+.site-acme--desktop {
+  height: 800px;
+  width: 1280px;
+}
+
+.site-acme--bare {
+  background: none;
+  overflow: visible;
+}
+
+.site-acme b {
+  font-weight: 600;
+}
+
+.site-acme i,
+.site-acme em {
+  font-style: normal;
+}
+
+.site-acme-icon {
+  flex: none;
+  height: 20px;
+  width: 20px;
+}
+
+/* Secondary text, labels and hairlines mix the screen's own ink, so they
+   follow a dark screen too. */
+
+.site-acme-sub,
+.site-acme-link,
+.site-acme-field-label,
+.site-acme-price-card-line,
+.site-acme-checkout-bar span,
+.site-acme-desktop-links > span,
+.site-acme-segmented > span,
+.site-acme-methods > span,
+.site-acme-settings-links > span,
+.site-acme-totals > span,
+.site-acme-stepper .site-acme-stepper-done,
+.site-acme-secure {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+}
+
+.site-acme-items i,
+.site-acme-mini-summary i,
+.site-acme-line-card i,
+.site-acme-profile i,
+.site-acme-saved i,
+.site-acme-panel-title,
+.site-acme-price-card-price span,
+.site-acme-stepper > span,
+.site-acme-input .site-acme-icon,
+.site-acme-input-value--muted {
+  color: color-mix(in srgb, currentColor 50%, transparent);
+}
+
+/* The current item of a list. The total of the totals, which the mockups
+   also list here, keeps all its declarations in home-acme-checkout.css. */
+
+.site-acme-desktop-links .site-acme-desktop-on,
+.site-acme-segmented .site-acme-segmented-on,
+.site-acme-methods .site-acme-methods-on,
+.site-acme-settings-links .site-acme-settings-on,
+.site-acme-stepper .site-acme-stepper-on {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* The paper surfaces: white on a light screen, raised on a dark one. The
+   order summary, which the mockups also list here, keeps all its
+   declarations in home-acme-checkout.css. */
+
+.site-acme-input,
+.site-acme-segmented-on,
+.site-acme-chips > span,
+.site-acme-mini-summary,
+.site-acme-methods span,
+.site-acme-line-card,
+.site-acme-price-card,
+.site-acme-panel,
+.site-acme-settings-on {
+  background: var(--mk-color-on-signal-fill);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.site-acme--dark .site-acme-input,
+.site-acme--dark .site-acme-segmented-on,
+.site-acme--dark .site-acme-mini-summary,
+.site-acme--dark .site-acme-methods span,
+.site-acme--dark .site-acme-line-card,
+.site-acme--dark .site-acme-price-card,
+.site-acme--dark .site-acme-panel,
+.site-acme--dark .site-acme-settings-on {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+/* Parts that fill from their hue, with the label nested in them */
+
+.site-acme-button--primary,
+.site-acme-button--danger,
+.site-acme-chips .site-acme-chips-on,
+.site-acme-cart i,
+.site-acme-switch--on,
+.site-acme-toast {
+  background: currentColor;
+}
+
+.site-acme-button--primary .site-acme-button-label,
+.site-acme-button--danger .site-acme-button-label,
+.site-acme-chips-on > span,
+.site-acme-cart i > span,
+.site-acme-avatar > span,
+.site-acme-toast .site-acme-lines {
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-acme--dark .site-acme-button--primary .site-acme-button-label {
+  color: var(--mk-color-on-signal);
+}

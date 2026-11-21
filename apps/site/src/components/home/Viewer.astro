@@ -1,0 +1,54 @@
+---
+/**
+ * The depicted Mokly viewer of the home's Browse frame, opened on
+ * acme/storefront's branch `feat/checkout-v2`: the bar with the crumb, the
+ * branch, the pull request, the commit, the people in the file, History
+ * and Share, then the catalogue column beside the open screen in its
+ * compare. A phone's bar keeps the mark, the branch and Share, and the
+ * catalogue column stacks above the screen. A depiction: hidden from
+ * assistive technology, and its controls are drawn, not controls.
+ *
+ * `ViewerBarParts.astro` draws the bar's mark, crumb trail and branch chip,
+ * and `Presence.astro` the people. The bar's details from the pull request
+ * to History sit in one group, which a phone leaves out.
+ *
+ * Use: `<Viewer />` in the Browse frame. The rules are in
+ * `src/styles/home-viewer-frame.css`.
+ */
+import Icon from "../Icon.astro";
+import Presence from "../Presence.astro";
+
+import ViewerBarParts from "./ViewerBarParts.astro";
+import ViewerCompare from "./ViewerCompare.astro";
+import ViewerTree from "./ViewerTree.astro";
+
+import "../../styles/home-viewer-frame.css";
+---
+
+<div aria-hidden="true" class="site-frame">
+  <div class="site-topbar">
+    <ViewerBarParts
+      branch="feat/checkout-v2"
+      chevron
+      crumbs={["acme", "storefront"]}
+      crumbsClass="site-home-viewer-crumbs"
+    />
+    <span class="site-home-viewer-details">
+      <span class="site-home-viewer-pr">
+        <Icon name="pullRequest" size={14} />
+        #482
+      </span>
+      <span class="site-home-viewer-commit">9c2f5ae</span>
+      <Presence class="site-home-viewer-people" people={["maya", "sam"]} />
+      <span class="site-home-viewer-button">
+        <Icon name="history" size={15} />
+        History
+      </span>
+    </span>
+    <span class="site-home-viewer-button site-home-viewer-share">Share</span>
+  </div>
+  <div class="site-shell-body">
+    <ViewerTree />
+    <ViewerCompare />
+  </div>
+</div>

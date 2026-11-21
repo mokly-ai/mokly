@@ -1,0 +1,43 @@
+---
+/**
+ * The depicted acme `pricing` screen on a phone, at 390 × 844: the
+ * navigation, the heading block, the featured Regular plan, which a
+ * selection depicts, then Taster.
+ *
+ * - `dark`: the app's dark screen.
+ * - `padding`: both PriceCards' padding, `24` (the default) or `16`.
+ * - `tone`: the Regular card's button tone, `primary` (the default) or
+ *   `secondary`.
+ *
+ * Use: `<AcmePricingPhone padding={16} tone="secondary" />`, the card before
+ * the team's change.
+ */
+import type { AcmePricingProps } from "./acme-pricing.js";
+import AcmeAvatar from "./AcmeAvatar.astro";
+import AcmeCart from "./AcmeCart.astro";
+import AcmeLogo from "./AcmeLogo.astro";
+import AcmePricingHead from "./AcmePricingHead.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeStatus from "./AcmeStatus.astro";
+import PriceCard from "./PriceCard.astro";
+
+type Props = AcmePricingProps;
+
+const { dark = false, padding = 24, tone = "primary" } = Astro.props;
+---
+
+<AcmeRoot dark={dark} kind="phone">
+  <AcmeStatus />
+  <div class="site-acme-phone-nav">
+    <AcmeLogo />
+    <span class="site-acme-phone-nav-end">
+      <AcmeCart />
+      <AcmeAvatar initials="JE" size="small" />
+    </span>
+  </div>
+  <div class="site-acme-pricing">
+    <AcmePricingHead />
+    <PriceCard padding={padding} plan="regular" target tone={tone} />
+    <PriceCard padding={padding} plan="taster" />
+  </div>
+</AcmeRoot>

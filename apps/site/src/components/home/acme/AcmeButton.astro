@@ -1,0 +1,51 @@
+---
+/**
+ * A button of the depicted acme/storefront app, drawn as text, not a
+ * control: it takes no focus and names no action. A filled tone fills from
+ * its hue and its nested label takes the light text.
+ *
+ * - `tone`: `primary` (the default) fills with the screen's ink, or with
+ *   saffron on a dark screen; `secondary` draws a ring; `muted` a faint
+ *   fill; `danger` the shop's red.
+ * - `block`: the button fills its row.
+ * - `size`: `large` or `small`; the default sits between them.
+ * - `icon`: an acme icon before the label.
+ * - `class`: the place's class, such as `site-acme-pay`.
+ *
+ * Use: `<AcmeButton block icon="lock" size="large">Pay $42.00</AcmeButton>`.
+ * The label is the slot.
+ */
+import type { AcmeIconName } from "./acme-icons.js";
+import AcmeIcon from "./AcmeIcon.astro";
+
+interface Props {
+  readonly block?: boolean;
+  readonly class?: string;
+  readonly icon?: AcmeIconName;
+  readonly size?: "large" | "small";
+  readonly tone?: "danger" | "muted" | "primary" | "secondary";
+}
+
+const {
+  block = false,
+  class: className,
+  icon,
+  size,
+  tone = "primary",
+} = Astro.props;
+---
+
+<span
+  class:list={[
+    "site-acme-button",
+    `site-acme-button--${tone}`,
+    block && "site-acme-button--block",
+    size && `site-acme-button--${size}`,
+    className,
+  ]}
+>
+  <span class="site-acme-button-label">
+    {icon !== undefined && <AcmeIcon name={icon} />}
+    <slot />
+  </span>
+</span>

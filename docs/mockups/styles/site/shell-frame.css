@@ -100,6 +100,7 @@
   background: var(--mk-color-signal-fill);
   color: var(--mk-color-on-signal-fill);
   font-weight: var(--mk-font-semibold);
+  margin-left: 0;
 }
 
 .site-shell-body {
@@ -157,6 +158,7 @@
   display: flex;
   flex: none;
   padding: 3px;
+  width: auto;
 }
 
 .site-home-mode {
@@ -164,11 +166,14 @@
   border-radius: 7px;
   color: var(--mk-color-text-secondary);
   display: inline-flex;
+  flex: 0 1 auto;
   font-size: 12.5px;
   font-weight: 550;
   height: 30px;
   justify-content: center;
+  line-height: 1.1;
   padding: 0 11px;
+  text-align: center;
   white-space: nowrap;
 }
 

@@ -1,6 +1,6 @@
 # Mokly Site
 
-Status: The site draws the Canvas chrome, the legal pages, the docs and the pricing page, but not the Canvas home and changelog pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
+Status: The site draws the Canvas chrome, the home, the legal pages, the docs and the pricing page, but not the Canvas changelog page yet. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
@@ -77,24 +77,20 @@ badge and redline value and follows resizing; without script those values do
 not show. Every animation honours reduced motion and shows its finished state.
 [Site delivery](../../docs/protocol/cloud/site-delivery.md) owns these rules.
 
-The home stage is generated after the dogfood catalogue. It publishes the
-four mobile/desktop and light/dark documents of
-`product/account/project-created`, read from
-`mokly-static/static/mokly-generated/`, plus their local resources into
-`public/stage/`. The workspace `@mokly/viewer` public `readCatalogueIndex`
-reader checks the version of `mokly-static/mokly-viewer/index.json` and copies
-its content under the
-[reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#frame-boundary).
-The stage projects
-Specs and Components from that tree, with section-specific row ordering,
-authored variants and hidden-folder pruning. Breadcrumbs use the index's
-resolved titles. The frame label is `Mokly Cloud · <SITE_STAGE_PR>` and
-carries no private repository link. Generated stage files, social cards,
-Astro output and search output are not committed. The stage keeps
-`sandbox=""`; `public/_headers` and the Astro preview configuration both add
-`Access-Control-Allow-Origin: *` so its opaque origin can load the
-self-hosted font without receiving script or storage permissions. The same
-file emits the site CSP. The build moves every inline script, Astro's island
+The home draws a fictional demo app, the coffee shop `acme/storefront`, as
+static components at build time: the hero's heading as a selected text
+layer, the spread of the app's screens and component sets, and the depicted
+product in the Browse, Review and Edit frames and the open foundation. The
+home demos island plays each frame's demo once when it comes into view, and
+marks the section in view in the Specs panel. The built page draws each demo
+in its finished state, so a reader without script or with reduced motion
+sees that state.
+
+Generated social cards, Astro output and search output are not committed.
+`public/_headers` and the Astro preview configuration both add
+`Access-Control-Allow-Origin: *`, so any origin, a sandboxed frame with an
+opaque origin included, can read the public static files. The same file emits
+the site CSP. The build moves every inline script, Astro's island
 bootstraps and the scheme island included, into content-hashed, same-origin
 assets and rejects inline executable scripts or scripts loaded from outside
 the page's own origin. Astro preview serves the production CSP so the browser
@@ -129,7 +125,6 @@ From the repository root with the pinned Node and npm versions:
 ```sh
 npm ci
 npm run build
-npm run mockups:build
 npm run site:build
 npm run site:check
 ```
@@ -143,17 +138,15 @@ npm run dev --workspace @mokly-cloud/site
 It serves `http://localhost:4321`. Settings come only from the process
 environment and are read once:
 
-| Setting         | Local default           | Purpose                                     |
-| --------------- | ----------------------- | ------------------------------------------- |
-| `SITE_ORIGIN`   | `http://localhost:4321` | Canonical metadata, sitemap and feed origin |
-| `SITE_STAGE_PR` | `sydney-v1`             | Home-stage branch or publication label      |
+| Setting       | Local default           | Purpose                                     |
+| ------------- | ----------------------- | ------------------------------------------- |
+| `SITE_ORIGIN` | `http://localhost:4321` | Canonical metadata, sitemap and feed origin |
 
 The origin must be an absolute HTTP(S) origin without credentials, path, query or
-fragment. The stage label accepts safe letters, digits, `.`, `_`, `/` and `-`,
-with no leading slash or `..` path segment. Explicit empty values fail the
-build. Get started uses the relative path `/docs/start/install/`. The Pricing
-page's Create an account and Start a 7-day trial use the app's relative path
-`/sign-up`, and the link check accepts that app path.
+fragment. Explicit empty values fail the build. Get started uses the relative
+path `/docs/start/install/`. The Pricing page's Create an account and Start a
+7-day trial use the app's relative path `/sign-up`, and the link check accepts
+that app path.
 [Marketing site](../../docs/protocol/cloud/marketing-site.md) names every link
 from the site to the app.
 
@@ -164,7 +157,7 @@ The focused checks are:
 | Command                                             | Coverage                                                        |
 | --------------------------------------------------- | --------------------------------------------------------------- |
 | `npm run brand:check --workspace @mokly-cloud/site` | Committed PNG matches the public SVG                            |
-| `npm run site:build`                                | Stage, cards, CSP-safe Astro output and the search index        |
+| `npm run site:build`                                | Cards, CSP-safe Astro output and the search index               |
 | `npm run site:typecheck`                            | `astro check` and strict TypeScript                             |
 | `npm run site:test`                                 | Content, settings, workflow, style and output contracts         |
 | `npm run site:links`                                | Built links, anchors, assets, CSS URLs, frames and search index |
@@ -183,24 +176,15 @@ Chromium once with:
 npm exec --workspace @mokly-cloud/site -- playwright install chromium
 ```
 
-Git ignores the dogfood catalogue's generated output. Run
-`npm run mockups:build` from the repository root before direct site build,
-check or development commands, and again after changing mockup source. The
-stage build runs the mockups build itself only when a selected document is
-absent, including on a fresh clone; existing stale documents need an explicit
-build. An unreadable or invalid catalogue index fails with
-`The dogfood catalogue needs a version 9 catalogue index. Run npm run mockups:build from the repository root.`
-The `cloud-site` suite always builds the mockups first.
+The site reads the built workspace `@mokly/mokly` and `@mokly/viewer`
+packages. Run `npm run build` from the repository root before direct site
+build, check or development commands, and again after changing either package.
 
 To add a public first segment or a root asset output, declare it in
 `src/navigation.ts`, run `npm run site:routes` to regenerate the
 Worker's committed site-segment module, and add the segment to the reserved
 workspace names in `crates/mkc-domain`. The site build rejects undeclared
 outputs and a stale generated module.
-
-Generated `public/stage/` files are static assets, excluded from the site's
-source typecheck. The stage copies the published frame probe script unchanged;
-the frame's empty sandbox prevents it from executing.
 
 Root Prettier includes this package, and its Astro plugin formats `.astro`
 files. Root ESLint lints the TypeScript but does not parse `.astro` files;
@@ -272,14 +256,14 @@ Pages project `mokly-site`. Main derives `SITE_ORIGIN` as
 the sticky comment names `https://pr-<number>.preview.<MKC_DOMAIN>/sign-in` for
 review. Fork and Release Please PRs skip deployment and cleanup.
 
-The workflow requires repository variables `MKC_DOMAIN`,
-`CLOUDFLARE_ACCOUNT_ID` and optional `SITE_STAGE_PR`, plus secret
-`CLOUDFLARE_PAGES_API_TOKEN` or its `CLOUDFLARE_API_TOKEN` fallback. Closing a
+The workflow requires repository variables `MKC_DOMAIN` and
+`CLOUDFLARE_ACCOUNT_ID`, plus secret `CLOUDFLARE_PAGES_API_TOKEN` or its
+`CLOUDFLARE_API_TOKEN` fallback. Closing a
 PR runs `scripts/cloud/site/cleanup.sh` at the repository root, which removes every
 matching Pages deployment, and marks the sticky site comment inactive.
 Provider failures retain the preview and report the reason. Pages applies the
 checked-in `_headers` file to the static responses, matching local preview
-behavior for the sandboxed home stage. The maintainer steps that create the
+behavior. The maintainer steps that create the
 Pages project and attach the domain are in the
 [deployment runbook](../../docs/ops/deploy.md#public-site).
 
@@ -287,7 +271,7 @@ Pages project and attach the domain are in the
 
 - `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the Install guide that Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
 - `scripts/generate-site-segments.ts` — derives the site's first segments from `src/navigation.ts` and writes or checks the Worker's committed `site-segments.ts` module (`site:routes` and `routes:check`).
-- `src/settings.ts` — reads `SITE_ORIGIN` and `SITE_STAGE_PR` once from the process environment and validates them.
+- `src/settings.ts` — reads `SITE_ORIGIN` once from the process environment and validates it.
 - `src/mokly-package.ts` — locates the installed `@mokly/mokly`, verifies its name and version, and keeps every package file read inside that root.
 - `src/docs/pages.ts` — merges the package guides, the cloud Markdown under `src/content/docs/` and the published references into the one ordered page list that the tree, pager, sitemap, cards, search and tests read; `assertCollection` keeps Astro's collection equal to it.
 - `src/docs/sections.ts` — `SECTION_IDS`, `SECTION_TITLES`, `SECTION_SUMMARIES` and `sectionOrder`, the fixed section order and titles.
@@ -313,6 +297,8 @@ Pages project and attach the domain are in the
 - `src/components/Panel.astro`, `PanelRow.astro` and `src/styles/panels.css` — the floating panel with its head, body and optional foot, and its 44px rows, which link with `href` and mark the current row with `aria-current`.
 - `src/components/CodePanel.astro`, `code-lines.ts`, `src/styles/code.css` and `code-tokens.css` — the dark code panel, drawn at build time from typed lines of syntax tokens, with tabs, line numbers, a prompt, lit and dimmed lines and a foot, without a Copy control or a script.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
+- `src/pages/index.astro` and `src/components/home/` — the home: `Hero.astro` with `Spread.astro`, `SpreadSets.astro` and `StorybookMark.astro`; `Workspace.astro` with `SpecsPanel.astro`; the modules `BrowseModule.astro` (with `CheckCard.astro`, `Viewer.astro`, `ViewerTree.astro`, `ViewerCompare.astro` and `FitConnector.astro`), `ReviewModule.astro` (with `Thread.astro`), `EditModule.astro` (with `AgentChat.astro`) and `Foundation.astro` (with `Steps.astro`, `Terminal.astro` and `FitWire.astro`), built on `ModuleText.astro`, `ModuleFrame.astro` and `ViewerBarParts.astro`; and the demo app under `home/acme/`, which `Artboard.astro` frames and `CardSelection.astro` selects. Their sheets are `src/styles/home*.css`.
+- `src/components/home/home-island.ts`, `specs-spy.ts` and `demos.ts` — the home demos island: the Specs scroll spy, and the demo states that each frame's sheet animates. `tests/home_island.test.ts` drives it against a stub page, and `tests/browser/home*.spec.ts` check the home in a browser.
 - `src/pages/pricing.astro` and `src/components/pricing/` — the pricing page: `Hero.astro` with the two measured redlines under the heading, `Plans.astro` with the two section boxes and the three `PlanFrame.astro` frames (Team selected, with its measured size tag and Maya's cursor), `Compare.astro` with the props table, and `Questions.astro` with the resolved threads of `Thread.astro`. `hero-copy.ts` holds the approved hero copy, which the page description repeats. `plan-facts.ts` keeps Team's seat prices in USD cents, the trial length and the currency, and derives the shown amounts; `compare-rows.ts` and `questions.ts` hold the compare rows and the threads. The page and its parts load `src/styles/pricing*.css`.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
 - `src/components/Policy.astro` and `src/styles/document.css` — one legal document in its page frame, and the sheet of the legal pages, which `src/pages/404.astro` shares.
@@ -320,7 +306,6 @@ Pages project and attach the domain are in the
 - `src/metadata.ts`, `src/og.ts` and `scripts/og.mjs` — per-page metadata, the social card drawn as SVG in the Canvas light look around the light lockup's outlined drawing, and the pre-build step that rasterizes one PNG per route. The rasterizer loads no web font, so the card's text takes system stacks.
 - `scripts/brand-assets.mjs` and `public/brand/` — the canonical brand SVGs and the script that derives their PNGs and light-variant aliases (`brand:build` and `brand:check`).
 - `src/fonts/` — the self-hosted Geist, Geist Mono and Instrument Serif 400 faces, each beside its SIL Open Font License, and `fonts.css`, the `@font-face` rules that the site layout imports, so the build emits each face as a content-hashed file under `/_astro/`.
-- `scripts/stage.mjs`, `scripts/stage/catalogue.ts`, `scripts/stage/tree.ts`, `scripts/stage/fragments.ts` and `src/stage.ts` — the home-stage publication: the fallback mockups build, the public index reader, section projection, document and resource rewriting, and stage manifest schema.
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check. It accepts the paths of `APP_PATHS` without a site file, and no other path.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
@@ -329,8 +314,6 @@ Pages project and attach the domain are in the
 - `tests/docs_code_panel.test.ts` and `tests/browser/docs-code.spec.ts` — the built code panel markup of a guide and of the docs landing, with the icon of each tab kind; the copy of a multi-line block; the dark fill in both schemes; and Copy beside the sample's language at the end of its bar.
 - `tests/docs_page_source.test.ts`, `tests/docs_pager_entries.test.ts` and `tests/docs_search_body.test.ts`, with `tests/browser/docs-layout.spec.ts`, `docs-search.spec.ts` and `docs-sheet.spec.ts` — each page kind's tracked source, Edit on GitHub target and facts, the pager's neighbours, the indexed body, and in a browser the layout steps, the scroll spy, the search controls and keys, and the tree sheet.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
-- `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.
-- `tests/stage_source.test.ts` — the stage's fallback mockups build and its catalogue-index error message.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.
 - `tests/legal.test.ts` and `tests/copy.test.ts` — the legal documents' section inventory and the banned-words rule read from the built pages.
 - `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes and sticky plan heads.

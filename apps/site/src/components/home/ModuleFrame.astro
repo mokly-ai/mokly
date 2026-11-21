@@ -1,0 +1,33 @@
+---
+/**
+ * A labelled frame on the canvas that holds a home section's demo: the
+ * frame label, such as `01 Browse`, over its top-left corner, then the demo,
+ * which is the default slot. The frame is the root of its demo: `demo` names
+ * it in `data-home-demo`, which the home demos island arms and plays, as
+ * `demos.ts` says. The frame sets `position: relative`, so its label and the
+ * demo's overlays place themselves on it.
+ *
+ * - `demo`: `browse`, `review`, `edit` or `foundation`.
+ * - `name`: the frame label.
+ * - `class`: the area's own class.
+ *
+ * Use: `<ModuleFrame demo="browse" name="01 Browse">…</ModuleFrame>`. The
+ * rules are in `src/styles/home.css`.
+ */
+import FrameLabel from "../FrameLabel.astro";
+
+import { type HomeDemo, demoRoot } from "./demos.js";
+
+interface Props {
+  readonly class?: string;
+  readonly demo: HomeDemo;
+  readonly name: string;
+}
+
+const { class: className, demo, name } = Astro.props;
+---
+
+<div class:list={["site-module-detail", className]} {...demoRoot(demo)}>
+  <FrameLabel name={name} />
+  <slot />
+</div>

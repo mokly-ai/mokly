@@ -1,0 +1,32 @@
+---
+/**
+ * The payment methods of the depicted acme checkout: Card, Wallet and
+ * Bank, with Card chosen. A depiction, not a control.
+ *
+ * - `large`: the taller tiles of the desktop payment step.
+ *
+ * Use: `<AcmeMethods />`.
+ */
+import AcmeIcon from "./AcmeIcon.astro";
+
+interface Props {
+  readonly large?: boolean;
+}
+
+const { large = false } = Astro.props;
+---
+
+<div class:list={["site-acme-methods", large && "site-acme-methods--large"]}>
+  <span class="site-acme-methods-on">
+    <AcmeIcon name="card" />
+    Card
+  </span>
+  <span>
+    <AcmeIcon name="wallet" />
+    Wallet
+  </span>
+  <span>
+    <AcmeIcon name="bank" />
+    Bank
+  </span>
+</div>

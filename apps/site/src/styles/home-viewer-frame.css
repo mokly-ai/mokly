@@ -1,0 +1,228 @@
+/* The depicted Mokly viewer of the home Browse frame: its window, its bar
+   with the pull request, the commit, the people, History and Share, its
+   body with the catalogue column beside the open screen, and the head of
+   the open screen with the compare toolbar, whose five modes are drawn
+   with Swipe chosen. ViewerBarParts.astro and home-bar.css draw the bar's
+   mark, crumb trail and branch chip.
+
+   The class names and the rules match docs/mockups/styles/site/shell-frame.css
+   and the Browse rules of home-responsive.css. The mockups pin a composition
+   with data-site-viewport; the site resolves the same switch at 768px. So
+   each base rule is the mobile composition, and the desktop values and the
+   desktop steps follow under the 768px query, in the mockup's order. On a
+   phone the bar keeps the mark, the branch and Share, the catalogue column
+   stacks above the open screen, and the five modes share the head's width
+   at the 44px target size. */
+
+.site-frame {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-large);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.site-topbar {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  gap: 12px;
+  height: 50px;
+  padding: 0 12px 0 14px;
+  white-space: nowrap;
+}
+
+/* The mockups leave the crumb trail and the bar's details, from the pull
+   request to History, out of a phone's bar. The site sends one page to
+   every width, so they show from the breakpoint: the trail as home-bar.css
+   draws it, and the details as items of the bar. */
+
+.site-topbar .site-home-viewer-crumbs,
+.site-home-viewer-details {
+  display: none;
+}
+
+.site-home-viewer-pr {
+  align-items: center;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+}
+
+.site-home-viewer-commit {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+}
+
+.site-home-viewer-button {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+}
+
+.site-home-viewer-share {
+  background: var(--mk-color-signal-fill);
+  color: var(--mk-color-on-signal-fill);
+  font-weight: var(--mk-font-semibold);
+  margin-left: auto;
+}
+
+.site-shell-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: auto;
+}
+
+.site-shell-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The screen head of the open screen: its title, path and status, and the
+   compare toolbar with the five modes and Swipe chosen */
+
+.site-screen-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  height: auto;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.site-screen-title-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.site-screen-title {
+  font-size: 15.5px;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.015em;
+}
+
+.site-idchip {
+  background: var(--mk-color-background);
+  border-radius: 5px;
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 11.5px;
+  padding: 4px 6px;
+}
+
+.site-home-modes {
+  background: var(--mk-color-background);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: flex;
+  flex: none;
+  padding: 3px;
+  width: 100%;
+}
+
+.site-home-mode {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  flex: 1;
+  font-size: 11.5px;
+  font-weight: 550;
+  height: 44px;
+  justify-content: center;
+  line-height: 1.1;
+  padding: 0 3px;
+  text-align: center;
+  white-space: normal;
+}
+
+.site-home-mode--chosen {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+
+/* The desktop composition from the breakpoint upward: the whole bar, the
+   catalogue column beside the open screen, and the compare toolbar at the
+   end of the screen head's row. */
+
+@media (min-width: 768px) {
+  .site-topbar .site-home-viewer-crumbs {
+    display: inline-flex;
+  }
+
+  .site-home-viewer-details {
+    display: contents;
+  }
+
+  .site-home-viewer-share {
+    margin-left: 0;
+  }
+
+  .site-shell-body {
+    grid-template-columns: 232px minmax(0, 1fr);
+    height: 548px;
+  }
+
+  .site-screen-head {
+    flex-wrap: nowrap;
+    height: 58px;
+    padding: 0 14px 0 18px;
+  }
+
+  .site-home-modes {
+    width: auto;
+  }
+
+  .site-home-mode {
+    flex: 0 1 auto;
+    font-size: 12.5px;
+    height: 30px;
+    padding: 0 11px;
+    white-space: nowrap;
+  }
+}
+
+/* The intermediate desktop steps: below 1280px the screen head puts the
+   compare toolbar under the title; below 900px the bar leaves out the
+   commit and History; below 800px the five modes close up. */
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-screen-head {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 14px 12px 18px;
+    row-gap: 10px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .site-home-viewer-commit,
+  .site-home-viewer-button:not(.site-home-viewer-share) {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 799px) {
+  .site-home-mode {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}

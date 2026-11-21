@@ -10,7 +10,7 @@ const CSP_HEADER_NAME = "Content-Security-Policy";
 const CSP_HEADER =
   "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 
-test("Cloudflare Pages permits sandboxed stage assets to load", async () => {
+test("Cloudflare Pages lets any origin read the public static files", async () => {
   assert.equal(
     await readFile(sitePath("public", "_headers"), "utf8"),
     `/*\n  ${CORS_HEADER}: *\n  Content-Security-Policy: ${CSP_HEADER}\n`,

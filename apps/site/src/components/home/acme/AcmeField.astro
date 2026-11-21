@@ -1,0 +1,45 @@
+---
+/**
+ * A labelled field of the depicted acme/storefront app with its value, in
+ * its rest, focus or error state. A depiction: plain text, not an input.
+ *
+ * - `label` and `value`: the field's label and its text.
+ * - `state`: `focus` or `error` rings the field in its hue.
+ * - `muted`: the value reads as a placeholder, such as `Enter code`.
+ * - `icon`: an acme icon before the value.
+ * - `note`: a line under the field, such as an error message.
+ *
+ * Use: `<AcmeField icon="card" label="Card number" state="focus" value="4242 4242 4242 4242" />`.
+ * A part after the value, such as `Apply`, goes in the `trail` slot.
+ */
+import type { AcmeIconName } from "./acme-icons.js";
+import AcmeIcon from "./AcmeIcon.astro";
+
+interface Props {
+  readonly icon?: AcmeIconName;
+  readonly label: string;
+  readonly muted?: boolean;
+  readonly note?: string;
+  readonly state?: "error" | "focus";
+  readonly value: string;
+}
+
+const { icon, label, muted = false, note, state, value } = Astro.props;
+---
+
+<div class="site-acme-field">
+  <span class="site-acme-field-label">{label}</span>
+  <span class:list={["site-acme-input", state && `site-acme-input--${state}`]}>
+    {icon !== undefined && <AcmeIcon name={icon} />}
+    <span
+      class:list={[
+        "site-acme-input-value",
+        muted && "site-acme-input-value--muted",
+      ]}
+    >
+      {value}
+    </span>
+    <slot name="trail" />
+  </span>
+  {note !== undefined && <span class="site-acme-field-note">{note}</span>}
+</div>
