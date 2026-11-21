@@ -1,7 +1,7 @@
 //! Optional lossless document segments over the common cache publication rules.
 
 use std::collections::{BTreeMap, VecDeque};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use arc_swap::ArcSwapOption;
@@ -71,6 +71,10 @@ pub trait DocumentBackend: Send + Sync {
     fn initialize(&self) -> ReadOutcome {
         ReadOutcome::Miss
     }
+    /// Probe the prepared index without IO, decoding, or access-order changes.
+    fn contains(&self, _key: &StoreKey) -> bool {
+        false
+    }
     /// Read one complete document from its retained segment.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
     /// Envelope version used by the appending writer.
@@ -124,6 +128,14 @@ impl CachedDocuments {
 impl DocumentBackend for CachedDocuments {
     fn initialize(&self) -> ReadOutcome {
         self.prepare_documents()
+    }
+    fn contains(&self, key: &StoreKey) -> bool {
+        self.enabled.load(Ordering::Acquire)
+            && self
+                .index
+                .load()
+                .as_ref()
+                .is_some_and(|entries| entries.contains_key(key))
     }
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         self.read_document(key)

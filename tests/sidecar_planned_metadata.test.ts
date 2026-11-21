@@ -6,9 +6,10 @@ import test from "node:test";
 import { build } from "esbuild";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
+import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import {
   nativeParams,
@@ -56,20 +57,17 @@ for (const [name, restore] of [
     const restoredTime = new Date("2002-01-01T00:00:00.000Z");
     await fs.utimes(manifest, initialTime, initialTime);
     const params = nativeParams(root);
-    const plan = new Map([
-      [
-        planKey(
-          path.join(library, "index.mjs"),
-          "./impl.js",
-          "import-statement",
-        ),
-        { path: path.join(library, "impl.js"), sideEffects: true },
+    const plan: ResolutionPlan = {
+      paths: [
+        path.join(library, "index.mjs"),
+        path.join(library, "impl.js"),
+        path.join(library, "cjs.cjs"),
       ],
-      [
-        planKey(path.join(library, "impl.js"), "./cjs.cjs", "import-statement"),
-        { path: path.join(library, "cjs.cjs"), sideEffects: true },
+      imports: [
+        [0, "./impl.js", "import-statement", 1, true],
+        [1, "./cjs.cjs", "import-statement", 2, true],
       ],
-    ]);
+    };
     let compiles = 0;
     const compile: typeof build = async (options) => {
       compiles++;
@@ -92,11 +90,11 @@ for (const [name, restore] of [
       unmeasured,
       undefined,
       "serveEdit",
-      { imports: Object.fromEntries(plan) },
+      plan,
     );
     const complete = await bundleWith(params, build, unmeasured, {
       mode: "planned",
-      plan,
+      plan: new PlanLookup(plan),
     });
     assert.equal(entryValue(complete.result), "cjs-default");
     assert.equal(entryValue(guarded.result), "cjs-default");

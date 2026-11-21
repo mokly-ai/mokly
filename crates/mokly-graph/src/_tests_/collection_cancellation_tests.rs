@@ -42,7 +42,7 @@ fn cancellation_during_composition_prevents_the_next_view_and_encoding() {
 }
 
 #[test]
-fn cancellation_during_collection_discards_the_batch_without_starting_another() {
+fn cancellation_during_collection_prevents_the_next_view_and_encoding() {
     let probe = collection_support::probe(4);
     probe.session.render_all().unwrap();
     probe.renders.lock().unwrap().clear();
@@ -62,5 +62,5 @@ fn cancellation_during_collection_discards_the_batch_without_starting_another() 
             .collect_comparison(&mut collector)
             .unwrap_err(),
     );
-    assert_eq!(probe.renders.lock().unwrap().len(), 2);
+    assert_eq!(probe.renders.lock().unwrap().len(), 1);
 }

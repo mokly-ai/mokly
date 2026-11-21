@@ -503,8 +503,14 @@ spawn the built sidecar and render a component, screen, story, and page. The
   no marker. Its `with_plan` keeps an optional plan beside it within the
   record bound.
 - [`src/resolution_plan.rs`](./src/resolution_plan.rs) defines
-  `ResolutionPlan`, the native import targets of one captured compile, keyed
-  by importer, specifier, and import kind, and `PlannedImport`, one target.
+  `ResolutionPlan`, the native import targets of one captured compile, and
+  `PlannedImport`, one target. The plan lists each path once in its path
+  table. Each `PlannedImport` gives its importer and its target as table
+  positions, with its specifier, its import kind, and its side effects flag.
+  `DirectoryCandidates` holds one recorded directory's table position and
+  its sorted, unique lowercase ASCII names. The optional `candidates` field
+  holds these sets. Its decode rejects an invalid table position, a repeated
+  directory position, or names that violate this format.
   `RECORD_BYTES` is the 8 MiB bound of a plan record and of the records that
   the core keeps. `ResolutionPlan::record_bytes` admits a plan only with
   captured and durable evidence. `bounded_record_bytes` counts a serialized

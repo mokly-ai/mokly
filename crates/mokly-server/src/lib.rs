@@ -30,6 +30,7 @@ pub mod changes_signal;
 mod clients;
 pub mod clock;
 pub mod comparison_capture;
+mod comparison_collector;
 mod comparison_files;
 pub mod comparison_graph;
 mod comparison_metadata;

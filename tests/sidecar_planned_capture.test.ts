@@ -6,7 +6,7 @@ import { build } from "esbuild";
 
 import { bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import {
   countedCompile,
@@ -42,16 +42,10 @@ test("full-capture planned compilation keeps the complete path's evidence and wa
   const counted = countedCompile();
   const planned = await bundleWith(params, counted.compile, unmeasured, {
     mode: "planned",
-    plan: new Map([
-      [
-        planKey(
-          path.join(library, "index.mjs"),
-          "./value.mjs",
-          "import-statement",
-        ),
-        { path: target, sideEffects: true },
-      ],
-    ]),
+    plan: new PlanLookup({
+      paths: [path.join(library, "index.mjs"), target],
+      imports: [[0, "./value.mjs", "import-statement", 1, true]],
+    }),
   });
   const full = await bundleWith(params, build, unmeasured, { mode: "full" });
   assert.deepEqual(

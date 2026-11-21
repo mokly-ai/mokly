@@ -6,24 +6,30 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::{DocumentEncoder, EncodedComparisonDocument};
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
 
 use super::Collector;
 
-fn input() -> ComparisonDocument {
+fn input() -> EncodedComparisonDocument {
     input_bytes(b"<!doctype html><p>exact bytes</p>".to_vec())
 }
 
-fn input_bytes(bytes: Vec<u8>) -> ComparisonDocument {
-    ComparisonDocument {
-        artifact: Arc::new(Artifact {
-            bytes,
-            content_type: "text/html".into(),
-            fragment: None,
-            document: None,
-        }),
-        closure: Closure::default(),
-    }
+fn input_bytes(bytes: Vec<u8>) -> EncodedComparisonDocument {
+    EncodedComparisonDocument::encode(
+        "",
+        ComparisonDocument {
+            artifact: Arc::new(Artifact {
+                bytes,
+                content_type: "text/html".into(),
+                fragment: None,
+                document: None,
+            }),
+            closure: Closure::default(),
+        },
+        &DocumentEncoder,
+    )
+    .unwrap()
 }
 
 fn deterministic_bytes(length: usize, mut state: u32) -> Vec<u8> {
@@ -71,7 +77,7 @@ fn candidate_charges_are_exact_and_summary_growth_keeps_earlier_routes() {
             .restore()
             .unwrap()
             .bytes,
-        input().artifact.bytes
+        input().document.restore().unwrap().bytes
     );
 }
 

@@ -1,0 +1,35 @@
+# Frame and record bounds drop named plans whole
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the fresh Opus options check of 2026-11-20 on collector overflow, on branch `calummoore/mokly-plan-reuse-editor-files-2-4oor`. That check named this approach as the wider fix.
+- **Location:** `packages/mokly/src/sidecar/recipe-size.ts:28` to line 31, function `checkRecipeSize`; `crates/mokly-render/src/edit_plans.rs:74` to line 76, in `Records::insert`; the pair-bound fallback of `bundleRecipe` in `packages/mokly/src/sidecar/bundle-recipe.ts`; and the sections "Plan Records" and "Kept Records" of `docs/protocol/mokly-sidecar-plans.md`.
+- **Reason:** The change rewrites the frame-limit and kept-record rules of the plan protocol, which needs a new call, and it helps only edge cases outside the measured goal of the branch that found it.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Plan record:** the native import plan of a captured compile, with the reuse evidence of the same compile. A Serve edit with a current record makes no native attempt, and at most two esbuild calls under the guarded attempt rules.
+  - **Candidate names:** the names that the plan check compares in a recorded directory. They are an optional layer of the plan.
+  - **Pair bound:** the 8 MiB bound of one plan and its reuse evidence together.
+  - **Frame limit:** the 64 MiB limit of one `bundle` response from the sidecar.
+  - **Kept-record bound:** the 8 MiB total of the plan records that the core of a Serve head keeps, with their resolution settings.
+- **Background:**
+  - On 2026-11-19 the performance orchestrator, under the user's delegation, made candidate names an optional layer of the plan. Its reason: a bound removes that layer before it drops the plan.
+  - Two places apply that rule today. A collector overflow keeps the plan without names. A plan whose names fail the pair bound loses the names and the path rows that only they added, and the capture counts it again. The section "Plan Records" of `docs/protocol/mokly-sidecar-plans.md` states the pair-bound rule.
+  - The frame check, `checkRecipeSize` at `packages/mokly/src/sidecar/recipe-size.ts:28` to line 31, deletes the whole plan when the response passes 64 MiB. It does this also when the plan without names fits. The protocol says that the sidecar drops the plan before it drops the reuse evidence.
+  - `Records::insert` counts the resolution settings and the record keys together with the pair, at `crates/mokly-render/src/edit_plans.rs:74` to line 76. A pair that the capture keeps within those few bytes of 8 MiB loses its whole record. A warm start meets the same bound. The section "Kept Records" says that a record that does not fit alone is not kept.
+  - Disk admission, `DurableRecipe::with_plan` at `crates/mokly-sidecar/src/durable_recipe.rs:18` to line 23, counts the same pair as `capturedPlan`. So it needs no rule of its own.
+- **Problem:** The frame check and the kept-record bound drop a plan with names as a whole, although the same plan without names can fit.
+- **Impact if no action:** Rarely, a response near 64 MiB, or a pair within the settings' bytes of 8 MiB, loses its whole plan. The edits of that session then start with the native attempt. Results stay exact.
+- **Root question:** How can each bound that a plan must pass keep the plan without names before it drops the plan?
+- **Options:**
+  - **A.** Change nothing. Only the collector and the pair bound remove names first. Effort: Small.
+  - **B.** Give the plan type one strip operation that removes the names and the trailing path rows that no import uses. `capturedPlan`, `checkRecipeSize`, and `Records::insert` call it before they drop a plan. It needs a TypeScript helper, one Rust method, two tests, and changes to three protocol paragraphs. In Rust the strip copies one plan of at most 8 MiB. Effort: Medium.
+  - **C.** Repeat the pair-bound fallback separately at the frame check and in `Records::insert`, with no shared operation. Each bound keeps its own copy of the rule. Effort: Medium.
+- **Left out:** A run-time 1 MiB margin drops names that the record can hold, and the call of 2026-11-19 rejects that. A larger frame limit or record bound breaks the bounds that the user fixed.
+- **Shared assumptions:** The bounds stay, results stay exact, and names stay an optional layer. Source: the user's fixed bounds and the call of 2026-11-19.
+- **Wider fix:** B. One operation in the plan type covers each bound, also a bound that a later change adds.
+- **Previous examples:** The pair-bound fallback of 2026-11-19 in `bundleRecipe`, which removes the names and their added rows before it drops the plan.
+- **Recommendation:** B. It puts the rule in the plan type, so each bound keeps the plan without names with one call.
+- **Action:** ask the user, because B changes the frame-limit rule and the kept-record rule of `docs/protocol/mokly-sidecar-plans.md`, and no recorded user decision covers that change.

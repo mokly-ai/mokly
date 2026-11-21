@@ -99,7 +99,12 @@ fn concurrent_indexed_reads_hit_while_another_thread_owns_maintenance() {
             let keys = keys.clone();
             thread::spawn(move || {
                 keys.iter()
-                    .map(|key| DocumentBackend::load(store.as_ref(), key))
+                    .map(|key| {
+                        (
+                            DocumentBackend::contains(store.as_ref(), key),
+                            DocumentBackend::load(store.as_ref(), key),
+                        )
+                    })
                     .collect::<Vec<_>>()
             })
         })
@@ -111,7 +116,11 @@ fn concurrent_indexed_reads_hit_while_another_thread_owns_maintenance() {
     for (reader, result) in results.into_iter().enumerate() {
         let outcomes = result.unwrap();
         assert_eq!(outcomes.len(), 4);
-        for (outcome, (name, expected)) in outcomes.into_iter().zip(documents) {
+        for ((present, outcome), (name, expected)) in outcomes.into_iter().zip(documents) {
+            assert!(
+                present,
+                "reader {reader} must find indexed document {name} during maintenance"
+            );
             assert!(
                 matches!(&outcome, ReadOutcome::Hit(_)),
                 "reader {reader} must hit indexed document {name} during maintenance: {outcome:?}"

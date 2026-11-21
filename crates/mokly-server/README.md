@@ -86,9 +86,14 @@ retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a
 mixed generation. Its `comparison_capture` method returns `None`, so capture
 creation and smaller budgets cannot bypass these checks through the wrapped
-generation. It forwards `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to the wrapped
-generation. Scheduled tasks still call its checked reads. It keeps the default `None` of
+generation. It forwards `comparison_parallelism`, `capture_parallelism`,
+`schedule_capture_window`, `schedule_comparison_tasks`, and
+`schedule_comparison_stream` to the wrapped generation. Scheduled tasks still
+call its checked reads. Its capture collector wraps the
+`ComparisonEncoder` of the inner collector. So each capture worker checks the
+original document bytes and the digests of the closure's resources before it
+encodes a view. The collector forwards `remaining`, so the waiting views keep
+the same byte bound. It keeps the default `None` of
 `retained_comparison_input`, because a forward could bypass these checks or
 need source IO. The contract owns the admission, retention, and capacity
 limits.
@@ -280,6 +285,8 @@ generations.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
   `PackageAssets`, the built viewer inventory. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
+
+- [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.
 
 ### Related Docs
 

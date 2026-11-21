@@ -25,12 +25,14 @@ use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::BaseDependencies;
+use crate::base_render_admission::BaseRenderAdmission;
 use crate::changes_freshness::{SelectionRequest, html_dependencies, reusable, working_roots};
 
 /// Prepare the base generation through a second `Runtime` over the base tree. It reuses
-/// the head runtime's pool, render cache, and workers. A base that needs a sidecar gets a
+/// the supplied pool, render cache, and capture scheduler. A base that needs a sidecar gets a
 /// `BaseSide`, which keeps its source and dependency leases while the base graph lives.
 pub(super) struct NativeBase {
+    pub(super) admission: Arc<dyn BaseRenderAdmission>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) dependencies: Arc<dyn BaseDependencies>,
@@ -173,6 +175,11 @@ impl NativeBase {
             Ok(generation) => generation,
             Err(source) => return Err(Error::Graph { source }),
         };
+        let mut prepared = match self.admission.admit(generation, *scripts_off) {
+            Ok(prepared) => prepared,
+            Err(error) => return Err(*error.source),
+        };
+        let generation = &prepared.generation;
         let roots = roots.map(|mut roots| {
             roots.extend(
                 generation
@@ -203,11 +210,8 @@ impl NativeBase {
             }
             _ => None,
         };
-        Ok(PreparedBase {
-            generation,
-            scripts_off: *scripts_off,
-            freshness,
-        })
+        prepared.freshness = freshness;
+        Ok(prepared)
     }
 
     /// Before the base configuration loads, leases an existing complete extraction

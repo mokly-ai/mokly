@@ -6,7 +6,7 @@ import type { BuildResult } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
@@ -35,7 +35,7 @@ export interface CompiledBundle {
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
-  plan: ReadonlyMap<string, PlannedImport> | undefined;
+  plan: ResolutionPlan | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -200,7 +200,17 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
+  const originalPathCount = plan?.paths.length ?? 0;
+  const namedPlan = evidence
+    ? evidence.candidates.attach(plan, reuseEvidence)
+    : plan;
+  let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  if (!retainedPlan && namedPlan?.candidates) {
+    namedPlan.paths.length = originalPathCount;
+    delete namedPlan.candidates;
+    retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  }
+  const result = bundleResult(generation, retainedPlan);
   if (reusable && !compilation.reuseEvidence.complete) {
     delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")
