@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::path::Path;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
@@ -50,7 +51,10 @@ fn reversed_errors_return_the_first_root_error_and_join_the_chunk() {
     assert_eq!(started, BTreeSet::from([0, 1, 2, 3]));
     assert_eq!(
         *events.lock().unwrap(),
-        ["observe:/repo/r0.css", "watch:r0.css"]
+        [
+            format!("observe:{}", Path::new("/repo").join("r0.css").display()),
+            "watch:r0.css".into(),
+        ]
     );
     for store in [&*shared.lock().unwrap(), &*compiler.local.lock().unwrap()] {
         assert_eq!(
@@ -121,7 +125,10 @@ fn watch_cancellation_keeps_the_inserted_root_and_joins_later_workers() {
     assert_eq!(gate.active.load(Ordering::SeqCst), 0);
     assert_eq!(
         *events.lock().unwrap(),
-        ["observe:/repo/r0.css", "watch:r0.css"]
+        [
+            format!("observe:{}", Path::new("/repo").join("r0.css").display()),
+            "watch:r0.css".into(),
+        ]
     );
     for store in [&*shared.lock().unwrap(), &*compiler.local.lock().unwrap()] {
         assert_eq!(
@@ -171,7 +178,10 @@ fn a_worker_panic_resumes_its_payload_after_committing_the_prior_root() {
     assert_eq!(gate.active.load(Ordering::SeqCst), 0);
     assert_eq!(
         *events.lock().unwrap(),
-        ["observe:/repo/r0.css", "watch:r0.css"]
+        [
+            format!("observe:{}", Path::new("/repo").join("r0.css").display()),
+            "watch:r0.css".into(),
+        ]
     );
     let store = shared.lock().unwrap_or_else(|error| error.into_inner());
     assert_eq!(

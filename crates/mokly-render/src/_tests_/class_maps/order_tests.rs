@@ -1,6 +1,7 @@
 //! Reverse worker exits cannot reorder maps, observations, watches, or cache inserts.
 
 use std::collections::BTreeSet;
+use std::path::Path;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
@@ -52,18 +53,18 @@ fn reversed_chunks_keep_root_order_and_caller_tracing_with_four_workers() {
     assert_eq!(
         *events.lock().unwrap(),
         [
-            "observe:/repo/r0.css",
-            "watch:r0.css",
-            "observe:/repo/r1.css",
-            "watch:r1.css",
-            "observe:/repo/r2.css",
-            "watch:r2.css",
-            "observe:/repo/r3.css",
-            "watch:r3.css",
-            "observe:/repo/r4.css",
-            "watch:r4.css",
-            "observe:/repo/r5.css",
-            "watch:r5.css",
+            format!("observe:{}", Path::new("/repo").join("r0.css").display()),
+            "watch:r0.css".into(),
+            format!("observe:{}", Path::new("/repo").join("r1.css").display()),
+            "watch:r1.css".into(),
+            format!("observe:{}", Path::new("/repo").join("r2.css").display()),
+            "watch:r2.css".into(),
+            format!("observe:{}", Path::new("/repo").join("r3.css").display()),
+            "watch:r3.css".into(),
+            format!("observe:{}", Path::new("/repo").join("r4.css").display()),
+            "watch:r4.css".into(),
+            format!("observe:{}", Path::new("/repo").join("r5.css").display()),
+            "watch:r5.css".into(),
         ]
     );
     let spans = trace.spans();
