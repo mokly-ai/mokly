@@ -17,11 +17,17 @@ fn serve_startup_rechecks_are_full_and_attempt_copies_reuse_only_live_edit_keys(
     let expired = {
         let _first = prepare(&runtime.with_tree(runtime.tree.clone()), "one", None);
         assert_eq!(jobs.swap(0, Ordering::Relaxed), 2, "startup seeds all keys");
-        let _rechecked = prepare(&runtime.with_tree(runtime.tree.clone()), "one", None);
+        let rechecked = prepare(&runtime.with_tree(runtime.tree.clone()), "one", None);
         assert_eq!(
             jobs.swap(0, Ordering::Relaxed),
             2,
             "the startup recheck stays full"
+        );
+        rechecked.prepare_render_reuse();
+        assert_eq!(
+            jobs.swap(0, Ordering::Relaxed),
+            0,
+            "seeding runs no exporter job"
         );
         runtime.bundle_capture = BundleCapture::ServeEdit;
         let _edited = prepare(&runtime.with_tree(runtime.tree.clone()), "two", None);
@@ -56,6 +62,7 @@ fn retained_current_keys_pin_no_previous_graph_catalogue_or_generation_lease() {
         let weak_lease = Arc::downgrade(&lease);
         let previous = prepare(&runtime, "one", Some(lease));
         assert_eq!(jobs.swap(0, Ordering::Relaxed), 2);
+        previous.prepare_render_reuse();
         runtime.bundle_capture = BundleCapture::ServeEdit;
         let current = prepare(&runtime, "two", None);
         assert_eq!(jobs.swap(0, Ordering::Relaxed), 1);
@@ -75,14 +82,16 @@ fn retained_current_keys_pin_no_previous_graph_catalogue_or_generation_lease() {
 fn base_and_non_serve_preparations_never_reuse_head_keys() {
     let (mut ordinary, jobs) = runtime();
     let mut runtime = ordinary.clone().with_serve_edit_plans();
-    let _head = prepare(&runtime, "one", None);
+    let head = prepare(&runtime, "one", None);
     assert_eq!(jobs.swap(0, Ordering::Relaxed), 2);
+    head.prepare_render_reuse();
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let mut base = runtime.for_base(runtime.tree.clone(), "test".into(), None);
     base.bundle_capture = BundleCapture::ServeEdit;
     assert!(ordinary.render_keys.is_none());
     assert!(base.clone().with_serve_edit_plans().render_keys.is_none());
     let _first_base = prepare(&base, "base", None);
+    _first_base.prepare_render_reuse();
     assert_eq!(
         jobs.swap(0, Ordering::Relaxed),
         2,
@@ -96,6 +105,7 @@ fn base_and_non_serve_preparations_never_reuse_head_keys() {
     );
     ordinary.bundle_capture = BundleCapture::ServeEdit;
     let _regular_one = prepare(&ordinary, "one", None);
+    _regular_one.prepare_render_reuse();
     assert_eq!(jobs.swap(0, Ordering::Relaxed), 2);
     let _regular_two = prepare(&ordinary, "one", None);
     assert_eq!(
@@ -108,5 +118,28 @@ fn base_and_non_serve_preparations_never_reuse_head_keys() {
         jobs.swap(0, Ordering::Relaxed),
         0,
         "base does not replace head predecessor"
+    );
+}
+
+#[test]
+fn an_edit_before_startup_seeding_calculates_full_current_keys_then_reuses_them() {
+    let (runtime, jobs) = runtime();
+    let mut runtime = runtime.with_serve_edit_plans();
+    let startup = prepare(&runtime, "one", None);
+    assert_eq!(jobs.swap(0, Ordering::Relaxed), 2);
+    runtime.bundle_capture = BundleCapture::ServeEdit;
+    let _current = prepare(&runtime, "two", None);
+    assert_eq!(
+        jobs.swap(0, Ordering::Relaxed),
+        2,
+        "unfinished seed uses full current keys"
+    );
+    startup.prepare_render_reuse();
+    assert_eq!(jobs.swap(0, Ordering::Relaxed), 0);
+    let _unchanged = prepare(&runtime, "two", None);
+    assert_eq!(
+        jobs.swap(0, Ordering::Relaxed),
+        0,
+        "a late seed cannot replace current keys"
     );
 }

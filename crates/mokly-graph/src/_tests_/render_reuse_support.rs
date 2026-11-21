@@ -147,6 +147,20 @@ impl Fixture {
         (keys, self.jobs.load(Ordering::Relaxed))
     }
 
+    pub(super) fn unseeded(&self) -> (RenderKeys, usize) {
+        self.jobs.store(0, Ordering::Relaxed);
+        let keys = RenderKeys::build_unseeded_with_workers(
+            &self.inputs(),
+            fallback(),
+            self.workers.as_ref(),
+        );
+        (keys, self.jobs.load(Ordering::Relaxed))
+    }
+
+    pub(super) fn jobs(&self) -> usize {
+        self.jobs.load(Ordering::Relaxed)
+    }
+
     pub(super) fn check(&self, previous: Option<&RenderKeys>, label: &str) -> RenderKeys {
         let (actual, _) = self.reuse(previous);
         let expected = render_reference::build(&self.inputs(), fallback());

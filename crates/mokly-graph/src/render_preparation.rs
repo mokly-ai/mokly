@@ -13,7 +13,10 @@ use crate::render_inputs::{PREVIEWS, RenderInputs};
 pub(crate) struct Prepared<'a> {
     pub(crate) records: Records<'a>,
     pub(crate) shared: String,
-    pub(crate) exporters: Vec<(&'a str, bool)>,
+    exporters: BTreeSet<&'a str>,
+    stories: BTreeSet<&'a str>,
+    unnamed_renderer: bool,
+    unnamed_preview: bool,
     pub(crate) renderer: Option<&'a str>,
     pub(crate) preview: Option<&'static str>,
 }
@@ -72,25 +75,27 @@ impl<'a> Prepared<'a> {
                     .push(encoded.clone());
             }
         }
-        let exporters = exporters
-            .into_iter()
-            .filter_map(|module| {
-                let story = stories.contains(module);
-                if (story && unnamed_preview) || (!story && unnamed_renderer) {
-                    return None;
-                }
-                Some((module, story))
-            })
-            .collect();
         Ok(Self {
             records,
             shared,
             exporters,
+            stories,
+            unnamed_renderer,
+            unnamed_preview,
             renderer: inputs.renderer,
             preview: PREVIEWS
                 .iter()
                 .find(|candidate| graph.contains_key(**candidate))
                 .copied(),
+        })
+    }
+
+    /// Current eligible exporters, selected directly into a caller's job vector.
+    pub(crate) fn exporters(&self) -> impl Iterator<Item = (&'a str, bool)> + '_ {
+        self.exporters.iter().copied().filter_map(|module| {
+            let story = self.stories.contains(module);
+            (!(story && self.unnamed_preview || !story && self.unnamed_renderer))
+                .then_some((module, story))
         })
     }
 }

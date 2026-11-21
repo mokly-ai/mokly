@@ -37,6 +37,7 @@ fn serve_edits_keep_full_document_keys_through_runtime_attempt_copies() {
     consumer.runtime = Arc::new((*consumer.runtime).clone().with_serve_edit_plans());
     let mut current = consumer.generation(consumer.prepare().unwrap());
     check_full(&consumer, current.as_ref());
+    current.prepare_render_reuse();
     Arc::make_mut(&mut consumer.runtime).bundle_capture = BundleCapture::ServeEdit;
     for (path, before, after, expected) in [
         ("specs/h.ts", "Hello", "Hello edited", vec!["s/s"]),

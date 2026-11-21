@@ -154,6 +154,10 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn prepare_render_reuse(&self) {
+        self.prepare_render_inputs();
+    }
+
     fn comparison_identity(
         &self,
         read: ComparisonRead,

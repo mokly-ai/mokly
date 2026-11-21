@@ -79,12 +79,13 @@ impl AfterUsage for ChangesPass {
                     let _activity = activity;
                     owner
                         .execute(head, task_source, task_cancel, references)
-                        .await;
+                        .await
                 }
                 .instrument(tracing::Span::current()),
             );
             let mut refresh = false;
             let mut settled = false;
+            let mut completed = false;
             loop {
                 if stopped(&stop) || !self.current(&origin) {
                     cancel.cancel();
@@ -92,7 +93,10 @@ impl AfterUsage for ChangesPass {
                 }
                 tokio::select! {
                     result = &mut work => {
-                        if let Err(source) = result { self.diagnostics.failed(&ServerError::Internal(InternalError::Task { source })); }
+                        match result {
+                            Ok(committed) => completed = committed,
+                            Err(source) => self.diagnostics.failed(&ServerError::Internal(InternalError::Task { source })),
+                        }
                         settled = true;
                         break;
                     },
@@ -118,6 +122,15 @@ impl AfterUsage for ChangesPass {
                     source = next;
                 }
                 continue;
+            }
+            if completed {
+                self.seed_after_completion(
+                    origin.clone(),
+                    source.clone(),
+                    cancel.clone(),
+                    stop.clone(),
+                )
+                .await;
             }
             loop {
                 if stopped(&stop) || !self.current(&origin) {

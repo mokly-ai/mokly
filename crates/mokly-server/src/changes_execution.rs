@@ -26,7 +26,7 @@ impl ChangesPass {
         source: Arc<dyn ChangeSource>,
         cancel: Arc<dyn ChangeCancellation>,
         references: Result<String>,
-    ) {
+    ) -> bool {
         let _staging = Staging(source.clone());
         let started = Instant::now();
         let phase = source.started(cancel.clone());
@@ -44,6 +44,8 @@ impl ChangesPass {
             parent.in_scope(|| owner.prepare(head, input, token, progress, references))
         })
         .await;
+        let task_failed = work.is_err();
+        let mut completed = false;
         let result = match work {
             Ok(result) => result,
             Err(source) => Err(InternalError::Task { source }.into()),
@@ -53,7 +55,7 @@ impl ChangesPass {
                 match self.publish(origin.clone(), accepted.clone(), files).await {
                     Ok(true) => {
                         tracing::Span::current().record("status", "ok");
-                        cancel.commit(&Commit(&|| {
+                        completed = cancel.commit(&Commit(&|| {
                             if let Some(phase) = &phase {
                                 phase.finish();
                             }
@@ -91,19 +93,25 @@ impl ChangesPass {
                                 }
                                 source.finished(Err(&error), started.elapsed());
                                 true
-                            }));
+                            }))
                         }
-                        Err(error) => owner.diagnostics.failed(&error),
-                        _ => {}
+                        Err(error) => {
+                            owner.diagnostics.failed(&error);
+                            false
+                        }
+                        _ => false,
                     }
                 })
             })
             .await;
-            if let Err(source) = reporting {
-                self.diagnostics
-                    .failed(&ServerError::Internal(InternalError::Task { source }));
+            match reporting {
+                Ok(committed) => completed = committed,
+                Err(source) => self
+                    .diagnostics
+                    .failed(&ServerError::Internal(InternalError::Task { source })),
             }
         }
+        completed && !task_failed
     }
 
     fn prepare(

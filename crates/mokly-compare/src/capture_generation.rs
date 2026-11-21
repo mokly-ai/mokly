@@ -61,6 +61,10 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn prepare_render_reuse(&self) {
+        self.source.prepare_render_reuse();
+    }
+
     fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
         if !self.restorer.proves_restore() {
             return None;

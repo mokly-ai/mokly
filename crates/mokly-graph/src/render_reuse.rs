@@ -31,10 +31,9 @@ impl Facts {
             .map(|(path, record)| ((*path).to_owned(), module(records, path, record)))
             .collect();
         let stories = prepared
-            .exporters
-            .iter()
+            .exporters()
             .filter(|(_, story)| *story)
-            .map(|(module, _)| (*module).to_owned())
+            .map(|(module, _)| module.to_owned())
             .collect();
         Ok(Self {
             modules,
@@ -103,10 +102,9 @@ impl Facts {
                 .is_ok()
     }
 
-    /// Owned allocation capacities, excluding allocator headers and the existing key map.
-    pub(crate) fn bytes(&self) -> usize {
-        size_of::<Self>()
-            + self.modules.capacity() * size_of::<(String, [u8; 32])>()
+    /// Heap capacities; the owning lazy cell accounts for the inline facts storage.
+    pub(crate) fn heap_bytes(&self) -> usize {
+        self.modules.capacity() * size_of::<(String, [u8; 32])>()
             + self
                 .modules
                 .iter()

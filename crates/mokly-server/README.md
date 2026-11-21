@@ -251,7 +251,11 @@ generations.
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
   `ChangesPass::activity` holds the render store's activity, and the private
-  `Reference` keeps a probe result together with its lease.
+  `Reference` keeps a probe result together with its lease. After a committed
+  Ready or Unavailable completion, and after `execute` and its write lease end,
+  `ChangesPass` runs the optional `ChangeSource::settled` work and waits for it.
+  [`src/changes_seed.rs`](./src/changes_seed.rs) skips that work when Serve
+  stops, the classification is cancelled, or the head is no longer current.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   usage pass's bounded batch, which keeps catalogue order for starts, warnings,
   and failure reports.

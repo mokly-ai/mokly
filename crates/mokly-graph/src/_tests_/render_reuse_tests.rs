@@ -13,6 +13,19 @@ use support::{A, B, C, Fixture, RENDERER, STORY};
 
 #[path = "render_reuse_generated_tests.rs"]
 mod generated_tests;
+#[path = "render_seed_tests.rs"]
+mod seed_tests;
+
+#[test]
+fn deferred_full_keys_do_not_supply_facts_before_generation_seeding() {
+    let fixture = Fixture::new();
+    let (startup, jobs) = fixture.unseeded();
+    assert_eq!(jobs, 4, "startup calculates every exporter");
+    let full = RenderKeys::build(&fixture.inputs(), support::fallback());
+    assert_eq!(startup.modules, full.modules);
+    let (_, jobs) = fixture.reuse(Some(&startup));
+    assert_eq!(jobs, 4, "unseeded startup cannot supply predecessor facts");
+}
 
 #[test]
 fn unchanged_and_isolated_edits_avoid_unaffected_exporter_jobs() {

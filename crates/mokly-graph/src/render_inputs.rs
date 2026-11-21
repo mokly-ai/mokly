@@ -1,13 +1,16 @@
 //! Per-entry-module render input keys: every input that can change a module's renders.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::mem::size_of;
+use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+use std::sync::OnceLock;
 
+use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderSource, ResolvedDefinition};
 
 use crate::key::NodeKey;
-use crate::render_closure::closure;
-use crate::render_exporters;
-use crate::render_preparation::Prepared;
+use crate::render_calculation::{self, Built, Mode};
 use crate::render_reuse::Facts;
 use crate::workers::RenderWorkers;
 
@@ -43,7 +46,7 @@ pub struct RenderInputs<'a> {
 pub struct RenderKeys {
     modules: BTreeMap<String, NodeKey>,
     fallback: NodeKey,
-    reuse: Option<Box<Facts>>,
+    reuse: Option<Box<OnceLock<Option<Facts>>>>,
 }
 
 impl RenderKeys {
@@ -64,7 +67,7 @@ impl RenderKeys {
     /// does not name. The stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
-        Self::build_keys(inputs, fallback, None, false, None)
+        Self::build_keys(inputs, fallback, None, Mode::Full)
     }
 
     /// Build the same keys on the supplied render workers with caller tracing context.
@@ -74,7 +77,16 @@ impl RenderKeys {
         fallback: NodeKey,
         workers: &dyn RenderWorkers,
     ) -> Self {
-        Self::build_keys(inputs, fallback, Some(workers), false, None)
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Full)
+    }
+
+    /// Calculate every key and defer Serve-head facts until the generation requests them.
+    pub fn build_unseeded_with_workers(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: &dyn RenderWorkers,
+    ) -> Self {
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Deferred)
     }
 
     /// Seed Serve-head facts with a full build, or reuse equal preceding entry keys.
@@ -85,21 +97,20 @@ impl RenderKeys {
         workers: &dyn RenderWorkers,
         previous: Option<&Self>,
     ) -> Self {
-        Self::build_keys(inputs, fallback, Some(workers), true, previous)
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Reuse(previous))
     }
 
     #[tracing::instrument(name = "render.inputs", skip_all, fields(
         reused = tracing::field::Empty, recomputed = tracing::field::Empty,
-        reuse_bytes = tracing::field::Empty
+        retained_bytes = tracing::field::Empty
     ))]
     fn build_keys(
         inputs: &RenderInputs<'_>,
         fallback: NodeKey,
         workers: Option<&dyn RenderWorkers>,
-        reusable: bool,
-        previous: Option<&Self>,
+        mode: Mode<'_>,
     ) -> Self {
-        match build_modules(inputs, workers, reusable, previous) {
+        let keys = match render_calculation::build(inputs, workers, mode) {
             Ok(Built { modules, reuse }) => Self {
                 modules,
                 fallback,
@@ -109,13 +120,21 @@ impl RenderKeys {
                 tracing::error!(%error, "render inputs could not serialize; using whole-bundle keys");
                 Self::whole(fallback)
             }
-        }
+        };
+        tracing::Span::current().record("retained_bytes", keys.reuse_facts_bytes());
+        keys
     }
 
-    /// Bytes of owned reuse-fact allocations, excluding allocator headers and existing keys.
-    /// Full builders retain no facts and return zero.
+    /// Bytes of the lazy cell and its facts, excluding allocator headers and existing keys.
+    /// Ordinary full builders retain no cell and return zero.
     pub fn reuse_facts_bytes(&self) -> usize {
-        self.reuse.as_deref().map_or(0, Facts::bytes)
+        self.reuse.as_deref().map_or(0, |cell| {
+            size_of::<OnceLock<Option<Facts>>>()
+                + cell
+                    .get()
+                    .and_then(Option::as_ref)
+                    .map_or(0, Facts::heap_bytes)
+        })
     }
 
     /// The whole-bundle key, which every module without its own key uses.
@@ -146,85 +165,71 @@ impl RenderKeys {
     }
 }
 
-struct Built {
-    modules: BTreeMap<String, NodeKey>,
-    reuse: Option<Box<Facts>>,
+/// Borrow the same catalogue inputs for full calculation, edit reuse, and deferred seeding.
+pub fn with_catalogue_inputs<T>(
+    config: &ResolvedConfig,
+    catalogue: &PreparedCatalogue,
+    generation: &JavaScriptGeneration,
+    build: impl FnOnce(&RenderInputs<'_>) -> T,
+) -> T {
+    let renderer = config.renderer();
+    let declarations = catalogue
+        .model
+        .entries
+        .iter()
+        .filter_map(|entry| {
+            let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
+            Some((source.handle.clone(), entry.metadata.source.path.clone()))
+        })
+        .collect();
+    build(&RenderInputs {
+        generation,
+        bindings: &catalogue.javascript.bindings,
+        renderer: renderer.as_deref(),
+        entries: &catalogue.javascript.entries,
+        declarations: &declarations,
+    })
 }
 
-/// Prepare shared closures once and schedule only exporters whose complete inputs may differ.
-fn build_modules(
-    inputs: &RenderInputs<'_>,
-    workers: Option<&dyn RenderWorkers>,
-    reusable: bool,
-    previous: Option<&RenderKeys>,
-) -> serde_json::Result<Built> {
-    let graph = &inputs.generation.modules;
-    let prepared = Prepared::new(inputs)?;
-    let renderer = prepared.records.parts(
-        prepared
-            .renderer
-            .map_or_else(BTreeSet::new, |root| closure(graph, [root.to_owned()])),
-    );
-    let preview = prepared.records.parts(
-        prepared
-            .preview
-            .map_or_else(BTreeSet::new, |root| closure(graph, [root.to_owned()])),
-    );
-    let facts = if reusable {
-        Some(Box::new(Facts::new(&prepared, &renderer, &preview)?))
-    } else {
-        None
-    };
-    let reuse = previous.and_then(|keys| Some((keys, keys.reuse.as_deref()?)));
-    let (same_renderer, same_preview) =
-        facts
-            .as_deref()
-            .zip(reuse)
-            .map_or((false, false), |(facts, (_, before))| {
-                (
-                    facts.same_common(before, false),
-                    facts.same_common(before, true),
-                )
+impl RenderKeys {
+    /// Reading an in-progress initializer returns no evidence and never waits.
+    pub(crate) fn completed_facts(&self) -> Option<&Facts> {
+        self.reuse.as_deref()?.get()?.as_ref()
+    }
+
+    /// A fallback is never reusable as an exporter's own key.
+    pub(crate) fn keyed(&self, module: &str) -> Option<&NodeKey> {
+        self.modules.get(module)
+    }
+
+    /// Initialize only this generation's facts; derive temporary inputs inside the closure.
+    pub(crate) fn seed_with(&self, seed: impl FnOnce() -> serde_json::Result<Facts>) {
+        if let Some(cell) = self.reuse.as_deref() {
+            let mut panic = None;
+            cell.get_or_init(|| {
+                let span = tracing::info_span!("render.inputs.seed", status = "ok", recomputed = 0, retained_bytes = tracing::field::Empty);
+                let _scope = span.enter();
+                let facts = match catch_unwind(AssertUnwindSafe(seed)) {
+                    Ok(Ok(facts)) => Some(facts),
+                    Ok(Err(error)) => {
+                        span.record("status", "error");
+                        tracing::error!(%error, "render reuse facts could not serialize; keeping full calculations");
+                        None
+                    }
+                    Err(payload) => {
+                        span.record("status", "error");
+                        panic = Some(payload);
+                        None
+                    }
+                };
+                span.record("retained_bytes", size_of::<OnceLock<Option<Facts>>>() + facts.as_ref().map_or(0, Facts::heap_bytes));
+                facts
             });
-    let affected = if same_renderer || same_preview {
-        facts
-            .as_deref()
-            .zip(reuse)
-            .map_or_else(BTreeSet::new, |(facts, (_, before))| {
-                facts.affected(before, graph)
-            })
-    } else {
-        BTreeSet::new()
-    };
-    let mut modules = BTreeMap::new();
-    let mut jobs = Vec::new();
-    for (module, story) in &prepared.exporters {
-        if let Some((facts, (previous, before))) = facts.as_deref().zip(reuse)
-            && !affected.contains(module)
-            && (if *story { same_preview } else { same_renderer })
-            && facts.same_mode(before, module)
-            && let Some(key) = previous.modules.get(*module)
-        {
-            modules.insert((*module).to_owned(), key.clone());
-        } else {
-            jobs.push((*module, if *story { &preview } else { &renderer }));
+            if let Some(payload) = panic {
+                resume_unwind(payload);
+            }
         }
     }
-    let span = tracing::Span::current();
-    span.record("reused", modules.len());
-    span.record("recomputed", jobs.len());
-    span.record("reuse_bytes", facts.as_deref().map_or(0, Facts::bytes));
-    modules.extend(render_exporters::build(
-        graph,
-        &prepared.records,
-        &prepared.shared,
-        jobs,
-        workers,
-    ));
-    Ok(Built {
-        modules,
-        reuse: facts,
-    })
 }
 
 #[cfg(test)]

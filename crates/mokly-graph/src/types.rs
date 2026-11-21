@@ -88,6 +88,9 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Prepare optional generation-owned reuse evidence without changing keys or rendering.
+    fn prepare_render_reuse(&self) {}
+
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;
 

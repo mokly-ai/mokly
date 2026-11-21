@@ -9,6 +9,7 @@ use mokly_sidecar::methods::BundleCapture;
 use crate::runtime::Runtime;
 
 impl Runtime {
+    /// Defer startup facts and consume completed predecessors only for Serve edits.
     pub(crate) fn render_keys(
         &self,
         inputs: &RenderInputs<'_>,
@@ -21,6 +22,15 @@ impl Runtime {
                 self.workers.as_ref(),
             ));
         };
+        if self.bundle_capture == BundleCapture::Full {
+            let keys = Arc::new(RenderKeys::build_unseeded_with_workers(
+                inputs,
+                fallback,
+                self.workers.as_ref(),
+            ));
+            *latest.lock().unwrap_or_else(|error| error.into_inner()) = Arc::downgrade(&keys);
+            return keys;
+        }
         let previous = if self.bundle_capture == BundleCapture::ServeEdit {
             latest
                 .lock()
