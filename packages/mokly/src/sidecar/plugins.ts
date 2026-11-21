@@ -12,7 +12,7 @@ import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
-import { nativeResolution, planKey } from "./native-resolution.js";
+import { importCallbackKey, nativeResolution } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
@@ -191,14 +191,20 @@ export function consumerPlugins(
           if (resolution.mode === "native" && nativeResolution(paths, args))
             return;
           if (args.pluginData === undefined)
-            handledImports?.add(planKey(args.importer, args.path, args.kind));
+            handledImports?.add(
+              importCallbackKey(args.importer, args.path, args.kind),
+            );
           const planned =
             resolution.mode === "planned" && args.pluginData === undefined
-              ? resolution.plan.get(
-                  planKey(args.importer, args.path, args.kind),
-                )
+              ? resolution.plan.get(args.importer, args.path, args.kind)
               : undefined;
-          if (planned) return await plannedResult(paths, args, planned);
+          if (planned && resolution.mode === "planned")
+            return await plannedResult(
+              paths,
+              args,
+              resolution.plan.plan,
+              planned,
+            );
           const resolved = await resolveImport(paths, build, args.path, {
             resolveDir: args.resolveDir,
             importer: args.importer,

@@ -166,3 +166,7 @@ mod wire_tests;
 #[cfg(test)]
 #[path = "_tests_/definition_tests.rs"]
 mod definition_tests;
+
+#[cfg(test)]
+#[path = "_tests_/plan_wire_tests.rs"]
+mod plan_wire_tests;

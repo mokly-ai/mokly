@@ -18,6 +18,7 @@ import {
   packageTarget,
 } from "./package-map.js";
 import { PhysicalInputs } from "./physical-inputs.js";
+import { PlanCandidates } from "./plan-candidates.js";
 import { PnpInputs } from "./pnp-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { bareSpecifier, packageName } from "./specifier.js";
@@ -25,6 +26,7 @@ import { bareSpecifier, packageName } from "./specifier.js";
 /** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
   readonly physical: PhysicalInputs;
+  readonly candidates: PlanCandidates;
   private readonly configs: ConfigInputs;
   private readonly packages = new Set<string>();
   private readonly aliases: Array<[string, string]>;
@@ -36,7 +38,8 @@ export class ResolutionEvidence {
     private readonly paths: ModulePaths,
     durability?: CaptureDurability,
   ) {
-    this.physical = new PhysicalInputs(durability);
+    this.candidates = new PlanCandidates(paths.settings);
+    this.physical = new PhysicalInputs(durability, this.candidates);
     this.configs = new ConfigInputs(this.physical, paths);
     this.aliases = Object.entries(paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,
@@ -131,6 +134,7 @@ export class ResolutionEvidence {
 
   private candidate(base: string): void {
     if (!this.physical.complete) return;
+    this.candidates.candidate(base);
     const extension = path.extname(base).toLowerCase();
     if (
       !extension ||
@@ -146,6 +150,7 @@ export class ResolutionEvidence {
 
   private capture(name: string, directory: string): void {
     const config = this.configs.scope(directory);
+    this.candidates.request(name, config);
     this.configs.manifest(directory);
     if (
       name.startsWith("#") ||
@@ -203,6 +208,7 @@ export class ResolutionEvidence {
       )) {
         const base = packageTarget(pkg, target);
         if (folder) {
+          this.candidates.unproved();
           this.pnp.covered(pkg);
           for (const candidate of packageFolderCandidates(
             base,
@@ -215,6 +221,7 @@ export class ResolutionEvidence {
   }
 
   finish(metafile: Metafile) {
+    this.candidates.metafile(metafile);
     this.pnp.finish(metafile, this.aliases);
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file)) continue;

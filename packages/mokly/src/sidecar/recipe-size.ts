@@ -6,7 +6,7 @@ import { FRAME_LIMIT } from "./transport.js";
 
 function recipeBytes(params: BundleParams, result: BundleResult): number {
   const id = "18446744073709551615";
-  // Recipe fields have no numbers; key order cannot change their byte length.
+  // Key order cannot change the serialized byte length of these objects.
   const shared =
     Buffer.byteLength(JSON.stringify(result.compiled)) +
     Buffer.byteLength(JSON.stringify(result.modules)) -

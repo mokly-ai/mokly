@@ -4,8 +4,8 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
+import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 import { Session } from "../packages/mokly/src/sidecar/session.js";
 
 import {
@@ -47,21 +47,40 @@ for (const exact of [true, false])
         toolchainPresent: Boolean(captured.result.compiled.toolchain),
       })}`,
     );
-    assert.deepEqual(captured.result.plan.imports, {
-      [planKey(
-        path.join(root, "mokly-entry"),
-        path.join(root, "entry.mjs"),
-        "import-statement",
-      )]: {
-        path: path.join(root, "entry.mjs"),
-        sideEffects: true,
-      },
-      [planKey(path.join(root, "entry.mjs"), "./value.js", "import-statement")]:
-        {
-          path: path.join(root, "value.js"),
-          sideEffects: true,
-        },
-    });
+    const plan = captured.result.plan;
+    assert.deepEqual(
+      [...plan.paths].sort(),
+      ["mokly-entry", "entry.mjs", "value.js", "."]
+        .map((file) => path.resolve(root, file))
+        .sort(),
+    );
+    assert.deepEqual(
+      plan.imports
+        .map(([importer, specifier, kind, target, sideEffects]) => [
+          plan.paths[importer],
+          specifier,
+          kind,
+          plan.paths[target],
+          sideEffects,
+        ])
+        .sort(),
+      [
+        [
+          path.join(root, "mokly-entry"),
+          path.join(root, "entry.mjs"),
+          "import-statement",
+          path.join(root, "entry.mjs"),
+          true,
+        ],
+        [
+          path.join(root, "entry.mjs"),
+          "./value.js",
+          "import-statement",
+          path.join(root, "value.js"),
+          true,
+        ],
+      ].sort(),
+    );
     assert.equal(captured.result.compiled.reuseEvidence.complete, true);
     assert.equal(captured.result.compiled.reuseEvidence.durable, true);
     assert.equal(counted.counts.compilations, exact ? 1 : 2);
@@ -82,13 +101,9 @@ test("an edit plan makes one attempt and matches native-first output and inputs 
     'export const existing="existing";',
   );
   const params = nativeParams(root);
-  const plan = {
-    imports: {
-      [planKey(entry, "./value.js", "import-statement")]: {
-        path: target,
-        sideEffects: true,
-      },
-    },
+  const plan: ResolutionPlan = {
+    paths: [entry, target],
+    imports: [[0, "./value.js", "import-statement", 1, true]],
   };
   for (const [name, source] of [
     ["content", 'export const value="edited";'],
@@ -145,14 +160,9 @@ test("a narrowed planned error retries the complete plan and equals native-first
   );
   await write(path.join(root, "value.js"), "export const present=1;");
   const params = nativeParams(root);
-  const plan = {
-    imports: {
-      [planKey(path.join(root, "entry.mjs"), "./value.js", "import-statement")]:
-        {
-          path: path.join(root, "value.js"),
-          sideEffects: true,
-        },
-    },
+  const plan: ResolutionPlan = {
+    paths: [path.join(root, "entry.mjs"), path.join(root, "value.js")],
+    imports: [[0, "./value.js", "import-statement", 1, true]],
   };
   const counted = countedCompile();
   const error = (operation: Promise<unknown>) =>
@@ -193,7 +203,7 @@ test("a request plan stays outside settings and a full request ignores it", asyn
   const first = await session.call({
     id: 1,
     method: "bundle",
-    params: { ...params, plan: { imports: {} } },
+    params: { ...params, plan: { paths: [], imports: [] } },
   });
   const second = await session.call({
     id: 2,
@@ -201,9 +211,8 @@ test("a request plan stays outside settings and a full request ignores it", asyn
     params: {
       ...params,
       plan: {
-        imports: {
-          unused: { path: "different request-only plan", sideEffects: true },
-        },
+        paths: ["unused importer", "different request-only plan"],
+        imports: [[0, "unused", "import-statement", 1, true]],
       },
     },
   });
@@ -218,7 +227,7 @@ test("a request plan stays outside settings and a full request ignores it", asyn
   await session.call({
     id: 3,
     method: "bundle",
-    params: { ...nativeParams(root), plan: { imports: {} } },
+    params: { ...nativeParams(root), plan: { paths: [], imports: [] } },
   });
   assert.equal(
     counted.counts.compilations,
