@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite.config` field is not available yet. The [Storybook setup on Vite milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
+Status: The `vite.config` field is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path

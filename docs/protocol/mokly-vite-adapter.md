@@ -1,6 +1,6 @@
 # Vite Adapter
 
-Status: The Vite stylesheet transform, Storybook's merged setup, and the optional file are not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds them.
+Status: The Vite stylesheet transform, Storybook's merged setup, and the optional file are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds the transform, and the [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds the merged setup and the optional file.
 
 This page extends the [sidecar bundling contract](./mokly-sidecar.md#bundling)
 and the [module source rules](./mokly-sidecar-modules.md). It defines the Vite

@@ -1210,6 +1210,10 @@ Depends on: 14
 
 - [ ] Transform each local stylesheet as design call 21 says, in place of
       the configured PostCSS module.
+- [ ] Under the adapter, send every local stylesheet of a catalogue without
+      JavaScript through the setup, as design call D12 says. A sidecar then
+      starts, and the base side extracts its sources and selects an
+      installation, as for the `postcss` module.
 - [ ] Keep Mokly's order, bundling, delivery, and attribution on the result.
 - [ ] Test Sass, CSS Modules class names, and Tailwind's Vite plugin.
 - [ ] Update `docs/guides/authoring/vite.md` and
