@@ -16,7 +16,10 @@ The means come from interleaved rounds against the control.
 The targets of 2026-11-20 named `main` as the control.
 On 2026-11-21 the performance orchestrator set the frozen step 1 runtime `fb8b20f77` as the control of this stacked round.
 After the step 1 merge at 03:10 UTC, the control is core and dist built from main `77021d88c`.
-Readiness, head usage, and edits must not become slower beyond measurement noise.
+The initial targets permit no readiness, head usage, or edit regression beyond noise.
+On 2026-11-21 the performance orchestrator accepted a repeatable warm readiness cost of 65 to 79 milliseconds.
+It also accepted the confirming warm unchanged gain of 0.33 seconds below the initial 0.5-second target.
+Edits remain unchanged in that confirmation.
 The whole-process-tree peak of cold ten-edit sessions must remain within 2% of the control.
 Every published byte must remain equal on all four required fixtures.
 
@@ -396,7 +399,7 @@ Cold discovery and extraction therefore wait for successful Serve readiness unle
 The pin, checkout sample, and configuration load keep their early start.
 The warm path and every other base rule stay unchanged.
 The cold 0.72-second gain replaces the original 1.5-second acceptance target for this change.
-The accepted readiness and edit differences are within the performance orchestrator's noise bound.
+The first acceptance treated the readiness and edit differences as within its noise bound.
 The accepted cold ten-edit whole-tree peak is 3,166 MiB against its own 3,171 MiB control.
 The performance orchestrator owns the final PR merge after Required CI.
 
@@ -410,6 +413,17 @@ After the targeted checks, push the cleanup for four warm one-line and four warm
 The performance orchestrator runs those rounds against main `36cfd7cf7` while this workspace runs the gate.
 It requires no new byte proof when the runtime diff only removes the unused producer and its experiment test.
 The pull request must state that scope.
+
+The performance orchestrator confirmed cleanup `237c1785b` on 2026-11-21 against the same main control and dist.
+Its four one-line warm rounds gain 0.67 seconds and its four unchanged warm rounds gain 0.33 seconds.
+Warm readiness is 65 to 79 milliseconds later in all eight rounds.
+This cost repeats and is accepted, rather than classified as noise.
+Edits are unchanged at 2.00 and 1.98 seconds.
+The pull request includes both official tables and names the remaining readiness cost.
+The performance orchestrator requests a source-only check of work before readiness and a post-merge follow-up.
+Its first option considers deferring that work while keeping the warm gain.
+Code can establish scheduling safety, but only a future measurement can establish the retained gain.
+Change no product code for that follow-up in this branch.
 
 Large React contention remains a post-merge task owned by Cal.
 Its first option is an idle-slot base bundle bound.
@@ -440,9 +454,10 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 
 - [x] Run the merged-tree repository suite, one heavy job at a time.
 - [x] Remove the unselected bundle-end experiment and its unused state, while preserving the accepted Ready-only behavior and every live assertion.
-- [ ] Receive the performance orchestrator's warm confirmation after the cleanup SHA is pushed.
+- [x] Receive the performance orchestrator's warm confirmation after the cleanup SHA is pushed.
+- [x] Record the remaining pre-readiness work and the accepted warm readiness cost in a post-merge follow-up.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
-- [ ] Commit with Conventional Commits and push the workspace branch.
+- [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
 - [ ] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
 - [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.

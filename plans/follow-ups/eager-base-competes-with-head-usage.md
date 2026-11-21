@@ -215,6 +215,9 @@
   shipped change to the eager admission rules updates the Admission section
   of `docs/protocol/mokly-eager-base-preparation.md` in the same change.
 - **Related:**
+  - [eager-base-warm-readiness-cost.md](./eager-base-warm-readiness-cost.md):
+    the accepted warm readiness cost before usage. Its options can move more
+    base work into usage, so both measurements must check head usage.
   - [cold-start-base-overlap-memory.md](./cold-start-base-overlap-memory.md):
     the memory of early base work beside head usage. This item covers its CPU
     contention with the head usage pass. Neither result answers the other.
