@@ -198,10 +198,13 @@ Depends on: 2
 The fence is non-UI pipeline work plus its drawing. Keep the drawing in
 Milestone 8.
 
-- [ ] Add the fence to the site Markdown pipeline: render the sample at build
+- [x] Add the fence to the site Markdown pipeline: render the sample at build
       time in a sandboxed frame beside its code, with the line-to-element map.
-- [ ] Accept the fence in the guide checks of the site and the package.
-- [ ] Use the fence in the Your first screen guide of `docs/guides`.
+      Branch: `calummoore/canvas-redesign-m7-html-sample-fence-9llh`.
+- [x] Accept the fence in the guide checks of the site and the package.
+      Branch: `calummoore/canvas-redesign-m7-html-sample-fence-9llh`.
+- [x] Use the fence in the Your first screen guide of `docs/guides`. Branch:
+      `calummoore/canvas-redesign-m7-html-sample-fence-9llh`.
 
 ## Milestone 8: Site docs sample and changelog
 
