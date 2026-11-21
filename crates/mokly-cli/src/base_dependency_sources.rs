@@ -34,10 +34,21 @@ impl NativeDependencies {
         if let Some(routing) = &self.routing {
             routing.normal(&sources.directory);
         }
-        let reader: &dyn InputReader = &SourceInputs;
-        let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
-        let working: &dyn WorkingInputs = &SystemWorkingInputs;
-        let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
+        let identities: Result<_> = (|| {
+            let reader: &dyn InputReader = &SourceInputs;
+            let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
+            let working: &dyn WorkingInputs = &SystemWorkingInputs;
+            let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
+            Ok((base, head))
+        })();
+        let (base, head) = identities.inspect_err(|_| {
+            let _scope = tracing::info_span!(
+                "review.base-dependencies",
+                status = "error",
+                tier = tracing::field::Empty
+            )
+            .entered();
+        })?;
         Ok(DependencySources {
             sources,
             base,
