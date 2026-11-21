@@ -1,6 +1,14 @@
 ---
+/**
+ * The document the site publishes for a path it does not know: the legal
+ * document layout, as a page frame labelled `404.html`, holding only its
+ * heading.
+ */
+import PageFrame from "../components/PageFrame.astro";
 import Site from "../layouts/Site.astro";
 import { NOT_FOUND_ROUTE, PAGE_METADATA } from "../metadata.js";
+
+import "../styles/document.css";
 
 const { description, title } = PAGE_METADATA[NOT_FOUND_ROUTE];
 ---
@@ -8,11 +16,13 @@ const { description, title } = PAGE_METADATA[NOT_FOUND_ROUTE];
 <Site
   description={description}
   indexed={false}
-  main="site-document site-policy"
+  main="site-policy"
   route={NOT_FOUND_ROUTE}
   title={title}
 >
-  <div class="site-document-intro">
-    <h1>Page not found</h1>
-  </div>
+  <PageFrame file="404.html">
+    <div class="site-document-intro">
+      <h1>Page not found</h1>
+    </div>
+  </PageFrame>
 </Site>

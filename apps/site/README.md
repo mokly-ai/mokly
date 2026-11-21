@@ -1,6 +1,6 @@
 # Mokly Site
 
-Status: The site takes the Canvas palette, Geist and the new brand, but not the Canvas chrome and pages yet. The [site chrome and legal pages milestone](../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) builds the Canvas chrome and the footer scheme control, and restyles the legal pages. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs milestone](../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Canvas docs. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog. The [site pricing milestone](../../plans/canvas-redesign.md#milestone-9-site-pricing) builds `/pricing/` and its links to the app.
+Status: The site draws the Canvas chrome and legal pages, but not the Canvas home, docs, changelog and pricing pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs milestone](../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Canvas docs. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog. The [site pricing milestone](../../plans/canvas-redesign.md#milestone-9-site-pricing) builds `/pricing/` and its links to the app.
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
@@ -247,7 +247,12 @@ Terms, Privacy, Complaints and Security are Markdown documents under
 `src/content/legal/`. Their effective dates, provider details, retention
 statements and security claims stay aligned with the cloud protocols and
 production runbooks. `src/legal.ts` owns their shared route and navigation
-model; every policy route renders the same Markdown document layout.
+model; every policy route renders the same document layout: a page frame on
+the canvas, labelled with its Markdown source such as `legal/terms.md`,
+whose sheet holds the Legal kicker, the title, the effective date, the
+Markdown body ruled into its sections and the links to the other three. The
+404 page shares the layout in a frame labelled `404.html` and holds only its
+heading.
 
 ### Deployment
 
@@ -289,9 +294,10 @@ Pages project and attach the domain are in the
 - `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
 - `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.
 - `src/components/scheme-island.js` — the scheme island, a checked classic script that `src/layouts/Site.astro` emits first in every page head: it applies `?scheme=` or the choice kept under `mokly.site.scheme` in `localStorage` before the first paint, and it runs the scheme control. `tests/scheme_island.test.ts` runs this file in `node:vm` against the stub page of `tests/helpers/scheme-island.ts`.
-- The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Brand.astro`, `Button.astro`, `Chip.astro`, `FrameLabel.astro`, and `Avatar.astro` and `Presence.astro` with the people of `people.ts`, all under `src/components/`.
+- The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Brand.astro`, `Button.astro`, `Chip.astro`, `Kicker.astro`, `FrameLabel.astro`, `Selection.astro`, `PageFrame.astro`, which frames a document with a `FrameLabel` and a `Selection`, and `Avatar.astro` and `Presence.astro` with the people of `people.ts`, all under `src/components/`.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
+- `src/components/Policy.astro` and `src/styles/document.css` — one legal document in its page frame, and the sheet of the legal pages, which `src/pages/404.astro` shares.
 - `src/changelog/` — the typed changelog parser, the release model, note rendering and the Atom feed.
 - `src/metadata.ts`, `src/og.ts` and `scripts/og.mjs` — per-page metadata, the social card drawn as SVG in the Canvas light look around the light lockup's outlined drawing, and the pre-build step that rasterizes one PNG per route. The rasterizer loads no web font, so the card's text takes system stacks.
 - `scripts/brand-assets.mjs` and `public/brand/` — the canonical brand SVGs and the script that derives their PNGs and light-variant aliases (`brand:build` and `brand:check`).
@@ -300,7 +306,7 @@ Pages project and attach the domain are in the
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
-- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets, each loaded once by a layout: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`), `layout.css` and the page sheets. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
+- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets. `src/layouts/Site.astro` loads the shared sheets on every page: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`) and `layout.css`, which holds the document type that the legal pages, the docs and the changelog share. A page, a layout or a part loads its own sheet, such as `page-frame.css` for `PageFrame.astro`. The built page puts such a sheet before the shared sheets, so a rule in it that overrides a shared rule needs a more specific selector. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map and the build errors.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.

@@ -1,11 +1,17 @@
 ---
 /**
- * One legal document: the location eyebrow, title, effective date, Markdown
- * body and links to the other legal documents.
+ * One legal document as a page frame on the canvas, labelled with its
+ * Markdown source under `src/content/`: the Legal kicker, the title and the
+ * effective date, the Markdown body ruled into its sections, and the links
+ * to the other legal documents. A legal page renders it in a `site-policy`
+ * main, whose sheet `src/styles/document.css` holds.
  */
 import { getEntry, render } from "astro:content";
 
 import { effectiveDate, relatedPolicies, type PolicyId } from "../legal.js";
+
+import Kicker from "./Kicker.astro";
+import PageFrame from "./PageFrame.astro";
 
 import "../styles/document.css";
 
@@ -22,23 +28,25 @@ const effective = effectiveDate(entry.data.effective);
 const related = relatedPolicies(id);
 ---
 
-<div class="site-document-intro">
-  <p class="site-eyebrow">Legal</p>
-  <h1>{entry.data.title}</h1>
-  <p class="site-policy-date">
-    Effective <time datetime={effective.datetime}>{effective.readable}</time>
-  </p>
-</div>
-<div class="site-document-body site-policy-body">
-  <Content />
-</div>
-<nav aria-label="Legal documents" class="site-policy-links">
-  <p class="site-policy-links-title">Legal documents</p>
-  <div class="site-policy-link-list">
-    {related.map((policy) => (
-      <a class="site-link" href={policy.route}>
-        {policy.label} <span aria-hidden="true">&#8594;</span>
-      </a>
-    ))}
+<PageFrame file={`legal/${id}.md`}>
+  <div class="site-document-intro">
+    <Kicker>Legal</Kicker>
+    <h1>{entry.data.title}</h1>
+    <p class="site-policy-date">
+      Effective <time datetime={effective.datetime}>{effective.readable}</time>
+    </p>
   </div>
-</nav>
+  <div class="site-document-body site-policy-body">
+    <Content />
+  </div>
+  <nav aria-label="Legal documents" class="site-policy-links">
+    <p class="site-policy-links-title">Legal documents</p>
+    <div class="site-policy-link-list">
+      {related.map((policy) => (
+        <a class="site-link" href={policy.route}>
+          {policy.label} <span aria-hidden="true">&#8594;</span>
+        </a>
+      ))}
+    </div>
+  </nav>
+</PageFrame>

@@ -1,5 +1,28 @@
-/* The chip that Chip.astro draws: a short label on a pill, for a version, a
-   status or a branch. The rules match docs/mockups/styles/site/labels.css. */
+/* The small labels of the Canvas pages: the kicker that Kicker.astro draws
+   above a heading, and the chip that Chip.astro draws, a short label on a
+   pill for a version, a status or a branch. The rules match
+   docs/mockups/styles/site/labels.css. */
+
+/* The mono kicker above a heading, such as 01 Browse */
+
+.site-kicker {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  gap: 10px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.site-kicker-index {
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
+}
+
+/* The chip: a version, a status or a branch on a pill */
 
 .site-chip {
   align-items: center;

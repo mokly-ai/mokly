@@ -133,6 +133,24 @@ for (const [
   });
 }
 
+/**
+ * The not-found document as assistive technology reads it. It shares the
+ * legal documents' page frame and holds only its heading; the frame's file
+ * label and its selection are depictions, so the main holds nothing else.
+ */
+const NOT_FOUND_MAIN = `
+  - main:
+    - /children: equal
+    - heading "Page not found" [level=1]
+`;
+
+test("the page frame hides its depictions from assistive technology", async ({
+  page,
+}) => {
+  await page.goto("/does-not-exist/");
+  await expect(page.getByRole("main")).toMatchAriaSnapshot(NOT_FOUND_MAIN);
+});
+
 test(
   "desktop release lists start 12px below their heading lines",
   { tag: "@desktop" },

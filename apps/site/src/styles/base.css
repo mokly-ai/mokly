@@ -60,10 +60,13 @@ pre {
   margin: 0;
 }
 
+/* A wrapped heading balances its lines, as the mockups set every heading. */
+
 h1,
 h2,
 h3 {
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 h1 {
