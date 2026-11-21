@@ -1,37 +1,40 @@
 /**
- * The recorded parity differences of the changelog area: the workspace,
- * Version history and the release frames. `design-site-parity.test.ts`
+ * The recorded parity differences of the changelog area: Version history,
+ * the note filter and the release frames. `design-site-parity.test.ts`
  * merges this list with the lists of the other areas. Each key is a selector
  * that the mockup sheets and the site sheets both declare with different
- * values; each value says why, and which milestone of the Canvas redesign
- * plan removes the difference.
+ * values; each value says why the difference is structural.
  */
 
-const MILESTONE = "Canvas changelog; Milestone 8 rebuilds the changelog";
+const MOBILE =
+  "only the mockup's mobile composition declares this property; the site's base rule is the mobile composition, so the site's desktop composition keeps the property or sets it again, and draws what the mockup's desktop draws without a declaration";
 
-const HISTORY = `Version history is a floating panel of 44px rows on one rail, sticky beside the frames; ${MILESTONE}`;
-const ROW = `a Version history row is a shared panel row on the rail with a dot, the current row filled, not a bordered link; ${MILESTONE}`;
-const FRAME = `each release is a frame on the canvas with its anchor label, a large version and its date over the count chips; ${MILESTONE}`;
-const NOTES = `the note groups sit on a rail beside their notes, each note a row with its links in a right-hand column; ${MILESTONE}`;
+const BELOW =
+  "the mockup's step below 721px draws its desktop composition narrower than the site's 768px breakpoint; the site draws the mobile composition there and has no such step, so its desktop keeps the values of the wider frames";
+
+const LANDING =
+  "the site's root scroll padding clears the tool bar, 56px on desktop and 60px on mobile, so the site's scroll margin is the mockup's less the bar's height, and a jump lands the part where the mockup lands it";
+
+const RESET =
+  "the mockup's reset of the headings and paragraphs under its root outweighs this rule, so the mockup draws the reset's value; the site's reset weighs less, so the site leaves out the declaration and draws the same";
 
 export const CHANGELOG_DIFFERENCES: Readonly<Record<string, string>> = {
-  ".site-changelog-body": `Version history and the frames share a workspace, the frames up to 1080px and centred; ${MILESTONE}`,
-  ".site-release-index": HISTORY,
-  ".site-release-index-date": HISTORY,
-  ".site-release-index-version": HISTORY,
-  ".site-release-index-link": ROW,
-  ".site-release-index-link:hover": ROW,
-  ".site-release-index-link--current": ROW,
-  ".site-release-index-link--current:hover": ROW,
-  ".site-releases": FRAME,
-  ".site-release": FRAME,
-  ".site-release-meta": FRAME,
-  ".site-release-meta h2": FRAME,
-  ".site-release-meta time": FRAME,
-  ".site-release-link": `Read release details is an outlined button beside the compare range; ${MILESTONE}`,
-  ".site-release-notes": NOTES,
-  ".site-release-notes ul": NOTES,
-  ".site-release-notes li": NOTES,
-  ".site-release-group": NOTES,
-  ".site-release-group-head": NOTES,
+  ".site-release-index":
+    "the mobile mockup does not draw Version history, so the rule that places it applies to its mobile composition unseen; the site draws the panel on every page and hides it below 1200px. The panel sticks 72px below the window top, under the 56px tool bar, as the docs panels do, where the mockup writes 60px + 24px from the mobile bar's height",
+  ".site-changelog-filter": MOBILE,
+  ".site-changelog-filter-option": MOBILE,
+  ".site-changelog-filter-option svg": MOBILE,
+  ".site-release": LANDING,
+  ".site-release-group": LANDING,
+  ".site-release-group-title": RESET,
+  ".site-release-group-hint": RESET,
+  ".site-release-meta": BELOW,
+  ".site-release-counts": BELOW,
+  ".site-release-notes": BELOW,
+  ".site-release-pin": BELOW,
+  ".site-release-links": `${BELOW}; and ${MOBILE}`,
+  ".site-release-group--breaking": `the mockup sets the callout's 214px rail in changelog-release.css after the narrower steps of changelog-notes.css, which outweigh it through the viewport attribute, and its mobile rule for every group gives the callout one column; the site sets the rail for the desktop with its steps after it, so a comparison in sheet order reads the steps' single column; and ${BELOW}`,
+  ".site-release-upgrade-count": MOBILE,
+  ".site-release--compact": MOBILE,
+  ".site-release-more > .site-release-summary": MOBILE,
 };

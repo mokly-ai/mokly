@@ -1,0 +1,36 @@
+---
+/**
+ * Earlier releases: the section of the canvas below the full frames, headed
+ * by its tag and a mono line with the number of releases and their dates,
+ * with each older release as a compact frame. Without older releases it
+ * draws nothing.
+ *
+ * Use: `<Earlier releases={releases.slice(FULL_FRAMES)} />`, newest first.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import SectionBox from "../SectionBox.astro";
+
+import CompactRelease from "./CompactRelease.astro";
+import { counted, dateRange } from "./facts.js";
+
+interface Props {
+  readonly releases: readonly PublishedRelease[];
+}
+
+const { releases } = Astro.props;
+const newest = releases[0];
+const oldest = releases.at(-1);
+---
+
+{newest !== undefined && oldest !== undefined && (
+  <SectionBox
+    class="site-changelog-earlier"
+    meta={`${counted(releases.length, "release")} · ${dateRange(oldest.date, newest.date)}`}
+    tag="Earlier releases"
+    tagId="earlier-releases"
+  >
+    {releases.map((release) => (
+      <CompactRelease release={release} />
+    ))}
+  </SectionBox>
+)}

@@ -1,0 +1,260 @@
+/* The changelog notes: the note groups of a release on their rail, and the
+   note rows with their scope chips, code spans, links, issue and commit
+   links and nested items. changelog-upgrade.css holds the upgrade notes.
+   This sheet loads after changelog-filter.css and before
+   changelog-release.css, whose breaking callout refines the groups and tints
+   the rows. The rules
+   match docs/mockups/styles/site/changelog-notes.css and the note rules of
+   changelog-responsive.css; changelog.css says how the site writes the
+   compositions. */
+
+/* The groups: on desktop each heading sticks on a rail beside its notes,
+   under the tool bar and the filter; on mobile it stands above them. A
+   jump to a group lands it 136px below the window top on desktop and 96px
+   on mobile: the root's scroll padding clears the tool bar, and the scroll
+   margin adds the rest. */
+
+.site-release-notes {
+  display: grid;
+  gap: 32px;
+  padding: 26px 20px 30px;
+}
+
+.site-release-group {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  scroll-margin-top: 36px;
+}
+
+.site-release-group-head {
+  align-self: start;
+  min-width: 0;
+  position: static;
+  top: 140px;
+}
+
+/* The title keeps the -0.02em tracking of every heading, as the mockup
+   draws it: its reset of the headings outweighs the title's own tracking */
+
+.site-release-group-title {
+  align-items: flex-start;
+  display: flex;
+  font-size: 0.9375rem;
+  gap: 9px;
+  line-height: 24px;
+}
+
+.site-release-group-title svg {
+  color: var(--mk-color-text-muted);
+  flex: none;
+  margin-top: 4px;
+}
+
+.site-release-group-count {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  margin-left: 3px;
+}
+
+/* The notes of a release: their lists carry no markers and keep long words
+   inside the measure. On desktop each note of a group is a row, the text at
+   a reading measure and its issue and commit links in a right-hand column,
+   like a commit log; on mobile the links flow after the text. */
+
+.site-release-notes ul {
+  list-style: none;
+  padding: 0;
+}
+
+.site-release-notes li {
+  overflow-wrap: break-word;
+}
+
+.site-release-group > ul > li {
+  align-items: baseline;
+  border-top: 1px solid var(--mk-color-border);
+  column-gap: 32px;
+  display: block;
+  font-size: 0.9375rem;
+  grid-template-columns: minmax(0, 31em) max-content;
+  justify-content: space-between;
+  letter-spacing: -0.004em;
+  line-height: 1.55;
+  padding: 11px 0 12px;
+}
+
+.site-release-group > ul > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* The scope of a note as a mono chip, its code spans and its links. A link
+   in a note reads as a body link of the document pages. */
+
+.site-release-scope {
+  background: var(--mk-color-surface-muted);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: inline-block;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  line-height: 21px;
+  margin-right: 3px;
+  padding: 0 7px;
+  vertical-align: 1px;
+}
+
+.site-release-note-text code {
+  background: color-mix(in srgb, var(--mk-color-text) 5.5%, transparent);
+  border-radius: 4px;
+  font-family: var(--mk-font-mono);
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+  padding: 1px 4px;
+}
+
+.site-release-note-text a {
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--mk-color-signal-deep) 45%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.site-release-note-text a:hover {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+/* The issue and commit links of a note */
+
+.site-release-refs {
+  display: inline-flex;
+  gap: 10px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.site-release-ref {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 4px;
+  line-height: 1;
+  position: relative;
+  text-decoration: none;
+  transition: color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+/* A link reaches a 44px target through a transparent band, so it drops the
+   44px minimum height that base.css gives every link */
+
+.site-release-refs .site-release-ref {
+  min-height: 0;
+}
+
+.site-release-ref::before {
+  content: "";
+  inset: -16px -5px;
+  position: absolute;
+}
+
+.site-release-ref:hover {
+  color: var(--mk-color-signal-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Nested items, such as a workspace dependency bump, as a layer tree */
+
+.site-release-notes .site-release-tree {
+  border-left: 1px solid
+    color-mix(
+      in srgb,
+      var(--mk-color-border-strong) 20%,
+      var(--mk-color-border)
+    );
+  grid-column: 1;
+  margin: 8px 0 0 3px;
+  padding-left: 14px;
+}
+
+.site-release-notes .site-release-tree li {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.90625rem;
+  padding: 3px 0;
+}
+
+/* The desktop composition: the rail beside the notes, and the note rows */
+
+@media (min-width: 768px) {
+  .site-release-notes {
+    gap: 40px;
+    padding: 34px 40px 44px;
+  }
+
+  .site-release-group {
+    gap: 36px;
+    grid-template-columns: 236px minmax(0, 1fr);
+    scroll-margin-top: 80px;
+  }
+
+  .site-release-group-head {
+    position: sticky;
+  }
+
+  .site-release-group > ul > li {
+    display: grid;
+    font-size: 0.96875rem;
+  }
+
+  .site-release-refs {
+    margin-left: 0;
+  }
+}
+
+/* Narrower frames. In a frame under 940px, below 1036px and from 1200px to
+   1275px beside Version history, the rail narrows and each note's links
+   flow after its text at the reading measure. In a frame under 700px, below
+   780px, each group's head stands above its notes. */
+
+@media (min-width: 768px) and (max-width: 1035px),
+  (min-width: 1200px) and (max-width: 1275px) {
+  .site-release-group {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+
+  .site-release-group > ul > li {
+    display: block;
+    padding-right: max(0px, calc(100% - 35em));
+  }
+
+  .site-release-refs {
+    margin-left: 4px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 779px) {
+  .site-release-group {
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-release-group-head {
+    position: static;
+  }
+}

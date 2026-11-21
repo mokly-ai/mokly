@@ -1,0 +1,84 @@
+---
+/**
+ * Version history: the floating panel beside the release frames, a
+ * navigation landmark that counts the releases in its head and lists every
+ * release under its month, newest first, on one rail. Each row links to its
+ * release's frame with its version and its date, and a release with
+ * breaking changes adds a warning mark whose hidden text says so. A patch
+ * release draws a smaller dot. The row of the release in view is current;
+ * the built page marks the newest, and the changelog island follows the
+ * reader. The foot links the Atom feed.
+ *
+ * Use: `<History current={releases[0]?.version} releases={releases} />`.
+ */
+import { FEED_PATH } from "../../changelog/feed.js";
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Icon from "../Icon.astro";
+import Panel from "../Panel.astro";
+import PanelRow from "../PanelRow.astro";
+
+import { isBreaking, isPatch, releaseMonths, shortDate } from "./facts.js";
+
+interface Props {
+  /** The version of the release in view. */
+  readonly current: string | undefined;
+  readonly releases: readonly PublishedRelease[];
+}
+
+const { current, releases } = Astro.props;
+
+/** The current mark of the row of the release in view. */
+function currentRow(release: PublishedRelease): { readonly current?: "true" } {
+  return release.version === current ? { current: "true" } : {};
+}
+
+/** The classes of a release's row: the rail, current and patch. */
+function rowClass(release: PublishedRelease): string {
+  return [
+    "site-release-index-link",
+    release.version === current && "site-release-index-link--current",
+    isPatch(release) && "site-release-index-link--patch",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+---
+
+<Panel
+  as="nav"
+  class="site-release-index"
+  meta={String(releases.length)}
+  metaMono
+  title="Version history"
+>
+  {releaseMonths(releases).map((month) => (
+    <>
+      <p class="site-release-index-month">{month.month}</p>
+      {month.releases.map((release) => (
+        <PanelRow
+          class={rowClass(release)}
+          href={`#${release.anchor}`}
+          {...currentRow(release)}
+        >
+          <span class="site-release-index-version">v{release.version}</span>
+          {isBreaking(release) && (
+            <span class="site-release-index-mark" title="Breaking changes">
+              <Icon name="alert" size={13} />
+              <span class="site-visually-hidden">, breaking changes</span>
+            </span>
+          )}
+          <time
+            class="site-release-index-date"
+            datetime={release.date}
+            slot="trailing"
+          >
+            {shortDate(release.date)}
+          </time>
+        </PanelRow>
+      ))}
+    </>
+  ))}
+  <PanelRow href={FEED_PATH} icon="feed" slot="foot">
+    Atom feed
+  </PanelRow>
+</Panel>

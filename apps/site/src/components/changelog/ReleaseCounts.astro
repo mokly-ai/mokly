@@ -1,0 +1,65 @@
+---
+/**
+ * The count chips of a release: one for each note group, each a link to
+ * that group with its icon and its count, and one for the upgrade notes.
+ * Breaking changes take the changed tone. Each chip's `data-kind` names its
+ * group, so the changelog island can quiet the chips of the groups that the
+ * filter hides.
+ *
+ * - `compact`: the chips of a compact frame keep each chip's icon and count
+ *   in sight and give its name to the reader and the tooltip.
+ *
+ * Use: `<ReleaseCounts release={release} />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Chip from "../Chip.astro";
+
+import { GROUP_ICONS, groupShort, groupTitle } from "./facts.js";
+
+interface Props {
+  readonly compact?: boolean;
+  readonly release: PublishedRelease;
+}
+
+const { compact = false, release } = Astro.props;
+const named = compact ? "site-visually-hidden" : undefined;
+---
+
+{(release.groups.length > 0 || release.upgrade.length > 0) && (
+  <ul aria-label={`Notes in ${release.version}`} class="site-release-counts">
+    {release.groups.map((group) => (
+      <li>
+        <a
+          class="site-release-count"
+          data-kind={group.kind}
+          href={`#${group.id}`}
+          title={
+            compact ? `${groupTitle(group)}: ${group.notes.length}` : undefined
+          }
+        >
+          <Chip
+            icon={GROUP_ICONS[group.kind]}
+            tone={group.kind === "breaking" ? "changed" : "neutral"}
+          >
+            <span class={named}>{groupShort(group)}</span>{" "}
+            <b>{group.notes.length}</b>
+          </Chip>
+        </a>
+      </li>
+    ))}
+    {release.upgrade.length > 0 && (
+      <li>
+        <a
+          class="site-release-count"
+          data-kind="upgrade"
+          href={`#${release.upgradeId}`}
+          title={compact ? "Upgrade notes" : undefined}
+        >
+          <Chip icon="doc">
+            <span class={named}>Upgrade notes</span>
+          </Chip>
+        </a>
+      </li>
+    )}
+  </ul>
+)}
