@@ -6,85 +6,111 @@ that milestone's report. Its other items, 13 to 19 and 23 to 28, are design
 calls in the [design record](./canvas-redesign-design.md). This file is a part
 of the plan, and the pull request that deletes the plan deletes it too.
 
-## 20. Does the demo app stay after go-live
+## 20. What the site may draw after go-live
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/cloud/site.md` (Boundary)
+- **Location:** `docs/protocol/cloud/site.md:39-47`, `docs/protocol/cloud/marketing-site.md:101-104`, `apps/site/README.md:219-223`
 - **Background:** Decision 2, option A, draws a fictional demo app and keeps
-  every claim about Mokly real. Cal relaxed the source rule "until go-live",
-  because comments and agents ship before then. `site.md` now says that the
-  site may draw a fictional demo app and features that ship before go-live.
-- **Problem:** The reason names only the features. It does not say whether
-  the demo app itself ends at go-live.
-- **Impact if no action:** At go-live the check removes the home spread, which
-  is built around the demo app.
-- **Root question:** After go-live, may the home page still draw the
-  fictional demo app?
+  every claim about Mokly real. Cal relaxed the source rule until go-live,
+  because comments and agents ship before then. Every site page also draws
+  people and agents (Maya, Sam, Claude, Codex) as part of the design file.
+- **Problem:** The docs disagree. `site.md` and `marketing-site.md` end the
+  demo app at go-live. The site README and the plan end only the unshipped
+  features. Named agents can read as a claim that Mokly works with them.
+- **Impact if no action:** At go-live the check removes the home spread and
+  the people on every page header.
+- **Root question:** After go-live, what may the site still draw that is not
+  real: the demo app, the people and agents, or neither?
 - **Options:**
-  - **A.** Yes. At go-live only the depicted Mokly features are checked, and
-    features that did not ship are removed. Effort: Small.
-  - **B.** No. The demo app and the unshipped features both end at go-live.
-    Effort: Small now, Medium at go-live for a new home page.
-- **Left out:** None. The decision text allows only these two readings.
-- **Wider fix:** None, because this is a reading of a decision.
-- **Previous examples:** None found.
-- **Recommendation:** A. It matches the text of decision 2, option A, and the
-  reason Cal gave.
+  - **A.** Keep the demo app and the people as fiction. At go-live, only the
+    depicted Mokly features are checked. Presence inside a drawn Mokly screen
+    and each named agent are checked like features. Effort: Small.
+  - **B.** The demo app, the people and the unshipped features all end at
+    go-live. Effort: Small now, Large at go-live.
+  - **C.** Keep the demo app, but count the people and agents as the presence
+    and agent features, removed at go-live unless those features ship.
+    Effort: Small now, Medium at go-live.
+  - **D.** Mark each drawing of an unshipped feature in the site source, as
+    docs pages carry `status: ahead`, and add it to the go-live pass. It works
+    with A, B or C. Effort: Small.
+- **Left out:** Deciding at go-live, because today's text then applies B by
+  default.
+- **Wider fix:** D, because a marked drawing cannot be missed.
+- **Previous examples:** The go-live pass for `status: ahead` docs pages in
+  `site.md` and `plans/follow-ups/site-pages-still-marked-ahead.md`.
+- **Recommendation:** A with D. Cal approved the named people and counts in
+  decision 2, and D makes the go-live check reliable.
 - **Action:** ask the user, because the answer reads Cal's own decision.
 
-## 21. Privacy Policy does not name site storage
+## 21. What the Privacy Policy says about browser storage
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Location:** `apps/site/src/content/legal/privacy.md` (section 9), `docs/protocol/cloud/site-legal.md`
-- **Background:** The footer scheme control keeps the reader's choice in
-  `localStorage`. The docs tree already keeps its scroll position in session
-  storage. Section 9, "Cookies and browser storage", lists only the app's
-  storage.
-- **Problem:** The section that names browser storage leaves out the site's
-  storage. No sentence is false.
-- **Impact if no action:** The policy stays incomplete when Milestone 4 ships
-  the scheme control.
-- **Root question:** Does the Privacy Policy name the site's browser storage?
+- **Location:** `apps/site/src/content/legal/privacy.md:227-236`, `docs/protocol/cloud/site-legal.md:43-47`, `apps/site/tests/legal.test.ts:68-73`
+- **Background:** The site footer keeps the scheme choice in `localStorage`.
+  The docs tree already keeps its scroll position in session storage.
+  Milestone 13 keeps the app's Theme on the device. Section 9 lists only the
+  app's storage, and says the app uses only storage needed to operate the
+  service. UK rules cover any data stored on the device, not only cookies.
+- **Problem:** Section 9 leaves out the site's storage, and the app's Theme
+  makes its app sentence false.
+- **Impact if no action:** The policy is incomplete, and partly wrong after
+  Milestone 13.
+- **Root question:** What does the Privacy Policy tell a reader about what
+  the site and the app keep in the browser?
 - **Options:**
-  - **A.** Add one requirement to `site-legal.md` and one sentence to the
-    policy in Milestone 4, with a new effective date. Effort: Small.
-  - **B.** Change nothing, because the storage keeps only the reader's own
-    choices and holds no personal data. Effort: Small.
-- **Left out:** A consent banner, because the site sets no cookie.
-- **Wider fix:** None, because `site-legal.md` already owns the policy claims.
-- **Previous examples:** None found.
-- **Recommendation:** A. The section claims to cover browser storage, and the
-  fix is one sentence.
+  - **A.** Add one sentence about the site's storage in Milestone 4, with a
+    new effective date. Effort: Small.
+  - **B.** Change nothing. Effort: Small.
+  - **C.** One edit for both: name the site's scheme choice and tree position
+    and the app's Theme, with their purpose, that they stay in the browser,
+    and how to remove them. Reword the app sentence, add browser storage to
+    the triggers in `site-legal.md`, and move all four legal dates together,
+    as the legal test requires. Effort: Small.
+  - **D.** A test that fails when a source file uses browser storage that
+    section 9 does not list. It is a new check. Effort: Medium.
+- **Left out:** A consent banner, because preference storage needs no
+  consent.
+- **Wider fix:** D.
+- **Previous examples:** The docs tree key in
+  `apps/site/src/components/docs/tree-scroll.ts:1` and the desktop sign-in
+  verifier in `apps/app/src/navigation/desktop-sign-in.ts:16`.
+- **Recommendation:** C, changed from A by the options check. It costs the
+  same as A and also keeps the app sentence true.
 - **Action:** ask the user, because legal text needs Cal's approval and a new
   effective date.
 
-## 22. Account menu has no site links
+## 22. How a signed-in reader reaches the site
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/cloud/marketing-site.md` lines 66–69
-- **Background:** `marketing-site.md` says that the signed-in account menu
-  links Home, Docs and Changelog. The merged account menu mockup has four
-  rows: the reader, Theme, Settings and Sign out. No app code makes these
-  links today.
+- **Location:** `docs/protocol/cloud/marketing-site.md:68-73`
+- **Background:** `marketing-site.md` says the signed-in account menu links
+  Home, Docs and Changelog. The merged account menu mockup has four rows: the
+  reader, Theme, Settings and Sign out. Inside the product the Mokly mark is
+  not a link, and the desktop app has no address bar.
 - **Problem:** The requirement and the merged mockup disagree.
 - **Impact if no action:** Milestone 13 builds a menu that breaks one of them.
-- **Root question:** How does a signed-in reader reach the site's Docs and
-  Changelog from the app?
+- **Root question:** How does a signed-in reader, in a browser or the desktop
+  app, reach the site's Docs, Changelog and Home?
 - **Options:**
-  - **A.** Follow the mockup and remove the sentence. The mark still links
-    Home, and contextual help links docs pages. Effort: Small.
-  - **B.** Add Docs and Changelog rows to the account menu, with a mockup
-    change in Milestone 15. Effort: Small.
-- **Left out:** A separate help menu, because no design draws one.
+  - **A.** Follow the mockup and remove the sentence. A signed-in reader then
+    has no fixed path to the site. Effort: Small.
+  - **B.** Add Docs and Changelog rows to the account menu, and to More on
+    phones. Change the mockup in Milestone 15 and five docs. Effort: Medium.
+  - **C.** Add Docs and Changelog to the desktop app's Help menu, and keep
+    four rows. A browser reader still has no link. Effort: Small.
+  - **D.** Make the in-product mark link the site's Home. A stray click leaves
+    the viewer. Effort: Small.
+- **Left out:** A separate help control in the bar, because the full bar
+  fits five cloud controls.
 - **Wider fix:** None, because this is a choice of behaviour.
 - **Previous examples:** None found.
-- **Recommendation:** A. The reviewed mockup has four rows, and nothing ships
-  these links today.
+- **Recommendation:** B, changed from A by the options check. A leaves no
+  path to the site, also in the desktop app.
 - **Action:** ask the user, because a requirement and a merged mockup
   disagree.
