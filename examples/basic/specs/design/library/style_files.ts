@@ -16,6 +16,17 @@ export const libraryStyleFiles = {
   "comparison-pane": "design-library/preview/comparison-pane.css",
   "empty-state": "design-library/preview/empty-state.css",
   "flow-step": "design-library/preview/flow-step.css",
+  "canvas-frame": "design-library/canvas/canvas-frame.css",
+  "zoom-pill": "design-library/canvas/zoom-pill.css",
+  "floating-panel": "design-library/panels/floating-panel.css",
+  "panel-tabs": "design-library/panels/panel-tabs.css",
+  "phone-dock": "design-library/panels/phone-dock.css",
+  "frames-filter": "design-library/inspector/frames-filter.css",
+  selection: "design-library/canvas/selection.css",
+  "box-model": "design-library/inspector/box-model.css",
+  "swipe-divider": "design-library/canvas/swipe-divider.css",
+  "change-stepper": "design-library/panels/change-stepper.css",
+  "compare-modes": "design-library/panels/compare-modes.css",
 } as const;
 
 export type LibraryStyle = keyof typeof libraryStyleFiles;

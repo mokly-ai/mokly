@@ -3,7 +3,8 @@
     "browse": "^design/browse/(views|states|index-entries|variants|pages|publication)/",
     "changes": "^design/changes/",
     "components": "^design/components/(?!controls/)",
-    "appearance": "^design/browse/appearance/"
+    "appearance": "^design/browse/appearance/",
+    "canvas": "^design/canvas/"
   },
   "parts": [
     {
@@ -231,6 +232,326 @@
         "design/browse/appearance/status/home",
         "design/browse/appearance/workspaces/drawer"
       ]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/canvas-frame",
+      "reason": "Home selects no entry, so its canvas holds no frame.",
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/zoom-pill",
+      "reason": "Home has no frames to zoom; a phone draws the pill's Fit in the dock.",
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/phone-dock",
+      "reason": "Every Canvas state has the compact dock: a phone draws it, and a desktop window draws it below the breakpoint.",
+      "except": []
+    },
+    {
+      "family": "canvas",
+      "component": "panels/floating-panel",
+      "reason": "A desktop window floats the catalogue and the right panel over the canvas.",
+      "viewports": ["desktop"],
+      "except": []
+    },
+    {
+      "family": "canvas",
+      "component": "panels/floating-panel",
+      "reason": "A phone draws a panel only as the sheet that a state opens.",
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/home"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "chrome/catalogue-navigation",
+      "reason": "A phone draws the catalogue in the sheet that these states open.",
+      "only": ["design/canvas/stage/catalogue", "design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/panel-tabs",
+      "reason": "Home selects no entry, so no right panel shows.",
+      "viewports": ["desktop"],
+      "except": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/panel-tabs",
+      "reason": "A phone draws the right panel's tabs in the panel sheet.",
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/component-set/disabled"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/metadata-row",
+      "reason": "Inspect draws the entry's Details rows; the Changes tab draws none, and home selects no entry.",
+      "viewports": ["desktop"],
+      "except": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/home"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/metadata-row",
+      "reason": "A phone draws Inspect in the panel sheet.",
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged",
+        "design/canvas/stage/component-set/disabled"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/frames-filter",
+      "reason": "Inspect holds the Frames filter; a document opens as one reading frame, and home selects no entry.",
+      "viewports": ["desktop"],
+      "except": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/stage/document",
+        "design/canvas/stage/home"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/frames-filter",
+      "reason": "A phone draws the Frames filter in the panel sheet.",
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/unchanged",
+        "design/canvas/stage/component-set/disabled"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/change-status",
+      "reason": "The states of Welcome, which the canonical branch changed, and of Details, which it added.",
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added",
+        "design/canvas/outcomes/added/changes",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/tag-chip",
+      "reason": "Inspect lists the tags of Welcome, of Details, and of the Action.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "preview/empty-state",
+      "reason": "Home shows the catalogue home's guidance on the canvas.",
+      "only": ["design/canvas/stage/home"]
+    },
+    {
+      "family": "canvas",
+      "component": "controls/tag-chip",
+      "reason": "A phone draws the entry's tags in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/stage/component-set/disabled"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/selection",
+      "reason": "The selection states draw the selected instance on its frame, or the selected frame of a variant set.",
+      "only": [
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/box-model",
+      "reason": "Inspect's Selection section draws the selected instance's box model.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/outcomes/added/primary",
+        "design/canvas/outcomes/added/secondary",
+        "design/canvas/outcomes/added/toolbar",
+        "design/canvas/outcomes/added/welcome",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/box-model",
+      "reason": "A phone draws the Selection section in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": ["design/canvas/inspect/sections"]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/prop-field",
+      "reason": "Inspect's Props section holds the field of Welcome's prop, and the fields of a variant set's chosen variant.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/inspect/frames",
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/inspect/selection",
+        "design/canvas/inspect/selection/primary",
+        "design/canvas/inspect/selection/secondary",
+        "design/canvas/inspect/selection/toolbar",
+        "design/canvas/overview",
+        "design/canvas/stage/catalogue",
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stage/component-set/toolbar-primary",
+        "design/canvas/stage/component-set/toolbar-secondary",
+        "design/canvas/stage/zoomed"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "inspector/prop-field",
+      "reason": "A phone draws the Props section in the open panel sheet.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/inspect/props",
+        "design/canvas/inspect/sections",
+        "design/canvas/stage/component-set/disabled"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/change-stepper",
+      "reason": "The Changes tab draws the stepper under the panel's tabs.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/change-stepper",
+      "reason": "A phone draws the Changes tab in the panel sheet that these states open.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/compare-modes",
+      "reason": "The Changes tab draws the compare modes.",
+      "viewports": ["desktop"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/changes/difference",
+        "design/canvas/changes/overlay",
+        "design/canvas/changes/side-by-side",
+        "design/canvas/changes/swipe",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "panels/compare-modes",
+      "reason": "A phone draws the compare modes in the open Changes sheet.",
+      "viewports": ["mobile"],
+      "only": [
+        "design/canvas/changes/current",
+        "design/canvas/outcomes/added/changes"
+      ]
+    },
+    {
+      "family": "canvas",
+      "component": "canvas/swipe-divider",
+      "reason": "Swipe draws its divider over every frame, and over a phone's one frame.",
+      "only": ["design/canvas/changes/swipe"]
     }
   ]
 }

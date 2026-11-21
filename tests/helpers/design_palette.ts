@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { CANVAS_SAMPLES } from "../../examples/basic/specs/design/library/metadata.js";
+import { libraryStyleFiles } from "../../examples/basic/specs/design/library/style_files.js";
+import { canvasProperties } from "../../examples/basic/specs/design/parts/canvas_palette.js";
+import { palettes } from "../../packages/ui/dist/palette/palette.js";
+
 import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
 
@@ -40,6 +45,77 @@ export async function designPalette(): Promise<
   if (!light?.[1] || !dark?.[1])
     throw new Error("design.css is missing a palette block");
   return { light: readTokens(light[1]), dark: readTokens(dark[1]) };
+}
+
+/**
+ * The custom properties that a Canvas root declares in one appearance, as
+ * its palette scope maps them from the Canvas palette of the built
+ * `@mokly/ui` palette module: the `--cv-*` roles and the shell tokens.
+ */
+export function canvasScopeTokens(appearance: Appearance): Map<string, string> {
+  return new Map(
+    Object.entries(
+      canvasProperties(palettes.canvas[appearance], palettes.canvas.fonts),
+    ),
+  );
+}
+
+/**
+ * Both palettes that a Canvas root draws in: the design palette, whose roles
+ * the root keeps where its scope declares nothing, overlaid with the tokens
+ * that its scope declares.
+ */
+export async function canvasPalette(): Promise<
+  Record<Appearance, Map<string, string>>
+> {
+  const design = await designPalette();
+  const overlay = (appearance: Appearance) =>
+    new Map([...design[appearance], ...canvasScopeTokens(appearance)]);
+  return { light: overlay("light"), dark: overlay("dark") };
+}
+
+/**
+ * The Canvas viewer's stylesheets, whose rules draw inside a Canvas root
+ * only: the shared Canvas sheets and the sheet of each Canvas part.
+ */
+export function isCanvasStylesheet(file: string): boolean {
+  return (
+    /^design-canvas(-[a-z]+)?\.css$/u.test(file) ||
+    Object.entries(libraryStyleFiles).some(
+      ([slug, sheet]) => sheet === file && CANVAS_SAMPLES.has(slug),
+    )
+  );
+}
+
+/** A palette that a rule draws in, by appearance, named for a failure. */
+export interface AuditPalette {
+  name: "design" | "Canvas";
+  tokens: Record<Appearance, Map<string, string>>;
+}
+
+/**
+ * The palettes that each design stylesheet's rules draw in: a Canvas
+ * sheet's in a Canvas root only, a `@mokly/ui` sheet's in the design
+ * catalogue's palette and in a Canvas root, and every other design sheet's
+ * in the design catalogue's palette.
+ */
+export async function auditPalettes(): Promise<
+  (file: string) => readonly AuditPalette[]
+> {
+  const design: AuditPalette = {
+    name: "design",
+    tokens: await designPalette(),
+  };
+  const canvas: AuditPalette = {
+    name: "Canvas",
+    tokens: await canvasPalette(),
+  };
+  return (file) =>
+    isCanvasStylesheet(file)
+      ? [canvas]
+      : file.startsWith("packages/ui/src/")
+        ? [design, canvas]
+        : [design];
 }
 
 const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;

@@ -1,0 +1,51 @@
+/* The box model of the selected instance: a hatched band of soft signal
+   around the content box, with each side's padding on the band in signal
+   text and the content size in the box. Hairline rings draw both edges. */
+.cv-boxm {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--cv-signal-soft) 0 4px,
+    transparent 4px 8px
+  );
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--cv-signal) 45%, transparent);
+  color: var(--cv-signal-deep);
+  display: grid;
+  font: 500 11px/1 var(--cv-mono);
+  font-variant-numeric: tabular-nums;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  grid-template-rows: 22px 34px 22px;
+}
+
+.cv-boxm-side {
+  display: grid;
+  place-items: center;
+}
+
+.cv-boxm-side[data-side="top"] {
+  grid-area: 1 / 1 / 2 / 4;
+}
+
+.cv-boxm-side[data-side="left"] {
+  grid-area: 2 / 1;
+}
+
+.cv-boxm-side[data-side="right"] {
+  grid-area: 2 / 3;
+}
+
+.cv-boxm-side[data-side="bottom"] {
+  grid-area: 3 / 1 / 4 / 4;
+}
+
+.cv-boxm-content {
+  background: var(--cv-surface);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--cv-line-strong);
+  color: var(--cv-text-secondary);
+  display: grid;
+  grid-area: 2 / 2;
+  place-items: center;
+  white-space: nowrap;
+}

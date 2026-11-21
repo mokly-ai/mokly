@@ -1,0 +1,212 @@
+/* The Canvas viewer's Inspect sections that a selection and the folded
+   sections fill: the Selection section with the selected instance's chip,
+   props, size, and source, the bodies of Props, Usage, and Components, and
+   the pill that names the selection on a phone. The instance tree, the
+   supplied props' message, the usage list, and the props form are the
+   shipped ones, from their @mokly/ui stylesheets, in the package's order;
+   the rules below set them in Inspect's type. */
+@import "../../packages/ui/src/instance-tree/instance-tree.css";
+@import "../../packages/ui/src/props-panel/props-panel.css";
+@import "../../packages/ui/src/usage-list/usage-list.css";
+@import "../../packages/ui/src/controls-panel/controls-panel.css";
+
+/* The panel opens scrolled to this section, as it does after a selection or
+   once a reader unfolds a section. */
+.cv-initial {
+  scroll-initial-target: nearest;
+}
+
+/* ---- Selection ------------------------------------------------------ */
+
+/* The selected instance's component, and on a phone the pill's: signal
+   text with the component glyph on the soft signal fill. */
+.cv-ins-chip,
+.cv-pill-name {
+  align-items: center;
+  background: var(--cv-signal-soft);
+  border-radius: 5px;
+  color: var(--cv-signal-deep);
+  display: inline-flex;
+  font: 500 12px/1 var(--cv-mono);
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px 0 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.cv-ins-chip:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* The selected instance's props and size: the name in the quiet label
+   column, the value in mono. */
+.cv-props {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 12px;
+}
+
+.cv-props > div {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 84px minmax(0, 1fr);
+  min-height: 26px;
+}
+
+.cv-props dt {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+}
+
+.cv-props dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.cv-value {
+  color: var(--cv-text);
+  display: block;
+  font: 12px/1.3 var(--cv-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The component's source file, a quiet line under the box model, which
+   wraps between its folders, never inside a name. */
+.cv-source {
+  align-items: flex-start;
+  color: var(--cv-text-muted);
+  display: flex;
+  font: 12px/1.3 var(--cv-mono);
+  gap: 7px;
+  margin: 10px 0 0;
+  min-width: 0;
+}
+
+.cv-source > .cv-glyph {
+  flex: none;
+  margin-top: 1px;
+}
+
+.cv-source > span {
+  min-width: 0;
+}
+
+/* ---- Folded sections ------------------------------------------------ */
+
+.cv-fold-body {
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+}
+
+.cv-fold-body > p,
+.cv-fold-body [data-usage-section] > p {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  margin: 0 0 6px;
+}
+
+.cv-fold-body > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Usage: each section's heading in Inspect's small type. */
+.cv-fold-body [data-usage-section] > h3 {
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 560;
+  margin: 0 0 4px;
+}
+
+/* Components: the tree's rows in the panel's type, its nested lists
+   stepping in beside a hairline. */
+.cv-fold-body .mbk-instance-tree li {
+  padding: 1px 0;
+}
+
+.cv-fold-body .mbk-instance-select {
+  font-size: 12.5px;
+  padding: 5px 8px;
+}
+
+.cv-fold-body .mbk-instance-tree summary {
+  font-size: 11.5px;
+  padding: 3px 8px;
+}
+
+/* Props: the shipped form in the panel's width. */
+.cv-fold-body .mbk-controls-heading h3 {
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cv-fold-body .mbk-control-field {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
+
+/* ---- The selection pill --------------------------------------------- */
+
+/* On a phone, the pill above the dock names the selection: the component's
+   chip, its first prop and its padding in mono, and a chevron. */
+.cv-pill {
+  align-items: center;
+  background: var(--cv-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-2);
+  color: var(--cv-text);
+  display: flex;
+  gap: 10px;
+  height: 44px;
+  max-width: 100%;
+  padding: 0 10px 0 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cv-pill-name {
+  flex: none;
+  height: 30px;
+  padding: 0 8px;
+}
+
+.cv-pill-props {
+  display: flex;
+  font: 11.5px/1 var(--cv-mono);
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cv-pill-props > span {
+  white-space: nowrap;
+}
+
+/* A long first prop gives way before the padding, which stays whole. */
+.cv-pill-props > span:not(:last-child) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cv-pill-props > span:last-child {
+  flex: none;
+}
+
+.cv-pill-props i {
+  color: var(--cv-text-muted);
+  font-style: normal;
+}
+
+.cv-pill > .cv-glyph:last-child {
+  color: var(--cv-text-muted);
+  flex: none;
+  transform: rotate(-90deg);
+}

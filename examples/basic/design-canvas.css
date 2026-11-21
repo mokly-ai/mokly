@@ -1,0 +1,278 @@
+/* The Canvas viewer design: Geist, the roles that the Canvas palette of
+   @mokly/ui lacks, and the stage of a Canvas artboard. A Canvas root, and the
+   library host of a Canvas part, carries the theme's root class and the
+   `cv` class, and declares the Canvas roles as --cv-* and the shell tokens
+   mapped from them in its inline style, from the one palette module. The
+   roles below mix those roles; no rule here names a colour. The shell's
+   layout, its floating panels, its compact form, and the package parts that
+   it restyles follow the component sheets, in design-canvas-shell.css. */
+@import "./design-fonts/geist.css";
+
+/* Roles the palette lacks: the hover fill, a stronger hairline, the frame
+   ring, the screen section, and the shadows, mixed from Canvas roles. The
+   shade is the ink of a light scheme and the canvas of a dark one. */
+.cv {
+  --cv-shade: var(--cv-text);
+  --cv-hover: color-mix(in srgb, var(--cv-text) 5%, var(--cv-surface));
+  --cv-line-strong: color-mix(
+    in srgb,
+    var(--cv-text-muted) 32%,
+    var(--cv-surface)
+  );
+  --cv-frame-ring: color-mix(in srgb, var(--cv-text) 8%, transparent);
+  --cv-section-fill: color-mix(in srgb, var(--cv-surface) 42%, transparent);
+  --cv-section-ring: color-mix(in srgb, var(--cv-text) 8%, transparent);
+  --cv-frame-shadow:
+    0 1px 2px color-mix(in srgb, var(--cv-shade) 5%, transparent),
+    0 14px 30px -14px color-mix(in srgb, var(--cv-shade) 24%, transparent);
+  --cv-shadow-1:
+    0 1px 0 color-mix(in srgb, var(--cv-shade) 3%, transparent),
+    0 1px 2px color-mix(in srgb, var(--cv-shade) 6%, transparent);
+  --cv-shadow-2:
+    0 1px 1px color-mix(in srgb, var(--cv-shade) 4%, transparent),
+    0 4px 10px -2px color-mix(in srgb, var(--cv-shade) 6%, transparent),
+    0 18px 36px -14px color-mix(in srgb, var(--cv-shade) 14%, transparent);
+  --cv-shadow-3:
+    0 1px 1px color-mix(in srgb, var(--cv-shade) 5%, transparent),
+    0 10px 20px -6px color-mix(in srgb, var(--cv-shade) 8%, transparent),
+    0 40px 80px -28px color-mix(in srgb, var(--cv-shade) 26%, transparent);
+  --cv-shadow-sheet: 0 -18px 40px -18px
+    color-mix(in srgb, var(--cv-shade) 28%, transparent);
+}
+
+.cv[data-mbk-appearance="dark"] {
+  --cv-shade: var(--cv-background);
+  --cv-section-fill: color-mix(in srgb, var(--cv-text) 2%, transparent);
+  --cv-section-ring: color-mix(in srgb, var(--cv-text) 7%, transparent);
+  --cv-frame-shadow:
+    0 1px 2px color-mix(in srgb, var(--cv-shade) 50%, transparent),
+    0 18px 36px -14px color-mix(in srgb, var(--cv-shade) 70%, transparent);
+  --cv-shadow-1:
+    0 0 0 1px color-mix(in srgb, var(--cv-text) 3%, transparent),
+    0 1px 2px color-mix(in srgb, var(--cv-shade) 50%, transparent);
+  --cv-shadow-2:
+    0 0 0 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
+    0 6px 14px -4px color-mix(in srgb, var(--cv-shade) 50%, transparent),
+    0 22px 44px -16px color-mix(in srgb, var(--cv-shade) 60%, transparent);
+  --cv-shadow-3:
+    0 0 0 1px color-mix(in srgb, var(--cv-text) 5%, transparent),
+    0 14px 28px -8px color-mix(in srgb, var(--cv-shade) 55%, transparent),
+    0 48px 96px -32px color-mix(in srgb, var(--cv-shade) 70%, transparent);
+  --cv-shadow-sheet: 0 -18px 40px -18px
+    color-mix(in srgb, var(--cv-shade) 60%, transparent);
+}
+
+/* The shell tokens without a Canvas role take the mixed roles. The selector
+   outweighs the shipped theme's appearance rules on the same root. */
+.cv.mbk[data-mbk-appearance] {
+  --chrome-hover: var(--cv-hover);
+  --chrome-border-strong: var(--cv-line-strong);
+  --chrome-count-bg: color-mix(in srgb, var(--cv-text) 8%, transparent);
+  --chrome-scrim: color-mix(in srgb, var(--cv-shade) 40%, transparent);
+  --chrome-shadow: var(--cv-shadow-3);
+  --chrome-shadow-soft: var(--cv-shadow-1);
+  --chrome-shadow-drawer: var(--cv-shadow-3);
+  --chrome-shadow-sheet: var(--cv-shadow-sheet);
+  --mbk-accent-edge: color-mix(in srgb, var(--cv-signal) 45%, transparent);
+  --mb-ignored-soft: var(--cv-hover);
+}
+
+/* A Canvas root draws in Geist on the canvas. */
+.cv {
+  background: var(--cv-background);
+  color: var(--cv-text);
+  font-family: var(--cv-sans);
+  font-feature-settings: "ss01" on;
+  line-height: 1.4;
+}
+
+/* A focused Canvas control draws the signal ring. */
+.cv :is(a, select, summary):focus-visible {
+  outline: 2px solid var(--cv-signal-deep);
+  outline-offset: 2px;
+}
+
+/* ---- Stage --------------------------------------------------------- */
+
+/* The canvas: a full-bleed dot grid under the panels. */
+.cv-canvas {
+  background-color: var(--cv-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--cv-dot) 1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+  inset: 0;
+  overflow: hidden;
+  position: absolute;
+}
+
+/* The selected entry: a section box holding its frames, with a head of the
+   dark title tag, the path chip, and the status. */
+.cv-section {
+  background: var(--cv-section-fill);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--cv-section-ring);
+  flex: none;
+  padding: 64px 22px 22px;
+  position: relative;
+}
+
+.cv-section-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  left: 12px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  white-space: nowrap;
+}
+
+.cv-title-tag {
+  align-items: center;
+  background: var(--cv-text);
+  border-radius: 6px;
+  color: var(--cv-surface);
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  height: 24px;
+  letter-spacing: -0.01em;
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.cv-path-chip {
+  align-items: center;
+  background: var(--cv-hover);
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-muted);
+  display: inline-flex;
+  font: 500 11.5px/1 var(--cv-mono);
+  height: 20px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.cv-kind-tag {
+  align-items: center;
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  font: 500 11.5px/1 var(--cv-mono);
+  gap: 5px;
+}
+
+.cv :is(.cv-section-head, .cv-entry-bar) .mbk-entry-status {
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+}
+
+/* The frames of a screen: Desktop beside Mobile, Light above Dark, each
+   cell leaving room for its label. A frame's slot draws no box, so the
+   frame is the grid's item. */
+.cv-frames {
+  align-items: start;
+  column-gap: 44px;
+  display: grid;
+  row-gap: 48px;
+}
+
+.cv-frame-slot {
+  display: contents;
+}
+
+/* A screen's frame takes its cell by its viewport and its scheme, so the
+   Frames filter keeps one row per scheme, Light above Dark, when it hides a
+   viewport. With one viewport or one scheme hidden, the other takes the
+   first column or row. Side by side places its pair itself. */
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-viewport="mobile"] {
+  grid-column: 2;
+}
+
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-row: 2;
+}
+
+.cv:has([data-cv-frames="desktop"]:not(:checked))
+  .cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-viewport="mobile"] {
+  grid-column: 1;
+}
+
+.cv:has([data-cv-frames="light"]:not(:checked))
+  .cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-row: 1;
+}
+
+/* A component opens as its variant set: one row per saved variant, Light
+   beside Dark, inside a dashed outline. */
+.cv-section[data-cv-kind="component"] {
+  background: transparent;
+  box-shadow: none;
+  outline: 1.5px dashed
+    color-mix(in srgb, var(--cv-border-strong) 60%, transparent);
+  outline-offset: -1px;
+}
+
+/* A row leaves room for a selected frame's size tag above the next row's
+   label. Light takes the first column and Dark the second, so each saved
+   variant keeps its row; with Light hidden, Dark takes the first column. */
+.cv-frames[data-cv-kind="component"] {
+  column-gap: 40px;
+  row-gap: 64px;
+}
+
+.cv-frames[data-cv-kind="component"] .cv-frame {
+  grid-column: 1;
+}
+
+.cv-frames[data-cv-kind="component"] .cv-frame[data-cv-scheme="dark"] {
+  grid-column: 2;
+}
+
+.cv:has([data-cv-frames="light"]:not(:checked))
+  .cv-frames[data-cv-kind="component"]
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-column: 1;
+}
+
+/* A page or a Markdown document opens as one reading frame. */
+.cv-frames[data-cv-kind="document"] {
+  grid-template-columns: auto;
+}
+
+/* A selection over a frame: the selected instance's box in the document,
+   at the frame's scale, above the document and unclipped by it. */
+.cv-sel-place {
+  height: calc(var(--cv-sel-h) * var(--cv-frame-scale) * 1px);
+  left: calc(var(--cv-sel-x) * var(--cv-frame-scale) * 1px);
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--cv-sel-y) * var(--cv-frame-scale) * 1px);
+  width: calc(var(--cv-sel-w) * var(--cv-frame-scale) * 1px);
+  z-index: 2;
+}
+
+/* A component's document draws the component 24px from its top left: the
+   Action's button, and the Toolbar with its two Actions. */
+.mbk-shot--action > .mbk-shot-pad,
+.mbk-shot--toolbar > .mbk-shot-pad {
+  padding: 24px;
+}
+
+.mbk-shot--action p {
+  margin: 10px 0 0;
+}

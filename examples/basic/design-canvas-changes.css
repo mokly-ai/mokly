@@ -1,0 +1,122 @@
+/* The Canvas viewer's Changes tab and its comparison on the stage: the
+   Compared rail of the version before and the current version, the
+   comparison details in Inspect's type, and Side by side, which shows the
+   compared frame's two versions next to each other. The stepper and the
+   compare modes are Canvas parts with their own sheets. */
+
+/* ---- Compared ------------------------------------------------------- */
+
+/* The version before and the current version as two dots on a rail, the
+   current one in signal. */
+.cv-refs {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.cv-refs::before {
+  background: linear-gradient(var(--cv-border-strong), var(--cv-signal));
+  bottom: 12px;
+  content: "";
+  left: 5.25px;
+  position: absolute;
+  top: 12px;
+  width: 1.5px;
+}
+
+/* An added entry has the current version alone, so no rail. */
+.cv-refs[data-cv-added]::before {
+  display: none;
+}
+
+.cv-ref {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 12px 52px minmax(0, 1fr);
+  min-height: 24px;
+  position: relative;
+}
+
+.cv-ref-dot {
+  background: var(--cv-surface);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--cv-border-strong);
+  height: 12px;
+  width: 12px;
+}
+
+.cv-ref[data-side="after"] > .cv-ref-dot {
+  background: var(--cv-signal-soft);
+  box-shadow: inset 0 0 0 2px var(--cv-signal);
+}
+
+.cv-ref-side {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+}
+
+.cv-ref-name {
+  color: var(--cv-text);
+  font-size: 12px;
+  min-width: 0;
+}
+
+.cv-ref-name > code {
+  font: 12px/1 var(--cv-mono);
+}
+
+.cv-refs + .cv-hint {
+  margin-top: 10px;
+}
+
+/* ---- Comparison details --------------------------------------------- */
+
+/* The shipped evidence as an Inspect section: its heading in the section's
+   head type, and each sentence in the panel's secondary text. */
+.cv-evidence > .mbk-comparison-evidence {
+  border-top: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.cv-evidence .mbk-comparison-evidence > h3 {
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.cv-evidence .mbk-comparison-evidence p {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cv-evidence .mbk-comparison-evidence p + p {
+  margin-top: 6px;
+}
+
+/* ---- Side by side on the stage -------------------------------------- */
+
+/* The stage holds every frame's pair and shows the compared frame's, the
+   version before beside the current version; the compact form's frame
+   picker picks another pair in place. */
+.cv-frames[data-cv-compare="side-by-side"] {
+  grid-template-columns: auto auto;
+}
+
+.cv-frames[data-cv-chosen="desktop-light"]
+  .cv-frame:not([data-cv-frame="desktop-light"]),
+.cv-frames[data-cv-chosen="mobile-light"]
+  .cv-frame:not([data-cv-frame="mobile-light"]),
+.cv-frames[data-cv-chosen="desktop-dark"]
+  .cv-frame:not([data-cv-frame="desktop-dark"]),
+.cv-frames[data-cv-chosen="mobile-dark"]
+  .cv-frame:not([data-cv-frame="mobile-dark"]) {
+  display: none;
+}

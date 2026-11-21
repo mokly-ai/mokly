@@ -1,5 +1,6 @@
 import { libraryStyleFiles, type LibraryStyle } from "./style_files.js";
-export type LibraryGroup = "chrome" | "controls" | "inspector" | "preview";
+export type LibraryGroup =
+  "canvas" | "chrome" | "controls" | "inspector" | "panels" | "preview";
 
 /**
  * Samples whose own subject is the catalogue's appearance. They render in both
@@ -9,6 +10,25 @@ export type LibraryGroup = "chrome" | "controls" | "inspector" | "preview";
 export const DUAL_SCHEME_SAMPLES = new Set<LibraryStyle>([
   "appearance-selector",
   "top-bar",
+]);
+
+/**
+ * The parts of the Canvas viewer. Their samples draw in the Canvas palette,
+ * which `LibraryHost` declares on the sample root, as a Canvas artboard's
+ * root declares it.
+ */
+export const CANVAS_SAMPLES: ReadonlySet<string> = new Set<LibraryStyle>([
+  "canvas-frame",
+  "zoom-pill",
+  "floating-panel",
+  "panel-tabs",
+  "phone-dock",
+  "frames-filter",
+  "selection",
+  "box-model",
+  "swipe-divider",
+  "change-stepper",
+  "compare-modes",
 ]);
 
 /**

@@ -1,0 +1,63 @@
+/* The canvas zoom: a raised pill holding zoom out, the zoom level, zoom in,
+   and Fit, and the Fit control alone, which the phone dock holds. */
+.cv-zoom {
+  align-items: center;
+  background: var(--cv-surface);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-2);
+  display: inline-flex;
+  gap: 2px;
+  height: 36px;
+  padding: 3px;
+}
+
+.cv-zoom-step,
+.cv-zoom-fit {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.cv-zoom-step {
+  width: 30px;
+}
+
+.cv-zoom-value {
+  color: var(--cv-text);
+  font: 500 12px/1 var(--cv-mono);
+  min-width: 44px;
+  text-align: center;
+}
+
+.cv-zoom-rule {
+  background: var(--cv-border);
+  height: 18px;
+  margin: 0 3px;
+  width: 1px;
+}
+
+.cv-zoom-fit {
+  font-size: 12.5px;
+  font-weight: 540;
+  gap: 6px;
+  padding: 0 10px 0 8px;
+}
+
+a:is(.cv-zoom-step, .cv-zoom-fit):hover {
+  background: var(--cv-hover);
+  color: var(--cv-text);
+}
+
+/* The dock's Fit: a 44px target with the larger glyph. */
+.cv-zoom-fit--icon {
+  border-radius: 11px;
+  height: 44px;
+  padding: 0;
+  width: 44px;
+}

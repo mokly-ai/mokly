@@ -1,0 +1,132 @@
+/* A frame on the Canvas stage: a bare rectangle at its nominal size times the
+   zoom, with a ring and a soft shadow, and its mono label and size above it.
+   The stage may set --cv-zoom on a frame to show it at another zoom, as the
+   compact layout does. A frame too narrow for both keeps its label and drops
+   its size. In a comparison, the frame holds the shipped viewport, layers,
+   and surfaces of a stacked comparison, from their @mokly/ui stylesheets, in
+   the package's order. */
+@import "../../../../packages/ui/src/comparison-pane/comparison-pane.css";
+@import "../../../../packages/ui/src/comparison-stage/comparison-stage.css";
+
+.cv-frame {
+  --cv-frame-scale: var(--cv-zoom, var(--cv-frame-zoom));
+  container: cv-frame / inline-size;
+  flex: none;
+  height: calc(var(--cv-frame-h) * var(--cv-frame-scale) * 1px);
+  margin: 0;
+  position: relative;
+  width: calc(var(--cv-frame-w) * var(--cv-frame-scale) * 1px);
+}
+
+.cv-frame-label {
+  align-items: center;
+  bottom: calc(100% + 7px);
+  color: var(--cv-text-muted);
+  display: flex;
+  font: 500 11.5px/1 var(--cv-mono);
+  gap: 6px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  white-space: nowrap;
+}
+
+.cv-frame-label > .cv-glyph {
+  flex: none;
+}
+
+.cv-frame-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The entry's slug leads the label only where one frame stands for the
+   entry; the compact layout shows it. */
+.cv-frame-entry {
+  display: none;
+}
+
+.cv-frame-size {
+  flex: none;
+  margin-left: auto;
+}
+
+/* The frame that holds the selection lights its name and glyph; its size
+   stays quiet. */
+.cv-frame[data-cv-selected] > .cv-frame-label {
+  color: var(--cv-signal-deep);
+}
+
+.cv-frame[data-cv-selected] .cv-frame-size {
+  color: var(--cv-text-muted);
+}
+
+/* A frame too narrow for its label and its size keeps the label. */
+@container cv-frame (width < 190px) {
+  .cv-frame-size {
+    display: none;
+  }
+}
+
+/* The document: the depicted screen's own surface and ink, in the frame's
+   scheme. */
+.cv-frame-clip {
+  background: var(--mbk-screen-bg);
+  box-shadow:
+    0 0 0 1px var(--cv-frame-ring),
+    var(--cv-frame-shadow);
+  color: var(--mbk-screen-ink);
+  color-scheme: light;
+  inset: 0;
+  overflow: hidden;
+  position: absolute;
+}
+
+.cv-frame[data-cv-scheme="dark"] > .cv-frame-clip {
+  color-scheme: dark;
+}
+
+.cv-frame-scale {
+  height: calc(var(--cv-frame-h) * 1px);
+  left: 0;
+  position: absolute;
+  top: 0;
+  transform: scale(var(--cv-frame-scale));
+  transform-origin: 0 0;
+  width: calc(var(--cv-frame-w) * 1px);
+}
+
+/* A frame in a comparison: the shipped panes of Overlay and Difference, and
+   Swipe's layers, fill the document, where the shipped viewport stacks the
+   current version over the version before. */
+.cv-frame-scale > :is(.mb-panes, .cv-frame-swipe) {
+  display: block;
+  height: 100%;
+}
+
+/* Swipe shows the current version to the right of its divider. */
+.cv-frame-swipe .mb-pane--after {
+  clip-path: inset(0 0 0 var(--cv-frame-split));
+}
+
+/* A frame of Side by side names its version in a tag before its label: the
+   version before in the dark tag, the current version in the signal tag. */
+.cv-frame-side {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  flex: none;
+  font: 500 10.5px/1 var(--cv-mono);
+  height: 18px;
+  padding: 0 6px;
+}
+
+.cv-frame-side[data-side="before"] {
+  background: var(--cv-text);
+  color: var(--cv-surface);
+}
+
+.cv-frame-side[data-side="after"] {
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+}

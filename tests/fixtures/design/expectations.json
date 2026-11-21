@@ -56,7 +56,30 @@
       "missing-current"
     ],
     "preview/empty-state": ["home", "missing-route", "no-changes"],
-    "preview/flow-step": ["first", "second"]
+    "preview/flow-step": ["first", "second"],
+    "canvas/canvas-frame": [
+      "desktop-light",
+      "mobile-dark",
+      "component",
+      "document",
+      "swipe",
+      "before"
+    ],
+    "canvas/zoom-pill": ["fitted", "zoomed", "fit"],
+    "panels/floating-panel": ["catalogue", "panel", "sheet"],
+    "panels/panel-tabs": ["changed", "unchanged"],
+    "panels/phone-dock": ["inspect", "home"],
+    "inspector/frames-filter": [
+      "screen",
+      "component",
+      "light-only",
+      "dark-hidden"
+    ],
+    "canvas/selection": ["action", "toolbar", "small", "frame"],
+    "inspector/box-model": ["action", "toolbar"],
+    "canvas/swipe-divider": ["centred", "moved"],
+    "panels/change-stepper": ["first", "second"],
+    "panels/compare-modes": ["current", "side-by-side", "swipe", "added"]
   },
   "links": [
     {
@@ -304,6 +327,733 @@
       "source": "example/screens/details",
       "name": "Return to welcome",
       "target": "example/screens/welcome"
+    },
+    {
+      "source": "design/canvas/overview",
+      "name": "Mokly",
+      "target": "design/canvas/stage/home"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": "design/canvas/stage/zoomed"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "name": "Fit",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/overview",
+      "name": "Catalogue",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["mobile"],
+      "name": "Open catalogue navigation",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["mobile"],
+      "name": "Close catalogue navigation",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["mobile"],
+      "name": "Close catalogue",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "viewports": ["mobile"],
+      "name": "Close catalogue",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Welcome",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Profile",
+      "target": "design/canvas/inspect/unchanged"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Payment terms",
+      "target": "design/canvas/stage/document"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "within": "mbk-nav",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "within": "mbk-nav",
+      "name": "Example tour",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "name": "Open the first screen",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "namePattern": "^Changes\\d+$",
+      "target": "design/canvas/stage/catalogue"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/inspect/unchanged",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/inspect/unchanged"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["mobile"],
+      "within": "cv-pill-place",
+      "namePattern": "^Action label",
+      "target": "design/canvas/inspect/sections"
+    },
+    {
+      "source": "design/canvas/inspect/selection/toolbar",
+      "viewports": ["mobile"],
+      "within": "cv-pill-place",
+      "namePattern": "^Toolbar title",
+      "target": null
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["mobile"],
+      "within": "cv-dock",
+      "name": "Inspect",
+      "target": "design/canvas/inspect/sections"
+    },
+    {
+      "source": "design/canvas/inspect/sections",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": "design/canvas/inspect/selection"
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · details",
+      "target": "design/canvas/inspect/selection"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Toolbar · toolbar",
+      "target": "design/canvas/inspect/selection/toolbar"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · primary",
+      "target": "design/canvas/inspect/selection/primary"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · secondary",
+      "target": "design/canvas/inspect/selection/secondary"
+    },
+    {
+      "source": "design/canvas/inspect/sections",
+      "within": "mbk-instance-tree",
+      "name": "Action · details",
+      "target": "design/canvas/inspect/sections"
+    },
+    {
+      "source": "design/canvas/inspect/frames",
+      "within": "ce-highlight-labels",
+      "name": "Action · details",
+      "target": "design/canvas/inspect/selection"
+    },
+    {
+      "source": "design/canvas/inspect/frames",
+      "within": "ce-highlight-labels",
+      "name": "Toolbar · toolbar",
+      "target": "design/canvas/inspect/selection/toolbar"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "within": "cv-sec-head",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set"
+    },
+    {
+      "source": "design/canvas/inspect/selection/toolbar",
+      "viewports": ["desktop"],
+      "within": "cv-sec-head",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": null
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": "design/canvas/stage/zoomed"
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/inspect/props"
+    },
+    {
+      "source": "design/canvas/inspect/frames",
+      "name": "Fit",
+      "target": "design/canvas/inspect/frames"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-modes",
+      "name": "Current",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-modes",
+      "name": "Side by side",
+      "target": "design/canvas/changes/side-by-side"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-modes",
+      "name": "Overlay",
+      "target": "design/canvas/changes/overlay"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-modes",
+      "name": "Difference",
+      "target": "design/canvas/changes/difference"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-modes",
+      "name": "Swipe",
+      "target": "design/canvas/changes/swipe"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Overlay",
+      "target": "design/canvas/changes/overlay"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "within": "cv-modes",
+      "name": "Current",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "within": "cv-modes",
+      "name": "Side by side",
+      "target": null
+    },
+    {
+      "source": "design/canvas/changes/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Desktop · Light",
+      "target": "design/canvas/changes/side-by-side"
+    },
+    {
+      "source": "design/canvas/changes/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Mobile · Light",
+      "target": null
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/changes/swipe",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["mobile"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/stage/document",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/added",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "name": "Next change",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "name": "Previous change",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "name": "Next change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/changes/difference",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": "design/canvas/changes/difference"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Details",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/stage/component-set",
+      "viewports": ["desktop"],
+      "within": "mbk-usage-list",
+      "name": "Welcome",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/component-set",
+      "viewports": ["desktop"],
+      "within": "mbk-usage-list",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/changes/overlay"
+    },
+    {
+      "source": "design/canvas/changes/overlay",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/changes/swipe",
+      "viewports": ["mobile"],
+      "within": "cv-dock",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/component-set",
+      "viewports": ["desktop"],
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set",
+      "viewports": ["desktop"],
+      "within": "cv-variants",
+      "name": "Default",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/component-set",
+      "viewports": ["desktop"],
+      "within": "mbk-usage-list",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-usage-list",
+      "name": "Welcome",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-usage-list",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · primary",
+      "target": "design/canvas/stage/component-set/toolbar-primary"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · secondary",
+      "target": "design/canvas/stage/component-set/toolbar-secondary"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar",
+      "viewports": ["desktop"],
+      "within": "cv-variants",
+      "name": "Default",
+      "target": null
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/stage/home",
+      "within": "mbk-nav",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-primary",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · primary",
+      "target": "design/canvas/stage/component-set/toolbar-primary"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-primary",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · secondary",
+      "target": "design/canvas/stage/component-set/toolbar-secondary"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-primary",
+      "viewports": ["desktop"],
+      "within": "cv-sec-head",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-primary",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/stage/component-set/toolbar-primary"
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-primary",
+      "viewports": ["mobile"],
+      "within": "cv-pill-place",
+      "namePattern": "^Action label",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/component-set/toolbar-secondary",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar-secondary"
+    },
+    {
+      "source": "design/canvas/outcomes/added",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · welcome",
+      "target": "design/canvas/outcomes/added/welcome"
+    },
+    {
+      "source": "design/canvas/outcomes/added",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Toolbar · toolbar",
+      "target": "design/canvas/outcomes/added/toolbar"
+    },
+    {
+      "source": "design/canvas/outcomes/added",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · primary",
+      "target": "design/canvas/outcomes/added/primary"
+    },
+    {
+      "source": "design/canvas/outcomes/added",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · secondary",
+      "target": "design/canvas/outcomes/added/secondary"
+    },
+    {
+      "source": "design/canvas/outcomes/added/welcome",
+      "viewports": ["desktop"],
+      "within": "mbk-instance-tree",
+      "name": "Action · welcome",
+      "target": "design/canvas/outcomes/added/welcome"
+    },
+    {
+      "source": "design/canvas/outcomes/added/welcome",
+      "viewports": ["desktop"],
+      "within": "cv-sec-head",
+      "name": "Action",
+      "target": "design/canvas/stage/component-set"
+    },
+    {
+      "source": "design/canvas/outcomes/added/welcome",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/added/welcome",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added/welcome"
+    },
+    {
+      "source": "design/canvas/outcomes/added/welcome",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/added/toolbar",
+      "viewports": ["desktop"],
+      "within": "cv-sec-head",
+      "name": "Toolbar",
+      "target": "design/canvas/stage/component-set/toolbar"
+    },
+    {
+      "source": "design/canvas/outcomes/added/secondary",
+      "viewports": ["mobile"],
+      "within": "cv-pill-place",
+      "namePattern": "^Action label",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/zoomed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/stage/zoomed"
+    },
+    {
+      "source": "design/canvas/inspect/selection",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection"
+    },
+    {
+      "source": "design/canvas/inspect/selection/toolbar",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/toolbar"
+    },
+    {
+      "source": "design/canvas/inspect/selection/primary",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/primary"
+    },
+    {
+      "source": "design/canvas/inspect/selection/secondary",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/selection/secondary"
+    },
+    {
+      "source": "design/canvas/inspect/sections",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/sections"
+    },
+    {
+      "source": "design/canvas/inspect/props",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/props"
+    },
+    {
+      "source": "design/canvas/inspect/frames",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Welcome",
+      "target": "design/canvas/inspect/frames"
     }
   ],
   "tagStates": [

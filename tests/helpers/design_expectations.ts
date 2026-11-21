@@ -60,7 +60,9 @@ export const INVENTORY = fixture<DesignInventory>("inventory");
 /**
  * A family part of the adoption table: a shared component that every family
  * screen records except the listed ones, or that only the listed screens
- * record, because only they depict it.
+ * record, because only they depict it. A part limited to some viewports
+ * binds only their views, such as a panel that a phone shows as a sheet only
+ * on the screens that open it.
  */
 export interface AdoptionPart {
   family: string;
@@ -68,6 +70,7 @@ export interface AdoptionPart {
   reason: string;
   except?: string[];
   only?: string[];
+  viewports?: ("mobile" | "desktop")[];
 }
 
 export const ADOPTION = fixture<{
@@ -89,7 +92,7 @@ export const {
 
 /** Design entries that render in both schemes; every other one is light-only. */
 export const DUAL_SCHEME =
-  /^design\/(browse\/(appearance|loading)\/.+|browse\/views\/(screen|details-screen|screen\/dark-scheme|screen\/light-only)|changes\/diff-controls\/.+|changes\/outcomes\/(changed|difference)|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
+  /^design\/(browse\/(appearance|loading)\/.+|browse\/views\/(screen|details-screen|screen\/dark-scheme|screen\/light-only)|canvas\/.+|changes\/diff-controls\/.+|changes\/outcomes\/(changed|difference)|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
 
 /** The startup pages draw no catalogue chrome before the index arrives. */
 const STARTUP =
@@ -127,7 +130,10 @@ export function requiredComponents(
   if (STARTUP.test(path)) return ["design/library/preview/empty-state"];
   const ids = ["chrome/top-bar", "chrome/appearance-selector"];
   if (viewport === "desktop") ids.push("chrome/catalogue-navigation");
-  if (!UNSELECTED.has(path)) ids.push("chrome/screen-header");
+  // The Canvas viewer names the selected entry on the canvas, in the section
+  // head and the compact entry bar, so it draws no screen header band.
+  const canvas = new RegExp(ADOPTION.families.canvas!, "u").test(path);
+  if (!UNSELECTED.has(path) && !canvas) ids.push("chrome/screen-header");
   if (path.startsWith("design/browse/loading/"))
     ids.push("preview/empty-state");
   if (path.startsWith("design/changes/"))
@@ -147,10 +153,11 @@ export function requiredComponents(
     ids.push("preview/flow-step", "preview/device-frame");
   for (const part of ADOPTION.parts)
     if (
-      part.only
+      (part.viewports ?? [viewport]).includes(viewport) &&
+      (part.only
         ? part.only.includes(path)
         : new RegExp(ADOPTION.families[part.family]!, "u").test(path) &&
-          !part.except!.includes(path)
+          !part.except!.includes(path))
     )
       ids.push(part.component);
   return [...new Set(ids)].map((id) => `design/library/${id}`);

@@ -7,9 +7,12 @@ import type {
 } from "./depicted_view.js";
 import type { ArtboardViewport } from "./shell.js";
 
-/** A depicted form of the example's Welcome or Details screen. */
+/**
+ * A depicted form of the example's Welcome or Details screen. The revised
+ * Welcome adds its one-line introduction below the heading.
+ */
 export type MiniForm =
-  "details" | "welcome" | "welcome-empty" | "welcome-error";
+  "details" | "welcome" | "welcome-empty" | "welcome-error" | "welcome-revised";
 
 /** The Action that a form's real screen renders as its own instance. */
 interface MiniAction {
@@ -21,7 +24,7 @@ interface MiniAction {
 }
 
 /** The Toolbar that a form's real screen renders, with its slot's text. */
-interface MiniToolbar {
+export interface MiniToolbarContent {
   text: string;
   title: string;
 }
@@ -38,7 +41,7 @@ const WELCOME = {
  */
 const INSTANCES: Record<
   MiniForm,
-  { action: MiniAction; toolbar?: MiniToolbar | undefined }
+  { action: MiniAction; toolbar?: MiniToolbarContent | undefined }
 > = {
   details: {
     action: {
@@ -53,6 +56,7 @@ const INSTANCES: Record<
     },
   },
   welcome: WELCOME,
+  "welcome-revised": WELCOME,
   "welcome-empty": {
     action: {
       id: "create-workspace",
@@ -70,13 +74,16 @@ const LEFT = 20;
 /**
  * The fixed rows of a mini screen above its instances, each with its gap, as
  * `design-shots.css` draws them: the padding, the navigation, the heading, the
- * empty workspace's field, the save error, and Details' text. The error and
- * the text take one line on a desktop and two in a phone.
+ * revised Welcome's introduction, the empty workspace's field, the save
+ * error, and Details' text. The introduction takes one line in both
+ * viewports; the error and the text take one line on a desktop and two in a
+ * phone.
  */
 const ROWS = {
   pad: 18,
   nav: 28.25 + 14,
   title: 25.5 + 10,
+  intro: 19.375 + 12,
   field: 32 + 10,
   error: { desktop: 37.375 + 12, mobile: 56.75 + 12 },
   text: { desktop: 19.375 + 12, mobile: 38.75 + 12 },
@@ -96,6 +103,8 @@ function actionTop(form: MiniForm, viewport: ArtboardViewport): number {
       return top + ROWS.text[viewport];
     case "welcome":
       return top + ROWS.nav;
+    case "welcome-revised":
+      return top + ROWS.nav + ROWS.intro;
     case "welcome-empty":
       return top + ROWS.nav + ROWS.field;
     case "welcome-error":
@@ -164,20 +173,29 @@ export function MiniInstances({
         {action.label}
       </span>
       <div className="mbk-shot-link-row">{link}</div>
-      {toolbar === undefined ? null : (
-        <div className="mbk-shot-toolbar">
-          <strong>{toolbar.title}</strong>
-          <span>{toolbar.text}</span>
-          <div className="mbk-shot-toolbar-actions">
-            <span className="mbk-shot-action mbk-shot-action--primary">
-              Browse details
-            </span>
-            <span className="mbk-shot-action mbk-shot-action--secondary">
-              Browse welcome
-            </span>
-          </div>
-        </div>
-      )}
+      {toolbar === undefined ? null : <MiniToolbarCard {...toolbar} />}
     </>
+  );
+}
+
+/**
+ * A depicted Toolbar: its title, its slot's text, and the two Actions that
+ * the example's Toolbar renders, in a row on a desktop and in a component
+ * document, and stacked in a phone.
+ */
+export function MiniToolbarCard({ text, title }: MiniToolbarContent) {
+  return (
+    <div className="mbk-shot-toolbar">
+      <strong>{title}</strong>
+      <span>{text}</span>
+      <div className="mbk-shot-toolbar-actions">
+        <span className="mbk-shot-action mbk-shot-action--primary">
+          Browse details
+        </span>
+        <span className="mbk-shot-action mbk-shot-action--secondary">
+          Browse welcome
+        </span>
+      </div>
+    </div>
   );
 }
