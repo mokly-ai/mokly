@@ -77,6 +77,10 @@ Contract owners:
 - 2026-11-21, orchestrator: the large-catalogue cap item is added only when one
   generation charges more than the cap. Large React charged 165,162 bytes, and
   large HTML starts no sidecar, so no item was added.
+- 2026-11-21, review finding 3, agent call: the process cache is a constant in
+  `describe.ts` that no other module imports, and `orderedExports` and
+  `describeStories` require the cache. This narrows the owner call below, so
+  that no inner call can skip the cache that `describe` received.
 - 2026-11-21, orchestrator: during the Codex outage, a Codex action that runs
   no command within about 5 minutes runs on Claude Opus at `max` effort in a
   fresh context. This Claude session resolved the one prose conflict of the

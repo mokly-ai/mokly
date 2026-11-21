@@ -8,10 +8,12 @@ import { validateFields } from "./definition-fields.js";
 import { serialize } from "./describe-records.js";
 import { SidecarError, detail } from "./errors.js";
 import { evaluate } from "./evaluate.js";
-import { exportNameCache } from "./export-name-cache.js";
-import type { ExportNameCache } from "./export-name-cache.js";
+import { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
 import { describeStories } from "./stories.js";
+
+/** One bounded cache of parsed export names lasts for the sidecar process. */
+const exportNameCache = new ExportNameCache();
 
 const groups = {
   screen: "screens",

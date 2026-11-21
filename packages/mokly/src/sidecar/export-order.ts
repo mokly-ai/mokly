@@ -1,4 +1,3 @@
-import { exportNameCache } from "./export-name-cache.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 
 /** Module namespace keys are sorted by JavaScript; source order needs the AST. */
@@ -6,7 +5,7 @@ export function orderedExports(
   source: string,
   values: Record<string, unknown>,
   module: string,
-  cache: ExportNameCache = exportNameCache,
+  cache: ExportNameCache,
 ): [string, unknown][] {
   const names = [
     ...cache.names(source, /\.[cm]?ts$/.test(module) ? "typescript" : "tsx"),

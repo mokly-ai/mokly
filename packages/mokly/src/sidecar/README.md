@@ -29,8 +29,11 @@ its requests and results. The paths below are relative to the package root.
   [`src/sidecar/json.ts`](./json.ts), which sorts object keys in UTF-16
   order and keeps negative zero.
 - [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
-  which restores source order with a bounded process cache of parsed names.
-  Each call reads the current namespace values.
+  which restores source order with parsed names from the `ExportNameCache` of
+  [`src/sidecar/export-name-cache.ts`](./export-name-cache.ts) that its caller
+  passes. `describe` keeps one bounded cache for the process and passes it to
+  `orderedExports` and `describeStories`. Each call reads the current
+  namespace values.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module

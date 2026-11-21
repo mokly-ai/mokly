@@ -5,7 +5,7 @@
 - **Added:** 2026-11-21, from `calummoore/mokly-cheaper-sidecar-describe-dlz0`,
   review round 1: the wider fix of finding 1 and a problem outside the review
   scope.
-- **Location:** `plans/follow-ups/`, the 17 items listed below, and
+- **Location:** `plans/follow-ups/`, the 16 items listed below, and
   `skills/plans/templates/follow-up.md` line 3 in the `Firna-AI/skills`
   repository.
 - **Reason:** The rule that would prevent the mismatch lives in the shared
@@ -26,12 +26,11 @@
   - The follow-up template asks for an **Effort** grade on the first line, but
     it does not say that this grade is the grade of the recommended option.
   - `follow-ups.sh` reads only the first-line grade.
-  - On 2026-11-21 a scan compared the first-line **Effort** of each item with
-    the effort of the option that its **Recommendation** names. 17 items
-    differ:
+  - On 2026-11-21 a scan of `main` at 27ffad4b2 compared the first-line
+    **Effort** of each item with the effort of the option that its
+    **Recommendation** names. 16 items differ:
     - `blobless-base-read-extra-listing.md`: first line Medium, option B Small.
     - `build-sigterm-exit-delay.md`: Medium, option A Small.
-    - `changes-detail-revision-copies.md`: Medium, option A Small.
     - `embedded-document-closures.md`: Medium, option C Large.
     - `mac-buttons-follow-measured-bar.md`: Large, option A Small.
     - `macos-serve-signal-test-cache-warning.md`: Small, option B Medium.
@@ -56,7 +55,7 @@
 - **Root question:** How does the priority score of each item use the effort
   of the option that the item recommends?
 - **Options:**
-  - **A.** Correct the first-line grade of the 17 items in this repository.
+  - **A.** Correct the first-line grade of the 16 items in this repository.
     It does not prevent new cases. Effort: Small.
   - **B.** Do A, and state the rule in the template placeholder of the shared
     `plans` skill: the first-line effort is the grade of the recommended
@@ -67,13 +66,13 @@
 - **Left out:** A lint in this repository that compares the two grades,
   because C removes the case and a structural fix ranks above a detection fix.
 - **Wider fix:** C. It removes the duplicate grade from the score.
-- **Previous examples:** The 17 items above. The first round of the review of
+- **Previous examples:** The 16 items above. The first round of the review of
   `calummoore/mokly-cheaper-sidecar-describe-dlz0` found the same mismatch in
   `plans/follow-ups/prepare-only-describe.md`, and that branch fixed it.
 - **Related:** `plans/follow-ups/follow-up-code-lists-go-stale.md`: another
   rule for the shared `plans` skill from the same review. The two can change
   the skill in one pull request.
-- **Recommendation:** B. It fixes the 17 items and prevents new cases with one
+- **Recommendation:** B. It fixes the 16 items and prevents new cases with one
   sentence. C best protects the scores, but it changes a shared script.
 - **Action:** ask the user, because B and C change the shared skills of every
   repository that uses them.

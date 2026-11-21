@@ -90,5 +90,3 @@ export class ExportNameCache {
     return names;
   }
 }
-
-export const exportNameCache = new ExportNameCache();

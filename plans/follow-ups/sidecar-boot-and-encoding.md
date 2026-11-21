@@ -28,8 +28,8 @@
     traverse took 168 ms of that.
   - Before `hello`, the sidecar process loads only `@babel/parser`. Two
     static imports load it:
-    - `export-name-cache.ts:1`, which `describe.ts`, `stories.ts`, and
-      `export-order.ts` import.
+    - `export-name-cache.ts:1`, which `describe.ts` imports. `export-order.ts`
+      and `stories.ts` import only its type.
     - `pnp-json.ts:3`, through `sidecar.ts:10`, `session.ts:8`,
       `bundle.ts:32`, `resolution-evidence.ts:22`, `pnp-inputs.ts:16`, and
       `pnp-locations.ts:9`. `pnp-json.ts:13` to line 19 already loads

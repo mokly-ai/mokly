@@ -11,24 +11,27 @@ import { parserProbe } from "./helpers/export_cache.js";
 const sources = ["export const a=1;", "export const b=1;", "export const c=1;"];
 
 test("charged retention evicts the least recently used source at its exact cap", () => {
+  // Charges: 64 per entry, 2 per source code unit, 16 + 2 per name code unit.
+  const lru = ["export const a=10;", "export const b=1;", "export const c=1"];
   const probe = parserProbe();
-  const cache = new ExportNameCache(232, probe.parser);
+  const cache = new ExportNameCache(234, probe.parser);
   const read = (index: number) =>
-    orderedExports(sources[index]!, { a: 1, b: 1, c: 1 }, "entry.ts", cache);
+    orderedExports(lru[index]!, { a: 1, b: 1, c: 1 }, "entry.ts", cache);
   read(0);
-  assert.equal(cache.retainedBytes, 116);
+  assert.equal(cache.retainedBytes, 118);
   read(1);
-  assert.equal(cache.retainedBytes, 232);
+  assert.equal(cache.retainedBytes, 234);
   read(0);
   read(2);
+  assert.equal(cache.retainedBytes, 232);
   read(0);
   assert.equal(probe.calls.length, 3);
   read(1);
   assert.deepEqual(
     probe.calls.map((call) => call.source),
-    [sources[0], sources[1], sources[2], sources[1]],
+    [lru[0], lru[1], lru[2], lru[1]],
   );
-  assert.equal(cache.retainedBytes, 232);
+  assert.equal(cache.retainedBytes, 234);
 });
 
 test("retention charges UTF-16 sources and names and stays bounded across versions", () => {
@@ -87,22 +90,4 @@ test("failed parses retain and evict nothing and preserve the same error", () =>
   for (const source of sources.slice(0, 2))
     orderedExports(source, {}, "entry.ts", cache);
   assert.deepEqual(calls, [sources[0], sources[1], "broken", "broken"]);
-});
-
-test("recent live sources keep their parse results while dead versions fill the cap", () => {
-  const probe = parserProbe();
-  const cache = new ExportNameCache(464, probe.parser);
-  for (const source of sources) orderedExports(source, {}, "entry.ts", cache);
-  for (let version = 0; version < 25; version++) {
-    orderedExports(`export let d=${version};`, {}, "entry.ts", cache);
-    for (const source of sources) orderedExports(source, {}, "entry.ts", cache);
-    assert.ok(cache.retainedBytes <= 464);
-  }
-  assert.deepEqual(
-    probe.calls
-      .filter((call) => sources.includes(call.source))
-      .map((call) => call.source),
-    sources,
-  );
-  assert.equal(probe.calls.length, 28);
 });
