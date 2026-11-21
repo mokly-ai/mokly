@@ -1,0 +1,38 @@
+---
+/**
+ * The tree sheet below 1024px: a modal dialog named Layers that the
+ * sub-bar's Layers control opens under the sub-bar, over a scrim. It holds
+ * the published CLI version, every section with its pages and the
+ * Changelog row. The control, Escape, the scrim and a link close it. It
+ * starts closed on each page and keeps no scroll position; opening it
+ * reveals the current page's row. The tree sheet island runs it.
+ *
+ * Use: `<TreeSheet route={route} />`, once per page, beside the sub-bar.
+ */
+import TreeFoot from "./TreeFoot.astro";
+import TreeSections from "./TreeSections.astro";
+import VersionRow from "./VersionRow.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+---
+
+<dialog
+  aria-label="Layers"
+  class="site-docs-sheet"
+  closedby="any"
+  id="docs-layers"
+>
+  <nav aria-label="Documentation" class="site-doc-tree">
+    <div class="site-docs-layers-top">
+      <VersionRow />
+    </div>
+    <TreeSections route={route} />
+    <TreeFoot />
+  </nav>
+</dialog>
+
+<script src="./tree-sheet.ts"></script>

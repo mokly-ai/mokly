@@ -24,7 +24,7 @@ const DESTINATIONS = ["Docs", "Changelog", "GitHub"];
  * The banner of a documentation page as assistive technology reads it in
  * each composition. The desktop bar also draws the file title and the
  * people in the file, but they are depictions, so the banner holds nothing
- * else. The search control is the bar's last control.
+ * else.
  */
 const BANNER = {
   narrow: `
@@ -33,7 +33,6 @@ const BANNER = {
       - link "Mokly home"
       - link "Get started"
       - button "Menu"
-      - button "Search docs"
   `,
   wide: `
     - banner:
@@ -44,7 +43,6 @@ const BANNER = {
         - link "Changelog"
         - link "GitHub"
       - link "Get started"
-      - button "Search docs"
   `,
 };
 
@@ -158,34 +156,6 @@ test("the header hides its depictions from assistive technology", async ({
   await expect(page.getByRole("banner")).toMatchAriaSnapshot(
     narrow(page) ? BANNER.narrow : BANNER.wide,
   );
-});
-
-test("the search control appears on documentation routes only", async ({
-  page,
-}) => {
-  const banner = page.getByRole("banner");
-  const search = banner.getByRole("button", { name: "Search docs" });
-  await page.goto(SITE_PATHS.docs);
-  await expect(search).toBeVisible();
-  // It is the bar's last control. Below the breakpoint it takes the row
-  // beneath the bar, and above it it follows Get started in the bar.
-  const brand = await banner
-    .getByRole("link", { name: "Mokly home" })
-    .boundingBox();
-  const start = await banner
-    .getByRole("link", { name: "Get started" })
-    .boundingBox();
-  const field = await search.boundingBox();
-  expect((field?.y ?? 0) >= (brand?.y ?? 0) + (brand?.height ?? 0)).toBe(
-    narrow(page),
-  );
-  expect((field?.x ?? 0) >= (start?.x ?? 0) + (start?.width ?? 0)).toBe(
-    !narrow(page),
-  );
-  for (const route of [SITE_PATHS.home, SITE_PATHS.changelog]) {
-    await page.goto(route);
-    await expect(search).toHaveCount(0);
-  }
 });
 
 test("the current route is marked in the header and footer", async ({

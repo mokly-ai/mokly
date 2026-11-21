@@ -39,8 +39,8 @@
 }
 
 /* An anchor jump or the skip link lands below the sticky tool bar: 60px
-   tall on mobile and 56px from the breakpoint up. controls.css adds the
-   search row of a documentation route. */
+   tall on mobile and 56px from the breakpoint up. A documentation heading
+   adds the docs sub-bar below the bar through its own scroll margin. */
 :root {
   scroll-padding-top: 60px;
 }
@@ -258,8 +258,7 @@
    centres between the brand and the end group, then the people in the file
    hide, then the file title hides; the navigation and Get started stay in
    the row down to the breakpoint. Each step sits where every page name
-   keeps a 12px clear gap between the items. controls.css steps the bar of
-   a documentation route, which also holds the search control. */
+   keeps a 12px clear gap between the items. */
 
 @media (min-width: 768px) and (max-width: 1399px) {
   .site-header {

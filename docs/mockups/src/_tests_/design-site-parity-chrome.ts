@@ -10,8 +10,6 @@
 
 const MENU =
   "the mockup draws the open sheet in place, and the site opens it as a modal dialog in the top layer: the sheet also transitions its display and its top-layer overlay so it can fade out, it settles 8px by its top edge rather than a translate, which would make it the containing block of the fixed close control and move that control with the sheet, and it scrolls within the window below the bar";
-const TRAIL =
-  "the trail is the design file's mono uppercase eyebrow; Milestone 6 rebuilds the docs and Milestone 8 the changelog";
 
 export const CHROME_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-menu": MENU,
@@ -22,5 +20,4 @@ export const CHROME_DIFFERENCES: Readonly<Record<string, string>> = {
     "the mockup wraps each section of a document in a section element and spaces the sections; the site renders a flat Markdown body, so its gap spaces each part",
   ".site-document-body h2":
     "the site renders a flat Markdown body, so each heading carries the rule above its section and the scroll margin that the mockup's section element carries",
-  ".site-trail": TRAIL,
 };

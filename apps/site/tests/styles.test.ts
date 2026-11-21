@@ -61,12 +61,15 @@ const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
 const CONTROLS = [
   ".site-button",
   ".site-code-copy",
-  ".site-doc-disclosure",
+  ".site-docs-edit",
+  ".site-docs-layers-toggle",
+  ".site-docs-outline-summary",
   ".site-pager-item",
   ".site-search",
+  ".site-search-close",
   ".site-search-input",
   ".site-skip",
-  ".site-version",
+  ".site-version-link",
 ];
 
 const REQUIRED_TOKENS = [

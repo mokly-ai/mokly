@@ -6,6 +6,7 @@
 import { getCollection, render, type CollectionEntry } from "astro:content";
 
 import Install from "../../components/docs/Install.astro";
+import { pageSource } from "../../components/docs/page-source.js";
 import Version from "../../components/docs/Version.astro";
 import { assertUniqueHeadings } from "../../docs/headings.js";
 import {
@@ -60,6 +61,7 @@ assertUniqueHeadings(headings, page.id);
   headings={headings}
   route={page.route}
   section={SECTION_TITLES[page.section]}
+  source={pageSource(page)}
   title={page.title}
 >
   <Content components={{ Install, Version }} />

@@ -1,0 +1,256 @@
+/* The open page as a page frame on the canvas: a sheet with a centred
+   reading column that holds the location trail, the title and the lead
+   with its green rule, then the document, each h2 section ruled across the
+   whole sheet with its two-digit index. docs-pager.css holds previous and
+   next, which close the sheet.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-document.css, docs-responsive.css and docs-steps.css, and the trail
+   matches prose.css. The mobile composition is the base rule, the desktop
+   one follows at 768px, and the desktop steps follow it as ranges from
+   768px. A docs sheet loads before the shared sheets, so a rule that
+   overrides a shared rule carries the frame's class. */
+
+.site-docs-frame {
+  max-width: 880px;
+}
+
+/* The sheet's columns: a margin, the reading column and a margin. A band,
+   such as an HTML sample, spans the whole sheet. */
+
+.site-docs-frame .site-page-sheet {
+  display: grid;
+  grid-template-columns:
+    [bleed-start] 20px [text-start] minmax(0, 1fr) [text-end] 20px
+    [bleed-end];
+  padding-top: 36px;
+}
+
+.site-docs-frame .site-page-sheet > * {
+  grid-column: text;
+  min-width: 0;
+}
+
+/* The intro: the trail, the title and the lead */
+
+.site-docs-frame .site-document-intro {
+  border-bottom: 0;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.site-docs-frame .site-document-intro h1 {
+  font-size: 2.5rem;
+  margin-top: 16px;
+}
+
+.site-docs-frame .site-document-intro .site-pullquote {
+  margin-top: 18px;
+}
+
+/* The location trail: the mono eyebrow, its last step in the signal ink */
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.site-trail-step {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-trail .site-trail-step:last-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-trail-sep {
+  padding: 0 var(--mk-space-2);
+}
+
+/* The lead: a pull quote with the green rule, not a box */
+
+.site-pullquote {
+  border-left: 2px solid var(--mk-color-signal);
+  color: var(--mk-color-text-secondary);
+  font-size: 1.125rem;
+  letter-spacing: -0.014em;
+  line-height: 1.5;
+  max-width: 31em;
+  padding: 2px 0 2px 14px;
+}
+
+/* The document. The mockup wraps each h2 section in a section element. The
+   site renders the Markdown as one flat list of parts, so the parts sit the
+   section's 18px gap apart, and each h2 opens its section: a hairline
+   across the sheet 44px below the part before it, 40px on mobile, then the
+   section's top padding to the heading. The hairline crosses the sheet's
+   margins and the sheet clips it. The h2's two-digit index comes from a
+   counter: it hangs in the margin beside the heading on desktop and heads
+   the section on mobile, and assistive technology skips it. Each heading's
+   scroll margin adds the sub-bar and some air to the root's scroll
+   padding, which clears the tool bar. */
+
+.site-docs-frame .site-document-body {
+  counter-reset: site-docs-section;
+  display: grid;
+  gap: 18px 0;
+  grid-column: bleed;
+  grid-template-columns: subgrid;
+}
+
+.site-docs-frame .site-document-body > * {
+  grid-column: text;
+  min-width: 0;
+}
+
+.site-docs-frame .site-document-body > .site-docs-sample {
+  grid-column: bleed;
+  max-width: none;
+}
+
+.site-docs-frame .site-document-body > h2 {
+  border-top: 0;
+  counter-increment: site-docs-section;
+  margin-top: 55px;
+  padding-top: 0;
+  position: relative;
+  scroll-margin-top: 76px;
+}
+
+.site-docs-frame .site-document-body > h2:first-child {
+  margin-top: 73px;
+}
+
+.site-docs-frame .site-document-body > h2::before {
+  color: var(--mk-color-signal-deep);
+  content: counter(site-docs-section, decimal-leading-zero) / "";
+  display: block;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: normal;
+  line-height: 14px;
+  margin-bottom: 18px;
+}
+
+.site-docs-frame .site-document-body > h2::after {
+  border-top: 1px solid var(--mk-color-border);
+  content: "";
+  left: -100vmax;
+  position: absolute;
+  right: -100vmax;
+  top: -33px;
+}
+
+/* A subsection heading: larger than the body and smaller than an h2, with
+   room above it */
+
+.site-docs-frame .site-document-body > h3 {
+  font-size: 1.125rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin-top: 14px;
+  scroll-margin-top: 76px;
+}
+
+/* The desktop composition: the wide sheet margins, the larger title and
+   lead, and the index hung in the margin, where only the section in view
+   takes the signal ink */
+
+@media (min-width: 768px) {
+  .site-docs-frame .site-page-sheet {
+    grid-template-columns:
+      [bleed-start] minmax(88px, 1fr) [text-start] minmax(0, 568px)
+      [text-end] minmax(64px, 1fr) [bleed-end];
+    padding-top: 60px;
+  }
+
+  .site-docs-frame .site-document-intro h1 {
+    font-size: 3.875rem;
+    margin-top: 20px;
+  }
+
+  .site-docs-frame .site-document-intro .site-pullquote {
+    margin-top: 24px;
+  }
+
+  .site-pullquote {
+    font-size: 1.28125rem;
+    padding-left: 18px;
+  }
+
+  .site-docs-frame .site-document-body > h2 {
+    margin-top: 75px;
+    scroll-margin-top: 28px;
+  }
+
+  .site-docs-frame .site-document-body > h2:first-child {
+    margin-top: 93px;
+  }
+
+  .site-docs-frame .site-document-body > h2::before {
+    color: var(--mk-color-text-muted);
+    left: -52px;
+    line-height: 22px;
+    margin-bottom: 0;
+    position: absolute;
+    top: 5px;
+  }
+
+  .site-docs-frame .site-document-body > h2[data-current]::before {
+    color: var(--mk-color-signal-deep);
+  }
+
+  .site-docs-frame .site-document-body > h2::after {
+    top: -49px;
+  }
+
+  .site-docs-frame .site-document-body > h3 {
+    font-size: 1.25rem;
+    scroll-margin-top: 28px;
+  }
+}
+
+/* Below the 1440px design width the sheet keeps narrower margins, and the
+   title and the lead scale with the window */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-docs-frame .site-page-sheet {
+    grid-template-columns:
+      [bleed-start] minmax(76px, 1fr) [text-start] minmax(0, 568px)
+      [text-end] minmax(48px, 1fr) [bleed-end];
+  }
+
+  .site-docs-frame .site-document-intro h1 {
+    font-size: clamp(2.5rem, 4.3vw, 3.875rem);
+  }
+
+  .site-docs-frame .site-pullquote {
+    font-size: clamp(1.125rem, 1.5vw, 1.28125rem);
+  }
+}
+
+/* Below 1024px the page frame takes the width under the sub-bar, which the
+   headings' scroll margin clears */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-docs-frame {
+    max-width: 820px;
+  }
+
+  .site-docs-frame .site-document-body > h2,
+  .site-docs-frame .site-document-body > h3 {
+    scroll-margin-top: 76px;
+  }
+}

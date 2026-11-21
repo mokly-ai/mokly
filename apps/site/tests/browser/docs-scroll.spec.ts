@@ -102,17 +102,24 @@ test(
 );
 
 test(
-  "mobile docs navigation opens a fresh closed disclosure",
+  "the tree sheet starts closed on each page",
   { tag: "@mobile" },
   async ({ page }) => {
     await page.goto("/docs/start/install/");
-    const disclosure = page.locator("details.site-doc-disclosure");
-    await expect(disclosure).toHaveJSProperty("open", false);
-    await disclosure.locator("summary").click();
-    await expect(disclosure).toHaveJSProperty("open", true);
-    await disclosure.locator('a[href="/docs/cli/check/"]').click();
+    const sheet = page.getByRole("dialog", { name: "Layers" });
+    const control = page.getByRole("button", {
+      name: "Getting started Install",
+    });
+    await expect(sheet).toBeHidden();
+    await expect(control).toHaveAttribute("aria-expanded", "false");
+    await control.click();
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("link", { name: "Validate a catalogue" }).click();
     await expect(page).toHaveURL(/\/docs\/cli\/check\/$/);
-    await expect(disclosure).toHaveJSProperty("open", false);
+    await expect(sheet).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "CLI reference Validate a catalogue" }),
+    ).toHaveAttribute("aria-expanded", "false");
   },
 );
 
