@@ -50,7 +50,7 @@ fn prepared_context_requests_and_disposal_use_the_bundle_owner() {
                                 epoch: 0,
                                 cache: None,
                                 compile_count: 1,
-                                modules: vec![],
+                                modules: Default::default(),
                                 unmapped_dependency_directories: None,
                                 plan: None,
                                 compiled: Arc::new(compiled("prepared")),

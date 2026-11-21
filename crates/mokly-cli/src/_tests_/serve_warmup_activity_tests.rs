@@ -86,7 +86,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
                         cache: None,
                         compile_count: 1,
                         compiled: Arc::new(compiled()),
-                        modules: vec![],
+                        modules: Default::default(),
                         unmapped_dependency_directories: None,
                     })),
                     _ => MethodResult::Empty,

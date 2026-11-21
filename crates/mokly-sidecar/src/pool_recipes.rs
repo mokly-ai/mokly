@@ -29,7 +29,7 @@ impl Recipe {
         Box::new(RestoreGeneration {
             generation: seed_id(self.reusable.generation()),
             params: self.reusable.params().clone(),
-            modules: self.reusable.modules().to_vec(),
+            modules: self.reusable.modules().clone(),
             compiled: self.reusable.compiled().clone(),
         })
     }
@@ -51,7 +51,7 @@ impl Recipes {
         &mut self,
         generation: String,
         params: Bundle,
-        modules: Vec<Module>,
+        modules: Arc<Vec<Module>>,
         compiled: Arc<CompiledGeneration>,
     ) {
         if let Some(index) = self.find(&params) {

@@ -1,9 +1,10 @@
 //! Ordered client requests and exact-version hello handshake.
 
 use crate::capture_hint::CaptureHint;
+use crate::client_origins::Origins;
 use crate::error::{Error, ProtocolError, Result};
 use crate::methods::{Call, Hello};
-use crate::wire::{Event, Frame, MethodResult, Request};
+use crate::wire::{Event, Frame, MethodResult, Request, Response};
 
 /// Framed transport provided by the process pool.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = TransportMock))]
@@ -37,6 +38,7 @@ pub struct Client {
     version: String,
     timings: bool,
     capture: Option<CaptureHint>,
+    origins: Origins,
 }
 
 impl Client {
@@ -49,6 +51,7 @@ impl Client {
             version,
             timings: false,
             capture: None,
+            origins: Origins::default(),
         }
     }
 
@@ -62,6 +65,12 @@ impl Client {
     pub fn with_capture(mut self, hint: Option<CaptureHint>) -> Self {
         self.capture = hint;
         self
+    }
+
+    fn response(&mut self, response: Response, request: &Request) -> Result<MethodResult> {
+        let result = response.decode_result(request, &self.origins)?;
+        self.origins.record(&request.call, &result);
+        Ok(result)
     }
 }
 
@@ -79,7 +88,9 @@ impl SidecarClient for Client {
         let Frame::Response(response) = self.transport.receive()? else {
             return Err(Error::Protocol(ProtocolError::Handshake));
         };
-        let hello = response.decode_result(&request)?.into_hello();
+        let hello = response
+            .decode_result(&request, &self.origins)?
+            .into_hello();
         if hello.version != self.version {
             return Err(Error::Version {
                 expected: self.version.clone(),
@@ -96,7 +107,7 @@ impl SidecarClient for Client {
         loop {
             match self.transport.receive()? {
                 Frame::Event(event) => self.events.emit(event),
-                Frame::Response(response) => return response.decode_result(request),
+                Frame::Response(response) => return self.response(response, request),
             }
         }
     }
@@ -109,3 +120,7 @@ mod client_tests;
 #[cfg(test)]
 #[path = "_tests_/session_tests.rs"]
 mod session_tests;
+
+#[cfg(test)]
+#[path = "_tests_/restored_bundle/mod.rs"]
+mod restored_bundle_tests;

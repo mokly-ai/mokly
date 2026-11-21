@@ -250,7 +250,7 @@ fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) 
     for directory in result.unmapped_dependency_directories.iter().flatten() {
         runtime.dependency_usage.unmapped(directory);
     }
-    for module in &result.modules {
+    for module in result.modules.iter() {
         runtime
             .dependency_usage
             .record(&side.dependency_aliases, &module.path);

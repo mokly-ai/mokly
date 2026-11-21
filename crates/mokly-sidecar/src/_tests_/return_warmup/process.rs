@@ -44,7 +44,7 @@ pub(super) fn process(id: usize, events: &Arc<Journal>, hook: Hook) -> Unimock {
                         cache: None,
                         compile_count: 1,
                         compiled: Arc::new(compiled(&params.params.entry_files[0])),
-                        modules: vec![],
+                        modules: Default::default(),
                         unmapped_dependency_directories: None,
                     })),
                     _ => MethodResult::Empty,

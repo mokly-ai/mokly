@@ -70,7 +70,7 @@ pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleC
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),
-            modules: Vec::new(),
+            modules: Default::default(),
             compiled: Arc::new(compiled(id, capture)),
         })),
     })
@@ -116,7 +116,7 @@ impl Fixture {
                                 epoch: 0,
                                 cache: None,
                                 compile_count: 1,
-                                modules: Vec::new(),
+                                modules: Default::default(),
                                 unmapped_dependency_directories: None,
                             }))
                         }
