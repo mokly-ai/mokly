@@ -19,7 +19,7 @@
   - **C.** When the pass can miss a swap that lands while a render ends, fix the pass so that it reads the current snapshot after each render ends, and keep the test. Effort: Medium.
 - **Left out:** A test timeout or a retry. A timeout turns the hang into a failure but hides the race, and the testing rules forbid a retry.
 - **Wider fix:** C, when the pass can miss the swap, because then no caller meets the race.
-- **Previous examples:** `plans/follow-ups/flaky-background-admission-order.md`, another `mokly-server` test of the same change that depends on task timing.
-- **Related:** `plans/follow-ups/flaky-background-admission-order.md`, the same change and the same kind of timing dependence in the background work. One cause in the pool can explain both.
+- **Previous examples:** `queued_background_renders_admit_in_request_order` in `crates/mokly-server/src/_tests_/work/background_tests.rs`, another `mokly-server` test of the same change that depended on task timing. PR #447, "fix(serve): keep queued background renders in request order", fixes it in product code.
+- **Related:** PR #447 fixes the admission order of queued background renders in `crates/mokly-server/src/work_background.rs`. The same change made both tests depend on task timing, so check this test again after #447 merges.
 - **Recommendation:** A, then B or C. The flaky-test rule asks for a reproduction with pass counts, and the captured state shows whether the test or the pass is wrong.
 - **Action:** fix after merge, apply A, because the test is outside the scope of the site change that met it, and one fix in its own branch reaches every open branch.
