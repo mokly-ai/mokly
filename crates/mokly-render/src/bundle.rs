@@ -99,7 +99,8 @@ pub(crate) fn describe(
         evaluation.push_str(&maps_digest(maps));
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
-    let preparation = if runtime.bundle_capture == BundleCapture::ServeEdit
+    let startup = runtime.bundle_capture == BundleCapture::Full && runtime.edit_plans.is_some();
+    let preparation = if (startup || runtime.bundle_capture == BundleCapture::ServeEdit)
         && runtime.base.is_none()
         && runtime.head_styles.is_none()
     {
@@ -108,7 +109,7 @@ pub(crate) fn describe(
             .filter(|lease| {
                 !lease.used.load(Ordering::Relaxed)
                     && !runtime.older_used_head_context(lease)
-                    && compiler.stale_postcss()
+                    && (startup || compiler.stale_postcss())
             })
             .and_then(|lease| config.postcss().and_then(|postcss| lease.prepare(postcss)))
     } else {

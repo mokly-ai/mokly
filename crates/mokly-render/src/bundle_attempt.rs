@@ -162,5 +162,9 @@ mod bundle_plan_bound_tests;
 mod bundle_plan_candidate_tests;
 
 #[cfg(test)]
+#[path = "_tests_/bundle_preparation_support.rs"]
+mod bundle_preparation_support;
+
+#[cfg(test)]
 #[path = "_tests_/bundle_preparation_tests.rs"]
 mod bundle_preparation_tests;

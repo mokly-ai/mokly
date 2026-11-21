@@ -113,8 +113,9 @@
     bounded disk cache across command processes, and it deleted the
     [bundle disk cache item at its last commit](https://github.com/mokly-ai/mokly/blob/bc858df427b0ffe2cb53dbf3fe35a44e032475cc/plans/follow-ups/bundle-disk-cache.md).
     [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md)
-    still waits for the user's choice. It keeps compiled output across
-    restarts. E keeps it across the edits of one process. So the plan for E
+    now holds the parked restart-store design. The user chose startup
+    PostCSS preparation on 2026-11-21 and parked stored stylesheet records.
+    E keeps compiled output across the edits of one process. So the plan for E
     reads the cache of PR #312 and that item first.
 - **Recommendation:** E. The user chose it on 2026-11-03. The first
   recommendation was C, which reports the last finished step of each edit.
