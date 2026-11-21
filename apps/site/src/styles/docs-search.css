@@ -142,15 +142,6 @@
   padding: var(--mk-space-5);
 }
 
-.site-visually-hidden {
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .site-search-dialog[open] {
     animation: site-search-in var(--mk-motion-standard) var(--mk-motion-easing);

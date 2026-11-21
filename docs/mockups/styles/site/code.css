@@ -190,31 +190,31 @@
 /* Syntax colours */
 
 .site-code-token--keyword {
-  color: color-mix(in srgb, var(--mk-color-signal) 75%, currentColor);
+  color: color-mix(in srgb, currentColor 25%, var(--mk-color-signal));
 }
 
 .site-code-token--string {
   color: color-mix(
     in srgb,
-    var(--mk-color-people-orange-fill) 38%,
-    currentColor
+    currentColor 62%,
+    var(--mk-color-people-orange-fill)
   );
 }
 
 .site-code-token--type {
-  color: color-mix(in srgb, var(--mk-color-people-blue-fill) 45%, currentColor);
+  color: color-mix(in srgb, currentColor 55%, var(--mk-color-people-blue-fill));
 }
 
 .site-code-token--attr {
   color: color-mix(
     in srgb,
-    var(--mk-color-people-violet-fill) 40%,
-    currentColor
+    currentColor 60%,
+    var(--mk-color-people-violet-fill)
   );
 }
 
 .site-code-token--number {
-  color: color-mix(in srgb, var(--mk-color-people-pink-fill) 50%, currentColor);
+  color: color-mix(in srgb, currentColor 50%, var(--mk-color-people-pink-fill));
 }
 
 .site-code-token--fn {

@@ -21,6 +21,8 @@ function Copy({ panel }: { readonly panel: HTMLElement }) {
 
   async function write(): Promise<void> {
     try {
+      // The block's text is its source, newlines included; the stylesheet
+      // draws the prompts and the line numbers, so they are never copied.
       await navigator.clipboard.writeText(
         panel.querySelector("pre")?.textContent ?? "",
       );
