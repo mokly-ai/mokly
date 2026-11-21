@@ -1,31 +1,21 @@
-/* Layout for the public site mockups.
+/* The foundations of the public site mockups, shared by every site screen:
+   the dot-grid canvas behind every page, the type defaults, the focus rule,
+   the shared text, links and badges.
 
-   The catalogue shell is the site's principal image: a compact copy block
-   sits above a full-width frame that redraws the Mokly shell — top bar,
-   catalogue navigation, screen header and stage — from the Folio tokens. The
-   same chrome cues carry the rest of the site: a white application band with
-   a hairline, 6px controls, quiet filled current states and the green accent.
+   The site stylesheets are split by owner. The shared files come first in
+   the site rule of mokly.config.json: this file, then the buttons, the
+   Canvas parts, the labels, the people, the panels, the code panel, the
+   document typography, the chrome, the menu, the footer and the legal
+   pages. The area files follow, one group each for the home, the
+   documentation, the changelog and pricing, and each area file holds only
+   rules that its own area uses.
 
-   Every color comes from the workspace's semantic --mk-* properties; this
-   sheet holds no literal color or token declaration. The depicted viewport
-   is selected by data-site-viewport on the root, which the site implements
-   as the 768px breakpoint.
-
-   Contents
-      1  Foundations and scale
-      2  Shared text, badges and controls
-      3  Skip link, application band, header and menu
-      4  Home hero
-      5  The catalogue frame
-      6  Feature modules and their shell details
-      7  Closing
-      8  Documentation
-      9  Changelog
-     10  Policy documents
-     11  Footer
-     12  Mobile composition and narrow widths */
-
-/* 1 -- Foundations and scale --------------------------------------------- */
+   Site documents draw in the canvas palette, so the --mk-* roles hold the
+   Canvas values and the sans and mono families are Geist and Geist Mono.
+   Every color comes from those roles; this sheet holds no literal color or
+   token declaration. The depicted viewport is selected by
+   data-site-viewport on the root, which the site implements as the 768px
+   breakpoint. */
 
 /* The document root: the renderer's wrapper, which carries the colour
    scheme, the viewport and the palette scope. */
@@ -39,15 +29,27 @@
   box-sizing: border-box;
 }
 
+/* The canvas: a 24px dot grid on the background role */
+
 .site-root {
-  background: var(--mk-color-background);
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-position: -1px -1px;
+  background-size: 24px 24px;
   color: var(--mk-color-text);
   display: flex;
   flex-direction: column;
   font-family: var(--mk-font-sans);
+  font-feature-settings: "ss01" on;
   font-size: var(--mk-type-body-size);
   line-height: var(--mk-type-body-line);
   min-height: 100vh;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -65,7 +67,9 @@
 .site-root h1,
 .site-root h2,
 .site-root h3 {
+  font-weight: var(--mk-font-semibold);
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .site-root :focus-visible {
@@ -73,11 +77,7 @@
   outline-offset: 3px;
 }
 
-.site-main {
-  width: 100%;
-}
-
-/* 2 -- Shared text, badges and controls ---------------------------------- */
+/* Shared text */
 
 .site-accent {
   color: var(--mk-color-accent);
@@ -90,24 +90,42 @@
   line-height: var(--mk-type-small-line);
 }
 
-.site-lead {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-lead-size);
-  line-height: var(--mk-type-lead-line);
-  max-width: var(--mk-layout-prose-max);
+/* Text that only a screen reader reads, such as the name of an icon, a
+   table caption or the colon after a scope; the site declares the same
+   rule */
+
+.site-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
-/* The rubric: the small mono label the tree, the rail and the pager share */
+/* The head of a depicted list, which the home's catalogue tree and the
+   changelog's release index share */
 
-.site-rubric {
+.site-tree-head {
+  align-items: center;
   color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: 0.12em;
-  line-height: var(--mk-type-caption-line);
+  display: flex;
+  font-size: var(--mk-type-ui-label-size);
+  font-weight: var(--mk-font-bold);
+  justify-content: space-between;
+  letter-spacing: 0.08em;
+  padding: var(--mk-space-3) var(--mk-space-4) var(--mk-space-2);
   text-transform: uppercase;
 }
+
+.site-tree-head span {
+  font-size: var(--mk-type-nano-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Links and status badges */
 
 .site-link {
   align-items: center;
@@ -157,137 +175,15 @@
   width: 6px;
 }
 
-.site-button {
-  align-items: center;
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  display: inline-flex;
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-medium);
-  gap: var(--mk-space-2);
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-4);
-  text-decoration: none;
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
-}
+/* Every transition and animation honours reduced motion and shows its
+   finished state. */
 
-.site-button--primary {
-  background: var(--mk-color-accent-solid);
-  border-color: var(--mk-color-accent-solid);
-  color: var(--mk-color-on-accent);
-}
-
-.site-button--primary:hover {
-  background: var(--mk-color-accent-hover);
-  border-color: var(--mk-color-accent-hover);
-}
-
-.site-button--primary:active {
-  background: var(--mk-color-accent-active);
-  border-color: var(--mk-color-accent-active);
-}
-
-.site-button--secondary {
-  color: var(--mk-color-text);
-}
-
-.site-button--quiet {
-  border-color: var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-}
-
-.site-button--secondary:hover,
-.site-button--quiet:hover {
-  background: var(--mk-color-surface-muted);
-  border-color: var(--mk-color-border-strong);
-}
-
-.site-actions {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-3);
-}
-
-.site-search {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  display: inline-flex;
-  flex: 0 1 320px;
-  font: inherit;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-2);
-  justify-content: flex-start;
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-3);
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-search:hover {
-  background: var(--mk-color-surface);
-  border-color: var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-}
-
-/* The code panel with its language label and copy control */
-
-.site-code {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  overflow: hidden;
-  width: 100%;
-}
-
-.site-code-head {
-  align-items: center;
-  border-bottom: 1px solid var(--mk-color-border);
-  display: flex;
-  gap: var(--mk-space-3);
-  justify-content: space-between;
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-3);
-}
-
-.site-code-language {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
-}
-
-.site-code-copy {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  font: inherit;
-  font-size: var(--mk-type-caption-size);
-  min-height: var(--mk-layout-control-min);
-  min-width: 76px;
-  padding: 0 var(--mk-space-3);
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-code-copy:hover {
-  background: var(--mk-color-surface-muted);
-  border-color: var(--mk-color-border-strong);
-}
-
-.site-code-body {
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  overflow-x: auto;
-  padding: var(--mk-space-4) var(--mk-space-5);
-  white-space: pre-wrap;
-  word-break: break-word;
+@media (prefers-reduced-motion: reduce) {
+  .site-root *,
+  .site-root *::before,
+  .site-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

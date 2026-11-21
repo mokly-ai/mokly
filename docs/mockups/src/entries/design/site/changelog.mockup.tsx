@@ -10,7 +10,7 @@ export default defineScreen({
   render: (_props, context) => (
     <SiteChangelogScreen viewport={context.viewport} />
   ),
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Changelog",
   useCasePaths: ["design/site/tour"],
 });

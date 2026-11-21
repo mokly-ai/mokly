@@ -1,10 +1,10 @@
 /**
- * The shared site chrome: a header band on the page canvas holding one
- * header row, and a footer whose seven destinations are grouped into
- * columns. The documentation search sits in the header beside the
- * navigation; below the breakpoint the navigation moves into the menu and
- * the search takes the row beneath. The location trail is set as the
- * eyebrow above a page title.
+ * The shared site chrome: the sticky tool bar of the design file, the open
+ * mobile menu when a screen asks for it, and the footer frame. The tool bar
+ * holds the brand, the file title `mokly.ai — {page}` with its `main` branch
+ * chip and the people in the file, which are depicted, then the navigation
+ * and Get started. On the mobile composition the bar keeps the brand, Get
+ * started and the menu control, and the navigation moves into the menu.
  */
 
 import type { ReactNode } from "react";
@@ -12,193 +12,106 @@ import type { ReactNode } from "react";
 import { MockLink } from "@mokly/mokly";
 
 import { SiteBrand } from "./brand.js";
-import { SearchGlyph } from "./glyphs.js";
+import { SiteFooter } from "./footer.js";
+import { SiteChip } from "./labels.js";
 import {
   EXTERNAL_LINKS,
   GET_STARTED_SCREEN,
-  SITE_LEGAL_SCREENS,
-  SITE_SCREENS,
+  SITE_NAV_SCREENS,
+  SITE_PAGE_NAMES,
   currentPage,
   type SiteScreen,
 } from "./links.js";
 import { SiteMenu, SiteMenuButton } from "./menu.js";
-import { PACKAGE_VERSION } from "./version.js";
+import { SitePresence } from "./people.js";
 
-/** The location trail, set as the eyebrow line above the page title. */
-export function SiteTrail({ trail }: { trail: readonly string[] }) {
+/** The file title of the design file: the site, the page and the branch. */
+function FileTitle({ active }: { active: SiteScreen }) {
   return (
-    <nav aria-label="Location" className="site-trail">
-      {trail.map((step, index) => (
-        <span className="site-trail-step" key={step}>
-          {index > 0 ? (
-            <span aria-hidden="true" className="site-trail-sep">
-              &#8250;
-            </span>
-          ) : null}
-          {step}
-        </span>
-      ))}
-    </nav>
-  );
-}
-
-/** The published CLI version, shown as the shell's quiet identity chip. */
-export function SiteVersion({ label }: { label: string }) {
-  return (
-    <span className="site-version">
-      <span className="site-version-label">{label}</span>
-      {PACKAGE_VERSION}
-    </span>
-  );
-}
-
-/** The documentation search control, shaped like the catalogue's own. */
-export function SiteSearch() {
-  return (
-    <button className="site-search" type="button">
-      <SearchGlyph />
-      Search docs
-    </button>
-  );
-}
-
-/**
- * The brand, the menu control, the documentation search and the
- * navigation, in reading order. The open menu is drawn only on the mobile
- * composition, where its control is.
- */
-function SiteHeader({
-  active,
-  menu,
-  search,
-}: {
-  active: SiteScreen;
-  menu: boolean;
-  search: boolean;
-}) {
-  return (
-    <header className="site-header">
-      <SiteBrand active={active} />
-      <SiteMenuButton open={menu} />
-      {menu ? <SiteMenu active={active} /> : null}
-      {search ? <SiteSearch /> : null}
-      <nav aria-label="Main" className="site-nav">
-        <MockLink
-          aria-current={currentPage(active, SITE_SCREENS.docs)}
-          className="site-nav-link"
-          to={SITE_SCREENS.docs}
-        >
-          Docs
-        </MockLink>
-        <MockLink
-          aria-current={currentPage(active, SITE_SCREENS.changelog)}
-          className="site-nav-link"
-          to={SITE_SCREENS.changelog}
-        >
-          Changelog
-        </MockLink>
-        <a className="site-nav-link" href={EXTERNAL_LINKS.github}>
-          GitHub
-        </a>
-        <MockLink
-          className="site-button site-button--secondary"
-          to={GET_STARTED_SCREEN}
-        >
-          Get started <span aria-hidden="true">&#8594;</span>
-        </MockLink>
-      </nav>
-    </header>
-  );
-}
-
-function FooterGroup({
-  active,
-  screens,
-  title,
-}: {
-  active: SiteScreen;
-  screens: ReadonlyArray<readonly [SiteScreen, string]>;
-  title: string;
-}) {
-  return (
-    <div className="site-footer-group">
-      <p className="site-footer-heading">{title}</p>
-      {screens.map(([screen, label]) => (
-        <MockLink
-          aria-current={currentPage(active, screen)}
-          className="site-footer-link"
-          key={screen}
-          to={screen}
-        >
-          {label}
-        </MockLink>
-      ))}
+    <div aria-hidden="true" className="site-header-title">
+      <span className="site-file">
+        <span className="site-file-team">mokly.ai</span>
+        <span className="site-file-dash">—</span>
+        <span className="site-file-name">{SITE_PAGE_NAMES[active]}</span>
+      </span>
+      <SiteChip icon="branch" mono>
+        main
+      </SiteChip>
     </div>
   );
 }
 
-function SiteFooter({ active }: { active: SiteScreen }) {
+/**
+ * The tool bar: the brand, the file title, the people in the file, the
+ * navigation with the current page marked, Get started and, on the mobile
+ * composition, the menu control.
+ */
+function SiteHeader({ active, menu }: { active: SiteScreen; menu: boolean }) {
   return (
-    <footer className="site-footer">
-      <div className="site-footer-inner">
-        <div className="site-footer-brand">
-          <SiteBrand active={active} />
-          <p>The Mokly CLI is open source under the MIT license.</p>
-        </div>
-        <nav aria-label="Footer" className="site-footer-nav">
-          <FooterGroup
-            active={active}
-            screens={[
-              [SITE_SCREENS.home, "Home"],
-              [SITE_SCREENS.docs, "Docs"],
-              [SITE_SCREENS.changelog, "Changelog"],
-            ]}
-            title="Product"
-          />
-          <FooterGroup
-            active={active}
-            screens={SITE_LEGAL_SCREENS}
-            title="Legal"
-          />
-        </nav>
+    <header className="site-header">
+      <div className="site-header-start">
+        <SiteBrand active={active} />
       </div>
-    </footer>
+      <FileTitle active={active} />
+      <div className="site-header-end">
+        <SitePresence className="site-header-presence" />
+        <nav aria-label="Main" className="site-nav">
+          {SITE_NAV_SCREENS.map(([screen, label]) => (
+            <MockLink
+              aria-current={currentPage(active, screen)}
+              className="site-nav-link"
+              key={screen}
+              to={screen}
+            >
+              {label}
+            </MockLink>
+          ))}
+          <a className="site-nav-link" href={EXTERNAL_LINKS.github}>
+            GitHub
+          </a>
+        </nav>
+        <MockLink
+          className="site-button site-button--primary site-header-cta"
+          to={GET_STARTED_SCREEN}
+        >
+          Get started{" "}
+          <span aria-hidden="true" className="site-button-arrow">
+            &#8594;
+          </span>
+        </MockLink>
+        <SiteMenuButton open={menu} />
+      </div>
+    </header>
   );
 }
 
 /**
- * Skip link, header band, page content and grouped footer, in order. The
- * band sits on the page canvas; structured pages rule it off from the
- * content below, while the home lets the hero follow it directly. `menu`
- * draws the mobile menu open over the page.
+ * Skip link, tool bar, page content and footer, in order. `active` names
+ * the rendered screen: it marks the current page and names the page in the
+ * file title and the status bar. `menu` draws the mobile menu open over the
+ * page; the desktop composition has no menu, so it draws the page as is.
  */
 export function SiteLayout({
   active,
   children,
   menu = false,
-  ruled = true,
-  search = false,
   viewport,
 }: {
   active: SiteScreen;
   children: ReactNode;
-  menu?: boolean;
-  ruled?: boolean;
-  search?: boolean;
+  menu?: boolean | undefined;
   viewport: "mobile" | "desktop";
 }) {
+  const open = menu && viewport === "mobile";
   return (
     <div className="site-root" data-site-viewport={viewport}>
       <a className="site-skip" href="#main">
         Skip to content
       </a>
-      <div className={ruled ? "site-band site-band--ruled" : "site-band"}>
-        <SiteHeader
-          active={active}
-          menu={menu && viewport === "mobile"}
-          search={search}
-        />
+      <div className="site-band">
+        <SiteHeader active={active} menu={open} />
       </div>
+      {open ? <SiteMenu active={active} /> : null}
       {children}
       <SiteFooter active={active} />
     </div>

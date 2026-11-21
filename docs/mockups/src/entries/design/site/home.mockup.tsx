@@ -15,7 +15,7 @@ const screens = {
 export default defineScreen({
   ...SITE_METADATA,
   description:
-    "The approved home with its real project-created dogfood screen, product modules and open-foundation closing.",
+    "The Canvas home: `Design in code.` as a selected text layer, the spread of the depicted acme/storefront app, the Specs panel of page sections, the Browse, Review and Edit frames and the open foundation. The demo app is drawn as static components (decision 2). Each demo draws its finished state, as reduced motion shows it on the site: the compare rests in Swipe at 50 percent, Review waits for Approve, and Edit shows Claude on the changed PriceCard with Publish ready. No frame is selected, because the hero is the section in view.",
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -27,7 +27,7 @@ export default defineScreen({
     const Screen = screens[state];
     return <Screen viewport={context.viewport} />;
   },
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Home",
   useCasePaths: ["design/site/tour"],
   variants: [

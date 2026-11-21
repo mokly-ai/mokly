@@ -6,10 +6,10 @@ import type { RenderInput } from "@mokly/mokly";
  * The entry path roots whose screens render in the Canvas palette. A Canvas
  * root wins over the Folio root that holds it.
  */
-const canvasRoots = ["product/viewer"] as const;
+const canvasRoots = ["product/viewer", "design/site"] as const;
 
 /** The entry path roots whose screens render in the Folio palette. */
-const folioRoots = ["product", "design/site", "design/email"] as const;
+const folioRoots = ["product", "design/email"] as const;
 
 /** Whether an entry path is one of the roots or lies under one of them. */
 function under(path: string, roots: readonly string[]): boolean {

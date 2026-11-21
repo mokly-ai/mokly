@@ -1,31 +1,212 @@
-/* 4 -- Home hero --------------------------------------------------------- */
+/* The home's main column and its workspace: on the desktop composition the
+   Specs panel floats beside the frames column, which holds the features
+   intro, the stack of feature modules and the open foundation. A module
+   pairs its copy with a labelled frame on the canvas. Then the artboard
+   part that the spread and every frame place. */
 
-.site-hero {
-  display: grid;
-  gap: var(--mk-space-5);
-  justify-items: center;
-  margin: 0 auto;
-  max-width: 62rem;
-  padding: var(--mk-space-20) var(--mk-layout-gutter-desktop) var(--mk-space-12);
-  text-align: center;
+.site-main {
   width: 100%;
 }
 
-.site-hero h1 {
-  font-size: var(--mk-type-hero-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: -0.05em;
-  line-height: var(--mk-type-hero-line);
+.site-home-workspace {
+  display: grid;
+  gap: 40px;
+  grid-template-columns: 200px minmax(0, 1fr);
+  padding: 0 78px 0 16px;
 }
 
-.site-hero-lead {
+.site-home-specs {
+  align-self: start;
+  margin-top: 120px;
+  position: sticky;
+  top: 72px;
+}
+
+.site-home-frames {
+  margin: 0 auto;
+  max-width: 1080px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* The features intro, and the open foundation's heading beside it */
+
+.site-modules {
+  padding-top: 144px;
+}
+
+.site-section-head,
+.site-module,
+.site-closing {
+  scroll-margin-top: 80px;
+}
+
+.site-section-head h2,
+.site-closing-copy h2 {
+  font-size: 66px;
+  letter-spacing: -0.048em;
+  line-height: 1;
+}
+
+.site-section-head h2 span,
+.site-closing-copy h2 span {
   color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-lead-size);
-  line-height: var(--mk-type-lead-line);
-  max-width: 52ch;
 }
 
-.site-hero .site-actions {
-  justify-content: center;
-  margin-top: var(--mk-space-2);
+.site-section-head p {
+  color: var(--mk-color-text-secondary);
+  font-size: 21px;
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  margin-top: 26px;
+  max-width: 30ch;
+}
+
+/* The feature modules: their copy above or beside a labelled frame */
+
+.site-module-grid {
+  display: grid;
+  gap: 158px;
+  padding-top: 158px;
+}
+
+.site-module {
+  display: grid;
+  gap: 76px 48px;
+  position: relative;
+}
+
+.site-module-text {
+  max-width: 500px;
+}
+
+.site-module h3 {
+  font-size: 42px;
+  letter-spacing: -0.036em;
+  line-height: 1.06;
+  margin-top: 18px;
+}
+
+.site-module-body {
+  color: var(--mk-color-text-secondary);
+  font-size: 16.5px;
+  letter-spacing: -0.004em;
+  line-height: 1.6;
+  max-width: 44ch;
+}
+
+.site-module-text .site-module-body {
+  margin-top: 14px;
+}
+
+.site-module-detail {
+  grid-column: 1 / -1;
+  min-width: 0;
+  position: relative;
+}
+/* The artboard: a mono label over a framed screen at its native size */
+
+.site-home-board {
+  margin: 0;
+  position: relative;
+}
+
+.site-home-board-label {
+  align-items: center;
+  bottom: calc(100% + 8px);
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  left: 0;
+  line-height: 1;
+  max-width: 100%;
+  position: absolute;
+  white-space: nowrap;
+}
+
+/* A long path keeps its words: the label stays within the artboard's width,
+   and its icons give way */
+
+.site-home-board-label svg {
+  min-width: 0;
+}
+
+.site-home-board-frame {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mk-color-text) 7%, transparent),
+    var(--mk-shadow-medium);
+  overflow: hidden;
+}
+
+.site-home-board-screen {
+  transform-origin: 0 0;
+}
+
+.site-home-board-live {
+  align-items: center;
+  color: var(--mk-color-signal-deep);
+  display: inline-flex;
+  gap: 5px;
+  margin-left: 8px;
+}
+
+.site-home-live-dot {
+  background: var(--mk-color-signal);
+  border-radius: var(--mk-radius-pill);
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+}
+
+/* The intermediate desktop steps, from the prototype: below 1440px the
+   gutter, the section spaces and the headings scale with the window; below
+   1200px the Specs panel leaves and the frames take the width; below
+   1100px a module's rows close up. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-home-workspace {
+    padding: 0 clamp(20px, 5.4vw, 80px) 0 16px;
+  }
+
+  [data-site-viewport="desktop"] .site-modules {
+    padding-top: clamp(104px, 10vw, 150px);
+  }
+
+  [data-site-viewport="desktop"] .site-section-head h2,
+  [data-site-viewport="desktop"] .site-closing-copy h2 {
+    font-size: clamp(38px, 4.6vw, 68px);
+  }
+
+  [data-site-viewport="desktop"] .site-section-head p {
+    font-size: clamp(17px, 1.45vw, 21px);
+  }
+
+  [data-site-viewport="desktop"] .site-module-grid {
+    gap: clamp(112px, 11vw, 168px);
+    padding-top: clamp(112px, 11vw, 168px);
+  }
+
+  [data-site-viewport="desktop"] .site-module h3 {
+    font-size: clamp(28px, 2.95vw, 42px);
+  }
+}
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-home-workspace {
+    display: block;
+    padding: 0 clamp(20px, 5.4vw, 80px);
+  }
+
+  [data-site-viewport="desktop"] .site-home-specs {
+    display: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module {
+    gap: 40px;
+  }
 }

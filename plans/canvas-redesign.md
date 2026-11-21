@@ -28,9 +28,8 @@ presence.
 
 ## Design record
 
-The [design record](./canvas-redesign-design.md) gives the design source,
-Cal's decisions in force with their dates, my design calls, the contract
-owners and the replaced ways. Read it before you start a milestone.
+Read the [design record](./canvas-redesign-design.md) before each milestone.
+It holds the dated decisions, design calls, contract owners and replaced ways.
 
 ## Milestone 1: Mockups
 
@@ -49,16 +48,22 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
       a named palette, so that only the design mockups use it. Add the Geist
       faces to the mockup assets. The site, the app and the shell keep Folio
       until Milestone 3.
-- [ ] Redraw the site chrome: header, mobile menu and footer with the scheme
-      control. Update `design/site/home/menu`.
-- [ ] Redraw `design/site/home` with the copy of the user decisions and the
-      drawn demo app. The Browse demo shows the Swipe mode.
-- [ ] Redraw `design/site/docs` with the Layers panel, the page frame, the
-      Inspect panel and the HTML sample fence (decision 10).
-- [ ] Redraw `design/site/changelog` with Version history, the timeline, the
-      filter and the release frames.
-- [ ] Redraw the four legal screens in the new chrome.
-- [ ] Add `design/site/pricing` and add it to the tour.
+- [x] Redraw the site chrome: header, mobile menu and footer with the scheme
+      control. Update `design/site/home/menu`. Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
+- [x] Redraw `design/site/home` with the copy of the user decisions and the
+      drawn demo app. The Browse demo shows the Swipe mode. Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
+- [x] Redraw `design/site/docs` with the Layers panel, the page frame, the
+      Inspect panel and the HTML sample fence (decision 10). Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
+- [x] Redraw `design/site/changelog` with Version history, the timeline, the
+      filter and the release frames. Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
+- [x] Redraw the four legal screens in the new chrome. Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
+- [x] Add `design/site/pricing` and add it to the tour. Branch:
+      `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
 - [x] Redraw the Browse shell mockups under `examples/basic/specs/design`:
       the canvas stage with four frames, zoom and Fit, the floating catalogue
       and right panel, and the phone dock and sheets (decision 6).
@@ -97,19 +102,16 @@ a status line that links its milestone.
       panel, dark code panels, the mobile tree sheet and the sample fence.
 - [ ] `site-delivery.md`: the script islands for the scheme control, the
       changelog filter, the scroll spies, the home demos and the sample fence.
-- [ ] `site-mockups.md` and `marketing-site.md`: the pricing entry, the route
-      table and the app links.
-- [ ] `design-tokens.md` and `design-tokens-color.md`: the Canvas values, and
-      `@mokly/ui` as their source.
-- [ ] `mokly-viewer-palette.md` and `mokly-viewer-appearance.md`: the palette
-      source and the Canvas look.
+- [ ] `site-mockups.md`, `marketing-site.md`: pricing, routes, app links.
+- [ ] The token and palette docs (`design-tokens*.md`, `mokly-viewer-palette.md`,
+      `mokly-viewer-appearance.md`): Canvas values from `@mokly/ui`.
 - [ ] `mokly-shell-design.md` and `mokly-shell-device-chrome.md`: the canvas
       stage, frame labels, size tags, pan, zoom, Fit, floating panels and the
       phone dock.
 - [ ] `mokly-component-inspector-design.md`, `mokly-viewer-selection.md` and
       the frame probe docs: the right panel, the selection and the box model.
-- [ ] `mokly-comparison-panes.md`: the Swipe mode and compare on every frame.
-- [ ] `mokly-guides.md`: the HTML sample fence.
+- [ ] `mokly-comparison-panes.md` (Swipe, compare on every frame) and
+      `mokly-guides.md` (the HTML sample fence).
 - [ ] The cloud viewer docs: the bar, the account menu and the check slot.
 - [ ] Update the site, UI package and mockups README files.
 
@@ -125,6 +127,8 @@ Depends on: 2
 - [ ] Self-host Geist and Geist Mono for the site, the app, the mockups and
       the shell. Replace Inter in `packages/viewer/src/shell/assets/fonts/`,
       `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
+- [ ] Self-host the Instrument Serif 400 face for the site's drawn demo app,
+      as the mockups do in `docs/mockups/styles/site/fonts/`.
 - [ ] Lower the button pair to 3:1 in the three contrast tests.
 - [ ] Draw the new mark and the Geist wordmark in every copy: brand files,
       favicon, social cards, shell, app, emails and desktop icon. Run
@@ -171,7 +175,8 @@ Depends on: 4
 - [ ] Build the Layers panel with search, the version chip and the
       Changelog foot. Keep 44px rows.
 - [ ] Frame the document, and add the Inspect panel with page facts, Edit on
-      GitHub and On this page.
+      GitHub and On this page. Edit on GitHub opens the tracked guide
+      source under `docs/guides/`, not the generated package copy.
 - [ ] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
 - [ ] Build the mobile sub-bar and the tree sheet.
 
@@ -278,20 +283,16 @@ Depends on: 12
 
 Depends on: every other milestone
 
-- [ ] Run `npm run site:check`, which includes the browser suite, and the
-      report-only Lighthouse run. Report the scores of the home page.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Run the one full test pass on the merged primary branch (Cal,
+      2026-11-20): the complete gate of `AGENTS.md`, `npm run site:check` and
+      the report-only Lighthouse run, with the home page scores.
 - [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record follow-up
-      items under `plans/follow-ups/` for the rest, re-review once, and
-      report.
+- [ ] Review the diff against `origin/main` with the `implementation-review`
+      skill after the push, then apply its fix rule and re-review once.
 - [ ] Delete this plan, its design record and both decisions files when the
       `plans` skill says, under "Deleting the plan".
-- [ ] Open the pull request. Its description gives the decisions and the
-      design calls with their dates, a permalink to this plan, and the
-      follow-up items that the change adds.
+- [ ] Open the pull request, with the dated decisions and design calls, a
+      plan permalink and the new follow-up items. Its CI is the final check.
 
 ## Post-merge follow-up (non-blocking)
 

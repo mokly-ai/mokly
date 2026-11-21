@@ -10,7 +10,7 @@ export default defineScreen({
   render: (_props, context) => (
     <SitePrivacyScreen viewport={context.viewport} />
   ),
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Privacy Policy",
   useCasePaths: ["design/site/tour"],
 });

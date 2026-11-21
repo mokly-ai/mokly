@@ -1,77 +1,117 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
-import type { CatalogueNode } from "@mokly/viewer";
-
-import { ancestorTitles, catalogueIndex } from "./catalogue-index";
 import {
+  assertHoverChangesMoreThanColor,
+  assertStrongBoundaries,
   attribute,
   byClass,
+  cssRules,
   elements,
-  folderChildCount,
   label,
-  repositoryRoot,
   siteDocument,
+  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
 
-const screens = [
-  "design/site/home",
-  "design/site/docs",
-  "design/site/changelog",
-  "design/site/terms",
-  "design/site/privacy",
-  "design/site/complaints",
-  "design/site/security",
-] as const;
+type SiteScreenPath = (typeof siteScreens)[number];
 
-type FolderNode = Extract<CatalogueNode, { kind: "folder" }>;
+/** The page name that each screen's file title and status bar show. */
+const pageNames: Record<SiteScreenPath, string> = {
+  "design/site/home": "Home",
+  "design/site/docs": "Docs",
+  "design/site/changelog": "Changelog",
+  "design/site/pricing": "Pricing",
+  "design/site/terms": "Terms",
+  "design/site/privacy": "Privacy",
+  "design/site/complaints": "Complaints",
+  "design/site/security": "Security",
+};
 
-/** The folder node at one path of an index tree, or nothing. */
-function findFolder(
-  nodes: readonly CatalogueNode[],
-  path: string,
-): FolderNode | undefined {
-  for (const node of nodes) {
-    if (node.kind === "folder" && node.path === path) return node;
-    const found = findFolder(node.children ?? [], path);
-    if (found) return found;
-  }
-  return undefined;
-}
+/** The navigation link that each screen marks as the current page. */
+const currentNav: Partial<Record<SiteScreenPath, string>> = {
+  "design/site/docs": "Docs",
+  "design/site/changelog": "Changelog",
+  "design/site/pricing": "Pricing",
+};
+
+/** The chrome's controls, each of which promises a hover state. */
+const hoverClasses = [
+  "site-nav-link",
+  "site-menu-button",
+  "site-menu-close",
+  "site-menu-link",
+  "site-brand",
+  "site-button--primary",
+  "site-button--secondary",
+  "site-button--quiet",
+  "site-link",
+  "site-footer-link",
+  "site-scheme-option",
+];
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: the header band carries one header and docs-only search`, () => {
-    for (const id of screens) {
+  test(`${viewport}: the tool bar is the one header of every page`, () => {
+    for (const id of siteScreens) {
       const { document } = siteDocument(id, viewport);
-      const band = byClass(document, "site-band")[0];
-      assert.ok(band, id);
+      const bands = byClass(document, "site-band");
+      assert.equal(bands.length, 1, id);
       assert.equal(
-        elements(band, (node) => node.tagName === "header").length,
+        elements(bands[0]!, (node) => node.tagName === "header").length,
         1,
+        id,
       );
       assert.equal(
         elements(document, (node) => node.tagName === "header").length,
         1,
-      );
-      assert.equal(
-        byClass(document, "site-search").length,
-        id === "design/site/docs" ? 1 : 0,
-      );
-      assert.equal(
-        (attribute(band, "class") ?? "").includes("site-band--ruled"),
-        id !== "design/site/home",
+        id,
       );
     }
   });
 
-  test(`${viewport}: the footer groups all seven destinations`, () => {
-    for (const id of screens) {
+  test(`${viewport}: the tool bar names the page, depicts the file and marks the current page`, () => {
+    for (const id of siteScreens) {
+      const { document } = siteDocument(id, viewport);
+      const header = byClass(document, "site-header")[0]!;
+      const title = byClass(header, "site-header-title")[0];
+      assert.ok(title, id);
+      assert.equal(attribute(title, "aria-hidden"), "true", id);
+      assert.equal(
+        label(byClass(title, "site-file")[0]!),
+        `mokly.ai—${pageNames[id]}`,
+      );
+      assert.deepEqual(byClass(title, "site-chip").map(label), ["main"], id);
+      const presence = byClass(header, "site-presence")[0];
+      assert.ok(presence, id);
+      assert.equal(attribute(presence, "aria-hidden"), "true", id);
+      assert.equal(byClass(presence, "site-avatar").length, 4, id);
+      assert.deepEqual(
+        elements(
+          byClass(header, "site-nav")[0]!,
+          (node) => attribute(node, "aria-current") === "page",
+        ).map(label),
+        currentNav[id] === undefined ? [] : [currentNav[id]],
+        id,
+      );
+      assert.equal(
+        elements(header, (node) => attribute(node, "type") === "radio").length,
+        0,
+        `${id}: no scheme control in the header`,
+      );
+    }
+  });
+
+  test(`${viewport}: the footer frame groups all eight destinations`, () => {
+    for (const id of siteScreens) {
       const { document } = siteDocument(id, viewport);
       const footer = byClass(document, "site-footer")[0];
       assert.ok(footer);
+      // The home Specs panel's Footer row links this target.
+      assert.equal(attribute(footer, "id"), "footer", id);
+      const frameName = byClass(footer, "site-frame-name")[0];
+      assert.ok(frameName, id);
+      assert.equal(label(frameName), "Footer");
+      assert.equal(attribute(frameName, "aria-hidden"), "true");
       assert.match(
         label(byClass(footer, "site-footer-brand")[0]!),
         /MIT license/,
@@ -80,182 +120,128 @@ for (const viewport of ["mobile", "desktop"] as const) {
         "Product",
         "Legal",
       ]);
-      assert.equal(byClass(footer, "site-footer-link").length, 7);
+      const links = byClass(footer, "site-footer-link");
+      assert.equal(links.length, 8);
+      assert.deepEqual(
+        links
+          .filter((node) => attribute(node, "aria-current") === "page")
+          .map((node) => attribute(node, "data-mokly-link")),
+        [id],
+      );
     }
   });
 
-  test(`${viewport}: the stage chrome names the real catalogue hierarchy`, () => {
-    const { document } = siteDocument("design/site/home", viewport);
-    const frame = byClass(document, "site-frame")[0];
-    assert.ok(frame);
-    assert.match(label(byClass(frame, "site-topbar")[0]!), /Search catalogue/);
-    assert.equal(
-      byClass(frame, "site-topbar-menu").length,
-      viewport === "mobile" ? 1 : 0,
-    );
-    assert.deepEqual(
-      byClass(frame, "site-crumb").map((node) => label(node).replace(/^›/, "")),
-      ancestorTitles("product/account/project-created"),
-    );
+  test(`${viewport}: the footer's scheme control checks the document's scheme`, () => {
+    for (const id of siteScreens)
+      for (const scheme of ["light", "dark"] as const) {
+        const { document } = siteDocument(id, viewport, scheme);
+        // The scheme control's radios share one name. A page's own control,
+        // such as the changelog filter, may hold radios of its own.
+        const radios = elements(
+          document,
+          (node) =>
+            node.tagName === "input" &&
+            attribute(node, "type") === "radio" &&
+            attribute(node, "name") === "site-scheme",
+        );
+        assert.equal(radios.length, 2, `${id} ${scheme}`);
+        assert.equal(
+          byClass(document, "site-scheme").length,
+          1,
+          `${id} ${scheme}: the page holds one scheme control`,
+        );
+        const brand = byClass(document, "site-footer-brand")[0];
+        assert.ok(brand, id);
+        const groups = byClass(brand, "site-scheme");
+        assert.equal(
+          groups.length,
+          1,
+          `${id} ${scheme}: the scheme control sits in the footer's brand column`,
+        );
+        const group = groups[0]!;
+        assert.equal(group.tagName, "fieldset");
+        assert.equal(attribute(group, "aria-label"), "Color scheme");
+        const options = byClass(group, "site-scheme-option");
+        assert.deepEqual(
+          options.map((node) => node.tagName),
+          ["label", "label"],
+        );
+        assert.deepEqual(options.map(label), ["Light", "Dark"]);
+        const inputs = options.map(
+          (option) => elements(option, (node) => node.tagName === "input")[0]!,
+        );
+        assert.deepEqual(inputs, radios, `${id} ${scheme}`);
+        assert.deepEqual(
+          inputs.map((node) => [
+            attribute(node, "name"),
+            attribute(node, "value"),
+          ]),
+          [
+            ["site-scheme", "light"],
+            ["site-scheme", "dark"],
+          ],
+        );
+        assert.deepEqual(
+          inputs.map((node) => attribute(node, "checked") !== undefined),
+          scheme === "light" ? [true, false] : [false, true],
+          `${id} ${scheme}`,
+        );
+      }
+  });
 
-    const tree = byClass(frame, "site-tree")[0];
-    if (viewport === "mobile") {
-      assert.equal(tree, undefined);
-      return;
+  test(`${viewport}: the status bar depicts the file, the people in it and the zoom`, () => {
+    for (const id of siteScreens) {
+      const { document } = siteDocument(id, viewport);
+      const bar = byClass(document, "site-statusbar")[0];
+      assert.ok(bar, id);
+      assert.equal(attribute(bar, "aria-hidden"), "true");
+      assert.deepEqual(byClass(bar, "site-statusbar-item").map(label), [
+        `mokly.ai — ${pageNames[id]}`,
+        "MS4 in this file",
+      ]);
+      assert.equal(byClass(bar, "site-avatar").length, 4);
+      assert.equal(label(byClass(bar, "site-statusbar-zoom")[0]!), "−100%+");
+      assert.deepEqual(
+        elements(bar, (node) =>
+          ["a", "button", "input"].includes(node.tagName),
+        ),
+        [],
+      );
     }
-    assert.ok(tree);
-    assert.deepEqual(byClass(tree, "site-tree-section-head").map(label), [
-      "Specs",
-      "Components",
-    ]);
-    assert.equal(byClass(tree, "site-filter").length, 0);
-    assert.deepEqual(byClass(tree, "site-row--current").map(label), [
-      "Project created",
-    ]);
-    assert.deepEqual(byClass(tree, "site-row-count").map(label), [
-      String(folderChildCount("pages", ["Product"])),
-      String(folderChildCount("pages", ["Product", "Account"])),
-      String(folderChildCount("components", ["Design"])),
-    ]);
-  });
-
-  test(`${viewport}: home modules and closing retain their structure`, () => {
-    const { document } = siteDocument("design/site/home", viewport);
-    const modules = byClass(document, "site-module");
-    assert.equal(modules.length, 3);
-    assert.deepEqual(
-      modules.map((module) => attribute(module, "id")),
-      ["browse", "review", "edit"],
-    );
-    for (const module of modules)
-      assert.equal(byClass(module, "site-detail").length, 1);
-    assert.equal(byClass(modules[1]!, "site-pin").length, 2);
-    assert.match(
-      label(byClass(modules[2]!, "site-agent")[0]!),
-      /Agent session/,
-    );
-    assert.deepEqual(
-      byClass(document, "site-step").map((step) =>
-        label(elements(step, (node) => node.tagName === "h3")[0]!),
-      ),
-      [
-        "Shape the next screen.",
-        "Publish the branch.",
-        "Build from a shared decision.",
-      ],
-    );
-    assert.equal(byClass(document, "site-actions").length, 2);
-  });
-
-  test(`${viewport}: changelog is an indexed release list`, () => {
-    const { document } = siteDocument("design/site/changelog", viewport);
-    assert.deepEqual(
-      byClass(document, "site-release-index-version").map(label),
-      [
-        "0.18.0",
-        "0.17.0",
-        "0.16.1",
-        "0.16.0",
-        "0.15.0",
-        "0.14.0",
-        "0.13.0",
-        "0.12.0",
-        "0.11.0",
-        "0.10.0",
-        "0.9.0",
-      ],
-    );
-    assert.deepEqual(
-      byClass(document, "site-release-index-link").map((node) =>
-        attribute(node, "href"),
-      ),
-      [
-        "#release-0-18-0",
-        "#release-0-17-0",
-        "#release-0-16-1",
-        "#release-0-16-0",
-        "#release-0-15-0",
-        "#release-0-14-0",
-        "#release-0-13-0",
-        "#release-0-12-0",
-        "#release-0-11-0",
-        "#release-0-10-0",
-        "#release-0-9-0",
-      ],
-    );
-    assert.deepEqual(byClass(document, "site-badge--neutral").map(label), [
-      "Mokly CLI 0.18.0",
-      "Mokly CLI 0.17.0",
-      "Mokly CLI 0.16.1",
-      "Mokly CLI 0.16.0",
-      "Mokly CLI 0.15.0",
-      "Mokly CLI 0.14.0",
-      "Mokly CLI 0.13.0",
-      "Mokly CLI 0.12.0",
-      "Mokly CLI 0.11.0",
-      "Mokly CLI 0.10.0",
-      "Mokly CLI 0.9.0",
-    ]);
   });
 }
 
-test("split site styles own every shared composition without imports", () => {
+test("split site styles own the chrome compositions without imports", () => {
   const css = siteStyles();
   assert.doesNotMatch(css, /@import/);
   assert.doesNotMatch(css, /\.pd-/);
   for (const selector of [
     ".site-band",
-    ".site-frame",
-    ".site-topbar",
-    ".site-tree",
-    ".site-screen-head",
-    ".site-stage",
-    ".site-stage-frame",
-    ".site-module",
-    ".site-doc-tree",
-    ".site-release",
     ".site-policy",
     ".site-footer-nav",
+    ".site-scheme",
+    ".site-statusbar",
+    ".site-page-frame",
+    ".site-frame-name",
+    ".site-sel",
+    ".site-panel",
+    ".site-code",
   ])
     assert.ok(css.includes(`${selector} {`), selector);
-  assert.match(css, /\[data-site-viewport="mobile"\] \.site-module-grid/);
 });
 
-test("the installed package version heads only the documentation tree", () => {
-  const packageVersion = JSON.parse(
-    readFileSync(
-      resolve(repositoryRoot, "node_modules/@mokly/mokly/package.json"),
-      "utf8",
-    ),
-  ) as { version: string };
-  for (const viewport of ["mobile", "desktop"] as const) {
-    const { document } = siteDocument("design/site/docs", viewport);
-    assert.deepEqual(byClass(document, "site-version").map(label), [
-      "Mokly CLI" + packageVersion.version,
-    ]);
-  }
-  for (const id of screens.filter((id) => id !== "design/site/docs"))
-    assert.equal(
-      byClass(siteDocument(id, "desktop").document, "site-version").length,
-      0,
-    );
+test("every promised chrome control changes more than color on hover", () => {
+  assertHoverChangesMoreThanColor(hoverClasses);
 });
 
-test("breadcrumb parity detects a changed ancestor title", () => {
-  const { document } = siteDocument("design/site/home", "desktop");
-  const crumbs = byClass(document, "site-crumb").map((node) =>
-    label(node).replace(/^›/, ""),
+test("focus and meaningful control boundaries use semantic tokens", () => {
+  const parsed = cssRules(siteStyles());
+  const focus = parsed.find((rule) => rule.selector.includes(":focus-visible"));
+  assert.ok(focus);
+  assert.match(
+    focus.declarations,
+    /outline: 2px solid var\(--mk-color-focus\)/,
   );
-  const changed = structuredClone(catalogueIndex());
-  const account = findFolder(changed.tree, "product/account");
-  assert.ok(account);
-  account.title = "Changed account title";
-  assert.throws(
-    () =>
-      assert.deepEqual(
-        crumbs,
-        ancestorTitles("product/account/project-created", changed),
-      ),
-    { name: "AssertionError" },
-  );
+  assert.match(focus.declarations, /outline-offset: 3px/);
+  assertStrongBoundaries([".site-button--quiet"]);
 });

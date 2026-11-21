@@ -1,0 +1,282 @@
+/* The changelog's mobile composition: no panel, the page title on two
+   lines, the timeline with up to three lanes, the filter as a grid of two
+   and three options with 44px targets, and full-width frames whose group
+   headings stack above their notes. At its end, the narrower desktop steps
+   of the timeline and the filter. The other sheets end with the narrower
+   desktop steps of their own parts. */
+
+[data-site-viewport="mobile"] .site-changelog {
+  padding-bottom: var(--mk-space-16);
+}
+
+[data-site-viewport="mobile"] .site-changelog-body {
+  display: block;
+  padding: 0 var(--mk-layout-gutter-mobile);
+}
+
+[data-site-viewport="mobile"] .site-changelog-intro {
+  padding-top: 56px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-heading h1 {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+[data-site-viewport="mobile"] .site-changelog-heading > .site-sel {
+  inset: -4px -10px -8px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-intro .site-lead {
+  font-size: 1.125rem;
+  margin-top: 50px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-timeline {
+  margin-top: 28px;
+  padding: 12px 14px 14px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-timeline-legend {
+  font-size: 0.6875rem;
+  gap: 5px;
+}
+
+/* The filter: the options as a grid, the status under it */
+
+[data-site-viewport="mobile"] .site-changelog-filterbar {
+  background: none;
+  box-shadow: none;
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 0;
+  position: static;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter {
+  background: var(--mk-color-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  padding: 3px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-option {
+  font-size: 0.875rem;
+  height: var(--mk-layout-control-min);
+  justify-content: center;
+  padding: 0 8px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-option:nth-child(-n + 2) {
+  grid-column: span 3;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-option:nth-child(n + 3) {
+  grid-column: span 2;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-option::before {
+  content: none;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-option svg {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-changelog-filter-status {
+  border-left: 0;
+  margin: 0;
+  padding: 0 0 0 2px;
+}
+
+/* The release frames: full width, the head stacked, the groups stacked */
+
+[data-site-viewport="mobile"] .site-releases {
+  gap: 96px;
+  padding-top: 76px;
+}
+
+[data-site-viewport="mobile"] .site-release {
+  scroll-margin-top: 110px;
+}
+
+[data-site-viewport="mobile"] .site-release-meta {
+  gap: 12px;
+  grid-template-areas:
+    "title"
+    "date"
+    "links";
+  grid-template-columns: minmax(0, 1fr);
+  padding: 26px 20px 22px;
+}
+
+[data-site-viewport="mobile"] .site-release-version {
+  font-size: 2.5rem;
+}
+
+[data-site-viewport="mobile"] .site-release-links {
+  align-items: flex-start;
+  margin-top: 6px;
+}
+
+[data-site-viewport="mobile"] .site-release-link {
+  min-height: var(--mk-layout-control-min);
+}
+
+[data-site-viewport="mobile"] .site-release-link::before,
+[data-site-viewport="mobile"]
+  .site-release-more
+  > .site-release-summary::before {
+  content: none;
+}
+
+[data-site-viewport="mobile"] .site-release-counts {
+  gap: 0 6px;
+  padding: 0 20px 16px;
+}
+
+[data-site-viewport="mobile"] .site-release-notes {
+  gap: 32px;
+  padding: 26px 20px 30px;
+}
+
+[data-site-viewport="mobile"] .site-release-group {
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  scroll-margin-top: 96px;
+}
+
+[data-site-viewport="mobile"] .site-release-group-head {
+  position: static;
+}
+
+[data-site-viewport="mobile"] .site-release-group--breaking {
+  padding: 16px 16px 4px;
+}
+
+[data-site-viewport="mobile"] .site-release-pin {
+  left: -9px;
+}
+
+[data-site-viewport="mobile"] .site-release-group > ul > li {
+  display: block;
+  font-size: 0.9375rem;
+}
+
+[data-site-viewport="mobile"] .site-release-refs {
+  margin-left: 4px;
+}
+
+/* Earlier releases: a compact frame stacks its head, its chips, its link
+   and a full-width Show notes control */
+
+[data-site-viewport="mobile"] .site-changelog-earlier {
+  margin-top: 112px;
+  padding: 14px 12px;
+}
+
+[data-site-viewport="mobile"] .site-changelog-earlier .site-section-box-meta {
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-release--compact {
+  gap: 10px 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 14px 16px;
+}
+
+[data-site-viewport="mobile"] .site-release--compact .site-release-counts,
+[data-site-viewport="mobile"] .site-release--compact .site-release-links {
+  grid-column: 1 / -1;
+  margin-right: 0;
+}
+
+[data-site-viewport="mobile"] .site-release-more > .site-release-summary {
+  justify-content: center;
+  min-height: var(--mk-layout-control-min);
+  position: static;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-release-more .site-release-notes {
+  margin: 14px -16px -14px;
+}
+
+/* Upgrade notes: the count leaves the summary, the topics take two lines
+   and the Read control is a 44px target */
+
+[data-site-viewport="mobile"] .site-release-upgrade-count {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-release-upgrade-topics {
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-release-toggle {
+  min-height: var(--mk-layout-control-min);
+}
+
+[data-site-viewport="mobile"] .site-release-upgrade-body {
+  padding: 8px 16px 22px;
+}
+
+/* The timeline and the filter on narrower desktop widths; changelog-timeline.css
+   has no room for them. The filter stops sticking below 1200px and sets its
+   status on a line of its own below 1100px. Below 830px the keyframes step
+   down, so that releases two days apart still stand clear. */
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-changelog-filterbar {
+    position: static;
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-changelog-filterbar {
+    background: none;
+    box-shadow: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-filter {
+    background: var(--mk-color-surface);
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 1px var(--mk-color-border),
+      var(--mk-shadow-small);
+    flex-wrap: wrap;
+    padding: 3px;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-filter-status {
+    border-left: 0;
+    flex-basis: 100%;
+    margin: 0;
+    padding: 0 0 0 2px;
+  }
+}
+
+@media (max-width: 829px) {
+  [data-site-viewport="desktop"]
+    .site-changelog-keys
+    .site-changelog-key::before {
+    height: 8px;
+    width: 8px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-changelog-keys
+    .site-changelog-key--patch::before {
+    height: 6px;
+    width: 6px;
+  }
+}

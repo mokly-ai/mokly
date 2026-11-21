@@ -1,0 +1,243 @@
+/* The home Review frame: on the desktop composition the frame sits left and
+   the copy right. The frame's wash holds the two desktop pricing artboards
+   behind the mobile one; the thread spills out of the frame onto the
+   canvas. The selected PriceCard, which the Edit frame and the open
+   foundation also draw, sits on the featured card of a phone artboard, in
+   percent of the artboard, with its padding redline and Maya's pin. */
+
+[data-site-viewport="desktop"] .site-module--review {
+  align-items: start;
+  column-gap: 56px;
+  grid-template-areas: "frame text";
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+[data-site-viewport="desktop"] .site-module--review > .site-module-text {
+  grid-area: text;
+  padding-top: 36px;
+}
+
+[data-site-viewport="desktop"] .site-module--review > .site-module-detail {
+  grid-area: frame;
+}
+
+.site-detail {
+  background: color-mix(in srgb, var(--mk-color-surface) 50%, transparent);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  min-height: 690px;
+  overflow: hidden;
+  position: relative;
+}
+
+.site-home-review-desk {
+  display: grid;
+  gap: 48px;
+  left: -120px;
+  position: absolute;
+  top: 68px;
+}
+
+.site-home-review-desk .site-home-board-label {
+  display: none;
+}
+
+.site-home-review-desk .site-home-board-frame {
+  height: 222.5px;
+  width: 356px;
+}
+
+.site-home-review-desk .site-home-board-screen {
+  transform: scale(0.278125);
+}
+
+[data-site-viewport="desktop"] .site-home-review-phone {
+  left: calc(50% - 150px);
+  position: absolute;
+  top: 68px;
+}
+
+/* A phone artboard in a frame: 240px wide, its screen at 61.5 percent */
+
+.site-home-frames .site-home-board--phone .site-home-board-frame {
+  height: 519.4px;
+  width: 240px;
+}
+
+.site-home-frames .site-home-board--phone .site-home-board-screen {
+  transform: scale(0.615385);
+}
+
+[data-site-viewport="desktop"] .site-module--review .site-comment {
+  left: calc(50% + 112px);
+  position: absolute;
+  top: 372px;
+  z-index: 4;
+}
+
+/* The selected PriceCard */
+
+.site-home-card-sel {
+  height: 35.069%;
+  left: 5.128%;
+  position: absolute;
+  top: 37.883%;
+  width: 89.744%;
+  z-index: 3;
+}
+
+.site-home-card-sel--tall {
+  height: 37.675%;
+}
+
+.site-home-card-sel .site-sel-name {
+  background: var(--mk-color-signal);
+  border-radius: 4px;
+  bottom: calc(100% + 6px);
+  color: var(--mk-color-on-signal);
+  font-size: 11px;
+  gap: 4px;
+  height: 20px;
+  padding: 0 6px;
+}
+
+.site-home-card-sel .site-home-card-pad {
+  left: 0;
+  top: 42px;
+}
+
+.site-home-card-pad--16 {
+  width: 4.571%;
+}
+
+.site-home-card-pad--24 {
+  width: 6.857%;
+}
+
+.site-home-card-pad .site-redline-value {
+  font-size: 10px;
+  left: auto;
+  right: calc(100% + 5px);
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.site-home-card-sel .site-home-card-claude {
+  border-radius: 3px;
+  inset: -4px;
+}
+
+.site-pin {
+  background: var(--mk-color-people-pink-fill);
+  border-radius: 17px 17px 17px 4px;
+  box-shadow:
+    0 0 0 2px var(--mk-color-on-signal-fill),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-people-pink-ink);
+  display: grid;
+  font-size: 13px;
+  font-weight: var(--mk-font-semibold);
+  height: 34px;
+  left: calc(100% - 22px);
+  place-items: center;
+  position: absolute;
+  top: -18px;
+  width: 34px;
+  z-index: 4;
+}
+
+/* The intermediate desktop steps, from the prototype: below 1100px the copy
+   stacks above a taller frame, the artboards keep their places from the
+   frame's edges, the phone artboard grows to 250px and the thread sits
+   inside the frame; below 900px the frame keeps the 240px phone artboard
+   alone and the thread follows the frame. */
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-module--review {
+    grid-template-areas: none;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review > .site-module-text,
+  [data-site-viewport="desktop"] .site-module--review > .site-module-detail {
+    grid-area: auto;
+  }
+
+  [data-site-viewport="desktop"] .site-module--review > .site-module-text {
+    padding-top: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-detail {
+    min-height: 716px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-desk {
+    left: -76px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-phone {
+    left: auto;
+    right: 378px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-frame {
+    height: 541px;
+    width: 250px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-screen {
+    transform: scale(0.641026);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-comment {
+    left: auto;
+    right: 28px;
+    top: 196px;
+  }
+}
+
+@media (max-width: 899px) {
+  [data-site-viewport="desktop"] .site-module--review .site-detail {
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+    padding: 64px 20px 56px;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-desk {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-home-review-phone {
+    position: relative;
+    right: auto;
+    top: auto;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-frame {
+    height: 519.4px;
+    width: 240px;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-home-review-phone
+    .site-home-board-screen {
+    transform: scale(0.615385);
+  }
+
+  [data-site-viewport="desktop"] .site-module--review .site-comment {
+    margin: 24px auto 0;
+    max-width: 420px;
+    position: relative;
+    right: auto;
+    top: auto;
+    width: 100%;
+  }
+}

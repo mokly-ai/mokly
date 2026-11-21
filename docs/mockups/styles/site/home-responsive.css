@@ -1,0 +1,274 @@
+/* The home's mobile composition: no panel, the heading on two lines with
+   its selection, the actions stacked, three phones in the spread, the
+   frames stacked with their copy first, the viewer's catalogue folded over
+   its screen, and the thread and the chat under their artboards. */
+
+[data-site-viewport="mobile"] .site-hero {
+  padding-top: 64px;
+}
+
+[data-site-viewport="mobile"] .site-home-hero-inner,
+[data-site-viewport="mobile"] .site-home-workspace {
+  display: block;
+  padding: 0 20px;
+}
+
+[data-site-viewport="mobile"] .site-hero h1 {
+  font-size: 82px;
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-home-title-layer .site-home-title-sel {
+  inset: -4px -10px -8px;
+}
+
+[data-site-viewport="mobile"] .site-home-hero-maya {
+  left: 84%;
+  top: 78%;
+}
+
+[data-site-viewport="mobile"] .site-home-hero-group {
+  align-items: stretch;
+  gap: 28px;
+  margin-top: 52px;
+}
+
+[data-site-viewport="mobile"] .site-home-hero-redline {
+  height: 52px;
+}
+
+[data-site-viewport="mobile"] .site-hero-lead {
+  font-size: 19px;
+}
+
+[data-site-viewport="mobile"] .site-hero .site-actions {
+  flex-direction: column;
+}
+
+/* Three phones, the middle one centred under the copy */
+
+[data-site-viewport="mobile"] .site-home-spread {
+  height: 460px;
+  margin-top: 56px;
+}
+
+[data-site-viewport="mobile"] .site-home-spread-canvas {
+  left: 50%;
+}
+
+[data-site-viewport="mobile"] .site-home-spread-canvas .site-home-spread-specs {
+  background: none;
+  box-shadow: none;
+  height: 40px;
+  left: -175px;
+  padding: 0;
+  width: 350px;
+}
+
+[data-site-viewport="mobile"]
+  .site-home-spread
+  .site-home-board--phone
+  .site-home-board-frame {
+  height: 354.48px;
+  width: 163.8px;
+}
+
+[data-site-viewport="mobile"] .site-home-spread .site-home-board-screen {
+  transform: scale(0.42);
+}
+
+[data-site-viewport="mobile"] .site-home-spread-claude {
+  left: 20px;
+  top: 300px;
+}
+
+/* The features stack, each copy above its frame */
+
+[data-site-viewport="mobile"] .site-modules {
+  padding-top: 112px;
+}
+
+[data-site-viewport="mobile"] .site-section-head h2,
+[data-site-viewport="mobile"] .site-closing-copy h2 {
+  font-size: 38px;
+}
+
+[data-site-viewport="mobile"] .site-section-head p {
+  font-size: 17px;
+}
+
+[data-site-viewport="mobile"] .site-module-grid {
+  gap: 104px;
+  padding-top: 104px;
+}
+
+[data-site-viewport="mobile"] .site-module {
+  gap: 52px;
+}
+
+[data-site-viewport="mobile"] .site-module h3 {
+  font-size: 28px;
+}
+
+[data-site-viewport="mobile"] .site-module-body {
+  font-size: 16px;
+}
+
+/* Browse: the full-width card, and the viewer's catalogue over its screen */
+
+[data-site-viewport="mobile"] .site-home-check {
+  margin-top: -20px;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-home-check-link {
+  height: 44px;
+  justify-content: center;
+  margin: 4px 0 0;
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-home-viewer-share {
+  margin-left: auto;
+}
+
+[data-site-viewport="mobile"] .site-shell-body {
+  grid-template-columns: minmax(0, 1fr);
+  height: auto;
+}
+
+[data-site-viewport="mobile"] .site-tree {
+  border-bottom: 1px solid var(--mk-color-border);
+  border-right: 0;
+  max-height: 228px;
+  position: relative;
+}
+
+[data-site-viewport="mobile"] .site-tree::after {
+  background: linear-gradient(transparent, var(--mk-color-surface-muted) 85%);
+  bottom: 0;
+  content: "";
+  height: 56px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+[data-site-viewport="mobile"] .site-filter-option {
+  height: 44px;
+}
+
+[data-site-viewport="mobile"] .site-screen-head {
+  flex-wrap: wrap;
+  height: auto;
+  padding: 12px 14px;
+}
+
+[data-site-viewport="mobile"] .site-home-modes {
+  width: 100%;
+}
+
+[data-site-viewport="mobile"] .site-home-mode {
+  flex: 1;
+  font-size: 11.5px;
+  height: 44px;
+  line-height: 1.1;
+  padding: 0 3px;
+  text-align: center;
+  white-space: normal;
+}
+
+[data-site-viewport="mobile"] .site-stage {
+  padding: 46px 14px 20px;
+}
+
+[data-site-viewport="mobile"] .site-stage-frame {
+  width: 322px;
+}
+
+[data-site-viewport="mobile"] .site-stage-screen > .site-acme {
+  transform: scale(0.251563);
+}
+
+/* Review: the phone artboard alone in the wash, the thread under it */
+
+[data-site-viewport="mobile"] .site-detail {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  padding: 60px 14px 40px;
+}
+
+[data-site-viewport="mobile"] .site-module--review .site-comment {
+  margin: 24px auto 0;
+  max-width: 420px;
+  width: 100%;
+}
+
+/* Edit: the copy, then the artboard, then the chat */
+
+[data-site-viewport="mobile"] .site-detail--split {
+  display: block;
+  padding: 0;
+}
+
+[data-site-viewport="mobile"] .site-home-edit-body,
+[data-site-viewport="mobile"] .site-home-edit-canvas {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-site-viewport="mobile"] .site-home-edit-canvas {
+  gap: 60px;
+  justify-items: center;
+  padding: 36px 20px 40px;
+}
+
+[data-site-viewport="mobile"] .site-home-edit-canvas .site-module-text {
+  justify-self: stretch;
+  max-width: none;
+}
+
+[data-site-viewport="mobile"] .site-home-edit-canvas h3 {
+  font-size: 28px;
+}
+
+[data-site-viewport="mobile"] .site-agent {
+  border-left: 0;
+  border-top: 1px solid var(--mk-color-border);
+}
+
+/* The open foundation: the actions under the copy, the artboard under the
+   code. The steps' own mobile rules sit beside the flow in closing.css. */
+
+[data-site-viewport="mobile"] .site-closing {
+  margin-top: 112px;
+}
+
+[data-site-viewport="mobile"] .site-closing-panel {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+[data-site-viewport="mobile"] .site-module-detail.site-home-source {
+  gap: 64px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 72px;
+}
+
+[data-site-viewport="mobile"] .site-home-source-board {
+  justify-self: center;
+}
+
+[data-site-viewport="mobile"] .site-home-source .site-code-tab + .site-code-tab,
+[data-site-viewport="mobile"] .site-home-source .site-code-language--end {
+  display: none;
+}
+
+[data-site-viewport="mobile"] .site-home-terminal {
+  font-size: 11.5px;
+  padding: 12px 16px 14px;
+}
+
+[data-site-viewport="mobile"] .site-home-facts {
+  margin-top: 40px;
+}
