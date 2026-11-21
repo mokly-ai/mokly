@@ -191,7 +191,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(navRow(page, comparisonPaths.component)).toBeVisible();
     });
 
-    test("an unchanged saved view closes with its own status line", async ({
+    test("an unchanged variant closes with its own status line", async ({
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.quietParent}/`);
