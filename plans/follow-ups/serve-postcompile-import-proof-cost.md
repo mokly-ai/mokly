@@ -6,7 +6,9 @@
   experiments, which ran diagnostics on `main` at `e331ad64b`, PR #449.
 - **Location:**
   - `packages/mokly/src/sidecar/planned-relative.ts:75`:
-    `PlannedRelative.verify`, the proof. Line 104 classifies the targets.
+    `PlannedRelative.verify`, the proof. Lines 80 to 121 scan the metafile
+    edges and run conditional, memoized target checks. Line 104 starts
+    `classifyNativeTarget` when a target needs the check.
     Lines 122 to 124 read and check the metadata. Lines 125 to 128 record the
     observations.
   - `packages/mokly/src/sidecar/bundle.ts:258`: the call of the proof after a
@@ -47,6 +49,9 @@
     and it is not a byte proof of published output.
   - The baseline was `main` at `e331ad64bb684b0c6049ef6b0a7ec92af44f4dde`, PR
     #449. Experiment H added diagnostic spans only.
+  - These timings describe `e331ad64b`, before PR #450, commit `45a5f33e3`,
+    changed the plan lookup inside the edge scan. The Location paths point to
+    current code.
   - The scope was `PlannedRelative.verify` and its direct proof helpers. A
     change had to keep the boolean result, the fallback, the identity, the
     captures, and the result bytes.
@@ -55,7 +60,8 @@
   - The existing per-target Promise memo of the proof stays.
   - The diagnostic spans split the proof into these phases:
     - Total: the whole proof.
-    - Classify: the awaited `classifyNativeTarget` checks of new targets.
+    - Classify: the complete metafile edge scan, including conditional,
+      memoized `classifyNativeTarget` checks.
     - Metadata: the package metadata reads of the target directories, with
       `MetadataProof.use`.
     - Current: the synchronous age and path check, `MetadataProof.current`.
