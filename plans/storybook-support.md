@@ -954,10 +954,18 @@ Depends on: 10
 
 Depends on: 9, 10, 11
 
-- [ ] Remove each status line whose page this track completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
+The merge justifications of track C are in
+`.context/storybook-support/track-c/merge-justifications.md`. The findings
+file and the review reports are in
+`.context/reviews/conductor/storybook-support-c-imported-assets/`.
+
+- [x] Remove each status line whose page this track completes. Branch:
+      conductor/storybook-support-c-imported-assets
+- [ ] Run the targeted tests and `cargo xtask check`. Branch:
+      conductor/storybook-support-c-imported-assets
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: conductor/storybook-support-c-imported-assets
 
 ## Milestone 13: Vite adapter documentation
 
