@@ -53,14 +53,15 @@ family's canonical screen, and each folder holds at most five screens.
 ## Family Rules
 
 - Every Canvas screen renders in both schemes and in both viewports. The outer
-  Appearance control moves between the two renders of an entry. In both
+  viewer shows the two renders of an entry under the
+  [preview scheme rules](./mokly-shell-device-chrome.md#color-scheme). In both
   renders, each frame on the canvas shows its own scheme's view, and the
   reading frame of `design/canvas/stage/document` follows the rendered
   appearance.
 - Every Canvas artboard draws the top bar with its one Appearance selector,
   which names the scheme that its file was rendered for.
-- A desktop render draws the floating catalogue, the right panel of a selected
-  entry and the zoom pill, and turns compact below the shell's breakpoint. A
+- A desktop render draws the floating catalogue, the right panel and the zoom
+  pill of a selected entry, and turns compact below the shell's breakpoint. A
   mobile render draws the compact layout at every width: the entry bar with
   the frame picker, the dock, and only the sheet that its state opens.
 - In the mobile render, `design/canvas/stage/home` and

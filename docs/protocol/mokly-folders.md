@@ -169,9 +169,10 @@ When the query and Changes hide the folder only together, it clears the query
 and keeps Changes, then switches to All only if the folder is still hidden. An
 application-owned viewer proposes those filters to its host and moves focus
 once a committed selection shows the folder row; a commit that leaves the row
-hidden ends the reveal without moving focus. Below the responsive breakpoint
-it also opens the navigation drawer. Without active filtering the opened disclosures
-are saved like a user toggle under the
+hidden ends the reveal without moving focus. Below the
+[layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior) it also
+opens the catalogue. Without active filtering the opened disclosures are saved
+like a user toggle under the
 [persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
 A hidden folder without its own page has no row in All, so its segment is
 plain text, as are the base folder titles of a removed entry. The public

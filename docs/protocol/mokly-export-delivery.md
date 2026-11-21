@@ -190,8 +190,8 @@ hidden changed views and lists them in Details from the index and the
 details. Added entries keep their current preview without
 comparison modes. Removed screens and pages have no comparison modes;
 selecting one requests the packaged historical version under removed previews.
-Side by side, Overlay, and Difference keep the UI and the
-missing-current state for removed component variants. Refresh and retry reload
+Every compare mode other than Current keeps the UI and the missing-current
+state for removed component variants. Refresh and retry reload
 the same generation; only another build and deployment produce new comparison
 content. Hosts may keep prior generations for old tabs; if they remove them,
 the comparison failure state applies until the page reloads.

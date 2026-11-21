@@ -153,17 +153,17 @@ identity; folder identities follow the [folder contract](./mokly-folders.md).
 A page appears once at its path with the page icon. The heading uses its
 title; breadcrumbs use the resolved titles of its folders; the path chip, the
 shared [search rule](./mokly-folders.md#titles), the tag picker, Details, and
-the home counts include pages. Details show the authored description,
+the home counts include pages. The inspector shows the authored description,
 rationale, and related docs. Once Changes is ready, the heading shows the page
-status and Details add the comparison details under the
+status and the inspector adds the comparison details under the
 [evidence contract](./mokly-css-evidence-presentation.md#status-lines).
 
-The shell reuses the complete-document frame, the responsive shell, the
-expansion control, and the script-free sandbox. It adds no device chrome
-around chrome the document authors itself. It hides the controls that imply
-viewport variants, colour-scheme variants, or page comparisons, and it
-remembers the user's screen choices for the next screen. The mobile drawer and
-the desktop navigation show the same path-derived folders.
+The shell shows a page in the same frame as a Markdown document, inside the
+responsive shell and the script-free sandbox. It adds no device chrome around
+chrome the document authors itself. It hides the controls that imply viewport
+variants, colour-scheme variants, or page comparisons, and it remembers the
+user's screen choices for the next screen. The catalogue shows the same
+path-derived folders in every layout.
 
 `/view/<path>/` opens the page, and `/static/mokly-generated/<path>/index.html`
 answers its document with the same GET and HEAD behaviour as every document.

@@ -8,13 +8,14 @@ The owning catalogue is `examples/basic/specs/design`; use its registered
 shared components and existing screen compositions. Appearance screens and
 their affected shared component samples render Light and Dark views for both
 viewports through Mokly's authoring: the entries inherit the configured
-`colorSchemes`, every view renders once per scheme, and Browse's Appearance
-control swaps between them at the same entry. A shared render context carries
-the renderer's `input.colorScheme` to the artboard roots as a pass-through,
-not a second theme setting, and each artboard's `data-mbk-appearance` reflects
-that requested scheme. Rendered pages must not read the building or viewing
-machine's system theme; the Auto example uses the requested scheme as its
-deterministic system-theme fixture.
+`colorSchemes`, and every view renders once per scheme. Browse shows both
+renders of an entry under the [frame scheme
+rules](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes). A
+shared render context carries the renderer's `input.colorScheme` to the
+artboard roots as a pass-through, not a second theme setting, and each
+artboard's `data-mbk-appearance` reflects that requested scheme. Rendered
+pages must not read the building or viewing machine's system theme; the Auto
+example uses the requested scheme as its deterministic system-theme fixture.
 
 Each artboard draws exactly one appearance control: the registered
 `chrome/appearance-selector` composed into the top bar. It depicts the

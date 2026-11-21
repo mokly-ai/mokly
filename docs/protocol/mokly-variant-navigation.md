@@ -3,7 +3,7 @@
 ## Navigation Rows
 
 The catalogue groups variants under their parent's row in Specs or Components,
-including the responsive drawer:
+in every layout:
 
 - A parent without variants renders as an ordinary entry.
 - A parent with variants renders its ordinary link beside a separate disclosure

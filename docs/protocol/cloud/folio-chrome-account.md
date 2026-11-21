@@ -1,6 +1,6 @@
 # Folio Chrome: Account Entry
 
-Status: The new mark and wordmark are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
+Status: The new mark and the Geist wordmark are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
 
 The account entry composition of [Folio chrome](./folio-chrome.md): the one
 panel every account screen shares. Every value comes from
@@ -41,8 +41,8 @@ it carries only the identity and the two legal links.
 - **Mark**. The wordmark sits inside the panel, 32px above the title. The brand
   belongs to the form the reader came for, not to a header that holds one link.
   It leaves for the site's home on the logged-out screens and is inert once the
-  user is signed in; the mark and the wordmark keep the brand's colours, as
-  [Shell brand](../mokly-shell-brand.md) defines.
+  user is signed in; the mark and the wordmark keep the design and the colours
+  that [Shell brand](../mokly-shell-brand.md) defines.
 - **Title**. One line of `heading3` in sentence case, one color, 32px above the
   body. An optional 13px muted line sits under it only when it changes a
   decision.

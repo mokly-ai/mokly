@@ -13,7 +13,7 @@ as secondary text. Static frames add no interactive control or consumer
 JavaScript runtime. The [live descriptor](./mokly-shell-delivery.md#live-descriptor)
 grants this capability; an environment badge does not.
 
-The inspector's Props tab lists controls derived from the
+Props in the inspector lists controls derived from the
 [entry prop schema](./mokly-entry-props.md#one-model): text for `string`, a toggle for
 `boolean`, a number control for `number` and `integer` whose step is
 `multipleOf` counted from zero, else 1 for `integer`, else none, and a select
@@ -33,7 +33,7 @@ property order. Inferred schemas use first-seen prop order: own props first,
 then variant props in variant order. Uneditable properties are omitted.
 Each visual entry's detail carries that order in `controlOrder`. Saved variants
 inherit it. The viewer follows the detail's order instead of sorting prop names.
-Until all route details arrive, the Props tab shows `Loading props…` and no
+Until all route details arrive, Props shows `Loading props…` and no
 fields, so the fields first appear in that order and never move. A current
 component variant waits for its own detail and its parent's detail under the
 [route delivery rules](./mokly-shell-delivery.md#fetch-and-fences). A failed
@@ -65,16 +65,17 @@ The viewer accepts these saved values when they satisfy the prop schema.
 The values still render. `--strict` makes the warnings fatal. Live validation
 keeps the complete merged-props check so every accepted preview meets its bounds.
 
-A control starts from the shown entry's props, that is the entry's own props or
-a variant's merged props, updates the preview after validation, and has a label
-from the control's `label`, else the schema `title`, else the prop name. No
-invented sample value replaces a missing value; an optional prop exposes its
-unset state, and `unset` removes only an optional prop. Empty text stays a
-string. Reset restores the shown entry's complete props. Navigating to another
-entry discards temporary edits, as does a reload. Viewport and scheme changes
-keep validated edits and render them in the new context. Temporary state is
-never written to a source, never encoded in a URL, local storage, a comparison,
-or a Changes count, and never enters the catalogue model.
+A control starts from the props of the entry that Props edits, that is the
+entry's own props or a variant's merged props, updates the preview after
+validation, and has a label from the control's `label`, else the schema
+`title`, else the prop name. No invented sample value replaces a missing
+value; an optional prop exposes its unset state, and `unset` removes only an
+optional prop. Empty text stays a string. Reset restores that entry's complete
+props. Navigating to another entry discards temporary edits, as does a reload.
+Viewport and scheme changes keep validated edits and render them in the new
+context. Temporary state is never written to a source, never encoded in a URL,
+local storage, a comparison, or a Changes count, and never enters the
+catalogue model.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
 props and compares the base render with the current render of the saved props;

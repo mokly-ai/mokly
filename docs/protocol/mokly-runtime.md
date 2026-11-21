@@ -158,19 +158,17 @@ The Browse shell is the viewer package's React tree, rendered only in the
 browser from the catalogue index and the current route's details under the
 [shell delivery contract](./mokly-shell-delivery.md). Serve and `build`
 deliver one identical stub page per shell route and never render shell HTML.
-The [viewer contract](./mokly-viewer-selection.md#shell-tree-and-state) owns the tree:
-the top bar, search and tags, the navigation column with its All/Changes
-filter, the breadcrumbs, the viewport and appearance controls, the device
-chrome, the expand toggle, and the details inspector. The
-[navigation contract](./mokly-navigation.md) owns routes, links, history,
-and the active-tree rule; the [variant navigation](./mokly-variant-navigation.md),
-[disclosure persistence](./mokly-disclosure-persistence.md),
-[appearance](./mokly-viewer-appearance.md), and
-[shell design](./mokly-shell-design.md) contracts own their parts.
+The [viewer contract](./mokly-viewer-selection.md#shell-tree-and-state) owns
+the tree, and the [shell design contract](./mokly-shell-design.md#layout) owns
+its parts. The [navigation contract](./mokly-navigation.md) owns routes, links,
+history, and the active-tree rule; the
+[variant navigation](./mokly-variant-navigation.md),
+[disclosure persistence](./mokly-disclosure-persistence.md), and
+[appearance](./mokly-viewer-appearance.md) contracts own their parts.
 
-A screen embeds its rendered views inside package-owned device frames; a use
-case renders ordered steps that reference those views; a page or document
-embeds its complete document. Frames are sandboxed without script permission,
+A screen embeds its rendered views inside package-owned frames; a use case
+renders ordered steps that reference those views; a page or document embeds
+its complete document. Frames are sandboxed without script permission,
 so a document cannot alter the shell; the explicit cross-origin exception is
 confined to the [frame adapter](./mokly-frame-adapter.md). The All/Changes
 filter, the per-view status beside the title, and the marks on the view
@@ -188,10 +186,11 @@ decides which usage completions publish.
 
 Registered components have component pages, variant entries, usage from the
 composed trees, and live prop editing in Serve. The
-[explorer contract](./mokly-component-explorer.md) owns the inspector and the
-component page; the [controls contract](./mokly-component-controls.md) owns
-live editing; [component attribution](./mokly-component-changes.md) separates
-changed entries from affected consumers.
+[inspector design](./mokly-component-inspector-design.md) owns the inspector;
+the [explorer contract](./mokly-component-explorer.md) owns the component page;
+the [controls contract](./mokly-component-controls.md) owns live editing;
+[component attribution](./mokly-component-changes.md) separates changed entries
+from affected consumers.
 
 ## Watched Development
 

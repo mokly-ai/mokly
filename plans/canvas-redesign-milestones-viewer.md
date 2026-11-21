@@ -91,8 +91,10 @@ Milestone 2 found about 45 statements in protocol pages outside its scope that
 the new pages make wrong (item 19). Guides and code READMEs still change with
 their code.
 
-- [ ] Bring every other protocol page in line with the Canvas requirements:
+- [x] Bring every other protocol page in line with the Canvas requirements:
       the inspector, compare modes, version registries, the viewer slots,
       Folio and Inter, the cloud controls and the app scheme. Leave the frame
       probe pages to Milestone 10 and the guide fence pages to Milestone 7.
-- [ ] Run the Markdown checks.
+      Branch: `calummoore/canvas-redesign-m16-protocol-docs-second-6n73`.
+- [x] Run the Markdown checks. Branch:
+      `calummoore/canvas-redesign-m16-protocol-docs-second-6n73`.

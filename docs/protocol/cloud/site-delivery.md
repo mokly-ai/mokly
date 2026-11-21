@@ -1,6 +1,6 @@
 # Site Delivery
 
-Status: The new brand in the favicon, the brand assets and the social cards, the drawn home demos and the audit of the pricing page are not built yet; the home embeds the dogfood stage in place of the demos. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) draws the brand, [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the pricing page to the audited pages.
+Status: The new brand in the favicon, the brand assets and the social cards, the drawn home demos and the audit of the pricing page are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) draws the brand, [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the pricing page to the audited pages.
 
 This contract fixes how the public site is built, tested and deployed. The
 site package, its checks and its workflow must satisfy every rule here.
@@ -146,9 +146,7 @@ runners. The deterministic accessibility rules above are the required gate.
 
 The site gate runs the build, the typecheck, the unit tests, the link check
 and the browser check, in that order; the Lighthouse budget runs apart from
-it. The `cloud-site` suite builds the mockups before the site gate, including
-on the independent site CI runner. Missing or stale site output fails rather
-than skips.
+it. Missing or stale site output fails rather than skips.
 
 - The build fails when a setting is invalid, when a package document is
   missing or malformed, or when the generated site-segment inventory or a
@@ -175,15 +173,14 @@ than skips.
 
 The site gate runs in the required aggregate through its own parallel CI
 job. A separate Lighthouse job uses the same pinned Node, npm, lockfile
-and Chromium installation, builds the mockups before the site, and runs the
-report-only budget, keeping its results on failure. The required aggregate
-does not depend on that job.
+and Chromium installation, builds the site, and runs the report-only budget,
+keeping its results on failure. The required aggregate does not depend on
+that job.
 
 ## Deployment
 
 The site deploys as the direct-upload Cloudflare Pages project `mokly-site`
 rather than as a Git-connected Pages build, because the build needs the
 workspace packages and the pinned repository toolchain, which the
-repository's own workflow supplies; deployment builds the dogfood catalogue
-before the site. [Site deployment](./site-deployment.md) defines the Pages
-workflows, sticky PR comments, cleanup and domain redirects.
+repository's own workflow supplies. [Site deployment](./site-deployment.md)
+defines the Pages workflows, sticky PR comments, cleanup and domain redirects.

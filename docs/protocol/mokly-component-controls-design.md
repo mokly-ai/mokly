@@ -1,16 +1,20 @@
 # Component Controls Design
 
+Status: Inspect's Props section, which edits the variant of the selected frame on a variant set, and the panel sheet of the compact layout are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the panel sheet, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds Inspect.
+
 ## Controls Panel
 
 The controls artboards show the component page with its saved-variant strip,
 canvas, comparison band, and shared icon inspector. Controls occupy the Props
 tab; Details and Usage stay independently available. The leaf Action
-component has no Nested components tab. The
-[workspace design](./mokly-component-workspace-design.md)
-groups view controls, shows both selected preview contexts, and gives the
-inspector a resizable pane beneath the desktop preview and a rounded bottom sheet
-over the mobile preview. Its centered desktop divider and iOS-style mobile
-grabber follow the workspace design.
+component has no Nested components tab. The artboards show both selected
+preview contexts and draw the inspector as a resizable pane beneath the
+desktop preview and a rounded bottom sheet over the mobile preview, with a
+centered desktop divider and an iOS-style mobile grabber. In the product, the
+controls fill Inspect's Props section under the
+[inspector design](./mokly-component-inspector-design.md#inspect), and the
+[workspace design](./mokly-component-workspace-design.md) gives the view
+controls.
 
 The Action fixture demonstrates text (label), boolean (disabled), numeric
 (corner radius), select (emphasis), and optional text (hint). Its typed saved
@@ -29,23 +33,23 @@ Each control is a row: its name in a label column, 120px wide on desktop and
 and error. Focus indicators and error text remain legible, and controls do not
 rely on color alone.
 
-A component page edits props in place: its Props tab shows the controls of
-the entry it is on, the parent's own entry on the component page, or a saved
-variant on that variant's page. Decision: no separate Edit props link, because
-the shipped Props tab already holds the controls. The canonical Controls page
-depicts the parent's own entry, and its variant bar opens Default and Disabled.
+A component page edits props in place: Props shows the controls of the entry
+that it edits, which on a variant set is the variant of the selected frame.
+Decision: no separate Edit props link, because Props already holds the
+controls. The canonical Controls page depicts the parent's own entry, and its
+variant bar opens Default and Disabled.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
-restores the shown entry's saved props: the parent's own props on the parent,
-or the full saved variant on a variant. Navigating to a different variant entry
+restores the saved props of the entry that Props edits: a component's own
+props, or the full saved variant. Navigating to a different variant entry
 replaces temporary edits with that entry's complete values. Controls do not
 create a saved variant or change source files. Viewport and theme selection
 keep edits in the target runtime; navigating to another entry or entering a
 comparison discards them.
 
 Pending state keeps the last valid preview visible and shows Updating preview.
-On mobile that status is a pill at the top of the preview, above the open
-inspector sheet.
+In the compact layout that status is a pill at the top of the shown frame,
+above the open panel sheet.
 Rendering failure also retains that preview, with Try again and Reset actions.
 Retry leads back through the pending design state. Comparison shows the saved
 variant and read-only values, with a short secondary explanation. Published
@@ -56,7 +60,7 @@ While no live descriptor is installed, the fields are read-only under
 `Preparing to edit props…`; a refetch keeps the installed capability, so the
 fields stay editable. When editing cannot start, `Editing could not start.`
 offers Try again, which fetches the live descriptor again. Until all route
-details arrive, the tab shows `Loading props…` and no fields. A current
+details arrive, Props shows `Loading props…` and no fields. A current
 component variant waits for its own detail and its parent's detail. A failed
 load shows `Props couldn’t be loaded.` with Try again after all route details
 settle. A removed entry, a
@@ -67,7 +71,7 @@ temporary preview keeps the edits, shows the saved props, and offers Update
 preview. An optional field shows Optional, a Set check box, and Not set while
 unset; an optional toggle's value check box carries the field's name. A
 number field's help and error name its bounds and its step. After
-Reset, Try again, or Update preview, focus moves to the panel heading; after
+Reset, Try again, or Update preview, focus moves to the Props heading; after
 Switch to Current, to the first field; after a start retry, to the status
 that replaces the button, and to the heading when that status leaves; after
 a catalogue retry, to the loading status. The rendered UI shows no

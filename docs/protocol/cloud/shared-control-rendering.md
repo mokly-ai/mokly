@@ -15,9 +15,9 @@ block content renders inside the package's theme boundary, which is a real
 boxless element carrying the focus variables; the boundary never wraps `html`
 and never sits directly inside a table row, a list, a paragraph or an SVG. The
 theme is the complete theme of the requested scheme, and dark output always
-extends the library's dark preset. Folio product screens take the scoped Folio
-theme; component previews take paper and the token inventory keeps the base
-palette. Header, PageFrame and Card stay registered as Design-only layouts.
+extends the library's dark preset. Each document takes the theme of the palette
+that the [renderer](./mockups.md#screen-and-renderer-boundary) chooses. Header,
+PageFrame and Card stay registered as Design-only layouts.
 
 Mokly collects the react-native-web atomic styles of each render, so every
 class that the content uses is present. It puts them in `head` before the
@@ -70,9 +70,8 @@ for React Native imports inside dependencies. The Mokly configuration holds
 the mapping; see
 [Mockup tooling](./mockup-tooling.md#configuration-and-scripts). The viewer
 drawings take `@mokly/ui/styles.css` through a side-effect import, which Mokly
-bundles into the entry's stylesheet. That stylesheet loads no
-font, so the drawings use the catalogue's own self-hosted Inter.
-The generated asset paths are in
+bundles into the entry's stylesheet. The faces that the drawings use and the
+generated asset paths are in
 [Mockup tooling](./mockup-tooling.md#imported-viewer-styles).
 
 Typechecks resolve the installed packages' public declarations; runtime tests

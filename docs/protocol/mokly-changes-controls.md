@@ -119,10 +119,10 @@ change open the entry before and after it on the Changes tab. The first entry
 has no previous change and the last entry no next change, so those controls
 are disabled. An entry that the Changes filter does not list has no stepper.
 
-The host slot follows the stepper. A host fills it through the
-[viewer's slots](./mokly-viewer.md#rendered-features-and-slots), and Mokly
-Cloud places its check there. The open-source shell leaves the slot empty, and
-an empty slot takes no space.
+The host slot follows the stepper. A host fills it through the `changesStart`
+key of the [viewer's slots](./mokly-viewer.md#rendered-features-and-slots),
+and Mokly Cloud places its check there. The open-source shell leaves the slot
+empty, and an empty slot takes no space.
 
 Compared names the two versions on a rail. Before reads `Branch point on` and
 the base, such as `origin/main`, and Current reads `This branch`. An entry

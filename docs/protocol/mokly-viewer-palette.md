@@ -225,8 +225,8 @@ the same way in both appearances.
 - `--chrome-muted` carries breadcrumbs, frame labels, size tags, navigation
   heads, counts and field hints as normal text.
 - `--chrome-control-edge` draws the boundary of the appearance control, the
-  inspector resize grip, the mobile sheet grabber and native fields, including
-  the prop field's input border. The view controls draw no boundary at rest.
+  mobile sheet grabber and native fields, including the prop field's input
+  border. The view controls draw no boundary at rest.
   `--chrome-border-strong` keeps the device and pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.

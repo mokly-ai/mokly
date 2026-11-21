@@ -1,25 +1,23 @@
 # Component Workspace Design
 
+Status: The right panel with its tabs, its Nested components section and its Frames filter, and the panel sheet of the compact layout are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the floating panel and the panel sheet, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the tabs, the sections and the Frames filter.
+
 ## View Controls
 
-Place one compact icon toolbar beside the page title. It contains a native
-viewport dropdown (Mobile, Desktop, Both) and a Highlight components toggle.
-Standalone artboards use the single top-bar Appearance
-selector for interface and preview scheme. Embedded hosts keep their separate
-preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
-names, hover tooltips, selected states, and visible keyboard focus.
+The [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) in Inspect
+replaces the viewport choice and holds the Highlight components switch. The
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme) give the
+standalone Appearance selector, the Dark preview control of an embedded host,
+and the scheme of each frame and its label. Highlighting has no separate
+horizontal band. Icons have accessible names, hover tooltips, selected states,
+and visible keyboard focus.
 
-The menu icon and the dropdown chevron sit centered in their boxes, independent
-of text baselines. Usage uses a connected-node icon with clear, separated
-strokes. Icon boxes do not shrink; all glyphs are centered within their
-pointer targets.
+The menu icon sits centered in its box, independent of text baselines. Icon
+boxes do not shrink; all glyphs are centered within their pointer targets.
 
-The viewport dropdown switches the actual displayed preview contexts. Both shows
-both mobile and desktop, with labels identifying each. Desktop content keeps
-its layout width when the available pane is narrow; scrolling happens inside the
-preview pane instead of scaling the document or widening the outer page.
-Theme changes affect the preview and its context labels, leaving the application
-chrome legible. View changes preserve the selected variant and edited fields.
+The [canvas frames](./mokly-shell-device-chrome.md#canvas-frames) give each
+frame's size, its scale and its scrolling. A change of the Frames filter keeps
+the selected variant and edited fields.
 
 These mockup controls work without scripts, including inside Browse's
 sandboxed frames. Both preview contexts show the same fixture values. They do
@@ -38,38 +36,32 @@ Highlight labels are separate rounded chips with a small gap above an intact
 rounded outline. The chip must not overlap the outline's corner or obscure the
 component; apply the same treatment to outer, nested, and single-instance regions.
 
-## Fixed Shell And Resizable Inspector
+## Fixed Shell, Divider And Panel Sheet
 
-The artboard fills its viewport. Its top bar, screen title, view toolbar, saved
-variants, and comparison controls stay outside scrolling content. The enclosing
-page and main column have no vertical scrollbar. The preview and inspector are
-siblings on desktop; their contents may scroll independently without an enclosing
-scroll region. The inspector's icon strip stays visible while its content scrolls.
+The artboard fills its viewport. The
+[shell design](./mokly-shell-design.md#layout) fixes how the shell scrolls, and
+the [inspector design](./mokly-component-inspector-design.md#right-panel) fixes
+how the right panel scrolls.
 
-On desktop, use the navigation divider's centered short-line handle, rotated to
-resize vertically. The grip center sits on the divider border, with no vertical gap.
-There is no diagonal corner grip or thick colored border. Both dividers share one
-affordance: a 32×2px rounded grip that turns accent-colored with a soft accent
-halo while hovered, keyboard-focused, or being dragged, fading between those
-states. The palette contract sets each grip's resting color: the
-[inspector grip's](./mokly-viewer-palette.md#role-use) and the
-[navigation grip's](./mokly-viewer-palette.md#recorded-contrast). Keyboard focus also draws an accent bar along the divider's
-outer edge instead of a ring around the hit area. While a drag is in progress the
-pointer keeps the resize cursor everywhere and preview frames ignore pointer input,
-so the gesture cannot be interrupted by the content underneath.
-The mockup's resize hit area is centered on the divider, and resizing changes
-the layout height without consumer scripts. Both panes have minimum heights.
-Closing restores the preview's space; reopening keeps the resized split,
-clamped to the available workspace. Runtime resizing supports the whole
-divider and keyboard input; native mockup dragging uses its center grip.
+The catalogue's divider keeps the grip of the
+[navigation design](./mokly-shell-design-navigation.md#catalogue-panel). The
+grip's center sits on the divider border, with no gap, and there is no
+diagonal corner grip or thick colored border. The grip fades between its
+resting and accent states. Keyboard focus also draws an accent bar along the
+divider's outer edge instead of a ring around the hit area. While a drag is in
+progress the pointer keeps the resize cursor everywhere and frames ignore
+pointer input, so the gesture cannot be interrupted by the content underneath.
 
-On mobile, keep the preview at full size and open the inspector above it as a
-non-modal, full-workspace-width bottom sheet with safe-area spacing and a
-centered iOS-style grabber. The workspace dock owns placement and height; the
-inspector component owns the border, rounded surface and light shadow. The icon
-strip and close action stay fixed at the top of the sheet. Only its content
-scrolls. Closing leaves the icon strip at the bottom with no selected icon and
-no sheet content or grabber.
+The `design/components/**` artboards draw the inspector as a resizable pane
+beneath the desktop preview, whose divider reuses that grip, rotated. The
+mockup's resize hit area is centered on the divider, and resizing changes the
+layout height without consumer scripts. Native mockup dragging uses its center
+grip.
+
+In the [compact layout](./mokly-shell-device-chrome.md#compact-layout), the
+right panel opens as the panel sheet: a non-modal, full-width bottom sheet
+with safe-area spacing and a centered grabber. Its tab strip and close control
+stay fixed at the top of the sheet, and only its body scrolls.
 
 The mockup grabber is a native switch: touch/click or Space toggles between
 compact and expanded sheet heights without discarding edits or switching tabs.
@@ -79,11 +71,13 @@ native iOS drag behavior. Background preview/header controls stay available.
 
 ## Nested Components
 
-A component can render other registered components. On its page, the inspector
-tab is named Nested components and lists those children, excluding the component
-whose page is open. Toolbar demonstrates its nested Action instance. Leaf
-components, including Action, omit this tab. Screen pages keep their Components
-tab, including the explicit empty and unavailable states.
+A component can render other registered components. Its Inspect lists those
+children in its Nested components section, excluding the component whose page
+is open, under the
+[inspector design](./mokly-component-inspector-design.md#inspect). Toolbar
+demonstrates its nested Action instance. Leaf components, including Action,
+have no such section. Screen pages keep their Components section, including
+the explicit empty and unavailable states.
 
 ## Comparison Availability
 
@@ -98,15 +92,16 @@ Known examples show Added, Changed, Removed, or Unmodified beside the title,
 using the shown view's state. Resolve the selected screen or saved variant's
 effective displayed scheme before reading that state: a light-only preview uses
 Light status and marks while the catalogue's Dark preference stays selected.
-One view maps review states to Added, Changed, Removed, or Unmodified; Both uses
-that priority order. Changed is eligible, as is Removed only for a component
-variant. An entry that Changes does not list stays eligible while it shows
+One view maps review states to Added, Changed, Removed, or Unmodified; several
+shown views use that priority order. Changed is eligible, as is Removed only
+for a component variant. An entry that Changes does not list stays eligible
+while it shows
 Unmodified when its entry detail marks it comparison-eligible, because changed
 components affect it. Missing or nonmatching evidence keeps status and
 independently supplied eligibility; never derive one from the other. Axis,
 entry, and evidence updates recompute the decision. Any other Unmodified entry
-omits the band and uses control marks plus `Changed views` for changes
-elsewhere. Removed screens show their badge
+offers no compare modes and uses control marks plus `Changed views` for
+changes elsewhere. Removed screens show their badge
 without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
@@ -121,9 +116,9 @@ Missing inspection metadata is distinct from comparison availability.
 The runtime uses actual comparison eligibility for the selected saved example.
 Missing, pending, or nonmatching per-view evidence uses the entry-level status
 fallback without changing that eligibility and cannot trigger eager screenshot
-work merely to decide whether to show a mode row. The same rule gates comparison
-deep links at the first shell render, controlled selection, and later evidence
-updates.
+work merely to decide whether to offer compare modes. The same rule gates
+comparison deep links at the first shell render, controlled selection, and
+later evidence updates.
 Affected consumers may still expose comparisons while staying out of Changes.
 
 Parent status and variant status are distinct. Removing Compact from Action
@@ -143,12 +138,13 @@ Variant parents, workspace keys and paired inputs follow the
 [branch-point lookup](./mokly-branch-point-lookup.md). Presentation stays the same
 when a parent or variant moves or changes letter case.
 
-Name the information icon Details. Keep comparison evidence, when present,
-inside this panel alongside description and secondary source metadata. Do not
-add a comparison disclosure below the canvas or a separate explanatory banner
-above it. The panel stays available on a Removed screen's stage even though
-that screen has no comparison modes. Ordinary Unmodified mockups omit the
-comparison section unless there is retained or excluded rendered-resource evidence.
+Comparison evidence, when present, lives in the comparison details of the
+[Changes tab](./mokly-changes-controls.md#changes-tab), and an entry without
+Changes keeps it in Inspect, under
+[Changes and evidence](./mokly-component-inspector-design.md#changes-and-evidence).
+Do not add a comparison disclosure below the canvas or a separate explanatory
+banner above it. Ordinary Unmodified mockups omit the comparison section unless
+there is retained or excluded rendered-resource evidence.
 The `design/components/states/shared-impact/shared-impact` artboard in States → Stylesheet evidence depicts
 Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
 Its `design/components/states/shared-impact/style-changed` and `design/components/states/shared-impact/style-outside`
@@ -172,7 +168,7 @@ can populate factual rows from validated comparison/usage records and paired
 inputs, but does not generate visual-analysis prose. Temporary control edits
 stay separate from saved comparison evidence.
 
-Details read the routed entry's direct reasons from its
+The comparison details read the routed entry's direct reasons from its
 [entry detail](./mokly-shell-delivery.md#entry-detail), so they show them as
 soon as the detail arrives: in Current before any comparison loads, in a loaded
 comparison, and under either filter. Each reason is one sentence, shown once

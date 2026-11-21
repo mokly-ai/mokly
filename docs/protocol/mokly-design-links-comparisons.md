@@ -13,8 +13,9 @@ selector in the top bar. `design/browse/views/screen`,
 `design/browse/views/details-screen`, the Welcome comparison family
 (`design/changes/diff-controls/**`, `design/changes/outcomes/changed`, and
 `design/changes/outcomes/difference`), the appearance entries, and the loading
-and recovery entries render in Light and in Dark instead, and the outer
-Appearance control moves between those two rendered views of the same entry. A
+and recovery entries render in Light and in Dark instead. The outer viewer
+shows both rendered views of such an entry as the [design mockup links
+contract](./mokly-design-links.md#scope-and-ownership) says. A
 link out of a dark fragment resolves to the target's dark fragment wherever one
 exists, and every member of a comparison family publishes the same schemes, so
 no comparison control strands a reader in a light document. The

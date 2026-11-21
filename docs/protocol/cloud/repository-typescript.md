@@ -1,5 +1,7 @@
 # Repository TypeScript Layout
 
+Status: The site does not draw its home demos as static components yet; its home stage reads the dogfood catalogue. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) draws the demos and removes the stage.
+
 This is the TypeScript npm workspace sub-contract of
 [Repository layout](./repository-layout.md): the npm workspace, its packages
 and their pins, the generated API client, the app layout, and the
@@ -79,7 +81,7 @@ formatting, lint and import rules.
   The shared React, React Native and React Native Web runtime installs once,
   as [Shared controls](./shared-controls.md#dependencies) requires.
   The application contract is [Web application](./web-app.md). Design tokens
-  come from `@mokly-cloud/tokens`, and the Folio stylesheets have one
+  come from `@mokly-cloud/tokens`, and the product chrome stylesheets have one
   authored source, `docs/mockups/styles`; the app's generated copy stays
   git-ignored, so the app keeps no second source. The
   [app guide](../../../apps/app/README.md) documents compiler selection and
@@ -94,8 +96,9 @@ formatting, lint and import rules.
 - `apps/site` is static Astro output. It reads guides, reference documents,
   version and changelog from the installed `@mokly/mokly` package and reads
   Cloud/Review Markdown from this repository. It depends directly on the token
-  npm workspace, uses the dogfood catalogue for its stage and has no runtime API,
-  cookies or third-party scripts. Its contract is [Site](./site.md).
+  npm workspace, draws its [home demos](./site-delivery.md#home-stage) as
+  static components and has no runtime API, cookies or third-party scripts.
+  Its contract is [Site](./site.md).
 
 ## Tooling
 

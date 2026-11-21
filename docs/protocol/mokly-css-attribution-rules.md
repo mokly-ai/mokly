@@ -8,7 +8,7 @@ A page is one composed document: a screen view, a component view, or a
 whole-document page. A component's own pages are the views of the component's
 own props and of each of its variants, at every available viewport and colour
 scheme, under the [entry props contract](./mokly-entry-props.md). The
-component page shows those views; it adds no other document.
+component page adds no document beside those views.
 
 For each changed public stylesheet, use every page that reaches it on either
 side through a stylesheet link, a transitive `@import`, or an embedded

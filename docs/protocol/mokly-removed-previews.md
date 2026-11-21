@@ -7,9 +7,9 @@ entry's views rendered from the base commit's sources under
 [Sides](./mokly-comparison.md#sides), the same commit that produced its
 Changes row. The heading keeps its Removed badge, breadcrumbs keep the textual
 base ancestry, and Details keeps its historical metadata. A quiet label above
-the stage reads “Showing previous version.” No Current selector, comparison
-band, refresh control, Props editing, current inspector bindings, or current
-usage or comment markers appear.
+the previous version reads “Showing previous version.” The entry offers no
+compare mode, not even Current, and no Refresh. No Props editing, current
+inspector bindings, or current usage or comment markers appear.
 
 A removed page or document renders its historical document in the plain
 document pane; a document's Light and Dark choices follow the historical
@@ -19,7 +19,7 @@ reads `Showing previous version — Light only` when the catalogue has a dark
 axis. A removed screen renders its historical mobile and desktop frames; Light
 and Dark choices follow the historical views that exist. A saved scheme
 without a historical view falls back to Light with the light-only note.
-Removed screens stay outside comparison modes; an incoming comparison URL
+Removed screens stay outside the compare modes; an incoming comparison URL
 opens the preview instead. A removed component entry has no preview: it
 stays eligible for comparison with an explicit missing current side under
 [variant navigation](./mokly-variant-navigation.md#changes-rows). An entry

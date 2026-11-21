@@ -31,7 +31,7 @@ Keep rejection fixtures under `docs/mockups/src/_tests_/` for every policy:
 6. Internal links, flow back-links and referenced resources resolve in the
    build. Build fresh output before tests inspect it.
 
-Email policy checks also require the five Folio colors, three accent roles
+Email policy checks also require the five named roles, three accent roles
 and transparency, and the two published logo images. The message table keeps
 separate borders with zero spacing. Only the action cell carries an accent
 fill. Each view equals the shared delivered body for its content, scheme and
@@ -206,8 +206,9 @@ reaches a control outside the panel.
 Browse requires HTTP. [Mockup baselines](./mockup-baselines.md) defines how
 the comparison base renders and when Changes are unavailable.
 
-Selection policies verify screen coverage, ownership and the Folio palette
-from the catalogue index and the rendered documents. Review screens remain deferred. Site policies require all eight
+Selection policies read the catalogue index and the rendered documents. They
+verify screen coverage, ownership and the palette that the
+[renderer boundary](./mockups.md#screen-and-renderer-boundary) chooses. Review screens remain deferred. Site policies require all eight
 site screens, their reciprocal tour, four viewport/scheme documents, semantic
 tokens and parity with `apps/site`. The entry identities and directory checks
 use `design/site/*`. Settings policies verify the rules of

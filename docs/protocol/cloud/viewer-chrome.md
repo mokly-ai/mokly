@@ -11,8 +11,9 @@ Theme choice are in
 ## Slot Inventory
 
 The package exposes `topBarStart`, `topBarEnd`, `railStart`, `railEnd`,
-`sidePanel`, `stageOverlay` and `emptyState`, and its Changes tab holds one
-host slot for a check. Cloud composes its five actions into the first two:
+`changesStart`, `sidePanel`, `stageOverlay` and `emptyState`. `changesStart`
+is the one host slot of its Changes tab, which holds a check. Cloud composes
+its five actions into the first two:
 the workspace and project switcher, the publication, History, Share and the
 account. When the bar's own width fits all five beside the package's own
 controls, project and publication fill `topBarStart`; history, share and
@@ -141,8 +142,9 @@ The cloud read operations, ordering and share validation are defined in
 
 ## Check Slot
 
-The package's Changes tab holds one host slot between the change stepper and
-Compared, as [Changes screen controls](../mokly-changes-controls.md#changes-tab)
+The package's Changes tab holds one host slot, `changesStart`, between the
+change stepper and Compared, as
+[Changes screen controls](../mokly-changes-controls.md#changes-tab)
 defines, and shows it only on a changed entry. Cloud fills it with the check
 card of a pull request's publication: the Mokly check that
 [Changes check](./changes-check.md#result) posts for that publication. A
