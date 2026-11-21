@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { type DefaultTreeAdapterMap, parse } from "parse5";
+import { type DefaultTreeAdapterMap, parse, parseFragment } from "parse5";
 
+import { ICONS } from "../src/components/icons.js";
 import { GUIDE_CONTENT } from "../src/docs/pages.js";
 import { INSTALL_COMMAND } from "../src/docs/version.js";
 import { sitePath } from "../src/workspace.js";
@@ -21,6 +22,7 @@ type Node = DefaultTreeAdapterMap["node"];
 type Element = DefaultTreeAdapterMap["element"];
 
 interface Expected {
+  readonly icon: "file" | "terminal";
   readonly language: string;
   readonly prompt: boolean;
   readonly text: string;
@@ -50,6 +52,26 @@ function children(node: Element): Node[] {
   return node.childNodes;
 }
 
+/** The shapes inside one SVG, each its tag name and its sorted attributes. */
+function shapes(svg: Element): string[] {
+  return elements(svg, (element) => element !== svg).map((element) =>
+    [
+      element.tagName,
+      ...element.attrs.map(({ name, value }) => `${name}="${value}"`).sort(),
+    ].join(" "),
+  );
+}
+
+/** The shapes of one icon of the site's set, as an HTML parser reads them. */
+function drawing(name: Expected["icon"]): string[] {
+  const svg = elements(
+    parseFragment(`<svg>${ICONS[name]}</svg>`),
+    (element) => element.tagName === "svg",
+  );
+  assert.equal(svg.length, 1, name);
+  return shapes(svg[0]!);
+}
+
 /** The one panel whose open tab names the language. */
 function panel(page: Node, language: string): Element {
   const found = byClass(page, "site-code").filter(
@@ -61,8 +83,9 @@ function panel(page: Node, language: string): Element {
 
 /**
  * An ordinary panel: the prompt modifier only on a shell, never the numbered
- * one; a head of the open tab, which names the language, and the copy slot;
- * and a body whose code holds only its lines, whose text is the source.
+ * one; a head of the open tab, which shows the icon of its kind and names the
+ * language, and the copy slot; and a body whose code holds only its lines,
+ * whose text is the source.
  */
 function assertPanel(panel: Element, expected: Expected): void {
   const name = expected.language;
@@ -80,7 +103,12 @@ function assertPanel(panel: Element, expected: Expected): void {
     ],
     name,
   );
-  assert.equal(textContent(one(head, "site-code-tab")), name);
+  const tab = one(head, "site-code-tab");
+  const icon = elements(tab, (element) => element.tagName === "svg");
+  assert.equal(icon.length, 1, `${name}: one icon`);
+  assert.equal(attribute(icon[0]!, "aria-hidden"), "true", name);
+  assert.deepEqual(shapes(icon[0]!), drawing(expected.icon), name);
+  assert.equal(textContent(tab), name);
   const pre = elements(panel, (element) => element.tagName === "pre");
   assert.equal(pre.length, 1, name);
   assert.ok(classList(pre[0]!).includes("site-code-body"), name);
@@ -98,11 +126,13 @@ test("a guide renders its shell fence with the prompt and its other fences witho
   const page = built("docs", "start", "your-first-screen");
   const guide = "start/your-first-screen.md";
   assertPanel(panel(page, "sh"), {
+    icon: "terminal",
     language: "sh",
     prompt: true,
     text: fence(guide, "sh"),
   });
   assertPanel(panel(page, "tsx"), {
+    icon: "file",
     language: "tsx",
     prompt: false,
     text: fence(guide, "tsx"),
@@ -113,6 +143,7 @@ test("the landing's install snippet renders the shell panel of a guide", () => {
   const panels = byClass(built("docs"), "site-code");
   assert.equal(panels.length, 1);
   assertPanel(panels[0]!, {
+    icon: "terminal",
     language: "shell",
     prompt: true,
     text: INSTALL_COMMAND,

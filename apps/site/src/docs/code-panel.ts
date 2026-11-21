@@ -1,16 +1,19 @@
 /**
  * Render every code block in the Canvas code panel: a head whose open tab
- * names the fence's language, the place the copy control takes, and the
- * highlighted block, one line element per line. A `bash`, `sh` or `shell`
- * block takes the prompt modifier, so the stylesheet draws the `$` and the
- * code's text stays exactly what Copy copies. Authored pages and published
- * protocol documents render the panel through the Markdown plugin, and the
- * install snippet through the Shiki transformer, so every page draws the same
- * panel.
+ * shows an icon and names the fence's language, the marker after which the
+ * copy control takes its place, and the highlighted block, one line element
+ * per line. A `bash`, `sh` or `shell` block takes the prompt modifier, so the
+ * stylesheet draws the `$` and the code's text stays exactly what Copy
+ * copies. Authored pages and published protocol documents render the panel
+ * through the Markdown plugin, and the install snippet through the Shiki
+ * transformer, so every page draws the same panel.
  */
 
 import type { SatteriMarkdownProcessorOptions } from "@astrojs/markdown-satteri";
+import { parseFragment, type DefaultTreeAdapterMap } from "parse5";
 import type { HastNode, HastPluginDefinition } from "satteri";
+
+import { ICONS, VIEW_BOXES, type IconName } from "../components/icons.js";
 
 type Element = Extract<HastNode, { type: "element" }>;
 
@@ -18,14 +21,25 @@ type Transformer = NonNullable<
   NonNullable<SatteriMarkdownProcessorOptions["shikiConfig"]>["transformers"]
 >[number];
 
-/** The class the documentation's copy island places a control in. */
+/** The class of the marker after which the copy island places a control. */
 export const COPY_SLOT = "site-code-copy-slot";
 
 /** The class wrapping one code block. */
 export const PANEL = "site-code";
 
 /** The fence languages whose lines the panel draws after a `$` prompt. */
-const SHELLS: ReadonlySet<string> = new Set(["bash", "sh", "shell"]);
+const PROMPTED: ReadonlySet<string> = new Set(["bash", "sh", "shell"]);
+
+/**
+ * The fence languages whose tab takes the terminal icon, the rule of
+ * `CodePanel.astro`.
+ */
+const TERMINALS: ReadonlySet<string> = new Set([
+  "bash",
+  "console",
+  "sh",
+  "shell",
+]);
 
 function classes(node: Readonly<Element>): string[] {
   const value = node.properties["className"] ?? node.properties["class"];
@@ -53,6 +67,46 @@ function element(
     tagName,
     properties: { className: [...className] },
     children,
+  };
+}
+
+/** One shape of an icon drawing, with its own shapes, as hast. */
+function shape(node: DefaultTreeAdapterMap["element"]): Element {
+  return {
+    type: "element",
+    tagName: node.tagName,
+    properties: Object.fromEntries(
+      node.attrs.map(({ name, value }) => [name, value]),
+    ),
+    children: node.childNodes.flatMap((child) =>
+      "tagName" in child ? [shape(child)] : [],
+    ),
+  };
+}
+
+/**
+ * One icon of the site's set, `size` pixels square, with the attributes that
+ * `Icon.astro` gives it. Both pipelines serialize hast, so the drawing from
+ * `icons.ts` becomes elements rather than raw HTML, which Shiki would escape.
+ */
+function icon(name: IconName, size: number): Element {
+  const [svg] = parseFragment(`<svg>${ICONS[name]}</svg>`).childNodes;
+  return {
+    type: "element",
+    tagName: "svg",
+    properties: {
+      ariaHidden: "true",
+      fill: "none",
+      focusable: "false",
+      height: size,
+      stroke: "currentColor",
+      strokeLineCap: "round",
+      strokeLineJoin: "round",
+      strokeWidth: "1.5",
+      viewBox: VIEW_BOXES[name] ?? "0 0 16 16",
+      width: size,
+    },
+    children: svg && "tagName" in svg ? shape(svg).children : [],
   };
 }
 
@@ -114,7 +168,7 @@ function panel(pre: Readonly<Element>): Element {
   const name = language(pre);
   return element(
     "div",
-    SHELLS.has(name) ? [PANEL, "site-code--prompt"] : [PANEL],
+    PROMPTED.has(name) ? [PANEL, "site-code--prompt"] : [PANEL],
     [
       element(
         "div",
@@ -123,7 +177,10 @@ function panel(pre: Readonly<Element>): Element {
           element(
             "span",
             ["site-code-tab", "site-code-tab--open", "site-code-language"],
-            name ? [{ type: "text", value: name }] : [],
+            [
+              icon(TERMINALS.has(name) ? "terminal" : "file", 13),
+              ...(name ? [{ type: "text" as const, value: name }] : []),
+            ],
           ),
           element("span", [COPY_SLOT], []),
         ],
