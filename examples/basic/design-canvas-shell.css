@@ -104,15 +104,16 @@
 }
 
 /* The Frames filter hides, in place, the frames of each viewport and scheme
-   that it turns off. */
+   that it turns off. It hides a frame's slot, so no rule that shows the
+   frame itself, such as the compact frame picker's, brings it back. */
 .cv:has([data-cv-frames="mobile"]:not(:checked))
-  .cv-frame[data-cv-viewport="mobile"],
+  .cv-frame-slot[data-cv-viewport="mobile"],
 .cv:has([data-cv-frames="desktop"]:not(:checked))
-  .cv-frame[data-cv-viewport="desktop"],
+  .cv-frame-slot[data-cv-viewport="desktop"],
 .cv:has([data-cv-frames="light"]:not(:checked))
-  .cv-frame[data-cv-scheme="light"],
+  .cv-frame-slot[data-cv-scheme="light"],
 .cv:has([data-cv-frames="dark"]:not(:checked))
-  .cv-frame[data-cv-scheme="dark"] {
+  .cv-frame-slot[data-cv-scheme="dark"] {
   display: none;
 }
 

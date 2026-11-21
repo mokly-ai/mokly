@@ -13,14 +13,15 @@ const HANDLES = {
  * The selection on a frame: a signal outline with square handles and the
  * selection's size in a tag below the centre. An instance has eight handles,
  * its component's name in a tag above the top-left corner, and, where it is
- * large enough to read, a redline that measures its padding from the left
- * edge to the content, with the value in a tag outside the box. A selected
+ * large enough to read, a redline that measures its left padding from inside
+ * the border to the content, with the value in a tag outside the box. A selected
  * frame has a handle at each corner, and its own label names it, so it draws
  * no name tag and no redline. The selection fills the box that its caller
  * places, and its marks keep their size at every zoom; the redline's length
  * follows the frame's scale.
  */
 export function SelectionView({
+  border = 0,
   height,
   kind = "instance",
   name,
@@ -28,8 +29,12 @@ export function SelectionView({
   width,
 }: SelectionProps) {
   const frame = kind === "frame";
-  const redline: (CSSProperties & Record<"--cv-sel-pad", number>) | undefined =
-    frame || padding === undefined ? undefined : { "--cv-sel-pad": padding };
+  const redline:
+    | (CSSProperties & Record<`--cv-sel-${"border" | "pad"}`, number>)
+    | undefined =
+    frame || padding === undefined
+      ? undefined
+      : { "--cv-sel-border": border, "--cv-sel-pad": padding };
   return (
     <div
       aria-label={`${name} selected, ${width} by ${height}`}

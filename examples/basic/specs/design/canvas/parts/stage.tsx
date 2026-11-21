@@ -192,7 +192,12 @@ export function CanvasStage({
   );
 }
 
-/** One frame of the stage, holding its sketch and what lies over it. */
+/**
+ * One frame of the stage, holding its sketch and what lies over it, in a
+ * slot that draws no box of its own. The Frames filter hides the slot, so a
+ * frame that the filter turns off stays hidden whatever rule shows the
+ * frame, such as the compact frame picker's.
+ */
 function StageFrame({
   entry,
   frame,
@@ -206,24 +211,34 @@ function StageFrame({
   selected: boolean;
   zoom: number;
 }) {
+  const viewport =
+    frame.kind === "desktop" || frame.kind === "mobile"
+      ? frame.kind
+      : undefined;
   return (
-    <canvasFrame.Component
-      moklyInstance={useDesignInstance(`frame-${frame.id}`)}
-      kind={frame.kind}
-      scheme={frame.scheme}
-      label={frame.label}
-      entry={entry.slug}
-      width={frame.width}
-      height={frame.height}
-      zoom={zoom / 100}
-      {...optional("compare", frame.compare)}
-      {...optional("side", frame.side)}
-      {...optional("before", frame.before)}
-      {...optional("variant", frame.variant)}
-      {...(selected ? { selected } : {})}
-      {...optional("overlay", overlay ?? undefined)}
+    <div
+      className="cv-frame-slot"
+      data-cv-scheme={frame.scheme}
+      data-cv-viewport={viewport}
     >
-      {frame.content}
-    </canvasFrame.Component>
+      <canvasFrame.Component
+        moklyInstance={useDesignInstance(`frame-${frame.id}`)}
+        kind={frame.kind}
+        scheme={frame.scheme}
+        label={frame.label}
+        entry={entry.slug}
+        width={frame.width}
+        height={frame.height}
+        zoom={zoom / 100}
+        {...optional("compare", frame.compare)}
+        {...optional("side", frame.side)}
+        {...optional("before", frame.before)}
+        {...optional("variant", frame.variant)}
+        {...(selected ? { selected } : {})}
+        {...optional("overlay", overlay ?? undefined)}
+      >
+        {frame.content}
+      </canvasFrame.Component>
+    </div>
   );
 }

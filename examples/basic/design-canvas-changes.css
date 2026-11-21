@@ -103,15 +103,20 @@
 
 /* ---- Side by side on the stage -------------------------------------- */
 
-/* The stage holds every frame's pair and shows the compared frame's; the
-   compact form's frame picker picks another pair in place. */
+/* The stage holds every frame's pair and shows the compared frame's, the
+   version before beside the current version; the compact form's frame
+   picker picks another pair in place. */
+.cv-frames[data-cv-compare="side-by-side"] {
+  grid-template-columns: auto auto;
+}
+
 .cv-frames[data-cv-chosen="desktop-light"]
-  > .cv-frame:not([data-cv-frame="desktop-light"]),
+  .cv-frame:not([data-cv-frame="desktop-light"]),
 .cv-frames[data-cv-chosen="mobile-light"]
-  > .cv-frame:not([data-cv-frame="mobile-light"]),
+  .cv-frame:not([data-cv-frame="mobile-light"]),
 .cv-frames[data-cv-chosen="desktop-dark"]
-  > .cv-frame:not([data-cv-frame="desktop-dark"]),
+  .cv-frame:not([data-cv-frame="desktop-dark"]),
 .cv-frames[data-cv-chosen="mobile-dark"]
-  > .cv-frame:not([data-cv-frame="mobile-dark"]) {
+  .cv-frame:not([data-cv-frame="mobile-dark"]) {
   display: none;
 }

@@ -3,9 +3,10 @@
    centre, and the padding redline with its value outside the box. A selected
    frame draws the outline, a handle at each corner, and the size tag. The
    selection fills the box that its caller places, and lets the pointer
-   through. Its marks keep their size at every zoom; the redline's length is
-   the padding at the frame's scale, which a sample without a frame takes as
-   1. A handle takes the surface of the document under it. */
+   through. Its marks keep their size at every zoom; the redline starts after
+   the border and runs the padding's length, both at the frame's scale, which
+   a sample without a frame takes as 1. A handle takes the surface of the
+   document under it. */
 .cv-sel {
   box-shadow: 0 0 0 1.5px var(--cv-signal);
   inset: 0;
@@ -93,12 +94,12 @@
   transform: translateX(-50%);
 }
 
-/* The padding redline: a measure from the left edge to the content, with
-   ticks at both ends, and its value in a tag outside the box. */
+/* The padding redline: a measure from inside the left border to the
+   content, with ticks at both ends, and its value in a tag outside the box. */
 .cv-sel-pad {
   background: var(--cv-signal);
   height: 1px;
-  left: 0;
+  left: calc(var(--cv-sel-border) * var(--cv-frame-scale, 1) * 1px);
   position: absolute;
   top: min(22%, 46px);
   width: calc(var(--cv-sel-pad) * var(--cv-frame-scale, 1) * 1px);

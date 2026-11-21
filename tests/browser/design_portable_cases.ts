@@ -5,6 +5,7 @@ import { expect } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
+import { registerCanvasCases } from "./design_canvas_cases.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
@@ -28,6 +29,7 @@ export function registerDesignPortable(
         `index.${viewport}.html`,
       ),
     ).href;
+  registerCanvasCases(test, design);
 
   for (const viewport of ["mobile", "desktop"] as const) {
     test(`${viewport}: portable design links work without Browse enhancement`, async ({

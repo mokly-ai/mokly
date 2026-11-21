@@ -39,7 +39,7 @@ function SelectionPlace({
  * The selection of one instance over the frame it was picked on: the
  * registered selection, placed over the instance's box at the frame's scale.
  * The canvas is zoomed far enough for the padding to read, so the selection
- * draws its redline.
+ * draws its redline inside the instance's border.
  */
 function StageSelection({ instance }: { instance: CanvasInstance }) {
   return (
@@ -49,6 +49,7 @@ function StageSelection({ instance }: { instance: CanvasInstance }) {
         name={instance.component}
         {...instanceSize(instance)}
         padding={instance.padding.left}
+        border={instance.border.left}
       />
     </SelectionPlace>
   );

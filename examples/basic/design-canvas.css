@@ -172,13 +172,49 @@
 }
 
 /* The frames of a screen: Desktop beside Mobile, Light above Dark, each
-   cell leaving room for its label. */
+   cell leaving room for its label. A frame's slot draws no box, so the
+   frame is the grid's item. */
 .cv-frames {
   align-items: start;
   column-gap: 44px;
   display: grid;
-  grid-template-columns: auto auto;
   row-gap: 48px;
+}
+
+.cv-frame-slot {
+  display: contents;
+}
+
+/* A screen's frame takes its cell by its viewport and its scheme, so the
+   Frames filter keeps one row per scheme, Light above Dark, when it hides a
+   viewport. With one viewport or one scheme hidden, the other takes the
+   first column or row. Side by side places its pair itself. */
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-viewport="mobile"] {
+  grid-column: 2;
+}
+
+.cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-row: 2;
+}
+
+.cv:has([data-cv-frames="desktop"]:not(:checked))
+  .cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-viewport="mobile"] {
+  grid-column: 1;
+}
+
+.cv:has([data-cv-frames="light"]:not(:checked))
+  .cv-frames[data-cv-kind="screen"]:not([data-cv-compare="side-by-side"])
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-row: 1;
 }
 
 /* A component opens as its variant set: one row per saved variant, Light
@@ -192,10 +228,25 @@
 }
 
 /* A row leaves room for a selected frame's size tag above the next row's
-   label. */
+   label. Light takes the first column and Dark the second, so each saved
+   variant keeps its row; with Light hidden, Dark takes the first column. */
 .cv-frames[data-cv-kind="component"] {
   column-gap: 40px;
   row-gap: 64px;
+}
+
+.cv-frames[data-cv-kind="component"] .cv-frame {
+  grid-column: 1;
+}
+
+.cv-frames[data-cv-kind="component"] .cv-frame[data-cv-scheme="dark"] {
+  grid-column: 2;
+}
+
+.cv:has([data-cv-frames="light"]:not(:checked))
+  .cv-frames[data-cv-kind="component"]
+  .cv-frame[data-cv-scheme="dark"] {
+  grid-column: 1;
 }
 
 /* A page or a Markdown document opens as one reading frame. */

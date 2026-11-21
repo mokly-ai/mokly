@@ -205,7 +205,8 @@ holds both versions in the shipped stacked layers, or names its version in a
 tag in Side by side; `canvas/zoom-pill`, zoom out, the zoom level, zoom in
 and Fit, whose Fit-only form the dock holds; `canvas/selection`, the
 selected instance's outline with eight handles, its name and size tags, and
-the redline of its padding, or a selected frame's outline with a handle at
+the redline of its padding from inside its border to its content, or a
+selected frame's outline with a handle at
 each corner and its size, whose marks keep their size at every zoom;
 `canvas/swipe-divider`,
 Swipe's divider over a frame, with its grip and the Before and Current tags;
@@ -219,7 +220,7 @@ modes as tiles with their keys, the compared frame's chips in Side by side,
 and Scroll together and Refresh; `inspector/frames-filter`, the viewport and
 scheme toggles of Inspect with the Highlight components switch; and
 `inspector/box-model`, the selected instance's padding on each side around
-its content size. The
+its content size inside the border and the padding. The
 `CANVAS_SAMPLES` set of `metadata.ts` names them, and `LibraryHost` gives
 their sample root the Canvas palette scope that a Canvas artboard's root
 carries. A static artboard runs no script, so each control links to the
@@ -242,7 +243,9 @@ instance of a depicted tree links to the artboard that shows it selected:
 the saved states of `selection` select Welcome's four instances, those of
 `outcomes/added` Details' four, and those of `stage/component-set` the
 Toolbar's two Actions. `../canvas/parts/instance_records.ts` holds each
-entry's instance records, with each instance's frame, box, and padding. A
+entry's instance records, with each instance's frame, outer box, border,
+and padding, from which the box model and the samples of
+`inspector/box-model` and `canvas/selection` derive their sizes. A
 static artboard opens the panel scrolled to the section that its state is
 about, the selection or an unfolded section. The Canvas family shows each
 component as the example defines it: `../canvas/parts/component_identity.ts`
@@ -280,7 +283,11 @@ selection; `CanvasStage` draws the selected entry's section with its frames,
 panned onto a frame where the state asks, with what lies over each frame,
 such as the selection, and the compact entry bar with the frame picker,
 which a variant set shows only once a selection picks a frame, and then that
-frame alone. They take the destination, the viewport, the catalogue's
+frame alone. Each frame stands in a slot that draws no box. The Frames
+filter hides the slot, so a frame that it turns off stays hidden whatever
+rule shows the frame, and each frame takes its grid cell by its viewport
+and scheme, so the filter keeps one row per scheme when it hides a
+viewport. They take the destination, the viewport, the catalogue's
 filter and row, the entry's title, path, and status, a render of each
 frame's sketch by viewport and scheme, and the Inspect body.
 `ScreenSelection` composes them for a screen with an instance selected, and

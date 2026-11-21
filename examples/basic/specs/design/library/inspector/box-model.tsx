@@ -1,5 +1,10 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { WELCOME_INSTANCES } from "../../canvas/parts/instance_records.js";
+import {
+  contentSize,
+  type CanvasInstance,
+} from "../../canvas/parts/instances.js";
 import { libraryMetadata } from "../metadata.js";
 import type { LibraryProps } from "../schemas.js";
 
@@ -22,15 +27,16 @@ const propSchema = {
 } as const;
 export type BoxModelProps = LibraryProps<typeof propSchema>;
 
+/**
+ * The box model of one of Welcome's instances, from its instance record:
+ * its padding, and its content size inside the border and the padding.
+ */
+function measured(instance: CanvasInstance) {
+  return { ...instance.padding, ...contentSize(instance) };
+}
+
 /** The View details Action: padding on its two sides only. */
-const action = {
-  top: 0,
-  right: 10,
-  bottom: 0,
-  left: 10,
-  width: 92,
-  height: 30,
-} as const;
+const action = measured(WELCOME_INSTANCES.details);
 
 const sideControl = (label: string) =>
   ({ kind: "number", label, minimum: 0, maximum: 400, step: 1 }) as const;
@@ -60,14 +66,7 @@ export const boxModel = defineComponent({
     {
       slug: "toolbar",
       title: "Toolbar",
-      props: {
-        top: 10,
-        right: 12,
-        bottom: 10,
-        left: 12,
-        width: 326,
-        height: 108,
-      },
+      props: measured(WELCOME_INSTANCES.toolbar),
     },
   ],
 });

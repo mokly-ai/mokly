@@ -9,12 +9,22 @@ export interface SketchBox {
   height: number;
 }
 
-/** The padding on each side of an instance's box. */
-interface SketchPadding {
+/** A length on each side of an instance's box: its border or its padding. */
+interface SketchSides {
   top: number;
   right: number;
   bottom: number;
   left: number;
+}
+
+/**
+ * An instance's measurements in the sketch: its outer box, which holds its
+ * border, as the sketches size every box, and its border and its padding.
+ */
+export interface SketchMeasure {
+  box: SketchBox;
+  border: SketchSides;
+  padding: SketchSides;
 }
 
 /** A frame of the stage, by its id, and its label as Inspect names it. */
@@ -26,11 +36,11 @@ export interface SelectionFrame {
 /**
  * One registered instance of a depicted entry, as its instance record holds
  * it: its component, the instance that renders it, the props that its owner
- * supplies, the frame that the reader selects it on with its box and padding
+ * supplies, the frame that the reader selects it on with its measurements
  * there, its component's source, the artboard that shows it selected, and
  * the Canvas artboard that opens its component.
  */
-export interface CanvasInstance {
+export interface CanvasInstance extends SketchMeasure {
   id: string;
   /** The title of the instance's component. */
   component: string;
@@ -39,8 +49,6 @@ export interface CanvasInstance {
   /** The props that the entry or the parent supplies, each value as code. */
   props: readonly { name: string; value: string }[];
   frame: SelectionFrame;
-  box: SketchBox;
-  padding: SketchPadding;
   /** The component's source file. */
   source: string;
   /** The artboard that shows the instance selected. */
@@ -60,6 +68,12 @@ export const MOBILE_LIGHT: SelectionFrame = {
   label: "Mobile · Light",
 };
 
+/**
+ * The 1px border that a depicted Action and a depicted Toolbar draw on every
+ * side, as `design-shots.css` draws them.
+ */
+export const SKETCH_BORDER = { top: 1, right: 1, bottom: 1, left: 1 };
+
 /** A depicted Action keeps 10px beside its label. */
 export const ACTION_PADDING = { top: 0, right: 10, bottom: 0, left: 10 };
 
@@ -68,7 +82,8 @@ export const TOOLBAR_PADDING = { top: 10, right: 12, bottom: 10, left: 12 };
 
 /**
  * The two Actions that the example's Toolbar renders, with the props that
- * it gives each and the width that its label takes in Geist.
+ * it gives each and its outer width: its label in Geist, its padding, and
+ * its border.
  */
 const TOOLBAR_ACTIONS = {
   primary: { label: "Browse details", destination: "details", width: 107.03 },
@@ -100,6 +115,7 @@ export function toolbarAction(
     ...record,
     props: actionProps(action.label, id, action.destination),
     box: { ...at, width: action.width, height: 26 },
+    border: SKETCH_BORDER,
     padding: ACTION_PADDING,
     source: COMPONENT_IDENTITIES.action.source,
     componentPage: CANVAS_PAGES.componentSet,
@@ -119,11 +135,17 @@ export function instanceSize(instance: CanvasInstance) {
   };
 }
 
-/** The content box inside the padding, as the box model names it. */
-export function contentSize(instance: CanvasInstance) {
-  const { box, padding } = instance;
+/**
+ * The content box inside the border and the padding, in whole pixels, as the
+ * box model names it.
+ */
+export function contentSize({ border, box, padding }: SketchMeasure) {
   return {
-    width: Math.round(box.width - padding.left - padding.right),
-    height: Math.round(box.height - padding.top - padding.bottom),
+    width: Math.round(
+      box.width - border.left - border.right - padding.left - padding.right,
+    ),
+    height: Math.round(
+      box.height - border.top - border.bottom - padding.top - padding.bottom,
+    ),
   };
 }
