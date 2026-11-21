@@ -15,6 +15,7 @@ use mokly_graph::comparison_proof::{
 };
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, InternalError, Result};
+use mokly_graph::head_validation::{HeadValidation, ValidationRead};
 
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -31,7 +32,7 @@ use crate::error::ServerError;
 /// Retain only hashes; the render graph still owns documents, resources, and leases.
 #[derive(Clone)]
 pub struct FrozenResources {
-    inner: Arc<dyn RenderGeneration>,
+    pub(crate) inner: Arc<dyn RenderGeneration>,
     digests: Arc<Mutex<BTreeMap<String, Option<String>>>>,
 }
 impl FrozenResources {
@@ -59,7 +60,11 @@ impl FrozenResources {
         }
         Ok(())
     }
-    fn document_identity(&self, route: &str, mode: ProofMode) -> Option<ContentIdentity> {
+    pub(crate) fn document_identity(
+        &self,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
         let digest = self
             .digests
             .lock()
@@ -83,6 +88,15 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn validate_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.head_summary(validation)
+    }
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.checked_head(route)
+    }
+    fn validation_identity(&self, kind: ValidationRead, route: &str) -> Option<ContentIdentity> {
+        self.head_input(kind, route)
+    }
     fn prepare_render_reuse(&self) {
         self.inner.prepare_render_reuse();
     }
