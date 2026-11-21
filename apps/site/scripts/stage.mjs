@@ -1,7 +1,7 @@
-/** Publish one path-addressed dogfood screen and its resources for the home stage. */
+/** Publish a dogfood screen with inline stylesheets and copied resources. */
 
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -17,7 +17,8 @@ import {
   catalogueTrail,
   stagedEntry,
 } from "./stage/catalogue.ts";
-import { rewriteStage, stylesheetResources } from "./stage/fragments.ts";
+import { rewriteStage } from "./stage/fragments.ts";
+import { stylesheetResources } from "./stage/stylesheets.ts";
 
 const repository = repositoryPath();
 const output = path.join(repository, "mokly-static");
@@ -115,7 +116,9 @@ for (const [index, { file }] of DOCUMENTS.entries()) {
   });
 }
 
-const rewritten = rewriteStage(documents);
+const rewritten = rewriteStage(documents, (source) =>
+  readFileSync(path.join(output, source), "utf8"),
+);
 const { index, entries } = await catalogue();
 const screen = stagedEntry(entries, SCREEN_PATH);
 if (screen.title !== rewritten.title) {

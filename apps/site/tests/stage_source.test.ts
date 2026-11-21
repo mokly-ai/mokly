@@ -16,6 +16,7 @@ const files = [
   "scripts/stage/catalogue.ts",
   "scripts/stage/tree.ts",
   "scripts/stage/fragments.ts",
+  "scripts/stage/stylesheets.ts",
   "src/stage.ts",
   "src/workspace.ts",
 ];

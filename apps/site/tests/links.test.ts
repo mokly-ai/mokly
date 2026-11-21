@@ -8,6 +8,7 @@ import type { TestContext } from "node:test";
 import { promisify } from "node:util";
 
 import { checkLinks } from "../scripts/links/check.js";
+import { INLINED_STYLESHEET_ATTRIBUTE } from "../scripts/stage/stylesheets.js";
 
 const origin = "https://mokly.example";
 
@@ -62,6 +63,19 @@ test("links resolve nested routes, fragments, assets and frames", async (t) => {
     "movie.mp4": "",
   });
   assert.ok((await checkLinks(root, origin)) > 20);
+
+  const unmarked = await output(t, {
+    "index.html": "<style>.art { filter: url(#absent); }</style>",
+  });
+  await assert.rejects(
+    checkLinks(unmarked, origin),
+    /missing anchor #absent in index\.html/,
+  );
+
+  const marked = await output(t, {
+    "index.html": `<style ${INLINED_STYLESHEET_ATTRIBUTE}>.art { filter: url(#absent); }</style>`,
+  });
+  await assert.doesNotReject(checkLinks(marked, origin));
 });
 
 test("base href changes relative URL resolution", async (t) => {
@@ -136,6 +150,14 @@ for (const [name, html, message] of [
     "<style>p { background: url(/missing.svg); }</style>",
     "missing file",
   ],
+  [
+    "asset URL in an inlined stylesheet",
+    `<style ${INLINED_STYLESHEET_ATTRIBUTE}>p { background: url(./missing.png); }</style>`,
+    {
+      message:
+        'site:links failed:\nindex.html: "./missing.png" — missing file /missing.png',
+    },
+  ],
   ["poster", '<video poster="/missing.jpg"></video>', "missing file"],
   ["object", '<object data="/missing.pdf"></object>', "missing file"],
   ["malformed encoding", '<a href="/%zz">Invalid</a>', "malformed"],
@@ -159,7 +181,9 @@ for (const [name, html, message] of [
     });
     await assert.rejects(
       checkLinks(root, origin),
-      new RegExp(`index.html:.*${message}`),
+      typeof message === "string"
+        ? new RegExp(`index.html:.*${message}`)
+        : message,
     );
   });
 }

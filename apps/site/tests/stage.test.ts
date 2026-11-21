@@ -3,6 +3,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { serialize } from "parse5";
+
+import { currentDocumentPath, viewRoute } from "@mokly/viewer/data";
+
+import { cssReferences } from "../scripts/links/documents.js";
 import {
   CATALOGUE_ROOT,
   type CatalogueEntry,
@@ -11,16 +16,18 @@ import {
   stagedEntry,
 } from "../scripts/stage/catalogue.js";
 import {
-  rewriteStage,
-  stylesheetResources,
-} from "../scripts/stage/fragments.js";
+  INLINED_STYLESHEET_ATTRIBUTE,
+  safeTarget,
+} from "../scripts/stage/stylesheets.js";
 import {
   parseStageManifest,
   readStageManifest,
   stageDocumentFor,
   stageDocumentPath,
 } from "../src/stage.js";
-import { sitePath } from "../src/workspace.js";
+import { repositoryPath, sitePath } from "../src/workspace.js";
+
+import { analyzeStylesheet, documentStyles } from "./helpers/stage-styles.js";
 
 const ENTRIES: readonly CatalogueEntry[] = [
   { path: "example/screens/welcome", kind: "screen", title: "Welcome" },
@@ -87,108 +94,6 @@ const TREE = {
   ],
 };
 
-function fragment(name: string, body: string): string {
-  return `<!doctype html><html lang="en"><head><title>Welcome</title><link rel="stylesheet" href="../styles.css"><script src="/mokly-viewer/client/frame-probe.js"></script></head><body><main id="welcome">${body}</main><!-- ${name} --></body></html>`;
-}
-
-test("resources move beside the document and unpublished links are dropped", () => {
-  const rewritten = rewriteStage(
-    new Map([
-      [
-        "welcome.desktop.html",
-        {
-          html: fragment(
-            "desktop",
-            '<a href="./details.desktop.html#details">Details</a><a href="./welcome.desktop.html">Self</a><a href="https://example.com/">Away</a>',
-          ),
-          path: "screens/welcome.desktop.html",
-        },
-      ],
-    ]),
-  );
-  const html = rewritten.documents.get("welcome.desktop.html") ?? "";
-  assert.ok(html.includes('href="./styles.css"'));
-  assert.ok(html.includes('src="./mokly-viewer/client/frame-probe.js"'));
-  assert.ok(html.includes('href="./welcome.desktop.html"'));
-  assert.ok(html.includes('href="https://example.com/"'));
-  assert.ok(!html.includes("details.desktop.html"));
-  assert.ok(html.includes(">Details</a>"), "the text of a dropped link stays");
-  assert.deepEqual(
-    [...rewritten.resources],
-    [
-      ["styles.css", "styles.css"],
-      [
-        "mokly-viewer/client/frame-probe.js",
-        "mokly-viewer/client/frame-probe.js",
-      ],
-    ],
-    "the stylesheet is published beside the document",
-  );
-  assert.equal(rewritten.title, "Welcome");
-});
-
-test("stylesheet resources include imports and nested URLs", () => {
-  assert.deepEqual(
-    stylesheetResources(
-      "styles/product/inventory.css",
-      '@import "account.css";\n@import url("records.css");\n.card { background-image: url(../art/card.svg#mark); }',
-    ),
-    [
-      "styles/product/account.css",
-      "styles/product/records.css",
-      "styles/art/card.svg",
-    ],
-  );
-});
-
-test("a resource the stage cannot publish fails the build", () => {
-  assert.throws(
-    () =>
-      rewriteStage(
-        new Map([
-          [
-            "welcome.desktop.html",
-            {
-              html: '<html><head><title>Welcome</title></head><body><main id="welcome"><img srcset="../a.png 1x"></main></body></html>',
-              path: "screens/welcome.desktop.html",
-            },
-          ],
-        ]),
-      ),
-    /responsive source/,
-  );
-  assert.throws(
-    () =>
-      rewriteStage(
-        new Map([
-          [
-            "welcome.desktop.html",
-            {
-              html: '<html><head><title>Welcome</title><style>p{background:url(../art.png)}</style></head><body><main id="welcome"></main></body></html>',
-              path: "screens/welcome.desktop.html",
-            },
-          ],
-        ]),
-      ),
-    /embedded stylesheet reference/,
-  );
-});
-
-test("a document without a titled screen fails the build", () => {
-  assert.throws(
-    () =>
-      rewriteStage(
-        new Map([
-          [
-            "welcome.desktop.html",
-            { html: "<html><body></body></html>", path: "a.html" },
-          ],
-        ]),
-      ),
-    /title and a main landmark/,
-  );
-});
-
 test("a screen the catalogue does not publish cannot be staged", () => {
   assert.throws(() => stagedEntry(ENTRIES, "absent"), /no screen/);
   assert.throws(
@@ -224,6 +129,8 @@ test("a manifest that does not describe a complete stage is rejected", () => {
 test("the build published every screen document and its resources", () => {
   const manifest = readStageManifest();
   const dist = sitePath("dist");
+  const font =
+    "static/mokly-generated/assets/docs/mockups/styles/fonts/InterVariable.woff2";
   assert.equal(manifest.documents.length, 4);
   assert.equal(manifest.screen, "Project created");
   assert.equal(manifest.screenPath, "product/account/project-created");
@@ -248,13 +155,71 @@ test("the build published every screen document and its resources", () => {
       assert.match(html, /<title>Project created<\/title>/);
       assert.match(html, /Mokly Cloud is ready/);
       assert.match(html, new RegExp(`data-color-scheme="${scheme}"`));
+      const { head, links, styles } = documentStyles(html);
+      assert.deepEqual(links, [], `${document.file} loads a stylesheet link`);
+      const analyzed = new Map(
+        styles.map((style) => {
+          const sheet = analyzeStylesheet(serialize(style), document.file);
+          assert.deepEqual(
+            sheet.dependencies.filter(({ type }) => type === "import"),
+            [],
+            `${document.file} contains a stylesheet import`,
+          );
+          return [style, sheet];
+        }),
+      );
+
+      const sourcePath = currentDocumentPath(
+        viewRoute(manifest.screenPath, viewport, scheme),
+      );
+      const source = readFileSync(
+        repositoryPath("mokly-static", sourcePath),
+        "utf8",
+      );
+      const sourceHead = documentStyles(source).head;
+      const expected = sourceHead.map((element) =>
+        element.tagName === "link"
+          ? "inlined stylesheet"
+          : { text: serialize(element) },
+      );
+      const published = head.map((style) => {
+        const text = serialize(style);
+        const marked = style.attrs.some(
+          ({ name }) => name === INLINED_STYLESHEET_ATTRIBUTE,
+        );
+        if (!marked) return { text };
+        return text.trim() ? "inlined stylesheet" : "empty stylesheet";
+      });
+      assert.deepEqual(
+        published,
+        expected,
+        `${document.file} head styles differ from the source`,
+      );
+
+      for (const [index, element] of sourceHead.entries()) {
+        if (element.tagName !== "link") continue;
+        const href = element.attrs.find(({ name }) => name === "href")?.value;
+        assert.ok(href, `${sourcePath} stylesheet link has no href`);
+        const sheet = safeTarget(sourcePath, href);
+        const css = readFileSync(repositoryPath("mokly-static", sheet), "utf8");
+        const style = head[index];
+        assert.ok(style, `${document.file} has no style for ${sheet}`);
+        assert.deepEqual(
+          analyzed.get(style),
+          analyzeStylesheet(css, sheet),
+          `${document.file} inlined stylesheet differs from ${sheet}`,
+        );
+      }
+
+      const css = styles.map((style) => serialize(style)).join("\n");
+      const faces = css.match(/@font-face\s*\{[^}]*\}/gi) ?? [];
+      assert.ok(
+        faces.some((face) => cssReferences(face).includes(`./${font}`)),
+        `${document.file} has no inline @font-face for InterVariable.woff2`,
+      );
     }
   }
-  assert.ok(
-    manifest.resources.includes(
-      "static/mokly-generated/assets/docs/mockups/styles/fonts/InterVariable.woff2",
-    ),
-  );
+  assert.ok(manifest.resources.includes(font));
   assert.ok(
     manifest.resources.some((resource) => resource.includes("/")),
     "nested catalogue resources retain their paths",

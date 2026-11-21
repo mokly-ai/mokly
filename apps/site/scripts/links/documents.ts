@@ -3,6 +3,8 @@ import type { DefaultTreeAdapterMap } from "parse5";
 import { parse } from "parse5";
 import { parseSrcset } from "srcset";
 
+import { INLINED_STYLESHEET_ATTRIBUTE } from "../stage/stylesheets.js";
+
 export interface LinkDocument {
   readonly ids: Set<string>;
   readonly references: string[];
@@ -51,11 +53,15 @@ export function htmlDocument(source: string): LinkDocument {
         }
       }
       if (node.tagName === "style") {
+        const marked = node.attrs.some(
+          ({ name }) => name === INLINED_STYLESHEET_ATTRIBUTE,
+        );
+        const css = node.childNodes
+          .map((child) => ("value" in child ? child.value : ""))
+          .join("");
         references.push(
-          ...cssReferences(
-            node.childNodes
-              .map((child) => ("value" in child ? child.value : ""))
-              .join(""),
+          ...cssReferences(css).filter(
+            (url) => !marked || !url.startsWith("#"),
           ),
         );
       }
