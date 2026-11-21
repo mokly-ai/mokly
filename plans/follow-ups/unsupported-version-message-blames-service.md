@@ -10,6 +10,7 @@
 - **Category:** UX wording.
 - **Background:**
   - A receiver answers HTTP 426 when it does not support the format versions of an upload. The CLI maps statuses by value alone and reads no rejection body, as `docs/protocol/mokly-upload-validation.md:11-18` states.
+  - The rejection table in `docs/protocol/mokly-upload-validation.md` gives 426 for an unsupported version of any Plan file. The Plan files are the upload envelope, the ownership marker, and the catalogue index.
   - On every 426 the CLI prints "The catalogue service does not support this Mokly version. Update the service and try again.", from `crates/mokly-cli/src/publish_errors.rs:30` and `crates/mokly-publish/src/error.rs:25`.
   - Mokly Cloud reads upload envelope 3 and catalogue index 9 only, and it answers 426 to any other version, in `crates/mkc-mokly-contract/src/index.rs:29-36` and `crates/mkc-mokly-contract/src/error.rs:143`.
   - So an older CLI, such as 0.17.0, gets 426 from Mokly Cloud and tells its user to update the service, while the user must update Mokly. Each released CLI keeps the message that it shipped with.
@@ -23,6 +24,5 @@
 - **Left out:** None.
 - **Wider fix:** C, because the CLI then knows which side is older. B is the direct fix.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/upload-plan-index-version-status.md` adds the 426 row for an unsupported index version. Both items change the 426 rules of `docs/protocol/mokly-upload-validation.md`, so one change can carry both answers.
 - **Recommendation:** B. It gives correct advice in both directions without a change at the wire. C protects the codebase best, but only for CLIs that ship after it.
 - **Action:** ask the user, because B changes the 426 message that `docs/protocol/mokly-upload-validation.md:16-18` states.
