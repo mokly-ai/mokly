@@ -39,8 +39,16 @@ const config = run(
   repository,
   true,
 );
+// Only the release job turns the updater on; preview and local builds keep it off.
+const desktopConfig = {
+  ...JSON.parse(config),
+  updates: process.env.MKC_DESKTOP_UPDATES === "enabled",
+};
 await mkdir(resolve(root, "bundle"), { recursive: true });
-await writeFile(resolve(root, "bundle/build-config.json"), config);
+await writeFile(
+  resolve(root, "bundle/build-config.json"),
+  `${JSON.stringify(desktopConfig)}\n`,
+);
 for (const script of ["build:web", "verify:web"]) {
   run(
     "npm",

@@ -62,8 +62,11 @@ for (const platform of ["darwin", "linux"] as const) {
           },
         }),
       },
-      () => {
-        checks++;
+      {
+        available: true,
+        check: () => {
+          checks++;
+        },
       },
       platform,
     );
