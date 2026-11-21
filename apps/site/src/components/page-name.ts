@@ -12,6 +12,7 @@ const PAGE_NAMES: Readonly<Record<PageRoute, string>> = {
   [SITE_PATHS.home]: "Home",
   [SITE_PATHS.docs]: "Docs",
   [SITE_PATHS.changelog]: "Changelog",
+  [SITE_PATHS.pricing]: "Pricing",
   [SITE_PATHS.terms]: "Terms",
   [SITE_PATHS.privacy]: "Privacy",
   [SITE_PATHS.complaints]: "Complaints",

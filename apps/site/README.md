@@ -1,6 +1,6 @@
 # Mokly Site
 
-Status: The site draws the Canvas chrome and legal pages, but not the Canvas home, docs, changelog and pricing pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs milestone](../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Canvas docs. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog. The [site pricing milestone](../../plans/canvas-redesign.md#milestone-9-site-pricing) builds `/pricing/` and its links to the app.
+Status: The site draws the Canvas chrome, the legal pages and the pricing page, but not the Canvas home, docs and changelog pages yet. The [site home milestone](../../plans/canvas-redesign.md#milestone-5-site-home) builds the drawn home spread and deletes the real dogfood stage. The [site docs milestone](../../plans/canvas-redesign.md#milestone-6-site-docs) builds the Canvas docs. The [site docs sample and changelog milestone](../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) draws the fence and builds the Canvas changelog.
 
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
@@ -278,7 +278,7 @@ Pages project and attach the domain are in the
 
 ### Key Code
 
-- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the Install guide that Get started opens) and `currentPage`; the header, footer, sitemap, link check and browser walk all read this one table.
+- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the Install guide that Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
 - `scripts/generate-site-segments.ts` — derives the site's first segments from `src/navigation.ts` and writes or checks the Worker's committed `site-segments.ts` module (`site:routes` and `routes:check`).
 - `src/settings.ts` — reads `SITE_ORIGIN` and `SITE_STAGE_PR` once from the process environment and validates them.
 - `src/mokly-package.ts` — locates the installed `@mokly/mokly`, verifies its name and version, and keeps every package file read inside that root.
@@ -300,6 +300,7 @@ Pages project and attach the domain are in the
 - `src/components/Panel.astro`, `PanelRow.astro` and `src/styles/panels.css` — the floating panel with its head, body and optional foot, and its 44px rows, which link with `href` and mark the current row with `aria-current`.
 - `src/components/CodePanel.astro`, `code-lines.ts`, `src/styles/code.css` and `code-tokens.css` — the dark code panel, drawn at build time from typed lines of syntax tokens, with tabs, line numbers, a prompt, lit and dimmed lines and a foot, without a Copy control or a script.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
+- `src/pages/pricing.astro` and `src/components/pricing/` — the pricing page: `Hero.astro` with the two measured redlines under the heading, `Plans.astro` with the two section boxes and the three `PlanFrame.astro` frames (Team selected, with its measured size tag and Maya's cursor), `Compare.astro` with the props table, and `Questions.astro` with the resolved threads of `Thread.astro`. `hero-copy.ts` holds the approved hero copy, which the page description repeats. `plan-facts.ts` keeps Team's seat prices in USD cents, the trial length and the currency, and derives the shown amounts; `compare-rows.ts` and `questions.ts` hold the compare rows and the threads. The page and its parts load `src/styles/pricing*.css`.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
 - `src/components/Policy.astro` and `src/styles/document.css` — one legal document in its page frame, and the sheet of the legal pages, which `src/pages/404.astro` shares.
 - `src/changelog/` — the typed changelog parser, the release model, note rendering and the Atom feed.
@@ -308,7 +309,7 @@ Pages project and attach the domain are in the
 - `src/fonts/` — the self-hosted Geist, Geist Mono and Instrument Serif 400 faces, each beside its SIL Open Font License, and `fonts.css`, the `@font-face` rules that the site layout imports, so the build emits each face as a content-hashed file under `/_astro/`.
 - `scripts/stage.mjs`, `scripts/stage/catalogue.ts`, `scripts/stage/tree.ts`, `scripts/stage/fragments.ts` and `src/stage.ts` — the home-stage publication: the fallback mockups build, the public index reader, section projection, document and resource rewriting, and stage manifest schema.
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
-- `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
+- `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check. It accepts the paths of `APP_PATHS` without a site file, and no other path.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
 - `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets. `src/layouts/Site.astro` loads the shared sheets on every page: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `canvas-tags.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`) and `layout.css`, which holds the document type that the legal pages, the docs and the changelog share. A page, a layout or a part loads its own sheet, such as `page-frame.css` for `PageFrame.astro`. The built page puts such a sheet before the shared sheets, so a rule in it that overrides a shared rule needs a more specific selector. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map and the build errors.
@@ -317,6 +318,7 @@ Pages project and attach the domain are in the
 - `tests/stage_source.test.ts` — the stage's fallback mockups build and its catalogue-index error message.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.
 - `tests/legal.test.ts` and `tests/copy.test.ts` — the legal documents' section inventory and the banned-words rule read from the built pages.
+- `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes and sticky plan heads.
 - `tests/lighthouse.test.ts`, `tests/site_workflows.test.ts` and `tests/site_cleanup.test.ts` — the budget against the delivery contract, the site workflow policy, and the Pages cleanup script.
 - `tests/browser/` — the Playwright suite over every built route.
 

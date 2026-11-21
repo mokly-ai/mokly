@@ -13,6 +13,7 @@ import { HEADINGS } from "./routes.js";
 const MENU_LINKS = [
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   EXTERNAL_LINKS.github,
   GET_STARTED_PATH,
 ];

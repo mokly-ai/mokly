@@ -1,0 +1,62 @@
+---
+/**
+ * One plan frame on the canvas: the frame label `plans/{id}`, then the head
+ * with the plan's name and summary, the price, the action and the list of
+ * what the plan holds, each line after a check. The desktop composition
+ * lines these four rows up across the frames of the plan grid. The frame's
+ * own id is `pricing-frame-{id}`, so that a selection can measure it.
+ *
+ * - `price` and `action` are named slots that fill their rows.
+ * - `selected` draws the label of the selected frame in the signal green.
+ * - The default slot draws over the frame, as the Team frame's selection
+ *   and cursor do.
+ *
+ * Use: `<PlanFrame features={…} id="free" name="Free" summary="…">`, with a
+ * `slot="price"` and a `slot="action"` child. The rules are in
+ * `src/styles/pricing-frame.css`, and `pricing-plans.css` places the frame.
+ */
+import FrameLabel from "../FrameLabel.astro";
+import Icon from "../Icon.astro";
+
+import "../../styles/pricing-frame.css";
+
+interface Props {
+  readonly features: readonly string[];
+  readonly id: string;
+  readonly name: string;
+  readonly selected?: boolean;
+  readonly summary: string;
+}
+
+const { features, id, name, selected = false, summary } = Astro.props;
+const heading = `pricing-plan-${id}`;
+---
+
+<article
+  aria-labelledby={heading}
+  class:list={["site-pricing-plan", selected && "site-pricing-plan--selected"]}
+  id={`pricing-frame-${id}`}
+>
+  <FrameLabel name={`plans/${id}`} selected={selected} />
+  <div class="site-pricing-plan-head">
+    <h3 class="site-pricing-plan-name" id={heading}>
+      {name}
+    </h3>
+    <p class="site-pricing-plan-for">{summary}</p>
+  </div>
+  <div class="site-pricing-plan-price">
+    <slot name="price" />
+  </div>
+  <div class="site-pricing-plan-action">
+    <slot name="action" />
+  </div>
+  <ul class="site-pricing-features">
+    {features.map((feature) => (
+      <li>
+        <Icon name="check" />
+        {feature}
+      </li>
+    ))}
+  </ul>
+  <slot />
+</article>

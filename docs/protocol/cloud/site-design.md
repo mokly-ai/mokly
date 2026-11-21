@@ -1,6 +1,6 @@
 # Site Design
 
-Status: The type and the layout steps of the home, docs, changelog and pricing pages are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home, [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) the docs, [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) the changelog and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) the pricing page.
+Status: The type and the layout steps of the home, docs and changelog pages are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home, [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) the docs and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) the changelog.
 
 The public site uses Canvas, the one design language of Mokly. The site reads
 as a live design file: a dot-grid canvas, labelled frames, green selections

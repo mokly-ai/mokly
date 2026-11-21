@@ -1,0 +1,24 @@
+---
+/**
+ * Team's two seat prices, one row each: the amount, its unit and, under the
+ * unit, the roles that hold that seat. The amounts share a right-aligned
+ * column. The stop after the unit is read, not shown, so a screen reader
+ * pauses before the seat holders.
+ *
+ * Use: `<TeamPrice />`. The prices come from `plan-facts.ts`, and the rules
+ * are in `src/styles/pricing-frame.css`.
+ */
+import { TEAM_SEATS } from "./plan-facts.js";
+---
+
+<div class="site-pricing-seats">
+  {TEAM_SEATS.map((seat) => (
+    <p class="site-pricing-seat">
+      <span class="site-pricing-amount">{seat.amount}</span>{" "}
+      <span class="site-pricing-seat-unit">
+        per {seat.kind} a month<span class="site-visually-hidden">. </span>
+        <small>{seat.holders}</small>
+      </span>
+    </p>
+  ))}
+</div>

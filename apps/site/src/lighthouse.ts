@@ -84,6 +84,7 @@ export const AUDITED: readonly string[] = Object.freeze([
   "/docs/authoring/config/",
   "/docs/cli/serve/",
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   SITE_PATHS.terms,
 ]);
 

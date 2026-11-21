@@ -30,6 +30,7 @@ const FOOTER = `
       - link "Home"
       - link "Docs"
       - link "Changelog"
+      - link "Pricing"
       - paragraph: Legal
       - link "Terms"
       - link "Privacy"

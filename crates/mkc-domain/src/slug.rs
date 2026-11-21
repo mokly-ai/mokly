@@ -27,6 +27,7 @@ pub const SITE_FIRST_SEGMENTS: &[&str] = &[
     "favicon.svg",
     "og",
     "pagefind",
+    "pricing",
     "privacy",
     "robots.txt",
     "security",

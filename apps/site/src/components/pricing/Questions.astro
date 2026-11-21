@@ -1,0 +1,39 @@
+---
+/**
+ * The pricing questions: the heading and Read Plans and billing in an intro
+ * that sticks beside the threads, then the eight resolved threads in two
+ * columns. Read Plans and billing opens the Plans and billing page of the
+ * documentation; the link check holds the route to a published page.
+ */
+import Button from "../Button.astro";
+
+import { PRICING_QUESTIONS } from "./questions.js";
+import Thread from "./Thread.astro";
+
+import "../../styles/pricing-questions.css";
+
+/** The documentation page that holds the full plan and billing rules. */
+const PLANS_AND_BILLING_PATH = "/docs/cloud/plans-and-billing/";
+---
+
+<section
+  aria-labelledby="pricing-questions-title"
+  class="site-pricing-questions"
+>
+  <div class="site-pricing-questions-intro">
+    <h2 class="site-pricing-section-title" id="pricing-questions-title">
+      Questions, <br />
+      <span>resolved.</span>
+    </h2>
+    <p class="site-pricing-docs">
+      <Button arrow href={PLANS_AND_BILLING_PATH} kind="secondary">
+        Read Plans and billing
+      </Button>
+    </p>
+  </div>
+  <div class="site-pricing-threads">
+    {PRICING_QUESTIONS.map((question) => (
+      <Thread question={question} />
+    ))}
+  </div>
+</section>

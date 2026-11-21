@@ -1,0 +1,61 @@
+---
+/**
+ * One resolved comment thread of the pricing questions: its head names the
+ * topic and the frame that the thread is pinned to, then the question and
+ * Mokly's answer follow, joined by a reply line. The pin and the avatars
+ * are depictions, hidden from assistive technology; the resolved badge
+ * reads "Resolved".
+ *
+ * Use: `<Thread question={question} />`. The rules are in
+ * `src/styles/pricing-questions.css`.
+ */
+import Avatar from "../Avatar.astro";
+import Icon from "../Icon.astro";
+import { PERSON } from "../people.js";
+
+import { ASKER_TEAMS, type PricingQuestion } from "./questions.js";
+
+interface Props {
+  readonly question: PricingQuestion;
+}
+
+const { question } = Astro.props;
+const heading = `pricing-question-${question.id}`;
+---
+
+<article aria-labelledby={heading} class="site-pricing-thread">
+  <p class="site-pricing-thread-head">
+    <span class="site-pricing-thread-topic">
+      <Icon name={question.icon} size={14} />
+      {question.topic}
+    </span>{" "}
+    <span aria-hidden="true" class="site-pricing-thread-pin">
+      {question.pin}
+    </span>
+    <span class="site-pricing-thread-resolved">
+      <Icon name="checkCircle" size={14} />
+      <span class="site-visually-hidden">Resolved</span>
+    </span>
+  </p>
+  <div class="site-pricing-message">
+    <Avatar person={question.asker} />
+    <div>
+      <p class="site-pricing-message-meta">
+        <b>{PERSON[question.asker].name}</b>
+        <span>{ASKER_TEAMS[question.asker]}</span>
+      </p>
+      <h3 class="site-pricing-question" id={heading}>
+        {question.question}
+      </h3>
+    </div>
+  </div>
+  <div class="site-pricing-message site-pricing-message--answer">
+    <Avatar person="mokly" />
+    <div>
+      <p class="site-pricing-message-meta">
+        <b>Mokly</b>
+      </p>
+      <p class="site-pricing-answer">{question.answer}</p>
+    </div>
+  </div>
+</article>
