@@ -173,12 +173,38 @@
         would also not show which side closed the connection.
       - 20 clean modes do not show that the failure is gone. They give no
         failure rate.
+  - A local recurrence on 2026-11-20, while checking the audit-tool lock
+    update on branch `calummoore/fu-rust-audit-tool-yanked-lock-n6eb`:
+    - The workspace used `main` at `78b08fdf86d855ccd6bf72c51fee72a829dc4e88`,
+      with only the Tokio tool-lock update and its follow-up deletion.
+      No test, static host, or product code changed.
+    - The Conductive cloud computer ran Ubuntu 24.04, Linux 6.8.0-117,
+      four CPUs, about 7.8 GiB RAM, Node 24.22.1, npm 11.21.0,
+      Playwright 1.61.1, and Chromium. It used one browser worker and no retry.
+    - `cargo xtask check` passed the Repository and Viewer suites.
+      The browser suite passed 2,295 cases, with no failures or skips.
+    - Static delivery passed all 653 `static-http` cases. Its `file` phase
+      passed 649 cases, failed one case, and did not run three cases.
+    - The failed case was "desktop component designs › mask cutouts match
+      real component bounds without dimming their ancestors" in
+      `tests/browser/component_design_inspection_cases.ts:29`.
+    - Its `beforeAll` catalogue request failed at
+      `tests/browser/design_catalogue.ts:24` with
+      "Error: apiRequestContext.get: socket hang up" for
+      `GET http://127.0.0.1:34349/mokly-viewer/index.json`.
+      The test body did not start.
+    - A single diagnostic rerun used the same delivery configuration and
+      `file` mode against a fresh strict export. The selected case passed
+      once, with no failure, skip, or retry. This was not a full-suite rerun.
+    - Suspected source: the same unconfirmed keep-alive race described
+      above. The new log names no connection events or confirmed source.
+      No fix or test change followed this recurrence.
 - **Problem:** The catalogue request can fail before its test starts, so a
-  healthy delivery run can fail. The source of the one recorded failure is
+  healthy delivery run can fail. The source of the recorded transport failures is
   unknown.
 - **Impact if no action:** A healthy CI run or remote gate can fail, and
   the developer must rerun it.
-- **Root question:** What work should follow the unreproduced failure of the
+- **Root question:** What work should follow the intermittent failure of the
   catalogue request?
 - **Options:**
   - **A.** Change nothing, and rerun a failed job. Effort: Small.
