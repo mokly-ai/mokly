@@ -10,8 +10,6 @@
 
 const MENU =
   "the mockup draws the open sheet in place, and the site opens it as a modal dialog in the top layer: the sheet also transitions its display and its top-layer overlay so it can fade out, it settles 8px by its top edge rather than a translate, which would make it the containing block of the fixed close control and move that control with the sheet, and it scrolls within the window below the bar";
-const FOOTER =
-  "the footer is the last frame on the canvas, with the scheme control under the brand and the status bar beneath; Milestone 4 rebuilds the site chrome";
 const LEGAL =
   "each legal document is a page frame on the canvas, ruled by hairlines across its sheet; Milestone 4 rebuilds the legal pages";
 const TYPOGRAPHY =
@@ -24,15 +22,6 @@ const TRAIL =
 export const CHROME_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-menu": MENU,
   ".site-menu[open]": MENU,
-  ".site-footer": FOOTER,
-  ".site-footer-inner": FOOTER,
-  ".site-footer-brand": FOOTER,
-  ".site-footer-brand p": FOOTER,
-  ".site-footer-nav": FOOTER,
-  ".site-footer-heading": FOOTER,
-  ".site-footer-link": FOOTER,
-  ".site-footer-link:hover": FOOTER,
-  '.site-footer-link[aria-current="page"]': FOOTER,
   ".site-policy": LEGAL,
   ".site-policy-body": LEGAL,
   ".site-policy-links": LEGAL,

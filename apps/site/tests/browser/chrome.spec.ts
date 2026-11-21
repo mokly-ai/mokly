@@ -222,30 +222,31 @@ test("the current route is marked in the header and footer", async ({
 });
 
 /**
- * Every link and button in a region has a target at least 44px tall: a press
- * 21px above or below the middle of its box, on the outer whole pixels of a
- * 44px target, still lands on it. A control drawn smaller, such as a 36px
- * navigation link, reaches 44px through its transparent band.
+ * Every link, button and radio in a region has a target at least 44px tall:
+ * a press 21px above or below the middle of its box, on the outer whole
+ * pixels of a 44px target, still lands on it. A control drawn smaller, such
+ * as a 36px navigation link, reaches 44px through its transparent band. A
+ * radio's target is its label, the segment that the reader presses.
  */
 async function assertTargets(region: Locator): Promise<void> {
-  for (const role of ["link", "button"] as const) {
+  for (const role of ["link", "button", "radio"] as const) {
     for (const control of await region.getByRole(role).all()) {
       // Reading the topmost element at a point needs the page's own hit
       // testing, which no locator exposes.
-      const reached = await control.evaluate((node) => {
-        node.scrollIntoView({ block: "center" });
-        const box = node.getBoundingClientRect();
+      const { name, reached } = await control.evaluate((node) => {
+        const target = node.closest("label") ?? node;
+        target.scrollIntoView({ block: "center" });
+        const box = target.getBoundingClientRect();
         const x = box.left + box.width / 2;
         const middle = box.top + box.height / 2;
-        return [middle - 21, middle + 21].map((y) =>
-          node.contains(document.elementFromPoint(x, y)),
-        );
+        return {
+          name: node.getAttribute("aria-label") ?? target.textContent ?? "",
+          reached: [middle - 21, middle + 21].map((y) =>
+            target.contains(document.elementFromPoint(x, y)),
+          ),
+        };
       });
-      expect(
-        reached,
-        (await control.getAttribute("aria-label")) ??
-          (await control.innerText()),
-      ).toEqual([true, true]);
+      expect(reached, name.trim()).toEqual([true, true]);
     }
   }
 }

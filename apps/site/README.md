@@ -24,7 +24,8 @@ chrome and delivery. Product and account routes remain in `packages/app`.
   the Pricing page's plan actions to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
   scripts. The footer's scheme control keeps the reader's choice in
-  `localStorage`.
+  `localStorage`, and each page applies a kept choice before it first
+  paints.
 
 ## What This Package Does
 
@@ -45,6 +46,16 @@ documentation routes the bar's last control is the docs search. The desktop
 docs tree keeps its scroll position across pages within a tab and reveals the
 current page when a direct link, search result or pager opens a page outside
 the visible tree.
+
+Every page ends with the footer, the last frame on the canvas: the brand, the
+open-source line and the Light and Dark scheme control beside the Product and
+Legal links, with the design file's status bar under the frame. The scheme
+island leads every page head as a classic, blocking script. Before the first
+paint it sets the root's `data-color-scheme` from this view's `?scheme=`, else
+from the choice kept in `localStorage`, and with neither the page follows the
+system scheme. It then runs the control: a choice applies at once and is
+kept, and the parameter is never kept or added to a link. Without script the
+control does not show.
 
 The site consumes the private `@mokly-cloud/tokens` package from the npm workspace
 directly and emits its responsive CSS scoped per color scheme; site styles use
@@ -74,10 +85,14 @@ Astro output and search output are not committed. The stage keeps
 `sandbox=""`; `public/_headers` and the Astro preview configuration both add
 `Access-Control-Allow-Origin: *` so its opaque origin can load the
 self-hosted font without receiving script or storage permissions. The same
-file emits the site CSP. The build moves Astro's inline island bootstraps
-into content-hashed, same-origin assets and rejects inline executable scripts
-or scripts loaded from outside the page's own origin. Astro preview serves
-the production CSP so the browser suite exercises that boundary.
+file emits the site CSP. The build moves every inline script, Astro's island
+bootstraps and the scheme island included, into content-hashed, same-origin
+assets and rejects inline executable scripts or scripts loaded from outside
+the page's own origin. Astro preview serves the production CSP so the browser
+suite exercises that boundary. The development server sends the same CSP but
+keeps those scripts inline, so the browser blocks them there: under
+`npm run dev` the scheme control and the hydrated islands do not run. Preview
+a build to see them.
 
 Every deployment publishes transparent brand assets for external consumers:
 
@@ -272,6 +287,8 @@ Pages project and attach the domain are in the
 - `src/components/docs/tree-scroll.ts` — tab-scoped desktop tree scroll restoration and current-page reveal.
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
 - `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
+- `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.
+- `src/components/scheme-island.js` — the scheme island, a checked classic script that `src/layouts/Site.astro` emits first in every page head: it applies `?scheme=` or the choice kept under `mokly.site.scheme` in `localStorage` before the first paint, and it runs the scheme control. `tests/scheme_island.test.ts` runs this file in `node:vm` against the stub page of `tests/helpers/scheme-island.ts`.
 - The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Brand.astro`, `Button.astro`, `Chip.astro`, `FrameLabel.astro`, and `Avatar.astro` and `Presence.astro` with the people of `people.ts`, all under `src/components/`.
 - `src/home.ts` — the home hero copy from `docs/protocol/cloud/site-copy.md`, shared by the hero, the home page description and every social card.
 - `src/legal.ts` and `src/content/legal/` — the legal documents' schema, labels and routes, and their four Markdown sources.
@@ -283,7 +300,7 @@ Pages project and attach the domain are in the
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
-- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets, each loaded once by a layout: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css` and `footer.css`), `layout.css` and the page sheets. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
+- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets, each loaded once by a layout: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`), `layout.css` and the page sheets. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map and the build errors.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.

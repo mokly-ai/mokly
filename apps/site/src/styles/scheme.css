@@ -1,0 +1,123 @@
+/* The scheme control in the footer's brand column: two native radios drawn
+   as segments of a canvas track. The chosen segment sits on the raised
+   surface with the strong ring of a control boundary. The radio itself is
+   visually hidden, and its segment draws the focus ring. Segments are drawn
+   34px tall with a 44px target band from the breakpoint up, and 44px tall
+   below it.
+
+   The class names and the rules match the scheme control of
+   docs/mockups/styles/site/footer.css: each base rule is the mobile
+   composition, and the desktop values follow under the 768px query. The
+   rules after it are the site's own: the control and the scheme island,
+   scheme-island.js, which applies the choice. */
+
+.site-scheme {
+  background: var(--mk-color-background);
+  border: 0;
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  display: inline-flex;
+  gap: 2px;
+  margin: 24px 0 0;
+  min-inline-size: 0;
+  padding: 3px;
+}
+
+.site-scheme-option {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9375rem;
+  font-weight: var(--mk-font-medium);
+  gap: 8px;
+  height: var(--mk-layout-control-min);
+  padding: 0 16px 0 14px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-scheme-option::before {
+  content: "";
+  inset: -5px 0;
+  position: absolute;
+}
+
+.site-scheme-option:hover {
+  background: color-mix(in srgb, var(--mk-color-surface) 60%, transparent);
+  color: var(--mk-color-text);
+}
+
+.site-scheme-option:has(.site-scheme-input:checked) {
+  background: var(--mk-color-surface-raised);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+
+.site-scheme-option:has(.site-scheme-input:focus-visible) {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+}
+
+.site-scheme-input {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* The desktop segments: 34px tall, and the band of the base rule's
+   ::before reaches the 44px target */
+
+@media (min-width: 768px) {
+  .site-scheme-option {
+    font-size: 0.84375rem;
+    height: 34px;
+    padding: 0 13px 0 11px;
+  }
+}
+
+/* Without script the control does not show, and the page follows the
+   system scheme. The scheme island marks the root in the page head, before
+   the first paint, so where it runs the control holds its place from the
+   start. */
+
+:root:not([data-scheme-island]) .site-scheme {
+  display: none;
+}
+
+/* The frame of a scheme flip draws without transitions, so hover
+   transitions do not animate the whole page into the new scheme. */
+
+:root[data-scheme-switching] *,
+:root[data-scheme-switching] *::before,
+:root[data-scheme-switching] *::after {
+  transition: none !important;
+}
+
+/* Forced colors drop the raised fill and the ring, and the radio stays
+   hidden, so the chosen segment takes the system highlight. It keeps these
+   system colours itself, or the browser draws a backplate in the page's
+   colour behind its label, which hides the label. Its focus ring takes the
+   system text colour. */
+
+@media (forced-colors: active) {
+  .site-scheme-option:has(.site-scheme-input:checked) {
+    background: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .site-scheme-option:has(.site-scheme-input:focus-visible) {
+    outline-color: CanvasText;
+  }
+}

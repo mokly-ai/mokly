@@ -1,15 +1,21 @@
 ---
 /**
- * The page shell every route renders: the document metadata, then on the
- * dot-grid canvas the skip link, the header band, one `main` landmark and
- * the footer. The `main` landmark carries `tabindex="-1"` so the skip link
- * moves focus to it. A layout that places its own landmark inside a wider
- * composition, as the documentation does beside its section tree, renders
- * unwrapped and owns that element.
+ * The page shell every route renders: the scheme island and the document
+ * metadata, then on the dot-grid canvas the skip link, the header band, one
+ * `main` landmark and the footer. The `main` landmark carries
+ * `tabindex="-1"` so the skip link moves focus to it. A layout that places
+ * its own landmark inside a wider composition, as the documentation does
+ * beside its section tree, renders unwrapped and owns that element.
+ *
+ * The scheme island leads the head as a classic, blocking script, before
+ * any stylesheet, so the reader's scheme applies before the first paint.
+ * The layout emits its source, and the build moves it into a content-hashed
+ * file under /_astro/, as it does every inline script.
  */
 import { FEED_PATH } from "../changelog/feed.js";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import schemeIsland from "../components/scheme-island.js?raw";
 import SkipLink from "../components/SkipLink.astro";
 import {
   SOCIAL_IMAGE_DIRECTORY,
@@ -31,6 +37,7 @@ import "../styles/chrome.css";
 import "../styles/menu.css";
 import "../styles/layout.css";
 import "../styles/footer.css";
+import "../styles/scheme.css";
 
 interface Props {
   readonly title: string;
@@ -62,6 +69,7 @@ const image = socialImageUrl(
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script is:inline set:html={schemeIsland}></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <style is:global set:html={SITE_TOKEN_CSS}></style>
