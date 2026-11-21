@@ -351,7 +351,8 @@ override the desktop layout rules.
   palettes, with the `PaletteColors`, `PaletteFonts`, and `Palette` types;
   `canvas` is the only palette
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
-  workspace control icons, with `IconSvg` as their frame
+  workspace control icons, with `IconSvg` as their frame; the icons entry
+  also exports `BrandIcon`
 - [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —
   `ChangeMark`, the dot and the screen reader wording that mark a view control
   whose other view changed
@@ -371,6 +372,8 @@ override the desktop layout rules.
   its focus return
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
   menu and the brand, as controls, links, or pictures of a static depiction
+- [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
+  the Mokly mark, whose parts the top bar's stylesheet colours
 - [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)
   — `CatalogueNavigation`: the column, the All and Changes filter, the status
   line, and the resize separator with its drag and keys

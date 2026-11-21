@@ -3,7 +3,6 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 
 import { logoFiles } from "../emails/brand";
@@ -38,13 +37,13 @@ test("the message table preserves the rounded card border", () => {
     }
 });
 
-test("the email color policy rejects Folio roles outside its contract", () => {
+test("the email color policy rejects Canvas roles outside its contract", () => {
   for (const scheme of schemes) {
     const body = messages[0]!.subtree(scheme, "desktop");
     const style = emailStyles(scheme, "desktop")["e-card"];
-    const excluded = paletteColors(scheme, "folio");
+    const excluded = tokens.color[scheme];
     for (const [property, original, replacement] of [
-      ["border-color", style.borderColor, excluded.borderStrong],
+      ["border-color", style.borderColor, excluded.dot],
       ["background-color", style.backgroundColor, excluded.surfaceMuted],
     ]) {
       const mutated = body.replace(
@@ -62,7 +61,7 @@ test("the email color policy rejects Folio roles outside its contract", () => {
 
 test("the email policy rejects resources, stray accents and untokenized color", () => {
   const body = messages[0]!.subtree("light", "desktop");
-  const folio = emailStyles("light", "desktop");
+  const canvas = emailStyles("light", "desktop");
   for (const mutation of [
     (html: string) =>
       html.replace("<h1", '<img src="https://mokly.ai/mark.png"/><h1'),
@@ -70,24 +69,24 @@ test("the email policy rejects resources, stray accents and untokenized color", 
     (html: string) => html.replace(logoFiles.light, "mokly-icon-light.png"),
     (html: string) =>
       html.replace(
-        "border-color:" + folio["e-card"].borderColor,
+        "border-color:" + canvas["e-card"].borderColor,
         "border-color:#123456",
       ),
     (html: string) =>
       html.replace(
-        "background-color:" + folio["e-card"].backgroundColor,
+        "background-color:" + canvas["e-card"].backgroundColor,
         "background-color:" + tokens.color.light.accentSolid,
       ),
     (html: string) =>
       html.replace(
-        "background-color:" + folio["e-canvas"].backgroundColor,
-        "background-color:" + tokens.color.light.background,
+        "background-color:" + canvas["e-canvas"].backgroundColor,
+        "background-color:" + tokens.color.dark.background,
       ),
     (html: string) =>
       html.replace(canvasGradient("light"), canvasGradient("dark")),
     (html: string) =>
       html.replace(
-        String(folio["e-card"].boxShadow),
+        String(canvas["e-card"].boxShadow),
         tokens.shadow.dark.medium,
       ),
     (html: string) => html.replace(brandRoot, "https://mokly.example/brand/"),
@@ -101,11 +100,11 @@ test("the email policy rejects resources, stray accents and untokenized color", 
     (html: string) =>
       html.replace(
         'style="color:' + tokens.color.light.onAccent,
-        'style="color:' + folio["e-title"].color,
+        'style="color:' + canvas["e-title"].color,
       ),
     (html: string) =>
       html.replace(
-        "padding:" + folio["e-card"].padding,
+        "padding:" + canvas["e-card"].padding,
         "background:url(https://mokly.ai/m.png)",
       ),
     (html: string) =>

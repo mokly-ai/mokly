@@ -1,6 +1,6 @@
 # Folio Chrome
 
-Status: The Canvas palette and Geist, the avatar trigger, and the deep shadow of the viewer's panels and dialog are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and Geist, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the avatar trigger and the Canvas panels and dialog.
+Status: The avatar trigger and the deep shadow of the viewer's panels and dialog are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the avatar trigger and the Canvas panels and dialog.
 
 The composition rules for Mokly Cloud's product surfaces. Every value here comes
 from [Design tokens](./design-tokens.md); this document says how those values

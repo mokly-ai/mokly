@@ -1,7 +1,5 @@
 # Folio Chrome: Account Entry
 
-Status: The new mark and the Geist wordmark are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
-
 The account entry composition of [Folio chrome](./folio-chrome.md): the one
 panel every account screen shares. Every value comes from
 [Design tokens](./design-tokens.md); the screens that draw it are listed in

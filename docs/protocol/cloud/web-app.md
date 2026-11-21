@@ -52,7 +52,7 @@ mapping; layout CSS never restyles a control.
 Token custom properties are emitted into the document at runtime and carry
 the desktop type ramp with the mobile ramp under the shared breakpoint,
 because a running window resizes and a generated document does not. The
-document root takes `folio-scope` and `data-color-scheme`. Controls come from
+document root takes `data-color-scheme`. Controls come from
 `@firna/ui` through the same theme mapping the catalogue uses, with the
 package's live focus ring retained. The scheme is the reader's
 [Theme](./viewer-chrome-account.md#theme) choice, which the device keeps, or

@@ -6,12 +6,11 @@ import { exampleToken } from "../fixtures/product-states";
 
 import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
-import { drawnPalette } from "./catalogue-reads";
+import { drawnPalette, viewPalette } from "./catalogue-reads";
 import { variantParent } from "./catalogue-variants";
 import {
   inventoryPages,
   productInventoryViolations,
-  productPalette,
 } from "./product-inventory";
 import { repeatedStates } from "./product-situations";
 
@@ -37,24 +36,22 @@ test("every standard product screen owns canonical, empty, loading and error sta
     );
     assert.ok(
       productInventoryViolations(entries, (path) =>
-        path === id ? "default" : drawnPalette(path),
+        path === id ? undefined : drawnPalette(path),
       ).length,
       id,
     );
   }
-  // A viewer page drawn in Folio, and another family's page drawn in Canvas,
-  // are both in the wrong palette.
-  for (const [id, wrong] of [
-    ["product/viewer/standalone", "folio"],
-    ["product/viewer/switcher/error", "folio"],
-    ["product/settings/project", "canvas"],
-    ["product/account/sign-in/loading", "canvas"],
-  ] as const)
+  for (const id of [
+    "product/viewer/standalone",
+    "product/viewer/switcher/error",
+    "product/settings/project",
+    "product/account/sign-in/loading",
+  ])
     assert.ok(
       productInventoryViolations(entries, (path) =>
-        path === id ? wrong : drawnPalette(path),
+        path === id ? "paper" : drawnPalette(path),
       ).length,
-      id + " " + wrong,
+      id + " paper",
     );
   const variants = entries.filter(
     (entry) => variantParent(entry) === "product/settings/project",
@@ -96,10 +93,7 @@ test("all 292 inventory pages render both widths and schemes with their stable i
     for (const view of ["mobile", "desktop"] as const)
       for (const scheme of ["light", "dark"] as const) {
         const html = readFileSync(screenFile(id, view, scheme), "utf8");
-        assert.ok(
-          html.includes('class="' + productPalette(id) + '-scope"'),
-          id,
-        );
+        assert.equal(viewPalette(id, view, scheme), "default", id);
         assert.ok(html.includes('data-mkc-screen="' + id + '"'), id);
         if (!id.startsWith("product/viewer/"))
           assert.ok(!html.includes("<iframe"), id);

@@ -1,6 +1,6 @@
 # Site Design
 
-Status: The Canvas palette, the Geist faces, the new brand and the dot-grid canvas are not on the site yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette source, the fonts and the brand, and [Milestone 4](../../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) draws the canvas in the site stylesheets.
+Status: The dot-grid canvas is not on the site yet. [Milestone 4](../../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) draws it in the site stylesheets.
 
 The public site uses Canvas, the one design language of Mokly. The site reads
 as a live design file: a dot-grid canvas, labelled frames, green selections

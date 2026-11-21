@@ -47,30 +47,62 @@
   width: 100%;
 }
 
+/* The brand: the mark and the Geist wordmark with its signal period, at one
+   size on every page, in a 44px target. The rules are the mockup's. */
+
 .site-brand {
   align-items: center;
+  border-radius: 9px;
   color: var(--mk-color-text);
   display: inline-flex;
-  font-family: var(--mk-font-display);
-  font-size: 1.5rem;
-  gap: var(--mk-space-2);
+  font-family: var(--mk-font-sans);
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 6px;
   text-decoration: none;
-  text-underline-offset: 6px;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
   white-space: nowrap;
 }
 
 .site-brand:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--mk-color-accent);
-  text-decoration-thickness: 2px;
+  background: var(--mk-color-background);
 }
 
-.site-brand svg {
-  color: var(--mk-color-accent);
+.site-brand-word {
+  font-size: 1.375rem;
+  font-weight: 640;
+  letter-spacing: -0.055em;
+  line-height: 1;
+  padding-bottom: 2px;
 }
 
 .site-brand-dot {
-  color: var(--mk-color-accent);
+  color: var(--mk-color-signal);
+}
+
+.site-brand svg {
+  color: var(--mk-color-text);
+  flex: none;
+}
+
+.site-mark-back {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.site-mark-front {
+  fill: var(--mk-color-signal);
+  paint-order: stroke;
+  stroke: var(--mk-color-surface);
+  stroke-width: 1.6;
+}
+
+.site-mark-rules {
+  fill: none;
+  stroke: var(--mk-color-on-signal);
+  stroke-linecap: round;
+  stroke-width: 2.1;
 }
 
 /* Below the breakpoint the menu lists the destinations instead. */
@@ -116,7 +148,8 @@
   text-decoration: none;
   transition:
     background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
+    border-color var(--mk-motion-fast) var(--mk-motion-easing),
+    transform var(--mk-motion-standard) var(--mk-motion-easing);
 }
 
 .site-button--secondary {
@@ -165,10 +198,6 @@
   .site-header {
     gap: var(--mk-space-5);
     padding: var(--mk-space-2) var(--mk-layout-gutter-desktop);
-  }
-
-  .site-brand {
-    font-size: 1.75rem;
   }
 
   .site-nav {

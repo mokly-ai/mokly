@@ -1,6 +1,6 @@
 # Mockup Tooling
 
-Status: The `@mokly/ui` stylesheet does not name Geist and Geist Mono yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the fonts.
+Status: The `@mokly/ui` stylesheet does not name Geist and Geist Mono yet. [Milestone 17](../../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) builds the fonts.
 
 This is the configuration and command sub-contract of [Mockups](./mockups.md).
 

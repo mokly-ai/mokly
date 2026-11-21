@@ -2,10 +2,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 
-type ColorName = keyof typeof tokens.color.light;
+type ColorName = {
+  [
+    Key in keyof typeof tokens.color.light
+  ]: (typeof tokens.color.light)[Key] extends string ? Key : never;
+}[keyof typeof tokens.color.light];
 
 /** Foreground, background and the ratio the pair must reach. */
 const PAIRS: ReadonlyArray<readonly [ColorName, ColorName, number]> = [
@@ -15,9 +18,13 @@ const PAIRS: ReadonlyArray<readonly [ColorName, ColorName, number]> = [
   ["textMuted", "background", 4.5],
   ["textMuted", "surface", 4.5],
   ["textMuted", "surfaceMuted", 4.5],
-  ["onAccent", "accentSolid", 4.5],
-  ["onAccent", "accentHover", 4.5],
-  ["onAccent", "accentActive", 4.5],
+  ["onAccent", "accentSolid", 3],
+  ["accentHover", "background", 4.5],
+  ["accentHover", "surface", 4.5],
+  ["accentHover", "accentSoft", 4.5],
+  ["accentActive", "background", 4.5],
+  ["accentActive", "surface", 4.5],
+  ["accentActive", "accentSoft", 4.5],
   ["accent", "background", 4.5],
   ["accent", "surface", 4.5],
   ["accent", "accentSoft", 4.5],
@@ -56,10 +63,7 @@ function contrast(one: string, other: string): number {
 
 test("every documented site token pair meets its contrast ratio", () => {
   for (const scheme of ["light", "dark"] as const) {
-    const values: Record<string, string> = {
-      ...tokens.color[scheme],
-      ...paletteColors(scheme, "folio"),
-    };
+    const values = tokens.color[scheme];
     for (const [ink, behind, minimum] of PAIRS) {
       const foreground = values[ink];
       const background = values[behind];

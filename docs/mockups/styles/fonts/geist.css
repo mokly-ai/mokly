@@ -1,9 +1,10 @@
-/* Geist and Geist Mono are self-hosted for the canvas palette, which names
-   both families with a system stack as the fallback while they load. The
-   variable faces and their SIL Open Font License are copied unchanged from
-   the geist npm package 1.9.2, which Vercel publishes from its geist-font
-   repository. A stylesheet that draws in the canvas palette links this
-   file. */
+/* Geist and Geist Mono are self-hosted for the Canvas sans and mono stacks,
+   which name both families with a system stack as the fallback while they
+   load. The variable faces and their SIL Open Font License are copied
+   unchanged from the geist npm package 1.9.2, which Vercel publishes from its
+   geist-font repository. base.css imports this file, and the site documents,
+   which do not link base.css, link it directly, so each document declares
+   each face once. */
 @font-face {
   font-family: "Geist";
   font-style: normal;

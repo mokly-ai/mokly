@@ -1,10 +1,4 @@
-import {
-  canvasColors,
-  documentPalettes,
-  paletteColors,
-  paletteFonts,
-} from "./palettes";
-import type { DocumentPalette, PaletteRoles } from "./palettes";
+import { documentPalettes, paletteColors } from "./palettes";
 import { tokens } from "./tokens";
 import type { TokenColorScheme, TokenViewport } from "./tokens";
 
@@ -25,11 +19,6 @@ export function cssVariables(tree: TokenTree, prefix = "--mk"): string {
     .join("");
 }
 
-const scopes: readonly [PaletteRoles, string][] = [
-  ["paper", "paper-scope"],
-  ["folio", "folio-scope"],
-];
-
 function typeVariables(viewport: TokenViewport): string {
   return cssVariables({
     type: Object.fromEntries(
@@ -46,45 +35,20 @@ function typeVariables(viewport: TokenViewport): string {
 }
 
 function scopeCss(scheme: TokenColorScheme, root?: string): string {
-  return scopes
-    .map(
-      ([palette, scope]) =>
-        (root === undefined
-          ? "." + scope
-          : root + "." + scope + "," + root + " ." + scope) +
-        "{" +
-        cssVariables({ color: paletteColors(scheme, palette) }) +
-        "}",
-    )
-    .join("");
-}
-
-/**
- * The scope rule of a canvas document: the Canvas surfaces, its accent and
- * its own roles, and its font stacks. Only a canvas document carries it, so
- * the token CSS of every other document stays the same.
- */
-function canvasScopeCss(scheme: TokenColorScheme): string {
+  const { roles, scope } = documentPalettes.paper;
+  const selector =
+    root === undefined
+      ? "." + scope
+      : root + "." + scope + "," + root + " ." + scope;
   return (
-    "." +
-    documentPalettes.canvas.scope +
-    "{" +
-    cssVariables({
-      color: { ...paletteColors(scheme, "canvas"), ...canvasColors(scheme) },
-      font: paletteFonts("canvas"),
-    }) +
-    "}"
+    selector + "{" + cssVariables({ color: paletteColors(scheme, roles) }) + "}"
   );
 }
 
-/**
- * Viewport and theme values belong to the document, not duplicated screen
- * trees. A document of the canvas palette also carries the canvas scope.
- */
+/** Viewport and theme values belong to the document, not duplicated screen trees. */
 export function tokenCss(
   scheme: TokenColorScheme,
   viewport: TokenViewport,
-  palette: DocumentPalette = "default",
 ): string {
   return (
     ":root{" +
@@ -103,8 +67,7 @@ export function tokenCss(
     "color-scheme:" +
     scheme +
     ";}" +
-    scopeCss(scheme) +
-    (palette === "canvas" ? canvasScopeCss(scheme) : "")
+    scopeCss(scheme)
   );
 }
 

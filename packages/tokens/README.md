@@ -1,104 +1,100 @@
 # Tokens Package
 
-`@mokly-cloud/tokens` is the single source of Mokly Cloud's visual values: the
-typed light and dark token tables, the surface families a document binds them
-to, the CSS custom properties generated from them, and the `@firna/ui` control
-theme derived from the same values. The generated catalogue, application and
-static site import it, so a color, radius or control geometry cannot drift
-between specification and product. It is a private npm workspace dependency, not
-a separately published package. The canvas palette is the one family whose
-values live elsewhere: it binds the Canvas palette of the open-source
-`@mokly/ui` package, and only the design mockups select it.
+`@mokly-cloud/tokens` owns Mokly Cloud's typed visual tokens, surface families,
+CSS custom properties and `@firna/ui` control themes. The catalogue, application
+and static site import this private npm workspace package. Canvas is the default
+family. Its shared colors and sans and mono font stacks come from
+`@mokly/ui/palette`, with no copied values. The package owns the focus, status,
+paper, art and window colors, the display serif, and the other token tables.
 
-The contract these values satisfy is
-[Design tokens](../../docs/protocol/cloud/design-tokens.md) with its
-[color tables](../../docs/protocol/cloud/design-tokens-color.md).
+The contract is [Design tokens](../../docs/protocol/cloud/design-tokens.md)
+with its [color tables](../../docs/protocol/cloud/design-tokens-color.md).
 
 ## Responsibilities
 
-- Hold the typed token tables: the colors of both schemes, the fonts, the type
-  ramp, space, radii, shadows, layout and motion.
-- Bind the semantic color roles to one surface family, paper, Folio or canvas,
-  and name the scope class a document carries for it.
-- Emit the `--mk-*` custom properties: one viewport baked for a generated
-  document, with the canvas scope for a canvas document, or both type ramps
-  under the shared breakpoint for a running surface.
-- Derive the `@firna/ui` theme of a scheme and a document palette, with its
-  static and header-pill variants.
+- Hold the typed tokens for both schemes, type, space, radii, shadows, layout
+  and motion.
+- Bind semantic surface, text and line roles to the default Canvas family or
+  the paper family of Design components.
+- Emit every `--mk-*` property on the document root, or the caller's selector,
+  with the paper scope rule.
+- Derive live, static, primary-action and header-pill control themes from the same tokens.
 
-The package ships no stylesheet: the Folio stylesheets live under
-`docs/mockups/styles` and read these properties, and `fonts/geist.css` there
-loads the Geist faces that the canvas fonts name. No consumer keeps a copy of
-a value, and no stylesheet declares a token.
+The package ships no stylesheet. The styles under `docs/mockups/styles` use
+its properties. Each surface loads its own self-hosted Geist and Geist Mono.
+No consumer copies a value, and no stylesheet declares a token.
 
 ## What This Package Does
 
-| Entry point                           | Owns                                                    |
-| ------------------------------------- | ------------------------------------------------------- |
-| `@mokly-cloud/tokens/tokens`          | `tokens`: colors, type, space, radius, shadow, layout   |
-| `@mokly-cloud/tokens/palettes`        | Surface families, scope classes, colors and fonts       |
-| `@mokly-cloud/tokens/token-css`       | `tokenCss` for one generated view, `responsiveTokenCss` |
-| `@mokly-cloud/tokens/shared-ui-theme` | The Firna theme mapping, palette and static variants    |
+| Entry point                           | Owns                                                               |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| `@mokly-cloud/tokens/tokens`          | `tokens`, `TokenColorScheme` and `TokenViewport`                   |
+| `@mokly-cloud/tokens/palettes`        | `DocumentPalette`, `documentPalettes`, `paletteColors`             |
+| `@mokly-cloud/tokens/token-css`       | `cssVariables`, `tokenCss`, `responsiveTokenCss`                   |
+| `@mokly-cloud/tokens/shared-ui-theme` | Firna mapping and theme variants, including `primaryActionUiTheme` |
 
-`tokenCss(scheme, viewport, palette?)` bakes one viewport's type ramp, which
-is what a generated document needs. Every document carries the paper and Folio
-scope rules. Only a document that passes the canvas palette also carries the
-canvas scope rule: the Canvas surfaces, the accent roles bound to the signal
-green, the Canvas roles that the token table has no name for, such as
-`--mk-color-dot`, `--mk-color-signal-fill` and `--mk-color-people-pink-fill`,
-and the Geist stacks of `--mk-font-sans`, `--mk-font-mono` and
-`--mk-font-display`. `responsiveTokenCss(scheme, selector?)` carries the
-desktop ramp with the mobile ramp under the shared breakpoint, and no canvas
-scope. Running app code omits the selector; the static site supplies one to
-compose system and explicit light/dark rules.
+`DocumentPalette` is `"default" | "paper"`. `paletteColors(scheme, palette?)`
+returns the surface, text and line roles. Omitting the family selects Canvas.
+`documentPalettes.paper` names the `paper-scope` class. This scope changes only
+the surface, text and line roles. Accent, status, focus and font tokens stay
+shared. `font.display` stays `Georgia, "Times New Roman", serif`.
+
+`tokenCss(scheme, viewport)` emits every token on `:root` and bakes one
+viewport's type ramp. `responsiveTokenCss(scheme, selector?)` emits the same
+tokens with the desktop ramp, then the mobile ramp below the shared breakpoint.
+Both emit `.paper-scope`. The scoped responsive output qualifies that rule
+with the caller's selector. Running app code omits the selector. The static
+site supplies one to compose system and explicit light/dark rules.
 
 ### Control Theme Mapping
 
-`sharedUiColors(scheme, palette)` supplies every Firna color role from the
-token table of its scheme. The surface roles come from the selected family,
-shown here with the paper template; substitute `folio` for the prefix:
+`sharedUiColors(scheme, palette?)` supplies every Firna color role from the
+scheme's token table. The default family uses this mapping. The paper family
+rebinds the semantic surface, text and line roles before the same mapping.
 
-| SharedUiColors keys            | Token source      |
-| ------------------------------ | ----------------- |
-| `bg`                           | `paper`           |
-| `bg2`, `soft`                  | `paperMuted`      |
-| `surface`                      | `paperSurface`    |
-| `border`, `border2`            | `paperLine`       |
-| `controlBorder`                | `paperLineStrong` |
-| `faint`                        | `paperInkMuted`   |
-| `ink`, `ink2`                  | `paperInk`        |
-| `muted`, `placeholder`         | `paperInkMuted`   |
-| `onSolid`                      | `onAccent`        |
-| `primary`                      | `accentSolid`     |
-| `primaryDeep`                  | `accent`          |
-| `primarySoft`, `primaryBorder` | `accentSoft`      |
-| `amber`, `amberDeep`           | `warning`         |
-| `amberSoft`                    | `warningSoft`     |
-| `rose`, `roseDeep`             | `danger`          |
-| `roseSoft`                     | `dangerSoft`      |
+| SharedUiColors keys            | Token source   |
+| ------------------------------ | -------------- |
+| `bg`                           | `background`   |
+| `bg2`, `soft`                  | `surfaceMuted` |
+| `surface`                      | `surface`      |
+| `border`, `border2`            | `border`       |
+| `controlBorder`                | `borderStrong` |
+| `faint`                        | `textMuted`    |
+| `ink`, `ink2`                  | `text`         |
+| `muted`, `placeholder`         | `textMuted`    |
+| `onSolid`                      | `onAccent`     |
+| `primary`                      | `accentSolid`  |
+| `primaryDeep`                  | `accent`       |
+| `primarySoft`, `primaryBorder` | `accentSoft`   |
+| `amber`, `amberDeep`           | `warning`      |
+| `amberSoft`                    | `warningSoft`  |
+| `rose`, `roseDeep`             | `danger`       |
+| `roseSoft`                     | `dangerSoft`   |
 
-`primary` is the library's solid fill and `primaryDeep` its accent ink, which
-is why they take `accentSolid` and `accent`; the ghost pressed wash is
-`primaryBorder`, so that role stays on the soft tint rather than a heavier line
-color. Fonts copy the font tokens. Radii are the pixel radius tokens parsed as
-numbers — `sm` from `small`, `md` from `medium`, `lg` from `large`, `xl` and
-`xxl` from `xlarge`, `pill` from `pill`, and `avatarRatio` is `small / xlarge`
-(0.25) — and the Folio and canvas palettes take `md` from `chrome` and `lg`
-from `medium` instead, so a control is 8px and a surface 10px.
+`primary` is the solid fill and `primaryDeep` is accent ink. The ghost pressed
+wash is `primaryBorder`, so it takes the soft tint. Both schemes use the same
+green fill and white `onSolid` label. Fonts use `font.sans` and `font.mono`.
 
-The canvas palette maps the same keys from the Canvas palette of `@mokly/ui`
-instead of the token table: each surface row from the Canvas role of the same
-meaning, such as `bg` from `background` and `controlBorder` from
-`borderStrong`, and the accent rows from the signal roles, so `primary` takes
-`signalFill`, `onSolid` takes `onSignalFill`, `primaryDeep` takes
-`signalDeep`, and `primarySoft` and `primaryBorder` take `signalSoft`. The
-status rows keep the token table, and the fonts are the palette's Geist
-stacks. A catalogue policy test holds this mapping beside the table's.
+`primaryActionUiTheme(base: SharedUiTheme): SharedUiTheme` scopes a primary
+Button to a constant fill. It sets only `primaryDeep` to the base theme's
+`primary`, so resting and hovered primary actions keep the same green fill
+and white label in both schemes. Other colors, fonts and radii stay unchanged.
+The base theme keeps `primaryDeep` as accent ink for ghost labels and soft
+badges. Product code draws no solid Firna badge because its dark fills cannot
+support the white label at 4.5:1.
 
-The header pill theme sets
-only `md` to the pill radius. Live themes keep `focusIndicator: "ring"`; the
-static document theme sets `"outline"`, which keeps the browser's
-keyboard-focus outline without hydration.
+`sharedUiRadii` parses the pixel radius tokens as numbers. It maps `sm` from
+`small`, `md` from `medium`, `lg` from `large`, `xl` and `xxl` from `xlarge`,
+and `pill` from `pill`. `avatarRatio` is `small / xlarge`, or 0.25. The paper
+theme uses these radii. The default theme replaces `md` with `chrome` and `lg`
+with `medium`, so a control is 8px and a surface is 10px.
+
+`sharedUiThemes.light` and `.dark` are the default Canvas themes.
+`paletteUiTheme(scheme, palette?)` returns the selected family's complete live
+theme. Live themes keep `focusIndicator: "ring"`. `staticUiTheme(scheme,
+palette?)` sets `"outline"` for unhydrated documents. `pillUiTheme(base)`
+changes only `md` to the pill radius. Each dark theme extends Firna's dark
+preset, so package-owned dark roles stay intact.
 
 ## Quick Start
 
@@ -112,7 +108,7 @@ document.head.append(
     textContent: responsiveTokenCss("light"),
   }),
 );
-const theme = paletteUiTheme("light", "folio");
+const theme = paletteUiTheme("light");
 const gutter = tokens.layout.gutterDesktop;
 ```
 
@@ -123,26 +119,22 @@ npm ci
 npm run typecheck --workspace @mokly-cloud/tokens
 ```
 
-The package ships TypeScript sources; its consumers bundle them. It extends
-the theme of the exact-pinned `@firna/ui` 4.0.0, and it reads the Canvas
-palette from the built `@mokly/ui` of the workspace, so run `npm run build`
-before a consumer bundles it. Changing a value here changes the catalogue, app
-and site, so update
-[Design tokens](../../docs/protocol/cloud/design-tokens.md) and regenerate the
-mockups in the same change. The mapping table above is read by a catalogue
-policy test, so keep it in step with the theme module.
+The package ships TypeScript sources for consumers to bundle. It extends the
+exact-pinned `@firna/ui` 4.0.0 and imports the built workspace `@mokly/ui`
+palette. Run `npm run build` before a consumer bundles it. Keep the mapping
+table above aligned with the theme module. The catalogue policy test reads it.
 
 ### Key Code
 
-- `src/tokens.ts` — `tokens`, the typed light and dark color tables, fonts, type ramp, space, radii, shadows, layout and motion, with the `TokenColorScheme` and `TokenViewport` unions.
-- `src/palettes.ts` — `paletteColors(scheme, family)` binds the semantic color roles to one surface family, the canvas family from the Canvas palette of `@mokly/ui/palette`; `canvasColors(scheme)` gives the accent and Canvas roles that the canvas scope adds, `paletteFonts(family)` the font stacks of a family, and `documentPalettes` maps each document palette to its roles and scope class, such as `folio-scope`; the app's theme provider and the generated emails bind the Folio roles through it.
-- `src/token-css.ts` — `tokenCss(scheme, viewport, palette?)` emits the `:root` custom properties and the scope rules for one generated viewport, with the canvas scope only for a canvas document; `responsiveTokenCss(scheme, selector?)` emits the desktop ramp with the mobile ramp under the breakpoint, scoped under the selector when the caller gives one.
-- `src/shared-ui-theme.ts` — `sharedUiColors` and `sharedUiRadii` map the tokens, or the Canvas palette for the canvas family, onto Firna's roles; `sharedUiThemes` are the paper themes, `paletteUiTheme(scheme, palette)` the complete theme of one document palette, `staticUiTheme` the same with `focusIndicator: "outline"`, and `pillUiTheme` the header pill variant.
+- `src/tokens.ts` — `tokens` imports Canvas values and font stacks, adds semantic accent names, and holds the token-owned tables.
+- `src/palettes.ts` — `DocumentPalette`, `documentPalettes` and `paletteColors` select default Canvas or paper surface roles.
+- `src/token-css.ts` — `cssVariables` flattens token trees, including people colors. `tokenCss` and `responsiveTokenCss` emit root tokens and the paper scope.
+- `src/shared-ui-theme.ts` — `sharedUiColors`, `sharedUiRadii`, `sharedUiThemes`, `paletteUiTheme`, `staticUiTheme` and `pillUiTheme` derive the Firna themes. `primaryActionUiTheme` keeps a primary Button's hover fill equal to its resting fill.
 
 ### Related Docs
 
-- [Architecture](../../docs/architecture/cloud.md) — the design system component and its consumers.
+- [Architecture](../../docs/architecture/cloud.md)
 - [Design tokens](../../docs/protocol/cloud/design-tokens.md) and [Design token colors](../../docs/protocol/cloud/design-tokens-color.md)
+- [Viewer palette](../../docs/protocol/mokly-viewer-palette.md#canvas-palette)
 - [Shared controls](../../docs/protocol/cloud/shared-controls.md)
-- [Folio chrome](../../docs/protocol/cloud/folio-chrome.md)
 - [npm workspace guide](../../apps/README.md)

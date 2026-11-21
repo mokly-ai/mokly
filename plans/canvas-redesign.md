@@ -128,18 +128,23 @@ Depends on: 2
 The cloud surfaces take Canvas here. The open-source shell's default look
 changes in Milestone 17, after decision 11.
 
-- [ ] Make `packages/tokens` import its shared values from the `@mokly/ui`
+- [x] Make `packages/tokens` import its shared values from the `@mokly/ui`
       palette module. Make Canvas the default for the site, the app and the
-      cloud mockups, and delete the Folio values.
-- [ ] Self-host Geist and Geist Mono for the site, the app and the cloud
-      mockups.
-- [ ] Self-host the Instrument Serif 400 face for the site's drawn demo app,
-      as the mockups do in `docs/mockups/styles/site/fonts/`.
-- [ ] Lower the button pair to 3:1 in the three contrast tests.
-- [ ] Draw the new mark and the Geist wordmark in every copy: brand files,
+      cloud mockups, and delete the Folio values. Branch:
+      `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
+- [x] Self-host Geist and Geist Mono for the site, the app and the cloud
+      mockups. Branch: `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
+- [x] Self-host the Instrument Serif 400 face for the site's drawn demo app,
+      as the mockups do in `docs/mockups/styles/site/fonts/`. Branch:
+      `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
+- [x] Lower the button pair to 3:1 in the three contrast tests. Branch:
+      `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
+- [x] Draw the new mark and the Geist wordmark in every copy: brand files,
       favicon, social cards, shell, app, emails and desktop icon. Run
-      `brand:build`.
-- [ ] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.
+      `brand:build`. Branch:
+      `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
+- [x] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.
+      Branch: `calummoore/canvas-redesign-m3-palette-fonts-and-raqu`.
 
 ## Milestone 4: Site chrome and legal pages
 

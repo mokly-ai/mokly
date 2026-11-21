@@ -1,7 +1,5 @@
 # Email
 
-Status: The Canvas values of the emails, and the new mark with the Geist wordmark in the published logo, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
-
 Mokly Cloud sends two transactional emails: the sign-in link issued by
 `POST /v1/auth/magic-links` and the invitation issued by
 `POST /v1/workspaces/{workspaceId}/members`. Each is a reviewed mockup in the

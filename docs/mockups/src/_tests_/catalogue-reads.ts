@@ -56,8 +56,8 @@ export function viewPalette(
   if (wrapper === undefined)
     throw new Error(`${path} ${viewport} ${scheme}: no renderer wrapper`);
   const classes = (attribute(wrapper, "class") ?? "").split(/\s+/);
-  if (classes.includes(documentPalettes.canvas.scope)) return "canvas";
-  if (classes.includes(documentPalettes.folio.scope)) return "folio";
+  if (classes.some((name) => /^(?:folio|canvas)-scope$/.test(name)))
+    throw new Error(`${path} ${viewport} ${scheme}: retired palette scope`);
   if (classes.includes(documentPalettes.paper.scope)) return "paper";
   return "default";
 }

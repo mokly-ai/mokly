@@ -4,33 +4,35 @@
    the projects panel. Only the drawings load this sheet: `screen.tsx`, which
    draws every panel, imports it, so Mokly bundles it into each panel entry's
    own stylesheet, and the application never loads it. Every rule is scoped
-   to the Canvas palette's wrapper and to the viewer's own surface, and it
-   restyles the registered frame there without changing it. */
+   to the renderer's wrapper, the element that carries `data-color-scheme`,
+   and to the viewer's own surface, so it outweighs a product sheet's rule
+   for the same element, and it restyles the registered frame there without
+   changing it. */
 @import "viewer-canvas-depth.css";
 
 /* The scrim: the ink at about a quarter in light and near-black at about a
    half in dark, with no blur, so the canvas still reads beneath it. */
-.canvas-scope .fo-viewer-surface {
+[data-color-scheme] .fo-viewer-surface {
   background: var(--fo-canvas-scrim);
   backdrop-filter: none;
 }
 
 /* The panel floats over the canvas on the surface, with a hairline, a 12px
    radius on a pointer viewport and a deep, soft shadow. */
-.canvas-scope .fo-viewer-surface .fo-viewer-panel {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel {
   border-color: var(--mk-color-border);
   box-shadow: var(--fo-canvas-shadow-deep);
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-modal {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-modal {
   border-radius: var(--fo-canvas-radius);
 }
 
 /* On a phone the panel is a bottom sheet with a grab handle above its bar. */
-.canvas-scope .fo-viewer-surface .fo-viewer-sheet {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-sheet {
   position: relative;
   padding-top: var(--mk-space-3);
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-sheet::before {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-sheet::before {
   content: "";
   position: absolute;
   top: 6px;
@@ -43,24 +45,24 @@
 
 /* The bar: the title at the panel's own size, with a reference beside it in
    mono, and Close at the end. */
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-bar {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-bar {
   gap: var(--mk-space-3);
   min-height: 52px;
   padding: var(--mk-space-2) var(--mk-space-3) var(--mk-space-2)
     var(--mk-space-5);
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-heading {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 var(--mk-space-2);
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-title {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-title {
   font-size: var(--mk-type-ui-title-size);
   line-height: var(--mk-type-ui-title-line);
   letter-spacing: -0.015em;
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-subtitle {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-subtitle {
   margin-top: 0;
   font-family: var(--mk-font-mono);
 }
@@ -69,57 +71,57 @@
    stays for assistive technology, and the field fills the bar up to Close.
    While the references load or fail the field is disabled, and it fades as
    a disabled control does. */
-.canvas-scope .fo-canvas-panel-searching .fo-viewer-panel-heading {
+[data-color-scheme] .fo-canvas-panel-searching .fo-viewer-panel-heading {
   flex: 1 1 auto;
 }
-.canvas-scope .fo-canvas-panel-search {
+[data-color-scheme] .fo-canvas-panel-search {
   flex: 1 1 auto;
   min-width: 0;
 }
-.canvas-scope .fo-canvas-search-off {
+[data-color-scheme] .fo-canvas-search-off {
   opacity: 0.55;
 }
 
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-body {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-body {
   padding: var(--mk-space-4) var(--mk-space-5) var(--mk-space-5);
 }
-.canvas-scope .fo-viewer-surface .fo-viewer-sheet .fo-viewer-panel-body {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-sheet .fo-viewer-panel-body {
   padding: var(--mk-space-4) var(--mk-layout-gutter-mobile) var(--mk-space-8);
 }
-.canvas-scope .fo-viewer-surface .fo-panel-stack {
+[data-color-scheme] .fo-viewer-surface .fo-panel-stack {
   gap: var(--mk-space-5);
 }
-.canvas-scope .fo-viewer-surface .fo-ref-group {
+[data-color-scheme] .fo-viewer-surface .fo-ref-group {
   gap: var(--mk-space-1);
 }
 
 /* A group's label is the tool's voice: uppercase mono, muted. A workspace's
    name is something the user wrote, so it keeps its own case. */
-.canvas-scope .fo-viewer-surface .fo-group-label {
+[data-color-scheme] .fo-viewer-surface .fo-group-label {
   font-family: var(--mk-font-mono);
   font-weight: var(--mk-font-medium);
   letter-spacing: 0.06em;
 }
-.canvas-scope .fo-viewer-surface .fo-ref-head {
+[data-color-scheme] .fo-viewer-surface .fo-ref-head {
   padding-bottom: var(--mk-space-1);
 }
-.canvas-scope .fo-viewer-surface .fo-ref-name {
+[data-color-scheme] .fo-viewer-surface .fo-ref-name {
   color: var(--mk-color-text);
   font-size: var(--mk-type-ui-small-size);
   line-height: var(--mk-type-ui-small-line);
   letter-spacing: 0;
 }
-.canvas-scope .fo-viewer-surface .fo-ref-detail {
+[data-color-scheme] .fo-viewer-surface .fo-ref-detail {
   font-family: var(--mk-font-mono);
 }
 /* A quiet action under a group's rows keeps its label in line with them. */
-.canvas-scope .fo-viewer-surface .fo-ref-group > .fo-panel-foot {
+[data-color-scheme] .fo-viewer-surface .fo-ref-group > .fo-panel-foot {
   margin-inline-start: calc(-1 * var(--mk-space-3));
 }
 
 /* A state inside a panel sits in a well on the muted surface, because the
    panel is already its frame. */
-.canvas-scope .fo-viewer-surface .fo-viewer-panel-body .fo-state {
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel-body .fo-state {
   padding: var(--mk-space-8) var(--mk-space-5);
   border-color: transparent;
   border-radius: var(--fo-canvas-radius);
@@ -129,18 +131,18 @@
 /* A panel's rows: no hairlines between them. Each row's frame reaches into
    the body's gutter by its own padding, so its fill rounds off around the
    row while its content starts where the labels above it do. */
-.canvas-scope .fo-canvas-rows {
+[data-color-scheme] .fo-canvas-rows {
   margin-inline: calc(-1 * var(--mk-space-3));
 }
-.canvas-scope .fo-canvas-rows li:has(> .fo-canvas-row-current) {
+[data-color-scheme] .fo-canvas-rows li:has(> .fo-canvas-row-current) {
   border-radius: var(--mk-radius-chrome);
   background: var(--mk-color-signal-soft);
 }
-.canvas-scope .fo-canvas-rows .content-list-row {
+[data-color-scheme] .fo-canvas-rows .content-list-row {
   gap: var(--mk-space-1) var(--mk-space-3);
   padding-right: 0;
 }
-.canvas-scope .fo-canvas-row-title {
+[data-color-scheme] .fo-canvas-row-title {
   display: block;
   overflow-wrap: anywhere;
   color: var(--mk-color-text);
@@ -148,19 +150,19 @@
   line-height: var(--mk-type-ui-line);
   font-weight: var(--mk-font-medium);
 }
-.canvas-scope[data-viewport="mobile"] .fo-canvas-row-title {
+[data-color-scheme][data-viewport="mobile"] .fo-canvas-row-title {
   font-size: var(--mk-type-small-size);
   line-height: var(--mk-type-small-line);
 }
 /* A branch is a reference, so it reads in mono, at the interface size also
    on a phone, where its wider letters would otherwise wrap a long name; a
    pull request keeps its title in sans after its number. */
-.canvas-scope .fo-canvas-row-reference,
-.canvas-scope[data-viewport="mobile"] .fo-canvas-row-reference {
+[data-color-scheme] .fo-canvas-row-reference,
+[data-color-scheme][data-viewport="mobile"] .fo-canvas-row-reference {
   font-family: var(--mk-font-mono);
   font-size: var(--mk-type-ui-size);
 }
-.canvas-scope .fo-canvas-row-number {
+[data-color-scheme] .fo-canvas-row-number {
   font-weight: var(--mk-font-semibold);
 }
 
@@ -170,27 +172,27 @@
    which reaches into the row's own padding, and a choice's quiet control
    reaches past the column by its own padding, so its label ends where the
    other ends do. */
-.canvas-scope .fo-canvas-rows .list-destination,
-.canvas-scope .fo-canvas-row-end {
+[data-color-scheme] .fo-canvas-rows .list-destination,
+[data-color-scheme] .fo-canvas-row-end {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 4.5rem;
 }
-.canvas-scope[data-viewport="mobile"] .fo-canvas-rows .list-destination,
-.canvas-scope[data-viewport="mobile"] .fo-canvas-row-end {
+[data-color-scheme][data-viewport="mobile"] .fo-canvas-rows .list-destination,
+[data-color-scheme][data-viewport="mobile"] .fo-canvas-row-end {
   min-width: 3rem;
 }
-.canvas-scope .fo-canvas-rows .list-destination {
+[data-color-scheme] .fo-canvas-rows .list-destination {
   margin-block: calc(-1 * var(--mk-space-3));
   color: var(--mk-color-text-secondary);
   font-weight: var(--mk-font-semibold);
 }
-.canvas-scope .fo-canvas-row-choice {
+[data-color-scheme] .fo-canvas-row-choice {
   margin-inline-end: calc(-1 * var(--mk-space-3));
 }
 /* The mark of the row the reader is on, in the signal-deep ink. */
-.canvas-scope .fo-canvas-row-mark {
+[data-color-scheme] .fo-canvas-row-mark {
   color: var(--mk-color-signal-deep);
   font-size: var(--mk-type-ui-small-size);
   line-height: var(--mk-type-ui-small-line);
@@ -199,15 +201,15 @@
 
 /* Share: the link and Copy link in one row, Copy link level with the field,
    and on a phone the link above a full-width Copy link. */
-.canvas-scope .fo-canvas-share-link {
+[data-color-scheme] .fo-canvas-share-link {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: var(--mk-space-2);
 }
-.canvas-scope[data-viewport="mobile"] .fo-canvas-share-link {
+[data-color-scheme][data-viewport="mobile"] .fo-canvas-share-link {
   grid-template-columns: minmax(0, 1fr);
 }
-.canvas-scope .fo-canvas-share-access {
+[data-color-scheme] .fo-canvas-share-access {
   gap: var(--mk-space-2);
 }

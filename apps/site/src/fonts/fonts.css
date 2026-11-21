@@ -1,0 +1,31 @@
+/* The site's self-hosted faces, each beside its SIL Open Font License. Geist
+   and Geist Mono, the variable faces of the sans and mono token stacks, are
+   copied unchanged from the geist npm package 1.9.2. Instrument Serif 400,
+   the face of the home page's drawn demo app, is copied unchanged from the
+   @fontsource/instrument-serif npm package 5.3.0. The site layout imports
+   this sheet, so the build emits each face as a content-hashed file on the
+   site origin, and the token stacks fall back to system faces while a face
+   loads. */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./Geist-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./GeistMono-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./instrument-serif-latin-400-normal.woff2") format("woff2");
+}

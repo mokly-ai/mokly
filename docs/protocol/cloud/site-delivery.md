@@ -1,6 +1,6 @@
 # Site Delivery
 
-Status: The new brand in the favicon, the brand assets and the social cards, the drawn home demos and the audit of the pricing page are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) draws the brand, [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the pricing page to the audited pages.
+Status: The drawn home demos and the audit of the pricing page are not built yet; the home embeds the dogfood stage in place of the demos, and the site checks and the deployment build the mockups for that stage. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the home demos and removes the stage and its mockups build, and [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) adds the pricing page to the audited pages.
 
 This contract fixes how the public site is built, tested and deployed. The
 site package, its checks and its workflow must satisfy every rule here.

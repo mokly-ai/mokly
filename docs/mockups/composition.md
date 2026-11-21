@@ -256,11 +256,9 @@ one titled section for each GitHub account, because the live surface portals
 from an effect and draws nothing in static markup. Table's optional large
 density uses Firna Body for ordinary cells; its earlier saved variants keep
 their density.
-Folio binds the shared semantic roles through `.folio-scope` and its derived
-Firna theme across the account, recovery and settings screens. Canvas binds
-them through `.canvas-scope` and its own Firna theme, whose solid fill is the
-signal green, across the viewer family and the site screens. Component
-previews retain paper.
+Canvas binds the shared semantic roles on every screen document's root, with
+its Firna theme, whose solid fill is the signal green. Component previews
+retain paper through `.paper-scope`.
 `textarea` stays registered with its variants while the screen that consumed
 it waits for the review phase; `switch` draws the project pane's Automatic
 builds setting, with its `working` word beside the label while that setting

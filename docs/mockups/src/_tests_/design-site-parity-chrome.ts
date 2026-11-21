@@ -10,8 +10,6 @@
 
 const TOOL_BAR =
   "Canvas draws the header as the design file's sticky white tool bar with the file title, the people in the file and a green rule under the current page; Milestone 4 rebuilds the site chrome";
-const BRAND =
-  "the new mark and the Geist wordmark of decision 5; Milestone 4 rebuilds the site chrome";
 const SKIP =
   "the skip link shows on the ink fill above the sticky tool bar; Milestone 4 rebuilds the site chrome";
 const BUTTONS =
@@ -35,15 +33,10 @@ export const CHROME_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-nav": TOOL_BAR,
   ".site-nav-link": TOOL_BAR,
   ".site-nav-link:hover": TOOL_BAR,
-  ".site-brand": BRAND,
-  ".site-brand svg": BRAND,
-  ".site-brand-dot": BRAND,
-  ".site-brand:hover": BRAND,
   ".site-skip": SKIP,
   ".site-skip:focus": SKIP,
   ".site-button": BUTTONS,
   ".site-button--primary": BUTTONS,
-  ".site-button--primary:active": BUTTONS,
   ".site-button--primary:hover": BUTTONS,
   ".site-button--quiet": BUTTONS,
   ".site-button--quiet:hover": BUTTONS,

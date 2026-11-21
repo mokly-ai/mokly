@@ -28,7 +28,7 @@ type SamplePalette = CSSProperties &
  * document, so the sample does not read the document's own palette.
  */
 function samplePalette(scheme: ColorScheme): SamplePalette {
-  const color = paletteColors(scheme, "canvas");
+  const color = paletteColors(scheme);
   return {
     "--fo-sample-surface": color.surface,
     "--fo-sample-fill": color.surfaceMuted,

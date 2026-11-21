@@ -2,9 +2,10 @@
    floating Canvas panel on the dot-grid canvas, in the embedded layout's
    side panel. Only the drawings load this sheet: `check-panel.tsx` imports
    it, so Mokly bundles it into that entry's own stylesheet, and the
-   application never loads it. Every rule is scoped to the Canvas palette's
-   wrapper and styles cloud elements only; the side panel's own container is
-   the package's.
+   application never loads it. Every rule is scoped to the renderer's
+   wrapper, the element that carries `data-color-scheme`, so it outweighs a
+   product sheet's rule for the same element, and styles cloud elements only;
+   the side panel's own container is the package's.
 
    The host carries the class that shows a part only in the full bar, whose
    switch in `viewer.css` sets its display, so no rule here sets it. */
@@ -12,7 +13,7 @@
 
 /* The canvas the panel floats on, the stage's dot grid, as tall as the
    side panel and as wide as the panel with its inset. */
-.canvas-scope .fo-canvas-check-host {
+[data-color-scheme] .fo-canvas-check-host {
   flex-direction: column;
   box-sizing: border-box;
   width: 20rem;
@@ -26,7 +27,7 @@
   );
   background-size: 24px 24px;
 }
-.canvas-scope .fo-canvas-check-panel {
+[data-color-scheme] .fo-canvas-check-panel {
   display: grid;
   align-content: start;
   gap: var(--mk-space-3);
@@ -36,7 +37,7 @@
   background: var(--mk-color-surface);
   box-shadow: var(--fo-canvas-shadow-float);
 }
-.canvas-scope .fo-canvas-check-heading {
+[data-color-scheme] .fo-canvas-check-heading {
   color: var(--mk-color-text);
   font-size: var(--mk-type-ui-size);
   line-height: var(--mk-type-ui-line);
@@ -45,19 +46,19 @@
 
 /* The check card: the result above, and the link to the check on GitHub on
    the muted surface below a hairline. */
-.canvas-scope .fo-canvas-check {
+[data-color-scheme] .fo-canvas-check {
   border: 1px solid var(--mk-color-border);
   border-radius: var(--mk-radius-medium);
 }
 /* The result: the success glyph beside the check's name, with its summary
    under the name. */
-.canvas-scope .fo-canvas-check-result {
+[data-color-scheme] .fo-canvas-check-result {
   display: flex;
   align-items: flex-start;
   gap: var(--mk-space-2);
   padding: var(--mk-space-3);
 }
-.canvas-scope .fo-canvas-check-text {
+[data-color-scheme] .fo-canvas-check-text {
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -68,23 +69,23 @@
 }
 /* The success glyph, level with the name: the signal fill with the tick in
    its label colour. */
-.canvas-scope .fo-canvas-check-glyph {
+[data-color-scheme] .fo-canvas-check-glyph {
   display: flex;
   flex: none;
   padding-top: 2px;
   color: var(--mk-color-on-signal-fill);
 }
-.canvas-scope .fo-canvas-check-glyph circle {
+[data-color-scheme] .fo-canvas-check-glyph circle {
   fill: var(--mk-color-signal-fill);
   stroke: var(--mk-color-signal-fill);
 }
-.canvas-scope .fo-canvas-check-name {
+[data-color-scheme] .fo-canvas-check-name {
   color: var(--mk-color-text);
   font-size: var(--mk-type-ui-size);
   line-height: var(--mk-type-ui-line);
   font-weight: var(--mk-font-semibold);
 }
-.canvas-scope .fo-canvas-check-link {
+[data-color-scheme] .fo-canvas-check-link {
   display: flex;
   align-items: center;
   gap: var(--mk-space-2);
@@ -100,17 +101,17 @@
   line-height: var(--mk-type-ui-small-line);
   text-decoration: none;
 }
-.canvas-scope .fo-canvas-check-link:hover {
+[data-color-scheme] .fo-canvas-check-link:hover {
   color: var(--mk-color-text);
 }
-.canvas-scope .fo-canvas-check-link-label {
+[data-color-scheme] .fo-canvas-check-link-label {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.canvas-scope .fo-canvas-check-link-glyph {
+[data-color-scheme] .fo-canvas-check-link-glyph {
   display: flex;
   flex: none;
   color: var(--mk-color-text-muted);

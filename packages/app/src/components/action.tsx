@@ -1,7 +1,10 @@
 import { Button } from "@firna/ui/button";
+import type { ButtonStateStyleArgs } from "@firna/ui/button";
+import { SharedUiThemeProvider, useSharedUiTheme } from "@firna/ui/theme";
 import { Label } from "@firna/ui/typography";
+import { primaryActionUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { ComponentProps } from "react";
 
 import { useCompact } from "../layout/viewport";
@@ -86,12 +89,32 @@ export type ActionProps = ActionSemantics &
   };
 
 /**
+ * A hovered primary action lifts by one pixel and keeps its fill, so its
+ * hover does not rely on colour alone. The lift applies only while a hovering
+ * pointer, never a touch, is over the enabled and idle control, and a press
+ * sets it back down. A transform moves no layout box, and no transition
+ * animates it.
+ */
+function primaryHoverLift({
+  busy,
+  disabled,
+  hovered,
+  pressed,
+}: ButtonStateStyleArgs) {
+  return hovered && !disabled && !busy && !pressed
+    ? { transform: [{ translateY: -1 }] }
+    : null;
+}
+
+/**
  * Every action in the product is the package Button through one mapping:
  * emphasis chooses the size, the viewport chooses the target, and a
  * destination is followed on press rather than drawn as a second kind of
- * control. The Button renders no anchor and takes no wrapper, so an address
- * outside the application is still this one control: pressing it opens the
- * address in this tab.
+ * control. The Button renders no anchor, so an address outside the
+ * application is still this one control: pressing it opens the address in
+ * this tab. A primary action sits in its scoped theme, whose boundary draws
+ * no box, so its hover keeps the resting fill and the lift above stands in
+ * for a darker one.
  */
 export function Action({
   label,
@@ -112,6 +135,8 @@ export function Action({
 }: ActionProps) {
   const router = useRouter();
   const compact = useCompact();
+  const theme = useSharedUiTheme();
+  const primaryTheme = useMemo(() => primaryActionUiTheme(theme), [theme]);
   const press = useCallback(() => {
     if (onPress) {
       onPress();
@@ -124,39 +149,49 @@ export function Action({
   // At rest, the control refuses a press for its own reason or while its
   // write has nothing to send. While the write works, `busy` refuses it.
   const refused = disabled === true || write?.sendable === false;
+  const button = (
+    <Button
+      tone={tone === "quiet" ? "plain" : tone}
+      size={size}
+      block={block}
+      disabled={running === undefined && refused}
+      busy={running !== undefined}
+      icon={icon ? icons[icon] : undefined}
+      // A compact surface clears the 44px touch target; a pointer surface
+      // keeps the control's own scale and widens the hit area instead.
+      minTouchTarget={compact ? touchTarget : undefined}
+      hitSlop={compact ? undefined : 8}
+      onPress={press}
+      testID={testID}
+      numberOfLines={singleLine ? 1 : undefined}
+      style={tone === "primary" ? primaryHoverLift : undefined}
+      {...semantics}
+      trailing={
+        arrow ? (
+          <Label
+            color={
+              tone === "primary" || tone === "danger" ? "inverse" : "default"
+            }
+          >
+            →
+          </Label>
+        ) : chevron ? (
+          <Icon name="switcher" size={14} />
+        ) : undefined
+      }
+    >
+      {label}
+    </Button>
+  );
   return (
     <>
-      <Button
-        tone={tone === "quiet" ? "plain" : tone}
-        size={size}
-        block={block}
-        disabled={running === undefined && refused}
-        busy={running !== undefined}
-        icon={icon ? icons[icon] : undefined}
-        // A compact surface clears the 44px touch target; a pointer surface
-        // keeps the control's own scale and widens the hit area instead.
-        minTouchTarget={compact ? touchTarget : undefined}
-        hitSlop={compact ? undefined : 8}
-        onPress={press}
-        testID={testID}
-        numberOfLines={singleLine ? 1 : undefined}
-        {...semantics}
-        trailing={
-          arrow ? (
-            <Label
-              color={
-                tone === "primary" || tone === "danger" ? "inverse" : "default"
-              }
-            >
-              →
-            </Label>
-          ) : chevron ? (
-            <Icon name="switcher" size={14} />
-          ) : undefined
-        }
-      >
-        {label}
-      </Button>
+      {tone === "primary" ? (
+        <SharedUiThemeProvider theme={primaryTheme}>
+          {button}
+        </SharedUiThemeProvider>
+      ) : (
+        button
+      )}
       {/* The status is out of the layout, so the form around the control
           inserts nothing while the write works, and the control keeps its
           place in the tree, so it keeps its focus. */}

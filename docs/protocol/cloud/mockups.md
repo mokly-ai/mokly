@@ -1,7 +1,5 @@
 # Mockup Catalogue Contract
 
-Status: The account, recovery, settings and email screens and the token inventory do not render in Canvas yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) moves them to Canvas.
-
 The catalogue uses the workspace `@mokly/mokly` and `@mokly/ui` packages.
 Product UI follows its reviewed mockups. The
 [authoring guide](../../mockups/README.md), [tokens](./design-tokens.md),

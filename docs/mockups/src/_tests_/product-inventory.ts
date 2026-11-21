@@ -160,17 +160,9 @@ export function inventoryPages(): {
 }
 
 /**
- * The palette a product page renders in: the viewer family's pages take
- * Canvas, and every other product page takes Folio.
- */
-export function productPalette(path: string): DocumentPalette {
-  return path.startsWith("product/viewer/") ? "canvas" : "folio";
-}
-
-/**
  * The catalogue index holds exactly the product screens that the inventory
  * declares, each parent with its variants in authored order, and every one
- * of them renders in its family's palette, Canvas or Folio. `palette` gives
+ * of them renders in the default Canvas palette. `palette` gives
  * the palette of an entry's rendered documents.
  */
 export function productInventoryViolations(
@@ -185,7 +177,7 @@ export function productInventoryViolations(
     if (
       entry?.kind !== "screen" ||
       variantParent(entry) !== undefined ||
-      palette(screen.path) !== productPalette(screen.path)
+      palette(screen.path) !== "default"
     ) {
       problems.push("parent screen in its family's palette: " + screen.path);
       continue;
@@ -197,7 +189,7 @@ export function productInventoryViolations(
       problems.push("variants in authored order: " + screen.path);
     for (const path of screen.variants) {
       const variant = byId.get(path);
-      if (variant?.kind !== "screen" || palette(path) !== productPalette(path))
+      if (variant?.kind !== "screen" || palette(path) !== "default")
         problems.push("variant in its family's palette: " + path);
     }
     if (!entry.path.startsWith("product/" + screen.family + "/"))

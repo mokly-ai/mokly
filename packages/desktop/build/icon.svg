@@ -28,15 +28,36 @@
     fill="#ffffff"
     filter="url(#plate-shadow)"
   />
-  <!-- The light-surface brand mark of the site's mokly-icon-light.svg. -->
-  <g fill="#2f5945" transform="translate(224 224) scale(18)">
-    <rect x="3" y="3" width="20" height="21" rx="4" opacity=".3" />
-    <rect x="9" y="8" width="20" height="21" rx="4" />
+  <!-- The brand mark in the light Canvas colours on its 32-unit grid: the
+       ink outline frame, the signal front layer with its two rules, and the
+       front layer's halo in the light surface white, which is the plate's. -->
+  <g transform="translate(224 224) scale(18)">
+    <rect
+      x="3.6"
+      y="3.6"
+      width="18.8"
+      height="19.8"
+      rx="4.6"
+      fill="none"
+      stroke="#0d1410"
+      stroke-width="1.8"
+    />
+    <rect
+      x="9"
+      y="8"
+      width="20"
+      height="21"
+      rx="4.8"
+      fill="#12b76a"
+      paint-order="stroke"
+      stroke="#ffffff"
+      stroke-width="1.6"
+    />
     <path
       d="M14 15h10M14 20h7"
       fill="none"
-      stroke="#ffffff"
-      stroke-width="2"
+      stroke="#04130b"
+      stroke-width="2.1"
       stroke-linecap="round"
     />
   </g>

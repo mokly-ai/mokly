@@ -1,6 +1,6 @@
 # Shared Controls
 
-Status: The dark theme's Canvas fill with its white label, and the surfaces of the account menu and More, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the dark fill, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the menus.
+Status: The surfaces of the account menu and More are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 Common controls come from the public `@firna/ui` package. The catalogue
 registers them as thin wrappers, and the product uses the same controls through
@@ -96,9 +96,18 @@ theme the mapping feeds the library the same `accentSolid` fill and white
 `onAccent` label as in light, in place of the dark preset's light accent with
 a near-black `onSolid`, so a filled button reads the same in both schemes, as
 [the accent family](./design-tokens-color.md#the-accent-family) defines
-(decision 4, option A). Theme overrides are the only way to change
-a control's geometry or colors: CSS selectors, inline style, label-style and
-input-style props, and custom color props never restyle a Firna control.
+(decision 4, option A). A primary action renders its Button under a scoped
+theme whose hover fill stays the resting `accentSolid`, so the white label
+keeps 3:1 at rest and on hover in both schemes. A hovering pointer lifts the
+enabled, idle primary action by 1px instead. Decision: the fill does not
+darken on hover, because the library's darker hover fill is the accent ink, on
+which the white dark-scheme label reads 1.62:1. No product screen draws a
+solid Firna badge, because the white dark-scheme label cannot reach 4.5:1 on
+the badge's light dark-scheme fills. Theme overrides are the only way to
+change a control's geometry or colors: CSS selectors, inline style,
+label-style and input-style props, and custom color props never restyle a
+Firna control. The primary action's hover lift is the one state style that a
+product screen passes to a Firna control.
 Typography may select a semantic color role, including inverse text for arrows
 on solid buttons; raw colors are forbidden. External layout containers may
 provide spacing, alignment and width; they must not change a control's own

@@ -1,6 +1,6 @@
 # Viewer Compositions
 
-Status: The Canvas look of these compositions is not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the Canvas palette and Geist, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the bar, the publication pill, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer.
+Status: The bar, the publication pill, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 The compositions of the viewer and of the surfaces layered over it, from
 [Folio chrome](./folio-chrome.md): the stage, the viewer top bar, the

@@ -49,9 +49,7 @@ test("every token consumed by site mockups is emitted by the workspace", () => {
   assert.ok(used.size > 40, "site policy stopped covering the token surface");
   for (const scheme of ["light", "dark"] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
-      // Site documents are canvas documents, so they also carry the canvas
-      // scope with the Canvas roles.
-      const emitted = tokenCss(scheme, viewport, "canvas");
+      const emitted = tokenCss(scheme, viewport);
       for (const property of used)
         assert.ok(
           emitted.includes(property + ":"),
@@ -73,8 +71,8 @@ test("the responsive emitter keeps legacy root output and scopes complete themes
       "--mk-layout-site-wide",
     ])
       assert.ok(scoped.includes(role + ":"), `${scheme}: ${role}`);
-    assert.ok(scoped.includes(selector + ".folio-scope,"));
-    assert.ok(scoped.includes(selector + " .folio-scope{"));
+    assert.ok(scoped.includes(selector + ".paper-scope,"));
+    assert.ok(scoped.includes(selector + " .paper-scope{"));
     assert.ok(scoped.includes("@media (max-width:767.98px){" + selector));
   }
 });

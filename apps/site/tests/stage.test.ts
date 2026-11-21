@@ -252,7 +252,7 @@ test("the build published every screen document and its resources", () => {
   }
   assert.ok(
     manifest.resources.includes(
-      "static/mokly-generated/assets/docs/mockups/styles/fonts/InterVariable.woff2",
+      "static/mokly-generated/assets/docs/mockups/styles/fonts/Geist-Variable.woff2",
     ),
   );
   assert.ok(

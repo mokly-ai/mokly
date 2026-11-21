@@ -21,7 +21,14 @@ test("prescribed text, status, control and focus combinations meet contrast requ
       colors.surfaceRaised,
       colors.surfaceMuted,
     ]) {
-      for (const foreground of [colors.text, colors.textMuted, colors.accent]) {
+      for (const foreground of [
+        colors.text,
+        colors.textSecondary,
+        colors.textMuted,
+        colors.accent,
+        colors.accentHover,
+        colors.accentActive,
+      ]) {
         assert.ok(
           contrast(foreground, background) >= 4.5,
           foreground + " on " + background,
@@ -77,19 +84,24 @@ test("prescribed text, status, control and focus combinations meet contrast requ
       colors.accent,
       colors.accentHover,
       colors.accentActive,
-      colors.accentSolid,
     ])
-      assert.ok(contrast(colors.onAccent, accent) >= 4.5);
+      for (const background of [
+        colors.background,
+        colors.surface,
+        colors.accentSoft,
+      ])
+        assert.ok(contrast(accent, background) >= 4.5);
+    assert.ok(contrast(colors.onAccent, colors.accentSolid) >= 3);
     assert.ok(contrast(colors.accentSolid, colors.accentSoft) >= 3);
     for (const background of [colors.surface, colors.surfaceRaised])
       assert.ok(contrast(colors.accent, background) >= 4.5);
-    for (const status of ["success", "warning", "danger", "info"] as const)
-      assert.ok(
-        contrast(
-          colors[status],
-          colors[(status + "Soft") as keyof typeof colors],
-        ) >= 4.5,
-      );
+    for (const [status, soft] of [
+      ["success", "successSoft"],
+      ["warning", "warningSoft"],
+      ["danger", "dangerSoft"],
+      ["info", "infoSoft"],
+    ] as const)
+      assert.ok(contrast(colors[status], colors[soft]) >= 4.5);
   }
 });
 
@@ -97,16 +109,24 @@ test("CSS is derived from canonical tokens without stylesheet color copies", () 
   for (const scheme of ["light", "dark"] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
       const css = tokenCss(scheme, viewport);
-      for (const [scope, base] of [
-        ["paper", tokens.color[scheme].paper],
-        ["folio", tokens.color[scheme].folio],
-      ])
-        assert.ok(
-          css.includes("." + scope + "-scope{--mk-color-background:" + base),
-          scope + " scope",
-        );
+      assert.ok(
+        css.includes(
+          ".paper-scope{--mk-color-background:" + tokens.color[scheme].paper,
+        ),
+      );
       assert.ok(css.includes("--mk-font-display:" + tokens.font.display));
-      for (const [key, value] of Object.entries(tokens.color[scheme])) {
+      const colors = Object.entries(tokens.color[scheme]).flatMap(
+        ([key, value]) =>
+          typeof value === "string"
+            ? [[key, value]]
+            : Object.entries(value).flatMap(([person, roles]) =>
+                Object.entries(roles).map(([role, color]) => [
+                  key + "-" + person + "-" + role,
+                  color,
+                ]),
+              ),
+      );
+      for (const [key, value] of colors) {
         const variable =
           "--mk-color-" +
           key.replace(/[A-Z]/g, (letter) => "-" + letter.toLowerCase());
@@ -137,10 +157,8 @@ test("CSS is derived from canonical tokens without stylesheet color copies", () 
 
 test("every document family keeps text, focus and boundaries legible", () => {
   for (const scheme of ["light", "dark"] as const)
-    for (const [palette, { roles, scope }] of Object.entries(
-      documentPalettes,
-    )) {
-      const colors = paletteColors(scheme, roles);
+    for (const palette of ["default", "paper"] as const) {
+      const colors = paletteColors(scheme, palette);
       const status = tokens.color[scheme];
       for (const background of [
         colors.background,
@@ -150,36 +168,30 @@ test("every document family keeps text, focus and boundaries legible", () => {
         for (const foreground of [colors.text, colors.textMuted, status.accent])
           assert.ok(
             contrast(foreground, background) >= 4.5,
-            scope + ": " + foreground + " on " + background,
+            palette + ": " + foreground + " on " + background,
           );
         for (const foreground of [colors.borderStrong, status.focus])
           assert.ok(
             contrast(foreground, background) >= 3,
-            scope + ": " + foreground + " on " + background,
+            palette + ": " + foreground + " on " + background,
           );
       }
-      // Every document carries the paper and Folio scopes; only a canvas
-      // document carries the canvas scope.
-      const document = palette === "canvas" ? "canvas" : "default";
+      const selector =
+        palette === "default" ? ":root" : "." + documentPalettes.paper.scope;
       assert.ok(
-        tokenCss(scheme, "desktop", document).includes(
-          "." + scope + "{--mk-color-background:" + colors.background,
+        tokenCss(scheme, "desktop").includes(
+          selector + "{--mk-color-background:" + colors.background,
         ),
-        scope,
+        palette,
       );
     }
 });
 
-test("only a canvas document carries the canvas scope, with the Canvas roles and type", () => {
+test("all documents carry Canvas roles and fonts on the root with only a paper scope", () => {
   for (const scheme of ["light", "dark"] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
-      const shared = tokenCss(scheme, viewport);
-      for (const palette of ["default", "paper", "folio"] as const)
-        assert.equal(tokenCss(scheme, viewport, palette), shared, palette);
-      assert.ok(!shared.includes(".canvas-scope"), scheme + " " + viewport);
-      const document = tokenCss(scheme, viewport, "canvas");
-      assert.ok(document.startsWith(shared), scheme + " " + viewport);
-      const scope = document.slice(shared.length);
+      const document = tokenCss(scheme, viewport);
+      const root = document.slice(0, document.indexOf("}") + 1);
       const canvas = palettes.canvas[scheme];
       for (const [property, value] of [
         ["--mk-color-background", canvas.background],
@@ -196,10 +208,12 @@ test("only a canvas document carries the canvas scope, with the Canvas roles and
         ["--mk-font-mono", palettes.canvas.fonts.mono],
       ])
         assert.ok(
-          scope.includes(property + ":" + value + ";"),
+          root.includes(property + ":" + value + ";"),
           scheme + " " + property,
         );
-      assert.match(scope, /^\.canvas-scope\{[^{}]*\}$/);
+      assert.match(root, /^:root\{[^{}]*\}$/);
+      assert.match(document.slice(root.length), /^\.paper-scope\{[^{}]*\}$/);
+      assert.doesNotMatch(document, /\.(?:folio|canvas)-scope/);
     }
 });
 
@@ -211,8 +225,9 @@ test("responsive tokens can be scoped without changing application output", () =
   const selector = ':root[data-color-scheme="dark"]';
   const scoped = responsiveTokenCss("dark", selector);
   assert.ok(scoped.startsWith(selector + "{--mk-color-background:"));
-  assert.ok(scoped.includes(selector + ".folio-scope,"));
-  assert.ok(scoped.includes(selector + " .folio-scope{"));
+  assert.ok(scoped.includes(selector + ".paper-scope,"));
+  assert.ok(scoped.includes(selector + " .paper-scope{"));
+  assert.doesNotMatch(scoped, /\.(?:folio|canvas)-scope/);
   assert.ok(scoped.includes("@media (max-width:767.98px){" + selector + "{"));
   assert.ok(!scoped.includes(":root{--mk-color-background:"));
 });

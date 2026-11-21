@@ -1,8 +1,11 @@
 ---
 /**
- * The Mokly mark beside the lowercase serif wordmark with its accent period.
- * Together they link Home from every page with the accessible name
- * "Mokly home", and they mark the current page on the home itself.
+ * The Mokly mark beside the lowercase Geist wordmark with its signal period.
+ * The mark is the selected layer of a design file: an ink outline frame
+ * behind a signal front layer that carries two short rules, parted from the
+ * frame by a halo of the surface. Together they link Home from every page
+ * with the accessible name "Mokly home", and they mark the current page on
+ * the home itself.
  */
 import { SITE_PATHS, currentPage } from "../navigation.js";
 
@@ -11,7 +14,7 @@ interface Props {
   readonly size?: number;
 }
 
-const { route, size = 26 } = Astro.props;
+const { route, size = 30 } = Astro.props;
 ---
 
 <a
@@ -20,25 +23,33 @@ const { route, size = 26 } = Astro.props;
   class="site-brand"
   href={SITE_PATHS.home}
 >
-  <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
+  <svg
+    aria-hidden="true"
+    class="site-mark"
+    focusable="false"
+    height={size}
+    viewBox="0 0 32 32"
+    width={size}
+  >
     <rect
-      x="3"
-      y="3"
-      width="20"
-      height="21"
-      rx="4"
-      fill="currentColor"
-      opacity="0.3"
+      class="site-mark-back"
+      height="19.8"
+      rx="4.6"
+      width="18.8"
+      x="3.6"
+      y="3.6"
     ></rect>
-    <rect x="9" y="8" width="20" height="21" rx="4" fill="currentColor"></rect>
-    <path
-      d="M14 15h10M14 20h7"
-      stroke="var(--mk-color-surface)"
-      stroke-width="2"
-      stroke-linecap="round"
-    ></path>
+    <rect
+      class="site-mark-front"
+      height="21"
+      rx="4.8"
+      width="20"
+      x="9"
+      y="8"
+    ></rect>
+    <path class="site-mark-rules" d="M14 15h10M14 20h7"></path>
   </svg>
-  <span>
+  <span class="site-brand-word">
     mokly<span class="site-brand-dot">.</span>
   </span>
 </a>
