@@ -103,6 +103,11 @@ The current implementation confirms those traits.
 
 Evidence: `.context/parallel-class-map-stylesheets/options-check.md`.
 
+Parent acceptance, 2026-11-20: `66e02679a` passed its Cloud check.
+The parent accepted a 90 ms mean readiness gain over eight rounds, below the original 120 ms target.
+First Changes and edit time stayed within noise. Bytes, cache state, and memory passed the parent's acceptance.
+Evidence: `.context/parallel-class-map-stylesheets/cloud-acceptance.md`.
+
 ## Milestone 1: Documentation and safety audit
 
 Depends on: none
@@ -135,21 +140,23 @@ Depends on: Milestone 1
 
 Depends on: Milestone 2
 
-- [ ] Run the repository suite and complete gate from `AGENTS.md`.
-- [ ] Run the strict example build and renderer smoke check.
-- [ ] Measure cold and warm `serve.ready` and first Changes on `examples/basic` and the large React fixture.
+- [x] Run the repository suite and every frozen-base gate suite from `AGENTS.md`.
+      The final merged tree also runs the complete gate in Milestone 4.
+- [x] Run the strict example build and renderer smoke check.
+- [x] Measure cold and warm `serve.ready` and first Changes on `examples/basic` and the large React fixture.
 - [x] Compare every published byte and render key against main on all four fixtures.
-- [ ] Send the candidate SHA immediately after the four-fixture proof for the parent's Cloud latency, store-hit, and memory measurements.
+- [x] Send the candidate SHA immediately after the four-fixture proof for the parent's Cloud latency, store-hit, and memory measurements.
       The parent authorized cloud suites to finish while it measures on another machine.
 
 ## Milestone 4: Commit, review, and pull request
 
 Depends on: Milestone 3
 
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the frozen-base diff with the `implementation-review` skill after the push. No findings.
+- [ ] Review the final diff against current `origin/main` after the final base integration and push.
       Fix confirmed findings under its two-round rule and record follow-ups.
-- [ ] Incorporate the parent's acceptance results before opening the pull request.
+- [x] Incorporate the parent's acceptance results before opening the pull request.
 - [ ] Merge current `origin/main` once after cloud acceptance. Audit preservation and rerun the complete gate.
 - [ ] Redo the byte proof if that merge changes stylesheet code.
 - [ ] Delete this plan under the `plans` skill.
