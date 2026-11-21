@@ -37,17 +37,11 @@ Tags: mockup
 
 Depends on: none
 
-Draw every changed screen in the mockup catalogues first. Read the `mockups`
-skill before you start. The mockup tests ban literal colours, and the Browse
-design mockups import the shipped theme. So the mockups read Canvas from a
-named palette in `@mokly/ui` (decision 1), and the site and the app keep
-Folio until Milestone 3. The first TODO lands before the other TODOs start.
+Draw every changed screen in the mockup catalogues first, from a named Canvas
+palette in `@mokly/ui`. The site and the app keep Folio until Milestone 3.
 
-- [x] Add the Canvas light and dark values as a named, non-default palette
-      in a palette module of `@mokly/ui`. Expose it to `packages/tokens` as
-      a named palette, so that only the design mockups use it. Add the Geist
-      faces to the mockup assets. The site, the app and the shell keep Folio
-      until Milestone 3.
+- [x] Add Canvas as a named, non-default palette in `@mokly/ui`, exposed by
+      `packages/tokens`, and the Geist faces for the mockups.
 - [x] Redraw the site chrome: header, mobile menu and footer with the scheme
       control. Update `design/site/home/menu`. Branch:
       `calummoore/canvas-redesign-m1-site-mockups-7l8g`.
@@ -77,10 +71,10 @@ Folio until Milestone 3. The first TODO lands before the other TODOs start.
       with Theme, Settings and Sign out, the compact More menu, the check in
       Changes, and the overlays. Branch:
       `calummoore/canvas-redesign-m1-cloud-viewer-mockups-1osn`.
-- [ ] Run the mockup checks that `AGENTS.md` and `docs/mockups/README.md`
+- [x] Run the mockup checks that `AGENTS.md` and `docs/mockups/README.md`
       name. Smoke-test the changed pages in both schemes at 390px and 1440px.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. Decisions 11 and 12 came from the mockups.
 
 ## Milestone 2: Documentation and protocol
 
@@ -245,6 +239,9 @@ Depends on: 3
       Catalogue, the current tab and Fit, and the panels as sheets.
 - [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
       search.
+- [ ] Link the Canvas design sheets and `design-review.css` through a
+      `design/canvas/**` route in `examples/basic/mokly.config.json`, in
+      place of the `@import` lines in the shared design sheets.
 
 ## Milestone 12: Right panel and compare
 

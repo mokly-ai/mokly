@@ -120,6 +120,22 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
 - The home Browse demo draws the Swipe mode with its divider, and lists the
   five compare modes of the product.
 
+- Mockup calls of the Milestone 1 workspaces, 2026-11-20: Canvas Browse
+  designs are a new `design/canvas` family beside today's screens; desktop
+  frames are 1280 × 800 and mobile frames 390 × 844; the Frames filter
+  replaces the viewport choice and holds Highlight components; Props on a
+  variant set edits the selected frame's variant; a desktop page narrower than
+  900px draws the compact layout; the cloud check uses the side panel until
+  Milestone 13 moves it into the Changes tab; Share is the one filled button
+  of a viewer screen; the account menu's Settings opens the settings index;
+  the switcher marks the reader's row Current; the site desktop layout steps
+  between 700px and 1440px; the docs Edit on GitHub link opens the tracked
+  `docs/guides/` source. The workspace reports in `.context/canvas-redesign/`
+  hold the full lists.
+- The catalogue's Changes filter keeps the folder tree, restyled, and does
+  not take the prototype's status groups, because the tree keeps each change
+  in its folder with its variants and moved rows. Cal can choose the groups.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),

@@ -6,8 +6,9 @@ are a part of that plan, and the pull request that deletes the plan deletes
 them too. The [design record](./canvas-redesign-design.md) holds the design
 source, Cal's decisions in force and my design calls.
 
-Cal answered every decision on 2026-11-20. Each item ends with his answer,
-and the milestones follow it. The options check of 2026-11-20
+Cal answered decisions 1 to 10 on 2026-11-20. Each answered item ends with
+his answer, and the milestones follow it. Decisions 11 and 12 came from the
+mockups and wait for Cal. The options check of 2026-11-20
 added options and changed two recommendations. Its transcript is in
 `.context/canvas-redesign/`.
 
@@ -28,18 +29,20 @@ added options and changed two recommendations. Its transcript is in
 
 ## Summary
 
-| No. | Title                                  | Severity | Effort | Recommended | Chosen                   |
-| --- | -------------------------------------- | -------- | ------ | ----------- | ------------------------ |
-| 1   | Canvas look for open-source Mokly      | High     | Large  | A           | D                        |
-| 2   | Home demo content and the source rule  | Medium   | Medium | A           | A, relaxed until go-live |
-| 3   | Pricing page and links to the app      | Medium   | Medium | A           | A                        |
-| 4   | Button colour below the access minimum | Medium   | Small  | A           | A                        |
-| 5   | Brand mark and wordmark                | Medium   | Medium | B           | B                        |
-| 6   | Stage with several frames and zoom     | Medium   | Medium | A           | C                        |
-| 7   | Inspect and Changes right panel        | Medium   | Large  | D, was B    | C                        |
-| 8   | Overlay compare as a divider           | Low      | Small  | D, was B    | C                        |
-| 9   | Live presence in the app               | Low      | Small  | A           | A                        |
-| 10  | Docs "Your first screen" showpiece     | Low      | Small  | A           | C                        |
+| No. | Title                                          | Severity | Effort | Recommended | Chosen                   |
+| --- | ---------------------------------------------- | -------- | ------ | ----------- | ------------------------ |
+| 1   | Canvas look for open-source Mokly              | High     | Large  | A           | D                        |
+| 2   | Home demo content and the source rule          | Medium   | Medium | A           | A, relaxed until go-live |
+| 3   | Pricing page and links to the app              | Medium   | Medium | A           | A                        |
+| 4   | Button colour below the access minimum         | Medium   | Small  | A           | A                        |
+| 5   | Brand mark and wordmark                        | Medium   | Medium | B           | B                        |
+| 6   | Stage with several frames and zoom             | Medium   | Medium | A           | C                        |
+| 7   | Inspect and Changes right panel                | Medium   | Large  | D, was B    | C                        |
+| 8   | Overlay compare as a divider                   | Low      | Small  | D, was B    | C                        |
+| 9   | Live presence in the app                       | Low      | Small  | A           | A                        |
+| 10  | Docs "Your first screen" showpiece             | Low      | Small  | A           | C                        |
+| 11  | Canvas designs for the remaining Browse states | Medium   | Medium | B           | open                     |
+| 12  | New automatic checks from the mockup reviews   | Low      | Small  | A           | open                     |
 
 ## 1. Canvas look for open-source Mokly
 

@@ -169,3 +169,68 @@ terms, the summary table and the notes about the options check.
   without it.
 - **Action:** answered. It waited for the user, because Cal asked to check large features first.
 - **Answer:** Cal chose **C** on 2026-11-20: a general Markdown fence that renders an HTML sample beside its code.
+
+## 11. Canvas designs for the remaining Browse states
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `examples/basic/specs/design/` (`browse/`, `changes/` and `components/`)
+- **Background:** Milestone 1 drew Canvas as a new family of 29 Browse screens
+  and states. Tests tie each of the 130 older design screens to the shipped
+  package, so those screens kept today's look.
+- **Problem:** Some states of today's shell have no Canvas design yet: the
+  removed and moved outcomes, use-case flows, loading and recovery, search with
+  the tag picker, and most component explorer pages.
+- **Impact if no action:** Milestones 11 and 12 build those states without a
+  design, and the catalogue shows two shell looks until Milestone 12.
+- **Root question:** When does each remaining state of the shell get its
+  Canvas design?
+- **Options:**
+  - **A.** Keep both families. Each implementation milestone draws the Canvas
+    form of the states that it changes. Effort: Small now, more in each
+    implementation milestone.
+  - **B.** Add a second mockup milestone before Milestone 11 for every state
+    whose layout changes. States that change only colour follow the package.
+    Effort: Medium.
+  - **C.** Redraw all 130 older screens now and retire the old family. Effort:
+    Large.
+- **Left out:** A colour-only re-theme of the older screens, because the
+  result matches neither the shipped shell nor the target. Deleting the older
+  screens now, because they depict shipped behaviour.
+- **Wider fix:** None, because this is a choice of scope.
+- **Previous examples:** None found.
+- **Recommendation:** B. The plans rule asks for a design before the
+  implementation, and B covers every changed layout in about a day.
+- **Action:** ask the user, because each option has a real cost and no plan
+  TODO covers these states.
+
+## 12. New automatic checks from the mockup reviews
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Test.
+- **Location:** `docs/mockups/src/_tests_/`, `apps/site/tests/`, `xtask/`
+- **Background:** The site mockup review fixed four defects: dim code below
+  4.5:1, an Edit on GitHub link to an ignored path, an unhosted font and an
+  unused module. For each class it proposed a wider check. Cal decided on
+  2026-11-20 to reduce testing.
+- **Problem:** Each wider check is a new gate, and new gates need Cal's
+  approval.
+- **Impact if no action:** The same classes of defect can return in later
+  site work, and only review finds them.
+- **Root question:** Which new checks guard the Canvas pages?
+- **Options:**
+  - **A.** Add none now. Record each as a follow-up item. Effort: Small.
+  - **B.** Add the two cheap Node checks: every first font family is hosted,
+    and every GitHub file link in the site mockups names a tracked file.
+    Record the rest. Effort: Small.
+  - **C.** Add all five: B, plus a contrast check of every site page, a
+    browser check of the toolbar between 700px and 1440px, and the
+    unused-export ratchet over `docs/mockups/src/`. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** C, because it covers every class.
+- **Previous examples:** `plans/follow-ups/test-helper-unused-exports.md`.
+- **Recommendation:** A. It follows Cal's choice to test less, and the
+  regression tests of the four fixes stay.
+- **Action:** ask the user, because every option except A adds a gate.
