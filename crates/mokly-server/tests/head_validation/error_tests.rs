@@ -123,7 +123,7 @@ fn namespace_check_includes_closure_files_of_reused_views() {
         .compare_prepared(&request(), previous.clone(), head.generation())
         .unwrap();
     first.accept();
-    head.write("ICON.svg", "<svg/>");
+    head.write("ICON.svg", "<svg><title>one</title></svg>");
     head.write(
         "specs/target.screen.html",
         "---\ntitle: Target\n---\n<h1 id=\"summary\">Target</h1><img src=\"../../ICON.svg\">",
