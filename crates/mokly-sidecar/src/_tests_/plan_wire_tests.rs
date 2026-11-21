@@ -2,6 +2,7 @@
 
 use serde_json::json;
 
+use crate::client_origins::Origins;
 use crate::compiled_fixture::compiled;
 use crate::error::{Error, ProtocolError};
 use crate::wire::{Request, Response};
@@ -35,7 +36,7 @@ fn a_bundle_result_rejects_import_indices_outside_its_path_table() {
         .unwrap();
         assert!(
             matches!(
-                response.decode_result(&request),
+                response.decode_result(&request, &Origins::default()),
                 Err(Error::Protocol(ProtocolError::Json { .. }))
             ),
             "out-of-range {name} must reject the result"
@@ -71,7 +72,7 @@ fn a_bundle_result_rejects_invalid_directory_selectors() {
         .unwrap();
         assert!(
             matches!(
-                response.decode_result(&request),
+                response.decode_result(&request, &Origins::default()),
                 Err(Error::Protocol(ProtocolError::Json { .. }))
             ),
             "{name}"

@@ -7,6 +7,7 @@ use serde_json::value::RawValue;
 use ts_rs::TS;
 
 use crate::bundle_reply::BundleReply;
+use crate::client_origins::Origins;
 use crate::definitions::Definitions;
 use crate::error::{Error, ProtocolError, RemoteCode, Result};
 use crate::methods::Call;
@@ -115,10 +116,6 @@ pub enum MethodResult {
 }
 
 impl Response {
-    pub(crate) fn decode_bundle(self) -> Result<BundleReply> {
-        decode(&self.payload()?)
-    }
-
     fn payload(self) -> Result<Box<RawValue>> {
         match self {
             Self::Failure {
@@ -138,11 +135,22 @@ impl Response {
     }
 
     /// Decode the result selected by the pending request method.
-    pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
+    ///
+    /// A bundle result is a full or short reply. A short reply resolves to the
+    /// storage of a restore that the same process loaded.
+    pub(crate) fn decode_result(
+        self,
+        request: &Request,
+        origins: &Origins,
+    ) -> Result<MethodResult> {
         let result = self.payload()?;
         match &request.call {
             Call::Hello(_) => Ok(MethodResult::Hello(decode(&result)?)),
-            Call::Bundle(_) => Ok(MethodResult::Bundle(decode(&result)?)),
+            Call::Bundle(_) => Ok(MethodResult::Bundle(origins.resolve(decode::<
+                BundleReply,
+            >(
+                &result
+            )?)?)),
             Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
             Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
                 Ok(MethodResult::Render(decode(&result)?))

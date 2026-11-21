@@ -113,33 +113,22 @@ impl Pool {
             (stored, candidate, fallback)
         };
         let complete = stored.is_some() || candidate.is_some();
-        if let Some(recipe) = &stored {
-            attempt.pin_restore(recipe);
-        }
-        if let Some((_, preparation, _)) = &candidate {
-            preparation.pin(attempt);
-        }
-        if let Some((_, preparation)) = &fallback {
-            preparation.pin(attempt);
-        }
         if stored
             .as_ref()
             .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
             && candidate.as_ref().is_some_and(|(_, _, captured)| *captured)
             && let Some((generation, preparation, _)) = candidate.take()
         {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some(recipe) = stored {
-            let generation = recipe.generation.clone();
-            self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
-            slot.generations.insert(generation, 0);
+            self.install_released(slot, attempt, recipe)?;
         }
         if let Some((generation, preparation, _)) = candidate {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some((generation, preparation)) = fallback {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         Ok(complete)
     }
@@ -242,7 +231,8 @@ struct Recipe {
 }
 
 impl Preparation {
-    fn pin(&self, attempt: &mut BundleAttempt) {
+    /// Keep the recipe that this preparation restores until the attempt ends.
+    pub(super) fn pin(&self, attempt: &mut BundleAttempt) {
         if let Some(recipe) = &self.recipe {
             attempt.pin(&recipe.compiled, &recipe.modules);
         }

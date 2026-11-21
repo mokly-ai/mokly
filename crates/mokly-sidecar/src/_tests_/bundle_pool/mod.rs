@@ -2,11 +2,13 @@
 
 mod order_tests;
 mod origin_lifetime_tests;
+mod origin_support;
 mod plan_tests;
 mod provenance_tests;
 mod recovery_tests;
 mod restore_tests;
 mod restored_reply_tests;
+mod seed_pin_tests;
 mod sharing_tests;
 mod write_tests;
 

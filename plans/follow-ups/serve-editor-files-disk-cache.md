@@ -6,7 +6,7 @@
   exact Serve plan change, on branch
   `calummoore/mokly-plan-reuse-editor-files-6dni`. The call asked for this
   item for the restart misses that the change leaves.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:155` to line 166,
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:157` to line 170,
   `packages/mokly/src/sidecar/resolution-inputs.ts:76` to line 84,
   `packages/mokly/src/sidecar/physical-input-reader.ts:243` to line 261,
   `crates/mokly-render/src/bundle_attempt.rs:112` to line 124,

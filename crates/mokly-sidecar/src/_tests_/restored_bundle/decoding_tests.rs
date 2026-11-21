@@ -4,6 +4,7 @@ use serde_json::json;
 use serde_json::value::{RawValue, to_raw_value};
 
 use crate::client::SidecarClient;
+use crate::client_origins::Origins;
 use crate::wire::{Frame, Response};
 
 use super::{Script, accepted, bundle, reply, restore, restored};
@@ -76,7 +77,7 @@ fn full_reply_sequences_keep_the_derived_bundle_shape() {
         json!({"generation": "sequence", "compiled": source.compiled, "modules": source.modules});
     let old = response
         .clone()
-        .decode_result(&bundle(2))
+        .decode_result(&bundle(2), &Origins::default())
         .unwrap()
         .into_bundle();
     assert_eq!(serde_json::to_value(old).unwrap(), expected);

@@ -68,11 +68,7 @@ impl Client {
     }
 
     fn response(&mut self, response: Response, request: &Request) -> Result<MethodResult> {
-        let result = if matches!(request.call, Call::Bundle(_)) {
-            MethodResult::Bundle(self.origins.resolve(response.decode_bundle()?)?)
-        } else {
-            response.decode_result(request)?
-        };
+        let result = response.decode_result(request, &self.origins)?;
         self.origins.record(&request.call, &result);
         Ok(result)
     }
@@ -92,7 +88,9 @@ impl SidecarClient for Client {
         let Frame::Response(response) = self.transport.receive()? else {
             return Err(Error::Protocol(ProtocolError::Handshake));
         };
-        let hello = response.decode_result(&request)?.into_hello();
+        let hello = response
+            .decode_result(&request, &self.origins)?
+            .into_hello();
         if hello.version != self.version {
             return Err(Error::Version {
                 expected: self.version.clone(),

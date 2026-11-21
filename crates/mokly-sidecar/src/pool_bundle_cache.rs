@@ -9,6 +9,7 @@ use crate::durable_recipe::DurableRecipe;
 use crate::error::{Error, Result};
 use crate::methods::{BundleCapture, BundleRequest, Call};
 use crate::pool::Pool;
+use crate::pool_preparation::Preparation;
 use crate::pool_state::{Slot, State};
 use crate::results;
 use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
@@ -46,10 +47,6 @@ impl BundleAttempt {
         }
     }
 
-    pub(super) fn pin_restore(&mut self, recipe: &RestoreGeneration) {
-        self.pin(&recipe.compiled, &recipe.modules);
-    }
-
     pub(super) fn pin(
         &mut self,
         compiled: &Arc<CompiledGeneration>,
@@ -60,6 +57,34 @@ impl BundleAttempt {
 }
 
 impl Pool {
+    /// Pin a released seed for the attempt, then restore it in the slot.
+    ///
+    /// A short reply can name any seed, so the attempt owns its storage until the request ends.
+    pub(super) fn install_released(
+        &self,
+        slot: &mut Slot,
+        attempt: &mut BundleAttempt,
+        recipe: Box<RestoreGeneration>,
+    ) -> Result<()> {
+        attempt.pin(&recipe.compiled, &recipe.modules);
+        let generation = recipe.generation.clone();
+        self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
+        slot.generations.insert(generation, 0);
+        Ok(())
+    }
+
+    /// Pin a live seed for the attempt, then send the inputs that the slot lacks.
+    pub(super) fn install_live(
+        &self,
+        slot: &mut Slot,
+        attempt: &mut BundleAttempt,
+        generation: &str,
+        preparation: Preparation,
+    ) -> Result<()> {
+        preparation.pin(attempt);
+        self.restore(slot, generation, false, preparation, false)
+    }
+
     pub(super) fn seed_bundle(
         &self,
         slot: &mut Slot,

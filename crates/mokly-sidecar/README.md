@@ -419,7 +419,9 @@ Real-process recipe tests count esbuild operations. A revert after a
 release skips esbuild, a changed input compiles, and a stored and a live
 recipe with one content id both stay usable. Restored reply tests cover the
 shared rebuild of short replies, origin lifetimes, protocol failures, full
-reply decoding, and the request pins of the pool. The shutdown unit tests
+reply decoding, and the request pins of the pool. The origin lifetime and seed pin tests release
+or evict a live, loaded, released-recipe, Serve edit fallback, or disk seed
+while the request that names it is busy, and the reply still resolves. The shutdown unit tests
 control exit and drain independently through `WaitMock`. Command stderr tests
 acknowledge all forwarded bytes before shutdown and check bounded pieces and
 process reaping. Direct sidecar tests check graceful exit code 0 and the final
@@ -508,7 +510,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a restored stored compilation, with its runtime key and plan. A result with
   that runtime key carries that plan. It reports `hit` when its count of
   `esbuild` events is zero. `BundleAttempt` also holds the request pins of the
-  live slot generations and the restored seeds.
+  live slot generations and the restored seeds. `install_live` and `install_released`
+  pin each live or released seed before they restore it in the slot.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -587,7 +590,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
-  the pending request, or `decode_bundle` decodes a `BundleReply`. A failed
+  the pending request. A `bundle` result decodes as a `BundleReply`, and the
+  restore origins of the `Client` resolve a short reply. A failed
   typed decode falls back once to a generic JSON tree.
   The private [`src/wire_decode.rs`](./src/wire_decode.rs)
   decodes each envelope field by field, with no generic JSON tree.
