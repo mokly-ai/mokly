@@ -141,7 +141,7 @@ impl NativePreparation {
             Err(source) => (
                 WorkState::Ready {
                     context,
-                    prepared: Err(BasePreparationError::new(false, source)),
+                    prepared: Box::new(Err(BasePreparationError::new(false, source))),
                 },
                 SourceCompletion::Finished,
             ),

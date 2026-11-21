@@ -1,6 +1,6 @@
 # Prepare the Serve base before head usage completes
 
-Status: Active. On branch `calummoore/mokly-eager-base-preparation-5dkn`, no pull request yet. The pull request that completes the work deletes this plan.
+Status: Active. [PR #461](https://github.com/mokly-ai/mokly/pull/461) is open as a draft on branch `calummoore/mokly-eager-base-preparation-5dkn`. The pull request deletes this plan when verification and review finish.
 
 Serve currently waits for the complete head usage pass before it prepares the base catalogue.
 This change moves independent base preparation into head startup and head usage.
@@ -458,6 +458,8 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] Record the remaining pre-readiness work and the accepted warm readiness cost in a post-merge follow-up.
 - [x] Restore the existing dependency error timing span on an input read limit, with its unchanged static regression test.
 - [x] Provision the Browser gate's OS watch capacity and record the known Example teardown failure and full rerun, with every test unchanged.
+- [x] Open the requested draft at `7a423c250` and run fresh read-only review beside the gate and CI.
+- [x] Keep the prepared result behind one Box allocation to satisfy Windows clippy, without a lint allowance or behavior change.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
@@ -465,7 +467,19 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.
 - [x] Rerun the targeted tests and repository suite after the main integration.
 - [ ] Delete this plan when the `plans` skill permits it.
-- [ ] Open the pull request into `main` with the dated design calls and plan permalink. Await final CI with `scripts/ci-wait.sh` after each push and PR creation. Rerun unrelated Site Lighthouse at most once and record it separately from Required CI. Report the PR link, tested SHA, acceptance, checks, and remaining items. Do not merge.
+- [ ] Mark PR #461 ready after the gate and review pass, with the dated design calls and plan permalink. Await final CI with `scripts/ci-wait.sh` after each push and readiness. Rerun unrelated Site Lighthouse at most once and record it separately from Required CI. Report the PR link, tested SHA, acceptance, checks, and remaining items. Do not merge.
 
 Evidence: `.context/eager-base-preparation/main-integration-merge-audit.log` and `main-integration-preservation.md` record the main integration and preservation check.
 Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/desktop-main-integration/` records preservation of the later desktop release merge. Its sibling `browser-git-exit/browser-7f4220e7a-summary.json` records the full Browser pass and zero exits of the shared process chain. The existing Example teardown follow-up keeps the earlier failure and its unknown cause.
+
+## Verification calls, 2026-11-21
+
+The performance orchestrator retained the unaffected Repository pass after the agent's observer setup error.
+It requested normal Viewer and Browser reruns, then delivery and every unrun cloud suite.
+It requested draft PR #461 at `7a423c250`, with fresh read-only review and CI beside the local gate.
+The plan stays until the gate and review finish, then the pull request becomes ready.
+It authorized one Box allocation for each ready preparation to satisfy the Windows enum-layout lint, with no allowance.
+This representation change moves no read or work.
+The other gate results stay valid, and no new measurement is required.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/windows-enum-layout/` records the source audit and targeted checks.

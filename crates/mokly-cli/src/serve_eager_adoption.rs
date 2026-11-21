@@ -44,7 +44,7 @@ impl NativePreparation {
                 context.evidence,
                 context.services,
                 Ok(context.sources),
-                Some(prepared),
+                Some(*prepared),
                 context.root,
             ),
             Some(WorkState::Failed {

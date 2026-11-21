@@ -60,7 +60,7 @@ pub(super) enum WorkState {
     },
     Ready {
         context: Context,
-        prepared: BasePreparationResult,
+        prepared: Box<BasePreparationResult>,
     },
     Failed {
         evidence: Arc<NativeEvidence>,
@@ -135,7 +135,7 @@ impl PreparationWork for NativePreparation {
         self.events.warnings(preparation_warnings(&result));
         *self.state.lock().unwrap_or_else(|error| error.into_inner()) = Some(WorkState::Ready {
             context,
-            prepared: result,
+            prepared: Box::new(result),
         });
     }
     fn failed(&self, error: Error) {
