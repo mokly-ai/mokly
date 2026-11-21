@@ -3,9 +3,10 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
-use super::{WARNING_LINE, build, fixture, git, write};
+use super::{WARNING_LINE, build, fixture, write};
 
 /// Publish to an unreachable endpoint, so a passed build step ends at the upload.
 fn strict_publish(root: &Path) -> Output {

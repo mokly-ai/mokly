@@ -18,7 +18,7 @@ mod changes_freshness;
 mod changes_runtime;
 #[path = "../src/changes_static.rs"]
 mod changes_static;
-#[expect(dead_code, reason = "the fixture uses only Git helpers")]
+#[expect(dead_code, reason = "the fixture uses only helpers that write sources")]
 mod changes_support;
 mod design_support;
 

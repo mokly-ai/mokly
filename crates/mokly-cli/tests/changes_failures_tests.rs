@@ -4,25 +4,8 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
-
-fn git(root: &Path, args: &[&str]) {
-    let output = Command::new("git")
-        .current_dir(root)
-        .args(args)
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env(
-            "GIT_CONFIG_GLOBAL",
-            if cfg!(windows) { "NUL" } else { "/dev/null" },
-        )
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
 
 fn catalogue() -> TempDir {
     let root = TempDir::new().unwrap();
@@ -155,13 +138,11 @@ fn a_missing_historical_blob_is_git_failed_instead_of_unavailable_validation() {
     let root = catalogue();
     git(root.path(), &["init", "--initial-branch=fixture-base"]);
     commit(root.path());
-    let blob = Command::new("git")
-        .current_dir(root.path())
-        .args(["rev-parse", "HEAD:specs/home.screen.html"])
-        .output()
-        .unwrap();
-    assert!(blob.status.success());
-    let hash = String::from_utf8(blob.stdout).unwrap();
+    let hash = String::from_utf8(git(
+        root.path(),
+        &["rev-parse", "HEAD:specs/home.screen.html"],
+    ))
+    .unwrap();
     let hash = hash.trim();
     fs::remove_file(
         root.path()
@@ -170,12 +151,7 @@ fn a_missing_historical_blob_is_git_failed_instead_of_unavailable_validation() {
             .join(&hash[2..]),
     )
     .unwrap();
-    let commit = Command::new("git")
-        .current_dir(root.path())
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .unwrap();
-    let commit = String::from_utf8(commit.stdout).unwrap();
+    let commit = String::from_utf8(git(root.path(), &["rev-parse", "HEAD"])).unwrap();
     let message = failure(root.path(), "fixture-base", "git-failed");
     assert!(message.contains(commit.trim()), "{message}");
     assert!(message.contains("base object"), "{message}");

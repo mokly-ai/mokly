@@ -3,8 +3,10 @@
 use std::fs;
 use std::path::Path;
 
+use mokly_test_support::git::git;
+
 mod changes_support;
-use changes_support::{base, git, run, write};
+use changes_support::{base, run, write};
 
 fn commit(root: &Path) {
     git(root, &["add", "-A"]);

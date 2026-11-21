@@ -5,13 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+use mokly_test_support::git::{command, run};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
 use crate::remote::adapter_support::TestDirectory;
 use crate::remote::contracts::{ClockSleepMock, InterruptRequestedMock, Output};
 use crate::remote::error::Result;
 use crate::remote::git_identity::CommitSha;
-use crate::remote::git_test_runner::IsolatedGit;
 use crate::remote::process::{Process, Request, SystemProcess};
 use crate::remote::scripts::SystemScripts;
 
@@ -53,8 +54,6 @@ impl Process for RecordingProcess {
 pub(crate) struct Repository {
     /// Own the containing temporary directory until every child has ended.
     directory: TestDirectory,
-    /// Isolated setup and inspection, never recorded as code-under-test requests.
-    fixture_git: IsolatedGit,
     /// Actual checkout root.
     pub(crate) root: PathBuf,
     /// Git and script boundary under test.
@@ -67,7 +66,6 @@ impl Repository {
     /// Create a repository with one root commit and a local bare origin.
     pub(crate) fn new() -> Self {
         let directory = TestDirectory::new();
-        let fixture_git = IsolatedGit::new(directory.path());
         let root = directory.path().join("repo with space");
         let process = Arc::new(RecordingProcess {
             inner: Arc::new(SystemProcess {
@@ -93,7 +91,6 @@ impl Repository {
         };
         let repository = Self {
             directory,
-            fixture_git,
             root,
             scripts,
             process,
@@ -132,7 +129,12 @@ impl Repository {
 
     /// Inspect or prepare the fixture with isolated config and no request recording.
     pub(crate) fn at(&self, cwd: &Path, args: &[&str]) -> String {
-        self.fixture_git.run(cwd, args)
+        let mut command = command();
+        command.args(args).current_dir(cwd);
+        for name in GIT_REPOSITORY_VARIABLES.iter().chain(SECRET_VARIABLES) {
+            command.env_remove(name);
+        }
+        String::from_utf8(run(&mut command)).unwrap()
     }
 
     /// Run Git in the checkout.

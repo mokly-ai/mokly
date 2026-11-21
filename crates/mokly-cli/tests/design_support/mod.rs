@@ -2,11 +2,11 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
-use crate::changes_support::{git, write};
+use crate::changes_support::write;
 
 mod callers;
 mod delivery;
@@ -20,8 +20,9 @@ mod shared;
 pub fn fixture() -> TempDir {
     let directory = TempDir::new().unwrap();
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let files = Command::new("git")
-        .args([
+    let files = git(
+        &workspace,
+        &[
             "ls-files",
             "-z",
             "--",
@@ -29,13 +30,9 @@ pub fn fixture() -> TempDir {
             "packages/ui/src",
             "docs/protocol",
             "plans/rust-rebuild.md",
-        ])
-        .current_dir(&workspace)
-        .output()
-        .unwrap();
-    assert!(files.status.success());
+        ],
+    );
     for name in files
-        .stdout
         .split(|byte| *byte == 0)
         .filter(|name| !name.is_empty())
     {

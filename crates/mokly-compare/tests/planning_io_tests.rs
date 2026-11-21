@@ -1,7 +1,6 @@
 //! Real base planning batches public inputs before rendering and survives cache eviction.
 
 use std::io::Write;
-use std::process::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -10,6 +9,7 @@ use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{Cancellation, Output, Request, Runner};
 use mokly_git::error::Result;
 use mokly_model::canonical;
+use mokly_test_support::git::git;
 
 #[expect(dead_code, reason = "these fixtures exercise only resource IO")]
 mod engine_support;
@@ -124,12 +124,10 @@ fn fixture(size: usize) -> Fixture {
     // Git for Windows sets `core.autocrlf=true` for the whole system, which
     // converts line endings on checkout. Pin identity conversion in the
     // repository, so the base bytes equal the committed bytes on every host.
-    let status = Command::new("git")
-        .args(["config", "core.autocrlf", "false"])
-        .current_dir(fixture.directory.path())
-        .status()
-        .unwrap();
-    assert!(status.success());
+    git(
+        fixture.directory.path(),
+        &["config", "core.autocrlf", "false"],
+    );
     fixture
 }
 

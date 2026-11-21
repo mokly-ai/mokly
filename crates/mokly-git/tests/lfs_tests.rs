@@ -1,10 +1,10 @@
 //! Git LFS checkout conversion uses a local remote without internet access.
 
 use std::fs;
-use std::process::Command;
 
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
+use mokly_test_support::git::{command, git, run};
 use sha2::{Digest, Sha256};
 
 #[expect(dead_code, reason = "the clone case composes its own repository")]
@@ -14,8 +14,8 @@ use support::Fixture;
 #[test]
 fn missing_lfs_content_downloads_from_the_local_remote() {
     let source = Fixture::new();
-    source.git(&["lfs", "install", "--local"]);
-    source.git(&["lfs", "track", "*.lfs"]);
+    git(source.root(), &["lfs", "install", "--local"]);
+    git(source.root(), &["lfs", "track", "*.lfs"]);
     let content = b"local LFS download\n";
     source.write("asset.lfs", content);
     let base = source.commit();
@@ -27,28 +27,11 @@ fn missing_lfs_content_downloads_from_the_local_remote() {
     } else {
         format!("file://{remote_path}")
     };
-    let output = Command::new("git")
+    run(command()
         .args(["clone", &remote])
         .arg(&root)
-        .env("GIT_LFS_SKIP_SMUDGE", "1")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env(
-            "GIT_CONFIG_GLOBAL",
-            if cfg!(windows) { "NUL" } else { "/dev/null" },
-        )
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let output = Command::new("git")
-        .current_dir(&root)
-        .args(["lfs", "install", "--local"])
-        .output()
-        .unwrap();
-    assert!(output.status.success());
+        .env("GIT_LFS_SKIP_SMUDGE", "1"));
+    git(&root, &["lfs", "install", "--local"]);
     let digest = Sha256::digest(content)
         .iter()
         .map(|byte| format!("{byte:02x}"))

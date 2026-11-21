@@ -9,6 +9,7 @@ use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories};
+use mokly_test_support::git::git;
 
 #[expect(dead_code, reason = "this case uses the native runner only")]
 mod engine_support;
@@ -20,20 +21,19 @@ fn partial_extraction_warns_and_a_new_generation_can_recover() {
     let temporary = tempfile::tempdir().unwrap();
     let root = temporary.path().join("repo");
     fs::create_dir(&root).unwrap();
-    support::git(&root, &["init", "-b", "main"]);
-    support::git(&root, &["config", "user.name", "Mokly Tests"]);
-    support::git(&root, &["config", "user.email", "tests@mokly.invalid"]);
+    git(&root, &["init", "-b", "main"]);
+    git(&root, &["config", "user.name", "Mokly Tests"]);
+    git(&root, &["config", "user.email", "tests@mokly.invalid"]);
     fs::write(root.join(".gitattributes"), b"bad.txt filter=bad\n").unwrap();
     fs::write(root.join("bad.txt"), b"recoverable").unwrap();
     fs::write(root.join("good.txt"), b"independent").unwrap();
-    support::git(&root, &["add", "."]);
-    support::git(&root, &["commit", "-m", "fixture"]);
-    let commit = ObjectId::parse(
-        String::from_utf8_lossy(&support::git(&root, &["rev-parse", "HEAD"])).trim(),
-    )
-    .unwrap();
-    support::git(&root, &["config", "filter.bad.smudge", "sh -c 'exit 42'"]);
-    support::git(&root, &["config", "filter.bad.required", "true"]);
+    git(&root, &["add", "."]);
+    git(&root, &["commit", "-m", "fixture"]);
+    let commit =
+        ObjectId::parse(String::from_utf8_lossy(&git(&root, &["rev-parse", "HEAD"])).trim())
+            .unwrap();
+    git(&root, &["config", "filter.bad.smudge", "sh -c 'exit 42'"]);
+    git(&root, &["config", "filter.bad.required", "true"]);
     let factory: &dyn Repositories = &GitRepositories {
         runner: engine_support::runner(),
         disk: Arc::new(SystemDisk),
@@ -66,7 +66,7 @@ fn partial_extraction_warns_and_a_new_generation_can_recover() {
         assert_eq!(repository.conversion_warnings().len(), 1);
     }
     assert!(!partial.exists());
-    support::git(&root, &["config", "filter.bad.smudge", "cat"]);
+    git(&root, &["config", "filter.bad.smudge", "cat"]);
     let repository = factory.open(&root).unwrap();
     let extraction: &dyn Extraction = &CachedExtraction {
         steps: Arc::new(support::IgnoredSteps),

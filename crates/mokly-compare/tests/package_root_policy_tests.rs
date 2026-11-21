@@ -16,15 +16,8 @@ use mokly_graph::policy::{FilePolicy, PublicPolicy};
 use mokly_graph::public_denial::PublicDenial;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_source_interface::tree::SourceTree;
+use mokly_test_support::git::git;
 use tempfile::TempDir;
-
-use support::git;
-
-#[expect(
-    dead_code,
-    reason = "The shared host fixtures also support cache and install tests."
-)]
-mod support;
 
 fn fixture() -> TempDir {
     let directory = TempDir::new().unwrap();

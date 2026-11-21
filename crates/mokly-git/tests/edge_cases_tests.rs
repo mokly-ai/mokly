@@ -16,6 +16,9 @@ use mokly_git::identity::RepoPath;
 #[cfg(unix)]
 use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::tree::Limits;
+use mokly_test_support::git::git;
+#[cfg(unix)]
+use mokly_test_support::git::{command, run};
 
 use support::Fixture;
 #[cfg(unix)]
@@ -28,7 +31,7 @@ fn an_unindexed_working_file_is_modified_instead_of_deleted() {
     let fixture = Fixture::new();
     fixture.write("kept.txt", b"base");
     let base = fixture.commit();
-    fixture.git(&["rm", "--cached", "kept.txt"]);
+    git(fixture.root(), &["rm", "--cached", "kept.txt"]);
     let changes = fixture.repository().changed_paths(&base).unwrap();
     assert_eq!(changes.len(), 1);
     assert_eq!(changes[0].kind, Kind::Modified);
@@ -51,13 +54,7 @@ fn unusual_and_nested_untracked_names_do_not_fail_queries_or_extraction() {
     let base = fixture.commit();
     let nested = fixture.root().join("scratch-clone");
     fs::create_dir(&nested).unwrap();
-    Command::new("git")
-        .arg("init")
-        .arg(&nested)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
+    command().arg("init").arg(&nested).output().unwrap();
     fs::write(nested.join("file"), b"nested").unwrap();
     #[cfg(not(target_os = "macos"))]
     // APFS rejects names whose bytes are not valid UTF-8 with EILSEQ.
@@ -115,15 +112,15 @@ fn a_real_shallow_clone_cannot_invent_a_merge_base() {
     let fixture = Fixture::new();
     fixture.write("file", b"ancestor");
     fixture.commit();
-    fixture.git(&["switch", "-c", "base"]);
+    git(fixture.root(), &["switch", "-c", "base"]);
     fixture.write("base", b"base");
     fixture.commit();
-    fixture.git(&["switch", "-c", "head", "main"]);
+    git(fixture.root(), &["switch", "-c", "head", "main"]);
     fixture.write("head", b"head");
     fixture.commit();
     let temporary = tempfile::tempdir().unwrap();
     let clone = temporary.path().join("shallow");
-    let output = Command::new("git")
+    run(command()
         .args([
             "clone",
             "--no-local",
@@ -133,24 +130,8 @@ fn a_real_shallow_clone_cannot_invent_a_merge_base() {
             "head",
             fixture.root().to_str().unwrap(),
         ])
-        .arg(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let output = Command::new("git")
-        .args(["fetch", "--depth", "1", "origin", "base:base"])
-        .current_dir(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
+        .arg(&clone));
+    git(&clone, &["fetch", "--depth", "1", "origin", "base:base"]);
     assert!(clone.join(".git/shallow").exists());
     let factory: &dyn Repositories = &GitRepositories {
         runner: runner(Arc::new(Token::default())),

@@ -19,6 +19,7 @@ thiserror = "2.0.21"
 toml = "1.2.1"
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 serde-saphyr = "2.1.1"
 tempfile = "3.27.0"
 unimock = "0.6.8"

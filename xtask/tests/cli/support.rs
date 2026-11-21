@@ -10,6 +10,7 @@ use std::os::windows::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Output};
 
+use mokly_test_support::git::command;
 use tempfile::TempDir;
 
 pub(super) trait Fixture {
@@ -94,12 +95,19 @@ impl Fixture for GitFixture {
         } else {
             program.to_owned()
         };
-        Command::new(program)
+        let mut command = if program == "git" {
+            command()
+        } else {
+            let mut command = Command::new(program);
+            command
+                .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                .env("GIT_CONFIG_NOSYSTEM", "1");
+            command
+        };
+        command
             .args(args)
             .current_dir(self.root())
             .env("CARGO_TARGET_DIR", self.root().join("target"))
-            .env("GIT_CONFIG_GLOBAL", "/dev/null")
-            .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_COUNT", "1")
             .env("GIT_CONFIG_KEY_0", "commit.gpgsign")
             .env("GIT_CONFIG_VALUE_0", "false")

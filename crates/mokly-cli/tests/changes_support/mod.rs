@@ -4,30 +4,13 @@ use std::fs;
 use std::path::Path;
 use std::process::{Command, Output};
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
 pub fn write(root: &Path, path: &str, body: &str) {
     let path = root.join(path);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, body).unwrap();
-}
-
-pub fn git(root: &Path, arguments: &[&str]) {
-    let output = Command::new("git")
-        .current_dir(root)
-        .args(arguments)
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env(
-            "GIT_CONFIG_GLOBAL",
-            if cfg!(windows) { "NUL" } else { "/dev/null" },
-        )
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
 }
 
 pub fn run(root: &Path, arguments: &[&str]) -> Output {

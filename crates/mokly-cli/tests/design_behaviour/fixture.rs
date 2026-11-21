@@ -7,8 +7,8 @@ use std::os::unix::fs::symlink;
 #[cfg(windows)]
 use std::os::windows::fs::symlink_dir;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
 use super::records;
@@ -24,8 +24,9 @@ pub(super) fn workspace() -> PathBuf {
 pub(super) fn copy() -> TempDir {
     let directory = TempDir::new().unwrap();
     let workspace = workspace();
-    let files = Command::new("git")
-        .args([
+    let files = git(
+        &workspace,
+        &[
             "ls-files",
             "-z",
             "--",
@@ -34,13 +35,9 @@ pub(super) fn copy() -> TempDir {
             "packages/ui/src",
             "docs/protocol",
             "plans/rust-rebuild.md",
-        ])
-        .current_dir(&workspace)
-        .output()
-        .unwrap();
-    assert!(files.status.success());
+        ],
+    );
     for name in files
-        .stdout
         .split(|byte| *byte == 0)
         .filter(|name| !name.is_empty())
     {

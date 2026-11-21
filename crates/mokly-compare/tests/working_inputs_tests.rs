@@ -13,14 +13,7 @@ use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
-
-use support::git;
-
-#[expect(
-    dead_code,
-    reason = "The shared host fixtures also support cache and install tests."
-)]
-mod support;
+use mokly_test_support::git::git;
 
 #[test]
 fn ignored_packages_nested_clones_and_clean_crlf_do_not_change_dependency_identity() {

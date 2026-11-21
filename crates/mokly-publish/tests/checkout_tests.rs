@@ -2,9 +2,10 @@
 
 use std::fs;
 
-use checkout_support::{checkout, git, init};
+use checkout_support::{checkout, init};
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::CommandCancellation;
+use mokly_test_support::git::git;
 
 #[path = "support/checkout.rs"]
 mod checkout_support;
