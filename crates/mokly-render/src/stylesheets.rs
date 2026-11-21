@@ -6,7 +6,7 @@ use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
@@ -15,13 +15,14 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_compiler::CapturingCompiler;
 
 pub(crate) fn compiler(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
-) -> Arc<dyn StylesheetBundler> {
+) -> Arc<dyn ClassMapCompiler> {
     let tree = sources::reader(runtime, config, side);
     let module_resolution = &side.module_resolution;
     let resolution = Resolution {
@@ -82,6 +83,7 @@ pub(crate) fn compiler(
                     .watch_stylesheets
                     .then(|| runtime.inventory_tree.clone()),
                 side: side.clone(),
+                deferred_sources: Some(tree.clone()),
             }),
             tree,
             config.repo_root.clone(),
