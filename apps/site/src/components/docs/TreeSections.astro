@@ -1,0 +1,56 @@
+---
+/**
+ * Every documentation section, listed expanded under its mono rubric with
+ * its page count, and its pages as 44px rows with a file icon, in the order
+ * of the section tree. The page being read is the selected layer: its row
+ * carries `aria-current="page"`. A CLI command's title, such as `serve`, is
+ * set in mono. The Layers panel and the tree sheet both list them, and the
+ * sections scroll inside their area.
+ *
+ * Use: `<TreeSections route={route} />`.
+ */
+import { DOCS_SECTIONS, type DocsPage } from "../../docs/pages.js";
+import Icon from "../Icon.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+
+/** A CLI command's page, whose title is the command itself. */
+function isCommand(page: DocsPage): boolean {
+  return page.section === "cli" && /^[a-z]+$/.test(page.title);
+}
+---
+
+<div class="site-doc-tree-scroll">
+  {DOCS_SECTIONS.map((section) => (
+    <div class="site-doc-section">
+      <p class="site-doc-section-head site-rubric">
+        <span>{section.title}</span>
+        <span aria-hidden="true" class="site-docs-section-count">
+          {section.pages.length}
+        </span>
+      </p>
+      <ul>
+        {section.pages.map((page) => (
+          <li>
+            <a
+              aria-current={page.route === route ? "page" : undefined}
+              class="site-doc-link"
+              href={page.route}
+            >
+              <Icon name="file" size={14} />
+              {isCommand(page) ? (
+                <span class="site-docs-command">{page.title}</span>
+              ) : (
+                page.title
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</div>

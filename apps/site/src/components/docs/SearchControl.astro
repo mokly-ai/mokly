@@ -1,0 +1,56 @@
+---
+/**
+ * A documentation search control, which opens the search dialog as ⌘K,
+ * Ctrl K and `/` do. The full control in the Layers panel is shaped like a
+ * field and shows its key hint; the compact one is the sub-bar's 44px icon
+ * control. Both are named Search docs. The page draws them, and the search
+ * island binds them and sets the key hint to ⌘K on Apple platforms, so
+ * without script neither shows.
+ *
+ * The glyph is the Canvas set's search drawing. The site's icon set does not
+ * hold it yet, so the control draws it itself.
+ *
+ * Use: `<SearchControl />` or `<SearchControl compact />`.
+ */
+
+interface Props {
+  readonly compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+const size = compact ? 18 : 15;
+---
+
+<button
+  aria-controls="site-search"
+  aria-haspopup="dialog"
+  aria-keyshortcuts="Control+K Meta+K /"
+  class="site-search"
+  type="button"
+>
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height={size}
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="1.5"
+    viewBox="0 0 16 16"
+    width={size}
+  >
+    <circle cx="7" cy="7" r="4.4"></circle>
+    <path d="m10.3 10.3 3.3 3.3"></path>
+  </svg>
+  {compact ? (
+    <span class="site-visually-hidden">Search docs</span>
+  ) : (
+    <>
+      <span class="site-search-label">Search docs</span>
+      <kbd aria-hidden="true" class="site-search-key">
+        Ctrl K
+      </kbd>
+    </>
+  )}
+</button>

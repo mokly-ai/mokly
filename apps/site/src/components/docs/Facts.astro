@@ -1,0 +1,40 @@
+---
+/**
+ * The page's facts as labelled rows with mono values, the version on a
+ * signal chip, then Edit on GitHub: a full-width 44px link to GitHub's
+ * editor for the page's tracked source. The Inspect panel and the On this
+ * page disclosure both hold them.
+ *
+ * Use: `<Facts edit={editUrl(source)} facts={pageFacts(source, section)} />`.
+ */
+import Chip from "../Chip.astro";
+
+import type { PageFact } from "./page-source.js";
+
+interface Props {
+  readonly edit: string;
+  readonly facts: readonly PageFact[];
+}
+
+const { edit, facts } = Astro.props;
+---
+
+<dl class="site-docs-facts">
+  {facts.map((fact) => (
+    <div class="site-docs-fact">
+      <dt>{fact.label}</dt>
+      <dd>
+        {fact.label === "Version" ? (
+          <Chip mono tone="signal">
+            {fact.value}
+          </Chip>
+        ) : (
+          fact.value
+        )}
+      </dd>
+    </div>
+  ))}
+</dl>
+<a class="site-docs-edit" href={edit}>
+  Edit on GitHub
+</a>

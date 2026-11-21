@@ -1,35 +1,42 @@
 ---
 /**
- * Previous and next at the foot of a document. They follow the section tree's
- * order across section boundaries, so reading straight through covers the
- * documentation once.
+ * Previous and next at the foot of a document: two small frames under the
+ * mono labels Previous and Next, below a hairline that crosses the sheet.
+ * Each names the neighbour's section, title and description. They follow
+ * the section tree's order across section boundaries, so reading straight
+ * through covers the documentation once, and they stack on mobile.
+ *
+ * Use: `<Pager route={route} />` as the last part of the page frame.
  */
-import { neighbours } from "../../docs/pages.js";
+import { pagerEntries } from "./pager-entries.js";
 
 interface Props {
   readonly route: string;
 }
 
-const { next, previous } = neighbours(Astro.props.route);
+const { next, previous } = pagerEntries(Astro.props.route);
+const items = [
+  ...(previous ? [{ entry: previous, label: "Previous", rel: "prev" }] : []),
+  ...(next ? [{ entry: next, label: "Next", rel: "next" }] : []),
+];
 ---
 
-{(previous || next) && (
-  <nav aria-label="Pagination" class="site-pager" data-pagefind-ignore>
-    {previous && (
-      <a class="site-pager-item" href={previous.route} rel="prev">
-        <span class="site-pager-label site-rubric">Previous</span>
-        {previous.title}
-      </a>
-    )}
-    {next && (
+{items.length > 0 && (
+  <nav aria-label="Pagination" class="site-pager">
+    {items.map(({ entry, label, rel }) => (
       <a
-        class="site-pager-item site-pager-item--next"
-        href={next.route}
-        rel="next"
+        class:list={[
+          "site-pager-item",
+          rel === "next" && "site-pager-item--next",
+        ]}
+        href={entry.route}
+        rel={rel}
       >
-        <span class="site-pager-label site-rubric">Next</span>
-        {next.title}
+        <span class="site-pager-label">{label}</span>
+        <span class="site-docs-pager-section">{entry.section}</span>
+        <span class="site-docs-pager-title">{entry.title}</span>
+        <span class="site-docs-pager-description">{entry.description}</span>
       </a>
-    )}
+    ))}
   </nav>
 )}

@@ -1,0 +1,21 @@
+---
+/**
+ * The published Mokly CLI version at the top of the Layers panel and of the
+ * tree sheet: a row that links the changelog, with the version of the
+ * workspace `@mokly/mokly` package on a signal chip.
+ *
+ * Use: `<VersionRow />`.
+ */
+import { PACKAGE_VERSION } from "../../docs/version.js";
+import { SITE_PATHS } from "../../navigation.js";
+import Chip from "../Chip.astro";
+---
+
+<a class="site-version-link" href={SITE_PATHS.changelog}>
+  <span class="site-version">
+    <span class="site-version-label">Mokly CLI</span>
+    <Chip mono tone="signal">
+      {PACKAGE_VERSION}
+    </Chip>
+  </span>
+</a>

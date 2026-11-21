@@ -1,0 +1,37 @@
+---
+/**
+ * The docs sub-bar below 1024px: a sticky 52px bar under the tool bar that
+ * holds the Layers control, named by the section and the page, which opens
+ * the tree sheet, and the compact search control. Both controls need
+ * script, so without script the whole bar does not show.
+ *
+ * Use: `<Subbar section="Getting started" title="Install" />`.
+ */
+import SearchControl from "./SearchControl.astro";
+
+interface Props {
+  readonly section: string;
+  readonly title: string;
+}
+
+const { section, title } = Astro.props;
+---
+
+<div class="site-docs-subbar">
+  <button
+    aria-controls="docs-layers"
+    aria-expanded="false"
+    aria-haspopup="dialog"
+    class="site-docs-layers-toggle"
+    type="button"
+  >
+    <span class="site-docs-layers-toggle-trail">
+      <span class="site-docs-layers-toggle-section">{section}</span>{" "}
+      <span aria-hidden="true" class="site-docs-layers-toggle-sep">
+        /
+      </span>{" "}
+      <span class="site-docs-layers-toggle-page">{title}</span>
+    </span>
+  </button>
+  <SearchControl compact />
+</div>

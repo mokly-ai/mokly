@@ -41,11 +41,18 @@ rewritten.
 Every page draws on the dot-grid canvas under one sticky tool bar: the brand,
 the depicted file title and people, the navigation and Get started. Below
 768px the bar holds the brand, Get started and a Menu control, which opens the
-site's destinations in a modal sheet that drops in below the bar. On
-documentation routes the bar's last control is the docs search. The desktop
-docs tree keeps its scroll position across pages within a tab and reveals the
+site's destinations in a modal sheet that drops in below the bar.
+
+Each documentation page is a page of the design file. The Layers panel holds
+the docs search and the section tree, the page is a frame on the canvas
+labelled with its tracked source, and the Inspect panel holds the page's facts,
+Edit on GitHub and On this page with the reading progress. Below 1280px On
+this page, the facts and Edit on GitHub sit in a disclosure under the lead.
+Below 1024px a sub-bar under the tool bar opens the tree as a modal sheet and
+opens search. ⌘K, Ctrl K and `/` open search on every docs page. The Layers
+tree keeps its scroll position across pages within a tab and reveals the
 current page when a direct link, search result or pager opens a page outside
-the visible tree.
+the visible tree, and a scroll spy marks the section in view.
 
 Every page ends with the footer, the last frame on the canvas: the brand, the
 open-source line and the Light and Dark scheme control beside the Product and
@@ -288,8 +295,14 @@ Pages project and attach the domain are in the
 - `src/docs/sample-fence.ts`, `sample-render.ts`, `sample-lines.ts`, `sample-band.ts` and `sample-path.ts` — the HTML sample fence: the Shiki transformer and the Markdown plugin, the isolated build of each guide sample, the line map, the band markup with one `srcdoc` frame for each view, and the `sample=` path rules.
 - `src/docs/code-panel.ts` and `src/components/docs/CodeCopy.tsx` — the Markdown plugin that wraps every code block in the Folio panel, and the island that places a copy control in each panel and copies that panel's own text.
 - `src/docs/headings.ts` — stable heading ids, the duplicate-heading check and the on-this-page list.
-- `src/components/docs/Search.tsx` and `scripts/index-search.mjs` — the search dialog island, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
-- `src/components/docs/tree-scroll.ts` — tab-scoped desktop tree scroll restoration and current-page reveal.
+- `src/layouts/Docs.astro` — every documentation page: the workspace with the Layers panel, the page frame and the Inspect panel, the sub-bar and the tree sheet below 1024px, the one search island and the docs scroll spy.
+- `src/components/docs/Layers.astro`, `TreeSections.astro`, `TreeFoot.astro`, `VersionRow.astro` and `SearchControl.astro` — the Layers content, and the version row, sections and Changelog row that the tree sheet shares.
+- `src/components/docs/Subbar.astro`, `TreeSheet.astro` and `tree-sheet.ts` — the sub-bar below 1024px and the modal tree sheet that its Layers control opens.
+- `src/components/docs/Inspect.astro`, `Facts.astro`, `OnThisPage.astro`, `Outline.astro` and `scroll-spy.ts` — the Inspect content, the On this page disclosure below 1280px, and the scroll spy that marks the heading in view and moves the reading progress.
+- `src/components/docs/page-source.ts` — each page's tracked source, which the frame label names and Edit on GitHub opens, and the page facts.
+- `src/components/docs/Pager.astro`, `pager-entries.ts` and `Trail.astro` — previous and next with each neighbour's section and description, and the location trail.
+- `src/components/docs/Search.tsx`, `search-keys.ts` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/` and names the key hint, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
+- `src/components/docs/tree-scroll.ts` and `tree-reveal.ts` — the Layers panel's tab-scoped tree scroll memory from 1024px, and the current-page reveal that the tree sheet shares.
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
 - `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
 - `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.

@@ -1,0 +1,33 @@
+---
+/**
+ * The Inspect content beside the page frame from 1280px, named Inspect: the
+ * Page section with the page's facts and Edit on GitHub, then On this page
+ * with the reading progress and a row for each heading.
+ *
+ * Use: `<Inspect edit={…} facts={…} headings={onThisPage(headings)} />`
+ * inside the workspace's Inspect column.
+ */
+import type { DocsHeading } from "../../docs/headings.js";
+
+import Facts from "./Facts.astro";
+import OnThisPage from "./OnThisPage.astro";
+import type { PageFact } from "./page-source.js";
+
+interface Props {
+  readonly edit: string;
+  readonly facts: readonly PageFact[];
+  readonly headings: readonly DocsHeading[];
+}
+
+const { edit, facts, headings } = Astro.props;
+---
+
+<aside aria-label="Inspect" class="site-docs-inspect">
+  <div class="site-docs-inspect-section">
+    <p class="site-docs-inspect-head">Page</p>
+    <Facts edit={edit} facts={facts} />
+  </div>
+  <div class="site-docs-inspect-section">
+    <OnThisPage headings={headings} progress />
+  </div>
+</aside>
