@@ -10,7 +10,7 @@
  * nothing.
  */
 
-import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CanvasIcon } from "./CanvasIcon.js";
 import { keyHint, opensSearch } from "./search-keys.js";
@@ -123,18 +123,11 @@ export default function Search() {
     };
   }, [query]);
 
-  // A press on the dimmed page targets the dialog itself, while a press on
-  // the dialog's surface, which its parts fill, targets one of them.
-  const dismiss = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) event.currentTarget.close();
-  };
-
   return (
     <dialog
       aria-label="Search the documentation"
       className="site-search-dialog"
       id={DIALOG}
-      onClick={dismiss}
       ref={dialog}
     >
       <div className="site-search-field">
