@@ -1,0 +1,46 @@
+---
+/**
+ * The Mokly mark: the selected layer of a design file, an outline frame in
+ * the current colour behind a signal front layer that carries two short
+ * rules, parted from the frame by a halo of the surface. The rules in
+ * `src/styles/chrome.css` colour its parts from the site's roles. It is
+ * decorative: hidden from assistive technology, and it takes no focus.
+ *
+ * Use: `<Mark />` at 30px, or `<Mark size={18} />`. `Brand.astro` and the
+ * Mokly avatar draw it.
+ */
+
+interface Props {
+  readonly class?: string;
+  readonly size?: number;
+}
+
+const { class: className, size = 30 } = Astro.props;
+---
+
+<svg
+  aria-hidden="true"
+  class:list={["site-mark", className]}
+  focusable="false"
+  height={size}
+  viewBox="0 0 32 32"
+  width={size}
+>
+  <rect
+    class="site-mark-back"
+    height="19.8"
+    rx="4.6"
+    width="18.8"
+    x="3.6"
+    y="3.6"
+  ></rect>
+  <rect
+    class="site-mark-front"
+    height="21"
+    rx="4.8"
+    width="20"
+    x="9"
+    y="8"
+  ></rect>
+  <path class="site-mark-rules" d="M14 15h10M14 20h7"></path>
+</svg>

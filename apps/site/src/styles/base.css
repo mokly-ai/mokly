@@ -1,6 +1,7 @@
 /* Foundations for the public site: the reset, the dot-grid canvas behind
-   every page, the type roles, the shared measures, the focus ring, the
-   minimum target size, and the forced-colors and reduced-motion rules.
+   every page, the type roles, the shared measures, the visually hidden
+   text, the focus ring, the minimum target size, and the forced-colors and
+   reduced-motion rules.
 
    Every value here resolves from a semantic --mk-* property emitted by the
    tokens workspace. Mobile is the default composition and the 768px
@@ -125,6 +126,19 @@ button {
   font-size: var(--mk-type-lead-size);
   line-height: var(--mk-type-lead-line);
   max-width: var(--mk-layout-prose-max);
+}
+
+/* Text that only a screen reader reads, such as the name of an icon, a
+   table caption or the colon after a scope. The rule matches
+   docs/mockups/styles/site/base.css. */
+
+.site-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 @media (forced-colors: active) {

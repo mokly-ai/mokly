@@ -1,0 +1,58 @@
+---
+/**
+ * One row of a floating panel's list: a 14px icon, the label and an
+ * optional trailing note, at least 44px tall. The row is `textSecondary`
+ * with its icon in `textMuted`, and a linked row fills with `background` on
+ * hover. A label too long for the panel ends in an ellipsis.
+ *
+ * - `href`: the row links there, in the page or outside it. Without it the
+ *   row is plain text.
+ * - `current`: marks the row with `aria-current` of that value and the
+ *   current fill, `signalSoft` with `text` at semibold and a `signalDeep`
+ *   icon, as the page you are reading or the section in view.
+ * - `icon`: the icon before the label.
+ * - `trailing`: a short mono note at the row's end, such as a date. For a
+ *   note with markup, pass the `trailing` slot instead.
+ * - `class`: the area's own class, such as a tree's row class.
+ *
+ * Use: `<PanelRow current="location" href="#hero" icon="frame">Hero</PanelRow>`.
+ * The label is the default slot. The rules are in `src/styles/panels.css`.
+ */
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+
+import "../styles/panels.css";
+
+interface Props {
+  readonly class?: string;
+  readonly current?: "location" | "page" | "true";
+  readonly href?: string;
+  readonly icon?: IconName;
+  readonly trailing?: string;
+}
+
+const { class: className, current, href, icon, trailing } = Astro.props;
+
+const Tag = href === undefined ? "span" : "a";
+const trail = trailing !== undefined || Astro.slots.has("trailing");
+---
+
+<Tag
+  aria-current={current}
+  class:list={[
+    "site-panel-row",
+    current !== undefined && "site-panel-row--current",
+    className,
+  ]}
+  href={href}
+>
+  {icon !== undefined && <Icon name={icon} size={14} />}
+  <span class="site-panel-row-label">
+    <slot />
+  </span>
+  {trail && (
+    <span class="site-panel-row-trail">
+      <slot name="trailing">{trailing}</slot>
+    </span>
+  )}
+</Tag>

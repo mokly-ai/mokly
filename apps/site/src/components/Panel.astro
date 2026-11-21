@@ -1,0 +1,63 @@
+---
+/**
+ * A floating panel of the design file: a raised `surface` panel on the
+ * canvas with a 14px radius, a `border` ring and `shadow.medium`. Its 44px
+ * head names it, its body holds its rows, and an optional foot closes it.
+ * The area sets its width and whether it sticks while the page scrolls.
+ *
+ * - `title`: the name in the head, such as `Specs`.
+ * - `meta`: a note at the head's other end, such as `Docs`; `metaMono`
+ *   sets it in Geist Mono, as a file name or a count is.
+ * - `as`: the element, `aside` by default, or `nav` for a panel of links.
+ * - `label`: the panel's accessible name, the title by default. A `div` is
+ *   not a landmark, so a `div` panel takes no name.
+ * - The `foot` slot: the foot, drawn only when the slot is given.
+ *
+ * Use: `<Panel as="nav" label="Page sections" title="Specs">…</Panel>`. The
+ * body is the default slot, usually `PanelRow` parts. The rules are in
+ * `src/styles/panels.css`.
+ */
+import "../styles/panels.css";
+
+interface Props {
+  readonly as?: "aside" | "div" | "nav" | "section";
+  readonly class?: string;
+  readonly label?: string;
+  readonly meta?: string;
+  readonly metaMono?: boolean;
+  readonly title: string;
+}
+
+const {
+  as: Tag = "aside",
+  class: className,
+  label,
+  meta,
+  metaMono = false,
+  title,
+} = Astro.props;
+---
+
+<Tag
+  aria-label={Tag === "div" ? undefined : (label ?? title)}
+  class:list={["site-panel", className]}
+>
+  <div class="site-panel-head">
+    <p class="site-panel-title">{title}</p>
+    {meta !== undefined && (
+      <span
+        class:list={["site-panel-meta", metaMono && "site-panel-meta--mono"]}
+      >
+        {meta}
+      </span>
+    )}
+  </div>
+  <div class="site-panel-body">
+    <slot />
+  </div>
+  {Astro.slots.has("foot") && (
+    <div class="site-panel-foot">
+      <slot name="foot" />
+    </div>
+  )}
+</Tag>

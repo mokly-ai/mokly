@@ -1,26 +1,66 @@
 ---
 /**
  * A selection box over its positioned parent: a 1.5px outline in the signal
- * green with 9px square handles, the way the design file marks a selected
- * part. A depiction: hidden from assistive technology, and it takes no
- * pointer. The selection fills its parent, which sets `position: relative`;
- * an area's rule moves or outsets it.
+ * green, or in a person's colour, with 9px square handles, the way the
+ * design file marks a selected part. A depiction: hidden from assistive
+ * technology, and it takes no pointer. The selection fills its parent, which
+ * sets `position: relative`; an area's rule moves or outsets it.
  *
  * - `handles`: where the handles sit: `corners`, the default, `all` for the
  *   corners and the edge midpoints, or `none`.
+ * - `name`: a name tag over the top-left corner, after the `nameIcon`
+ *   (`text` by default), such as `T Heading`.
+ * - `badge`: a type badge over the top-right corner: the face and the
+ *   weight, such as `Geist Semibold`.
+ * - `tag`: a person's live tag over the top-right corner, such as
+ *   `Claude is editing`. Use `badge` or `tag`, not both.
+ * - `person`: the outline, the live tag and the size tag take that
+ *   person's colour.
+ * - `size`: a static size tag centred under the box, such as `1035 × 156`.
+ * - `measure`: the id of the element that the selection measures. Its size
+ *   tag shows that element's rendered size, and its type badge adds that
+ *   element's rendered font size in a `b`, so it reads `Geist Semibold 162`.
+ *   The measurements island writes both and follows resizing; without
+ *   script neither shows. Use `size` or `measure`, not both.
  * - `soft`: tints the outline, for a frame that holds text, as the page
  *   frame of a document does.
  *
- * Use: `<Selection soft />`. The rules are in `src/styles/canvas.css`.
+ * Use: `<Selection soft />`, or
+ * `<Selection badge="Geist Semibold" handles="all" measure="home-title" name="Heading" />`.
+ * The rules are in `src/styles/canvas.css` and `src/styles/canvas-tags.css`.
  */
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+import Measurements from "./Measurements.astro";
+import { measureType } from "./measurements.js";
+import type { Person } from "./people.js";
+import SizeTag from "./SizeTag.astro";
 
 interface Props {
+  readonly badge?: string;
   readonly class?: string;
   readonly handles?: "all" | "corners" | "none";
+  readonly measure?: string;
+  readonly name?: string;
+  readonly nameIcon?: IconName;
+  readonly person?: Person;
+  readonly size?: string;
   readonly soft?: boolean;
+  readonly tag?: string;
 }
 
-const { class: className, handles = "corners", soft = false } = Astro.props;
+const {
+  badge,
+  class: className,
+  handles = "corners",
+  measure,
+  name,
+  nameIcon = "text",
+  person,
+  size,
+  soft = false,
+  tag,
+} = Astro.props;
 
 /** The handles of each kind of selection, clockwise from the top-left. */
 const HANDLES = {
@@ -32,9 +72,35 @@ const HANDLES = {
 
 <span
   aria-hidden="true"
-  class:list={["site-sel", soft && "site-sel--soft", className]}
+  class:list={[
+    "site-sel",
+    person && `site-sel--${person}`,
+    soft && "site-sel--soft",
+    className,
+  ]}
 >
   {HANDLES[handles].map((at) => (
     <span class={`site-sel-handle site-sel-handle--${at}`} />
   ))}
+  {name !== undefined && (
+    <span class="site-sel-name">
+      <Icon name={nameIcon} size={13} />
+      {name}
+    </span>
+  )}
+  {badge !== undefined &&
+    (measure === undefined ? (
+      <span class="site-sel-badge">{badge}</span>
+    ) : (
+      <span class="site-sel-badge" {...measureType(measure)}>
+        {badge} <b />
+      </span>
+    ))}
+  {tag !== undefined && <span class="site-sel-tag">{tag}</span>}
+  {(measure !== undefined || size !== undefined) && (
+    <SizeTag class="site-sel-size" measure={measure} person={person}>
+      {size}
+    </SizeTag>
+  )}
 </span>
+{measure !== undefined && <Measurements />}
