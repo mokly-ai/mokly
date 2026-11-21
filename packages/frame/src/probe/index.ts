@@ -6,8 +6,7 @@ import { encodeMessage, validHostMessage, type MessageBody } from "./schema.js";
 import { boundedJson, BYTE_LIMIT, origin } from "./values.js";
 /** The sole pre-handshake effect is this bounded message listener. */
 const win = window,
-  parent = win.parent,
-  doc = win.document;
+  parent = win.parent;
 const hosts = new URL(win.location.href).searchParams.getAll("mokly-host");
 const host =
   hosts.length === 1 && origin(hosts[0]) && hosts[0] !== win.location.origin
@@ -43,7 +42,7 @@ const receive = (event: MessageEvent<unknown>): void => {
   if (type === "hello") {
     if (!nonce) {
       nonce = message.nonce;
-      const maps = doc.querySelectorAll<HTMLTemplateElement>(
+      const maps = win.document.querySelectorAll<HTMLTemplateElement>(
         "template[data-mokly-frame-probe]",
       );
       const metadata =
@@ -76,6 +75,14 @@ const receive = (event: MessageEvent<unknown>): void => {
   try {
     if (type === "list") {
       send({ type: "boundaries", requestId, boundaries: runtime.__list() });
+      return;
+    }
+    if (type === "measure") {
+      send({
+        type: "box-model",
+        requestId,
+        boxModel: runtime.__boxModel(message.key),
+      });
       return;
     }
     if (type === "highlight") runtime.__highlight(message.keys, message.mode);

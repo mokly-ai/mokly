@@ -13,6 +13,11 @@ export const viewport = (doc: Document): Edges => [
   doc.defaultView!.innerHeight,
 ];
 
+export const boundedPixel = (value: number, minimum = 0): number => {
+  if (!(value >= minimum && value <= 1000000)) throw "limit";
+  return value;
+};
+
 /** Fixed descendants escape overflow until their actual containing block. */
 const fixedContainer = (style: CSSStyleDeclaration): boolean =>
   [

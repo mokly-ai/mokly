@@ -11,6 +11,11 @@ import { boundedJson } from "../packages/frame/dist/probe/values.js";
 const nonce = "1".repeat(32),
   key = "a".repeat(64);
 const box = { x: -2, y: 5, width: 10, height: 0 };
+const model = {
+  box,
+  border: { top: 2, right: 2, bottom: 2, left: 2 },
+  padding: { top: 6, right: 12, bottom: 6, left: 12 },
+};
 const messages: MessageBody[] = [
   { type: "hello" },
   { type: "ready" },
@@ -22,6 +27,9 @@ const messages: MessageBody[] = [
   },
   { type: "highlight", requestId: 3, keys: [key], mode: "highlight" },
   { type: "scroll-to", requestId: 4, key },
+  { type: "measure", requestId: 7, key },
+  { type: "box-model", requestId: 7, boxModel: model },
+  { type: "box-model", requestId: 8, boxModel: null },
   {
     type: "subscribe",
     requestId: 5,
@@ -46,19 +54,23 @@ const messages: MessageBody[] = [
 ];
 const wire = (body: object) => ({
   channel: "mokly-frame-probe",
-  version: 3,
+  version: 4,
   nonce,
   ...body,
 });
 
-for (const body of messages)
-  test(`probe schema: ${body.type} accepts only its exact envelope`, () => {
+for (const body of messages) {
+  const name =
+    body.type === "box-model" && body.boxModel === null
+      ? "box-model null"
+      : body.type;
+  test(`probe schema: ${name} accepts only its exact envelope`, () => {
     assert.ok(validMessage(boundedJson(encodeMessage(nonce, body)), nonce));
     for (const mutation of [
       { extra: true },
       { nonce: "f".repeat(32) },
       { channel: "other" },
-      { version: 2 },
+      { version: 3 },
       { nonce: "INVALID" },
       { type: "unknown" },
     ])
@@ -69,6 +81,7 @@ for (const body of messages)
       assert.equal(validMessage(value, nonce), false);
     }
   });
+}
 
 test("probe rejects malformed envelopes before parsing and counts UTF-8 bytes", () => {
   for (const value of [
@@ -82,6 +95,29 @@ test("probe rejects malformed envelopes before parsing and counts UTF-8 bytes", 
   ])
     assert.equal(boundedJson(value), undefined);
   assert.equal(boundedJson(`"${"é".repeat(131071)}"`), "é".repeat(131071));
+});
+
+test("box-model rejects unknown fields, missing sides and invalid numeric bounds", () => {
+  for (const boxModel of [
+    { ...model, extra: 1 },
+    { ...model, box: { ...box, extra: 1 } },
+    { ...model, border: { ...model.border, extra: 1 } },
+    { ...model, padding: { ...model.padding, extra: 1 } },
+    { ...model, border: { top: 2, right: 2, bottom: 2 } },
+    { ...model, padding: { top: 6, right: 12, bottom: 6 } },
+    { ...model, border: { ...model.border, top: -1 } },
+    { ...model, padding: { ...model.padding, left: 1000001 } },
+    { ...model, box: { ...box, width: -1 } },
+    { ...model, box: { ...box, x: -1000001 } },
+    { ...model, padding: { ...model.padding, top: "6" } },
+    { ...model, border: { ...model.border, right: NaN } },
+    { ...model, border: { ...model.border, bottom: Infinity } },
+  ])
+    assert.equal(
+      validMessage(wire({ type: "box-model", requestId: 1, boxModel })),
+      false,
+      JSON.stringify(boxModel),
+    );
 });
 
 test("probe recursively rejects unknown fields, invalid geometry and duplicate identities", () => {

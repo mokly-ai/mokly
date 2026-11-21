@@ -178,8 +178,8 @@ of spelling them in source.
   frame session registry, which shares private shell metadata with the
   same-origin adapter outside the public adapter contract
 - [`src/probe`](./src/probe/README.md) — the frame probe IIFE and
-  `probeRuntime`, the shared core for geometry, hover, click, picks, Escape,
-  and navigation that both adapters run
+  `probeRuntime`, the shared core for geometry, instance box models, hover,
+  click, picks, Escape, and navigation that both adapters run
 - [`src/navigation`](./src/navigation) — the link rules that only the frame
   code uses: `frameLinkActivation` in `activation.ts`, `parseLogicalMarker`
   and `logicalMarker` in `logical.ts`, and `parseBrowsingTarget` in

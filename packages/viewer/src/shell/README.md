@@ -485,6 +485,8 @@ independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
 step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and
 `workspace_inspection.tsx` coordinate through the registry's inspection owner.
+`instance_box_model.ts` owns the selected instance's box model reader and its
+rounded sizes. It coalesces geometry requests and rejects stale session results.
 Workspace masks and labels, public inspection, and host markers acquire the registry's single geometry
 scheduler; a usage revision supersedes any unresolved measurement before fresh
 evidence is read. Navigation and inspector resize drag state stays on the

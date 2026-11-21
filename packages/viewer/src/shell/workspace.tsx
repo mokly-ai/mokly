@@ -110,7 +110,7 @@ export function ComponentWorkspace({
     activeView,
     setActiveViewport,
     selectInstance,
-  } = useWorkspaceInstanceSelection(entry.path, views, inspectorRef);
+  } = useWorkspaceInstanceSelection(data, views, inspectorRef);
   const inspection = useWorkspaceInspection({
     workspaceRef,
     highlightRef,

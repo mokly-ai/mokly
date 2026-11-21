@@ -12,6 +12,17 @@ export interface InstanceBoundary {
   key: string;
   ranges: readonly { id: string; boxes: readonly Box[] }[];
 }
+export interface BoxSides {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+export interface InstanceBoxModel {
+  box: Box;
+  border: BoxSides;
+  padding: BoxSides;
+}
 export interface FrameMount {
   /** Cancel a pending mount or its active session. */
   signal?: AbortSignal;
@@ -54,6 +65,8 @@ export interface MountedFrame {
     mode: "off" | "highlight" | "pick",
   ): Promise<void>;
   scrollTo(key: string): Promise<void>;
+  /** Measure the unclipped border box and sides of a single element root. */
+  boxModel?(key: string): Promise<InstanceBoxModel | null>;
   /**
    * Add a listener until the returned cleanup runs. Passing the mount's own
    * `onEvent` adopts that receiver, matched by function identity, instead of

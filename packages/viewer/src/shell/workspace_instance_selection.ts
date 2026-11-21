@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type RefObject,
 } from "react";
 
@@ -12,15 +13,27 @@ import type { InspectorHandle } from "@mokly/ui/inspector";
 
 import type { GeneratedComponentView } from "../components/views.js";
 
+import { workspaceFrameSessions } from "./frame_instances.js";
+import { useOptionalShellFrameRegistry } from "./frame_registry.js";
+import { useInstanceBoxModel } from "./instance_box_model.js";
 import { useShellStore } from "./store_context.js";
+import type { WorkspaceData } from "./workspace_data.js";
 
 /** Keep instance selection across preview changes and focus Props after a pick. */
 export function useWorkspaceInstanceSelection(
-  entryPath: string,
+  data: WorkspaceData,
   views: readonly GeneratedComponentView[],
   inspectorRef: RefObject<InspectorHandle | null>,
 ) {
   const store = useShellStore();
+  const entryPath = data.entry.path;
+  const registry = useOptionalShellFrameRegistry();
+  const subscribe = useCallback(
+    (listener: () => void) => registry?.subscribe(listener) ?? (() => {}),
+    [registry],
+  );
+  const snapshot = useCallback(() => registry?.snapshot() ?? 0, [registry]);
+  useSyncExternalStore(subscribe, snapshot, () => 0);
   const viewport = store.state.selection.viewport;
   const [activeViewport, setActiveViewport] = useState<"desktop" | "mobile">(
     viewport === "mobile" ? "mobile" : "desktop",
@@ -39,6 +52,11 @@ export function useWorkspaceInstanceSelection(
   const selectedInstance = activeView?.usage?.instances.find(
     (instance) => instance.key === selectedKey,
   );
+  const session =
+    registry && activeView
+      ? workspaceFrameSessions(registry.values(), data, [activeView])[0]
+      : undefined;
+  const boxModel = useInstanceBoxModel(registry, session, selectedKey);
 
   useEffect(() => {
     setActiveViewport(
@@ -76,6 +94,7 @@ export function useWorkspaceInstanceSelection(
   );
   return {
     selectedInstance,
+    boxModel,
     selectedKey,
     resolvedViewport,
     activeView,

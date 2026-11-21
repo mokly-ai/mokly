@@ -134,6 +134,14 @@ export function postMessageAdapter(options: {
           await transport.request({ type: "scroll-to", key });
           check([key]);
         },
+        async boxModel(key) {
+          check([key]);
+          const response = await transport.request({ type: "measure", key });
+          check([key]);
+          if (response.type !== "box-model")
+            throw new FrameError("invalid-message");
+          return response.boxModel;
+        },
         subscribe(listener) {
           if (disposed) throw new FrameError("disposed");
           if (initialSubscription === listener) {

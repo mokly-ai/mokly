@@ -95,7 +95,7 @@ versions. The cloud uses them together.
 | Catalogue index                        | 9                              | Plan checks, Changes count, check links, screens and the app's viewer |
 | Entry detail                           | 4                              | The receiver's content check and the app's viewer                     |
 | Static deployment file                 | 1                              | Served unchanged; the receiver parses none                            |
-| Frame probe wire envelope              | 3                              | Packaged frame adapter and frame probe                                |
+| Frame probe wire envelope              | 4                              | Packaged frame adapter and frame probe                                |
 | Removed page/document preview metadata | 3                              | Packaged removed-preview reader                                       |
 | Historical snapshot identity domain    | `mokly-historical-snapshot-v3` | Package-generated 64 lowercase hex identity                           |
 
@@ -197,11 +197,11 @@ transport is a change to the viewer package and its protocol. See
 ## Frame Boundary
 
 Published pages use `mokly-viewer/client/frame-probe.js`, channel
-`mokly-frame-probe` and frame wire version 3. A viewer and a page with
+`mokly-frame-probe` and frame wire version 4. A viewer and a page with
 different frame wire versions reject each other's frame protocol, so pages
-that Mokly 0.18 or earlier published do not work in the viewer. Republish
-such catalogues after the matching app deploys. Stored publications are not
-converted.
+that a Mokly release with an earlier frame wire version published do not
+work in the viewer. Republish such catalogues after the matching app
+deploys. Stored publications are not converted.
 
 The public index and detail readers gate versions and return copies.
 They do not validate content. The receiver checks the content, as
