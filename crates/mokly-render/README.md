@@ -118,6 +118,13 @@ captured results of its compilation. Empty directory recipes observe later
 additions.
 Each stylesheet root compiles through its own recording tree, resolver, and
 compiler, so roots that compile in parallel never share captured results.
+Class-map preparation compiles cold plain-CSS roots in bounded parallel chunks
+when both stylesheet stores are empty and no head store is live. It needs at
+least two distinct roots and two available workers. The worker
+bound is the available parallelism, four, or the root count, whichever is
+smallest. Other cases use serial preparation. Maps, records, observations,
+watch inputs, and dependency usage follow root order. A failed chunk can finish
+up to three later roots, but their dependency usage and records are discarded.
 The recording tree keeps each read, digest, unretained digest, and projection
 of the core CSS compiler, its resolver, and the nested-import check of
 PostCSS. A read keeps the digest of the returned bytes, so a `package.json`
@@ -416,6 +423,14 @@ view after the edit and counts real process starts and hello calls.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
+- [`src/stylesheet_class_maps.rs`](./src/stylesheet_class_maps.rs) defines
+  `ClassMapCompiler`, the bounded preparation boundary for class-map roots.
+  It keeps serial preparation for warm stores, live head stores, and PostCSS.
+- [`src/stylesheet_commit.rs`](./src/stylesheet_commit.rs) gives serial and
+  parallel preparation one record insertion and delivery path.
+- [`src/stylesheet_usage.rs`](./src/stylesheet_usage.rs) defines
+  `BufferedUsage`, which retains raw dependency calls until their root's
+  serial position, including the partial calls of a failing root.
 - [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) defines
   `RootCompiler`, which compiles one stylesheet root, and `CapturingCompiler`.
   For each root, `CapturingCompiler` makes a new recording tree, resolver, and

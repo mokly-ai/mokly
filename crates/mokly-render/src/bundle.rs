@@ -3,11 +3,12 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Weak};
+use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
@@ -20,6 +21,7 @@ use crate::leases::BundleLease;
 use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
+use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::{
     bundle_attempt, bundle_finish, bundle_inputs, persistent_identity, render_environment,
 };
@@ -185,7 +187,7 @@ fn maps_digest(maps: &ClassMaps) -> String {
 }
 
 fn class_maps(
-    compiler: &dyn StylesheetBundler,
+    compiler: &dyn ClassMapCompiler,
     modules: &BTreeMap<String, Vec<String>>,
     params: &Bundle,
 ) -> Result<ClassMaps> {
@@ -201,13 +203,11 @@ fn class_maps(
         &entries,
         &params.module_resolution.loaders,
     );
-    let mut maps = BTreeMap::new();
-    for root in roots {
-        match compiler.bundle(&root) {
-            Ok(bundle) => maps.extend(bundle.css_modules),
-            Err(source) => return Err(RenderError::Css { source }),
-        }
-    }
+    let parallelism = thread::available_parallelism().map_or(1, usize::from);
+    let mut maps = match compiler.class_maps(&roots, parallelism) {
+        Ok(maps) => maps,
+        Err(source) => return Err(RenderError::Css { source }),
+    };
     for path in modules.keys().filter(|path| path.ends_with(".module.css")) {
         if !maps.contains_key(path)
             && !stylesheets::ignored(path, &params.module_resolution.loaders)
@@ -237,3 +237,7 @@ fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) 
             .record(&side.dependency_aliases, &module.path);
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/class_maps/uncovered_tests.rs"]
+mod uncovered_tests;
