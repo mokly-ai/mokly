@@ -5,8 +5,9 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { createSatteriMarkdownProcessor } from "@astrojs/markdown-satteri";
-import { parse } from "parse5";
+import { type DefaultTreeAdapterMap, parse, parseFragment } from "parse5";
 
+import { ICONS } from "../src/components/icons.js";
 import { GUIDE_CONTENT } from "../src/docs/pages.js";
 import { sampleFence, sampleTransformer } from "../src/docs/sample-fence.js";
 import { sampleLines } from "../src/docs/sample-lines.js";
@@ -20,6 +21,26 @@ import {
   one,
   textContent,
 } from "./helpers/html.js";
+
+type Element = DefaultTreeAdapterMap["element"];
+
+/** The sample band of the built first-screen guide. */
+function builtBand(): Element {
+  const document = parse(
+    readFileSync(
+      sitePath("dist/docs/start/your-first-screen/index.html"),
+      "utf8",
+    ),
+  );
+  return one(document, "site-docs-sample");
+}
+
+/** The `d` of each path of an element's drawing. */
+function paths(node: DefaultTreeAdapterMap["node"]): (string | undefined)[] {
+  return elements(node, (element) => element.tagName === "path").map((path) =>
+    attribute(path, "d"),
+  );
+}
 
 function guideSample(): string {
   const guide = readFileSync(
@@ -84,20 +105,20 @@ test("sample lines map to authored elements across closing tags and multiline el
 });
 
 test("the built first-screen guide has a numbered sample and four script-free views", () => {
-  const document = parse(
-    readFileSync(
-      sitePath("dist/docs/start/your-first-screen/index.html"),
-      "utf8",
-    ),
-  );
-  const band = one(document, "site-docs-sample");
+  const band = builtBand();
   const head = one(band, "site-docs-sample-head");
   assert.equal(attribute(head, "aria-hidden"), "true");
   assert.equal(textContent(one(head, "site-docs-sample-name")), "Welcome");
   assert.equal(textContent(one(head, "site-chip")), "welcome");
   const panel = one(band, "site-docs-sample-code");
   assert.equal(byClass(panel, "site-code--numbered").length, 1);
-  assert.equal(textContent(one(panel, "site-code-tab")), "welcome.screen.html");
+  const tab = one(panel, "site-code-tab");
+  assert.equal(textContent(tab), "welcome.screen.html");
+  // The open tab shows the file icon of the site's set.
+  assert.deepEqual(
+    paths(tab),
+    paths(parseFragment(`<svg>${ICONS.file}</svg>`)),
+  );
   assert.equal(textContent(one(panel, "site-code-meta")), "specs");
   assert.equal(textContent(one(panel, "site-code-language")), "html");
   one(panel, "site-code-copy-slot");
@@ -106,26 +127,23 @@ test("the built first-screen guide has a numbered sample and four script-free vi
   assert.equal(attribute(pre[0]!, "data-sample-meta"), undefined);
   assert.equal(textContent(pre[0]!), guideSample());
   const lines = byClass(panel, "site-code-line");
+  const numbers = Array.from({ length: 16 }, (_, index) => String(index + 1));
   assert.deepEqual(
     lines.map((line) => attribute(line, "data-line")),
-    [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
-      "16",
-    ],
+    numbers,
+  );
+  // Each line holds the newline that follows it, so the code holds only its
+  // lines: a text node between two lines draws a blank row after each line.
+  const [code] = elements(pre[0]!, (element) => element.tagName === "code");
+  assert.deepEqual(
+    code!.childNodes.map((node) =>
+      "tagName" in node ? attribute(node, "data-line") : "a text node",
+    ),
+    numbers,
+  );
+  assert.deepEqual(
+    lines.map((line) => textContent(line).endsWith("\n")),
+    numbers.map((number) => number !== "16"),
   );
   assert.deepEqual(
     byClass(panel, "site-code-line--dim").map((line) =>
@@ -155,49 +173,35 @@ test("the built first-screen guide has a numbered sample and four script-free vi
       ["desktop", "welcome/first-visit", "First visit", "13 14", ""],
     ],
   );
-  const frames = views.map((view) => one(view, "site-docs-sample-screen"));
+  // Each frame is labelled with its viewport, and its size tag shows the
+  // view's full size. Both are depictions.
+  assert.deepEqual(
+    views.map((view) =>
+      ["site-frame-name", "site-sel-size"].map((name) => {
+        const part = one(view, name);
+        return `${textContent(part)} ${attribute(part, "aria-hidden")}`;
+      }),
+    ),
+    [
+      ["Mobile true", "390 × 844 true"],
+      ["Desktop true", "1280 × 800 true"],
+      ["Mobile true", "390 × 844 true"],
+      ["Desktop true", "1280 × 800 true"],
+    ],
+  );
+  const frames = views.map((view) => one(view, "site-docs-sample-document"));
   assert.deepEqual(
     frames.map((frame) => [
       frame.tagName,
       attribute(frame, "title"),
       attribute(frame, "sandbox"),
-      attribute(frame, "width"),
-      attribute(frame, "height"),
       attribute(frame, "loading"),
     ]),
     [
-      [
-        "iframe",
-        "Welcome, Mobile, Welcome",
-        "allow-same-origin",
-        "390",
-        "844",
-        "lazy",
-      ],
-      [
-        "iframe",
-        "Welcome, Desktop, Welcome",
-        "allow-same-origin",
-        "1280",
-        "800",
-        "lazy",
-      ],
-      [
-        "iframe",
-        "Welcome, Mobile, First visit",
-        "allow-same-origin",
-        "390",
-        "844",
-        "lazy",
-      ],
-      [
-        "iframe",
-        "Welcome, Desktop, First visit",
-        "allow-same-origin",
-        "1280",
-        "800",
-        "lazy",
-      ],
+      ["iframe", "Welcome, Mobile, Welcome", "allow-same-origin", "lazy"],
+      ["iframe", "Welcome, Desktop, Welcome", "allow-same-origin", "lazy"],
+      ["iframe", "Welcome, Mobile, First visit", "allow-same-origin", "lazy"],
+      ["iframe", "Welcome, Desktop, First visit", "allow-same-origin", "lazy"],
     ],
   );
   for (const frame of frames) {
@@ -209,6 +213,47 @@ test("the built first-screen guide has a numbered sample and four script-free vi
     attribute(frames[0]!, "srcdoc")?.includes(
       '<h1 data-sample-line="12">Welcome, Ada</h1>',
     ),
+  );
+});
+
+test("the sample band offers each viewport and saved state of its views, the first view checked", () => {
+  // The band's own form keeps its radio groups apart from another band's.
+  const form = one(builtBand(), "site-docs-sample-controls");
+  assert.equal(form.tagName, "form");
+  const controls = byClass(form, "site-docs-sample-control");
+  assert.deepEqual(
+    controls.map((control) => [
+      control.tagName,
+      attribute(control, "aria-label"),
+    ]),
+    [
+      ["fieldset", "Viewport"],
+      ["fieldset", "Saved state"],
+    ],
+  );
+  assert.deepEqual(
+    controls.map((control) =>
+      byClass(control, "site-docs-sample-option").map((option) => {
+        const [input] = elements(option, (node) => node.tagName === "input");
+        return [
+          attribute(input!, "type"),
+          attribute(input!, "name"),
+          attribute(input!, "value"),
+          attribute(input!, "checked") !== undefined,
+          textContent(option),
+        ];
+      }),
+    ),
+    [
+      [
+        ["radio", "viewport", "mobile", true, "Mobile"],
+        ["radio", "viewport", "desktop", false, "Desktop"],
+      ],
+      [
+        ["radio", "state", "welcome", true, "Welcome"],
+        ["radio", "state", "welcome/first-visit", false, "First visit"],
+      ],
+    ],
   );
 });
 

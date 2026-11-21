@@ -6,7 +6,9 @@
  * stylesheet draws the `$` and the code's text stays exactly what Copy
  * copies. Authored pages and published protocol documents render the panel
  * through the Markdown plugin, and the install snippet through the Shiki
- * transformer, so every page draws the same panel.
+ * transformer, so every page draws the same panel. The HTML sample band of
+ * `sample-band.ts` draws its own numbered panel with the helpers exported
+ * here.
  */
 
 import type { SatteriMarkdownProcessorOptions } from "@astrojs/markdown-satteri";
@@ -50,24 +52,38 @@ function classes(node: Readonly<Element>): string[] {
       : [];
 }
 
-function withClass(node: Readonly<Element>, name: string): Element {
+/** The node with one more class name after its own. */
+export function withClass(node: Readonly<Element>, name: string): Element {
   const properties = { ...node.properties };
   delete properties["class"];
   properties["className"] = [...classes(node), name];
   return { ...node, properties };
 }
 
-function element(
+/**
+ * One element with its class names, if it has any, its children and its
+ * other properties.
+ */
+export function element(
   tagName: string,
   className: readonly string[],
   children: Element["children"],
+  properties: Element["properties"] = {},
 ): Element {
   return {
     type: "element",
     tagName,
-    properties: { className: [...className] },
+    properties:
+      className.length > 0
+        ? { className: [...className], ...properties }
+        : { ...properties },
     children,
   };
+}
+
+/** One text node. */
+export function text(value: string): Element["children"][number] {
+  return { type: "text", value };
 }
 
 /** One shape of an icon drawing, with its own shapes, as hast. */
@@ -89,7 +105,7 @@ function shape(node: DefaultTreeAdapterMap["element"]): Element {
  * `Icon.astro` gives it. Both pipelines serialize hast, so the drawing from
  * `icons.ts` becomes elements rather than raw HTML, which Shiki would escape.
  */
-function icon(name: IconName, size: number): Element {
+export function icon(name: IconName, size: number): Element {
   const [svg] = parseFragment(`<svg>${ICONS[name]}</svg>`).childNodes;
   return {
     type: "element",
@@ -110,7 +126,13 @@ function icon(name: IconName, size: number): Element {
   };
 }
 
-function language(pre: Readonly<Element>): string {
+/** The icon of an open tab: `terminal` for a shell language, else `file`. */
+export function tabIcon(language: string): Element {
+  return icon(TERMINALS.has(language) ? "terminal" : "file", 13);
+}
+
+/** The language of a highlighted block, or nothing for plain text. */
+export function language(pre: Readonly<Element>): string {
   for (const key of ["dataLanguage", "data-language"]) {
     const value = pre.properties[key];
     if (typeof value === "string" && value !== "plaintext") return value;
@@ -118,7 +140,8 @@ function language(pre: Readonly<Element>): string {
   return "";
 }
 
-function isLine(node: Element["children"][number]): node is Element {
+/** Whether a node of a highlighted block is one of Shiki's lines. */
+export function isLine(node: Element["children"][number]): node is Element {
   return (
     node.type === "element" &&
     node.tagName === "span" &&
@@ -131,7 +154,7 @@ function isLine(node: Element["children"][number]): node is Element {
  * follows it. No text then sits between two lines, which the stylesheet draws
  * as blocks, and the block's text stays its source, newlines included.
  */
-function lines(children: Element["children"]): Element["children"] {
+export function lines(children: Element["children"]): Element["children"] {
   const result: Element["children"] = [];
   for (const child of children) {
     const previous = result.at(-1);
@@ -177,10 +200,7 @@ function panel(pre: Readonly<Element>): Element {
           element(
             "span",
             ["site-code-tab", "site-code-tab--open", "site-code-language"],
-            [
-              icon(TERMINALS.has(name) ? "terminal" : "file", 13),
-              ...(name ? [{ type: "text" as const, value: name }] : []),
-            ],
+            [tabIcon(name), ...(name ? [text(name)] : [])],
           ),
           element("span", [COPY_SLOT], []),
         ],
