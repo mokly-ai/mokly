@@ -48,6 +48,7 @@ export const SITEMAP_PATHS: readonly SitePath[] = Object.freeze([
 
 /** Public destinations outside the site and application origins. */
 export const EXTERNAL_LINKS = {
+  desktopReleases: "https://github.com/mokly-ai/mokly-desktop/releases",
   github: "https://github.com/mokly-ai/mokly",
 } as const;
 

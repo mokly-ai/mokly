@@ -1,0 +1,27 @@
+---
+/**
+ * Frame 01 Browse of the home: the module's copy and its labelled frame,
+ * the root of the `browse` demo. The frame is empty: it does not draw the
+ * demo yet.
+ */
+import ModuleFrame from "./ModuleFrame.astro";
+import ModuleText from "./ModuleText.astro";
+---
+
+<article
+  aria-labelledby="browse-title"
+  class="site-module site-module--browse"
+  id="browse"
+>
+  <ModuleText
+    headingId="browse-title"
+    index="01"
+    kicker="Browse"
+    title="A visual diff for every branch."
+  >
+    Each branch and pull request publishes a catalogue built from your real
+    components. Changes shows what moved, and the check on the pull request
+    counts it.
+  </ModuleText>
+  <ModuleFrame demo="browse" name="01 Browse" />
+</article>

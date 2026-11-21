@@ -1,0 +1,37 @@
+---
+/**
+ * The copy of a home module: the kicker with the module's index, the
+ * heading and the body, which the Browse, Review and Edit modules share.
+ * It is the page's own text, so assistive technology reads it.
+ *
+ * - `index` and `kicker`: the kicker, such as `01` and `Browse`.
+ * - `title`: the heading, an `h3` with the id `headingId`. The module's
+ *   `article` names itself with that id.
+ * - `class`: the area's own class.
+ * - The body is the default slot.
+ *
+ * Use: `<ModuleText headingId="browse-title" index="01" kicker="Browse" title="A visual diff for every branch.">…</ModuleText>`.
+ * The rules are in `src/styles/home.css`.
+ */
+import Kicker from "../Kicker.astro";
+
+interface Props {
+  readonly class?: string;
+  readonly headingId: string;
+  readonly index: string;
+  readonly kicker: string;
+  readonly title: string;
+}
+
+const { class: className, headingId, index, kicker, title } = Astro.props;
+---
+
+<div class:list={["site-module-text", className]}>
+  <Kicker class="site-module-eyebrow" index={index}>
+    {kicker}
+  </Kicker>
+  <h3 id={headingId}>{title}</h3>
+  <p class="site-module-body">
+    <slot />
+  </p>
+</div>

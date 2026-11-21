@@ -10,7 +10,7 @@ export interface SitePage {
 
 /** The heading each route publishes; its title comes from the page table. */
 const HEADING: Readonly<Record<SitePath, string>> = {
-  [SITE_PATHS.home]: "Mockup your entire app.",
+  [SITE_PATHS.home]: "Design in code.",
   [SITE_PATHS.docs]: "Getting started",
   [SITE_PATHS.changelog]: "What’s new in Mokly",
   [SITE_PATHS.terms]: "Terms of Service",

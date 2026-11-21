@@ -1,0 +1,27 @@
+---
+/**
+ * Frame 02 Review of the home: the module's copy and its labelled frame,
+ * the root of the `review` demo. The frame is empty: it does not draw the
+ * demo yet.
+ */
+import ModuleFrame from "./ModuleFrame.astro";
+import ModuleText from "./ModuleText.astro";
+---
+
+<article
+  aria-labelledby="review-title"
+  class="site-module site-module--review"
+  id="review"
+>
+  <ModuleText
+    headingId="review-title"
+    index="02"
+    kicker="Review"
+    title="Sticky comments."
+  >
+    Each comment is tied to the component it is about, so it stays put when the
+    layout changes. Approve when it is right, in step with the pull request
+    review.
+  </ModuleText>
+  <ModuleFrame demo="review" name="02 Review" />
+</article>

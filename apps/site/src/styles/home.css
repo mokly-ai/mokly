@@ -1,203 +1,225 @@
-/* The home page below the header: the rest of the hero, the three numbered
-   feature modules with their framed details of the catalogue shell, and the
-   open-foundation closing. Kept in parity with the promoted mockups under
-   docs/mockups/styles/site/; the mobile composition is the default
-   and 768px raises the desktop one. */
+/* The home below the hero: the workspace, where the Specs panel floats
+   beside the frames column from 1200px, the features intro, and the Browse,
+   Review and Edit modules, each of which pairs its copy with a labelled
+   frame on the canvas. The open foundation's heading takes the type of the
+   features heading. Under reduced motion no home demo moves.
 
-.site-hero-lead {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-lead-size);
-  line-height: var(--mk-type-lead-line);
-  max-width: 52ch;
+   The class names and the rules match docs/mockups/styles/site/home.css and
+   the workspace and module rules of home-responsive.css. The mockups pin a
+   composition with data-site-viewport; the site resolves the same switch at
+   768px. So each base rule is the mobile composition, and the desktop values
+   and the desktop steps follow under the 768px query, in the mockup's
+   order. */
+
+.site-home-workspace {
+  display: block;
+  gap: 40px;
+  grid-template-columns: 200px minmax(0, 1fr);
+  padding: 0 20px;
 }
 
-.site-hero .site-actions {
-  justify-content: flex-start;
-  margin-top: var(--mk-space-2);
+.site-home-specs {
+  align-self: start;
+  margin-top: 120px;
+  position: sticky;
+  top: 72px;
 }
 
-/* Feature modules */
+/* The site sends one page to every width, and a phone draws no Specs
+   panel, which the mockups' mobile document leaves out. The workspace hides
+   the panel there with a selector that outweighs the panel's own display. */
 
-.site-modules {
-  border-top: 1px solid var(--mk-color-border);
+.site-home-workspace > .site-home-specs {
+  display: none;
+}
+
+.site-home-frames {
   margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: var(--mk-layout-section-mobile) var(--mk-layout-gutter-mobile);
+  max-width: 1080px;
+  min-width: 0;
   width: 100%;
 }
 
-.site-section-head {
-  display: grid;
-  gap: var(--mk-space-4);
-  margin-bottom: var(--mk-space-12);
+/* The features intro, and the open foundation's heading beside it */
+
+.site-modules {
+  padding-top: 112px;
 }
 
-.site-section-head h2 {
-  font-size: var(--mk-type-heading2-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading2-line);
+.site-section-head,
+.site-module,
+.site-closing {
+  scroll-margin-top: 80px;
+}
+
+.site-section-head h2,
+.site-closing-copy h2 {
+  font-size: 38px;
+  letter-spacing: -0.048em;
+  line-height: 1;
+}
+
+.site-section-head h2 span,
+.site-closing-copy h2 span {
+  color: var(--mk-color-text-muted);
 }
 
 .site-section-head p {
-  color: var(--mk-color-text-muted);
-  max-width: 42ch;
+  color: var(--mk-color-text-secondary);
+  font-size: 17px;
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  margin-top: 26px;
+  max-width: 30ch;
 }
+
+/* The feature modules: their copy above or beside a labelled frame */
 
 .site-module-grid {
   display: grid;
-  gap: var(--mk-space-6);
-  grid-template-columns: minmax(0, 1fr);
+  gap: 104px;
+  padding-top: 104px;
 }
 
 .site-module {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-medium);
   display: grid;
-  gap: var(--mk-space-3);
-  overflow: hidden;
-  padding: 0 var(--mk-space-6) var(--mk-space-6);
-  scroll-margin-top: var(--mk-space-6);
+  gap: 52px;
+  position: relative;
 }
 
-.site-module-detail {
-  align-items: center;
-  background-color: var(--mk-color-background);
-  background-image: radial-gradient(
-    circle at center,
-    var(--mk-color-border) 1px,
-    transparent 1px
-  );
-  background-size: 18px 18px;
-  border-bottom: 1px solid var(--mk-color-border);
-  display: flex;
-  justify-content: center;
-  margin: 0 calc(-1 * var(--mk-space-6)) var(--mk-space-5);
-  min-height: 176px;
-  padding: var(--mk-space-4);
-}
-
-.site-module-eyebrow {
-  align-items: baseline;
-  display: flex;
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-2);
-}
-
-.site-module-number {
-  color: var(--mk-color-accent);
-}
-
-.site-feature-label {
-  color: var(--mk-color-text-muted);
-  letter-spacing: 0.08em;
+.site-module-text {
+  max-width: 500px;
 }
 
 .site-module h3 {
-  font-size: var(--mk-type-lead-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-lead-line);
+  font-size: 28px;
+  letter-spacing: -0.036em;
+  line-height: 1.06;
+  margin-top: 18px;
 }
 
 .site-module-body {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
+  color: var(--mk-color-text-secondary);
+  font-size: 16px;
+  letter-spacing: -0.004em;
   line-height: 1.6;
+  max-width: 44ch;
 }
 
-/* The closing */
-
-.site-closing {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: 0 var(--mk-layout-gutter-mobile) var(--mk-layout-section-mobile);
-  scroll-margin-top: var(--mk-space-6);
-  width: 100%;
+.site-module-text .site-module-body {
+  margin-top: 14px;
 }
 
-.site-closing-panel {
-  background: var(--mk-color-surface-muted);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-medium);
-  display: grid;
-  gap: var(--mk-space-10);
-  grid-template-columns: minmax(0, 1fr);
-  padding: var(--mk-space-10) var(--mk-space-5);
+.site-module-detail {
+  grid-column: 1 / -1;
+  min-width: 0;
+  position: relative;
 }
 
-.site-closing-copy {
-  align-content: start;
-  display: grid;
-  gap: var(--mk-space-5);
-}
+/* The desktop composition from the 768px breakpoint upward: the Specs
+   panel takes its column beside the frames. */
 
-.site-closing-copy h2 {
-  font-size: var(--mk-type-heading2-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading2-line);
-}
-
-.site-closing-copy p {
-  color: var(--mk-color-text-muted);
-  max-width: 46ch;
-}
-
-.site-steps {
-  display: grid;
-  gap: var(--mk-space-6);
-  list-style: none;
-  padding: 0;
-}
-
-.site-step {
-  border-top: 1px solid var(--mk-color-border-strong);
-  display: grid;
-  gap: var(--mk-space-1);
-  padding-top: var(--mk-space-4);
-}
-
-.site-step-number {
-  color: var(--mk-color-accent);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
-}
-
-.site-step h3 {
-  font-size: var(--mk-type-lead-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-lead-line);
-}
-
-.site-step p {
-  color: var(--mk-color-text-muted);
-}
-
-/* The desktop composition from the 768px breakpoint upward. */
 @media (min-width: 768px) {
-  .site-hero .site-actions {
-    justify-content: center;
+  .site-home-workspace {
+    display: grid;
+    padding: 0 78px 0 16px;
   }
 
-  .site-module-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .site-home-workspace > .site-home-specs {
+    display: flex;
   }
 
   .site-modules {
-    padding: var(--mk-layout-section-desktop) var(--mk-layout-gutter-desktop);
+    padding-top: 144px;
   }
 
-  .site-module-detail {
-    padding: var(--mk-space-5);
+  .site-section-head h2,
+  .site-closing-copy h2 {
+    font-size: 66px;
   }
 
-  .site-closing-panel {
-    gap: var(--mk-space-16);
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    padding: var(--mk-space-16) var(--mk-space-12);
+  .site-section-head p {
+    font-size: 21px;
   }
 
-  .site-closing {
-    padding: 0 var(--mk-layout-gutter-desktop) var(--mk-layout-section-desktop);
+  .site-module-grid {
+    gap: 158px;
+    padding-top: 158px;
+  }
+
+  .site-module {
+    gap: 76px 48px;
+  }
+
+  .site-module h3 {
+    font-size: 42px;
+  }
+
+  .site-module-body {
+    font-size: 16.5px;
+  }
+}
+
+/* The intermediate desktop steps, from the prototype: below 1440px the
+   gutter, the section spaces and the headings scale with the window; below
+   1200px the Specs panel leaves and the frames take the width; below
+   1100px a module's rows close up. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-home-workspace {
+    padding: 0 clamp(20px, 5.4vw, 80px) 0 16px;
+  }
+
+  .site-modules {
+    padding-top: clamp(104px, 10vw, 150px);
+  }
+
+  .site-section-head h2,
+  .site-closing-copy h2 {
+    font-size: clamp(38px, 4.6vw, 68px);
+  }
+
+  .site-section-head p {
+    font-size: clamp(17px, 1.45vw, 21px);
+  }
+
+  .site-module-grid {
+    gap: clamp(112px, 11vw, 168px);
+    padding-top: clamp(112px, 11vw, 168px);
+  }
+
+  .site-module h3 {
+    font-size: clamp(28px, 2.95vw, 42px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .site-home-workspace {
+    display: block;
+    padding: 0 clamp(20px, 5.4vw, 80px);
+  }
+
+  .site-home-specs,
+  .site-home-workspace > .site-home-specs {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-module {
+    gap: 40px;
+  }
+}
+
+/* Under reduced motion no home demo animates or waits: each shows its
+   finished state at once, which its base rules draw. The home demos island
+   sets no state then, and this guard also stops a demo that already plays. */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-home-demo],
+  [data-home-demo] *,
+  [data-home-demo] *::before,
+  [data-home-demo] *::after {
+    animation: none !important;
   }
 }

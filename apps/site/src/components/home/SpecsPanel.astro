@@ -1,0 +1,36 @@
+---
+/**
+ * The Specs panel of the home workspace: a floating panel titled `Specs`, a
+ * `nav` named Page sections, whose rows link the page's sections in order.
+ * The built page marks Hero, the section in view at the top of the page, as
+ * the current location, and the Specs scroll spy of `specs-spy.ts` moves the
+ * mark as the reader scrolls. `src/styles/home.css` floats the panel beside
+ * the frames from 1200px; below 1200px it does not show.
+ */
+import Panel from "../Panel.astro";
+import PanelRow from "../PanelRow.astro";
+---
+
+<Panel as="nav" class="site-home-specs" label="Page sections" title="Specs">
+  <PanelRow current="location" href="#hero" icon="frame">
+    Hero
+  </PanelRow>
+  <PanelRow href="#features" icon="text">
+    Browse, review, edit.
+  </PanelRow>
+  <PanelRow href="#browse" icon="frame">
+    01 Browse
+  </PanelRow>
+  <PanelRow href="#review" icon="frame">
+    02 Review
+  </PanelRow>
+  <PanelRow href="#edit" icon="frame">
+    03 Edit
+  </PanelRow>
+  <PanelRow href="#foundation" icon="frame">
+    Open foundation
+  </PanelRow>
+  <PanelRow href="#footer" icon="frame">
+    Footer
+  </PanelRow>
+</Panel>

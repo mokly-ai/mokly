@@ -1,0 +1,37 @@
+---
+/**
+ * The open foundation that closes the home: its kicker, its heading with the
+ * muted second line, its body and the action pair that ends in View on
+ * GitHub, then the frame labelled `Open foundation`, the root of the
+ * `foundation` demo. The frame is empty: it does not draw the source, the
+ * artboard, the facts or the steps yet.
+ */
+import Actions from "../Actions.astro";
+import Kicker from "../Kicker.astro";
+
+import ModuleFrame from "./ModuleFrame.astro";
+---
+
+<section
+  aria-labelledby="foundation-title"
+  class="site-closing"
+  id="foundation"
+>
+  <div class="site-closing-copy">
+    <Kicker>An open foundation</Kicker>
+    <h2 id="foundation-title">
+      Your screens.
+      <br />
+      <span>Your building blocks.</span>
+    </h2>
+    <div class="site-closing-panel">
+      <p>
+        Author locally with the open-source Mokly CLI. Keep your screens in Git
+        and host the catalogue anywhere. The cloud adds hosting, review and the
+        agent; it never owns the source.
+      </p>
+      <Actions secondary="github" />
+    </div>
+  </div>
+  <ModuleFrame demo="foundation" name="Open foundation" />
+</section>
