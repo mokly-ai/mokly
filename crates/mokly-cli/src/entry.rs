@@ -12,7 +12,7 @@ use mokly_cli::parsing::{ParseError, parse};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
 use mokly_publish::redaction::Secret;
-use terminal_size::{Width, terminal_size};
+use terminal_size::{Width, terminal_size_of};
 
 use crate::terminal::{SystemTerminal, Terminal};
 use crate::{entry_publish, entry_serve};
@@ -44,10 +44,9 @@ pub(super) fn main() -> ExitCode {
             && env::var_os("WT_SESSION").is_none()
             && env::var_os("TERM_PROGRAM").is_none()
             && env::var_os("TERM").is_none(),
-        columns: terminal_size().map_or(
-            80,
-            |(Width(width), _)| if width > 0 { usize::from(width) } else { 80 },
-        ),
+        columns: terminal_size_of(io::stdout()).map_or(80, |(Width(width), _)| {
+            if width > 0 { usize::from(width) } else { 80 }
+        }),
     };
     #[cfg(debug_assertions)]
     let style = Style {
