@@ -88,7 +88,7 @@ fn collected_styles_rewrite_text_and_attribution_at_each_document_depth_and_reac
                 module: "specs/card.component.html".into(),
                 asset: OpaqueAsset {
                     path: "media/logo.png".into(),
-                    source: root.join("media/logo.png"),
+                    source: fs::canonicalize(root.join("media/logo.png")).unwrap(),
                     digest: digest(&[0, 255, 10, 128]),
                     aliases: vec![],
                 },

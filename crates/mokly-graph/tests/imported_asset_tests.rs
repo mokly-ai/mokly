@@ -50,7 +50,9 @@ fn inputs(root: &Path) -> DeliveryInputs {
                 module: "specs/example.mjs".into(),
                 asset: OpaqueAsset {
                     path: path.into(),
-                    source: root.join(path),
+                    // A temporary folder can lie behind a symbolic link, such as /var on
+                    // macOS, and asset delivery opens only canonical sources.
+                    source: fs::canonicalize(root.join(path)).unwrap(),
                     digest: digest(&fs::read(root.join(path)).unwrap()),
                     aliases: vec![],
                 },
