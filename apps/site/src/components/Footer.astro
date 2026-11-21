@@ -1,12 +1,20 @@
 ---
 /**
- * The shared footer: the brand and the open-source line beside the Product
- * and Legal columns.
+ * The shared footer: the last frame on the canvas, labelled Footer. It pairs
+ * the brand, the line about the open-source CLI and the scheme control with
+ * the Product and Legal link groups, and the design file's status bar runs
+ * on the canvas under the frame. The frame label and the status bar are
+ * depictions, hidden from assistive technology. Below the breakpoint the
+ * frame stacks the brand column above the two groups. The `footer` id lets
+ * a page link to the footer.
  */
 import { POLICIES } from "../legal.js";
 import { SITE_PATHS, type SitePath, currentPage } from "../navigation.js";
 
 import Brand from "./Brand.astro";
+import FrameLabel from "./FrameLabel.astro";
+import SchemeControl from "./SchemeControl.astro";
+import StatusBar from "./StatusBar.astro";
 
 interface Props {
   readonly route: string;
@@ -14,47 +22,48 @@ interface Props {
 
 const { route } = Astro.props;
 
-const product: ReadonlyArray<readonly [SitePath, string]> = [
+type Links = ReadonlyArray<readonly [SitePath, string]>;
+
+const product: Links = [
   [SITE_PATHS.home, "Home"],
   [SITE_PATHS.docs, "Docs"],
   [SITE_PATHS.changelog, "Changelog"],
 ];
-const legal: ReadonlyArray<readonly [SitePath, string]> = Object.values(
-  POLICIES,
-).map(({ label, route: policyRoute }) => [policyRoute, label]);
+const legal: Links = Object.values(POLICIES).map(
+  ({ label, route: policyRoute }) => [policyRoute, label],
+);
+
+/** The link groups, in reading order, each under its heading. */
+const groups: ReadonlyArray<readonly [string, Links]> = [
+  ["Product", product],
+  ["Legal", legal],
+];
 ---
 
-<footer class="site-footer">
+<footer class="site-footer" id="footer">
   <div class="site-footer-inner">
+    <FrameLabel name="Footer" />
     <div class="site-footer-brand">
       <Brand route={route} />
       <p>The Mokly CLI is open source under the MIT license.</p>
+      <SchemeControl />
     </div>
     <nav aria-label="Footer" class="site-footer-nav">
-      <div class="site-footer-group">
-        <p class="site-footer-heading">Product</p>
-        {product.map(([path, label]) => (
-          <a
-            aria-current={currentPage(route, path)}
-            class="site-footer-link"
-            href={path}
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-      <div class="site-footer-group">
-        <p class="site-footer-heading">Legal</p>
-        {legal.map(([path, label]) => (
-          <a
-            aria-current={currentPage(route, path)}
-            class="site-footer-link"
-            href={path}
-          >
-            {label}
-          </a>
-        ))}
-      </div>
+      {groups.map(([heading, links]) => (
+        <div class="site-footer-group">
+          <p class="site-footer-heading">{heading}</p>
+          {links.map(([path, label]) => (
+            <a
+              aria-current={currentPage(route, path)}
+              class="site-footer-link"
+              href={path}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      ))}
     </nav>
   </div>
+  <StatusBar route={route} />
 </footer>

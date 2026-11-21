@@ -1,0 +1,40 @@
+---
+/**
+ * A selection box over its positioned parent: a 1.5px outline in the signal
+ * green with 9px square handles, the way the design file marks a selected
+ * part. A depiction: hidden from assistive technology, and it takes no
+ * pointer. The selection fills its parent, which sets `position: relative`;
+ * an area's rule moves or outsets it.
+ *
+ * - `handles`: where the handles sit: `corners`, the default, `all` for the
+ *   corners and the edge midpoints, or `none`.
+ * - `soft`: tints the outline, for a frame that holds text, as the page
+ *   frame of a document does.
+ *
+ * Use: `<Selection soft />`. The rules are in `src/styles/canvas.css`.
+ */
+
+interface Props {
+  readonly class?: string;
+  readonly handles?: "all" | "corners" | "none";
+  readonly soft?: boolean;
+}
+
+const { class: className, handles = "corners", soft = false } = Astro.props;
+
+/** The handles of each kind of selection, clockwise from the top-left. */
+const HANDLES = {
+  all: ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
+  corners: ["nw", "ne", "se", "sw"],
+  none: [],
+} as const;
+---
+
+<span
+  aria-hidden="true"
+  class:list={["site-sel", soft && "site-sel--soft", className]}
+>
+  {HANDLES[handles].map((at) => (
+    <span class={`site-sel-handle site-sel-handle--${at}`} />
+  ))}
+</span>

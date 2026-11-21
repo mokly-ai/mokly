@@ -1,6 +1,6 @@
 # Site Design Components
 
-Status: The Canvas parts, the buttons, the chrome, the document frames and the dark code panel are not built yet. [Milestone 4](../../../plans/canvas-redesign.md#milestone-4-site-chrome-and-legal-pages) builds the parts, the buttons, the header, the menu, the footer, the legal pages and the 404 page, and [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the code panel.
+Status: The tags of a selection, the size tag, the redline, the section box, the floating panel, the cursor, the docs and changelog document frames and the dark code panel are not built yet. [Milestone 5](../../../plans/canvas-redesign.md#milestone-5-site-home) builds the tags, redlines, section boxes and cursors that the home draws, [Milestone 6](../../../plans/canvas-redesign.md#milestone-6-site-docs) builds the floating panels, the docs frame and the code panel, and [Milestone 8](../../../plans/canvas-redesign.md#milestone-8-site-docs-sample-and-changelog) builds the changelog frames.
 
 This is the components sub-contract of [Site design](./site-design.md), which
 owns the roles, the type, the layout and the brand. [Site](./site.md) owns the

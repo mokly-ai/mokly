@@ -1,8 +1,8 @@
 /**
  * Opens and closes the mobile header's menu. The menu control opens the
- * panel as a modal dialog. The close control, Escape and a press on the
- * dimmed page beside the panel close it, and focus returns to the menu
- * control. The panel also closes when the desktop composition replaces the
+ * sheet as a modal dialog. The close control, Escape and a press on the
+ * dimmed page below the sheet close it, and focus returns to the menu
+ * control. The sheet also closes when the desktop composition replaces the
  * mobile one, and when the reader leaves the page, so a page restored from
  * the back and forward cache shows it closed.
  */
@@ -28,9 +28,10 @@ if (menu && opener) {
   });
   menu.querySelector(".site-menu-close")?.addEventListener("click", close);
 
-  // `closedby="any"` closes the menu on a press beside the panel. Where the
+  // `closedby="any"` closes the menu on a press outside the sheet. Where the
   // browser does not implement it, a press on the backdrop targets the dialog
-  // itself, while a press anywhere on the panel targets one of its children.
+  // itself, while a press anywhere on the sheet, which its panel fills, or on
+  // the close control targets one of its children.
   if (!("closedBy" in HTMLDialogElement.prototype)) {
     menu.addEventListener("click", (event) => {
       if (event.target === menu) close();

@@ -1,0 +1,45 @@
+---
+/**
+ * A document page as a frame on the canvas, the way the design file shows
+ * the open page: the `surface` sheet with a `border` ring and
+ * `shadow.small`, labelled with its source file and selected with corner
+ * handles in a soft outline. The label and the selection are depictions,
+ * hidden from assistive technology, so only the sheet's content reaches it.
+ *
+ * - `file`: the page's source path, such as `legal/terms.md`. The label
+ *   keeps its folder muted and sets its file name apart.
+ * - `class`: the area's class. The area's rules set the frame's width and,
+ *   through their own rule for `.site-page-sheet`, the sheet's padding.
+ *
+ * Use: `<PageFrame file="legal/terms.md">…</PageFrame>`. The sheet's
+ * content is the slot. The rules are in `src/styles/page-frame.css`.
+ */
+import FrameLabel from "./FrameLabel.astro";
+import Selection from "./Selection.astro";
+
+import "../styles/page-frame.css";
+
+interface Props {
+  readonly class?: string;
+  readonly file: string;
+}
+
+const { class: className, file } = Astro.props;
+
+const slash = file.lastIndexOf("/") + 1;
+const folder = file.slice(0, slash);
+const name = file.slice(slash);
+---
+
+<div class:list={["site-page-frame", className]}>
+  <FrameLabel icon="file" selected>
+    <Fragment slot="name">
+      {folder}
+      <b>{name}</b>
+    </Fragment>
+  </FrameLabel>
+  <div class="site-page-sheet">
+    <slot />
+  </div>
+  <Selection soft />
+</div>

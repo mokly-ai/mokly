@@ -1,0 +1,36 @@
+---
+/**
+ * The design file's status bar, on the canvas under the footer frame: the
+ * file `mokly.ai — {page}` with the frame icon, the people in the file and
+ * the zoom pill. A depiction: hidden from assistive technology, and nothing
+ * in it takes focus. Below the breakpoint the file leaves the bar.
+ *
+ * Use: `<StatusBar route={route} />`, with the rendered route.
+ */
+import Icon from "./Icon.astro";
+import { pageName } from "./page-name.js";
+import { PEOPLE } from "./people.js";
+import Presence from "./Presence.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+---
+
+<div aria-hidden="true" class="site-statusbar">
+  <span class="site-statusbar-item site-statusbar-file">
+    <Icon name="frame" size={14} />
+    mokly.ai — {pageName(route)}
+  </span>
+  <span class="site-statusbar-item">
+    <Presence small />
+    {PEOPLE.length} in this file
+  </span>
+  <span class="site-statusbar-zoom">
+    <span>−</span>
+    100%
+    <span>+</span>
+  </span>
+</div>

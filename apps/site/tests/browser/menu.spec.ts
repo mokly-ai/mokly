@@ -28,12 +28,13 @@ async function isOpen(menu: Locator): Promise<boolean> {
 }
 
 test(
-  "the menu opens as a modal panel holding every destination",
+  "the menu opens as a modal sheet below the tool bar holding every destination",
   { tag: "@mobile" },
   async ({ page }) => {
     await page.goto(SITE_PATHS.home);
     await expect(control(page)).toHaveAttribute("aria-expanded", "false");
     const opener = await control(page).boundingBox();
+    const bar = await page.getByRole("banner").boundingBox();
     const menu = await openMenu(page);
     expect(await menu.evaluate((dialog) => dialog.matches(":modal"))).toBe(
       true,
@@ -45,6 +46,10 @@ test(
     const closer = await close.boundingBox();
     for (const edge of ["x", "y", "width", "height"] as const)
       expect(closer?.[edge] ?? 0).toBeCloseTo(opener?.[edge] ?? -1, 0);
+    // The sheet spans the window directly below the tool bar.
+    const sheet = await menu.boundingBox();
+    expect(sheet?.y ?? 0).toBeCloseTo((bar?.y ?? 0) + (bar?.height ?? -1), 0);
+    expect([sheet?.x, sheet?.width]).toEqual([0, page.viewportSize()?.width]);
     expect(
       await menu
         .locator("a")
@@ -71,7 +76,7 @@ test(
 );
 
 test(
-  "the close control and a press beside the panel close the menu",
+  "the close control and a press on the dimmed page close the menu",
   { tag: "@mobile" },
   async ({ page }) => {
     await page.goto(SITE_PATHS.docs);
@@ -81,16 +86,20 @@ test(
     await expect(control(page)).toBeFocused();
 
     menu = await openMenu(page);
-    const panel = await menu.boundingBox();
-    if (!panel) throw new Error("the open menu has no box");
-    // A press on the panel's empty foot keeps the menu open.
+    const sheet = await menu.boundingBox();
+    const height = page.viewportSize()?.height ?? 0;
+    if (!sheet) throw new Error("the open menu has no box");
+    // A press on the sheet's empty foot keeps the menu open.
     await page.mouse.click(
-      panel.x + panel.width / 2,
-      panel.y + panel.height - 20,
+      sheet.x + sheet.width / 2,
+      sheet.y + sheet.height - 8,
     );
     expect(await isOpen(menu)).toBe(true);
-    // A press on the dimmed page beside the panel closes it.
-    await page.mouse.click(panel.x / 2, panel.y + panel.height / 2);
+    // A press on the dimmed page below the sheet closes it.
+    await page.mouse.click(
+      sheet.x + sheet.width / 2,
+      (sheet.y + sheet.height + height) / 2,
+    );
     await expect(menu).toBeHidden();
   },
 );

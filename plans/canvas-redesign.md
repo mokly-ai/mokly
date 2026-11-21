@@ -152,12 +152,16 @@ Tags: ui
 
 Depends on: 3, 15
 
-- [ ] Draw the dot-grid canvas base in the site stylesheets.
-- [ ] Rebuild the header, the mobile menu and the footer. Milestone 9 adds
-      the Pricing links with the route.
-- [ ] Add the footer scheme control as a script island, with `localStorage`
-      and `?scheme=`. Set the scheme before the first paint.
-- [ ] Restyle the legal pages and the 404 page.
+- [x] Draw the dot-grid canvas base in the site stylesheets. Branch:
+      `calummoore/canvas-redesign-m4-site-chrome-and-legal-bx98`.
+- [x] Rebuild the header, the mobile menu and the footer. Milestone 9 adds
+      the Pricing links with the route. Branch:
+      `calummoore/canvas-redesign-m4-site-chrome-and-legal-bx98`.
+- [x] Add the footer scheme control as a script island, with `localStorage`
+      and `?scheme=`. Set the scheme before the first paint. Branch:
+      `calummoore/canvas-redesign-m4-site-chrome-and-legal-bx98`.
+- [x] Restyle the legal pages and the 404 page. Branch:
+      `calummoore/canvas-redesign-m4-site-chrome-and-legal-bx98`.
 
 ## Milestone 5: Site home
 

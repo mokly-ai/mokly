@@ -1,0 +1,26 @@
+---
+/**
+ * The kicker above a heading, such as `Legal` or `01 Browse`: an uppercase
+ * Geist Mono 12px label in `textMuted`. An `index` leads the label in
+ * `signalDeep`.
+ *
+ * Use: `<Kicker>Legal</Kicker>`, or `<Kicker index="01">Browse</Kicker>`.
+ * The label is the slot. The rules are in `src/styles/labels.css`.
+ */
+
+interface Props {
+  readonly class?: string;
+  readonly index?: string;
+}
+
+const { class: className, index } = Astro.props;
+---
+
+<p class:list={["site-kicker", className]}>
+  {index !== undefined && (
+    <>
+      <b class="site-kicker-index">{index}</b>{" "}
+    </>
+  )}
+  <slot />
+</p>

@@ -1,0 +1,61 @@
+/* The people and agents in the depicted design file: the avatars and the
+   presence group that Avatar.astro and Presence.astro draw. Maya is pink,
+   Sam blue, Claude orange and Codex violet; each avatar's initial or spark
+   takes the ink role of its colour. The rules match
+   docs/mockups/styles/site/people.css. */
+
+/* Avatars, on a ring of the surface they sit on */
+
+.site-avatar {
+  border-radius: var(--mk-radius-pill);
+  box-shadow: 0 0 0 2px var(--mk-color-surface);
+  display: inline-grid;
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-semibold);
+  height: 28px;
+  line-height: 1;
+  place-items: center;
+  width: 28px;
+}
+
+.site-avatar--small {
+  font-size: 0.625rem;
+  height: 22px;
+  width: 22px;
+}
+
+.site-avatar--maya {
+  background: var(--mk-color-people-pink-fill);
+  color: var(--mk-color-people-pink-ink);
+}
+
+.site-avatar--sam {
+  background: var(--mk-color-people-blue-fill);
+  color: var(--mk-color-people-blue-ink);
+}
+
+.site-avatar--claude {
+  background: var(--mk-color-people-orange-fill);
+  color: var(--mk-color-people-orange-ink);
+}
+
+.site-avatar--codex {
+  background: var(--mk-color-people-violet-fill);
+  color: var(--mk-color-people-violet-ink);
+}
+
+/* The presence group: the avatars overlap */
+
+.site-presence {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-presence .site-avatar + .site-avatar {
+  margin-left: -6px;
+}
+
+.site-presence--small .site-avatar + .site-avatar {
+  margin-left: -3px;
+}

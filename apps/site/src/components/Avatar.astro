@@ -1,0 +1,33 @@
+---
+/**
+ * The avatar of one person or agent in the depicted design file: a person's
+ * initial, or an agent's spark, on that person's colour and a ring of the
+ * surface it sits on. It is 28px, and `small` draws the 22px size of the
+ * status bar. A depiction: hidden from assistive technology.
+ *
+ * Use: `<Avatar person="maya" />`.
+ */
+import Icon from "./Icon.astro";
+import { PERSON, type Person } from "./people.js";
+
+interface Props {
+  readonly class?: string;
+  readonly person: Person;
+  readonly small?: boolean;
+}
+
+const { class: className, person, small = false } = Astro.props;
+const { agent, name } = PERSON[person];
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "site-avatar",
+    `site-avatar--${person}`,
+    small && "site-avatar--small",
+    className,
+  ]}
+>
+  {agent ? <Icon name="spark" size={small ? 11 : 13} /> : name.slice(0, 1)}
+</span>

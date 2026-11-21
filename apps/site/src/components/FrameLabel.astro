@@ -1,0 +1,52 @@
+---
+/**
+ * The label of a frame on the canvas: an icon and the frame's name in
+ * Geist Mono 12px `textMuted`, set 10px above the top-left corner of its
+ * frame, with an optional size at its right end. The frame sets
+ * `position: relative`. A depiction: hidden from assistive technology.
+ *
+ * - `name`: the frame's name, such as `Footer`. For a name in which a part
+ *   stands out, pass markup in the `name` slot instead: a `b` in it takes
+ *   `textSecondary`, as the file name of a path such as `legal/terms.md`
+ *   does.
+ * - `icon`: the icon before the name, `frame` by default.
+ * - `selected`: the label of a selected frame takes `signalDeep`.
+ * - `size`: a size at the label's right end, such as `840 × 1290`.
+ *
+ * Use: `<FrameLabel name="Footer" />`, or
+ * `<FrameLabel icon="file" selected><Fragment slot="name">legal/<b>terms.md</b></Fragment></FrameLabel>`.
+ */
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+
+interface Props {
+  readonly class?: string;
+  readonly icon?: IconName;
+  readonly name?: string;
+  readonly selected?: boolean;
+  readonly size?: string;
+}
+
+const {
+  class: className,
+  icon = "frame",
+  name,
+  selected = false,
+  size,
+} = Astro.props;
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "site-frame-name",
+    selected && "site-frame-name--selected",
+    className,
+  ]}
+>
+  <Icon name={icon} size={13} />
+  <span class="site-frame-name-text">
+    <slot name="name">{name}</slot>
+  </span>
+  {size !== undefined && <span class="site-frame-name-size">{size}</span>}
+</span>

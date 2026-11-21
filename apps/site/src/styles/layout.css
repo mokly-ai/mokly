@@ -1,6 +1,8 @@
 /* Page layout for the public site: the home's full-measure main, the
-   centered document column and its ruled intro, and the home hero type.
-   Kept in parity with the promoted mockups under docs/mockups/styles/site/;
+   centered document column and its ruled intro, the document type that the
+   legal pages, the documentation and the changelog share, and the home hero
+   type. Kept in parity with the promoted mockups under
+   docs/mockups/styles/site/, whose prose.css holds the shared document type;
    the mobile composition is the default and 768px raises the desktop one. */
 
 .site-main {
@@ -27,11 +29,6 @@
   max-width: var(--mk-layout-content-max);
 }
 
-.site-policy {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-policy);
-}
-
 .site-document-intro {
   border-bottom: 1px solid var(--mk-color-border);
   display: grid;
@@ -40,14 +37,26 @@
   padding-bottom: var(--mk-space-8);
 }
 
-.site-document-intro h1 {
-  font-size: var(--mk-type-heading1-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: -0.045em;
-  line-height: var(--mk-type-heading1-line);
+/* A word that is wider than the column, such as a one-word title at 200%
+   text size on a 320px window, breaks rather than widening the intro. Its
+   parts may sit at their own width, as the policy intro sets them, so the
+   break also lowers the narrowest width that each part asks for. */
+
+.site-document-intro > * {
+  overflow-wrap: anywhere;
 }
 
-/* Markdown documents share one readable body across docs and legal pages. */
+.site-document-intro h1 {
+  font-size: 2.5rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.052em;
+  line-height: 1;
+}
+
+/* Markdown documents share one readable body across docs and legal pages.
+   The site renders the Markdown as one flat list of parts, where the
+   mockups wrap each section in a section element: so the parts sit apart
+   by the body's gap, and each heading rules off its section. */
 
 .site-document-body {
   display: grid;
@@ -67,9 +76,10 @@
 
 .site-document-body h2 {
   border-top: 1px solid var(--mk-color-border);
-  font-size: var(--mk-type-heading3-size);
+  font-size: 1.5rem;
   font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading3-line);
+  letter-spacing: -0.034em;
+  line-height: 1.16;
   padding-top: var(--mk-space-8);
   scroll-margin-top: var(--mk-space-6);
 }
@@ -86,40 +96,87 @@
   scroll-margin-top: var(--mk-space-6);
 }
 
-.site-document-body p,
-.site-document-body li {
-  color: var(--mk-color-text-muted);
+.site-document-body p {
+  color: var(--mk-color-text-secondary);
+  font-size: 1rem;
+  letter-spacing: -0.006em;
+  line-height: 1.68;
+  max-width: var(--mk-layout-prose-max);
 }
 
 .site-document-body ul,
 .site-document-body ol {
   display: grid;
-  gap: var(--mk-space-2);
+  gap: 10px;
   padding-left: var(--mk-space-5);
 }
 
+/* List markers are small selection handles */
+
+.site-document-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.site-document-body ul > li {
+  padding-left: 26px;
+  position: relative;
+}
+
+.site-document-body ul > li::before {
+  background: var(--mk-color-surface);
+  border: 1.5px solid var(--mk-color-signal);
+  border-radius: 2px;
+  content: "";
+  height: 7px;
+  left: 3px;
+  position: absolute;
+  top: 0.72em;
+  width: 7px;
+}
+
 .site-document-body li {
+  color: var(--mk-color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.68;
   min-width: 0;
 }
 
 .site-document-body a {
-  color: var(--mk-color-accent);
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
   text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--mk-color-signal-deep) 45%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
 .site-document-body a:hover {
-  color: var(--mk-color-accent-hover);
+  text-decoration-color: currentColor;
   text-decoration-thickness: 2px;
 }
 
 .site-document-body code {
-  background: var(--mk-color-surface-muted);
-  border-radius: var(--mk-radius-small);
+  background: var(--mk-color-background);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
   color: var(--mk-color-text);
   font-family: var(--mk-font-mono);
-  font-size: 0.875em;
-  padding: 1px var(--mk-space-1);
+  font-size: 0.86em;
+  padding: 2px 6px;
+}
+
+/* Code in a block, such as a code panel's, sheds the chip of inline code. */
+
+.site-document-body pre code {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .site-document-body table {
@@ -172,6 +229,20 @@
 @media (min-width: 768px) {
   .site-document {
     padding: var(--mk-space-12);
+  }
+
+  .site-document-intro h1 {
+    font-size: 3.5rem;
+  }
+
+  .site-document-body h2 {
+    font-size: 1.6875rem;
+  }
+
+  .site-document-body p,
+  .site-document-body li {
+    font-size: 1.0625rem;
+    line-height: 1.7;
   }
 
   .site-hero {
