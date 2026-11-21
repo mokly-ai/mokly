@@ -1,0 +1,244 @@
+/* The docs sub-bar and the tree sheet below 1024px. The sticky 52px
+   sub-bar under the tool bar holds the Layers control, named by the section
+   and the page, and the compact search control. The Layers control opens
+   the tree sheet, a modal dialog that drops in under the sub-bar over a
+   scrim, which paints only below the sub-bar, so both bars stay undimmed.
+   The page behind the open sheet holds its scroll position.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-responsive.css and docs-steps.css. The mockup draws the open sheet
+   in place over a scrim element; the site opens it in the top layer, so
+   the dialog's backdrop is the scrim. The mobile composition is the base
+   rule; from 768px the sub-bar shows only below the 1024px step, under the
+   56px tool bar. */
+
+.site-docs-subbar {
+  align-items: center;
+  background: var(--mk-color-surface);
+  box-shadow: 0 1px 0 var(--mk-color-border);
+  display: flex;
+  gap: 4px;
+  height: 52px;
+  padding: 0 4px 0 6px;
+  position: sticky;
+  top: 60px;
+  z-index: 25;
+}
+
+.site-docs-layers-toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  color: var(--mk-color-text);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font: inherit;
+  font-size: 0.875rem;
+  gap: var(--mk-space-2);
+  height: var(--mk-layout-control-min);
+  min-width: 0;
+  padding: 0 10px;
+  text-align: left;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-docs-layers-toggle:hover,
+.site-docs-layers-toggle[aria-expanded="true"] {
+  background: var(--mk-color-background);
+}
+
+.site-docs-layers-toggle svg {
+  flex: none;
+}
+
+.site-docs-layers-toggle > svg:first-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-docs-layers-toggle-trail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-docs-layers-toggle-section,
+.site-docs-layers-toggle-sep,
+.site-docs-layers-toggle-chevron {
+  color: var(--mk-color-text-muted);
+}
+
+.site-docs-layers-toggle-page {
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-docs-layers-toggle[aria-expanded="true"]
+  .site-docs-layers-toggle-chevron {
+  rotate: 180deg;
+}
+
+.site-docs-subbar .site-search {
+  background: none;
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--mk-color-text-secondary);
+  flex: none;
+  justify-content: center;
+  padding: 0;
+  width: var(--mk-layout-control-min);
+}
+
+.site-docs-subbar .site-search:hover {
+  background: var(--mk-color-background);
+  box-shadow: none;
+  color: var(--mk-color-text);
+}
+
+/* The tree sheet under the sub-bar: 60px of tool bar and 52px of sub-bar on
+   mobile */
+
+.site-docs-sheet {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 0 0 16px 16px;
+  box-shadow:
+    0 1px 0 var(--mk-color-border),
+    var(--mk-shadow-large);
+  color: var(--mk-color-text);
+  height: auto;
+  inset: 112px 0 auto;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  padding: 0;
+  position: fixed;
+  width: auto;
+  z-index: 24;
+}
+
+.site-docs-sheet .site-doc-tree {
+  display: flex;
+  flex-direction: column;
+  max-height: min(640px, calc(100vh - 136px));
+}
+
+.site-docs-sheet .site-docs-layers-top {
+  padding: 8px 12px 10px;
+}
+
+.site-docs-sheet .site-doc-tree-scroll {
+  padding: 0 12px 10px;
+}
+
+.site-docs-sheet .site-doc-section-head {
+  font-size: 0.71875rem;
+  min-height: 44px;
+}
+
+.site-docs-sheet .site-panel-row {
+  font-size: 0.9375rem;
+}
+
+.site-docs-sheet .site-doc-tree-foot {
+  border-top: 1px solid var(--mk-color-border);
+  padding: var(--mk-space-2) 12px;
+}
+
+/* The scrim: ink at 32% in light and the canvas at 70% in dark. It paints
+   only below the sub-bar, and a press anywhere on it closes the sheet. */
+
+.site-docs-sheet::backdrop {
+  background-clip: content-box;
+  background-color: color-mix(in srgb, var(--mk-color-text) 32%, transparent);
+  padding-top: 112px;
+}
+
+:root[data-color-scheme="dark"] .site-docs-sheet::backdrop {
+  background-color: color-mix(
+    in srgb,
+    var(--mk-color-background) 70%,
+    transparent
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-docs-sheet::backdrop {
+    background-color: color-mix(
+      in srgb,
+      var(--mk-color-background) 70%,
+      transparent
+    );
+  }
+}
+
+:root:has(.site-docs-sheet[open]) {
+  overflow: hidden;
+}
+
+/* The sheet drops in: it fades in and settles 8px, and its scrim fades in.
+   With reduced motion it shows open at once. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-docs-sheet[open] {
+    animation: site-docs-sheet-in var(--mk-motion-standard)
+      var(--mk-motion-easing);
+  }
+
+  .site-docs-sheet[open]::backdrop {
+    animation: site-docs-scrim-in var(--mk-motion-standard)
+      var(--mk-motion-easing);
+  }
+}
+
+@keyframes site-docs-sheet-in {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+@keyframes site-docs-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .site-docs-sheet {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* From 768px the sub-bar and its sheet show only below the 1024px step,
+   under the 56px tool bar */
+
+@media (min-width: 768px) {
+  .site-docs-subbar {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-docs-subbar {
+    display: flex;
+    top: 56px;
+  }
+
+  .site-docs-sheet {
+    inset: 108px 0 auto;
+  }
+
+  .site-docs-sheet::backdrop {
+    padding-top: 108px;
+  }
+}
+
+/* The sub-bar holds only controls that need script, so without script it
+   does not show at any width. This rule follows the steps above. */
+@media (scripting: none) {
+  .site-docs-subbar {
+    display: none;
+  }
+}

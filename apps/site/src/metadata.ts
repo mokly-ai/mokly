@@ -7,6 +7,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 
+import { PRICING_HERO } from "./components/pricing/hero-copy.js";
 import { HOME_HERO } from "./home.js";
 import { SITE_PATHS, type SitePath } from "./navigation.js";
 import { sitePath } from "./workspace.js";
@@ -41,6 +42,10 @@ export const PAGE_METADATA: Readonly<Record<PageRoute, PageMetadata>> =
     [SITE_PATHS.changelog]: {
       description: "Every release of the Mokly CLI, newest first.",
       title: "Changelog · Mokly",
+    },
+    [SITE_PATHS.pricing]: {
+      description: PRICING_HERO.lead,
+      title: "Pricing · Mokly",
     },
     [SITE_PATHS.terms]: {
       description: "Service terms for Mokly Cloud.",

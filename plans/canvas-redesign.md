@@ -6,8 +6,9 @@ and its parts: the [design record](./canvas-redesign-design.md), the
 [viewer milestones](./canvas-redesign-milestones-viewer.md),
 [decisions 1 to 5](./canvas-redesign-decisions.md),
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
-[decisions 20 to 25](./canvas-redesign-decisions-docs.md). Decisions 11, 12
-and 20 to 25 wait for Cal.
+[decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
+[decisions 27 to 29](./canvas-redesign-decisions-site.md). Decisions 11, 12
+and 20 to 29 wait for Cal.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a
@@ -189,13 +190,17 @@ Tags: ui
 
 Depends on: 4, 15
 
-- [ ] Build the Layers panel with search, the version chip and the
-      Changelog foot. Keep 44px rows.
-- [ ] Frame the document, and add the Inspect panel with page facts, Edit on
+- [x] Build the Layers panel with search, the version chip and the
+      Changelog foot. Keep 44px rows. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Frame the document, and add the Inspect panel with page facts, Edit on
       GitHub and On this page. Edit on GitHub opens the tracked guide
-      source under `docs/guides/`, not the generated package copy.
-- [ ] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
-- [ ] Build the mobile sub-bar and the tree sheet.
+      source under `docs/guides/`, not the generated package copy. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Restyle the code panels and the pager. Keep tab-scoped tree scroll.
+      Branch: `calummoore/canvas-redesign-m6-site-docs-570n`.
+- [x] Build the mobile sub-bar and the tree sheet. Branch:
+      `calummoore/canvas-redesign-m6-site-docs-570n`.
 
 ## Milestone 7: HTML sample fence
 
@@ -220,10 +225,15 @@ Depends on: 6, 7, 15
 
 - [ ] Draw the sample fence: the frame label, the size tag, the viewport and
       state controls, and the wires between lines and elements. The scaled frames fit at
-      320px, so the guide page does not overflow.
+      320px, so the guide page does not overflow. Reuse the line helper of
+      `code-panel.ts` in `sample-band.ts`, so the band draws no blank row
+      after each line.
 - [ ] Build Version history with its scroll spy, and the release timeline.
 - [ ] Build the filter for Breaking, Features, Fixes and Performance.
-- [ ] Build the release frames, with breaking notes as pinned callouts.
+- [ ] Build the release frames, with breaking notes as pinned callouts. Move
+      the trail rules from the docs sheet into a shared sheet. The page must
+      not scroll sideways from 768px to 797px, and the panels sit below the
+      sticky bar.
 
 ## Milestone 9: Site pricing
 
@@ -231,15 +241,16 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Add `/pricing` to `src/navigation.ts`, then run `npm run site:routes`.
+- [x] Add `/pricing` to `src/navigation.ts`, then run `npm run site:routes`.
       `pricing` is already a reserved workspace name. Add Pricing to the
       header, the menu and the footer. Correct the module comment about app
-      routes.
-- [ ] Build the plan frames, the compare table and the questions from
-      `billing.md`.
-- [ ] Link Create an account and Start a 7-day trial to `/sign-up`, and let
+      routes. Branch: `calummoore/canvas-redesign-m9-site-pricing-5q33`.
+- [x] Build the plan frames, the compare table and the questions from
+      `billing.md`. Branch: `calummoore/canvas-redesign-m9-site-pricing-5q33`.
+- [x] Link Create an account and Start a 7-day trial to `/sign-up`, and let
       the link check accept the app paths. Add the page to the sitemap, the
-      cards, the browser walk and the Lighthouse pages.
+      cards, the browser walk and the Lighthouse pages. Branch:
+      `calummoore/canvas-redesign-m9-site-pricing-5q33`.
 
 ## Milestones 10 to 13 and 15 to 17
 

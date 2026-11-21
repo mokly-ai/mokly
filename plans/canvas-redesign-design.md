@@ -214,6 +214,26 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   docs page keeps Search docs as a 36px icon in the bar from 768px; headings
   balance their lines.
 
+- Calls on Milestone 6, 2026-11-21:
+  - The docs `h3` is 20px on desktop and 18px on mobile.
+  - The frame label names the tracked source under its own root. Edit on
+    GitHub opens `github.com/mokly-ai/mokly/edit/main/` and that path.
+  - Section is always a page fact. Version and Package show only for guides
+    and Reference pages.
+  - Without script, both search controls and the sub-bar stay hidden.
+  - The scroll spy marks the last heading above a line 22% down the window.
+    Below 1280px, On this page is a disclosure that counts the `h2` sections.
+  - Code panels use Shiki's dark colours in both schemes, at 8.52:1 or more.
+  - A docs code panel keeps the mockup's extra 8px above and below. On mobile
+    it reaches 6px into the margins.
+- Calls on Milestone 9, 2026-11-21:
+  - The link check accepts only the app's `/sign-up`.
+  - Two measured redlines replace the mockup's static values, and the Team
+    size tag shows the frame's live size.
+  - The plan facts come from the plan catalogue, and a test holds them equal
+    to the Rust `CATALOGUE`.
+  - The page has no reveal animations.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),

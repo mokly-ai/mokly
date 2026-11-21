@@ -6,15 +6,13 @@
  * started; and the menu control. The file title and the people are
  * depictions, hidden from assistive technology. Below the breakpoint the bar
  * keeps the brand, Get started and the menu control, and the menu lists the
- * destinations. The documentation search control follows on documentation
- * routes only; below the breakpoint it takes the row under the bar.
+ * destinations.
  */
 import {
   EXTERNAL_LINKS,
   GET_STARTED_PATH,
   SITE_PATHS,
   currentPage,
-  isDocsRoute,
 } from "../navigation.js";
 
 import Brand from "./Brand.astro";
@@ -22,7 +20,6 @@ import Button from "./Button.astro";
 import Chip from "./Chip.astro";
 import Menu from "./Menu.astro";
 import Presence from "./Presence.astro";
-import Search from "./docs/Search.tsx";
 import { pageName } from "./page-name.js";
 
 interface Props {
@@ -30,10 +27,9 @@ interface Props {
 }
 
 const { route } = Astro.props;
-const search = isDocsRoute(route);
 ---
 
-<div class:list={["site-band", search && "site-band--search"]}>
+<div class="site-band">
   <header class="site-header">
     <div class="site-header-start">
       <Brand route={route} />
@@ -65,6 +61,13 @@ const search = isDocsRoute(route);
         >
           Changelog
         </a>
+        <a
+          aria-current={currentPage(route, SITE_PATHS.pricing)}
+          class="site-nav-link"
+          href={SITE_PATHS.pricing}
+        >
+          Pricing
+        </a>
         <a class="site-nav-link" href={EXTERNAL_LINKS.github}>
           GitHub
         </a>
@@ -78,7 +81,6 @@ const search = isDocsRoute(route);
         Get started
       </Button>
       <Menu route={route} />
-      {search && <Search client:idle />}
     </div>
   </header>
 </div>

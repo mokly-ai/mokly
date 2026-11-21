@@ -1,0 +1,19 @@
+---
+/**
+ * A plan's single price and the note under it, such as `$0` over
+ * `MIT license`. The amount sets tabular figures.
+ *
+ * Use: `<PlanPrice amount="$0" note="MIT license" />`. The rules are in
+ * `src/styles/pricing-frame.css`.
+ */
+
+interface Props {
+  readonly amount: string;
+  readonly note: string;
+}
+
+const { amount, note } = Astro.props;
+---
+
+<p class="site-pricing-amount">{amount}</p>
+<p class="site-pricing-price-note">{note}</p>

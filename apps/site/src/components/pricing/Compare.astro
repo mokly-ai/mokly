@@ -1,0 +1,80 @@
+---
+/**
+ * The compare table, drawn as a component's props table in a frame labelled
+ * `Plan · props`: one column for each plan under its product line, the rows
+ * grouped as a props table groups its sections, and the Team column tinted.
+ * Each group is its own row group under its header. The explicit table roles
+ * keep the table's semantics when the mobile composition stacks each row as
+ * a property line over three cells.
+ */
+import FrameLabel from "../FrameLabel.astro";
+
+import CompareValue from "./CompareValue.astro";
+import {
+  PRICING_COLUMNS,
+  PRICING_GROUPS,
+  type PricingPlanKey,
+} from "./compare-rows.js";
+
+import "../../styles/pricing-compare.css";
+import "../../styles/pricing-compare-cells.css";
+
+/** The class of a cell in the tinted Team column. */
+function columnClass(key: PricingPlanKey): string | undefined {
+  return key === "team" ? "site-pricing-props-team" : undefined;
+}
+---
+
+<section aria-labelledby="pricing-compare-title" class="site-pricing-compare">
+  <h2 class="site-pricing-section-title" id="pricing-compare-title">
+    Compare the plans.
+  </h2>
+  <div class="site-pricing-props-frame">
+    <FrameLabel icon="component" name="Plan · props" />
+    <table class="site-pricing-props" role="table">
+      <caption class="site-visually-hidden">What each plan includes</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th
+            class="site-pricing-props-property"
+            role="columnheader"
+            scope="col"
+          >
+            Property
+          </th>
+          {PRICING_COLUMNS.map((column) => (
+            <th class={columnClass(column.key)} role="columnheader" scope="col">
+              <small aria-hidden="true">{column.line}</small>
+              {column.plan}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      {PRICING_GROUPS.map((group) => (
+        <tbody role="rowgroup">
+          <tr class="site-pricing-props-group" role="row">
+            <th colspan="4" role="rowheader" scope="rowgroup">
+              {group.title}
+            </th>
+          </tr>
+          {group.rows.map((row) => (
+            <tr role="row">
+              <th role="rowheader" scope="row">
+                {row.label}
+                {row.note !== undefined && <small>{row.note}</small>}
+              </th>
+              {PRICING_COLUMNS.map((column) => (
+                <td class={columnClass(column.key)} role="cell">
+                  <CompareValue
+                    team={column.key === "team"}
+                    value={row.values[column.key]}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      ))}
+    </table>
+  </div>
+</section>

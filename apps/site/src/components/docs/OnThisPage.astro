@@ -1,34 +1,68 @@
 ---
 /**
- * The "On this page" list, generated from the page's own second and third
- * level headings. A page with fewer than two of them renders nothing.
+ * On this page: a row for each `h2` and `h3` of the document, in order. An
+ * `h2` row repeats its section's two-digit index; an `h3` row sits under
+ * the titles. A page with fewer than two of these headings has no list.
+ * With `progress`, as the Inspect panel shows it, the head names the list
+ * and shows the reading progress as a bar and a percentage; it stays on a
+ * page without a list. The docs scroll spy marks the row of the heading in
+ * view with `aria-current="location"` and moves the progress.
+ *
+ * Use: `<OnThisPage headings={onThisPage(headings)} progress />`.
  */
 import type { DocsHeading } from "../../docs/headings.js";
 
 interface Props {
   readonly headings: readonly DocsHeading[];
+  readonly progress?: boolean;
 }
 
-const { headings } = Astro.props;
+const { headings, progress = false } = Astro.props;
+
+let sections = 0;
+const rows = headings.map((heading) => ({
+  index: heading.depth === 2 ? String(++sections).padStart(2, "0") : undefined,
+  slug: heading.slug,
+  text: heading.text,
+}));
+const listed = rows.length > 1;
+const Tag = listed ? "nav" : "div";
 ---
 
-{headings.length > 1 && (
-  <nav aria-label="On this page" class="site-onpage" data-pagefind-ignore>
-    <p class="site-rubric">On this page</p>
-    <ol>
-      {headings.map((heading) => (
-        <li>
-          <a
-            class:list={[
-              "site-onpage-link",
-              heading.depth > 2 && "site-onpage-link--nested",
-            ]}
-            href={`#${heading.slug}`}
-          >
-            {heading.text}
-          </a>
-        </li>
-      ))}
-    </ol>
-  </nav>
+{(listed || progress) && (
+  <Tag aria-label={listed ? "On this page" : undefined} class="site-onpage">
+    {progress && (
+      <p class="site-docs-inspect-head">
+        On this page
+        <span aria-hidden="true" class="site-docs-progress">
+          <span class="site-docs-progress-track">
+            <span class="site-docs-progress-fill" />
+          </span>
+          <span class="site-docs-progress-value">0%</span>
+        </span>
+      </p>
+    )}
+    {listed && (
+      <ol>
+        {rows.map((row) => (
+          <li>
+            <a
+              class:list={[
+                "site-onpage-link",
+                row.index === undefined && "site-onpage-link--nested",
+              ]}
+              href={`#${row.slug}`}
+            >
+              {row.index !== undefined && (
+                <span aria-hidden="true" class="site-docs-index">
+                  {row.index}
+                </span>
+              )}
+              {row.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    )}
+  </Tag>
 )}

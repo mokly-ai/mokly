@@ -13,6 +13,7 @@ const HEADING: Readonly<Record<SitePath, string>> = {
   [SITE_PATHS.home]: "Design in code.",
   [SITE_PATHS.docs]: "Getting started",
   [SITE_PATHS.changelog]: "What’s new in Mokly",
+  [SITE_PATHS.pricing]: "Free for open source. Team for private projects.",
   [SITE_PATHS.terms]: "Terms of Service",
   [SITE_PATHS.privacy]: "Privacy Policy",
   [SITE_PATHS.complaints]: "Complaints",

@@ -1,0 +1,46 @@
+---
+/**
+ * The pricing hero: the kicker, the two-tone heading and the lead, which
+ * stand on the plan grid of the page. The copy is the approved pricing copy
+ * of `docs/protocol/cloud/site-pricing.md`, held in `hero-copy.ts` so that
+ * the page description repeats the lead. A non-breaking space keeps the last
+ * word of the heading's second line on the line of the word before it.
+ *
+ * A redline measures the space under the heading, and each layout draws its
+ * own: from 1100px up it runs down to the plan grid, and below 1100px, where
+ * the lead moves under the heading, it runs down to the lead. The redlines
+ * are depictions, and the measurements island writes their values.
+ */
+import Kicker from "../Kicker.astro";
+import Redline from "../Redline.astro";
+
+import { PRICING_HERO } from "./hero-copy.js";
+
+const secondLine = PRICING_HERO.headingSecondLine.replace(
+  / (?=\S+$)/u,
+  "\u00a0",
+);
+---
+
+<section aria-labelledby="pricing-title" class="site-pricing-hero">
+  <Kicker>{PRICING_HERO.kicker}</Kicker>
+  <div class="site-pricing-heading">
+    <h1 class="site-pricing-title" id="pricing-title">
+      {PRICING_HERO.heading} <br />
+      <span>{secondLine}</span>
+    </h1>
+    <Redline
+      class="site-pricing-redline site-pricing-redline--wide"
+      from="pricing-title"
+      to="pricing-plan-grid"
+    />
+    <Redline
+      class="site-pricing-redline site-pricing-redline--stacked"
+      from="pricing-title"
+      to="pricing-lead"
+    />
+  </div>
+  <p class="site-pricing-lead" id="pricing-lead">
+    {PRICING_HERO.lead}
+  </p>
+</section>

@@ -1,8 +1,12 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { APP_PATHS } from "../../src/navigation.js";
+
 import type { LinkDocument } from "./documents.js";
 import { cssReferences, htmlDocument } from "./documents.js";
+
+const applicationPaths: ReadonlySet<string> = new Set(Object.values(APP_PATHS));
 
 async function inventory(root: string, directory = ""): Promise<string[]> {
   const files: string[] = [];
@@ -55,6 +59,7 @@ function resolveReference(
   ) {
     return "invalid output path";
   }
+  if (applicationPaths.has(url.pathname)) return;
   const file = [target, path.posix.join(target, "index.html")].find(
     (candidate) => files.has(candidate),
   );

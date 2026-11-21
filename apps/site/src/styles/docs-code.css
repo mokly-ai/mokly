@@ -1,75 +1,35 @@
-/* Documentation code panels use Shiki's light and dark token properties. */
+/* The docs' own rules for the code panels that src/docs/code-panel.ts draws
+   around Shiki's highlighted blocks. code.css and code-tokens.css draw the
+   panel itself: the fill, the bar, the tabs, Copy, the lines, the prompt and
+   the numbers. These rules add only what a Shiki block needs. */
 
-.site-code {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-small);
-  overflow: hidden;
-  width: 100%;
-}
+/* Shiki gives each token span its colour in both themes. The panel is dark
+   in both schemes, so each token takes the dark theme's colour. The dimmed
+   line rule of code-tokens.css is more specific, so a dimmed line still
+   mutes its tokens in either load order. */
 
-.site-code-head {
-  align-items: center;
-  border-bottom: 1px solid var(--mk-color-border);
-  display: flex;
-  gap: var(--mk-space-3);
-  justify-content: space-between;
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-3);
-}
-
-.site-code-language {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
-}
-
-.site-code-copy {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  font: inherit;
-  font-size: var(--mk-type-caption-size);
-  min-height: var(--mk-layout-control-min);
-  min-width: 76px;
-  padding: 0 var(--mk-space-3);
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    border-color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-code-copy:hover {
-  background: var(--mk-color-surface-muted);
-  border-color: var(--mk-color-border-strong);
-}
-
-.site-code pre {
-  background: var(--mk-color-surface) !important;
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  margin: 0;
-  overflow-x: auto;
-  padding: var(--mk-space-4) var(--mk-space-5);
-}
-
-.site-code code {
-  background: none;
-  font-family: inherit;
-  padding: 0;
-}
-
-.site-code span {
-  color: var(--shiki-light);
-}
-
-:root[data-color-scheme="dark"] .site-code span {
+.site-code-line > span {
   color: var(--shiki-dark);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-color-scheme="light"]) .site-code span {
-    color: var(--shiki-dark);
-  }
+/* Shiki's inline style makes each block a scroll box, which the panel never
+   needs: its lines wrap with a hanging indent. Only an important declaration
+   overrides an inline one. */
+
+.site-code .site-code-body {
+  overflow: visible !important;
+}
+
+/* Shiki keeps each block in the tab order. The panel clips an outer ring, so
+   the block's focus ring draws inside the block, as Copy's does. */
+
+.site-code .site-code-body:focus-visible {
+  outline-offset: -2px;
+}
+
+/* The copy island places Copy after this empty marker, so the marker draws
+   no box and adds no gap to the bar. */
+
+.site-code-copy-slot {
+  display: none;
 }

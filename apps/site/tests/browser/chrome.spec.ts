@@ -13,18 +13,19 @@ const HEADER_LINKS = [
   SITE_PATHS.home,
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   EXTERNAL_LINKS.github,
   GET_STARTED_PATH,
 ];
 
 /** What the navigation lists above the breakpoint and the menu below it. */
-const DESTINATIONS = ["Docs", "Changelog", "GitHub"];
+const DESTINATIONS = ["Docs", "Changelog", "Pricing", "GitHub"];
 
 /**
  * The banner of a documentation page as assistive technology reads it in
  * each composition. The desktop bar also draws the file title and the
  * people in the file, but they are depictions, so the banner holds nothing
- * else. The search control is the bar's last control.
+ * else.
  */
 const BANNER = {
   narrow: `
@@ -33,7 +34,6 @@ const BANNER = {
       - link "Mokly home"
       - link "Get started"
       - button "Menu"
-      - button "Search docs"
   `,
   wide: `
     - banner:
@@ -42,9 +42,9 @@ const BANNER = {
       - navigation "Main":
         - link "Docs"
         - link "Changelog"
+        - link "Pricing"
         - link "GitHub"
       - link "Get started"
-      - button "Search docs"
   `,
 };
 
@@ -53,6 +53,7 @@ const FOOTER_LINKS = [
   SITE_PATHS.home,
   SITE_PATHS.docs,
   SITE_PATHS.changelog,
+  SITE_PATHS.pricing,
   SITE_PATHS.terms,
   SITE_PATHS.privacy,
   SITE_PATHS.complaints,
@@ -160,34 +161,6 @@ test("the header hides its depictions from assistive technology", async ({
   );
 });
 
-test("the search control appears on documentation routes only", async ({
-  page,
-}) => {
-  const banner = page.getByRole("banner");
-  const search = banner.getByRole("button", { name: "Search docs" });
-  await page.goto(SITE_PATHS.docs);
-  await expect(search).toBeVisible();
-  // It is the bar's last control. Below the breakpoint it takes the row
-  // beneath the bar, and above it it follows Get started in the bar.
-  const brand = await banner
-    .getByRole("link", { name: "Mokly home" })
-    .boundingBox();
-  const start = await banner
-    .getByRole("link", { name: "Get started" })
-    .boundingBox();
-  const field = await search.boundingBox();
-  expect((field?.y ?? 0) >= (brand?.y ?? 0) + (brand?.height ?? 0)).toBe(
-    narrow(page),
-  );
-  expect((field?.x ?? 0) >= (start?.x ?? 0) + (start?.width ?? 0)).toBe(
-    !narrow(page),
-  );
-  for (const route of [SITE_PATHS.home, SITE_PATHS.changelog]) {
-    await page.goto(route);
-    await expect(search).toHaveCount(0);
-  }
-});
-
 test("the current route is marked in the header and footer", async ({
   page,
 }) => {
@@ -218,6 +191,13 @@ test("the current route is marked in the header and footer", async ({
   await page.goto(SITE_PATHS.security);
   await expect(
     page.getByRole("contentinfo").getByRole("link", { name: "Security" }),
+  ).toHaveAttribute("aria-current", "page");
+  await page.goto(SITE_PATHS.pricing);
+  await expect(
+    page.getByRole("contentinfo").getByRole("link", { name: "Pricing" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    (await headerDestinations(page)).getByRole("link", { name: "Pricing" }),
   ).toHaveAttribute("aria-current", "page");
 });
 

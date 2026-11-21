@@ -1,8 +1,7 @@
 /* The controls the pages share: status badges, the inline link with its
    trailing glyph and the action row that repeats in the hero and the
-   closing, then the documentation search control and its place in the tool
-   bar. buttons.css holds the buttons. Every value resolves from the token
-   workspace. */
+   closing. buttons.css holds the buttons. Every value resolves from the
+   token workspace. */
 
 .site-badge {
   align-items: center;
@@ -57,85 +56,4 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--mk-space-3);
-}
-
-/* The documentation search control, shaped like a field with the strong
-   edge of a control. The tool bar holds it on documentation routes only,
-   until the documentation layout takes it. It is the last control of the
-   bar, after the menu control, so the reading order and the keyboard order
-   agree in both compositions. Below the breakpoint it takes the row under
-   the bar, and the band grows by the 52px of that row. From the breakpoint
-   up it follows Get started as the 36px icon control that the mockups draw
-   for the compact search, with a 44px target. Its label stays its
-   accessible name, and the bar keeps the composition and the steps of
-   every other page. */
-
-.site-search {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 0;
-  border-radius: var(--mk-radius-chrome);
-  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
-  color: var(--mk-color-text-muted);
-  cursor: pointer;
-  display: flex;
-  flex: none;
-  font: inherit;
-  font-size: 0.875rem;
-  gap: var(--mk-space-2);
-  min-height: var(--mk-layout-control-min);
-  padding: 0 12px 0 10px;
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-search:hover {
-  background: var(--mk-color-surface);
-  color: var(--mk-color-text);
-}
-
-.site-band--search {
-  padding-bottom: 52px;
-}
-
-.site-band--search .site-search {
-  bottom: 8px;
-  left: 12px;
-  position: absolute;
-  right: 12px;
-}
-
-:root:has(.site-band--search) {
-  scroll-padding-top: 112px;
-}
-
-@media (min-width: 768px) {
-  .site-band--search {
-    padding-bottom: 0;
-  }
-
-  .site-band--search .site-search {
-    font-size: 0;
-    gap: 0;
-    height: 36px;
-    inset: auto;
-    justify-content: center;
-    margin-left: 6px;
-    min-height: 0;
-    padding: 0;
-    position: relative;
-    width: 36px;
-  }
-
-  .site-band--search .site-search::before {
-    content: "";
-    inset: -4px;
-    position: absolute;
-  }
-
-  /* The tool bar's own 56px. */
-  :root:has(.site-band--search) {
-    scroll-padding-top: 56px;
-  }
 }

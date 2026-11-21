@@ -1,0 +1,42 @@
+---
+/**
+ * The Layers panel beside the page frame from 1024px: a floating panel and
+ * a navigation landmark named Documentation, titled Layers with the meta
+ * Docs. Its top holds the search control and the published CLI version,
+ * every section with its pages scrolls between the top and the foot, and
+ * the foot holds the Changelog row. Its tree keeps its scroll offset across
+ * docs pages in the tab, through the tree scroll island.
+ *
+ * Use: `<Layers route={route} />` inside the workspace's Layers column.
+ */
+import Panel from "../Panel.astro";
+
+import SearchControl from "./SearchControl.astro";
+import TreeFoot from "./TreeFoot.astro";
+import TreeSections from "./TreeSections.astro";
+import VersionRow from "./VersionRow.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+---
+
+<Panel
+  as="nav"
+  class="site-doc-tree"
+  label="Documentation"
+  meta="Docs"
+  metaMono
+  title="Layers"
+>
+  <div class="site-docs-layers-top">
+    <SearchControl />
+    <VersionRow />
+  </div>
+  <TreeSections route={route} />
+  <TreeFoot slot="foot" />
+</Panel>
+
+<script src="./tree-scroll.ts"></script>

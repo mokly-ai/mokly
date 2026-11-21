@@ -1,7 +1,5 @@
 # Marketing Site
 
-Status: The site does not publish `/pricing` or link to `/sign-up` yet. [Milestone 9](../../../plans/canvas-redesign.md#milestone-9-site-pricing) builds both.
-
 The public website and documentation live in this repository as the static
 Astro npm workspace `apps/site`. Marketing lives here, not in `packages/app`,
 because the site documents the cloud from the cloud protocol docs and consumes
@@ -15,11 +13,11 @@ implementation contract.
 
 ## Ownership
 
-| Public surface                | Owner         | Routes                                                                                     |
-| ----------------------------- | ------------- | ------------------------------------------------------------------------------------------ |
-| Shared app/site origin        | `apps/site`   | `/`, `/docs/…`, `/changelog`, `/pricing`, `/terms`, `/privacy`, `/complaints`, `/security` |
-| Shared app/site origin        | `packages/app`    | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`                    |
-| Catalogue publication origins | Rust workload | per-publication sandbox subdomains, see [Viewer](./viewer.md)                              |
+| Public surface                | Owner          | Routes                                                                                     |
+| ----------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| Shared app/site origin        | `apps/site`    | `/`, `/docs/…`, `/changelog`, `/pricing`, `/terms`, `/privacy`, `/complaints`, `/security` |
+| Shared app/site origin        | `packages/app` | `/dashboard`, `/sign-in`, `/sign-up`, `/auth/…`, `/:workspace/:project`                    |
+| Catalogue publication origins | Rust workload  | per-publication sandbox subdomains, see [Viewer](./viewer.md)                              |
 
 The internal app-origin hostname is an app-workload endpoint used only by the
 Worker. It is not a public surface and is never linked or navigated directly.
