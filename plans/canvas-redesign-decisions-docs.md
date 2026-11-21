@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 20 to 25
+# Canvas redesign: decisions 20 to 26
 
 These decisions came from Milestone 2, the protocol docs, of the
 [Canvas redesign plan](./canvas-redesign.md). They keep the item numbers of
@@ -202,3 +202,40 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** A. The declared 4px is the authored design value.
 - **Action:** ask the user, because it decides which side of a mockup and
   site difference is right.
+
+## 26. Demo app colours under the strict tint check
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/mockups/styles/site/home-acme.css`, `apps/site/src/styles/home-acme.css`, `apps/site/tests/styles.test.ts:24`
+- **Background:** The site test allows only a single colour mix of two roles.
+  The merged mockup draws the demo coffee shop's six colours with nested
+  mixes. On 2026-11-21 the orchestrator kept the strict check, so Milestone 5
+  rewrote each colour as one two-role mix, as close as possible.
+- **Problem:** Four colours move visibly: saffron turns ochre, plum turns wine,
+  sage turns mint, and the danger red gets brighter. Ink and the dark screen
+  stay close.
+- **Impact if no action:** The welcome art, the Taster bag, the "Most
+  popular" badge and three more colours differ from the approved mockup.
+- **Root question:** Which roles may the demo app's palette mix, so that it
+  stays close to the approved design in both schemes?
+- **Options:**
+  - **A.** Keep the two-role mixes. Four colours stay changed. Effort: Small.
+  - **B.** Mix saffron, red and ink from the window-chrome roles, which stay
+    close. Plum and sage stay changed, and the demo depends on the window
+    colours. Effort: Small.
+  - **C.** Widen the site tint check to mixes whose every part is a role,
+    `currentColor`, `transparent` or another such mix, and keep the six
+    approved nested mixes. All six colours return exactly. It loosens a gate.
+    Effort: Small.
+- **Left out:** The warning and success roles, because they change strongly
+  between schemes.
+- **Wider fix:** C, because it checks the real rule: every colour comes from
+  the roles.
+- **Previous examples:** The six other mixes that swapped their parts with no
+  colour change.
+- **Recommendation:** C. It is the only option that ships the approved
+  palette, and every colour still comes from the roles.
+- **Action:** ask the user, because C loosens a gate and B changes a
+  requirement sentence.
