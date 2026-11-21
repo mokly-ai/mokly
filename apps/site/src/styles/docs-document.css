@@ -1,8 +1,8 @@
 /* The open page as a page frame on the canvas: a sheet with a centred
    reading column that holds the location trail, the title and the lead
    with its green rule, then the document, each h2 section ruled across the
-   whole sheet with its two-digit index, and previous and next as two small
-   frames below a rule of their own.
+   whole sheet with its two-digit index. docs-pager.css holds previous and
+   next, which close the sheet.
 
    The class names and the rules match docs/mockups/styles/site/
    docs-document.css, docs-responsive.css and docs-steps.css, and the trail
@@ -164,102 +164,9 @@
   scroll-margin-top: 76px;
 }
 
-/* Previous and next: two small frames under their labels, below a rule
-   that crosses the sheet. They stack on mobile. */
-
-.site-pager {
-  display: grid;
-  gap: 44px;
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: 44px;
-  padding: 56px 0 52px;
-  position: relative;
-}
-
-.site-pager::before {
-  border-top: 1px solid var(--mk-color-border);
-  content: "";
-  left: -100vmax;
-  position: absolute;
-  right: -100vmax;
-  top: 0;
-}
-
-.site-pager-item {
-  align-content: start;
-  background: var(--mk-color-surface);
-  box-shadow: 0 0 0 1px var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-  display: grid;
-  gap: 6px;
-  min-height: 112px;
-  padding: 18px 20px 20px;
-  position: relative;
-  transition: box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-/* The mockup draws each frame as text; on the site each frame is a link. */
-a.site-pager-item {
-  text-decoration: none;
-}
-
-.site-pager-item:hover {
-  box-shadow:
-    0 0 0 1.5px var(--mk-color-signal),
-    var(--mk-shadow-medium);
-}
-
-.site-pager-item--next {
-  grid-column: 1;
-  text-align: left;
-}
-
-.site-pager-label {
-  align-items: center;
-  bottom: calc(100% + 9px);
-  color: var(--mk-color-text-muted);
-  display: inline-flex;
-  font-family: var(--mk-font-mono);
-  font-size: 0.71875rem;
-  font-weight: var(--mk-font-medium);
-  gap: 6px;
-  left: 0;
-  line-height: 1;
-  position: absolute;
-  white-space: nowrap;
-}
-
-.site-pager-item--next .site-pager-label {
-  left: 0;
-  right: auto;
-}
-
-.site-docs-pager-section {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: 0.6875rem;
-  font-weight: var(--mk-font-medium);
-  letter-spacing: 0.06em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.site-docs-pager-title {
-  font-size: 1.1875rem;
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: -0.025em;
-  line-height: 1.25;
-}
-
-.site-docs-pager-description {
-  color: var(--mk-color-text-secondary);
-  font-size: 0.84375rem;
-  line-height: 1.5;
-}
-
 /* The desktop composition: the wide sheet margins, the larger title and
-   lead, the index hung in the margin, where only the section in view takes
-   the signal ink, and previous and next side by side */
+   lead, and the index hung in the margin, where only the section in view
+   takes the signal ink */
 
 @media (min-width: 768px) {
   .site-docs-frame .site-page-sheet {
@@ -312,23 +219,6 @@ a.site-pager-item {
   .site-docs-frame .site-document-body > h3 {
     font-size: 1.25rem;
     scroll-margin-top: 28px;
-  }
-
-  .site-pager {
-    gap: 20px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: 60px;
-    padding: 64px 0 72px;
-  }
-
-  .site-pager-item--next {
-    grid-column: 2;
-    text-align: right;
-  }
-
-  .site-pager-item--next .site-pager-label {
-    left: auto;
-    right: 0;
   }
 }
 
