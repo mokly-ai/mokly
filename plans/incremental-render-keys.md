@@ -119,9 +119,9 @@ Evidence: `.context/incremental-render-keys/implementation.md`.
 Depends on: 2
 
 - [x] Run the repository suite and complete gate from `AGENTS.md`. Check disk and memory before each large Cargo build.
-- [ ] Build and smoke-test Serve with `examples/basic` and the large React fixture.
-- [ ] Measure `render.inputs` and edit to Changes ready on both catalogues against `origin/main`.
-- [ ] Measure three title edits in the current Mokly Cloud catalogue's `slug-editor.tsx` against `origin/main`. Also measure a renderer-closure edit.
+- [x] Build and smoke-test Serve with `examples/basic` and the large React fixture.
+- [x] Measure `render.inputs` and edit to Changes ready on both catalogues against `origin/main`.
+- [x] Measure three title edits in the current Mokly Cloud catalogue's `slug-editor.tsx` against `origin/main`. Also measure a renderer-closure edit.
 - [x] Prove byte-identical published files on `examples/basic`, large HTML, large React, and `mokly-cloud`.
 - [x] Compare incremental and full render keys over the real JavaScript fixtures and generated edits.
 - [x] Audit preservation against the frozen base, commit with Conventional Commits, and push the candidate.
@@ -141,7 +141,7 @@ Depends on: 2
 - [x] Keep `session.rs`, `types.rs`, and `lib.rs` changes small. Keep the protocol and all key formats unchanged.
 - [x] Run targeted graph, runtime, wrapper, completion, and real-sidecar checks. Repeat new asynchronous tests ten times.
 - [x] Repeat the real-fixture differential key proof and strict published-byte proof on all four fixtures.
-- [ ] Measure retained and post-Changes seed memory, startup spans, and three isolated edits. Commit, push, and send the new SHA to the parent.
+- [x] Measure retained and post-Changes seed memory, startup spans, and three isolated edits. Commit, push, and send the new SHA to the parent.
 
 Evidence: `.context/incremental-render-keys/startup-investigation.md` and the revised verification record.
 
@@ -151,10 +151,18 @@ Depends on: 3, 4
 
 Review can run while the parent measures the frozen candidate. Integration waits for the parent's acceptance.
 
-- [ ] Run `implementation-review` against the frozen base after the push. Check each new finding. Apply its fix rounds and re-review.
-- [ ] Record the parent's speed, output, and memory results. Fix branch-caused failures.
-- [ ] After the parent accepts the Cloud result, merge `origin/main` once with the `git-merge` skill. Rerun the complete gate on the merged tree.
-- [ ] Repeat the byte proof if integration changes graph render-key or closure code. Audit, commit, and push the final tree.
+- [x] Run `implementation-review` against the frozen base after the push. Check each new finding. Apply its fix rounds and re-review.
+- [x] Record the parent's speed, output, and memory results. Fix branch-caused failures.
+- [x] After the parent accepts the Cloud result, merge `origin/main` once with the `git-merge` skill.
+- [x] Run merged-tree targeted checks and the repository suite.
+- [ ] Run a fresh post-push review of the merged tree and its callers.
+- [x] Repeat the real-fixture key proof and all four strict byte proofs on the merged tree. Audit, commit, and push the final tree.
 - [ ] Record any remaining findings with the required follow-up items.
 - [ ] Delete this plan under the `plans` skill. Preserve its dated calls and permalink in the pull request description.
-- [ ] Open the pull request into `main`. Watch final CI with `scripts/ci-wait.sh`. Fix branch-caused failures. Report PR and SHA. Do not merge.
+- [ ] Open the pull request into `main`. Complete the remaining merged-tree gate through Required CI. Watch final CI with `scripts/ci-wait.sh`. Fix branch-caused failures. Report PR and SHA. Do not merge.
+
+Integration steering, 2026-11-21: the parent accepted `01aab1bf0`. Merge main at `77021d88c` once. Run targeted checks, repository verification, the real-fixture key proof, and all four strict byte proofs before the pull request. Required CI verifies the remaining merged-tree gate. The parent owns the confirming warm measurement and merge.
+
+Evidence: `.context/incremental-render-keys/merge-decisions.md` and the merge audit.
+
+Merged proof evidence: `.context/incremental-render-keys/integrated-key-proof.json` and `.context/incremental-render-keys/integrated-static-byte-proof.json`.

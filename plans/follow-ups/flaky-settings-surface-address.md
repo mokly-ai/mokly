@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-21, from `calummoore/mokly-incremental-render-keys-38ts` during the frozen-base complete gate.
-- **Location:** `apps/app/src/_tests_/settings/drafts.spec.ts:117`.
+- **Location:** `packages/app/src/_tests_/settings/drafts.spec.ts:117`.
 - **Reason:** The render-key change does not touch the app or this test, so its fix belongs in a separate branch.
 
 - **Background:** The browser test checks that a settings draft survives switching between mobile and desktop surfaces. It also checks the exact address query. Its local `settleAddress` helper waits for two animation frames before reading the address.
