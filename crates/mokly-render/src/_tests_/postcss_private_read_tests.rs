@@ -32,17 +32,21 @@ fn private_reads_reject_escaping_aliases_but_keep_mapped_and_unavailable_witness
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers(&|_, path| {
-                let identity = match path.to_str().unwrap() {
-                    "/head/allowed.txt" => "/head/allowed.txt",
-                    "/head/escape.txt" | "/head/canonical-escape.txt" => "/outside/opaque.txt",
-                    "/head/node_modules/plugin/settings.txt" => {
+                let identity = match path {
+                    path if path == Path::new("/head/allowed.txt") => "/head/allowed.txt",
+                    path if path == Path::new("/head/escape.txt")
+                        || path == Path::new("/head/canonical-escape.txt") =>
+                    {
+                        "/outside/opaque.txt"
+                    }
+                    path if path == Path::new("/head/node_modules/plugin/settings.txt") => {
                         "/install/node_modules/plugin/settings.txt"
                     }
-                    "/head/missing.txt" => return Ok(None),
-                    "/head/failed.txt" => {
+                    path if path == Path::new("/head/missing.txt") => return Ok(None),
+                    path if path == Path::new("/head/failed.txt") => {
                         return Err(SourceError::Changed { path: path.into() });
                     }
-                    unexpected => panic!("unexpected projection {unexpected}"),
+                    unexpected => panic!("unexpected projection {}", unexpected.display()),
                 };
                 Ok(Some(Node {
                     identity: identity.into(),
