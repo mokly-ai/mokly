@@ -14,6 +14,7 @@ use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::routes;
 
 use crate::assets::File;
+use crate::changes_background::PendingChanges;
 use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
@@ -104,6 +105,12 @@ pub trait ChangeSource: Send + Sync {
     /// Prepare optional evidence after an accepted terminal completion returns.
     fn settled(&self) {}
 
+    /// Explicitly drain preparation after classification, including a failed reference probe.
+    fn settle_pending(&self, _accepted: bool) {}
+    /// Transfer this origin's pending preparation into its usage pass.
+    fn pending(&self) -> Option<Arc<dyn PendingChanges>> {
+        None
+    }
     /// Start command progress for one accepted background attempt.
     fn started(&self, _cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         None

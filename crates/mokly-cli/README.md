@@ -83,8 +83,8 @@ startup that fails or is cancelled drops the notice, and a later notice prints
 at once.
 Serve prepares its head in the `full` mode of the
 [capture modes](../../docs/protocol/mokly-sidecar-recipes.md#capture-modes)
-until it publishes its first state. After that publication, and before Serve
-reports readiness, `ServeServices::head_published` switches each later head
+until it publishes its first state. After successful readiness,
+`ServeServices::head_published` switches each later head
 preparation to `serveEdit`. Those preparations capture no reuse evidence and
 offer nothing to the bundle cache. The base side of Serve, `build`, and
 `publish` keep the `full` mode.
@@ -141,10 +141,11 @@ is open and no base call waits at it. It holds the pool and the gate only
 weakly, so an idle worker keeps neither alive. Each failed step reaches
 stderr once through the sidecar `Diagnostics` reporter, and a failed reap
 adds the warning that background preparation is disabled. The base preparation
-bundles its stylesheet roots on the classification thread, not on the shared
-render workers. A base root that waits at the gate then never holds a worker
-that a foreground render needs. `Source::classification_runtime` also gives
-each classification `CaptureWorkers` with a separate capture pool. That pool
+bundles its stylesheet roots on its own thread, not on the shared render
+workers. That thread is the classification thread, or the `mokly-base-prepare`
+thread of an eager preparation. A base root that waits at the gate then never
+holds a worker that a foreground render needs.
+`Source::classification_runtime` also gives each classification `CaptureWorkers` with a separate capture pool. That pool
 has as many threads as the smaller of the worker count and the admission limit
 of the gate, and at least one. So the base capture and the early renders of a fresh base run on render
 workers that foreground renders do not use. A base job that waits at the gate
@@ -209,6 +210,42 @@ of the base through `RenderGeneration::prefetch_comparison`. It returns their
 `PrefetchGuard` in `PreparedBase`. They never move to a kept base. The
 classification holds the guard until the capture of that base returns, so
 each exit stops the early renders and waits for them.
+
+Serve also starts the
+[eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md)
+of each head preparation attempt when its working configuration validates and
+the configured sidecar size in `Common::sidecars` is at least three.
+`serve_delivery::states` gives that size and the `NativeEagerFactory` to
+`EagerStarts::configure`, and `EagerAttempts` keeps the factory only when the
+size is at least three. Without that factory, `EagerAttempts::start` starts
+nothing, no `Source` has pending work, and `Source::classify_native` prepares
+the base serially after the usage pass.
+`EagerAttempts` first cancels and joins the pending work of the earlier
+attempt. One owned `mokly-base-prepare` thread runs the work under its own
+`PreparingBase` lifetime, which the command stop also cancels. A failed or
+replaced attempt, the usage pass or classification of its state, and Serve
+shutdown end the work with `PendingChanges::cancel_and_join`. That call joins
+the thread before it releases the sources and leases. The source phase pins
+the base, samples the checkout, loads the base configuration, discovers the
+base sources, and reads both clean dependency identities with the extraction
+that a sidecar base needs. A complete extraction lease bypasses the cold
+source wait. Otherwise discovery, the extraction, and the identity reads wait
+through `SourceAdmission` until `ServeServices::head_published` reports the
+first successful readiness. The attempts after that readiness do not wait. The
+source phase stops after the pin when the key matches the kept base. The
+adopted head, after any watch recheck, starts the validation
+phase: dependency selection, the install, and graph validation. With a kept
+base of another key, that phase also waits for the classification.
+`ProvenValidation` holds graph validation until adoption when it cannot prove
+the working installation. The work keeps its statuses, steps, cache notices, warnings, and the sidecar text of its base
+source root in one `OrderedEvents` record. `Source::pending` hands the work to
+the usage pass of its state. The classification adopts it through
+`AdoptingBase` only when the key, the head dependency evidence, and the
+working inputs are current. Adoption replays the record through the normal
+reporting paths, selects the eager lifetime, and binds the classification's
+capture workers before the early renders start. Otherwise the classification
+prepares serially. A source that a reference refresh creates has no pending
+work.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate
@@ -329,20 +366,35 @@ changed.
   `ServeOutput` and creates the one announcement flag of the Serve process.
   `ServeServices::head_published` sets the flag that gives each later head
   preparation the `ServeEdit` capture mode. `entry_serve.rs` calls it after
-  the first successful publication, before readiness.
+  the first successful publication and the readiness timing span. That call
+  also ends the cold source wait of eager base preparation. Its
+  `AttemptPreparation` starts, adopts, and discards the eager base
+  preparation of each head attempt through `EagerStarts`.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
-  base caches of Serve Changes.
+  base caches of Serve Changes. Its `states` composes the `NativeEagerFactory`
+  and gives it to `EagerStarts::configure` with the configured sidecar size.
 - [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, which puts
   the admission gate around the shared pool. Its narrow `BaseCompletion`
   capability schedules the return pass. Each head or base handle passes the
   caller's `RenderClass` to the gate and runs the admitted call through
   `SidecarPool::request_claimed`. A handle forwards a store-served record to
   `SidecarPool::record_served_render` without admission or a write lease.
+  `ServePool::new` registers the wake of the return worker for head return
+  only. `PoolScheduling::eager_pool` gives eager preparation a handle whose
+  calls take eager admission until the classification adopts the preparation.
+  It also registers that wake through `PoolCapacity::observe_admission`, so a
+  Serve without eager preparation receives no pool admission wakes.
 - [`src/serve_gate.rs`](./src/serve_gate.rs) defines `Gate`, which admits each
   call with a `CallClaim` from `PoolCapacity::try_claim`. Waiting
   `RenderClass::Background` calls go after the other waiting head calls, and
-  base calls also wait for every foreground request. The gate answers the
-  `ReturnAdmission` check and reports each failed step and the disable warning.
+  base calls also wait for every foreground request. `Gate::acquire_eager`
+  admits one eager call at a time with `PoolCapacity::try_eager_claim`, and
+  only while no head call waits and no whole HTTP render runs.
+  `EagerAdmission::allowed` of
+  [`src/serve_eager_admission.rs`](./src/serve_eager_admission.rs) refuses
+  eager calls at a capacity of one, and at two or three until the last view
+  starts. The gate answers the `ReturnAdmission` check and reports each failed
+  step and the disable warning.
 - [`src/serve_return.rs`](./src/serve_return.rs) starts the
   `mokly-head-return` worker. The worker holds only weak handles and runs one
   `maintain_head_return` step at a time while admission is ready.
@@ -392,7 +444,27 @@ changed.
   base provider of every command. With a `Freshness`, it samples the checkout
   identity before its first base read and records the evidence of the
   preparation. It starts the early renders of a fresh base when the base graph
-  preparation ends.
+  preparation ends. Its `NativePhases` of
+  [`src/changes_base_sources.rs`](./src/changes_base_sources.rs) split the
+  source phase, which needs no head dependency evidence, from
+  `validate_sources`, which selects the dependencies and validates the graph.
+  `NativePhases::validate` prepares the graph without document work, and
+  `NativePhases::admit` admits that work after head usage.
+  [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
+  defines `SourceAdmission`, and
+  [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)
+  defines `SourceWait`, which holds the cold wait until `StartupSources`
+  records the first successful readiness or the preparation is cancelled.
+  [`src/changes_validation_admission.rs`](./src/changes_validation_admission.rs)
+  defines `GraphPreparationAdmission`, the check before base graph validation.
+- [`src/base_dependencies.rs`](./src/base_dependencies.rs) defines
+  `NativeDependencies` and `DependencySources`.
+  [`src/base_dependency_sources.rs`](./src/base_dependency_sources.rs) leases
+  or builds the extraction and reads both clean dependency identities without
+  head evidence. `NativeDependencies::prepare` then selects the tier with the
+  adopted head evidence.
+  [`src/base_dependency_selection.rs`](./src/base_dependency_selection.rs)
+  holds the timing tier numbers and the configured module resolution.
 - [`src/changes_freshness.rs`](./src/changes_freshness.rs) compares the HTML
   dependency inputs, gives their `base-dependencies` warning, and builds the
   `DependencySelection` of an HTML-only base. Its `SelectionRequest` and
@@ -407,10 +479,16 @@ changed.
   schedules the sidecar return pass. `Source::settled` forwards to
   `RenderGeneration::prepare_render_reuse` on the original head of the source.
   `mokly-graph` owns what that hook prepares.
+  `Source::pending` hands the eager
+  preparation of its state to the usage pass, and `Source::settle_pending`
+  cancels and joins it after the classification.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
-  base references and composes each classification with its `ServeBase`
-  provider, its cancellations, and its capture workers. Its
-  `Source::comparison_attempt` begins one fenced reuse attempt.
+  base references and builds the runtime of each classification with its
+  capture workers. Its `Source::comparison_attempt` begins one fenced reuse
+  attempt.
+  [`src/serve_changes_classification.rs`](./src/serve_changes_classification.rs)
+  defines `Source::classify_native`, which composes each classification with
+  its `ServeBase` provider, its cancellations, and `AdoptingBase`.
   [`src/serve_capture_workers.rs`](./src/serve_capture_workers.rs) builds the
   separate capture pool of one Serve classification.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
@@ -428,6 +506,33 @@ changed.
   merge-base commit, a digest of the adopted configuration with its file,
   repository root, roots, and authored inputs, and the effective
   install-scripts setting.
+- [`src/serve_eager.rs`](./src/serve_eager.rs) defines `EagerStarts`, the
+  attempt hooks of eager base preparation, and `PendingBase`, the pending
+  result of one head attempt until its classification adopts it.
+  `EagerAttempts::configure` keeps the factory only for a configured sidecar
+  size of at least three.
+  [`src/serve_eager_native.rs`](./src/serve_eager_native.rs) composes that
+  work with its own lifetime, eager pool handle, and ordered record.
+  [`src/serve_eager_task.rs`](./src/serve_eager_task.rs) runs it on one owned
+  thread, which `PendingChanges::cancel_and_join` cancels and joins before it
+  releases the pending inputs.
+  [`src/serve_eager_sources.rs`](./src/serve_eager_sources.rs) and
+  [`src/serve_eager_work.rs`](./src/serve_eager_work.rs) hold the source phase
+  and the validation phase.
+- [`src/serve_eager_events.rs`](./src/serve_eager_events.rs) defines
+  `OrderedEvents`, the one ordered record of the statuses, steps, cache
+  notices, warnings, and diagnostic text of pending work.
+  [`src/serve_eager_reporting.rs`](./src/serve_eager_reporting.rs) replays it
+  at adoption through the guarded output paths of Serve Changes, and
+  [`src/serve_eager_diagnostics.rs`](./src/serve_eager_diagnostics.rs) routes
+  the sidecar text of a pending base source root into it.
+- [`src/serve_eager_base.rs`](./src/serve_eager_base.rs) defines
+  `AdoptingBase`, which adopts one pending graph or prepares the base
+  serially. [`src/serve_eager_evidence.rs`](./src/serve_eager_evidence.rs)
+  checks the exact key, the head dependency evidence, and the working inputs
+  before adoption, and
+  [`src/serve_eager_adoption.rs`](./src/serve_eager_adoption.rs) releases each
+  rejected pending graph.
 
 - [`src/base_render_admission.rs`](./src/base_render_admission.rs) defines the prerequisite before early rendering. Static commands verify source evidence, and Serve admits immediately.
 
@@ -446,8 +551,9 @@ changed.
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).
-- [Base preparation](../../docs/protocol/mokly-base-preparation.md) and
-  [comparison serving](../../docs/protocol/mokly-comparison-serving.md).
+- [Base preparation](../../docs/protocol/mokly-base-preparation.md),
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md),
+  and [comparison serving](../../docs/protocol/mokly-comparison-serving.md).
 - [Sidecar source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
 - [Static build](../../docs/protocol/mokly-export.md) and
   [upload](../../docs/protocol/mokly-upload.md).

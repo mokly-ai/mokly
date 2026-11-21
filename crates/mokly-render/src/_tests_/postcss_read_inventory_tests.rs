@@ -56,6 +56,7 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
             "/install/node_modules/plugin/index.mjs",
             "/base/tokens.txt",
             "/base/undeclared.txt",
+            "/install/node_modules/plugin/settings.json",
             "/outside/opaque.txt",
         ]
         .iter()
@@ -75,10 +76,12 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
         &Default::default(),
     );
     assert_eq!(result.coverage, ReadCoverage::Incomplete);
-    assert_eq!(result.inputs.len(), 3);
+    assert_eq!(result.inputs.len(), 5);
     for path in [
         "postcss.mjs",
         "node_modules/plugin/index.mjs",
+        "node_modules/plugin/settings.json",
+        "undeclared.txt",
         &format!("{SOURCE_INPUT_PREFIX}tokens.txt"),
     ] {
         assert_eq!(result.inputs[path].len(), 2);

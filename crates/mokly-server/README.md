@@ -68,7 +68,10 @@ hold no snapshot, generation, render backend, or history. A candidate copies
 them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of Serve: current usage
-first, then Changes classification against one pinned merge base. The
+first, then Changes classification against one pinned merge base. A Changes
+continuation can also give the pass the base preparation that its command
+started early, as a `PendingChanges`. The pass owns that work until its
+Changes work ends, so a replaced pass cancels it and waits for it. The
 [background work](./background.md) page holds the guidance for their window,
 the lookup and the miss of each view, the `Stages` bounds and budget, the ready
 state, and the write leases of the Changes reference probes.
@@ -242,6 +245,12 @@ generations.
   `ChangesPass` runs the optional `ChangeSource::settled` work and waits for it.
   [`src/changes_seed.rs`](./src/changes_seed.rs) skips that work when Serve
   stops, the classification is cancelled, or the head is no longer current.
+  `AfterUsage::prepare` moves the pending base preparation of the origin's
+  head attempt into the pass as a `PendingChanges`, through
+  `ChangeSource::pending`. The pass calls `PendingChanges::dispatched` after it
+  starts the last view, and `PendingChanges::cancel_and_join` when its
+  Changes work ends or the pass is replaced. `ChangesPass` calls
+  `ChangeSource::settle_pending` after each classification.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   bounded window of the current usage pass, which keeps catalogue order for
   starts, warnings, and failure reports. `Window::start_dispatched` adds a view
@@ -303,8 +312,9 @@ generations.
 ### Related Docs
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
-  [background pass](../../docs/protocol/mokly-on-demand-background.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md), its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md), and
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).

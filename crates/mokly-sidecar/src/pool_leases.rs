@@ -19,6 +19,9 @@ impl Pool {
         root: Option<&Path>,
         claim: Option<u64>,
     ) -> Result<(usize, Option<Slot>, Option<StartLease>)> {
+        if let Some(reserved) = claim.and_then(|claim| self.take_eager(call, claim)) {
+            return Ok(reserved);
+        }
         let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock();
         let ticket = state.ticket;

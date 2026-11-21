@@ -1,5 +1,6 @@
 //! Injectable process workers, shutdown controls, and diagnostic delivery.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use crate::error::{Error, Result};
@@ -10,6 +11,10 @@ use crate::wire::{MethodResult, Request};
 /// Diagnostics from protocol events and the process standard error stream.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DiagnosticsMock))]
 pub trait Diagnostics: Send + Sync {
+    /// Select source-owned text reporting while preserving timing and operation reports.
+    fn for_source_root(&self, _root: &Path) -> Option<Arc<dyn Diagnostics>> {
+        None
+    }
     /// Forward diagnostic text to the caller's terminal reporter.
     fn emit(&self, message: &str);
     /// Forward one complete sidecar timing line without diagnostic formatting.
