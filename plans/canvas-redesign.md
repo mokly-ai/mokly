@@ -1,11 +1,13 @@
 # Canvas redesign of the site and the viewer
 
 Status: Active. On branch `calummoore/mokly-website-redesign-plan-af84`, no
-pull request yet. The pull request that completes the work deletes this plan,
-its [design record](./canvas-redesign-design.md) and its two decisions files,
-[decisions 1 to 5](./canvas-redesign-decisions.md) and
-[decisions 6 to 12](./canvas-redesign-decisions-viewer.md), as the `plans` skill
-says. Cal answered the ten decisions on 2026-11-20.
+pull request yet. The pull request that completes the work deletes this plan
+and its parts: the [design record](./canvas-redesign-design.md), the
+[viewer milestones](./canvas-redesign-milestones-viewer.md),
+[decisions 1 to 5](./canvas-redesign-decisions.md),
+[decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
+[decisions 20 to 22](./canvas-redesign-decisions-docs.md). Decisions 11, 12
+and 20 to 22 wait for Cal.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a
@@ -123,6 +125,9 @@ a status line that links its milestone.
 
 Depends on: 2
 
+Starts after Cal answers decision 11, which decides whether the older Browse
+design screens are re-themed here or removed first.
+
 - [ ] Make the `@mokly/ui` palette module the source. Generate the theme
       stylesheet and the `mokly-html` Markdown style from it.
 - [ ] Make `packages/tokens` import its shared values from the module. Make
@@ -143,7 +148,7 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 3
+Depends on: 3, 15
 
 - [ ] Draw the dot-grid canvas base in the site stylesheets.
 - [ ] Rebuild the header, the mobile menu and the footer. Milestone 9 adds
@@ -167,6 +172,8 @@ Depends on: 4
 - [ ] Build the open-foundation frame, the code-to-screen wires, the facts
       and the steps.
 - [ ] Update `src/home.ts`, the page description and the social cards.
+- [ ] Remove the mockups build from the site checks and deployment, and
+      `SITE_STAGE_PR` from the delivery docs and workflow.
 - [ ] Delete the old stage and its tests. Remove `stage` from
       `SITE_OUTPUT_FIRST_SEGMENTS` and run `npm run site:routes`.
 
@@ -174,7 +181,7 @@ Depends on: 4
 
 Tags: ui
 
-Depends on: 4
+Depends on: 4, 15
 
 - [ ] Build the Layers panel with search, the version chip and the
       Changelog foot. Keep 44px rows.
@@ -186,7 +193,7 @@ Depends on: 4
 
 ## Milestone 7: HTML sample fence
 
-Depends on: 6
+Depends on: 2
 
 The fence is non-UI pipeline work plus its drawing. Keep the drawing in
 Milestone 8.
@@ -200,7 +207,7 @@ Milestone 8.
 
 Tags: ui
 
-Depends on: 7
+Depends on: 6, 7, 15
 
 - [ ] Draw the sample fence: the frame label, the size tag, the viewport and
       state controls, and the wires between lines and elements.
@@ -224,64 +231,10 @@ Depends on: 4
       the link check accept the app paths. Add the page to the sitemap, the
       cards, the browser walk and the Lighthouse pages.
 
-## Milestone 10: Frame probe box model
+## Milestones 10 to 13, 15 and 16
 
-Depends on: 3
-
-- [ ] Report each instance's padding, border and content size from the frame
-      probe, in the wire format of the frame probe docs.
-- [ ] Expose the sizes to the viewer selection, with unit tests.
-
-## Milestone 11: Canvas stage in `@mokly/ui`
-
-Tags: ui
-
-Depends on: 3
-
-- [ ] Restyle the catalogue, the top bar, the compare toolbar and the search
-      in Canvas.
-- [ ] Build the canvas stage: each screen as desktop and mobile frames in
-      light and dark, with frame labels and size tags. A component opens as
-      its variant set.
-- [ ] Add pan, zoom, pinch, the zoom pill, Fit and their keys.
-- [ ] Float the catalogue and the right panel over the canvas.
-- [ ] Build the compact layout: one frame with a frame picker, the dock with
-      Catalogue, the current tab and Fit, and the panels as sheets.
-- [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
-      search.
-
-## Milestone 12: Right panel and compare
-
-Tags: ui
-
-Depends on: 10, 11
-
-- [ ] Move the inspector to the right panel with Inspect and Changes. Show
-      Changes only on changed entries, and let the tab set what a click does.
-- [ ] Build Inspect: description, path, source, variants, the frames filter,
-      the selected instance's props and size, and the box model. Keep Usage
-      and the component tree as sections.
-- [ ] Draw the selection with handles, name and size tags, and the padding
-      redline.
-- [ ] Build Changes: counts, base and head, the compare modes, next and
-      previous change, and a slot for the cloud's check.
-- [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
-- [ ] Delete the old inspector layout and the one-frame stage.
-
-## Milestone 13: Cloud viewer chrome
-
-Tags: ui
-
-Depends on: 12
-
-- [ ] Rebuild the bar: project switcher, publication pill, Search, History,
-      Share and account. Remove the Settings button.
-- [ ] Build the account menu with Theme, Settings and Sign out. Store the
-      theme choice on the device.
-- [ ] Fill the Changes check slot with the Mokly check.
-- [ ] Restyle the panels, the switcher, Share, History and the settings
-      dialog.
-- [ ] End the More menu with the same account rows on compact widths.
+The viewer milestones and the added Milestones 15 and 16 are in
+[the viewer milestones file](./canvas-redesign-milestones-viewer.md).
 
 ## Milestone 14: Verification, commit, review and pull request
 

@@ -1,6 +1,6 @@
 # Viewer Selection, Events And Shell State
 
-Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher. The right panel's tab and the canvas selection are not built yet: the [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) gives the selection its box model sizes, and the [right panel and compare milestone](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the rest.
+Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher. The right panel's tab and the canvas selection are not built yet: the [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) gives the selection its box model sizes, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the rest.
 
 This continues the [embeddable viewer contract](./mokly-viewer.md), which
 defines the props and the types that this page uses.

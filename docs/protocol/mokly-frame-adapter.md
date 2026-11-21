@@ -1,6 +1,6 @@
 # Viewer Frame Adapter
 
-Status: The `boxModel` method, its types and its measurement are not built yet. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds them.
+Status: The `boxModel` method, its types and its measurement are not built yet. The [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) builds them.
 
 ## Public Interface
 

@@ -1,6 +1,6 @@
 # Shell Canvas Stage
 
-Status: The canvas, its section and frames, pan, zoom, Fit, the floating panels and the Frames filter are not built yet. [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, its section and frames, pan, zoom, Fit and the panels, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the Frames filter in Inspect.
+Status: The canvas, its section and frames, pan, zoom, Fit, the floating panels and the Frames filter are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, its section and frames, pan, zoom, Fit and the panels, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Frames filter in Inspect.
 
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the canvas below the top bar: the panels that float over it, the selected

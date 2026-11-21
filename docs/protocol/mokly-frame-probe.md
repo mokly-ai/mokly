@@ -1,6 +1,6 @@
 # Frame Probe
 
-Status: The frame probe does not measure box models yet. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds the measurement.
+Status: The frame probe does not measure box models yet. The [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) builds the measurement.
 
 The frame probe is the in-frame script of the cross-origin
 [frame adapter](./mokly-frame-adapter.md). The

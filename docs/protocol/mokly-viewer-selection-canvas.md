@@ -1,6 +1,6 @@
 # Canvas Selection
 
-Status: The canvas, the selection on it and the box model sizes are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, the [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) reports the sizes, and the [right panel and compare milestone](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the selection.
+Status: The canvas, the selection on it and the box model sizes are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, the [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) reports the sizes, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the selection.
 
 This continues the [selection contract](./mokly-viewer-selection.md). The
 [canvas stage](./mokly-shell-canvas-stage.md) defines the canvas and its zoom,

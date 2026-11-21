@@ -1,6 +1,6 @@
 # Product Navigation
 
-Status: The Canvas palette, Geist and the new brand, and the account menu with Theme and Settings, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette, Geist and the brand, and [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) builds the account menu.
+Status: The Canvas palette, Geist and the new brand, and the account menu with Theme and Settings, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette, Geist and the brand, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the account menu.
 
 The product's routes, their resolution and fallbacks, and the navigation shell
 around the hosted viewer. Accounts, onboarding, roles and settings are in

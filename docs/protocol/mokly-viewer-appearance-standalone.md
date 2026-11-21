@@ -1,6 +1,6 @@
 # Standalone Appearance Control
 
-Status: The Appearance control is not restyled in Canvas yet, and the canvas stage, the right panel and the Frames filter that a choice leaves alone are not built. [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the restyled control and the canvas stage, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
+Status: The Appearance control is not restyled in Canvas yet, and the canvas stage, the right panel and the Frames filter that a choice leaves alone are not built. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the restyled control and the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
 
 This continues the [viewer appearance contract](./mokly-viewer-appearance.md):
 the one appearance control of Serve and the static build.

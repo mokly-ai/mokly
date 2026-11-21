@@ -1,6 +1,6 @@
 # Settings Dialog
 
-Status: The account menu's Settings entry and its focus return are not built yet. [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) builds them.
+Status: The account menu's Settings entry and its focus return are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 Settings for the account, the workspace and the project are panes of one
 dialog layered over the viewer the user is in, in the `settings` slot of the

@@ -1,6 +1,6 @@
 # Comparison Pane Presentation
 
-Status: Compare on every frame of the canvas, Swipe, and Side by side on one chosen frame are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, and the [right panel and compare milestone](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the comparisons on it.
+Status: Compare on every frame of the canvas, Swipe, and Side by side on one chosen frame are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the comparisons on it.
 
 ## Behavior
 

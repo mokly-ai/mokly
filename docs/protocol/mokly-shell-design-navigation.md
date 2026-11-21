@@ -1,6 +1,6 @@
 # Shell Navigation Design
 
-Status: The floating catalogue panel, its head and foot, its Canvas rows and its sheet are not built yet. [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds them.
+Status: The floating catalogue panel, its head and foot, its Canvas rows and its sheet are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds them.
 
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the design of the Browse catalogue: the panel that floats over the

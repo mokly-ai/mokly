@@ -1,6 +1,6 @@
 # Frame Probe Handshake And Wire Protocol
 
-Status: Wire protocol v4 is not built yet, so both peers use version 3. The [frame probe box model milestone](../../plans/canvas-redesign.md#milestone-10-frame-probe-box-model) builds it.
+Status: Wire protocol v4 is not built yet, so both peers use version 3. The [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) builds it.
 
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and

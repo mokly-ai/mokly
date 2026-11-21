@@ -1,6 +1,6 @@
 # Changes Screen Controls
 
-Status: The Changes tab of the right panel, with its stepper, its host slot and its five mode tiles, is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds it.
+Status: The Changes tab of the right panel, with its stepper, its host slot and its five mode tiles, is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 Continuation of [Changes serving](./mokly-changes-serving.md).
 

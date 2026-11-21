@@ -1,6 +1,6 @@
 # Viewer Host
 
-Status: The Canvas palette and Geist, and Theme on the device as the source of `theme`, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and Geist, and [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) builds Theme.
+Status: The Canvas palette and Geist, and Theme on the device as the source of `theme`, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette and Geist, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds Theme.
 
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
 what the cloud guarantees to the workspace `@mokly/viewer`

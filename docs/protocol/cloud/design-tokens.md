@@ -1,6 +1,6 @@
 # Design Tokens
 
-Status: The token package does not import its Canvas values from the `@mokly/ui` palette module yet, Canvas is not its default family, the Folio values and Inter remain, the wordmark still sets in the serif, and no token holds the Canvas depth of the viewer's cards, panels and settings dialog. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette, the fonts and the wordmark, and [Milestone 13](../../../plans/canvas-redesign.md#milestone-13-cloud-viewer-chrome) restyles the viewer's cards, panels and dialog in that depth.
+Status: The token package does not import its Canvas values from the `@mokly/ui` palette module yet, Canvas is not its default family, the Folio values and Inter remain, the wordmark still sets in the serif, and no token holds the Canvas depth of the viewer's cards, panels and settings dialog. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds the palette, the fonts and the wordmark, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) restyles the viewer's cards, panels and dialog in that depth.
 
 Canvas is the product and marketing system: the look of a design file, with a
 dot-grid canvas, white frames and panels with hairlines, near-black ink, one

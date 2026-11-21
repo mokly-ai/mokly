@@ -1,6 +1,6 @@
 # Shell Device Chrome And Preview Scheme
 
-Status: The canvas frames, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
+Status: The canvas frames, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
 
 ## Canvas Frames
 

@@ -136,6 +136,30 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   not take the prototype's status groups, because the tree keeps each change
   in its folder with its variants and moved rows. Cal can choose the groups.
 
+- Calls on Milestone 2's items, 2026-11-21. Each keeps today's behaviour or
+  follows the merged mockups, so none waits for Cal:
+  - 13: the Frames filter is local view state, like the zoom. `viewport` and
+    `colorScheme` keep their meaning, and in the compact layout they name the
+    picked frame. No public type changes.
+  - 14: each folder segment of Inspect's Path row is a breadcrumb.
+  - 15: a saved variant opens its parent's variant set with that variant's
+    Light frame selected.
+  - 16: a component frame shows the desktop view, sized to its content.
+  - 17: a primary click on a link in a frame navigates unless Highlight
+    components is on, as today. Every other click in Inspect selects.
+  - 18: the Components section lists the frame that holds the selection,
+    else the first shown frame.
+  - 19: Milestone 16 brings the other protocol pages in line now.
+  - 23: Sign out closes the account menu. A failure opens the Account
+    settings pane, which shows it.
+  - 24, 26 and 28: Milestone 15 fixes the mockups: 3:1 boundaries on two
+    controls, a language-only tab on ordinary code panels, and the sample's
+    Desktop view.
+  - 25: the shell brand page follows the code: the embedded compact bar hides
+    the brand.
+  - 27: Milestone 5 removes the mockups build from the site's checks and
+    deployment, with the stage.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),

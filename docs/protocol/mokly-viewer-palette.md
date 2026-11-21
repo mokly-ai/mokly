@@ -1,6 +1,6 @@
 # Viewer Semantic Palette
 
-Status: The shell theme and the `mokly-html` Markdown style do not take their colours and fonts from the Canvas palette of `@mokly/ui` yet, and the canvas stage and the Changes tab whose parts read it are not built. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) generates the theme and the style from the palette, [Milestone 11](../../plans/canvas-redesign.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign.md#milestone-12-right-panel-and-compare) builds the Changes tab.
+Status: The shell theme and the `mokly-html` Markdown style do not take their colours and fonts from the Canvas palette of `@mokly/ui` yet, and the canvas stage and the Changes tab whose parts read it are not built. [Milestone 3](../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) generates the theme and the style from the palette, [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab.
 
 The shell draws in Canvas, the look of a design file: a dot-grid canvas,
 white frames and panels with hairlines, near-black ink, one signal green, and
