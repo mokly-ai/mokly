@@ -3,7 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { libraryStyleFiles } from "../examples/basic/specs/design/library/style_files.js";
+
 import {
+  canvasRoleColor,
   canvasScopeTokens,
   contrast,
   designPalette,
@@ -11,7 +14,7 @@ import {
   designThemeTokens,
   SHIPPED_THEME,
 } from "./helpers/design_palette.js";
-import { designStyleRules } from "./helpers/design_styles.js";
+import { designStyleRules, fillOf } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
@@ -160,6 +163,26 @@ test("every Canvas scope pair meets its criterion in both appearances", () => {
         `${label} (${appearance}): ${contrast(first, second)} < ${minimum}`,
       );
     }
+});
+
+test("the Canvas sheet's grabber reaches 3:1 on the sheet's surface in both appearances", async () => {
+  const grabber = (await designStyleRules()).find(
+    (rule) =>
+      rule.file === libraryStyleFiles["floating-panel"] &&
+      rule.selector === ".cv-float-grab",
+  );
+  const role = grabber && fillOf(grabber.body)?.token;
+  assert.ok(role, "the sheet's grabber fills with no palette role");
+  for (const appearance of ["light", "dark"] as const) {
+    const fill = await canvasRoleColor(role, appearance);
+    const surface = canvasScopeTokens(appearance).get("--cv-surface");
+    assert.ok(fill && surface, `${role} is not a Canvas role in ${appearance}`);
+    const reached = contrast(fill, surface);
+    assert.ok(
+      reached >= 3,
+      `the sheet's grabber (${appearance}): ${reached} < 3`,
+    );
+  }
 });
 
 /** Font stacks share the palette block but are not appearance roles. */
