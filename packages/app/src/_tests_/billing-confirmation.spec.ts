@@ -73,6 +73,7 @@ test("a durable Checkout return stays delayed until Team is confirmed", async ({
 }) => {
   const { workspaceId, projectId } = await owner(page, "delayed");
   await page.clock.install();
+  const firstReadFinished = Promise.withResolvers<void>();
   let activeReads = 0;
   let mostActiveReads = 0;
   let reads = 0;
@@ -86,6 +87,7 @@ test("a durable Checkout return stays delayed until Team is confirmed", async ({
       await route.fulfill({ response: answer });
     } finally {
       activeReads -= 1;
+      firstReadFinished.resolve();
     }
   });
 
@@ -101,6 +103,8 @@ test("a durable Checkout return stays delayed until Team is confirmed", async ({
   await expect
     .poll(() => new URL(page.url()).searchParams.get("settings"))
     .toBe("billing");
+  // Finish the real GET before the fake deadline can overtake its response.
+  await firstReadFinished.promise;
   await page.clock.fastForward(30_001);
   await expect(
     page.getByText("Still confirming your subscription"),
@@ -170,6 +174,7 @@ test("a failed Check again read stays beside its retryable control", async ({
 }) => {
   const { projectId } = await owner(page, "confirmation-check-fails");
   await page.clock.install();
+  const firstReadFinished = Promise.withResolvers<void>();
   let failCheck = false;
   const failure = apiFailure("unavailable");
   await page.route(billingRead, async (route) => {
@@ -182,7 +187,8 @@ test("a failed Check again read stays beside its retryable control", async ({
       });
     }
     const answer = await route.fetch();
-    return route.fulfill({ response: answer });
+    await route.fulfill({ response: answer });
+    firstReadFinished.resolve();
   });
 
   await page.goto(
@@ -193,6 +199,7 @@ test("a failed Check again read stays beside its retryable control", async ({
     ),
   );
   await expect(page.getByText("Confirming your subscription…")).toBeVisible();
+  await firstReadFinished.promise;
   await page.clock.fastForward(30_001);
   await expect(
     page.getByText("Still confirming your subscription"),

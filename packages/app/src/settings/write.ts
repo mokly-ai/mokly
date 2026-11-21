@@ -40,7 +40,7 @@ export interface Write {
    */
   run: (work: () => Promise<unknown>) => Promise<void>;
   /**
-   * Hand this tab to another site as the last step of the work `run` sends,
+   * Open another site as the last step of the work `run` sends,
    * such as GitHub's authorization. It leaves only while the screen that
    * started the write is shown, and that screen calls the trip off if it goes
    * before the next page loads, so a reader who followed Back or another link
@@ -51,6 +51,8 @@ export interface Write {
    *
    * GitHub takes its purpose and API answer together, so the shown check also
    * protects the tab's flow record. Other hosted pages take their URL alone.
+   * In the desktop window, an address alone opens in the system browser after
+   * the same check, and the write returns to rest.
    */
   leave: (...trip: PageTrip) => void;
   /** Forget a refusal after the input that produced it changes. */
@@ -164,6 +166,8 @@ export function failureAfterInput(
  * A write that ends by leaving the page, for GitHub or Stripe, is done when the
  * page goes, so it does not come back to rest when its work returns: `leave`
  * keeps it in flight until the page unloads, and `done` does not run for it.
+ * An address opened beside the desktop window leaves this page in place, so
+ * that write returns to rest and runs `done` as an ordinary write does.
  */
 export function useWrite(done: () => void, sendable: boolean): Write {
   const [pending, setPending] = useState(false);

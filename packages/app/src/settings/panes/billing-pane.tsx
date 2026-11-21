@@ -23,7 +23,6 @@ import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
 import { useReconcilePlan } from "./billing-reconcile";
 import {
   landingOf,
-  openStripe,
   opensStripeOutside,
   withoutCheckout,
 } from "./billing-stripe";
@@ -171,7 +170,7 @@ export function BillingPane({
   const upgrade = useCallback(
     () =>
       void checkout.run(async () => {
-        openStripe(checkout, await startCheckout(workspace.id));
+        checkout.leave(await startCheckout(workspace.id));
         if (external) watchCheckout();
       }),
     [checkout, external, watchCheckout, workspace.id],
@@ -179,7 +178,7 @@ export function BillingPane({
   const manage = useCallback(
     () =>
       void portal.run(async () =>
-        openStripe(portal, await openBillingPortal(workspace.id)),
+        portal.leave(await openBillingPortal(workspace.id)),
       ),
     [portal, workspace.id],
   );

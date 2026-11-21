@@ -1,7 +1,5 @@
 import { readQuery } from "../../navigation/address";
 import { isDesktopShell } from "../../navigation/desktop-shell";
-import { openBeside } from "../../navigation/web-setup";
-import type { Write } from "../write";
 
 /** How the reader arrived back from a Stripe-hosted Checkout session. */
 export type Landing = "success" | "cancelled";
@@ -28,15 +26,4 @@ export function withoutCheckout(pathname: string, search: string): string {
  */
 export function opensStripeOutside(): boolean {
   return isDesktopShell();
-}
-
-/**
- * Hand the reader to a Stripe-hosted page. A browser tab leaves for it
- * through the write, which stays busy until the page goes. The desktop app's
- * window opens it as a popup, which the shell opens in the system browser, so
- * the write comes back to rest.
- */
-export function openStripe(write: Write, address: string): void {
-  if (opensStripeOutside()) openBeside(address);
-  else write.leave(address);
 }
