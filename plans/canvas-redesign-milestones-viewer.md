@@ -119,3 +119,6 @@ design screens are re-themed here or removed first.
 - [ ] Replace Inter with Geist in `packages/viewer/src/shell/assets/fonts/`,
       `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
 - [ ] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.
+- [ ] Switch the shell mark's rules to `onSignal` and its front layer to
+      `signal`, and remove `docs/mockups/styles/fonts/inter.css` and its Inter
+      files.

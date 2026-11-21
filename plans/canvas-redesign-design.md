@@ -193,6 +193,19 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   - Ordinary docs code panels show no line numbers. Only the HTML sample
     fence numbers its lines.
 
+- Calls on Milestone 3, 2026-11-21:
+  - Filled primary actions keep `#109f5c` with white text at rest and on
+    hover, in both schemes. A hovered primary action lifts 1px instead of
+    darkening, as in the prototype. The app and the mockups draw no solid
+    control-library badge, and a test checks it.
+  - The cloud mockups keep a hosted Inter face only for the drawn `@mokly/ui`
+    parts until Milestone 17.
+  - The shell takes the new mark shape and the 640-weight wordmark now, in
+    its current theme colours. Milestone 17 moves them to the signal colours.
+  - Controls use 8px and surfaces 10px radii.
+  - The social card embeds the committed light lockup, and its title uses a
+    system font.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),
