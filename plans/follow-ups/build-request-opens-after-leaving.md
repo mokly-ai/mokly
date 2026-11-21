@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 81 of the round 1 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/viewer/build-request.ts:27` (`send`).
+- **Location:** `packages/app/src/viewer/build-request.ts:27` (`send`).
 - **Reason:** The file is unchanged since `origin/main`, so the fix belongs to a separate branch.
 - **Category:** Product bug.
 
@@ -15,6 +15,6 @@
   - **A.** Open the answer's build only while the card that sent the request is still shown, as `docs/protocol/cloud/folio-chrome.md` (Write in progress) says for writes that leave. Effort: Small.
 - **Left out:** Cancel the request on unmount. The build is still created, so the reader should be able to find it in the switcher.
 - **Wider fix:** See `plans/follow-ups/write-done-runs-after-unmount.md`, the same class for every write.
-- **Previous examples:** `apps/app/src/navigation/leave-page.ts`, which leaves only while its screen is shown.
+- **Previous examples:** `packages/app/src/navigation/leave-page.ts`, which leaves only while its screen is shown.
 - **Recommendation:** A.
 - **Action:** fix after merge, apply A, because the file is outside the change that found it.

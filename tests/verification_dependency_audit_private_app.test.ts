@@ -122,7 +122,7 @@ test("each vulnerable location needs its own record even on dev-only paths", () 
   assert.equal(result.notices.length, 2);
 });
 
-test("private-app scope needs its marker and a private apps workspace", () => {
+test("private-app scope needs its marker and a private Cloud app workspace", () => {
   const { report, lockfile, exception, today, workspaces } =
     privateAppAuditFixture();
   const { kind: _kind, ...devOnly } = exception;
@@ -140,25 +140,48 @@ test("private-app scope needs its marker and a private apps workspace", () => {
     lockfile,
     [exception],
     today,
-    { ...workspaces, "apps/app": {} },
+    { ...workspaces, "packages/app": {} },
   );
   assert.equal(published.ok, false);
   assert.match(
     issueMessages(published),
-    /must start at a private apps\/ workspace/u,
+    /must start at a private Cloud app workspace/u,
   );
+});
+
+test("private-app scope starts under apps/ but not at a Mokly package", () => {
+  const { report, lockfile, exception, today, workspaces } =
+    privateAppAuditFixture();
+  const startingAt = (start: string) => {
+    const packages = {
+      ...lockfile.packages,
+      [start]: { devDependencies: { parent: "*" } },
+    };
+    return evaluateDependencyAudit(
+      report,
+      { ...lockfile, packages },
+      [{ ...exception, path: [start, ...exception.path.slice(1)] }],
+      today,
+      { ...workspaces, [start]: { private: true } },
+    );
+  };
+  const site = startingAt("apps/site");
+  assert.equal(site.ok, true, issueMessages(site));
+  const viewer = startingAt("packages/viewer");
+  assert.equal(viewer.ok, false);
+  assert.match(issueMessages(viewer), /normalized install locations/u);
 });
 
 test("different paths cannot accept the same advisory location twice", () => {
   const { report, lockfile, exception, today, workspaces } =
     privateAppAuditFixture();
-  lockfile.packages["apps/app"]!.dependencies!.vulnerable = "*";
+  lockfile.packages["packages/app"]!.dependencies!.vulnerable = "*";
   const result = evaluateDependencyAudit(
     report,
     lockfile,
     [
       exception,
-      { ...exception, path: ["apps/app", "node_modules/vulnerable"] },
+      { ...exception, path: ["packages/app", "node_modules/vulnerable"] },
     ],
     today,
     workspaces,

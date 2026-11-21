@@ -40,5 +40,5 @@
 
 Facts for the work:
 
-- On 2026-10-27, ESLint ran with `--no-ignore` on the built outputs `apps/site/dist`, `apps/desktop/dist`, `apps/site/.astro`, `apps/desktop/bundle` and `apps/app/dist`. It reported 32,592 errors in 25 of 35 files.
+- On 2026-10-27, ESLint ran with `--no-ignore` on the built outputs `apps/site/dist`, `packages/desktop/dist`, `apps/site/.astro`, `packages/desktop/bundle` and `packages/app/dist`. It reported 32,592 errors in 25 of 35 files.
 - So a lint that loses the `.gitignore` import fails on the next local run after a build. The output probes of `lint-scope.test.ts` and `tests/eslint_gitignore.test.ts` both check that Git-ignored output stays out of the lint.

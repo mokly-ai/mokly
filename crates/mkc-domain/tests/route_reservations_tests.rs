@@ -188,7 +188,7 @@ fn worker_site_segments() -> BTreeSet<String> {
 #[test]
 fn expo_static_roots_match_the_reserved_domain_inventory() {
     let mut routes = BTreeSet::new();
-    collect_expo_roots(&repository().join("apps/app/app"), &mut routes);
+    collect_expo_roots(&repository().join("packages/app/app"), &mut routes);
     let declared = EXPO_STATIC_FIRST_SEGMENTS
         .iter()
         .map(ToString::to_string)

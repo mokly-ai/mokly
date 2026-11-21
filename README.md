@@ -267,11 +267,12 @@ Mokly Cloud is the hosted companion of the packages above:
   Linux opens the same product from its bundled web export.
 
 Its Rust API, catalogue server, and stores are the `mkc-*` crates under
-`crates/`. Its Expo app, Electron desktop shell, Astro site, Cloudflare origin
-router, and mockup tooling are under `apps/`. Its design tokens are under
-`packages/tokens`, and its Terraform, workload images, and Helm charts are
-under `infra/`. The cloud uses the workspace packages and crates of this
-repository directly, so a Mokly change reaches the cloud without a release.
+`crates/`. Its Expo app, Electron desktop shell, and design tokens are under
+`packages/app`, `packages/desktop`, and `packages/tokens`. Its Astro site,
+Cloudflare origin router, and mockup tooling are under `apps/`. Its Terraform,
+workload images, and Helm charts are under `infra/`. The cloud uses the
+workspace packages and crates of this repository directly, so a Mokly change
+reaches the cloud without a release.
 The cloud deploys from this repository while its
 [cutover switch](./docs/protocol/ci-workflow-cloud.md#forks-and-protection) is
 on. Mokly never depends on the cloud.
@@ -326,7 +327,8 @@ and cloud project names its own entry points.
 
 Mokly is available under the [MIT License](./LICENSE). Mokly Cloud is
 available under the GNU Affero General Public License, version 3 only. Its
-paths are `apps/`, the `mkc-` crates, `docs/mockups/`, `packages/tokens/`,
-`infra/`, and `scripts/cloud/`. [`LICENSE`](./LICENSE) names these paths, and
+paths are `apps/`, `packages/app/`, `packages/desktop/`, `packages/tokens/`,
+the `mkc-` crates, `docs/mockups/`, `infra/`, and `scripts/cloud/`.
+[`LICENSE`](./LICENSE) names these paths, and
 [`LICENSES/AGPL-3.0-only.txt`](./LICENSES/AGPL-3.0-only.txt) holds the AGPL
 text.

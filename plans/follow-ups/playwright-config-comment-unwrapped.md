@@ -3,12 +3,12 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from open finding 15 of the Milestone 5 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/playwright.config.ts:31`.
+- **Location:** `packages/app/playwright.config.ts:31`.
 - **Reason:** PR #69 merged on 2026-10-28 with the finding open, and the workspaces change left it with that plan. The review-fix rule leaves its category to the user.
 - **Checked:** 2026-11-17, in this repository after the cloud moved in. The choice is still open. The long line is now line 31, after the shard parser that came before the comment. It still joins the end of one sentence and the start of the next.
 - **Category:** Code structure.
 
-- **Background:** The doc comment above the configuration in `apps/app/playwright.config.ts` wraps at 80 columns. Line 31 has 135 characters. It joins the sentence about provider answers with the start of the routing sentence.
+- **Background:** The doc comment above the configuration in `packages/app/playwright.config.ts` wraps at 80 columns. Line 31 has 135 characters. It joins the sentence about provider answers with the start of the routing sentence.
 - **Problem:** One comment line breaks the wrap of its block.
 - **Impact if no action:** The comment is harder to read, and the next edit copies the long line.
 - **Root question:** How does the comment keep the wrap of its block?

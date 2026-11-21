@@ -1,6 +1,6 @@
 {
   "name": "mokly-workspace",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -55,8 +55,8 @@
     "site:routes": "npm run routes:generate --workspace @mokly-cloud/site",
     "site:test": "npm run test --workspace @mokly-cloud/site",
     "site:typecheck": "npm run typecheck --workspace @mokly-cloud/site",
-    "cloud:typecheck": "npm run typecheck --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker",
-    "cloud:test": "npm run test --if-present --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker"
+    "cloud:typecheck": "npm run typecheck --workspace packages/tokens --workspace packages/app --workspace packages/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker",
+    "cloud:test": "npm run test --if-present --workspace packages/tokens --workspace packages/app --workspace packages/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker"
   },
   "devDependencies": {
     "@ast-grep/cli": "0.45.3",
@@ -67,10 +67,10 @@
     "@firna/ui": "4.0.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@happy-dom/global-registrator": "^21.0.4",
-    "@mokly/frame": "0.20.0",
-    "@mokly/model": "0.20.0",
-    "@mokly/ui": "0.20.0",
-    "@mokly/viewer": "0.20.0",
+    "@mokly/frame": "0.21.0",
+    "@mokly/model": "0.21.0",
+    "@mokly/ui": "0.21.0",
+    "@mokly/viewer": "0.21.0",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
     "@tailwindcss/postcss": "^4.3.3",
@@ -143,8 +143,8 @@
     "packages/viewer",
     "packages/mokly",
     "packages/tokens",
-    "apps/app",
-    "apps/desktop",
+    "packages/app",
+    "packages/desktop",
     "apps/mockups",
     "apps/site",
     "apps/worker"

@@ -19,6 +19,8 @@ other crate depends on it.
   classifications.
 - Keep one captured base in Serve between classifications, and reuse it while
   its key and its freshness checks hold.
+- Start the early renders of a fresh base, and end them with their
+  classification.
 - Compose one rendering runtime, sidecar pool, bundle store, and render cache
   per command, and the render store in Serve.
 
@@ -38,7 +40,11 @@ Each command also creates one render cache at its entry point and uses it
 across catalogue preparation, document rendering, and live prop previews.
 The timing layer of `--debug-timings` reads the same cache for its cache
 counts. Head and base renders use `mokly_render::runtime::Runtime` with that
-shared pool and cache. The npm shim supplies its package root and Node
+shared pool and cache. The render workers of a command are `CaptureWorkers`
+over one `ThreadWorkers` pool. Their `PoolCaptureCapacity` limits each capture
+window by the current admission bound of the sidecar pool, under the
+[capture rules](../../docs/protocol/mokly-comparison-serving.md#base-and-head-capture).
+The npm shim supplies its package root and Node
 executable. Direct binary execution checks the adjacent installed package and
 development ancestors, and uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`. An HTML-only catalogue without a renderer or
@@ -109,9 +115,21 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
-The usage pass reads the current sidecar capacity before each view starts.
-Its sliding window uses the smaller of that capacity and the worker count.
-Both source roots share that capacity. A shared admission
+The usage pass starts its views in a sliding window of the worker count. Each
+view first looks up its document on the shared render workers, and a cache or
+store hit ends there without a batch or completion admission reading. A sidecar
+call of its link checks still passes the gate checks below. A miss waits for a
+batch place. The completion bound limits only the misses whose own root fragment
+returned without failure. The batch and completion bounds read the current
+sidecar capacity at each entry, and both use the smaller of that capacity and
+the worker count. Both bounds also count the views of a replaced pass that
+still render or complete. Both source roots share that capacity. A miss of a
+JavaScript entry without saved slots waits for its own root fragment on its
+resumed blocking thread. Any other miss keeps its worker permit until it ends
+and takes no completion place. Every background view reads or builds its
+document on the shared render workers, as HTTP renders, build, and comparison
+do. So a view that waits for its own root fragment holds no render worker that
+another view needs. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The gate admits each call with a pool claim, which keeps the
 call's place in the capacity until the call ends. Waiting calls of background
@@ -125,7 +143,15 @@ stderr once through the sidecar `Diagnostics` reporter, and a failed reap
 adds the warning that background preparation is disabled. The base preparation
 bundles its stylesheet roots on the classification thread, not on the shared
 render workers. A base root that waits at the gate then never holds a worker
-that a foreground render needs.
+that a foreground render needs. `Source::classification_runtime` also gives
+each classification `CaptureWorkers` with a separate capture pool. That pool
+has as many threads as the smaller of the worker count and the admission limit
+of the gate, and at least one. So the base capture and the early renders of a fresh base run on render
+workers that foreground renders do not use. A base job that waits at the gate
+then holds no shared worker, under the
+[admission rules](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
+Ordinary reads, and every read through the kept base, still run on the shared
+render workers.
 Changes classification also prepares views on the shared render workers. Those
 tasks read only retained base inputs and the head, so they schedule no base
 source read and no base sidecar call. A view that needs the base source is
@@ -176,7 +202,13 @@ classification's commit callback, and it detaches the lifetime there. After
 that, only the command stop cancels the work of the kept base. A base that
 Serve does not keep stays on the classification lifetime. In every command,
 `NativeBase` builds the base runtime with `Runtime::for_base`, so the base
-shares the style memo of the head runtime.
+shares the style memo of the head runtime. When the base graph preparation
+ends, `NativeBase` applies `BaseRenderAdmission` before it starts the
+[early renders](../../docs/protocol/mokly-base-preparation.md#shared-render-runtime)
+of the base through `RenderGeneration::prefetch_comparison`. It returns their
+`PrefetchGuard` in `PreparedBase`. They never move to a kept base. The
+classification holds the guard until the capture of that base returns, so
+each exit stops the early renders and waits for them.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate
@@ -261,7 +293,13 @@ changed.
   and composes the shared JavaScript and HTML rendering services of one
   command. It adds the bundle store to the pool and returns the command's
   cache reporter for the Changes of `build` and `publish`. It also composes
-  the host and process-limit estimate for default sidecar admission.
+  the host and process-limit estimate for default sidecar admission, and it
+  wraps the render workers of the command in `CaptureWorkers`.
+- [`src/capture_workers.rs`](./src/capture_workers.rs) defines
+  `CaptureWorkers`, which forwards ordinary reads to its inner render workers
+  and runs the capture window and the early renders on its capture pool.
+  `PoolCaptureCapacity` reads the current admission bound of the process pool,
+  which limits each capture window.
 - [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
   of one command over a `DiskCache` that the command's cancellation stops,
   and maps each store outcome to its warning lines.
@@ -353,7 +391,8 @@ changed.
 - [`src/changes_base.rs`](./src/changes_base.rs) defines `NativeBase`, the
   base provider of every command. With a `Freshness`, it samples the checkout
   identity before its first base read and records the evidence of the
-  preparation.
+  preparation. It starts the early renders of a fresh base when the base graph
+  preparation ends.
 - [`src/changes_freshness.rs`](./src/changes_freshness.rs) compares the HTML
   dependency inputs, gives their `base-dependencies` warning, and builds the
   `DependencySelection` of an HTML-only base. Its `SelectionRequest` and
@@ -370,11 +409,15 @@ changed.
   `mokly-graph` owns what that hook prepares.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
   base references and composes each classification with its `ServeBase`
-  provider and its cancellations. Its `Source::comparison_attempt` begins one
-  fenced reuse attempt.
+  provider, its cancellations, and its capture workers. Its
+  `Source::comparison_attempt` begins one fenced reuse attempt.
+  [`src/serve_capture_workers.rs`](./src/serve_capture_workers.rs) builds the
+  separate capture pool of one Serve classification.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
-  `comparison_reuse::MemoryComparisons` service. It gives the writer's
-  `WriteActivity` to `Workers`, `MemoryComparisons`, and `ChangesPass`.
+  `comparison_reuse::MemoryComparisons` service. It also composes `UsagePass`,
+  whose `UsageCapacity` gives both background stages the smaller of the worker
+  count and the sidecar limit. It gives the writer's `WriteActivity` to
+  `Workers`, `MemoryComparisons`, and `ChangesPass`.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.
@@ -385,6 +428,8 @@ changed.
   merge-base commit, a digest of the adopted configuration with its file,
   repository root, roots, and authored inputs, and the effective
   install-scripts setting.
+
+- [`src/base_render_admission.rs`](./src/base_render_admission.rs) defines the prerequisite before early rendering. Static commands verify source evidence, and Serve admits immediately.
 
 ### Related Docs
 

@@ -3,11 +3,11 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-02, from the post-merge follow-up of the plan `plans/app-browser-suite-shards.md`, on the branch `calummoore/ci-pipeline-duration`.
-- **Location:** The cloud app shard jobs of `.github/workflows/ci.yml`, `apps/app/playwright.config.ts:5-22`, `:38` and `:40`, `xtask/src/check/cloud_commands.rs`, `apps/app/src/_tests_/members.ts:55-79`, `crates/mkc-auth/src/links.rs:37-38`, and the Cloud Suites section of `docs/protocol/ci-verification.md`.
+- **Location:** The cloud app shard jobs of `.github/workflows/ci.yml`, `packages/app/playwright.config.ts:5-22`, `:38` and `:40`, `xtask/src/check/cloud_commands.rs`, `packages/app/src/_tests_/members.ts:55-79`, `crates/mkc-auth/src/links.rs:37-38`, and the Cloud Suites section of `docs/protocol/ci-verification.md`.
 - **Reason:** The measurement needs CI runs on `main` of this repository after its CI runs the cloud jobs, which no branch can produce.
 
 - **Terms:**
-  - **App browser suite:** The Playwright tests in `apps/app/src/_tests_/**/*.spec.ts`, which drive the exported web app against a real `mkc-api` and Postgres.
+  - **App browser suite:** The Playwright tests in `packages/app/src/_tests_/**/*.spec.ts`, which drive the exported web app against a real `mkc-api` and Postgres.
   - **App shard job:** One of the four CI jobs that run `cargo xtask check --suite cloud-app --shard n/4`. Each job builds its own web export and runs one partition of the App browser suite. Shard 1 also runs the app logic tests. In the old cloud repository, job `n` ran `cargo xtask app-check` with `MKC_APP_SHARD=n/4`.
   - **Passed first attempt:** A CI run whose first attempt passed, with no rerun.
   - **Runner minutes:** The sum of the times of all jobs of one CI run.
@@ -26,7 +26,7 @@
     - The suite runs as four App shard jobs. Each job has its own runner, Postgres and API, and builds the web app. Shard 1 also runs the app logic tests. Each job runs one test at a time.
   - On 2026-11-02, the four shards held 98, 94, 99 and 80 of the 371 tests, and each test was in exactly one shard. In local runs, shard 1 passed its 98 browser tests in 5.0 minutes, and shard 4 passed its 80 in 4.4 minutes.
   - On 2026-11-17, local runs of the four `cloud-app` shards in this repository passed 109, 101, 106 and 97 browser tests, 413 in total. Shard 1 also passed 368 logic tests and 5 script tests. Each run on a warm host took, with setup and its web build: 15m 01s, 6m 10s, 11m 42s and 5m 59s. Two native builds ran beside shard 1. These are local runs, not CI runs.
-  - Two tests keep their second sign-in, because it is the behaviour under test: `settings-address-handoff.spec.ts:42` and `:143` under `apps/app/src/_tests_/`. They still wait about one minute each, in one shard.
+  - Two tests keep their second sign-in, because it is the behaviour under test: `settings-address-handoff.spec.ts:42` and `:143` under `packages/app/src/_tests_/`. They still wait about one minute each, in one shard.
   - The estimates before the shard change:
     - Each App shard job takes about 10 minutes. Each job has about 3 to 4 minutes of fixed work: setup, the web build and the API start.
     - CI takes about 11 to 12 minutes, and Workspace checks set the total.

@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from design call 5 of 2026-10-29 in the deleted `plans/workspaces.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/project_input.rs:8-41`, `crates/mkc-api/src/input.rs:80-91`, `crates/mkc-api/src/platform/projects.rs:58-85`, `apps/app/src/settings/panes/project-pane.tsx:109-174` and `docs/protocol/cloud/platform-model.md:169-186`.
+- **Location:** `crates/mkc-api/src/project_input.rs:8-41`, `crates/mkc-api/src/input.rs:80-91`, `crates/mkc-api/src/platform/projects.rs:58-85`, `packages/app/src/settings/panes/project-pane.tsx:109-174` and `docs/protocol/cloud/platform-model.md:169-186`.
 - **Reason:** The workspaces change left this feature out by a design call, and no requirement or user decision asks for it yet.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. A project gets its repository link only at creation, and neither the update path nor the project pane has a link action.
 - **Category:** Docs or spec.

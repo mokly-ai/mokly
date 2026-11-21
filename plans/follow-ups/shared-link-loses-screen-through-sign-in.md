@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Common. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the signed-out return defect that Milestone 8 of the deleted `plans/mokly-dependencies-upgrade.md` recorded for a separate plan, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/app/sign-in.tsx:11-19`, `apps/app/app/sign-up.tsx:11-19`, `apps/app/app/auth/email.tsx:11-21`, `apps/app/src/screens/account/entry-screen.tsx:57-77` and `:70-73`, `apps/app/src/navigation/address.ts:84-107` and `apps/app/src/navigation/return-to.ts:92-104`.
+- **Location:** `packages/app/app/sign-in.tsx:11-19`, `packages/app/app/sign-up.tsx:11-19`, `packages/app/app/auth/email.tsx:11-21`, `packages/app/src/screens/account/entry-screen.tsx:57-77` and `:70-73`, `packages/app/src/navigation/address.ts:84-107` and `packages/app/src/navigation/return-to.ts:92-104`.
 - **Reason:** The pull request with the fix, PR #37, closed unmerged on 2026-10-30, and no recorded decision says whether its fix lands.
 - **Checked:** 2026-10-31, at commit `f568853e`. Partly confirmed. The sign-in and sign-up switch link still drops `returnTo`. The automatic return defect is not verified. The entry routes read the live address, not a one-time copy.
 - **Category:** Product bug.
@@ -33,7 +33,7 @@
 Facts for the work:
 
 - The closed branch `calummoore/shared-link-sign-in-return` holds the fix at commit `7902db16`.
-- It adds `apps/app/src/_tests_/shared-link-sign-in.spec.ts`, a real-API test of the request body, the sent-screen address, the callback result and the final screen.
+- It adds `packages/app/src/_tests_/shared-link-sign-in.spec.ts`, a real-API test of the request body, the sent-screen address, the callback result and the final screen.
 - Its six browser regressions failed before the fix and passed after it. That result is history. Nobody repeated it at commit `f568853e`.
 
 Source: [the status paragraph](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-dependencies-upgrade.md?plain=1#L1-L12) and [Milestone 8](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-dependencies-upgrade.md?plain=1#L1216-L1240) of the deleted plan.

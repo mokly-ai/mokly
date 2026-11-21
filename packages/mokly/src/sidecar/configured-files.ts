@@ -6,7 +6,6 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
-import { planKey } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import { absoluteSpecifierPattern } from "./path-pattern.js";
@@ -42,9 +41,14 @@ export function configuredFiles(
         const file = await paths.resolve(args.path);
         const planned =
           resolution.mode === "planned"
-            ? resolution.plan.get(planKey(args.importer, args.path, args.kind))
+            ? resolution.plan.get(args.importer, args.path, args.kind)
             : undefined;
-        if (planned?.path === file) return plannedResult(paths, args, planned);
+        if (
+          resolution.mode === "planned" &&
+          planned &&
+          resolution.plan.plan.paths[planned[3]] === file
+        )
+          return plannedResult(paths, args, resolution.plan.plan, planned);
         return { path: file, sideEffects: await scope.sideEffects(file) };
       });
     },

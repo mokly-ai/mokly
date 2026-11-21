@@ -91,15 +91,12 @@ Decision: the shell owns the failure text and never shows Serve's message,
 so that a failure reads the same in every host. A protocol list of Serve's
 failure codes was rejected, because the shell reads none of them.
 
-Complete base validation and capture must use the same rendered input for each
-view. Capture must preserve validation failures and warning order, including
-when another view fails later. A failed validation publishes no partial capture.
-
 Replacing an unfinished classification cancels the base that it prepares: its
-base capture, its base workers, its source reads, and its sidecar calls. A
-replaced classification that reads the kept base stops before its next call
-to that base. A call that already runs finishes, and the kept base stays
-usable, under the
+base capture, its
+[early renders](./mokly-base-preparation.md#shared-render-runtime), its base
+workers, its source reads, and its sidecar calls. A replaced classification
+that reads the kept base stops before its next call to that base. A call that
+already runs finishes, and the kept base stays usable, under the
 [kept base cancellation rule](./mokly-base-preparation.md#cancellation).
 Command shutdown cancels both current and base work, the kept base included.
 
@@ -120,18 +117,39 @@ order.
 Decision: each side has its own bound. A shared bound was rejected, because the
 head is captured first and could leave no room for the base.
 
-Route order is the byte order of the view routes. A capture keeps views in
-route order while they fit its bound. It skips a view that does not fit when
-that view arrives. It still keeps a later view that fits. The side's validation
-summary, stylesheets, and asset digests come before views in the same bound.
-When they need more room, the capture drops its last kept views first.
+Route order is the byte order of the view routes. A capture takes each view at
+its turn in route order, whatever order the renders end in. At that turn, it
+records the view's validation facts, warnings, and failure, and it keeps the
+view while the view fits its bound. A view that waits for its turn never
+changes which earlier views the capture keeps. Complete validation and capture
+must use the same rendered input for each view. Capture must preserve
+validation failures and warning order, including when another view fails
+later. A failed validation publishes no partial capture. A capture skips a view
+that does not fit at its turn. It still keeps a later view that fits. The
+side's validation summary, stylesheets, and asset digests come before views in
+the same bound. When they need more room, the capture drops its last kept views
+first.
+
+A capture renders its views in a sliding window. The limit of the window is the
+smaller of the [worker count](./mokly-on-demand.md#background-work-and-replacement)
+and the [sidecar capacity](./mokly-sidecar-memory.md#capacity), and the limit
+is at least one view. The next view in route order starts as soon as the window
+has room.
+A worker encodes each view when its render ends. Encoded views that wait for
+their turn share the room that the capture bound has left.
+Decision: the window slides, and waiting views share the capture bound. Fixed
+batches were rejected, because one slow view leaves the other workers idle
+until its batch ends. A bound of twice the window on started views was
+rejected, because one slow view then stops new starts. A larger window for
+views that the render cache holds was rejected, because an eviction can make
+such a view render again beyond the capacity.
 
 A view that a capture does not keep, or that fails to restore, comes from its
 side's source when a comparison or the output needs it. Base capture misses use
 the pinned source. The source renders the view again only when neither tier of
 the [render cache](./mokly-runtime.md#render-graph-and-cache) holds it. The
-comparison and the output have the same bytes whichever views a capture keeps.
-Only the number of views that render again changes.
+comparison and the output have the same bytes whichever views a capture keeps
+or the render cache holds. Only the number of views that render again changes.
 
 Decision: a capture does not try a skipped view again. Strict route order,
 which keeps no view after the first skip, was rejected, because it keeps fewer

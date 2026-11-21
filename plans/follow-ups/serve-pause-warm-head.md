@@ -8,7 +8,7 @@
   plan reuse work.
 - **Location:** `crates/mokly-cli/src/serve_rebuild.rs:91`,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:62`,
-  `crates/mokly-sidecar/src/pool_exchange.rs:35`,
+  `crates/mokly-sidecar/src/pool_exchange.rs:39`,
   `crates/mokly-sidecar/src/pool_shutdown.rs:7`,
   `packages/mokly/src/sidecar.ts:55` to line 66 (the request loop), and
   `docs/protocol/mokly-base-cache.md:67` to line 68.
@@ -72,7 +72,7 @@
       needs approval to let the cache store that bounded, complete, and
       durable result.
     - Worker-only cancellation: `cancel_requests` at
-      `crates/mokly-sidecar/src/pool_exchange.rs:35` stops the whole pool
+      `crates/mokly-sidecar/src/pool_exchange.rs:39` stops the whole pool
       through `cancel_busy` at `crates/mokly-sidecar/src/pool_shutdown.rs:7`.
       The sidecar reads no frame during a request, at
       `packages/mokly/src/sidecar.ts:55` to line 66. esbuild runs `build`,
@@ -90,8 +90,8 @@
     batches, actions, and the stop.
   - Plan reuse on C4:
     - Each finished pause compile that gives a record replaces the plan
-      record of its bundle settings. A pause compile is a captured compile,
-      so the plan reuse rules already keep its record. A pause compile
+      record of its resolution settings. A pause compile is a captured
+      compile, so the plan reuse rules already keep its record. A pause compile
       without a record keeps the older record.
       If that compile replaces the disk entry without a plan, the older
       record stays only in the process. The next warm start has no plan.
@@ -103,8 +103,8 @@
       the bundle cache entry. `restoreGeneration` carries no plan. A warm
       start gets the stored plan only after a sidecar accepts that stored
       compilation.
-    - The Rust check is `physical_inputs::current`, at
-      `crates/mokly-render/src/physical_inputs.rs:113`. Plan reuse also
+    - The Rust plan check is `plan_inputs::current`, at
+      `crates/mokly-render/src/plan_inputs.rs:11`. Plan reuse also
       needs the `durable` flag, which that check does not read.
     - The plan record gives the import targets of a captured compile. Option
       D below also needs such a record. Plan reuse stores no edit compile, so
@@ -177,9 +177,11 @@
   stop or a cancellation ends it, are in
   `docs/protocol/mokly-sidecar-root-scheduling.md`.
 - **Related:**
-  - `plans/follow-ups/serve-plan-editor-invalidation.md`, linked alternatives:
-    editor files and new entries disable saved plans. This item owns the
-    separate captured-head refresh alternative.
+  - [serve-plan-per-import-evidence.md](./serve-plan-per-import-evidence.md), linked alternatives. Per-import admission can retain edit reuse before an idle compile. It changes a different decision and still needs its own measurement.
+  - `plans/follow-ups/serve-editor-files-disk-cache.md`, linked
+    alternatives: retained editor files make a restart miss the head entry.
+    Its recommended option is the pause compile of this item, so it waits
+    for this decision. This item owns the captured-head refresh.
   - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code: a
     restart restores the stale plan payload before a captured head compile.
     Its profile separates the added plan cost from that restart work.
