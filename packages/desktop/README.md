@@ -13,7 +13,7 @@ browser app.
 - Keep window bounds and the Chromium session across launches.
 - Keep the native Mac window buttons centred in the app's top bar at each
   page zoom.
-- Check the public pre-release feed in packaged builds.
+- Update release builds from the public pre-release feed.
 
 ## What This Package Does
 
@@ -23,8 +23,15 @@ preload, renderer bridge or viewer implementation. Electron is pinned to
 44.11.3, with Chromium 152 and Node 24.22.2. The package's exact pins are in
 [`package.json`](./package.json). The builder and the updater use the public
 `mokly-ai/mokly-desktop` GitHub feed, including pre-releases.
-The updater is off in development. A packaged Linux app without `APPIMAGE`
-offers the release page; it does not download or install an update.
+Only release builds turn the updater on. Development, local builds and
+pull-request packages keep it off, and their **Check for updates** item is
+disabled. On macOS the ready dialog waits until the macOS update framework
+accepts the download. A manual check always answers with a dialog. A macOS
+copy that runs from a read-only place, such as its mounted DMG, offers to move
+into Applications. A packaged Linux app without `APPIMAGE` offers the release
+page; it does not download or install an update.
+[Updates in the app](../../docs/protocol/cloud/desktop-distribution.md#updates-in-the-app)
+holds the rules.
 
 Only the main frame on `mokly-app://desktop` can use
 `clipboard-sanitized-write`. Requests and checks deny every other permission,
@@ -91,7 +98,9 @@ into `bundle/web`, writes `bundle/build-config.json` through the app image's
 configuration writer, `infra/docker/app-build-config.mjs`, generates site
 segments and compiles `src` into `dist`.
 It uses `EXPO_PUBLIC_MKC_API_ORIGIN`, `EXPO_PUBLIC_MKC_APP_ORIGIN`,
-`MKC_CATALOGUE_BASE_DOMAIN` and `MKC_BUILD_SHA`. Local builds default to ports
+`MKC_CATALOGUE_BASE_DOMAIN`, `MKC_BUILD_SHA` and `MKC_DESKTOP_UPDATES`. Only
+`MKC_DESKTOP_UPDATES=enabled` writes `updates: true` into
+`bundle/build-config.json`, which turns the updater on. Local builds default to ports
 8080/8081, `catalogue.mokly.example` and the current Git revision. Release
 builds must supply their target environment inputs.
 
@@ -157,21 +166,35 @@ Linux needs `xvfb-run`. Package artifacts are `desktop-macos` and
 `desktop-linux`; launch evidence is `desktop-smoke-macos` and
 `desktop-smoke-linux`, retained for 14 days.
 
-A tag `desktop-v<version>` must match `package.json`. It builds for production,
-signs and notarizes on macOS, and publishes one pre-release to
-`mokly-ai/mokly-desktop`. That public release uses `v<version>`, which matches
-the updater's release-page address. Both platform publishers run in sequence.
-Manual dispatch from a release tag does the same; dispatch from a branch runs
-preview packaging.
+Releases come from the desktop release pull request. On each push to `main`,
+Release Please updates it from the commits that change `packages/`, except the
+npm CLI and native packages. Merging it writes the version into `package.json`
+and `CHANGELOG.md`, and creates the tag `desktop-v<version>` on the merge
+commit. [The release workflow](../../.github/workflows/release.yml) then checks
+that the tag names that commit, and calls `desktop-release.yml` with the tag and
+the commit. That job runs in the `desktop-release` environment, builds for
+production with the updater on, signs and notarizes on macOS, and publishes one
+pre-release to `mokly-ai/mokly-desktop`. That public release uses `v<version>`,
+which matches the updater's release-page address. Both platform publishers run
+in sequence. Manual dispatch runs preview packaging only.
+
+When the tag check fails, move the tag to the release commit that the error
+names, then rerun the failed jobs:
+
+```sh
+git push --force origin RELEASE_COMMIT:refs/tags/desktop-vX.Y.Z
+gh run rerun RUN_ID --failed
+```
 
 Release packaging builds into a fresh directory with publishing off, then
 uses the pinned GitHub publisher through an append-only upload hook. It keeps
 the publisher's two-hour limit. It fails on an existing asset name, a skipped
 upload or any built file missing from the final GitHub asset list. The check
 also requires the uploaded size and completed state. Published assets are
-never replaced or deleted; `EP_GH_IGNORE_TIME` stays disabled. Delayed recovery
-needs a new package version and a new matching `desktop-v<version>` tag.
-Do not delete assets or rerun an old release to repair it.
+never replaced or deleted; `EP_GH_IGNORE_TIME` stays disabled. Rerun the failed
+jobs when nothing was uploaded. After a partial upload, release a new version
+through the next release pull request. Do not delete assets or rerun an old
+release to repair it.
 
 Both modes derive origins from `MKC_DOMAIN` and `MKC_CATALOGUE_BASE_DOMAIN`
 repository variables through the deployment domain helpers. The release
@@ -210,7 +233,8 @@ The fallback needs the deployed app's public metadata, but no API or secret.
   `zoomMenuItem` supplies the three Mac zoom commands with the default labels,
   accelerators and half-level steps.
 - [Safe main-process diagnostics](./src/diagnostics.ts)
-- [Updater](./src/updates.ts)
+- [Updater](./src/updates.ts) and the
+  [move to Applications offer](./src/install-location.ts)
 - [Build](./scripts/build.mjs) and [Electron smoke](./src/_tests_/desktop.spec.ts)
 - [App icon source](./build/icon.svg) and [icon renderer](./scripts/icon.mjs)
 - [Release inputs](./scripts/release-environment.py), [packaging](./scripts/package.mjs)
