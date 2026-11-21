@@ -13,6 +13,11 @@ proofs, review, and a pull request on 2026-11-20. The performance orchestrator
 owns the cloud measurements, memory acceptance, and every merge. This
 workspace must not merge the pull request.
 
+The performance orchestrator accepted option C and the protocol amendment on
+2026-11-21. Reads take no index lock. Existing disk stripe locks and brief
+bookkeeping locks retain their rules. The orchestrator also requested the
+large React index size, copies per update, and snapshot memory cost.
+
 Contract owners:
 
 - [Render store](../docs/protocol/mokly-render-store.md).
@@ -61,6 +66,11 @@ write. Existing brief fault and counter bookkeeping locks stay. Ordinary
 reads take no index lock. Common disk stripe locks still use one nonblocking
 attempt. A held disk stripe can therefore cause a miss under the existing
 common cache rules. This task changes only contention on the process index.
+
+The no-index-lock rule covers the ordinary lookup. Replacement adoption
+remains an optional nonblocking maintenance update under the same owner.
+This wording follows the accepted requirement to keep adoption excluded
+from startup and writer inspection.
 
 ### Original reason and preserved property
 
@@ -112,12 +122,14 @@ Replaced ways:
 Depends on: none
 
 - [x] Complete the fresh Opus options check and record its result here.
-- [ ] Send the concrete protocol amendment to the performance orchestrator.
-- [ ] Update the Reads requirement: index maintenance never causes an ordinary
+- [x] Send the concrete protocol amendment to the performance orchestrator.
+- [x] Update the Reads requirement: index maintenance never causes an ordinary
       indexed read to miss. Preserve no wait for a store write or segment IO.
-- [ ] Clarify that normal held-lock events still cover disk locks and optional
+- [x] Clarify that normal held-lock events still cover disk locks and optional
       maintenance. Keep all other store contracts.
-- [ ] Check the compare README for useful changed entry points.
+- [x] Check the compare README for useful changed entry points.
+
+Evidence: `.context/render-store-read-lock/docs-milestone-1-report.md`.
 
 ## Milestone 2: Regression and index publication
 
@@ -141,6 +153,9 @@ Depends on: 2
 - [ ] Measure warm unchanged store hits and misses on examples/basic and the
       5,850-document React fixture before and after. Use separate stable caches
       outside `/tmp`, identical source trees, and a completed writer drain.
+- [ ] Report the large React index size, snapshot copies per update, and the
+      memory cost of those copies. Distinguish measured allocations from
+      estimates and from the parent's complete-process memory measurement.
 - [ ] Prove strict byte equality on examples/basic, large HTML, large React,
       and mokly-cloud. Compare every relative file and raw byte without
       normalization. Save manifests, document keys, and a summary.

@@ -141,7 +141,7 @@ through `SystemImage`. On Linux, it digests the embedded build nonce and the
 running image through `/proc/self/exe`, and it gives no identity when the image
 changes during the read. On other targets, it digests the nonce alone.
 The [render store contract](../../docs/protocol/mokly-render-store.md) owns the
-identity, the entry format, the fault classes, and the bound.
+identity, the read rules, the entry format, the fault classes, and the bound.
 
 `entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file in
 one place. The bundle and render kinds use 256 fixed stripes, selected by the
@@ -524,8 +524,13 @@ development dependencies, and no test uses the internet.
 - [`src/render_store.rs`](./src/render_store.rs) defines `RenderDisk`,
   `SegmentCache`, `CachedDocuments`, `DocumentBackend`, `WriteOutcome`, and
   `CAPACITY`, the render kind and its document backend. The private
-  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory, and the
-  `render_store_*.rs` modules hold the index, the reads, and the writes.
+  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory.
+  [`src/render_store_state.rs`](./src/render_store_state.rs) prepares the
+  index from that inventory and handles entry and store faults.
+  [`src/render_store_read.rs`](./src/render_store_read.rs) serves one document
+  through the index and records its new position when its segment was
+  replaced. [`src/render_store_write.rs`](./src/render_store_write.rs)
+  publishes a built segment and adds its documents to the index.
 - [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
   segment: the prefix, the bounded header, and the digests.
   [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines
