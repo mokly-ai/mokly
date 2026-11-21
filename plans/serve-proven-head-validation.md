@@ -38,6 +38,22 @@ The measured split used `beb87a53a`. Before product code, this branch integrated
 rebuilt core and distributions. The earlier measurements identify the target
 phase. They are not acceptance evidence for the implementation.
 
+User decision on 2026-11-21: the performance orchestrator approved F. It requires
+one recorder mutation check for each input class, red tests for both identified
+traps, local edit and fact-peak measurements on both default large fixtures,
+the lasting React fresh-process differential, and follow-ups for kept-base
+freshness and Ready publication. A large-fixture slowdown must be reported
+before the implementation push.
+
+User decision on 2026-11-21: frozen main confirmed that an unchanged ServeEdit
+salt can change `comparisonUrl` across processes while its named content stays
+equal. Keep product identity unchanged. The Serve oracle checks the raw root's
+stability and its stage transition pattern within each process against main.
+Across processes, it compares all named content through an explicit root map.
+It retains raw roots and keeps detail IDs, snapshot IDs, and base commits exact.
+Static output still has no substitutions. Record the salt and its restart-cache
+effects as a separate follow-up.
+
 ### 1. Avoid repeated head closure validation
 
 - **Severity:** Low. **Effort:** Large.
@@ -50,8 +66,8 @@ phase. They are not acceptance evidence for the implementation.
 - **Terms:**
   - **Content proof:** Equality of every input that a saved view result reads,
     checked by a content digest or an exact value.
-  - **Validation facts:** A view's anchor names, logical links, resource file
-    membership, and warnings after its document and closure pass validation.
+  - **Validation facts:** A view's closure files, ordered closure warnings,
+    lexical observer paths, and complete walk read identities.
   - **Current usage:** The current document's component instances, slots, and
     ranges, read for the current classification.
 - **Background:** Serve validates every head view before its comparison stream.
@@ -110,9 +126,9 @@ phase. They are not acceptance evidence for the implementation.
   F covers validation inputs that comparison evidence omits. It also avoids
   pairing-dependent lookup and preserves watch effects. E remains an alternative
   if F cannot satisfy retention and diagnostic order.
-- **Action:** Design call, apply F within the authorized task. Send the measured
-  split and ranking before product code. Ask only if a real protocol change
-  becomes necessary.
+- **Action:** Apply F, approved by the performance orchestrator on 2026-11-21
+  with the conditions above. Ask only if a real protocol change becomes
+  necessary.
 
 ### Required design properties
 
@@ -165,48 +181,56 @@ Depends on: none
 - [x] Run a fresh Claude Opus max options check and merge its result here.
 - [x] Send the split, ranked options, and any protocol decision to the orchestrator.
 - [x] Record the authorized design call and confirm that the contracts cover it.
-- [ ] Validate this Markdown, commit the plan alone, and push it.
+- [x] Validate this Markdown, commit the plan alone, and push it.
 
 ## Milestone 2: Red correctness tests
 
 Depends on: 1
 
-- [ ] Add an assertion-failing test for each new validation or proof reuse path.
-- [ ] Use real graph validation through `FrozenResources` and
+- [x] Add an assertion-failing test for each new validation or proof reuse path.
+- [x] Use real graph validation through `FrozenResources` and
       `MemoryComparisons` for the lasting fact-reuse oracle. The existing
       server oracle mocks whole-head validation and cannot cover this path.
-- [ ] Cover a changed input of a reused view that forces ordinary validation
+- [x] Cover a changed input of a reused view that forces ordinary validation
       and comparison again. Include missing and unavailable proof inputs.
-- [ ] Cover ignored unavailable targets, observer replay after unaccepted
+- [x] Cover ignored unavailable targets, observer replay after unaccepted
       removal/restoration, changed destination anchors, cross-view namespace
       collisions, and unnormalized failure warning order.
-- [ ] Add a real React differential sequence against a fresh-process full
+- [x] Add a real React differential sequence against a fresh-process full
       comparison: text, class, new import, removed component, renamed export,
       and a base change. Compare exact Changes output, warnings, and diagnostics.
-- [ ] Prove the differential assertions can fail before implementation. Keep
+- [x] Prove the differential assertions can fail before implementation. Keep
       red logs and mutation evidence outside the repository. Once the new path
       exists, mutate it to prove that the assertions catch incorrect reuse.
-- [ ] Keep the real React fresh-process differential as a lasting test because
+- [x] Keep the real React fresh-process differential as a lasting test because
       the user explicitly requested it. This task overrides the shared skill's
       general rule against lasting one-time equivalence proofs.
-- [ ] Protect global link and namespace checks, first diagnostic and warning
+- [x] Protect global link and namespace checks, first diagnostic and warning
       order, current usage, fences, admission, overflow, and draining charges.
-- [ ] Count closure walks and checked document reads. Prove no repeated walk
+- [x] Count closure walks and checked document reads. Prove no repeated walk
       or second checked read on reuse, and no proof read on a changed key.
-- [ ] Cover a base-reference-only refresh on the same head generation and
+- [x] For each input class, remove that class from the recorder in a test
+      build and observe an assertion failure. Restore each mutation and keep
+      its exact evidence under `.context/`.
+- [x] Cover a base-reference-only refresh on the same head generation and
       pressure where comparisons fit but optional facts do not.
+
+Evidence: `.context/edit-comparison-cost/implementation/evidence-map.md`.
 
 ## Milestone 3: Complete proof with less repeated work
 
 Depends on: 2
 
-- [ ] Implement the chosen approach with the required properties above.
-- [ ] Remove the repeated work that the new path replaces. Keep every existing
+- [x] Implement the chosen approach with the required properties above.
+- [x] Remove the repeated work that the new path replaces. Keep every existing
       check and assertion. Add no timeout, retry, or sleep.
-- [ ] Update crate README entry points when the implementation adds a useful
+- [x] Update crate README entry points when the implementation adds a useful
       boundary. Keep the protocol unchanged unless an approved decision needs it.
-- [ ] Run the targeted tests and record every red-to-green result.
-- [ ] Run each new asynchronous test ten times. Record its cost and pass count.
+- [x] Run the targeted tests and record every red-to-green result.
+- [x] Run each new asynchronous test ten times. Record its cost and pass count.
+
+Evidence: `.context/edit-comparison-cost/implementation/ten-runs-summary.json` and
+`.context/edit-comparison-cost/implementation/implementation-report.md`.
 
 ## Milestone 4: Local acceptance evidence
 
@@ -215,7 +239,9 @@ Depends on: 3
 - [ ] Freeze own release main and candidate cores and distributions with exact
       source, build, environment, and artifact provenance.
 - [ ] Measure interleaved warm cloud edits against current `origin/main`.
-- [ ] Check warm Basic and default large React edits for regression.
+- [ ] Check warm Basic edits for regression. Measure edit time and peak fact
+      bytes on both default large React and large HTML. Compare kept bytes
+      with and without facts. Report any large-fixture slowdown before pushing.
 - [ ] Compare complete strict build artifacts with Changes enabled on cloud,
       Basic, default large HTML, and default large React. Compare actual bytes.
 - [ ] Compare Serve Changes fields, counts, published details and comparison
@@ -239,6 +265,10 @@ Depends on: 4
       rounds. Record all results in the branch findings file.
 - [ ] Resolve the addressed comparison-cost follow-up and record every remaining
       review item through the shared skill rules.
+- [x] Record kept-base freshness and Ready publication as separate follow-ups
+      with the measured split. List them in the pull request.
+- [x] Record the existing random ServeEdit salt and its effect on cache reuse
+      across restarts as a separate follow-up. Keep product identity unchanged.
 - [ ] Delete this plan when the `plans` skill permits it.
 - [ ] Open the pull request into `main`. Preserve this plan's dated decisions
       and permalink in its description. Watch final CI with the skill's

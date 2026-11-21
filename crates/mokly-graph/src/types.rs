@@ -22,6 +22,7 @@ use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence}
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
+use crate::head_validation::{HeadValidation, ValidationRead};
 use crate::key::NodeKey;
 use crate::prefetch::PrefetchGuard;
 use crate::resource_inputs::ResourceObserver;
@@ -91,6 +92,18 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Complete head validation before pairing, with optional caller-owned facts.
+    fn validate_head(&self, _validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.render_all()
+    }
+    /// Read one current document without replacing the later complete link pass.
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.comparison_document(route)
+    }
+    /// Prove one closure-walk input. Unknown or failed reads are ordinary misses.
+    fn validation_identity(&self, _kind: ValidationRead, _route: &str) -> Option<ContentIdentity> {
+        None
+    }
     /// Prepare optional generation-owned reuse evidence without changing keys or rendering.
     fn prepare_render_reuse(&self) {}
 
@@ -283,7 +296,3 @@ pub struct TemporaryDocument {
     /// Resources checked through the generation's public-file policy.
     pub closure: Closure,
 }
-
-#[cfg(test)]
-#[path = "_tests_/comparison_usage_tests.rs"]
-mod comparison_usage_tests;

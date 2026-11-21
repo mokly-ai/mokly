@@ -292,6 +292,13 @@ generations.
   [`mokly-model`](../mokly-model/src/shell.rs).
 
 - [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.
+- [`src/comparison_graph.rs`](./src/comparison_graph.rs) defines
+  `FrozenResources`, which checks frozen document and resource hashes for the
+  generation that it wraps.
+  [`src/comparison_head.rs`](./src/comparison_head.rs) gives it the head
+  validation methods. It forwards `validate_head` to the wrapped generation,
+  checks each `validation_document` read against the frozen document digest,
+  and answers `validation_identity` for head proofs.
 
 ### Related Docs
 
