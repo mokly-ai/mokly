@@ -1,5 +1,7 @@
 # Web Application
 
+Status: Theme on the device as the source of the app's scheme is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
+
 `apps/app` is the Expo application that serves Mokly Cloud's account entry and
 its logged-in product. It targets the web. The account and settings surfaces
 are DOM compositions over `@firna/ui` controls, so they render in a browser and
@@ -34,12 +36,12 @@ the single hoisted runtime of the root npm workspace, never a second copy.
 ## Document And Styling
 
 The web target is a single-page build. Its document carries
-`<meta name="robots" content="noindex">` and links the Folio stylesheets before
-the application's own stylesheet. The Folio stylesheets have one source of
-truth, `docs/mockups/styles`. Each catalogue build bundles it and links the
-bundled copy. The application copies it before every start,
-build and test, so the product and the catalogue can never drift. The
-application's own stylesheet undoes the react-native-web root reset and holds
+`<meta name="robots" content="noindex">` and links the product chrome
+stylesheets before the application's own stylesheet. The product chrome
+stylesheets have one source of truth, `docs/mockups/styles`. Each catalogue
+build bundles it and links the bundled copy. The application copies it before
+every start, build and test, so the product and the catalogue can never drift.
+The application's own stylesheet undoes the react-native-web root reset and holds
 only the compositions that exist in the running product and not in the
 catalogue, such as the live settings dialog's
 grid; apart from that root reset, no selector appears in both the catalogue's
@@ -52,8 +54,9 @@ the desktop type ramp with the mobile ramp under the shared breakpoint,
 because a running window resizes and a generated document does not. The
 document root takes `folio-scope` and `data-color-scheme`. Controls come from
 `@firna/ui` through the same theme mapping the catalogue uses, with the
-package's live focus ring retained. The scheme is the reader's system
-preference, light when the browser states none; the hosted viewer's interface
+package's live focus ring retained. The scheme is the reader's
+[Theme](./viewer-chrome-account.md#theme) choice, which the device keeps, or
+their system preference until they choose; the hosted viewer's interface
 `theme` and the cloud chrome change in the same render and never disagree.
 
 The app exposes no generated route list and no sitemap. An unmatched address

@@ -103,8 +103,7 @@ control links to the canonical catalogue home artboard; the reparented hierarchy
 is the context for this Changes-state example. The changed-views state shows no
 comparison band. Its marks on Appearance and the viewport dropdown identify
 evidence about other views. The Details view list opens the canonical
-comparison; the outer Appearance control chooses its rendered scheme. The
-depicted Appearance selector has no authored transition.
+comparison. The depicted Appearance selector has no authored transition.
 
 ## Related Docs
 

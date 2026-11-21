@@ -206,7 +206,7 @@ shell cancels a refresh still in flight, fetches the index and the current
 route's details, including a current component variant's parent detail,
 requires one `revision` on all of them at or above the message id,
 and adopts them in one store commit: the navigation, the Changes marks,
-Usage, and the details panel update in place, and only the mounted frames
+Usage, and the inspector update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
 shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and

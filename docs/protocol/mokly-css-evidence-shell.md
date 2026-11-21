@@ -4,13 +4,15 @@
 
 The inspector groups kept selectors by stylesheet and rule outcome, including
 separate outside-component page evidence, and lists
-excluded resources in a secondary details section. Headline copy is product
-language, for example "This stylesheet changed, but none of the changed styles
-apply to this screen"; selector text appears only in the details list. Excluded
-resources never produce Changes rows.
+excluded resources in a secondary details section. The
+[component inspector design](./mokly-component-inspector-design.md#changes-and-evidence)
+places this evidence. Headline copy is product language, for example "This
+stylesheet changed, but none of the changed styles apply to this screen";
+selector text appears only in the details list. Excluded resources never
+produce Changes rows.
 
-Details for screens, component variants and whole-document pages show the
-branch-point sentence and the shared heading of the
+The comparison details of screens, component variants and whole-document
+pages show the shared heading and the branch-point sentence of the
 [presentation contract](./mokly-css-evidence-presentation.md#details-copy),
 also while the selected entry's detail loads.
 
@@ -36,25 +38,26 @@ rules:
   then each sentence paragraph and its list of selector code chips.
 - A screen whose page selectors come from rules that also changed a component
   reads "These changed styles also apply outside the changed components on
-  this screen:" under that stylesheet, and its Details link those changed
-  components. Their own pages keep the matched-component sentence. A consumer
-  whose matches all lie inside them stays under Affected screens, without a
-  row of its own.
-- A `matched` or `unresolved` reason reads as one outcome in the comparison
-  stage heading, "Styles this screen uses changed". That heading is rendered
-  only inside a loaded comparison; the plain current preview has no stage
-  heading. The two statuses differ only in the secondary details: `matched`
-  lists the changed styles that apply to the screen, while `unresolved` says
-  the change can apply anywhere on the screen. With serialized selectors the
-  unresolved sentence ends with a colon and a list; without them it ends with
-  a full stop and no list. When a stylesheet also has proven outside-component
+  this screen:" under that stylesheet, and its comparison details link those
+  changed components. Their own pages keep the matched-component sentence. A
+  consumer whose matches all lie inside them stays under Affected screens,
+  without a row of its own.
+- A `matched` or `unresolved` reason reads as one outcome in the
+  [view heading](./mokly-css-evidence-presentation.md#shell-derivation),
+  "Styles this screen uses changed". That heading is rendered only inside a
+  loaded comparison; the plain current preview has no view heading. The two
+  statuses differ only in the secondary details: `matched` lists the changed
+  styles that apply to the screen, while `unresolved` says the change can
+  apply anywhere on the screen. With serialized selectors the unresolved
+  sentence ends with a colon and a list; without them it ends with a full
+  stop and no list. When a stylesheet also has proven outside-component
   matches, retain their separate paragraph and selector list under that same
   stylesheet. Unresolved evidence never hides that proof.
 - An excluded resource leads with the outcome, "This stylesheet changed, but
   none of the changed styles apply to this screen", and lists the stylesheet
   under an "Examined and excluded" heading. An excluded-only screen is not in
-  Changes, offers no comparison, and shows no stage heading; its evidence panel
-  ends with the terminal status line "No changes to this screen." A component
+  Changes, offers no comparison, and shows no view heading; its evidence ends
+  with the terminal status line "No changes to this screen." A component
   variant's terminal line reads "No changes to this variant." The wording
   follows the entry kind.
 - Linked Excluded and Matched screens show the same changed Welcome in All
@@ -72,28 +75,27 @@ rules:
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
 - A screen or component that only changed components affect stays
-  Unmodified with no Changes row, and its comparison band stays available.
-  Its Details keep the full matched styles of each file, link each changed
-  component, and end with the shared-component sentence in place of the
-  terminal line: “Changed components that this screen uses affect its
+  Unmodified with no Changes row, and its compare modes stay available. Its
+  comparison details keep the full matched styles of each file, link each
+  changed component, and end with the shared-component sentence in place of
+  the terminal line: “Changed components that this screen uses affect its
   preview.” for a screen, as
   `design/components/states/shared-impact/affected-screen` depicts, and
   “Changed components that this variant uses affect its preview.” for a
-  component. In a
-  loaded comparison, each of its affected views reads the stage heading
-  "Components this screen uses changed", or "Components this variant uses
-  changed" for a component.
-- A whole-document page in Changes keeps its plain document pane, with no
-  comparison toolbar and no stage heading. Its Details hold the same
-  comparison details and files list, led by "Changes to these files may affect
-  this page:", with the page sentences of the presentation contract under each
-  file. A page may use component elements, but it has no usage records, so its
-  Details link no changed component.
-  Its status sits beside its title, as a screen's does. The open Details panel
-  takes at most 60% of the main region and scrolls, with its bar kept in view,
-  so long evidence stays reachable and the document stays visible. On narrow
-  screens every title row wraps its chips below the title before the title
-  itself wraps.
+  component. In a loaded comparison, each of its affected views reads the
+  view heading "Components this screen uses changed", or "Components this
+  variant uses changed" for a component.
+- A whole-document page in Changes shows its current document, with no
+  compare modes and no view heading. It shows the same comparison details and
+  files list, led by "Changes to these files may affect this page:", with the
+  page sentences of the presentation contract under each file. A page may use
+  component elements, but it has no usage records, so its comparison details
+  link no changed component.
+  Its status sits beside its title, as a screen's does. Long evidence scrolls
+  inside the [inspector](./mokly-component-inspector-design.md#right-panel),
+  so it stays reachable and the document stays visible. On narrow screens
+  every title row wraps its chips below the title before the title itself
+  wraps.
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.
@@ -104,6 +106,6 @@ rules:
 ### Shell Derivation
 
 The [CSS evidence presentation contract](./mokly-css-evidence-presentation.md)
-owns live/static evidence projection, merge rules, stage-heading derivation,
-exact screen/component copy, selector grouping, and viewport-independent
-Details behavior.
+owns live/static evidence projection, merge rules, view-heading derivation,
+exact screen/component copy, selector grouping, and comparison details that do
+not change with the view.

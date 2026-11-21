@@ -178,7 +178,7 @@ default/`_self` marked link asks the outer shell to navigate through its
 latest-wins route transition. The shell resolves the destination in the index
 and renders it; it does not fetch a shell document. The resulting history
 entry has the canonical `/view/<path>/[?fragment=...]` URL; the title,
-breadcrumbs, heading, details inspector, frames, focus, and status
+breadcrumbs, heading, inspector, frames, focus, and status
 announcement all describe the destination. Back and Forward return through
 those outer route entries and restore their route-owned scroll. Once React
 owns a same-origin frame session, that ownership is continuous: a valid marked

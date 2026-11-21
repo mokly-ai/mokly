@@ -5,7 +5,7 @@
 A registered component owns a catalogue page, optional variant entries, and
 comparisons. Its rendered instances connect that page to consuming screens
 and other components. Registration supplies the identity used by previews,
-automatic change attribution, the shared icon inspector, and highlighting;
+automatic change attribution, the inspector, and highlighting;
 consumers do not maintain separate usage lists or per-screen Review-ignore
 hashes.
 
@@ -81,7 +81,7 @@ above is `components/action` under a root with the prefix `components`.
   inference for a component: the schema is declared.
 - `props` are the component's own prop values. They default to the empty map
   and must satisfy the schema, so a schema with a `required` prop needs
-  `props`. The component's page renders them first.
+  `props`. They render the component's own views.
 - `variants` each declare `slug`, `title`, and `props` that replace top-level
   keys of the component's own props; `description`, `tags`, `movedFrom`, and
   `slots` are optional. A variant's `slots` maps declared slot names to
@@ -181,9 +181,9 @@ writes the instance markers. From an HTML body, the core renders the
 component through `renderComponent` with the coerced props, the slot
 placeholders, and the enclosing ignore scope, and grafts the returned fragment
 with its collected styles under the [sidecar contract](./mokly-sidecar.md).
-The component's own page renders its own props first and then each variant,
-with the component as the root instance, at every viewport and effective
-colour scheme, with the configured and declared stylesheets. Serve, `build`,
+The component's own props and each variant render with the component as the
+root instance, at every viewport and effective colour scheme, with the
+configured and declared stylesheets. Serve, `build`,
 and Changes use the same rendered documents. Nothing is written to the
 repository.
 

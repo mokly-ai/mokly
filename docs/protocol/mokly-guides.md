@@ -1,7 +1,5 @@
 # Mokly Guides Contract
 
-Status: No guide check accepts an HTML sample yet, and no renderer shows a sample beside its code. [Milestone 7](../../plans/canvas-redesign.md#milestone-7-html-sample-fence) adds the sample to the site Markdown pipeline and to the guide checks of the site and the package.
-
 ## Scope
 
 This contract makes this repository the owner of the versioned

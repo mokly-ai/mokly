@@ -49,9 +49,9 @@ component stylesheet subpath.
 The viewer bundles the package CSS into its own `shell.css` and `styles.css`,
 so these stay the only stylesheets that a delivery or a host loads. The
 [theming rules](./mokly-viewer.md#theming-and-ownership) of the viewer contract
-give the cascade precedence of the package CSS. The shell font file and its
-`@font-face` rule stay with the viewer, because the viewer delivers the font.
-The theme names the font family with system fallbacks.
+give the cascade precedence of the package CSS. The shell's font files and
+their `@font-face` rules stay with the viewer, because the viewer delivers the
+fonts. The theme names each font family with system fallbacks.
 
 ## Theme And Host Pages
 

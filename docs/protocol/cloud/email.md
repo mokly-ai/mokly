@@ -1,8 +1,10 @@
 # Email
 
+Status: The Canvas values of the emails, and the new mark with the Geist wordmark in the published logo, are not built yet. [Milestone 3](../../../plans/canvas-redesign.md#milestone-3-palette-source-fonts-and-brand) builds them.
+
 Mokly Cloud sends two transactional emails: the sign-in link issued by
 `POST /v1/auth/magic-links` and the invitation issued by
-`POST /v1/workspaces/{workspaceId}/members`. Each is a reviewed Folio mockup in the
+`POST /v1/workspaces/{workspaceId}/members`. Each is a reviewed mockup in the
 dogfood catalogue and generated into committed templates synchronized to both
 stable Postmark servers. The API sends by hosted template alias with typed
 values; Postmark renders the HTML and plain-text bodies. [Product copy](./product-copy.md),
@@ -107,12 +109,13 @@ The delivered HTML is one self-contained document. Its shell is fixed:
   padding, holding in order: the brand, the heading, the body sentence when
   the kind has one, the action, the fallback link and the expiry line, with
   the ignore sentence after it for sign-in.
-- The brand is the published logo — the Mokly mark beside the serif
-  `mokly.` wordmark, one artwork — as an `img` of the 768×256 lockup drawn at
-  `width="96" height="32"` (its 3:1 canvas at the product wordmark's height),
-  with `alt="Mokly"`, `display:block` and `border:0`, in a cell of its own
-  above the heading. No HTML text stands in for the wordmark: a client that
-  blocks images shows the alternative text, and the heading beneath still
+- The brand is the published logo — the Mokly mark beside the Geist
+  `mokly.` wordmark, one artwork with the design of the
+  [shell brand](../mokly-shell-brand.md) — as an `img` of the 768×256 lockup
+  drawn at `width="96" height="32"` (its 3:1 canvas at the product wordmark's
+  height), with `alt="Mokly"`, `display:block` and `border:0`, in a cell of
+  its own above the heading. No HTML text stands in for the wordmark: a client
+  that blocks images shows the alternative text, and the heading beneath still
   names the product. Both logos are sent: the light table shows `e-logo-light`
   and hides `e-logo-dark` with `display:none; mso-hide:all`, the dark table
   does the reverse, and the override block swaps them. Their `src` is
@@ -126,10 +129,11 @@ The delivered HTML is one self-contained document. Its shell is fixed:
 - Every rendered element carries inline styles resolved from the token tables
   at generation time. Typography and spacing use pixel lengths equivalent to
   the shared tokens at a 16px root. Inline styles and overrides use the same
-  lengths. The Folio surface family binds `background`, `surface`,
-  `text`, `textMuted` and `border` exactly as the app's account panel binds
-  them, so the message and the account panel share one canvas and one card;
-  `surfaceRaised`, `surfaceMuted` and `borderStrong` are excluded.
+  lengths. `background`, `surface`, `text`, `textMuted` and `border` take the
+  Canvas values of [Design tokens](./design-tokens.md#email), exactly as the
+  app's account panel binds them, so the message and the account panel share
+  one canvas and one card; `surfaceRaised`, `surfaceMuted` and `borderStrong`
+  are excluded.
   The only shared accent roles are `accent`, `accentSolid` and `onAccent`;
   transparency is permitted for hidden and mobile surfaces. The heading is `heading3`
   (24/32, 600, `-0.02em`), body copy is `body` (16/24) in `text`, the fallback

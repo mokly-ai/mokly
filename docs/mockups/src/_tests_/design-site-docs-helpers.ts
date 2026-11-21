@@ -63,7 +63,7 @@ export function installedGuide(path: string): {
       open = undefined;
     } else if (open !== undefined) open.lines.push(line);
     else if (line.startsWith("```"))
-      open = { language: line.slice(3).trim(), lines: [] };
+      open = { language: line.slice(3).trim().split(/\s+/u)[0]!, lines: [] };
     else if (line.startsWith("## ")) headings.push(line.slice(3).trim());
   }
   const { data } = readFrontmatter(source, path);

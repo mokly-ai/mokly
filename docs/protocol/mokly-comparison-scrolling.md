@@ -1,45 +1,54 @@
 # Comparison Scrolling
 
+Status: Comparison frames at the nominal size of their canvas frame at every zoom, Swipe, and scrolling on every frame of the canvas are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas frames and the zoom, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the comparisons on them.
+
 ## Page Scroller
 
-Each comparison frame stays exactly the size of its device viewport. Viewport
-units, `position: fixed`, and `position: sticky` therefore resolve as in
-Current, and a document's size never depends on its measured size. The chrome
-viewport is the only page-level scroll container for its panes; inner regions
-defined below remain scrollable in their own right. Frames carry
+Each comparison frame is exactly the nominal size of its
+[canvas frame](./mokly-shell-device-chrome.md#canvas-frames), and its document
+lays out at that size at every
+[zoom](./mokly-shell-canvas-stage.md#pan-zoom-and-fit). Viewport units,
+`position: fixed`, and `position: sticky` therefore resolve as in Current, and
+a document's size never depends on its measured size. Every size, range,
+offset, and step on this page is in the document's CSS pixels, so the zoom
+changes none of them. In a comparison, each canvas frame has one page
+viewport, the only page-level scroll container for its panes; inner regions
+defined below remain scrollable in their own right. Comparison frames carry
 `scrolling="no"` and are scrolled only by the viewer.
 
-The device-sized frames stay in place while their viewport scrolls. Each
-viewport's scroll range is the section's largest document range: vertically
-the largest `scrollHeight - clientHeight`, and horizontally the largest
-`scrollWidth - clientWidth`. Side by side gives both viewports this pair
-maximum, so their ranges match.
+The comparison frames stay in place while their page viewport scrolls. Each
+page viewport's scroll range is the largest document range of its view:
+vertically the largest `scrollHeight - clientHeight`, and horizontally the
+largest `scrollWidth - clientWidth`. Side by side gives both page viewports
+this pair maximum, so their ranges match.
 
 The viewer measures a document as soon as it commits, before slow resources
 finish, and again on its `load`. It measures again when the document's root
 or body changes size, a resource loads, fonts finish loading, or a `<details>`
-element toggles. Measurement updates every viewport's range and reapplies the
-current page offsets. No frame dimension depends on the result, so measurement
-cannot feed back into the document. Every measurement discards the section's
-region pairing results, including the no-match results.
+element toggles. Measurement updates every page viewport's range and reapplies
+the current page offsets. No frame dimension depends on the result, so
+measurement cannot feed back into the document. Every measurement discards the
+region pairing results of its view, including the no-match results.
 
 ## Page Writes And Echoes
 
-Every viewport keeps its own page offset and writes it to each layer document it
-holds in the same handler that observed it. With Scroll together on, Side by
-side first mirrors its two chrome viewports in both directions; a stack always
-has one viewport, so its layers always share one offset. The off behavior is
-defined by the [Scroll together contract](./mokly-comparison-scroll-together.md).
-Every page write is instant, regardless of CSS `scroll-behavior`.
+Every page viewport keeps its own page offset and writes it to each layer
+document it holds in the same handler that observed it. With Scroll together
+on, Side by side first mirrors its two page viewports in both directions; a
+stack always has one page viewport, so its layers always share one offset. The
+off behavior is defined by the
+[Scroll together contract](./mokly-comparison-scroll-together.md). Every page
+write is instant, regardless of CSS `scroll-behavior`.
 
-A shorter or narrower document clamps at its own range. Its frame is translated
-back by the unmet x and y remainder, without changing the snapshot document, so
-content before its end stays aligned. The revealed surface uses the document
-canvas color: the computed root background, or the body background when the
-root is transparent, over the selected scheme's opaque screen background.
+A shorter or narrower document clamps at its own range. Its comparison frame
+is translated back by the unmet x and y remainder, without changing the
+snapshot document, so content before its end stays aligned. The revealed
+surface uses the document's background color: the computed root background, or
+the body background when the root is transparent, over the opaque screen
+background of its canvas frame's scheme.
 
 A document scroll the viewer did not make, including find in page, focus,
-selection autoscroll, or fragment behavior, is written back to its chrome
+selection autoscroll, or fragment behavior, is written back to its page
 viewport first and then applied under the current Scroll together mode.
 Echoes are recognized by value, never by a timer. A scroller's last recorded
 value is the x/y offset at which the last viewer write settled, or the offset
@@ -55,7 +64,7 @@ range is `max(0, scrollHeight - clientHeight)`. A region scrolls on an axis
 only when that axis has one of those overflow values and a positive range.
 
 When a region scrolls for any reason, the viewer resolves one counterpart in
-every other version of the same section under the
+every other version of the same view under the
 [region pairing contract](./mokly-comparison-region-pairing.md). A candidate
 must scroll on every axis on which the source scrolls. A source that scrolls on
 x and y therefore cannot pair with a y-only candidate; a y-only source may pair
@@ -86,9 +95,9 @@ without error. An element whose overflow is not `auto` or `scroll` is not a
 region, so a scroll the browser makes inside one, such as focus revealing it,
 is not mirrored.
 
-These rules apply to Side by side in both directions, every layer in Overlay
-and Difference, the mobile and desktop sections independently when Both is
-shown, and component comparisons. Regions never pair across viewport sections.
+These rules apply to Side by side in both directions, to every layer in
+Overlay, Difference, and Swipe, to each compared view independently, and to
+component comparisons. Regions never pair across views.
 
 ### Design Depictions
 
@@ -128,7 +137,7 @@ ArrowLeft when `scrollLeft > -horizontal range`.
 When such a region exists, do not prevent the key and do not move a page
 viewport; the browser scrolls that region and its scroll events drive
 [region mirroring](#region-writes-and-echoes). When none exists, prevent the
-key and move the applicable chrome viewport: a page is 87.5% of its visible
+key and move the applicable page viewport: a page is 87.5% of its visible
 height, an arrow is 40 CSS pixels, Home is zero, End is the range end, and
 every result is clamped. The page write then follows the current Scroll
 together mode.
@@ -146,8 +155,8 @@ end-edge difference; otherwise leave that axis unchanged. Scroll instantly and
 mirror the settled offsets when Scroll together is on before processing the
 next ancestor.
 
-After the regions, move the source section's page viewport to the target's
-current document position and apply that page offset under the current mode.
-Horizontal page movement uses the same nearest-edge rule; vertical movement
-aligns the target's top. With Scroll together on, every enclosing counterpart
-follows before the page viewport moves.
+After the regions, move the page viewport that holds the source document to
+the target's current document position and apply that page offset under the
+current mode. Horizontal page movement uses the same nearest-edge rule;
+vertical movement aligns the target's top. With Scroll together on, every
+enclosing counterpart follows before the page viewport moves.

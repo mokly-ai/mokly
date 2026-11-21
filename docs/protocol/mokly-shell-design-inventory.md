@@ -175,19 +175,19 @@ Additional owning groups keep each page at no more than five screens:
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the
   Auto/Light/Dark interface appearance from
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
-  both schemes, so the outer Appearance control moves between its two rendered
-  views at the same entry.
+  both schemes, and the outer viewer shows both rendered views at the same
+  entry under the [preview scheme
+  rules](./mokly-shell-device-chrome.md#color-scheme).
 
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
 `design/changes/diff-controls/overlay-long`, `design/changes/diff-controls/overlay-panel`,
 `design/changes/diff-controls/side-by-side-apart`, `design/changes/outcomes/changed` and
 `design/changes/outcomes/difference` — also render in both
-schemes, so the outer Appearance control shows the selected Welcome, the
-light-only Details subject and every comparison mode under either appearance at
-their own entries. A comparison family publishes the same schemes for every
-member, so switching mode inside a dark catalogue never lands on a light
-document.
+schemes, so the outer viewer shows the selected Welcome, the light-only Details
+subject and every comparison mode in both appearances at their own entries. A
+comparison family publishes the same schemes for every member, so switching
+mode inside a dark catalogue never lands on a light document.
 
 Every artboard that draws a top bar draws exactly one scheme control in it, the
 depicted Appearance selector, because the standalone shell always offers that

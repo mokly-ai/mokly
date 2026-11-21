@@ -1,6 +1,6 @@
 # Viewer Markers And Multi-Instance Highlights
 
-Status: A cleanup error of marker content that the viewer removes or hides can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
+Status: A cleanup error of marker content that the viewer removes or hides can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher. The refresh after a pan or a zoom of the canvas is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds it.
 
 ## Purpose And Boundary
 
@@ -95,6 +95,7 @@ after:
 
 - an authenticated in-frame `geometry` notification;
 - capture-phase scrolling at the viewer root, including outer stage scrolling;
+- a pan or a zoom of the [canvas](./mokly-shell-canvas-stage.md#pan-zoom-and-fit);
 - resize of the viewer root, stage or a mounted frame;
 - frame expansion or collapse;
 - frame mount, replacement or disposal;
@@ -117,7 +118,7 @@ delay, replace or report against the fresh snapshot.
 
 `highlightInstances(refs)` highlights the exact union of all referenced Current
 frame sessions. Each selected session receives only the keys whose complete
-references match it. References may span Both viewports, schemes and flow steps.
+references match it. References may span viewports, schemes and flow steps.
 Duplicate references have no additional effect.
 
 The operation is atomic. Before changing the current presentation, the viewer

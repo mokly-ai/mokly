@@ -1,6 +1,6 @@
 # Embeddable Mokly Viewer
 
-Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. The `changesStart` slot is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 ## Package And Props
 
@@ -113,25 +113,28 @@ The viewer renders the [Browse shell](./mokly-runtime.md),
 [navigation](./mokly-navigation.md): catalogue trees and filters, route chrome,
 responsive frames and controls, comparisons, inspection and ordered flows,
 with their accessibility, responsive, unavailable, loading and empty states.
-Documents render in the complete-document frame, one document per scheme and
-no viewport axis ([documents](./mokly-documents.md)); a moved entry reads
-`Moved` with its previous path in details ([moves](./mokly-moves.md)). Removed
-entries load the historical documents of their
-[previous version](./mokly-removed-previews.md) only from the advertised
-comparison generation. Details show the workspace of the entry
-detail in every delivery: Used by, Affected screens, related changed
+Documents render in one frame, one document per scheme and no viewport axis
+([documents](./mokly-documents.md)); a moved entry reads `Moved` with its
+previous path in details ([moves](./mokly-moves.md)). Removed entries load the
+historical documents of their [previous version](./mokly-removed-previews.md)
+only from the advertised comparison generation. The
+[inspector](./mokly-component-inspector-design.md) shows the workspace of the
+entry detail in every delivery: Used by, Affected screens, related changed
 components, and input changes with Before and Current props.
 A current component variant shows Used by and Affected lists from its parent's
 detail. A removed variant shows those lists from its own detail.
 
 Slots are optional React-owned content containers. `topBarStart` and
 `topBarEnd` adjoin the top bar; `railStart` and `railEnd` adjoin the
-navigation rail. `sidePanel` adds a host-owned panel beside the stage with
-host-specified width; the host owns its responsive content and accessible
-controls. `stageOverlay` covers only the stage; the host explicitly chooses
-pointer events, using `none` for passive annotations, and it cannot silently
-intercept shell navigation. `emptyState` replaces only the no-selection home
-body, not loading, fetch errors, missing current screens or unavailable
+catalogue. `changesStart` adds host content to the Changes tab of the right
+panel, after the change stepper and before Compared, as the
+[Changes tab](./mokly-changes-controls.md#changes-tab) defines. `sidePanel`
+adds a host-owned panel beside the stage with host-specified width; the host
+owns its responsive content and accessible controls. `stageOverlay` covers
+only the stage; the host explicitly chooses pointer events, using `none` for
+passive annotations, and it cannot silently intercept shell navigation.
+`emptyState` replaces only the home guidance that shows while nothing is
+selected, not loading, fetch errors, missing current screens or unavailable
 evidence. Omitted slots add no visible space or controls. Slot children are
 ordinary React children of the shell tree and may rerender without resetting
 viewer state; the shell never reaches into their DOM or event handlers. The
@@ -150,11 +153,14 @@ container, not the browser viewport.
 
 `theme` selects an embedded root's interface appearance as `"auto"`, `"light"`
 or `"dark"`; omission means Auto. `selection.colorScheme` independently
-selects preview documents, so either preview scheme can sit inside either
-interface appearance. Changing `theme` updates only the root and preserves
-frame sessions, selection, temporary props, inspection and host slots.
-Standalone Browse instead renders one Appearance selector that controls both
-values under the [appearance contract](./mokly-viewer-appearance.md).
+selects the preview colour scheme that the
+[appearance contract](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes)
+defines, so either preview scheme can sit inside either interface appearance.
+Changing `theme` updates only the root and preserves frame sessions,
+selection, temporary props, inspection and host slots. Standalone Browse
+instead renders one Appearance selector, and the
+[standalone appearance control](./mokly-viewer-appearance-standalone.md#choosing-a-value)
+defines what a choice changes.
 
 Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
 ownership follow the [shell design](./mokly-shell-design.md) and
@@ -162,7 +168,7 @@ ownership follow the [shell design](./mokly-shell-design.md) and
 
 Every rule of `styles.css` comes from the
 [shared UI package](./mokly-ui-package.md#stylesheets), apart from the
-`@font-face` rule of the shell font. The rules are unlayered, so a host rule
+`@font-face` rules of the shell fonts. The rules are unlayered, so a host rule
 competes with them by specificity and order. Decision: unlayered rules, not a
 cascade layer, because a host reset or a host layer declared later would
 otherwise restyle the package components, and one cascade then serves hosts,

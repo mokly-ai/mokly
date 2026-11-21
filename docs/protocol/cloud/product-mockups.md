@@ -1,7 +1,7 @@
 # Product Mockup Inventory
 
 This inventory owns state coverage and flow membership for the product
-screens, which are authored in Folio per [Design tokens](./design-tokens.md).
+screens, whose values come from [Design tokens](./design-tokens.md).
 The viewer is the application: the product has no project or workspace
 page, the Workspace settings are panes of the
 [settings dialog](./settings-dialog.md), and the Viewer family draws its ready
@@ -99,9 +99,10 @@ diverging fails the suite until it is removed.
 
 Sign-in and sign-up are product screens under `product/account/`, paths
 `product/account/sign-in` and `product/account/sign-up`, each with the three state children.
-They keep the Folio treatment, and the wordmark, Terms and Privacy are external
-`href`s derived from the one site-origin fixture (see
-[Marketing site](./marketing-site.md)), not `MockLink` catalogue destinations.
+They draw the [account entry](./folio-chrome-account.md), and the wordmark,
+Terms and Privacy are external `href`s derived from the one site-origin
+fixture (see [Marketing site](./marketing-site.md)), not `MockLink` catalogue
+destinations.
 That fixture also places the site mockups' sign-in and sign-up destinations at
 `/sign-in` and `/sign-up` beneath the same origin.
 

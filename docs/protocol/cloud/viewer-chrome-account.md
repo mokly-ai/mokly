@@ -35,8 +35,11 @@ The `account` trigger opens the account menu. Its rows, from the top:
 
 Who is signed in and Theme head the menu. Settings and Sign out are its items,
 and choosing one closes the menu before the dialog opens or the session ends.
-Theme is a choice, not an item: choosing Light or Dark applies the scheme and
-keeps the menu open, so the reader sees the result and can change it back.
+When Sign out fails, the
+[settings dialog](./settings-dialog.md#sections-and-panes) opens on the
+Account pane, which shows the failure. Theme is a choice, not an item:
+choosing Light or Dark applies the scheme and keeps the menu open, so the
+reader sees the result and can change it back.
 
 ## Theme
 

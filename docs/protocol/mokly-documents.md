@@ -86,8 +86,9 @@ catalogue has a dark axis, the shell names that fallback with the
 `design/browse/appearance/states/light-only-current` design shows, and after
 `Showing previous version` for a removed one, as the
 `design/browse/appearance/states/light-only-document` design shows. The
-shell opens the document for the current appearance exactly as it selects a
-screen's scheme, and documents have no viewport axis. Documents pass the same
+shell opens the document in the preview colour scheme that the
+[appearance contract](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes)
+defines, and documents have no viewport axis. Documents pass the same
 link rewriting and final validation as pages, then the independent element,
 attribute and URL allowlist of
 [Document Rendering Safety](./mokly-document-safety.md), which rejects active

@@ -160,6 +160,27 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   - 27: Milestone 5 removes the mockups build from the site's checks and
     deployment, with the stage.
 
+- Calls on Milestones 7 and 16, 2026-11-21:
+  - Sample fence: each sample renders while the Markdown renders, through a
+    plain `mokly build --no-changes`. Each view is a `srcdoc` frame with
+    `sandbox="allow-same-origin"` and no script, so the sample island can
+    read its elements. Views drop Mokly's own viewer scripts. Only installed
+    package guides render samples.
+  - A variant set has a Mobile toggle in its Frames filter, off by default,
+    with the change dot when a hidden mobile view changed.
+  - Selecting a variant navigates to its path. The address and the right
+    panel then describe that variant; with no frame selected they describe
+    the parent.
+  - A component with saved variants starts its set with a row for its own
+    example.
+  - A variant set reads each shown variant's entry detail, as use-case steps
+    do.
+  - The host `sidePanel` stays a column at the right edge below the top bar,
+    in both layouts.
+  - Each compared frame's outcome is a line in the Changes tab's comparison
+    details.
+  - The Changes tab's host slot is `changesStart`.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),

@@ -25,9 +25,11 @@ scheme, and the compact layout below the layout breakpoint.
 - The stage is the part of the canvas between the floating panels and above
   the zoom pill. Fit and centring use the stage. Panning can move a frame under
   a panel.
-- The zoom pill floats at the bottom centre of the stage, 12px above the
-  canvas's bottom edge. It is a group named `Zoom` that holds Zoom out, the
-  zoom as a whole percentage, Zoom in, and Fit.
+- While an entry is selected, the zoom pill floats at the bottom centre of the
+  stage, 12px above the canvas's bottom edge. It is a group named `Zoom` that
+  holds Zoom out, the zoom as a whole percentage, Zoom in, and Fit. With
+  nothing selected, the canvas has no zoom pill, because it holds no section
+  to zoom or fit.
 - The panels, the zoom pill, the section head, and the frames' labels and size
   tags keep their size at every zoom.
 
