@@ -11,7 +11,8 @@ const globals = [
   "Math",
 ];
 const builtins = ["Math.min", "Math.max", "Array.isArray"];
-export const probePrivateProperties = /^__(?:list|scroll|keys|node|index)$/;
+export const probePrivateProperties =
+  /^__(?:list|scroll|boxModel|highlight|subscribe|dispose|keys)$/;
 
 /** Pool repeated names as ordinary constants, preserving property names and receivers. */
 export function probePool(code) {

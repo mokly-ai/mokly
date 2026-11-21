@@ -9,12 +9,15 @@ status, the summary and the other milestones.
 
 Depends on: 2
 
-- [ ] Report each instance's padding, border and content size from the frame
-      probe, in the wire format of the frame probe docs.
-- [ ] Expose the sizes to the viewer selection, with unit tests.
-- [ ] Bump the frame wire version to 4 in `mokly-format-versions.md` and
+- [x] Report each instance's padding, border and content size from the frame
+      probe, in the wire format of the frame probe docs. Branch:
+      `calummoore/canvas-redesign-m10-frame-probe-box-q3gr`.
+- [x] Expose the sizes to the viewer selection, with unit tests. Branch:
+      `calummoore/canvas-redesign-m10-frame-probe-box-q3gr`.
+- [x] Bump the frame wire version to 4 in `mokly-format-versions.md` and
       `cloud/mokly-artifact-compatibility.md`. Keep the probe script inside
-      its size budget.
+      its size budget. Branch:
+      `calummoore/canvas-redesign-m10-frame-probe-box-q3gr`.
 
 ## Milestone 11: Canvas stage in `@mokly/ui`
 

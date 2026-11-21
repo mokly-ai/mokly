@@ -1,6 +1,12 @@
 import type { Box } from "../frame_adapter.js";
 
-import { clipNode, edges, viewport, type Edges } from "./clipping.js";
+import {
+  boundedPixel,
+  clipNode,
+  edges,
+  viewport,
+  type Edges,
+} from "./clipping.js";
 const intersect = (a: Edges, b: Edges): Edges =>
   a.map((value, axis) =>
     (axis < 2 ? Math.max : Math.min)(value, b[axis]!),
@@ -9,7 +15,7 @@ const visible = (box: Edges) => box[2] > box[0] && box[3] > box[1];
 /** Read actual element/text rectangles, clipping each node's own ancestors. */
 export const geometry = (doc: Document) => {
   const frame = viewport(doc);
-  if (!frame.every((value) => value >= 0 && value <= 1000000)) throw "limit";
+  frame.forEach((value) => boundedPixel(value));
   const candidates = [...doc.querySelectorAll("body *")].map(
     (node) => [node, node.getClientRects()] as const,
   );

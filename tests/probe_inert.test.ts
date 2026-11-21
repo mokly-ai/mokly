@@ -171,7 +171,7 @@ test("before a valid handshake only the bounded message listener exists", () => 
     encodeMessage(nonce, { type: "list", requestId: 1 }),
     JSON.stringify({
       channel: "mokly-frame-probe",
-      version: 3,
+      version: 4,
       nonce,
       type: "hello",
       extra: true,
@@ -266,19 +266,34 @@ test("wire errors retain request ids and consume them before a later request", (
     }),
   );
   assert.equal(fixture.activate(0), true);
+  fixture.send(
+    encodeMessage(nonce, {
+      type: "measure",
+      requestId: 3,
+      key: "f".repeat(64),
+    }),
+  );
   const replies = fixture.messages.map(({ data }) => JSON.parse(data));
   assert.deepEqual(
     replies.map((message) => message.type),
-    ["ready", "error", "ack", "navigation"],
+    ["ready", "error", "ack", "navigation", "error"],
   );
   assert.deepEqual(replies[1], {
     channel: "mokly-frame-probe",
-    version: 3,
+    version: 4,
     nonce,
     type: "error",
     requestId: 1,
     code: "missing-instance",
   });
   assert.equal(replies[2].requestId, 2);
+  assert.deepEqual(replies[4], {
+    channel: "mokly-frame-probe",
+    version: 4,
+    nonce,
+    type: "error",
+    requestId: 3,
+    code: "missing-instance",
+  });
   fixture.send(encodeMessage(nonce, { type: "dispose" }));
 });

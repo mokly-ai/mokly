@@ -194,6 +194,7 @@ export const probeRuntime = (
         active = mode !== "off";
       }),
     __scroll: (key: string) => run(() => reader.__scroll(key)),
+    __boxModel: reader.__boxModel,
     __subscribe: (subscribed: readonly ProbeSubscription[]) => {
       events = subscribed;
     },

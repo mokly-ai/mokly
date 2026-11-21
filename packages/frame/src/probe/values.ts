@@ -14,7 +14,7 @@ import type {
  * measures every incoming string in UTF-8 bytes.
  */
 export const BYTE_LIMIT = 262144;
-const KEY = /^[a-f0-9]{64}$/;
+const KEY = /^[a-f\d]{64}$/;
 const RANGE = /^r-\d+$/;
 export const EVENTS = [
   "hover",
@@ -26,14 +26,14 @@ export const EVENTS = [
 export type ProbeEventType = (typeof EVENTS)[number];
 export type JsonObject = Record<string, unknown>;
 export const object = (value: unknown): value is JsonObject =>
-  value !== null &&
+  !!value &&
   typeof value === "object" &&
   !Array.isArray(value) &&
   Object.getPrototypeOf(value) === Object.prototype;
 /** Known fields are validated individually; an exact count rejects every extra. */
 export const shape = (value: JsonObject, count: number): boolean =>
   Object.keys(value).length === count;
-const textMatch = (
+export const textMatch = (
   value: unknown,
   pattern: RegExp,
   max: number,
@@ -68,15 +68,14 @@ export const boxes = (value: unknown): value is Box[] => {
 const target = (value: unknown): value is NavigationTarget =>
   object(value) &&
   (value.kind === "named"
-    ? shape(value, 2) &&
-      textMatch(value.name, /^[A-Za-z0-9][A-Za-z0-9._:-]*$/, 256)
+    ? shape(value, 2) && textMatch(value.name, /^[A-Za-z\d][\w.:-]*$/, 256)
     : shape(value, 1) &&
       ["self", "top", "parent", "blank"].includes(value.kind as string));
 export const identity = (value: JsonObject): boolean =>
   isEntryPath(value.screenPath) &&
   value.screenPath.length <= 256 &&
   (!Object.hasOwn(value, "fragment") ||
-    textMatch(value.fragment, /^[A-Za-z][A-Za-z0-9_:.-]*$/, 256)) &&
+    textMatch(value.fragment, /^[A-Za-z][\w:.-]*$/, 256)) &&
   target(value.target);
 export const navigation = (value: unknown): value is FrameNavigation =>
   object(value) &&
@@ -97,9 +96,9 @@ export const boundedJson = (value: unknown): unknown => {
   }
 };
 export const origin = (value: unknown): value is string => {
-  if (typeof value !== "string" || value.length > 2048) return false;
+  if (!textMatch(value, /^https?:/, 2048)) return false;
   try {
-    return /^https?:/.test(value) && new URL(value).origin === value;
+    return new URL(value).origin === value;
   } catch {
     return false;
   }

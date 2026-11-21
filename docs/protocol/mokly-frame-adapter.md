@@ -1,7 +1,5 @@
 # Viewer Frame Adapter
 
-Status: The `boxModel` method, its types and its measurement are not built yet. The [frame probe box model milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-10-frame-probe-box-model) builds them.
-
 ## Public Interface
 
 The [frame package](./mokly-frame-package.md) defines these types and the

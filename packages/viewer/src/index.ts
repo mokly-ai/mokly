@@ -1,12 +1,14 @@
 export type * from "./catalogue/types.js";
 export type {
   Box,
+  BoxSides,
   FrameAdapter,
   FrameErrorCode,
   FrameEvent,
   FrameMount,
   FrameNavigation,
   InstanceBoundary,
+  InstanceBoxModel,
   MountedFrame,
   NavigationTarget,
 } from "@mokly/frame";

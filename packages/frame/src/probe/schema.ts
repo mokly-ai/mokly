@@ -1,6 +1,7 @@
 import type {
   FrameNavigation,
   InstanceBoundary,
+  InstanceBoxModel,
   Box,
 } from "../frame_adapter.js";
 
@@ -14,6 +15,7 @@ import {
   rangeId,
   requestId,
   unique,
+  textMatch,
   EVENTS,
   type ProbeEventType,
 } from "./values.js";
@@ -48,9 +50,14 @@ export type MessageBody =
       mode: "off" | "highlight" | "pick";
     }
   | {
-      type: "scroll-to";
+      type: "scroll-to" | "measure";
       requestId: number;
       key: string;
+    }
+  | {
+      type: "box-model";
+      requestId: number;
+      boxModel: InstanceBoxModel | null;
     }
   | {
       type: "subscribe";
@@ -81,11 +88,18 @@ export type MessageBody =
       code: ProbeError;
     };
 export type HostMessage = Message & {
-  type: "hello" | "dispose" | "list" | "highlight" | "scroll-to" | "subscribe";
+  type:
+    | "hello"
+    | "dispose"
+    | "list"
+    | "highlight"
+    | "scroll-to"
+    | "measure"
+    | "subscribe";
 };
 export type Message = MessageBody & {
   channel: "mokly-frame-probe";
-  version: 3;
+  version: 4;
   nonce: string;
 };
 export const envelope = (
@@ -94,9 +108,8 @@ export const envelope = (
 ): value is Record<string, unknown> =>
   object(value) &&
   value.channel === "mokly-frame-probe" &&
-  value.version === 3 &&
-  typeof value.nonce === "string" &&
-  /^[a-f0-9]{32}$/.test(value.nonce) &&
+  value.version === 4 &&
+  textMatch(value.nonce, /^[a-f\d]{32}$/, 32) &&
   (nonce === undefined || value.nonce === nonce);
 const validBoundaries = (value: unknown): value is InstanceBoundary[] => {
   if (!array(value, 1024)) return false;
@@ -130,6 +143,20 @@ const validBoundaries = (value: unknown): value is InstanceBoundary[] => {
     });
   });
 };
+const validSides = (value: unknown): boolean =>
+  object(value) &&
+  shape(value, 4) &&
+  ["top", "right", "bottom", "left"].every((side) => {
+    const number = value[side];
+    return typeof number === "number" && number >= 0 && number <= 1000000;
+  });
+const validBoxModel = (value: unknown): boolean =>
+  value === null ||
+  (object(value) &&
+    shape(value, 3) &&
+    boxes([value.box]) &&
+    validSides(value.border) &&
+    validSides(value.padding));
 const messageFields = (
   value: Record<string, unknown>,
   count: number,
@@ -142,33 +169,27 @@ export const validHostMessage = (
   nonce?: string,
 ): value is HostMessage => {
   if (!envelope(value, nonce)) return false;
-  if (value.type === "hello" || value.type === "dispose")
-    return shape(value, 4);
+  const { type } = value;
+  if (type === "hello" || type === "dispose") return shape(value, 4);
   if (!requestId(value.requestId)) return false;
-  switch (value.type) {
-    case "list":
-      return shape(value, 5);
-    case "highlight":
-      return (
-        shape(value, 7) &&
-        array(value.keys, 1024) &&
-        value.keys.every(key) &&
-        unique(value.keys) &&
-        ["off", "highlight", "pick"].includes(value.mode as string) &&
-        (value.mode !== "off" || value.keys.length === 0)
-      );
-    case "scroll-to":
-      return shape(value, 6) && key(value.key);
-    case "subscribe":
-      return (
-        shape(value, 6) &&
-        array(value.events, 5) &&
-        unique(value.events) &&
-        value.events.every((event) => EVENTS.includes(event as ProbeEventType))
-      );
-    default:
-      return false;
-  }
+  if (type === "list") return shape(value, 5);
+  if (type === "highlight")
+    return (
+      shape(value, 7) &&
+      array(value.keys, 1024) &&
+      value.keys.every(key) &&
+      unique(value.keys) &&
+      ["off", "highlight", "pick"].includes(value.mode as string) &&
+      (value.mode !== "off" || value.keys.length === 0)
+    );
+  if (!shape(value, 6)) return false;
+  if (type === "scroll-to" || type === "measure") return key(value.key);
+  return (
+    type === "subscribe" &&
+    array(value.events, 5) &&
+    unique(value.events) &&
+    value.events.every((event) => EVENTS.includes(event as ProbeEventType))
+  );
 };
 const validFrameMessage = (
   value: unknown,
@@ -183,6 +204,8 @@ const validFrameMessage = (
       return messageFields(value, 0, true);
     case "boundaries":
       return messageFields(value, 1, true) && validBoundaries(value.boundaries);
+    case "box-model":
+      return messageFields(value, 1, true) && validBoxModel(value.boxModel);
     case "hover":
     case "click":
       return (
@@ -220,7 +243,7 @@ export const validMessage = (
 export const encodeMessage = (nonce: string, body: MessageBody): string =>
   JSON.stringify({
     channel: "mokly-frame-probe",
-    version: 3,
+    version: 4,
     nonce,
     ...body,
   });

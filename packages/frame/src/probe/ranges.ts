@@ -12,10 +12,7 @@ export const documentRanges = (
 ): Range[] => {
   if (metadata.error) throw metadata.error;
   const walker = doc.createTreeWalker(doc, 128),
-    stack: {
-      __index: number;
-      __node: Node;
-    }[] = [],
+    stack: number[] = [],
     ranges: Range[] = [],
     root = metadata.ranges[0]?.join() === "," ? 0 : null;
   let next = 0,
@@ -33,18 +30,17 @@ export const documentRanges = (
     if (match[2] === "start") {
       if (
         id !== next++ ||
-        record[1] !== (stack.at(-1)?.__index ?? root) ||
+        record[1] !== (stack.at(-1) ?? root) ||
         (key && !match[4]!.includes(` instance="${key}"`))
       )
         throw "invalid-boundary";
-      stack.push({ __index: id, __node: node });
-    } else {
-      const start = stack.pop();
-      if (match[4] || start?.__index !== id) throw "invalid-boundary";
       const range = doc.createRange();
-      range.setStartAfter(start.__node);
-      range.setEndBefore(node);
+      range.setStartAfter(node);
       ranges[id] = range;
+      stack.push(id);
+    } else {
+      if (match[4] || stack.pop() !== id) throw "invalid-boundary";
+      ranges[id]!.setEndBefore(node);
     }
   }
   if (stack.length || next !== metadata.ranges.length) throw "invalid-boundary";
