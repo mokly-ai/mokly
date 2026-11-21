@@ -1,9 +1,9 @@
 /* The depicted acme/storefront app: its palette, type and shared parts.
    The coffee shop keeps its own warm palette in both page schemes, so that
    it reads as another company's product: cream, espresso, saffron,
-   terracotta, plum and sage. Each colour mixes the scheme-steady white and
-   near-black roles with the people roles, which lighten a little in the
-   dark scheme, so the app shifts only slightly. Each hue is written once,
+   terracotta, plum and sage. Each colour is a single mix of two people or
+   signal roles, which lighten a little in the dark scheme, so the app
+   shifts only slightly. Each hue is written once,
    for every part that takes it; a part fills from currentColor, and the
    label nested in it takes its own text colour. The serif titles, logo and
    prices use Instrument Serif, which fonts/instrument-serif.css hosts for
