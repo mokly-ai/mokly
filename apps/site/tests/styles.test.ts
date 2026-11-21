@@ -47,9 +47,10 @@ function mixes(source: string): string[] {
 }
 
 /**
- * The composition switches: the 768px breakpoint every page shares, and the
- * width at which the documentation hangs its on-this-page rail, both fixed by
- * docs/protocol/cloud/site-design.md.
+ * The widths that a site sheet's width query may start with: the 768px
+ * breakpoint every page shares, fixed by docs/protocol/cloud/site-design.md,
+ * and 1100px, which no sheet uses now. A desktop step narrows a 768px query
+ * with a `max-width` condition, as the header and the docs steps do.
  */
 const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
 

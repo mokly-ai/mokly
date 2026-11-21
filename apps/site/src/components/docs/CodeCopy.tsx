@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { ICONS } from "../icons.js";
+import { CanvasIcon } from "./CanvasIcon.js";
 
 const SLOT = ".site-code-copy-slot";
 
@@ -40,19 +40,7 @@ function Copy({ panel }: { readonly panel: HTMLElement }) {
       onClick={() => void write()}
       type="button"
     >
-      <svg
-        aria-hidden="true"
-        dangerouslySetInnerHTML={{ __html: ICONS.copy }}
-        fill="none"
-        focusable="false"
-        height={14}
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        viewBox="0 0 16 16"
-        width={14}
-      />
+      <CanvasIcon name="copy" size={14} />
       <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
     </button>
   );

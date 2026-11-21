@@ -164,6 +164,16 @@
   scroll-margin-top: 76px;
 }
 
+/* A code panel keeps 8px more air than the section gap above and below it,
+   and on mobile it reaches 6px into the sheet's margins, as the mockup
+   draws the panels of a section */
+
+.site-docs-frame .site-document-body > .site-code {
+  margin-block: 8px;
+  margin-inline: -6px;
+  width: auto;
+}
+
 /* The desktop composition: the wide sheet margins, the larger title and
    lead, and the index hung in the margin, where only the section in view
    takes the signal ink */
@@ -219,6 +229,11 @@
   .site-docs-frame .site-document-body > h3 {
     font-size: 1.25rem;
     scroll-margin-top: 28px;
+  }
+
+  .site-docs-frame .site-document-body > .site-code {
+    margin-inline: 0;
+    width: 100%;
   }
 }
 
