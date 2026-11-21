@@ -275,3 +275,13 @@ branch. A newer audited merge superseded the commit before a rerun. This
 occurrence used no Lighthouse rerun. The user permits at most one rerun and
 classifies this known Site Lighthouse failure separately from Required CI.
 The item keeps its existing decision, options, recommendation, and cause limits.
+
+On commit `487601e1e227982c3cfe6dd78c984ace2f58e8b0` of the same PR,
+[CI run 44918955595](https://github.com/mokly-ai/mokly/actions/runs/44918955595),
+[Site Lighthouse job 136890551428](https://github.com/mokly-ai/mokly/actions/runs/44918955595/job/136890551428)
+failed with the same home-page score and threshold text above.
+GitHub refused an early job rerun request while the workflow was active.
+No rerun started. The performance orchestrator then instructed no rerun on
+2026-11-21, because this known failure is unrelated and is outside Required CI.
+The PR records the failure. No site, threshold, test, or gate changed for it.
+This occurrence changes no option, recommendation, or pending decision of this item.

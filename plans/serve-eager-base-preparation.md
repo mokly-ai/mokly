@@ -464,17 +464,19 @@ Depends on: 3. The step 1 merge signal arrived on 2026-11-21. The pull request w
 - [ ] Diagnose the combined PostCSS first-edit and two-sidecar memory regressions before marking the pull request ready.
 - [x] Compare the pre-PostCSS feature `10a28ba3b` with main `beb87a53a` on basic, using two sidecars, the equal-lockfile base, and ten edits.
 - [ ] Prove which eager owners, base contexts, and sidecar work remain after classification, then fix the cause or obtain approval for a measured bound.
-- [ ] Apply approved decision 4B with red tests and aligned protocol text, then send its targeted-green SHA for basic at two and four sidecars and for cloud.
+- [x] Apply approved decision 4B with red tests and aligned protocol text, then send its targeted-green SHA for basic at two and four sidecars and for cloud.
 - [x] Trace the surviving startup compiler's ordinary owners, last-render protection, and RSS. Record the performance orchestrator's acceptance of no eager-owner release and no process-count test.
 - [ ] Receive the performance orchestrator's new combined speed, edit, and two-percent memory acceptance for the next runtime SHA.
+- [ ] Trace the remaining four-sidecar PostCSS peak, choose its next bound with the performance orchestrator, and implement that choice with aligned protocol text and red tests.
 - [ ] Run the complete gate from `AGENTS.md`, one heavy job at a time.
 - [x] Commit with Conventional Commits and push the workspace branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
-- [ ] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
+- [x] Run fresh finding checks, apply the fix rounds, and record each result and follow-up.
+- [x] Resolve the fresh reservation-handoff test finding after its independent check, with a behavior-red proof and unchanged production source.
 - [x] After the step 1 merge signal, merge `origin/main` once and audit its additions.
 - [x] Rerun the targeted tests and repository suite after the main integration.
 - [ ] Delete this plan when the `plans` skill permits it.
-- [ ] Mark PR #461 ready after the gate and review pass, with the dated design calls and plan permalink. Await final CI with `scripts/ci-wait.sh` after each push and readiness. Rerun unrelated Site Lighthouse at most once and record it separately from Required CI. Report the PR link, tested SHA, acceptance, checks, and remaining items. Do not merge.
+- [ ] Mark PR #461 ready after the gate and review pass, with the dated design calls and plan permalink. Await final CI with `scripts/ci-wait.sh` after each push and readiness. Do not rerun Site Lighthouse, as the performance orchestrator instructed on 2026-11-21. Record its known failure as unrelated and separate from Required CI. Report the PR link, tested SHA, acceptance, checks, and remaining items. Do not merge.
 
 Evidence: `.context/eager-base-preparation/main-integration-merge-audit.log` and `main-integration-preservation.md` record the main integration and preservation check.
 Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/desktop-main-integration/` records preservation of the later desktop release merge. Its sibling `browser-git-exit/browser-7f4220e7a-summary.json` records the full Browser pass and zero exits of the shared process chain. The existing Example teardown follow-up keeps the earlier failure and its unknown cause.
@@ -559,3 +561,13 @@ The performance orchestrator therefore requested no release and no process-count
 The pull request body must include the owners, render order, and RSS at readiness, first Changes, and the first edit.
 
 Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/small-pool-bound/startup-compiler-trace.md` records the audit and its limits. The W224 handoff retains the four frozen release builds, per-process snapshots, and all paired sessions.
+
+The performance orchestrator completed the combined check of `487601e1e` on 2026-11-21.
+B passed basic with two sidecars and the cloud catalogue with four.
+Basic with four sidecars still exceeded the cold memory bound, while its edit cost met the control bounds.
+The pull request therefore stays draft.
+The next investigation checks the peak of a four-sidecar PostCSS catalogue and compares bounds that retain the cloud gain.
+No PostCSS-specific bound is chosen yet.
+The reserved-claim review fix adds only a regression test and keeps all production Rust bytes unchanged.
+
+Evidence: `.context/eager-base-preparation/cold-overlap-check/diagnostic/small-pool-bound/verification.md` records the targeted checks. The W224 four-sidecar trace and the next source options report are separate from its earlier two-sidecar samples.

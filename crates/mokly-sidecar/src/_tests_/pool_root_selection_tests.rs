@@ -181,6 +181,36 @@ fn eager_claim_is_single_and_shares_the_call_budget() {
 }
 
 #[test]
+fn an_eager_claim_hands_its_existing_base_slot_to_the_request() {
+    let (pool, events) = pool(3);
+    request(&pool, "/head", 0);
+    request(&pool, "/base", 0);
+    let call = eager_call("/base");
+    assert!(
+        !pool
+            .lock()
+            .affinity
+            .contains_key(call.postcss_context().unwrap())
+    );
+    let result = {
+        let claim = pool.try_eager_claim(&call).unwrap().unwrap();
+        pool.request_claimed(call, &claim).unwrap()
+    };
+    let retained = {
+        let state = pool.lock();
+        (state.allocated(), state.claims.len(), state.eager.len())
+    };
+    let observed = events.lock().unwrap().clone();
+    pool.abort().unwrap();
+    assert!(matches!(result, MethodResult::Empty));
+    assert_eq!(
+        observed,
+        [Event::Spawn("/head".into()), Event::Spawn("/base".into())]
+    );
+    assert_eq!(retained, (2, 0, 0));
+}
+
+#[test]
 fn a_newer_matching_worker_wins_over_the_oldest_idle_other_root() {
     let (pool, events) = pool(2);
     request(&pool, "/head", 0);

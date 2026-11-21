@@ -12,7 +12,7 @@
   `crates/mokly-server/src/changes_background.rs:34` to line 41,
   `crates/mokly-cli/src/serve_eager_admission.rs:42` to line 48,
   `crates/mokly-cli/src/serve_gate.rs:102` to line 160,
-  `crates/mokly-cli/src/serve_pool.rs:156` to line 168,
+  `crates/mokly-cli/src/serve_pool.rs:166` to line 178,
   `crates/mokly-sidecar/src/pool_eager.rs:11` to line 62, and the Admission
   section of `docs/protocol/mokly-eager-base-preparation.md`.
 - **Reason:** On 2026-11-21 the owner accepted the Ready-only policy and gave
