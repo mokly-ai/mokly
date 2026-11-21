@@ -324,7 +324,7 @@ Main merge of 2026-11-20 with main `e69db4ce8` (#448): `main448-code-merge-repor
 - [x] Record E in the plan protocol, A and D in the sidecar README, and B as a measured follow-up. Move the pointers that the 2026-11-20 merge left stale.
 - [x] Run the targeted candidate, attachment, limit, export, package-folder, and saved-plan Node tests. Run each new asynchronous test ten times.
 - [x] Run the Rust plan tests of `mokly-render`, `mokly-sidecar`, and `mokly-compare`.
-- [ ] Rerun the targeted plan tests and `cargo xtask check --suite repository` on the merge of main `e69db4ce8`.
+- [x] Rerun the targeted plan tests and `cargo xtask check --suite repository` on the merge of main `e69db4ce8`.
 - [ ] Commit and push implementation. Send its SHA, dist source commit, and cache inspection command to the performance orchestrator at once.
 - [ ] Obtain its instrumented head and base size check and one normal and one editor-file edit pair on mokly-cloud, against main `e69db4ce8`. Audit rejected real manifests. Apply the margins of decision 4 and resolve failed conditions with it.
 - [ ] Run the complete `cargo xtask check`.

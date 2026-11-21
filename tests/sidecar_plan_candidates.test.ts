@@ -8,6 +8,7 @@ import type { BundleResult } from "../packages/mokly/src/generated/sidecar/Bundl
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { PlanCandidates } from "../packages/mokly/src/sidecar/plan-candidates.js";
 
+import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
   countedCompile,
   fingerprint,
@@ -216,6 +217,7 @@ test("matching absolute paths mappings keep whole comparisons when target proven
 });
 
 test("candidate retention overflow keeps the bare plan and its exact edit result", async (context) => {
+  matureMetadata(context);
   const root = await nativeRoot(context);
   await write(
     path.join(root, "entry.mjs"),
