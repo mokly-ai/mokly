@@ -41,7 +41,7 @@ Evidence: `.context/sidecar-bundle-tail/profile-split.json` and the candidate JS
   - **D.** The same three cuts as B, with shared encoding only for a newly compiled recipe. Publish its texts after the final identity step. If that step changes identity, use normal encoding. Reuse keeps its current count. One encoder owns the replacements. Effort: Medium.
 - **Left out:** Unsorted `JSON.stringify` changes frame bytes and negative zero. Compression and smaller answers change frame bytes. Moving encoding to a worker still delays its response and adds memory. Proof and callback changes are outside the user's scope.
 - **Wider fix:** D. It publishes shared text only after the last change and keeps one encoding rule.
-- **Previous examples:** [Bundle response single encoding](./follow-ups/bundle-response-single-encoding.md) recommends shared member text. [Boot and encoding](./follow-ups/sidecar-boot-and-encoding.md) requires negative zero. [Closed import-proof work](./follow-ups/serve-postcompile-import-proof-cost.md) excludes another proof experiment.
+- **Previous examples:** [Bundle response single encoding](./follow-ups/bundle-response-single-encoding.md) recommends shared member text. [Boot work](./follow-ups/sidecar-boot-and-encoding.md) keeps the separate Babel start work deferred. [Closed import-proof work](./follow-ups/serve-postcompile-import-proof-cost.md) excludes another proof experiment.
 - **Recommendation:** D, changed from B after the fresh options check. It applies the same approved cuts and avoids identity refresh logic.
 - **Action:** Design call by the workspace orchestrator on 2026-11-21. Apply D as the ownership of the user-approved cuts. It changes no requirement or reuse rule. No further user decision is needed.
 
@@ -74,6 +74,14 @@ Measured ranking uses isolated warm rounds on the same recorded cloud result. Th
 
 Protected areas: `PlannedRelative.verify` and its proof helpers, compile callbacks, PR #449 reuse checks, `session.ts`, the reuse branch of `bundleResult`, the core pool, and sidecar protocol documents.
 
+### Verification and scheduling calls
+
+On 2026-11-21, the parent approved fixed toolchain identity and entropy before sidecar code for the raw-frame proof. Keep unmodified captures. Check every other field. Compare controlled raw response lines with zero substitutions.
+
+On 2026-11-21, the parent authorized a partial gate continuation after a missing browser binary stopped cloud app setup. Keep the passing suites on the same source. Install the pinned browser, rerun the failed cloud app suite, and run the remaining suites. Record the setup failure and this continuation in the pull request.
+
+The parent also authorized an immediate final-source commit and push before local proofs and timings. This supersedes the earlier before-SHA measurement order. The parent will queue its official check while this workspace completes the remaining checks. Send a new SHA after any later code change.
+
 ## Milestone 1: Confirm existing contracts
 
 Depends on: none
@@ -91,18 +99,21 @@ Evidence: `.context/sidecar-bundle-tail/options-check.md`. The check added D. Th
 
 Depends on: 1
 
-- [ ] Add differential encoder cases against the original encoder. Cover generated values, negative zero, holes, undefined, UTF-16 keys, getters, and long strings.
-- [ ] Capture bundle results for the fixture proof. Record that the HTML fixture starts no sidecar.
-- [ ] Add a fixed-result frame and exact-limit rejection test. Cover evidence pruning and the final frame after late identity changes. Keep the whole-compiled-text count used by existing limit tests. Show each new requirement test fail on an assertion first.
-- [ ] Add a cache-lifetime case with changed inputs between two compiles. Use one metafile with two roots. Assert physical paths. Show that a persistent-cache mutant fails.
-- [ ] Implement the faster encoder and one shared recipe encoding.
-- [ ] Implement the call-local graph conversion cache.
-- [ ] Run targeted tests, type checks, and lint. Record test costs and required repeated asynchronous runs.
+- [x] Add differential encoder cases against the original encoder. Cover generated values, negative zero, holes, undefined, UTF-16 keys, getters, and long strings.
+- [x] Capture bundle results for the fixture proof. Record that the HTML fixture starts no sidecar.
+- [x] Add a fixed-result frame and exact-limit rejection test. Cover evidence pruning and the final frame after late identity changes. Keep the whole-compiled-text count used by existing limit tests. Show each new requirement test fail on an assertion first.
+- [x] Add a cache-lifetime case with changed inputs between two compiles. Use one metafile with two roots. Assert physical paths. Show that a persistent-cache mutant fails.
+- [x] Implement the faster encoder and one shared recipe encoding.
+- [x] Implement the call-local graph conversion cache.
+- [x] Run targeted tests, type checks, and lint. Record test costs and required repeated asynchronous runs.
+
+Evidence: `.context/sidecar-bundle-tail/implementation-report.md` and `orchestrator-focused.log`. The orchestrator inspected the full code and tests. It reran36focused tests after two small typing and response-snapshot edits.
 
 ## Milestone 3: Acceptance evidence and publication
 
 Depends on: 2
 
+- [x] Align the sidecar README and the remaining boot and reuse-encoding follow-up work.
 - [ ] Run the repository suite and complete gate from `AGENTS.md`. Check disk and memory before each large Cargo build. Keep one heavy job at a time.
 - [ ] Compare local warm edits and one cold start against `main` on the pinned cloud fixture. Check basic.
 - [ ] Ask the parent for workspace 206's byte-proof helper.
