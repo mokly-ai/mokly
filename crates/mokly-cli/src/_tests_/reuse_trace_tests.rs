@@ -23,6 +23,12 @@ fn comparison_reuse_reports_actual_work_charge_and_revalidation_duration() {
             candidate_views = 3u64,
             candidate_bytes = 2048u64,
             accepted_bytes = 1024u64,
+            validation_fact_bytes = 102u64,
+            validation_fact_peak_bytes = 202u64,
+            comparison_kept_bytes = 2048u64,
+            validation_reused = 4u64,
+            validation_walks = 1u64,
+            validation_documents = 5u64,
             overflowed = true
         );
         let _scope = span.enter();
@@ -50,4 +56,10 @@ fn comparison_reuse_reports_actual_work_charge_and_revalidation_duration() {
     assert_eq!(result["candidateBytes"], 2048);
     assert_eq!(result["acceptedBytes"], 1024);
     assert_eq!(result["overflowed"], true);
+    assert_eq!(result["validationFactBytes"], 102);
+    assert_eq!(result["validationFactPeakBytes"], 202);
+    assert_eq!(result["comparisonKeptBytes"], 2048);
+    assert_eq!(result["validationReused"], 4);
+    assert_eq!(result["validationWalks"], 1);
+    assert_eq!(result["validationDocuments"], 5);
 }

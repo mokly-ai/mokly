@@ -262,8 +262,10 @@ parsed CSS cache counts do not depend on the worker count.
 `dyn ReuseAttempt`. `Changes` calls the attempt as its `dyn Comparison`.
 Without a fence, the attempt reuses and keeps nothing. Admission finds the
 kept view of each route. The worker of that view then checks its read set
-before preparation, through `comparison_identity` and the head's
-`comparison_document_proof`, with no base source read. A proven view skips
+before preparation, through `comparison_identity` and the checked head
+document proof, with no base source read. Complete head validation supplies
+that proof when it read the document, and `comparison_document_proof`
+supplies it otherwise. A proven view skips
 preparation and takes its current head usage from that proof. The ordered
 pass adds its shared evidence, its warnings, and the current usage of both
 sides. Call
@@ -462,6 +464,19 @@ development dependencies, and no test uses the internet.
   `ReuseWork`, the bounded view comparison reuse of Serve. The private
   `reuse_*.rs` modules record proof reads, charge the bound, and collect the
   candidate.
+- [`src/validation_head.rs`](./src/validation_head.rs) defines the private
+  `Head`, the `HeadValidation` of one Serve reuse attempt. `Engine` passes it
+  to `RenderGeneration::validate_head` before pairing, and it calls
+  `render_all` when it has no reuse collection. `Head` reads each checked head
+  document once and keeps that proof, with current usage, for the view stream.
+  It reuses the closure facts of a head route only when the document key, the
+  policy identity, and every recorded walk read are equal. Otherwise it
+  records a new walk. Facts never depend on pairing. The private
+  `validation_*.rs` modules keep the facts and their reads.
+- [`src/reuse_optional.rs`](./src/reuse_optional.rs) defines the private
+  `Arena`, the optional fact store of one classification inside the
+  comparison bound. The bound clears every optional arena before it refuses a
+  comparison charge, so facts never displace kept comparisons.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran

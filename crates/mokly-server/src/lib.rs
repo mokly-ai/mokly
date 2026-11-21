@@ -34,6 +34,7 @@ pub mod comparison_capture;
 mod comparison_collector;
 mod comparison_files;
 pub mod comparison_graph;
+mod comparison_head;
 mod comparison_metadata;
 mod comparison_requests;
 mod comparison_routes;
