@@ -5,7 +5,6 @@ import test from "node:test";
 import type { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 
 import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
@@ -69,16 +68,11 @@ test("an unanswered unsafe relative edge retries despite a matching plan path an
     undefined,
     "serveEdit",
     {
-      imports: {
-        [planKey(entry, "./safe.mjs", "import-statement")]: {
-          path: path.join(root, "safe.mjs"),
-          sideEffects: true,
-        },
-        [planKey(entry, "./effect.mjs", "import-statement")]: {
-          path: target,
-          sideEffects: false,
-        },
-      },
+      paths: [entry, path.join(root, "safe.mjs"), target],
+      imports: [
+        [0, "./safe.mjs", "import-statement", 1, true],
+        [0, "./effect.mjs", "import-statement", 2, false],
+      ],
     },
   );
   assert.equal(counted.counts.compilations, 2);
@@ -102,12 +96,8 @@ test("an erased relative type import needs no consumer callback ownership", asyn
     undefined,
     "serveEdit",
     {
-      imports: {
-        [planKey(entry, "./safe.mjs", "import-statement")]: {
-          path: path.join(root, "safe.mjs"),
-          sideEffects: true,
-        },
-      },
+      paths: [entry, path.join(root, "safe.mjs")],
+      imports: [[0, "./safe.mjs", "import-statement", 1, true]],
     },
   );
   assert.equal(counted.counts.compilations, 1);
@@ -136,12 +126,8 @@ for (const [name, source] of [
     const counted = missFirstAnswer("./missing.mjs");
     await assert.rejects(
       bundle(params, counted.compile, undefined, undefined, "serveEdit", {
-        imports: {
-          [planKey(entry, "./safe.mjs", "import-statement")]: {
-            path: path.join(root, "safe.mjs"),
-            sideEffects: true,
-          },
-        },
+        paths: [entry, path.join(root, "safe.mjs")],
+        imports: [[0, "./safe.mjs", "import-statement", 1, true]],
       }),
       { code: "bundle-failed", message: expected },
     );

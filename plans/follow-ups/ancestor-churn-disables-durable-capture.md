@@ -12,11 +12,11 @@
   `packages/mokly/src/sidecar/capture-durability.ts:57` to line 65, line 110
   to line 117, and line 153 to line 211,
   `packages/mokly/src/sidecar/capture-runtime.ts:76` to line 121,
-  `crates/mokly-render/src/edit_plans.rs:41` to line 49,
+  `crates/mokly-render/src/edit_plans.rs:60` to line 68,
   `crates/mokly-sidecar/src/durable_recipe.rs:31` to line 35,
   `docs/protocol/mokly-base-cache.md:175` to line 215,
-  `docs/protocol/mokly-sidecar-plans.md:43` to line 49 and line 75 to line
-  98, and `docs/protocol/mokly-sidecar-recipes.md:32` to line 35.
+  `docs/protocol/mokly-sidecar-plans.md:71` to line 75 and line 111 to line
+  134, and `docs/protocol/mokly-sidecar-recipes.md:32` to line 35.
 - **Reason:** The performance orchestrator deferred this real-use
   investigation and authorized no product change in the branch that found
   the mechanism, which changes no product code.
@@ -50,7 +50,7 @@
       `durable_recipe.rs:31` to line 35. A later process can then load the
       compilation instead of compiling again.
     - The core keeps a plan record only from complete and durable evidence,
-      at `edit_plans.rs:47`. A Serve edit with a current record sends the
+      at `edit_plans.rs:66`. A Serve edit with a current record sends the
       plan and makes no native attempt. It makes one esbuild call when its
       guarded result stands, and never more than two, under the
       [guarded attempt rules](../../docs/protocol/mokly-sidecar-plans.md#guarded-attempts).
@@ -223,7 +223,7 @@
   5. Evaluate whether each ancestor witness of an absent lookup is necessary
      for coherence. Coherence means that a kept plan or a stored compilation
      never keeps a module selection that a fresh compile would change. The
-     decision at `docs/protocol/mokly-sidecar-plans.md:85` to line 88 states
+     decision at `docs/protocol/mokly-sidecar-plans.md:122` to line 125 states
      this need. Record the evidence for each kind of witness.
   6. Make no product change. Give the results to the performance
      orchestrator. Ask it before any change to a durability requirement in
@@ -242,9 +242,14 @@
   coherence evaluation, and the performance orchestrator has answered
   whether a durability requirement changes.
 - **Related:**
-  - [serve-plan-editor-invalidation.md](./serve-plan-editor-invalidation.md):
-    another cause of the same native-attempt fallback. There, a kept record
-    goes stale at the edit check. Here, the first capture keeps no record.
+  - [Candidate names](../../docs/protocol/mokly-sidecar-plans.md#candidate-names)
+    in the plan protocol: in a recorded directory with candidate names, the
+    plan check ignores an added entry whose name is not a candidate, such as
+    an editor swap file. So a kept record stays usable through unrelated
+    additions in its recorded directories. The core still keeps a record only
+    from a durable capture, and a `serveEdit` request keeps none. So candidate
+    names cannot give plan reuse to a session whose first captures kept no
+    record. That case stays with this item.
   - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md):
     it records the stale module selections that the durable check keeps out
     of the bundle cache. A narrower witness rule from this task must still

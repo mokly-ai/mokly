@@ -3,7 +3,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
+import { PlanBuilder } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import {
   countedCompile,
@@ -30,24 +30,22 @@ test("a relative string shared by safe and commonjs targets keeps every planned 
     'export { value } from "clean"; export { other } from "typed";',
   );
   const counted = countedCompile();
+  const plan = new PlanBuilder();
+  for (const directory of [clean, typed])
+    plan.addImport(
+      path.join(directory, "index.mjs"),
+      "./part.js",
+      "import-statement",
+      path.join(directory, "part.js"),
+      true,
+    );
   await bundle(
     nativeParams(root),
     counted.compile,
     undefined,
     undefined,
     "serveEdit",
-    {
-      imports: Object.fromEntries(
-        [clean, typed].map((directory) => [
-          planKey(
-            path.join(directory, "index.mjs"),
-            "./part.js",
-            "import-statement",
-          ),
-          { path: path.join(directory, "part.js"), sideEffects: true },
-        ]),
-      ),
-    },
+    plan.plan,
   );
   assert.equal(counted.consumerCallbacks("./part.js"), 2);
   assert.equal(counted.counts.compilations, 1);
@@ -67,12 +65,8 @@ test("a saved side-effect flag keeps the callback when the current manifest woul
     undefined,
     "serveEdit",
     {
-      imports: {
-        [planKey(entry, "./effect.mjs", "import-statement")]: {
-          path: target,
-          sideEffects: false,
-        },
-      },
+      paths: [entry, target],
+      imports: [[0, "./effect.mjs", "import-statement", 1, false]],
     },
   );
   assert.doesNotMatch(result.compiled.code, /effectRan/);
