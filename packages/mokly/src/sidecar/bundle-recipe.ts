@@ -9,6 +9,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
+import { importedAssetPaths } from "./asset-imports.js";
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
@@ -70,6 +71,7 @@ export async function bundleRecipe(
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
+  const importedAssets = importedAssetPaths(inputs.files);
   measurements.runSync("sidecar.bundle.inputs", () => {
     for (const module of graph) {
       const absolute = physical.get(module.path)!;
@@ -82,7 +84,10 @@ export async function bundleRecipe(
           `Bundled source bytes were not recorded: ${module.path}`,
         );
       module.digest = createHash("sha256").update(text).digest("hex");
-      hash.update(JSON.stringify([module.path, module.imports]));
+      if (importedAssets.has(module.path)) module.importedAsset = true;
+      hash.update(
+        JSON.stringify([module.path, module.imports, module.importedAsset]),
+      );
       if (!module.path.endsWith(".css")) {
         hash.update(text);
         physicalInputs[absolute] = module.digest;

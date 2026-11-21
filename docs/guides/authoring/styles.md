@@ -63,6 +63,41 @@ Keep file and directory names URL-safe. Use `url(...)` around a local image
 inside `image-set()`. Root-absolute URLs are not portable.
 Remote HTTP(S), data, and fragment URLs keep their meanings.
 
+## Import images, fonts, and media
+
+Import an image, font, or media file from your component.
+Use the imported value in `src`, `srcset`, `poster`, `href`, or a `style` `url()`.
+Mokly delivers the file.
+Mokly gives each document a working relative URL to the file.
+
+```tsx
+import logo from "./logo.png";
+
+export function Logo() {
+  return <img src={logo} alt="Company logo" />;
+}
+```
+
+Code can append a `?query` or a `#fragment` to the imported value.
+Use a `#fragment` to select an icon from an SVG sprite.
+
+These file extensions work as asset imports.
+Extension matching is case-sensitive.
+
+- Images: `.apng`, `.avif`, `.bmp`, `.cur`, `.gif`, `.ico`, `.jfif`, `.jpeg`,
+  `.jpg`, `.jxl`, `.pjp`, `.pjpeg`, `.png`, `.svg`, and `.webp`.
+- Fonts: `.eot`, `.otf`, `.ttf`, `.woff`, and `.woff2`.
+- Audio: `.aac`, `.flac`, `.m4a`, `.mp3`, `.ogg`, `.opus`, and `.wav`.
+- Video: `.mov`, `.mp4`, and `.webm`.
+- Other files: `.pdf`, `.vtt`, and `.webmanifest`.
+
+Keep file and directory names URL-safe.
+Use only letters, digits, dots, underscores, tildes, and hyphens in each path segment.
+A name with a space fails the build.
+
+In Serve, an edit to an imported file updates the views that use it.
+Changes shows the views that reference the changed file.
+
 ## Consumer PostCSS
 
 Name a config-relative module in `mokly.config.json`. Mokly supplies PostCSS.
@@ -115,8 +150,13 @@ with its React tree.
 
 ## Loader choices
 
-Use a JavaScript-safe loader, such as `dataurl` or `binary`, for JavaScript
-asset imports. A `file` loader emits an undelivered file and fails.
+An asset import's default value is not a URL that code can fetch during a render.
+Use `binary` or `text` in `moduleResolution.loaders` to read the file's bytes or text.
+An import attribute such as `with { type: "text" }` also gives the file's text.
+A configured loader overrides asset delivery for its extension.
+A `.txt` import gives its text by default.
+
+A `file` loader emits an undelivered file and fails.
 Only `empty` can override `.css` or `.module.css` handling.
 The `.css` override opts out of plain CSS and CSS Modules. The `.module.css`
 override opts out of CSS Modules alone.

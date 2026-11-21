@@ -17,6 +17,7 @@ pub mod error;
 mod failures;
 mod fragments;
 mod graph;
+mod imported_assets;
 mod input_stamp;
 mod leases;
 mod persistent_identity;

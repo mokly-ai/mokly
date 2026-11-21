@@ -35,6 +35,7 @@ pub(crate) fn finish(
             css_context: lease.side.context.clone(),
             modules: bundle.modules.clone(),
             module_digests: bundle.module_digests.clone(),
+            imported_assets: bundle.imported_assets.clone(),
             environment: bundle.render.environment.clone(),
             resolution_digests: bundle.render.resolution_digests.clone(),
             class_map_digests: bundle.render.class_map_digests.clone(),

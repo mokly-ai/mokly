@@ -52,9 +52,9 @@ its requests and results. The paths below are relative to the package root.
   a regular preview file.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
-  graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. An incomplete recipe gets a fresh identity, also
-  when `checkRecipeSize` in
+  graph with asset-default flags, the input digests, the reuse evidence, the
+  toolchain identity, and the compilation identity. An incomplete recipe gets
+  a fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
   result before it drops the evidence. A `serveEdit` compile gets incomplete
@@ -63,6 +63,9 @@ its requests and results. The paths below are relative to the package root.
   marker. A `serveEdit` compile also gets no marker when
   `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
+- [`src/sidecar/asset-imports.ts`](./asset-imports.ts) holds the asset
+  extension list, the longest consumer-loader lookup, the closed tokens, and
+  the imported paths of each compile, keyed by its consumed-byte map.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it

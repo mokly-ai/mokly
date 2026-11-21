@@ -5,7 +5,7 @@ use std::sync::{Arc, Weak};
 use mokly_graph::types::RenderGeneration;
 
 use crate::asset_streams::{AssetRequest, AssetResult, AssetStreams, Capture, SharedAsset};
-use crate::assets::content_type;
+use crate::assets::generated_content_type;
 use crate::backend::GraphDocuments;
 use crate::error::{Result, ServerError};
 use crate::public_read::OpenedFile;
@@ -76,7 +76,7 @@ impl Request {
             Err(source) => return Err(ServerError::Render { source }),
         };
         self.streams
-            .capture(asset.as_mut(), &content_type(&self.route))
+            .capture(asset.as_mut(), &generated_content_type(&self.route))
             .map(Some)
     }
 }

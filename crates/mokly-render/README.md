@@ -82,6 +82,9 @@ class maps remain equal. A changed map uses a separate evaluated lifetime.
 Graph leases retain old maps, bindings, and PostCSS contexts until the final
 request releases them. Final drops enqueue epoch-specific pool release and
 cache cleanup without waiting for worker requests or the PostCSS cache lock.
+The graph adapter delivers modules marked `importedAsset` with their captured
+digests. It selects the importing module by sorted logical path. The selected
+side's source reader supplies the confined file identity and any source alias.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
@@ -360,9 +363,11 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path. It gives the `Fragments` of each side that side's own
-  source root, so a base graph records nothing as head, also with an equal
-  generation id.
+  same composition path and initializes their `DeliveryInputs` metadata.
+  It gives `Fragments` the source root of its side. A base graph therefore
+  records nothing as head, even when the generation ids are equal.
+- [`src/imported_assets.rs`](./src/imported_assets.rs) selects the asset source,
+  digest, and importer for each flagged module.
 - [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
   adapter over the pool. Its `record_served` passes a store-served request to
   `SidecarPool::record_served_render`.

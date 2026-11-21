@@ -7,6 +7,10 @@ export type Module = {
  */
 digest?: string,
 /**
+ * This module used the asset-default loader.
+ */
+importedAsset?: boolean,
+/**
  * Repository-relative source path.
  */
 path: string,

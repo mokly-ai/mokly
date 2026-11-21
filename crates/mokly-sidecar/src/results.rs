@@ -27,6 +27,14 @@ pub struct Module {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub digest: Option<String>,
+    /// This module used the asset-default loader.
+    #[serde(
+        default,
+        rename = "importedAsset",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub imported_asset: Option<bool>,
     /// Repository-relative source path.
     pub path: String,
     /// Resolved logical paths in source order.

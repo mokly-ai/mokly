@@ -1,5 +1,7 @@
 # Imported Stylesheet Assets And Delivery
 
+Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them.
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Assets, Links And Delivery
@@ -28,7 +30,9 @@ physical identity enter the inventory, and physically installed package code
 is not inventoried.
 
 Only these extensions, matched case-sensitively, are assets; every other
-extension fails. Serve and the static output use the same content types:
+extension fails. Serve sends these content types, and a host of the static
+output sends the same types, under the
+[static delivery contract](./mokly-export-delivery.md#hosting-contract):
 
 | Extension       | Content type                    |
 | --------------- | ------------------------------- |
@@ -45,6 +49,10 @@ extension fails. Serve and the static output use the same content types:
 | `.ttf`          | `font/ttf`                      |
 | `.woff`         | `font/woff`                     |
 | `.woff2`        | `font/woff2`                    |
+
+Assets that JavaScript imports share this delivery and its routes, and they
+can have more types. [JavaScript Asset Imports](./mokly-imported-assets.md)
+gives their rules.
 
 Binary assets are never decoded. `assets/<path>` satisfies the portable
 URL-path rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no
