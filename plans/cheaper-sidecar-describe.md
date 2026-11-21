@@ -290,29 +290,13 @@ Depends on: 4
 
 ## Milestone 6: Part B, prepare-only describe
 
-On 2026-11-21 the orchestrator chose not to build Part B. Its work moved to
-[prepare-only-describe.md](follow-ups/prepare-only-describe.md).
-
 Depends on: 5, the merges of workspaces 220 and 221 into `main`, and the
 orchestrator's answer when Milestone 5 asks.
 
-- [ ] Merge `origin/main` once with the `git-merge` skill.
-- [ ] Write red tests first. In Rust, the decoder selects the empty result,
-      `restore` and the warm-up send prepare-only calls, and the binary's own
-      call stays full. In Node, a prepare-only call returns `null`, fails with
-      the same code and message, and leaves the same handles, registrations,
-      saved slots, and stories. A later full call equals a fresh call.
-- [ ] Add the wire shape of the wire-shape call in `methods.rs`, and move every
-      `Call::Describe` use to it. Regenerate the TypeScript modules with the
-      `shared-types` skill.
-- [ ] Select the empty result in `wire.rs`, send prepare-only calls from
-      `restore`, and return `null` in `session.ts` after the same collection.
-- [ ] With the `documentation` skill, change the `describe` row of
-      `docs/protocol/mokly-sidecar.md` in place within its cap. Add the rule
-      and its decision in force to the definition transport page. Update the
-      Key Code lists of the sidecar and `mokly-sidecar` READMEs.
-- [ ] Run `cargo test -p mokly-sidecar`, `cargo test -p mokly-render`, the new
-      Node tests, and `cargo xtask check --suite repository`.
+On 2026-11-21 the orchestrator chose not to build Part B. Its work moved to
+[prepare-only-describe.md](follow-ups/prepare-only-describe.md), with its TODOs:
+red tests, the wire shape, the decoder, the docs, and the checks. This
+milestone has no TODOs left.
 
 ## Milestone 7: Verification and push
 
