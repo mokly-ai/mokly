@@ -10,6 +10,7 @@
  * Use: `<Outline edit={…} facts={…} headings={onThisPage(headings)} />`.
  */
 import type { DocsHeading } from "../../docs/headings.js";
+import Icon from "../Icon.astro";
 
 import Facts from "./Facts.astro";
 import OnThisPage from "./OnThisPage.astro";
@@ -27,10 +28,12 @@ const sections = headings.filter((heading) => heading.depth === 2).length;
 
 <details class="site-docs-outline" data-pagefind-ignore>
   <summary class="site-docs-outline-summary">
+    <Icon name="outline" size={16} />
     On this page
     <span aria-hidden="true" class="site-docs-outline-count">
       {sections}
     </span>
+    <Icon class="site-docs-outline-chevron" name="chevronDown" size={16} />
   </summary>
   <div class="site-docs-outline-body">
     <OnThisPage headings={headings} />

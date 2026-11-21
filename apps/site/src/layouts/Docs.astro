@@ -19,6 +19,7 @@ import Outline from "../components/docs/Outline.astro";
 import {
   editUrl,
   pageFacts,
+  sourceFile,
   type PageSource,
 } from "../components/docs/page-source.js";
 import Pager from "../components/docs/Pager.astro";
@@ -34,6 +35,8 @@ import Site from "./Site.astro";
 import "../styles/docs-layout.css";
 import "../styles/docs-tree.css";
 import "../styles/docs-document.css";
+import "../styles/code.css";
+import "../styles/code-tokens.css";
 import "../styles/docs-code.css";
 import "../styles/docs-inspect.css";
 import "../styles/docs-sheet.css";
@@ -69,7 +72,11 @@ const edit = editUrl(source);
       <Layers route={route} />
     </div>
     <main class="site-document site-docs-document" id="main" tabindex="-1">
-      <PageFrame class="site-docs-frame" file={source.label}>
+      <PageFrame
+        class="site-docs-frame"
+        file={source.label}
+        measure="docs-page"
+      >
         <div class="site-document-intro" data-pagefind-body>
           <Trail steps={[DOCUMENTATION, section]} />
           <h1>{title}</h1>
@@ -84,7 +91,12 @@ const edit = editUrl(source);
       <CodeCopy client:idle />
     </main>
     <div class="site-docs-rail">
-      <Inspect edit={edit} facts={facts} headings={listed} />
+      <Inspect
+        edit={edit}
+        facts={facts}
+        file={sourceFile(source)}
+        headings={listed}
+      />
     </div>
   </div>
   <Search client:idle />

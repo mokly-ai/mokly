@@ -6,6 +6,7 @@ import {
   editUrl,
   pageFacts,
   pageSource,
+  sourceFile,
 } from "../src/components/docs/page-source.js";
 import { DOCS_PAGES, type DocsPage } from "../src/docs/pages.js";
 import { PACKAGE_VERSION } from "../src/docs/version.js";
@@ -16,31 +17,36 @@ function page(id: string): DocsPage {
   return found;
 }
 
-test("the frame label and Edit on GitHub name each kind of page's tracked source", () => {
+test("the frame label, the Inspect meta and Edit on GitHub name each kind of page's tracked source", () => {
   const cases = [
     [
       pageSource(page("start/install")),
       "start/install.md",
+      "install.md",
       "https://github.com/mokly-ai/mokly/edit/main/docs/guides/start/install.md",
     ],
     [
       pageSource(page("cloud/overview")),
       "cloud/overview.md",
+      "overview.md",
       "https://github.com/mokly-ai/mokly/edit/main/apps/site/src/content/docs/cloud/overview.md",
     ],
     [
       pageSource(page("reference/upload")),
       "protocol/mokly-upload.md",
+      "mokly-upload.md",
       "https://github.com/mokly-ai/mokly/edit/main/docs/protocol/mokly-upload.md",
     ],
     [
       LANDING_SOURCE,
       "docs/index.astro",
+      "index.astro",
       "https://github.com/mokly-ai/mokly/edit/main/apps/site/src/pages/docs/index.astro",
     ],
   ] as const;
-  for (const [source, label, url] of cases) {
+  for (const [source, label, file, url] of cases) {
     assert.equal(source.label, label);
+    assert.equal(sourceFile(source), file, label);
     assert.equal(editUrl(source), url, label);
   }
 });

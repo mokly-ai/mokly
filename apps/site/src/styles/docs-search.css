@@ -1,10 +1,10 @@
 /* The documentation search dialog: a floating surface over the menu's
-   scrim, with the search box and its Close control at its top and the
-   results of a query, each page with the headings that matched. Every
-   target is at least 44px, and each control keeps the strong edge of a
-   control. It fades in as it opens; with reduced motion it shows open at
-   once. On mobile it fills the window inside an 8px margin; from 768px it
-   sits centred near the top. */
+   scrim, with the search box, which leads with the search icon, and its
+   Close control at its top, then the results of a query, each page with the
+   headings that matched. Every target is at least 44px, and each control
+   keeps the strong edge of a control. It fades in as it opens; with reduced
+   motion it shows open at once. On mobile it fills the window inside an 8px
+   margin; from 768px it sits centred near the top. */
 
 .site-search-dialog {
   background: var(--mk-color-surface);
@@ -61,6 +61,23 @@
   padding: var(--mk-space-2);
 }
 
+/* The search box: the field with the search icon at its start */
+
+.site-search-box {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.site-search-box svg {
+  color: var(--mk-color-text-muted);
+  left: 12px;
+  pointer-events: none;
+  position: absolute;
+}
+
 .site-search-input {
   background: var(--mk-color-background);
   border: 1px solid var(--mk-color-border-strong);
@@ -71,22 +88,25 @@
   font-size: 1rem;
   min-height: var(--mk-layout-control-min);
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 12px 0 38px;
 }
 
 .site-search-close {
+  align-items: center;
   background: var(--mk-color-surface);
   border: 0;
   border-radius: 9px;
   box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
   color: var(--mk-color-text);
   cursor: pointer;
+  display: inline-flex;
   flex: none;
   font: inherit;
   font-size: 0.875rem;
   font-weight: var(--mk-font-medium);
+  gap: 6px;
   min-height: var(--mk-layout-control-min);
-  padding: 0 14px;
+  padding: 0 14px 0 12px;
   transition:
     background var(--mk-motion-fast) var(--mk-motion-easing),
     box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
@@ -95,6 +115,11 @@
 .site-search-close:hover {
   background: var(--mk-color-background);
   box-shadow: inset 0 0 0 1px var(--mk-color-text);
+}
+
+.site-search-close svg {
+  color: var(--mk-color-text-muted);
+  flex: none;
 }
 
 .site-search-results {

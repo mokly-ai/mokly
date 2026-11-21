@@ -80,6 +80,11 @@ export function editUrl(source: PageSource): string {
   return `${EXTERNAL_LINKS.github}/edit/main/${source.path}`;
 }
 
+/** The file name of the tracked source, such as `install.md`. */
+export function sourceFile(source: PageSource): string {
+  return source.label.slice(source.label.lastIndexOf("/") + 1);
+}
+
 /** One labelled fact of a page, as the Inspect panel lists it. */
 export interface PageFact {
   readonly label: "Package" | "Section" | "Version";

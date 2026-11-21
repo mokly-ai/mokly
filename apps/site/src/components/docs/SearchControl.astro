@@ -7,18 +7,15 @@
  * island binds them and sets the key hint to ⌘K on Apple platforms, so
  * without script neither shows.
  *
- * The glyph is the Canvas set's search drawing. The site's icon set does not
- * hold it yet, so the control draws it itself.
- *
  * Use: `<SearchControl />` or `<SearchControl compact />`.
  */
+import Icon from "../Icon.astro";
 
 interface Props {
   readonly compact?: boolean;
 }
 
 const { compact = false } = Astro.props;
-const size = compact ? 18 : 15;
 ---
 
 <button
@@ -28,21 +25,7 @@ const size = compact ? 18 : 15;
   class="site-search"
   type="button"
 >
-  <svg
-    aria-hidden="true"
-    fill="none"
-    focusable="false"
-    height={size}
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="1.5"
-    viewBox="0 0 16 16"
-    width={size}
-  >
-    <circle cx="7" cy="7" r="4.4"></circle>
-    <path d="m10.3 10.3 3.3 3.3"></path>
-  </svg>
+  <Icon name="search" size={compact ? 18 : 15} />
   {compact ? (
     <span class="site-visually-hidden">Search docs</span>
   ) : (

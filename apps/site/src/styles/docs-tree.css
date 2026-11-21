@@ -1,9 +1,10 @@
-/* The Layers content: the search control and the published CLI version at
-   its top, every section listed expanded under its rubric with its page
-   count, each page a 44px row with a file icon, and the Changelog row at
-   its foot. A row hovers on the canvas tone, and the page being read takes
-   the signal tint with ink text. The tree sheet below 1024px lists the same
-   rows; docs-sheet.css holds its own sizes.
+/* The Layers panel, a floating panel that panels.css draws: the search
+   control and the published CLI version at its top, every section listed
+   expanded under its rubric with its page count, each page a 44px panel
+   row with a file icon, and the Changelog row in its foot. A row hovers on
+   the canvas tone, and the page being read takes the signal tint with ink
+   text. The tree sheet below 1024px lists the same rows without the panel;
+   docs-sheet.css holds its own sizes.
 
    The class names and the rules match docs/mockups/styles/site/
    docs-tree.css, which applies to every composition. */
@@ -132,11 +133,18 @@
   text-transform: uppercase;
 }
 
-/* The tree stays inside the window, and its sections scroll inside it
-   between its top and its foot */
+/* The Layers panel stays inside the window, and its sections scroll
+   inside it between its top and its foot */
 
 .site-doc-tree {
   max-height: calc(100vh - 128px);
+}
+
+.site-doc-tree > .site-panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
 }
 
 .site-doc-tree-scroll {
@@ -177,50 +185,9 @@
   font-size: 0.78125rem;
 }
 
-/* The Layers content sits in a plain container, and its rows are plain
-   links: the site has no floating panel or panel row part yet. Until it
-   does, the container sets the panel's text and stacks its parts, so the
-   sections scroll between the top and the foot, and each row takes the
-   shape of a panel row. */
-
-.site-docs-side > .site-doc-tree {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8125rem;
-  line-height: 1.3;
-}
-
-.site-doc-tree .site-doc-link {
-  align-items: center;
-  border-radius: 7px;
-  color: var(--mk-color-text-secondary);
-  display: flex;
-  font-weight: var(--mk-font-medium);
-  gap: 9px;
-  min-width: 0;
-  padding: 6px 9px;
-  text-decoration: none;
-  transition:
-    background var(--mk-motion-fast) var(--mk-motion-easing),
-    color var(--mk-motion-fast) var(--mk-motion-easing);
-}
-
-.site-doc-tree .site-doc-link svg {
-  color: var(--mk-color-text-muted);
-  flex: none;
-}
-
-.site-doc-tree .site-doc-link[aria-current="page"] {
-  font-weight: var(--mk-font-semibold);
-}
-
-.site-doc-tree .site-doc-link[aria-current="page"] svg {
-  color: var(--mk-color-signal-deep);
-}
-
-/* The rows of the tree keep 44px targets. Every row takes the row hover,
-   because each page is a link; the page being read keeps the selected fill
-   under the pointer. */
+/* The rows of the tree are the shared 44px panel rows. Every row takes
+   the row hover, because each page is a link; the page being read keeps
+   the selected fill under the pointer. */
 
 .site-doc-link {
   min-height: var(--mk-layout-control-min);

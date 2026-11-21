@@ -1,13 +1,15 @@
 ---
 /**
- * The Inspect content beside the page frame from 1280px, named Inspect: the
+ * The Inspect panel beside the page frame from 1280px: a floating panel
+ * titled Inspect, with the page's file name as its mono meta. It holds the
  * Page section with the page's facts and Edit on GitHub, then On this page
  * with the reading progress and a row for each heading.
  *
- * Use: `<Inspect edit={…} facts={…} headings={onThisPage(headings)} />`
+ * Use: `<Inspect edit={…} facts={…} file="install.md" headings={…} />`
  * inside the workspace's Inspect column.
  */
 import type { DocsHeading } from "../../docs/headings.js";
+import Panel from "../Panel.astro";
 
 import Facts from "./Facts.astro";
 import OnThisPage from "./OnThisPage.astro";
@@ -16,13 +18,15 @@ import type { PageFact } from "./page-source.js";
 interface Props {
   readonly edit: string;
   readonly facts: readonly PageFact[];
+  /** The file name of the page's tracked source. */
+  readonly file: string;
   readonly headings: readonly DocsHeading[];
 }
 
-const { edit, facts, headings } = Astro.props;
+const { edit, facts, file, headings } = Astro.props;
 ---
 
-<aside aria-label="Inspect" class="site-docs-inspect">
+<Panel class="site-docs-inspect" meta={file} metaMono title="Inspect">
   <div class="site-docs-inspect-section">
     <p class="site-docs-inspect-head">Page</p>
     <Facts edit={edit} facts={facts} />
@@ -30,4 +34,4 @@ const { edit, facts, headings } = Astro.props;
   <div class="site-docs-inspect-section">
     <OnThisPage headings={headings} progress />
   </div>
-</aside>
+</Panel>

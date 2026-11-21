@@ -1,15 +1,18 @@
 ---
 /**
- * The foot of the section tree: the Changelog row, which links the
- * changelog, in the Layers panel and in the tree sheet.
+ * The foot of the section tree: the Changelog row, a panel row that links
+ * the changelog, in the Layers panel's foot and in the tree sheet.
  *
- * Use: `<TreeFoot />`.
+ * Use: `<TreeFoot />`, or `<TreeFoot slot="foot" />` in a panel.
  */
 import { SITE_PATHS } from "../../navigation.js";
+import Icon from "../Icon.astro";
+import PanelRow from "../PanelRow.astro";
 ---
 
 <div class="site-doc-tree-foot">
-  <a class="site-doc-link" href={SITE_PATHS.changelog}>
+  <PanelRow class="site-doc-link" href={SITE_PATHS.changelog} icon="history">
     Changelog
-  </a>
+    <Icon name="arrowRight" size={14} slot="trailing" />
+  </PanelRow>
 </div>

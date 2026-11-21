@@ -7,6 +7,8 @@
  *
  * Use: `<Subbar section="Getting started" title="Install" />`.
  */
+import Icon from "../Icon.astro";
+
 import SearchControl from "./SearchControl.astro";
 
 interface Props {
@@ -25,6 +27,7 @@ const { section, title } = Astro.props;
     class="site-docs-layers-toggle"
     type="button"
   >
+    <Icon name="layers" size={16} />
     <span class="site-docs-layers-toggle-trail">
       <span class="site-docs-layers-toggle-section">{section}</span>{" "}
       <span aria-hidden="true" class="site-docs-layers-toggle-sep">
@@ -32,6 +35,11 @@ const { section, title } = Astro.props;
       </span>{" "}
       <span class="site-docs-layers-toggle-page">{title}</span>
     </span>
+    <Icon
+      class="site-docs-layers-toggle-chevron"
+      name="chevronDown"
+      size={16}
+    />
   </button>
   <SearchControl compact />
 </div>

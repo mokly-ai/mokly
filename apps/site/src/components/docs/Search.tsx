@@ -12,6 +12,7 @@
 
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 
+import { CanvasIcon } from "./CanvasIcon.js";
 import { keyHint, opensSearch } from "./search-keys.js";
 
 interface SubResult {
@@ -140,21 +141,25 @@ export default function Search() {
         <label className="site-visually-hidden" htmlFor="site-search-input">
           Search the documentation
         </label>
-        <input
-          autoComplete="off"
-          className="site-search-input"
-          id="site-search-input"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search the documentation"
-          ref={field}
-          type="search"
-          value={query}
-        />
+        <span className="site-search-box">
+          <CanvasIcon name="search" size={17} />
+          <input
+            autoComplete="off"
+            className="site-search-input"
+            id="site-search-input"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search the documentation"
+            ref={field}
+            type="search"
+            value={query}
+          />
+        </span>
         <button
           className="site-search-close"
           onClick={() => dialog.current?.close()}
           type="button"
         >
+          <CanvasIcon name="close" size={16} />
           Close
         </button>
       </div>

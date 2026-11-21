@@ -1,16 +1,16 @@
 ---
 /**
  * Every documentation section, listed expanded under its mono rubric with
- * its page count, and its pages as 44px rows with a file icon, in the order
- * of the section tree. The page being read is the selected layer: its row
- * carries `aria-current="page"`. A CLI command's title, such as `serve`, is
- * set in mono. The Layers panel and the tree sheet both list them, and the
- * sections scroll inside their area.
+ * its page count, and its pages as 44px panel rows with a file icon, in the
+ * order of the section tree. The page being read is the selected layer: its
+ * row carries `aria-current="page"`. A CLI command's title, such as
+ * `serve`, is set in mono. The Layers panel and the tree sheet both list
+ * them, and the sections scroll inside their area.
  *
  * Use: `<TreeSections route={route} />`.
  */
 import { DOCS_SECTIONS, type DocsPage } from "../../docs/pages.js";
-import Icon from "../Icon.astro";
+import PanelRow from "../PanelRow.astro";
 
 interface Props {
   readonly route: string;
@@ -36,18 +36,18 @@ function isCommand(page: DocsPage): boolean {
       <ul>
         {section.pages.map((page) => (
           <li>
-            <a
-              aria-current={page.route === route ? "page" : undefined}
+            <PanelRow
               class="site-doc-link"
               href={page.route}
+              icon="file"
+              {...(page.route === route ? { current: "page" as const } : {})}
             >
-              <Icon name="file" size={14} />
               {isCommand(page) ? (
                 <span class="site-docs-command">{page.title}</span>
               ) : (
                 page.title
               )}
-            </a>
+            </PanelRow>
           </li>
         ))}
       </ul>

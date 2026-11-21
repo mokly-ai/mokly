@@ -45,7 +45,10 @@ test(
     await expect(dialog).toBeHidden();
     await expect(control(page)).toHaveText(/Ctrl K$/);
 
-    const apple = await browser.newContext({ baseURL, userAgent: APPLE });
+    const apple = await browser.newContext({
+      ...(baseURL === undefined ? {} : { baseURL }),
+      userAgent: APPLE,
+    });
     try {
       const mac = await apple.newPage();
       await mac.goto(PAGE);

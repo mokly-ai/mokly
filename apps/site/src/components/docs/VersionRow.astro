@@ -9,10 +9,12 @@
 import { PACKAGE_VERSION } from "../../docs/version.js";
 import { SITE_PATHS } from "../../navigation.js";
 import Chip from "../Chip.astro";
+import Icon from "../Icon.astro";
 ---
 
 <a class="site-version-link" href={SITE_PATHS.changelog}>
   <span class="site-version">
+    <Icon name="cube" size={14} />
     <span class="site-version-label">Mokly CLI</span>
     <Chip mono tone="signal">
       {PACKAGE_VERSION}

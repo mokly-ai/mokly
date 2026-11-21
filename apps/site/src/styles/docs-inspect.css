@@ -1,8 +1,9 @@
-/* The Inspect content: the page's facts, Edit on GitHub, and On this page
-   with the reading progress and a row for each heading, where an h2 row
-   repeats its section's index and the row of the heading in view takes the
-   signal tint. Below 1280px, where the Inspect column does not show, the
-   same list, facts and link sit under the lead in a native disclosure.
+/* The Inspect panel, a floating panel that panels.css draws: the page's
+   facts, Edit on GitHub, and On this page with the reading progress and a
+   row for each heading, where an h2 row repeats its section's index and the
+   row of the heading in view takes the signal tint. Below 1280px, where the
+   Inspect column does not show, the same list, facts and link sit under the
+   lead in a native disclosure.
 
    The class names and the rules match docs/mockups/styles/site/
    docs-inspect.css and docs-steps.css. The mobile composition is the base
@@ -13,14 +14,12 @@
   max-height: calc(100vh - 128px);
 }
 
-/* The Inspect content sits in a plain container: the site has no floating
-   panel part yet. Until it does, the container sets the panel's text and
-   scrolls its content inside the window's height. */
+/* The panel's body scrolls inside the window's height */
 
-.site-docs-rail > .site-docs-inspect {
-  font-size: 0.8125rem;
-  line-height: 1.3;
+.site-docs-inspect > .site-panel-body {
+  gap: 0;
   overflow-y: auto;
+  padding: 0;
   scrollbar-color: var(--mk-color-border-strong) transparent;
   scrollbar-width: thin;
 }

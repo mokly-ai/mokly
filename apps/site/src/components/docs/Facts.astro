@@ -8,6 +8,7 @@
  * Use: `<Facts edit={editUrl(source)} facts={pageFacts(source, section)} />`.
  */
 import Chip from "../Chip.astro";
+import Icon from "../Icon.astro";
 
 import type { PageFact } from "./page-source.js";
 
@@ -36,5 +37,7 @@ const { edit, facts } = Astro.props;
   ))}
 </dl>
 <a class="site-docs-edit" href={edit}>
+  <Icon name="github" size={14} />
   Edit on GitHub
+  <Icon name="external" size={14} />
 </a>
