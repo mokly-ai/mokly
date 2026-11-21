@@ -71,10 +71,13 @@ temporary preview keeps the edits, shows the saved props, and offers Update
 preview. An optional field shows Optional, a Set check box, and Not set while
 unset; an optional toggle's value check box carries the field's name. A
 number field's help and error name its bounds and its step. After
-Reset, Try again, or Update preview, focus moves to the Props heading; after
+Reset, the Try again of a failed render, or Update preview, focus moves to the
+Props heading; after
 Switch to Current, to the first field; after a start retry, to the status
 that replaces the button, and to the heading when that status leaves; after
-a catalogue retry, to the loading status. The rendered UI shows no
+the Try again of a failed load, to `Loading props…` and then to the panel
+heading, as the [viewer's recovery focus rule](./mokly-viewer.md#package-and-props)
+says. The rendered UI shows no
 environment badge and no implementation detail.
 
 Mockup inputs keep native semantics. Authored links connect edited, reset,

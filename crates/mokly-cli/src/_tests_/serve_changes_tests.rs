@@ -1,5 +1,6 @@
 //! Base-ref refresh keeps the current warning attempt and orders warnings before readiness.
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -7,10 +8,13 @@ use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_compare::comparison_types::{ComparisonCounts, ComparisonResult};
+use mokly_graph::document_store::DocumentStoreMock;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::review::ReviewResultV8;
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::ChangeSource;
+use mokly_server::comparison_graph::FrozenResources;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_capture_cancel::CaptureCancellation;
@@ -59,13 +63,30 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     );
     let old = scopes.begin();
     let current = scopes.begin();
+    let resumes = Arc::new(AtomicUsize::new(0));
+    let seeds = Arc::new(AtomicUsize::new(0));
+    let seeded = seeds.clone();
+    let resumed = resumes.clone();
+    let documents = Arc::new(Unimock::new(
+        DocumentStoreMock::resume
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                resumed.fetch_add(1, Ordering::SeqCst);
+            })),
+    ));
     let service = Source {
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
         pending: Arc::new(Mutex::new(Vec::new())),
         config: config(),
-        head: Arc::new(Unimock::new(())),
+        head: Arc::new(FrozenResources::new(Arc::new(Unimock::new(
+            RenderGenerationMock::prepare_render_reuse
+                .next_call(matching!())
+                .answers_arc(Arc::new(move |_| {
+                    seeded.fetch_add(1, Ordering::SeqCst);
+                })),
+        )))),
         warnings: old,
         services: ServeChanges {
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
@@ -88,16 +109,19 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
                     .next_call(matching!())
                     .returns(current),
             )),
-            runtime: Arc::new(Runtime::new(
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                Arc::new(Unimock::new(())),
-                "test".into(),
-                None,
-            )),
+            runtime: Arc::new(
+                Runtime::new(
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    Arc::new(Unimock::new(())),
+                    "test".into(),
+                    None,
+                )
+                .with_document_store(documents),
+            ),
             git: Arc::new(Unimock::new(())),
             cancellation: cancellation.clone(),
             terminal,
@@ -143,6 +167,12 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     source.finished(Ok(&result), Duration::ZERO);
     assert!(lines.lock().unwrap().is_empty());
     let refreshed = source.refreshed().unwrap();
+    refreshed.settled();
+    assert_eq!(
+        seeds.load(Ordering::SeqCst),
+        1,
+        "post-completion reaches the original wrapped head"
+    );
     refreshed.finished(Ok(&result), Duration::ZERO);
     refreshed.finished(Ok(&result), Duration::ZERO);
     let recorded = lines.lock().unwrap().clone();
@@ -159,4 +189,9 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     cancellation.interrupt();
     refreshed.finished(Ok(&result), Duration::ZERO);
     assert_eq!(*lines.lock().unwrap(), recorded);
+    assert_eq!(
+        resumes.load(Ordering::SeqCst),
+        6,
+        "ready and unavailable outcomes must both release optional writes"
+    );
 }

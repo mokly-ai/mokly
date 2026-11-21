@@ -25,7 +25,7 @@ in [Site](./site.md). The home copy is in [Site home copy](./site-copy.md).
 The `canvas` palette of `@mokly/ui/palette` is the one source of the colour
 values and the font stacks. The private `@mokly-cloud/tokens` npm workspace
 imports them, makes Canvas its default surface family and emits the `--mk-*`
-properties. `apps/site` depends on that workspace exactly as `apps/app` and
+properties. `apps/site` depends on that workspace exactly as `packages/app` and
 `apps/mockups` do; npm links one local npm workspace copy, and no package is
 separately published or downloaded. [Design tokens](./design-tokens.md),
 [Design token colors](./design-tokens-color.md) and the

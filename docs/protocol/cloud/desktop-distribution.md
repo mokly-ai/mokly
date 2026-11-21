@@ -23,17 +23,42 @@ rejected because it disappears on a dark Dock.
 
 Releases are GitHub releases of the public repository
 `mokly-ai/mokly-desktop`, which holds releases and nothing else, because the
-updater needs an unauthenticated feed. The shell's version is
-`apps/desktop/package.json`; a tag `desktop-v<version>` on
-this repository runs the release workflow, which builds on a macOS runner and
-a Linux runner and publishes with electron-builder's GitHub publisher. Every
-release is a pre-release until local mode lands, as
-[Desktop application](./desktop-app.md) requires. Pull requests run the same packaging
-without release signing or publishing, so the build is proven before any secret
-exists. The workflow checks that the source tag equals `desktop-v` plus the
-package version. The publisher creates `v<version>` in the public repository,
-which is also the release-page address the `deb` updater opens. The two
-platform publishers run in sequence to create and fill one pre-release.
+updater needs an unauthenticated feed. A feed in this repository was
+rejected: the updater reads the newest release of its feed, and the npm
+releases here hold no desktop files. Every release is a pre-release until
+local mode lands, as [Desktop application](./desktop-app.md) requires.
+
+### Release Pull Requests
+
+The shell's version is `packages/desktop/package.json`. Versions have the form
+`0.x.y`, and the first is `0.1.0`. The alpha line was rejected, so that the
+version shows the kind of change. Each version comes from a release pull
+request, as the [npm release](../npm-release-management.md) does. A
+version from a pushed tag or a hand edit was rejected: one merge then sets the
+version, writes the changelog and starts the release.
+
+- The `desktop` Release Please component covers `packages/`, except the npm
+  CLI package and the native packages. The bundle of the shell is the shell,
+  the app export and the shared packages, so every change to one of them can
+  release the shell. Its changelog is `packages/desktop/CHANGELOG.md`.
+- Each push to `main` updates the desktop release pull request. A `fix` gives
+  a patch version and a `feat` gives a minor version. The desktop and npm
+  releases have separate pull requests, so each product ships on its own.
+- The merge creates the tag `desktop-v<version>` on the merge commit, and a
+  GitHub pre-release of this repository. The npm release stays the latest
+  release of this repository.
+- The release workflow then checks that the tag points at the merge commit.
+  It checks out that commit, never a tag or a branch name, and stops before
+  signing when the check fails. The workflow never moves a tag. A person
+  moves it to the merge commit and reruns the failed jobs.
+- It checks that the tag equals `desktop-v` plus the package version. It then
+  builds on a macOS runner and a Linux runner and publishes with
+  electron-builder's GitHub publisher. The publisher creates `v<version>` in
+  the feed, which is also the release-page address the `deb` updater opens.
+  The two platform publishers run in sequence to create and fill one
+  pre-release.
+- Pull requests run the same packaging without release signing or
+  publishing, so the build is proven before any secret is used.
 
 Release packaging first builds with publishing disabled in a fresh output
 directory. The pinned GitHub publisher keeps its two-hour upload limit, but
@@ -43,12 +68,13 @@ never replaced or deleted, and `EP_GH_IGNORE_TIME` is never enabled. After
 uploading, the job reads the release asset list with the release token and
 checks every built package, blockmap and update file by name, size and
 `uploaded` state. A skipped upload or partial inventory fails, even if the
-publisher returns success. Delayed recovery needs a new package version and
-a matching new source tag; rerunning a release never repairs published assets.
+publisher returns success. A rerun of the failed jobs repairs a run that
+uploaded nothing. A partly published release needs a new version from the
+next release pull request; rerunning a release never repairs published assets.
 
-`.github/workflows/desktop-release.yml` runs on matching tags, package-affecting
-pull requests and manual dispatch. Dispatch on a `desktop-v*` tag releases it;
-dispatch on a branch runs preview packaging. Both jobs use the repository's
+`.github/workflows/desktop-release.yml` runs on package-affecting pull
+requests and manual dispatch, and the release workflow calls it for a desktop
+release. Dispatch runs preview packaging. Both jobs use the repository's
 `MKC_DOMAIN` and `MKC_CATALOGUE_BASE_DOMAIN` variables. The desktop build-input
 script calls `infra/scripts/render-values.py`'s domain helpers for production
 or main-preview, including the environment's catalogue base domain.
@@ -64,24 +90,58 @@ packages start without an Apple credential. Release macOS builds keep hardened
 runtime and require the Developer ID signature and notarization. Linux builds
 use the `mokly` executable name in both modes.
 
-The updater is off when the application is not packaged. It uses the GitHub
-provider for `mokly-ai/mokly-desktop` and accepts pre-releases. It checks the feed at launch and every four hours, downloads in the
-background and then shows one native dialog, **Restart now** or **Later**;
-**Later** installs on the next quit. Linux without an `APPIMAGE` environment variable has no in-place updater: its
-dialog names the new version and offers the release page. The AppImage
-updater replaces the file in place. The product's pages update by release,
-not by cloud deploy, and the API makes no version check; because the project
-is not in production, an API change may break an older desktop build until
-it updates.
+### Release Secrets
 
-The release workflow reads GitHub Actions secrets `APPLE_API_KEY`,
-`APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `CSC_LINK`, `CSC_KEY_PASSWORD` and
-`DESKTOP_RELEASES_TOKEN`; [Secrets](../../ops/secrets.md) records their owners
-and rotation. Fork builds receive none of them. Only the publishing steps
-receive secrets. The macOS packaging script writes the certificate and API key
-to private temporary files, passes their paths to electron-builder through its
+The release job reads `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`,
+`CSC_LINK`, `CSC_KEY_PASSWORD` and `DESKTOP_RELEASES_TOKEN` from the
+`desktop-release` GitHub environment, which admits only `main`.
+[Secrets](../../ops/secrets.md) records their owners and rotation. Repository
+secrets were rejected, because a workflow on any branch can read them, and the
+signing credentials decide which builds install as an update. Fork builds and
+pull requests receive none of them. Only the publishing steps receive
+secrets. The macOS packaging script writes the certificate and API key to
+private temporary files, passes their paths to electron-builder through its
 environment, and removes the files after success or failure. The publisher
 reads `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`.
+
+### Updates In The App
+
+- Only the packages that a release publishes have the updater on. A build-time
+  flag turns it on. Preview packages and local builds keep it off, and their
+  **Check for updates** item is disabled. Reason: a preview build with the
+  updater on could install a production release over itself. The updater
+  never runs in an unpackaged app.
+- The updater uses the GitHub provider for `mokly-ai/mokly-desktop` and
+  accepts pre-releases. It checks the feed at launch and every four hours and
+  downloads in the background.
+- It then shows one native dialog, "Mokly <version> is ready", with
+  **Restart now** and **Later**. **Later** installs on the next quit. On macOS
+  the dialog comes only after the macOS update framework accepts the
+  download. Reason: macOS can still refuse it, and **Restart now** would then
+  wait for ever. Without a manual check, the app offers each version once.
+- **Check for updates** answers each manual check with a native dialog:
+  - No new version: "Mokly is up to date."
+  - A failed check: "Mokly could not check for updates. Try again later."
+  - A new version: "Downloading the new version. Mokly tells you when it is
+    ready." The ready dialog follows.
+  - A downloaded version that waits: the ready dialog again.
+- A failed automatic check, download or install does not stop the app and
+  shows no dialog.
+- At launch on macOS, a release build that runs from a read-only place outside
+  an Applications folder shows "Move Mokly to Applications to get updates."
+  with **Move to Applications** and **Not now**. Such a place is its mounted
+  `dmg`, or the hidden read-only copy that macOS runs until the user moves the
+  app. Reason: the macOS update framework cannot replace an app there, so the
+  copy would download each update and never install it.
+- **Move to Applications** moves the app and restarts it from there. **Not
+  now** hides the dialog until another version runs. A copy in a writable
+  folder shows no dialog, because it can update itself.
+- Linux without an `APPIMAGE` environment variable has no in-place updater:
+  its dialog names the new version and offers the release page. The AppImage
+  updater replaces the file in place.
+- The product's pages update by release, not by cloud deploy, and the API
+  makes no version check; because the project is not in production, an API
+  change may break an older desktop build until it updates.
 
 ## Verification
 
@@ -93,7 +153,8 @@ and formats it.
 - Logic tests (`src/_tests_/*.test.ts`, `node:test` through `tsx`) cover the
   scheme-address validator, the navigation policy with its rewrite and site
   segments, the export resolver against a table of the app server's rules,
-  the build configuration reader and the update dialog decisions, with the
+  the build configuration reader, the update flag, the update dialogs and
+  manual check answers and the read-only install check, with the
   Electron APIs injected as doubles. Permission cases cover the main-frame
   clipboard write grant and denial of other frames, origins and permissions.
   Event-order cases hold the initial load,
@@ -110,9 +171,9 @@ and formats it.
   shows the expired state and that a valid grant delivered next starts a fresh
   landing document and signs the window in. It opens the viewer route and
   proves that a public-origin product link is rewritten into the bundle, that a
-  site link and an external link reach the system-browser opener, and that a
-  route-controlled redirect from a round-trip host to a public-origin product
-  path is rewritten into the bundle. It proves
+  site link, an external link, a GitHub page and a Stripe page reach the
+  system-browser opener, and that a public-origin callback path is rewritten
+  into the bundle before any request reaches the hosted server. It proves
   Chromium sends `Origin: mokly-app://desktop`, the API admits it, and the
   `SameSite=None; Secure` session cookie is stored, sent and kept across a
   relaunch. It loads the catalogue index through CORS. It proves
@@ -132,6 +193,7 @@ Each platform uploads the packages and its launch evidence as separate
 artifacts. Screenshots and JSON evidence live under
 `.context/desktop-app-shell/`.
 
-Before a release, the packaged app is smoke-tested by hand on macOS: install
+Before a desktop release pull request merges, the packaged app is
+smoke-tested by hand on macOS: install
 from the `dmg`, sign in through the browser, open a project and run **Check
 for updates**.

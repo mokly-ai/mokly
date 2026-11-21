@@ -70,7 +70,21 @@ impl Session {
             let span =
                 capture.then(|| tracing::info_span!("review.capture-document", status = "error"));
             let _scope = span.as_ref().map(tracing::Span::enter);
-            let artifact = self.raw(route)?;
+            let prefetched = if capture {
+                let flights = self
+                    .state
+                    .prefetch
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .clone();
+                flights.and_then(|flights| flights.read(route))
+            } else {
+                None
+            };
+            let artifact = match prefetched {
+                Some(result) => result?,
+                None => self.raw(route)?,
+            };
             if let Some(span) = &span {
                 span.record("status", "ok");
             }

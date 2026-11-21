@@ -7,11 +7,12 @@ use std::sync::{Arc, Weak};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_graph::delivery_inputs::DeliveryInputs;
+use mokly_graph::document_store::Persistence;
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
 use mokly_graph::key::NodeKey;
-use mokly_graph::render_inputs::{RenderInputs, RenderKeys};
+use mokly_graph::render_inputs::with_catalogue_inputs;
 use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
@@ -76,6 +77,7 @@ impl JavaScriptGraph {
     ) -> Result<Arc<dyn RenderGraph>> {
         let mut side = self.runtime.side(config);
         let mut inputs = DeliveryInputs {
+            persistence: None,
             resources: self.runtime.resources.clone(),
             closures: self.runtime.closures.clone(),
             style_references: self.runtime.style_references.clone(),
@@ -133,31 +135,15 @@ impl JavaScriptGraph {
                 .as_bytes(),
             );
             let renderer = config.renderer();
-            let declaring: BTreeMap<_, _> = catalogue
-                .model
-                .entries
-                .iter()
-                .filter_map(|entry| {
-                    let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
-                    Some((source.handle.clone(), entry.metadata.source.path.clone()))
-                })
-                .collect();
-            let keys = Arc::new(RenderKeys::build_with_workers(
-                &RenderInputs {
-                    generation,
-                    bindings: &catalogue.javascript.bindings,
-                    renderer: renderer.as_deref(),
-                    entries: &catalogue.javascript.entries,
-                    declarations: &declaring,
-                },
-                NodeKey(fingerprint),
-                self.runtime.workers.as_ref(),
-            ));
+            let keys = with_catalogue_inputs(config, catalogue, generation, |inputs| {
+                self.runtime.render_keys(inputs, NodeKey(fingerprint))
+            });
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
                 Arc::new(Fragments {
                     pool: self.runtime.pool.clone(),
                     generation: generation.id.clone(),
+                    source_root: side.source_root.clone(),
                     _lease: generation.lease.clone(),
                 }),
                 self.runtime.cache.clone(),
@@ -175,6 +161,7 @@ impl JavaScriptGraph {
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
             inputs = DeliveryInputs {
+                persistence: None,
                 resources: self.runtime.resources.clone(),
                 closures: self.runtime.closures.clone(),
                 style_references: self.runtime.style_references.clone(),
@@ -190,6 +177,18 @@ impl JavaScriptGraph {
                 entry_modules,
             };
         }
+        inputs.persistence = self
+            .runtime
+            .document_store
+            .as_ref()
+            .map(|store| Persistence {
+                store: store.clone(),
+                javascript: catalogue
+                    .javascript
+                    .generation
+                    .as_ref()
+                    .and_then(|generation| generation.persistence_identity.clone()),
+            });
         Ok(Arc::new(Graph {
             inputs,
             tree: Arc::new(LeasedTree {

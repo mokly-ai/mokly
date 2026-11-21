@@ -129,6 +129,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
 - [On-demand Serve](./mokly-on-demand.md)
+- [On-demand Serve Background Pass](./mokly-on-demand-background.md)
 - [Startup Diagnostics And Scale Fixtures](./mokly-timings.md)
 - [Watch Runtime And Recovery](./mokly-watch-runtime.md)
 - [Watched Catalogue Development](./mokly-watch.md)

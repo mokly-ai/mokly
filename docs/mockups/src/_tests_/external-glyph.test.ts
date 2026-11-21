@@ -2,8 +2,8 @@
  * The actions that leave their surface draw the external glyph on every page
  * and in every view the catalogue draws them, as the application does. A
  * protocol doc names each glyph: `product-mockups-account-desktop.md` for the
- * desktop app's sign-in actions and the GitHub actions of its window, and
- * `product-mockups-viewer.md` for Set up publishing.
+ * desktop app's sign-in actions and the GitHub and billing actions of its
+ * window, and `product-mockups-viewer.md` for Set up publishing.
  */
 
 import assert from "node:assert/strict";
@@ -17,6 +17,7 @@ import { catalogueEntries, viewUsage } from "./catalogue-index";
 const outbound = {
   "Continue in browser": [
     "product/account/sign-in/desktop",
+    "product/account/sign-in/mac-app",
     "product/account/sign-up/desktop",
   ],
   "Open browser again": [
@@ -80,13 +81,15 @@ test("the actions that leave their surface draw the external glyph in every view
     );
 });
 
-test("in the desktop app's window each GitHub action trades its own glyph for the external one", () => {
+test("in the desktop app's window each GitHub and Stripe action trades its own glyph for the external one", () => {
   // Each action keeps its label in the window, so the browser drawings of the
   // same label must still carry the action's own glyph.
   for (const [label, inWindow, own] of [
     ["Connect GitHub", "product/settings/account/desktop", "github"],
     ["Add GitHub account", "product/settings/github/desktop", "start"],
     ["Install on GitHub", "product/account/install-app/desktop", "github"],
+    ["Upgrade to Team", "product/settings/billing/desktop", "none"],
+    ["Manage billing", "product/settings/billing/desktop/team", "none"],
   ] as const) {
     const drawn = drawnGlyphs(label);
     assert.deepEqual(drawn[inWindow], everyView, label);

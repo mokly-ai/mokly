@@ -98,16 +98,19 @@ gcloud iam workload-identity-pools providers describe github --location=global \
 
 `grep -h -o -E "secrets\.[A-Z0-9_]+" .github/workflows/*.yml | sort -u` lists
 the 16 secrets that the workflows read. Compare `gh secret list` for both
-repositories, and set each missing one here from its source:
+repositories, and set each missing one here from its source. The six desktop
+secrets go into the `desktop-release` environment, which
+[Desktop release secrets](./secrets.md#desktop-release-secrets) creates, and
+`gh secret list --env desktop-release` lists them:
 
-| Secret                                                                | Source                                                                                                               |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` and the five `GCP_*_SERVICE_ACCOUNT` | The foundation outputs, which are resource names. Use the commands below                                             |
-| `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`                       | The restore command of [Desktop release secrets](./secrets.md#desktop-release-secrets), with `--repo mokly-ai/mokly` |
-| `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`                                | App Store Connect                                                                                                    |
-| `DESKTOP_RELEASES_TOKEN`                                              | The secure copy, or a new fine-grained token with contents write on `mokly-ai/mokly-desktop` only                    |
-| `CLOUDFLARE_PAGES_API_TOKEN`, `CLOUDFLARE_API_TOKEN`                  | Keep the value here, or create a token. It needs Cloudflare Pages Edit on the account of `mokabook` and `mokly-site` |
-| `RELEASE_PLEASE_TOKEN`, `DEPENDENCY_AUDIT_TOKEN`                      | Keep the value here. Only Mokly workflows read them                                                                  |
+| Secret                                                                | Source                                                                                                                                  |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` and the five `GCP_*_SERVICE_ACCOUNT` | The foundation outputs, which are resource names. Use the commands below                                                                |
+| `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`                       | The restore command of [Desktop release secrets](./secrets.md#desktop-release-secrets), into the `desktop-release` environment          |
+| `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`                                | App Store Connect, into the `desktop-release` environment                                                                               |
+| `DESKTOP_RELEASES_TOKEN`                                              | The secure copy, or a new fine-grained token with contents write on `mokly-ai/mokly-desktop` only, in the `desktop-release` environment |
+| `CLOUDFLARE_PAGES_API_TOKEN`, `CLOUDFLARE_API_TOKEN`                  | Keep the value here, or create a token. It needs Cloudflare Pages Edit on the account of `mokabook` and `mokly-site`                    |
+| `RELEASE_PLEASE_TOKEN`, `DEPENDENCY_AUDIT_TOKEN`                      | Keep the value here. Only Mokly workflows read them                                                                                     |
 
 The trust step initialized the foundation root. Set the GCP secrets from it:
 
@@ -260,8 +263,8 @@ not re-run them. Steps 2 and 3 start new runs.
    missing.
    [Wait failures](./foundation.md#wait-failures) gives the recovery.
 4. The next push to `main` must pass **Deploy Main Site**, **Deploy Main
-   Preview** and the **Credential-gated infrastructure plan**. The next
-   `desktop-v*` tag must pass **Release desktop**.
+   Preview** and the **Credential-gated infrastructure plan**. The first
+   merged desktop release pull request must pass **Release desktop**.
 5. Label a pull request here with `preview`, as
    [Review A Labelled PR](./preview.md#review-a-labelled-pr) shows. Check:
    **Preview required** passes, and the comment says **Checks passed**. This

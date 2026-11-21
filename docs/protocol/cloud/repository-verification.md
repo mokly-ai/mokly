@@ -49,7 +49,7 @@ reserved workspace names.
 ### Cloud Markdown Links
 
 The Markdown link check also covers the Markdown files under `apps/`,
-`crates/mkc-*/`, and `infra/`, not only `docs/`, `plans/`, and each
+`packages/app/`, `packages/desktop/`, `crates/mkc-*/`, and `infra/`, not only `docs/`, `plans/`, and each
 `README.md`. Under `apps/site/src/content/legal/`, a root route of one segment
 resolves to its sibling Markdown source, as `/privacy/` resolves to
 `privacy.md`. The source and the published destination of each legal link
@@ -108,8 +108,8 @@ applies each exact saved plan of a stable environment. An unauthenticated mock
 plan is never reported as a cloud deployment.
 
 Workflow contract tests check the desktop release workflow: its triggers,
-platforms, permissions, action pins, tag and version check, and
-deployment-owned origins. The `cloud-site` suite includes the actions of that
+platforms, permissions, action pins, tag and version check, release
+environment, update flag, and deployment-owned origins. The `cloud-site` suite includes the actions of that
 workflow in its reviewed action allowlist.
 [Desktop distribution](./desktop-distribution.md) defines the workflow, its
 packaged launch smoke, and its artifacts.

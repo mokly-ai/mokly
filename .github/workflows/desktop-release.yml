@@ -1,8 +1,29 @@
 name: Desktop release
 
 on:
-  push:
-    tags: [desktop-v*]
+  # The release workflow calls this workflow after a desktop release pull
+  # request merges. It passes the tag and the commit that Release Please made.
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+    secrets:
+      CSC_LINK:
+        required: false
+      CSC_KEY_PASSWORD:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_KEY_ID:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+      DESKTOP_RELEASES_TOKEN:
+        required: false
   pull_request:
     paths:
       - apps/**
@@ -24,7 +45,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-${{ github.event.pull_request.number || github.ref }}
+  group: desktop-${{ inputs.tag || github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -61,7 +82,7 @@ jobs:
       - name: Install npm
         run: npm install --global npm@11.21.0
       - name: Resolve main-preview build inputs
-        run: python3 apps/desktop/scripts/release-environment.py main-preview >> "$GITHUB_ENV"
+        run: python3 packages/desktop/scripts/release-environment.py main-preview >> "$GITHUB_ENV"
       - name: Install dependencies
         run: npm ci
       - name: Install Linux launch dependencies
@@ -76,26 +97,26 @@ jobs:
       - name: Build the bundled export
         run: npm run build --workspace @mokly-cloud/desktop
       - name: Package without release credentials
-        run: node apps/desktop/scripts/package.mjs preview
+        run: node packages/desktop/scripts/package.mjs preview
       - name: Launch the packaged app offline
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == Linux ]]; then
-            xvfb-run -a node apps/desktop/scripts/packaged-smoke.mjs
+            xvfb-run -a node packages/desktop/scripts/packaged-smoke.mjs
           else
-            node apps/desktop/scripts/packaged-smoke.mjs
+            node packages/desktop/scripts/packaged-smoke.mjs
           fi
       - name: Upload desktop packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktop-${{ matrix.platform }}
           path: |
-            apps/desktop/release/*.dmg
-            apps/desktop/release/*.zip
-            apps/desktop/release/*.AppImage
-            apps/desktop/release/*.deb
-            apps/desktop/release/*.yml
-            apps/desktop/release/*.blockmap
+            packages/desktop/release/*.dmg
+            packages/desktop/release/*.zip
+            packages/desktop/release/*.AppImage
+            packages/desktop/release/*.deb
+            packages/desktop/release/*.yml
+            packages/desktop/release/*.blockmap
           if-no-files-found: error
           retention-days: 14
       - name: Retain packaged launch evidence
@@ -109,9 +130,12 @@ jobs:
 
   release:
     name: Release desktop (${{ matrix.platform }})
-    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (startsWith(github.ref, 'refs/tags/desktop-v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    # A called workflow sees the caller's push event. Only that call has a tag.
+    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && github.event_name == 'push' && inputs.tag != ''
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    # The environment admits only main and holds the signing secrets.
+    environment: desktop-release
     permissions:
       contents: read
     strategy:
@@ -127,14 +151,17 @@ jobs:
     env:
       MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
       MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
-      MKC_BUILD_SHA: ${{ github.sha }}
+      MKC_BUILD_SHA: ${{ inputs.ref }}
     steps:
-      - name: Check out the tagged source
+      - name: Check out the release commit
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Check the tag and resolve production build inputs
-        run: python3 apps/desktop/scripts/release-environment.py production --tag "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python3 packages/desktop/scripts/release-environment.py production --tag "$RELEASE_TAG" >> "$GITHUB_ENV"
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -148,7 +175,9 @@ jobs:
         run: rustup toolchain install
       - name: Build workspace packages
         run: npm run build
-      - name: Build the bundled export
+      - name: Build the bundled export with the updater on
+        env:
+          MKC_DESKTOP_UPDATES: enabled
         run: npm run build --workspace @mokly-cloud/desktop
       - name: Sign, notarize and publish macOS packages
         if: runner.os == 'macOS'
@@ -159,9 +188,9 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node apps/desktop/scripts/package.mjs release
+        run: node packages/desktop/scripts/package.mjs release
       - name: Publish Linux packages
         if: runner.os == 'Linux'
         env:
           GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
-        run: node apps/desktop/scripts/package.mjs release
+        run: node packages/desktop/scripts/package.mjs release

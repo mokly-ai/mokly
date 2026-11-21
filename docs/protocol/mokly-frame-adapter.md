@@ -83,9 +83,11 @@ declare function postMessageAdapter(options: {
 Current frames derive routes from `url` under `/static/mokly-generated/`; no prefix or route override exists.
 
 Mount validation follows the [artifact path contract](./mokly-artifact-paths.md#frames-and-reverse-mapping).
-A mount or a request that gets no reply within 5,000 ms rejects with
-`timeout`. A request timeout disposes the mount, so every later request
-rejects with `disposed`.
+A mount has no time limit while the frame's document loads. Until it settles,
+each load gives it 5,000 ms to accept a document or get a reply, or it rejects
+with `timeout`. A request without a reply in 5,000 ms rejects with `timeout`
+and disposes the mount, so every later request rejects with `disposed`.
+Decision: Serve renders pages on demand, so no fixed load limit fits.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.

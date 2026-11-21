@@ -134,6 +134,11 @@ composition and recovery.
 See [Viewer inventory](./product-mockups-viewer.md) for paths, states,
 composition and recovery.
 
+## Mac App
+
+See [Mac app inventory](./product-mockups-mac-app.md) for the top bars of the
+Mac app's window.
+
 ## Comments And Approvals
 
 Deferred to the review phase with [Comments](./screen-comments.md) and

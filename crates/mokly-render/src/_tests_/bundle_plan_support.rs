@@ -8,7 +8,7 @@ use mokly_sidecar::compiled::{
 };
 use mokly_sidecar::methods::{Bundle, BundleRequest, Call};
 use mokly_sidecar::pool::PoolMock;
-use mokly_sidecar::resolution_plan::{PlannedImport, ResolutionPlan};
+use mokly_sidecar::resolution_plan::{PlannedImport, PlannedImportKind, ResolutionPlan};
 use mokly_sidecar::results;
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
@@ -39,13 +39,15 @@ pub(super) fn evidence() -> Arc<ReuseEvidence> {
 
 pub(super) fn plan() -> Arc<ResolutionPlan> {
     Arc::new(ResolutionPlan {
-        imports: BTreeMap::from([(
-            "edge".into(),
-            PlannedImport {
-                path: "/repo/value.ts".into(),
-                side_effects: true,
-            },
-        )]),
+        candidates: None,
+        paths: vec!["/repo/entry.ts".into(), "/repo/value.ts".into()],
+        imports: vec![PlannedImport(
+            0,
+            "./value.ts".into(),
+            PlannedImportKind::ImportStatement,
+            1,
+            true,
+        )],
     })
 }
 
@@ -58,10 +60,12 @@ pub(super) fn result(
         generation: "generation".into(),
         epoch: 1,
         cache: None,
+        compile_count: 1,
         modules: vec![],
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
+            metadata_identity: None,
             reuse_evidence: evidence,
             identity: "identity".into(),
             code: String::new(),

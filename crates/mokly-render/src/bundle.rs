@@ -1,13 +1,14 @@
 //! Bundle only changed JavaScript and isolate class maps across retained graphs.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Weak};
+use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
@@ -16,14 +17,18 @@ use mokly_sidecar::results;
 
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
-use crate::leases::{BundleLease, PreparedLease};
+use crate::leases::BundleLease;
 use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
-use crate::{bundle_attempt, bundle_inputs, render_environment};
+use crate::stylesheet_class_maps::ClassMapCompiler;
+use crate::{
+    bundle_attempt, bundle_finish, bundle_inputs, persistent_identity, render_environment,
+};
 use crate::{physical_inputs, sources, stylesheets};
 
 pub(crate) struct BundleState {
+    pub(crate) persistence_identity: Option<String>,
     pub(crate) repository: PathBuf,
     pub(crate) settings: String,
     pub(crate) lease: Arc<BundleLease>,
@@ -65,7 +70,10 @@ pub(crate) fn describe(
                     runtime.physical_inputs.as_ref(),
                 ) || runtime.bundle_capture == BundleCapture::ServeEdit
                     && !state.toolchain.is_empty()
-                    && state.reuse_evidence.serve_edit())
+                    && physical_inputs::marked_current(
+                        &state.reuse_evidence,
+                        runtime.physical_inputs.as_ref(),
+                    ))
         })
         .collect();
     candidates.sort_by_key(|state| !state.reuse_evidence.captured());
@@ -79,7 +87,7 @@ pub(crate) fn describe(
             .find(|state| state.class_maps_digest == digest)
         {
             bundle_attempt::served(runtime, &existing.lease);
-            return finish(runtime, side, compiler, existing.clone());
+            return bundle_finish::finish(runtime, side, compiler, existing.clone());
         }
         prepared_maps = Some(maps);
     }
@@ -125,6 +133,7 @@ pub(crate) fn describe(
         .collect();
     if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
         let existing = Arc::new(BundleState {
+            persistence_identity: persistent_identity::compilation(&result.compiled),
             repository: config.repo_root.clone(),
             settings: cache_key,
             lease: existing.lease.clone(),
@@ -138,7 +147,7 @@ pub(crate) fn describe(
             reuse_evidence: result.compiled.reuse_evidence.clone(),
         });
         bundle_attempt::remember(runtime, &existing);
-        return finish(runtime, side, compiler, existing);
+        return bundle_finish::finish(runtime, side, compiler, existing);
     }
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
@@ -154,6 +163,7 @@ pub(crate) fn describe(
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
     let state = Arc::new(BundleState {
+        persistence_identity: persistent_identity::compilation(&result.compiled),
         repository: config.repo_root.clone(),
         settings: cache_key.clone(),
         lease,
@@ -167,66 +177,7 @@ pub(crate) fn describe(
         reuse_evidence: result.compiled.reuse_evidence.clone(),
     });
     bundle_attempt::remember(runtime, &state);
-    finish(runtime, side, compiler, state)
-}
-
-fn finish(
-    runtime: &Runtime,
-    side: SideInputs,
-    compiler: Arc<dyn StylesheetBundler>,
-    bundle: Arc<BundleState>,
-) -> Result<(JavaScriptGeneration, Definitions)> {
-    let lease = Arc::new(PreparedLease {
-        bundle: bundle.clone(),
-        side,
-        compiler,
-    });
-    let mut prepared = runtime.prepared.lock().unwrap_or_else(|e| e.into_inner());
-    prepared.retain(|_, value| value.strong_count() > 0);
-    prepared.insert(lease.side.context.clone(), Arc::downgrade(&lease));
-    Ok((
-        JavaScriptGeneration {
-            id: bundle.lease.id.clone(),
-            class_maps_digest: bundle.class_maps_digest.clone(),
-            css_context: lease.side.context.clone(),
-            modules: bundle.modules.clone(),
-            module_digests: bundle.module_digests.clone(),
-            environment: bundle.render.environment.clone(),
-            resolution_digests: bundle.render.resolution_digests.clone(),
-            class_map_digests: bundle.render.class_map_digests.clone(),
-            runtime_packages: bundle.render.runtime_packages.clone(),
-            unattributed: BTreeSet::new(),
-            resolution_files: bundle
-                .stamp
-                .files
-                .keys()
-                .filter_map(|path| {
-                    path.strip_prefix(&bundle.repository)
-                        .ok()
-                        .map(|path| path.to_string_lossy().replace('\\', "/"))
-                })
-                .collect(),
-            resolution_directories: bundle
-                .stamp
-                .memberships
-                .iter()
-                .filter_map(|(path, names)| {
-                    path.strip_prefix(&bundle.repository).ok().map(|path| {
-                        (
-                            path.to_string_lossy().replace('\\', "/"),
-                            names
-                                .iter()
-                                .flatten()
-                                .map(|name| name.to_string_lossy().into_owned())
-                                .collect(),
-                        )
-                    })
-                })
-                .collect(),
-            lease: Some(lease),
-        },
-        bundle.definitions.clone(),
-    ))
+    bundle_finish::finish(runtime, side, compiler, state)
 }
 
 fn maps_digest(maps: &ClassMaps) -> String {
@@ -236,7 +187,7 @@ fn maps_digest(maps: &ClassMaps) -> String {
 }
 
 fn class_maps(
-    compiler: &dyn StylesheetBundler,
+    compiler: &dyn ClassMapCompiler,
     modules: &BTreeMap<String, Vec<String>>,
     params: &Bundle,
 ) -> Result<ClassMaps> {
@@ -252,13 +203,11 @@ fn class_maps(
         &entries,
         &params.module_resolution.loaders,
     );
-    let mut maps = BTreeMap::new();
-    for root in roots {
-        match compiler.bundle(&root) {
-            Ok(bundle) => maps.extend(bundle.css_modules),
-            Err(source) => return Err(RenderError::Css { source }),
-        }
-    }
+    let parallelism = thread::available_parallelism().map_or(1, usize::from);
+    let mut maps = match compiler.class_maps(&roots, parallelism) {
+        Ok(maps) => maps,
+        Err(source) => return Err(RenderError::Css { source }),
+    };
     for path in modules.keys().filter(|path| path.ends_with(".module.css")) {
         if !maps.contains_key(path)
             && !stylesheets::ignored(path, &params.module_resolution.loaders)
@@ -288,3 +237,7 @@ fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) 
             .record(&side.dependency_aliases, &module.path);
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/class_maps/uncovered_tests.rs"]
+mod uncovered_tests;

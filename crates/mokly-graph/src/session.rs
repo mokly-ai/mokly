@@ -12,27 +12,31 @@ use mokly_html::composition::Composer;
 use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::background::BackgroundRead;
 use crate::cache::{Artifact, RenderCache};
-use crate::closure::{Closure, Walker};
+use crate::capture_window::CaptureConsumer;
+use crate::closure::Closure;
 use crate::collection::ComparisonCollector;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
+use crate::document_store::StoreKey;
 use crate::error::Result;
-use crate::graph::Graph;
 use crate::link_index::LinkIndex;
-use crate::link_results::{self, LinkResults, MemoryLinkResults};
+use crate::link_results::LinkResults;
 use crate::policy::PublicPolicy;
-use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
-use crate::requests::{MemoryRequests, Requests};
+use crate::prefetch::PrefetchGuard;
+use crate::prefetch_state::Flights;
+use crate::reference_index::ReferenceIndex;
+use crate::requests::Requests;
 use crate::resource_inputs::ResourceObserver;
 use crate::types::{
-    ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
-    ResourcePlan, TemporaryDocument,
+    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan,
+    TemporaryDocument,
 };
 use crate::validation_summary::Summary;
-use crate::workers::{ComparisonTask, ComparisonWorker, RenderWorkers, check_cancelled};
-use crate::{session_proof, styles, temporary, validation};
+use crate::workers::{ComparisonTask, RenderWorkers, check_cancelled};
+use crate::{session_prefetch, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
@@ -40,6 +44,8 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
+    pub(crate) prefetch: Mutex<Option<Arc<Flights>>>,
+    pub(crate) fresh: Mutex<BTreeMap<String, StoreKey>>,
     pub(crate) anchor_flights: Arc<dyn Requests>,
     pub(crate) link_results: Arc<dyn LinkResults>,
     pub(crate) link_index: LinkIndex,
@@ -79,78 +85,14 @@ pub(crate) struct SessionInput {
     pub(crate) matchers: styles::Matchers,
 }
 
-impl Session {
-    pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
-        let comparison_policy = session_proof::policy(&input);
-        let link_index = LinkIndex::new(&input.plans, &input.catalogue.model.entries);
-        for plan in input.plans.values() {
-            graph.inputs.resources.retain(&plan.resource_key);
-            graph.inputs.closures.retain(&plan.key.0);
-        }
-        let document_keys = input
-            .plans
-            .values()
-            .map(|plan| plan.key.0.clone())
-            .collect();
-        Self {
-            state: Arc::new(State {
-                anchor_flights: Arc::new(MemoryRequests::default()),
-                link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
-                link_index,
-                observed: Arc::new(Mutex::new(
-                    input
-                        .plans
-                        .values()
-                        .flat_map(|plan| {
-                            graph.inputs.resources.paths(&plan.resource_key).into_keys()
-                        })
-                        .collect(),
-                )),
-                observer: Arc::new(Mutex::new(None)),
-                generation_key: input.generation_key,
-                directories: input.directories,
-                stylesheet_resolution_files: input.stylesheet_resolution_files,
-                stylesheet_resolution_roots: input.stylesheet_resolution_roots,
-                document_keys,
-                matchers: Arc::new(input.matchers),
-                reference_index: Arc::new(MemoryReferenceIndex::new(
-                    graph.inputs.style_references.clone(),
-                )),
-                inputs: graph.inputs.clone(),
-                config: Arc::new(input.config),
-                catalogue: Arc::new(input.catalogue),
-                plans: Arc::new(input.plans),
-                resources: Arc::new(input.resources),
-                tree: graph.tree.clone(),
-                composer: graph.composer.clone(),
-                stylesheets: graph.stylesheets.clone(),
-                cache: graph.cache.clone(),
-                workers: graph.workers.clone(),
-                policy: input.policy,
-                comparison_policy,
-            }),
-        }
-    }
-
-    pub(crate) fn preview_walker(&self) -> Walker {
-        Walker {
-            observer: None,
-            ..self.walker()
-        }
-    }
-
-    pub(crate) fn walker(&self) -> Walker {
-        Walker {
-            observer: Some(Arc::new(self.clone())),
-            tree: self.state.tree.clone(),
-            policy: self.state.policy.clone(),
-            generated: Arc::new(self.clone()),
-            index: self.state.reference_index.clone(),
-        }
-    }
-}
-
 impl RenderGeneration for Session {
+    fn prepare_render_reuse(&self) {
+        self.prepare_render_inputs();
+    }
+
+    fn read_background(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background_document(route).map(Some)
+    }
     fn comparison_identity(
         &self,
         read: ComparisonRead,
@@ -173,11 +115,36 @@ impl RenderGeneration for Session {
     fn plans(&self) -> &BTreeMap<String, DocumentPlan> {
         &self.state.plans
     }
+    fn uncached_documents(&self) -> Vec<String> {
+        self.state
+            .plans
+            .iter()
+            .filter(|(route, plan)| {
+                !self.state.cache.contains(&plan.key) && !self.has_stored_document(route)
+            })
+            .map(|(route, _)| route.clone())
+            .collect()
+    }
+    fn prefetch_comparison(&self) -> Result<Option<PrefetchGuard>> {
+        session_prefetch::start(self)
+    }
     fn catalogue(&self) -> &PreparedCatalogue {
         &self.state.catalogue
     }
     fn comparison_parallelism(&self) -> usize {
         self.state.workers.comparison_parallelism()
+    }
+    fn capture_parallelism(&self) -> usize {
+        self.state.workers.capture_parallelism()
+    }
+    fn schedule_capture_window(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        self.state
+            .workers
+            .capture_window(self.capture_parallelism(), task, consumer);
     }
     fn schedule_comparison_stream(
         &self,
@@ -188,13 +155,6 @@ impl RenderGeneration for Session {
     }
     fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.state.workers.comparison_tasks(count, task);
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.state.workers.comparison(routes, worker)
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.raw(route)?;
@@ -225,7 +185,11 @@ impl RenderGeneration for Session {
         for result in results {
             summary.record(result);
         }
-        summary.finish(self).map(|(summary, _)| summary)
+        let (summary, _) = summary.finish(self)?;
+        for route in &routes {
+            self.offer_document(route);
+        }
+        Ok(summary)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         self.collect_validated(collector)

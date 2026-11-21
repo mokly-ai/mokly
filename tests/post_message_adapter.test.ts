@@ -261,11 +261,13 @@ test("boxModel authenticates measure replies and rejects errors and unknown keys
   await assert.rejects(obsolete, { code: "disposed" });
 });
 
-test("handshake timeout, view replacement and disposal invalidate old sessions", async () => {
+test("the load has no time limit; handshake timeout, view replacement and disposal invalidate old sessions", async () => {
   const waiting = fakeFrame();
   const timeout = postMessageAdapter({
     frameOrigin: "https://frames.test",
   }).mount(waiting.frame, frameView);
+  assert.equal(waiting.timers.size, 0);
+  waiting.load();
   waiting.expire();
   await assert.rejects(timeout, { code: "timeout" });
   const fake = await mounted();

@@ -37,7 +37,9 @@ inert without handshake: no navigation interception, geometry collection or
 outgoing messages. Only its bounded handshake listener exists before
 activation.
 
-Ready/requests time out after five seconds, disposing the session without retries.
+The load of the document has no time limit. Ready must arrive within five
+seconds after hello, and each reply within five seconds after its request.
+A timeout disposes the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
 At most 16 requests are pending.
 

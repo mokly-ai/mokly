@@ -42,7 +42,7 @@ fn action_pins_valid(source: &Value) -> bool {
 #[test]
 fn desktop_release_events_and_platforms_cover_both_package_modes() {
     let source = workflow();
-    assert_eq!(source["on"]["push"]["tags"], json!(["desktop-v*"]));
+    assert!(source["on"]["push"].is_null());
     assert!(
         source["on"]
             .as_object()
@@ -77,8 +77,10 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
     );
     assert_eq!(
         release["if"],
-        "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (startsWith(github.ref, 'refs/tags/desktop-v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))"
+        "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && github.event_name == 'push' && inputs.tag != ''"
     );
+    assert_eq!(package["env"]["MKC_BUILD_SHA"], "${{ github.sha }}");
+    assert_eq!(release["env"]["MKC_BUILD_SHA"], "${{ inputs.ref }}");
     assert_eq!(release["strategy"]["max-parallel"], 1);
     for job in [package, release] {
         assert_eq!(job["permissions"], json!({"contents": "read"}));
@@ -96,7 +98,6 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
             job["env"]["MKC_CATALOGUE_BASE_DOMAIN"],
             "${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}"
         );
-        assert_eq!(job["env"]["MKC_BUILD_SHA"], "${{ github.sha }}");
         let node = steps(job)
             .iter()
             .find(|step| step["name"] == "Install Node")
@@ -129,7 +130,8 @@ fn desktop_release_pins_reject_mutable_action_references() {
 
 #[test]
 fn desktop_release_publisher_uses_the_updaters_public_version_tag() {
-    let text = fs::read_to_string(repository().join("apps/desktop/electron-builder.yml")).unwrap();
+    let text =
+        fs::read_to_string(repository().join("packages/desktop/electron-builder.yml")).unwrap();
     let builder: Value = serde_saphyr::from_str(&text).unwrap();
     assert_eq!(
         builder["publish"],
@@ -159,7 +161,7 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
     let pack = command_index(package, "scripts/package.mjs preview");
     let smoke = command_index(
         package,
-        "xvfb-run -a node apps/desktop/scripts/packaged-smoke.mjs",
+        "xvfb-run -a node packages/desktop/scripts/packaged-smoke.mjs",
     );
     let upload = steps(package)
         .iter()
@@ -175,11 +177,10 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
                 .contains(&format!("*.{extension}"))
         );
     }
+    assert!(!package.to_string().contains("MKC_DESKTOP_UPDATES"));
     let release = &source["jobs"]["release"];
-    assert!(
-        command_index(release, "production --tag \"$GITHUB_REF_NAME\"")
-            < command_index(release, "npm ci")
-    );
+    let tag = command_index(release, "production --tag \"$RELEASE_TAG\"");
+    assert!(tag < command_index(release, "npm ci"));
     let mac = steps(release)
         .iter()
         .find(|step| step["name"] == "Sign, notarize and publish macOS packages")
@@ -205,6 +206,9 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
             step["env"]["GH_TOKEN"],
             "${{ secrets.DESKTOP_RELEASES_TOKEN }}"
         );
-        assert_eq!(step["run"], "node apps/desktop/scripts/package.mjs release");
+        assert_eq!(
+            step["run"],
+            "node packages/desktop/scripts/package.mjs release"
+        );
     }
 }

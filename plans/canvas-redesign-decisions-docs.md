@@ -77,7 +77,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Wider fix:** D.
 - **Previous examples:** The docs tree key in
   `apps/site/src/components/docs/tree-scroll.ts:1` and the desktop sign-in
-  verifier in `apps/app/src/navigation/desktop-sign-in.ts:16`.
+  verifier in `packages/app/src/navigation/desktop-sign-in.ts:16`.
 - **Recommendation:** C, changed from A by the options check. It costs the
   same as A and also keeps the app sentence true.
 - **Action:** ask the user, because legal text needs Cal's approval and a new

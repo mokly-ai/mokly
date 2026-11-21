@@ -89,9 +89,12 @@ Bundle reuse also reads the captured reuse evidence of the compiled recipe
 again through the injected `PhysicalInputs` reader, outside the side tree. A
 read error rejects reuse, also for a recorded absence. Incomplete evidence
 never permits reuse, with one exception in the Serve edit capture mode: a
-retained state with a toolchain identity whose evidence holds only the
+retained state with a toolchain identity whose evidence holds the
 `uncaptured` marker is reused while its module digests and metadata stamps
-stay current. A captured state is tried before a marked one.
+stay current. Its evidence can also hold the private folder files of the
+[package folder reuse rules](../../docs/protocol/mokly-sidecar-folder-reuse.md).
+The same reader checks them again, and one change rejects the reuse. A
+captured state is tried before a marked one.
 Each core `bundle` request runs in a `catalogue.bundle` span, which records the
 `cache` outcome that the pool sets on the result. The request carries the
 `capture` mode of the runtime: `full` by default, and `serveEdit` for each
@@ -105,6 +108,20 @@ no notice. The head runtime of Serve also keeps the plan records of the
 [Serve edit plan rules](../../docs/protocol/mokly-sidecar-plans.md). It keeps
 a record from a `full` result, and it sends the plan of a current record with
 each `serveEdit` request.
+The head runtime of Serve also keeps one weak reference to its latest render
+input keys. The runtime copies of all its attempts share it. A `full` head
+preparation, such as the first one or its recheck, calls
+`RenderKeys::build_unseeded_with_workers`. It calculates every key, leaves the
+fact cell of those keys empty, and stores the keys in the reference. Their
+generation seeds that cell through `RenderGeneration::prepare_render_reuse`
+after its Changes complete as Ready or Unavailable. A `serveEdit` preparation
+passes the referenced keys to `RenderKeys::build_reusing_with_workers` while
+their generation lives, so the build copies only the keys whose inputs stayed
+equal. When their seed has not finished, the build calculates every key and
+keeps its own facts without waiting. Base runtimes, static builds, and publish
+have no reference, and their keys keep no reuse facts and no fact cell. The
+reference keeps no generation alive, and a seed never changes it. After the
+earlier generation goes, the next preparation calculates every key.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -115,6 +132,13 @@ captured results of its compilation. Empty directory recipes observe later
 additions.
 Each stylesheet root compiles through its own recording tree, resolver, and
 compiler, so roots that compile in parallel never share captured results.
+Class-map preparation compiles cold plain-CSS roots in bounded parallel chunks
+when both stylesheet stores are empty and no head store is live. It needs at
+least two distinct roots and two available workers. The worker
+bound is the available parallelism, four, or the root count, whichever is
+smallest. Other cases use serial preparation. Maps, records, observations,
+watch inputs, and dependency usage follow root order. A failed chunk can finish
+up to three later roots, but their dependency usage and records are discarded.
 The recording tree keeps each read, digest, unretained digest, and projection
 of the core CSS compiler, its resolver, and the nested-import check of
 PostCSS. A read keeps the digest of the returned bytes, so a `package.json`
@@ -322,8 +346,9 @@ view after the edit and counts real process starts and hello calls.
   `bundle_capture` field holds the `BundleCapture` of each core `bundle`
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
-  the head runtime of Serve its plan record owner. A base runtime never gets
-  one. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
+  the head runtime of Serve its plan record owner and the shared weak
+  reference to its latest render input keys. A base runtime never gets
+  either. `Runtime::with_stylesheet_watching` turns on physical stylesheet watch
   mapping for a runtime without a `BaseSide`. Serve calls it for its working
   side. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime. It starts its
@@ -331,18 +356,38 @@ view after the edit and counts real process starts and hello calls.
   origin. It is `None` in an original head. In a base, it holds a weak
   read-only reference to the stylesheet store of the original head, also
   when that reference is empty or expired.
+  `Runtime::with_document_store` gives the Serve runtime its render store, and
+  `Runtime::for_base` copies it, so the head and base graphs share one store.
+- [`src/persistent_identity.rs`](./src/persistent_identity.rs) gives the
+  JavaScript part of a render store identity: the toolchain identity and the
+  metadata identity of a compilation with captured and durable reuse evidence,
+  or none.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
-  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
-  captured and durable evidence, replaces the record of equal settings, and
-  removes the oldest records to keep the serialized total within
-  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
-  place.
+  with the `ReuseEvidence` of its compilation. `Records` keeps each record by
+  the resolution settings of its request: the bundle settings without the
+  entry files, the stories files, the renderer, and the evaluation digest.
+  `Records::insert` keeps only captured and durable evidence, replaces the
+  record of equal resolution settings, and removes the oldest records to keep
+  the serialized total within `RECORD_BYTES`. A record that it cannot keep
+  leaves the older record in place.
 - [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
   `PhysicalInputs`, the reader that checks the captured reuse evidence of a
   compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
-  filesystem implementation. Its `current` check rejects marked evidence. It
-  does not read the `durable` flag of the evidence.
+  filesystem implementation. Its `current` check rejects marked evidence and
+  compares whole directories. It does not read the `durable` flag of the
+  evidence. Its `matches_candidates` method defaults to the whole comparison
+  for readers without a candidate implementation.
+- [`src/plan_inputs.rs`](./src/plan_inputs.rs) holds `current`, the plan
+  check that `bundle_attempt.rs` runs before a Serve edit. It selects
+  candidate comparisons for the recorded directories that have candidate
+  names, under the
+  [candidate name rules](../../docs/protocol/mokly-sidecar-plans.md#candidate-names).
+  Other observations keep the whole comparison.
+- [`src/plan_directory.rs`](./src/plan_directory.rs) holds `matches`, the
+  streaming candidate comparison that `SystemPhysicalInputs` uses. It checks
+  each current entry and link before filtering unrelated ASCII names. It
+  compares the saved candidate entries and the canonical directory path.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -351,7 +396,20 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path.
+  same composition path. It gives the `Fragments` of each side that side's own
+  source root, so a base graph records nothing as head, also with an equal
+  generation id.
+- [`src/render_keys.rs`](./src/render_keys.rs) builds the render input keys of
+  each graph. With the Serve head reference, it calls
+  `RenderKeys::build_unseeded_with_workers` in the `Full` mode and passes the
+  live earlier keys to `RenderKeys::build_reusing_with_workers` in the
+  `ServeEdit` mode. Without the reference, it calls
+  `RenderKeys::build_with_workers`, which keeps no facts.
+- [`src/fragments.rs`](./src/fragments.rs) defines `Fragments`, the fragment
+  adapter over the pool. Its `record_served` passes a store-served request to
+  `SidecarPool::record_served_render`.
+  [`src/render_call.rs`](./src/render_call.rs) builds the wire call once, for a
+  render and for a record.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
   isolates class maps across retained graphs. It sends the served-generation
   notice only at its direct return of a retained state. Its `BundleState`
@@ -362,9 +420,10 @@ view after the edit and counts real process starts and hello calls.
   request with the `capture` mode of the runtime in its `catalogue.bundle`
   span, gives each result's lifetime epoch to a `BundleLease`, and sends the
   served-generation notice after a core reuse, only in the `Full` mode.
-  Before a `ServeEdit` request of a head runtime, it sends the plan of a
-  record whose evidence `physical_inputs::current` accepts. It offers each
-  `Full` result with a plan and a toolchain identity to `Records`.
+  Before a `ServeEdit` request of a head runtime, it runs the plan check on
+  the record of the request's resolution settings, and it sends the plan when
+  the check passes. It offers each `Full` result with a plan and a toolchain
+  identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -385,6 +444,14 @@ view after the edit and counts real process starts and hello calls.
 - [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
   `StylesheetCache`, the byte-bounded store of records, shared context
   entries, and miss reasons.
+- [`src/stylesheet_class_maps.rs`](./src/stylesheet_class_maps.rs) defines
+  `ClassMapCompiler`, the bounded preparation boundary for class-map roots.
+  It keeps serial preparation for warm stores, live head stores, and PostCSS.
+- [`src/stylesheet_commit.rs`](./src/stylesheet_commit.rs) gives serial and
+  parallel preparation one record insertion and delivery path.
+- [`src/stylesheet_usage.rs`](./src/stylesheet_usage.rs) defines
+  `BufferedUsage`, which retains raw dependency calls until their root's
+  serial position, including the partial calls of a failing root.
 - [`src/stylesheet_compiler.rs`](./src/stylesheet_compiler.rs) defines
   `RootCompiler`, which compiles one stylesheet root, and `CapturingCompiler`.
   For each root, `CapturingCompiler` makes a new recording tree, resolver, and
@@ -413,9 +480,11 @@ view after the edit and counts real process starts and hello calls.
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
 - [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Render input keys in Serve](../../docs/protocol/mokly-watch.md#invalidation-through-the-render-graph).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
 - [Stylesheet dependency retention](../../docs/protocol/mokly-imported-styles-postcss.md#dependency-retention).
 - [Timing records](../../docs/protocol/mokly-timings.md#core-spans).

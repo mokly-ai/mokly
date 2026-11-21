@@ -27,6 +27,24 @@ pub mod git_tree;
 pub mod inputs;
 pub mod locations;
 pub mod process;
+mod render_admission;
+mod render_batch;
+mod render_disk;
+pub mod render_identity;
+pub mod render_image;
+mod render_memory;
+pub mod render_pending;
+mod render_segment;
+pub mod render_segment_buffer;
+mod render_segment_header;
+mod render_sequence;
+pub mod render_store;
+mod render_store_index;
+mod render_store_read;
+mod render_store_state;
+mod render_store_write;
+pub mod render_writer;
+pub mod render_writer_control;
 mod source_cache;
 mod source_index;
 pub mod sources;
@@ -231,6 +249,10 @@ mod capture_engine_tests;
 mod capture_producer;
 
 mod capture_collection;
+
+#[cfg(test)]
+#[path = "_tests_/capture_window_fixture.rs"]
+mod capture_window_fixture;
 
 #[cfg(test)]
 #[path = "_tests_/bundle_fixture.rs"]

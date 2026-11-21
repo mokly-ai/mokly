@@ -158,6 +158,10 @@ impl ProcessGroups for TrackedGroups {
         self.pid.store(child.id(), Ordering::Release);
         Ok(Box::new(SharedGroup(group)))
     }
+
+    fn kill_unattached(&self, child: &Child) -> Result<()> {
+        SystemProcessGroups.kill_unattached(child)
+    }
 }
 
 struct SharedGroup(Arc<dyn ProcessGroup>);

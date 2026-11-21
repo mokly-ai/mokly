@@ -4,10 +4,9 @@ import path from "node:path";
 
 import type { BuildResult } from "esbuild";
 
-import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
@@ -35,9 +34,8 @@ export interface CompiledBundle {
   preview: string | null | undefined;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
-  capture: BundleCapture;
   editImports: ServeEditImports | undefined;
-  plan: ReadonlyMap<string, PlannedImport> | undefined;
+  plan: ResolutionPlan | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -52,17 +50,16 @@ export async function bundleRecipe(
     preview,
     runtimeKey,
     evidence,
-    capture,
     editImports,
     plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
-  const editReusable = editImports
+  const folderEvidence = editImports
     ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
         editImports.record(compiled.metafile!, paths),
       )
-    : false;
+    : undefined;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
     "sidecar.bundle.graph",
@@ -127,14 +124,11 @@ export async function bundleRecipe(
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence
     ? await evidence.finish(compiled.metafile!)
-    : {
+    : (folderEvidence ?? {
         complete: false,
         durable: false,
         inputs: {},
-        ...(capture === "serveEdit" && editReusable
-          ? { uncaptured: "serveEdit" as const }
-          : {}),
-      };
+      });
   const toolchain = await toolchainIdentity();
   if (!toolchain) {
     reuseEvidence.complete = false;
@@ -168,6 +162,25 @@ export async function bundleRecipe(
   );
   const compilation: CompiledGeneration = {
     toolchain: toolchain ?? "",
+    ...(reuseEvidence.complete
+      ? {
+          metadataIdentity: createHash("sha256")
+            .update(
+              JSON.stringify(
+                [...(evidence?.physical.identityInputs ?? [])]
+                  .map(([file, value]): [string, string | null] => [
+                    path
+                      .relative(paths.sourceRoot, file)
+                      .split(path.sep)
+                      .join("/"),
+                    value,
+                  ])
+                  .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+              ),
+            )
+            .digest("hex"),
+        }
+      : {}),
     reuseEvidence,
     identity: hash.digest("hex"),
     code: compiled.outputFiles![0]!.text,
@@ -187,8 +200,19 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
+  const originalPathCount = plan?.paths.length ?? 0;
+  const namedPlan = evidence
+    ? evidence.candidates.attach(plan, reuseEvidence)
+    : plan;
+  let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  if (!retainedPlan && namedPlan?.candidates) {
+    namedPlan.paths.length = originalPathCount;
+    delete namedPlan.candidates;
+    retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  }
+  const result = bundleResult(generation, retainedPlan);
   if (reusable && !compilation.reuseEvidence.complete) {
+    delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")
       .update(compilation.identity)
       .update(runtimeKey)

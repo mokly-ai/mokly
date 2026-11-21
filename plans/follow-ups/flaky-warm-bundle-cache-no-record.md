@@ -1,20 +1,22 @@
 # Warm bundle cache test finds no disk record
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Fix after merge.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-19, on branch `calummoore/mokly-flaky-saved-plan-test-5sod`
   at commit `76386b810`, from a macOS CI failure of PR #356.
-- **Location:** `crates/mokly-compare/tests/bundle_pool_tests.rs:27` to line
-  75, with the warm cache assertion at line 51,
-  `crates/mokly-compare/tests/support/bundle_pool.rs:127` to line 137,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:41` to line 150,
+- **Location:** `crates/mokly-compare/tests/bundle_pool_tests.rs:36` to line
+  90, with the warm cache assertion at line 60,
+  `crates/mokly-compare/tests/support/bundle_pool.rs:42` to line 161,
+  `crates/mokly-compare/tests/support/bundle_pool_trace.rs:14` to line 131,
+  `crates/mokly-compare/tests/support/bundle_pool_observations.rs:10` to line
+  62, `crates/mokly-compare/tests/support/bundle_pool_sidecar.mjs:1` to line
+  176, `crates/mokly-sidecar/src/pool_bundle_cache.rs:41` to line 150,
   `crates/mokly-sidecar/src/durable_recipe.rs:31` to line 35,
   `crates/mokly-compare/src/bundle_store.rs:73` and line 138,
   `crates/mokly-sidecar/src/bundle_outcomes.rs:5` to line 19, and
-  `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
-- **Reason:** On 2026-11-19 the performance orchestrator deferred this unknown
-  mode, so that the class fix of the branch does not wait for its natural
-  trace.
+  `packages/mokly/src/sidecar/captured-plan.ts:7` to line 12.
+- **Reason:** The source stays unknown after 100 complete local runs with
+  failure diagnostics on 2026-11-20, so the user chooses the eventual fix.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -33,6 +35,9 @@
   - **Write outcome:** the result of a save to the bundle cache, such as
     `Written` or `Unchanged`.
 - **Background:**
+  - Test line numbers in this background are those of commit `e272615f2`,
+    unless the text names another copy. The **Location** line gives the
+    lines with the diagnostics of 2026-11-20.
   - The test is
     `a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_equal_output`
     at line 27 of `crates/mokly-compare/tests/bundle_pool_tests.rs`. It uses
@@ -60,7 +65,7 @@
   - How the plan and the disk record come about:
     - The sidecar returns a plan only for complete and durable evidence with
       no `uncaptured` marker, in `capturedPlan` at
-      `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
+      `packages/mokly/src/sidecar/captured-plan.ts:7` to line 12.
     - After a full capture, `complete_bundle` saves a durable recipe to the
       store, at `pool_bundle_cache.rs:131` to line 143. `DurableRecipe::new`
       admits only captured and durable evidence, at `durable_recipe.rs:32`.
@@ -143,6 +148,117 @@
     Node tests. Each helper creates every shared folder and every owner folder
     of its runtime before it returns a fixture. Nobody has shown that the
     class fix removes this mode.
+  - The record of 2026-11-19 had the kind Fix after merge. It recommended C,
+    with B next when C cannot reproduce the failure, and D after the cause
+    is known.
+    - Its reason: on 2026-11-19 the performance orchestrator deferred this
+      unknown mode, so that the class fix of the branch does not wait for its
+      natural trace.
+    - Its action: fix after merge, apply C, because on 2026-11-19 the
+      performance orchestrator kept this mode open while the class fix
+      merges. The testing rules require a named source before a fix. If C
+      cannot reproduce the failure or name its source, the testing rules
+      give the fix the outcome `ask the user`.
+  - On 2026-11-20, the user chose B first, then C. The user allowed D only
+    for a cause in the test or its fixture that a trace names. When the
+    runs cannot reproduce the failure or name its source, the user asked for
+    a change that adds evidence only, and for a decision.
+  - The investigation of 2026-11-20 applied B, then C, on Linux:
+    - It started at commit `e272615f2` of `main`. There, this item and the
+      code that it names still applied.
+    - The machine ran Ubuntu 24.04.4 LTS on Linux x86_64, with kernel
+      6.8.0-117-generic. It had 4 CPUs, 8 GiB of memory, 2 GiB of swap, and
+      an ext4 checkout. The tools were Rust and Cargo 1.98.1, Node 24.22.1,
+      npm 11.21.0, and Bun 1.4.4.
+    - B added test-only diagnostics. They observe the real calls and change
+      no result. A failed test now prints these facts:
+      - the cache outcome and the capture flags of each bundle and edit
+        result
+      - each real store load, save, and invalidate outcome
+      - each real restore of a loaded record
+      - the files of the cache folder
+      - the first recorded input that differs between two compared captures
+      - the path and the saved and read stamps of the first check that made
+        a capture not durable
+    - The test pools launch `support/bundle_pool_sidecar.mjs`. It imports the
+      exported capture classes of the built sidecar, observes their calls,
+      and passes each call to the original method. Then it imports the real
+      built `packages/mokly/dist/sidecar.js`. It adds no filesystem probes,
+      and it keeps each return value and each error.
+    - C ran the complete `bundle_pool_tests` binary 50 times, with the
+      default test threads and no test filter. All 50 runs passed all 150
+      tests.
+    - C ran the binary 50 more times under parallel load. All 50 runs passed
+      all 150 tests. Each round started three complete binaries at the same
+      time, one of each kind:
+      - a prebuilt `config_dir_pool_tests` binary of `mokly-compare`, with
+        1 test
+      - a prebuilt `recipe_reuse_tests` binary of `mokly-sidecar`, with 3
+        tests
+      - the `bundle_pool_tests` binary, with 3 tests
+    - No two running tests shared a fixture owner folder. The
+      `config_dir_pool_tests` binary passed 50 of 50 runs with 50 tests. The
+      `recipe_reuse_tests` binary passed 50 of 50 runs with 150 tests.
+    - No Cargo build or gate ran during the runs. The builds used
+      `CARGO_BUILD_JOBS=2` and `CARGO_INCREMENTAL=0`.
+    - In total, 100 of 100 runs passed 300 of 300 tests, and the load passed
+      200 of 200 tests. No run had a failed, ignored, measured, or filtered
+      test, or a missing harness summary.
+    - In each of the 100 runs, the first capture of the warm test was
+      complete and durable, with no `uncaptured` marker. It returned a plan
+      with two imports, and its save reported `Written`. The warm load
+      reported `Hit`, and the restore succeeded. The warm save reported
+      `Unchanged`, and the warm result reported `Hit`.
+    - Across the 100 runs, all 1000 full bundles were complete and durable,
+      with no `uncaptured` marker. The 200 edit results had the `uncaptured`
+      marker `ServeEdit`, as expected. No capture failed its durability
+      check.
+    - One controlled probe checked the rejection output. A temporary change
+      to an ignored build file created and removed one folder in
+      `target/durable-capture-fixtures/rust/compare-warm-plan`. It did this
+      at the finish of the first capture of the warm test.
+      - The complete binary exited with status 101, with 2 tests passed and
+        1 failed.
+      - The warm test failed earlier than in CI, at the plan `unwrap()` after
+        the first capture. That capture was complete but not durable, with
+        no `uncaptured` marker and no plan. The pool offered no save.
+      - The rejection output named that owner folder. Its saved ctime and
+        mtime were 1795167194078392855 ns, and the read values were
+        1795167194774386962 ns.
+      - This probe does not reproduce this mode. In CI, the first capture
+        returned a valid plan with two imports, and then the warm pool found
+        no disk record.
+      - The build file was restored byte for byte. All hashes of the built
+        sidecar, the sources, and the archived test binaries were verified.
+    - No cause is proved. The investigation made no fixture fix and no
+      product fix, and no fixture fix follows from the controlled probe.
+    - The runs check the diagnostics only. No fix exists, so no pass counts
+      before and after a fix exist.
+    - The diagnostics keep all 32 assertions of the binary, with their
+      operands and expected values. They add and remove no test. They add no
+      retry, sleep, repeat, skip, quarantine, longer time limit,
+      serialization, gate, or lint.
+    - No run on macOS took part, because no local macOS machine was
+      available.
+  - The diagnostic merge, accepted on 2026-11-20:
+    - The performance orchestrator accepted the diagnostics at commit
+      `662a5fcc4` of branch
+      `calummoore/fu-flaky-warm-bundle-cache-no-record-jbfp`. The acceptance
+      includes the wrapper entry `support/bundle_pool_sidecar.mjs`, under a
+      fail-stop condition.
+    - The user requires this stop: when `CaptureDurability`,
+      `captureRuntime`, or `CaptureVolumes` is missing from
+      `packages/mokly/dist/sidecar/`, the wrapper entry stops and names that
+      export. It never starts the sidecar without its observers. Its static
+      named ESM imports already do this.
+    - `crates/mokly-compare/tests/bundle_pool_sidecar_tests.rs` exercises the
+      actual wrapper entry in isolated fake module trees.
+    - A branch that renames one of these exports updates the wrapper entry
+      in the same branch.
+    - The follow-up orchestrator found that this merge needs no further user
+      decision, because it changes diagnostics only and keeps every
+      assertion.
+    - The cause stays unknown. The eventual fix stays the user's choice.
   - Suspected source: unknown. No local run or probe reproduced this mode,
     and no evidence shows a product defect.
 - **Problem:** The warm test failed once in macOS CI with the cache outcome
@@ -156,33 +272,39 @@
 - **Root question:** How does the warm bundle pool test prove its disk hit on
   every run, also on a macOS CI runner?
 - **Options:**
-  - **A.** Change nothing, and add each recurrence with its failure text to
-    this item. Cost: CI stays flaky, and the source stays unknown. Effort:
+  - **A.** Change nothing after the diagnostics merge. Add each recurrence
+    with its failure text to this item. No fix follows without a new
+    decision. Cost: CI stays flaky, and each failure costs a rerun. Effort:
     Small.
-  - **B.** Make a later failure name its reason. Since the class fix, the
-    message of the assertion at line 51 prints the flags of the first capture.
-    B adds the rest. Examples are the cache outcome of the first result, the
-    flags of the warm result, and the file list of the cache folder. Keep
-    every assertion. Cost: a small test change, and the next failure can take
-    many CI runs. Effort: Small.
-  - **C.** Reproduce and trace, and commit nothing.
-    - Run the complete `bundle_pool_tests` binary many times, with the
-      default test threads, also on macOS. Count the failures, and record the
-      counts under `.context/`.
-    - With local diagnostics in the sidecar and the core, record the
-      `complete`, `durable`, and `uncaptured` flags of each capture. Record
-      the disk admission, the write outcome, the load outcome, and whether
-      the sidecar restored a loaded record. The store's `load` and `save` are
-      at `crates/mokly-compare/src/bundle_store.rs:73` and line 138.
+  - **B.** Make a later failure name its reason. The test-only diagnostics of
+    2026-11-20, in the background, print the facts that the CI log lacked.
+    They merge without a fixture or product fix, and without a user
+    decision, as the background says. Keep this item open. Add the trace of
+    the next natural failure to this item. When the trace names the cause, D
+    follows. Keep every assertion. Cost: three more test-support files and a
+    wrapper test file to maintain, and the next failure can take many CI
+    runs. The wrapper entry `support/bundle_pool_sidecar.mjs` names internal
+    modules and methods of the built sidecar. A rename there can fail these
+    tests or silently drop an observation. Effort: Small.
+  - **C.** Reproduce and trace more, before any fixture or product fix.
+    - Run the complete `bundle_pool_tests` binary many more times, with the
+      default test threads and the diagnostics of B, preferably on macOS.
+      Count the failures, and record the counts under `.context/`.
+    - When the diagnostics of B show too little, add local diagnostics in
+      the sidecar and the core, and commit none of them. The store's `load`
+      and `save` are at `crates/mokly-compare/src/bundle_store.rs:73` and
+      line 138.
     - Keep every assertion, so that a failing run stops where the CI run
       stopped.
     - Cost: machine time, macOS runs, and an unknown number of runs. This
-      mode appeared in none of the 20 local runs. Effort: Medium.
+      mode appeared in none of the 120 local Linux runs: 20 at `76386b810`
+      and 100 at `e272615f2`. Effort: Medium.
   - **D.** After B or C names the cause, fix it, and keep every assertion. A
     cause in the test or its fixture gets a deterministic test fix. A cause in
     product code is a product bug: add a failing test first. Bring each
-    product change to the performance orchestrator before the fix. Cost:
-    unknown until the cause is known. Effort: Medium.
+    product change to the performance orchestrator before the fix. On
+    2026-11-20 the user allowed D only for a traced cause in the test or its
+    fixture. Cost: unknown until the cause is known. Effort: Medium.
 - **Left out:**
   - A retry, a sleep, a repeat, a skip, a quarantine, a longer time limit, or
     a weaker assertion. The testing rules forbid each of them without the
@@ -191,6 +313,9 @@
   - Running the tests one at a time, or any other serialization. It changes
     the runner only to make the test pass, and it names no cause.
   - A product fix before a trace. No evidence shows a product defect.
+  - A fixture fix based on the controlled probe of 2026-11-20. That probe
+    failed earlier than CI, at the plan `unwrap()`, so it names no cause of
+    this mode.
   - A hold of the class fix until a natural trace of this mode. The
     performance orchestrator rejected it on 2026-11-19, because the wait
     would delay the reproduced class fix.
@@ -199,12 +324,9 @@
 - **Previous examples:** The replacement test of the same binary failed in the
   same CI run, and a controlled probe reproduced its chain, as the background
   says. The class fix covers that test. Its chain does not explain this mode.
-- **Recommendation:** C. It names the cause under the conditions of the
-  failure before any change, as the testing rules require, and it changes
-  nothing in the repository. B is the next step when C cannot reproduce the
-  failure, and D follows when the cause is known.
-- **Action:** fix after merge, apply C, because on 2026-11-19 the performance
-  orchestrator kept this mode open while the class fix merges. The testing
-  rules require a named source before a fix. If C cannot reproduce the
-  failure or name its source, the testing rules give the fix the outcome
-  `ask the user`.
+- **Recommendation:** B. Each later macOS CI run then repeats the test with
+  these diagnostics, and 100 local Linux runs did not reproduce this mode. C,
+  more runs preferably on macOS, stays the step before any fixture or
+  product fix. B replaces C, the recommendation of 2026-11-19.
+- **Action:** ask the user, because the 2026-11-20 runs named no source, and
+  the user asked to choose the eventual fix in that case.

@@ -7,18 +7,15 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config::normalize;
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::definition_provider::{DefinitionProvider, Definitions};
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
-use mokly_catalogue::discovery::SourceFile;
-use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_compare::ancestor_roots;
 use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
 use mokly_graph::cache::RenderCache;
 use mokly_graph::delivery_inputs::STYLE_REFERENCE_BYTES;
+use mokly_graph::document_store::DocumentStore;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
+use mokly_graph::render_inputs::RenderKeys;
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
-use mokly_graph::source_snapshot::SourceSnapshot;
-use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::RenderWorkers;
 use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
@@ -27,19 +24,20 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::edit_plans::Records;
-use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
 use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
+use crate::side;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
-use crate::{definitions, side};
 
 static CONTEXT_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Definition and graph factories share one sidecar pool and one fragment cache.
 #[derive(Clone)]
 pub struct Runtime {
+    /// Optional Serve store shared by working and historical generations.
+    pub document_store: Option<Arc<dyn DocumentStore>>,
     /// Working or historical source reader.
     pub tree: Arc<dyn SourceTree>,
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
@@ -77,9 +75,16 @@ pub struct Runtime {
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
     pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
+    pub(crate) render_keys: Option<Arc<Mutex<Weak<RenderKeys>>>>,
 }
 
 impl Runtime {
+    /// Enable persistent documents only at the Serve composition root.
+    pub fn with_document_store(mut self, store: Arc<dyn DocumentStore>) -> Self {
+        self.document_store = Some(store);
+        self
+    }
+
     /// Enable physical stylesheet watch mapping for the working side of Serve.
     pub fn with_stylesheet_watching(mut self) -> Self {
         if self.base.is_none() {
@@ -88,10 +93,13 @@ impl Runtime {
         self
     }
 
-    /// Keep bounded captured plans for the head preparations of one Serve command.
+    /// Keep captured plans and weak render-key lookup for one Serve head.
     pub fn with_serve_edit_plans(mut self) -> Self {
-        if self.base.is_none() && self.edit_plans.is_none() {
-            self.edit_plans = Some(Arc::new(Mutex::new(Records::default())));
+        if self.base.is_none() && self.head_styles.is_none() {
+            self.edit_plans
+                .get_or_insert_with(|| Arc::new(Mutex::new(Records::default())));
+            self.render_keys
+                .get_or_insert_with(|| Arc::new(Mutex::new(Weak::new())));
         }
         self
     }
@@ -162,6 +170,7 @@ impl Runtime {
             base,
             self.style_references.clone(),
         );
+        runtime.document_store = self.document_store.clone();
         runtime.watch_stylesheets = false;
         runtime.head_styles = Some(match &self.head_styles {
             Some(head) => head.clone(),
@@ -187,6 +196,7 @@ impl Runtime {
         style_references: Arc<dyn ReferenceCache>,
     ) -> Self {
         Self {
+            document_store: None,
             inventory_tree: tree.clone(),
             tree,
             dependency_tree,
@@ -209,6 +219,7 @@ impl Runtime {
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
             edit_plans: None,
+            render_keys: None,
         }
     }
 
@@ -257,40 +268,6 @@ impl Runtime {
     }
 }
 
-impl DefinitionProvider for Runtime {
-    fn describe(
-        &self,
-        config: &ResolvedConfig,
-        files: &[SourceFile],
-    ) -> mokly_catalogue::error::Result<Definitions> {
-        let _describing = self
-            .describing
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        let mut attempt = self.clone();
-        attempt.tree = Arc::new(SourceSnapshot::new(self.tree.clone()));
-        attempt.dependency_tree = Arc::new(SourceSnapshot::new(self.dependency_tree.clone()));
-        match definitions::describe(&attempt, config, files) {
-            Ok(definitions) => Ok(definitions),
-            Err(source) => match source.diagnostic() {
-                Some(source) => Err(CatalogueError::Runtime { source }),
-                None => Err(CatalogueError::Internal(InternalError::Provider {
-                    source: Box::new(source),
-                })),
-            },
-        }
-    }
-}
-
-impl GraphFactory for Runtime {
-    fn create(&self, _config: &ResolvedConfig) -> mokly_graph::error::Result<Arc<dyn RenderGraph>> {
-        let mut runtime = self.clone();
-        runtime.tree = Arc::new(SourceSnapshot::new(self.tree.clone()));
-        runtime.dependency_tree = Arc::new(SourceSnapshot::new(self.dependency_tree.clone()));
-        Ok(Arc::new(JavaScriptGraph { runtime }))
-    }
-}
-
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
@@ -298,3 +275,7 @@ mod runtime_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_reuse_tests.rs"]
 mod bundle_reuse_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_folder_reuse_tests.rs"]
+mod bundle_folder_reuse_tests;

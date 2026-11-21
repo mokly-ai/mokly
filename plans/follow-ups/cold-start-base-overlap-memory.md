@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the closed branch `calummoore/mokly-startup-base-overlap-rae7`, after the performance orchestrator closed its product change without a merge.
-- **Location:** `crates/mokly-server/src/background.rs:42-56`, `crates/mokly-server/src/changes_background.rs:43-52`, `crates/mokly-cli/src/serve_gate.rs:64-87`, `crates/mokly-sidecar/src/pool_admission.rs:29-107`, `crates/mokly-cli/src/render_runtime.rs:115`, and the Default Admission section of `docs/protocol/mokly-sidecar-memory.md`.
+- **Location:** `crates/mokly-server/src/background.rs:44-62`, `crates/mokly-server/src/changes_background.rs:43-52`, `crates/mokly-cli/src/serve_gate.rs:64-87`, `crates/mokly-sidecar/src/pool_admission.rs:29-107`, `crates/mokly-cli/src/render_runtime.rs:115`, and the Default Admission section of `docs/protocol/mokly-sidecar-memory.md`.
 - **Reason:** A further attempt needs a new memory rule for early base work, and only the user can choose that rule.
 
 - **Source:** Implementation.
@@ -22,7 +22,7 @@
     - First Changes is the time from the Serve start to the first published Changes result.
     - HTTP is the time of one view render that a browser requests during usage.
     - A byte proof compares the published Changes bytes of both arms.
-  - Current main prepares the base serially. `UsagePass` renders current usage, then runs Changes, at `crates/mokly-server/src/background.rs:42-56`. Changes and its one-second reference poll start after usage, at `crates/mokly-server/src/changes_background.rs:43-52`.
+  - Current main prepares the base serially. `UsagePass` renders current usage, then runs Changes, at `crates/mokly-server/src/background.rs:44-62`. Changes and its one-second reference poll start after usage, at `crates/mokly-server/src/changes_background.rs:43-52`.
   - On main, a base sidecar call waits while a foreground lease is held, at `crates/mokly-cli/src/serve_gate.rs:86`.
   - Main has live memory admission for default-size sidecar pools, at `crates/mokly-sidecar/src/pool_admission.rs:29-107`, wired at `crates/mokly-cli/src/render_runtime.rs:115`.
     - Each sidecar slot reservation has a 1 GiB budget.
@@ -94,6 +94,7 @@
 - **Wider fix:** E, for the class of early work that can exhaust memory. A reservation makes that bound part of admission. It does not prove the paired 5% bound, which still needs paired evidence.
 - **Previous examples:** On the closed branch, a headroom rule with a serial fallback was proposed three times and not chosen, because no threshold was proved. An earlier cloud run had already shown a 2.4 s cold gain and a 0.45 s warm gain for an earlier candidate. The new runs repeat a cold gain for the narrowed design.
 - **Related:**
+  - [early-base-capture-evicted-results.md](./early-base-capture-evicted-results.md): its bounded handoff must account for retained early results. Its accepted step 1 diagnostic does not approve a new memory rule for this separate overlap work.
   - [background-base-render-pool.md](./background-base-render-pool.md): it covers the shared-worker stall. Like main, the closed attempt captured only after usage, so its capture did not compete with usage for render workers. A browser request during that capture can still wait, because waiting base jobs can hold every shared render worker.
   - [default-sidecar-count.md](./default-sidecar-count.md): the pool size sets the sidecar memory that any early base work must fit beside.
   - [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md): it would return bundler memory after each bundle, which option D can test. An older sampled peak showed more memory in a head esbuild process during an edit, with no causal proof.

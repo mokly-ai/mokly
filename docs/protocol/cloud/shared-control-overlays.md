@@ -83,7 +83,7 @@ scrolling body without ever owning a heading of its own. See
 ## The Published Viewer Stage
 
 The workspace `@mokly/viewer` owns the ready stage, the catalogue and package
-controls. `apps/app` uses its root React entry and stylesheet behind the
+controls. `packages/app` uses its root React entry and stylesheet behind the
 [package host contract](./viewer-host.md#package-host). The mockups depict the
 ready stage statically with the parts of the workspace `@mokly/ui`, which
 the viewer renders its shell from, drawn with `interactive={false}`.

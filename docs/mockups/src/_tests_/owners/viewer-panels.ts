@@ -42,6 +42,17 @@ export const viewerPanelOwners = {
       "settings/panes/member-details.tsx",
     ],
   },
+  // The bar in the Mac app is this page's whole subject: the cloud's slot
+  // content starts after the window buttons. The same sources draw every
+  // control on it as on the bar above.
+  "product/viewer/standalone/mac-app": {
+    region: "bar",
+    files: [
+      "viewer/chrome.tsx",
+      "screens/viewer/slots.tsx",
+      "screens/viewer/more-menu.tsx",
+    ],
+  },
   // A failed attempt is named by the classification Mokly kept, which is read
   // and worded in `failure.ts`; the card around it is the stage's own.
   "product/viewer/standalone/failed": {

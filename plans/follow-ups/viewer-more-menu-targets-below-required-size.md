@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-03, from the hosted viewer layout verification on `conductor/follow-ups-hosted-viewer-layout`.
-- **Location:** `apps/app/src/screens/viewer/more-menu.tsx`, `apps/app/src/settings/row-menu.tsx`, `apps/app/src/screens/account/connect-screen.tsx`, and the Viewer top bar paragraph of `docs/protocol/cloud/folio-viewer.md`.
+- **Location:** `packages/app/src/screens/viewer/more-menu.tsx`, `packages/app/src/settings/row-menu.tsx`, `packages/app/src/screens/account/connect-screen.tsx`, and the Viewer top bar paragraph of `docs/protocol/cloud/folio-viewer.md`.
 - **Reason:** The recommended shared-control fix needs another repository and a release, while local alternatives change the design or requirements.
 - **Category:** Product bug.
 - **Terms:**
@@ -20,11 +20,11 @@
   - **C.** Add a public row-minimum option to Firna, release it, and deliberately bump the three pinned workspaces in a separate change. Apply it to More and keep the existing dropdown behavior. Other phone menu families stay separate. Effort: Medium.
   - **D.** Add visible Firna `DropdownIconBox` tiles through the public `leading` slot on touch viewports. A row then measures 8 + 28 + 8 = 44 px. This needs a new drawing and changes to the icon-size and tinted-fill rules in `folio-chrome.md`. Its sizing depends on the current tile and padding dimensions. Effort: Medium.
   - **E.** Clarify that the More sentence's 44 px floor applies only on touch viewports. Pointer windows keep their current density. Combine E with B, C, D, F, or G, because E alone leaves phone rows at 34 px. Effort: Small.
-  - **F.** Give every Firna dropdown row family one supported floor, then release and bump the pin in `apps/app`, `apps/mockups`, and `packages/tokens`. Apply 44 px on touch viewports through one shared helper. Cover More, settings row menus, workspace selectors, and their drawings. Include E's viewport clarification. This needs two repositories and all affected call sites. Effort: Large.
+  - **F.** Give every Firna dropdown row family one supported floor, then release and bump the pin in `packages/app`, `apps/mockups`, and `packages/tokens`. Apply 44 px on touch viewports through one shared helper. Cover More, settings row menus, workspace selectors, and their drawings. Include E's viewport clarification. This needs two repositories and all affected call sites. Effort: Large.
   - **G.** Open More in the existing settings sheet on touch viewports, using registered Firna `List` rows with 48 px targets. Pointer windows keep the dropdown. The sheet supplies its focus trap. Update the More surface requirements and add a drawing of the open sheet. Effort: Medium.
 - **Left out:** Ad hoc CSS overrides break the shared-control rule. A global breakpoint change does not change the fixed dropdown padding. Empty sizing spacers break `shared-controls.md`'s rule that public size and touch-target props set control geometry. Repeated secondary text breaks the product copy rule that supporting text stays optional. Firna `ResponsiveMenu` uses the same short rows. Changing nothing leaves the phone requirement unmet.
 - **Wider fix:** F. One supported row floor covers all affected menu families and their drawings.
-- **Previous examples:** The settings sheet in `apps/app/src/settings/row-menu.tsx` and the workspace selector in `apps/app/src/screens/account/connect-screen.tsx` use the same single-line rows. Their drawings use `docs/mockups/src/components/responsive-menu.tsx` and `options-list.tsx`. These additional cases follow from the shared implementation, rather than a browser measurement.
+- **Previous examples:** The settings sheet in `packages/app/src/settings/row-menu.tsx` and the workspace selector in `packages/app/src/screens/account/connect-screen.tsx` use the same single-line rows. Their drawings use `docs/mockups/src/components/responsive-menu.tsx` and `options-list.tsx`. These additional cases follow from the shared implementation, rather than a browser measurement.
 - **Recommendation:** F. It preserves shared menu behavior and meets the mobile target rule for every affected family. The initial recommendation was C. G is the strongest option that needs no Firna release.
 - **Action:** ask the user, because F needs another repository and a release, while the local alternatives change requirements or menu design.
 

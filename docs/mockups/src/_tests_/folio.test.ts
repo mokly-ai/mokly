@@ -96,6 +96,7 @@ test("Folio and Canvas screens have permanent ids and folders, with all register
       "switch",
       "table",
       "textarea",
+      "window-controls",
       "write-failure",
     ]
       .map((name) => "design/" + name)

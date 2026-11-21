@@ -86,7 +86,7 @@ export function drawnPendingLabels(
  * deleted label goes unnoticed.
  */
 export function source(path: string): string {
-  return readFileSync(resolve(repository, "apps/app/src", path), "utf8")
+  return readFileSync(resolve(repository, "packages/app/src", path), "utf8")
     .replaceAll(/\/\*[\s\S]*?\*\//g, " ")
     .replaceAll(/(^|[^:"'\\])\/\/[^\n]*/g, "$1");
 }

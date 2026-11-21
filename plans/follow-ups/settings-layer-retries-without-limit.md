@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-06, from the check of finding 82 of the round 1 review of `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `apps/app/src/settings/layer-address.ts:69`.
+- **Location:** `packages/app/src/settings/layer-address.ts:69`.
 - **Reason:** The code moved unchanged from `origin/main`, so the fix belongs to a separate branch.
 - **Checked:** 2026-11-06, after the fix of review finding 82: on a wide surface, the settings dialog's wait now stays on screen during the repeated reads, instead of a blank page. The repeated reads remain.
 - **Category:** Product bug.

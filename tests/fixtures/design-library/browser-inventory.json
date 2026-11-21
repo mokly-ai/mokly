@@ -1517,6 +1517,12 @@
   },
   {
     "kind": "component",
+    "path": "design/library/preview/device-frame/failed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/device-frame"
+  },
+  {
+    "kind": "component",
     "path": "design/library/preview/device-frame/light-only",
     "colorSchemes": ["light"],
     "variantOf": "design/library/preview/device-frame"

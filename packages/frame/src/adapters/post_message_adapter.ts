@@ -46,6 +46,9 @@ export function postMessageAdapter(options: {
       let loaded = false,
         ready = false,
         disposed = false;
+      // The document may load for as long as the server needs. Its reply has
+      // five seconds after the load.
+      let timer: number | undefined;
       let release = () => {};
       let resolveReady: (mounted: MountedFrame) => void;
       let rejectReady: (error: FrameError) => void;
@@ -207,6 +210,7 @@ export function postMessageAdapter(options: {
           return;
         }
         loaded = true;
+        timer = win.setTimeout(() => dispose("timeout"), 5000);
         try {
           transport.send({ type: "hello" });
         } catch {
@@ -214,7 +218,6 @@ export function postMessageAdapter(options: {
         }
       };
       const unload = () => dispose();
-      const timer = win.setTimeout(() => dispose("timeout"), 5000);
       release = ownFrame(frame, unload);
       view.signal?.addEventListener("abort", unload, { once: true });
       win.addEventListener("message", receive);

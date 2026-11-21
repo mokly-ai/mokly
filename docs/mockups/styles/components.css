@@ -293,12 +293,34 @@
   top: 0;
   z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--mk-space-4);
+  min-height: var(--mk-layout-topbar);
   background: var(--mk-color-background);
   border-bottom: 1px solid var(--mk-color-border);
-  padding: var(--mk-space-2) var(--mk-layout-gutter-mobile);
+  /* Where the window buttons take the start or the end of the bar, the bar
+     is 48px high, as every top bar is, so the buttons line up with its
+     controls: their width takes its vertical padding. A window without them
+     keeps the padding. With the buttons and enlarged text, the brand moves to
+     a second row rather than past the edge. */
+  padding-block: max(
+    0px,
+    calc(
+      var(--mk-space-2) - var(--fo-window-inset, 0px) -
+        var(--fo-window-inset-end, 0px)
+    )
+  );
+  padding-inline: var(--mk-layout-gutter-mobile);
+  padding-left: max(
+    var(--mk-layout-gutter-mobile),
+    var(--fo-window-inset, 0px)
+  );
+  padding-right: max(
+    var(--mk-layout-gutter-mobile),
+    var(--fo-window-inset-end, 0px)
+  );
 }
 .fo-layer-back {
   display: inline-flex;

@@ -27,8 +27,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
-- Store source, dependency, and bundle caches outside the repository.
+- Store source, dependency, bundle, and render caches outside the repository.
 - Implement the sidecar's bundle store over the bounded `bundles` kind.
+- Implement the render store of `mokly-graph` over the bounded render kind,
+  with one writer outside the render path.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
 - Install base dependencies with scripts disabled by default, a deadline, and a
@@ -65,8 +67,8 @@ needs files on disk. Its `review.base-extraction` span times the source key,
 the cache lookup, and a build, and records `action`: `reuse` for a complete
 entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
 lease a complete entry without a build, so base preparation can read an
-earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, and bundle
-namespaces under the directory that `SystemLocations` selects, with OS locks
+earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, bundle, and
+render namespaces under the directory that `SystemLocations` selects, with OS locks
 for namespace mutation and entry leases. When `SystemLocations` checks that the
 cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
@@ -110,14 +112,45 @@ gives a cache location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry format, the fault classes, the locks, and the bound.
 
-`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file
-in one place. The bundle kind uses 256 fixed stripes, selected by the first
-byte of the key. The source and dependency kinds keep one lock file for each
-key, because their callers wait for locks and hold long leases. A shared
-stripe there could make a build wait for an unrelated lease, or for its own.
-The stripe layout is fixed for the `bundles` directory, because every release
-must use the same lock file for an entry. A later layout needs a new
-directory.
+`RenderDisk` implements `SegmentCache` over the `renders` kind of the same
+namespace. It shares the receipts, the durable publication, the stripes, and
+the eviction of the bundle kind, under its own fixed bound,
+`render_store::CAPACITY`. `CachedDocuments` implements `DocumentBackend` over
+it. Each entry is one segment of at most 64 documents and 2 MiB, keyed by the
+digest of its bytes. A process inventories the kind once, checks each whole
+segment, and indexes at most 16,384 documents, from the most recently used
+segment down. Each read then checks the identity of its segment and the digest
+of its document. An access counter under the namespace lock orders the
+segments, so a read scans no entries. Only a segment publication scans the
+kind, to make room under the bound.
+`DocumentWriter` implements the `DocumentStore` of `mokly-graph`. It admits
+only keys, under the bounds of `WriterLimits`. `DocumentWriter::activity` gives
+the `WriteActivity` whose leases Serve work holds while it runs, and
+`DocumentWriter::bind_readiness` takes the `WriteReadiness` of the current
+Changes result. Its one writer thread starts a new export or save only while
+that readiness holds and no lease is held, and work that already started
+finishes. Each batch builds its segment in place in one `SegmentBuffer`, whose
+fixed capacity with its owner stays within 4 MiB inside the workspace of the
+render cache, and saves the `BuiltSegment` through the unchanged storage path.
+The state records carry the known capacities and the charges of the writer's
+buffers in `StoreMemory`.
+`DocumentWriter::prepared` starts that thread with its writes paused. The
+thread first prepares the native identity of its `Startup` and the index, and
+`resume` then releases the writes. `ImageIdentity` reads the identity once
+through `SystemImage`. On Linux, it digests the embedded build nonce and the
+running image through `/proc/self/exe`, and it gives no identity when the image
+changes during the read. On other targets, it digests the nonce alone.
+The [render store contract](../../docs/protocol/mokly-render-store.md) owns the
+identity, the read rules, the entry format, the fault classes, and the bound.
+
+`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file in
+one place. The bundle and render kinds use 256 fixed stripes, selected by the
+first byte of the key. The source and dependency kinds keep one lock file for
+each key, because their callers wait for locks and hold long leases. A shared
+stripe there could make a build wait for an unrelated lease, or for its own. The
+stripe layout is fixed for the `bundles` and `renders` directories, because
+every release must use the same lock file for an entry. A later layout needs a
+new directory.
 
 `DependencyTiers` implements `dyn Dependencies`. `InputReader` and
 `WorkingInputs` read manifests and lockfiles from the base blobs and from the
@@ -160,13 +193,17 @@ head. Each view supplies its validated document and closure without a second
 render. `Comparison::compare_prepared` classifies the prepared base and head.
 An uncaptured fallback uses the source generation, so a summary that exceeds
 the capture bound does not start another pass. The capture keeps exact document
-bytes, generated CSS, and trusted annotations in compressed form. It encodes
-documents with `mokly_graph::document_codec::EncodedView`, the codec that the
-compact tier of the render cache also uses. Each kept view also keeps the
-32-byte identity of its codec input from `EncodedView::encode_identified`,
-and the capture budget charges it. The render cache keeps no identity. Inputs
-that do not fit the capture budget, and kept views that fail to restore, read
-from their side's source.
+bytes, generated CSS, and trusted annotations in compressed form. Its collector
+gives the graph workers a `ComparisonEncoder` through
+`ComparisonCollector::encoder`. So each worker encodes its view with
+`mokly_graph::document_codec::EncodedView`, the codec that the compact tier of
+the render cache also uses. The encoder calls `EncodedView::encode_identified`,
+so each view also gets the 32-byte identity of its codec input.
+`ComparisonCollector::remaining` gives the bytes that the capture bound has
+left for the views that wait for their turn. Each waiting view and each kept
+view holds its identity, and the capture budget charges it. The render cache
+keeps no identity. Inputs that do not fit the capture budget, and kept views
+that fail to restore, read from their side's source.
 A usage read of a kept view returns its retained usage without a restore, so
 it needs no source fallback. Serve head reads use the bounded render cache and
 render again on the head root only when neither cache tier holds the document.
@@ -424,7 +461,8 @@ development dependencies, and no test uses the internet.
   pin the base, prepare its sources, report whether its tier-two install ran
   with lifecycle scripts off, carry its freshness evidence, and compare it with
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
-  methods keep nothing.
+  methods keep nothing. `PreparedBase::prefetch` holds the `PrefetchGuard` of
+  the early renders of a fresh base.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -442,7 +480,8 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse.
+  reuse. It holds the `PrefetchGuard` of a fresh base until the capture of
+  that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,
@@ -488,6 +527,44 @@ development dependencies, and no test uses the internet.
   [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
   the bounded scans, and the durable receipts with their publication nonce and
   compilation digest.
+- [`src/render_store.rs`](./src/render_store.rs) defines `RenderDisk`,
+  `SegmentCache`, `CachedDocuments`, `DocumentBackend`, `WriteOutcome`, and
+  `CAPACITY`, the render kind and its document backend. The private
+  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory.
+  [`src/render_store_state.rs`](./src/render_store_state.rs) prepares the
+  index from that inventory and handles entry and store faults.
+  [`src/render_store_read.rs`](./src/render_store_read.rs) reads one position
+  from the published snapshot before segment IO.
+  [`src/render_store_index.rs`](./src/render_store_index.rs) adopts validated
+  replacement positions in one snapshot while preserving keys that moved.
+  [`src/render_store_write.rs`](./src/render_store_write.rs) publishes a built
+  segment and adds its batch to the index with one snapshot copy.
+- [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
+  segment: the prefix, the bounded header, and the digests.
+  [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines
+  `SegmentBuffer` and `BuiltSegment`, the fixed buffer in which a batch builds
+  its segment, and the private
+  [`src/render_segment_header.rs`](./src/render_segment_header.rs) writes the
+  bounded header into it.
+  [`src/render_sequence.rs`](./src/render_sequence.rs) advances the access
+  counter.
+- [`src/render_writer.rs`](./src/render_writer.rs) defines `DocumentWriter` and
+  `WriterLimits`, the bounded key admission and the one writer.
+  [`src/render_batch.rs`](./src/render_batch.rs) builds one batch inside its
+  workspace. [`src/render_pending.rs`](./src/render_pending.rs) defines
+  `StoreObserver`, `StoreWarning`, and `TraceStoreObserver`. The private
+  [`src/render_admission.rs`](./src/render_admission.rs) holds the admission
+  state that implements `WriteActivity`, and
+  [`src/render_memory.rs`](./src/render_memory.rs) updates the `StoreMemory` of
+  the state records.
+- [`src/render_writer_control.rs`](./src/render_writer_control.rs) defines
+  `Startup` and `DocumentWriter::prepared`, the paused writer start that
+  prepares the identity and the index, and `DocumentWriter::activity` and
+  `DocumentWriter::bind_readiness`.
+- [`src/render_identity.rs`](./src/render_identity.rs) defines
+  `NativeIdentity`, the native build identity that the writer prepares, and
+  [`src/render_image.rs`](./src/render_image.rs) defines `ImageIdentity`,
+  `ImageSource`, and `SystemImage`, its implementation.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency
@@ -520,6 +597,7 @@ development dependencies, and no test uses the internet.
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
+  [render store](../../docs/protocol/mokly-render-store.md),
   [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),
   [dependency installation](../../docs/protocol/mokly-base-dependencies.md),
   and [install processes](../../docs/protocol/mokly-base-install-processes.md).

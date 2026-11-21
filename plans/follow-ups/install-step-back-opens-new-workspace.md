@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from an outside-the-scope note of the Milestone 5 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/screens/account/install-screen.tsx:72`, `:277` and `:289`, and `docs/protocol/cloud/product-navigation.md:134-152`.
+- **Location:** `packages/app/src/screens/account/install-screen.tsx:72`, `:277` and `:289`, and `docs/protocol/cloud/product-navigation.md:134-152`.
 - **Reason:** The protocol doc is silent on the Back of the install step, so the destination is a decision.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The owner, member and reviewer pages still link Back to `createWorkspacePath`, and the resolution table still gives no install-step Back.
 - **Category:** Product bug.

@@ -46,30 +46,28 @@ viewport and colour scheme. A page renders once. A Markdown document renders
 once per enabled colour scheme. A watched change renders only the outputs whose
 inputs changed. A component with the same props on many screens renders once.
 
-The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
-The tiers share 240 MiB and evict the least recently used entry. Compaction reserves
-three times the document charge and one of eight encoder leases under one lock.
-Encoders allocate on first use and retain 384 KiB each, at most 3 MiB, while idle
-or active. If charges do not fit or no lease is free, the document leaves and counts
-as an eviction. Inserts never wait. Every exit returns the lease and releases the
-document charge. Encoding runs outside the lock. Completion moves transit to compact
-under one lock. Other evicted artifacts leave. Compact takes room from evicted full
-entries, up to 128 MiB. Full keeps at least 112 MiB. A catalogue fitting 240 MiB
-never restores. Reads check full, transit, then compact. Transit returns full artifacts.
-Compact restores exact bytes, trees, and trusted annotations. `postcard` encodes
-compact trees. `flate2` compresses trees and bytes with zlib. Only a second
-restore within fewer operations than full has entries promotes. A full pass
-never promotes. A document that compact cannot keep or restore leaves the cache.
-Decision: keep evicted documents compact. Rejected: a larger bound that still
-thrashes; a fixed tier split that reduces room for fitting catalogues; a
-scan-resistant order that still misses when the head exceeds the bound; a Serve
-head capture read by the base, because it only serves Changes and adds a copy.
-Both sides share equal keys with no side warning. Serve reads the head from the
-cache. A missing head document renders again on the head root. Each
-[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
-bound. The base-side extraction cache, the dependency install cache, and the bundle
-cache live in the operating system's cache directory under a key derived from the
-repository path, each with its own byte bound, and the terminal names that directory.
+The 256 MiB render cache reserves 16 MiB for transit and encoding. The tiers share 240 MiB. Each tier
+evicts in its own access order. Inserts never wait.
+
+Compaction reserves three times the document charge and one of eight encoder leases. Encoders allocate on
+first use and retain 384 KiB each, at most 3 MiB, while idle or active. If charges do not fit or no lease
+is free, the document leaves and counts as an eviction. Every exit returns the lease and the document
+charge. Other evicted artifacts leave, and compact takes room from evicted full entries, up to 128 MiB.
+Full keeps at least 112 MiB.
+
+A catalogue fitting 240 MiB never restores. Compact restores exact bytes, trees, and trusted annotations.
+Only a second restore within fewer operations than full has entries promotes, so a full pass never
+promotes. A document that compact cannot keep or restore leaves the cache.
+Decision: keep evicted documents compact. Rejected: a larger bound that still thrashes, a fixed tier split
+that reduces room for fitting catalogues, a scan-resistant order that still misses when the head exceeds
+the bound, and a Serve head capture read by the base, because it only serves Changes and adds a copy.
+
+Both sides share equal keys with no side warning. Serve reads the head from the cache. A missing head
+document comes from the [render store](./mokly-render-store.md) or renders again on the head root. Each
+[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own bound. The base extraction,
+dependency install, and bundle caches and the render store live in the operating system's cache
+directory, under a key derived from the repository path. Each has its own byte bound, and the terminal
+names that directory.
 
 ## Serve
 
@@ -237,9 +235,9 @@ commit point and never leave a partial output directory in place.
 ## No Writes
 
 No command writes into the repository except `build` into its output directory. Serve,
-Changes, live prop editing, and comparison generations keep every result in process
-memory. The [caches](./mokly-base-cache.md) outside the repository, compiled bundles
-included, are the only other files Mokly writes, and deleting them changes time only.
+Changes, live prop editing, and comparison generations keep every result in process memory.
+The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes.
+Deleting them changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
 
 ## Related Docs
 

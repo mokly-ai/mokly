@@ -137,7 +137,7 @@ added options and changed two recommendations. Its transcript is in
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/cloud/site.md`, `docs/protocol/cloud/marketing-site.md`, `apps/app/src/config.ts:59`
+- **Location:** `docs/protocol/cloud/site.md`, `docs/protocol/cloud/marketing-site.md`, `packages/app/src/config.ts:59`
 - **Background:** The design adds `/pricing` with Open source, Free and Team.
   The facts come from `billing.md`. **Create an account** and **Start a 7-day
   trial** open `/sign-up`. The Plans and billing docs page already lists the

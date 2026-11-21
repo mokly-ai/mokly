@@ -8,11 +8,23 @@ use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput, R
 use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::stream::{OpenedSource, SourceStream};
 
+use crate::plan_directory;
+
 /// Physical reads used only to decide whether an earlier compilation remains current.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PhysicalInputsMock))]
 pub trait PhysicalInputs: Send + Sync {
     /// Compare one observation. Read errors must reject reuse, including recorded absence.
     fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool>;
+    /// Compare a plan directory using proved names. Other readers retain full checks.
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+    ) -> Result<bool> {
+        let _ = names;
+        self.matches(path, expected)
+    }
 }
 
 /// Native filesystem reader. File content checks retain one 64 KiB streaming buffer.
@@ -20,14 +32,19 @@ pub struct SystemPhysicalInputs;
 
 impl PhysicalInputs for SystemPhysicalInputs {
     fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool> {
-        match self.read(path, expected) {
-            Ok(matches) => Ok(matches),
-            Err(source) => Err(SourceError::Io {
-                operation: "check physical compilation input",
-                path: path.into(),
-                source,
-            }),
+        checked_result(path, self.read(path, expected))
+    }
+
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+    ) -> Result<bool> {
+        if !matches!(expected, PhysicalInput::Directory { .. }) {
+            return self.matches(path, expected);
         }
+        checked_result(path, plan_directory::matches(path, expected, names))
     }
 }
 
@@ -102,7 +119,19 @@ impl SystemPhysicalInputs {
     }
 }
 
-fn real_path(path: &Path) -> io::Result<String> {
+/// Keep the physical input path and operation on each native read error.
+pub(crate) fn checked_result<T>(path: &Path, result: io::Result<T>) -> Result<T> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(source) => Err(SourceError::Io {
+            operation: "check physical compilation input",
+            path: path.into(),
+            source,
+        }),
+    }
+}
+
+pub(crate) fn real_path(path: &Path) -> io::Result<String> {
     let real = dunce::canonicalize(path)?;
     match real.into_os_string().into_string() {
         Ok(real) => Ok(real),
@@ -111,11 +140,19 @@ fn real_path(path: &Path) -> io::Result<String> {
 }
 
 pub(crate) fn current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
-    evidence.captured()
-        && evidence
-            .inputs
-            .iter()
-            .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
+    evidence.captured() && entries_current(evidence, reader)
+}
+
+/// Compare eligible marked file observations without admitting them to full reuse.
+pub(crate) fn marked_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
+    evidence.serve_edit() && entries_current(evidence, reader)
+}
+
+fn entries_current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
+    evidence
+        .inputs
+        .iter()
+        .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
 }
 
 #[cfg(test)]

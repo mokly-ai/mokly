@@ -43,6 +43,7 @@ fn setup(
                 })),
         )),
         diagnostics: Arc::new(Unimock::new(())),
+        activity: None,
         watching,
     });
     (pass, origin, publications, collecting)

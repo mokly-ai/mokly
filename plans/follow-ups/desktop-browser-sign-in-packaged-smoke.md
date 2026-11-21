@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-06, from the post-merge tasks of the desktop browser sign-in plan on the branch `calummoore/desktop-browser-authentication`.
-- **Location:** `apps/desktop`, `docs/protocol/cloud/desktop-distribution.md` (the manual check), and the main-preview environment.
+- **Location:** `packages/desktop`, `docs/protocol/cloud/desktop-distribution.md` (the manual check), and the main-preview environment.
 - **Reason:** The check needs the merged change deployed to main-preview and signed packaged builds.
 
 - **Terms:**

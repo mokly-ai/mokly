@@ -37,7 +37,7 @@ setting, as the `auto-appearance` sample does.
 | inspector / inspector         | `details`, `props`, `closed`                                                                                                                  |
 | inspector / metadata-row      | `text`, `code`, `linked`, `tags`                                                                                                              |
 | inspector / prop-field        | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
-| preview / device-frame        | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
+| preview / device-frame        | `phone`, `browser`, `dark`, `light-only`, `failed`                                                                                            |
 | preview / comparison-pane     | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
 | preview / empty-state         | `home`, `missing-route`, `no-changes`                                                                                                         |
 | preview / flow-step           | `first`, `second`                                                                                                                             |
@@ -162,8 +162,9 @@ below use text, boolean, number and primitive enum selections only.
     Label, input, and error associations hold, and repeated forms use unique
     ids. This is reusable field framing, not a forms or schema engine.
 12. **Device frame:** device `phone/browser`, depicted dark state, light-only
-    note, compact-phone and expandable flags, browser address; `children` is
-    the screen-content slot. Controls: device, dark state, compact frame and
+    note, compact-phone and expandable flags, browser address, and an optional
+    retry destination that depicts a failed load whose Try again opens it;
+    `children` is the screen-content slot. Controls: device, dark state, compact frame and
     address. Where a frame stands decides its caption, as in the shell: on a
     stage it names its viewport above the chrome, and in a flow step or a
     comparison pane it has none. No screen draws its own frame caption.

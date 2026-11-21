@@ -7,6 +7,7 @@ import { LayerBeneath } from "../../../components/layer-beneath";
 import { Panel } from "../../../entries/design/panel.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
+import { MacWindowControls, macWindowClass } from "../mac-window";
 import { Action } from "../page-parts";
 
 import type { AccountLabel } from "./account-trigger";
@@ -41,6 +42,8 @@ type ViewerScreenProps = {
   project?: string;
   /** An entry drawing one of the stage's own situations names itself. */
   screen?: string;
+  /** Whether the page draws the Mac app window around the viewer. */
+  macApp?: boolean;
 } & (
   | {
       published: true;
@@ -87,6 +90,7 @@ export function ViewerScreen({
   workspace,
   project,
   screen,
+  macApp = false,
   published,
   publishedSubject,
   comparisonBlocked,
@@ -97,7 +101,9 @@ export function ViewerScreen({
 }: ViewerScreenProps) {
   return (
     <div
-      className="folio-root fo-viewer-screen"
+      className={
+        "folio-root fo-viewer-screen" + (macApp ? " " + macWindowClass : "")
+      }
       data-mkc-screen={screen ?? stateScreenPath(id, state)}
     >
       {!published && (
@@ -132,6 +138,7 @@ export function ViewerScreen({
           </ViewerChrome>
         </main>
       )}
+      {macApp && <MacWindowControls />}
     </div>
   );
 }

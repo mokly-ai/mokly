@@ -2,7 +2,7 @@
 
 Status: Theme on the device as the source of the app's scheme is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
 
-`apps/app` is the Expo application that serves Mokly Cloud's account entry and
+`packages/app` is the Expo application that serves Mokly Cloud's account entry and
 its logged-in product. It targets the web. The account and settings surfaces
 are DOM compositions over `@firna/ui` controls, so they render in a browser and
 nowhere else. The desktop shell of [Desktop application](./desktop-app.md)
@@ -29,7 +29,7 @@ composition and outbound links,
 
 Expo SDK 56 is the release whose peer set is the one
 [Shared controls](./shared-controls.md#dependencies) installs. Every
-package is pinned to an exact version in `apps/app/package.json`, as
+package is pinned to an exact version in `packages/app/package.json`, as
 [Repository TypeScript layout](./repository-typescript.md#application) says. The app uses
 the single hoisted runtime of the root npm workspace, never a second copy.
 

@@ -10,7 +10,7 @@
   - **`ELECTRON_SKIP_BINARY_DOWNLOAD`:** an environment variable that the install script of older `electron` npm packages reads, to skip the download of the Electron binary during `npm ci`.
   - **Lazy download:** in Electron 44.11.3, `node_modules/electron/index.js` downloads the binary when a Node process requires the `electron` package and the binary is missing. It runs `install.js` for the download and prints `Downloading Electron binary...`.
 - **Background:**
-  - `apps/desktop/package.json` pins `electron` 44.11.3.
+  - `packages/desktop/package.json` pins `electron` 44.11.3.
   - Each workflow job that does not run Electron sets the variable to `1`, at the places that the Location names. The cloud desktop partition clears it at `ci.yml:407`. `xtask/scripts/testbox-cloud.mjs:41-42` clears it for the `cloud-desktop` suite and sets it for the other suites. `blacksmith-testbox.yml:86` and `:91` write it into the Testbox environment. `infra/docker/app.Dockerfile:13` sets it for the image install.
   - `docs/protocol/ci-workflow.md:118-120` says: "Every CI job that does not run Electron sets `ELECTRON_SKIP_BINARY_DOWNLOAD=1`. Its install does not download Electron. The cloud desktop partition clears that setting and caches the binary." `infra/README.md:44-45` gives the same reason for the image.
   - `xtask/tests/cli/desktop_workflow_tests.rs:12-14` and `:20-29` assert the setting in `ci.yml`, `deploy.yml`, `preview.yml`, `site.yml` and the Dockerfile.

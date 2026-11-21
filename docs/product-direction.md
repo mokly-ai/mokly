@@ -23,7 +23,7 @@ is the historical record of that scope.
 3. **Edit.** Live branch sessions running Mokly serve in a sandbox, an agent
    chat beside the viewer that edits the mockup source, click-to-reference an
    element in the conversation, and publish-from-session back to the branch.
-4. **Native.** Desktop is an Electron shell under `apps/desktop` that ships
+4. **Native.** Desktop is an Electron shell under `packages/desktop` that ships
    the web build inside the app, serves it from its own origin so the product
    opens offline, and signs in through the browser, which hands a one-use
    grant to the shell through the `mokly` scheme. It exists for local mode: a

@@ -183,9 +183,9 @@ Catalogue-only links below an artboard use `CatalogueLinks` and the shared
 `.catalogue-links` style in `base.css`.
 `components.css` is the
 disclosure's only style owner, and the application uses it from there:
-`apps/app/scripts/sync-styles.mjs` serves these stylesheets to the application
+`packages/app/scripts/sync-styles.mjs` serves these stylesheets to the application
 too, so a second declaration there would draw the same composition twice.
-`apps/app/public/app.css` contains no second disclosure style.
+`packages/app/public/app.css` contains no second disclosure style.
 
 `src/_tests_/app-owners.ts` declares who answers for each drawn screen and
 `src/_tests_/app-parity.ts` compares them, tying the drawings to the running
@@ -209,7 +209,7 @@ page with no control or a GitHub installation landing's heading, which the
 drawing and the owning source must both say, and sentences a redraw removed,
 which both must leave out. The
 fixtures' reason sentences and placeholders
-are read from `apps/app/src` on disk. Each direction has its own allowlist in
+are read from `packages/app/src` on disk. Each direction has its own allowlist in
 `app-parity-allowances.ts`, declared sentences have a third, and every line in
 any of them names the follow-up item in `plans/follow-ups/` that removes it.
 `design/review-illustration` registers the fictional product scene, browser/phone,

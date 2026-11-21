@@ -14,6 +14,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 - Render generated documents on request through an injected graph adapter.
 - Read only reached authored resources through confined file handles.
 - Authenticate live prop edits and retain previews in bounded process memory.
+- Hold a write lease of the render store during render jobs, captures, and
+  Changes reference probes, so its writer stays paused while Serve works.
 - End client connections before ordered subsystem shutdown.
 
 ## What This Crate Does
@@ -65,35 +67,11 @@ publication's revision. The records drop paths that leave the catalogue. They
 hold no snapshot, generation, render backend, or history. A candidate copies
 them, so a rejected candidate leaves the live records unchanged.
 
-`UsagePass` and `ChangesPass` run the background work of the
-[on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
-usage first, then Changes classification against one pinned merge base. They
-yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. `UsagePass` keeps a sliding window bounded
-by its injected `dyn BackgroundCapacity`. It reads the bound before each
-view starts, so the same pass can grow when capacity recovers.
-It starts views in catalogue order and reports each
-view's warnings and failure once, in catalogue order, after every earlier
-render ends. The
-composition root supplies its current capacity. `Workers` admits queued background renders
-one at a time, in request order, whenever no foreground request is active.
-It runs each background document render in `RenderClass::Background`, so the
-sidecar calls of that render go after the other waiting head calls.
-Ready state installs the generation root, the base commit, Changes
-membership, moved paths, removed records, and per-view states, ignore ids, and
-evidence in one revision. Included details carry
-classification reasons and their base side even without a workspace.
-Workspace lists stay absent until all
-consumer usage is proven. One unavailable view keeps every Used by list absent
-until the next generation. Failed views publish unavailable usage without
-inventing empty consumers. `mokly-model` projects every status from retained
-model inputs. `mokly-compare` owns Changes membership, eligibility,
-workspaces, input changes, and removed metadata. Serve uses those shared
-functions and the shared snapshot route builders. Watched Serve polls `HEAD`
-and the base ref once per second. A changed merge base reuses the accepted
-current graph. A tip change with the same merge base keeps the published
-state. HTTP worker leases keep foreground priority for the whole request, and
-the CLI shares those leases with base-side sidecar admission.
+`UsagePass` and `ChangesPass` run the background work of Serve: current usage
+first, then Changes classification against one pinned merge base. The
+[background work](./background.md) page holds the guidance for their window,
+the lookup and the miss of each view, the `Stages` bounds and budget, the ready
+state, and the write leases of the Changes reference probes.
 
 `MemoryComparisons` implements `dyn Comparisons`, the store of the
 [selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
@@ -108,9 +86,14 @@ retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a
 mixed generation. Its `comparison_capture` method returns `None`, so capture
 creation and smaller budgets cannot bypass these checks through the wrapped
-generation. It forwards `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to the wrapped
-generation. Scheduled tasks still call its checked reads. It keeps the default `None` of
+generation. It forwards `comparison_parallelism`, `capture_parallelism`,
+`schedule_capture_window`, `schedule_comparison_tasks`, and
+`schedule_comparison_stream` to the wrapped generation. Scheduled tasks still
+call its checked reads. Its capture collector wraps the
+`ComparisonEncoder` of the inner collector. So each capture worker checks the
+original document bytes and the digests of the closure's resources before it
+encodes a view. The collector forwards `remaining`, so the waiting views keep
+the same byte bound. It keeps the default `None` of
 `retained_comparison_input`, because a forward could bypass these checks or
 need source IO. The contract owns the admission, retention, and capacity
 limits.
@@ -230,6 +213,14 @@ generations.
   shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
+  `Documents::background_read` looks up one background view, and its default
+  `Ok(None)` declines the lookup. `GraphDocuments::background` renders one view
+  on the ordinary path.
+- [`src/background_read.rs`](./src/background_read.rs) defines
+  `BackgroundRead` and `BackgroundMiss`, the result of one lookup and the
+  single-use miss that `GraphDocuments::read_background` returns.
+  `BackgroundMiss::complete` takes the route's usage lock again and renders
+  nothing when that usage is already settled.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
@@ -243,17 +234,54 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+  `UsagePass::fill_window` starts each view in catalogue order with its own
+  `Dispatch`. `ChangesPass::activity` holds the render store's activity, and
+  the private `Reference` keeps a probe result together with its lease.
+  After a committed
+  Ready or Unavailable completion, and after `execute` and its write lease end,
+  `ChangesPass` runs the optional `ChangeSource::settled` work and waits for it.
+  [`src/changes_seed.rs`](./src/changes_seed.rs) skips that work when Serve
+  stops, the classification is cancelled, or the head is no longer current.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
-  usage pass's bounded batch, which keeps catalogue order for starts, warnings,
-  and failure reports.
+  bounded window of the current usage pass, which keeps catalogue order for
+  starts, warnings, and failure reports. `Window::start_dispatched` adds a view
+  with its `Dispatch`. The window counts only the views that have not handed
+  off, and a handoff event lets it start the next view.
+  [`src/background_dispatch.rs`](./src/background_dispatch.rs) defines
+  `Dispatch`, the window place of one view, which its `Stage` wakes at the
+  handoff. `Dispatch::new` creates it from the shared `Stages`.
+- [`src/background_stage.rs`](./src/background_stage.rs) defines `Stages`, the
+  batch bound, the completion bound, and the 4 MiB transient budget that every
+  pass of one `UsagePass` shares, and `Stage`, the owner of one eligible miss's
+  worker permit, batch place, completion place, and transient charge. `Stage`
+  implements the graph's `Completion`. Its handoff takes a charge without
+  waiting, then takes a completion place through the crate-private
+  `Stage::enter`, also when the charge does not fit. A granted charge releases
+  the worker and the batch place and wakes the window. The private
+  [`src/background_admission.rs`](./src/background_admission.rs) admits each
+  miss to the batch with a fresh capacity reading.
 - [`src/background_capacity.rs`](./src/background_capacity.rs) defines
-  `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
+  `BackgroundCapacity`, the changing bound of the batch and the completion
+  stage, and `FixedCapacity`.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
-  [`src/work_background.rs`](./src/work_background.rs) admits one background
-  render at a time and runs it in `RenderClass::Background`.
+  `Work::parallelism` gives the fixed worker count that bounds the window, and
+  `Work::background` runs one view with its `Dispatch`.
+  `Workers::with_activity` takes the `WriteActivity` of the render store, and
+  each queued or active job, native work included, holds a lease of it. A
+  file response holds its lease until the file opens, and its body streams
+  after that.
+  [`src/work_background.rs`](./src/work_background.rs) runs the lookup job of
+  one background view and, after a miss, its resumed job, in
+  `RenderClass::Background`. One lease and one count of
+  [`src/work_active.rs`](./src/work_active.rs) pass from the lookup job to the
+  resumed job, so `Workers::stop` waits for both jobs. The
+  [lookup and miss](./background.md#lookup-and-miss) guidance gives their
+  order.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
+  `MemoryComparisons::with_activity` takes the same activity, and each queued
+  capture and its detached native work hold a lease.
 - [`src/render_request.rs`](./src/render_request.rs) and
   [`src/preview.rs`](./src/preview.rs) validate live prop requests and define
   `PreviewStore` and `MemoryPreviews`.
@@ -263,12 +291,16 @@ generations.
   `PackageAssets`, the built viewer inventory. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 
+- [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.
+
 ### Related Docs
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
+- [Render store](../../docs/protocol/mokly-render-store.md).
 - [Live controls](../../docs/protocol/mokly-component-controls.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

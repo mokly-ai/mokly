@@ -11,10 +11,8 @@ import { build } from "esbuild";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
-import {
-  currentEvidence,
-  PhysicalInputs,
-} from "../packages/mokly/src/sidecar/physical-inputs.js";
+import { currentEvidence } from "../packages/mokly/src/sidecar/physical-input-reader.js";
+import { PhysicalInputs } from "../packages/mokly/src/sidecar/physical-inputs.js";
 import { ResolutionEvidence } from "../packages/mokly/src/sidecar/resolution-evidence.js";
 
 import { bundleParams } from "./helpers/sidecar.js";

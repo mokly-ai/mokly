@@ -11,7 +11,7 @@ import {
 
 /** Every application source the announcer contract is checked against. */
 function appSources(): string[] {
-  return readdirSync(resolve(repository, "apps/app/src"), {
+  return readdirSync(resolve(repository, "packages/app/src"), {
     recursive: true,
     encoding: "utf8",
   }).filter((path) => path.endsWith(".tsx") || path.endsWith(".ts"));
@@ -47,7 +47,7 @@ export function ownerViolations(): string[] {
   const problems: string[] = [];
   for (const [screen, owner] of declared()) {
     if (!owner.files) {
-      if (existsSync(resolve(repository, "apps/app/src", owner.pending)))
+      if (existsSync(resolve(repository, "packages/app/src", owner.pending)))
         problems.push(
           "declare the new owner for " +
             screen +
@@ -58,7 +58,7 @@ export function ownerViolations(): string[] {
       continue;
     }
     for (const path of owner.files)
-      if (!existsSync(resolve(repository, "apps/app/src", path)))
+      if (!existsSync(resolve(repository, "packages/app/src", path)))
         problems.push("declare the new owner for " + screen + ": " + path);
   }
   if (problems.length > 0) return problems;

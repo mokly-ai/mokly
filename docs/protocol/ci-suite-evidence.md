@@ -61,11 +61,9 @@ parallelism, and never fewer than two. Playwright uses one worker unless
 Node test files and one Playwright worker. An eight-CPU workstation runs four
 Node test files. Hosted runners keep these limits for their CPU count.
 
-Browser specs keep one worker by default. The viewer gives a same-origin
-preview five seconds to load, as the
-[frame adapter contract](./mokly-frame-adapter.md) states, and the first
-on-demand render of a page can exceed that while other workers load the CPU.
-Pages that load correctly alone then fail.
+Browser specs keep one worker by default. The first on-demand render of a
+page slows down while other workers load the CPU, and a spec that waits for a
+preview can then exceed its own time limit.
 
 `MOKLY_UNIT_CONCURRENCY` replaces the Node test file limit and
 `MOKLY_PLAYWRIGHT_WORKERS` replaces the Playwright worker count. Each accepts

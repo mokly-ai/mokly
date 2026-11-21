@@ -18,6 +18,7 @@ import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { useRetryFocus } from "./retry_focus.js";
 import { useShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
 import { useActiveWorkspace } from "./workspace_context.js";
@@ -84,11 +85,13 @@ export function ComponentWorkspace({
     data.removed,
     data.controlOrder,
   );
+  const propsRecovery = useRetryFocus();
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
     data,
     onCurrent: () => comparison.selectMode("current"),
+    recovery: propsRecovery,
     target: editTarget,
     workspaceRef,
   });
@@ -147,6 +150,7 @@ export function ComponentWorkspace({
       controls={controls.panel}
       data={data}
       delivery={workspace.detailDelivery}
+      focus={propsRecovery}
       instance={selectedInstance}
       target={editTarget}
       usage={activeView?.usage}

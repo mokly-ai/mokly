@@ -55,8 +55,14 @@ test("workflows use free GitHub-hosted standard runners except the Blacksmith Te
     for (const [jobName, job] of Object.entries(workflow.jobs)) {
       const context = `${workflowName}:${jobName}`;
       if (job.uses) {
-        assert.equal(context, "release.yml:prepare-release");
-        assert.equal(job.uses, "./.github/workflows/release-prepare.yml");
+        // A called workflow has no runner of its own. This audit reads the
+        // called file too, so only a local workflow that it reads may run.
+        const called = /^\.\/\.github\/workflows\/([^/@]+)$/.exec(job.uses);
+        assert.ok(called, `${context} calls only local workflows`);
+        assert.ok(
+          workflowNames.includes(called[1]!),
+          `${context} calls an audited workflow`,
+        );
         continue;
       }
       const runsOn = job["runs-on"];

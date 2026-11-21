@@ -127,7 +127,7 @@ function holds(
   constant: { file: string; name: string },
   sentence: string,
 ): boolean {
-  if (!existsSync(resolve(repository, "apps/app/src", constant.file)))
+  if (!existsSync(resolve(repository, "packages/app/src", constant.file)))
     return false;
   const binding = new RegExp(
     "\\b" + escaped(constant.name) + '\\b\\s*=\\s*"' + escaped(sentence) + '"',
