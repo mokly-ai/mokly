@@ -3,10 +3,11 @@
 use std::sync::{Arc, Mutex};
 
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumerMock;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_stream::ComparisonConsumerMock;
 use mokly_graph::types::{ComparisonDocument, RenderGeneration, RenderGenerationMock};
-use mokly_graph::workers::{ComparisonTaskMock, ComparisonWorkerMock};
+use mokly_graph::workers::{ComparisonTaskMock, ComparisonWorker, ComparisonWorkerMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_graph::FrozenResources;
@@ -37,9 +38,14 @@ fn frozen_schedulers_run_the_supplied_checked_jobs_and_preserve_index_and_captur
                     }
                 }
             }),
-        RenderGenerationMock::schedule_comparison
+        RenderGenerationMock::schedule_capture_window
             .each_call(matching!(_, _))
-            .answers(&|_, routes, worker| routes.iter().map(|route| worker.input(route)).collect()),
+            .answers(&|_, task, consumer| {
+                if consumer.admit(0) {
+                    task.run(0);
+                    consumer.complete(0);
+                }
+            }),
         RenderGenerationMock::comparison_document
             .each_call(matching!(_))
             .answers(&|_, _| {
@@ -106,7 +112,28 @@ fn frozen_schedulers_run_the_supplied_checked_jobs_and_preserve_index_and_captur
                 })
             })),
     );
-    let results = graph.schedule_comparison(&["sample/index.html".into()], &worker);
+    let results = Arc::new(Mutex::new(Vec::new()));
+    let prepared = results.clone();
+    let task = Unimock::new(
+        ComparisonTaskMock::run
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                prepared
+                    .lock()
+                    .unwrap()
+                    .push(worker.input("sample/index.html"));
+            })),
+    );
+    let mut capture = Unimock::new((
+        CaptureConsumerMock::admit
+            .each_call(matching!(_))
+            .returns(true),
+        CaptureConsumerMock::complete
+            .each_call(matching!(_))
+            .returns(true),
+    ));
+    graph.schedule_capture_window(&task, &mut capture);
+    let results = std::mem::take(&mut *results.lock().unwrap());
     assert_eq!(
         results
             .into_iter()

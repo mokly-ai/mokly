@@ -25,6 +25,8 @@ use unimock::{MockFn, Unimock, matching};
 
 #[path = "../src/base_dependencies.rs"]
 mod base_dependencies;
+#[path = "../src/base_render_admission.rs"]
+mod base_render_admission;
 #[path = "../src/bundle_runtime.rs"]
 mod bundle_runtime;
 #[path = "../src/changes_base.rs"]

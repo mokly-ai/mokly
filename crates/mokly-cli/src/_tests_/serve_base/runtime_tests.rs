@@ -49,7 +49,9 @@ fn keep_detaches_git_source_pool_and_workers_until_command_stop() {
         capacity(1),
     ));
     let source = source(&fixture, pool);
-    let runtime = source.classification_runtime(fixture.lifetime.clone());
+    let runtime = source
+        .classification_runtime(fixture.lifetime.clone())
+        .unwrap();
     let config = config();
     let selected = selected("a");
     let head = head(false);
