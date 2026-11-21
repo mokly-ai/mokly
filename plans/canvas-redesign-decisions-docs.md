@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 20 to 23
+# Canvas redesign: decisions 20 to 25
 
 These decisions came from Milestone 2, the protocol docs, of the
 [Canvas redesign plan](./canvas-redesign.md). They keep the item numbers of
@@ -144,3 +144,61 @@ of the plan, and the pull request that deletes the plan deletes it too.
   one pass.
 - **Action:** ask the user, because A changes the rule that no comparison
   frame size depends on a measurement.
+
+## 24. Mobile chrome at 200% text on 320px
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `apps/site/src/styles/chrome.css:213`, `apps/site/src/styles/footer.css:74`
+- **Background:** `site-design.md` says layouts stay usable at 320px and 200%
+  text, with no sideways scroll. The mobile tool bar now holds the brand, Get
+  started and Menu.
+- **Problem:** At 200% text in a 320px window, Get started covers the
+  wordmark, and one footer link ends 6px past the window.
+- **Impact if no action:** A reader with large text on a small phone sees
+  overlapping controls and a cut-off link.
+- **Root question:** How does the mobile chrome stay usable when large text
+  does not fit in one 320px row?
+- **Options:**
+  - **A.** Hide the wordmark when the bar cannot hold its three controls, and
+    let footer links break long words. The mark keeps the name "Mokly home".
+    Effort: Small.
+  - **B.** Move Get started to a second row when the first is full. The bar
+    gets taller. Effort: Medium.
+  - **C.** Make the bar's Get started smaller at large text sizes. It may still
+    not fit. Effort: Small.
+- **Left out:** Removing Get started from the mobile bar, because `site.md`
+  puts it there.
+- **Wider fix:** Decision 12 covers new checks such as a 200% text walk.
+- **Previous examples:** None found.
+- **Recommendation:** A. It keeps one row, and every control stays usable.
+- **Action:** ask the user, because A hides the wordmark that the brand rule
+  places in the bar.
+
+## 25. Space under the footer headings
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/mockups/styles/site/footer.css`, `docs/mockups/styles/site/base.css`
+- **Background:** The site and the mockup both declare 4px under the footer
+  headings. A stronger reset in the mockup draws 0px, so the mockup shows 0px
+  and the site shows 4px. The parity test compares declared values only.
+- **Problem:** The site and the mockup differ by 4px, and no check shows it.
+- **Impact if no action:** A 4px difference in every footer.
+- **Root question:** Is the design 4px, as both sheets declare, or 0px, as
+  the mockup draws?
+- **Options:**
+  - **A.** Keep 4px on the site, and weaken the mockup reset to
+    `:where(.site-root) p` in a later mockup change. Effort: Small.
+  - **B.** Draw 0px on the site, and record a parity difference. Effort:
+    Small.
+- **Left out:** Changing nothing, because the difference stays hidden.
+- **Wider fix:** A, because a weaker reset fixes every rule that the mockup
+  declares but does not draw.
+- **Previous examples:** The mobile legal introduction line height had the
+  same cause.
+- **Recommendation:** A. The declared 4px is the authored design value.
+- **Action:** ask the user, because it decides which side of a mockup and
+  site difference is right.

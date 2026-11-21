@@ -206,6 +206,14 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   - The social card embeds the committed light lockup, and its title uses a
     system font.
 
+- Calls on Milestone 4, 2026-11-21: the site keeps the scheme choice under
+  `mokly.site.scheme`; the control shows only after its island marks the
+  page; `?scheme=` stays in the address for that view; nav links and the bar's
+  Get started draw 36px tall in a 44px target band; the menu sheet slides 8px
+  from its top edge and dims only the area below the bar; until Milestone 6 a
+  docs page keeps Search docs as a 36px icon in the bar from 768px; headings
+  balance their lines.
+
 ## Contract owners
 
 - [Site](../docs/protocol/cloud/site.md),
