@@ -9,7 +9,7 @@ use axum::body::Body;
 use tokio::sync::{broadcast, watch};
 
 use crate::live::events;
-use crate::publication_event::{PublicationEvent, Subscription};
+use crate::publication::{PublicationEvent, Subscription};
 
 async fn next(body: &mut Body) -> Option<String> {
     poll_fn(|context| hyper::body::Body::poll_frame(Pin::new(&mut *body), context))

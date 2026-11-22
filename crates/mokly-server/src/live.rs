@@ -9,7 +9,7 @@ use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
 use tokio::sync::watch;
 
-use crate::publication_event::Subscription;
+use crate::publication::Subscription;
 use crate::response;
 
 pub(crate) fn events(mut subscription: Subscription, mut stop: watch::Receiver<bool>) -> Response {

@@ -9,7 +9,7 @@ use std::time::SystemTime;
 
 use crate::serve_watch_events;
 use crate::serve_watch_files::{self, NativeObservers, Observers};
-use crate::serve_watch_plan::{PlanInputs, PlanRecord, PlanRecords};
+use crate::serve_watch_plan::{PlanInputs, PlanRecord};
 use async_trait::async_trait;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
@@ -33,8 +33,7 @@ pub(super) trait WatchInputs: Send + Sync {
     /// Record that a preparation starts now, before it reads any input.
     fn begin(&self);
     /// Build the watch candidate of `prepared`. After a successful rebuild and observer
-    /// update, plan inputs equal to the adopted inputs, or to those inputs with the resources
-    /// that a drain attached since, reuse that plan and the observer without attaching.
+    /// update, equal plan inputs reuse the adopted plan and observer without attaching.
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch>;
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()>;
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe);
@@ -61,9 +60,8 @@ pub(super) struct State {
     pub(super) closed: bool,
     /// When the latest preparation began.
     pub(super) started: SystemTime,
-    /// The inputs, plan, and targets of the adopted candidate, and of their copy with the
-    /// resources that a drain attached after the adoption.
-    pub(super) records: Option<Arc<PlanRecords>>,
+    /// The inputs, plan, and targets of the adopted candidate.
+    pub(super) record: Option<Arc<PlanRecord>>,
 }
 /// Prepared observer state exposed inside this private module for generated mocks.
 pub struct CandidateWatch {
@@ -93,7 +91,7 @@ impl WatchedInputs {
                 attach_reported: false,
                 closed: false,
                 started,
-                records: None,
+                record: None,
             })),
             ready: Arc::new(Notify::new()),
         })
@@ -123,12 +121,12 @@ impl WatchInputs for WatchedInputs {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
             let settled = !current.failed && !current.attach_reported;
             (
-                current.records.clone().filter(|_| settled),
+                current.record.clone().filter(|_| settled),
                 current.observer.clone(),
             )
         };
         let inputs = PlanInputs::of(prepared);
-        if let Some(record) = recorded.and_then(|records| records.find(&inputs)) {
+        if let Some(record) = recorded.filter(|record| record.matches(&inputs)) {
             self.replay(&active, &record.unobserved(active.as_ref()));
             return Ok(record.candidate(active, false));
         }
@@ -177,7 +175,7 @@ impl WatchInputs for WatchedInputs {
             }
             state.plan = candidate.record.plan.clone();
             state.observer = candidate.observer;
-            state.records = Some(PlanRecords::adopted(candidate.record));
+            state.record = Some(candidate.record);
             state.generation = Some(prepared.generation.clone());
             state.failed = false;
             state.attach_reported = false;
@@ -290,7 +288,3 @@ mod serve_watch_coverage_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_watch_stale_tests.rs"]
 mod serve_watch_stale_tests;
-
-#[cfg(test)]
-#[path = "_tests_/serve_watch_resource_tests.rs"]
-mod serve_watch_resource_tests;

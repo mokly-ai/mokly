@@ -113,11 +113,8 @@ again before adoption only under the
 serialized queue handles watch events and the rich-mode `r` shortcut under the
 [watch runtime contract](../../docs/protocol/mokly-watch-runtime.md). A valid
 candidate replaces the public state and backend with the next revision. A
-failed candidate keeps the last good state. Each candidate calls
-`PublicationWriter::candidate` after the debounce and before its preparation,
-which ends the idle rebuild record step of `mokly-server` for the session.
-After `Catalogue ready`, Serve completes current usage and classifies Changes
-against one pinned merge base.
+failed candidate keeps the last good state. After `Catalogue ready`, Serve
+completes current usage and classifies Changes against one pinned merge base.
 The usage pass starts its views in a sliding window of the worker count. Each
 view first looks up its document on the shared render workers, and a cache or
 store hit ends there without a batch or completion admission reading. A sidecar
@@ -499,8 +496,7 @@ changed.
   `comparison_reuse::MemoryComparisons` service. It also composes `UsagePass`,
   whose `UsageCapacity` gives both background stages the smaller of the worker
   count and the sidecar limit. It gives the writer's `WriteActivity` to
-  `Workers`, `MemoryComparisons`, and `ChangesPass`. Its `ServeBackground` runs
-  `UsagePass` and the `IdleRecords` step in the one background task.
+  `Workers`, `MemoryComparisons`, and `ChangesPass`.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

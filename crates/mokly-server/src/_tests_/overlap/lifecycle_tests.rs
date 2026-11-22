@@ -8,7 +8,7 @@ use std::task::{Context, Waker};
 use unimock::Unimock;
 
 use crate::background::Background;
-use crate::publication_event::PublicationEvent;
+use crate::publication::PublicationEvent;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 

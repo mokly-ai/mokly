@@ -17,43 +17,21 @@ use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
 
-/// Copy the ready usage of each view of `previous` whose document key is unchanged, then
-/// settle every workspace when all views have ready usage.
 pub(crate) fn reuse_usage(
     details: &mut BTreeMap<String, EntryDetailV4>,
     index: &CatalogueReadModel,
     keys: &BTreeMap<String, String>,
     previous: Option<&Snapshot>,
 ) -> BTreeMap<String, Completion> {
+    let mut completed = BTreeMap::new();
     let Some(previous) = previous else {
-        return BTreeMap::new();
+        return completed;
     };
     if previous.index.identity != index.identity
         || previous.index.deployment_id != index.deployment_id
     {
-        return BTreeMap::new();
+        return completed;
     }
-    let completed = copy_usage(details, keys, previous);
-    let refs = details
-        .iter()
-        .map(|(path, detail)| (path.clone(), detail))
-        .collect();
-    for (path, workspace) in projection_usage::workspaces(&refs, index) {
-        if let Some(detail) = details.get_mut(&path) {
-            detail.workspace = Some(workspace);
-        }
-    }
-    completed
-}
-
-/// Copy the ready usage of each view of `previous` whose document key in `keys` is equal,
-/// and return each copied view as a ready completion. The workspaces stay unchanged.
-pub(crate) fn copy_usage(
-    details: &mut BTreeMap<String, EntryDetailV4>,
-    keys: &BTreeMap<String, String>,
-    previous: &Snapshot,
-) -> BTreeMap<String, Completion> {
-    let mut completed = BTreeMap::new();
     for (path, detail) in details.iter_mut() {
         let Some(old) = previous.details.get(path) else {
             continue;
@@ -77,6 +55,15 @@ pub(crate) fn copy_usage(
             }
         }
     }
+    let refs = details
+        .iter()
+        .map(|(path, detail)| (path.clone(), detail))
+        .collect();
+    for (path, workspace) in projection_usage::workspaces(&refs, index) {
+        if let Some(detail) = details.get_mut(&path) {
+            detail.workspace = Some(workspace);
+        }
+    }
     completed
 }
 
@@ -98,8 +85,7 @@ pub(crate) fn encode_details(
             .filter(|(old, _)| equivalent(&detail, old))
             .map_or(Some(index.revision), |(old, _)| old.revision);
         let mut detail = Arc::new(detail);
-        let kind = PublicationKind::rebuild(&detail);
-        let file = recent.publish(kind, &mut detail, adjacent, encoder)?;
+        let file = recent.publish(PublicationKind::Rebuild, &mut detail, adjacent, encoder)?;
         mokly_model::projection::set_detail_id(index, &path, &detail.detail_id);
         files.insert(route, file);
         result.insert(path, detail);

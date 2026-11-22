@@ -13,7 +13,7 @@ use crate::comparison_support::{accepted, files, snapshot};
 use crate::diagnostics::DiagnosticsMock;
 use crate::entropy::EntropyMock;
 use crate::error::ServerError;
-use crate::fixed_publication::FixedPublication;
+use crate::publication::FixedPublication;
 
 #[test]
 fn generation_and_total_byte_bounds_charge_shared_bytes_without_eviction() {

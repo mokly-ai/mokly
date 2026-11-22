@@ -1,10 +1,8 @@
 //! A watch plan derives only from its plan inputs, so a candidate whose inputs equal the
-//! adopted inputs, or those inputs with the resources that the observer attached after the
-//! adoption, reuses that plan and its targets.
+//! adopted inputs reuses the adopted plan and its targets.
 
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use std::iter;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -26,7 +24,7 @@ type Resolution<'a> = (
 
 /// Every value that the watch plan of a prepared generation reads. A candidate borrows
 /// them from its preparation, and a record keeps its own copy.
-#[derive(Clone, PartialEq)]
+#[derive(PartialEq)]
 pub(super) struct PlanInputs<'a> {
     config: Cow<'a, ResolvedConfig>,
     sources: Cow<'a, [String]>,
@@ -127,28 +125,6 @@ impl PlanRecord {
         })
     }
 
-    /// A copy of this record whose inputs also hold `resources`, with the plan and the
-    /// targets of those inputs, or `None` when the inputs already hold each of them.
-    pub(super) fn with_resources(&self, resources: &BTreeSet<String>) -> Option<Self> {
-        let added: BTreeSet<String> = resources
-            .difference(&self.inputs.resources)
-            .cloned()
-            .collect();
-        if added.is_empty() {
-            return None;
-        }
-        let mut inputs = self.inputs.clone();
-        inputs.resources.extend(added.iter().cloned());
-        let mut plan = self.plan.clone();
-        plan.resources(&added);
-        let targets = plan.targets();
-        Some(Self {
-            inputs,
-            plan,
-            targets,
-        })
-    }
-
     /// Whether `inputs` equal the inputs of this record, so their plan equals this plan.
     pub(super) fn matches(&self, inputs: &PlanInputs<'_>) -> bool {
         self.inputs == *inputs
@@ -177,44 +153,3 @@ impl PlanRecord {
             .collect()
     }
 }
-
-/// The record of the adopted candidate, and its copy that also holds the resources that the
-/// observer attached after the adoption. Each change replaces the whole value, so a drain
-/// tells by pointer whether the records that it read are still the current ones.
-pub(super) struct PlanRecords {
-    adopted: Arc<PlanRecord>,
-    observed: Option<Arc<PlanRecord>>,
-}
-
-impl PlanRecords {
-    /// The records at the adoption of the candidate with `record`.
-    pub(super) fn adopted(record: Arc<PlanRecord>) -> Arc<Self> {
-        Arc::new(Self {
-            adopted: record,
-            observed: None,
-        })
-    }
-
-    /// The record whose inputs equal `inputs`.
-    pub(super) fn find(&self, inputs: &PlanInputs<'_>) -> Option<Arc<PlanRecord>> {
-        iter::once(&self.adopted)
-            .chain(&self.observed)
-            .find(|record| record.matches(inputs))
-            .cloned()
-    }
-
-    /// These records with a copy of the newest record whose inputs also hold `resources`,
-    /// or `None` when the newest record already holds each of them.
-    pub(super) fn with_resources(&self, resources: &BTreeSet<String>) -> Option<Arc<Self>> {
-        let newest = self.observed.as_ref().unwrap_or(&self.adopted);
-        let observed = newest.with_resources(resources)?;
-        Some(Arc::new(Self {
-            adopted: self.adopted.clone(),
-            observed: Some(Arc::new(observed)),
-        }))
-    }
-}
-
-#[cfg(test)]
-#[path = "_tests_/serve_watch_plan_tests.rs"]
-mod serve_watch_plan_tests;

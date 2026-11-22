@@ -9,7 +9,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::backend::DocumentsMock;
 use crate::background::Background;
 use crate::background_capacity::BackgroundCapacityMock;
-use crate::publication_event::PublicationEvent;
+use crate::publication::PublicationEvent;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 

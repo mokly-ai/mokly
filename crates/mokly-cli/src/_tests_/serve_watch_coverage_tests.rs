@@ -66,14 +66,14 @@ pub(super) fn adoptable() -> impl Clause {
 /// A watch that adopted one candidate of the generation `first`. Its active observer
 /// answers `extra`, watches every directory, and records each plan that it attaches.
 /// Setting `failing` fails the next attachment.
-pub(super) struct Adopted {
-    pub(super) watch: Arc<WatchedInputs>,
-    pub(super) active: Arc<dyn Observer>,
-    pub(super) attached: Arc<Mutex<Vec<Plan>>>,
-    pub(super) failing: Arc<AtomicBool>,
+struct Adopted {
+    watch: Arc<WatchedInputs>,
+    active: Arc<dyn Observer>,
+    attached: Arc<Mutex<Vec<Plan>>>,
+    failing: Arc<AtomicBool>,
 }
 
-pub(super) fn adopted(first: impl Clause, extra: impl Clause) -> Adopted {
+fn adopted(first: impl Clause, extra: impl Clause) -> Adopted {
     let attached = Arc::new(Mutex::new(Vec::new()));
     let failing = Arc::new(AtomicBool::new(false));
     let active: Arc<dyn Observer> = Arc::new(Unimock::new((

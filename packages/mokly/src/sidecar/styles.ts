@@ -7,15 +7,12 @@ import type { Generation } from "./bundle.js";
 import { emotionOwners } from "./emotion-ownership.js";
 import type { EmotionCache } from "./emotion-ownership.js";
 import { HtmlInput } from "./html_input.js";
-import { registryIndexOf } from "./registry-index.js";
+import { registryStyles } from "./registry-styles.js";
 import type { InlineAttribution } from "./style-ownership.js";
 import { styledOwners } from "./styled-ownership.js";
 import type { StyledAdapter } from "./styled-ownership.js";
 
-/**
- * Delivery uses the original sheet bytes. Comparison uses separate rule owners.
- * The registry index of the generation filters the persistent registry.
- */
+/** Delivery uses the original sheet bytes. Comparison uses separate rule owners. */
 export function collectStyles(
   generation: Pick<Generation, "runtime" | "require" | "exports">,
   render: (node: ReactNode) => string,
@@ -150,7 +147,7 @@ export function collectStyles(
           });
       }
     }
-    const registry = registryIndexOf(generation).styles(nativeSheet(), input);
+    const registry = registryStyles(nativeSheet(), input);
     if (registry) styles.push({ css: registry, owners: [] });
     const emotionInline = emotionCapture?.inlineAttribution();
     const styledInline = styledCapture?.inlineAttribution();

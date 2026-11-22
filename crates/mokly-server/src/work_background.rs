@@ -40,19 +40,9 @@ struct LookupJob {
 /// does, still keeps that order: the earlier miss queues before a later render can handle its
 /// own lookup result. After a panic or a cancelled render, the job's thread drops them. The
 /// permit drops before the guard, so the worker is free when the guard wakes the waiters.
-pub(crate) struct HeldWorker {
+struct HeldWorker {
     _permit: OwnedSemaphorePermit,
     _guard: Guard,
-}
-
-impl HeldWorker {
-    /// Hold `permit` until `guard`, so a drop frees the worker before it wakes the waiters.
-    pub(crate) fn new(permit: OwnedSemaphorePermit, guard: Guard) -> Self {
-        Self {
-            _permit: permit,
-            _guard: guard,
-        }
-    }
 }
 
 struct ResumeJob {
@@ -181,7 +171,7 @@ impl Workers {
         }
     }
 
-    pub(crate) async fn background_permit(&self) -> Option<OwnedSemaphorePermit> {
+    async fn background_permit(&self) -> Option<OwnedSemaphorePermit> {
         let _turn = self.turn.acquire().await.ok()?;
         loop {
             let changed = self.priority.changed.notified();

@@ -15,25 +15,11 @@ use crate::changes::Accepted;
 use crate::comparison_support;
 use crate::snapshot::{Projector, SnapshotInput};
 
-pub(crate) fn generation(count: usize, edit: usize) -> Arc<dyn RenderGeneration> {
+pub(super) fn generation(count: usize, edit: usize) -> Arc<dyn RenderGeneration> {
     graph(count, edit, None, ColorScheme::Light)
 }
 
-/// A generation in which only the views of `screen-0` moved to the key of `edit`.
-pub(crate) fn narrow(count: usize, edit: usize) -> Arc<dyn RenderGeneration> {
-    keyed(count, edit, &|entry| if entry == 0 { edit } else { 0 })
-}
-
-/// A generation whose views of each entry have the document key that `key` gives that entry.
-pub(crate) fn keyed(
-    count: usize,
-    edit: usize,
-    key: &dyn Fn(usize) -> usize,
-) -> Arc<dyn RenderGeneration> {
-    graph_with(count, edit, key, None, ColorScheme::Light)
-}
-
-pub(crate) fn generation_in_scheme(
+pub(super) fn generation_in_scheme(
     count: usize,
     edit: usize,
     scheme: ColorScheme,
@@ -44,16 +30,6 @@ pub(crate) fn generation_in_scheme(
 fn graph(
     count: usize,
     edit: usize,
-    comparison: Option<bool>,
-    scheme: ColorScheme,
-) -> Arc<dyn RenderGeneration> {
-    graph_with(count, edit, &|_| edit, comparison, scheme)
-}
-
-fn graph_with(
-    count: usize,
-    edit: usize,
-    key: &dyn Fn(usize) -> usize,
     comparison: Option<bool>,
     scheme: ColorScheme,
 ) -> Arc<dyn RenderGeneration> {
@@ -95,7 +71,7 @@ fn graph_with(
                     route.clone(),
                     DocumentPlan {
                         route,
-                        key: NodeKey(format!("{:064x}", key(entry))),
+                        key: NodeKey(format!("{edit:064x}")),
                         resource_key: "resources".into(),
                         entry,
                         viewport: Some(viewport),
@@ -134,14 +110,14 @@ fn graph_with(
     Arc::new(mock)
 }
 
-pub(crate) fn projector() -> Projector {
+pub(super) fn projector() -> Projector {
     Projector {
         deployment_id: "a".repeat(64),
         render_token: "b".repeat(64),
     }
 }
 
-pub(crate) fn input(revision: u64) -> SnapshotInput {
+pub(super) fn input(revision: u64) -> SnapshotInput {
     SnapshotInput {
         documents: Arc::new(Unimock::new(())),
         revision,
@@ -151,7 +127,7 @@ pub(crate) fn input(revision: u64) -> SnapshotInput {
     }
 }
 
-pub(crate) fn accepted(count: usize, edit: usize, settled: bool) -> Arc<Accepted> {
+pub(super) fn accepted(count: usize, edit: usize, settled: bool) -> Arc<Accepted> {
     let graph = graph(count, edit, Some(settled), ColorScheme::Light);
     let mut accepted = comparison_support::accepted(graph.clone(), graph);
     let result = &mut Arc::get_mut(&mut accepted).unwrap().result;

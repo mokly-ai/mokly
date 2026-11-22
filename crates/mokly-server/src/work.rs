@@ -23,7 +23,6 @@ use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
 use crate::work_active::ActiveJobs;
-use crate::work_idle::IdleJob;
 use crate::work_page::Page;
 
 /// Bound native HTTP and render scheduling to available machine parallelism.
@@ -66,8 +65,6 @@ pub trait Work: Send + Sync {
     ) -> std::result::Result<PreviewDocument, Rejection>;
     /// Stop admission and wait for active blocking graph calls.
     async fn stop(&self);
-    /// Run one idle job on a worker when no foreground request is active, or drop it.
-    async fn idle(&self, _job: Box<dyn IdleJob>) {}
 }
 
 /// One bounded scheduler shared by foreground jobs and background generations.
@@ -165,9 +162,6 @@ impl Work for Workers {
         .await
         .ok()
         .flatten()
-    }
-    async fn idle(&self, job: Box<dyn IdleJob>) {
-        self.idle_job(job).await;
     }
     async fn preview(
         &self,
