@@ -52,10 +52,10 @@ function band(page: Page) {
       refresh: box(toolbar.querySelector(".mbk-diff-refresh")!),
       tokens: {
         accent: token("--mbk-accent-deep"),
-        bg: token("--chrome-bg"),
         edge: token("--chrome-control-edge"),
         ink: token("--chrome-ink-2"),
         onAccent: token("--_mokly-private-on-accent-deep"),
+        surface: token("--chrome-surface"),
       },
       track: {
         background: getComputedStyle(track).backgroundColor,
@@ -133,22 +133,22 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const on = await band(page);
   expect(on.text).toEqual({
     colour: on.tokens.ink,
-    size: "12px",
-    weight: "600",
+    size: "12.5px",
+    weight: "400",
   });
-  expect([on.track.width, on.track.height]).toEqual([30, 18]);
+  expect([on.track.width, on.track.height]).toEqual([32, 18]);
   expect(on.track.background).toBe(on.tokens.accent);
   expect(on.track.border).toBe(on.tokens.accent);
   expect(on.track.knob).toEqual({
     colour: on.tokens.onAccent,
-    left: "14px",
+    left: "16px",
     size: ["12px", "12px"],
     top: "2px",
   });
   await scrollTogether(page).click();
   await expect(scrollTogether(page)).not.toBeChecked();
   const off = await band(page);
-  expect(off.track.background).toBe(off.tokens.bg);
+  expect(off.track.background).toBe(off.tokens.surface);
   expect(off.track.border).toBe(off.tokens.edge);
   expect(off.track.knob.colour).toBe(off.tokens.edge);
   expect(off.track.knob.left).toBe("2px");
@@ -174,7 +174,7 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const forcedOff = await band(page);
   expect(forcedOff.track.knob.colour).not.toBe(forcedOff.track.background);
   expect([forcedOn.track.knob.left, forcedOff.track.knob.left]).toEqual([
-    "14px",
+    "16px",
     "2px",
   ]);
 });

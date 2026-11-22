@@ -1,5 +1,6 @@
-/* The comparison band: the mode group, Scroll together, and Refresh. The
-   narrow query is the shell's one layout breakpoint, narrower than 900px. */
+/* The comparison band: the mode group, Scroll together, and Refresh, in the
+   Canvas surface, hairline, type, and control radius. The narrow query is the
+   shell's one layout breakpoint, narrower than 900px. */
 .mbk-diff-toolbar {
   display: flex;
   align-items: center;
@@ -32,8 +33,7 @@
   align-items: center;
   gap: 8px;
   color: var(--chrome-ink-2);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -51,11 +51,11 @@
 .mbk-diff-sync-track {
   position: relative;
   flex-shrink: 0;
-  width: 30px;
+  width: 32px;
   height: 18px;
   border: 1px solid var(--chrome-control-edge);
   border-radius: 999px;
-  background: var(--chrome-bg);
+  background: var(--chrome-surface);
 }
 
 /* The knob is drawn by its border, which forced colours keep, so the
@@ -81,7 +81,7 @@
 }
 
 .mbk-diff-sync input:checked + .mbk-diff-sync-track::after {
-  left: 14px;
+  left: 16px;
   border-color: var(--_mokly-private-on-accent-deep);
 }
 
@@ -90,19 +90,25 @@
   outline-offset: 2px;
 }
 
+/* Refresh: the refresh glyph in a square icon button at the band's end. */
 .mbk-diff-refresh {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   margin-left: auto;
+  padding: 0;
   border: 0;
+  border-radius: 8px;
   background: none;
-  color: var(--chrome-accent);
-  font: inherit;
-  font-size: 20px;
+  color: var(--chrome-ink-2);
   cursor: pointer;
+}
+
+button.mbk-diff-refresh:hover {
+  background: var(--chrome-hover);
+  color: var(--chrome-ink);
 }
 
 /* The picture of Refresh in a band that is not interactive acts on nothing. */

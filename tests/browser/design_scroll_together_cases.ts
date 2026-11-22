@@ -144,7 +144,7 @@ export function registerDesignScrollTogether(
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(
-            canvasColor(scheme, on ? "signalDeep" : "background"),
+            canvasColor(scheme, on ? "signalDeep" : "surface"),
           );
           expect(follows(facts.control, facts.modes), where).toBe(true);
           expect(follows(facts.refresh, facts.control), where).toBe(true);
