@@ -152,7 +152,7 @@ fn a_bundle_without_a_preparation_sends_no_prepare_context() {
 }
 
 #[test]
-fn an_error_reply_to_prepare_context_leaves_the_bundle_result_unchanged() {
+fn a_usable_error_reply_to_prepare_context_leaves_the_bundle_result_unchanged() {
     let events: Events = Arc::default();
     let pool = pool(
         store(events.clone()),

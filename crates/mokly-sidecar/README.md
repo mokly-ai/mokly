@@ -178,8 +178,8 @@ without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
 For a `bundle` call with a PostCSS preparation, the pool records the context
 on the slot after the slot cleanup. It then sends `prepareContext` to the same
-slot, before the bundle cache read and any seed. An error reply to
-`prepareContext` does not fail the call.
+slot, before the bundle cache read and any seed. An error reply that leaves the
+process usable does not fail the call.
 Before a `bundle` call, the pool restores the stored entry with equal
 settings under a private seed id. It then prepares the first live generation
 with equal settings: a captured generation before a marked one, then the

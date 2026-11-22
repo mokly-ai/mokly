@@ -61,6 +61,11 @@ fn every_method_and_result_round_trips() {
             json!({"generation":"g","entries":{"entry#default":{"path":"entry","title":"Entry"}}}),
             Value::Null,
         ),
+        (
+            "prepareContext",
+            json!({"context":"css","postcss":"postcss.cjs","sourceRoot":"/repo","repositoryRoots":[],"moduleResolution":{}}),
+            Value::Null,
+        ),
         ("disposeContext", json!({"context":"css"}), Value::Null),
         ("dispose", json!({"generation":"g"}), Value::Null),
         ("shutdown", json!({}), Value::Null),

@@ -123,7 +123,12 @@ impl FailureKind {
             | Call::Dispose(_)
             | Call::PrepareContext(_)
             | Call::DisposeContext(_) => Self::Bundle,
-            _ => Self::Render,
+            Call::Hello(_)
+            | Call::RenderScreen(_)
+            | Call::RenderComponent(_)
+            | Call::RenderStory(_)
+            | Call::RenderPage(_)
+            | Call::Shutdown(_) => Self::Render,
         }
     }
 }
