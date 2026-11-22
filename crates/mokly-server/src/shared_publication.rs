@@ -138,19 +138,12 @@ impl Publications for SharedPublication {
             .snapshot
             .clone()
     }
-    fn delivery(&self, document: Option<&str>) -> Delivery {
-        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        if let Some(route) = document {
-            state.requests.record(route);
-        }
-        state.delivery.clone()
-    }
-    fn background_priority(&self, origin: &Snapshot) -> Vec<usize> {
-        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        if Arc::ptr_eq(&state.delivery.snapshot.documents, &origin.documents) {
-            return state.requests.priority();
-        }
-        Vec::new()
+    fn delivery(&self) -> Delivery {
+        self.state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .delivery
+            .clone()
     }
     fn subscribe(&self) -> Subscription {
         let state = self.state.lock().unwrap_or_else(|error| error.into_inner());

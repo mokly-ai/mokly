@@ -1,6 +1,5 @@
 //! One cancellable usage pass for each installed generation, in bounded batches.
 
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -97,14 +96,8 @@ impl UsagePass {
         stages: &Arc<Stages>,
         pending: Option<&dyn PendingChanges>,
     ) -> bool {
-        let mut window = Window::new(self.work.parallelism(), origin.routes.len());
-        let priority = self.publications.background_priority(origin);
-        let requested: BTreeSet<_> = priority.iter().copied().collect();
-        let mut routes = priority
-            .into_iter()
-            .chain((0..origin.routes.len()).filter(|position| !requested.contains(position)))
-            .filter_map(|position| origin.routes.get(position).map(|route| (position, route)))
-            .peekable();
+        let mut window = Window::new(self.work.parallelism());
+        let mut routes = origin.routes.iter().enumerate().peekable();
         let mut dispatched = false;
         loop {
             loop {
@@ -120,9 +113,6 @@ impl UsagePass {
                     return cancelled();
                 }
                 if current.completed.contains_key(&route.route) {
-                    for outcome in window.settle(position, Ok(Vec::new())) {
-                        self.report(origin.documents.as_ref(), outcome);
-                    }
                     continue;
                 }
                 let dispatch = Dispatch::new(stages.clone());

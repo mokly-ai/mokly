@@ -141,8 +141,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
     {
         return response;
     }
-    let document = path.strip_prefix(&generated(""));
-    let delivery = app.publications.delivery(document);
+    let delivery = app.publications.delivery();
     let snapshot = &delivery.snapshot;
     if let Some(status) = shell(&path, snapshot) {
         return response::bytes(status, "text/html; charset=utf-8", snapshot.stub.clone());
@@ -158,7 +157,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         }
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
-    if let Some(route) = document {
+    if let Some(route) = path.strip_prefix(&generated("")) {
         return generated_routes::route(app, snapshot, route, request.headers()).await;
     }
     if let Some(path) = path.strip_prefix("static/") {

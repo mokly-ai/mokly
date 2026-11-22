@@ -11,7 +11,6 @@ use crate::changes_install::ChangeInstallation;
 use crate::detail_encoding::{DetailEncoder, EncodedDetails};
 use crate::error::Result;
 use crate::json_delivery::GzipFiles;
-use crate::requested_routes::RequestedRoutes;
 use crate::snapshot::Snapshot;
 
 /// The only data retained by an update stream; it holds no render generation.
@@ -60,13 +59,9 @@ impl Delivery {
 pub trait Publications: Send + Sync {
     /// Get matching index, details, routes, backend, and capability.
     fn current(&self) -> Arc<Snapshot>;
-    /// Read one revision and record the request if it names a declared document.
-    fn delivery(&self, _document: Option<&str>) -> Delivery {
+    /// Read one revision with its HTTP representations.
+    fn delivery(&self) -> Delivery {
         Delivery::new(self.current())
-    }
-    /// Start these catalogue positions first for the rebuild of this backend.
-    fn background_priority(&self, _origin: &Snapshot) -> Vec<usize> {
-        Vec::new()
     }
     /// Install an update receiver and capture its handshake in one step.
     fn subscribe(&self) -> Subscription;
@@ -125,7 +120,7 @@ impl Publications for FixedPublication {
     fn current(&self) -> Arc<Snapshot> {
         self.delivery.snapshot.clone()
     }
-    fn delivery(&self, _document: Option<&str>) -> Delivery {
+    fn delivery(&self) -> Delivery {
         self.delivery.clone()
     }
     fn subscribe(&self) -> Subscription {
@@ -146,7 +141,6 @@ pub trait PublicationWriter: Send + Sync {
 pub(crate) struct State {
     pub(crate) closed: bool,
     pub(crate) delivery: Delivery,
-    pub(crate) requests: RequestedRoutes,
     pub(crate) updates: broadcast::Sender<PublicationEvent>,
 }
 
@@ -173,7 +167,6 @@ impl SharedPublication {
             encoder: Arc::new(EncodedDetails),
             state: Mutex::new(State {
                 closed: false,
-                requests: RequestedRoutes::new(&snapshot.routes),
                 delivery: Delivery::new(snapshot),
                 updates: broadcast::channel(64).0,
             }),
@@ -191,7 +184,6 @@ impl PublicationWriter for SharedPublication {
         {
             return false;
         }
-        state.requests = state.requests.rebuild(&snapshot.routes);
         state.publish(snapshot);
         true
     }

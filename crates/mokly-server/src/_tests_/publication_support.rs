@@ -22,13 +22,6 @@ use crate::revision::RevisionLease;
 use crate::snapshot::Snapshot;
 
 pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
-    snapshot_with_screens(0..count, documents)
-}
-
-pub(crate) fn snapshot_with_screens(
-    numbers: impl IntoIterator<Item = usize>,
-    documents: Arc<dyn Documents>,
-) -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
         "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
@@ -39,7 +32,7 @@ pub(crate) fn snapshot_with_screens(
     let mut details = BTreeMap::new();
     let mut routes = Vec::new();
     let mut files = BTreeMap::new();
-    for number in numbers {
+    for number in 0..count {
         let path = format!("screen-{number}");
         let mut screen = template.clone();
         screen.entry.path = path.clone();

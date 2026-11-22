@@ -5,6 +5,5 @@ mod capacity_tests;
 mod dispatch_tests;
 mod failure_tests;
 mod priority_tests;
-mod request_order_tests;
 mod script;
 mod support;

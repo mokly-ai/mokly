@@ -95,9 +95,8 @@ continuation can also give the pass the base preparation that its command
 started early, as a `PendingChanges`. The pass owns that work until its
 Changes work ends, so a replaced pass cancels it and waits for it. The
 [background work](./background.md) page holds the guidance for their window,
-their start order, the lookup and the miss of each view, the `Stages` bounds
-and budget, the ready state, and the write leases of the Changes reference
-probes.
+the lookup and the miss of each view, the `Stages` bounds and budget, the ready
+state, and the write leases of the Changes reference probes.
 
 The [HTTP delivery](./delivery.md) page holds the guidance for the routes, the
 generated and authored assets, the cache headers, JSON compression, the
@@ -159,9 +158,6 @@ changes at the same URL.
 copy of an authored JSON file and its own `ETag`.
 [Comparison cache tests](./src/_tests_/comparison_cache_tests.rs) cover the
 immutable generation files and the `no-store` root and selection.
-[Request order tests](./src/_tests_/background_batch/request_order_tests.rs)
-cover the start order of a rebuilt pass and its catalogue-ordered reports and
-publication.
 
 ### Key Code
 
@@ -175,11 +171,8 @@ publication.
   gzip bodies. The default `Publications::delivery` keeps no gzip bodies
   between requests.
 - [`src/shared_publication.rs`](./src/shared_publication.rs) implements
-  `Publications` for `SharedPublication`, with the request record that sets the
-  [start order](./background.md#usage-pass) of the next pass.
-- [`src/requested_routes.rs`](./src/requested_routes.rs) defines
-  `RequestedRoutes`, the request record, which `RequestedRoutes::rebuild`
-  hands to the next catalogue.
+  `Publications` for `SharedPublication`, including atomic reads of the
+  current snapshot and its gzip cache.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Snapshot`,
   `SnapshotFactory`, and `Projector`, the canonical bytes of one revision.
 - [`src/replacement.rs`](./src/replacement.rs) provides `reuse_usage` and
@@ -240,9 +233,8 @@ publication.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
-  `UsagePass::fill_window` starts each view in the start order of the pass,
-  with its own `Dispatch`.
-  `ChangesPass::activity` holds the render store's activity, and
+  `UsagePass::fill_window` starts each view in catalogue order with its own
+  `Dispatch`. `ChangesPass::activity` holds the render store's activity, and
   the private `Reference` keeps a probe result together with its lease.
   After a committed
   Ready or Unavailable completion, and after `execute` and its write lease end,
@@ -256,11 +248,11 @@ publication.
   Changes work ends or the pass is replaced. `ChangesPass` calls
   `ChangeSource::settle_pending` after each classification.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
-  bounded window of the current usage pass, which starts views in the order
-  that the pass gives and keeps catalogue order for warnings and failure
-  reports. `Window::start_dispatched` adds a view with its `Dispatch`, and
-  `Window::settle` releases the held reports. The window counts only the views
-  that have not handed off, and a handoff event lets it start the next view.
+  bounded window of the current usage pass, which keeps catalogue order for
+  starts, warnings, and failure reports. `Window::start_dispatched` adds a view
+  with its `Dispatch`. `Window::settle` releases the held reports. The window
+  counts only the views that have not handed off, and a handoff event lets it
+  start the next view.
   [`src/background_dispatch.rs`](./src/background_dispatch.rs) defines
   `Dispatch`, the window place of one view, which its `Stage` wakes at the
   handoff. `Dispatch::new` creates it from the shared `Stages`.

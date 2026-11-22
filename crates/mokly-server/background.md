@@ -14,27 +14,13 @@ yield to foreground requests, publish changed evidence in one revision, and
 cannot publish into a replacement. `UsagePass` keeps a sliding window bounded
 by `Work::parallelism`, the fixed worker count. Its `Stages` read the injected
 `dyn BackgroundCapacity` at each batch entry and each completion entry, so the
-same pass can admit more misses when capacity recovers. The composition root
-supplies its current capacity.
-
-A pass first starts the views whose documents a request asked for since the
-previous rebuild, the most recent first, and then the other views in catalogue
-order, under the
-[window rule](../../docs/protocol/mokly-on-demand-background.md#window-and-lookup).
-`SharedPublication::delivery` records each GET or HEAD of a document route of
-the current catalogue. A repeated request moves its route to the front, so the
-record holds each route at most once. A rebuild hands this record to its own
-pass. It then starts an empty record for the next rebuild. The handed record
-keeps only the route names that the new catalogue declares.
-`Publications::background_priority` maps those names to positions in the
-current catalogue. The pass reports each view's warnings and failure once, in catalogue
-order, after every view before it in catalogue order ends. A view whose usage
-the snapshot already records ends at once, without a render.
-
-`Workers` admits queued background jobs one at a time, in the order that they
-queued, whenever no foreground request is active. It runs each lookup and each
-resumed render in `RenderClass::Background`, so the sidecar calls of that view
-go after the other waiting head calls.
+same pass can admit more misses when capacity recovers. It starts views in
+catalogue order and reports each view's warnings and failure once, in
+catalogue order, after every earlier render ends. The composition root
+supplies its current capacity. `Workers` admits queued background jobs one at
+a time, in request order, whenever no foreground request is active. It runs
+each lookup and each resumed render in `RenderClass::Background`, so the
+sidecar calls of that view go after the other waiting head calls.
 
 ## Lookup and miss
 

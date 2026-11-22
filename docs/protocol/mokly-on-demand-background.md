@@ -14,13 +14,9 @@ current pass from their start until they hand off or end, and at most the
 worker count of them. The worker count is the machine's core count, up to
 eight. A view start reads no capacity and takes no
 [claim](./mokly-sidecar-memory.md#claims). The next view starts as soon as the
-window has fewer views than the worker count. Views start in request order,
-then in catalogue order. A view whose document a request asked for since the
-previous rebuild starts first, the most recently requested first. The other
-views follow in catalogue order. When several lookups wait for one free
-worker, the first in this order starts. Decision: an open viewer's documents
-start first, because its frames wait for them. A worker reserved for requests
-was rejected, because it slows the pass and so the ready Changes.
+window has fewer views than the worker count. Views start in catalogue order:
+when several lookups wait for one free worker, the first in catalogue order
+starts.
 
 Each view first looks up its document on a worker: one counted read of the
 render cache and, after a cache miss, at most one read of the

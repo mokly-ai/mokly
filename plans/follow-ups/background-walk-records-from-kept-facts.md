@@ -80,9 +80,7 @@
     first classification and after the bound clears the arenas. A stale
     answer costs only a walk. Effort: Large.
 - **Left out:** Starting the changed views first, so that their records fit
-  first: the protocol fixes the start order. Since the user decision of
-  2026-11-22, the views that requests asked for since the previous rebuild
-  start first, and the other views follow in catalogue order.
+  first: the protocol requires catalogue order.
 - **Wider fix:** D. It still holds when the routes that the pass reads
   change.
 - **Previous examples:** None found.

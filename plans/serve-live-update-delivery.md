@@ -2,7 +2,7 @@
 
 Status: Active. On branch `calummoore/mokly-viewer-live-update-lpaj`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-After each source edit, Serve publishes about five revisions. The viewer then fetches the whole index of 1.19 to 1.31 MB after each event, and every reloaded frame fetches its stylesheets and its font again, because Serve sends `no-store` on every response. After a rebuild, the background pass renders the changed views in catalogue order, so a frame of the open viewer can wait up to about 130 ms behind other views. This change makes Serve send fewer bytes and answer the open viewer's documents sooner. It keeps every published byte, the set of rendered views, the final state of the viewer, and the static output. The viewer's own refresh work is a separate change in its own pull request.
+After each source edit, Serve publishes about five revisions. The viewer then fetches the whole index of 1.19 to 1.31 MB after each event, and every reloaded frame fetches its stylesheets and its font again, because Serve sends `no-store` on every response. This change makes Serve send fewer bytes and revalidate unchanged resources. It keeps every published byte, the set of rendered views, the final state of the viewer, and the static output. The viewer's own refresh work is a separate change in its own pull request.
 
 Measurements of `main` 3362e250d on mokly-cloud 194fdb78, 4 vCPU, warm edits 2 to 4, A/A arms: 6.51 MB and 29 requests per edit, 4.6 full index bodies per edit, the first frame paint 161 ± 28 ms after the page's first event (Chrome clock), the last frame paint 32 to 105 ms later in 7 of 12 edits, one frame document waiting 72 to 131 ms for the pass in 8 of 24 edits, the Changes pane paint 123 to 130 ms after the published ready Changes. The evidence is under `.context/viewer-live-update/`.
 
@@ -14,6 +14,7 @@ User decisions of 2026-11-22, by the performance orchestrator (Cal), after the m
 - The official check of this pull request: bytes per edit at least 50% lower; the last frame paint (viewer part, Chrome clock) at least 20 ms sooner and the first frame paint not later than +5 ms (12 interleaved warm rounds, edits 2 to 4); the Changes pane paint not later; published Changes not later than +20 ms (untimed, 12 rounds); the core CPU per session not more than +2%; Serve's whole-tree peak within 2% over paired cold sessions; the same final state and the same static output.
 - After the branch series showed that P4 cannot make the slug page sooner (its entry is the first changed entry in catalogue order, so the pass already starts its documents first, and the frame waits come from the second sidecar process, which loads the new generation at its first render), the orchestrator decided: keep P4 (option A), and measure it on a page whose entry comes late among the changed entries. The rewritten official check: bytes per edit at least 50% lower (view and Changes); on `/view/product/settings/workspace/slug-recovery/` with the workspace title edit, 6 sessions per arm, the last frame paint at least 20 ms sooner on the mean; on the slug page, 6 sessions per arm, the first and the last frame paint not later than +20 ms; on the Changes page, 4 sessions per arm, the ready event to the pane paint not later than +20 ms; over all view sessions, published ready Changes not later than +20 ms and the core CPU per session not more than +2%; 4 cold pairs, Serve's whole-tree peak within 2%; the same final state and the same static output. Rejected: removing P4 (late entries lose the gain), and adding the sidecar fix to this change.
 - The orchestrator did not take the proposal to load each new head generation into the idle head processes after each bundle, because the head preload was measured three times and the user rejected it on 2026-11-21. The frame measurement goes into `plans/follow-ups/serve-head-generation-preload.md` as new evidence, with option A as its outcome for now.
+- After its official check of `c1dc3126c`, the orchestrator removed P4 from this change: on the late-entry page the first frame paint came 24.7 ms sooner and the last frame paint 10.4 ms later, and on the slug page the last frame paint came 21.2 ms later, because the second visible document lands on the cold second sidecar process. P4 helps only when that document reaches a warm process, which needs the rejected head preload or a change of the generation affinity rule, and both need the user. The change then holds P2, P3, and P3b. A follow-up item keeps P4 with these numbers. The re-check of the change without P4: bytes per edit at least 50% lower (view and Changes); on the slug and the late-entry page, the first and the last frame paint not later than +20 ms; on the Changes page, the ready event to the pane paint not later than +20 ms; over all view sessions, published ready Changes not later than +20 ms and the core CPU per session not more than +2%; the cold pairs of `c1dc3126c` stand for memory unless the change adds retained state.
 
 Design calls (mine, 2026-11-22):
 
@@ -22,14 +23,13 @@ Design calls (mine, 2026-11-22):
 - The runtime page passed 250 lines with P3, so its unchanged "Sidecar Pool" section moved to the linked page `docs/protocol/mokly-sidecar-pool.md`. The "Shutdown" section stayed, because five pages link its anchor.
 - Two more sentences gave `no-store` for generation files and so contradicted P3b: `mokly-removed-previews.md` (the generation's routes) and `mokly-shell-fences.md` (Serve JSON). Both now point to the generation rule of the comparison serving contract, and the fences page names the read-model JSON (the index, the details, and the live descriptor) for `no-store`, because P3 gives authored JSON files validators.
 - `crates/mokly-cli/src/serve_errors.rs` gets one arm for the new internal error `EntityTag`. The match is exhaustive, so the CLI does not compile without it.
-- Follow-up items that state the catalogue start order of the pass or cite moved protocol lines are updated: `serve-pass-rereads-unchanged-pages.md`, `background-walk-records-from-kept-facts.md`, `native-html-head-usage-overhead.md`, `git-helpers-outlive-commands.md`, `macos-stop-mid-walk-orphans.md`, and `early-base-capture-evicted-results.md`.
+- Follow-up items that cite moved protocol lines are updated: `git-helpers-outlive-commands.md`, `macos-stop-mid-walk-orphans.md`, and `early-base-capture-evicted-results.md`. The three items that stated the start order of the pass (`serve-pass-rereads-unchanged-pages.md`, `background-walk-records-from-kept-facts.md`, and `native-html-head-usage-overhead.md`) went back to their `origin/main` text with the removal of P4.
 
 Contract owners:
 
 - [Shell delivery](../docs/protocol/mokly-shell-delivery.md), Routes.
 - [Runtime](../docs/protocol/mokly-runtime.md), Routes.
 - [Comparison serving](../docs/protocol/mokly-comparison-serving.md), Generation And Serving.
-- [Background pass](../docs/protocol/mokly-on-demand-background.md), Window And Lookup.
 - The [mokly-server README](../crates/mokly-server/README.md).
 
 ## Milestone 1: Documentation and protocol
@@ -63,6 +63,14 @@ Depends on: 1
 
 - [x] Red tests: after a rebuild, a view whose document was requested since the previous rebuild starts first, the most recent first; the final publication and the warnings follow catalogue order; the set of rendered views is the same; the requested-route list holds only routes of the catalogue.
 - [x] Record the requested document routes, bounded by the catalogue, and start the pass with them.
+
+## Milestone 6: Remove requested views first (P4)
+
+Depends on: 4
+
+- [x] Restore `docs/protocol/mokly-on-demand-background.md` and the follow-up items `serve-pass-rereads-unchanged-pages.md`, `background-walk-records-from-kept-facts.md`, and `native-html-head-usage-overhead.md` to `origin/main`.
+- [x] Remove the request record, the pass priority, the catalogue-order warning reports that only P4 needed, their tests, and their README text.
+- [ ] Record P4 in a follow-up item with the measurements, and fold `plans/follow-ups/pass-priority-skips-unchanged-generations.md` into it.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

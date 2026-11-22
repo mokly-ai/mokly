@@ -68,7 +68,6 @@ pub mod public_read;
 pub mod publication;
 pub mod render_request;
 mod replacement;
-mod requested_routes;
 mod response;
 pub mod revision;
 pub mod revision_file;
