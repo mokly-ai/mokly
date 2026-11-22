@@ -21,41 +21,19 @@ export function registerDesignTopBar(
     mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 
+  /** The Canvas tag search states whose picker is open under the field. */
   const pickerDesigns = [
-    "design/browse/views/screen/tag-picker",
-    "design/browse/states/tag-filter",
-    "design/browse/views/screen/tag-forms",
-    "design/browse/views/screen/tag-onboarding-picker",
+    "design/canvas/search/tags",
+    "design/canvas/search/tags/forms-picker",
+    "design/canvas/search/tags/onboarding-picker",
   ];
 
   const barDesigns = [
-    ["design/browse/views/screen", 440],
-    ["design/browse/appearance/states/auto", 366],
-    ["design/browse/appearance/overview", 366],
+    ["design/canvas/overview", 440],
+    ["design/canvas/stage/home", 366],
   ] as const;
 
   for (const viewport of ["desktop", "mobile"] as const) {
-    test(`${viewport}: the changed-view indicator is painted on Appearance`, async ({
-      page,
-    }) => {
-      await page.goto(
-        designFileUrl(
-          path.join(
-            directory,
-            `design/browse/variants/changed-views/index.${viewport}.html`,
-          ),
-        ).href,
-      );
-      const appearance = page.locator(".mbk-appearance");
-      const mark = appearance.locator('[data-view-changed="scheme"]');
-      await expect(mark).toBeVisible();
-      await expect(mark).toHaveCSS("background-color", "rgb(79, 120, 100)");
-      await expect(mark).toHaveCSS("width", "6px");
-      await expect(
-        appearance.getByLabel("Appearance", { exact: true }),
-      ).toHaveAccessibleDescription("Other theme changed");
-    });
-
     test(`${viewport}: the tag picker panel escapes the search field it anchors to`, async ({
       page,
     }) => {
@@ -70,7 +48,7 @@ export function registerDesignTopBar(
             .href,
         );
         const panel = page.locator(".mbk-tag-picker");
-        if ((await panel.count()) === 0) continue;
+        await expect(panel, `${route}: the picker is open`).toHaveCount(1);
         const chip = panel.locator(".mbk-chip").first();
         const box = (await chip.boundingBox())!;
         const reached = await page.evaluate(

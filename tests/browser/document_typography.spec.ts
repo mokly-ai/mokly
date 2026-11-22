@@ -190,7 +190,7 @@ function computedParts(root: Locator, selectors: Record<Part, string>) {
 
 async function designParts(page: Page, viewport: "desktop" | "mobile") {
   await page.setViewportSize({ width: 1700, height: 1100 });
-  await page.goto(`/view/design/browse/pages/document/?viewport=${viewport}`);
+  await page.goto(`/view/design/canvas/stage/document/?viewport=${viewport}`);
   const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
   await expect(frame.locator(".mbk-markdown h1")).toHaveText("Payment terms");
   return computedParts(frame.locator("html"), DESIGN);

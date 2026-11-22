@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { expect, type Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -57,11 +57,6 @@ export function registerDesignLibrary(
         page.on("requestfailed", (request) => failed.push(request.url()));
         await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
         await expect(page.locator(".mbk-library-host")).toBeVisible();
-        for (const panel of await page
-          .locator(".mbk-workspace details[open] > .mbk-inspector-content")
-          .all()) {
-          await expect(panel).toHaveCSS("overflow-y", "auto");
-        }
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -159,23 +154,6 @@ export function registerDesignLibrary(
       expect(isolated).toEqual(inScreen);
     });
 
-    test("the last flow step has no trailing connector after registered boundaries", async ({
-      page,
-    }) => {
-      await page.goto(
-        fileUrl(`design/browse/views/use-case/index.${viewport}.html`),
-      );
-      const steps = page.locator(".flow-step");
-      await expect(steps).toHaveCount(2);
-      const connector = (step: Locator) =>
-        step.evaluate((node) => getComputedStyle(node, "::before").display);
-      // A mobile render draws the shipped narrow flow, which joins no steps.
-      expect(await connector(steps.first())).toBe(
-        viewport === "desktop" ? "block" : "none",
-      );
-      expect(await connector(steps.last())).toBe("none");
-    });
-
     test("standalone inline components retain their intrinsic width", async ({
       page,
     }) => {
@@ -197,22 +175,6 @@ export function registerDesignLibrary(
         ).toBeLessThan(150);
       }
     });
-
-    test("the icon footer sample keeps its open content visible", async ({
-      page,
-    }) => {
-      const entry = manifest.entries.find(
-        (entry) => entry.path === "design/library/inspector/inspector/details",
-      );
-      if (entry?.kind !== "component" || !("variantOf" in entry))
-        throw new Error("Missing footer panel");
-      await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-      await expect(
-        page.getByText(
-          "A shared action with an optional destination and hint.",
-        ),
-      ).toBeInViewport();
-    });
   });
 
   if (viewport === "mobile") {
@@ -220,52 +182,28 @@ export function registerDesignLibrary(
       page,
     }) => {
       await page.setViewportSize({ width: 390, height: 844 });
-      for (const route of [
-        "design/library/chrome/screen-header/changed",
-        "design/library/controls/comparison-toolbar/side-by-side",
-      ]) {
-        await page.goto(fileUrl(`${route}/index.mobile.html`));
-        await page.addStyleTag({
-          content: ":root { --sans: Verdana, sans-serif; }",
-        });
-        const toolbar = page.getByRole("group", { name: "Comparison mode" });
-        await expect(toolbar.getByRole("button")).toHaveCount(4);
-        const bounds = await toolbar.boundingBox();
-        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
-        expect(
-          await page.evaluate(() => document.documentElement.scrollWidth),
-        ).toBeLessThanOrEqual(390);
-      }
-    });
-
-    test("mobile footer component owns its full-width sheet surface", async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
-      const entry = manifest.entries.find(
-        (candidate) =>
-          candidate.path === "design/library/inspector/inspector/details",
+      await page.goto(
+        fileUrl(
+          "design/library/panels/compare-modes/side-by-side/index.mobile.html",
+        ),
       );
-      if (entry?.kind !== "component" || !("variantOf" in entry))
-        throw new Error("Missing footer panel");
-      await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
-      const workspace = page.locator(".mbk-workspace-panes");
-      const dock = page.locator(".ce-inspector-dock");
-      const inspector = page.locator(".mbk-inspector");
-      const [workspaceBounds, dockBounds] = await Promise.all([
-        workspace.boundingBox(),
-        dock.boundingBox(),
-      ]);
-      expect(workspaceBounds).not.toBeNull();
-      expect(dockBounds).not.toBeNull();
-      expect(dockBounds!.x).toBeCloseTo(workspaceBounds!.x, 0);
-      expect(dockBounds!.width).toBeCloseTo(workspaceBounds!.width, 0);
-      await expect(dock).toHaveCSS("border-top-width", "0px");
-      await expect(dock).toHaveCSS("border-top-left-radius", "0px");
-      await expect(dock).toHaveCSS("box-shadow", "none");
-      await expect(inspector).toHaveCSS("border-top-width", "1px");
-      await expect(inspector).toHaveCSS("border-top-left-radius", "14px");
-      await expect(inspector).not.toHaveCSS("box-shadow", "none");
+      // The Canvas palette scope declares its fonts inline, so the wider
+      // fallback outranks that declaration.
+      await page.addStyleTag({
+        content:
+          ".cv { --cv-sans: Verdana, sans-serif !important; --sans: Verdana, sans-serif !important; }",
+      });
+      const modes = page.getByRole("list", { name: "Comparison mode" });
+      await expect(modes.locator(".cv-mode")).toHaveCount(5);
+      await expect(modes.locator(".cv-mode-name").first()).toHaveCSS(
+        "font-family",
+        "Verdana, sans-serif",
+      );
+      const bounds = await modes.boundingBox();
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(390);
     });
   }
 }

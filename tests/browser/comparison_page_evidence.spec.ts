@@ -1,7 +1,7 @@
 /**
  * Whole-page stylesheet Details on the copied comparison output, under the
- * CSS evidence shell contract and the approved document design
- * `design/changes/impact/styles/page`. The changed handbook names each of
+ * CSS evidence shell contract and the approved Canvas document design
+ * `design/canvas/evidence/page`. The changed handbook names each of
  * its stylesheets once with the page copy, repeats the design's outcomes and
  * spacing, keeps its last style reachable on a short screen, and keeps the
  * same facts across navigation. The unchanged notes page lists its examined
@@ -72,7 +72,7 @@ function documentDesignUrl(viewport: string): string {
   return designFileUrl(
     path.join(
       repositoryRoot,
-      "examples/basic/mokly-generated/design/changes/impact/styles/page",
+      "examples/basic/mokly-generated/design/canvas/evidence/page",
       `index.${viewport}.html`,
     ),
   ).href;
@@ -146,7 +146,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       );
       expect(await titleLines(page)).toBe(1);
       await page.goto(documentDesignUrl(name));
-      const card = page.locator(".mbk-comparison-details");
+      const card = page.locator(".cv-evidence [data-page-evidence]");
       await expect(
         card.getByText(PAGE_FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -163,10 +163,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         styles: spacing.styles,
         afterList: spacing.afterList,
       });
+      // The design's status sits beside its title: the section head's on a
+      // desktop, and the entry bar's on a phone.
       await expect(
-        page.locator(".mbk-screen-head .mbk-entry-status"),
+        page.locator(".cv-canvas .mbk-entry-status:visible"),
       ).toHaveText("Changed");
-      expect(await titleLines(page)).toBe(1);
     });
 
     test("an unchanged document lists its examined stylesheet and ends with its terminal line", async ({

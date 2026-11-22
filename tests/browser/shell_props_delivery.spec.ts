@@ -10,10 +10,10 @@ import { expect, type Page, type Route } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { networkFailure } from "./shell_error_allowances.js";
 
-const ORIGIN = "design/library/chrome/top-bar";
-/** Its index lists `status, title`; its detail declares `title, status`. */
-const DESTINATION = "design/library/chrome/screen-header";
-const DECLARED = ["title", "status"];
+const ORIGIN = "design/library/canvas/selection";
+/** Its index lists `presentation, zoom`; its detail declares `zoom, presentation`. */
+const DESTINATION = "design/library/canvas/zoom-pill";
+const DECLARED = ["zoom", "presentation"];
 
 /** Hold the first read of the destination's detail; later reads continue. */
 async function holdDetail(page: Page, fail = false) {
@@ -29,7 +29,7 @@ async function holdDetail(page: Page, fail = false) {
 /** Open Props on the origin, then move to the destination in the page. */
 async function openDestination(page: Page) {
   await page.goto(`/view/${ORIGIN}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Top bar");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Selection");
   const tab = page.getByRole("tab", { name: "Props", exact: true });
   // A click on the selected icon would close the panel.
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
@@ -52,7 +52,7 @@ async function moveToDestination(page: Page) {
       `nav.mbk-nav a[data-nav-row][data-route="${DESTINATION}/index.html"]`,
     )
     .click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Screen header");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Zoom pill");
   return page.getByRole("tabpanel", { name: "Props", exact: true });
 }
 
@@ -82,7 +82,7 @@ test("Props wait for the routed detail, then show the fields once in their decla
   ).toEqual(DECLARED);
   // The destination's fields never showed the index's order.
   expect(
-    (await fieldOrders(page)).filter((order) => order === "status,title"),
+    (await fieldOrders(page)).filter((order) => order === "presentation,zoom"),
   ).toEqual([]);
 });
 

@@ -289,3 +289,10 @@ export async function paletteColor(
   if (!value) throw new Error(`design.css has no ${token} for ${appearance}`);
   return cssColor(value);
 }
+
+/** One Canvas role on a Canvas root as the `rgb()` value a style reports. */
+export async function canvasColor(appearance: Appearance, role: string) {
+  const value = await canvasRoleColor(role, appearance);
+  if (!value) throw new Error(`Canvas has no opaque ${role} in ${appearance}`);
+  return cssColor(value);
+}
