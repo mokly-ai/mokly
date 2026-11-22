@@ -1,7 +1,5 @@
 # Mokly Shell Brand
 
-Status: The shell's theme does not hold the Canvas roles and Geist yet, so the shell draws the mark in its current palette with surface-coloured rules, and sets the wordmark in its current sans face. [Milestone 17](../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) moves the theme.
-
 ## Identity Boundary
 
 The top-bar brand is Mokly identity, not a consumer accent. The public

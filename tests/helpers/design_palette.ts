@@ -4,7 +4,10 @@ import path from "node:path";
 import { CANVAS_SAMPLES } from "../../examples/basic/specs/design/library/metadata.js";
 import { libraryStyleFiles } from "../../examples/basic/specs/design/library/style_files.js";
 import { canvasProperties } from "../../examples/basic/specs/design/parts/canvas_palette.js";
-import { palettes } from "../../packages/ui/dist/palette/palette.js";
+import {
+  palettes,
+  type PaletteColors,
+} from "../../packages/ui/dist/palette/palette.js";
 
 import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
@@ -280,12 +283,15 @@ function cssColor(color: string): string {
   return `rgb(${channels.join(", ")})`;
 }
 
-/** One palette token as the CSS `rgb()` value a computed style reports. */
-export async function paletteColor(
-  appearance: Appearance,
-  token: string,
-): Promise<string> {
-  const value = (await designPalette())[appearance].get(token);
-  if (!value) throw new Error(`design.css has no ${token} for ${appearance}`);
-  return cssColor(value);
+/** A colour role of the Canvas palette, other than the people's colours. */
+export type CanvasRole = Exclude<keyof PaletteColors, "people">;
+
+/**
+ * One colour role of the Canvas palette in one appearance, as the CSS `rgb()`
+ * value a computed style reports. The shipped theme takes each shell token
+ * from a Canvas role, and a design screen's shell root takes that theme, so
+ * a package component inside it paints this value.
+ */
+export function canvasColor(appearance: Appearance, role: CanvasRole): string {
+  return cssColor(palettes.canvas[appearance][role]);
 }

@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
 
-import { paletteColor } from "../helpers/design_palette.js";
+import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
@@ -144,10 +144,7 @@ export function registerDesignScrollTogether(
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(
-            await paletteColor(
-              scheme,
-              on ? "--mbk-accent-deep" : "--chrome-bg",
-            ),
+            canvasColor(scheme, on ? "signalDeep" : "background"),
           );
           expect(follows(facts.control, facts.modes), where).toBe(true);
           expect(follows(facts.refresh, facts.control), where).toBe(true);

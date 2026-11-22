@@ -39,7 +39,8 @@
   `npm run dev` in `docs/protocol/mokly-watch.md` states the requirement.
 - **Problem:** The output list does not hold every file that Serve reads.
   Serve also reads `browser.manifest.json`, `shell.css`,
-  `assets/brand.svg`, and `assets/fonts/InterVariable.woff2` in
+  `assets/brand.svg`, `assets/fonts/Geist-Variable.woff2`, and
+  `assets/fonts/GeistMono-Variable.woff2` in
   `packages/viewer/dist`. A viewer build that stops after
   `browser/frame-probe.js` but before `shell.css` leaves every listed file in
   place. Dev preparation then runs no build. Serve stops with "Build or
@@ -55,7 +56,8 @@
   complete before it starts Serve?
 - **Options:**
   - **A.** Add `shell.css`, `browser.manifest.json`, `assets/brand.svg`,
-    and `assets/fonts/InterVariable.woff2` of `packages/viewer/dist` to the
+    `assets/fonts/Geist-Variable.woff2`, and
+    `assets/fonts/GeistMono-Variable.woff2` of `packages/viewer/dist` to the
     output list. Add a test case where only `shell.css` is missing. The
     list needs an update each time Serve reads a new file. Effort: Small.
   - **B.** Write a complete inventory of the runtime files in each package

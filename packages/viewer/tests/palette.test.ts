@@ -80,7 +80,7 @@ test("the shell stylesheets were actually scanned", async () => {
   for (const source of [
     ...listed,
     ...PALETTE_SOURCES,
-    "viewer/src/shell/assets/fonts/inter.css",
+    "viewer/src/shell/assets/fonts/geist.css",
   ])
     assert.ok(
       modules.some((module) => module.file === source),
@@ -229,8 +229,8 @@ test("every status and device token value is covered by a painted pair", () => {
 });
 
 test("the palette carries the three Light role values of the contract", () => {
-  assert.equal(LIGHT.get("--chrome-muted"), "#676e6a");
-  assert.equal(LIGHT.get("--chrome-control-edge"), "#868e88");
+  assert.equal(LIGHT.get("--chrome-muted"), "#626a64");
+  assert.equal(LIGHT.get("--chrome-control-edge"), "#626a64");
   assert.equal(LIGHT.get("--mbk-danger-ink"), "#964334");
 });
 

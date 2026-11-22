@@ -11,8 +11,8 @@ import { test } from "./browser_test.js";
 import { renderWithShellStyles } from "./shell_styles_page.js";
 
 /** The Light palette's control edge and decorative hairline. */
-const CONTROL_EDGE = "rgb(134, 142, 136)";
-const HAIRLINE = "rgb(227, 229, 224)";
+const CONTROL_EDGE = "rgb(98, 106, 100)";
+const HAIRLINE = "rgb(225, 228, 222)";
 
 test.use({ colorScheme: "light" });
 

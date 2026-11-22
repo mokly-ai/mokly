@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { expect, type Page, type Locator } from "@playwright/test";
 
-import { paletteColor } from "../helpers/design_palette.js";
+import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 export async function openComparisonDesign(
@@ -36,7 +36,7 @@ export async function assertComparisonInk(
   scheme: "light" | "dark",
   designFileUrl: (file: string) => URL,
 ) {
-  const stageInk = await paletteColor(scheme, "--chrome-ink-2");
+  const stageInk = canvasColor(scheme, "textSecondary");
   for (const route of [
     "design/changes/diff-controls/overlay-long",
     "design/changes/diff-controls/overlay-panel",

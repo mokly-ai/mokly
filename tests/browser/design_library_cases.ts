@@ -151,10 +151,10 @@ export function registerDesignLibrary(
       );
       const inScreen = await logo();
       expect(inScreen).toEqual({
-        brand: "rgb(26, 29, 28)",
-        mark: "rgb(47, 89, 69)",
-        rules: "rgb(255, 255, 255)",
-        name: viewport === "desktop" ? "rgb(26, 29, 28)" : null,
+        brand: "rgb(13, 20, 16)",
+        mark: "rgb(18, 183, 106)",
+        rules: "rgb(4, 19, 11)",
+        name: viewport === "desktop" ? "rgb(13, 20, 16)" : null,
       });
       expect(isolated).toEqual(inScreen);
     });

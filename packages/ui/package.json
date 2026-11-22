@@ -203,6 +203,8 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "palette:check": "node --import tsx scripts/palette-generate.mjs --check",
+    "palette:generate": "node --import tsx scripts/palette-generate.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
     "prepack": "npm run build"

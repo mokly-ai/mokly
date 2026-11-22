@@ -114,15 +114,19 @@ Under decision 11, option D, Milestone 18 removes the older Browse design
 screens, so this milestone does not re-theme them. It runs at the same time as
 Milestone 18 and leaves `examples/basic/specs/design/` to it.
 
-- [ ] Generate the `@mokly/ui` theme stylesheet and the `mokly-html` Markdown
-      style from the palette module, with Canvas as the default.
-- [ ] Add the drift check that compares the generated files with the module.
-- [ ] Replace Inter with Geist in `packages/viewer/src/shell/assets/fonts/`,
+- [x] Generate the `@mokly/ui` theme stylesheet and the `mokly-html` Markdown
+      style from the palette module, with Canvas as the default. Branch:
+      `calummoore/canvas-redesign-m17-canvas-default-in-77ix`.
+- [x] Add the drift check that compares the generated files with the module.
+      Branch: `calummoore/canvas-redesign-m17-canvas-default-in-77ix`.
+- [x] Replace Inter with Geist in `packages/viewer/src/shell/assets/fonts/`,
       `crates/mokly-server/src/assets.rs` and `examples/basic/design.css`.
-- [ ] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.
-- [ ] Switch the shell mark's rules to `onSignal` and its front layer to
+      Branch: `calummoore/canvas-redesign-m17-canvas-default-in-77ix`.
+- [x] Run `cargo xtask mokly-fixtures` and commit any changed fixtures.
+      Branch: `calummoore/canvas-redesign-m17-canvas-default-in-77ix`.
+- [x] Switch the shell mark's rules to `onSignal` and its front layer to
       `signal`, and remove `docs/mockups/styles/fonts/inter.css` and its Inter
-      files.
+      files. Branch: `calummoore/canvas-redesign-m17-canvas-default-in-77ix`.
 
 ## Milestone 18: One Canvas family of Browse designs
 

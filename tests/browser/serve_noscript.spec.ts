@@ -7,7 +7,7 @@ test("the Serve stub explains its JavaScript requirement", async ({ page }) => {
   await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
-    "rgb(24, 24, 27)",
+    "rgb(17, 17, 19)",
   );
   await expect(page.locator("noscript")).toBeVisible();
   expect(await page.locator("noscript").textContent()).toBe(

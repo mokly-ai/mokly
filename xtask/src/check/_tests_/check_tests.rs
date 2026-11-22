@@ -122,6 +122,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             "cargo xtask boundary",
             "cargo xtask whitespace",
             "cargo xtask check-generated-types",
+            "npm run palette:check",
             "npm run format:check",
             "npm run lint",
             "node_modules/.bin/ast-grep test --skip-snapshot-tests",

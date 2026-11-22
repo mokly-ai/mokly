@@ -24,7 +24,7 @@ const ACCENT_SOFT =
   "var(--mokly-accent-soft, var(--_mokly-private-accent-soft-default))";
 
 test("shell stylesheet stays aligned with the design contract", () => {
-  assert.match(STANDALONE_CSS, /--_mokly-private-accent-default: #4f7864/);
+  assert.match(STANDALONE_CSS, /--_mokly-private-accent-default: #067a45/);
   assert.match(STANDALONE_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
   assert.match(STANDALONE_CSS, /--mbk-dark-screen-bg: #121514/);
   assert.match(STANDALONE_CSS, /--mbk-dark-screen-ink: #eef1ef/);
@@ -65,7 +65,8 @@ test("shell stylesheet stays aligned with the design contract", () => {
   );
 
   assert.match(STANDALONE_CSS, /prefers-reduced-motion/);
-  assert.match(STANDALONE_CSS, /InterVariable\.woff2/);
+  assert.match(STANDALONE_CSS, /Geist-Variable\.woff2/);
+  assert.match(STANDALONE_CSS, /GeistMono-Variable\.woff2/);
   assert.match(STANDALONE_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
   assert.match(
     STANDALONE_CSS,

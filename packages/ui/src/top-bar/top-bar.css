@@ -58,17 +58,18 @@ span.mbk-menu {
   text-decoration: none;
 }
 
-/* The mark: the outline frame in the ink, and the front layer in the brand
-   colour, ringed by a halo of the surface behind the mark. The theme's brand
-   colour is a deep green in Light, so the rules take the surface colour too,
-   which keeps them visible on the front layer in both appearances. */
+/* The mark: the outline frame in the ink, and the front layer in the Canvas
+   signal colour, ringed by a halo of the surface behind the mark. The two
+   rules on the front layer take the ink on the signal colour. The mark reads
+   the Canvas roles themselves, so it draws the same in every root that
+   declares them. */
 .mbk-mark {
   display: inline-grid;
   place-items: center;
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  color: var(--chrome-brand);
+  color: var(--cv-signal);
 }
 
 .mbk-mark-back {
@@ -80,11 +81,11 @@ span.mbk-menu {
 }
 
 .mbk-mark-rules {
-  stroke: var(--chrome-surface);
+  stroke: var(--cv-on-signal);
 }
 
 /* The Geist wordmark: weight 640 with tight tracking, its period in the
-   brand colour. */
+   signal colour. */
 .mbk-name {
   font-family: var(--sans);
   font-size: 20px;
@@ -95,7 +96,7 @@ span.mbk-menu {
 }
 
 .mbk-name-dot {
-  color: var(--chrome-brand);
+  color: var(--cv-signal);
 }
 
 .mbk-search {

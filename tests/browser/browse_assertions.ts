@@ -30,7 +30,7 @@ export const darkSurface = "rgb(18, 21, 20)";
 export const formsChip =
   '[data-inspector-panel="details"] [data-mokly-tag="forms"]';
 
-export const accentFill = "rgb(79, 120, 100)";
+export const accentFill = "rgb(6, 122, 69)";
 
 export async function markPage(page: Page): Promise<void> {
   await page.evaluate(() => {
