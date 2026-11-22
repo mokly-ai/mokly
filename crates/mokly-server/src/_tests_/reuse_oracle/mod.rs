@@ -2,6 +2,11 @@
 
 mod fixture;
 mod generation;
+mod head_fixture;
+mod head_link_tests;
+mod head_pass_tests;
+mod head_sequence_tests;
+mod head_tree;
 mod publication;
 mod reference;
 mod sequence_tests;

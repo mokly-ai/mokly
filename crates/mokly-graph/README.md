@@ -255,7 +255,8 @@ retention disabled.
   one Serve background view on the render workers. Its private miss keeps the
   store key, the root eligibility, and the view's span, and no tree.
   `BackgroundMiss::complete` can prepare the own root, hands it off, and
-  finishes the view on the render workers without a second lookup.
+  finishes the view on the render workers without a second lookup. A
+  background finish keeps the walk record of its view.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
   charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
@@ -339,19 +340,40 @@ retention disabled.
   [`src/closure_walk.rs`](./src/closure_walk.rs) holds the one walk that
   `Walker::collect` and `Walker::collect_recorded` run.
 - [`src/head_validation.rs`](./src/head_validation.rs) defines
-  `HeadValidation`, `ClosureFacts`, `ValidationRecorder`, and `ValidationRead`.
+  `HeadValidation`, `HeadProof`, `ClosureProof`, `ClosureFacts`,
+  `DocumentChecks`, `ValidationRecorder`, and `ValidationRead`.
   `RenderGeneration::validate_head` runs complete head validation over every
-  view with a caller's `HeadValidation`. That caller supplies each checked
-  document, and either proven closure facts or a recorded walk. The default
-  calls `render_all`. `RenderGeneration::validation_document` and
+  view with a caller's `HeadValidation`. `HeadValidation::kept` can prove a
+  view from the caller's kept facts with no document read. For any other view
+  the caller supplies the checked document, and either proven closure facts,
+  the background walk of the same generation, or a recorded walk.
+  `HeadValidation::validated` lets the caller keep the outputs of a view read
+  from its document. The default calls `render_all`.
+  `RenderGeneration::validation_document` and
   `RenderGeneration::validation_identity` give the checked head read and the
-  proof of one walk input. Their defaults read `comparison_document` and prove
-  nothing. The caller's `HeadValidation` reads documents and inputs through the
-  outermost generation. So a checking wrapper can forward `validate_head`, and
-  it keeps its checks in these two methods. The private
-  [`src/session_head.rs`](./src/session_head.rs) runs the pass for a prepared
-  generation. It replays the observer calls of reused facts, and it takes
-  anchors, links, and document warnings from the current document.
+  proof of one walk or link input. `RenderGeneration::validation_checks`
+  exports the checks of a checked read, and
+  `RenderGeneration::adopt_validation` adopts them for a proven document
+  instead of a read. Their defaults read `comparison_document`, prove nothing,
+  export nothing, and decline. The caller's `HeadValidation` reads documents
+  and inputs through the outermost generation. So a checking wrapper can
+  forward `validate_head`, and it keeps its checks in these four methods. The
+  private [`src/session_head.rs`](./src/session_head.rs) runs the pass for a
+  prepared generation. A view proven from kept facts replays their observer
+  calls and takes its anchors, links, and warnings from them. Its adoption
+  reads the render cache once, as the checked read's lookup does, and a
+  document that the cache does not hold takes the checked read. Any other view
+  takes its anchors, links, and document warnings from its current document.
+  Every ordered and global check still runs over all views. The private
+  [`src/head_links.rs`](./src/head_links.rs) answers the `LinkTarget` read:
+  the destination, a use case's first screen, and the route and document key
+  of each view that the link check of one target reads.
+- [`src/head_walks.rs`](./src/head_walks.rs) defines `WalkRecord` and
+  `WalkStep`. A Serve background read records the read set of its closure walk
+  through the same recorder calls as a validation walk. The generation keeps
+  one record for each view that its background reads walked, within two MiB,
+  and its head validation takes each record once. A record ends with that
+  validation or with its generation.
 - [`src/reference_index.rs`](./src/reference_index.rs) defines
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
   referenced file of one generation and its reads of the style memo.

@@ -7,6 +7,8 @@ use mokly_model::axes::Viewport;
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver, Walker};
 use crate::error::{GraphError, Result};
+use crate::head_validation::{ClosureFacts, Unrecorded, ValidationRecorder};
+use crate::head_walks::{PassRecorder, WalkRecord};
 use crate::session::Session;
 use crate::session_lookup::DocumentRead;
 use crate::types::DocumentPlan;
@@ -48,15 +50,21 @@ impl Session {
         &self,
         route: &str,
         composed: Arc<Artifact>,
+        finish: Finish,
     ) -> Result<Arc<Artifact>> {
+        let recorder = (finish == Finish::Background).then(|| PassRecorder::new(self));
+        let walk: &dyn ValidationRecorder = match &recorder {
+            Some(recorder) => recorder,
+            None => &Unrecorded,
+        };
         let document = composed
             .document
             .as_ref()
             .expect("rendered document artifacts carry their composed tree");
-        let closure = match self
-            .walker()
-            .collect(route, &document.tree, &document.resources)
-        {
+        let walked =
+            self.walker()
+                .collect_recorded(route, &document.tree, &document.resources, walk);
+        let closure = match walked {
             Ok(closure) => closure,
             Err(source) => {
                 return Err(GraphError::Attempt {
@@ -86,8 +94,27 @@ impl Session {
             self.state.inputs.closures.record(key, path);
         }
         self.offer_document(route);
+        if let Some(steps) = recorder.and_then(PassRecorder::finish) {
+            let closure = ClosureFacts {
+                files: closure.files,
+                warnings: closure.warnings,
+                replay: Vec::new(),
+            };
+            self.state
+                .walks
+                .insert(route, WalkRecord { steps, closure });
+        }
         Ok(artifact)
     }
+}
+
+/// Whether a finished view keeps the read set of its closure walk for its generation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Finish {
+    /// A foreground read keeps no walk record.
+    Foreground,
+    /// A background read keeps one for the head validation of its generation.
+    Background,
 }
 
 impl ArtifactWorker for Session {
@@ -102,7 +129,7 @@ impl ArtifactWorker for Session {
     }
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
         let composed = self.raw(route)?;
-        self.finish_artifact(route, composed)
+        self.finish_artifact(route, composed, Finish::Foreground)
     }
 }
 

@@ -76,6 +76,19 @@ Contract owners:
 - 2026-11-22, the performance orchestrator: merge `origin/main` once after
   workspaces 229 and 233 land in `crates/mokly-sidecar`, before the final SHA.
 
+- 2026-11-22, the performance orchestrator, item 3: a shared entry detail may
+  keep the typed revision of the publication that built it, because served
+  bytes take the current revision from `RevisionFile` and the typed revision is
+  internal. This changes the rule of PR #305 that reuse never changes a typed
+  revision. Alternative: keep the rule and copy each shared detail once.
+  Conditions: the `mokly-server` README states the new contract and names the
+  two readers, `detail_validation.rs` and the rebuild path in
+  `replacement.rs`, with why each stays correct; an HTTP test proves that a
+  shared detail serves the current revision and fails if a response used the
+  stored one; a validation test accepts an older stored revision and still
+  rejects an invalid one; the eight sharing mutations still fail; the pull
+  request description states the rule change and its reason.
+
 ## Design
 
 ### B4: one Git reference read
@@ -153,6 +166,19 @@ Contract owners:
   base commit in a criss-cross history.
 - 2026-11-22, implementor's call, accepted by me: `PinnedBase::resolved` lives
   in `mokly-compare`, so the Git error mapping of that crate has one copy.
+- 2026-11-22, my call on the B2 report: a referrer of a changed link target is
+  fetched and checked again, and its closure facts stay proven. Reason: the
+  closure walk never reads the link target, and the existing test of PR #466
+  requires that reuse.
+- 2026-11-22, my call on the B2 report: the `validationDocuments` count still
+  counts a kept view once. Reason: an existing test requires it; a separate
+  counter of kept views can follow.
+- 2026-11-22, my call on the B2 report: a kept view's document bytes are not
+  hashed again in Serve. Reason: the decision of item 2 lets an unchanged view
+  skip its fetch and its digest once its inputs are proven.
+- 2026-11-22, my call on the B2 report: B2 also changes `session_build.rs`, the
+  module lines of two `lib.rs` files, and splits `types.rs` into
+  `transient_documents.rs` for the 300-line cap. Reason: each is mechanical.
 
 ## Milestone 1: Documentation and protocol
 
@@ -206,22 +232,27 @@ Depends on: 1
       patch is `.context/edit-background-render/m3-b1/variant-A-shared-arc.patch`.
 - [x] Run the targeted tests of the changed crates. Evidence:
       `.context/edit-background-render/m3-b1/`.
+- [ ] Apply item 3 of 2026-11-22: share the record itself, rewrite the README
+      rule, and add the HTTP revision test and the validation test, with the
+      eight sharing mutations still failing.
 
 ## Milestone 4: Head validation without a fetch for proven views
 
 Depends on: 1
 
-- [ ] Red test: a view whose link target changes is validated again.
-- [ ] Red test: a view whose link target is added or removed is validated
-      again.
-- [ ] Red test: the walk facts of a pass are not used by a classification of
+- [x] Red test: a view whose link target changes is validated again.
+- [x] Red test: a view whose link target is added or removed is validated
+      again. Catalogue preparation rejects a removed link target before head
+      validation, so the test adds and removes the views of a destination.
+- [x] Red test: the walk facts of a pass are not used by a classification of
       another state, and they are released with the pass.
-- [ ] Red test: the walk facts of a pass stay bounded by its changed views.
-- [ ] Red differential test: documents, usage, Changes, and diagnostics equal
+- [x] Red test: the walk facts of a pass stay bounded by its changed views.
+- [x] Red differential test: documents, usage, Changes, and diagnostics equal
       today's over the edit sequence of Milestone 3 and a failed render with
       its recovery.
-- [ ] Implement B2.
-- [ ] Run the targeted tests of the changed crates.
+- [x] Implement B2.
+- [x] Run the targeted tests of the changed crates. Evidence:
+      `.context/edit-background-render/m4-b2/`.
 
 ## Milestone 5: Verification, proofs, review, and pull request
 

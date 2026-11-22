@@ -264,8 +264,8 @@ Without a fence, the attempt reuses and keeps nothing. Admission finds the
 kept view of each route. The worker of that view then checks its read set
 before preparation, through `comparison_identity` and the checked head
 document proof, with no base source read. Complete head validation supplies
-that proof when it read the document, and `comparison_document_proof`
-supplies it otherwise. A proven view skips
+that proof when it read the document or adopted its kept checks, and
+`comparison_document_proof` supplies it otherwise. A proven view skips
 preparation and takes its current head usage from that proof. The ordered
 pass adds its shared evidence, its warnings, and the current usage of both
 sides. Call
@@ -467,16 +467,23 @@ development dependencies, and no test uses the internet.
 - [`src/validation_head.rs`](./src/validation_head.rs) defines the private
   `Head`, the `HeadValidation` of one Serve reuse attempt. `Engine` passes it
   to `RenderGeneration::validate_head` before pairing, and it calls
-  `render_all` when it has no reuse collection. `Head` reads each checked head
-  document once and keeps that proof, with current usage, for the view stream.
-  It reuses the closure facts of a head route only when the document key, the
-  policy identity, and every recorded walk read are equal. Otherwise it
-  records a new walk. Facts never depend on pairing. The private
-  `validation_*.rs` modules keep the facts and their reads.
+  `render_all` when it has no reuse collection. `Head` checks each head
+  document once. It validates a view without a document read only when the
+  document key and the policy identity are equal, every link-target read of
+  its fragment links and then every recorded walk read are equal in order,
+  and the generation adopts the kept document checks. That view takes its
+  anchors, links, warnings, and usage from its kept outputs. Any other view
+  takes its checked read. Its closure facts are still proven when the key, the
+  policy identity, the document checks, and every walk read are equal.
+  Otherwise it replays the background walk of the same generation, or records
+  a new walk. Each view keeps its proof, with usage, for the view stream.
+  Facts never depend on pairing. The private `validation_*.rs` modules keep
+  the facts, the kept outputs, and their reads.
 - [`src/reuse_optional.rs`](./src/reuse_optional.rs) defines the private
-  `Arena`, the optional fact store of one classification inside the
-  comparison bound. The bound clears every optional arena before it refuses a
-  comparison charge, so facts never displace kept comparisons.
+  `Arena`, the optional store of the facts and kept outputs of one
+  classification inside the comparison bound. The bound clears every optional
+  arena before it refuses a comparison charge, so facts and kept outputs never
+  displace kept comparisons.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran

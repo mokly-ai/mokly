@@ -319,7 +319,12 @@ generations.
   [`src/comparison_head.rs`](./src/comparison_head.rs) gives it the head
   validation methods. It forwards `validate_head` to the wrapped generation,
   checks each `validation_document` read against the frozen document digest,
-  and answers `validation_identity` for head proofs.
+  and answers `validation_identity` for head proofs. The document read of a
+  proof is the wrapped document identity, so a proof needs no document read.
+  `validation_checks` exports the frozen digest of a checked read.
+  `adopt_validation` freezes the kept digest of a proven document when this
+  state froze no other digest and the wrapped generation adopts the document,
+  so every later read of that document meets the same digest check.
 
 ### Related Docs
 

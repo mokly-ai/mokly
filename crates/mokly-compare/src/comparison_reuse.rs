@@ -29,15 +29,15 @@ impl ReuseFence {
 pub struct ReuseWork {
     /// Candidate comparison payload charge, excluding optional validation facts.
     pub comparison_kept_bytes: usize,
-    /// Current optional closure fact charge, inside the comparison bound.
+    /// Current optional fact and kept output charge, inside the comparison bound.
     pub validation_fact_bytes: usize,
-    /// Lifetime peak optional closure fact charge, inside the comparison bound.
+    /// Lifetime peak optional fact and kept output charge, inside the comparison bound.
     pub validation_fact_peak_bytes: usize,
-    /// Head closures proved without another walk in this attempt.
+    /// Head closures proved without another walk in this attempt, kept views included.
     pub validation_reused: usize,
     /// Head closures walked in this attempt.
     pub validation_walks: usize,
-    /// Head documents checked during complete head validation.
+    /// Head documents checked once each, by a checked read or an adopted kept check.
     pub validation_documents: usize,
     /// Peak charged memory over the Serve lifetime.
     pub peak_bytes: usize,

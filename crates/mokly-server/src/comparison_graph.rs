@@ -15,7 +15,7 @@ use mokly_graph::comparison_proof::{
 };
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, InternalError, Result};
-use mokly_graph::head_validation::{HeadValidation, ValidationRead};
+use mokly_graph::head_validation::{DocumentChecks, HeadValidation, ValidationRead};
 
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -33,7 +33,7 @@ use crate::error::ServerError;
 #[derive(Clone)]
 pub struct FrozenResources {
     pub(crate) inner: Arc<dyn RenderGeneration>,
-    digests: Arc<Mutex<BTreeMap<String, Option<String>>>>,
+    pub(crate) digests: Arc<Mutex<BTreeMap<String, Option<String>>>>,
 }
 impl FrozenResources {
     /// Wrap one immutable graph without reading or rendering anything.
@@ -96,6 +96,12 @@ impl RenderGeneration for FrozenResources {
     }
     fn validation_identity(&self, kind: ValidationRead, route: &str) -> Option<ContentIdentity> {
         self.head_input(kind, route)
+    }
+    fn validation_checks(&self, route: &str) -> Option<DocumentChecks> {
+        self.head_checks(route)
+    }
+    fn adopt_validation(&self, route: &str, checks: &DocumentChecks) -> bool {
+        self.adopt_head(route, checks)
     }
     fn prepare_render_reuse(&self) {
         self.inner.prepare_render_reuse();

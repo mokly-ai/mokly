@@ -38,6 +38,7 @@ mod fragment_weight;
 pub mod fragments;
 pub mod graph;
 pub mod head_validation;
+pub mod head_walks;
 pub mod key;
 mod link_index;
 mod link_results;
@@ -66,6 +67,7 @@ mod background_render;
 mod component_keys;
 mod config_key;
 mod evaluation;
+mod head_links;
 mod markdown_assets;
 mod markdown_links;
 mod markdown_sources;
@@ -116,6 +118,7 @@ mod snapshot_tests;
 mod document_composition;
 mod planning_resources;
 mod temporary;
+mod transient_documents;
 
 #[cfg(test)]
 #[path = "_tests_/cancellation_tests.rs"]

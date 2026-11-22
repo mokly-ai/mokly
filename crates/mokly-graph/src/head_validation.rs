@@ -1,4 +1,4 @@
-//! Complete head validation can borrow optional closure facts from its caller.
+//! Complete head validation can borrow optional view facts from its caller.
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -12,15 +12,17 @@ use crate::cache::Artifact;
 use crate::closure::ClosureBuilder;
 use crate::comparison_proof::{ContentIdentity, content_identity};
 use crate::error::Result;
+use crate::head_walks::WalkRecord;
 use crate::policy::PublicFile;
 use crate::public_denial::PublicDenial;
+use crate::workers::ValidatedView;
 
-/// Inputs observed at the closure walk's read boundaries.
+/// Inputs observed at the closure walk's read boundaries and by the link checks.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum ValidationRead {
     /// Public policy and the generation's declared route inventories.
     Policy,
-    /// Current checked document, including its complete render recipe.
+    /// Current checked document by its document key and the comparison policy.
     Document,
     /// Eligibility of one lexical authored resource target.
     PublicTarget,
@@ -30,6 +32,8 @@ pub enum ValidationRead {
     GeneratedMembership,
     /// Content of a generated resource followed by the walk.
     GeneratedContent,
+    /// Destination, views, and document keys that one logical link target reaches.
+    LinkTarget,
 }
 
 /// A walk-local recorder. Unknown inputs prevent optional fact retention.
@@ -56,17 +60,51 @@ pub struct ClosureFacts {
     pub replay: Vec<String>,
 }
 
+/// Exact checks that the generation wrappers applied to one checked head document read.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct DocumentChecks {
+    /// Digest of the checked document bytes, when a checking wrapper keeps one.
+    pub digest: Option<String>,
+}
+
+/// The result of proving one view before its document is read.
+#[derive(Debug)]
+pub enum HeadProof {
+    /// Every kept input and check is proven, so the view needs no document read.
+    Kept(ValidatedView),
+    /// The view needs its current checked document.
+    Read(ClosureProof),
+}
+
+/// What the proof before the document read leaves for the closure step.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ClosureProof {
+    /// No closure replay ran, so the closure step may replay kept facts.
+    #[default]
+    Unknown,
+    /// A replay found a changed closure input, so the closure step walks.
+    Changed,
+}
+
 /// Attempt-owned reads and optional facts used before global validation finishes.
 pub trait HeadValidation: Send + Sync {
+    /// Prove a view from kept facts and adopt its checks before any document read.
+    fn kept(&self, _route: &str, _builder: &dyn ClosureBuilder) -> HeadProof {
+        HeadProof::Read(ClosureProof::Unknown)
+    }
     /// Read the current document through all generation wrapper checks.
     fn document(&self, route: &str) -> Result<Arc<Artifact>>;
-    /// Prove a kept closure or run this view's complete ordinary walk.
+    /// Prove a kept closure, replay this generation's background walk, or walk.
     fn closure(
         &self,
         route: &str,
         document: &Composed,
         builder: &dyn ClosureBuilder,
+        proof: ClosureProof,
+        pass: Option<WalkRecord>,
     ) -> Result<ClosureFacts>;
+    /// Keep the outputs of a view validated from its current document.
+    fn validated(&self, _route: &str, _document: &Composed, _view: &ValidatedView) {}
 }
 
 impl fmt::Debug for dyn HeadValidation + '_ {

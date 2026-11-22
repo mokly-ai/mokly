@@ -28,6 +28,7 @@ impl Session {
             state: Arc::new(State {
                 prefetch: Mutex::new(None),
                 fresh: Mutex::new(BTreeMap::new()),
+                walks: Default::default(),
                 anchor_flights: Arc::new(MemoryRequests::default()),
                 link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
                 link_index,

@@ -9,6 +9,7 @@ use mokly_graph::types::RenderGenerationMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::reuse_budget::Resident;
+use crate::validation_arena::Replay;
 use crate::validation_inputs::arena_bytes;
 use crate::validation_recording::Recording;
 
@@ -60,6 +61,7 @@ fn fact_proof_observes_each_target_before_reading_and_stops_before_unproved_chil
                     files: BTreeSet::from(["root.css".into(), "child.png".into()]),
                     ..Default::default()
                 },
+                None,
             )
         });
         let current = resident.register_optional(arena_bytes()).unwrap();
@@ -89,14 +91,14 @@ fn fact_proof_observes_each_target_before_reading_and_stops_before_unproved_chil
                 })),
         ));
         let result = resident.with_optional([Some(previous.id), Some(current.id)], |arenas| {
-            arenas[0].unwrap().reuse(
-                arenas[1],
-                &resident,
-                &boundary,
-                "home/index.html",
-                [2; 32],
-                &boundary,
-            )
+            let replay = Replay {
+                current: arenas[1],
+                resident: &resident,
+                generation: &boundary,
+            };
+            arenas[0]
+                .unwrap()
+                .reuse(&replay, "home/index.html", [2; 32], &boundary, None)
         });
         let mut expected = vec![
             Event::Read(ValidationRead::Policy, "".into()),

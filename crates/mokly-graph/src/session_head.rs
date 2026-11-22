@@ -6,7 +6,9 @@ use crate::cache::Artifact;
 use crate::closure::ClosureObserver;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode, content_identity};
 use crate::error::{GraphError, Result};
-use crate::head_validation::{HeadValidation, ValidationRead, public_identity, resource_identity};
+use crate::head_validation::{
+    HeadProof, HeadValidation, ValidationRead, public_identity, resource_identity,
+};
 use crate::references;
 use crate::session::Session;
 use crate::types::{RenderGeneration, RenderSummary};
@@ -21,6 +23,12 @@ struct Worker<'a> {
 impl DocumentWorker for Worker<'_> {
     fn validate(&self, route: &str) -> Result<ValidatedView> {
         self.session.check_cancelled()?;
+        let pass = self.session.state.walks.take(route);
+        let walker = self.session.walker();
+        let proof = match self.validation.kept(route, &walker) {
+            HeadProof::Kept(view) => return Ok(view),
+            HeadProof::Read(proof) => proof,
+        };
         let artifact = self.validation.document(route)?;
         let document = artifact
             .document
@@ -28,7 +36,7 @@ impl DocumentWorker for Worker<'_> {
             .ok_or_else(|| GraphError::InputsChanged { path: route.into() })?;
         let closure = match self
             .validation
-            .closure(route, document, &self.session.walker())
+            .closure(route, document, &walker, proof, pass)
         {
             Ok(closure) => closure,
             Err(source) => {
@@ -41,7 +49,7 @@ impl DocumentWorker for Worker<'_> {
         for path in &closure.replay {
             self.session.observe(route, path);
         }
-        Ok(ValidatedView {
+        let view = ValidatedView {
             route: route.into(),
             anchors: references::anchors(&document.tree),
             links: document.links.clone(),
@@ -52,7 +60,9 @@ impl DocumentWorker for Worker<'_> {
                 .chain(&closure.warnings)
                 .cloned()
                 .collect(),
-        })
+        };
+        self.validation.validated(route, document, &view);
+        Ok(view)
     }
 }
 
@@ -63,6 +73,15 @@ impl Session {
             .cache
             .insert(self.state.plans[route].key.clone(), artifact.clone());
         Ok(artifact)
+    }
+
+    /// Read a proven document's residency like the checked read's lookup, without an insert.
+    /// A document that the cache does not hold takes the ordinary checked read instead.
+    pub(crate) fn adopt_head(&self, route: &str) -> bool {
+        let Some(plan) = self.state.plans.get(route) else {
+            return false;
+        };
+        self.state.cache.contains(&plan.key) && self.state.cache.get(&plan.key).is_some()
     }
 
     pub(crate) fn complete_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
@@ -116,6 +135,7 @@ impl Session {
                     &serde_json::to_vec(&(document, resource)).ok()?,
                 ))
             }
+            ValidationRead::LinkTarget => self.link_identity(route),
         }
     }
 }
