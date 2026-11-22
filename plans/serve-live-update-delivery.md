@@ -16,7 +16,7 @@ User decisions of 2026-11-22, by the performance orchestrator (Cal), after the m
 Design calls (mine, 2026-11-22):
 
 - P3b also narrows the sentence of `mokly-comparison-serving.md` that gives `no-store` for every generation route to the generation root, and `mokly-runtime.md` links the generation rule, so that the pages do not contradict P3b.
-- Error responses keep the identity encoding. P2 covers the JSON content of the routes, and an error body is not publication content.
+- Error responses keep the identity encoding. The user confirmed this on 2026-11-22 (option A): P2 now names the body of a successful answer, an error answer keeps the identity encoding, and `publication_json_negotiates_gzip_and_preserves_head_headers` pins it. Rejected: compressing error bodies too, because an error body is small and is not publication content.
 - The runtime page passed 250 lines with P3, so its unchanged "Sidecar Pool" section moved to the linked page `docs/protocol/mokly-sidecar-pool.md`. The "Shutdown" section stayed, because five pages link its anchor.
 - Two more sentences gave `no-store` for generation files and so contradicted P3b: `mokly-removed-previews.md` (the generation's routes) and `mokly-shell-fences.md` (Serve JSON). Both now point to the generation rule of the comparison serving contract, and the fences page names the read-model JSON (the index, the details, and the live descriptor) for `no-store`, because P3 gives authored JSON files validators.
 - `crates/mokly-cli/src/serve_errors.rs` gets one arm for the new internal error `EntityTag`. The match is exhaustive, so the CLI does not compile without it.
