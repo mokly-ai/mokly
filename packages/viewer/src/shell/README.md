@@ -269,7 +269,9 @@ standalone shell keeps the original font paths.
 Its `entries` holds current records, and `removedEntries` holds `ShellRemovedEntry`
 records. Its `byPath` index contains both sets, whose paths are unique across them.
 An explicit snapshot selects its exact removed record. `createCatalogue` builds
-these lookups, tags, Dark availability, and accepted move pairs once per index.
+these lookups, tags, Dark availability, and accepted move pairs. A publication
+reuses the lookups when the projected records, tree, and tree order stay the
+same.
 `registry/catalogue_hierarchy.ts` reads the index `tree` for folders, titles,
 hidden flags, and ancestor titles. `filterHierarchy` derives and orders each
 navigation section. The catalogue's `publicModel` joins held details separately.
@@ -450,11 +452,13 @@ from the stub's origin, shows the loading, failed, and version states, and
 renders the shell chrome; `data_source.ts` reads the index, deployment file,
 and detail routes,
 and `live_source.ts` the live descriptor, the event stream, and the render
-route of Serve. A publication commit rebuilds the navigation sections and
-reconciles the current disclosures and pre-filter baseline to exactly their
-new keys; initial restore uses the same `disclosure_storage.ts`
-reconciliation with an explicit fallback. A publication keeps surviving
-collapsed choices; route navigation owns active-route reveal.
+route of Serve. The publication commit and the store share the navigation
+sections. A publication keeps the sections when their inputs stay equal.
+A changed tree keeps each equal subtree. The commit reconciles the current
+disclosures and pre-filter baseline to the installed keys, and keeps each
+equal map. Initial restore uses the same `disclosure_storage.ts` reconciliation
+with an explicit fallback. A publication keeps surviving collapsed choices.
+Route navigation owns active-route reveal.
 `nav_rows.ts` and `nav_leaf_rows.ts` read each disclosure from the store,
 which holds every current key, because it builds its disclosures from the
 same sections. A removed-entry route whose snapshot record leaves a refreshed

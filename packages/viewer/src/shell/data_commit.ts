@@ -7,10 +7,14 @@ import {
   detailKey,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type { HeldDetails } from "../catalogue/shell_model.js";
-import { shellCatalogueModel } from "../catalogue/shell_model.js";
+import { keepEqualJson } from "../catalogue/json_values.js";
+import {
+  shellCatalogueModel,
+  type HeldDetails,
+} from "../catalogue/shell_model.js";
 
 import { createCatalogue, type Catalogue } from "./catalogue.js";
+import { reuseDetail, reuseIndex } from "./data_reuse.js";
 import { reconcileDisclosures } from "./disclosure_storage.js";
 import {
   catalogueNavSections,
@@ -93,9 +97,10 @@ function withHeldDetails(
  */
 export function withIndex(
   snapshot: ShellDataSnapshot,
-  index: CatalogueReadModel,
+  received: CatalogueReadModel,
   accepted: readonly (readonly [DetailRequest, EntryDetailV4])[],
 ): ShellDataSnapshot {
+  const index = reuseIndex(snapshot.index, received);
   const details = new Map<string, EntryDetailV4>();
   for (const [key, detail] of snapshot.details)
     if (
@@ -111,9 +116,16 @@ export function withIndex(
           currentEntry(index, detail.entry.path)?.detailId === detail.detailId
     )
       details.set(key, detail);
-  for (const [request, detail] of accepted)
-    details.set(detailKey(request), detail);
-  return dataSnapshot(index, details);
+  for (const [request, detail] of accepted) {
+    const key = detailKey(request);
+    details.set(key, reuseDetail(snapshot.details.get(key), detail));
+  }
+  const catalogue = createCatalogue(
+    shellCatalogueModel(index, details),
+    snapshot.catalogue,
+  );
+  catalogueNavSections(catalogue, snapshot.catalogue);
+  return { index, details, catalogue };
 }
 
 /**
@@ -131,21 +143,35 @@ export function shellStateWithCatalogue(
   const activeId =
     route.view.kind === "target" ? route.view.target.entry.path : undefined;
   const defaults = defaultDisclosures(sections, activeId);
-  const disclosures = reconcileDisclosures(
-    defaults,
+  const disclosures = keepEqualJson(
     state.disclosures,
-    navigationFiltering(state.selection) ? "open" : "default",
+    reconcileDisclosures(
+      defaults,
+      state.disclosures,
+      navigationFiltering(state.selection) ? "open" : "default",
+    ),
   );
   const filterBaseline = state.filterBaseline
-    ? reconcileDisclosures(defaults, state.filterBaseline, "default")
+    ? keepEqualJson(
+        state.filterBaseline,
+        reconcileDisclosures(defaults, state.filterBaseline, "default"),
+      )
     : undefined;
   const status = catalogue.publicModel.changesStatus;
+  const changesStatus = status && status !== "disabled" ? status : undefined;
+  if (
+    route === state.route &&
+    disclosures === state.disclosures &&
+    filterBaseline === state.filterBaseline &&
+    changesStatus === state.changesStatus
+  )
+    return state;
   return {
     ...state,
     route,
     disclosures,
     filterBaseline,
-    changesStatus: status && status !== "disabled" ? status : undefined,
+    changesStatus,
   };
 }
 
@@ -172,6 +198,7 @@ function reboundRoute(route: ShellRoute, catalogue: Catalogue): ShellRoute {
           record.snapshotId === route.snapshot,
       )?.entry
     : catalogue.byPath.get(previous.path);
+  if (entry === previous) return route;
   const target = entry && toRouteTarget(entry);
   return target && entry.path === previous.path && entry.kind === previous.kind
     ? { ...route, view: { kind: "target", target } }

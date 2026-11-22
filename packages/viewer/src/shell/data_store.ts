@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -13,7 +14,7 @@ import {
 
 import type { LiveDescriptorV3 } from "@mokly/model";
 
-import type { DetailRequest } from "../catalogue/detail_fences.js";
+import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {
@@ -113,7 +114,7 @@ export function useShellDataStore(input: {
   const failed = controller.failed;
   const refreshFailed = controller.refreshFailed;
   const replaced = controller.replaced;
-  const routeDelivery = useMemo<DetailDelivery | undefined>(
+  const delivery = useMemo<DetailDelivery | undefined>(
     () =>
       routeDetailDelivery({
         details: snapshot.details,
@@ -134,6 +135,11 @@ export function useShellDataStore(input: {
       snapshot.details,
     ],
   );
+  const routeDelivery = useStableDelivery(
+    delivery,
+    requests,
+    controller.retryRefresh,
+  );
   const descriptor = controller.descriptor;
   const editing = controller.editing;
   const live = useMemo<ShellLiveState>(
@@ -146,4 +152,29 @@ export function useShellDataStore(input: {
     [controller, descriptor, editing, version],
   );
   return { snapshot, routeDelivery, live, reloadDetail };
+}
+
+function useStableDelivery(
+  delivery: DetailDelivery | undefined,
+  requests: readonly DetailRequest[],
+  retryRefresh: () => void,
+): DetailDelivery | undefined {
+  const keys = useMemo(
+    () => JSON.stringify(requests.map(detailKey)),
+    [requests],
+  );
+  const refresh =
+    delivery?.status === "failed" && delivery.retry === retryRefresh;
+  const installed = useRef({ delivery, keys, refresh });
+  const held = installed.current;
+  const value =
+    keys === held.keys &&
+    refresh === held.refresh &&
+    delivery?.status === held.delivery?.status
+      ? held.delivery
+      : delivery;
+  useLayoutEffect(() => {
+    installed.current = { delivery: value, keys, refresh };
+  }, [value, keys, refresh]);
+  return value;
 }

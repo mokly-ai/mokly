@@ -171,17 +171,35 @@ Each item below is my design call of 2026-11-22, unless it names a decision.
   object, and `main` makes a new route object on every publication. A
   publication can then scroll the rail, which the live evidence page
   forbids. The current-row effect keys on the routed entry's identity in
-  place of the route object, and a regression test covers it.
+  place of the route object, and a regression test covers it. The test
+  reproduced the scroll on `main`, also for a publication that restores a
+  missing route, so the effect runs only for a new route installation.
 
 Open question: does a usage update of equal content reset an active
 highlight or the instance selection? The live evidence page requires that
 both stay. When `main` resets either one, decision 2 also fixes that
-defect, and the change adds its regression test.
+defect, and the change adds its regression test. Answer of 2026-11-22: on
+`main` the probe restart clears the active highlight in the frame until the
+viewer draws it again. The selected instance stays. The value guard removes
+that update, and a React test now holds the highlight through the
+publication.
 
-Question for the user, outside decisions 1 and 2: `loadRefresh` requests
-the route details only after the index arrives and parses. Loading them
-beside the index would shorten the path to the first frame paint. This
-change does not build it without the user's approval.
+Decision 3, answered by Cal on 2026-11-22 through the parent orchestrator:
+**the order of the index and detail requests.** Chosen: **A**, keep the
+serial order. `loadRefresh` keeps requesting the route details after the
+index arrives and parses.
+
+- Reason: the parent orchestrator's bench of `main` (12 warm edits,
+  Chrome's clock) puts the index request at 0 ms and its body end at 6 ms
+  after the page's first event. The detail request starts at 22 ms and ends
+  at 25 ms, after a 16 ms parse and copy that decision 1 shortens. So the
+  detail itself costs about 3 ms, and a parallel fetch saves at most about
+  4 ms. When a newer publication lands between the two requests, a
+  parallel detail fails its fence and costs one more 1.2 MB index fetch.
+- Rejected: **B**, load the route details of the installed index beside
+  the index request in this change. **C**, the same in a later change.
+  Both save at most about 4 ms and risk one more index fetch.
+- Source: the options check of this plan raised the question.
 
 ## Milestone 1: Final-state tests
 
@@ -190,19 +208,21 @@ Depends on: none
 Tests that pass on `main` and must keep passing. They fix the final state of
 an edit before the code changes.
 
-- [ ] Add a test for each case: after the last publication of a sequence,
+- [x] Add a test for each case: after the last publication of a sequence,
       the snapshot and the shell state are deep-equal to a full rebuild from
       the same index and details. Cover a document key change, a usage
       change, a Changes status and mark change, a removed record change, a
       dropped and a renamed routed entry, events during a fetch, and a failed
       fetch that a later event repairs.
-- [ ] Add a test that the frame documents after the last publication are the
+- [x] Add a test that the frame documents after the last publication are the
       documents of a full rebuild, and that only a frame whose document key
       changed reloads.
-- [ ] Add a React test: after a sequence of publications, the rendered
+- [x] Add a React test: after a sequence of publications, the rendered
       navigation column and stage equal a fresh render of the final index
       and details.
-- [ ] Run the new tests on `main` and record that they pass.
+- [x] Run the new tests on `main` and record that they pass.
+
+Evidence: `.context/viewer-refresh-identity/main-final-state.log`.
 
 ## Milestone 2: Fetched JSON without a copy
 
@@ -210,15 +230,17 @@ Depends on: 1
 
 Decision 1.
 
-- [ ] Add the red tests: a fetched index and a fetched detail are the objects
+- [x] Add the red tests: a fetched index and a fetched detail are the objects
       that `response.json()` returned, also through the standalone source.
       An object source and the public readers still return copies.
-- [ ] Make every test fake that returns one shared body return a fresh copy
+- [x] Make every test fake that returns one shared body return a fresh copy
       for each call. Check `sources.test.ts`, `standalone_transport.test.ts`,
       `live_render.test.ts`, and the other fakes of `response.json()`.
-- [ ] Add the version gates without a copy and the `FetchedJson` type, and
+- [x] Add the version gates without a copy and the `FetchedJson` type, and
       use them on the fetch paths.
-- [ ] Update the readers line of the viewer README.
+- [x] Update the readers line of the viewer README.
+
+Evidence: `.context/viewer-refresh-identity/main-red.log`.
 
 ## Milestone 3: Refresh reuse
 
@@ -226,24 +248,27 @@ Depends on: 1
 
 Decision 2, under the design above.
 
-- [ ] Add the red tests: a publication keeps each unchanged record, detail,
+- [x] Add the red tests: a publication keeps each unchanged record, detail,
       usage object, projected record, lookup, section, and the route object,
       and replaces each changed one. The mounted frame of an unchanged view
       gets no usage update across a publication. A frame whose usage changed
       gets exactly one.
-- [ ] Answer the open question with a test. When `main` resets the
+- [x] Answer the open question with a test. When `main` resets the
       highlight or the instance selection, keep the test as the regression
       test of the defect.
-- [ ] Add the regression test of the rail scroll: a publication that rebinds
+- [x] Add the regression test of the rail scroll: a publication that rebinds
       the routed entry does not scroll the current row into view.
-- [ ] Implement the reuse in the data adoption, the projection, the
+- [x] Implement the reuse in the data adoption, the projection, the
       lookups, the sections, the state rebind, and the context.
-- [ ] Add the value guard of the frame mount hook, and key the current-row
+- [x] Add the value guard of the frame mount hook, and key the current-row
       effect of `nav_scroll.ts` on the routed entry's identity.
-- [ ] Memoize the navigation column and the other containers that an
+- [x] Memoize the navigation column and the other containers that an
       unchanged publication renders again.
-- [ ] Update the shell README where it says that a publication rebuilds the
+- [x] Update the shell README where it says that a publication rebuilds the
       lookups and the navigation sections.
+
+Evidence: `.context/viewer-refresh-identity/main-red.log` and
+`.context/viewer-refresh-identity/viewer-tests-1.log`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -251,9 +276,13 @@ Depends on: 2, 3
 
 - [ ] Run the targeted viewer tests. Run each new asynchronous test 10
       times. Run `cargo xtask check --suite repository`.
-- [ ] Smoke-test `npm run dev` with a live edit of an `examples/basic`
+- [x] Smoke-test `npm run dev` with a live edit of an `examples/basic`
       entry: the view updates, the Changes list updates, and no view is
       stale.
+
+Evidence: `.context/viewer-refresh-identity/smoke/run.log` and
+`.context/viewer-refresh-identity/smoke/settled.json`.
+
 - [ ] Commit with Conventional Commits and push the branch. Send the SHA to
       the parent orchestrator.
 - [ ] Review the complete local diff against `origin/main` with the

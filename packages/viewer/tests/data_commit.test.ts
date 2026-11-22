@@ -59,7 +59,8 @@ test("a newer index keeps only the details of its own revision", () => {
   const next = withIndex(held, newer, [
     [{ path: HOME }, { ...detailFixture({ path: HOME }), revision: 1 }],
   ]);
-  assert.equal(next.index, newer);
+  assert.notStrictEqual(next.index, newer);
+  assert.deepStrictEqual(next.index, newer);
   assert.deepEqual(
     [...next.details.keys()].sort(),
     [

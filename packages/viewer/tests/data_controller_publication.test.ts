@@ -64,7 +64,8 @@ test("a publication that drops the open entry installs and shows the missing sta
   const { fixture, index } = await publish("/view/guide/", published);
   assert.deepEqual(fixture.source.details, []);
   assert.equal(fixture.commits.length, 1);
-  assert.equal(fixture.controller.snapshot.index, published);
+  assert.notStrictEqual(fixture.controller.snapshot.index, published);
+  assert.deepStrictEqual(fixture.controller.snapshot.index, published);
   assert.equal(fixture.controller.refreshFailed, undefined);
   assert.deepEqual(stateAfter(index, "/view/guide/", published).route.view, {
     kind: "missing",
@@ -84,7 +85,8 @@ test("a publication that renames the open entry installs and shows the missing s
   const { fixture, index } = await publish("/view/guide/", published);
   assert.deepEqual(fixture.source.details, []);
   assert.equal(fixture.commits.length, 1);
-  assert.equal(fixture.controller.snapshot.index, published);
+  assert.notStrictEqual(fixture.controller.snapshot.index, published);
+  assert.deepStrictEqual(fixture.controller.snapshot.index, published);
   assert.deepEqual(stateAfter(index, "/view/guide/", published).route.view, {
     kind: "missing",
     requested: "view/guide/",
@@ -136,7 +138,8 @@ test("a publication that adds a step loads the new step's detail in the same com
     item.resolve({ ...detailFixture({ path: item.input.path }), revision: 2 });
   await flush();
   assert.equal(fixture.commits.length, 1);
-  assert.equal(fixture.controller.snapshot.index, published);
+  assert.notStrictEqual(fixture.controller.snapshot.index, published);
+  assert.deepStrictEqual(fixture.controller.snapshot.index, published);
   assert.ok(
     fixture.controller.snapshot.details.has(
       "current:product/browse/home/empty",
