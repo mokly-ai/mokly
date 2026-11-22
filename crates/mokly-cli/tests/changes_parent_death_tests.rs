@@ -11,11 +11,15 @@ use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
+#[path = "process_support/cache.rs"]
+mod cache;
 #[expect(
     dead_code,
     reason = "this fixture owns its asynchronous command lifetime"
 )]
 mod changes_support;
+
+use cache::Cache;
 use changes_support::{base, write};
 
 const PAGE: &str = "import {definePage} from '@mokly/mokly'; export default definePage({title:'Home',description:'',relatedDocs:[],render(){ BODY }});";
@@ -103,12 +107,12 @@ async fn killing_build_ends_the_historical_sidecar_and_a_blocked_postcss_child()
             root.path().join("node_modules"),
         )
         .unwrap();
-        let cache = tempfile::tempdir().unwrap();
+        let cache = Cache::new();
         let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
             .args(["build", "--sidecars", "1"])
             .current_dir(root.path())
             .env("MOKLY_PACKAGE_ROOT", workspace.join("packages/mokly"))
-            .env("XDG_CACHE_HOME", cache.path())
+            .envs(cache.environment())
             .env("MOKLY_OUTPUT", "plain")
             .env_remove("MOKLY_SIDECAR_TIMEOUT_MS")
             .env_remove("MOKLY_SIDECARS")

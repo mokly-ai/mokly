@@ -14,6 +14,8 @@ mod base_dependency_selection;
 mod base_dependency_sources;
 #[path = "../src/base_render_admission.rs"]
 mod base_render_admission;
+#[path = "process_support/cache.rs"]
+mod cache;
 #[path = "../src/changes_base.rs"]
 mod changes_base;
 #[path = "../src/changes_base_sources.rs"]
@@ -49,6 +51,8 @@ mod serve_eager_events;
 #[expect(dead_code, reason = "native fixtures use no terminal streams")]
 mod terminal;
 
+use cache::Cache;
+
 #[test]
 fn design_catalogue_attribution_acceptance_matrix() {
     let name = "design_catalogue_attribution_acceptance_matrix";
@@ -59,15 +63,15 @@ fn design_catalogue_attribution_acceptance_matrix() {
         return;
     }
     let fixture = design_support::fixture();
-    let cache = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let cache = Cache::new();
     let output = Command::new(env::current_exe().unwrap())
         .args(["--exact", name, "--nocapture"])
         .env("MOKLY_TEST_DESIGN_ROOT", fixture.path())
-        .env("XDG_CACHE_HOME", cache.path())
-        .env("LOCALAPPDATA", cache.path())
-        .env("TMPDIR", cache.path())
-        .env("TMP", cache.path())
-        .env("TEMP", cache.path())
+        .envs(cache.environment())
+        .env("TMPDIR", temporary.path())
+        .env("TMP", temporary.path())
+        .env("TEMP", temporary.path())
         .env(
             "MOKLY_PACKAGE_ROOT",
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),

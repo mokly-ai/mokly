@@ -34,7 +34,13 @@
 - **Left out:** Loosening the line-count assertion, because it would stop
   the test from catching new stderr noise.
 - **Wider fix:** None found.
-- **Previous examples:** `plans/follow-ups/non-serve-process-cache-homes.md`.
+- **Previous examples:** The `mokly build` child in
+  `crates/mokly-cli/tests/changes_parent_death_tests.rs` and the child test
+  process of the attribution matrix in
+  `crates/mokly-cli/tests/design_attribution_tests.rs` get a temporary home
+  from `Cache` in `crates/mokly-cli/tests/process_support/cache.rs`. `Cache`
+  sets child-only `HOME`, `XDG_CACHE_HOME`, and `LOCALAPPDATA`. On macOS the
+  cache directory is under `HOME`, and `XDG_CACHE_HOME` does not move it.
 - **Recommendation:** B, and A when the cause is the test environment only.
 - **Action:** fix after merge, apply B, because the change is in Rust Serve
   code outside this branch.
