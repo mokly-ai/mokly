@@ -92,7 +92,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
             attach_reported: false,
             closed: false,
             started: SystemTime::UNIX_EPOCH,
-            record: None,
+            records: None,
         })),
     })
 }

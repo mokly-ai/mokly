@@ -100,12 +100,15 @@ Contract owners:
   its old inputs, so the first candidate builds the whole plan again, in 36 to
   41 ms.
 - With W1, after a drain adds observed resources to the live plan and the
-  observer update returns `Ok`, the drain replaces the adopted record with a
-  copy that holds those resources, when the record is still the one that the
-  drain read. A `PlanRecord` method builds the copy outside the lock with the
-  same `Plan::resources` call. So the record never holds an input that the
-  observer does not watch, and a candidate in the gap builds the full plan, as
-  today.
+  observer update returns `Ok`, the drain keeps a copy of the newest record
+  that holds those resources beside the adopted record, when the records are
+  still the ones that the drain read. A `PlanRecord` method builds the copy
+  outside the lock with the same `Plan::resources` call. A candidate reuses
+  the record whose inputs equal its own. The records hold the adopted record
+  and one copy at most. So no record holds an input that the observer does not
+  watch, a candidate in the gap builds the full plan, as today, and the adopted
+  record still serves a later edit whose new resource key has no recordings
+  yet.
 - On the measured slug-editor edit, the resolution inputs also differ, so W1
   saves nothing there. It saves the whole candidate, about 38 ms, on a first
   rebuild whose resolution inputs equal those of the startup, such as a
@@ -162,10 +165,18 @@ Contract owners:
 - 2026-11-22, implementor's call, accepted by me: the step skips an entry with
   a view that is not ready. Reason: its rebuilt detail has a pending view, and
   the step writes only the ready shape.
-- 2026-11-22, my call after the options check: W1 changes the record only
+- 2026-11-22, my call after the options check: W1 changes the records only
   after the observer update returns `Ok`, through a `PlanRecord` copy method.
   Reason: a candidate between the plan change and the attach would otherwise
   reuse a record whose resources the observer does not watch yet.
+- 2026-11-22, the performance orchestrator, on the W1 report: the copy stays
+  beside the adopted record (B), bounded to the adopted record and one copy,
+  with a test of that bound, and the pull request gives the size of the copy
+  on mokly-cloud. Alternatives: a replacement of the record, which loses the
+  reuse that the #347 test
+  `equal_plan_inputs_reuse_the_active_observer_and_a_queued_edit_still_rebuilds`
+  covers; a set of resources beside the record. Reason: B keeps every reuse of
+  today and meets the intent of the W1 condition.
 - 2026-11-22, my call after the options check: C1 measures the hit rate of the
   registry text first, and the generation object owns the index. Reasons: the
   gain of an index keyed by the whole text depends on an unmeasured hit rate,
@@ -206,10 +217,14 @@ Depends on: 1
 
 Depends on: 1
 
-- [ ] Red test: after a warm start, a resource that the background pass
+- [x] Red test: after a warm start, a resource that the background pass
       observes is in both the live plan and the adopted record, and a later
       resource-only rebuild reuses the record.
-- [ ] Implement W1. Update the `mokly-cli` README if an entry point moves.
+- [x] Implement W1. Update the `mokly-cli` README if an entry point moves.
+      No entry point moved. Evidence: `.context/edit-background-render/pr2-w1/`.
+- [x] Bound test: the records hold the adopted record and one copy at most.
+- [x] Measure the size of the copy on mokly-cloud. Evidence:
+      `.context/edit-background-render/pr2-w1/copy-size.txt`.
 
 ## Milestone 4: C1
 
