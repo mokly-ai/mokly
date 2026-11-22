@@ -149,3 +149,4 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
   and the work can follow the merge, because it blocks nothing.
 - **Action:** ask the user, because A changes a requirement and C adds
   delivery behaviour that no requirement covers.
+- **Answer:** Cal chose **C** on 2026-11-22. Milestone 19 does the work.

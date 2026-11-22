@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 18 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 19 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -148,3 +148,21 @@ screens, which Milestones 11 and 12 build.
 - [ ] Link the Canvas sheets through a `design/canvas/**` route.
 - [ ] Update the design inventory pages and the mockups README.
 - [ ] Run the mockup check of the example catalogue.
+
+## Milestone 19: Geist in Markdown documents
+
+Depends on: 17
+
+Decision 36, option C. Each Markdown document loads the viewer's Geist and
+Geist Mono files, so a reader without Geist installed sees the same faces as
+the shell.
+
+- [ ] Give the document style `@font-face` rules that load the viewer's two
+      Geist files from a document-relative address, in Serve, the static
+      build and a publication.
+- [ ] Let the referenced closure accept those two font files, and write the
+      delivery rule in the protocol pages.
+- [ ] Check the documents on the cloud catalogue origin under its CSP.
+- [ ] Remove the status-line part of `mokly-viewer-palette.md`, delete
+      `plans/follow-ups/markdown-documents-load-no-geist.md`, and run
+      `cargo xtask mokly-fixtures`.
