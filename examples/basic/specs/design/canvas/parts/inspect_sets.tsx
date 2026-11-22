@@ -37,7 +37,7 @@ import {
  * A variant set's Frames filter: its frames are its saved variants in each
  * scheme, so it has no viewport toggles.
  */
-const SET_FILTER = {
+export const SET_FILTER = {
   viewports: false,
   mobile: true,
   desktop: true,
@@ -50,7 +50,7 @@ const SET_FILTER = {
  * The head of a component's Inspect, as its definition declares it: its
  * description, its source, its schemes, and its tags where it has any.
  */
-function ComponentHead({
+export function ComponentHead({
   component,
   entry,
 }: {
@@ -79,12 +79,15 @@ function ComponentHead({
 }
 
 /**
- * Inspect for the Action, a leaf component, which opens as its variant set.
- * With no frame selected, Props asks for a variant, and Disabled in the
- * Variants list selects its Light frame. With that frame selected, the list
- * checks Disabled, Selection names the frame, and Props edits Disabled. A
- * leaf renders no registered component, so it has no component tree, and
- * Highlight components is unavailable.
+ * Inspect for the Action, a leaf component, which opens as its variant set:
+ * its own example's row, then its saved variants', eight frames in all. The
+ * Variants list names the own example first, as the set does; no artboard
+ * shows it chosen, so it is a picture. With no frame selected, Props asks
+ * for a variant, and a variant in the Variants list selects its Light frame:
+ * Default opens it chosen, where Props edits it, and Disabled likewise. With
+ * Disabled's frame selected, the list checks Disabled, Selection names the
+ * frame, and Props edits Disabled. A leaf renders no registered component,
+ * so it has no component tree, and Highlight components is unavailable.
  */
 export function ActionInspect({
   disabled,
@@ -101,7 +104,8 @@ export function ActionInspect({
       />
       <InspectVariants
         variants={[
-          { label: "Default" },
+          { label: COMPONENT_IDENTITIES.action.title },
+          { label: "Default", to: CANVAS_PAGES.propsEditing },
           {
             label: "Disabled",
             current: chosen,
@@ -111,7 +115,7 @@ export function ActionInspect({
         ]}
       />
       <InspectFrames
-        count={6}
+        count={8}
         filter={{ ...SET_FILTER, unavailable: "empty" }}
       />
       {disabled === undefined ? (

@@ -4,14 +4,14 @@ Status: Inspect's Props section, which edits the variant of the selected frame o
 
 ## Controls Panel
 
-The controls artboards show the component page with its saved-variant strip,
-canvas, comparison band, and shared icon inspector. Controls occupy the Props
-tab; Details and Usage stay independently available. The leaf Action
-component has no Nested components tab. The artboards show both selected
-preview contexts and draw the inspector as a resizable pane beneath the
-desktop preview and a rounded bottom sheet over the mobile preview, with a
-centered desktop divider and an iOS-style mobile grabber. In the product, the
-controls fill Inspect's Props section under the
+The Props and controls artboards, except the one of a screen without props,
+show the Action's variant set on the canvas with a saved variant chosen: its
+Light frame is selected, and Inspect's Props section holds the controls of
+that variant, while Inspect's details and Usage stay available. The leaf
+Action component has no component tree. A desktop
+render draws the right panel beside the canvas, and a mobile render opens the
+panel sheet at Props over the chosen frame. The controls fill Inspect's Props
+section under the
 [inspector design](./mokly-component-inspector-design.md#inspect), and the
 [workspace design](./mokly-component-workspace-design.md) gives the view
 controls.
@@ -28,16 +28,16 @@ Each field has a visible label, associated input, and concise help where needed.
 Optional props have a supplied/unset choice; unset differs from an empty string.
 Numeric controls show their supported range. Invalid fields retain the entered
 value and show a nearby error; the preview retains the last valid values.
-Each control is a row: its name in a label column, 120px wide on desktop and
-100px on mobile, with Optional beneath an optional name, then its value, help,
-and error. Focus indicators and error text remain legible, and controls do not
+Each control is a row: its name in a label column, 112px wide in the right
+panel and in its bottom sheet, with Optional beneath an optional name, then its
+value, help, and error. Focus indicators and error text remain legible, and controls do not
 rely on color alone.
 
 A component page edits props in place: Props shows the controls of the entry
 that it edits, which on a variant set is the variant of the selected frame.
 Decision: no separate Edit props link, because Props already holds the
-controls. The canonical Controls page depicts the parent's own entry, and its
-variant bar opens Default and Disabled.
+controls. `design/canvas/props/editing` depicts Default chosen on the Action's
+variant set, and Inspect's Variants list opens Default and Disabled.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
 restores the saved props of the entry that Props edits: a component's own
@@ -88,36 +88,28 @@ through Serve or make a static preview reactive.
 
 ## Owning Catalogue
 
-The Controls page is the canonical parent representation, and Default's saved
-state is its variant. Editing, States, Published, and Read-only and recovery are
-bounded child galleries with five, five, two, and five owning screens.
-Every screen has distinct mobile and desktop components. The catalogue provides
-state navigation without adding a footer to the rendered product artboard.
-Each entry's files derive from its path under the
-[artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
-membership. Component pages such as `design/components/states/removed` show the
-same Props panel in their Props tab, and this controls catalogue owns the states
-of that panel.
+The `Props and controls` folder of the Canvas family, `design/canvas/props`,
+owns the states of Inspect's Props section. The
+[component design inventory](./mokly-component-design-inventory.md#owning-catalogue)
+lists its five screens and eleven saved variants. Each screen holds one kind
+of state: `editing` the edits of Default and their reset, `states` a render in
+flight and its failures, `preparing` the start of editing, `read-only` the
+static build and an entry without props, and `loading` the route's details.
+Every entry renders in both viewports and both schemes, and its files derive
+from its path under the [artifact path contract](./mokly-artifact-paths.md).
+The catalogue provides state navigation without adding a footer to the
+rendered artboard.
 
-| Entry                                                   | State                                                 |
-| ------------------------------------------------------- | ----------------------------------------------------- |
-| `design/components/controls/controls`                   | Action's own entry with all control types             |
-| `design/components/controls/controls/default`           | Default saved variant, a variant of the Controls page |
-| `design/components/controls/editing/edited`             | Edited values and matching preview                    |
-| `design/components/controls/editing/unset`              | Optional hint unset                                   |
-| `design/components/controls/editing/variant`            | Disabled saved variant selected                       |
-| `design/components/controls/editing/reset`              | Reset to saved values                                 |
-| `design/components/controls/editing/screen`             | A screen's own props with no instance selected        |
-| `design/components/controls/states/pending`             | Last valid preview while an update is pending         |
-| `design/components/controls/states/preparing`           | Read-only fields while Serve prepares editing         |
-| `design/components/controls/states/preparing/failed`    | Editing could not start, with Try again               |
-| `design/components/controls/states/invalid`             | Field validation with last valid preview              |
-| `design/components/controls/states/error`               | Render failure, retry, and reset                      |
-| `design/components/controls/states/comparison`          | Saved variant comparison and read-only controls       |
-| `design/components/controls/published/readonly`         | Read-only values and available saved variants         |
-| `design/components/controls/published/readonly-variant` | Disabled saved variant with read-only values          |
-| `design/components/controls/limits/removed`             | Removed saved variant with its saved props            |
-| `design/components/controls/limits/read-only`           | Component without declared controls                   |
-| `design/components/controls/limits/no-props`            | Screen without props or registered components         |
-| `design/components/controls/limits/invalid-together`    | Values not valid together, with Reset                 |
-| `design/components/controls/limits/expired`             | Expired temporary preview, with Update preview        |
+Other Canvas artboards show the same Props section in their own context:
+
+| Entry                                                 | Props state                                               |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| `design/canvas/inspect/props`                         | A screen's own props, with no instance selected           |
+| `design/canvas/stage/component-set/disabled`          | The Disabled saved variant chosen                         |
+| `design/canvas/components/compare/props`              | The saved props read-only while a comparison stays on     |
+| `design/canvas/components/removed`                    | A removed saved variant's saved props, read-only          |
+| `design/canvas/components/usage/loading` and `failed` | Props waiting for the parent's detail, or failing with it |
+| `design/canvas/loading/entry` and `failed`            | Props waiting for the entry's detail, or failing with it  |
+
+No artboard draws a component without declared controls, because every
+component of the example declares controls.

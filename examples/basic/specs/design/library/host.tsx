@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { RenderInput } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
+import { DesignAppearanceScope } from "../parts/appearance.js";
 import { canvasScope } from "../parts/canvas_palette.js";
 
 import { CANVAS_SAMPLES } from "./metadata.js";
@@ -10,9 +11,12 @@ import { CANVAS_SAMPLES } from "./metadata.js";
 /**
  * Standalone samples share tokens and layout constraints, without scenario
  * data. The sample root carries the viewer root class and states the
- * requested scheme as its appearance, so the package components draw in the
- * shipped palette, as they do inside a shell. A Canvas part's root also
- * declares the Canvas palette, as a Canvas artboard's root does.
+ * requested scheme as its theme, so the package components draw in the
+ * shipped palette, as they do inside a shell. The design palette's
+ * appearance scope wraps the root, as it wraps a screen's shell root, so the
+ * theme that the root declares wins over the design palette that the root
+ * inherits. A Canvas part's root declares the Canvas palette instead, as a
+ * Canvas artboard's root does.
  */
 export function LibraryHost({
   input,
@@ -53,13 +57,14 @@ export function LibraryHost({
     );
   }
   return (
-    <div
-      className="ce-design mbk mbk-library"
-      data-library-component={slug}
-      data-mbk-appearance={input.colorScheme}
-      data-mokly-theme={input.colorScheme}
-    >
-      {host}
-    </div>
+    <DesignAppearanceScope>
+      <div
+        className="mbk mbk-library"
+        data-library-component={slug}
+        data-mokly-theme={input.colorScheme}
+      >
+        {host}
+      </div>
+    </DesignAppearanceScope>
   );
 }

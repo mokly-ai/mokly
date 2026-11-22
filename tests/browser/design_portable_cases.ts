@@ -2,11 +2,13 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
+import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
 import { registerCanvasCases } from "./design_canvas_cases.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { CATALOGUE_LINKS } from "./design_links_cases.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 
@@ -31,10 +33,28 @@ export function registerDesignPortable(
     ).href;
   registerCanvasCases(test, design);
 
+  test("desktop: the selected catalogue row keeps its full hit area and color as a portable link", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(design("design/canvas/overview", "desktop"));
+    const row = page.locator('.mbk-nav-row[aria-current="page"]');
+    await expect(row).toHaveCSS("display", "flex");
+    await expect(row).toHaveCSS(
+      "color",
+      await canvasColor("light", "--cv-text"),
+    );
+    const bounds = await row.boundingBox();
+    expect(bounds?.width).toBeGreaterThan(180);
+    await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
+    await expect(page).toHaveURL(design("design/canvas/overview", "desktop"));
+  });
+
   for (const viewport of ["mobile", "desktop"] as const) {
     test(`${viewport}: portable design links work without Browse enhancement`, async ({
       browser,
     }) => {
+      const links = CATALOGUE_LINKS[viewport];
       const context = await browser.newContext({
         javaScriptEnabled: false,
         viewport:
@@ -43,41 +63,50 @@ export function registerDesignPortable(
             : { width: 1440, height: 1000 },
       });
       const page = await context.newPage();
-      await page.goto(design("design/browse/views/home", viewport));
-      await page.locator(".mbk-empty-link").click();
+      const link = (name: string | RegExp) =>
+        page.getByRole("link", { name, exact: true });
+      await page.goto(design("design/canvas/stage/home", viewport));
+      await link("Open the first screen").click();
+      await expect(page).toHaveURL(design("design/canvas/overview", viewport));
+      await link(links.open).click();
       await expect(page).toHaveURL(
-        design("design/browse/views/screen", viewport),
+        design("design/canvas/stage/catalogue", viewport),
       );
-      await page.locator(".mbk-shot-link:visible").first().click();
+      await link(links.close).click();
+      await expect(page).toHaveURL(design("design/canvas/overview", viewport));
+      await link("Filter by tag").click();
       await expect(page).toHaveURL(
-        design("design/browse/views/details-screen", viewport),
+        design("design/canvas/search/tags", viewport),
       );
-      await page.locator(".mbk-shot-link:visible").first().click();
-      await page.locator(".mbk-search-tag").click();
       await page
         .getByRole("group", { name: "Tags", exact: true })
         .getByRole("link", { name: "onboarding", exact: true })
         .click();
       await expect(page).toHaveURL(
-        design("design/browse/views/screen/tag-onboarding", viewport),
+        design("design/canvas/search/tags/onboarding", viewport),
       );
-      await page.locator(".mbk-search-tag").click();
+      await link("Filter by tag").click();
       await expect(page).toHaveURL(
-        design("design/browse/views/screen/tag-onboarding-picker", viewport),
+        design("design/canvas/search/tags/onboarding-picker", viewport),
       );
       await page.getByRole("link", { name: "Close tag picker" }).click();
       await expect(page).toHaveURL(
-        design("design/browse/views/screen/tag-onboarding", viewport),
+        design("design/canvas/search/tags/onboarding", viewport),
       );
-      await page.goto(design("design/browse/views/use-case", viewport));
-      await page.locator(".flow-step-link").nth(1).click();
+      // The use case's second step, which a phone shows once the frame
+      // picker picks it, opens the Canvas artboard of Details.
+      await page.goto(design("design/canvas/flows/tour/second-step", viewport));
+      await page
+        .locator(".cv-frames")
+        .getByRole("link", { name: "Details", exact: true })
+        .click();
       await expect(page).toHaveURL(
-        design("design/browse/views/details-screen", viewport),
+        design("design/canvas/outcomes/added", viewport),
       );
       await context.close();
     });
 
-    test(`${viewport}: link adaptation preserves row hit areas, colors, and toolbar dimensions`, async ({
+    test(`${viewport}: a focused portable link draws the dark focus ring`, async ({
       page,
     }) => {
       await page.setViewportSize(
@@ -85,47 +114,22 @@ export function registerDesignPortable(
           ? { width: 390, height: 1000 }
           : { width: 1440, height: 1000 },
       );
-      await page.goto(design("design/browse/views/screen", viewport));
-      await page.goto(design("design/changes/diff-controls/current", viewport));
-      const toolbar = page.getByRole("group", { name: "Comparison mode" });
-      const current = toolbar.getByText("Current", { exact: true });
-      const side = toolbar.getByRole("link", { name: "Side by side" });
-      const currentBounds = await current.boundingBox();
-      const sideBounds = await side.boundingBox();
-      expect(currentBounds?.height).toBe(sideBounds?.height);
-      expect((sideBounds?.width ?? 0) > 70).toBe(true);
-      await page.goto(design("design/browse/views/screen", viewport));
-      if (viewport === "desktop") {
-        const row = page.locator('.mbk-nav-row[aria-current="page"]');
-        await expect(row).toHaveCSS("display", "flex");
-        await expect(row).toHaveCSS("color", "rgb(255, 255, 255)");
-        const bounds = await row.boundingBox();
-        expect(bounds?.width).toBeGreaterThan(180);
-        await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
-        await expect(page).toHaveURL(
-          design("design/browse/views/screen", viewport),
-        );
-      }
-      await page.goto(design("design/browse/views/screen", `${viewport}.dark`));
-      const link = page.locator(".mbk-shot-link:visible").first();
+      await page.goto(design("design/canvas/overview", `${viewport}.dark`));
+      const link = page.getByRole("link", { name: "Mokly", exact: true });
       await link.focus();
       await expect(link).toHaveCSS("outline-style", "solid");
-      await expect(link).toHaveCSS("color", "rgb(127, 174, 149)");
+      await expect(link).toHaveCSS(
+        "outline-color",
+        await canvasColor("dark", "--cv-signal-deep"),
+      );
+      await expect(link).toHaveCSS(
+        "color",
+        await canvasColor("dark", "--cv-text"),
+      );
       await page.screenshot({
         path: `.context/design-dark-focus-${viewport}.png`,
         fullPage: true,
       });
-      for (const route of [
-        "design/changes/outcomes/removed",
-        "design/changes/impact/empty",
-      ]) {
-        await page.goto(design(route, viewport));
-        await expect(page.locator(".mbk-diff-toolbar a")).toHaveCount(0);
-        for (const control of await page
-          .locator(".mbk-pathchip, .mbk-search-tag")
-          .all())
-          await expect(control).not.toHaveAttribute("tabindex");
-      }
     });
   }
 }

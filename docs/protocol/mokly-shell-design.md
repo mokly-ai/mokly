@@ -15,20 +15,25 @@ implementation and the tests must keep. Runtime behaviour stays in
 
 ## Design Mockups
 
-The design screens are authored in `examples/basic/specs/design/`. The
-[Canvas design inventory](./mokly-shell-canvas-inventory.md) lists the
-`design/canvas` screens. They depict the canvas stage, the floating panels,
-Inspect, Changes and the compact layout. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists every Browse
-and Changes design screen with its folder and depicted state, describes the
-fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
-the [component design inventory](./mokly-component-design.md#owning-catalogue)
-lists the component explorer screens.
+The design screens are authored in `examples/basic/specs/design/`. Decision:
+one Canvas family of Browse designs (decision 11, option D), not a second
+family that draws the one-frame stage with the inspector below it, because the
+canvas stage and the right panel replace that layout.
 
-A state that the Canvas screens do not draw keeps the requirements of its own
-contract and the content that its Browse, Changes or component explorer screen
-depicts. These states include a use-case flow, a removed or moved entry,
-loading and recovery, the tag picker and most component explorer pages.
+The [Canvas design inventory](./mokly-shell-canvas-inventory.md), with the
+pages that it links, lists the `design/canvas` screens, and it owns their
+family rules. They depict the canvas stage, the floating panels, Inspect,
+Changes and the compact layout. They also depict a use case, loading and
+recovery, the tag search, the added and moved outcomes, a removed entry's
+previous version, the comparison evidence, the component explorer pages and
+the Props states. The
+[component design inventory](./mokly-component-design-inventory.md) lists the
+component explorer and Props screens. The
+[shell design inventory](./mokly-shell-design-inventory.md) lists the Browse
+and Changes screens outside the Canvas family and owns the dual-scheme and
+owning-group rules. The
+[depicted design catalogue](./mokly-shell-design-catalogue.md) describes the
+fixture catalogue that the design screens browse.
 
 ## Consumer-Tunable Custom Properties
 
@@ -76,9 +81,9 @@ The shell fills the viewport (`100vh`, document scrolling disabled); every
 scrollable region scrolls internally. Below the top bar, a full-bleed dot-grid
 canvas fills the window, and the panels float over it. The
 [canvas stage](./mokly-shell-canvas-stage.md) fixes the canvas, the floating
-panels, the selected entry's section, pan, zoom and Fit.
-[Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
-scheme and the compact layout.
+panels, the selected entry's section, pan, zoom and Fit. The
+[canvas frames contract](./mokly-shell-device-chrome.md) fixes each frame, the
+preview scheme and the compact layout.
 
 - **Top bar** — 48px, surface background, hairline bottom border: the
   [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search
@@ -154,7 +159,10 @@ Details have no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
-document's Details show its description, path, tags, and Markdown source file.
+removed entry's Details add a `Location` row before Tags. It names the
+folders that held the entry at the branch point, as text with `›` separators.
+A document's Details show its description, path, tags, and Markdown source
+file.
 
 Shared home guidance asks visitors to choose an item from the navigation.
 With nothing selected, the canvas holds the guidance and no right panel shows.
@@ -169,12 +177,11 @@ catalogue home. Kind-specific wording is reserved for a known screen, page,
 document, or flow; shared controls and missing-route messages cover the whole
 catalogue.
 
-## Device Chrome And Color Scheme
+## Canvas Frames And Color Scheme
 
-[Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
-defines the canvas frames, the device frames of the states that the Canvas
-screens do not draw, the use-case flow layout, and the preview scheme with its
-containment and light-only rules.
+[Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
+defines the canvas frames, a use case's step frames included, and the preview
+scheme with its light-only rules.
 
 ## Responsive Behavior
 
@@ -205,8 +212,14 @@ The canonical Canvas states are `design/canvas/changes/current`,
 `design/canvas/changes/difference` and `design/canvas/changes/swipe`, each with
 path-derived `index.<viewport>.html` documents and mobile and desktop
 artboards. `design/canvas/outcomes/added/changes` depicts an added entry, which
-offers Current alone. The `design/changes/**` screens depict the comparison
-states that the Canvas screens do not draw. See [Changes](./mokly-changes.md),
+offers Current alone. `design/canvas/outcomes/moved` depicts a moved entry,
+which compares with the version at its previous path. The
+`design/canvas/components` screens depict a component's comparison on its
+variant set, and the `design/canvas/evidence` screens the comparison evidence.
+`design/canvas/outcomes/removed`, `design/canvas/outcomes/removed-document`
+and `design/canvas/outcomes/removed-variant` depict the previous versions of a
+removed screen, document and screen variant. None of them offers a compare
+mode. See [Changes](./mokly-changes.md),
 [component designs](./mokly-component-design.md), and
 [CSS evidence](./mokly-css-evidence-shell.md).
 
@@ -215,5 +228,5 @@ states that the Canvas screens do not draw. See [Changes](./mokly-changes.md),
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Package and authoring contract](./mokly-package.md)
 - [Shell canvas stage](./mokly-shell-canvas-stage.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
 - [Canvas design inventory](./mokly-shell-canvas-inventory.md)

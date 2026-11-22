@@ -1,7 +1,6 @@
 /**
  * The quiet band that names a current light-only document's light page under
- * Dark, as `design/browse/appearance/states/light-only-current` depicts. Any
- * host whose shell still offers Dark can check it.
+ * Dark. Any host whose shell still offers Dark can check it.
  */
 
 import { expect, type Page } from "@playwright/test";

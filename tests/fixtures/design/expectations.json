@@ -22,13 +22,6 @@
     ],
     "chrome/screen-header": ["screen", "component", "changed", "removed"],
     "chrome/appearance-selector": ["auto", "light", "dark", "compact"],
-    "controls/comparison-toolbar": [
-      "current",
-      "side-by-side",
-      "overlay",
-      "difference",
-      "side-by-side-apart"
-    ],
     "controls/view-controls": [
       "default",
       "both",
@@ -55,14 +48,7 @@
       "light-only",
       "failed"
     ],
-    "preview/comparison-pane": [
-      "before",
-      "current",
-      "missing-before",
-      "missing-current"
-    ],
     "preview/empty-state": ["home", "missing-route", "no-changes"],
-    "preview/flow-step": ["first", "second"],
     "canvas/canvas-frame": [
       "desktop-light",
       "mobile-dark",
@@ -89,240 +75,127 @@
   },
   "links": [
     {
-      "source": "design/browse/views/screen",
-      "name": "Mokly",
-      "target": "design/browse/views/home"
-    },
-    {
-      "source": "design/browse/states/missing-route",
-      "name": "Go to the catalogue home",
-      "target": "design/browse/views/home"
-    },
-    {
-      "source": "design/browse/views/home",
-      "name": "Open the first screen",
-      "target": "design/browse/views/screen"
-    },
-    {
-      "source": "design/browse/views/home",
-      "viewports": ["desktop"],
-      "name": "Welcome",
-      "target": "design/browse/views/screen"
-    },
-    {
-      "source": "design/browse/views/home",
-      "viewports": ["desktop"],
-      "name": "Details",
-      "target": "design/browse/views/details-screen"
-    },
-    {
-      "source": "design/browse/views/home",
-      "viewports": ["desktop"],
-      "name": "Example tour",
-      "target": "design/browse/views/use-case"
-    },
-    {
-      "source": "design/changes/diff-controls/current",
-      "viewports": ["desktop"],
-      "name": "Details",
-      "target": "design/changes/outcomes/added"
-    },
-    {
-      "source": "design/changes/diff-controls/current",
-      "viewports": ["desktop"],
-      "name": "Farewell · Removed",
-      "target": "design/changes/outcomes/removed"
-    },
-    {
-      "source": "design/browse/views/screen",
-      "name": "Open the details screen",
-      "target": "design/browse/views/details-screen"
-    },
-    {
-      "source": "design/browse/views/details-screen",
-      "name": "Return to welcome",
-      "target": "design/browse/views/screen"
-    },
-    {
-      "source": "design/browse/views/use-case",
-      "name": "This screen in the catalogue: Welcome →",
-      "target": "design/browse/views/screen"
-    },
-    {
-      "source": "design/browse/views/use-case",
-      "name": "This screen in the catalogue: Details →",
-      "target": "design/browse/views/details-screen"
-    },
-    {
-      "source": "design/browse/views/screen",
-      "name": "Example tour",
-      "target": "design/browse/views/use-case"
-    },
-    {
-      "source": "design/browse/views/home",
-      "viewports": ["mobile"],
-      "name": "Open catalogue navigation",
-      "target": "design/browse/states/navigation"
-    },
-    {
-      "source": "design/browse/states/navigation",
-      "viewports": ["mobile"],
-      "name": "Close catalogue navigation",
-      "target": "design/browse/views/home"
-    },
-    {
-      "source": "design/browse/views/screen",
-      "viewports": ["desktop"],
-      "namePattern": "^Changes\\d+$",
-      "target": "design/changes/diff-controls/current"
-    },
-    {
-      "source": "design/browse/variants/variant-selected",
-      "viewports": ["desktop"],
-      "namePattern": "^Changes\\d+$",
-      "target": "design/browse/variants/variant-changes"
-    },
-    {
-      "source": "design/changes/impact/empty",
-      "name": "All",
-      "target": "design/changes/impact/ignored-only"
-    },
-    {
-      "source": "design/changes/diff-controls/current",
-      "name": "Side by side",
-      "target": "design/changes/outcomes/changed"
-    },
-    {
-      "source": "design/changes/diff-controls/current",
-      "name": "Overlay",
-      "target": "design/changes/diff-controls/overlay"
-    },
-    {
-      "source": "design/changes/diff-controls/current",
-      "name": "Difference",
-      "target": "design/changes/outcomes/difference"
-    },
-    {
-      "source": "design/changes/outcomes/changed",
-      "name": "Current",
-      "target": "design/changes/diff-controls/current"
-    },
-    {
-      "source": "design/browse/appearance/workspaces/side-by-side",
-      "name": "Difference",
-      "target": "design/browse/appearance/workspaces/difference"
-    },
-    {
-      "source": "design/browse/appearance/workspaces/side-by-side",
-      "name": "Current",
-      "target": "design/browse/appearance/overview"
-    },
-    {
-      "source": "design/browse/appearance/workspaces/side-by-side",
-      "name": "Overlay",
-      "target": null
-    },
-    {
-      "source": "design/browse/pages/view",
-      "name": "Details",
-      "target": "design/browse/pages/details"
-    },
-    {
-      "source": "design/browse/pages/details",
-      "name": "Details",
-      "target": "design/browse/pages/view"
-    },
-    {
-      "source": "design/browse/pages/navigation",
-      "name": "Getting started",
-      "target": "design/browse/pages/view"
-    },
-    {
-      "source": "design/changes/impact/styles/matched-excluded/excluded",
-      "viewports": ["desktop"],
-      "namePattern": "^Changes\\d+$",
-      "target": "design/changes/impact/styles/matched-excluded/matched"
-    },
-    {
-      "source": "design/changes/impact/styles/matched-excluded/excluded",
-      "viewports": ["desktop"],
-      "name": "Details",
-      "target": "design/changes/impact/styles/matched-excluded/excluded-only"
-    },
-    {
-      "source": "design/browse/loading/catalogue-failed",
+      "source": "design/canvas/loading/catalogue/failed",
       "name": "Try again",
-      "target": "design/browse/loading/catalogue-loading"
+      "target": "design/canvas/loading/catalogue"
     },
     {
-      "source": "design/browse/loading/viewer-version",
+      "source": "design/canvas/loading/catalogue/version",
       "name": "Reload",
-      "target": "design/browse/loading/catalogue-loading"
+      "target": "design/canvas/loading/catalogue"
     },
     {
-      "source": "design/browse/appearance/status/error",
+      "source": "design/canvas/loading/entry/failed",
       "name": "Try again",
-      "target": "design/browse/loading/preview-loading"
+      "target": "design/canvas/loading/entry"
     },
     {
-      "source": "design/components/states/removed-consumer",
+      "source": "design/canvas/loading/entry/failed",
       "viewports": ["desktop"],
-      "name": "ActionChanged",
-      "target": "design/components/states/removed"
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/loading/entry"
     },
     {
-      "source": "design/components/states/removed-consumer",
-      "viewports": ["mobile"],
-      "name": "Changes 2",
-      "target": "design/components/states/removed"
+      "source": "design/canvas/loading/entry/failed",
+      "viewports": ["desktop"],
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/loading/entry"
     },
     {
-      "source": "design/components/states/removed-consumer",
-      "within": "ce-preview-pane",
-      "namePattern": "",
+      "source": "design/canvas/loading/entry",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
       "target": null
     },
     {
-      "source": "design/components/states/shared-impact/style-outside",
+      "source": "design/canvas/loading/entry",
+      "name": "Fit",
+      "target": null
+    },
+    {
+      "source": "design/canvas/loading/entry/failed",
+      "name": "Fit",
+      "target": null
+    },
+    {
+      "source": "design/canvas/loading/entry",
       "viewports": ["desktop"],
-      "name": "ActionChanged",
-      "target": "design/components/states/shared-impact/style-changed"
+      "name": "Zoom in",
+      "target": null
     },
     {
-      "source": "design/components/states/shared-impact/style-outside",
-      "within": "mbk-comparison-evidence",
-      "name": "Action",
-      "target": "design/components/states/shared-impact/style-changed"
+      "source": "design/canvas/loading/missing",
+      "name": "Go to the catalogue home",
+      "target": "design/canvas/stage/home"
     },
     {
-      "source": "design/components/states/shared-impact/style-changed",
-      "within": "[data-usage-section=affected]",
+      "source": "design/canvas/loading/changes",
+      "name": "All",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/loading/changes/without-changes",
+      "name": "All",
+      "target": null
+    },
+    {
+      "source": "design/canvas/flows/tour",
+      "within": "cv-frames",
       "name": "Welcome",
-      "target": "design/components/states/shared-impact/affected-screen"
+      "target": "design/canvas/overview"
     },
     {
-      "source": "design/components/states/shared-impact/affected-screen",
+      "source": "design/canvas/flows/tour",
+      "within": "cv-frames",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/flows/tour",
+      "within": "cv-frames",
+      "name": "Return to welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/flows/tour",
+      "name": "Fit",
+      "target": "design/canvas/flows/tour"
+    },
+    {
+      "source": "design/canvas/flows/tour",
       "viewports": ["desktop"],
-      "name": "ActionChanged",
-      "target": "design/components/states/shared-impact/style-changed"
+      "name": "Zoom in",
+      "target": null
     },
     {
-      "source": "design/components/states/shared-impact/affected-screen",
-      "within": "mbk-comparison-evidence",
-      "name": "Action",
-      "target": "design/components/states/shared-impact/style-changed"
+      "source": "design/canvas/flows/tour",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "name": "Example tour",
+      "target": "design/canvas/flows/tour"
     },
     {
-      "source": "design/components/overview",
-      "within": "mbk-selection-bar",
-      "name": "Disabled",
-      "target": "design/components/pages/variants"
+      "source": "design/canvas/flows/tour",
+      "viewports": ["mobile"],
+      "within": "cv-dock",
+      "name": "Inspect",
+      "target": "design/canvas/flows/tour/mobile"
     },
     {
-      "source": "design/components/overview",
-      "within": "[data-usage-section=used-by]",
-      "name": "Welcome",
-      "target": "design/components/inspection/inspection-details"
+      "source": "design/canvas/flows/tour/mobile",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": "design/canvas/flows/tour"
+    },
+    {
+      "source": "design/canvas/overview",
+      "viewports": ["desktop"],
+      "within": "cv-ins",
+      "name": "Example tour",
+      "target": "design/canvas/flows/tour"
     },
     {
       "source": "example/screens/welcome",
@@ -422,7 +295,7 @@
       "source": "design/canvas/stage/home",
       "within": "mbk-nav",
       "name": "Example tour",
-      "target": null
+      "target": "design/canvas/flows/tour"
     },
     {
       "source": "design/canvas/stage/home",
@@ -689,6 +562,25 @@
       "target": null
     },
     {
+      "source": "design/canvas/stage/document/light-only",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Payment terms",
+      "target": "design/canvas/stage/document/light-only"
+    },
+    {
+      "source": "design/canvas/stage/document/light-only",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/document/light-only",
+      "name": "Fit",
+      "target": "design/canvas/stage/document/light-only"
+    },
+    {
       "source": "design/canvas/outcomes/added",
       "viewports": ["desktop"],
       "within": "cv-ptabs",
@@ -721,7 +613,7 @@
     {
       "source": "design/canvas/outcomes/added/changes",
       "name": "Next change",
-      "target": null
+      "target": "design/canvas/outcomes/moved"
     },
     {
       "source": "design/canvas/stage/catalogue",
@@ -729,6 +621,12 @@
       "within": "mbk-nav",
       "namePattern": "^Details",
       "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "within": "mbk-nav",
+      "namePattern": "^Invoice",
+      "target": "design/canvas/outcomes/moved/inspect"
     },
     {
       "source": "design/canvas/changes/difference",
@@ -756,14 +654,14 @@
       "viewports": ["desktop"],
       "within": "mbk-usage-list",
       "name": "Welcome",
-      "target": "design/canvas/overview"
+      "target": "design/canvas/inspect/selection"
     },
     {
       "source": "design/canvas/stage/component-set",
       "viewports": ["desktop"],
       "within": "mbk-usage-list",
       "name": "Details",
-      "target": "design/canvas/outcomes/added"
+      "target": "design/canvas/outcomes/added/welcome"
     },
     {
       "source": "design/canvas/changes/overlay",
@@ -797,20 +695,26 @@
       "viewports": ["desktop"],
       "within": "cv-variants",
       "name": "Default",
-      "target": null
+      "target": "design/canvas/props/editing"
     },
     {
       "source": "design/canvas/stage/component-set",
       "viewports": ["desktop"],
       "within": "mbk-usage-list",
       "name": "Toolbar",
-      "target": "design/canvas/stage/component-set/toolbar"
+      "target": "design/canvas/stage/component-set/toolbar-primary"
     },
     {
       "source": "design/canvas/stage/component-set/disabled",
       "within": "cv-variants",
       "name": "Disabled",
       "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "within": "cv-variants",
+      "name": "Default",
+      "target": "design/canvas/props/editing"
     },
     {
       "source": "design/canvas/stage/component-set/disabled",
@@ -837,14 +741,14 @@
       "viewports": ["desktop"],
       "within": "mbk-usage-list",
       "name": "Welcome",
-      "target": "design/canvas/overview"
+      "target": "design/canvas/inspect/selection/toolbar"
     },
     {
       "source": "design/canvas/stage/component-set/toolbar",
       "viewports": ["desktop"],
       "within": "mbk-usage-list",
       "name": "Details",
-      "target": "design/canvas/outcomes/added"
+      "target": "design/canvas/outcomes/added/toolbar"
     },
     {
       "source": "design/canvas/stage/component-set/toolbar",
@@ -1060,54 +964,658 @@
       "within": "mbk-nav",
       "name": "Welcome",
       "target": "design/canvas/inspect/frames"
+    },
+    {
+      "source": "design/canvas/props/editing/edited",
+      "name": "Reset to Default",
+      "target": "design/canvas/props/editing/reset"
+    },
+    {
+      "source": "design/canvas/props/editing/reset",
+      "name": "Reset to Default",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/editing",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/props/states",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/states",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/states/invalid-together",
+      "name": "Reset to Default",
+      "target": "design/canvas/props/editing/reset"
+    },
+    {
+      "source": "design/canvas/props/states/error",
+      "name": "Try again",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/states/expired",
+      "name": "Update preview",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/preparing/failed",
+      "name": "Try again",
+      "target": "design/canvas/props/preparing"
+    },
+    {
+      "source": "design/canvas/props/loading/failed",
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
+      "source": "design/canvas/props/loading/failed",
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
+      "source": "design/canvas/props/loading/failed",
+      "within": "cv-home",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
+      "source": "design/canvas/props/preparing",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/read-only",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/props/read-only/disabled"
+    },
+    {
+      "source": "design/canvas/props/read-only/disabled",
+      "within": "cv-variants",
+      "name": "Default",
+      "target": "design/canvas/props/read-only"
+    },
+    {
+      "source": "design/canvas/props/read-only/no-props",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/props/read-only/no-props",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "[data-usage-section=affected]",
+      "name": "Welcome",
+      "target": "design/canvas/components/affected"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "[data-usage-section=affected]",
+      "name": "Details",
+      "target": "design/canvas/components/affected/details"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/usage/failed",
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
+      "source": "design/canvas/components/usage/failed",
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
+      "source": "design/canvas/components/usage/failed",
+      "within": "cv-home",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
+      "source": "design/canvas/components/compare/current",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/usage"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/compare/props"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Difference",
+      "target": "design/canvas/components/compare/difference"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Side by side",
+      "target": "design/canvas/components/compare/side-by-side"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Current",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Overlay",
+      "target": "design/canvas/components/compare"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Default · Light",
+      "target": "design/canvas/components/compare/side-by-side"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Disabled · Light",
+      "target": null
+    },
+    {
+      "source": "design/canvas/components/compare/props",
+      "name": "Switch to Current",
+      "target": "design/canvas/components/usage"
+    },
+    {
+      "source": "design/canvas/components/compare/props",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/compare"
+    },
+    {
+      "source": "design/canvas/components/affected",
+      "viewports": ["desktop"],
+      "within": "cv-cx-evidence",
+      "name": "Action",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/affected",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Desktop · Light",
+      "target": "design/canvas/components/affected"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "within": "cv-cx-evidence",
+      "name": "Action",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Desktop · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["mobile"],
+      "within": "cv-mode-frames",
+      "name": "Mobile · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": null
+    },
+    {
+      "source": "design/canvas/components/removed",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/removed"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Compact · Light",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Current",
+      "target": null
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": "design/canvas/components/removed/consumer-changes"
+    },
+    {
+      "source": "design/canvas/components/removed",
+      "viewports": ["desktop"],
+      "within": "[data-usage-section=affected]",
+      "name": "Farewell · Removed",
+      "target": "design/canvas/components/removed/consumer"
+    },
+    {
+      "source": "design/canvas/components/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Farewell",
+      "target": "design/canvas/components/removed/consumer"
+    },
+    {
+      "source": "design/canvas/components/removed/consumer",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Compact",
+      "target": "design/canvas/components/removed"
+    },
+    {
+      "source": "design/canvas/components/removed/consumer",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/removed/consumer-changes"
+    },
+    {
+      "source": "design/canvas/components/removed/consumer-changes",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/removed/consumer"
+    },
+    {
+      "source": "design/canvas/components/removed/consumer-changes",
+      "name": "Next change",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/components/removed/consumer-changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Compact",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "within": "mbk-nav",
+      "namePattern": "^Farewell",
+      "target": "design/canvas/outcomes/removed/inspect"
+    },
+    {
+      "source": "design/canvas/changes/current",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Farewell",
+      "target": "design/canvas/outcomes/removed"
+    },
+    {
+      "source": "design/canvas/outcomes/moved/inspect",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Farewell",
+      "target": "design/canvas/outcomes/removed/inspect"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Survey",
+      "target": "design/canvas/outcomes/removed/long"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Invite",
+      "target": "design/canvas/outcomes/removed/loading"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Archive",
+      "target": "design/canvas/outcomes/removed/unavailable"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Timeline",
+      "target": "design/canvas/outcomes/removed/no-view"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/inspect",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Invoice",
+      "target": "design/canvas/outcomes/moved/inspect"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": "design/canvas/stage/home"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/outcomes/removed/inspect"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/inspect",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/removed"
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed",
+      "viewports": ["desktop"],
+      "name": "Next change",
+      "target": "design/canvas/outcomes/removed/long"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/long",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": "design/canvas/outcomes/removed"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/long",
+      "viewports": ["desktop"],
+      "name": "Next change",
+      "target": "design/canvas/outcomes/removed/loading"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/unavailable",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": "design/canvas/outcomes/removed/loading"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/unavailable",
+      "viewports": ["desktop"],
+      "name": "Next change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed/unavailable",
+      "name": "Retry",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed/loading",
+      "name": "Fit",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed/no-view",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed/no-view",
+      "name": "Fit",
+      "target": "design/canvas/outcomes/removed/no-view"
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Field guide",
+      "target": "design/canvas/outcomes/removed-document/long"
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document",
+      "viewports": ["desktop"],
+      "name": "Next change",
+      "target": "design/canvas/outcomes/removed-document/long"
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document/unavailable",
+      "name": "Retry",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document/loading",
+      "name": "Fit",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed-document/light-only",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/outcomes/removed-variant",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/outcomes/removed-variant/inspect"
+    },
+    {
+      "source": "design/canvas/outcomes/removed-variant/inspect",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/removed-variant"
+    },
+    {
+      "source": "design/canvas/outcomes/removed-variant",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/components/inspection",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/evidence/styles",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": "design/canvas/evidence/styles/excluded"
+    },
+    {
+      "source": "design/canvas/evidence/styles",
+      "within": "cv-modes",
+      "name": "Current",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/styles/excluded",
+      "viewports": ["desktop"],
+      "namePattern": "^Changes\\d+$",
+      "target": "design/canvas/evidence/styles"
+    },
+    {
+      "source": "design/canvas/evidence/styles/excluded",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Details",
+      "target": "design/canvas/evidence/unchanged"
+    },
+    {
+      "source": "design/canvas/evidence/unchanged",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/page",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/evidence/page/inspect"
+    },
+    {
+      "source": "design/canvas/evidence/page",
+      "name": "Next change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/page/inspect",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/evidence/page"
     }
   ],
   "tagStates": [
     {
-      "path": "design/browse/views/screen",
+      "path": "design/canvas/overview",
       "query": "",
       "picker": false,
       "active": [],
-      "toggle": "design/browse/views/screen/tag-picker"
+      "toggle": "design/canvas/search/tags",
+      "chips": {
+        "forms": "design/canvas/search/tags/forms",
+        "onboarding": "design/canvas/search/tags/onboarding"
+      }
+    },
+    {
+      "path": "design/canvas/search/tags",
+      "query": "",
+      "picker": true,
+      "active": [],
+      "toggle": "design/canvas/overview",
+      "chips": {
+        "forms": "design/canvas/search/tags/forms",
+        "onboarding": "design/canvas/search/tags/onboarding"
+      }
+    },
+    {
+      "path": "design/canvas/search/tags/forms",
+      "query": "tag:forms",
+      "picker": false,
+      "active": ["forms"],
+      "toggle": "design/canvas/search/tags/forms-picker",
+      "chips": {
+        "forms": "design/canvas/overview",
+        "onboarding": "design/canvas/search/tags/onboarding"
+      },
+      "rows": ["Welcome", "Details", "Action"]
+    },
+    {
+      "path": "design/canvas/search/tags/forms-picker",
+      "query": "tag:forms",
+      "picker": true,
+      "active": ["forms"],
+      "toggle": "design/canvas/search/tags/forms",
+      "chips": {
+        "forms": "design/canvas/overview",
+        "onboarding": "design/canvas/search/tags/onboarding"
+      },
+      "rows": ["Welcome", "Details", "Action"]
+    },
+    {
+      "path": "design/canvas/search/tags/onboarding",
+      "query": "tag:onboarding",
+      "picker": false,
+      "active": ["onboarding"],
+      "toggle": "design/canvas/search/tags/onboarding-picker",
+      "chips": {
+        "forms": "design/canvas/search/tags/forms",
+        "onboarding": "design/canvas/overview"
+      },
+      "rows": ["Welcome"]
+    },
+    {
+      "path": "design/canvas/search/tags/onboarding-picker",
+      "query": "tag:onboarding",
+      "picker": true,
+      "active": ["onboarding"],
+      "toggle": "design/canvas/search/tags/onboarding",
+      "chips": {
+        "forms": "design/canvas/search/tags/forms",
+        "onboarding": "design/canvas/overview"
+      },
+      "rows": ["Welcome"]
     },
     {
       "path": "design/browse/views/screen/tag-picker",
       "query": "",
       "picker": true,
       "active": [],
-      "toggle": "design/browse/views/screen"
-    },
-    {
-      "path": "design/browse/views/screen/tag-forms",
-      "query": "tag:forms",
-      "picker": false,
-      "active": ["forms"],
-      "toggle": "design/browse/states/tag-filter",
-      "rows": ["Welcome", "Details"]
-    },
-    {
-      "path": "design/browse/states/tag-filter",
-      "query": "tag:forms",
-      "picker": true,
-      "active": ["forms"],
-      "toggle": "design/browse/views/screen/tag-forms",
-      "rows": ["Welcome", "Details"]
-    },
-    {
-      "path": "design/browse/views/screen/tag-onboarding",
-      "query": "tag:onboarding",
-      "picker": false,
-      "active": ["onboarding"],
-      "toggle": "design/browse/views/screen/tag-onboarding-picker",
-      "rows": ["Welcome"]
-    },
-    {
-      "path": "design/browse/views/screen/tag-onboarding-picker",
-      "query": "tag:onboarding",
-      "picker": true,
-      "active": ["onboarding"],
-      "toggle": "design/browse/views/screen/tag-onboarding",
-      "rows": ["Welcome"]
+      "toggle": "design/canvas/overview",
+      "chips": {
+        "forms": "design/canvas/search/tags/forms",
+        "onboarding": "design/canvas/search/tags/onboarding"
+      }
     }
   ]
 }

@@ -36,19 +36,19 @@ still tracks the last-scrolled version, but it writes no counterpart offsets.
 
 ### Design Geometry
 
-The design catalogue draws a 30×18px pill track with a 1px border and a 12px
-knob inset 2px, followed by an 8px gap and a 12px/600 label in
-`--chrome-ink-2`. On uses `--mbk-accent-deep` for the track and border and
-`--_mokly-private-on-accent-deep` for the knob at the far end; off uses `--chrome-bg`
-for the track and `--chrome-control-edge` for its border and knob at the start.
-A keyboard-focused control draws a 2px `--mbk-accent-deep` ring 2px outside the
+The design catalogue draws a 12.5px label in `--cv-text-secondary` that fills
+the row, followed by an 8px gap and a 32×18px pill track with a 1px border and
+a 12px knob inset 2px. On uses `--cv-signal-deep` for the track and its border
+and `--cv-surface` for the knob at the far end; off uses `--cv-surface` for
+the track and `--cv-border-strong` for its border and knob at the start. A
+keyboard-focused control draws a 2px `--cv-signal-deep` ring 2px outside the
 track, and the transparent checkbox covers the whole control. The runtime
 switch draws these [palette](./mokly-viewer-palette.md) values in each
 appearance. It never uses the consumer-tunable `--mokly-accent-contrast`. The
 knob has a border, so forced colours keep it visible without opting out.
 
-Every diff-mode artboard shows the switch on except
-`design/changes/diff-controls/side-by-side-apart`; Current shows none.
+Every Canvas artboard in a compare mode other than Current shows the switch
+on, and its off state toggles in place; Current shows none.
 
 ## Last-Scrolled Version
 

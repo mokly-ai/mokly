@@ -1,80 +1,21 @@
-/* The Mokly design stage: the frames' preview tokens, the details inspector,
-   and the highlight of a depicted view, and the mini screen sketches that the
-   shipped frames hold on the dotted stage, from design-shots.css. The details
-   body, the stage, the document stage, the use-case flow, a removed entry's
-   previous version and its states, and the highlight's labels and mask are
-   the shipped ones, from their @mokly/ui stylesheets, in the package's
-   order. The Canvas viewer's stage, Inspect, and Changes follow, from their
-   own sheets. */
+/* The older Mokly design stage: the details inspector, the device frames and
+   their screens, and the mini screen sketches that the shipped frames hold on
+   the dotted stage, from design-shots.css. The details body, the stage and
+   the frames are the shipped ones, from their @mokly/ui stylesheets, in the
+   package's order. The preview tokens and the highlight of a depicted view
+   come from design-preview.css, which the Canvas route links too. */
 @import "../../packages/ui/src/details-panel/details-panel.css";
 @import "../../packages/ui/src/scheme-fallback/scheme-fallback.css";
 @import "../../packages/ui/src/stage/stage.css";
 @import "../../packages/ui/src/preview-frame/preview-frame.css";
-@import "../../packages/ui/src/flow-step/flow-step.css";
-@import "../../packages/ui/src/preview-state/preview-state.css";
-@import "../../packages/ui/src/previous-version/previous-version.css";
-@import "../../packages/ui/src/highlight-label/highlight-label.css";
-@import "../../packages/ui/src/highlight-mask/highlight-mask.css";
+@import "./design-preview.css";
 @import "./design-shots.css";
-@import "./design-canvas.css";
-@import "./design-canvas-inspect.css";
-@import "./design-canvas-sections.css";
-@import "./design-canvas-changes.css";
 
 /* A mobile render draws the one-column details body at every width. Below the
    breakpoint the package stylesheet draws it on its own, as the shell does. */
 .mbk-shell--mobile .mbk-details-body {
   grid-template-columns: 1fr;
   gap: 14px;
-}
-
-/* Preview tokens describe what a device screen shows. They are deliberately
-   separate from the interface palette in design.css, so a light phone keeps its
-   light surfaces and ink inside a dark Mokly interface. */
-:root {
-  --mbk-dark-screen-bg: #121514;
-  --mbk-dark-screen-ink: #eef1ef;
-  --mbk-screen-bg: #ffffff;
-  --mbk-screen-ink: #1a1d1c;
-  --mbk-screen-ink-2: #4a4f4d;
-  --mbk-screen-muted: #7d8480;
-  --mbk-screen-border: #e3e5e0;
-  --mbk-screen-link: #4f7864;
-  --mbk-screen-link-strong: #2f5945;
-  --mbk-screen-danger-bg: #fdf1ef;
-  --mbk-screen-danger-edge: #e7c3bb;
-  --mbk-screen-danger-ink: #8a3423;
-  --mbk-device-body: #171a18;
-  --mbk-device-notch: #0b0d0c;
-  --mbk-device-home: rgba(20, 24, 20, 0.4);
-  --mbk-device-light-close: #d9655b;
-  --mbk-device-light-minimise: #dba43d;
-  --mbk-device-light-expand: #50a86d;
-}
-
-/* A depicted screen keeps its own scheme: the sketches that a dark frame
-   holds read the dark preview tokens, and a light frame keeps a light screen
-   inside a Dark interface. */
-[data-preview-color-scheme="dark"] {
-  --mbk-screen-bg: var(--mbk-dark-screen-bg);
-  --mbk-screen-ink: var(--mbk-dark-screen-ink);
-  --mbk-screen-ink-2: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 78%,
-    var(--mbk-dark-screen-bg)
-  );
-  --mbk-screen-muted: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 62%,
-    var(--mbk-dark-screen-bg)
-  );
-  --mbk-screen-border: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 12%,
-    var(--mbk-dark-screen-bg)
-  );
-  --mbk-screen-link: #7fae95;
-  --mbk-screen-link-strong: #a4c9b3;
 }
 
 /* The sketches inside a frame, which stand in for its document, take the
@@ -101,40 +42,4 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: safe center;
-}
-
-/* The bordered pane on the document stage stands in for the document's
-   frame, which the shell draws around a real document. */
-.mbk-stage-embed > .mbk-doc-pane {
-  border: 1px solid var(--chrome-border);
-  border-radius: 12px;
-  flex: 1;
-  min-height: 520px;
-  overflow: auto;
-  width: 100%;
-}
-
-/* ---- Highlight of a depicted view -------------------------------------- */
-
-/* The shipped mask and labels over a depicted document, which the Highlight
-   components switch reveals without a script. The layer lets the pointer
-   through to the document and keeps the mask and the labels in its own
-   stacking, where the labels lie above the mask, as an embedded root lifts
-   them. */
-.ce-highlight-layer {
-  display: none;
-  inset: 0;
-  isolation: isolate;
-  pointer-events: none;
-  position: absolute;
-}
-
-.ce-design:has([data-workspace-highlight]:checked) .ce-highlight-layer {
-  display: block;
-}
-
-.ce-highlight-labels {
-  inset: 0;
-  position: absolute;
-  z-index: 5;
 }

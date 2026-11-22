@@ -1,12 +1,12 @@
-/* The Canvas viewer design: Geist, the roles that the Canvas palette of
-   @mokly/ui lacks, and the stage of a Canvas artboard. A Canvas root, and the
-   library host of a Canvas part, carries the theme's root class and the
-   `cv` class, and declares the Canvas roles as --cv-* and the shell tokens
-   mapped from them in its inline style, from the one palette module. The
-   roles below mix those roles; no rule here names a colour. The shell's
-   layout, its floating panels, its compact form, and the package parts that
-   it restyles follow the component sheets, in design-canvas-shell.css. */
-@import "./design-fonts/geist.css";
+/* The Canvas viewer design: the roles that the Canvas palette of @mokly/ui
+   lacks, and the stage of a Canvas artboard. A Canvas root, and the library
+   host of a Canvas part, carries the theme's root class and the `cv` class,
+   and declares the Canvas roles as --cv-* and the shell tokens mapped from
+   them in its inline style, from the one palette module. Its Geist and Geist
+   Mono faces come from design.css, which every design route links. The roles
+   below mix those roles; no rule here names a colour. The shell's layout,
+   its floating panels, its compact form, and the package parts that it
+   restyles follow the component sheets, in design-canvas-shell.css. */
 
 /* Roles the palette lacks: the hover fill, a stronger hairline, the frame
    ring, the screen section, and the shadows, mixed from Canvas roles. The

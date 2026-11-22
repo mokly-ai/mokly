@@ -101,13 +101,10 @@ component comparisons. Regions never pair across views.
 
 ### Design Depictions
 
-`design/changes/diff-controls/overlay-panel` depicts a 44px top bar (40px on phone) and a
-148px desktop navigation column, or a phone tab bar below the panel, staying in
-place while both versions' main panels sit part-way down at one offset. The
-panel draws its own scrollbar and the zero-range page draws none.
-`design/changes/diff-controls/side-by-side-apart` depicts the switch off, with each version
-at a different position and its own scrollbar. Fixed row heights make every
-drawn offset and thumb independent of text wrapping.
+The Canvas designs show each compared frame at the start of its documents. A
+frame scrolls its own document, so a scroll position is not a separate design.
+The [Scroll together design](./mokly-comparison-scroll-together.md#design-geometry)
+gives the switch that each compare mode draws.
 
 ## Scroll Keys
 

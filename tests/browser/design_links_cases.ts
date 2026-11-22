@@ -1,13 +1,18 @@
-import {
-  expect,
-  type FrameLocator,
-  type Locator,
-  type Page,
-} from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
 import { chooseViewport } from "./workspace_actions.js";
+
+/**
+ * The Canvas overview's link that opens the catalogue artboard, and that
+ * artboard's link back: the compact form's dock and the top bar's close, and
+ * the desktop catalogue's Changes and All filters.
+ */
+export const CATALOGUE_LINKS = {
+  mobile: { open: "Catalogue", close: "Close catalogue navigation" },
+  desktop: { open: /^Changes \d+$/u, close: "All" },
+} as const;
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerDesignLinks(
@@ -27,13 +32,6 @@ export function registerDesignLinks(
     throw new Error("Design link was not reachable with Tab");
   }
 
-  function visibleShotLink(frame: FrameLocator, name: string): Locator {
-    return frame
-      .locator(".mbk-shot-link:visible")
-      .filter({ hasText: name })
-      .first();
-  }
-
   async function expectFrameRoute(
     page: Page,
     viewport: "mobile" | "desktop",
@@ -49,28 +47,30 @@ export function registerDesignLinks(
     test(`${viewport} design navigation updates Browse history, selection, and retains the outer viewport`, async ({
       page,
     }) => {
+      const links = CATALOGUE_LINKS[viewport];
       await page.setViewportSize({ width: 1600, height: 1000 });
-      await page.goto("/view/design/browse/views/home/");
+      await page.goto("/view/design/canvas/stage/home/");
       await chooseViewport(page, viewport);
       const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-      await frame.locator(".mbk-empty-link").click();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-      await expectFrameRoute(page, viewport, "design/browse/views/screen");
-      const details = visibleShotLink(frame, "Open the details screen");
-      await frame.locator(".mbk-brand").focus();
-      await tabTo(page, details);
-      await expect(details).toHaveCSS("outline-style", "solid");
+      await frame
+        .getByRole("link", { name: "Open the first screen", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
+      await expectFrameRoute(page, viewport, "design/canvas/overview");
+      const catalogue = frame.getByRole("link", {
+        name: links.open,
+        exact: true,
+      });
+      await frame.getByRole("link", { name: "Mokly", exact: true }).focus();
+      await tabTo(page, catalogue);
+      await expect(catalogue).toHaveCSS("outline-style", "solid");
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/details-screen\/$/,
+        /\/view\/design\/canvas\/stage\/catalogue\/$/,
       );
-      await expectFrameRoute(
-        page,
-        viewport,
-        "design/browse/views/details-screen",
-      );
+      await expectFrameRoute(page, viewport, "design/canvas/stage/catalogue");
       const row = page.locator(
-        'a[data-nav-row][data-route="design/browse/views/details-screen/index.html"]',
+        'a[data-nav-row][data-route="design/canvas/stage/catalogue/index.html"]',
       );
       await expect(row).toHaveAttribute("aria-current", "page");
       await expect(row).toBeVisible();
@@ -79,18 +79,14 @@ export function registerDesignLinks(
         viewport,
       );
       await page.goBack();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-      await expectFrameRoute(page, viewport, "design/browse/views/screen");
-      await expect(details).toBeVisible();
+      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
+      await expectFrameRoute(page, viewport, "design/canvas/overview");
+      await expect(catalogue).toBeVisible();
       await page.goForward();
       await expect(row).toHaveAttribute("aria-current", "page");
-      await expectFrameRoute(
-        page,
-        viewport,
-        "design/browse/views/details-screen",
-      );
-      await visibleShotLink(frame, "Return to welcome").click();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
+      await expectFrameRoute(page, viewport, "design/canvas/stage/catalogue");
+      await frame.getByRole("link", { name: links.close, exact: true }).click();
+      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
       await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
       const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
       expect(
@@ -101,100 +97,5 @@ export function registerDesignLinks(
         viewport,
       );
     });
-
-    test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 1600, height: 1000 });
-      await page.goto("/view/design/browse/views/screen/");
-      await chooseViewport(page, viewport);
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-      await visibleShotLink(frame, "Open the details screen").click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/details-screen\/$/,
-      );
-      await visibleShotLink(frame, "Return to welcome").click();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-      await frame.locator(".mbk-search-tag").click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/screen\/tag-picker\/$/,
-      );
-      await frame
-        .getByRole("group", { name: "Tags", exact: true })
-        .getByRole("link", { name: "forms", exact: true })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/screen\/tag-forms\/$/,
-      );
-      await expect(
-        frame.getByRole("searchbox", { name: "Search catalogue" }),
-      ).toHaveValue("tag:forms");
-      await frame.locator(".mbk-search-tag").click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/states\/tag-filter\/$/,
-      );
-      await frame
-        .getByRole("group", { name: "Tags", exact: true })
-        .getByRole("link", { name: "forms", exact: true })
-        .click();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-      await page.goto("/view/design/changes/diff-controls/current/");
-      await frame
-        .getByRole("group", { name: "Comparison mode" })
-        .getByRole("link", { name: "Side by side" })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/changes\/outcomes\/changed\/$/,
-      );
-      await frame
-        .getByRole("group", { name: "Comparison mode" })
-        .getByRole("link", { name: "Overlay" })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/changes\/diff-controls\/overlay\/$/,
-      );
-      await frame
-        .getByRole("group", { name: "Comparison mode" })
-        .getByRole("link", { name: "Current" })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/changes\/diff-controls\/current\/$/,
-      );
-      await page.goto("/view/design/browse/views/use-case/");
-      await frame.locator(".flow-step-link").nth(1).click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/details-screen\/$/,
-      );
-    });
   }
-
-  test("narrow design menu and drawer close return through canonical home", async ({
-    page,
-  }) => {
-    await page.goto("/view/design/browse/views/home/");
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
-    await frame
-      .getByRole("link", { name: "Open catalogue navigation" })
-      .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/navigation\/$/,
-    );
-    await frame
-      .getByRole("link", { name: "Close catalogue navigation" })
-      .click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/home\/$/);
-    await frame
-      .getByRole("link", { name: "Open catalogue navigation" })
-      .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/navigation\/$/,
-    );
-    await frame
-      .locator("nav.mbk-nav")
-      .getByRole("link", { name: "Details", exact: true })
-      .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/details-screen\/$/,
-    );
-  });
 }

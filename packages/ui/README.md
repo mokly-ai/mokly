@@ -262,7 +262,9 @@ error. An optional field draws both its control and its Not set line under
 the Set check box. `TextButton` with an `href` is a link with the button's
 look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
 `currentHref`, which draw Reset while the props differ, the alert's action, a
-failed start's action, and Switch to Current as links. `InstanceTree` draws an
+failed start's action, and Switch to Current as links. `PropsStatus` and
+`UsageStatus` take `retryHref`, which draws Try again of a failed load as a
+link. `InstanceTree` draws an
 instance with an `href` as a link with the button's look, whose selected one is
 the current page, and starts with the nested lists that `initiallyExpanded`
 names open.
@@ -345,7 +347,7 @@ embeds the viewer sets that size, so a `rem` width can change from host to
 host. An `em` width follows the element's own font size instead. The
 navigation drawer's `max-width: 20rem` is the one `rem` width. The
 [compact layout](../../docs/protocol/mokly-shell-device-chrome.md#compact-layout)
-of the device chrome contract replaces that drawer with sheets.
+of the canvas frames contract replaces that drawer with sheets.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
@@ -454,10 +456,11 @@ override the desktop layout rules.
   `EditStatus`, the status of a render of edited props over the preview
 - [`src/props-panel/props-panel.tsx`](./src/props-panel/props-panel.tsx) —
   `PropsPanel`, `PropValues`, `PropSlots`, `PropsMessage`, and `PropsStatus`:
-  the supplied props and slots, the line of an empty tab, and its loading
+  the supplied props and slots, the line of an empty tab, and its loading and
+  failed states
 - [`src/usage-list/usage-list.tsx`](./src/usage-list/usage-list.tsx) —
   `UsageList` and `UsageStatus`: the Used by and affected consumers, and the
-  tab's loading and unchecked states
+  tab's loading, failed, and unchecked states
 - [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
   — `InstanceTree`: the viewport choice and the instances, whose nested lists
   keep their open state
@@ -550,7 +553,7 @@ override the desktop layout rules.
   palette and the theme that the package draws in
 - [Shell design](../../docs/protocol/mokly-shell-design.md),
   [Shell canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md) and
-  [Shell device chrome](../../docs/protocol/mokly-shell-device-chrome.md), the
+  [Shell canvas frames](../../docs/protocol/mokly-shell-device-chrome.md), the
   Canvas stage, its frames, pan, zoom and Fit, and the compact layout
 - [Component inspector design](../../docs/protocol/mokly-component-inspector-design.md),
   the right panel with Inspect and Changes,

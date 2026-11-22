@@ -19,7 +19,7 @@ import { expectedConsoleNotice } from "../../tests/browser/console_notices.js";
 export const SCREENS = [
   { path: "example/screens/welcome", text: "View details" },
   {
-    path: "design/browse/views/screen",
+    path: "design/canvas/overview",
     text: "Search catalogue…",
     match: "placeholder",
   },

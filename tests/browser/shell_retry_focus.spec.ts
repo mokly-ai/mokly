@@ -11,7 +11,7 @@ import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { networkFailure } from "./shell_error_allowances.js";
 
-const ENTRY = "design/library/chrome/screen-header";
+const ENTRY = "example/components/action";
 const DETAIL = `/mokly-viewer/entries/${ENTRY}.json`;
 
 /** Fail the first read of the entry's detail and hold the next one. */
@@ -31,7 +31,7 @@ async function openFailed(page: Page): Promise<Route[]> {
   await page.setViewportSize({ width: 1280, height: 900 });
   const held = await failThenHold(page);
   await page.goto(`/view/${ENTRY}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Screen header");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
   return held;
 }
 

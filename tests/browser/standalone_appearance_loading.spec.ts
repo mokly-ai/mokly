@@ -8,7 +8,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: a superseded Dark response cannot replace the newer Light selection`, async ({
     page,
   }) => {
-    await page.goto("/view/design/browse/appearance/states/light-only/");
+    await page.goto("/view/example/screens/welcome/");
     await expect(page.locator("[data-mokly-search]")).toBeVisible();
     const frame = page.locator(`.mbk-frame-${viewport} iframe`);
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
@@ -16,7 +16,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const released = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const dark = `**/design/browse/appearance/states/light-only/index.${viewport}.dark.html`;
+    const dark = `**/example/screens/welcome/index.${viewport}.dark.html`;
     await page.route(dark, async (route) => {
       await released;
       await route.continue();
@@ -42,10 +42,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await finished;
       await expectFrameLoaded(
         frame,
-        new RegExp(
-          `/design/browse/appearance/states/light-only/index\\.${viewport}\\.html$`,
-          "u",
-        ),
+        new RegExp(`/example/screens/welcome/index\\.${viewport}\\.html$`, "u"),
       );
     } finally {
       release();
@@ -55,7 +52,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: Light replaces a Dark preview before its resources finish loading`, async ({
     page,
   }) => {
-    await page.goto("/view/design/browse/appearance/states/light-only/");
+    await page.goto("/view/example/screens/welcome/");
     await expect(page.locator("[data-mokly-search]")).toBeVisible();
     const frame = page.locator(`.mbk-frame-${viewport} iframe`);
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
@@ -69,7 +66,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await route.fulfill({ body: "", contentType: "text/css" });
     });
     await page.route(
-      `**/design/browse/appearance/states/light-only/index.${viewport}.dark.html`,
+      `**/example/screens/welcome/index.${viewport}.dark.html`,
       async (route) => {
         const response = await route.fetch();
         await route.fulfill({
@@ -92,17 +89,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
           })),
         )
         .toEqual({
-          path: `/static/mokly-generated/design/browse/appearance/states/light-only/index.${viewport}.dark.html`,
+          path: `/static/mokly-generated/example/screens/welcome/index.${viewport}.dark.html`,
           readyState: "interactive",
         });
 
       await chooseScheme(page, "light");
       await expectFrameLoaded(
         frame,
-        new RegExp(
-          `/design/browse/appearance/states/light-only/index\\.${viewport}\\.html$`,
-          "u",
-        ),
+        new RegExp(`/example/screens/welcome/index\\.${viewport}\\.html$`, "u"),
       );
       await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
       await expect(page.locator(shellRoot)).toHaveAttribute(

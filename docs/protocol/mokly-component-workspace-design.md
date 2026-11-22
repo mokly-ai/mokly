@@ -34,7 +34,7 @@ state or a header without the toggle, because the mockups show what the shell
 draws.
 Highlight labels are separate rounded chips with a small gap above an intact
 rounded outline. The chip must not overlap the outline's corner or obscure the
-component; apply the same treatment to outer, nested, and single-instance regions.
+component; apply the same treatment to outer and nested regions.
 
 ## Fixed Shell, Divider And Panel Sheet
 
@@ -52,40 +52,31 @@ divider's outer edge instead of a ring around the hit area. While a drag is in
 progress the pointer keeps the resize cursor everywhere and frames ignore
 pointer input, so the gesture cannot be interrupted by the content underneath.
 
-The `design/components/**` artboards draw the inspector as a resizable pane
-beneath the desktop preview, whose divider reuses that grip, rotated. The
-mockup's resize hit area is centered on the divider, and resizing changes the
-layout height without consumer scripts. Native mockup dragging uses its center
-grip.
-
 In the [compact layout](./mokly-shell-device-chrome.md#compact-layout), the
 right panel opens as the panel sheet: a non-modal, full-width bottom sheet
 with safe-area spacing and a centered grabber. Its tab strip and close control
 stay fixed at the top of the sheet, and only its body scrolls.
 
-The mockup grabber is a native switch: touch/click or Space toggles between
-compact and expanded sheet heights without discarding edits or switching tabs.
-The checked state exposes the expanded size to assistive technology. The
-runtime adds pan gestures and snap heights; the mockup does not claim
-native iOS drag behavior. Background preview/header controls stay available.
+The mockup grabber is a picture: each artboard draws its open sheet at the
+height that its state gives. The runtime adds pan gestures and snap heights.
 
 ## Nested Components
 
 A component can render other registered components. Its Inspect lists those
 children in its Nested components section, excluding the component whose page
 is open, under the
-[inspector design](./mokly-component-inspector-design.md#inspect). Toolbar
-demonstrates its nested Action instance. Leaf components, including Action,
-have no such section. Screen pages keep their Components section, including
-the explicit empty and unavailable states.
+[inspector design](./mokly-component-inspector-design.md#inspect).
+`design/canvas/stage/component-set/toolbar` demonstrates the Toolbar's two
+nested Actions. Leaf components, including Action, have no such section.
+Screen pages keep their Components section, including the explicit empty and
+unavailable states.
 
 ## Comparison Availability
 
-Across the complete design catalogue, comparison controls require an explicit
-change state, or a screen that only changed components affect; the shared
-header defaults to omitting them. Their band always has
-an opaque background. Browse/tag-picker, ignored-only, and
-empty designs keep Current without comparison controls.
+Across the complete design catalogue, the compare modes other than Current
+require an explicit change state, or a screen that only changed components
+affect. The tag search, ignored-only and empty designs show the current
+version without compare modes.
 
 All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
@@ -106,8 +97,8 @@ without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
 
-Normal component/control fixtures depict an unchanged saved example and zero
-catalogue changes. Changed component and independent screen-change fixtures
+The component set and Props designs depict an unchanged saved example on the
+canonical branch. Changed component and independent screen-change fixtures
 keep their explicit Changes counts and before/current presentation. A Removed
 component variant keeps before/current presentation; a Removed screen shows
 its previous version.
@@ -125,12 +116,10 @@ Parent status and variant status are distinct. Removing Compact from Action
 makes Compact its own Removed component variant entry, comparable with an
 explicit missing current side, while Action's status describes the parent
 only; Farewell is a Removed screen with no comparison controls.
-The `design/components/pages/variants` mockup depicts the inverse boundary: the
-selected Disabled variant entry is Unmodified and ineligible, so no comparison
-band appears, even though a sibling variant changed.
-The Added Badge example lives in States → Additions and shows its current saved
-preview without comparison controls, plus one Changes entry. The unused Badge
-example stays Unmodified. Status must never be inferred from usage counts.
+`design/canvas/components/removed` keeps Compact on the Action's variant set
+after the current variants, and `design/canvas/components/removed/changes`
+compares it with its missing current side. Status must never be inferred from
+usage counts.
 
 ## Comparison Details
 
@@ -145,16 +134,14 @@ Changes keeps it in Inspect, under
 Do not add a comparison disclosure below the canvas or a separate explanatory
 banner above it. Ordinary Unmodified mockups omit the comparison section unless
 there is retained or excluded rendered-resource evidence.
-The `design/components/states/shared-impact/shared-impact` artboard in States → Stylesheet evidence depicts
-Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
-Its `design/components/states/shared-impact/style-changed` and `design/components/states/shared-impact/style-outside`
-siblings depict a changed Action and a screen styled outside it; each changed
-file lists its outcomes under that file. Its
-`design/components/states/shared-impact/affected-screen` sibling depicts
-Unmodified Welcome, which only the changed Action affects, in Side by side: its
-band offers the comparison, the shown view reads "Components this screen uses
-changed", and its Details end with the shared-component sentence in place of
-the no-changes line.
+`design/canvas/evidence/unchanged/action` depicts the unmodified Action with
+excluded stylesheet evidence in Inspect and no Changes tab.
+`design/canvas/components/usage` depicts the changed Action with Welcome and
+Details under Affected screens. `design/canvas/components/affected` depicts
+the unmodified Welcome, which only the changed Action affects, in Side by
+side: its Changes tab offers the comparison, and its comparison details link
+the Action and end with the shared-component sentence in place of the
+no-changes line.
 
 Use structured evidence: entry/variant state, one sentence per direct reason,
 the component-level changed-file list and style outcomes, selected-variant
@@ -162,7 +149,8 @@ stylesheet exclusions, paired prop values, and links to changed components
 actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-presentation.md#details-copy)
 owns the exact component and variant sentences.
 Prop rows identify their component instance and show Before and Current values.
-The mockup fixtures share these values with the rendered preview and Props panel.
+The mockup fixtures share these values with the compared frames and the
+comparison details, as `design/canvas/components/affected/direct` draws them.
 Do not invent explanations such as “corners and spacing changed”: the runtime
 can populate factual rows from validated comparison/usage records and paired
 inputs, but does not generate visual-analysis prose. Temporary control edits
@@ -173,8 +161,9 @@ The comparison details read the routed entry's direct reasons from its
 soon as the detail arrives: in Current before any comparison loads, in a loaded
 comparison, and under either filter. Each reason is one sentence, shown once
 whatever supplies it. As the designs show, the reason sentences follow the
-branch-point sentence and a moved entry's previous path, and come before the
-changed files, the paired prop values, and the changed components used here. A
+branch-point sentence, where the comparison details show one, and a moved
+entry's previous path, and come before the changed files, the paired prop
+values, and the changed components used here. A
 `dependency` reason reads only through the changed-files list of the
 [CSS evidence contract](./mokly-css-evidence-presentation.md), a `screen`
 reason, which only a use case carries, has no sentence, and a pure move has no
@@ -191,7 +180,4 @@ reason sentence. Only a record that Changes lists shows reasons.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison headings stay unchanged. The
-`design/components/states/shared-impact/style-changed` artboard depicts it: a
-markup change shows only where screens use Action, so Details read the
-sentence while the comparison headings still name only the changed styles.
+component's own view states and comparison headings stay unchanged.

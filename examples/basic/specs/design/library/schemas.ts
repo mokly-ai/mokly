@@ -1,12 +1,6 @@
 import type { PropSchema, SchemaProps, SlotProps } from "@mokly/mokly";
 
 import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
-import {
-  COMPONENT_PAGES,
-  CONTROLS_PAGES,
-  INSPECTION_PAGES,
-  LIMIT_PAGES,
-} from "../components/parts/destinations.js";
 import { DESTINATIONS } from "../parts/destinations.js";
 
 /** The data and slot props that a library component's view receives. */
@@ -28,32 +22,15 @@ export const destination = {
   enum: [
     ...new Set([
       ...Object.values(DESTINATIONS),
-      ...Object.values(COMPONENT_PAGES),
-      ...Object.values(CONTROLS_PAGES),
-      ...Object.values(INSPECTION_PAGES),
-      ...Object.values(LIMIT_PAGES),
       ...Object.values(CANVAS_PAGES),
     ]),
   ],
-} as const;
-export const comparisonMode = {
-  enum: ["current", "side-by-side", "overlay", "difference"],
 } as const;
 export const changeStatus = {
   enum: ["unmodified", "added", "changed", "removed"],
 } as const;
 export const previewViewport = {
   enum: ["mobile", "desktop", "both"],
-} as const;
-export const comparisonDestinations = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    current: destination,
-    "side-by-side": destination,
-    overlay: destination,
-    difference: destination,
-  },
 } as const;
 export const tagRecords = {
   type: "array",

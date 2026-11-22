@@ -1,4 +1,6 @@
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
+
+import type { DesignDestination } from "./destinations.js";
 import { PREVIOUS_PATHS } from "./entry_paths.js";
 import type { CatalogueTag } from "./tags.js";
 
@@ -108,7 +110,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     previousPath: PREVIOUS_PATHS.invoice,
     rationale:
       "Customers open an invoice to see what they owe and pay it, so the amount due and the payment action come first.",
-    relatedDocument: { title: "Payment terms", to: DESTINATIONS.document },
+    relatedDocument: { title: "Payment terms", to: CANVAS_PAGES.document },
     relatedDocs: false,
     schemes: "light",
     source: "specs/account/billing/invoice.mockup.tsx",

@@ -8,7 +8,9 @@ import type { CompareModesProps } from "./compare-modes.js";
 import { CompareIcon } from "./compare_icons.js";
 
 type CompareMode = CompareModesProps["mode"];
-type CompareFrame = NonNullable<CompareModesProps["frame"]>;
+
+/** A frame that Side by side can compare, as its chip names it. */
+type FrameChip = NonNullable<CompareModesProps["frames"]>[number];
 
 /** The compare modes in the order of their keys, 1 to 5, with their names. */
 const MODES: readonly (readonly [CompareMode, string])[] = [
@@ -19,16 +21,15 @@ const MODES: readonly (readonly [CompareMode, string])[] = [
   ["swipe", "Swipe"],
 ];
 
-/** The frames that Side by side can compare, as the canvas labels them. */
-const FRAMES: readonly (readonly [
-  CompareFrame,
-  "desktop" | "mobile",
-  string,
-])[] = [
-  ["desktop-light", "desktop", "Desktop · Light"],
-  ["mobile-light", "mobile", "Mobile · Light"],
-  ["desktop-dark", "desktop", "Desktop · Dark"],
-  ["mobile-dark", "mobile", "Mobile · Dark"],
+/**
+ * A screen's frames, which Side by side compares unless the caller gives a
+ * variant set's, as the canvas labels them.
+ */
+const SCREEN_FRAMES: readonly FrameChip[] = [
+  { id: "desktop-light", kind: "desktop", label: "Desktop · Light" },
+  { id: "mobile-light", kind: "mobile", label: "Mobile · Light" },
+  { id: "desktop-dark", kind: "desktop", label: "Desktop · Dark" },
+  { id: "mobile-dark", kind: "mobile", label: "Mobile · Dark" },
 ];
 
 /**
@@ -83,25 +84,28 @@ function ModeTile({
 }
 
 /**
- * The frames that Side by side can compare, as chips. The compared frame's
- * chip links to the artboard that shows it, and every other chip is a
- * picture of itself.
+ * The frames that Side by side can compare, as chips: a screen's frames by
+ * viewport and scheme, or a variant set's by saved variant and scheme. The
+ * compared frame's chip links to the artboard that shows it, and every other
+ * chip is a picture of itself.
  */
 function FrameChips({
   frame,
+  frames,
   to,
 }: {
-  frame: CompareFrame;
+  frame: string;
+  frames: readonly FrameChip[];
   to: DesignDestination | undefined;
 }) {
   const current = useCurrentPage();
   return (
     <ul aria-label="Compared frame" className="cv-mode-frames">
-      {FRAMES.map(([id, glyph, label]) => {
+      {frames.map(({ id, kind, label }) => {
         const chosen = id === frame;
         const content = (
           <>
-            <CanvasGlyph name={glyph} size={12} />
+            <CanvasGlyph name={kind} size={12} />
             {label}
           </>
         );
@@ -133,16 +137,17 @@ function FrameChips({
 /**
  * The compare modes of Changes: a tile for each mode, of which an entry
  * that the branch added has Current alone; the compared frame's chips in
- * Side by side; and, in a comparison, the Scroll together switch and
- * Refresh, as the comparison band draws them. A static artboard runs no
- * script, so the switch is a native control, and Refresh is a picture of
- * itself.
+ * Side by side, a screen's four frames unless the caller gives a variant
+ * set's; and, in a comparison, the Scroll together switch and Refresh, as
+ * the comparison band draws them. A static artboard runs no script, so the
+ * switch is a native control, and Refresh is a picture of itself.
  */
 export function CompareModesView({
   comparable,
   destinations,
   frame,
   frameDestination,
+  frames = SCREEN_FRAMES,
   mode,
   scrollTogether,
 }: CompareModesProps) {
@@ -163,7 +168,7 @@ export function CompareModesView({
         ))}
       </ul>
       {mode === "side-by-side" && frame !== undefined ? (
-        <FrameChips frame={frame} to={frameDestination} />
+        <FrameChips frame={frame} frames={frames} to={frameDestination} />
       ) : null}
       {mode === "current" ? null : (
         <div className="cv-mode-sync">

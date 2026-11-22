@@ -6,9 +6,6 @@ export const welcomeRow =
 export const detailsRow =
   'a[data-nav-row][data-route="example/screens/details/index.html"]';
 
-export const designHomeRow =
-  'a[data-nav-row][data-route="design/browse/views/home/index.html"]';
-
 export const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
 
 /** The standalone shell's root, which carries its appearance and page marks. */

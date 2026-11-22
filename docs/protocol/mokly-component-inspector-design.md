@@ -41,7 +41,8 @@ Inspect holds these sections in this order, each when the entry has it:
    source first.
 2. The rationale, in a section named for the entry's kind, such as
    `Why this screen`.
-3. Variants: the entry's saved variants as a radio list with their count.
+3. Variants: a radio list that names the entry itself first and then its saved
+   variants, with their count.
 4. Frames: the count of the shown frames, and the
    [Frames filter](./mokly-shell-canvas-stage.md#frames-filter).
 5. Selection: the selected instance or frame, as [Selection](#selection)

@@ -27,6 +27,14 @@ const first = {
   nextDestination: CANVAS_PAGES.addedChanges,
 } as const;
 
+/** Details, the second change, between Welcome and the moved Invoice. */
+const second = {
+  position: 2,
+  total: 10,
+  previousDestination: CANVAS_PAGES.changesCurrent,
+  nextDestination: CANVAS_PAGES.moved,
+} as const;
+
 const countControl = (label: string) =>
   ({ kind: "number", label, minimum: 1, maximum: 999, step: 1 }) as const;
 
@@ -46,14 +54,6 @@ export const changeStepper = defineComponent({
   render: ChangeStepperView,
   variants: [
     { slug: "first", title: "First change", props: first },
-    {
-      slug: "second",
-      title: "Second change",
-      props: {
-        position: 2,
-        total: 10,
-        previousDestination: CANVAS_PAGES.changesCurrent,
-      },
-    },
+    { slug: "second", title: "Second change", props: second },
   ],
 });
