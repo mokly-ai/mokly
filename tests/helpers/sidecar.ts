@@ -8,6 +8,8 @@ import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/Bu
 import type { Definitions } from "../../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../../packages/mokly/src/generated/sidecar/EntryBinding.js";
 import type { Operation } from "../../packages/mokly/src/generated/sidecar/Operation.js";
+import type { PostcssPreparation } from "../../packages/mokly/src/generated/sidecar/PostcssPreparation.js";
+import type { PrepareContextParams } from "../../packages/mokly/src/generated/sidecar/PrepareContextParams.js";
 import type { ProcessCssParams } from "../../packages/mokly/src/generated/sidecar/ProcessCssParams.js";
 
 export const sidecarFixture = path.resolve("tests/fixtures/sidecar");
@@ -131,6 +133,19 @@ export async function installBindings(
   );
   await sidecar.call("bindings", { generation, entries: table });
   return table;
+}
+
+/** Build the `prepareContext` params that the pool sends before a prepared `bundle`. */
+export function contextParams(
+  params: BundleParams,
+  preparation: PostcssPreparation,
+): PrepareContextParams {
+  return {
+    ...preparation,
+    sourceRoot: params.sourceRoot,
+    repositoryRoots: params.repositoryRoots,
+    moduleResolution: params.moduleResolution,
+  };
 }
 
 export function cssParams(

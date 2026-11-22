@@ -84,12 +84,12 @@ For a `bundle` request with a preparation, the pool first sends a
 `prepareContext` request to the sidecar of the `bundle` request. It carries the
 preparation, source root, repository roots, and resolution settings. It comes
 before the bundle cache read and any seed, so a new sidecar receives it directly
-after `hello`. The sidecar starts the preparation then and answers at once. A
-`bundle` request starts the preparation only when no earlier request did. The
-prepared child loads the PostCSS module and constructs its plugins. It processes
-no stylesheet before the first `processCss` request of its context. Neither
-request waits for that load. A preparation failure never changes the result or
-the error of the `bundle` request.
+after `hello`. The sidecar starts the preparation then and answers at once. No
+other request starts it. After a failed `prepareContext`, the first `processCss`
+request starts the child. The prepared child loads the PostCSS module and
+constructs its plugins. It processes no stylesheet before the first `processCss`
+request of its context. Neither request waits for that load. A preparation
+failure never changes the result or the error of the `bundle` request.
 Decision: the child starts before the bundle cache read and runs no stylesheet
 early. Processing the stylesheet roots during the bundle was rejected, because
 it needs speculative roots and later evidence checks. A start at the `bundle`
