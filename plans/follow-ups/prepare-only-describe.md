@@ -5,7 +5,7 @@
 - **Added:** 2026-11-21, from `calummoore/mokly-cheaper-sidecar-describe-dlz0`,
   as its deferred Part B. Completed on 2026-11-21 by review finding 1 of that
   branch.
-- **Location:** `restore` in `crates/mokly-sidecar/src/pool_preparation.rs:190`,
+- **Location:** `restore` in `crates/mokly-sidecar/src/pool_preparation.rs:204`,
   `Step::Prepare` in `crates/mokly-sidecar/src/pool_warmup.rs:39`,
   `Response::decode_result` in `crates/mokly-sidecar/src/wire.rs:118`,
   `Call::Describe` in `crates/mokly-sidecar/src/methods.rs:254`, the binary's own
