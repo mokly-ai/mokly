@@ -225,19 +225,48 @@ repository Markdown link test, `tests/markdown_links.test.ts`, fails the link
 when the site has no route there. It checks the fragment against the
 headings of the Markdown that the route renders.
 
-The home page's demo app, `acme/storefront`, is fictional. Every claim about
-Mokly stays real, and the source rule of
-[Public site](../../docs/protocol/cloud/site.md) lets the site depict a
-feature that ships before go-live. Before go-live, check each depicted
-feature against the product, and remove each one that did not ship. The
-Pricing page states only the plan facts of
+The home page's demo app, `acme/storefront`, and the people of the design
+file, Maya and Sam, are fiction, and they stay after go-live. Every claim
+about Mokly stays real. The source rule of
+[Public site](../../docs/protocol/cloud/site.md#boundary) lets the site depict
+comments, approvals, agent sessions and presence until go-live. Presence
+inside a depicted Mokly screen, such as the Browse viewer, the comment thread
+or the Edit window, counts as such a feature, and so does each named agent,
+Claude and Codex.
+
+Each drawing of such a feature carries a source comment that holds
+`status: "ahead"` and the names of its features, so the search for the ahead
+pages finds it too. A template block takes
+`{/* status: "ahead" (presence) */}` on the line above it. A component that
+only draws the features, such as `AgentChat.astro`, takes
+`// status: "ahead" (agent sessions, Claude)` in its frontmatter, and a data
+entry takes that line above it. The names are `comments`, `approvals`,
+`agent sessions`, `presence`, `Claude` and `Codex`. A person's cursor outside
+a depicted Mokly screen, such as Maya's on the hero heading, and the pricing
+questions are fiction of the design file, so they carry no mark.
+
+Before go-live, run the alignment pass of the ahead pages and the marks:
+
+1. From the repository root, run `grep -rn 'status: "ahead"' apps/site/src`.
+2. Check each named feature against the deployed product. A named agent
+   stays only when agent sessions support it.
+3. Remove each drawing of a feature that did not ship, and the copy that
+   names the feature, in the page and in
+   [Site home copy](../../docs/protocol/cloud/site-copy.md). Removing an agent
+   from `src/components/people.ts` makes the type check fail at each `person`
+   that still names it.
+4. Remove the mark of each drawing whose features all shipped.
+
+The Pricing page states only the plan facts of
 [Billing](../../docs/protocol/cloud/billing.md) and
 [Billing plan gates](../../docs/protocol/cloud/billing-plan-gates.md).
 
 Terms, Privacy, Complaints and Security are Markdown documents under
 `src/content/legal/`. Their effective dates, provider details, retention
 statements and security claims stay aligned with the cloud protocols and
-production runbooks. `src/legal.ts` owns their shared route and navigation
+production runbooks. A change to what the site or the app keeps in the
+browser also changes section 9 of `privacy.md`, and all four effective dates
+move together. `src/legal.ts` owns their shared route and navigation
 model; every policy route renders the same document layout: a page frame on
 the canvas, labelled with its Markdown source such as `legal/terms.md`,
 whose sheet holds the Legal kicker, the title, the effective date, the
@@ -287,7 +316,7 @@ Pages project and attach the domain are in the
 - `src/components/docs/Inspect.astro`, `Facts.astro`, `OnThisPage.astro`, `Outline.astro` and `scroll-spy.ts` — the Inspect panel, a `Panel` named by the page's file, the On this page disclosure below 1280px, and the scroll spy that marks the heading in view and moves the reading progress.
 - `src/components/docs/page-source.ts` — each page's tracked source, which the frame label names and Edit on GitHub opens, and the page facts.
 - `src/components/docs/Pager.astro`, `pager-entries.ts` and `Trail.astro` — previous and next with each neighbour's section and description, and the location trail.
-- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/` and names the key hint, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
+- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/`, names the key hint and closes on a press on the dimmed page, with a fallback where the browser lacks `closedby`, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
 - `src/components/docs/tree-scroll.ts` and `tree-reveal.ts` — the Layers panel's tab-scoped tree scroll memory from 1024px, and the current-page reveal that the tree sheet shares.
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
 - `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
@@ -314,7 +343,7 @@ Pages project and attach the domain are in the
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map, the built band with lines that hold their newlines, the frame labels, the size tags and the controls, and the build errors.
 - `tests/browser/docs-sample.spec.ts` and `tests/browser/sample.ts` — the sample band in a browser: one row for each line, the controls that switch the view and the dimmed lines, the wire beside the code and none stacked, pointing and tapping that light a line and its element, each view inside the band and the sheet at 320px, 390px and 1440px, and the band without script.
 - `tests/docs_code_panel.test.ts` and `tests/browser/docs-code.spec.ts` — the built code panel markup of a guide and of the docs landing, with the icon of each tab kind; the copy of a multi-line block; the dark fill in both schemes; and Copy beside the sample's language at the end of its bar.
-- `tests/docs_page_source.test.ts`, `tests/docs_pager_entries.test.ts` and `tests/docs_search_body.test.ts`, with `tests/browser/docs-layout.spec.ts`, `docs-search.spec.ts` and `docs-sheet.spec.ts` — each page kind's tracked source, Edit on GitHub target and facts, the pager's neighbours, the indexed body, and in a browser the layout steps, the scroll spy, the search controls and keys, and the tree sheet.
+- `tests/docs_page_source.test.ts`, `tests/docs_pager_entries.test.ts` and `tests/docs_search_body.test.ts`, with `tests/browser/docs-layout.spec.ts`, `docs-search.spec.ts` and `docs-sheet.spec.ts` — each page kind's tracked source, Edit on GitHub target and facts, the pager's neighbours, the indexed body, and in a browser the layout steps, the scroll spy, the search controls, keys and dimmed page, and the tree sheet.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.
 - `tests/legal.test.ts` and `tests/copy.test.ts` — the legal documents' section inventory and the banned-words rule read from the built pages.

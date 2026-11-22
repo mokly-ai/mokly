@@ -3,11 +3,12 @@
  * docs page and binds the search controls that the page draws in the Layers
  * panel and in the sub-bar, each of which names the dialog in
  * `aria-controls`. ⌘K or Ctrl K, and `/` outside a text field, open it too,
- * and on Apple platforms the controls' key hint reads ⌘K. The dialog queries
- * the index the build wrote beside the pages, and every result links to the
- * page and, when the match is inside a section, to that heading. The index
- * is loaded on the first search, so a reader who never searches downloads
- * nothing.
+ * and on Apple platforms the controls' key hint reads ⌘K. Close, Escape and
+ * a press on the dimmed page close it. A press inside it, also on its
+ * padding, keeps it open. The dialog queries the index the build wrote
+ * beside the pages, and every result links to the page and, when the match
+ * is inside a section, to that heading. The index is loaded on the first
+ * search, so a reader who never searches downloads nothing.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -39,6 +40,43 @@ const DIALOG = "site-search";
 const RESULTS = 6;
 
 let index: Promise<SearchIndex> | undefined;
+
+/** Whether a press on a modal dialog fell outside its box, on the backdrop. */
+function onBackdrop(dialog: HTMLDialogElement, event: MouseEvent): boolean {
+  if (event.target !== dialog) return false;
+  const box = dialog.getBoundingClientRect();
+  return (
+    event.clientX < box.left ||
+    event.clientX > box.right ||
+    event.clientY < box.top ||
+    event.clientY > box.bottom
+  );
+}
+
+/**
+ * Close the dialog on a press on the dimmed page where the browser does not
+ * implement `closedby="any"`. A press on the backdrop targets the dialog
+ * itself, as a press on the dialog's own box does, so only a press outside
+ * the box counts. As with `closedby`, a press that starts inside the dialog
+ * and ends on the dimmed page, such as a text selection in the field, keeps
+ * it open. Answers the function that removes the listeners.
+ */
+function closeOnBackdrop(dialog: HTMLDialogElement): () => void {
+  let pressed = false;
+  const onPointerDown = (event: PointerEvent) => {
+    pressed = onBackdrop(dialog, event);
+  };
+  const onClick = (event: MouseEvent) => {
+    if (pressed && onBackdrop(dialog, event)) dialog.close();
+    pressed = false;
+  };
+  dialog.addEventListener("pointerdown", onPointerDown);
+  dialog.addEventListener("click", onClick);
+  return () => {
+    dialog.removeEventListener("pointerdown", onPointerDown);
+    dialog.removeEventListener("click", onClick);
+  };
+}
 
 async function load(): Promise<SearchIndex> {
   index ??= (async () => {
@@ -83,11 +121,16 @@ export default function Search() {
       if (key) key.textContent = hint;
     }
     document.addEventListener("keydown", onKey);
+    const stopBackdrop =
+      "closedBy" in HTMLDialogElement.prototype
+        ? undefined
+        : closeOnBackdrop(element);
     return () => {
       for (const control of controls) {
         control.removeEventListener("click", open);
       }
       document.removeEventListener("keydown", onKey);
+      stopBackdrop?.();
     };
   }, []);
 
@@ -127,6 +170,7 @@ export default function Search() {
     <dialog
       aria-label="Search the documentation"
       className="site-search-dialog"
+      closedby="any"
       id={DIALOG}
       ref={dialog}
     >

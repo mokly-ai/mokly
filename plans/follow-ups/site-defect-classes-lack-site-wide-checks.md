@@ -1,0 +1,68 @@
+# Site defect classes have no site-wide check
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from `calummoore/canvas-redesign-m20-site-decisions-of-fqcp`: decision 12 of the Canvas redesign plan, option D, with the 200% text walk of decisions 24 and 31.
+- **Location:** `apps/site/tests/browser/pages.spec.ts`, `apps/site/tests/browser/accessibility.ts`, `apps/site/tests/browser/chrome.spec.ts`, `apps/site/tests/docs_page_source.test.ts`, `apps/site/tests/contrast.test.ts`, `docs/mockups/src/_tests_/design-site-home.test.ts:242`, `docs/mockups/src/_tests_/design-site-docs-variants.test.ts:204`, `scripts/verification/ratchets/internal-exports.mjs:12`
+- **Reason:** Each check is a new gate, and on 2026-11-22 Cal chose to add no new gate in the Canvas redesign.
+- **Source:** Review.
+- **Category:** Test.
+
+- **Terms:**
+  - **Class-wide check:** a check that fails on every case of one defect class, not only on the case that a review found.
+  - **Page walk:** the Playwright spec `apps/site/tests/browser/pages.spec.ts`. It opens every site route and runs the shared checks of `apps/site/tests/browser/accessibility.ts`.
+  - **Parity test:** `docs/mockups/src/_tests_/design-site-parity.test.ts`. It fails when a rule that the site sheets and the site mockup sheets both declare has other values.
+  - **Unused-export ratchet:** `scripts/verification/ratchets/internal-exports.mjs`. This repository check fails on an export that no other module imports.
+- **Background:**
+  - The review of the Canvas site mockups found four defects. Commit `da8db8e1c` of 2026-11-20 fixed each one.
+    - A dimmed sample code line drew at 56% opacity, from 2.93:1 to 3.96:1.
+    - Edit on GitHub opened `packages/mokly/docs/guides/`, a build copy that Git ignores.
+    - The demo app named Instrument Serif with no hosted face.
+    - `docs/mockups/src/screens/design/site/parts/glyphs.tsx` had no importer.
+  - The same review found a mockup tool bar that broke between 700px and 1440px.
+  - On 2026-11-22, Cal chose to add no new gate in the Canvas redesign. Each site milestone tested the part that it rebuilt, and this item records the class-wide checks.
+  - On 2026-11-22, Cal also chose one 200% text pass over the chrome and every page. Before that pass, a one-time check with 200% text in a 320px window found sideways scroll on every page. The footer links reached 326px, the home 335px, pricing 596px and the changelog 363px.
+  - `docs/protocol/cloud/site-design.md` requires self-hosted Geist, Geist Mono and Instrument Serif 400, and no font from another host. It requires 4.5:1 for normal text. It requires usable layouts at 320px width and 200% text, with no sideways scroll.
+  - The report-only Lighthouse run audits accessibility, contrast included, on seven routes at 390px and 1440px. `apps/site/src/lighthouse.ts` lists them. No Lighthouse result can fail Required CI.
+  - Each of the six checks below is a new gate. For each, the list gives what the repository tests today, the gap and the check.
+  - **Hosted first families.**
+    - Today: the site hosts its three faces under `apps/site/src/fonts/`. The link check, `npm run site:links`, fails on a missing face file. The CSP in `apps/site/public/_headers` allows fonts from the site only, and `apps/site/tests/headers.test.ts` checks it. The mockup test "the site styles host the Instrument Serif face that the demo app names" checks that one family in the mockup sheets.
+    - Gap: no test checks the first family of each site rule. A rule that names a family without a face draws in a fallback face, and no check fails.
+    - Check: read every site sheet and site mockup sheet, and resolve the font tokens. Fail when the first family of a `font` or `font-family` value has no `@font-face` and is not a generic family.
+  - **Tracked Edit on GitHub targets.**
+    - Today: `apps/site/tests/docs_page_source.test.ts` checks the target of one page of each kind: a package guide, a cloud page, a published reference and the docs landing. The mockup test `docs/mockups/src/_tests_/design-site-docs-page.test.ts` asks Git that the target of each drawn guide is tracked.
+    - Gap: no site test asks Git about every docs page. A new page kind, or a rule that points at an ignored build copy, passes.
+    - Check: for every page of `DOCS_PAGES` in `apps/site/src/docs/pages.ts` and for the docs landing, run `git ls-files --error-unmatch` on the path of its Edit on GitHub target.
+  - **Contrast of every site page.**
+    - Today: `apps/site/tests/contrast.test.ts` checks 25 documented token pairs in both schemes. The mockup test "a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes" checks the dimmed line in the mockup sheets. The parity test keeps the dimmed-line rules of the site equal to those of the mockups. `apps/site/tests/browser/docs-sample.spec.ts` checks which lines dim, not their contrast.
+    - Gap: text in a pair outside the documented pairs, or text with opacity, can fall below 4.5:1 on a route that Lighthouse does not audit.
+    - Check: in the page walk, measure the text contrast of every route in both schemes, for example with the color-contrast rule of axe-core.
+  - **Tool bar widths.**
+    - Today: the page walk checks that no route scrolls sideways at 320px, 390px and 1440px. `apps/site/tests/browser/chrome.spec.ts` checks the header composition at 390px and 1440px.
+    - Gap: the header changes its layout below 1400px, 960px and 830px, and a comment in `apps/site/src/styles/chrome.css` sets a 12px clear gap between its items at each step. No test opens a width from 768px to 1439px.
+    - Check: open the header at every width from 768px to 1440px, or at both sides of each step. Fail when two of its items overlap or come closer than 12px.
+  - **Unused modules under `docs/mockups/src/`.**
+    - Today: the unused-export ratchet reads `src`, `packages/ui/src`, `packages/viewer/src` and `scripts`, with an empty baseline in `xtask/unused-internal-exports.txt`.
+    - Gap: an export or a whole module of the cloud mockups that nothing imports stays without a failure.
+    - Check: add `docs/mockups/src` to the roots of the ratchet. Treat the entry modules under `docs/mockups/src/entries` and the renderer that `mokly.config.json` names as public entry points.
+  - **200% text at 320px.**
+    - Today: the page walk opens every route at 320px with the default text size. No test sets 200% text.
+    - Gap: a later part with one-line text can bring sideways scroll back at 200% text, and no check fails.
+    - Check: repeat the 320px page walk with the root text at 200%, and fail when a page scrolls sideways.
+- **Problem:** Each class produced a real defect during the Canvas redesign, and no check fails on a new case of the class. The tests that exist cover the case that one milestone rebuilt.
+- **Impact if no action:** Later site work can bring each defect back: an unhosted face, an edit link to an ignored path, text below 4.5:1, a broken tool bar, dead mockup modules or sideways scroll at 200% text.
+- **Root question:** How does later site work keep out the defect classes that the Canvas redesign found?
+- **Options:**
+  - **A.** Add no check. Each later site change tests the part that it changes, as the Canvas redesign did. Effort: Small.
+  - **B.** Add the two Node checks: hosted first families and tracked Edit on GitHub targets. They read files only. The three browser classes and the dead modules stay unchecked. Effort: Small.
+  - **C.** Add all six checks: B, the contrast walk, the tool bar walk, the ratchet over `docs/mockups/src/` and the 200% text walk. The three walks add run time to `npm run site:browser`. Effort: Medium.
+  - **D.** Remove the wrong case at its source for three classes. The palette module ships each font stack with its hosted faces, the guide build records the tracked source path for Edit on GitHub, and muted code text becomes a named colour with a checked contrast pair. Add the other three checks of C. It changes the palette and guide contracts. Effort: Large.
+- **Left out:** Making the report-only Lighthouse run required, because its performance score flakes, as `plans/follow-ups/flaky-site-lighthouse-performance.md` records, and it audits seven routes only. Checks of the mockups alone, because the parity test lets the site differ wherever it lists an intentional difference.
+- **Wider fix:** D for the faces, the edit targets and the dimmed text, because a structural source removes the wrong case. C for the widths, the 200% text and the dead modules, which have no structural fix.
+- **Previous examples:** Commit `da8db8e1c`, which fixed the four mockup defects. The sideways scroll at 200% text above. The weak edges and the wrapping compare toolbar in `plans/follow-ups/canvas-mockup-contrast-and-overlap.md`.
+- **Related:**
+  - `plans/follow-ups/test-helper-unused-exports.md` and `plans/follow-ups/mokly-package-internal-export-audit.md` widen the same ratchet to other roots. The three changes edit the roots of one check.
+  - `plans/follow-ups/flaky-site-lighthouse-performance.md` holds the report-only Lighthouse run, which audits contrast on seven routes.
+  - `plans/follow-ups/canvas-mockup-contrast-and-overlap.md` names this work as its wider fix.
+- **Recommendation:** C. It checks every class that produced a defect in the redesign, on the built site, at Medium effort. D best protects the codebase, but it changes two contracts.
+- **Action:** ask the user, because each check is a new gate, which needs Cal's approval, and on 2026-11-22 he chose to add none in the Canvas redesign.

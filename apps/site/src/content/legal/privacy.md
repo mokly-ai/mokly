@@ -1,6 +1,6 @@
 ---
 title: Privacy Policy
-effective: 2026-09-22
+effective: 2026-11-22
 ---
 
 This Privacy Policy explains how Mokly handles personal data.
@@ -222,18 +222,32 @@ directly.
 ## 9. Cookies and browser storage
 
 The public website sets no cookies, makes no runtime API calls and loads no
-third-party scripts. It does not run analytics.
+third-party scripts. It does not run analytics. It keeps two items in your
+browser, and neither is sent to Mokly:
 
-The Mokly application uses only storage needed to operate the service:
+- your Light or Dark choice from the footer, in local storage under
+  `mokly.site.scheme`, so that every page opens in that scheme. Clearing your
+  browser's data for this site removes it; and
+- the scroll position of the list of documentation pages, in tab-scoped
+  session storage under `mokly.docs.tree.scrollTop`, so that the list keeps its
+  place as you move between pages. Your browser removes it when you close the
+  tab.
+
+The Mokly application uses this storage to operate the service and to keep
+one preference:
 
 - a Secure, HttpOnly, SameSite=Lax session cookie, with a 30-day absolute and
   seven-day idle lifetime;
 - a Secure, HttpOnly, host-only catalogue cookie lasting five minutes for a
   private publication;
 - tab-scoped session storage for GitHub authorization state and a PKCE
-  verifier, removed after the callback; and
+  verifier, removed after the callback;
 - local storage containing the identifier of the last project opened on that
-  device.
+  device; and
+- browser storage containing the Theme you choose in the account menu, so that
+  the application keeps that scheme on your device. It is not sent to Mokly.
+  Choosing again replaces it, and clearing your browser's data for Mokly
+  removes it.
 
 Blocking essential cookies or browser storage may stop authentication,
 private-catalogue access or navigation from working. Mokly does not currently

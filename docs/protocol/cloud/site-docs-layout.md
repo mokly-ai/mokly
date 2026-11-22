@@ -135,6 +135,9 @@ Code blocks render in the
 
 The search control of the Layers panel, or of the sub-bar below 1024px, opens
 a modal search dialog. `⌘K` or `Ctrl K`, and `/`, open it on every docs page.
+Close, Escape and a press on the dimmed page close it, and a press inside the
+dialog keeps it open. Decision 27 rejected closing search only on Close and
+Escape, because the menu and the tree sheet also close on that press.
 Search sits in the Layers panel, as the design draws it, not in the site
 header. Search covers every docs page and no marketing or legal page. Only
 the document body is indexed, so the panels, the location trail and the pager

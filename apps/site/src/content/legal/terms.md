@@ -1,6 +1,6 @@
 ---
 title: Terms of Service
-effective: 2026-09-22
+effective: 2026-11-22
 ---
 
 These Terms of Service govern your access to and use of Mokly Cloud.

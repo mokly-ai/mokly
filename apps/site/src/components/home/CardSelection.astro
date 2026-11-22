@@ -45,6 +45,7 @@ const { claude = false, padding, pin = false, tall = false } = Astro.props;
       value={padding}
     />
   )}
+  {/* status: "ahead" (agent sessions, Claude) */}
   {claude && (
     <Selection
       class="site-home-card-claude"
@@ -53,5 +54,6 @@ const { claude = false, padding, pin = false, tall = false } = Astro.props;
       tag="Claude is editing"
     />
   )}
+  {/* status: "ahead" (comments) */}
   {pin && <span class="site-pin">M</span>}
 </span>

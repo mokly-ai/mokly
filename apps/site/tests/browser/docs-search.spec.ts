@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { settle } from "./menu.js";
 import { openSearch } from "./search.js";
 
 const PAGE = "/docs/start/install/";
@@ -28,6 +29,28 @@ test("the search control, ⌘K, Ctrl K and / open search on a docs page", async 
   await page.keyboard.press("/");
   await page.keyboard.press("/");
   await expect(dialog.getByRole("searchbox")).toHaveValue("/");
+});
+
+test("a press on the dimmed page closes search, and a press inside it does not", async ({
+  page,
+}) => {
+  await page.goto(PAGE);
+  const dialog = await openSearch(page);
+  await settle(dialog);
+  const box = await dialog.boundingBox();
+  const height = page.viewportSize()?.height ?? 0;
+  if (!box) throw new Error("the open search dialog has no box");
+  // A press on the padding at the dialog's foot keeps search open.
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 8);
+  expect(
+    await dialog.evaluate((node) => (node as HTMLDialogElement).open),
+  ).toBe(true);
+  // A press on the dimmed page below the dialog closes it.
+  await page.mouse.click(
+    box.x + box.width / 2,
+    (box.y + box.height + height) / 2,
+  );
+  await expect(dialog).toBeHidden();
 });
 
 test(

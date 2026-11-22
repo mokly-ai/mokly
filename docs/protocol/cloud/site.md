@@ -34,17 +34,27 @@ router and the app on the one public origin.
 - Every claim about Mokly comes from a real source: the installed package, this
   repository, or its checked-in cloud-owned Markdown. No page invents a
   customer, a testimonial, a count, an integration or a date about Mokly.
-- Until the production domain goes live, the site may also draw the demo app:
-  the clearly fictional coffee shop `acme/storefront`, with its screens,
-  branches, pull request and counts, and the people and agents of the design
-  file. The site may also depict features that the product
-  does not have yet, such as comments, approvals, agent sessions and presence.
-  Before go-live, every depicted feature is checked against the product, and
-  what did not ship is removed. Decision 2 draws the demo app as static components at
-  build time and relaxes the rule only until go-live, because the site is not
-  live yet and comments and agents ship before it. A real example catalogue
-  that Mokly renders was rejected, because it turns the redesign into catalogue
-  work.
+- The site may draw the demo app: the clearly fictional coffee shop
+  `acme/storefront`, with its screens, branches, pull request and counts. It
+  may also draw the people of the design file, Maya and Sam. Both stay as
+  fiction after the production domain goes live.
+- Until go-live, the site may also depict features that the product does not
+  have yet: comments, approvals, agent sessions and presence. Presence inside a
+  depicted Mokly screen counts as such a feature, and so does each named agent,
+  Claude and Codex, wherever the site draws it.
+- The site source marks each drawing of such a feature. The mark names the
+  features of its drawing, and the page never renders it. One search finds
+  every mark together with the [ahead pages](#ahead-of-release-pages).
+- Before go-live, the [alignment pass](#ahead-of-release-pages) checks every
+  marked drawing against the deployed product. A drawing of a feature that did
+  not ship is removed, together with the copy that names the feature. A
+  drawing whose features all shipped loses its mark.
+- Decision 2 draws the demo app as static components at build time. A real
+  example catalogue that Mokly renders was rejected, because it turns the
+  redesign into catalogue work. Decision 20 keeps the demo app and the people
+  after go-live and checks only the depicted Mokly features. Ending both at
+  go-live was rejected, because it removes the home spread and the people from
+  every page header.
 
 ## Routes
 
@@ -189,8 +199,9 @@ documents it was written from, with multiple paths separated by `, ` and
 relative to this repository's `docs/`, and every cited path exists. A section
 is wholly ahead or wholly shipped. A page keeps the status until its routes,
 fields, labels and behavior match the shipped product, and loses it when they
-do. Before the production domain goes live, every ahead page is compared with
-the deployed product, and text that did not ship is removed or reworded.
+do. Before the production domain goes live, one alignment pass compares every
+ahead page and every [marked drawing](#boundary) with the deployed product, and
+text that did not ship is removed or reworded.
 
 These pages leave out, until they ship: the native iOS, Android and desktop
 surfaces, catalogue isolation and access-grant mechanics, request-level

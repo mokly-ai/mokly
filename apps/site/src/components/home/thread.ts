@@ -25,6 +25,7 @@ export const THREAD_MESSAGES: readonly ThreadMessage[] = [
     role: "Design",
     text: "Padding feels tight on mobile.",
   },
+  // status: "ahead" (agent sessions, Claude)
   {
     age: "1m",
     person: "sam",

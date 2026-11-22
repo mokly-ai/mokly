@@ -39,7 +39,7 @@ function PolicyScreen({
             <SiteKicker>Legal</SiteKicker>
             <h1>{document.title}</h1>
             <p className="site-policy-date">
-              Effective <time dateTime="2026-09-22">22 September 2026</time>
+              Effective <time dateTime="2026-11-22">22 November 2026</time>
             </p>
           </div>
           <div className="site-document-body site-policy-body">

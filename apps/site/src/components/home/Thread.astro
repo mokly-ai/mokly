@@ -10,6 +10,7 @@
  * and the Review demo shows the messages one after the other and brings
  * Maya's cursor to rest. The rules are in `src/styles/home-modules.css`.
  */
+// status: "ahead" (comments, approvals)
 import Avatar from "../Avatar.astro";
 import Cursor from "../Cursor.astro";
 import Icon from "../Icon.astro";
@@ -54,5 +55,6 @@ import "../../styles/home-modules.css";
       Approve
     </span>
   </div>
+  {/* status: "ahead" (presence) */}
   <Cursor class="site-home-review-maya" person="maya" />
 </div>
