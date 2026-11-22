@@ -5,9 +5,11 @@
 - **Added:** 2026-11-20, from the read-only line pointer check of the branch
   `calummoore/mokly-folder-export-evidence-7rox`. This item carries the open
   part of that record. `plans/follow-ups/follow-up-line-pointer-drift.md`
-  held it until main deleted that item in #410.
+  held it until main deleted that item in #410. Widened on 2026-11-21 by the
+  restored bundle reuse change (#465), whose review listed 7 more moved
+  pointers into `crates/mokly-sidecar/src/pool_bundle_cache.rs`.
 - **Location:** `plans/follow-ups/sequential-evidence-capture-cost.md:10`,
-  lines 11, 12, 13, 54, 59, 69, 78, 81, 83, and 218,
+  lines 11, 12, 13, 14, 54, 59, 69, 78, 81, 83, 87, and 218,
   `plans/follow-ups/ancestor-churn-disables-durable-capture.md:8`, lines 9,
   10, 70, 72, 74, and 76,
   `plans/follow-ups/bundle-recipe-query-suffix.md:7`, line 8, and line 28,
@@ -18,7 +20,9 @@
   `plans/follow-ups/marked-package-entry-targets.md:10`, lines 11, 78, 79,
   99, and 102,
   `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
-  and `plans/follow-ups/stylesheet-roots-span-parent.md:9`.
+  `plans/follow-ups/stylesheet-roots-span-parent.md:9`,
+  `plans/follow-ups/flaky-warm-bundle-cache-no-record.md:13`, line 70, and
+  line 72, and `plans/follow-ups/serve-pause-warm-head.md:10` and line 45.
 - **Reason:** The workspace orchestrator chose on 2026-11-20 to record these
   pointers and not to fix them in the folder evidence branch, because the
   fix adds a scope round of about thirty minutes before the final gate.
@@ -87,6 +91,23 @@
     [deleted drift item at `b3f753722`](https://github.com/mokly-ai/mokly/blob/b3f753722c31afb718f7188386c11a1cfc92cfda/plans/follow-ups/follow-up-line-pointer-drift.md?plain=1)
     keeps the earlier history of the record. This item carries only the
     open pointers that the folder evidence branch moved.
+  - The restored bundle reuse change (#465) added request pins and two seed
+    install methods to `crates/mokly-sidecar/src/pool_bundle_cache.rs`. Its
+    review of 2026-11-21 found 7 pointers into that file, in 3 items, that
+    were already wrong on `main` before the change and moved further with
+    it. Their targets at the head of that change, `05c7fe4d6`:
+    - `flaky-warm-bundle-cache-no-record.md:13` cites lines 41 to 150 for
+      the bundle cache code of the pool. That code is now at lines 17 to 187,
+      from `BundleAttempt` to the end of `complete_bundle`.
+    - `flaky-warm-bundle-cache-no-record.md:70` cites lines 131 to 143 for
+      the save of `complete_bundle`. It is now at lines 173 to 185.
+    - `flaky-warm-bundle-cache-no-record.md:72` cites line 62 for the load
+      in `seed_bundle`, and its next sentence cites line 63 for the cause.
+      They are now at lines 107 and 108.
+    - `serve-pause-warm-head.md:10` and line 45 cite line 62 for the load in
+      `seed_bundle`. It is now at line 107.
+    - `sequential-evidence-capture-cost.md:14` and line 87 cite lines 111 to
+      123 for the save of `complete_bundle`. It is now at lines 173 to 185.
   - The workspace orchestrator's call of 2026-11-20: record these pointers,
     so that one later change updates the line references together. A fix in
     the folder evidence branch was rejected, because it adds a scope round
@@ -96,15 +117,17 @@
     class: a doc that contradicts the changed code gets fixed, and a change
     that removes or renames a name searches `docs/`, `plans/`, and every
     `README.md` for it.
-- **Problem:** 41 line pointers in 9 follow-up items cite source lines that
-  the folder evidence branch moved.
+- **Problem:** 48 line pointers in 11 follow-up items cite source lines that
+  moved: 41 that the folder evidence branch moved, and 7 into
+  `pool_bundle_cache.rs` that were already wrong and that #465 moved
+  further.
 - **Impact if no action:** A reader who follows such a pointer opens the
   wrong code and must search for the target. A wrong pointer can also
   mislead a fix.
-- **Root question:** How do these 9 items get true source pointers again
-  after the folder evidence branch moved the code?
+- **Root question:** How do these 11 items get true source pointers again
+  after the code moved?
 - **Options:**
-  - **A.** In a later branch, re-anchor the 41 pointers at that branch's
+  - **A.** In a later branch, re-anchor the 48 pointers at that branch's
     commit. Cost: the next move can break them again. Effort: Small.
   - **B.** Apply A, and name the symbol beside each pointer, as #410 did. A
     reader then finds a moved target by its name, and a search for the name
@@ -130,7 +153,7 @@
     the seven pointers that it moved, with a symbol beside each.
   - On 2026-11-20, #410 re-anchored two stale pointers with a symbol beside
     each.
-- **Recommendation:** B. It fixes the 41 recorded pointers and keeps them
+- **Recommendation:** B. It fixes the 48 recorded pointers and keeps them
   easy to find after the next move.
 - **Action:** fix after merge, apply B, because the workspace orchestrator
   chose on 2026-11-20 to record these pointers instead of a fix in the
