@@ -283,10 +283,10 @@
   whether the durable check needs each ancestor witness of an absent lookup.
   A narrower witness rule from it must still keep the stale selections of
   this item out of the bundle cache.
-  [marked-post-build-coherence.md](./marked-post-build-coherence.md) is the
-  marked side of the same class. Its option B extends option D of this item
-  to folder obligations, and it closes the folder variant above. Each item
-  can merge alone.
+  The [marked folder checks](../../docs/protocol/mokly-sidecar-folder-reuse.md#marked-live-checks)
+  rank each selected module against the final recorded listings. They do not
+  rank full-capture candidates. Option D here still needs that check for full
+  folder obligations, whose native variant above remains unconfirmed.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

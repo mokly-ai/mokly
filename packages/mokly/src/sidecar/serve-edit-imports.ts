@@ -3,7 +3,6 @@ import path from "node:path";
 import type { Metafile, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
-import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { ConfigInputs } from "./config-inputs.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -11,6 +10,7 @@ import { absoluteSpecifierPattern, substitution } from "./path-pattern.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import { resolutionRequest } from "./resolution-request.js";
 import { serveEditLookups } from "./serve-edit-lookups.js";
+import type { ServeEditChecks } from "./serve-edit-lookups.js";
 
 /** Classify authored absolute imports without capturing mapped candidates on Serve edits. */
 export class ServeEditImports {
@@ -58,7 +58,7 @@ export class ServeEditImports {
     };
   }
 
-  record(metafile: Metafile, paths: ModulePaths): ReuseEvidence | undefined {
+  record(metafile: Metafile, paths: ModulePaths): ServeEditChecks | undefined {
     return this.reusable
       ? serveEditLookups(
           metafile,

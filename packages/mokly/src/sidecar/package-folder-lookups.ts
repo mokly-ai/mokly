@@ -1,11 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { ImportKind } from "esbuild";
+
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import type { PathSettings } from "./config-inputs.js";
 import { missingFile } from "./file-digests.js";
 import { folderRowBytes } from "./folder-candidates.js";
+import { FolderSelectionProof } from "./folder-selection-proof.js";
 import { markedFileEvidence } from "./marked-file-evidence.js";
 import type { SelectedImport } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -47,6 +50,7 @@ export class PackageFolderLookups {
   private readonly directories = new Set<string>();
   private readonly files = new Set<string>();
   private readonly links = new Set<string>();
+  private readonly proofs = new Map<string, FolderSelectionProof>();
   private bytes = 0;
   private folder = false;
 
@@ -81,7 +85,11 @@ export class PackageFolderLookups {
     set.add(file);
   }
 
-  accept(request: LookupRequest, selection: SelectedImport): boolean {
+  accept(
+    request: LookupRequest,
+    selection: SelectedImport,
+    kind: ImportKind,
+  ): boolean {
     try {
       const found = this.folders.lookup(
         request.name,
@@ -90,6 +98,23 @@ export class PackageFolderLookups {
       );
       if (found && (!found.placed || found.candidates?.overflow)) return false;
       if (!found?.candidates?.present) return true;
+      if (selection.kind !== "physical") return false;
+      const key = JSON.stringify([request, selection.file, kind]);
+      if (!this.proofs.has(key)) {
+        const bases = [...found.candidates.targets()];
+        this.bytes += Buffer.byteLength(JSON.stringify([key, bases]));
+        if (this.bytes > EVIDENCE_LIMIT) return false;
+        this.proofs.set(
+          key,
+          new FolderSelectionProof(
+            bases,
+            selection.file,
+            kind,
+            this.inputs,
+            this.paths,
+          ),
+        );
+      }
       this.folder = true;
       for (const base of found.candidates.values) {
         this.stage(this.directories, path.dirname(base));
@@ -129,5 +154,14 @@ export class PackageFolderLookups {
     for (const directory of this.directories)
       this.paths.lookupDirectories.add(directory);
     return evidence;
+  }
+
+  async certify(
+    listings: Record<string, string[]>,
+    evidence: ReuseEvidence,
+  ): Promise<boolean> {
+    for (const proof of this.proofs.values())
+      if (!(await proof.matches(listings, evidence))) return false;
+    return true;
   }
 }

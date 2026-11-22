@@ -7,6 +7,7 @@ import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
+import { PhysicalInputReader } from "../packages/mokly/src/sidecar/physical-input-reader.js";
 
 import { write } from "./helpers/native_resolution.js";
 import { folderPackage } from "./helpers/package_folder.js";
@@ -66,16 +67,32 @@ test("marked folder reuse rejects a skipped folder link retargeted to a file", a
     undefined,
     "serveEdit",
   );
-  assert.equal(first.result.compiled.reuseEvidence.uncaptured, "serveEdit");
+  const evidence = first.result.compiled.reuseEvidence;
+  assert.equal(
+    evidence.uncaptured,
+    undefined,
+    "an empty listing cannot prove that a pinned link targets a directory",
+  );
+  assert.deepEqual(evidence.inputs[fixture.preferred], {
+    kind: "link",
+    target: folder,
+  });
+  const pinned = { ...evidence, uncaptured: "serveEdit" as const };
+  assert.equal(new PhysicalInputReader().markedCurrent(pinned), true);
   assert.match(first.result.compiled.code, /original-index/);
   await fixture.unrelated();
   assert.equal(
     (await reuse([first.generation], fixture.params, "serveEdit"))?.runtimeKey,
-    first.result.compiled.runtimeKey,
-    "unrelated additions retain marked reuse while the link targets a folder",
+    undefined,
+    "the unproved empty folder cannot certify marked reuse",
   );
   await fs.unlink(fixture.preferred);
   await fs.symlink(file, fixture.preferred, "file");
+  assert.equal(
+    new PhysicalInputReader().markedCurrent(pinned),
+    false,
+    "the real captured link pin rejects a folder-to-file retarget",
+  );
   const native = await bundle(
     fixture.params,
     build,
