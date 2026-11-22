@@ -54,6 +54,12 @@ summary.mbk-details-bar::-webkit-details-marker {
   display: none;
 }
 
+/* The bar spans the panel, which scrolls under it, so it draws the inset
+   glow. */
+.mbk-details-bar:focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
 details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   transform: rotate(90deg);
 }

@@ -35,6 +35,16 @@ function band(page: Page) {
       probe.remove();
       return colour;
     };
+    /** A focus glow of the reset class, as a shadow of a probe. */
+    const glow = (name: string) => {
+      const probe = document.createElement("span");
+      probe.className = "mbk-reset";
+      probe.style.boxShadow = `var(${name})`;
+      toolbar.append(probe);
+      const shadow = getComputedStyle(probe).boxShadow;
+      probe.remove();
+      return shadow;
+    };
     return {
       content: {
         left:
@@ -52,10 +62,12 @@ function band(page: Page) {
       refresh: box(toolbar.querySelector(".mbk-diff-refresh")!),
       tokens: {
         accent: token("--mbk-accent-deep"),
-        bg: token("--chrome-bg"),
         edge: token("--chrome-control-edge"),
+        glow: glow("--mbk-focus-glow"),
+        glowInset: glow("--mbk-focus-glow-inset"),
         ink: token("--chrome-ink-2"),
         onAccent: token("--_mokly-private-on-accent-deep"),
+        surface: token("--chrome-surface"),
       },
       track: {
         background: getComputedStyle(track).backgroundColor,
@@ -76,6 +88,7 @@ function band(page: Page) {
           getComputedStyle(track).outlineColor,
           getComputedStyle(track).outlineOffset,
         ],
+        shadow: getComputedStyle(track).boxShadow,
         width: track.getBoundingClientRect().width,
       },
       text: {
@@ -133,48 +146,66 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const on = await band(page);
   expect(on.text).toEqual({
     colour: on.tokens.ink,
-    size: "12px",
-    weight: "600",
+    size: "12.5px",
+    weight: "400",
   });
-  expect([on.track.width, on.track.height]).toEqual([30, 18]);
+  expect([on.track.width, on.track.height]).toEqual([32, 18]);
   expect(on.track.background).toBe(on.tokens.accent);
   expect(on.track.border).toBe(on.tokens.accent);
   expect(on.track.knob).toEqual({
     colour: on.tokens.onAccent,
-    left: "14px",
+    left: "16px",
     size: ["12px", "12px"],
     top: "2px",
   });
   await scrollTogether(page).click();
   await expect(scrollTogether(page)).not.toBeChecked();
   const off = await band(page);
-  expect(off.track.background).toBe(off.tokens.bg);
+  expect(off.track.background).toBe(off.tokens.surface);
   expect(off.track.border).toBe(off.tokens.edge);
   expect(off.track.knob.colour).toBe(off.tokens.edge);
   expect(off.track.knob.left).toBe("2px");
   expect(off.track.outline[0]).toBe("none");
+  expect(off.track.shadow).toBe("none");
   await modeButton(page, "Difference").focus();
   await page.keyboard.press("Tab");
   await expect(scrollTogether(page)).toBeFocused();
+  // The track draws the focus glow of the switch over it.
   const focused = await band(page);
-  expect(focused.track.outline).toEqual([
-    "solid",
-    "2px",
-    focused.tokens.accent,
-    "2px",
-  ]);
+  expect(focused.track.outline[0]).toBe("none");
+  expect(focused.track.shadow).toBe(focused.tokens.glow);
+  // A mode draws the inset glow, and the shown mode keeps its raised shadow
+  // under the glow.
+  await page.keyboard.press("Shift+Tab");
+  await expect(modeButton(page, "Difference")).toBeFocused();
+  await expect(modeButton(page, "Difference")).toHaveCSS(
+    "box-shadow",
+    focused.tokens.glowInset,
+  );
+  await page.keyboard.press("Shift+Tab");
+  await expect(modeButton(page, "Overlay")).toBeFocused();
+  const shown = await modeButton(page, "Overlay").evaluate(
+    (button) => getComputedStyle(button).boxShadow,
+  );
+  expect(shown.startsWith(`${focused.tokens.glowInset}, `)).toBe(true);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(scrollTogether(page)).toBeFocused();
   await page.keyboard.press("Space");
   await expect(scrollTogether(page)).toBeChecked();
 
+  // Forced colours drop the glow, so the focused track takes the system
+  // outline.
   await page.emulateMedia({ forcedColors: "active" });
   const forcedOn = await band(page);
+  expect(forcedOn.track.outline.slice(0, 2)).toEqual(["solid", "2px"]);
   expect(forcedOn.track.knob.colour).not.toBe(forcedOn.track.background);
   await scrollTogether(page).click();
   await expect(scrollTogether(page)).not.toBeChecked();
   const forcedOff = await band(page);
   expect(forcedOff.track.knob.colour).not.toBe(forcedOff.track.background);
   expect([forcedOn.track.knob.left, forcedOff.track.knob.left]).toEqual([
-    "14px",
+    "16px",
     "2px",
   ]);
 });

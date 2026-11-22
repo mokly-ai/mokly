@@ -2,15 +2,16 @@
  * The shell's top bar. This container reads the store and the identifier
  * scope, and `@mokly/ui/top-bar` renders the bar, its compact search, and its
  * focus return. The tag picker sits in the search field, and the end control
- * is the standalone Appearance control or, in an embedded root of a catalogue
- * with dark previews, the preview scheme switch.
+ * is the standalone Appearance control. An embedded root has no end control:
+ * the canvas shows both preview schemes at once, and a view that shows one
+ * scheme keeps its own preview scheme control in its head band or its view
+ * controls.
  */
 
 import { TopBar as TopBarView } from "@mokly/ui/top-bar";
 
 import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
-import { SchemeSwitch } from "./head.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { useShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
@@ -27,11 +28,7 @@ export function TopBar(props: {
     <TopBarView
       drawerOpen={store.state.drawerOpen}
       end={
-        store.context.embedded ? (
-          props.catalogue.hasDarkFragments ? (
-            <SchemeSwitch />
-          ) : null
-        ) : (
+        store.context.embedded ? null : (
           <AppearanceSelect
             ready={props.appearance?.ready ?? false}
             theme={props.appearance?.theme ?? "auto"}

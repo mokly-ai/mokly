@@ -262,8 +262,9 @@ test("the design stylesheets import the shipped theme and the reset class that e
 test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
   // The root block of the interface palette declares each of its tokens, and
   // the same-roles test above holds the dark block to the same roles. The
-  // preview tokens of the preview stylesheet declare the device colours, and
-  // the shipped theme declares its own tokens on every artboard's root.
+  // preview tokens of the preview stylesheet declare the device colours, the
+  // shipped theme declares its own tokens on every artboard's root, and the
+  // reset class declares the focus glows on every package element.
   const declared = new Map([
     ...(await designPalette()).light,
     ...(await designPreviewTokens()),

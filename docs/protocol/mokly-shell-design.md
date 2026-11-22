@@ -75,6 +75,22 @@ Geist wordmark. The catalogue's indent guides use the faint guide tint of the
 palette. No consumer-specific color, name, or route family may appear in shell
 styles or copy.
 
+## Focus
+
+Keyboard focus shows the `@firna/ui` focus glow, not an outline: a 4px halo
+with no blur, in the shell accent at 75%. The accent defaults to `signalDeep`,
+and a host tunes it with `--mokly-accent`. The glow keeps 3:1 against each
+surface that it draws on, in both schemes, also with a host's accent. A control
+draws the glow outside its box, over its own shadow. A row, a segment, a tab
+and a control at the edge of a panel that clips or scrolls draw it inside the
+box. A drawn control under a transparent native control, such as the
+Appearance select, shows the glow. The split separators keep their accent grip,
+as the [navigation design](./mokly-shell-design-navigation.md#catalogue-panel)
+says. Forced-colors mode drops shadows, so there focus takes a 2px `Highlight`
+outline. Decision 38: the viewer takes the focus design of the site and the
+cloud app, so that focus looks the same on every surface, and the 2px outline
+with a 2px offset was rejected.
+
 ## Layout
 
 The shell fills the viewport (`100vh`, document scrolling disabled); every
@@ -102,10 +118,12 @@ preview scheme and the compact layout.
   opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
-  on hover. It opens a panel anchored under the field and aligned to its width
-  (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
-  radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
-  `Tags` head above a wrapping row of the Details Tags row's chips. The
+  on hover. It opens a panel anchored under the field and aligned to its end
+  edge, as wide as the field and at least 280px (max-width 440px), so a panel
+  wider than the field grows toward the start of the bar: a `--chrome-surface`
+  card with a hairline border, 10px radius, and `--chrome-shadow` elevation,
+  holding an uppercase 11px muted `Tags` head above a wrapping row of the
+  Details Tags row's chips. The
   panel lists every tag the catalogue declares, in alphabetical order, and
   scrolls internally once that set outgrows it. Selecting a chip enters
   `tag:<tag>` in the search field, replacing any tag term already entered, and

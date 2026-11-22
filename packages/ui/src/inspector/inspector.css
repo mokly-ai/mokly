@@ -160,9 +160,30 @@
   cursor: inherit;
 }
 
+/* A tab of the strip draws the inset glow, as a segment of a group does; the
+   tab of a static depiction draws the glow of its link. The sheet's grab
+   draws the inset glow, also for the transparent switch of a static
+   depiction. Forced colours drop the glow, so there a control around such a
+   switch takes the system outline. */
+.mbk-inspector-tabs > .mbk-icon-button:focus-visible,
+.mbk-inspector[data-inspector-disclosures] > details > summary:focus-visible,
+.mbk-inspector[data-inspector-disclosures]
+  > details
+  > summary:has(> .mbk-inspector-link:focus-visible),
+.mbk-sheet-grab:focus-visible,
 .mbk-sheet-grab:has(> input:focus-visible) {
-  outline: 2px solid var(--mokly-accent, var(--_mokly-private-accent-default));
-  outline-offset: -2px;
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
+.mbk-inspector-link:focus-visible {
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  .mbk-sheet-grab:has(> input:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 
 @media (width < 56.25rem) {
@@ -274,6 +295,15 @@
 .mbk-inspector-resize:focus-visible {
   box-shadow: inset 0 2px 0
     var(--mokly-accent, var(--_mokly-private-accent-default));
+}
+
+/* Forced colours drop the grip's colour and shadow, so the focused separator
+   takes the system outline inside its box. */
+@media (forced-colors: active) {
+  .mbk-inspector-resize:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 
 /* While the reader drags the inspector's divider, the drag marks the shell

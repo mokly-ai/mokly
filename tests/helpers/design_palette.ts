@@ -189,13 +189,17 @@ export const SHIPPED_THEME = "packages/ui/src/theme/theme.css";
 /**
  * The tokens that the shipped theme declares on the viewer root class, which
  * every artboard's and sample's root carries, when a design stylesheet
- * imports the theme: its Light half, which the Dark half redeclares.
+ * imports the theme: its Light half, which the Dark half redeclares. The
+ * focus glows that the reset class declares on every package element join.
  */
 export async function designThemeTokens(): Promise<Map<string, string>> {
   const tokens = new Map<string, string>();
-  for (const rule of await designStyleRules())
-    if (rule.file === SHIPPED_THEME && rule.selector === ".mbk, .mbk-document")
-      for (const [, name, value] of rule.body.matchAll(
+  for (const { body, file, selector } of await designStyleRules())
+    if (
+      (file === SHIPPED_THEME && selector === ".mbk, .mbk-document") ||
+      (file === "packages/ui/src/reset/reset.css" && selector === ".mbk-reset")
+    )
+      for (const [, name, value] of body.matchAll(
         /(--[\w-]+)\s*:\s*([^;]+);/gu,
       ))
         tokens.set(name!, value!.replace(/\s+/gu, " ").trim());

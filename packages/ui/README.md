@@ -52,10 +52,11 @@ root states its appearance in `data-mokly-theme`; Auto follows the reader's
 system. Each component puts the reset class `mbk-reset`
 on every element that it renders, apart from the host slots, whose content
 stays the host's. The class gives the element border-box sizing and the
-reader's reduced motion, and resets links and text blocks. No rule reaches the
-host page or host slot content. A host that renders a component outside a
-viewer root puts it inside an element with the viewer root class, or declares
-the tokens itself, as the design catalogue's `examples/basic/design.css` does.
+reader's reduced motion, resets links and text blocks, and gives a focusable
+element the focus glow. No rule reaches the host page or host slot content. A
+host that renders a component outside a viewer root puts it inside an element
+with the viewer root class, or declares the tokens itself, as the design
+catalogue's `examples/basic/design.css` does.
 
 `@mokly/ui/palette` exports `palettes`, each named palette by its name, with
 its types. A palette gives the `PaletteColors` of its `light` and `dark`
@@ -341,6 +342,22 @@ the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
 viewer's styles test holds both stylesheets to that.
 
+Keyboard focus draws the focus glow that the
+[shell design](../../docs/protocol/mokly-shell-design.md#focus) requires. The
+reset class declares its two shadows: `--mbk-focus-glow` outside the box and
+`--mbk-focus-glow-inset` inside it, both in the shell accent at 75%. Its
+baseline rule gives each focusable element the outer glow in place of the
+browser's outline, and a 2px `Highlight` outline in forced colours. The rule
+weighs one pseudo-class, so a component's own focus rule wins. Write such a
+rule for a control that draws a shadow of its own, and repeat that shadow
+after the glow, as the shown segment of a segmented control does. Write one
+for a control in a container that clips or scrolls, which draws the inset
+glow, as a catalogue row does on its pill. Write one for a drawn control
+under a transparent native control, which shows the glow with `:has()` and
+adds its own forced-colours outline. A focus rule sets only the shadow, so
+the baseline keeps the forced-colours outline. `palette.test.ts` holds the
+glow at 3:1 on each surface in both appearances.
+
 Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
 embeds the viewer sets that size, so a `rem` width can change from host to
@@ -377,7 +394,8 @@ override the desktop layout rules.
   of each generated role, with the fixed values of the roles without a Canvas
   source, and the sRGB mixes, tints, and shadows that the sources compute
 - [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
-  sizing, the reader's reduced motion, and the link and text block resets
+  sizing, the reader's reduced motion, the link and text block resets, and
+  the focus glow with its baseline focus rule and forced-colours outline
 - [`src/palette/palette.ts`](./src/palette/palette.ts) — `palettes`, the named
   palettes, with the `PaletteColors`, `PaletteFonts`, and `Palette` types;
   `canvas` is the only palette and the source of the generated stylesheets

@@ -187,14 +187,15 @@ test("no shell stylesheet declares a cascade layer", () => {
 
 /**
  * The media queries of the package rules: the shell's layout breakpoint, its
- * device breakpoint, the reader's reduced motion, and the system appearance
- * of Auto.
+ * device breakpoint, the reader's reduced motion, the system appearance of
+ * Auto, and the forced colours that replace the focus glow with an outline.
  */
 const PACKAGE_QUERIES = new Set<string>([
   NARROW_SHELL,
   NARROW_LAYOUT,
   "(prefers-reduced-motion: reduce)",
   "(prefers-color-scheme: dark)",
+  "(forced-colors: active)",
 ]);
 
 test("the package rules switch at the shell's layout and device breakpoints", () => {

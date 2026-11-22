@@ -39,8 +39,8 @@ export type ShellView =
 
 /**
  * Head-band controls for a routed catalogue entry: the viewport switch for
- * screens, and the narrow-width home of the scheme switch, which the top bar
- * has no room for below the breakpoint.
+ * screens, and, in an embedded root of a catalogue with dark previews, the
+ * preview scheme switch, which the head band shows at every width.
  */
 function HeadActions(props: {
   catalogue: Catalogue;

@@ -87,10 +87,8 @@ test("the changed mark draws one trailing dot the reader can hear", async ({
     "aria-current",
     "page",
   );
-  expect(await changedDot(page, comparisonPaths.changedVariant)).toEqual({
-    ...dot,
-    color: "rgb(255, 255, 255)",
-  });
+  // The current row keeps the accent dot on its soft accent fill.
+  expect(await changedDot(page, comparisonPaths.changedVariant)).toEqual(dot);
 
   await chooseFilter(page, "all");
   expect((await changedDot(page, comparisonPaths.unchanged)).content).toBe(

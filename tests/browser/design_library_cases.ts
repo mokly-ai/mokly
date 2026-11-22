@@ -140,7 +140,7 @@ export function registerDesignLibrary(
       });
       expect(inScreen).toMatchObject({
         fontSize: "10.5px",
-        fontWeight: "700",
+        fontWeight: "500",
       });
       expect(isolated).toEqual(inScreen);
     });

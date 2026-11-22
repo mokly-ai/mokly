@@ -1,6 +1,7 @@
 /* The segmented control: segments on the shell background in a hairline
-   frame, the shown one raised on the surface. A segment that is a link or
-   inert text reads exactly like a segment button. */
+   frame, the shown one raised on the surface. It draws the same track,
+   segments, and type as the catalogue's All and Changes filter. A segment
+   that is a link or inert text reads exactly like a segment button. */
 .mbk-seg {
   display: inline-flex;
   padding: 3px;
@@ -12,13 +13,13 @@
 .mbk-seg span,
 .mbk-seg a,
 .mbk-seg button {
-  padding: 4px 12px;
+  padding: 6px 11px;
   border: none;
   border-radius: 6px;
   background: none;
   color: var(--chrome-muted);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -32,4 +33,19 @@
   background: var(--chrome-surface);
   color: var(--chrome-ink);
   box-shadow: var(--chrome-shadow-soft);
+}
+
+/* A focused segment draws the inset glow, which the track holds, and the
+   shown one keeps its shadow under the glow. */
+.mbk-seg :is(a, button):focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
+.mbk-seg
+  :is(a, button):is(
+    .active,
+    [aria-pressed="true"],
+    [aria-current="page"]
+  ):focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset), var(--chrome-shadow-soft);
 }
