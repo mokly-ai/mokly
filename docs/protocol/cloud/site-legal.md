@@ -46,9 +46,12 @@ the public site. [Site](./site.md) owns their routes and shared navigation;
   [Site docs layout](./site-docs-layout.md#tree-scroll).
 - The application uses the session, catalogue-access and browser-storage
   mechanisms defined by [Authentication](./auth-sessions.md),
-  [Callbacks](./auth-callbacks.md) and
+  [Callbacks](./auth-callbacks.md),
+  [Desktop sign-in](./desktop-sign-in.md) and
   [Catalogue hosting](./catalogue-hosting.md). It also keeps one preference on
-  the device, the [Theme](./viewer-chrome-account.md#theme) choice.
+  the device, the [Theme](./viewer-chrome-account.md#theme) choice. The Privacy
+  Policy names each of these items, and the `SameSite` value of the session
+  cookie in a browser and in the desktop app.
 - For each item that the site keeps and for the Theme, the Privacy Policy
   gives the purpose, says that the item stays in the browser, and says how to
   remove it.

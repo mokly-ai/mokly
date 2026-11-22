@@ -236,12 +236,15 @@ browser, and neither is sent to Mokly:
 The Mokly application uses this storage to operate the service and to keep
 one preference:
 
-- a Secure, HttpOnly, SameSite=Lax session cookie, with a 30-day absolute and
-  seven-day idle lifetime;
+- a Secure, HttpOnly session cookie, with a 30-day absolute and seven-day idle
+  lifetime, which is SameSite=Lax in a browser and SameSite=None in the
+  desktop app, whose window reaches the service from another site;
 - a Secure, HttpOnly, host-only catalogue cookie lasting five minutes for a
   private publication;
 - tab-scoped session storage for GitHub authorization state and a PKCE
   verifier, removed after the callback;
+- tab-scoped session storage in the desktop app for a sign-in verifier,
+  removed when the app's window completes sign-in;
 - local storage containing the identifier of the last project opened on that
   device; and
 - browser storage containing the Theme you choose in the account menu, so that
