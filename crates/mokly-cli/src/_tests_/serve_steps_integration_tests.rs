@@ -54,6 +54,7 @@ fn classification_reports_reading_with_its_own_token_before_the_first_git_comman
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            purge_delay: Arc::new(Unimock::new(())),
             routing: None,
             eager: None,
             diagnostics: Arc::new(Unimock::new(())),
