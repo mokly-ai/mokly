@@ -24,5 +24,6 @@
 - **Left out:** A duplicate test before the byte test in `add` alone. It changes the same kind of decision as B with less gain, because the walk stop and the repeated `file` call keep their bounds.
 - **Wider fix:** None. B is the whole change.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/plan-candidate-repeat-bounds.md`: it derives the room bounds from the checks that they skip. Option B here removes those bounds, so that item waits for this answer.
 - **Recommendation:** A, until a catalogue near the budget shows the cost. On 2026-11-21 the mokly-cloud collectors peaked at 67.4% (head) and 73.9% (base) of the budget, so B changes no record there, and the bounds cost almost no CPU.
 - **Action:** ask the user, because B changes overflow decisions of the collector on `main`.
