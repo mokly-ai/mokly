@@ -291,15 +291,66 @@
       [serve-pass-rereads-unchanged-pages.md](./serve-pass-rereads-unchanged-pages.md)
       gives its count and its time: none on mokly-cloud, which has no pages
       or Markdown documents.
+  - 2026-11-22, the performance orchestrator, after the splits above and the
+    watch split below: the next speed pull request is H of
+    [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
+    W1 below, and C1, the style registry index of option C, in that order.
+    C2, one encode of each restore request, and C3, the native frame scan,
+    wait: about 7 to 16 ms together. W2 and W4 below stay open. W3 stays out.
   - 2026-11-22, the performance orchestrator: B3 stays out. A check by file
     metadata alone adds an unseen change class to the freshness rules, so it
     needs a protocol decision that is not taken for 15 to 18 ms.
   - 2026-11-22, the performance orchestrator: D, E, and the V8 code cache stay
     recorded as ranked here.
+- **The watch candidate of the first edit after a warm start:**
+  - Measured on 2026-11-22 on mokly-cloud with a probe on one clock: the
+    candidate of the first edit takes 36 to 52 ms, and the candidates of
+    edits 2 and 3 take 4 to 7 ms, because they reuse the adopted watch record.
+  - Its parts on the first edit: the plan build, `PlanRecord::new`, about
+    12 ms; `unobserved` 2.3 ms; the attachment, a clone of the record plan and
+    `extend_required`, 5.8 ms; the observer re-attach, `replace`, 15 to 19 ms;
+    and the replay 1.1 ms. The full pass of the observer covers about 5,000
+    targets.
+  - Two causes make the record of the startup miss:
+    - Resources. After a restart, the resource recordings of the process are
+      empty, so the startup record holds none. The background pass observes
+      the two email logos, and the drain adds them to the live plan, so a
+      write to them after a warm start is caught: in a real session a rebuild
+      started 79 ms after the write. The drain does not add them to the
+      record. W1 fixes this cause.
+    - Resolution. On the edit of
+      `docs/mockups/src/screens/product/settings/slug-editor.tsx`, the bundle
+      reads one more resolver probe than the startup bundle of the same
+      imports: the file
+      `node_modules/.mokly-roots/1/@firna/ui/dist/node/theme.d.ts/package.json`
+      and the folders `node_modules/.mokly-roots/1/@firna/ui/dist/node` and
+      `node_modules/.mokly-roots/1/@firna/ui/dist/node/theme.d.ts`. A restore
+      of the source returns to 5,019 files and 251 folders. Each state watches
+      the probes that its own bundle read. Open question: why the bundle of
+      the edited state reads this probe and the startup bundle does not.
+  - Open options, not chosen on 2026-11-22:
+    - **W2.** When a candidate differs from the record only by resources and
+      resolution entries, build its plan from the record plan and the deltas,
+      instead of `PlanRecord::new`. About 12 ms.
+    - **W4.** With W2, let the observer take the target delta and update only
+      the parents of the added and removed targets, and build the attachment
+      from the delta. With W2, up to about 33 ms. It changes
+      `crates/mokly-watch`.
+    - Condition for both: an equality test over an edit sequence (the
+      slug-editor edit, its restore, a resource write, an added and a removed
+      resource, an added and a removed import) shows that the incremental
+      plan and observer equal a fresh `PlanRecord::new` plan and a fresh
+      attach for every state, and every delta that the incremental path does
+      not handle falls back to the full path.
+    - The reason of 2026-11-22: they save about 33 ms once for each session,
+      on the first edit only, and a defect of the watcher's folder set means a
+      missed rebuild.
+    - W3, equal resolver probes in both bundles, stays out, because it changes
+      the resolution records of the bundler.
 - **Recommendation:** F without B3, as chosen on 2026-11-22.
-- **Action:** fix after merge, apply the safe parts of C of option F in the
-  next speed pull request, after the split and the ranking of
-  2026-11-22 above, because the orchestrator chose that order. A later
+- **Action:** fix after merge, apply C2 and C3 of option C, W2, or W4 when the
+  orchestrator chooses them, because the orchestrator chose on 2026-11-22 to
+  wait with them. The next speed pull request applies H, W1, and C1. A later
   proposal of B3 needs a protocol decision first. D, E, and the V8 code cache
   need their own scope approval.
 

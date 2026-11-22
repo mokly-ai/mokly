@@ -28,6 +28,16 @@
   `locator('astro-island[ssr]')`. Expected: 0. Received: 2. Timeout: 5000ms."
   The failing project was `1440-light`. A rerun of the same test in all five
   viewports passed 5 of 5 at once.
+- **Occurrences:**
+  - 2026-11-22, the local `cloud-site` run above: `/docs/authoring/screens/`,
+    `1440-light`.
+  - 2026-11-22, the `Site checks` job of the CI of PR #472 at `bb59546ba`
+    (run 45015168777, job 137186011114, step "Verify the partition"):
+    "`/docs/ci/the-check-on-a-pull-request/` meets the deterministic
+    accessibility contract" at `390-light`, with the same failure text
+    (received 2 within 5000 ms) and 508 other tests passed. The one rerun of
+    the job passed (attempt 2, job 137190782856). That branch did not change
+    `apps/site` or `packages/`.
 - **Impact if no action:** The cloud-site suite of the gate fails now and then
   without a site defect.
 - **Root question:** How does the check wait for the islands of a docs page to

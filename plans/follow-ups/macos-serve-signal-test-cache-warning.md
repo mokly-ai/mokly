@@ -21,9 +21,16 @@
     `[mokly/warning] The rendered document cache is unavailable. Rendering without it.`
   - The same job passed on Linux and Windows. Recent `main` runs of the macOS
     job were cancelled, so `main` has no clear macOS result since #394.
+  - 2026-11-22, the CI of PR #472 at `bb59546ba` (run 45015168777, job
+    137186010901): the same two lines. The one rerun of the job passed
+    (attempt 3, job 137193247265), and the same job passed on the CI of PR
+    #471 and on a manual CI run of an earlier commit of PR #472. So the
+    failure does not happen on every run.
 - **Problem:** On macOS, the cache cannot open in the test's environment, so
   the test sees one more stderr line than it allows.
-- **Impact if no action:** Required CI fails on macOS for every pull request.
+- **Impact if no action:** Required CI fails on macOS now and then, and each
+  failure needs a rerun. Until 2026-11-22 this line said that it failed for
+  every pull request.
 - **Root question:** Should Serve on macOS open the rendered document cache
   in the test's environment, or should the test allow the warning?
 - **Options:**
