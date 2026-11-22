@@ -13,9 +13,12 @@ export type PanelTab = "inspect" | "changes";
 
 /**
  * The right panel's tabs: Inspect always, and Changes on an entry that the
- * branch changed, added, removed, or moved. The selected tab opens this
- * artboard. The other tab opens the artboard that the navigation state names
- * for it, and stays a picture while no Canvas artboard shows that tab.
+ * branch changed, added, removed, or moved, and on an affected entry, which
+ * stays unmodified and outside the Changes filter but has an eligible
+ * comparison, because a changed component renders in it. The selected tab
+ * opens this artboard. The other tab opens the artboard that the navigation
+ * state names for it, and stays a picture while no Canvas artboard shows
+ * that tab.
  */
 function PanelTabs({
   design,

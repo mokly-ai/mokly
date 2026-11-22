@@ -1,152 +1,21 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import vm from "node:vm";
 
 import { encodeMessage } from "../packages/frame/dist/probe/schema.js";
+import { probeHarness } from "../packages/frame/tests/probe_wire_fixture.js";
 
 const bundle = fs.readFileSync(
   "packages/frame/dist/browser/frame-probe.js",
   "utf8",
 );
 const nonce = "a".repeat(32);
-function harness(query: string) {
-  const messages: { data: string; origin: string }[] = [];
-  const listeners = new Map<string, EventListener>();
-  const documentListeners = new Map<string, EventListener>();
-  let inspected = 0,
-    observed = 0,
-    trapped = 0;
-  const parent = {
-    postMessage(data: string, origin: string) {
-      messages.push({ data, origin });
-    },
-  };
-  Object.defineProperty(parent, "location", {
-    get() {
-      trapped++;
-      throw new Error("parent.location accessed");
-    },
-  });
-  const doc = {
-    querySelectorAll() {
-      inspected++;
-      return [
-        {
-          content: {
-            textContent: JSON.stringify({
-              ranges: [],
-              links: [
-                { screenPath: "screen", target: { kind: "top" } },
-                { screenPath: "screen", target: { kind: "parent" } },
-                {
-                  screenPath: "screen",
-                  target: { kind: "named", name: "preview" },
-                },
-              ],
-            }),
-          },
-        },
-      ];
-    },
-    addEventListener(
-      type: string,
-      listener: EventListener,
-      options: { signal: AbortSignal },
-    ) {
-      documentListeners.set(type, listener);
-      options.signal.addEventListener("abort", () =>
-        documentListeners.delete(type),
-      );
-    },
-    fonts: { addEventListener() {} },
-  };
-  class Observer {
-    observe() {
-      observed++;
-    }
-    disconnect() {}
-  }
-  class Link {
-    ownerDocument = doc;
-    constructor(readonly index: number) {}
-    closest() {
-      return this;
-    }
-    hasAttribute() {
-      return false;
-    }
-    getAttribute() {
-      return String(this.index);
-    }
-  }
-  const win = {
-    location: new URL(`https://frames.test/static/screen.html${query}`),
-    parent,
-    document: doc,
-    addEventListener(
-      type: string,
-      listener: EventListener,
-      options?: { signal?: AbortSignal },
-    ) {
-      listeners.set(type, listener);
-      options?.signal?.addEventListener("abort", () => listeners.delete(type));
-    },
-    removeEventListener(type: string) {
-      listeners.delete(type);
-    },
-    cancelAnimationFrame() {},
-    AbortController,
-    ResizeObserver: Observer,
-    MutationObserver: Observer,
-  };
-  Object.defineProperty(win, "top", {
-    get() {
-      trapped++;
-      throw new Error("window.top accessed");
-    },
-  });
-  vm.runInNewContext(bundle, {
-    window: win,
-    document: doc,
-    URL,
-    TextEncoder,
-    AbortController,
-    HTMLAnchorElement: Link,
-    HTMLAreaElement: Link,
-    SVGAElement: Link,
-  });
-  return {
-    messages,
-    listeners,
-    facts: () => ({ inspected, observed, trapped }),
-    activate(index: number) {
-      let prevented = false;
-      documentListeners.get("click")?.({
-        type: "click",
-        target: new Link(index),
-        currentTarget: doc,
-        button: 0,
-        preventDefault() {
-          prevented = true;
-        },
-      } as unknown as Event);
-      return prevented;
-    },
-    send(data: unknown, origin = "https://app.test", source: unknown = parent) {
-      listeners.get("message")?.({
-        data,
-        origin,
-        source,
-        ports: [],
-      } as unknown as Event);
-    },
-  };
-}
+const harness = (query: string, hasMap = true) =>
+  probeHarness(bundle, query, hasMap);
 
 test("probe bundle is a bounded standalone IIFE without top-window access", () => {
   assert.ok(
-    Buffer.byteLength(bundle) <= 9216,
+    Buffer.byteLength(bundle) <= 10240,
     `${Buffer.byteLength(bundle)} bytes`,
   );
   assert.doesNotMatch(
@@ -237,6 +106,29 @@ test("top, parent and named navigation never access trapped outer windows", () =
   assert.equal(fixture.facts().trapped, 0);
   fixture.send(encodeMessage(nonce, { type: "dispose" }));
   assert.equal(fixture.activate(0), false);
+});
+
+test("the probe answers measure-content after hello without a published map", () => {
+  const fixture = harness("?mokly-host=https%3A%2F%2Fapp.test", false);
+  const measure = encodeMessage(nonce, {
+    type: "measure-content",
+    requestId: 1,
+  });
+  fixture.send(measure);
+  assert.equal(fixture.messages.length, 0);
+  fixture.send(encodeMessage(nonce, { type: "hello" }));
+  fixture.send(measure);
+  assert.equal(fixture.messages.length, 2);
+  assert.equal(fixture.messages[1]!.origin, "https://app.test");
+  assert.deepEqual(JSON.parse(fixture.messages[1]!.data), {
+    channel: "mokly-frame-probe",
+    version: 4,
+    nonce,
+    type: "content-box",
+    requestId: 1,
+    contentBox: null,
+  });
+  fixture.send(encodeMessage(nonce, { type: "dispose" }));
 });
 
 test("wire errors retain request ids and consume them before a later request", () => {

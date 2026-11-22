@@ -10,7 +10,8 @@ import {
 /**
  * Inspect for Welcome: changed on the canonical branch, in both schemes. The
  * Selection section shows the selected instance, and the folded sections
- * hold Welcome's props controls, its usage, and its component tree.
+ * hold Welcome's props controls, its usage, and its component tree. While
+ * the search enters a tag, the Tags row marks that tag's chip.
  */
 export function WelcomeInspect(state: ScreenInspectState<WelcomeInstanceId>) {
   return (

@@ -42,8 +42,8 @@ the right panel opens as the panel sheet: a rounded, non-modal sheet with
 compact and expanded snap heights, safe-area spacing, pan gestures, and an
 accessible size toggle. Its tab strip and close control stay outside the
 scrolling body. Closing the sheet keeps edits, and reopening shows them. The
-mockups use a native switch for size changes; gesture handling belongs to the
-runtime.
+mockups draw each sheet at the height that its state gives; gesture handling
+belongs to the runtime.
 
 Each component variant is an entry, nav, search and Changes row, and `mock:`
 target under the [variant contract](./mokly-variants.md). A variant's page is
@@ -238,12 +238,12 @@ clears stale inspection under the viewer lifecycle contract.
 
 The [Canvas design inventory](./mokly-shell-canvas-inventory.md) depicts the
 variant set, Inspect and the selection. The
-[shell design](./mokly-shell-design.md#design-mockups) says which states keep
-the content of their component explorer screens. The
-[component design](./mokly-component-design.md) depicts these pages in
-mobile and desktop artboards under `examples/basic/specs/design`: the
-component page and variants, a changed component and its Affected screens,
-screen inspector usage, highlight selection, loading Usage, and the empty and
-unavailable states. The
-[controls designs](./mokly-component-controls-design.md) belong to the
-inspector. Local Serve implements those controls.
+[component design](./mokly-component-design.md) depicts these pages in mobile
+and desktop artboards under `design/canvas/components`: a changed component's
+comparison on its variant set, its Usage and Affected screens, a removed
+variant, screen inspection while usage waits or is unavailable, and Usage that
+loads or failed. The
+[controls designs](./mokly-component-controls-design.md) under
+`design/canvas/props` belong to the inspector. Local Serve implements those
+controls. The [shell design](./mokly-shell-design.md#design-mockups) names the
+states that the Canvas screens do not draw.

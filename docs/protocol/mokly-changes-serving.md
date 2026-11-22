@@ -12,9 +12,11 @@ writes.
 
 ## Design references
 
-`design/changes/*` and the stacked [component designs](./mokly-component-design.md)
-depict this behaviour. The [pane](./mokly-comparison-panes.md#design-references)
-and [shell](./mokly-shell-design.md) contracts own each state.
+The Changes designs `design/canvas/changes/**` and the component comparisons
+of the [component designs](./mokly-component-design.md) under
+`design/canvas/components/**` depict this behaviour. The
+[pane](./mokly-comparison-panes.md#design-references) and
+[shell](./mokly-shell-design.md) contracts own each state.
 
 ## Comparison engine
 

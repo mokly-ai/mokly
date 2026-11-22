@@ -120,16 +120,17 @@ the highlight mask and the package labels and to refresh host marker placement.
 
 ## Wire Protocol v4
 
-Version 4 keeps every rule of [version 3](#wire-protocol-v3) and adds one
-request, which measures the box model of an instance for Inspect. Its envelope
-carries `version: 4`. Each peer accepts only its own version, so a page that
-carries a version 3 frame probe and a version 4 viewer reject each other's
-handshake.
+Version 4 keeps every rule of [version 3](#wire-protocol-v3). It adds requests
+for the box model of an instance and the content box of a document. Its
+envelope carries `version: 4`. Each peer accepts only its own version. A
+version 3 probe and a version 4 viewer reject each other's handshake.
 
-| Type        | Direction | Additional fields                                 |
-| ----------- | --------- | ------------------------------------------------- |
-| `measure`   | H → F     | `requestId`, `key`                                |
-| `box-model` | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null` |
+| Type              | Direction | Additional fields                                 |
+| ----------------- | --------- | ------------------------------------------------- |
+| `measure`         | H → F     | `requestId`, `key`                                |
+| `box-model`       | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null` |
+| `measure-content` | H → F     | `requestId`                                       |
+| `content-box`     | F → H     | `requestId`, `contentBox: Box \| null`            |
 
 `measure` returns `box-model` or `error`. `InstanceBoxModel` has exactly the
 fields `box`, `border` and `padding`. `border` and `padding` each have exactly
@@ -141,6 +142,12 @@ outside the mount's validated usage gets `error` with `missing-instance`, and a
 measurement outside the bounds gets `error` with `limit`. The reply carries
 numbers only. The host measures again after a `geometry` event, as it lists
 boundaries again.
+
+`measure-content` returns `content-box` or `error`. `contentBox` holds null or
+one box within the version 3 bounds. The
+[content box rules](./mokly-frame-content-box.md) define the measurement. The
+probe answers even if its published map is missing or reports an error. An
+out-of-bounds measurement returns `error` with `limit`.
 
 ## Frame Probe Script
 

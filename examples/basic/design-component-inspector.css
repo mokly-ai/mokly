@@ -3,10 +3,6 @@
 :where(.mbk-inspector-content p) {
   margin-top: 0;
 }
-/* The selected instance's own line keeps its spacing. */
-:where(.mbk-inspector-content) .ce-selected-instance p {
-  margin: 0 0 12px;
-}
 /* Mobile panels float over the preview and retain their own scroll position.
    The sheet sits on the workspace's bottom edge and keeps the safe area
    inside it, and the grab's check expands the open sheet. Its heights are

@@ -66,8 +66,10 @@ label. It reports instance boundaries, geometry notifications, hovers, and
 picks, under the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v3).
 On request it measures the box model of one instance, under the
 [box model rules](./mokly-frame-adapter.md#box-model) and the
-[`measure` request](./mokly-frame-probe-wire.md#wire-protocol-v4). The shell
-draws the
+[`measure` request](./mokly-frame-probe-wire.md#wire-protocol-v4). On request
+it also measures the document's [content box](./mokly-frame-content-box.md).
+The content box follows the document's own layout, so a component that fills
+its block shows at full width. The shell draws the
 [Highlight components](./mokly-component-explorer.md#highlight-components)
 visuals from the reported boxes, for highlights and picks alike, as the
 [frame adapter contract](./mokly-frame-adapter.md) requires. It draws the
@@ -86,9 +88,10 @@ same-origin adapter's inspection even when published copies contain the inert
 script.
 No React, server module, cookie, network request, or host-specific integration is
 included in the IIFE. The built `client/frame-probe.js` stays within a
-**9 KiB (9,216 bytes) minified, uncompressed** script budget. The budget
-excludes the separately bounded per-document inert metadata, which is not
-executable code.
+**10 KiB (10,240 bytes) minified, uncompressed** script budget.
+Decision: 10 KiB, not 9 KiB, because the content box measurement needs the room.
+The budget excludes the separately bounded per-document inert metadata, which
+is not executable code.
 
 ## Related Docs
 

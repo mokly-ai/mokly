@@ -1,0 +1,163 @@
+/* The Canvas viewer's change outcomes beside the added entry: the moved
+   entry and the removed entry. Each Canvas part keeps its own sheet; this
+   sheet holds only the layout and the states of these artboards. A view that
+   was never captured shows the shipped note of the previous version, from
+   its @mokly/ui stylesheet. */
+@import "../../packages/ui/src/preview-state/preview-state.css";
+
+/* ---- The previous version's label ----------------------------------- */
+
+/* The quiet label after a removed entry's status, in the section head. */
+.cv-previous-label {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* The Compared rail of a removed entry holds the version before alone, so
+   it draws no line between two versions. */
+.cv-refs[data-cv-removed]::before {
+  display: none;
+}
+
+/* ---- A long previous version ---------------------------------------- */
+
+/* A document taller than its frame is drawn at its top. The frame clips it,
+   and the thumb of its own scrollbar shows the share that the frame holds,
+   in the ink of the frame's own scheme. */
+.cv-rm-scrolled {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.cv-rm-thumb {
+  background: color-mix(in srgb, var(--mbk-screen-ink) 26%, transparent);
+  border-radius: 999px;
+  height: var(--cv-rm-thumb);
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 6px;
+}
+
+/* The Survey's questions keep one height in each frame, so the share that
+   the thumb shows depends on no wrapping; each ends with its answer box. */
+.cv-rm-scrolled .mbk-shot-sections > section {
+  height: 172px;
+  overflow: hidden;
+}
+
+.mbk-shot-field.mbk-shot-answer {
+  align-items: flex-start;
+  border-color: color-mix(
+    in srgb,
+    var(--mbk-screen-ink) 20%,
+    var(--mbk-screen-bg)
+  );
+  color: var(--mbk-screen-muted);
+  height: 72px;
+  margin: 0;
+  padding-top: 8px;
+}
+
+/* Timeline's seasons read across its desktop view, under one rule. */
+.mbk-shot-timeline {
+  border-top: 1px solid var(--mbk-screen-border);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+.mbk-shot-timeline h3 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+/* ---- A view without a previous version ------------------------------ */
+
+/* The place of a frame whose view was never captured keeps the frame's
+   size and label, but holds no document, so it draws no surface, ring,
+   shadow or size: a dashed outline on the canvas. */
+.cv-frame:has(.cv-rm-place) > .cv-frame-clip {
+  background: none;
+  box-shadow: none;
+  outline: 1.5px dashed
+    color-mix(in srgb, var(--cv-border-strong) 80%, transparent);
+  outline-offset: -1.5px;
+}
+
+.cv-frame:has(.cv-rm-place) .cv-frame-size {
+  display: none;
+}
+
+/* The note stands in the middle of the place, unscaled, so it reads at every
+   zoom, in the canvas's own ink. */
+.cv-rm-missing {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px;
+  position: absolute;
+}
+
+.cv-rm-missing > .mbk-preview-state {
+  min-width: 0;
+}
+
+.cv-rm-missing .mbk-preview-note {
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.45;
+  padding: 0;
+}
+
+/* The note's second sentence names the other viewport, so it is hidden
+   while a frame of that viewport shows, and shows once the Frames filter
+   hides that viewport. */
+.cv-rm-missing .mbk-preview-switch {
+  display: none;
+}
+
+.cv:has([data-cv-frames="desktop"]:not(:checked))
+  .cv-rm-missing[data-cv-missing="mobile"]
+  .mbk-preview-switch,
+.cv:has([data-cv-frames="mobile"]:not(:checked))
+  .cv-rm-missing[data-cv-missing="desktop"]
+  .mbk-preview-switch {
+  display: inline;
+}
+
+/* ---- A light-only document ------------------------------------------ */
+
+/* A document without a dark render keeps the Light palette of the Markdown
+   typography inside a Dark artboard, and fills its reading frame. */
+[data-cv-light-only] {
+  height: 100%;
+}
+
+/* ---- Compact layout ------------------------------------------------- */
+
+/* The compact layout shows one frame, so a frame of the other viewport
+   never shows beside the note, and its second sentence shows. The entry bar
+   keeps the label on a second line under the title and the status, clear of
+   the frame picker. */
+@container cv (width < 56.25rem) {
+  .cv-rm-missing .mbk-preview-switch {
+    display: inline;
+  }
+
+  .cv-entry-title:has(> .cv-previous-label) {
+    flex-wrap: wrap;
+    row-gap: 3px;
+  }
+
+  .cv-entry-title > .cv-previous-label {
+    flex-basis: 100%;
+    font-size: 11.5px;
+    line-height: 1.2;
+  }
+}

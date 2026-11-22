@@ -76,4 +76,4 @@ preview tokens.
 
 - [Viewer semantic palette](./mokly-viewer-palette.md)
 - [Viewer appearance](./mokly-viewer-appearance.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)

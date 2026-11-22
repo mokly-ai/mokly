@@ -36,7 +36,7 @@ Removed-content requests are limited to the generation that the index's
 removed page or document, and the snapshot documents beneath that
 generation's permitted sides. There is no parallel vanilla Browse or preview runtime.
 
-The frame probe is `client/frame-probe.js`: React-free, at the 9,216-byte cap
+The frame probe is `client/frame-probe.js`: React-free, at the 10,240-byte cap
 of the [frame probe contract](./mokly-frame-probe.md), and built by the
 [frame package](./mokly-frame-package.md). It runs inside consumer documents
 under the [frame adapter](./mokly-frame-adapter.md) and shares nothing with the

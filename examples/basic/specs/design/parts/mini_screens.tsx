@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import { HighlightLayer } from "../components/parts/highlight.js";
 
 import { DesignLink } from "./design_navigation.js";
-import { DESTINATIONS } from "./destinations.js";
 import { MiniInstances, type MiniForm } from "./mini_views.js";
 
 interface MiniScreenProps {
@@ -69,10 +69,12 @@ function WelcomeSections({ revised }: { revised?: boolean | undefined }) {
   );
 }
 
-/** Welcome's link to the Details screen, which a comparison draws inert. */
+/**
+ * Welcome's link to Details' Canvas artboard, which a comparison draws inert.
+ */
 function WelcomeLink({ inert }: { inert?: boolean | undefined }) {
   return (
-    <DesignLink to={inert ? undefined : DESTINATIONS.details}>
+    <DesignLink to={inert ? undefined : CANVAS_PAGES.added}>
       <span className="mbk-shot-link">Open the details screen</span>
     </DesignLink>
   );
@@ -176,42 +178,6 @@ export function MiniWelcome({
 }
 
 /**
- * Welcome's long content for a drawn scroll position, always inside a
- * comparison and so without a working link. The introduction and every
- * section keep one fixed height and clip what does not fit, so an offset drawn
- * in CSS lands on the same rows whatever the text wrapping, and the reworded
- * section moves nothing else.
- */
-export function WelcomeRows({ revised }: { revised?: boolean | undefined }) {
-  return (
-    <div className="mbk-shot-rows">
-      <div className="mbk-shot-hero">
-        <WelcomeIntroduction inert revised={revised} />
-      </div>
-      <WelcomeSections revised={revised} />
-    </div>
-  );
-}
-
-/** Welcome as one long page of fixed-height rows below its navigation bar. */
-export function MiniWelcomePage({
-  compact,
-  revised,
-}: {
-  compact?: boolean | undefined;
-  revised?: boolean | undefined;
-}) {
-  return (
-    <div className="mbk-shot mbk-shot--page">
-      <div className="mbk-shot-nav">
-        {compact ? "Menu" : "Example navigation"}
-      </div>
-      <WelcomeRows revised={revised} />
-    </div>
-  );
-}
-
-/**
  * Miniature depiction of the example Details fragment, with the Action and
  * the Toolbar that the real screen renders. An inert Details carries no link,
  * as on the canvas of another design family.
@@ -226,7 +192,7 @@ export function MiniDetails({ compact, inert }: MiniScreenProps) {
       <MiniInstances
         form="details"
         link={
-          <DesignLink to={inert ? undefined : DESTINATIONS.welcome}>
+          <DesignLink to={inert ? undefined : CANVAS_PAGES.overview}>
             <span className="mbk-shot-link">Return to welcome</span>
           </DesignLink>
         }

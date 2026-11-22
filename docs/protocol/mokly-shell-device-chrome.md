@@ -1,6 +1,6 @@
-# Shell Device Chrome And Preview Scheme
+# Shell Canvas Frames, Preview Scheme And Compact Layout
 
-Status: The canvas frames, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
+Status: The canvas frames, a use case's step frames included, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
 
 ## Canvas Frames
 
@@ -14,13 +14,18 @@ side by side, at one zoom.
   hairline ring and a soft shadow, and no bezel, notch or browser bar. A
   desktop frame is 1280 × 800 CSS pixels and a mobile frame 390 × 844. The
   frame holds its document at its nominal size and scales it with the zoom.
-  The document scrolls inside the frame. A component's frame holds a saved
-  variant's document at the document's own size.
+  The document scrolls inside the frame. A component's frame holds the
+  document of its own example or of a saved variant at the document's own
+  size.
 - **Label** — above the frame's left edge, in the mono face: the glyph of the
   frame's kind and the frame's name. A screen's frame is named by its viewport
   and its scheme, such as `Desktop · Light`. A component's frame is named by
-  its saved variant and its scheme, such as `Default · Light`. A reading frame
-  is named by its source file, such as `payment-terms.md`. Where one frame
+  its saved variant and its scheme, such as `Default · Light`. The frame of a
+  component's own example is named by the component's title and its scheme,
+  such as `Action · Light`. A reading frame
+  is named by its source file, such as `payment-terms.md`. A step frame is
+  named by its step, not by its viewport and scheme: the step's number in a
+  dark tag, which reads as `Step 1`, and the step's title. Where one frame
   stands for the entry, as in the compact layout, the entry's slug leads the
   name: `welcome · Mobile · Light`. The label of the frame that holds the selection,
   a selected instance or the frame itself, reads in the signal colour.
@@ -28,64 +33,21 @@ side by side, at one zoom.
   CSS pixels, such as `1280 × 800`. The size tag stays muted when the label
   takes the signal colour. A frame too narrow on the canvas for its label and
   its size tag keeps the label and drops the size tag.
-- **Reading frame** — the one frame of a page or a Markdown document. It shows
-  a document in the shell's Markdown typography, and a page as its one
-  document. Its document reflows to the frame's width, so it has no size tag.
-  Decision: one reading frame, not device frames, because a page and a
-  document have no viewport.
+- **Reading frame** — the one frame of a page or a Markdown document, current
+  or removed. It shows a document in the shell's Markdown typography, and a
+  page as its one document. Its document reflows to the frame's width, so it
+  has no size tag. Decision: one reading frame, not device frames, because a
+  page and a document have no viewport.
+- **Step frame** — the frame of one use-case step: a desktop or a mobile frame,
+  for the viewport that the Frames filter chooses. The step's title in the
+  label is a link, with a chevron, that opens the step's screen. The link's
+  accessible name names that screen. The step's description reads muted below
+  the label, and a description too long for the frame ends in an ellipsis. No
+  slug leads a step frame's name, also in the compact layout.
 - **Comparison** — in a comparison, a frame holds both versions as its compare
   mode draws them. In Side by side, each of the compared frame's two versions
   stands in its own frame, whose label starts with a `Before` or a `Current`
   tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode.
-
-## Device Chrome
-
-The Canvas screens do not draw a use-case step or a removed entry's previous
-version. These keep the device frames below.
-
-- **Phone frame** — 390×844, 12px bezel padding, a `--mbk-device-body` body,
-  46px radius, floating notch (108×30 at top 22px), a 36px-radius screen that
-  is white unless the dark scheme is selected, and a bottom home pill (128×4).
-  The screen is a column: a reserved status band followed by the embedded
-  mobile fragment, which takes the remaining height and rounds only its bottom
-  corners. The notch and home pill are decorative, hidden from accessibility
-  semantics, and never take pointer input, in both the design library and the
-  runtime shell. Preview links remain clickable where the home pill overlaps
-  the embedded document.
-- **Phone status band** — the top 44px of the screen, padded `14px 28px 0` so
-  its content clears the notch: a `9:41` clock on the left and cellular, Wi-Fi,
-  and battery glyphs on the right. Text is 13.5px/600 in the screen ink
-  (`--chrome-ink`, or `--mbk-dark-screen-ink` when the screen is dark) with
-  tabular numerals; glyphs are 16×11 except the 22×11 battery, drawn with
-  `currentColor` on their own viewBoxes. The band is device chrome, so it
-  reserves space above the fragment rather than covering screen content.
-- **Browser frame** — width 100%, max-width 1180px, height 760px, strong
-  hairline border, 8px radius. Its 40px bar holds three traffic lights
-  (`--mbk-device-light-close`, `--mbk-device-light-minimise`, and
-  `--mbk-device-light-expand`), a monospace address pill (copies the
-  address on click, showing a `URL copied` toast), and the expand toggle.
-- **Address pill** — the address truncates with an ellipsis and the pill ends
-  with a 13px stroked copy icon that holds its size, muted until the pill is
-  hovered and drawn in the accent then.
-- **Expand toggle** — a 26px bordered button holding a 13px stroked
-  outward-arrow icon, sized with the address pill's copy icon so neither
-  control outweighs the other. Expanding fixes the frame to `inset: 2.5vh 2.5vw`
-  at overlay z-index over the `--chrome-scrim` scrim of the
-  [semantic palette](./mokly-viewer-palette.md#swatches), locks body scroll,
-  and swaps the icon for its inward-arrow collapse counterpart; Escape or
-  clicking outside collapses it. Only one frame expands at a time. An
-  expanded frame that leaves the page, such as a use-case step that a narrow
-  shell shows in a phone frame, collapses, so no scrim stays.
-- **Use-case flow** — vertical numbered steps (32px accent number tiles)
-  joined by a 2px connector line, each with title, description, a
-  `This screen in the catalogue: <title> →` link, and one device frame
-  indented under the step head: the step screen's desktop view in a browser
-  frame (height 640px), or, while the shell is at most 760px wide, its mobile
-  view in a phone frame. Crossing that width while the flow is open swaps
-  every step's frame.
-- **Document pane** — a bordered, 12px-radius pane holding a removed page's
-  or document's previous version. A document has no viewport controls and
-  follows the Appearance control between its light and dark renders.
 
 ## Color Scheme
 
@@ -93,9 +55,9 @@ The interface appearance colours the chrome: the canvas, the panels, the
 section, and each frame's label, size tag and ring. A canvas frame's document
 shows the view of the frame's own scheme, whatever the interface appearance, so
 a screen shows its light and dark views at once. In a standalone catalogue, a
-document's reading frame and a device frame show the scheme of the interface
-appearance, and a page's reading frame shows its one document. An embedded
-root keeps the preview scheme apart from its interface appearance, as
+document's reading frame shows the scheme of the interface appearance, and a
+page's reading frame shows its one document. An embedded root keeps the
+preview scheme apart from its interface appearance, as
 [mokly-viewer-appearance.md](./mokly-viewer-appearance.md) describes.
 
 - **Control** — a standalone catalogue carries one Appearance selector in the
@@ -112,47 +74,25 @@ root keeps the preview scheme apart from its interface appearance, as
   [preview tokens](./mokly-viewer-palette.md#preview-tokens). Its ring and
   shadow follow the interface appearance, so its edge stays visible on the
   canvas in both appearances.
-- **Dark device screen** — a dark device screen uses two tokens:
-  `--mbk-dark-screen-bg` for its surface and `--mbk-dark-screen-ink` for text
-  and glyphs. There is no third dark token: the secondary dark tones
-  (status-band ink, home pill, screen hairline, and the secondary ink, muted
-  text and borders of the depicted screen content) are `color-mix` blends of
-  those two. Depicted screen links use the dark link values of the preview
-  tokens.
-- **Containment** — dark paints the phone screen surface, including its
-  status-band ink, its home pill, and the fragment it holds, and the browser
-  viewport surface. Phone hardware keeps its fixed colors. The browser bar,
-  address pill and shell surfaces follow interface appearance; preview scheme
-  alone does not change them. Traffic-light artwork keeps its fixed colors.
-- **Screen edge** — a dark screen inside the near-black phone body would lose
-  its edge, so the phone screen carries a 1px inset hairline mixed from the two
-  dark tokens, which the embedded document cannot occlude:
-  `color-mix(in srgb, var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg))`.
-  The browser viewport needs none; its light bar already draws that edge.
-- **Light-only screens** — on the canvas, a screen with no dark view has its
+- **Light-only views** — on the canvas, a screen with no dark view has its
   Light frames alone, and the Frames filter's Dark toggle reads `Light only`.
-  A device frame keeps its light view under a dark appearance and states the
-  fallback in its label, which reads `MOBILE — LIGHT ONLY` or
-  `DESKTOP — LIGHT ONLY`. The note is the lighter-weight tail of the same
-  uppercase label, not a separate badge. A use-case step frame carries the
-  same fallback state but has no label, so it shows no scheme caption.
+  A use-case step whose screen has no dark view keeps its Light view while
+  Dark is chosen, and its label adds `Light only`. A Markdown document with no
+  dark document keeps its light document in its reading frame under Dark. The
+  reading frame's label then adds `Light only` after the file name, such as
+  `payment-terms.md · Light only`.
 - **Comparisons** — a comparison on a canvas frame compares the views of that
-  frame's viewport and scheme. Light-only comparisons in device frames name
-  their fallback, and dark styling stays contained within device screens.
+  frame's viewport and scheme.
 
 ## Responsive Behavior
 
-The shell has one layout breakpoint at **56.25rem (900px)**, one panel step at
-**73.75rem (1180px)**, and one device breakpoint at **760px**:
+The shell has one layout breakpoint at **56.25rem (900px)** and one panel step
+at **73.75rem (1180px)**:
 
 - At or above 900px, the catalogue and the right panel float over the canvas,
   under the [canvas stage](./mokly-shell-canvas-stage.md#canvas). Below
   1180px, the floating panels narrow.
 - Below 900px, the shell uses the [compact layout](#compact-layout).
-- At or below 760px, each use-case step shows its mobile view in a phone frame,
-  the phone frame scales within the available width and keeps its 390:844
-  aspect ratio, the browser frame drops to 560px height, and flow connector
-  lines hide.
 
 `prefers-reduced-motion: reduce` disables shell transitions.
 
@@ -169,20 +109,26 @@ frame at a time:
 - An entry bar over the top of the canvas names the entry: its title tag, its
   `Component` kind tag, and its change status. A frame picker, a native select
   named `Frame`, stands at the bar's end and lists the entry's shown frames.
+  A use case's picker lists its steps by number and title, such as
+  `1 · Welcome`. The bar and its picker stay while the selected entry's
+  preview loads or failed.
 - The canvas shows the picked frame alone, large enough to read. A screen
   opens on its Mobile · Light frame, or on its first shown frame while the
-  Frames filter hides that one. A variant set shows the whole set until a
-  selection picks a frame, and then shows that frame alone with the picker. A
-  reading frame has no picker. It takes the canvas width and reflows its
-  document instead of scaling it.
+  Frames filter hides that one. A use case opens on its first step. A variant
+  set shows the whole set until a selection picks a frame, and then shows that
+  frame alone with the picker. A reading frame has no picker. It takes the
+  canvas width and reflows its document instead of scaling it.
 - The zoom pill is absent. A pinch zooms the canvas, and the dock's Fit
   refits the shown frame to the canvas.
 - The dock floats at the bottom centre of the canvas: a group named
   `Canvas controls` with 44px targets. It holds Catalogue, which opens the
   catalogue sheet; the right panel's current tab, Inspect or Changes, which
-  names what a tap on the frame does and opens the panel sheet; and Fit. With
-  nothing selected, it holds Catalogue alone. The dock hides while a sheet is
-  open.
+  names what a tap on the frame does and opens the panel sheet; and Fit. Fit
+  shows only while the canvas holds a section, as the
+  [zoom pill](./mokly-shell-canvas-stage.md#canvas) does. So while the
+  selected entry's preview loads or failed, the dock holds Catalogue and the
+  current tab. With nothing selected, the dock holds Catalogue alone. The dock
+  hides while a sheet is open.
 - While an instance is selected, a pill above the dock names the selection and
   opens the panel sheet. The pill hides while a sheet is open.
 - The top bar's menu button opens the catalogue sheet, and closes an open

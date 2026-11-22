@@ -30,7 +30,7 @@ export function ScreenUsage() {
 const CONSUMER_VIEWS = 4;
 
 /** The number of an entry's instances of one component, by its records. */
-function instancesOf(
+export function instancesOf(
   records: Readonly<Record<string, CanvasInstance>>,
   component: string,
 ): number {
@@ -40,7 +40,7 @@ function instancesOf(
 }
 
 /** A consumer that uses a component itself, and the artboard that opens it. */
-function consumer(
+export function usageConsumer(
   title: string,
   to: CanvasDestination,
   instances: number,
@@ -57,42 +57,66 @@ function consumer(
   };
 }
 
-/** The screens that render a component, each opening its Canvas artboard. */
+/**
+ * The artboards of Welcome and Details that show their first instance of a
+ * component selected: a Used by link opens the owning screen with its instance
+ * selected, as the component explorer contract says.
+ */
+const SELECTED_IN: Readonly<
+  Record<string, { welcome: CanvasDestination; details: CanvasDestination }>
+> = {
+  [COMPONENT_IDENTITIES.action.title]: {
+    welcome: CANVAS_PAGES.selection,
+    details: CANVAS_PAGES.addedWelcome,
+  },
+  [COMPONENT_IDENTITIES.toolbar.title]: {
+    welcome: CANVAS_PAGES.selectionToolbar,
+    details: CANVAS_PAGES.addedToolbar,
+  },
+};
+
+/**
+ * The screens that render a component, each opening the artboard that shows
+ * its instance selected.
+ */
 function screenConsumers(component: string): UsageRow[] {
+  const selected = SELECTED_IN[component];
+  if (selected === undefined)
+    throw new Error(`No selection artboard for ${component}`);
   return [
-    consumer(
+    usageConsumer(
       "Welcome",
-      CANVAS_PAGES.overview,
+      selected.welcome,
       instancesOf(WELCOME_INSTANCES, component),
     ),
-    consumer(
+    usageConsumer(
       "Details",
-      CANVAS_PAGES.added,
+      selected.details,
       instancesOf(DETAILS_INSTANCES, component),
     ),
   ];
 }
 
 /**
- * The Usage section of the Action in the shipped list: the entries that use
- * it, each opening its Canvas artboard. Welcome and Details render an Action
- * and a Toolbar with two Actions, and the Toolbar renders its two Actions.
+ * The entries that use the Action, each opening the artboard that shows its
+ * first Action selected. Welcome and Details render an Action and a Toolbar
+ * with two Actions, and the Toolbar renders its two Actions.
  */
-export function ActionUsage() {
+export function actionUsedBy(): UsageRow[] {
   const action = COMPONENT_IDENTITIES.action.title;
-  return (
-    <UsageList
-      affected={[]}
-      usedBy={[
-        ...screenConsumers(action),
-        consumer(
-          COMPONENT_IDENTITIES.toolbar.title,
-          CANVAS_PAGES.componentSetToolbar,
-          instancesOf(TOOLBAR_INSTANCES, action),
-        ),
-      ]}
-    />
-  );
+  return [
+    ...screenConsumers(action),
+    usageConsumer(
+      COMPONENT_IDENTITIES.toolbar.title,
+      CANVAS_PAGES.componentSetPrimary,
+      instancesOf(TOOLBAR_INSTANCES, action),
+    ),
+  ];
+}
+
+/** The Usage section of the Action in the shipped list: its consumers. */
+export function ActionUsage() {
+  return <UsageList affected={[]} usedBy={actionUsedBy()} />;
 }
 
 /** The Usage section of the Toolbar: Welcome and Details render one each. */

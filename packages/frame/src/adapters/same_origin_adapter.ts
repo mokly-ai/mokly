@@ -52,6 +52,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
             list: () => runtime.__list(),
             scroll: (key) => runtime.__scroll(key),
             boxModel: (key) => runtime.__boxModel(key),
+            contentBox: () => runtime.__contentBox(),
             highlight: (keys, mode) => runtime.__highlight(keys, mode),
             subscribe,
             updateUsage(next) {

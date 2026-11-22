@@ -16,8 +16,17 @@ import type { CanvasFrameSpec } from "./frames.js";
 /** A compare mode of the Changes tab. */
 type CompareMode = CompareModesProps["mode"];
 
-/** The entry's change status, as the section head and the entry bar show it. */
-function EntryStatus({ entry, name }: { entry: CanvasEntry; name: string }) {
+/**
+ * The entry's change status, as the section head and the entry bar show it,
+ * also the entry bar of a stage that holds no section.
+ */
+export function EntryStatus({
+  entry,
+  name,
+}: {
+  entry: CanvasEntry;
+  name: string;
+}) {
   const instance = useDesignInstance(name);
   return entry.status === undefined ? null : (
     <changeStatusBadge.Component
@@ -27,8 +36,11 @@ function EntryStatus({ entry, name }: { entry: CanvasEntry; name: string }) {
   );
 }
 
-/** The component kind tag beside a component's title. */
-function KindTag({ entry }: { entry: CanvasEntry }) {
+/**
+ * The component kind tag beside a component's title, in the section head and
+ * the entry bar, also the entry bar of a stage that holds no section.
+ */
+export function KindTag({ entry }: { entry: CanvasEntry }) {
   return entry.kind === "component" ? (
     <span className="cv-kind-tag">
       <CanvasGlyph name="component" size={13} />
@@ -50,13 +62,14 @@ function PickerGlyph({ glyph }: { glyph: "component" | "desktop" | "mobile" }) {
  * The frame picker of the compact form: a native select of the entry's
  * frames over a drawn pill, which shows the picked frame in place, with the
  * picked screen frame's viewport glyph, or a variant set's component glyph.
+ * A use case's picker lists its steps, one shown frame each.
  */
-function FramePicker({
+export function FramePicker({
   frames,
   kind,
   picked,
 }: {
-  frames: readonly CanvasFrameSpec[];
+  frames: readonly Pick<CanvasFrameSpec, "id" | "label">[];
   kind: CanvasEntry["kind"];
   picked: string;
 }) {
@@ -115,6 +128,11 @@ interface CanvasStageProps {
    * another frame's pair in place.
    */
   compare?: CompareMode | undefined;
+  /**
+   * A removed entry's quiet label after its status, such as `Showing
+   * previous version`, in the section head and the compact entry bar.
+   */
+  previous?: ReactNode;
 }
 
 /**
@@ -133,11 +151,16 @@ export function CanvasStage({
   pan,
   pickable = frames,
   picked: pick,
+  previous,
   selected,
   view,
   zoom,
 }: CanvasStageProps) {
   const picked = pick ?? (entry.kind === "screen" ? "mobile-light" : undefined);
+  const label =
+    previous === undefined ? null : (
+      <span className="cv-previous-label">{previous}</span>
+    );
   const section = (
     <div className="cv-section" data-cv-kind={entry.kind}>
       <div className="cv-section-head">
@@ -145,6 +168,7 @@ export function CanvasStage({
         <KindTag entry={entry} />
         <span className="cv-path-chip">{entry.path}</span>
         <EntryStatus entry={entry} name="section-status" />
+        {label}
       </div>
       <div
         className="cv-frames"
@@ -172,6 +196,7 @@ export function CanvasStage({
           <span className="cv-title-tag">{entry.title}</span>
           <KindTag entry={entry} />
           <EntryStatus entry={entry} name="entry-status" />
+          {label}
         </span>
         {picked === undefined || entry.kind === "document" ? null : (
           <FramePicker frames={pickable} kind={entry.kind} picked={picked} />
@@ -234,6 +259,7 @@ function StageFrame({
         {...optional("side", frame.side)}
         {...optional("before", frame.before)}
         {...optional("variant", frame.variant)}
+        {...(frame.lightOnly ? { lightOnly: true } : {})}
         {...(selected ? { selected } : {})}
         {...optional("overlay", overlay ?? undefined)}
       >

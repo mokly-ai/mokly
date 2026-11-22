@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 import {
   computedStyle,
   darkSurface,
-  designHomeRow,
   desktopFrame,
   expectSchemeSelected,
   mobileFrame,
@@ -135,46 +134,6 @@ test("view controls retain mounted component frames", async ({ page }) => {
 
   await mobile?.dispose();
   await desktop?.dispose();
-});
-
-test("a light-only screen keeps light frames and says so", async ({ page }) => {
-  await page.goto("/view/example/screens/welcome/");
-  await chooseScheme(page, "dark");
-  await page.fill("[data-mokly-search]", "home");
-  await page.click(designHomeRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Home");
-
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /design\/browse\/views\/home\/index\.mobile\.html$/,
-  );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /design\/browse\/views\/home\/index\.desktop\.html$/,
-  );
-  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
-    "data-color-scheme-fallback",
-    "",
-  );
-  const note = page.locator(".mbk-frame-mobile .mbk-frame-scheme-note");
-  await expect(note).toBeVisible();
-  await expect(note).toHaveText("— Light only");
-  expect(
-    await computedStyle(
-      page,
-      ".mbk-frame-mobile .mbk-frame-label",
-      "textTransform",
-    ),
-  ).toBe("uppercase");
-  await expect(
-    page.locator(".mbk-frame-desktop .mbk-frame-scheme-note"),
-  ).toBeVisible();
-  expect(
-    await overlayStyle(page, ".mbk-frame-mobile .phone-screen", "boxShadow"),
-  ).toBe("none");
-
-  await chooseScheme(page, "light");
-  await expect(note).toBeHidden();
 });
 
 test("use-case steps follow the selected scheme without a caption", async ({

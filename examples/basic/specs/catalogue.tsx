@@ -64,7 +64,7 @@ function Welcome({ compact }: { compact: boolean }) {
         </MockLink>
       </p>
       <p>
-        <MockLink to="design/browse/views/home">
+        <MockLink to="design/canvas/overview">
           See the Mokly shell design
         </MockLink>
       </p>

@@ -1,6 +1,6 @@
 /* Documents on the design stage: the Markdown documents Mokly renders in the
-   shell's own typography and palette, and the invoice that the moved
-   screen's comparison depicts. */
+   shell's own typography and palette, and the invoice that the Canvas moved
+   outcome depicts. */
 
 /* ---- Markdown documents ----------------------------------------------- */
 
@@ -87,15 +87,6 @@
 .mbk-markdown th {
   background: var(--chrome-bg);
   font-weight: 650;
-}
-
-.mbk-shell--mobile .mbk-markdown {
-  font-size: 14px;
-  padding: 22px 18px 28px;
-}
-
-.mbk-shell--mobile .mbk-markdown h1 {
-  font-size: 22px;
 }
 
 /* ---- Invoice --------------------------------------------------------- */

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { FramesFilterProps } from "../../library/inspector/frames-filter.js";
 import { SUBJECTS, type ScreenSubject } from "../../parts/subjects.js";
+import type { CatalogueTag } from "../../parts/tags.js";
 
 import type { CanvasDestination } from "./destinations.js";
 import type { CanvasEntry } from "./entries.js";
@@ -52,6 +53,8 @@ export interface ScreenInspectState<Id extends string> {
   initial?: InspectFoldName | "frames" | "selection" | undefined;
   /** The Frames section: the shown frames, and the filter's state. */
   frames?: InspectFramesState | undefined;
+  /** The tag that the search field enters, whose chip the Tags row marks. */
+  activeTag?: CatalogueTag | undefined;
 }
 
 /** What a screen's Inspect shows of the screen itself. */
@@ -71,6 +74,7 @@ interface ScreenInspectSubject<Id extends string> {
  * folded sections that hold its props, its usage, and its component tree.
  */
 export function ScreenInspect<Id extends string>({
+  activeTag,
   design,
   entry,
   frames = ALL_FRAMES,
@@ -90,7 +94,7 @@ export function ScreenInspect<Id extends string>({
       <InspectHead
         description={subject.description}
         entry={entry}
-        rows={<SubjectRows subject={id} />}
+        rows={<SubjectRows activeTag={activeTag} subject={id} />}
         source={subject.source}
       />
       <InspectRationale noun="screen" text={subject.rationale} />

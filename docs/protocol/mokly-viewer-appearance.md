@@ -29,18 +29,13 @@ changes the interface appearance. A screen with no dark view holds only its
 Light frames, and the Frames filter's Dark toggle is disabled and reads Light
 only. A Markdown document opens as one reading frame in the preview colour
 scheme, so standalone Browse shows the document in the catalogue's
-appearance. A page has no scheme axis and keeps the Light context.
-
-A view outside the canvas stage, such as a use-case flow, shows one preview
-colour scheme. In standalone Browse that scheme equals the effective
-appearance: Dark shows each dark view where it exists, so the view's device
-screens, component samples and comparisons change together. A view with no
-dark view keeps its light frames and the fallback caption when the catalogue
-has dark views elsewhere; a catalogue with no dark views shows light previews
-with no captions under a dark interface. That light-only fallback does not
-change the document's effective Dark appearance: the shell renders under the
-Dark appearance while its preview selection independently normalizes to the
-available Light views.
+appearance. A view with no dark view keeps its light frames and the fallback
+caption when the catalogue has dark views elsewhere; a catalogue with no dark
+views shows light previews with no captions under a dark interface. That
+light-only fallback does not change the outer document's effective Dark
+appearance: the shell renders under the Dark appearance while its preview
+selection independently normalizes to the available Light views. A page has no
+scheme axis and keeps the Light context.
 
 In an embedded root, `selection.colorScheme` keeps its preview meaning and
 stays independent of `theme`: a dark interface around a light preview and the
@@ -59,15 +54,13 @@ On the canvas stage, a screen and a component show the frames of both
 schemes, so the Appearance control marks no change for them. Instead, a
 [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) toggle that hides
 a changed view carries the shared change dot and names `Other theme changed`
-or `Other viewport changed`. A Markdown document and a view outside the canvas
-stage show one preview scheme. There, a change confined to another preview
-scheme marks the standalone Appearance selector with the shared change dot and
-an `Other theme changed` description, and the viewport dropdown keeps the
-separate other-viewport indicator. Embedded viewers mark their Dark preview
-control instead. The active workspace supplies these marks from one
-entry-owned evidence and view resolution, including Light fallback and later
-detail updates. Leaving a workspace clears its mark; no control depends on a
-second evidence fetch.
+or `Other viewport changed`. A Markdown document shows one preview scheme.
+There, a change confined to another preview scheme marks the standalone
+Appearance selector with the shared change dot and an `Other theme changed`
+description. Embedded viewers mark their Dark preview control instead. The
+active workspace supplies these marks from one entry-owned evidence and view
+resolution, including Light fallback and later detail updates. Leaving a
+workspace clears its mark; no control depends on a second evidence fetch.
 
 ## React API
 
@@ -223,5 +216,5 @@ the design screens of the appearance and their owning folders.
 - [Viewer semantic palette](./mokly-viewer-palette.md)
 - [Standalone appearance control](./mokly-viewer-appearance-standalone.md)
 - [Viewer preview palette](./mokly-viewer-palette-preview.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
 - [Embeddable viewer](./mokly-viewer.md)

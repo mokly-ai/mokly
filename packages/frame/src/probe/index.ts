@@ -73,21 +73,27 @@ const receive = (event: MessageEvent<unknown>): void => {
   if (requestId <= lastRequest) return;
   lastRequest = requestId;
   try {
-    if (type === "list") {
-      send({ type: "boundaries", requestId, boundaries: runtime.__list() });
-      return;
-    }
-    if (type === "measure") {
-      send({
+    if (type === "list")
+      return send({
+        type: "boundaries",
+        requestId,
+        boundaries: runtime.__list(),
+      });
+    if (type === "measure")
+      return send({
         type: "box-model",
         requestId,
         boxModel: runtime.__boxModel(message.key),
       });
-      return;
-    }
+    if (type === "measure-content")
+      return send({
+        type: "content-box",
+        requestId,
+        contentBox: runtime.__contentBox(),
+      });
     if (type === "highlight") runtime.__highlight(message.keys, message.mode);
-    if (type === "scroll-to") runtime.__scroll(message.key);
-    if (type === "subscribe") runtime.__subscribe(message.events);
+    else if (type === "scroll-to") runtime.__scroll(message.key);
+    else if (type === "subscribe") runtime.__subscribe(message.events);
     send({ type: "ack", requestId });
   } catch (error) {
     send({ type: "error", requestId, code: inspectionError(error) });

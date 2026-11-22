@@ -35,7 +35,7 @@ export type MessageBody =
       type: "dispose";
     }
   | {
-      type: "list" | "ack";
+      type: "list" | "measure-content" | "ack";
       requestId: number;
     }
   | {
@@ -58,6 +58,11 @@ export type MessageBody =
       type: "box-model";
       requestId: number;
       boxModel: InstanceBoxModel | null;
+    }
+  | {
+      type: "content-box";
+      requestId: number;
+      contentBox: Box | null;
     }
   | {
       type: "subscribe";
@@ -95,6 +100,7 @@ export type HostMessage = Message & {
     | "highlight"
     | "scroll-to"
     | "measure"
+    | "measure-content"
     | "subscribe";
 };
 export type Message = MessageBody & {
@@ -172,25 +178,30 @@ export const validHostMessage = (
   const { type } = value;
   if (type === "hello" || type === "dispose") return shape(value, 4);
   if (!requestId(value.requestId)) return false;
-  if (type === "list") return shape(value, 5);
+  if (type === "list" || type === "measure-content") return shape(value, 5);
   if (type === "highlight")
     return (
       shape(value, 7) &&
-      array(value.keys, 1024) &&
-      value.keys.every(key) &&
-      unique(value.keys) &&
-      ["off", "highlight", "pick"].includes(value.mode as string) &&
-      (value.mode !== "off" || value.keys.length === 0)
+      uniqueList(value.keys, 1024, key) &&
+      (value.mode === "off"
+        ? !value.keys.length
+        : value.mode === "highlight" || value.mode === "pick")
     );
   if (!shape(value, 6)) return false;
   if (type === "scroll-to" || type === "measure") return key(value.key);
   return (
     type === "subscribe" &&
-    array(value.events, 5) &&
-    unique(value.events) &&
-    value.events.every((event) => EVENTS.includes(event as ProbeEventType))
+    uniqueList(value.events, 5, (event) =>
+      EVENTS.includes(event as ProbeEventType),
+    )
   );
 };
+const uniqueList = (
+  items: unknown,
+  max: number,
+  check: (item: unknown) => boolean,
+): items is unknown[] =>
+  array(items, max) && items.every(check) && unique(items);
 const validFrameMessage = (
   value: unknown,
   nonce?: string,
@@ -206,6 +217,11 @@ const validFrameMessage = (
       return messageFields(value, 1, true) && validBoundaries(value.boundaries);
     case "box-model":
       return messageFields(value, 1, true) && validBoxModel(value.boxModel);
+    case "content-box":
+      return (
+        messageFields(value, 1, true) &&
+        (value.contentBox === null || boxes([value.contentBox]))
+      );
     case "hover":
     case "click":
       return (

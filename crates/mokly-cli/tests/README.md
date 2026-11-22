@@ -18,21 +18,17 @@ runs it nightly and on manual dispatch. The default workspace tests and required
 verification gate exclude this target. Its runner and hang guards follow the
 [CI workflow contract](../../../docs/protocol/ci-workflow.md#design-attribution-matrix).
 
-The design behaviour target checks parents' own-props views, stacked frames,
-comparison headings tied to recorded changes, and the Checklist's Changes in
-the default workspace suite. It renders an isolated copy of the example
-catalogue and of those `@mokly/ui` sources.
+The design behaviour target checks parents' own-props views and the stacked
+frames of the Canvas comparisons in the default workspace suite. It renders an
+isolated copy of the example catalogue and of those `@mokly/ui` sources.
 Set `MOKLY_TEST_DESIGN_MUTATION` to inject one defect into that copy. Each
 value must fail its corresponding behaviour check:
 
-| Value            | Injected defect                                      |
-| ---------------- | ---------------------------------------------------- |
-| `own-props`      | Replace a parent's own destination prop.             |
-| `stack`          | Mark the Current layer as a Before layer.            |
-| `heading`        | Replace a comparison heading with incorrect text.    |
-| `checklist`      | Replace the Checklist's Changes with Action's story. |
-| `stack-swap`     | Swap Before and Current content in stacked previews. |
-| `heading-record` | Change a recorded reason without changing a heading. |
+| Value        | Injected defect                                    |
+| ------------ | -------------------------------------------------- |
+| `own-props`  | Replace a parent's own destination prop.           |
+| `stack`      | Mark the Current layer as a Before layer.          |
+| `stack-swap` | Swap Before and Current content in stacked frames. |
 
 The Serve terminal regression in
 [`serve_terminal_tests.rs`](./serve_terminal_tests.rs) is a Rust process test.

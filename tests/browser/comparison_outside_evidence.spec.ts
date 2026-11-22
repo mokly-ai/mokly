@@ -4,9 +4,9 @@
  * consuming component shows its consumed component's styles in Current
  * before any comparison. A changed component keeps its own sentence beside
  * its saved view's sentence under one file. A screen with an outside match
- * and an excluded-only screen repeat the copy and layout of
- * `design/components/states/shared-impact/style-outside` and
- * `design/changes/impact/styles/matched-excluded/excluded-only`.
+ * and an excluded-only screen repeat the copy and layout of the Canvas
+ * evidence designs `design/canvas/evidence/styles/unresolved` and
+ * `design/canvas/evidence/unchanged`.
  */
 
 import path from "node:path";
@@ -131,13 +131,13 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         ]);
       const served = await evidenceSpacing(evidence);
       await page.goto(
-        designUrl("design/components/states/shared-impact/style-outside", name),
+        designUrl("design/canvas/evidence/styles/unresolved", name),
       );
-      const card = page.locator("[data-workspace-evidence]");
+      const card = page.locator(".cv-evidence [data-workspace-evidence]");
       await expect(card.getByText(FILES_LEAD, { exact: true })).toBeVisible();
       const approved = await evidenceFiles(card);
       expect(approved.map(([, outcomes]) => outcomes[0]?.[0])).toEqual([
-        OUTSIDE_LEAD,
+        UNRESOLVED_LEAD,
       ]);
       const spacing = await evidenceSpacing(card);
       expect([spacing.sentence, spacing.styles]).toEqual([
@@ -166,18 +166,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeHidden();
       await expect(page.locator("[data-diff-stage]")).toBeHidden();
       await expect(page.locator(".mbk-diff-view h3")).toHaveCount(0);
-      await page.goto(
-        designUrl(
-          "design/changes/impact/styles/matched-excluded/excluded-only",
-          name,
-        ),
-      );
-      const card = page.locator(".mbk-comparison-details");
+      await page.goto(designUrl("design/canvas/evidence/unchanged", name));
+      const card = page.locator(".cv-evidence [data-workspace-evidence]");
       await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);
       await expect(card.locator("li")).toHaveCount(1);
-      await expect(
-        page.locator(".mbk-screen-head .mbk-entry-status"),
-      ).toHaveText("Unmodified");
     });
   });
 }

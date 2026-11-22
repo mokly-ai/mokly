@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 const SURVEY_SECTIONS = [
   ["How often did you open the catalogue?", "Daily, weekly, or now and then."],
   ["Which screens did you share?", "Welcome, Details, and the example tour."],
@@ -9,9 +11,17 @@ const SURVEY_SECTIONS = [
 
 /**
  * The Farewell fragment as it stood before the screen was removed. Links in a
- * previous version do nothing, so the historical content carries none.
+ * previous version do nothing, so the historical content carries none. On a
+ * branch where Farewell rendered a component, the component's picture
+ * follows its text.
  */
-export function MiniFarewell({ compact }: { compact?: boolean }) {
+export function MiniFarewell({
+  children,
+  compact,
+}: {
+  children?: ReactNode;
+  compact?: boolean;
+}) {
   return (
     <div className="mbk-shot">
       <div className="mbk-shot-pad">
@@ -24,6 +34,7 @@ export function MiniFarewell({ compact }: { compact?: boolean }) {
           from the navigation.
         </p>
         <p>See you next time.</p>
+        {children}
       </div>
     </div>
   );
@@ -79,9 +90,16 @@ export function MiniTimeline() {
 
 /**
  * A tall historical fragment. The preview keeps its own scrolling, so the
- * frame shows the top of the screen with the rest below it.
+ * frame shows the top of the screen with the rest below it. With its answer
+ * fields, each question ends with the box where a reader wrote the answer.
  */
-export function MiniSurvey({ compact }: { compact?: boolean }) {
+export function MiniSurvey({
+  answers = false,
+  compact,
+}: {
+  answers?: boolean;
+  compact?: boolean;
+}) {
   return (
     <div className="mbk-shot">
       <div className="mbk-shot-pad">
@@ -97,6 +115,11 @@ export function MiniSurvey({ compact }: { compact?: boolean }) {
                 {index + 1}. {question}
               </h3>
               <p>{answer}</p>
+              {answers ? (
+                <span className="mbk-shot-field mbk-shot-answer">
+                  Your answer
+                </span>
+              ) : null}
             </section>
           ))}
         </div>

@@ -1,4 +1,8 @@
-import { ComparisonEvidence } from "../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
+import {
+  ComparisonEvidence,
+  type EvidenceExclusions,
+  type EvidenceFiles,
+} from "../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { changeStepper } from "../../library/panels/change-stepper.js";
 import { compareModes } from "../../library/panels/compare-modes.js";
@@ -17,11 +21,23 @@ import { InspectSection } from "./inspect.js";
  * The version before is the branch point on the base, and the current
  * version is the branch. An entry that the branch added has no version
  * before, so its rail holds the current version alone, and a line says why.
+ * An entry that the branch removed has no current version, so its rail holds
+ * the version before alone, which the canvas shows, and a line says why.
  */
-function ChangesCompared({ added = false }: { added?: boolean }) {
+export function ChangesCompared({
+  added = false,
+  removed = false,
+}: {
+  added?: boolean;
+  removed?: boolean;
+}) {
   return (
     <InspectSection title="Compared">
-      <ol className="cv-refs" data-cv-added={added ? "" : undefined}>
+      <ol
+        className="cv-refs"
+        data-cv-added={added ? "" : undefined}
+        data-cv-removed={removed ? "" : undefined}
+      >
         {added ? null : (
           <li className="cv-ref" data-side="before">
             <span aria-hidden="true" className="cv-ref-dot" />
@@ -31,15 +47,22 @@ function ChangesCompared({ added = false }: { added?: boolean }) {
             </span>
           </li>
         )}
-        <li className="cv-ref" data-side="after">
-          <span aria-hidden="true" className="cv-ref-dot" />
-          <span className="cv-ref-side">Current</span>{" "}
-          <span className="cv-ref-name">This branch</span>
-        </li>
+        {removed ? null : (
+          <li className="cv-ref" data-side="after">
+            <span aria-hidden="true" className="cv-ref-dot" />
+            <span className="cv-ref-side">Current</span>{" "}
+            <span className="cv-ref-name">This branch</span>
+          </li>
+        )}
       </ol>
       {added ? (
         <p className="cv-hint">
           Added on this branch, so there is no base to compare.
+        </p>
+      ) : null}
+      {removed ? (
+        <p className="cv-hint">
+          Removed on this branch, so there is no current version to compare.
         </p>
       ) : null}
     </InspectSection>
@@ -48,19 +71,44 @@ function ChangesCompared({ added = false }: { added?: boolean }) {
 
 /**
  * The comparison details of today's inspector: the shipped evidence with one
- * sentence for each reason. The rail above names the base, so the evidence
- * leaves out its branch-point sentence.
+ * sentence for each reason, after the previous path of a moved entry, which
+ * the evidence names as the earlier side, then each changed file with its
+ * outcomes and the stylesheets that were examined and excluded. The rail
+ * above names the base, so the evidence leaves out its branch-point
+ * sentence.
  */
-function ChangesEvidence({
+export function ChangesEvidence({
+  excluded,
+  files,
+  initial,
+  mark = "data-workspace-evidence",
+  previousPath,
   reasons,
 }: {
+  /** The stylesheets that were examined and excluded. */
+  excluded?: EvidenceExclusions | undefined;
+  /** The changed files, each named once with its outcomes. */
+  files?: EvidenceFiles | undefined;
+  /** The panel opens scrolled to the comparison details. */
+  initial?: boolean | undefined;
+  /** The mark of the evidence: a whole-document page has its own. */
+  mark?: "data-page-evidence" | "data-workspace-evidence";
+  /** The path that a moved entry had at the branch point. */
+  previousPath?: string | undefined;
   reasons: readonly ChangeReasonKind[];
 }) {
   return (
-    <div className="cv-sec cv-evidence">
+    <div
+      className={
+        initial ? "cv-sec cv-evidence cv-initial" : "cv-sec cv-evidence"
+      }
+    >
       <ComparisonEvidence
         base=""
-        mark="data-workspace-evidence"
+        excluded={excluded}
+        files={files}
+        mark={mark}
+        previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
       />
     </div>
@@ -111,8 +159,10 @@ export function WelcomeChanges({
 
 /**
  * The Changes tab of Details, which the branch added, the second of its
- * changes: the stepper, whose Previous change opens Welcome in Changes, the
- * current version alone, and the compare modes reduced to Current.
+ * changes: the stepper, whose Previous change opens Welcome in Changes and
+ * whose Next change opens the moved Invoice in Changes, the current version
+ * alone, the compare modes reduced to Current, and the comparison details
+ * with the sentence of its reason.
  */
 export function DetailsChanges() {
   return (
@@ -122,6 +172,7 @@ export function DetailsChanges() {
         position={2}
         total={CHANGED_COUNT}
         previousDestination={C.changesCurrent}
+        nextDestination={C.moved}
       />
       <ChangesCompared added />
       <InspectSection title="Compare">
@@ -133,6 +184,7 @@ export function DetailsChanges() {
           destinations={{ current: C.addedChanges }}
         />
       </InspectSection>
+      <ChangesEvidence reasons={["added"]} />
     </>
   );
 }

@@ -1,3 +1,5 @@
+import type { Box } from "../frame_adapter.js";
+
 /** Viewport rectangles use edge tuples to share clipping across both measurers. */
 export type Edges = [left: number, top: number, right: number, bottom: number];
 export const edges = (rect: DOMRect): Edges => [
@@ -18,22 +20,41 @@ export const boundedPixel = (value: number, minimum = 0): number => {
   return value;
 };
 
+export const boundedBox = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Box => ({
+  x: boundedPixel(x, -1000000),
+  y: boundedPixel(y, -1000000),
+  width: boundedPixel(width),
+  height: boundedPixel(height),
+});
+
+export const combineEdges = (a: Edges, b: Edges, union = false): Edges =>
+  a.map((value, axis) =>
+    (axis < 2 === union ? Math.min : Math.max)(value, b[axis]!),
+  ) as Edges;
+
 /** Fixed descendants escape overflow until their actual containing block. */
 const fixedContainer = (style: CSSStyleDeclaration): boolean =>
-  [
-    style.transform,
-    style.translate,
-    style.rotate,
-    style.scale,
-    style.perspective,
-    style.filter,
-    style.backdropFilter,
-  ].some((value) => !!value && value !== "none") ||
-  /(transform|translate|rotate|scale|perspective|filter)/.test(
-    style.willChange,
+  containingBlockStyles.some(
+    (property) =>
+      (!!style[property] && style[property] !== "none") ||
+      style.willChange?.includes(property),
   ) ||
+  (!!style.backdropFilter && style.backdropFilter !== "none") ||
   /(paint|layout|strict|content)/.test(style.contain) ||
   style.contentVisibility === "auto";
+const containingBlockStyles = [
+  "transform",
+  "translate",
+  "rotate",
+  "scale",
+  "perspective",
+  "filter",
+] as const;
 
 /** Clip the measured node, retaining ancestor visibility even across fixed escapes. */
 export function clipNode(node: Node, bounds: Edges): Edges {

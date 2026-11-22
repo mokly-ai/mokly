@@ -139,14 +139,16 @@ of spelling them in source.
   that only the viewer uses: the frame session registry, `FrameError`,
   `frameUsage`, `cancelFrameMount`, `localFramePath`,
   `temporaryPreviewAdapter`, `clipNode`, the rectangle helpers, and the
-  `LinkActivation` type
+  `LinkActivation` type. `measureContentBox` measures a document without a
+  frame adapter.
 - [`src/frame_adapter.ts`](./src/frame_adapter.ts) — the public
   `FrameAdapter`, `FrameMount`, `MountedFrame`, and `FrameEvent` types, which
   the built-in adapters implement and `@mokly/viewer` re-exports
 - [`src/adapters/same_origin_adapter.ts`](./src/adapters/same_origin_adapter.ts)
   — `sameOriginAdapter`, the default adapter for script-disabled frames,
   `temporaryPreviewAdapter` for control previews, and `localFramePath` for
-  preview expiration checks
+  preview expiration checks. Both adapters measure instance box models and
+  document content boxes.
 - [`src/adapters/same_origin_mount.ts`](./src/adapters/same_origin_mount.ts) —
   `mountLocalDocument`, which owns the load and the session of one same-origin
   mount
@@ -164,7 +166,8 @@ of spelling them in source.
   shared core starts
 - [`src/adapters/post_message_adapter.ts`](./src/adapters/post_message_adapter.ts)
   — `postMessageAdapter`, the opt-in adapter for documents on a separate
-  origin
+  origin. It requests instance box models and document content boxes from
+  the probe.
 - [`src/adapters/message_transport.ts`](./src/adapters/message_transport.ts)
   — `messageTransport`, the bounded request and reply state of one
   cross-origin session
@@ -178,8 +181,8 @@ of spelling them in source.
   frame session registry, which shares private shell metadata with the
   same-origin adapter outside the public adapter contract
 - [`src/probe`](./src/probe/README.md) — the frame probe IIFE and
-  `probeRuntime`, the shared core for geometry, instance box models, hover,
-  click, picks, Escape, and navigation that both adapters run
+  `probeRuntime`, the shared core for geometry, instance box models, document
+  content boxes, hover, click, picks, Escape, and navigation
 - [`src/navigation`](./src/navigation) — the link rules that only the frame
   code uses: `frameLinkActivation` in `activation.ts`, `parseLogicalMarker`
   and `logicalMarker` in `logical.ts`, and `parseBrowsingTarget` in
@@ -193,6 +196,7 @@ of spelling them in source.
 
 - [Frame package contract](../../docs/protocol/mokly-frame-package.md)
 - [Frame adapter contract](../../docs/protocol/mokly-frame-adapter.md)
+- [Frame content box contract](../../docs/protocol/mokly-frame-content-box.md)
 - [Frame probe contract](../../docs/protocol/mokly-frame-probe.md)
 - [Frame probe wire protocol](../../docs/protocol/mokly-frame-probe-wire.md)
 - [Frame link navigation](../../docs/protocol/mokly-frame-link-navigation.md)

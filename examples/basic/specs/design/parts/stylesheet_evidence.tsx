@@ -47,15 +47,3 @@ export const PAGE_STYLE_COPY = {
   unresolved:
     "This change can apply anywhere on the page, so the page stays in Changes:",
 } as const;
-
-/** One outcome under a stylesheet: its lead sentence and the styles it names. */
-export interface StylesheetOutcome {
-  lead: string;
-  selectors: readonly string[];
-}
-
-/** A changed file named once, with the evidence that file retained. */
-export interface StylesheetEvidence {
-  path: string;
-  outcomes: readonly StylesheetOutcome[];
-}

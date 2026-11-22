@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 
-import { ControlsPanel } from "../../../../../../packages/ui/src/controls-panel/controls-panel.js";
+import {
+  ControlsPanel,
+  type ControlsAlert,
+  type ControlsStart,
+} from "../../../../../../packages/ui/src/controls-panel/controls-panel.js";
 import { PropFields } from "../../../../../../packages/ui/src/prop-field/prop-field.js";
 import { PropsMessage } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
 import { CONTROLS_COPY } from "../../components/controls/parts/copy.js";
@@ -19,75 +23,135 @@ export function ChooseVariant() {
 /**
  * One field of a saved variant's edit form, as the component's definition
  * declares its control: the prop, the control's label, its help, whether the
- * prop is optional and the variant leaves it out, and the native input that
- * holds the variant's value.
+ * prop is optional and the variant leaves it out, why its value is not
+ * valid, and the native input that holds the variant's value.
  */
-interface VariantField {
+export interface VariantField {
   name: string;
   label: string;
   description?: string | undefined;
   optional?: boolean | undefined;
   unset?: boolean | undefined;
+  error?: string | undefined;
   input: (id: string) => ReactNode;
 }
 
 /**
- * The Action's controls in the order of its definition in
- * `examples/basic/src/components/action`, with its saved variant Disabled's
- * values. The disabled flag, the corner radius, and the hint are optional,
- * and Disabled leaves out the hint.
+ * The values of the Action's props that a saved variant or an edit holds. An
+ * optional prop that the values leave out is unset.
  */
-const ACTION_DISABLED: readonly VariantField[] = [
-  {
-    name: "label",
-    label: "Label",
-    input: (id) => (
-      <input defaultValue="Continue" id={id} maxLength={80} type="text" />
-    ),
+export interface ActionValues {
+  label: string;
+  disabled?: boolean | undefined;
+  radius?: number | undefined;
+  tone: "primary" | "secondary";
+  hint?: string | undefined;
+}
+
+/** The saved props of the Action's saved variants Default and Disabled. */
+export const ACTION_SAVED = {
+  default: {
+    label: "Continue",
+    disabled: false,
+    radius: 8,
+    tone: "primary",
+    hint: "Continue when you’re ready.",
   },
-  {
-    name: "disabled",
-    label: "Disabled",
-    optional: true,
-    input: (id) => <input defaultChecked id={id} type="checkbox" />,
-  },
-  {
-    name: "radius",
-    label: "Corner radius",
-    description: CONTROLS_COPY.range(0, 32, 1),
-    optional: true,
-    input: (id) => (
-      <input
-        aria-describedby={`${id}-help`}
-        defaultValue={8}
-        id={id}
-        max={32}
-        min={0}
-        step={1}
-        type="number"
-      />
-    ),
-  },
-  {
-    name: "tone",
-    label: "Emphasis",
-    input: (id) => (
-      <select defaultValue="primary" id={id}>
-        <option value="primary">Primary</option>
-        <option value="secondary">Secondary</option>
-      </select>
-    ),
-  },
-  {
-    name: "hint",
-    label: "Hint",
-    optional: true,
-    unset: true,
-    input: (id) => (
-      <input defaultValue="" id={id} maxLength={120} type="text" />
-    ),
-  },
-];
+  disabled: { label: "Continue", disabled: true, radius: 8, tone: "primary" },
+} as const satisfies Record<string, ActionValues>;
+
+/** The bounds of the Action's corner radius, as its control declares them. */
+const RADIUS = { minimum: 0, maximum: 32, step: 1 } as const;
+
+/**
+ * The Action's controls in the order of its definition in
+ * `examples/basic/src/components/action`, holding the given values. The
+ * disabled flag, the corner radius, and the hint are optional. A corner
+ * radius outside its bounds keeps the entered value with its error.
+ */
+export function actionFields(
+  values: ActionValues,
+  invalid: { radius?: boolean } = {},
+): readonly VariantField[] {
+  const radiusError = invalid.radius
+    ? CONTROLS_COPY.numberError(RADIUS.minimum, RADIUS.maximum, RADIUS.step)
+    : undefined;
+  return [
+    {
+      name: "label",
+      label: "Label",
+      input: (id) => (
+        <input defaultValue={values.label} id={id} maxLength={80} type="text" />
+      ),
+    },
+    {
+      name: "disabled",
+      label: "Disabled",
+      optional: true,
+      unset: values.disabled === undefined,
+      input: (id) => (
+        <input
+          defaultChecked={values.disabled ?? false}
+          id={id}
+          type="checkbox"
+        />
+      ),
+    },
+    {
+      name: "radius",
+      label: "Corner radius",
+      description: CONTROLS_COPY.range(
+        RADIUS.minimum,
+        RADIUS.maximum,
+        RADIUS.step,
+      ),
+      optional: true,
+      unset: values.radius === undefined,
+      error: radiusError,
+      input: (id) => (
+        <input
+          aria-describedby={
+            radiusError === undefined ? `${id}-help` : `${id}-error`
+          }
+          aria-invalid={radiusError === undefined ? undefined : "true"}
+          defaultValue={values.radius ?? ""}
+          id={id}
+          max={RADIUS.maximum}
+          min={RADIUS.minimum}
+          step={RADIUS.step}
+          type="number"
+        />
+      ),
+    },
+    {
+      name: "tone",
+      label: "Emphasis",
+      input: (id) => (
+        <select defaultValue={values.tone} id={id}>
+          <option value="primary">Primary</option>
+          <option value="secondary">Secondary</option>
+        </select>
+      ),
+    },
+    {
+      name: "hint",
+      label: "Hint",
+      optional: true,
+      unset: values.hint === undefined,
+      input: (id) => (
+        <input
+          defaultValue={values.hint ?? ""}
+          id={id}
+          maxLength={120}
+          type="text"
+        />
+      ),
+    },
+  ];
+}
+
+/** The Action's controls with its saved variant Disabled's values. */
+const ACTION_DISABLED = actionFields(ACTION_SAVED.disabled);
 
 /** The Toolbar's one control, Title, with its saved variant Default's value. */
 const TOOLBAR_DEFAULT_FIELDS: readonly VariantField[] = [
@@ -112,15 +176,35 @@ export const VARIANT_FIELDS = {
 } as const;
 
 /**
+ * The state of an edit form: whether its props differ from the saved props,
+ * the alert above its fields, the status after a reset, and the start of
+ * editing. A static artboard runs no script, so Reset, the alert's action,
+ * and the action of a failed start each open the artboard of their outcome.
+ */
+export interface VariantEdit {
+  dirty?: boolean | undefined;
+  alert?: ControlsAlert | undefined;
+  restored?: string | undefined;
+  start?: ControlsStart | undefined;
+  resetHref?: string | undefined;
+  retryHref?: string | undefined;
+  startHref?: string | undefined;
+}
+
+/**
  * The shipped edit form of one saved variant: its title with its saved
  * props, Reset, which stays disabled until a prop changes, and its fields,
- * each in the registered prop field around its native input.
+ * each in the registered prop field around its native input. The edit's
+ * state adds the badge of edited props, an alert, the reset status, or the
+ * start of editing, which keeps the fields read-only.
  */
-function VariantControls({
+export function VariantControls({
+  edit = {},
   fields,
   id,
   title,
 }: {
+  edit?: VariantEdit | undefined;
   fields: readonly VariantField[];
   /** The prefix of the fields' ids, unique in the document. */
   id: string;
@@ -129,7 +213,13 @@ function VariantControls({
   const scope = useDesignInstance(id);
   return (
     <ControlsPanel
-      dirty={false}
+      dirty={edit.dirty ?? false}
+      {...optional("alert", edit.alert)}
+      {...optional("restored", edit.restored)}
+      {...optional("start", edit.start)}
+      {...optional("resetHref", edit.resetHref)}
+      {...optional("retryHref", edit.retryHref)}
+      {...optional("startHref", edit.startHref)}
       title={title}
       wording={{
         edited: CONTROLS_COPY.edited,
@@ -150,6 +240,7 @@ function VariantControls({
               optional={field.optional ?? false}
               supplied={!field.unset}
               {...optional("description", field.description)}
+              {...optional("error", field.error)}
               control={field.input(inputId)}
             />
           );

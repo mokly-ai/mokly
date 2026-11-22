@@ -1,7 +1,7 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
-import { libraryTags } from "../controls/tag-picker.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import { formsEnteredTags, libraryTags } from "../controls/tag-picker.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   destination,
@@ -33,13 +33,19 @@ const propSchema = {
   },
 } as const;
 export type TopBarProps = LibraryProps<typeof propSchema>;
+
+/**
+ * The bar over the Canvas overview, which opens the artboards that the
+ * Canvas top bar opens: the brand the home, the menu the catalogue sheet,
+ * and the tag button the open picker.
+ */
 const sample = {
   menu: "open",
   tags: libraryTags,
   pickerOpen: false,
-  brandDestination: DESTINATIONS.home,
-  menuDestination: DESTINATIONS.navigation,
-  pickerDestination: DESTINATIONS.tagPicker,
+  brandDestination: CANVAS_PAGES.home,
+  menuDestination: CANVAS_PAGES.catalogue,
+  pickerDestination: CANVAS_PAGES.tagPicker,
 } as const;
 export const topBar = defineComponent({
   ...libraryMetadata(
@@ -80,17 +86,31 @@ export const topBar = defineComponent({
     {
       slug: "search",
       title: "Search",
-      props: { ...sample, query: "tag:forms", activeTag: "forms" },
+      props: {
+        ...sample,
+        query: "tag:forms",
+        activeTag: "forms",
+        tags: formsEnteredTags,
+        pickerDestination: CANVAS_PAGES.tagFormsPicker,
+      },
     },
     {
       slug: "tag-picker",
       title: "Tag picker",
-      props: { ...sample, pickerOpen: true },
+      props: {
+        ...sample,
+        pickerOpen: true,
+        pickerDestination: CANVAS_PAGES.overview,
+      },
     },
     {
       slug: "drawer-open",
       title: "Drawer open",
-      props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
+      props: {
+        ...sample,
+        menu: "close",
+        menuDestination: CANVAS_PAGES.overview,
+      },
     },
     {
       slug: "auto-appearance",

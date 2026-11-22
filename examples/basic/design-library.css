@@ -1,11 +1,15 @@
 /* Standalone design samples: tokens and room for the same component markup.
    A sample's root carries the shell root's class for its theme, and it keeps
-   the page's flow instead of the shell's full-height column. */
+   the page's flow instead of the shell's full-height column. The root draws
+   its theme's ink itself, as the shell layout stylesheet does for the shell
+   root, so a sample keeps the shell's text colours without that sheet. */
 .mbk-library {
+  color: var(--chrome-ink);
   display: block;
   font-family: var(--sans);
   font-size: 13px;
   height: auto;
+  min-height: 100vh;
   padding: 24px;
 }
 .mbk-library-host {
@@ -57,12 +61,6 @@
 }
 .mbk-library .browser-frame {
   max-width: 100%;
-}
-.mbk-library[data-library-component="comparison-pane"] .mbk-library-host {
-  padding: 16px;
-}
-.mbk-library[data-library-component="flow-step"] .mbk-library-host {
-  padding: 16px;
 }
 /* A Canvas part's sample stands on the canvas, as it does in a Canvas
    artboard. A frame leaves room for the label above it, and a floating panel

@@ -145,6 +145,14 @@ export function postMessageAdapter(options: {
             throw new FrameError("invalid-message");
           return response.boxModel;
         },
+        async contentBox() {
+          if (disposed) throw new FrameError("disposed");
+          const response = await transport.request({ type: "measure-content" });
+          if (disposed) throw new FrameError("disposed");
+          if (response.type !== "content-box")
+            throw new FrameError("invalid-message");
+          return response.contentBox;
+        },
         subscribe(listener) {
           if (disposed) throw new FrameError("disposed");
           if (initialSubscription === listener) {

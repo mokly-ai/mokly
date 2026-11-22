@@ -2,8 +2,7 @@
  * A copy whose catalogue rendered Light only at the branch point and renders
  * Light and Dark now. The removed Old terms document has no dark render, so
  * its previous version keeps its light page and names that fallback only
- * under Dark, as `design/browse/appearance/states/light-only-document`
- * depicts.
+ * under Dark.
  */
 
 import { expect } from "@playwright/test";

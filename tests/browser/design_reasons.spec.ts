@@ -1,12 +1,14 @@
 /**
- * Every Browse design of a changed, added, or removed screen shows its
- * comparison details with one sentence per direct reason, as the viewer's
- * Details do, under the component workspace design contract. A stylesheet
- * reason reads only through the changed files, so a design whose only reason
- * is a stylesheet shows no reason sentence, and neither does an unchanged
- * screen or a page. Every built Browse design whose selected row or title row
- * marks a changed, added, or removed entry must be in the list, so a new
- * design of a changed screen cannot leave out its reasons.
+ * Every Canvas design that shows comparison details reads one sentence per
+ * direct reason, as the viewer's Details do, under the component workspace
+ * design contract. A stylesheet reason reads only through the changed files,
+ * so a design whose only reason is a stylesheet shows no reason sentence,
+ * and neither does an unchanged entry or a page. Every built Canvas design
+ * whose Changes tab is open, or that draws comparison details, must be in
+ * the list, so a new design of a change cannot leave out its reasons. An
+ * unchanged entry without evidence draws no comparison details. A removed
+ * entry's Changes tab keeps its reason beside its previous version, also
+ * while that version loads or failed.
  */
 
 import { readFile } from "node:fs/promises";
@@ -26,53 +28,73 @@ import {
 } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
 
-/** Each design's depicted direct reasons that have a sentence. */
-const REASONS: Readonly<Record<string, readonly SentenceReason[]>> = {
-  "design/browse/appearance/workspaces/difference": ["material"],
-  "design/browse/appearance/workspaces/side-by-side": ["material"],
-  "design/browse/index-entries/member-changes": ["material"],
-  "design/browse/publication/changes": ["material"],
-  "design/browse/variants/changed-views": ["material"],
-  "design/browse/variants/variant-changes": ["material"],
-  "design/browse/variants/variant-removed": ["removed"],
-  "design/browse/variants/variant-reparented": ["removed"],
-  "design/changes/diff-controls/current": ["material"],
-  "design/changes/diff-controls/overlay": ["material"],
-  "design/changes/diff-controls/overlay-long": ["material"],
-  "design/changes/diff-controls/overlay-panel": ["material"],
-  "design/changes/diff-controls/side-by-side-apart": ["material"],
-  "design/changes/impact/ignored-only": [],
-  "design/changes/impact/styles/matched-excluded/excluded": [],
-  "design/changes/impact/styles/matched-excluded/excluded-only": [],
-  "design/changes/impact/styles/matched-excluded/matched": [],
-  "design/changes/impact/styles/page": [],
-  "design/changes/impact/styles/unresolved-unnamed/unnamed": [],
-  "design/changes/impact/styles/unresolved-unnamed/unresolved": [],
-  "design/changes/outcomes/added": ["added"],
-  "design/changes/outcomes/changed": ["material"],
-  "design/changes/outcomes/difference": ["material"],
-  "design/changes/outcomes/moved": ["material"],
-  "design/changes/outcomes/previous-version/loading": ["removed"],
-  "design/changes/outcomes/previous-version/long": ["removed"],
-  "design/changes/outcomes/previous-version/no-view": ["removed"],
-  "design/changes/outcomes/previous-version/unavailable": ["removed"],
-  "design/changes/outcomes/removed": ["removed"],
-};
+type Viewport = "desktop" | "mobile";
 
-const BRANCH_POINT = "Compared with the branch point on origin/main.";
-/** The Browse and Changes designs of the shell design inventory. */
-const BROWSE_DESIGN = /^design\/(?:browse|changes)\//u;
-/** Kinds whose designs show no reason sentences, by the row's entry kind. */
-const EXCEPTED_KINDS = new Set(["page", "document", "use-case"]);
-/** Title-row badges that mark a changed, added, or removed entry. */
-const CHANGE_BADGES = new Set(["added", "changed", "removed"]);
+/** A design, its depicted direct reasons, and the artboards that show them. */
+type ReasonRow = readonly [
+  route: string,
+  reasons: readonly SentenceReason[],
+  viewports: readonly Viewport[],
+];
+
+/** Both artboards draw the comparison details. */
+const BOTH = ["desktop", "mobile"] as const;
+/** A phone shows the frames of a comparison with the panel sheet closed. */
+const DESKTOP = ["desktop"] as const;
+
+/** Each Canvas design's depicted direct reasons that have a sentence. */
+const REASONS: readonly ReasonRow[] = [
+  ["design/canvas/changes/current", ["material"], BOTH],
+  ["design/canvas/changes/side-by-side", ["material"], DESKTOP],
+  ["design/canvas/changes/overlay", ["material"], DESKTOP],
+  ["design/canvas/changes/difference", ["material"], DESKTOP],
+  ["design/canvas/changes/swipe", ["material"], DESKTOP],
+  ["design/canvas/components/affected", [], DESKTOP],
+  ["design/canvas/components/affected/details", [], DESKTOP],
+  ["design/canvas/components/affected/direct", ["inputs", "material"], BOTH],
+  ["design/canvas/components/compare", ["material"], DESKTOP],
+  ["design/canvas/components/compare/current", ["material"], BOTH],
+  ["design/canvas/components/compare/difference", ["material"], DESKTOP],
+  ["design/canvas/components/compare/side-by-side", ["material"], DESKTOP],
+  ["design/canvas/components/removed/changes", ["removed"], DESKTOP],
+  ["design/canvas/components/removed/consumer-changes", ["removed"], BOTH],
+  ["design/canvas/evidence/ignored", [], BOTH],
+  ["design/canvas/evidence/page", [], BOTH],
+  ["design/canvas/evidence/styles", [], BOTH],
+  ["design/canvas/evidence/styles/excluded", [], BOTH],
+  ["design/canvas/evidence/styles/unnamed", [], BOTH],
+  ["design/canvas/evidence/styles/unresolved", [], BOTH],
+  ["design/canvas/evidence/unchanged", [], BOTH],
+  ["design/canvas/evidence/unchanged/action", [], BOTH],
+  ["design/canvas/outcomes/added/changes", ["added"], BOTH],
+  ["design/canvas/outcomes/moved", ["material"], DESKTOP],
+  ["design/canvas/outcomes/removed", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/long", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/loading", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/unavailable", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/long", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/loading", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/unavailable", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-variant", ["removed"], BOTH],
+];
+
+/** Unchanged Canvas entries without evidence, which draw no details. */
+const NO_EVIDENCE = [
+  "design/canvas/inspect/unchanged",
+  "design/canvas/props/editing/edited",
+  "design/canvas/stage/component-set",
+];
+
+/** The Canvas designs of the shell design inventory. */
+const CANVAS_DESIGN = /^design\/canvas\//u;
 
 test.beforeEach(({ allowBrowserError, baseURL }) => {
   documentFavicon(allowBrowserError, baseURL!);
 });
 
 /** Open one design artboard of the example catalogue. */
-async function openDesign(page: Page, route: string, viewport: string) {
+async function openDesign(page: Page, route: string, viewport: Viewport) {
   const file = path.join(
     repositoryRoot,
     "examples/basic/mokly-generated",
@@ -101,7 +123,7 @@ async function designSource(
   return response.text();
 }
 
-test("every Browse design of a changed, added, or removed entry lists its reasons", async ({
+test("every Canvas design that opens Changes or shows comparison details lists its reasons", async ({
   baseURL,
   page,
   request,
@@ -112,76 +134,70 @@ test("every Browse design of a changed, added, or removed entry lists its reason
   const marked: string[] = [];
   const seen = new Set<string>();
   for (const { path: route } of index.screens) {
-    if (!BROWSE_DESIGN.test(route)) continue;
+    if (!CANVAS_DESIGN.test(route)) continue;
     const design = await page.evaluate(
       (html) => {
         const document = new DOMParser().parseFromString(html, "text/html");
-        // The shipped row names the current page, carries its changed mark
-        // as an attribute, and keeps the mark's wording beside its label.
-        // When a parent row and its selected variant row both open the shown
-        // artboard, both name the current page, and the selected row is last.
-        const rows = [
-          ...document.querySelectorAll('.mbk-nav-row[aria-current="page"]'),
-        ];
-        const row = rows.at(-1);
-        const label = [...(row?.childNodes ?? [])]
-          .filter((node) => node.nodeType === Node.TEXT_NODE)
-          .map((node) => node.textContent)
-          .join("")
-          .trim();
+        // The right panel's selected tab, and the shipped evidence that its
+        // comparison details hold.
         return {
-          kind: row?.getAttribute("data-entry-kind") ?? "",
-          changed: row?.getAttribute("data-changed") === "true",
-          removed: /· Removed$/u.test(label),
-          badge:
-            document
-              .querySelector(".mbk-title-row .mbk-entry-status")
-              ?.getAttribute("data-status")
-              ?.toLowerCase() ?? "",
+          changes:
+            document.querySelector(
+              '.cv-ptab[data-tab="changes"][data-selected]',
+            ) !== null,
+          details:
+            document.querySelector(".cv-evidence .mbk-comparison-evidence") !==
+            null,
         };
       },
       await designSource(request, route),
     );
-    if (design.changed) seen.add("changed row");
-    if (design.removed) seen.add("removed row");
-    if (design.badge === "added") seen.add("added badge");
-    if (EXCEPTED_KINDS.has(design.kind)) {
-      seen.add(design.kind);
-      continue;
-    }
-    if (design.changed || design.removed || CHANGE_BADGES.has(design.badge))
-      marked.push(route);
+    if (design.changes) seen.add("changes tab");
+    if (design.details) seen.add("comparison details");
+    if (design.changes || design.details) marked.push(route);
   }
-  // Each mark and each excepted kind occurs, so a renamed class or a lost
-  // marker cannot narrow the check unseen.
-  expect([...seen].sort()).toEqual([
-    "added badge",
-    "changed row",
-    "document",
-    "page",
-    "removed row",
-    "use-case",
-  ]);
-  expect(marked.filter((route) => !Object.hasOwn(REASONS, route))).toEqual([]);
+  // Each mark occurs, so a renamed class or a lost marker cannot narrow the
+  // check unseen.
+  expect([...seen].sort()).toEqual(["changes tab", "comparison details"]);
+  const listed = new Set(REASONS.map(([route]) => route));
+  expect(marked.filter((route) => !listed.has(route))).toEqual([]);
 });
 
 for (const viewport of ["desktop", "mobile"] as const)
-  test(`${viewport}: Browse designs read one sentence per reason in their comparison details`, async ({
+  test(`${viewport}: Canvas designs read one sentence per reason in their comparison details`, async ({
     page,
   }) => {
-    for (const [route, reasons] of Object.entries(REASONS)) {
+    for (const [route, reasons] of REASONS.filter(([, , shown]) =>
+      shown.includes(viewport),
+    )) {
       await openDesign(page, route, viewport);
-      const details = page.locator(".mbk-comparison-details");
+      // The facts appear once, in the comparison details of the panel.
+      await expect(page.locator(".mbk-comparison-evidence"), route).toHaveCount(
+        1,
+      );
+      const details = page.locator(".cv-evidence .mbk-comparison-evidence");
       await expect(details, route).toHaveCount(1);
+      await expect(details, route).toContainText("Comparison details");
+      await expect(details, route).not.toContainText("corners and spacing");
       await expectReasonSentences(details, reasons, `${viewport} ${route}`);
     }
-    // A moved screen names its earlier side before its reason.
-    await openDesign(page, "design/changes/outcomes/moved", viewport);
-    await expect(
-      page.locator(".mbk-comparison-details .mbk-comparison-evidence > p"),
-    ).toHaveText([
-      BRANCH_POINT,
-      /^The previous version is at .+, where it was before the move\.$/u,
-      REASON_SENTENCES.material,
-    ]);
+    for (const route of NO_EVIDENCE) {
+      await openDesign(page, route, viewport);
+      await expect(page.locator(".cv-root"), route).toHaveCount(1);
+      await expect(page.locator(".mbk-comparison-evidence"), route).toHaveCount(
+        0,
+      );
+    }
   });
+
+test("the moved Canvas design names its previous path before its reason", async ({
+  page,
+}) => {
+  await openDesign(page, "design/canvas/outcomes/moved", "desktop");
+  await expect(
+    page.locator(".cv-evidence .mbk-comparison-evidence > p"),
+  ).toHaveText([
+    /^The previous version is at .+, where it was before the move\.$/u,
+    REASON_SENTENCES.material,
+  ]);
+});

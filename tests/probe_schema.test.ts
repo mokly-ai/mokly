@@ -30,6 +30,9 @@ const messages: MessageBody[] = [
   { type: "measure", requestId: 7, key },
   { type: "box-model", requestId: 7, boxModel: model },
   { type: "box-model", requestId: 8, boxModel: null },
+  { type: "measure-content", requestId: 9 },
+  { type: "content-box", requestId: 9, contentBox: box },
+  { type: "content-box", requestId: 10, contentBox: null },
   {
     type: "subscribe",
     requestId: 5,
@@ -63,7 +66,9 @@ for (const body of messages) {
   const name =
     body.type === "box-model" && body.boxModel === null
       ? "box-model null"
-      : body.type;
+      : body.type === "content-box" && body.contentBox === null
+        ? "content-box null"
+        : body.type;
   test(`probe schema: ${name} accepts only its exact envelope`, () => {
     assert.ok(validMessage(boundedJson(encodeMessage(nonce, body)), nonce));
     for (const mutation of [
@@ -117,6 +122,18 @@ test("box-model rejects unknown fields, missing sides and invalid numeric bounds
       validMessage(wire({ type: "box-model", requestId: 1, boxModel })),
       false,
       JSON.stringify(boxModel),
+    );
+});
+
+test("content-box rejects extra box fields and out-of-bounds coordinates and dimensions", () => {
+  for (const contentBox of [
+    { ...box, extra: true },
+    { ...box, x: -1_000_001 },
+    { ...box, width: 1_000_001 },
+  ])
+    assert.equal(
+      validMessage(wire({ type: "content-box", requestId: 1, contentBox })),
+      false,
     );
 });
 
