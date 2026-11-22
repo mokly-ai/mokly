@@ -25,6 +25,7 @@
 @import "./design-canvas-search.css";
 @import "./design-canvas-components.css";
 @import "./design-canvas-props.css";
+@import "./design-canvas-evidence.css";
 
 /* A mobile render draws the one-column details body at every width. Below the
    breakpoint the package stylesheet draws it on its own, as the shell does. */

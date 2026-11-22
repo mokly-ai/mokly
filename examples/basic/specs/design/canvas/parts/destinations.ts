@@ -1,4 +1,5 @@
 import { EXPLORER_PAGES } from "../components/parts/destinations.js";
+import { EVIDENCE_PAGES } from "../evidence/parts/destinations.js";
 import { LOADING_PAGES } from "../loading/parts/destinations.js";
 import { OUTCOME_PAGES } from "../outcomes/parts/destinations.js";
 import { PROPS_PAGES } from "../props/parts/destinations.js";
@@ -53,6 +54,7 @@ export const CANVAS_PAGES = {
   ...SEARCH_PAGES,
   ...EXPLORER_PAGES,
   ...PROPS_PAGES,
+  ...EVIDENCE_PAGES,
 } as const;
 
 export type CanvasDestination =

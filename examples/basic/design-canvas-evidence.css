@@ -1,0 +1,4 @@
+/* The Canvas viewer's comparison evidence: the shipped evidence of a
+   comparison in the Changes tab, and the evidence that an entry without
+   Changes keeps in Inspect. Each Canvas part keeps its own sheet; this sheet
+   holds only the layout and the states of these artboards. */
