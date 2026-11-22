@@ -36,6 +36,9 @@ its requests and results. The paths below are relative to the package root.
   generation that a `bundle` request installed. A generation that a `bundle`
   request installs replaces the generation of an equal id, and it is never in
   that set.
+  It keeps one `KeptContext` for the guarded compiles of its `serveEdit`
+  requests, emits an `esbuild` operation for each of its rebuilds, and
+  disposes of it at `shutdown`.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response. Its
   `encodeResponse` encodes each response with `jsonText` from
@@ -155,6 +158,23 @@ its requests and results. The paths below are relative to the package root.
   compile gives the result or the error. A guarded result that stands has the
   output, the evidence, the watch inputs, and the returned plan of the
   complete planned compile.
+  The guarded compile rebuilds the kept context of the session; the complete
+  planned compile is always a fresh build.
+- [`src/sidecar/kept-context.ts`](./kept-context.ts) holds `KeptContext`, the
+  one esbuild build context of a process under the
+  [kept build context rules](../../../../docs/protocol/mokly-sidecar-kept-context.md).
+  `bundle` uses it only as the compile function of a guarded attempt. Each
+  request plugin sets up against a recorder, which lists its hooks. The setups
+  follow the order of a fresh build: they run over a copy of the plugin list,
+  `resolve` fails until every setup has ended, and the compile reads the build
+  options after the setups, so an option that a setup assigns through
+  `initialOptions` counts. The key of the context holds those build options
+  without plugins, the plugin names, and the kind, filter, and namespace of
+  each hook. An equal key rebuilds the context. Another key disposes of it and
+  creates a new one, and a failed setup or rebuild disposes of it. The plugins
+  of the context hold only those hook shapes and forward each call to the
+  hooks of the current request, which the compile clears after its rebuild. A
+  request's `onDispose` hooks run after its rebuild, as after a fresh build.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and
