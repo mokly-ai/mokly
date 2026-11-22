@@ -117,7 +117,7 @@ test("the inspector divider lights up like the navigation divider", async ({
   // navigation grip keeps its strong border; both share the line and shadow.
   expect(resting).toEqual({
     ...(await dividers.navigation.evaluate(grip)),
-    background: "rgb(134, 142, 136)",
+    background: "rgb(98, 106, 100)",
   });
 
   const box = (await dividers.inspector.boundingBox())!;

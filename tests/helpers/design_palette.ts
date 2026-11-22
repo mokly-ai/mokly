@@ -280,16 +280,6 @@ function cssColor(color: string): string {
   return `rgb(${channels.join(", ")})`;
 }
 
-/** One palette token as the CSS `rgb()` value a computed style reports. */
-export async function paletteColor(
-  appearance: Appearance,
-  token: string,
-): Promise<string> {
-  const value = (await designPalette())[appearance].get(token);
-  if (!value) throw new Error(`design.css has no ${token} for ${appearance}`);
-  return cssColor(value);
-}
-
 /** One Canvas role on a Canvas root as the `rgb()` value a style reports. */
 export async function canvasColor(appearance: Appearance, role: string) {
   const value = await canvasRoleColor(role, appearance);

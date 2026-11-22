@@ -1,6 +1,6 @@
 # Viewer Appearance
 
-Status: The shell does not take its palette from the `@mokly/ui` palette module yet, and it has no canvas stage, right panel or Frames filter. [Milestone 17](../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) builds the palette source, [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
+Status: The shell has no canvas stage, right panel or Frames filter yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
 
 ## Interface Appearance And Frame Schemes
 

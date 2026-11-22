@@ -61,7 +61,7 @@ test("host accent overrides and interactive overlay stay within the viewer", asy
   ).toBe("rgb(12, 34, 56)");
   await expect(page.locator("#one .mbk-mark")).toHaveCSS(
     "color",
-    "rgb(47, 89, 69)",
+    "rgb(18, 183, 106)",
   );
   await expect(page.locator("#one .mbk-mark")).toHaveCSS(
     "background-color",
@@ -69,15 +69,15 @@ test("host accent overrides and interactive overlay stay within the viewer", asy
   );
   await expect(page.locator("#one .mbk-mark-rules")).toHaveCSS(
     "stroke",
-    "rgb(255, 255, 255)",
+    "rgb(4, 19, 11)",
   );
   await expect(page.locator("#one .mbk-name-dot")).toHaveCSS(
     "color",
-    "rgb(47, 89, 69)",
+    "rgb(18, 183, 106)",
   );
   await expect(page.locator("#one .mbk-name")).toHaveCSS(
     "font-family",
-    '"Mokly Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    '"Mokly Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   );
   await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");

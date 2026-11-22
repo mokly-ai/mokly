@@ -82,7 +82,8 @@ async fn watched_html_css_membership_config_and_failure_recovery_share_one_port(
         ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/brand.svg", "<svg/>"),
-        ("viewer/assets/fonts/InterVariable.woff2", ""),
+        ("viewer/assets/fonts/Geist-Variable.woff2", ""),
+        ("viewer/assets/fonts/GeistMono-Variable.woff2", ""),
     ] {
         let path = root.path().join(path);
         fs::create_dir_all(path.parent().unwrap()).unwrap();

@@ -2,41 +2,67 @@ import { transform } from "lightningcss";
 
 import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 
-/** The address of the font in its authored rule, which sits beside the font. */
-const FONT_SOURCE = 'url("./InterVariable.woff2")';
+/**
+ * The shell faces: the family that the package rules name, the family that
+ * an embedded root names instead, and the file that the authored rule reads
+ * beside it.
+ */
+const FACES = [
+  {
+    family: '"Geist"',
+    embedded: '"Mokly Geist"',
+    file: "Geist-Variable.woff2",
+  },
+  {
+    family: '"Geist Mono"',
+    embedded: '"Mokly Geist Mono"',
+    file: "GeistMono-Variable.woff2",
+  },
+];
 
-/** The family name of the shell font in an embedded root. */
-const EMBEDDED_FAMILY = '"Mokly Inter"';
+/**
+ * The `@font-face` rule of each shell face, in face order, with each face at
+ * the address of one delivery under `directory`.
+ */
+function fontFaces(font, directory) {
+  const rules = font.match(/@font-face\s*\{[^}]*\}/gu) ?? [];
+  return FACES.map(({ file }) => {
+    const source = `url("./${file}")`;
+    const rule = rules.find((candidate) => candidate.includes(source));
+    if (!rule) throw new Error(`No shell font rule reads ${source}.`);
+    return rule.replace(source, `url("${directory}/${file}")`);
+  }).join("\n");
+}
 
-/** The `@font-face` rule of the shell font, at the address of one delivery. */
-function fontFace(font, address) {
-  const rule = /@font-face\s*\{[^}]*\}/u.exec(font)?.[0];
-  if (!rule?.includes(FONT_SOURCE))
-    throw new Error(`The shell font rule does not read ${FONT_SOURCE}.`);
-  return rule.replace(FONT_SOURCE, `url("${address}")`);
+/** CSS with each shell family renamed to the family of an embedded root. */
+function embeddedFamilies(css) {
+  return FACES.reduce(
+    (renamed, { family, embedded }) => renamed.replaceAll(family, embedded),
+    css,
+  );
 }
 
 /**
  * The standalone stylesheet that Serve and `build` deliver as
- * `/mokly-viewer/shell.css`: the shell font at its delivery path, then the
+ * `/mokly-viewer/shell.css`: the shell fonts at their delivery path, then the
  * package stylesheet unchanged.
  */
 export function standaloneStyles(font, packageCss) {
-  const address = `/${VIEWER_DIRECTORY}/fonts/InterVariable.woff2`;
-  return `${fontFace(font, address)}\n${packageCss}`;
+  const faces = fontFaces(font, `/${VIEWER_DIRECTORY}/fonts`);
+  return `${faces}\n${packageCss}`;
 }
 
 /**
- * The stylesheet of an embedded root. Its font takes a family name of its
- * own, so a host's own Inter keeps its file, and reads the packaged assets
+ * The stylesheet of an embedded root. Its fonts take family names of their
+ * own, so a host's own Geist keeps its file, and read the packaged assets
  * next to the stylesheet. The package rules need no scope: none of them
  * reaches the host page or host slot content.
  */
 export function embeddedStyles(font, packageCss) {
-  const face = fontFace(font, "./assets/fonts/InterVariable.woff2");
+  const faces = fontFaces(font, "./assets/fonts");
   const rules = transform({
-    code: Buffer.from(packageCss.replaceAll('"Inter"', EMBEDDED_FAMILY)),
+    code: Buffer.from(embeddedFamilies(packageCss)),
     filename: "styles.css",
   }).code.toString();
-  return `${face.replaceAll('"Inter"', EMBEDDED_FAMILY)}\n${rules}`;
+  return `${embeddedFamilies(faces)}\n${rules}`;
 }

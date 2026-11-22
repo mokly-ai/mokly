@@ -1,6 +1,6 @@
 # Design Tokens
 
-Status: The Browse shell does not set Geist and Geist Mono yet, and no token holds the Canvas depth of the viewer's cards, panels and settings dialog. [Milestone 17](../../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) moves the shell to Geist, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) restyles the viewer's cards, panels and dialog in that depth.
+Status: No token holds the Canvas depth of the viewer's cards, panels and settings dialog yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) restyles the viewer's cards, panels and dialog in that depth.
 
 Canvas is the product and marketing system: the look of a design file, with a
 dot-grid canvas, white frames and panels with hairlines, near-black ink, one

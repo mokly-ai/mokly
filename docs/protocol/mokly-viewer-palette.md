@@ -1,6 +1,6 @@
 # Viewer Semantic Palette
 
-Status: The shell theme and the `mokly-html` Markdown style do not take their colours and fonts from the Canvas palette of `@mokly/ui` yet, and the canvas stage and the Changes tab whose parts read it are not built. [Milestone 17](../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) generates the theme and the style from the palette, [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab.
+Status: The canvas stage and the Changes tab, whose parts read this palette, are not built yet. The Markdown documents name Geist and Geist Mono but do not load the faces yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage, [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab, and the [Markdown documents font item](../../plans/follow-ups/markdown-documents-load-no-geist.md) owns the faces of the documents.
 
 The shell draws in Canvas, the look of a design file: a dot-grid canvas,
 white frames and panels with hairlines, near-black ink, one signal green, and
@@ -76,41 +76,42 @@ One palette serves both appearances. Each shell root, and each design
 artboard, states one appearance on its own root, and every role keeps its
 meaning in both. The theme declares every Canvas role in both appearances, so
 that every part that draws in Canvas can read it, such as the canvas, its
-frames, the selection and the size tags. The theme's own roles below take
+frames, the selection and the size tags. A Canvas role or stack takes the name
+`--cv-` and its palette name in kebab case, such as `--cv-surface-raised`,
+`--cv-people-pink-fill` and `--cv-mono`. The theme's own roles below take
 their values from the Canvas roles. Names below are the theme's role names.
 
 ### Swatches
 
-| Role                     | Canvas source                     |
-| ------------------------ | --------------------------------- |
-| `--chrome-bg`            | `background`                      |
-| `--chrome-surface`       | `surface`                         |
-| `--chrome-raised`        | `surface`: the floating catalogue |
-| `--chrome-hover`         | `text` at 5% over `surface`       |
-| `--chrome-ink`           | `text`                            |
-| `--chrome-ink-2`         | `textSecondary`                   |
-| `--chrome-muted`         | `textMuted`                       |
-| `--chrome-border`        | `border`                          |
-| `--chrome-border-strong` | `textMuted` at 32% over `surface` |
-| `--chrome-control-edge`  | `borderStrong`                    |
-| `--chrome-accent`        | `signalDeep`                      |
-| `--chrome-brand`         | `signal`                          |
-| `--mbk-sage`             | `signalDeep`                      |
-| `--mbk-sage-deep`        | `signalDeep`                      |
-| `--mbk-accent-contrast`  | `surface`                         |
-| `--mbk-accent-soft`      | `signalSoft`                      |
-| `--mbk-accent-surface`   | `signalSoft`                      |
-| `--mbk-accent-edge`      | `signal` at 45% opacity           |
-| `--mbk-guide`            | `border`                          |
-| `--mbk-dot`              | `dot`                             |
-| `--mbk-browser-bar`      | `surfaceMuted`                    |
-| `--chrome-count-bg`      | `text` at 8% opacity              |
-| `--chrome-scrim`         | the shade at 40% opacity          |
+| Role                                       | Canvas source                                       |
+| ------------------------------------------ | --------------------------------------------------- |
+| `--chrome-bg`                              | `background`                                        |
+| `--chrome-surface`                         | `surface`                                           |
+| `--chrome-raised`                          | `surface`: the floating catalogue                   |
+| `--chrome-hover`                           | `text` at 5% over `surface`                         |
+| `--chrome-ink`                             | `text`                                              |
+| `--chrome-ink-2`                           | `textSecondary`                                     |
+| `--chrome-muted`                           | `textMuted`                                         |
+| `--chrome-border`                          | `border`                                            |
+| `--chrome-border-strong`                   | `textMuted` at 32% over `surface`                   |
+| `--chrome-control-edge`                    | `borderStrong`                                      |
+| `--chrome-accent`                          | `signalDeep`                                        |
+| `--_mokly-private-accent-default`          | `signalDeep`: the default of `--mokly-accent`       |
+| `--mbk-accent-deep`                        | `signalDeep`                                        |
+| `--_mokly-private-accent-contrast-default` | `surface`: the default of `--mokly-accent-contrast` |
+| `--_mokly-private-accent-soft-default`     | `signalSoft`: the default of `--mokly-accent-soft`  |
+| `--_mokly-private-on-ink`                  | `surface`                                           |
+| `--_mokly-private-on-accent-deep`          | `surface`                                           |
+| `--mbk-accent-surface`                     | `signalSoft`                                        |
+| `--mbk-accent-edge`                        | `signal` at 45% opacity                             |
+| `--mbk-guide`                              | `border`                                            |
+| `--mbk-dot`                                | `dot`                                               |
+| `--mbk-browser-bar`                        | `surfaceMuted`                                      |
+| `--chrome-count-bg`                        | `text` at 8% opacity                                |
+| `--chrome-scrim`                           | the shade at 40% opacity                            |
 
-`--mbk-sage`, `--mbk-accent-contrast` and `--mbk-accent-soft` are the
-defaults of the public `--mokly-accent`, `--mokly-accent-contrast` and
-`--mokly-accent-soft`. Each mix is a `color-mix()` in sRGB. The shade is
-`text` in Light and `background` in Dark. Each shadow layers the shade, and
+Each mix is the colour of its two roles mixed in sRGB at that share. The shade
+is `text` in Light and `background` in Dark. Each shadow layers the shade, and
 Dark adds a 1px `text` ring:
 
 | Role                                           | Light                                                                   | Dark                                                              |
@@ -180,9 +181,9 @@ Unmodified keeps `--chrome-ink-2` without a fill, and every status badge draws
 `--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
 hairlines separating adjacent surfaces, not control boundaries, so they are not
 held to 3:1. Every control outline, grip, field border and focus ring uses
-`--chrome-control-edge` or `--mbk-sage-deep` instead. A control that marks its
+`--chrome-control-edge` or `--mbk-accent-deep` instead. A control that marks its
 hovered, selected or checked state with a boundary draws it in
-`--mbk-sage-deep`.
+`--mbk-accent-deep`.
 
 The brand mark's `text` outline keeps the mark visible at 3:1 on every
 surface. Its `signal` front layer and the `signal` period of the wordmark are
@@ -204,7 +205,7 @@ resting tag chip and a selected instance of the component tree. The address
 pill and the expand toggle of a browser frame's bar draw `--chrome-border`,
 and the toggle draws `--chrome-border-strong` on hover. The group shows its
 value through the filled selected segment, a tile shows the selected mode with
-a `--mbk-sage-deep` edge, and the grip draws the accent while hovered, focused
+a `--mbk-accent-deep` edge, and the grip draws the accent while hovered, focused
 or dragged. A pressed icon control fills with the accent tint and draws its
 glyph in the accent, a selected instance fills with the accent tint and draws
 its text in the accent, and a selected tag chip fills with the accent. On

@@ -129,10 +129,10 @@ test("only the three public accent overrides survive from a host", () => {
       );
   }
   for (const [block, accent] of [
-    [/\n\.mbk, \.mbk-document \{([\s\S]*?)\}/, "#4f7864"],
+    [/\n\.mbk, \.mbk-document \{([\s\S]*?)\}/, "#067a45"],
     [
       /\n\.mbk\[data-mokly-theme="dark"\], \.mbk-document\[data-mokly-theme="dark"\] \{([\s\S]*?)\}/,
-      "#86b79b",
+      "#5be3a0",
     ],
   ] as const) {
     const declarations = block.exec(EMBEDDED_CSS)?.[1];

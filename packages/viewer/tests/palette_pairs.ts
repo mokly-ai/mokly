@@ -18,7 +18,16 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
   ["muted on raised", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
+  // The mark's text outline keeps it visible; its signal front layer is
+  // identity, with no minimum.
+  ["brand mark outline on surface", "--chrome-ink", "--chrome-surface", 3],
+  [
+    "brand mark front layer on surface",
+    "--cv-signal",
+    "--chrome-surface",
+    null,
+  ],
+  ["on-signal text on signal", "--cv-on-signal", "--cv-signal", 4.5],
   [
     "accent on surface",
     "--_mokly-private-accent-default",

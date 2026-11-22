@@ -1,6 +1,6 @@
 # Viewer Host
 
-Status: The hosted package does not take its colours from the Canvas palette yet, and Theme on the device as the source of `theme` is not built yet. [Milestone 17](../../../plans/canvas-redesign-milestones-viewer.md#milestone-17-canvas-default-in-the-open-source-shell) moves the package to the palette, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds Theme.
+Status: Theme on the device as the source of `theme` is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds Theme.
 
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
 what the cloud guarantees to the workspace `@mokly/viewer`

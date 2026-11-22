@@ -71,8 +71,8 @@
   border-radius: 50%;
 }
 
-/* On uses the deep accent and its private contrast, which equal the design's
-   sage-deep and accent contrast in both appearances. The consumer's
+/* On uses the deep accent and its private contrast, which take signalDeep and
+   surface from the Canvas palette in both appearances. The consumer's
    --mokly-accent-contrast override pairs only with its own accent, so the
    knob never reads it. */
 .mbk-diff-sync input:checked + .mbk-diff-sync-track {

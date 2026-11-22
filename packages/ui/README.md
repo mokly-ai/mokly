@@ -22,8 +22,9 @@ or read a palette yourself; a host that embeds a catalogue uses
 - The highlight mask that marks component instances over a preview, drawn from
   the boxes that the viewer's frame adapters return.
 - The named palettes: the colours of the light and dark schemes and the font
-  stacks of each palette, as data that applies nothing. No component and no
-  stylesheet of the shell reads them yet.
+  stacks of each palette, as data that applies nothing. The theme stylesheet
+  and the palette part of the `mokly-html` Markdown style are generated from
+  the Canvas palette, so no component reads the module itself.
 - Nothing else. A component reads no store, no context, no catalogue read
   model type, no network, and no history. It renders the `<iframe>` element of
   a preview but never reads the frame's document. React and React DOM are the
@@ -44,8 +45,11 @@ package components.
 The theme declares the shell's tokens, such as `--chrome-surface`, and the
 Light and Dark palette on the viewer root class `mbk` and on the standalone
 stub's document class `mbk-document`, never through a `:root`, `html`, or
-`body` selector. A root states its appearance in `data-mokly-theme`; Auto
-follows the reader's system. Each component puts the reset class `mbk-reset`
+`body` selector. It is generated from the Canvas palette: it declares every
+Canvas role as a `--cv-*` property, such as `--cv-signal`, and each shell
+token takes its value from a Canvas role, a mix of two, or a fixed value. A
+root states its appearance in `data-mokly-theme`; Auto follows the reader's
+system. Each component puts the reset class `mbk-reset`
 on every element that it renders, apart from the host slots, whose content
 stays the host's. The class gives the element border-box sizing and the
 reader's reduced motion, and resets links and text blocks. No rule reaches the
@@ -65,10 +69,11 @@ each person colour. The inks and `signalDeep` read at 4.5:1 on every surface,
 as do the labels on `signal` and on each person colour; `borderStrong` and the
 button label reach 3:1. A test holds each pair. `canvas`, the look of a design
 file, is the only palette. It names Geist and Geist Mono but ships no font
-file, so a page that draws in it loads the faces itself, as
-`examples/basic/design-fonts/geist.css` does for the design catalogue. The
-module applies nothing: a consumer declares the values in its own terms, such
-as the custom properties of a stylesheet.
+file, so a page that draws in it loads the faces itself: the viewer delivers
+them for the shell, and `examples/basic/design-fonts/geist.css` loads them for
+the design catalogue. The module applies nothing: a consumer declares the
+values in its own terms, such as the custom properties of a stylesheet, as the
+generated theme does.
 
 ```ts
 import { palettes } from "@mokly/ui/palette";
@@ -307,6 +312,18 @@ the cloud mockups under `docs/mockups`. After a change of a palette value,
 also run the check that the [mockups README](../../docs/mockups/README.md)
 gives.
 
+Two stylesheets are generated from the Canvas palette and committed: this
+package's `src/theme/theme.css`, and the repository's
+`crates/mokly-html/src/document_palette.css`, the colours and fonts of the
+Markdown documents. Each starts with a header that names its source. Do not
+edit either file. Change the palette module, or the role table in
+`scripts/palette-roles.mjs` for a role without a Canvas source, then run
+`npm run palette:generate` from the repository root and commit both files. The generator computes each mix in sRGB, as `color-mix()` does, and
+formats each file with Prettier, so the bytes pass `npm run format:check`.
+`npm run palette:check` writes nothing; it names each file that differs from
+the module or is missing, and exits 1. The repository suite runs it. The
+generator is not part of `npm run build`.
+
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpath in the `exports` map is `./<name>`, with `types` and
 `import` targets in `dist/<name>/`. The build copies
@@ -344,14 +361,26 @@ override the desktop layout rules.
 
 ### Key Code
 
-- [`src/theme/theme.css`](./src/theme/theme.css) — the tokens and the Light
-  and Dark palette on the root class and the stub's document class, Auto
-  through the system appearance, and the stub page's own rules
+- [`src/theme/theme.css`](./src/theme/theme.css) — generated: the Canvas
+  roles, the tokens, and the Light and Dark palette on the root class and the
+  stub's document class, Auto through the system appearance, and the stub
+  page's own rules
+- [`scripts/palette-generate.mjs`](./scripts/palette-generate.mjs) — the
+  command behind `npm run palette:generate` and `npm run palette:check`:
+  `generatePaletteStylesheets` writes each generated stylesheet that differs,
+  or reports it in a check
+- [`scripts/palette-styles.mjs`](./scripts/palette-styles.mjs) —
+  `themeStylesheet` and `documentPaletteStylesheet`, the renderers from a
+  palette to CSS text, and `paletteStylesheets`, the generated files by path
+- [`scripts/palette-roles.mjs`](./scripts/palette-roles.mjs) and
+  [`scripts/palette-sources.mjs`](./scripts/palette-sources.mjs) — the source
+  of each generated role, with the fixed values of the roles without a Canvas
+  source, and the sRGB mixes, tints, and shadows that the sources compute
 - [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
   sizing, the reader's reduced motion, and the link and text block resets
 - [`src/palette/palette.ts`](./src/palette/palette.ts) — `palettes`, the named
   palettes, with the `PaletteColors`, `PaletteFonts`, and `Palette` types;
-  `canvas` is the only palette
+  `canvas` is the only palette and the source of the generated stylesheets
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
   workspace control icons, with `IconSvg` as their frame; the icons entry
   also exports `BrandIcon`

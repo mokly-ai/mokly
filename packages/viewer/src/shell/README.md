@@ -252,8 +252,8 @@ The shell holds no style rule. `@mokly/ui/styles.css` holds every rule of the
 shell, in the cascade order that `packages/ui/src/styles.css` lists: the
 theme, the shared controls, the components, then the layout and its
 responsive rules. The viewer build writes the standalone `shell.css` and the
-embedded `styles.css` from that stylesheet and the `@font-face` rule of the
-shell font.
+embedded `styles.css` from that stylesheet and the `@font-face` rules of the
+shell fonts, Geist and Geist Mono.
 
 The theme gives the stub's document class the Auto appearance before the
 bundle runs. The standalone shell sets its appearance, scheme, and state marks
