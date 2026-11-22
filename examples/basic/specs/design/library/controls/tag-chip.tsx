@@ -1,6 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
@@ -13,9 +13,13 @@ const propSchema = {
   properties: { id: text, label: text, selected: flag, destination },
 } as const;
 export type TagChipProps = LibraryProps<typeof propSchema>;
-/** Own props omit the destination, which the inactive chip does not have. */
+/**
+ * Own props omit the destination, which the inactive chip does not have. A
+ * chip opens the Canvas artboard of its filter, and the chip of the entered
+ * tag opens the overview, where the query is cleared.
+ */
 const base = { id: "forms", label: "forms", selected: false } as const;
-const sample = { ...base, destination: DESTINATIONS.forms } as const;
+const sample = { ...base, destination: CANVAS_PAGES.tagForms } as const;
 export const tagChip = defineComponent({
   ...libraryMetadata(
     "controls",
@@ -43,7 +47,7 @@ export const tagChip = defineComponent({
         id: "forms",
         label: "forms",
         selected: true,
-        destination: DESTINATIONS.welcome,
+        destination: CANVAS_PAGES.overview,
       },
     },
     {

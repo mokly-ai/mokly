@@ -6,26 +6,23 @@ import { test } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
 import { designFileUrl } from "./design_fixture.js";
 
-/** Register independent hooks for every spec and reject an unknown design route. */
-export function componentDesignFixture(
+/**
+ * Register independent hooks for every spec, and reject a design entry that
+ * the frozen inventory or the delivery under test does not hold.
+ */
+export function designDocumentFixture(
   fixtureTest = test,
   documentUrl = designFileUrl,
 ) {
   const entries = designCatalogue(fixtureTest);
-  const componentDesignRoutes = designCases
-    .filter(
-      (entry) =>
-        entry.kind === "screen" && entry.path.startsWith("design/components/"),
-    )
-    .map((entry) => entry.path);
   return {
-    componentDesignRoutes,
-    componentDesignUrl(entryPath: string, viewport: string): string {
+    /** The document of a design entry in one viewport, in the delivery. */
+    designDocumentUrl(entryPath: string, viewport: string): string {
       if (
-        !componentDesignRoutes.includes(entryPath) ||
+        !designCases.some((entry) => entry.path === entryPath) ||
         !entries.some((entry) => entry.path === entryPath)
       )
-        throw new Error(`Unknown component design: ${entryPath}`);
+        throw new Error(`Unknown design entry: ${entryPath}`);
       return documentUrl(
         path.join(
           repositoryRoot,

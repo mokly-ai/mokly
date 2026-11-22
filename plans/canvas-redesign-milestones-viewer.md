@@ -71,6 +71,9 @@ Depends on: 10, 11
       document size, as the canvas frames contract says (Milestone 18,
       item 9): for example the Action's own example at 148 × 86 and the
       Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`.
+- [ ] Comparison panes measure each version with
+      `measureContentBox(doc)` from `@mokly/frame/internal` (Milestone 23),
+      for decision 23 below.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
@@ -188,17 +191,25 @@ Depends on: 1, 3
 Decision 11, option D. The design catalogue keeps one Canvas family of Browse
 screens, which Milestones 11 and 12 build.
 
-- [ ] Map each older design screen under `examples/basic/specs/design/` to its
-      Canvas successor, or name it obsolete.
-- [ ] Draw one Canvas screen for each state kind that has none: the removed
+- [x] Map each older design screen under `examples/basic/specs/design/` to its
+      Canvas successor, or name it obsolete. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
+- [x] Draw one Canvas screen for each state kind that has none: the removed
       and moved outcomes, use-case flows, loading and recovery, tag search,
-      and the component explorer pages.
-- [ ] Remove the older screens, their scaffolds and sheets, the seven
+      and the component explorer pages. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`, then
+      `calummoore/canvas-redesign-m18-finish-one-canvas-jd5q`.
+- [x] Remove the older screens, their scaffolds and sheets, the seven
       library parts that only they use, and their fixtures. Move the specs and
-      tests that name them to Canvas or example entries.
-- [ ] Link the Canvas sheets through a `design/canvas/**` route.
-- [ ] Update the design inventory pages and the mockups README.
-- [ ] Run the mockup check of the example catalogue.
+      tests that name them to Canvas or example entries. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`, then
+      `calummoore/canvas-redesign-m18-finish-one-canvas-jd5q`.
+- [x] Link the Canvas sheets through a `design/canvas/**` route. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
+- [x] Update the design inventory pages and the mockups README. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
+- [x] Run the mockup check of the example catalogue. Branch:
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
 
 ## Milestone 19: Geist in Markdown documents
 

@@ -98,15 +98,13 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
 }
 
 /**
- * Keyboard stops that open nothing: on design screens outside the component
- * explorer designs, which depict its interactive controls, only the depicted
+ * Keyboard stops that open nothing: on design screens, only the depicted
  * variant disclosure is an enabled button, and only a link takes a tab stop.
  */
 export function keyboardStopViolations(catalogue: ServedCatalogue): string[] {
   const violations: string[] = [];
   for (const view of designViews(catalogue)) {
-    if (view.kind !== "screen" || view.path.startsWith("design/components/"))
-      continue;
+    if (view.kind !== "screen") continue;
     for (const [element] of withAncestors(view.document)) {
       const tabindex = attribute(element, "tabindex");
       if (
@@ -167,12 +165,29 @@ export function adoptionViolations(catalogue: ServedCatalogue): string[] {
   return violations;
 }
 
+/**
+ * The sheets that a design route links before the component sheets: the
+ * older routes' stage and document sheets, and the Canvas route's preview,
+ * mini-screen, and Canvas sheets. The Canvas shell and compact sheets, like
+ * the older component sheets, come after them.
+ */
 const BASE_SHEETS = new Set([
   "design.css",
   "design-stage.css",
   "design-documents.css",
-  "design-review.css",
-  "design-review-scroll.css",
+  "design-preview.css",
+  "design-shots.css",
+  "design-canvas.css",
+  "design-canvas-inspect.css",
+  "design-canvas-sections.css",
+  "design-canvas-changes.css",
+  "design-canvas-outcomes.css",
+  "design-canvas-flows.css",
+  "design-canvas-loading.css",
+  "design-canvas-search.css",
+  "design-canvas-components.css",
+  "design-canvas-props.css",
+  "design-canvas-evidence.css",
 ]);
 
 /** A design view's stylesheet links, relative to the example directory. */

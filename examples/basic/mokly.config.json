@@ -2,14 +2,23 @@
   "$schema": "../../node_modules/@mokly/mokly/config.schema.json",
   "colorSchemes": ["light", "dark"],
   "roots": [
-    { "dir": "specs" },
-    { "dir": "src/components", "path": "example/components" }
+    {
+      "dir": "specs"
+    },
+    {
+      "dir": "src/components",
+      "path": "example/components"
+    }
   ],
   "postcss": "postcss.config.mjs",
   "moduleResolution": {
-    "aliases": { "react-native": "react-native-web" },
+    "aliases": {
+      "react-native": "react-native-web"
+    },
     "conditions": ["react-native", "import", "module", "default"],
-    "loaders": { ".js": "jsx" },
+    "loaders": {
+      ".js": "jsx"
+    },
     "mainFields": ["react-native", "module", "main"],
     "resolveExtensions": [
       ".web.tsx",
@@ -30,96 +39,36 @@
       "stylesheets": [
         "design.css",
         "design-stage.css",
-        "design-review.css",
+        "design-canvas.css",
         "$componentStylesheets",
         "design-components.css",
-        "design-component-inspection.css",
         "design-component-details.css",
         "design-component-inspector.css",
         "design-component-workspace.css",
-        "design-component-view.css",
-        "design-component-controls.css",
         "design-library.css"
       ]
     },
     {
-      "match": "design/components/controls/**/index*.html",
+      "match": "design/canvas/**/index*.html",
       "stylesheets": [
         "design.css",
-        "design-stage.css",
-        "design-review.css",
-        "$componentStylesheets",
-        "design-components.css",
-        "design-component-inspection.css",
-        "design-component-details.css",
-        "design-component-inspector.css",
-        "design-component-workspace.css",
-        "design-component-view.css",
-        "design-component-controls.css"
-      ]
-    },
-    {
-      "match": "design/components/**/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
-        "design-review.css",
-        "$componentStylesheets",
-        "design-components.css",
-        "design-component-inspection.css",
-        "design-component-details.css",
-        "design-component-inspector.css",
-        "design-component-workspace.css",
-        "design-component-view.css"
-      ]
-    },
-    {
-      "match": "design/browse/appearance/states/light-only-{current,document}/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
+        "design-preview.css",
+        "design-shots.css",
+        "design-canvas.css",
+        "design-canvas-inspect.css",
+        "design-canvas-sections.css",
+        "design-canvas-changes.css",
+        "design-canvas-outcomes.css",
+        "design-canvas-flows.css",
+        "design-canvas-loading.css",
+        "design-canvas-search.css",
+        "design-canvas-components.css",
+        "design-canvas-props.css",
+        "design-canvas-evidence.css",
         "design-documents.css",
-        "design-review.css",
         "$componentStylesheets",
-        "design-component-inspector.css",
-        "design-component-workspace.css"
-      ]
-    },
-    {
-      "match": "design/browse/appearance/**/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
-        "design-review.css",
-        "$componentStylesheets",
-        "design-component-inspector.css",
-        "design-component-workspace.css"
-      ]
-    },
-    {
-      "match": "design/changes/diff-controls/**/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
-        "design-documents.css",
-        "design-review.css",
-        "design-review-scroll.css",
-        "$componentStylesheets",
-        "design-component-inspector.css",
-        "design-component-workspace.css"
-      ]
-    },
-    {
-      "match": "design/changes/**/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
-        "design-documents.css",
-        "design-review.css",
-        "design-review-scroll.css",
-        "$componentStylesheets",
-        "design-component-inspector.css",
-        "design-component-workspace.css"
+        "design-canvas-shell.css",
+        "design-canvas-compact.css"
       ]
     },
     {

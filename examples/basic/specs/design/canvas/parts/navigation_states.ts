@@ -1,4 +1,12 @@
 import type { NavigationState } from "../../parts/navigation_states.js";
+import { EXPLORER_NAVIGATION_STATES } from "../components/parts/navigation.js";
+import { EVIDENCE_NAVIGATION_STATES } from "../evidence/parts/navigation.js";
+import { FLOW_NAVIGATION_STATES } from "../flows/parts/navigation.js";
+import { LOADING_NAVIGATION_STATES } from "../loading/parts/navigation.js";
+import { OUTCOME_NAVIGATION_STATES } from "../outcomes/parts/navigation.js";
+import { PROPS_NAVIGATION_STATES } from "../props/parts/navigation.js";
+import { SEARCH_NAVIGATION_STATES } from "../search/parts/navigation.js";
+import { TAG_FILTERS } from "../search/parts/tags.js";
 
 import { CANVAS_PAGES as C, type CanvasDestination } from "./destinations.js";
 
@@ -59,10 +67,23 @@ const detailsSelection = { canvas: { changesTab: C.addedChanges } } as const;
  * the sections state. A variant set keeps its fitted zoom with a selection.
  * No artboard shows a variant set's selection with its sheet closed, so the
  * open sheet's close is a picture there. Payment terms has no Changes
- * artboard, so its Changes tab is a picture.
+ * artboard, so its Changes tab is a picture. The overview is Welcome's
+ * search with no query: its tag picker button opens the picker, and its
+ * Tags row's chips open their filters.
  */
 export const CANVAS_NAVIGATION_STATES = {
-  [C.overview]: { changes: C.catalogue, canvas: { ...welcome, ...changes } },
+  ...OUTCOME_NAVIGATION_STATES,
+  ...LOADING_NAVIGATION_STATES,
+  ...SEARCH_NAVIGATION_STATES,
+  ...EXPLORER_NAVIGATION_STATES,
+  ...PROPS_NAVIGATION_STATES,
+  ...EVIDENCE_NAVIGATION_STATES,
+  ...FLOW_NAVIGATION_STATES,
+  [C.overview]: {
+    changes: C.catalogue,
+    tags: { active: null, picker: false, artboards: TAG_FILTERS },
+    canvas: { ...welcome, ...changes },
+  },
   [C.zoomed]: {
     changes: C.catalogue,
     canvas: { fit: C.overview, ...changes },
@@ -73,6 +94,8 @@ export const CANVAS_NAVIGATION_STATES = {
   [C.componentSetPrimary]: fitted(C.componentSetPrimary),
   [C.componentSetSecondary]: fitted(C.componentSetSecondary),
   [C.document]: { canvas: { fit: C.document } },
+  // A branch of its own: only Fit opens an artboard of its story.
+  [C.documentLightOnly]: { canvas: { fit: C.documentLightOnly } },
   [C.catalogue]: {
     all: C.overview,
     canvas: { fit: C.catalogue, close: C.overview, ...changes },

@@ -5,9 +5,6 @@ import type { ColorScheme } from "@mokly/mokly";
 /** The interface appearance an artboard depicts, independent of preview scheme. */
 export type DesignAppearance = ColorScheme;
 
-/** The appearance selector setting a standalone catalogue can hold. */
-export type AppearanceChoice = "auto" | "light" | "dark";
-
 /**
  * Carries the renderer's `input.colorScheme` to the artboards below it. This is
  * a pass-through of the scheme Mokly already asks the renderer for, not a
@@ -30,14 +27,6 @@ export function DesignRenderedScheme({
 /** The scheme this generated file was rendered for. */
 export function useRenderedAppearance(): DesignAppearance {
   return useContext(RenderedScheme);
-}
-
-/**
- * The depicted catalogue holds one scheme setting, so a screen with a dark
- * render shows it whenever the artboard is dark.
- */
-export function useDarkPreview(): boolean {
-  return useRenderedAppearance() === "dark";
 }
 
 /**

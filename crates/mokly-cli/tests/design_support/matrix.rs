@@ -14,15 +14,15 @@ pub const SCREEN_FILE: &str = "examples/basic/specs/attribution.mockup.tsx";
 pub const SCREEN: &str = r#"
 import { defineScreen } from '@mokly/mokly';
 import { topBar } from './design/library/chrome/top-bar.js';
-import { screenHeader } from './design/library/chrome/screen-header.js';
+import { emptyState } from './design/library/preview/empty-state.js';
 import { tagChip } from './design/library/controls/tag-chip.js';
 import { changeStatusBadge } from './design/library/controls/change-status.js';
 import { propField } from './design/library/inspector/prop-field.js';
 import { metadataRow } from './design/library/inspector/metadata-row.js';
 export default defineScreen({title:'Attribution caller',description:'',relatedDocs:[],colorSchemes:['light'],render:()=> <main>
   <topBar.Component moklyInstance='bar' {...topBar.props} query='QUERY_BEFORE' />
-  <screenHeader.Component moklyInstance='header' {...screenHeader.props} title='TITLE_BEFORE' />
-  <tagChip.Component moklyInstance='target' {...tagChip.props} destination='design/browse/views/home' />
+  <emptyState.Component moklyInstance='guidance' {...emptyState.props} title='TITLE_BEFORE' />
+  <tagChip.Component moklyInstance='target' {...tagChip.props} destination='design/canvas/stage/home' />
   <changeStatusBadge.Component moklyInstance='status' status='unmodified' />
   <propField.Component moklyInstance='field' {...propField.props} control={<input defaultValue='VALUE_BEFORE' />} />
   <metadataRow.Component moklyInstance='slot' {...metadataRow.props}>SLOT_BEFORE</metadataRow.Component>
@@ -118,6 +118,7 @@ pub fn run(root: &Path, session: &Session, baseline: &ComparisonResult) {
                     for consumer in [
                         "design/library/controls/tag-picker",
                         "design/library/chrome/top-bar",
+                        "design/canvas/search/tags",
                         "design/browse/views/screen/tag-picker",
                     ] {
                         assert!(

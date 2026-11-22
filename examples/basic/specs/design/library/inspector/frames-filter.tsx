@@ -16,6 +16,7 @@ const propSchema = {
     light: flag,
     dark: flag,
     lightOnly: flag,
+    single: flag,
     highlight: flag,
     unavailable: {
       enum: [
@@ -45,7 +46,7 @@ export const framesFilter = defineComponent({
     "inspector",
     "frames-filter",
     "Frames filter",
-    "The frames that the canvas shows, by viewport and scheme, and Highlight components.",
+    "The frames that the canvas shows, by viewport and scheme, and Highlight components. A use case's filter chooses one viewport and one scheme.",
   ),
   propSchema,
   props: screen,

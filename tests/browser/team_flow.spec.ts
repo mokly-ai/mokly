@@ -19,6 +19,16 @@ for (const width of [390, 1280])
         "Fill in the invitation",
         "See the invitation",
       ]);
+      // A connector joins each step to the next, so the last step has none,
+      // and the narrow flow joins no steps.
+      const joined = width > 760 ? "block" : "none";
+      expect(
+        await page
+          .locator(".flow-step")
+          .evaluateAll((steps) =>
+            steps.map((step) => getComputedStyle(step, "::before").display),
+          ),
+      ).toEqual([joined, joined, "none"]);
       // Below 760px each step shows its mobile view in a phone frame.
       const viewport = width <= 760 ? "mobile" : "desktop";
       const elements = page.locator(".mbk-flow-screen iframe");

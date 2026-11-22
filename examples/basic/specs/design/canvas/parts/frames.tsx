@@ -29,6 +29,11 @@ export interface CanvasFrameSpec {
   side?: FrameVersion;
   /** The saved variant that a frame of a variant set shows, by its slug. */
   variant?: string;
+  /**
+   * The frame keeps its light view under Dark, because its entry has no dark
+   * view, and its label names that fallback.
+   */
+  lightOnly?: boolean;
 }
 
 /** The name of each scheme, as a frame's label and Inspect show it. */
@@ -143,7 +148,10 @@ export function sideBySideFrames(render: VersionRender): CanvasFrameSpec[] {
   );
 }
 
-/** One saved variant of a component, as its frames depict it. */
+/**
+ * One saved variant of a component, or the component's own example, which
+ * its title names, as its frames depict it.
+ */
 export interface ComponentVariantSketch {
   slug: string;
   title: string;
@@ -151,8 +159,8 @@ export interface ComponentVariantSketch {
 }
 
 /**
- * A component's variant set: one row per saved variant, Light beside Dark,
- * each frame at the variant document's nominal size.
+ * Rows of a component's variant set: one row per sketch, Light beside Dark,
+ * each frame at the component document's nominal size.
  */
 export function componentFrames(
   variants: readonly ComponentVariantSketch[],

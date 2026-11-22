@@ -4,10 +4,12 @@ import type { DepictedView } from "../../parts/depicted_view.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import type { CatalogueView } from "./catalogue.js";
+import type { CompareMode } from "./changes_sketches.js";
 import type { CanvasDestination } from "./destinations.js";
 import type { CanvasEntry } from "./entries.js";
 import type { CanvasFrameSpec } from "./frames.js";
 import type { CanvasInstance } from "./instances.js";
+import type { PanelTab } from "./panel.js";
 import {
   SelectionPill,
   frameSelectionOverlays,
@@ -28,27 +30,37 @@ type SetSelection = { frame: CanvasFrameSpec } | { instance: CanvasInstance };
  * compact form shows the
  * whole set until a selection picks a frame, and then that frame at full
  * size with the frame picker, the pill of a selected instance, and the open
- * sheet that the state asks for.
+ * sheet that the state asks for. On the Changes tab, the frames keep the
+ * compare mode that the state shows.
  */
 export function VariantSetArtboard({
   catalogue,
+  compare,
   design,
   entry,
+  expanded,
   frames,
   panel,
   selection,
   sheet,
+  tab,
   view,
   viewport,
   zoom,
 }: {
   catalogue: CatalogueView;
+  /** The compare mode that the frames show; Current by default. */
+  compare?: CompareMode | undefined;
   design: CanvasDestination;
   entry: CanvasEntry;
+  /** The open sheet takes its expanded height. */
+  expanded?: boolean | undefined;
   frames: readonly CanvasFrameSpec[];
   panel: ReactNode;
   selection?: SetSelection | undefined;
   sheet?: CanvasSheet | undefined;
+  /** The right panel's selected tab; Inspect by default. */
+  tab?: PanelTab | undefined;
   /** The set's depicted view, where its frames render registered instances. */
   view?: DepictedView | undefined;
   viewport: ArtboardViewport;
@@ -70,6 +82,7 @@ export function VariantSetArtboard({
       compactZoom={picked === undefined ? FITS.phoneSet : FITS.phonePicked}
       design={design}
       entry={entry}
+      expanded={expanded}
       panel={panel}
       pill={
         instance === undefined ? undefined : (
@@ -77,10 +90,12 @@ export function VariantSetArtboard({
         )
       }
       sheet={sheet}
+      tab={tab}
       viewport={viewport}
       zoom={zoom}
     >
       <CanvasStage
+        compare={compare}
         entry={entry}
         frames={frames}
         overlays={

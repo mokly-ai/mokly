@@ -5,23 +5,23 @@
    package components draw in the shipped palette, and each of their elements
    carries the reset class. The shell root, its body, and its main region are
    the shipped ones, from the shell layout stylesheet that
-   design-component-workspace.css imports after the component sheets. The
-   shell's own parts, such as the top bar, the catalogue navigation, and the
-   screen header, come from the @mokly/ui stylesheets that their component
-   sheets import. The design catalogue keeps its own palette below for the
-   artboards' own parts. Every interface role has a Light and a Dark value, so
-   an artboard changes appearance by selecting a palette rather than by adding
-   an override sheet. Device-screen colors are preview tokens and live in
-   design-stage.css, independent of the interface appearance. A light-only
-   document keeps the Light palette inside a Dark artboard. */
+   design-canvas-shell.css and design-component-workspace.css import after
+   the component sheets. The shell's own parts, such as the top bar, the
+   catalogue navigation, and the screen header, come from the @mokly/ui
+   stylesheets that their component sheets import. The design catalogue keeps
+   its own palette below for the artboards' own parts. Every interface role
+   has a Light and a Dark value, so an artboard changes appearance by
+   selecting a palette rather than by adding an override sheet. Device-screen
+   colors are preview tokens and live in design-preview.css, independent of
+   the interface appearance. */
 @import "../../packages/ui/src/theme/theme.css";
 @import "../../packages/ui/src/reset/reset.css";
 /* Geist and Geist Mono, the faces that the shipped theme and the sans and
-   mono stacks below name. */
+   mono stacks below name. Every design route links this sheet, so it alone
+   imports them, and each design document declares each face once. */
 @import "./design-fonts/geist.css";
 
 :root,
-[data-mbk-light-only],
 [data-mbk-appearance="light"] {
   --chrome-bg: #f4f4f1;
   --chrome-surface: #ffffff;
@@ -34,7 +34,6 @@
   --chrome-border-strong: #c8ccc4;
   --chrome-control-edge: #868e88;
   --chrome-accent: #2a4733;
-  --chrome-brand: #2f5945;
   --chrome-shadow: 0 30px 90px rgba(20, 28, 22, 0.14);
   --chrome-shadow-soft: 0 1px 2px rgba(20, 28, 22, 0.1);
   --chrome-shadow-press: inset 0 1px 2px rgba(20, 28, 22, 0.14);
@@ -45,11 +44,13 @@
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
+  /* The public accent of the @mokly/ui parts, at the shipped theme's Canvas
+     defaults, so a sample and an older screen draw the shipped accent. */
+  --mokly-accent: #067a45;
+  --mokly-accent-contrast: #ffffff;
+  --mokly-accent-soft: #e3f6ec;
   /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
-  --mokly-accent: var(--mbk-sage);
-  --mokly-accent-contrast: var(--mbk-accent-contrast);
-  --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mb-added: var(--mbk-sage-deep);
   --mb-added-soft: var(--mbk-accent-surface);
@@ -57,7 +58,6 @@
   --mb-changed-soft: var(--mbk-status-changed-bg);
   --mb-removed: var(--mbk-status-removed-ink);
   --mb-removed-soft: var(--mbk-status-removed-bg);
-  --mbk-accent-soft: rgba(79, 120, 100, 0.1);
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
   --mbk-guide: #dbded8;
@@ -97,7 +97,6 @@
   --chrome-border-strong: #71717a;
   --chrome-control-edge: #71717a;
   --chrome-accent: #a5cdb6;
-  --chrome-brand: #a3cdb4;
   --chrome-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
   --chrome-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
   --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
@@ -108,11 +107,11 @@
   --mbk-sage: #86b79b;
   --mbk-sage-deep: #b6d8c4;
   --mbk-accent-contrast: #0e1a14;
+  --mokly-accent: #5be3a0;
+  --mokly-accent-contrast: #1b1b1e;
+  --mokly-accent-soft: #0f2a1d;
   /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
-  --mokly-accent: var(--mbk-sage);
-  --mokly-accent-contrast: var(--mbk-accent-contrast);
-  --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mb-added: var(--mbk-sage-deep);
   --mb-added-soft: var(--mbk-accent-surface);
@@ -120,7 +119,6 @@
   --mb-changed-soft: var(--mbk-status-changed-bg);
   --mb-removed: var(--mbk-status-removed-ink);
   --mb-removed-soft: var(--mbk-status-removed-bg);
-  --mbk-accent-soft: rgba(134, 183, 155, 0.16);
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
   --mbk-guide: #34343a;
@@ -167,16 +165,10 @@ body {
   overflow: hidden;
 }
 
-/* A mobile render draws the shell in a phone-wide column at every width, and
-   a collapsed render a desktop window narrower than the layout breakpoint. */
-.mbk-shell--mobile > .mbk,
-.mbk-shell--collapsed > .mbk {
+/* A mobile render draws the shell in a phone-wide column at every width. */
+.mbk-shell--mobile > .mbk {
   border-left: 1px solid var(--chrome-border);
   border-right: 1px solid var(--chrome-border);
   margin: 0 auto;
   max-width: 392px;
-}
-
-.mbk-shell--collapsed > .mbk {
-  max-width: 832px;
 }

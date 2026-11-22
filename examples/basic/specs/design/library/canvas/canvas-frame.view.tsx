@@ -1,4 +1,9 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+import { mockLink } from "@mokly/mokly";
+
+import { useCurrentPage } from "../../parts/design_navigation.js";
+import type { DesignDestination } from "../../parts/destinations.js";
 
 import type { CanvasFrameProps } from "./canvas-frame.js";
 import { FrameComparison, SWIPE_SPLIT } from "./frame_compare.js";
@@ -20,6 +25,27 @@ const SIDES: Record<NonNullable<CanvasFrameProps["side"]>, string> = {
 };
 
 /**
+ * A step frame's name as the link that opens the step's screen, with a
+ * chevron that points on to it; current where that screen's artboard is the
+ * rendered one.
+ */
+function ScreenLink({
+  children,
+  to,
+}: {
+  children: ReactNode;
+  to: DesignDestination;
+}) {
+  const current = useCurrentPage();
+  return (
+    <a aria-current={current(to)} className="cv-frame-link" href={mockLink(to)}>
+      {children}
+      <CanvasGlyph name="chevron" size={12} />
+    </a>
+  );
+}
+
+/**
  * A bare frame on the canvas: a rectangle with a ring and a soft shadow, a
  * mono label above its left edge and its size above the right edge. The
  * frame holds its document at the nominal size, scaled by the zoom, in the
@@ -35,20 +61,28 @@ const SIDES: Record<NonNullable<CanvasFrameProps["side"]>, string> = {
  * viewport and scheme, and a component's frame by its saved variant and
  * scheme, as the compact frame picker names them. The label of the frame
  * that holds the selection, an instance on it or the frame itself, takes the
- * signal.
+ * signal. A use case's step frame is named by its step: the step's number
+ * in a tag leads the label, the step's title is the link that opens the
+ * step's screen, and the step's description reads muted below the label. A
+ * frame that keeps its light view under Dark, because its entry has no dark
+ * view, adds `Light only` after its name, in a lighter weight.
  */
 export function CanvasFrameView({
   before,
   children,
   compare,
+  description,
   entry,
   height,
   kind,
   label,
+  lightOnly,
   overlay,
   scheme,
+  screenDestination,
   selected,
   side,
+  step,
   variant,
   width,
   zoom,
@@ -63,6 +97,14 @@ export function CanvasFrameView({
   const viewport = kind === "desktop" || kind === "mobile" ? kind : undefined;
   const name =
     viewport ?? (kind === "component" && variant ? variant : undefined);
+  const title = (
+    <span className="cv-frame-name">
+      {entry === undefined || entry === "" ? null : (
+        <span className="cv-frame-entry">{entry} · </span>
+      )}
+      {label}
+    </span>
+  );
   return (
     <figure
       className="cv-frame"
@@ -86,16 +128,35 @@ export function CanvasFrameView({
             </span>{" "}
           </>
         )}
-        <span className="cv-frame-name">
-          {entry === undefined || entry === "" ? null : (
-            <span className="cv-frame-entry">{entry} · </span>
-          )}
-          {label}
-        </span>
+        {step === undefined ? null : (
+          <>
+            <span className="cv-frame-step">
+              <span className="cv-frame-step-word">Step </span>
+              {step}
+            </span>{" "}
+          </>
+        )}
+        {screenDestination === undefined ? (
+          title
+        ) : (
+          <ScreenLink to={screenDestination}>{title}</ScreenLink>
+        )}
+        {lightOnly ? (
+          <>
+            {" "}
+            <span className="cv-frame-fallback">· Light only</span>
+          </>
+        ) : null}
         {kind === "document" ? null : (
           <span className="cv-frame-size">
             {width} × {height}
           </span>
+        )}
+        {description === undefined ? null : (
+          <>
+            {" "}
+            <span className="cv-frame-note">{description}</span>
+          </>
         )}
       </figcaption>
       <div className="cv-frame-clip">

@@ -33,8 +33,12 @@
   padding: 0 6px 0 4px;
 }
 
+/* The body is a stacking context of its own, so no content that it scrolls,
+   such as the shipped catalogue column with the stacking level of its
+   drawer, rises over the sheet's close control, which follows the body. */
 .cv-float-body {
   flex: 1;
+  isolation: isolate;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;

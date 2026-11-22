@@ -1,4 +1,3 @@
-import { DESTINATIONS } from "./destinations.js";
 import type { Crumb } from "./shell.js";
 
 /**
@@ -29,14 +28,8 @@ export const PREVIOUS_PATHS = {
 } as const;
 
 /**
- * The Example folder's README is the folder's own page, so its crumb opens
- * that page from All. Changes states and removed entries keep folder crumbs as
- * text, as they keep a parent entry's crumb.
+ * Crumbs of a current screen in Example › Screens, viewed from All. The
+ * Example folder's README is the folder's own page, which no artboard shows,
+ * so its crumb is text.
  */
-export const EXAMPLE_CRUMB = {
-  label: "Example",
-  to: DESTINATIONS.exampleOverview,
-} as const satisfies Crumb;
-
-/** Crumbs of a current screen in Example › Screens, viewed from All. */
-export const SCREEN_CRUMBS: readonly Crumb[] = [EXAMPLE_CRUMB, "Screens"];
+export const SCREEN_CRUMBS: readonly Crumb[] = ["Example", "Screens"];

@@ -79,8 +79,6 @@ export function canvasProperties(
     "--chrome-control-edge": colors.borderStrong,
     // Links in the shell's text.
     "--chrome-accent": colors.signalDeep,
-    // The brand mark.
-    "--chrome-brand": colors.signalDeep,
     // The guide lines of the catalogue tree: hairlines.
     "--mbk-guide": colors.border,
     // The dots of the shipped stage grid: the canvas dots.
@@ -95,7 +93,6 @@ export function canvasProperties(
     "--mbk-sage": colors.signalDeep,
     "--mbk-sage-deep": colors.signalDeep,
     "--mbk-accent-contrast": colors.surface,
-    "--mbk-accent-soft": colors.signalSoft,
     // Added entries: signal text on the soft signal fill.
     "--mb-added": colors.signalDeep,
     "--mb-added-soft": colors.signalSoft,

@@ -51,6 +51,11 @@ export interface TagState {
   active: string[];
   /** The search field's tag control: it opens or closes the picker. */
   toggle: string;
+  /**
+   * The destination of each tag's chip: an inactive chip enters its tag, and
+   * an active chip clears it.
+   */
+  chips: Record<string, string>;
   /** The catalogue rows a filtered desktop view keeps. */
   rows?: string[];
 }
@@ -92,36 +97,16 @@ export const {
 
 /** Design entries that render in both schemes; every other one is light-only. */
 export const DUAL_SCHEME =
-  /^design\/(browse\/(appearance|loading)\/.+|browse\/views\/(screen|details-screen|screen\/dark-scheme|screen\/light-only)|canvas\/.+|changes\/diff-controls\/.+|changes\/outcomes\/(changed|difference)|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
+  /^design\/(canvas\/.+|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
 
 /** The startup pages draw no catalogue chrome before the index arrives. */
-const STARTUP =
-  /^design\/browse\/loading\/(catalogue-loading|catalogue-failed|viewer-version)$/u;
-
-/** Screens that depict no selected entry, so they have no screen header. */
-const UNSELECTED = new Set([
-  "design/browse/views/home",
-  "design/browse/states/navigation",
-  "design/browse/states/missing-route",
-  "design/browse/appearance/status/home",
-  "design/browse/appearance/workspaces/drawer",
-]);
-
-/** Controls states that show no editable field. */
-const FIELDLESS = new Set([
-  "design/components/controls/limits/no-props",
-  "design/components/controls/limits/read-only",
-  "design/components/controls/limits/removed",
-  "design/components/controls/published/readonly",
-  "design/components/controls/published/readonly-variant",
-  "design/components/controls/states/comparison",
-]);
+const STARTUP = /^design\/canvas\/loading\/catalogue(\/failed|\/version)?$/u;
 
 /**
  * The shared component ids that one design screen view must record, by the
  * adoption table of the design component library: shared chrome everywhere,
- * the status, view, inspector, field, and flow parts of each family, and the
- * family parts of `adoption.json`.
+ * the screen header outside the Canvas family, and the family parts of
+ * `adoption.json`.
  */
 export function requiredComponents(
   path: string,
@@ -131,26 +116,10 @@ export function requiredComponents(
   const ids = ["chrome/top-bar", "chrome/appearance-selector"];
   if (viewport === "desktop") ids.push("chrome/catalogue-navigation");
   // The Canvas viewer names the selected entry on the canvas, in the section
-  // head and the compact entry bar, so it draws no screen header band.
+  // head and the compact entry bar, so it draws no screen header band. The
+  // older tag picker selects an entry.
   const canvas = new RegExp(ADOPTION.families.canvas!, "u").test(path);
-  if (!UNSELECTED.has(path) && !canvas) ids.push("chrome/screen-header");
-  if (path.startsWith("design/browse/loading/"))
-    ids.push("preview/empty-state");
-  if (path.startsWith("design/changes/"))
-    ids.push("inspector/inspector", "inspector/metadata-row");
-  if (path.startsWith("design/components/"))
-    ids.push(
-      "controls/view-controls",
-      "controls/change-status",
-      "inspector/inspector",
-    );
-  if (path.startsWith("design/components/controls/") && !FIELDLESS.has(path))
-    ids.push("inspector/prop-field");
-  if (
-    path === "design/browse/views/use-case" ||
-    path === "design/browse/appearance/status/flow"
-  )
-    ids.push("preview/flow-step", "preview/device-frame");
+  if (!canvas) ids.push("chrome/screen-header");
   for (const part of ADOPTION.parts)
     if (
       (part.viewports ?? [viewport]).includes(viewport) &&

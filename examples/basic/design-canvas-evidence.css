@@ -1,0 +1,25 @@
+/* The Canvas viewer's comparison evidence: the shipped evidence of a
+   comparison in the Changes tab, and the evidence that an entry without
+   Changes keeps in Inspect. Each Canvas part keeps its own sheet; this sheet
+   holds only the layout and the states of these artboards. */
+
+/* ---- Files and stylesheets ------------------------------------------- */
+
+/* Each changed file, and each examined stylesheet, as an item of a list in
+   the panel's type: a compact indent and quiet markers, the path in the
+   primary text, wrapping anywhere in the narrow panel, with the file's
+   sentences and selector lists nested under it. */
+.cv-evidence .mbk-comparison-evidence ul {
+  padding-left: 18px;
+}
+
+.cv-evidence .mbk-comparison-evidence li {
+  color: var(--cv-text);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.cv-evidence .mbk-comparison-evidence li::marker {
+  color: var(--cv-text-muted);
+}

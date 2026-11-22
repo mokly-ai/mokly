@@ -1,4 +1,4 @@
-//! All nine sheets use exact per-view evidence and an exact changed-entry union.
+//! Every shared sheet uses exact per-view evidence and an exact changed-entry union.
 
 use std::path::Path;
 
@@ -28,7 +28,7 @@ pub fn run(root: &Path, session: &Session, scopes: &Scopes) {
     edit(
         root,
         session,
-        "nine shared sheets with three rule statuses",
+        "every shared sheet with three rule statuses",
         &edits,
         &|result| check(result, scopes),
     );

@@ -4,7 +4,7 @@ import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import { COMPONENT_IDENTITIES } from "./component_identity.js";
 
 /** The kind of entry a Canvas artboard selects, which decides its frames. */
-export type CanvasEntryKind = "component" | "document" | "screen";
+export type CanvasEntryKind = "component" | "document" | "screen" | "use-case";
 
 /**
  * The selected entry of a Canvas artboard: its title, the last segment of
@@ -18,7 +18,12 @@ export interface CanvasEntry {
   kind: CanvasEntryKind;
   /** The status pill; absent for an unmodified or a moved entry. */
   status?: ChangeStatus | undefined;
-  /** Whether the branch changed, added, removed, or moved the entry. */
+  /**
+   * Whether the right panel has the Changes tab: the branch changed, added,
+   * removed, or moved the entry, or the entry is unmodified and outside
+   * Changes, yet its comparison is eligible, because a changed component
+   * renders in it.
+   */
   changed: boolean;
 }
 
@@ -67,5 +72,12 @@ export const CANVAS_ENTRIES = {
     path: ENTRY_PATHS.paymentTerms,
     kind: "document",
     changed: true,
+  },
+  tour: {
+    title: "Example tour",
+    slug: "tour",
+    path: ENTRY_PATHS.tour,
+    kind: "use-case",
+    changed: false,
   },
 } as const satisfies Record<string, CanvasEntry>;

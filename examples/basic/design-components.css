@@ -1,13 +1,10 @@
-/* Component-page artboards in the basic example's owning design catalogue.
-   The variant bar is the shipped one, from its @mokly/ui stylesheet. */
-@import "../../packages/ui/src/variant-bar/variant-bar.css";
+/* The links, focus rings and disclosures of the design library's samples. */
 
 /* Prose links take the deep sage. The links that @mokly/ui components draw
    keep the look of their package stylesheets, as the shipped shell draws
-   them: the brand, the catalogue rows, the crumbs, the menu, the comparison
-   modes, the Usage rows, the instance tree, the selected instance's component
-   link, Reset, the text buttons, the variants, an empty state's action, a
-   flow step's screen, and a highlight label. */
+   them: the brand, the catalogue rows, the crumbs, the menu, the instance
+   tree, Reset, the text buttons, an empty state's action, and a highlight
+   label. */
 .ce-design
   a:where(
     :not(
@@ -15,15 +12,10 @@
       .mbk-nav-row,
       .mbk-crumb-link,
       .mbk-menu,
-      .mbk-seg > a,
-      .mbk-usage-list a,
       .mbk-instance-select,
-      .ce-selected-instance > a,
       .mbk-controls-reset,
       .mbk-text-button,
-      .mbk-selection-bar > a,
       .mbk-empty-link,
-      .flow-step-link,
       .mbk-highlight-label
     )
   ) {
@@ -37,15 +29,10 @@
       .mbk-nav-row,
       .mbk-crumb-link,
       .mbk-menu,
-      .mbk-seg > a,
-      .mbk-usage-list a,
       .mbk-instance-select,
-      .ce-selected-instance > a,
       .mbk-controls-reset,
       .mbk-text-button,
-      .mbk-selection-bar > a,
       .mbk-empty-link,
-      .flow-step-link,
       .mbk-highlight-label
     )
   ):hover {
@@ -61,159 +48,6 @@
 }
 :where(.ce-design summary) {
   font: inherit;
-}
-.ce-button,
-.ce-action {
-  font-family: var(--sans);
-}
-/* A mobile render draws the narrow variant bar at every width. Below the
-   layout breakpoint the package stylesheet draws it on its own, as the shell
-   does. */
-.mbk-shell--mobile .mbk-selection-bar {
-  padding: 8px 12px;
-}
-/* The bordered box of a component's canvas stands in for the canvas's frame,
-   which the shell draws around a real document. */
-.mbk-component-canvas > .ce-canvas-content {
-  border: 1px solid var(--chrome-border);
-  border-radius: 8px;
-  height: 520px;
-  overflow: hidden;
-}
-/* A depicted component document fills its canvas or the viewport of its
-   comparison frame, and draws the component 24px from its top left, as the
-   example's documents do in the shell. */
-/* A canvas that the depicted view highlights holds the highlight's layer. */
-.ce-canvas-content:has(> .ce-highlight-layer) {
-  position: relative;
-}
-.ce-canvas-content {
-  align-items: flex-start;
-  display: flex;
-  justify-content: flex-start;
-  min-height: 100%;
-  padding: 24px;
-}
-.ce-action {
-  background: var(--mbk-sage);
-  border: 1px solid var(--mbk-sage);
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  height: 36px;
-  padding: 0 18px;
-  white-space: nowrap;
-}
-.ce-action:disabled {
-  background: var(--chrome-disabled-bg);
-  border-color: var(--chrome-disabled-edge);
-  color: var(--chrome-disabled-ink);
-  cursor: default;
-}
-.ce-action--before {
-  border-radius: 3px;
-  padding: 0 12px;
-}
-.ce-toolbar-example {
-  align-items: center;
-  background: var(--ce-soft);
-  border: 1px solid var(--ce-edge);
-  border-radius: 10px;
-  display: flex;
-  font-size: 12px;
-  gap: 14px;
-  justify-content: space-between;
-  max-width: 560px;
-  min-height: 82px;
-  padding: 16px;
-  width: 100%;
-}
-/* The Toolbar's Action keeps one width, so its highlight region is a fixed
-   box wherever the Toolbar is drawn. */
-.ce-toolbar-example .ce-action {
-  flex: 0 0 104px;
-  padding: 0 10px;
-  width: 104px;
-}
-.ce-toolbar-example > span {
-  max-width: 170px;
-}
-/* The tall Checklist is drawn part-way down the component frame's 518px
-   viewport, with the frame's scrollbar thumb placed and sized to match the
-   shown share of its 1060px document. */
-.mb-component-frame .mbk-stack-document[data-scrolled] {
-  transform: translateY(-160px);
-}
-.mb-component-frame .mbk-stack-thumb {
-  height: 48.9%;
-  top: 15.1%;
-}
-.ce-checklist {
-  font-size: 13px;
-  max-width: 360px;
-  padding: 6px 0;
-  width: 100%;
-}
-.ce-checklist-title {
-  font-weight: 600;
-  height: 40px;
-  line-height: 40px;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ce-checklist-steps {
-  display: grid;
-  grid-auto-rows: 40px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.ce-checklist-steps > li {
-  align-items: center;
-  border-top: 1px solid var(--ce-edge);
-  display: flex;
-  gap: 12px;
-  min-width: 0;
-}
-.ce-checklist-mark {
-  align-items: center;
-  border: 1px solid var(--ce-secondary);
-  border-radius: 50%;
-  display: inline-flex;
-  flex: 0 0 18px;
-  font-size: 11px;
-  height: 18px;
-  justify-content: center;
-}
-.ce-checklist-steps > li[data-complete] .ce-checklist-mark {
-  background: var(--mbk-sage);
-  border-color: var(--mbk-sage);
-  color: white;
-}
-.ce-checklist-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ce-mobile-location {
-  background: white;
-  border-bottom: 1px solid var(--chrome-border);
-  display: flex;
-  flex-shrink: 0;
-  font-size: 11px;
-  gap: 16px;
-  padding: 9px 16px;
-}
-.ce-change-count {
-  background: var(--chrome-bg);
-  border-radius: 4px;
-  color: var(--chrome-ink-2);
-  margin-left: 3px;
-  padding: 1px 5px;
 }
 .ce-badge {
   background: var(--mbk-accent-surface);

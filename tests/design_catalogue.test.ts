@@ -82,7 +82,12 @@ test(
       instances.filter(
         (instance) => instance.componentId === `design/library/${id}`,
       );
-    for (const instances of usage("design/browse/views/screen/tag-picker")) {
+    // The open tag picker of the Canvas search, and of the older tag picker
+    // that stays as the runtime test's subject.
+    for (const instances of [
+      "design/canvas/search/tags",
+      "design/browse/views/screen/tag-picker",
+    ].flatMap(usage)) {
       const byKey = new Map(
         instances.map((instance) => [instance.key, instance]),
       );
@@ -97,19 +102,33 @@ test(
       assert.equal(picker?.componentId, "design/library/controls/tag-picker");
       assert.equal(owner(picker)?.componentId, "design/library/chrome/top-bar");
     }
-    for (const instances of usage("design/browse/views/use-case")) {
-      const steps = of("preview/flow-step", instances);
-      assert.deepEqual(steps.map((step) => step.id).sort(), [
-        "arrival",
-        "detail",
-      ]);
-      const frames = of("preview/device-frame", instances);
-      assert.equal(frames.length, 2);
-      assert.equal(new Set(frames.map((frame) => frame.key)).size, 2);
-      for (const frame of frames) {
-        assert.equal(frame.owner.kind, "entry");
-        assert.ok(frame.slotKey, "a framed step stays in the caller's slot");
-      }
+    // The Canvas use case: its step frames in encounter order, each with its
+    // step's number, its title and the screen that the title opens. Every
+    // frame of a step comes before the next step's frames, and the artboard
+    // owns each frame.
+    for (const instances of usage("design/canvas/flows/tour")) {
+      const frames = of("canvas/canvas-frame", instances).sort(
+        (a, b) => a.order - b.order,
+      );
+      const steps = frames.map(({ props }) =>
+        JSON.stringify([props.step, props.label, props.screenDestination]),
+      );
+      assert.deepEqual(
+        steps.filter((step, index) => step !== steps[index - 1]),
+        [
+          [
+            ["number", "1"],
+            ["string", "Welcome"],
+            ["string", "design/canvas/overview"],
+          ],
+          [
+            ["number", "2"],
+            ["string", "Details"],
+            ["string", "design/canvas/outcomes/added"],
+          ],
+        ].map((step) => JSON.stringify(step)),
+      );
+      for (const frame of frames) assert.equal(frame.owner.kind, "entry");
     }
   },
 );
@@ -138,13 +157,9 @@ test(
   },
 );
 
-test(
-  "outside the component explorer, no keyboard stop opens nothing",
-  setup,
-  async () => {
-    assert.deepEqual(keyboardStopViolations(await served()), []);
-  },
-);
+test("no design keyboard stop opens nothing", setup, async () => {
+  assert.deepEqual(keyboardStopViolations(await served()), []);
+});
 
 test(
   "each artboard draws Highlight components in the shell's state",

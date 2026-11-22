@@ -1,9 +1,10 @@
-/* Geist and Geist Mono for the design mockups that draw the Canvas palette
-   of @mokly/ui, which names both families with a system stack as the
-   fallback while they load. The variable faces and their SIL Open Font
-   License are copied unchanged from the geist npm package 1.9.2, which
-   Vercel publishes from its geist-font repository. A design stylesheet that
-   draws in the Canvas palette imports this file. */
+/* Geist and Geist Mono for the design mockups. The @mokly/ui theme and the
+   Canvas palette name both families, with a system stack as the fallback
+   while they load. The variable faces and their SIL Open Font License are
+   copied unchanged from the geist npm package 1.9.2, which Vercel publishes
+   from its geist-font repository. design.css imports this file, and every
+   design route links design.css, so each design document declares each face
+   once. */
 @font-face {
   font-family: "Geist";
   font-style: normal;

@@ -2,10 +2,10 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 
-const componentPath = "/view/design/library/inspector/inspector/";
-const variantPath = "/view/design/library/inspector/inspector/props/";
+const componentPath = "/view/example/components/action/";
+const variantPath = "/view/example/components/action/disabled/";
 const variantRow =
-  'a[data-nav-row][data-route="design/library/inspector/inspector/props/index.html"]';
+  'a[data-nav-row][data-route="example/components/action/disabled/index.html"]';
 const fragment = "react-native-stylesheet";
 
 test("sequential search editing preserves spaces and typed tag terms", async ({
@@ -49,11 +49,11 @@ test("variant entry navigation scrolls the active row back into view", async ({
 
   await page
     .getByRole("navigation", { name: "Saved variants" })
-    .getByRole("link", { name: "Props", exact: true })
+    .getByRole("link", { name: "Disabled", exact: true })
     .click();
 
   await expect(page).toHaveURL(
-    /\/view\/design\/library\/inspector\/inspector\/props\/$/,
+    /\/view\/example\/components\/action\/disabled\/$/,
   );
   await expect.poll(() => rowIsInsidePane(pane, row)).toBe(true);
 });
@@ -62,14 +62,14 @@ async function expectInitialVariantEntry(page: Page): Promise<void> {
   await expect(
     page
       .getByRole("navigation", { name: "Saved variants" })
-      .getByRole("link", { name: "Props", exact: true }),
+      .getByRole("link", { name: "Disabled", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   for (const viewport of ["mobile", "desktop"])
     await expect(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
     ).toHaveAttribute(
       "src",
-      new RegExp(`inspector/props/index\\.${viewport}\\.html#${fragment}$`),
+      new RegExp(`action/disabled/index\\.${viewport}\\.html#${fragment}$`),
     );
 }
 
