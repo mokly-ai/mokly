@@ -7,7 +7,7 @@ use html5ever::tree_builder::TreeBuilder;
 use html5gum::emitters::callback::CallbackEmitter;
 use html5gum::{Emitter, ForwardingEmitter, State};
 
-use crate::html_driver::DriverSink;
+use crate::html_driver::{DriverSink, TokenObserver};
 use crate::html_driver_events::EventSink;
 
 /// The html5gum emitter that lets the tree builder choose each tokenizer state.
@@ -22,9 +22,10 @@ impl<'a, Sink: DriverSink> DriverEmitter<'a, Sink> {
         builder: &'a TreeBuilder<Sink::Handle, Sink>,
         source: &'a str,
         offset: usize,
+        observer: Option<&'a dyn TokenObserver>,
     ) -> Self {
         Self {
-            inner: CallbackEmitter::new(EventSink::new(builder, source, offset)),
+            inner: CallbackEmitter::new(EventSink::new(builder, source, offset, observer)),
             cdata: false,
         }
     }

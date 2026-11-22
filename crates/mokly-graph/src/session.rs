@@ -12,8 +12,9 @@ use mokly_html::composition::Composer;
 use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::background::BackgroundRead;
 use crate::cache::{Artifact, RenderCache};
-use crate::closure::{Closure, Walker};
+use crate::closure::Closure;
 use crate::collection::ComparisonCollector;
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
@@ -134,26 +135,12 @@ impl Session {
             }),
         }
     }
-
-    pub(crate) fn preview_walker(&self) -> Walker {
-        Walker {
-            observer: None,
-            ..self.walker()
-        }
-    }
-
-    pub(crate) fn walker(&self) -> Walker {
-        Walker {
-            observer: Some(Arc::new(self.clone())),
-            tree: self.state.tree.clone(),
-            policy: self.state.policy.clone(),
-            generated: Arc::new(self.clone()),
-            index: self.state.reference_index.clone(),
-        }
-    }
 }
 
 impl RenderGeneration for Session {
+    fn read_background(&self, route: &str) -> Result<Option<BackgroundRead>> {
+        self.read_background_document(route).map(Some)
+    }
     fn comparison_identity(
         &self,
         read: ComparisonRead,

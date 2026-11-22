@@ -31,9 +31,25 @@ pub(crate) fn usage_observed(
     else {
         return 0;
     };
+    let mut bytes = instance_records(instances, observer)
+        + slot_records(slots)
+        + ranges.capacity() * mem::size_of::<ComponentRangeRecord>();
+    for range in ranges {
+        bytes += range.id.capacity() + range.parent_id.as_ref().map_or(0, String::capacity);
+        bytes += match &range.target {
+            ComponentRangeTarget::Instance { instance_key } => instance_key.capacity(),
+            ComponentRangeTarget::Slot { slot_key } => slot_key.capacity(),
+            ComponentRangeTarget::Root => 0,
+        };
+    }
+    bytes
+}
+
+pub(crate) fn instance_records(
+    instances: &Vec<ComponentInstanceRecord>,
+    observer: Option<&dyn ExportObserver>,
+) -> usize {
     let mut bytes = instances.capacity() * mem::size_of::<ComponentInstanceRecord>();
-    bytes += slots.capacity() * mem::size_of::<ComponentSlotRecord>();
-    bytes += ranges.capacity() * mem::size_of::<ComponentRangeRecord>();
     for instance in instances {
         bytes += instance.key.capacity()
             + instance.id.capacity()
@@ -48,20 +64,17 @@ pub(crate) fn usage_observed(
             bytes += 256 + key.capacity() + mem::size_of_val(value) + wire(value, observer);
         }
     }
+    bytes
+}
+
+pub(crate) fn slot_records(slots: &Vec<ComponentSlotRecord>) -> usize {
+    let mut bytes = slots.capacity() * mem::size_of::<ComponentSlotRecord>();
     for slot in slots {
         bytes += slot.key.capacity()
             + slot.instance_key.capacity()
             + slot.name.capacity()
             + owner(&slot.owner)
             + slot.source_slot_key.as_ref().map_or(0, String::capacity);
-    }
-    for range in ranges {
-        bytes += range.id.capacity() + range.parent_id.as_ref().map_or(0, String::capacity);
-        bytes += match &range.target {
-            ComponentRangeTarget::Instance { instance_key } => instance_key.capacity(),
-            ComponentRangeTarget::Slot { slot_key } => slot_key.capacity(),
-            ComponentRangeTarget::Root => 0,
-        };
     }
     bytes
 }
