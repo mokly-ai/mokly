@@ -1,4 +1,4 @@
-//! Current checked head documents feed optional closure proofs before pairing.
+//! Current checked head documents feed optional view proofs before pairing.
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -8,12 +8,18 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::ClosureBuilder;
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use mokly_graph::error::Result;
-use mokly_graph::head_validation::{ClosureFacts, HeadValidation, ValidationRead};
+use mokly_graph::head_validation::{
+    ClosureFacts, ClosureProof, HeadProof, HeadValidation, ValidationRead,
+};
+use mokly_graph::head_walks::WalkRecord;
 use mokly_graph::types::RenderGeneration;
+use mokly_graph::workers::ValidatedView;
 use mokly_html::composition::Composed;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::reuse_budget::Resident;
 use crate::reuse_digest;
+use crate::validation_arena::Replay;
 use crate::validation_recording::Recording;
 
 pub(crate) struct Head {
@@ -30,28 +36,20 @@ pub(crate) struct Head {
 }
 
 impl HeadValidation for Head {
+    fn kept(&self, route: &str, builder: &dyn ClosureBuilder) -> Result<HeadProof> {
+        self.kept_view(route, builder)
+    }
+
     fn document(&self, route: &str) -> Result<Arc<Artifact>> {
         self.documents.fetch_add(1, Ordering::Relaxed);
         let artifact = self.generation.validation_document(route)?;
-        if self.forward
-            && let Some(identity) = self.generation.comparison_identity(
-                ComparisonRead::Document,
-                route,
-                ProofMode::Retained,
-            )
-        {
-            let proof = DocumentProof {
-                identity,
-                usage: artifact
-                    .document
-                    .as_ref()
-                    .map(|document| document.usage.clone()),
-            };
-            self.proofs
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .insert(route.into(), proof);
-        }
+        self.forward(
+            route,
+            artifact
+                .document
+                .as_ref()
+                .map(|document| document.usage.clone()),
+        );
         Ok(artifact)
     }
 
@@ -60,28 +58,34 @@ impl HeadValidation for Head {
         route: &str,
         document: &Composed,
         builder: &dyn ClosureBuilder,
+        proof: ClosureProof,
+        pass: Option<WalkRecord>,
     ) -> Result<ClosureFacts> {
-        let key = self.policy.and_then(|policy| {
-            reuse_digest::digest(&(&self.generation.plans().get(route)?.key.0, policy))
-        });
-        let saved = self
-            .resident
-            .with_optional([self.previous, self.current], |arenas| {
-                let Some(previous) = arenas[0] else {
-                    return Ok(None);
-                };
-                let Some(key) = key else {
-                    return Ok(None);
-                };
-                previous.reuse(
-                    arenas[1],
-                    &self.resident,
-                    self.generation.as_ref(),
-                    route,
-                    key,
-                    builder,
-                )
-            })?;
+        let key = self.key(route);
+        let checks = self.generation.validation_checks(route);
+        let mut saved = None;
+        if proof == ClosureProof::Unknown
+            && let Some(key) = key
+        {
+            saved = self
+                .resident
+                .with_optional([self.previous, self.current], |arenas| {
+                    let replay = Replay {
+                        current: arenas[1],
+                        resident: &self.resident,
+                        generation: self.generation.as_ref(),
+                    };
+                    let Some(previous) = arenas[0] else {
+                        return Ok(None);
+                    };
+                    previous.reuse(&replay, route, key, builder, checks.as_ref())
+                })?;
+        }
+        if saved.is_none()
+            && let Some(pass) = pass
+        {
+            saved = self.replay_pass(route, key, pass, builder, checks.clone())?;
+        }
         if let Some(saved) = saved {
             self.reused.fetch_add(1, Ordering::Relaxed);
             return Ok(saved);
@@ -110,10 +114,14 @@ impl HeadValidation for Head {
         };
         self.resident.with_optional([self.current, None], |arenas| {
             if let Some(arena) = arenas[0] {
-                arena.finish(route, key, &closure);
+                arena.finish(route, key, &closure, checks);
             }
         });
         Ok(closure)
+    }
+
+    fn validated(&self, route: &str, document: &Composed, view: &ValidatedView) {
+        self.keep_validated(route, document, view);
     }
 }
 
@@ -137,6 +145,29 @@ impl Head {
             proofs: Mutex::new(BTreeMap::new()),
             policy,
             forward,
+        }
+    }
+
+    /// Identify a route's facts by its document key and the policy of this generation.
+    pub(crate) fn key(&self, route: &str) -> Option<ContentIdentity> {
+        self.policy.and_then(|policy| {
+            reuse_digest::digest(&(&self.generation.plans().get(route)?.key.0, policy))
+        })
+    }
+
+    /// Keep the current document proof and usage for the view stream of this attempt.
+    pub(crate) fn forward(&self, route: &str, usage: Option<CatalogueUsage>) {
+        if self.forward
+            && let Some(identity) = self.generation.comparison_identity(
+                ComparisonRead::Document,
+                route,
+                ProofMode::Retained,
+            )
+        {
+            self.proofs
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .insert(route.into(), DocumentProof { identity, usage });
         }
     }
 }

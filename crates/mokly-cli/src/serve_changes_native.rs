@@ -1,14 +1,18 @@
 //! Blocking Git lookup and comparison use the command's shared runtime.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::serial_stylesheets::SerialStylesheets;
+use mokly_compare::base_render::selected_base;
+use mokly_compare::base_selection::{BaseLookup, PinnedBase};
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_reuse::{ReuseAttempt, ReuseFence};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{ProcessMode, Request};
+use mokly_git::repository::Repositories;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::ChangeCancellation;
 use mokly_server::error::{Result, ServerError};
@@ -16,10 +20,33 @@ use mokly_server::error::{Result, ServerError};
 use crate::serve_base_cancel::BaseLifetime;
 use crate::serve_capture_workers;
 use crate::serve_changes::Source;
-use mokly_compare::base_render::selected_base;
+
+/// The base lookup of one attempt pins the merge base of the attempt's reference read.
+/// It opens the repository when the classification reads the base, and it resolves no
+/// reference again.
+pub(super) struct AttemptLookup {
+    /// Repository opening on the classification's Git runner.
+    pub(super) repositories: Arc<dyn Repositories>,
+    /// The merge base that the reference read of the attempt returned.
+    pub(super) merge_base: String,
+}
+
+impl BaseLookup for AttemptLookup {
+    fn pin(&self, root: &Path, reference: &str) -> mokly_compare::error::Result<Arc<PinnedBase>> {
+        PinnedBase::resolved(
+            self.repositories.as_ref(),
+            root,
+            reference,
+            &self.merge_base,
+        )
+        .map(Arc::new)
+    }
+}
 
 impl Source {
     /// Resolve HEAD and the selected base to commits and return their merge base.
+    /// `merge-base` takes the base commit first, as the base pin of `build` and of eager
+    /// preparation does, because Git chooses among equal merge bases by argument order.
     /// While both commits stay the same, it returns the cached merge base without running
     /// `merge-base` again, and the equal result keeps the current classification.
     pub(super) fn references_native(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
@@ -69,7 +96,7 @@ impl Source {
             directory: self.config.repo_root.clone(),
             args: ["--no-optional-locks", "merge-base"]
                 .into_iter()
-                .chain(refs.iter().map(String::as_str))
+                .chain(refs.iter().rev().map(String::as_str))
                 .map(Into::into)
                 .collect(),
             stdin: Vec::new(),
