@@ -21,13 +21,18 @@
   `crates/mokly-compare/src/projection_index.rs:23` (`apply`).
 - **Reason:** The code lies outside the diffs of both branches that found it,
   and on 2026-11-21 the user asked for a separate later task. On 2026-11-22
-  the performance orchestrator closed the pull request that built option H,
+  the performance orchestrator closed the second speed change of branch
+  `calummoore/mokly-edit-background-render-olos`, which built option H,
   because its memory cost was near the 2% limit and its pooled speed check
   missed its bar.
 
 - **Source:** Implementation.
 - **Category:** Performance.
 - **Terms:**
+  - **Second speed change:** H, W1, and C1 of 2026-11-22, built on branch
+    `calummoore/mokly-edit-background-render-olos` (H in commit `ea6724a03`)
+    and reverted in `11f8e4ac4`. It never opened a pull request. Its code
+    stays at https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
   - **Detail:** one `EntryDetailV4` record of a catalogue entry, held behind
     an `Arc` in `Snapshot::details`.
   - **Classification:** one Changes pass of Serve after a source edit, which
@@ -57,7 +62,7 @@
       and changed the typed revision rule, as the parts below say. This item
       then took in the cost of the first edit after a warm start, and its
       problem, recommendation, and action changed.
-    - On 2026-11-22 the second pull request of that branch split the first
+    - On 2026-11-22 the second speed change of that branch split the first
       edit (option A) and built option H. H did not merge. Option H below
       gives its measurements, and option I, new on that date, gives the cut of
       its memory.
@@ -279,7 +284,15 @@
     Changes, or reuse the stored bytes of the unchanged details. Each needs
     the same published bytes and a whole-tree memory peak within 2% of
     `main`. Cost: idle work or memory after each start. Effort: Medium.
-    Built and measured on 2026-11-22, and not merged:
+    Built and measured on 2026-11-22, and reverted:
+    - The code: commit `ea6724a03`, which `11f8e4ac4` reverts. A return of H
+      starts from it and from two review results of 2026-11-22 on it. The
+      idle step called `install_records` on a Serve async thread
+      (`crates/mokly-server/src/idle_records.rs:107-117` at `0910565bf`),
+      where every other caller of the build lock uses
+      `tokio::task::spawn_blocking`. The step stopped on
+      `PublicationWriter::candidate`, which the rebuild loop calls after the
+      debounce, and not on the activity lease that the kept plan names.
     - The build: after the first ready Changes, an idle step built the detail
       that the next rebuild builds for each unchanged entry, with the code of
       the rebuild, encoded it in chunks of 32 on idle workers, and kept it as
@@ -317,7 +330,7 @@
       edit, 512 MiB against 486 MiB.
     - The pooled whole-tree memory checks passed: mokly-cloud +1.27% and
       `examples/basic` +1.97% over 8 cold pairs each, with W1 and C1 of the
-      same pull request.
+      same change.
   - **I.** H, with no typed copy in a ready record. The step builds its record
     with the code of the rebuild, as H did, and checks that it is equivalent
     to the usage record of the same path with the workspace unset, through
@@ -331,10 +344,15 @@
     check fails, the slot keeps the typed record, as H did. The bytes stay
     equal, because the kept bytes encode exactly the value that the rebuild
     compares. Saving: 8.9 MiB of live data on mokly-cloud and 8.6 MiB on
-    `examples/basic` until the first edit, and the long-lived typed copies
-    that the first rebuild frees from another thread. Cost: a new record
-    form in `RecentDetails` and its use in `publish`, `find`, and `holds`,
-    with tests for a share, a failed check, and the id. Effort: Medium.
+    `examples/basic` until the first edit. If the item
+    [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md)
+    shows that the typed copies that the first rebuild frees cause the
+    retained RSS, I also removes that part. Cost: on `main`,
+    `RecentDetails` has four slots and `retain_paths`, `publish`, `record`,
+    and `keep`. I brings back the ready rebuild slot and the `find` and
+    `holds` of H, which `11f8e4ac4` removed, with a new record form and its
+    use in `publish`, and tests for a share, a failed check, and the id.
+    Effort: Medium.
 - **Left out:**
   - Change nothing. It fails the goal of a shorter warm edit.
   - Publish `ready` before the projection ends, or publish the index and the
@@ -364,11 +382,11 @@
     the same measurement. It records the kept-base freshness check, the other
     deferred phase outside the comparison.
   - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md):
-    the pull request that built H also built W1 and C1. That item holds the
-    measurements of all three of 2026-11-22 and the decision to close them.
-    Until 2026-11-22 this line said that the next speed pull request ranks
-    the fix of the first edit after a warm start with the safe CPU cuts of
-    the pass.
+    the second speed change that built H also built W1 and C1. That item
+    holds the measurements of all three of 2026-11-22 and the decision to
+    close them. Until 2026-11-22 this line said that the next speed pull
+    request ranks the fix of the first edit after a warm start with the safe
+    CPU cuts of the pass.
   - [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md): the
     retained core RSS that decides whether H with I can come back.
 - **Recommendation:** H with I, only if an allocator change removes the

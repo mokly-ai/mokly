@@ -39,6 +39,9 @@
   or one struct at the store.
 - **Wider fix:** B. A single map entry removes the partial state at its source.
 - **Previous examples:** None found.
+- **Related:** [mokly-production-expect-rule.md](./mokly-production-expect-rule.md)
+  holds the open choice of the rule for these calls: #284, commit
+  `055c95981`, added them under the user decision of 2026-11-03.
 - **Recommendation:** A. It is the smallest change that keeps the release
   safe. B best protects the codebase.
 - **Action:** fix after merge, apply A, because the code is older than the

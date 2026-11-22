@@ -49,9 +49,13 @@
 - **Wider fix:** B. It lets each reader find the current places.
 - **Previous examples:** `plans/follow-ups/sidecar-boot-and-encoding.md`
   missed `pnp-json.ts:3` after #413.
-- **Related:** `plans/follow-ups/follow-up-effort-grade-mismatch.md`: another
-  rule for the shared `plans` skill from the same review. The two can change
-  the skill in one pull request.
+- **Related:**
+  - `plans/follow-ups/follow-up-effort-grade-mismatch.md`: another rule for the
+    shared `plans` skill from the same review. The two can change the skill in
+    one pull request.
+  - [item-fields-after-added-facts.md](./item-fields-after-added-facts.md):
+    another rule for "Keeping an item current", for the fields, causes, and
+    links of an item when a change adds facts to it.
 - **Recommendation:** B. One sentence keeps such lists checkable.
 - **Action:** ask the user, because B changes the shared skills of every
   repository that uses them.
