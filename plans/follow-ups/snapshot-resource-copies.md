@@ -14,8 +14,8 @@
     `mokly-viewer/diffs/generations/{generation}/` that a build with Changes
     writes. It holds `snapshots/before/` and `snapshots/after/`.
   - **Pane:** one side of a comparison. The viewer shows the snapshot HTML
-    with one `<base href>` at the pane's snapshot address, as
-    `docs/protocol/mokly-comparison-panes.md:44` says.
+    with its relative addresses resolved against the pane's own snapshot
+    address, as `docs/protocol/mokly-comparison-panes.md` says.
 - **Background:**
   - `side` in `crates/mokly-static/src/comparison_files.rs` copies each
     generated resource at line 45 and each public file at line 55 into the

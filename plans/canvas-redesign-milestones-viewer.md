@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 19 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 22 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -23,10 +23,10 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 15, 17, 18
+Depends on: 15, 17, 18, 22
 
-- [ ] Restyle the catalogue, the top bar, the compare toolbar and the search
-      in Canvas.
+- [ ] Restyle the catalogue, the compare toolbar and the search in Canvas.
+      Milestone 22 does the top bar.
 - [ ] Build the canvas stage: each screen as desktop and mobile frames in
       light and dark, with frame labels and size tags. A component opens as
       its variant set.
@@ -53,13 +53,24 @@ Depends on: 10, 11
 - [ ] Build Changes: counts, base and head, the compare modes, next and
       previous change, and a slot for the cloud's check.
 - [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
+- [ ] Size a component's frame during a compare at the larger width and
+      height of its two versions, measured once when both load (decision 23,
+      option A). Change the measurement rule for component frames in
+      `mokly-shell-device-chrome.md`, `mokly-comparison-panes.md` and
+      `mokly-comparison-scrolling.md`.
 - [ ] Delete the old inspector layout and the one-frame stage.
 - [ ] Fix the race that opens Props when a third nested disclosure of the
       Components tab opens (4 in 72 rounds under load on a Canvas screen),
       likely in `workspace_instance_selection.ts`. Then move the runtime test
       of `tests/browser/design_library_runtime_cases.ts` to a Canvas screen
       and delete `design/browse/views/screen/tag-picker`, the one older
-      design screen that Milestone 18 kept for it.
+      design screen that Milestone 18 kept for it, with the library parts
+      that only it uses: the device frame, the screen header, the view
+      controls and the inspector parts.
+- [ ] When the device frame leaves `@mokly/ui`, remove the device artwork
+      sentences and tokens from `mokly-viewer-appearance.md`,
+      `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`, and
+      rewrite the use-case stage paragraph of `packages/viewer/src/shell/README.md`.
 - [ ] List an ignored-only entry's ignored ids in Current too, as
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
@@ -79,6 +90,9 @@ Depends on: 12
 - [ ] Restyle the panels, the switcher, Share, History and the settings
       dialog.
 - [ ] End the More menu with the same account rows on compact widths.
+- [ ] Add Docs and Changelog rows to the account menu and to More on phones
+      (decision 22, option B). Change the account menu mockup first, then
+      `marketing-site.md` and the other docs that describe the menu.
 
 ## Milestone 15: Mockup fixes from the docs
 
@@ -186,3 +200,70 @@ the shell.
       `plans/follow-ups/markdown-documents-load-no-geist.md`, and run
       `cargo xtask mokly-fixtures`. Branch:
       `calummoore/canvas-redesign-m19-geist-in-markdown-7brr`.
+
+## Milestone 20: Site decisions of 2026-11-22
+
+Tags: ui, mockup
+
+Depends on: 5, 6, 8, 9
+
+Cal's answers to the site decisions. Each change starts in the site mockups,
+then the site follows.
+
+- [ ] 24 A and 31 C: one 200% text pass over every page and the chrome at
+      320px. The bar hides the wordmark when its three controls do not fit,
+      footer links break long words, and no page scrolls sideways.
+- [ ] 32: every site focus ring uses the `@firna/ui` focus design, a soft
+      glow in place of an outline, and keeps 3:1 against its backdrop.
+      Change `site-design.md`, the mockups and the style test.
+- [ ] 26 C: the tint test accepts a mix whose every part is a role,
+      `currentColor`, `transparent` or another such mix. Restore the six
+      approved nested demo app mixes.
+- [ ] 25 A: weaken the mockup reset to `:where(.site-root) p`, and keep 4px
+      under the footer headings.
+- [ ] 27 B: a press on the search scrim closes docs search. 28 B: remove the
+      1100px allowance and its parity branches. 30 B: the sample tab's file
+      name shrinks with an ellipsis.
+- [ ] 21 C: one Privacy Policy edit for the site's scheme choice, the docs
+      list position and the app's Theme, with all four legal dates.
+- [ ] 20 A with D: keep the demo app and the people as fiction, mark each
+      drawing of an unshipped feature in the site source, and add the marks
+      to the go-live pass. 12 D: record the site-wide checks as one
+      follow-up item.
+
+## Milestone 21: Previous-version addresses
+
+Depends on: 19
+
+Follow-up item 37, option B, which Cal chose on 2026-11-22.
+
+- [x] Rewrite the relative addresses of a previous version when the viewer
+      prepares it, so that it needs no `base` element, with a browser test
+      that uses a relative image on the catalogue origin. Branch:
+      `calummoore/canvas-redesign-m21-previous-version-9sa7`.
+- [x] Delete `plans/follow-ups/catalogue-base-uri-blocks-previous-version.md`.
+      Branch: `calummoore/canvas-redesign-m21-previous-version-9sa7`.
+
+## Milestone 22: Viewer bar to the prototype
+
+Tags: ui, mockup
+
+Depends on: 17
+
+Cal, 2026-11-22: the cloud header bar does not match the prototype. The
+package top bar puts the cloud's start slot before the Mokly mark and a wide
+search field in the middle. The prototype starts with the mark, then the
+workspace and project, centres the publication pill, and ends with a compact
+Search, History and Share with icons, and the account.
+
+- [ ] Lay out the `@mokly/ui` top bar as the prototype bar: the mark, the
+      start slot, the centred publication, then a compact search before the
+      end slot. Keep the `mokly serve` bar (mark, search, Appearance).
+- [ ] Draw the cloud slot content as the prototype: `workspace / project`
+      with the workspace muted, the publication pill, History with its icon,
+      Share and the account. Leave out the presence avatars (decision 9).
+- [ ] Show the mark in the compact embedded bar, as the prototype does at
+      390px. The catalogue button stays until Milestone 11 builds the dock.
+- [ ] Bring the cloud viewer mockups, `viewer-chrome.md` and
+      `mokly-shell-design.md` in line, and check the bar at 390, 1024, 1180
+      and 1440px against the prototype.

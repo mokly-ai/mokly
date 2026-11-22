@@ -267,3 +267,4 @@ terms, the summary table and the notes about the options check.
   codebase.
 - **Action:** ask the user, because B and C add gates, and E changes the
   palette and guide contracts.
+- **Answer:** Cal chose **D** on 2026-11-22. Each site milestone tested the part that it rebuilt, and Milestone 20 records the site-wide checks as one follow-up item.

@@ -130,7 +130,11 @@ async function loadPresentation(
       return unavailable(failureCopy);
     const source = await readBoundedBody(response, signal);
     signal.throwIfAborted();
-    return presentSnapshotDocument(environment.parse(source), requested.href);
+    return presentSnapshotDocument(
+      environment.parse(source),
+      requested.href,
+      (html) => environment.parse(html),
+    );
   } catch {
     signal.throwIfAborted();
     return unavailable(failureCopy);

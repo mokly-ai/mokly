@@ -42,7 +42,7 @@ added options and changed two recommendations. Its transcript is in
 | 9   | Live presence in the app                       | Low      | Small  | A           | A                        |
 | 10  | Docs "Your first screen" showpiece             | Low      | Small  | A           | C                        |
 | 11  | Canvas designs for the remaining Browse states | Medium   | Large  | D, was B    | D                        |
-| 12  | New automatic checks from the mockup reviews   | Low      | Small  | D, was A    | open                     |
+| 12  | New automatic checks from the mockup reviews   | Low      | Small  | D, was A    | D                        |
 
 ## 1. Canvas look for open-source Mokly
 

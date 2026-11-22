@@ -43,6 +43,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** A with D. Cal approved the named people and counts in
   decision 2, and D makes the go-live check reliable.
 - **Action:** ask the user, because the answer reads Cal's own decision.
+- **Answer:** Cal chose **A with D** on 2026-11-22. Milestone 20 does the work.
 
 ## 21. What the Privacy Policy says about browser storage
 
@@ -82,6 +83,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
   same as A and also keeps the app sentence true.
 - **Action:** ask the user, because legal text needs Cal's approval and a new
   effective date.
+- **Answer:** Cal chose **C** on 2026-11-22. Milestone 20 does the work.
 
 ## 22. How a signed-in reader reaches the site
 
@@ -114,6 +116,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
   path to the site, also in the desktop app.
 - **Action:** ask the user, because a requirement and a merged mockup
   disagree.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 13 does the work, mockup first.
 
 ## 23. Component frame size while it compares
 
@@ -144,6 +147,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
   one pass.
 - **Action:** ask the user, because A changes the rule that no comparison
   frame size depends on a measurement.
+- **Answer:** Cal chose **A** on 2026-11-22. Milestone 12 does the work.
 
 ## 24. Mobile chrome at 200% text on 320px
 
@@ -175,6 +179,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** A. It keeps one row, and every control stays usable.
 - **Action:** ask the user, because A hides the wordmark that the brand rule
   places in the bar.
+- **Answer:** Cal chose **A** on 2026-11-22. Milestone 20 does the work, with item 31.
 
 ## 25. Space under the footer headings
 
@@ -202,6 +207,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** A. The declared 4px is the authored design value.
 - **Action:** ask the user, because it decides which side of a mockup and
   site difference is right.
+- **Answer:** Cal chose **A** on 2026-11-22. Milestone 20 does the work.
 
 ## 26. Demo app colours under the strict tint check
 
@@ -239,3 +245,4 @@ of the plan, and the pull request that deletes the plan deletes it too.
   palette, and every colour still comes from the roles.
 - **Action:** ask the user, because C loosens a gate and B changes a
   requirement sentence.
+- **Answer:** Cal chose **C** on 2026-11-22. Milestone 20 does the work.

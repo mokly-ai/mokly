@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 27 to 32
+# Canvas redesign: decisions 27 to 32 and 38
 
 These decisions came from Milestones 6, 8 and 9, the site docs, the docs
 sample with the changelog, and the pricing page, of the [Canvas redesign plan](./canvas-redesign.md). This file is a part
@@ -32,6 +32,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** B. All three docs dialogs then close in the same way.
 - **Action:** ask the user, because B adds behaviour that no requirement
   covers.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 20 does the work.
 
 ## 28. The unused 1100px media query width
 
@@ -59,6 +60,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Previous examples:** None found.
 - **Recommendation:** B. It removes a rule that nothing uses.
 - **Action:** ask the user, because B makes a check stricter.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 20 does the work.
 
 ## 29. Two pricing mockup rules that draw nothing
 
@@ -125,6 +127,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** B. The file name stays readable, and the language label
   stays.
 - **Action:** ask the user, because the fix changes a merged mockup.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 20 does the work.
 
 ## 31. Pages scroll sideways at 200% text
 
@@ -156,6 +159,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Previous examples:** Decision 24, the mobile chrome at 200% text.
 - **Recommendation:** C. One pass keeps every page the same.
 - **Action:** ask the user, because C is large and joins decision 24.
+- **Answer:** Cal chose **C** on 2026-11-22. Milestone 20 does the work, with item 24.
 
 ## 32. The focus ring offset of the sample options
 
@@ -183,3 +187,34 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Previous examples:** Decisions 25 and 29.
 - **Recommendation:** C. Every control then has the same focus offset.
 - **Action:** ask the user, because C changes a merged mockup.
+- **Answer:** Cal chose a new option on 2026-11-22: "those outlines are bad, use firna/ui outline design instead". Every site focus ring uses the `@firna/ui` focus design, a soft glow in place of an outline, and the rule in `site-design.md` changes with it. Milestone 20 does the work, mockups first. Decision 38 asks whether the viewer follows.
+
+## 38. Whether the viewer takes the `@firna/ui` focus glow
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** the focus rules in `packages/ui/src` (2px outlines today),
+  `docs/protocol/mokly-shell-design.md`
+- **Background:** Under decision 32, every site focus ring becomes the
+  `@firna/ui` focus design: a soft glow of the primary colour, 4px wide at
+  35% opacity, drawn outside the box with no outline. The cloud app already
+  uses `@firna/ui` controls. The open-source viewer in `@mokly/ui` still draws
+  a 2px outline, 2px away from the control.
+- **Problem:** After decision 32, the site and the app show the glow, and the
+  viewer shows outlines.
+- **Impact if no action:** Focus looks different in the viewer from the site
+  and the app around it.
+- **Root question:** Which focus design does the viewer use?
+- **Options:**
+  - **A.** Keep the viewer's outlines. Effort: Small.
+  - **B.** The viewer takes the same glow in Milestone 11, which restyles
+    `@mokly/ui` in Canvas, and `mokly-shell-design.md` changes with it.
+    Effort: Small.
+- **Left out:** A separate focus design for the viewer, because decision 1
+  chose one Canvas look on every surface.
+- **Wider fix:** B, because one focus design then serves every surface.
+- **Previous examples:** The `@firna/ui` controls of the cloud app.
+- **Recommendation:** B. Decision 1 chose one Canvas look on every surface.
+- **Action:** ask the user, because decision 32 named the site's outlines
+  only.

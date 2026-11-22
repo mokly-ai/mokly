@@ -69,8 +69,19 @@ cargo xtask check --suite viewer
   `createSnapshotPresentationLoader`, the shared loader that fetches and
   prepares snapshot documents for previews and comparison panes.
 - [`presentation_document.ts`](./presentation_document.ts) holds
-  `presentSnapshotDocument`, which applies the base and refresh edits and
-  serializes one document for `srcdoc`.
+  `presentSnapshotDocument`, which finds the effective base, removes the
+  `base` and refresh elements, resolves the document's addresses, and
+  serializes it for `srcdoc`.
+- [`presentation_addresses.ts`](./presentation_addresses.ts) holds
+  `rewriteDocumentAddresses`, which resolves the address attributes, styles,
+  template contents, and nested `srcdoc` documents of one document.
+- [`presentation_css.ts`](./presentation_css.ts) holds `rewriteCss`, which
+  resolves the `url()`, `@import`, and `image-set()` addresses of CSS text,
+  and [`presentation_css_tokens.ts`](./presentation_css_tokens.ts) holds the
+  CSS tokenizing helpers that it uses.
+- [`presentation_url.ts`](./presentation_url.ts) holds `relativeAddress`, the
+  rule for which addresses change, and `rewriteSrcset`, which resolves the
+  URLs of a `srcset` value.
 - [`snapshot_address.ts`](./snapshot_address.ts) checks a loader's generation
   and confines each address to the configured snapshot sides.
 - [`read_only.ts`](./read_only.ts) holds `enforcePreviewReadOnly`, the guard
