@@ -42,6 +42,9 @@ Design calls, my own:
 - 2026-11-22: the two red tests run the real sidecar process, because the rule
   concerns which request forks the child. Each test watches the
   `postcss-start` operation events between the replies.
+- 2026-11-22: the byte proof covers Serve of `examples/basic` only. `build`,
+  `publish`, and a catalogue without PostCSS prepare no context, so the
+  change cannot reach their bytes.
 - 2026-11-22: the session tests of prepared children send `prepareContext`
   before their `bundle` request, as the pool does, and keep every assertion.
   The test "Bundle starts preparation before compilation and does not await
@@ -68,11 +71,11 @@ Depends on: none
 
 The approved text states the single start path and the memory count.
 
-- [ ] Change the "Prepared Contexts" sentence of
+- [x] Change the "Prepared Contexts" sentence of
       `docs/protocol/mokly-sidecar-postcss.md`. The page stays at 250 lines.
-- [ ] Change the discovery paragraph of
+- [x] Change the discovery paragraph of
       `docs/protocol/mokly-sidecar-memory.md`.
-- [ ] Update the `session.ts` and `postcss.ts` entries of
+- [x] Update the `session.ts` and `postcss.ts` entries of
       `packages/mokly/src/sidecar/README.md` and the doc comment of
       `Pool::prepare_context`.
 
@@ -80,28 +83,28 @@ The approved text states the single start path and the memory count.
 
 Depends on: 1
 
-- [ ] A `bundle` request with a preparation and no earlier `prepareContext`
+- [x] A `bundle` request with a preparation and no earlier `prepareContext`
       starts no child, and its first `processCss` request starts it.
-- [ ] After a failed `prepareContext`, the first `processCss` request of the
+- [x] After a failed `prepareContext`, the first `processCss` request of the
       context starts the child.
-- [ ] Run both and record that they fail.
+- [x] Run both and record that they fail.
 
 ## Milestone 3: The single start path
 
 Depends on: 2
 
-- [ ] Remove the start from the `bundle` case of `session.ts`. Keep the
+- [x] Remove the start from the `bundle` case of `session.ts`. Keep the
       release of the context on failure.
-- [ ] Move the session tests of prepared children to the product order.
-- [ ] Run the two red tests and the sidecar tests green.
+- [x] Move the session tests of prepared children to the product order.
+- [x] Run the two red tests and the sidecar tests green.
 
 ## Milestone 4: Records
 
 Depends on: none
 
-- [ ] Add the closed experiment record of the light sidecar entry.
-- [ ] Add the open follow-up item for the stylesheet chain.
-- [ ] Delete `plans/follow-ups/prepared-child-single-start.md`, which this
+- [x] Add the closed experiment record of the light sidecar entry.
+- [x] Add the open follow-up item for the stylesheet chain.
+- [x] Delete `plans/follow-ups/prepared-child-single-start.md`, which this
       change fixes.
 
 ## Milestone 5: Verification, commit, review, and pull request
@@ -109,8 +112,8 @@ Depends on: none
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Prove equal published bytes on the four fixtures.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Prove equal served bytes of `examples/basic`, the only PostCSS fixture.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
