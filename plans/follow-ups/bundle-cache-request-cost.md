@@ -7,9 +7,11 @@
   reviewed the reopened design of the synchronous bundle cache write.
   Narrowed on 2026-11-21 by `calummoore/mokly-restored-bundle-reuse-answer-pspj`,
   which shares each module list through an `Arc`.
-- **Location:** `crates/mokly-sidecar/src/pool_bundle_cache.rs:178` to line
-  185, `crates/mokly-compare/src/bundle_codec_write.rs:75`,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:116`, and
+- **Location:** `crates/mokly-sidecar/src/pool_bundle_cache.rs:174` to line
+  181 (the offer in `complete_bundle`),
+  `crates/mokly-compare/src/bundle_codec_write.rs:75` (`encode`),
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:112` (`disk_seed_request` in
+  `seed_bundle`), and
   `crates/mokly-compare/src/bundle_cache_write.rs:44`.
 - **Reason:** No run has split the cost of these stages. The warm-restart
   goal passes, and this profile can keep every response, timing, and warning
@@ -33,7 +35,7 @@
 - **Background:**
   - The pool of `crates/mokly-sidecar` sends each `bundle` request to a Node
     sidecar. After each successful request in the `full` capture mode,
-    `complete_bundle` at `crates/mokly-sidecar/src/pool_bundle_cache.rs:153`
+    `complete_bundle` at `crates/mokly-sidecar/src/pool_bundle_cache.rs:149`
     makes the offer. Since the capture decision C1 of 2026-11-18, a
     `serveEdit` request of a Serve head makes none.
     `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 runs it
@@ -59,7 +61,8 @@
     that day ran no compile and no esbuild operation. The same save code gave
     every sample.
   - Four sources of request cost have no profile:
-    - The offer copy: `pool_bundle_cache.rs:178` to line 185 copies the
+    - The offer copy: `pool_bundle_cache.rs:174` to line 181, in
+      `complete_bundle`, copies the
       settings of the result for each offer. Since the `Arc` change of
       2026-11-18, the offer shares the compilation through an `Arc`, and
       since 2026-11-21 it also shares the module list through an `Arc`.
@@ -78,7 +81,8 @@
       serializes this request a second time only to count its bytes against
       the 64 MiB frame limit.
     - The restore copy: on a disk hit, the store returns an owned recipe
-      snapshot. `pool_bundle_cache.rs:116` builds the `restoreGeneration`
+      snapshot. `pool_bundle_cache.rs:112`, in `seed_bundle`, builds the
+      `restoreGeneration`
       request from it with `disk_seed_request`, so it copies the settings
       again and shares the module list and the compilation. The bundle
       attempt then keeps the whole loaded recipe until the request ends. A
@@ -191,12 +195,12 @@
       the fault classes and their output. `Reported` at
       `crates/mokly-cli/src/bundle_runtime.rs:129` emits the warnings of each
       save. A save fault sets the `cache` value of the request, at
-      `pool_bundle_cache.rs:186` to line 190.
+      `pool_bundle_cache.rs:182` to line 186, in `complete_bundle`.
     - The write stays inside the bundle response and its `catalogue.bundle`
       span. The span set does not change.
     - No write runs after the pool stops. Each write ends inside its request,
-      and `served` offers nothing after a stop, at `pool_bundle_cache.rs:198`
-      to line 207.
+      and `served` offers nothing after a stop, at `pool_bundle_cache.rs:197`
+      to line 204.
     - No time gate and no new runtime setting are added. Every existing test
       and assertion stays.
 - **Problem:** A bundle request runs optional bundle cache work that nobody
@@ -218,15 +222,16 @@
   - **A.** Change nothing. Each compiling request keeps its save, and each
     request keeps the copies. Effort: Small.
   - **B.** Remove the recipe copies and the second serialization:
-    - Make the offer without a settings copy, at `pool_bundle_cache.rs:178`
-      to line 185. For example, run the receipt check before any copy, or let
+    - Make the offer without a settings copy, at `pool_bundle_cache.rs:174`
+      to line 181, in `complete_bundle`. For example, run the receipt check before any copy, or let
       the result and the offer share one immutable `Arc` of the served
       compilation.
     - Count the frame bytes at `bundle_codec_write.rs:75` without a copy. For
       example, serialize a borrowed view of the restore request. Or compute
       the count from the payload length and the fixed wrapper lengths, with a
       test that compares it with a real serialization.
-    - Build the restore request at `pool_bundle_cache.rs:116` from the owned
+    - Build the restore request at `pool_bundle_cache.rs:112`, in
+      `seed_bundle`, from the owned
       recipe of the disk hit, in place of a settings copy. The bundle attempt
       must keep the storage of that recipe, its runtime key, and its plan
       until the request ends, because a short sidecar reply can name the
