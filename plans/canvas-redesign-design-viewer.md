@@ -59,3 +59,8 @@ the plan deletes it too.
   to 10,240 bytes, because the content-box measurement needs about 360 bytes
   and Milestone 10 had filled the old budget. Each published page grows by
   about 360 bytes before compression.
+
+- Calls on Milestone 22, later on 2026-11-22: the full bar shows from 1022px.
+  The bar's readability test helper measured the search placeholder wrongly
+  and passed a cut placeholder; it now measures the input's overflow. Narrow
+  desktop drawings may centre the compact pill, which the app never does.

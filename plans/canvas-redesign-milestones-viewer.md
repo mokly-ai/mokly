@@ -108,6 +108,9 @@ Depends on: 12
 - [ ] Restyle the panels, the switcher, Share, History and the settings
       dialog.
 - [ ] End the More menu with the same account rows on compact widths.
+- [ ] After Settings leaves the bar, measure the bar's label and SHA widths
+      again, so History's label and the SHA show at 1180px, as the prototype
+      shows them.
 - [ ] Give the registered Button an optional content node, so the pill draws
       its branch in mono and is one control (decision 39).
 - [ ] Add Docs and Changelog rows to the account menu and to More on phones
