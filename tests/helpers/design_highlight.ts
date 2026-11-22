@@ -7,6 +7,8 @@ interface HighlightSwitch {
   disabled: boolean;
   /** The tooltip of the switch, which names the reason that disables it. */
   title: string | undefined;
+  /** The description of a disabled switch, which names the same reason. */
+  description?: string | undefined;
 }
 
 const AVAILABLE: HighlightSwitch = {
@@ -15,7 +17,7 @@ const AVAILABLE: HighlightSwitch = {
 };
 
 function unavailable(title: string): HighlightSwitch {
-  return { disabled: true, title };
+  return { disabled: true, title, description: title };
 }
 
 const COMPARISON = unavailable(
@@ -84,6 +86,11 @@ const SHELL_STATES: Readonly<
     desktop: AVAILABLE,
     mobile: undefined,
   },
+  // Details without inspection metadata, on a desktop and in a phone's open
+  // panel sheet: the reason differs from an empty view's.
+  "design/canvas/components/inspection/unavailable": unavailable(
+    "Component inspection is unavailable for this view.",
+  ),
   // Component pages. Only Toolbar's example renders a registered component.
   "design/components/pages/toolbar": AVAILABLE,
   "design/components/overview": EMPTY,
@@ -102,16 +109,25 @@ export function highlightViolations(catalogue: ServedCatalogue): string[] {
     if (!views.length) violations.push(`${path}: no view`);
     for (const view of views) {
       const switches = [...withAncestors(view.document)].flatMap(
-        ([element, ancestors]) =>
-          element.tagName === "input" &&
-          attribute(element, "data-workspace-highlight") !== undefined
-            ? [
-                {
-                  disabled: attribute(element, "disabled") !== undefined,
-                  title: ancestors[0] && attribute(ancestors[0], "title"),
-                },
-              ]
-            : [],
+        ([element, ancestors]) => {
+          if (
+            element.tagName !== "input" ||
+            attribute(element, "data-workspace-highlight") === undefined
+          )
+            return [];
+          const disabled = attribute(element, "disabled") !== undefined;
+          return [
+            {
+              disabled,
+              title: ancestors[0] && attribute(ancestors[0], "title"),
+              // A disabled switch also gives its reason to assistive
+              // technology.
+              ...(disabled
+                ? { description: attribute(element, "aria-description") }
+                : {}),
+            },
+          ];
+        },
       );
       if (
         JSON.stringify(switches) !==

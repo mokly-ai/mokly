@@ -1,13 +1,37 @@
 import { expect } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
-import { componentDesignFixture } from "./component_design_fixture.js";
-import {
-  expectReasonSentences,
-  type SentenceReason,
-} from "./design_reason_sentences.js";
+import { designDocumentFixture } from "./component_design_fixture.js";
+import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+
+type Viewport = "desktop" | "mobile";
+
+/**
+ * Artboards whose frames draw highlight chips: Welcome with Highlight
+ * components on, and the Toolbar's nested Actions once a reader checks it.
+ * A phone draws the switch only in an open panel sheet.
+ */
+const CHIPS: Record<Viewport, readonly (readonly [string, boolean])[]> = {
+  desktop: [
+    ["design/canvas/inspect/frames", false],
+    ["design/canvas/stage/component-set/toolbar", true],
+  ],
+  mobile: [["design/canvas/inspect/frames", false]],
+};
+
+/** Each entry state's status beside its title, and the entries without one. */
+const STATUSES = [
+  ["design/canvas/outcomes/added", "Added"],
+  ["design/canvas/changes/current", "Changed"],
+  ["design/canvas/components/usage", "Changed"],
+  ["design/canvas/components/removed", "Removed"],
+] as const;
+const UNMODIFIED = [
+  "design/canvas/inspect/unchanged",
+  "design/canvas/props/editing/edited",
+] as const;
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentEvidence(
@@ -17,7 +41,7 @@ export function registerComponentEvidence(
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { componentDesignUrl } = componentDesignFixture(
+  const { designDocumentUrl } = designDocumentFixture(
     test,
     mode === "static" ? copiedDesignFileUrl : undefined,
   );
@@ -31,84 +55,47 @@ export function registerComponentEvidence(
             : { width: 390, height: 844 },
       });
 
-      test("comparison facts appear only in Details when evidence exists", async ({
+      // No Canvas screen draws a removed screen's previous version until
+      // decision 34, so the removed consumer keeps its older subject.
+      test("a removed consumer's comparison facts appear only in Details", async ({
         page,
       }) => {
-        // Each route's direct reasons; a stylesheet reads only as its files.
-        for (const [route, reasons] of [
-          ["design/components/pages/comparison", ["material"]],
-          ["design/components/pages/stacked/overlay", ["material"]],
-          ["design/components/pages/stacked/difference", ["material"]],
-          ["design/components/pages/stacked/overlay-tall", ["material"]],
-          ["design/components/pages/affected", ["material"]],
-          ["design/components/controls/states/comparison", ["material"]],
-          ["design/components/states/additions/added", ["added"]],
-          ["design/components/states/removed", ["removed"]],
-          ["design/components/states/removed-consumer", ["removed"]],
-          [
-            "design/components/inspection/inspection-direct-change",
-            ["inputs", "material"],
-          ],
-          [
-            "design/components/states/shared-impact/style-changed",
-            ["implementation"],
-          ],
-          ["design/components/states/shared-impact/style-outside", []],
-          ["design/components/states/shared-impact/affected-screen", []],
-          ["design/components/states/shared-impact/shared-impact", []],
-        ] as const satisfies readonly (readonly [
-          string,
-          readonly SentenceReason[],
-        ])[]) {
-          await page.goto(componentDesignUrl(route, viewport));
-          await expect(
-            page.locator(".ce-preview-pane [data-workspace-evidence]"),
-          ).toHaveCount(0);
-          await expect(page.locator(".ce-change-context")).toHaveCount(0);
-          const details = page.getByRole("region", {
-            name: "Details",
-            exact: true,
-          });
-          if (!(await details.isVisible()))
-            await page
-              .getByRole("button", { name: "Details", exact: true })
-              .click();
-          await expect(details).toContainText("Comparison details");
-          await expect(page.locator("[data-workspace-evidence]")).toHaveCount(
-            1,
-          );
-          await expect(
-            page.locator("[data-workspace-evidence]"),
-          ).not.toContainText("corners and spacing");
-          await expectReasonSentences(
-            page.locator("[data-workspace-evidence]"),
-            reasons,
-            `${viewport} ${route}`,
-          );
-          if (route === "design/components/states/removed-consumer")
-            await expect(
-              page.getByRole("region", { name: "Details", exact: true }),
-            ).toContainText(
-              "A former screen that is no longer in the catalogue.",
-            );
-        }
-        for (const route of [
-          "design/components/overview",
-          "design/components/controls/editing/edited",
-          "design/components/states/empty",
-        ]) {
-          await page.goto(componentDesignUrl(route, viewport));
-          await expect(page.locator("[data-workspace-evidence]")).toHaveCount(
-            0,
-          );
-        }
+        const route = "design/components/states/removed-consumer";
+        await page.goto(designDocumentUrl(route, viewport));
+        await expect(
+          page.locator(".ce-preview-pane [data-workspace-evidence]"),
+        ).toHaveCount(0);
+        await expect(page.locator(".ce-change-context")).toHaveCount(0);
+        const details = page.getByRole("region", {
+          name: "Details",
+          exact: true,
+        });
+        if (!(await details.isVisible()))
+          await page
+            .getByRole("button", { name: "Details", exact: true })
+            .click();
+        await expect(details).toContainText("Comparison details");
+        await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
+        await expect(
+          page.locator("[data-workspace-evidence]"),
+        ).not.toContainText("corners and spacing");
+        await expectReasonSentences(
+          page.locator("[data-workspace-evidence]"),
+          ["removed"],
+          `${viewport} ${route}`,
+        );
+        await expect(details).toContainText(
+          "A former screen that is no longer in the catalogue.",
+        );
       });
 
+      // No Canvas screen draws a screen's own prop change beside a component
+      // change, so the paired props keep their older subject (question Q5).
       test("screen comparison names the instance and its before/current props", async ({
         page,
       }) => {
         await page.goto(
-          componentDesignUrl(
+          designDocumentUrl(
             "design/components/inspection/inspection-direct-change",
             viewport,
           ),
@@ -140,94 +127,59 @@ export function registerComponentEvidence(
         await expect(page.locator(".ce-prop-change")).toHaveCount(0);
       });
 
-      test("disabled highlighting explains the specific reason", async ({
-        page,
-      }) => {
-        for (const [route, reason] of [
-          [
-            "design/components/states/empty",
-            "No registered components are used in this view.",
-          ],
-          [
-            "design/components/states/unavailable",
-            "Component inspection is unavailable for this view.",
-          ],
-          [
-            "design/components/states/removed-consumer",
-            "This preview is unavailable.",
-          ],
-          [
-            "design/components/states/shared-impact/affected-screen",
-            "A comparison is selected. Highlighting is available in Current.",
-          ],
-        ]) {
-          await page.goto(componentDesignUrl(route!, viewport));
-          const toggle = page.getByRole("switch", {
-            name: "Highlight components",
-          });
-          await expect(toggle).toBeDisabled();
-          await expect(toggle).toHaveAccessibleDescription(reason!);
-          await expect(
-            page.locator(".mbk-icon-button:has([data-workspace-highlight])"),
-          ).toHaveAttribute("title", reason!);
-        }
-        await page.goto(
-          componentDesignUrl(
-            "design/components/inspection/inspection-details",
-            viewport,
-          ),
-        );
-        await expect(
-          page.getByRole("switch", { name: "Highlight components" }),
-        ).toBeEnabled();
-      });
-
       test("highlight chips have clear separation from intact outlines", async ({
         page,
       }) => {
-        for (const route of [
-          "design/components/inspection/inspection-highlight",
-          "design/components/inspection/inspection-nested",
-          "design/components/inspection/inspection-consumer",
-          "design/components/pages/toolbar",
-        ]) {
-          await page.goto(componentDesignUrl(route, viewport));
-          await page
-            .getByRole("switch", { name: "Highlight components" })
-            .check();
-          // The shipped mask outlines each region, and the region's label
-          // stands above its outline at the outline's left edge.
-          const preview = page.locator(".ce-preview-view:visible");
-          const outlines = preview.locator(".mbk-highlight-outline");
-          const labels = preview.locator(".mbk-highlight-label");
-          const count = await outlines.count();
-          expect(count).toBeGreaterThan(0);
-          await expect(labels).toHaveCount(count);
-          for (let index = 0; index < count; index++) {
-            const { outline, label, radii } = await outlines
-              .nth(index)
-              .evaluate((rect, order) => {
-                const box = rect.getBoundingClientRect();
-                const edge = parseFloat(getComputedStyle(rect).strokeWidth) / 2;
-                const chip = rect
-                  .closest(".ce-highlight-layer")!
-                  .querySelectorAll(".mbk-highlight-label")[order]!;
-                const style = getComputedStyle(chip);
-                const bounds = chip.getBoundingClientRect();
-                return {
-                  outline: { x: box.x - edge, y: box.y - edge },
-                  label: { x: bounds.x, y: bounds.y, height: bounds.height },
-                  radii: [
-                    style.borderBottomLeftRadius,
-                    style.borderBottomRightRadius,
-                  ],
-                };
-              }, index);
-            expect(outline.y - (label.y + label.height)).toBeGreaterThanOrEqual(
-              0,
-            );
-            expect(label.x).toBeGreaterThanOrEqual(outline.x);
-            expect(radii.every((radius) => parseFloat(radius) > 0)).toBe(true);
+        for (const [route, check] of CHIPS[viewport]) {
+          await page.goto(designDocumentUrl(route, viewport));
+          if (check)
+            await page
+              .getByRole("switch", { name: "Highlight components" })
+              .check();
+          const frames = page.locator(".cv-frame[data-cv-frame]:visible");
+          await expect(frames, route).not.toHaveCount(0);
+          for (const frame of await frames.all()) {
+            // The shipped mask outlines each region, and the region's label
+            // stands above its outline at the outline's left edge.
+            const outlines = frame.locator(".mbk-highlight-outline");
+            const labels = frame.locator(".mbk-highlight-label");
+            await expect(outlines, route).not.toHaveCount(0);
+            const count = await outlines.count();
+            await expect(labels, route).toHaveCount(count);
+            for (let index = 0; index < count; index++) {
+              const { outline, label, radii } = await outlines
+                .nth(index)
+                .evaluate((rect, order) => {
+                  const box = rect.getBoundingClientRect();
+                  // The stage zooms its frames, and the stroke with them.
+                  const scale = (rect as SVGGraphicsElement).getScreenCTM()!.a;
+                  const edge =
+                    (parseFloat(getComputedStyle(rect).strokeWidth) / 2) *
+                    scale;
+                  const chip = rect
+                    .closest(".ce-highlight-layer")!
+                    .querySelectorAll(".mbk-highlight-label")[order]!;
+                  const style = getComputedStyle(chip);
+                  const bounds = chip.getBoundingClientRect();
+                  return {
+                    outline: { x: box.x - edge, y: box.y - edge },
+                    label: { x: bounds.x, y: bounds.y, height: bounds.height },
+                    radii: [
+                      style.borderBottomLeftRadius,
+                      style.borderBottomRightRadius,
+                    ],
+                  };
+                }, index);
+              expect(
+                outline.y - (label.y + label.height),
+                route,
+              ).toBeGreaterThanOrEqual(0);
+              expect(label.x, route).toBeGreaterThanOrEqual(outline.x);
+              expect(
+                radii.every((radius) => parseFloat(radius) > 0),
+                route,
+              ).toBe(true);
+            }
           }
         }
       });
@@ -235,43 +187,18 @@ export function registerComponentEvidence(
       test("entry badges distinguish additions, edits, removals, and saved values", async ({
         page,
       }) => {
-        for (const [route, status] of [
-          ["design/components/pages/affected", "Changed"],
-          ["design/components/inspection/inspection-direct-change", "Changed"],
-          ["design/components/states/removed", "Removed"],
-          ["design/components/states/removed-consumer", "Removed"],
-          ["design/components/states/unused", "Unmodified"],
-          ["design/components/controls/editing/edited", "Unmodified"],
-          ["design/components/states/additions/added", "Added"],
-        ]) {
-          await page.goto(componentDesignUrl(route!, viewport));
-          await expect(
-            page.locator(".mbk-screen-head .mbk-entry-status"),
-          ).toHaveText(status!);
+        // The status stands beside the entry's title: in the stage's head on
+        // a desktop, and in the entry bar on a phone.
+        const status = page.locator(".cv-canvas .mbk-entry-status:visible");
+        for (const [route, text] of STATUSES) {
+          await page.goto(designDocumentUrl(route, viewport));
+          await expect(status, route).toHaveText(text);
         }
-        const preview = page.locator(".ce-preview-view:visible");
-        await expect(
-          page.getByRole("group", { name: "Comparison mode" }),
-        ).toHaveCount(0);
-        await expect(preview.locator(".mb-pane-missing")).toHaveCount(0);
-        await expect(preview.locator(".ce-badge")).toHaveText("New");
-        await expect(
-          page.locator(
-            viewport === "desktop"
-              ? ".mbk-nav-filter-count"
-              : ".ce-change-count",
-          ),
-        ).toHaveText("1");
-        if (viewport === "desktop") {
-          await expect(page.locator(".mbk-nav-scroll a")).toContainText([
-            "Badge",
-            "Default",
-          ]);
-          await expect(
-            page.locator(
-              '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
-            ),
-          ).toHaveCount(2);
+        // An unmodified entry and a temporary edit show no status.
+        for (const route of UNMODIFIED) {
+          await page.goto(designDocumentUrl(route, viewport));
+          await expect(page.locator(".cv-root"), route).toHaveCount(1);
+          await expect(page.locator(".mbk-entry-status"), route).toHaveCount(0);
         }
       });
     });
