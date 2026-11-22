@@ -1,6 +1,8 @@
 /* The viewer: the top bar's six slots, the stage placeholder beneath them, and
-   the panel a slot opens over it. */
+   the panel a slot opens over it. The bar's compact composition and its cloud
+   controls are in the two sheets this one imports. */
 @import "viewer-bar.css";
+@import "viewer-controls.css";
 .fo-viewer-main {
   display: flex;
   flex-direction: column;
@@ -154,12 +156,6 @@
 .fo-top-fixed {
   display: flex;
   flex: 0 0 auto;
-}
-.fo-top-account {
-  flex: 1 1 12rem;
-  min-width: 3rem;
-  max-width: 20rem;
-  overflow: hidden;
 }
 .fo-top-grow {
   flex: 1 1 auto;

@@ -20,7 +20,7 @@ import {
   elements,
   label,
 } from "./design-site-test-helpers";
-import { controlStates, drawnPage, only } from "./drawn-page";
+import { buttonsIn, controlStates, drawnPage, only } from "./drawn-page";
 
 /** The drawing of a publication's address while its publication is read. */
 const publicationRead = "product/viewer/standalone/publication-loading";
@@ -53,6 +53,15 @@ test("a publication's address waits for its reference in the trigger's own frame
     // known keeps its loaded form.
     assert.equal(byClass(bar, "fo-wait").length, 0, where);
     assert.deepEqual(controlStates(bar), loadedBar[viewport], where);
+    // The project's control keeps the whole name, which the project read gave.
+    if (viewport === "desktop")
+      assert.deepEqual(
+        buttonsIn(only(bar, "fo-top-project")).map((button) =>
+          attribute(button, "aria-label"),
+        ),
+        [sample.workspace + " / " + sample.project],
+        where,
+      );
     // Nothing names the reference, so its trigger is a placeholder in the
     // reference's own frame, hidden from assistive technology.
     const slot = only(bar, "fo-top-grow");

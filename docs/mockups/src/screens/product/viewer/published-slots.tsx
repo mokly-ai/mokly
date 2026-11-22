@@ -4,9 +4,11 @@ import { Action } from "../page-parts";
 
 import { AccountTrigger } from "./account-trigger";
 import type { AccountLabel } from "./account-trigger";
+import { HistoryTrigger, MoreTrigger, ShareTrigger } from "./bar-actions";
 import type { CheckedPullRequest } from "./check-panel";
 import { Pill, PillDot, PillGlyph, PillState } from "./pill";
 import type { ReferenceKind } from "./pill";
+import { ProjectTrigger } from "./project-trigger";
 import { slotBars, slotClass } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 import { ReferenceTrigger } from "./reference-trigger";
@@ -27,38 +29,32 @@ export interface PublishedSubject {
 }
 
 /**
- * One cloud action in a package slot: the registered Button through `Action`,
- * compact, on one line and with no catalogue link, so it stays the button
- * that the application draws. The renderer's static control theme reaches
- * it, because the embedded layout renders the slots in the screen's own React
- * tree. The registered Button takes its touch target from the drawing's
- * viewport, not from the composition, because a compact bar also fits a
- * narrow desktop window.
+ * One cloud action in a package slot that has no part of its own: the
+ * registered Button through `Action`, compact, on one line and with no
+ * catalogue link, so it stays the button that the application draws. The
+ * renderer's static control theme reaches it, because the embedded layout
+ * renders the slots in the screen's own React tree. The registered Button
+ * takes its touch target from the drawing's viewport, not from the
+ * composition, because a compact bar also fits a narrow desktop window. The
+ * bar's own controls are the parts of `project-trigger.tsx`,
+ * `reference-trigger.tsx`, `bar-actions.tsx` and `account-trigger.tsx`, which
+ * the cloud's fallback bar draws too.
  */
 function SlotButton({
   instance,
   label,
   tone = "quiet",
-  chevron,
-  whole,
-  block,
 }: {
   instance: string;
   label: string;
-  tone?: "primary" | "quiet" | "secondary";
-  chevron?: boolean;
-  whole?: string;
-  block?: boolean;
+  tone?: "quiet" | "secondary";
 }) {
   return (
     <Action
       instance={instance}
       label={label}
-      whole={whole}
       tone={tone}
       size="sm"
-      chevron={chevron}
-      block={block}
       singleLine
     />
   );
@@ -82,20 +78,11 @@ function StartSlot({
   workspace: string;
   project: string;
 }) {
-  const named = workspace + " / " + project;
   return (
     <div className={slotClass("fo-package-slot-start", bar)}>
       {!bar.compact && (
-        <span className="fo-top-slot fo-top-project" title={named}>
-          <span className="fo-top-variable-control">
-            <SlotButton
-              instance="viewer-project"
-              label={named}
-              whole={named}
-              chevron
-              block
-            />
-          </span>
+        <span className="fo-top-slot fo-top-project">
+          <ProjectTrigger workspace={workspace} project={project} />
         </span>
       )}
       <span className="fo-package-publication">
@@ -176,18 +163,14 @@ function EndSlot({
   return (
     <div className={slotClass("fo-package-slot-end", bar)}>
       {bar.compact ? (
-        <SlotButton instance="viewer-more" label="More" chevron />
+        <MoreTrigger />
       ) : (
         <>
           <span className="fo-top-slot fo-top-fixed">
-            <SlotButton instance="viewer-history" label="History" />
+            <HistoryTrigger />
           </span>
           <span className="fo-top-slot fo-top-fixed">
-            <SlotButton
-              instance="viewer-share"
-              label="Share"
-              tone={layered ? "secondary" : "primary"}
-            />
+            <ShareTrigger tone={layered ? "secondary" : "primary"} />
           </span>
           <span className="fo-top-slot fo-top-fixed">
             <AccountTrigger account={account} />

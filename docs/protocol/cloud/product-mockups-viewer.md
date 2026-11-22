@@ -41,7 +41,11 @@ The ready drawing is a static depiction composed of workspace `@mokly/ui`
 parts. Its embedded layout holds the cloud chrome in the
 `topBarStart` and `topBarEnd` host slots around the package top bar, which
 takes no end control, because the cloud's bar has no theme toggle, and whose
-search field ends with the `⌘K` hint.
+search field ends with the `⌘K` hint. The cloud controls take the looks of
+[Viewer compositions](./folio-viewer.md#compositions), in the ready drawing
+and in the cloud's own bar alike: the project switcher led by its workspace in
+muted ink, the publication pill, History with its history glyph, Share, the
+avatar, and More with its chevron.
 The layout also holds the catalogue navigation and the
 workspace layout, with its screen header and view controls.
 The stage holds the phone and browser frames, and a sample screen is the
@@ -69,9 +73,10 @@ Every account is created by an email address, so a reader who has not set a
 display name is called by theirs. `product/viewer/standalone/account` draws that bar as
 a screen beside `product/viewer/standalone`, pairing a long workspace display
 name with a reader named by a long address. The full bar keeps every action on
-one row: the project switcher truncates the long name while its complete
-accessible name and tooltip remain, and the avatar shows the address's
-initials, with the whole address as its accessible name and tooltip.
+one row: the project switcher leads with the long workspace name in muted ink
+and truncates it first when the bar runs short, while its complete accessible
+name and tooltip remain, and the avatar shows the address's initials, with the
+whole address as its accessible name and tooltip.
 
 The account menu has its own screen beside `product/viewer/standalone`:
 `product/viewer/standalone/account-menu` draws it open under the avatar, with

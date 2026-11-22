@@ -1,5 +1,8 @@
-import { Button } from "@firna/ui/button";
-import { Label } from "@firna/ui/typography";
+import { Button, createButtonStyles } from "@firna/ui/button";
+import { useSharedUiTheme } from "@firna/ui/theme";
+import { Label, resolveTypographyColor } from "@firna/ui/typography";
+import { useMemo } from "react";
+import { Text, View } from "react-native";
 
 import { Icon, icons } from "../screens/product/icons";
 
@@ -13,10 +16,80 @@ export const buttonIcons = [
   "retry",
   "external",
   "signOut",
+  "history",
 ] as const;
 
 /** The glyph vocabulary an action is allowed to draw. */
 export type ButtonIcon = (typeof buttonIcons)[number];
+
+type ButtonTone = "primary" | "secondary" | "quiet" | "danger";
+
+/** The text role of a label in each tone, as the package paints its own. */
+const labelRoles = {
+  primary: "inverse",
+  secondary: "default",
+  quiet: "default",
+  danger: "danger",
+} as const satisfies Record<ButtonTone, string>;
+
+/** How each part of a led label gives up its width on a narrow surface. */
+const yields = {
+  lead: { flexShrink: 100, minWidth: 0 },
+  label: { flexShrink: 1, minWidth: 0 },
+  fixed: { flexShrink: 0 },
+} as const;
+
+/**
+ * A label that a muted lead comes before, such as a workspace before its
+ * project: the lead, a slash and the label, each on one line in the Button's
+ * own label type, then the switcher's chevron when the Button carries one. The
+ * lead and the slash take the muted text role at the regular weight, and the
+ * label keeps its tone's ink and the Button's weight. The lead gives up its
+ * width before the label gives up any, and each is cut with an ellipsis. The
+ * Button draws them as its own content, so the whole row is one control.
+ */
+function LeadLabel({
+  lead,
+  label,
+  tone,
+  size,
+  chevron,
+}: {
+  lead: string;
+  label: string;
+  tone: ButtonTone;
+  size: "sm" | "md" | "lg";
+  chevron: boolean;
+}) {
+  const theme = useSharedUiTheme();
+  const type = useMemo(
+    () => createButtonStyles(theme, size).label,
+    [theme, size],
+  );
+  const muted = {
+    color: resolveTypographyColor(theme.colors, "muted"),
+    fontWeight: "400",
+  } as const;
+  const ink = { color: resolveTypographyColor(theme.colors, labelRoles[tone]) };
+  return (
+    <>
+      <Text numberOfLines={1} style={[type, muted, yields.lead]}>
+        {lead}
+      </Text>
+      <Text numberOfLines={1} style={[type, muted, yields.fixed]}>
+        {" / "}
+      </Text>
+      <Text numberOfLines={1} style={[type, ink, yields.label]}>
+        {label}
+      </Text>
+      {chevron && (
+        <View aria-hidden style={[yields.fixed, { pointerEvents: "none" }]}>
+          <Icon name="switcher" size={14} />
+        </View>
+      )}
+    </>
+  );
+}
 
 /**
  * The smallest box a control draws on a touch viewport, in px. The placeholder
@@ -50,6 +123,14 @@ export const buttonInput = componentInput({
       size: { enum: ["sm", "md", "lg"] },
       icon: { enum: buttonIcons },
       accessibilityLabel: { type: "string" },
+      /**
+       * A muted lead the Button draws before its label, with a slash between
+       * them, such as a workspace before its project. It takes the place of
+       * the leading icon and the arrow; a busy Button draws its working word
+       * alone. Without an `accessibilityLabel`, the accessible name is the
+       * lead, the slash and the label.
+       */
+      lead: { type: "string" },
     },
   },
   props: { label: "Get started", tone: "primary" },
@@ -82,6 +163,7 @@ export const buttonInput = componentInput({
       kind: "select",
       options: buttonIcons.map((value) => ({ label: value, value })),
     },
+    lead: { kind: "text", label: "Lead" },
   },
   render: (
     {
@@ -96,11 +178,26 @@ export const buttonInput = componentInput({
       size = "lg",
       icon,
       accessibilityLabel,
+      lead,
     },
     { viewport },
   ) => (
     <Button
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={
+        accessibilityLabel ??
+        (lead === undefined ? undefined : lead + " / " + label)
+      }
+      content={
+        lead === undefined || busy ? undefined : (
+          <LeadLabel
+            lead={lead}
+            label={label}
+            tone={tone}
+            size={size}
+            chevron={chevron === true}
+          />
+        )
+      }
       tone={tone === "quiet" ? "plain" : tone}
       size={size}
       block={block}

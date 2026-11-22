@@ -98,7 +98,10 @@ test("a pull request alias resolves its publication and can land on Changes", as
       .locator("[data-mokly-shell]")
       .getByRole("button", { name: /^Changes/ }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".fo-top-state")).toContainText("Changes");
+  // The Changes badge stands beside the publication pill.
+  await expect(
+    page.locator('[data-mkc-viewer-slot="switcher"] .fo-top-badge'),
+  ).toHaveText("Changes");
 });
 
 test("history lists every attempt on this branch, failed ones included", async ({

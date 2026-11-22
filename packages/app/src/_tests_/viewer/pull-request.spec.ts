@@ -40,7 +40,10 @@ test("a publication address names its pull request and links to GitHub", async (
   );
   const state = page.locator(".fo-top-state");
   await expect(state).toContainText("octocat");
-  const github = state.getByRole("link", { name: "GitHub" });
+  // The pull request on GitHub stands beside the publication pill.
+  const github = page
+    .locator('[data-mkc-viewer-slot="switcher"]')
+    .getByRole("link", { name: "GitHub" });
   await expect(github).toHaveAttribute(
     "href",
     `https://github.com/${installedRepository}/pull/42`,

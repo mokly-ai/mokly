@@ -180,6 +180,7 @@ test("the adoption preserves existing registration schemas, controls and saved v
     "singleLine",
     "accessibilityLabel",
     "busy",
+    "lead",
   ]) {
     assert.ok(button.propSchema.properties[added].optional, added);
     delete button.propSchema.properties[added];

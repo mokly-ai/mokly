@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { displayName } from "../../api/labels";
 import type { Project, Session, User } from "../../api/types";
 import { StatusBadge } from "../../components/controls";
+import { AccountTrigger } from "../../viewer/account-trigger";
 import type { BarPlacement } from "../../viewer/bar";
 import {
   BarAction,
@@ -15,6 +16,8 @@ import {
 } from "../../viewer/chrome";
 import { ReferenceTriggerWait } from "../../viewer/chrome-wait";
 import type { ViewerSlots, ViewerView } from "../../viewer/host";
+import { PillDot, PillGlyph, PublicationPill } from "../../viewer/pill";
+import type { ReferenceKind } from "../../viewer/pill";
 import type { PublicationState } from "../../viewer/resolution";
 import {
   publicationState,
@@ -110,42 +113,63 @@ function attributed(detail: string, author?: string): string {
 }
 
 /**
- * The reference trigger and the state beside it. Until the address or a read
- * names the reference, the trigger draws its placeholder in its own frame.
+ * The kind of reference the subject names, which the pill's glyph shows: the
+ * pull request a publication came from, else its reference. A name that
+ * stands in for a reference that no read has reached names neither.
+ */
+function referenceKind(subject: ChromeSubject): ReferenceKind | undefined {
+  if (subject.pullRequestUrl || subject.ref?.kind === "pull-request")
+    return "pullRequest";
+  return subject.ref?.kind === "branch" ? "branch" : undefined;
+}
+
+/**
+ * The publication pill: the compact bar's status dot, the reference's glyph,
+ * the reference trigger and the state that the full bar shows. Until the
+ * address or a read names the reference, the trigger draws its placeholder in
+ * its own frame. Beside the pill, the full bar draws the Changes badge, the
+ * pull request on GitHub and View latest, when each applies.
  */
 function publicationSlot(input: SlotInput): ReactNode {
   const current = meta(input.subject);
   const label = input.subject.label;
+  const compact = input.placement.compact;
+  const kind = label === undefined ? undefined : referenceKind(input.subject);
   return (
     <Slot
       name="switcher"
       slotRef={input.refs.switcher}
-      title={input.placement.compact ? label : undefined}
+      title={compact ? label : undefined}
     >
-      {label === undefined ? (
-        <ReferenceTriggerWait />
-      ) : (
-        <PublicationTrigger
-          label={label}
-          open={input.panel === "switcher"}
-          onOpen={() => input.onPanel("switcher")}
+      <PublicationPill waiting={label === undefined}>
+        {compact && <PillDot state={current.state} />}
+        {kind && <PillGlyph kind={kind} />}
+        {label === undefined ? (
+          <ReferenceTriggerWait />
+        ) : (
+          <PublicationTrigger
+            label={label}
+            open={input.panel === "switcher"}
+            onOpen={() => input.onPanel("switcher")}
+          />
+        )}
+        <PublicationMeta
+          state={current.state}
+          detail={attributed(current.detail, input.subject.author)}
+          sha={current.sha}
         />
+      </PublicationPill>
+      {!compact && input.view === "changes" && (
+        <span className="fo-top-badge">
+          <StatusBadge label="Changes" />
+        </span>
       )}
-      <PublicationMeta
-        state={current.state}
-        detail={attributed(current.detail, input.subject.author)}
-        sha={current.sha}
-      >
-        {input.view === "changes" && (
-          <span className="fo-top-badge">
-            <StatusBadge label="Changes" />
-          </span>
-        )}
-        {input.subject.pullRequestUrl && (
+      {!compact && input.subject.pullRequestUrl && (
+        <span className="fo-canvas-pill-extra">
           <PullRequestLink url={input.subject.pullRequestUrl} />
-        )}
-        {input.onLatest && <ViewLatest onOpen={input.onLatest} />}
-      </PublicationMeta>
+        </span>
+      )}
+      {!compact && input.onLatest && <ViewLatest onOpen={input.onLatest} />}
     </Slot>
   );
 }
@@ -174,6 +198,7 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
       <BarAction
         label="History"
         testID="viewer-history"
+        icon="history"
         open={input.panel === "history"}
         onPress={() => input.onPanel("history")}
         slot="history"
@@ -185,6 +210,7 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
         label="Share"
         testID="viewer-share"
         tone="secondary"
+        filled={input.panel === undefined && input.settingsOpen === undefined}
         open={input.panel === "share"}
         disabled={!input.shareable}
         onPress={() => input.onPanel("share")}
@@ -203,13 +229,11 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
       />
     ),
     account: (
-      <BarAction
+      <AccountTrigger
         {...accountLabel(input.session.user, input.placement.compact)}
         testID="viewer-account"
-        chevron
         open={input.settingsOpen === "account"}
         onPress={input.onAccount}
-        slot="account"
         slotRef={input.refs.account}
       />
     ),

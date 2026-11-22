@@ -1,10 +1,12 @@
 /**
  * The Canvas bar of the viewer drawings and its open account menu. The full
  * bar holds the project switcher, the publication pill, History, Share and
- * the account's avatar, and the compact bar the pill and More. The pill's
- * trigger keeps the reference as its own label, with the state and the SHA
- * outside it; the avatar's control keeps the reader's whole name, with the
- * initials outside it. Share is filled only where it is the screen's one
+ * the account's avatar, and the compact bar the pill and More. The project
+ * switcher is one control that leads with the workspace and keeps the whole
+ * name; the pill's trigger keeps the reference as its own label, with the
+ * state and the SHA outside it; the avatar's control keeps the reader's whole
+ * name, with the initials outside it; History's clock and More's chevron are
+ * their controls' own. Share is filled only where it is the screen's one
  * primary action. `product/viewer/standalone/account-menu` draws the account
  * menu and More. The waits of the bar are in `viewer-waits.test.ts` and
  * `viewer-reference-wait.test.ts`.
@@ -117,6 +119,39 @@ test("the avatar's control keeps the reader's whole name, and its initials stay 
   }
 });
 
+test("the project switcher is one control that leads with the workspace, and History and More draw their glyphs inside their controls", () => {
+  const svg = (node: Element) => node.tagName === "svg";
+  for (const id of [
+    "product/viewer/standalone",
+    "product/viewer/standalone/empty",
+  ]) {
+    const drawn = page(id);
+    // The one control reads as the whole name, is named by it and holds it
+    // as its wrapper's tooltip, with the switcher's chevron inside it.
+    const project = one(drawn, "fo-top-project");
+    const [control, ...more] = buttonsIn(project);
+    assert.ok(control, id);
+    assert.equal(more.length, 0, id);
+    assert.equal(label(control), named, id);
+    assert.equal(attribute(control, "aria-label"), named, id);
+    assert.equal(
+      attribute(one(project, "fo-top-variable-control"), "title"),
+      named,
+      id,
+    );
+    assert.equal(elements(control, svg).length, 1, id);
+    // History's clock and More's chevron are the registered Button's own.
+    for (const name of ["History", "More"]) {
+      const [button, ...others] = buttonsIn(drawn).filter(
+        (candidate) => label(candidate) === name,
+      );
+      assert.ok(button, id + " " + name);
+      assert.equal(others.length, 0, id + " " + name);
+      assert.equal(elements(button, svg).length, 1, id + " " + name);
+    }
+  }
+});
+
 test("Share is filled only where it is the screen's one primary action", () => {
   const share = (id: string) =>
     elements(
@@ -137,6 +172,10 @@ test("Share is filled only where it is the screen's one primary action", () => {
 
 test("the cloud's bar leads each control to its screen and draws no Settings", () => {
   const bar = one(page("product/viewer/standalone/empty"), "fo-top-bar");
+  // The project's control is named by the whole name it shows.
+  const [project] = linksIn(bar);
+  assert.ok(project);
+  assert.equal(attribute(project, "aria-label"), named);
   assert.deepEqual(
     linksIn(bar).map((link) => [label(link), destination(link)]),
     [

@@ -48,15 +48,23 @@ real alternative path beside it, `quiet` repeats or dismisses, and `danger`
 destroys; going back is the ink back link, not a button. A screen spends one
 `primary` and pairs it with at most one alternative; two filled buttons is two
 primaries. It takes an optional `block` for a full-width action, an optional
-`icon` naming one of `github`, `start`, `retry`, `external` or `signOut`, which
-the wrapper resolves to the shared lucide glyph and Firna tints to the label
-color, and an optional `chevron` that places the shared switcher glyph in the
-same decorative trailing slot the `arrow` uses, so a viewer switcher trigger
-reads as one. `arrow` and `chevron` are mutually exclusive; `arrow` wins if
-both are passed. It takes an optional `accessibilityLabel`, the whole value
-behind a label that is a shortened form of it: only a shortened label is given
-a longer name to answer to, so a reader who cannot hover still reaches the
-whole one. Every one of these props is optional.
+`icon` naming one of `github`, `start`, `retry`, `external`, `signOut` or
+`history`, which the wrapper resolves to the shared lucide glyph and Firna
+tints to the label color, and an optional `chevron` that places the shared
+switcher glyph in the same decorative trailing slot the `arrow` uses, so a
+viewer switcher trigger reads as one. `arrow` and `chevron` are mutually
+exclusive; `arrow` wins if both are passed. It takes an optional `lead`, a
+muted text before the label with a slash between them, such as a workspace
+before its project: the wrapper draws it inside the Button through the
+package's own content, in the muted text role at the regular weight, so the
+whole row is one control. The label keeps its tone's ink and weight. The lead
+gives up its width before the label gives up any, and each is cut on one line.
+A lead takes the place of the `icon` and the `arrow`, and a busy Button draws
+its working word alone. It takes an optional `accessibilityLabel`, the whole
+value behind a label that is a shortened form of it: only a shortened label is
+given a longer name to answer to, so a reader who cannot hover still reaches
+the whole one. A Button with a lead and no `accessibilityLabel` is named by the
+lead, the slash and the label. Every one of these props is optional.
 
 Target size follows the viewport too. Mobile keeps `minTouchTarget={44}`, so
 every action is at least 44px (WCAG 2.1 — 2.5.5, AAA). Desktop keeps the size

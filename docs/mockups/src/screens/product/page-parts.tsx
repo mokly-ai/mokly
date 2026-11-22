@@ -27,6 +27,7 @@ export function Action({
   block,
   singleLine,
   whole,
+  lead,
 }: {
   label: string;
   /**
@@ -35,6 +36,8 @@ export function Action({
    * reader on the surface where a label is shortened — still reaches it.
    */
   whole?: string;
+  /** A muted lead the registered Button draws before the label. */
+  lead?: string;
   instance?: string;
   to?: string;
   tone?: "primary" | "secondary" | "quiet" | "danger";
@@ -62,6 +65,7 @@ export function Action({
     ...(size === undefined ? {} : { size }),
     ...(block === undefined ? {} : { block }),
     ...(singleLine === undefined ? {} : { singleLine }),
+    ...(lead === undefined ? {} : { lead }),
   };
   const control = (
     <Button

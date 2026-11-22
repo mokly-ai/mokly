@@ -1,10 +1,11 @@
-/* The Canvas look of the viewer drawings: the bar's two compositions, the
-   publication pill, the account's avatar and the search field's hint. Only
-   the drawings load this sheet. `chrome.tsx` imports it, so Mokly bundles it
-   into each viewer entry's own stylesheet, after the product sheets that the
-   configuration links, and the application, which links the product sheets,
-   never loads it. The configuration's base.css declares the Geist faces,
-   which the drawn @mokly/ui parts also name.
+/* The Canvas look of the viewer drawings: the bar's two compositions and the
+   search field's hint. The bar's controls that the application draws too,
+   the publication pill and the avatar, are in the shared `viewer-controls.css`.
+   Only the drawings load this sheet. `chrome.tsx` imports it, so Mokly bundles
+   it into each viewer entry's own stylesheet, after the product sheets that
+   the configuration links, and the application, which links the product
+   sheets, never loads it. The configuration's base.css declares the Geist
+   faces, which the drawn @mokly/ui parts also name.
    Every rule is scoped to the renderer's wrapper, the element that carries
    `data-color-scheme`, whose attribute weighs as much as a class, so a rule
    here outweighs a product sheet's rule for the same element. Every rule
@@ -20,12 +21,6 @@
      menus under each bar's last control share. */
   --fo-canvas-bar-end: var(--mk-space-3);
   --fo-canvas-compact-end: var(--mk-space-2);
-  /* A divider a step stronger than a hairline. */
-  --fo-canvas-line-strong: color-mix(
-    in srgb,
-    var(--mk-color-border) 82%,
-    var(--mk-color-border-strong)
-  );
 }
 
 /* The cloud slots in the package's bar take the bar's own surface, so the
@@ -75,123 +70,6 @@
 }
 [data-color-scheme] .fo-top-grow {
   gap: var(--mk-space-2);
-}
-
-/* The publication pill: one rounded control on the muted surface with a
-   hairline. Its reference trigger is a quiet Button with no frame of its own,
-   so the pill is the frame the reader sees. A phone's trigger keeps its 44px
-   touch target, which reaches past the pill's 40px without a fill. */
-[data-color-scheme] .fo-canvas-pill {
-  display: flex;
-  align-items: center;
-  flex: 0 1 auto;
-  gap: var(--mk-space-1);
-  min-width: 0;
-  min-height: 2rem;
-  padding: 0 var(--mk-space-2) 0 var(--mk-space-3);
-  border: 1px solid var(--mk-color-border);
-  border-radius: var(--mk-radius-chrome);
-  background: var(--mk-color-surface-muted);
-  white-space: nowrap;
-}
-[data-color-scheme][data-viewport="mobile"] .fo-canvas-pill {
-  height: 2.5rem;
-}
-[data-color-scheme] .fo-canvas-pill-waiting {
-  background: var(--mk-color-surface);
-}
-[data-color-scheme] .fo-canvas-pill .fo-top-reference {
-  flex: 0 1 auto;
-}
-/* The quiet trigger's own padding stands in for the pill's gaps beside the
-   reference, so its wrapper reaches over part of it. A placeholder has no
-   padding to spare. */
-[data-color-scheme]
-  .fo-canvas-pill:not(.fo-canvas-pill-waiting)
-  .fo-top-reference {
-  margin-inline: calc(-1 * var(--mk-space-2));
-}
-[data-color-scheme] .fo-canvas-pill .fo-top-state {
-  flex: 0 1 auto;
-  gap: var(--mk-space-2);
-  color: var(--mk-color-text-secondary);
-}
-[data-color-scheme] .fo-canvas-pill .fo-top-state-detail {
-  flex: 0 1 auto;
-}
-[data-color-scheme] .fo-canvas-pill .mono-value {
-  color: var(--mk-color-text-muted);
-}
-[data-color-scheme] .fo-canvas-pill-glyph,
-[data-color-scheme] .fo-canvas-pill-chevron {
-  display: flex;
-  flex: none;
-  align-items: center;
-}
-:where([data-color-scheme]) .fo-canvas-pill-dot {
-  display: flex;
-  flex: none;
-  align-items: center;
-}
-[data-color-scheme] .fo-canvas-pill-glyph {
-  color: var(--mk-color-text-secondary);
-}
-[data-color-scheme] .fo-canvas-pill-chevron {
-  color: var(--mk-color-text-muted);
-}
-[data-color-scheme] .fo-canvas-pill-rule {
-  flex: none;
-  width: 1px;
-  height: 0.875rem;
-  background: var(--fo-canvas-line-strong);
-}
-[data-color-scheme] .fo-canvas-pill-extra {
-  flex: none;
-  align-items: center;
-  font-size: var(--mk-type-ui-small-size);
-}
-
-/* The reader's avatar: a circle in the signed-in person's colour with their
-   initials, sized in px like the box that holds it. */
-[data-color-scheme] .fo-canvas-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--mk-radius-pill);
-  background: var(--mk-color-people-pink-fill);
-  color: var(--mk-color-people-pink-ink);
-  font-family: var(--mk-font-sans);
-  font-size: 11px;
-  font-weight: var(--mk-font-semibold);
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-[data-color-scheme] .fo-canvas-avatar-large {
-  width: 32px;
-  height: 32px;
-  font-size: 12px;
-}
-
-/* The account control: the avatar laid over the registered Button that is
-   the control, which keeps its box and its focus outline. */
-[data-color-scheme] .fo-canvas-account {
-  position: relative;
-  display: flex;
-  flex: none;
-  width: 30px;
-  margin-inline-start: var(--mk-space-1);
-}
-[data-color-scheme] .fo-canvas-account .fo-canvas-avatar {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  pointer-events: none;
-}
-[data-color-scheme] .fo-canvas-account-off .fo-canvas-avatar {
-  opacity: 0.55;
 }
 
 /* The `⌘K` hint at the end of the package's search field. */

@@ -23,6 +23,7 @@ import {
   label,
 } from "./design-site-test-helpers";
 import {
+  buttonsIn,
   controlStates,
   drawnPage,
   linksIn,
@@ -127,8 +128,15 @@ test("a stage read draws the stage's waiting card, titled with the read", () => 
       assert.deepEqual(controlStates(canvas), [], where);
       assert.deepEqual(linksIn(canvas), [], where);
       if (viewport === "mobile") continue;
+      // The trigger says the workspace, or its address, and the project, and
+      // the whole of what it says names it.
       const project = only(only(page.main, "fo-top-bar"), "fo-top-project");
       assert.deepEqual(controlStates(project), [[entry.project, false]], where);
+      assert.deepEqual(
+        buttonsIn(project).map((button) => attribute(button, "aria-label")),
+        [entry.project],
+        where,
+      );
     }
 });
 
