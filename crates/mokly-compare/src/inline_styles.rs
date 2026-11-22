@@ -4,16 +4,23 @@ use mokly_css::attribution::RuleObservation;
 use mokly_css::inline_attribution;
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::match_document;
+use mokly_css::syntax;
+use mokly_graph::viewer_fonts;
 use mokly_html::tree::{Node, RegionKind};
+use mokly_model::namespace;
 
 use crate::error::Result;
 use crate::resource_memo::ResourceMemo;
 
+/// Observe the changed ownerless head rules of one view. `sources` are the artifact
+/// paths of the before and after documents, which differ for a moved entry, and
+/// `route` is the evidence source of each observation.
 pub(crate) fn compare(
     before: Option<&[Node]>,
     after: Option<&[Node]>,
     before_tree: Option<&MatchTree>,
     after_tree: Option<&MatchTree>,
+    sources: [&str; 2],
     route: &str,
     memo: &dyn ResourceMemo,
 ) -> Result<Vec<RuleObservation>> {
@@ -21,6 +28,11 @@ pub(crate) fn compare(
     let mut right = String::new();
     collect(before.unwrap_or_default(), false, &mut left);
     collect(after.unwrap_or_default(), false, &mut right);
+    if left == right {
+        return Ok(Vec::new());
+    }
+    let left = faces(&left, sources[0]);
+    let right = faces(&right, sources[1]);
     if left == right {
         return Ok(Vec::new());
     }
@@ -32,6 +44,24 @@ pub(crate) fn compare(
         before_tree,
         after_tree,
     ))
+}
+
+/// Name each viewer face by its artifact path. A Markdown document names the
+/// faces through the address of its own route, so its move to another depth
+/// changes no rule.
+fn faces(css: &str, source: &str) -> String {
+    let mut named = css.to_owned();
+    for reference in syntax::references(css).into_iter().rev() {
+        if let Some(face) = viewer_fonts::face(source, &reference)
+            && named.get(reference.start..reference.end).is_some()
+        {
+            named.replace_range(
+                reference.start..reference.end,
+                &format!("url(\"{}\")", namespace::viewer(face)),
+            );
+        }
+    }
+    named
 }
 
 fn collect(nodes: &[Node], head: bool, output: &mut String) {

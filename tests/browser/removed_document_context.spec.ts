@@ -12,6 +12,7 @@ import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, comparisonIndex, snapshotOf } from "./comparison_ui.js";
+import { documentFaces, loadedViewerFaces } from "./document_faces.js";
 
 const CONTROLS = "[data-diff-stage], [data-diff-mode], [data-viewport-option]";
 
@@ -25,10 +26,8 @@ for (const width of [390, 1280])
       baseURL,
     }) => {
       const removedPath = comparisonPaths.removedDocument;
-      const snapshot = snapshotOf(
-        await comparisonIndex(request, baseURL),
-        removedPath,
-      );
+      const index = await comparisonIndex(request, baseURL);
+      const snapshot = snapshotOf(index, removedPath);
       await page.goto(`/view/${removedPath}/?snapshot=${snapshot}`);
       await expect(page.locator(".mbk-screen-head h2")).toHaveText(
         "Retired document",
@@ -39,9 +38,21 @@ for (const width of [390, 1280])
       await expect(page.locator("#mb-main")).toContainText(
         "Showing previous version",
       );
-      await expect(
-        page.frameLocator("[data-mokly-preview] iframe").locator("body"),
-      ).toContainText("Historical document");
+      const previous = page.frameLocator("[data-mokly-preview] iframe");
+      await expect(previous.locator("body")).toContainText(
+        "Historical document",
+      );
+      // The previous version keeps its bytes; its faces load from its generation.
+      await expect
+        .poll(() => documentFaces(previous.locator("html")))
+        .toEqual(
+          loadedViewerFaces(
+            new URL(
+              `${index.comparisonUrl}snapshots/mokly-viewer/fonts/`,
+              baseURL,
+            ).href,
+          ),
+        );
       await expect(page.locator("[data-mokly-preview-retry]")).toHaveCount(0);
       await expect(page.locator(CONTROLS)).toHaveCount(0);
       // Details name the base-side folder too.

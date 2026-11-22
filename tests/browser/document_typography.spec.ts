@@ -3,6 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
+import { documentFaces, loadedViewerFaces } from "./document_faces.js";
 
 let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeEach(({ allowBrowserError }) => {
@@ -217,3 +218,12 @@ for (const [viewport, width] of [
     expect(rendered).toEqual(design);
     expect(design.tableFillsMeasure).toBe(true);
   });
+
+test("a rendered document loads Geist and Geist Mono from the viewer", async ({
+  page,
+}) => {
+  await page.goto(`${fixture.url}/static/mokly-generated/payment/index.html`);
+  await expect
+    .poll(() => documentFaces(page.locator("html")))
+    .toEqual(loadedViewerFaces(`${fixture.url}/mokly-viewer/fonts/`));
+});

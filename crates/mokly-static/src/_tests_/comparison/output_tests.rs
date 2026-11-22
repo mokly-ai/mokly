@@ -100,6 +100,60 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
     insta::assert_snapshot!(snapshot);
 }
 
+/// Append one generation to an output that already delivers the two viewer faces.
+fn generation_with_faces(sans: &'static str, mono: &'static str) -> (String, Inventory) {
+    let result = result();
+    let publication = projection_index::publication("mokly.config.json".into(), "base");
+    let mut index = projection::index(&result.after.catalogue().model, &[], &publication);
+    let cancellation = Unimock::new(
+        CancellationMock::requested
+            .each_call(matching!())
+            .returns(false),
+    );
+    let mut output = Inventory::default();
+    for (path, bytes) in [
+        ("mokly-viewer/fonts/Geist-Variable.woff2", sans),
+        ("mokly-viewer/fonts/GeistMono-Variable.woff2", mono),
+    ] {
+        output.insert(path.into(), bytes.into()).unwrap();
+    }
+    comparison_output::append(
+        &result,
+        &mut index,
+        &mut output,
+        b"shell",
+        "mokly.config.json",
+        &cancellation,
+    )
+    .unwrap();
+    (index.comparison_url.0.unwrap(), output)
+}
+
+#[test]
+fn a_generation_holds_each_delivered_viewer_face_with_its_exact_bytes() {
+    let (root, output) = generation_with_faces("sans bytes", "mono bytes");
+    let bytes = |path: String| {
+        output
+            .files()
+            .find(|file| file.path == path)
+            .map(|file| file.bytes.clone())
+    };
+    assert_eq!(
+        bytes(format!(
+            "{root}snapshots/mokly-viewer/fonts/Geist-Variable.woff2"
+        )),
+        Some("sans bytes".into())
+    );
+    assert_eq!(
+        bytes(format!(
+            "{root}snapshots/mokly-viewer/fonts/GeistMono-Variable.woff2"
+        )),
+        Some("mono bytes".into())
+    );
+    let (other, _) = generation_with_faces("sans bytes", "other mono bytes");
+    assert_ne!(root, other);
+}
+
 #[test]
 fn the_generation_holds_no_review_file_and_its_removed_detail_keeps_two_space_indentation() {
     let (_, files) = small_generation();

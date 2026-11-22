@@ -167,12 +167,16 @@ Decision 36, option C. Each Markdown document loads the viewer's Geist and
 Geist Mono files, so a reader without Geist installed sees the same faces as
 the shell.
 
-- [ ] Give the document style `@font-face` rules that load the viewer's two
+- [x] Give the document style `@font-face` rules that load the viewer's two
       Geist files from a document-relative address, in Serve, the static
-      build and a publication.
-- [ ] Let the referenced closure accept those two font files, and write the
-      delivery rule in the protocol pages.
-- [ ] Check the documents on the cloud catalogue origin under its CSP.
-- [ ] Remove the status-line part of `mokly-viewer-palette.md`, delete
+      build and a publication. Branch:
+      `calummoore/canvas-redesign-m19-geist-in-markdown-7brr`.
+- [x] Let the referenced closure accept those two font files, and write the
+      delivery rule in the protocol pages. Branch:
+      `calummoore/canvas-redesign-m19-geist-in-markdown-7brr`.
+- [x] Check the documents on the cloud catalogue origin under its CSP.
+      Branch: `calummoore/canvas-redesign-m19-geist-in-markdown-7brr`.
+- [x] Remove the status-line part of `mokly-viewer-palette.md`, delete
       `plans/follow-ups/markdown-documents-load-no-geist.md`, and run
-      `cargo xtask mokly-fixtures`.
+      `cargo xtask mokly-fixtures`. Branch:
+      `calummoore/canvas-redesign-m19-geist-in-markdown-7brr`.

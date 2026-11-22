@@ -81,7 +81,10 @@ its view closures; they hold no JSON. A variant selection captures only the
 selected variant's documents. The selection route redirects to the root of the
 captured generation, and a GET or HEAD of a retained root renews its idle
 window with 204. Historical routes capture the removed entry from the same
-pinned base. Captures preserve original document bytes. `FrozenResources`
+pinned base. Captures preserve original document bytes. The generation routes
+answer each viewer face copy under `snapshots/mokly-viewer/fonts/` of a
+retained generation from the viewer assets, without storing it in the
+generation. `FrozenResources`
 retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a
 mixed generation. Its `comparison_capture` method returns `None`, so capture

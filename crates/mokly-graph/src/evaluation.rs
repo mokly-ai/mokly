@@ -98,10 +98,12 @@ impl Session {
             let span =
                 capture.then(|| tracing::info_span!("review.capture-closure", status = "error"));
             let _scope = span.as_ref().map(tracing::Span::enter);
-            let closure = match self
-                .walker()
-                .collect(route, &document.tree, &document.resources)
-            {
+            let closure = match self.walker().collect(
+                route,
+                &document.tree,
+                &document.resources,
+                self.viewer_fonts(route),
+            ) {
                 Ok(closure) => closure,
                 Err(source) => {
                     return Err(GraphError::Attempt {
