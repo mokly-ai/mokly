@@ -46,12 +46,10 @@ entry here.
   before the catalogue arrives, so they render in both schemes too.
 - `design/canvas/loading/entry` depicts the stage while the selected entry's
   detail loads, and while a replaced catalogue loads. It and its failed
-  variant keep the catalogue, Inspect and the zoom controls, and the stage
-  holds the state in place of the frames. They draw the zoom pill on desktop
-  and the dock's Fit on a phone, as the
-  [canvas stage](./mokly-shell-canvas-stage.md#pan-zoom-and-fit) requires while
-  an entry is selected. Decision 35, on the zoom controls while an entry loads
-  or failed, is open.
+  variant keep the catalogue and Inspect, and the stage holds the state in
+  place of the frames. The canvas then holds no section, so they draw no zoom
+  pill on desktop and no Fit in the dock on a phone, as the
+  [canvas stage](./mokly-shell-canvas-stage.md#canvas) requires.
 - The Changes states keep the filter, the count slot and the tree in their
   places, so nothing moves when the result arrives, under the
   [catalogue panel design](./mokly-shell-design-navigation.md#catalogue-panel).

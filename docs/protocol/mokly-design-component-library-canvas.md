@@ -41,13 +41,19 @@ its switch are native controls that work in place.
 1. **Canvas frame:** frame kind `desktop/mobile/component/document`, scheme
    `light/dark`, label, optional entry slug, nominal width and height, zoom,
    optional compare mode `overlay/difference/swipe`, optional Side by side
-   version `before/after`, optional variant slug and a selected flag. Slots:
-   `children` holds the current version, `before` the version before, and
-   `overlay` what lies over the frame unclipped, such as a selection.
-   Controls: label, scheme, zoom and selected. The frame draws its label and
-   size tag as the [canvas frames](./mokly-shell-device-chrome.md#canvas-frames)
-   say, scales its document by the zoom, and in Swipe draws the Swipe divider
-   over both versions.
+   version `before/after`, optional variant slug, a selected flag, an optional
+   light-only flag, and a use case's optional step number from 1 to 99, screen
+   destination and description. Slots: `children` holds the current version,
+   `before` the version before, and `overlay` what lies over the frame
+   unclipped, such as a selection. Controls: label, scheme, zoom and selected.
+   The frame draws its
+   label and size tag as the
+   [canvas frames](./mokly-shell-device-chrome.md#canvas-frames) say, scales
+   its document by the zoom, and in Swipe draws the Swipe divider over both
+   versions. A step frame leads its label with the step number in a tag,
+   draws the label as the link to the step's screen, and draws the
+   description below the label. A light-only frame keeps its light view under
+   Dark, and its label adds `Light only` after its name, in a lighter weight.
 2. **Zoom pill:** zoom in percent, presentation `pill/fit`, and optional Zoom
    out, Zoom in and Fit destinations. Controls: zoom and presentation. The
    `fit` presentation is Fit alone, as the phone dock holds it.
@@ -70,7 +76,8 @@ its switch are native controls that work in place.
    width of its bold form.
 7. **Phone dock:** optional current tab `inspect/changes`, optional zoom, and
    the Catalogue, tab and Fit destinations. Control: current tab. Without a tab
-   the dock holds Catalogue alone.
+   the dock holds Catalogue alone. Without a zoom it holds no Fit, as while
+   the canvas holds no section.
 8. **Change stepper:** the shown change's position and the total of changes,
    from 1 to 999, and optional Previous change and Next change destinations.
    Controls: position and total. The first change's Previous change and the
@@ -87,11 +94,13 @@ its switch are native controls that work in place.
    frame's chip links to its destination, and every other chip is a picture of
    itself.
 10. **Frames filter:** a viewports flag, the Mobile, Desktop, Light and Dark
-    toggles, a light-only flag, the Highlight components state, and an
-    optional unavailable reason
+    toggles, a light-only flag, a single flag, the Highlight components state,
+    and an optional unavailable reason
     `empty/unavailable/loading/failed/comparison/removed` in the shell's own
     words. Controls: the four toggles and highlight. A set without viewports
-    has no viewport toggles, and a light-only screen disables Dark.
+    has no viewport toggles, and a light-only screen disables Dark. With the
+    single flag, as in a use case, each pair of toggles is a pair of native
+    radio buttons, so the filter chooses one viewport and one scheme.
 11. **Box model:** the padding of each side and the content width and height.
     Controls: each side, the content width and the content height. It is one
     image whose name gives the same numbers in words.

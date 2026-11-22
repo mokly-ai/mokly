@@ -134,9 +134,15 @@ returns Firna's `domBackendCss` stylesheet, which holds the element resets and
 the focus rules, as a `style` element. The sidecar collects it, and the Rust
 core writes it in the document head. The collected styles come before the
 configured stylesheets, so `styles.css`, and `styles-dark.css` in dark views,
-colour the plain HTML around the components. The renderer also places each
-design library component in `LibraryHost`, which gives the standalone sample
-its frame. The `moduleResolution` settings give the bundle the
+colour the plain HTML around the components.
+
+The renderer also places each design library component in `LibraryHost`,
+which gives the standalone sample its frame. In a component's own document,
+the renderer gives its wrapper the width of its content. The wrapper also
+holds the margins of the component's root, so the document measures the
+component. Screens and design library samples keep the full width.
+
+The `moduleResolution` settings give the bundle the
 `react-native-web` alias, the `react-native` conditions and fields, the
 `.web.*` extensions, and the JSX loader for `.js` files. Through them, the
 bundle reads Firna's `react-native` build and selects its `.web.*` files. A
@@ -164,14 +170,16 @@ screen derives its states from real props instead.
 `specs/design/components/controls/parts/copy.ts` holds the settled copy of
 the controls in Inspect's Props section.
 
-`specs/design/canvas/` holds the Canvas viewer family: 37 screens and 50
-saved variants in ten folders, which the
+`specs/design/canvas/` holds the Canvas viewer family: 41 screens and 66
+saved variants in eleven folders, which the
 [Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md)
 lists. A screen opens as four frames on a dot-grid canvas, between the
-floating catalogue and the right panel. Each mobile view draws the compact
-layout: one frame and the dock. Only the startup views of
-`specs/design/canvas/loading/` draw no chrome, because the shell draws none
-before the catalogue arrives. The family's shared scaffolds, instance records
+floating catalogue and the right panel. A use case opens as one row of step
+frames, and a removed entry as the frames of its previous version. Each
+mobile view draws the compact layout: one frame and the dock. Only the
+startup views of `specs/design/canvas/loading/` draw no chrome, because the
+shell draws none before the catalogue arrives. The family's shared scaffolds,
+instance records
 and destinations live in `specs/design/canvas/parts/`, and each folder keeps
 the parts of its own states in its own `parts/` directory. The family's
 eleven shared parts, the `canvas` and `panels` groups of
@@ -186,11 +194,11 @@ design route. The
 [design library stylesheets README](./design-library/README.md) gives their
 order.
 
-The Canvas family draws no use case and no removed entry's previous version
-yet. Fifteen older screens under `specs/design/browse/`, `changes/` and
-`components/` draw those states in the shipped shell. The older
+One older screen stays outside the family:
 `design/browse/views/screen/tag-picker` draws the shipped tag picker over
-Welcome, because the design library's runtime browser test opens it.
+Welcome in the shipped shell, because the design library's runtime browser
+test opens it. It is the one screen that renders the device frame, the
+screen header, the view controls and the inspector of the design library.
 
 `tests/design_catalogue.test.ts` serves this configuration once with
 `--no-watch` and the unresolved base `refs/mokly/browser-suite-no-base`, so
@@ -203,10 +211,9 @@ checks the shared components each design screen records, the stylesheets each
 view links, and every link's destination and focus behaviour. A new design
 screen updates the inventory. A family part that most screens show lists the
 screens without it, so a new screen without that part joins its `except` set.
-A part that only some screens show, such as the comparison toolbar, a
-comparison pane, an empty state, or the tag picker, lists those screens in its
-`only` set, so the test checks a new screen with that part only after it joins
-the set.
+A part that only some screens show, such as an empty state or the tag picker,
+lists those screens in its `only` set, so the test checks a new screen with
+that part only after it joins the set.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md),

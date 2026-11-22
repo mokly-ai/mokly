@@ -9,9 +9,9 @@ and tag states.
 ## Scheme, Comparison, And Tag States
 
 Standalone Browse owns one Appearance selector in the top bar, and no design
-screen depicts a second scheme control. The Canvas screens and the appearance
-entries render in Light and in Dark instead. The outer viewer shows both
-rendered views of such an entry as the [design mockup links
+screen depicts a second scheme control. The Canvas screens render in Light
+and in Dark instead. The outer viewer shows both rendered views of such an
+entry as the [design mockup links
 contract](./mokly-design-links.md#scope-and-ownership) says. A link out of a
 dark fragment resolves to the target's dark fragment wherever one exists, and
 every Canvas screen publishes both schemes, so no compare mode, tab or stepper
@@ -37,12 +37,17 @@ depiction.
 
 Added Details shows its current version with Current alone. Removed Farewell,
 Survey, Invite, Archive, and Timeline show their previous version, its loading
-wait, its unavailable state with Retry, or the note naming the viewport that
-still opens, without comparison modes and with no live product destination;
-links inside a previous version do nothing. The ignored-only Welcome, in All,
-and the empty Changes filter show the current version without compare modes.
-The ignored-only Welcome keeps its evidence in Inspect, and the All filter of
-the empty Changes filter opens `design/canvas/overview`.
+wait, its unavailable state with Retry, or the note in the place of a missing
+view, with no compare mode and no live product destination; links inside a
+previous version do nothing. The removed pages, the light-only document, the
+removed variant and the removed consumer follow the same rules. Retry of an
+unavailable previous version is a depiction, because no artboard shows that
+entry while its previous version loads again. The Example tour offers no
+compare mode, and its step frames' inner links do nothing, because each
+step's title opens its screen. The ignored-only Welcome, in All, and the empty
+Changes filter show the current version without compare modes. The
+ignored-only Welcome keeps its evidence in Inspect, and the All filter of the
+empty Changes filter opens `design/canvas/overview`.
 
 Each comparison evidence design depicts a branch of its own. On the branch
 whose changed stylesheet applies to Welcome, Matched styles and Excluded

@@ -74,10 +74,13 @@ preview scheme apart from its interface appearance, as
   [preview tokens](./mokly-viewer-palette.md#preview-tokens). Its ring and
   shadow follow the interface appearance, so its edge stays visible on the
   canvas in both appearances.
-- **Light-only screens** — on the canvas, a screen with no dark view has its
+- **Light-only views** — on the canvas, a screen with no dark view has its
   Light frames alone, and the Frames filter's Dark toggle reads `Light only`.
   A use-case step whose screen has no dark view keeps its Light view while
-  Dark is chosen, and its label adds `Light only`.
+  Dark is chosen, and its label adds `Light only`. A Markdown document with no
+  dark document keeps its light document in its reading frame under Dark. The
+  reading frame's label then adds `Light only` after the file name, such as
+  `payment-terms.md · Light only`.
 - **Comparisons** — a comparison on a canvas frame compares the views of that
   frame's viewport and scheme.
 

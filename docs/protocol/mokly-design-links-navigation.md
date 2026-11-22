@@ -10,41 +10,38 @@ variants.
 
 Canvas links stay inside the Canvas family: a control opens the Canvas
 artboard that shows its outcome, and a control without one is a depiction.
-The Browse, Changes and component explorer screens outside the family link to
-Canvas artboards too, except their links to the use case and to the previous
-versions of removed entries.
+The kept tag picker screen outside the family links to Canvas artboards too.
 
-| Control/context                                                                     | Destination or behavior                                                                                                                                               |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Brand, catalogue home crumb, missing-route recovery                                 | `design/canvas/stage/home`                                                                                                                                            |
-| Home: Open the first screen                                                         | `design/canvas/overview`                                                                                                                                              |
-| All catalogue: Welcome / Details / Profile                                          | `design/canvas/overview` / `design/canvas/outcomes/added` / `design/canvas/inspect/unchanged`                                                                         |
-| All catalogue: Action / Toolbar / Payment terms                                     | `design/canvas/stage/component-set` / `design/canvas/stage/component-set/toolbar` / `design/canvas/stage/document`                                                    |
-| Changed catalogue on Inspect: Welcome / Details / Invoice / Payment terms           | `design/canvas/stage/catalogue` / `design/canvas/outcomes/added` / `design/canvas/outcomes/moved/inspect` / `design/canvas/stage/document`                            |
-| Changed catalogue on Changes: Welcome / Details / Invoice                           | `design/canvas/changes/current` / `design/canvas/outcomes/added/changes` / `design/canvas/outcomes/moved`                                                             |
-| Welcome Changes filter / catalogue All filter                                       | `design/canvas/stage/catalogue` / `design/canvas/overview`                                                                                                            |
-| Menu or dock Catalogue / catalogue sheet close                                      | `design/canvas/stage/catalogue` / `design/canvas/overview`                                                                                                            |
-| Right panel: Inspect / Changes tab                                                  | The artboard of the same entry on that tab, such as `design/canvas/overview` / `design/canvas/changes/current` for Welcome                                            |
-| Zoom pill: Zoom in / Fit                                                            | `design/canvas/stage/zoomed` from Welcome / the fitted artboard of the same state: the artboard itself, or `design/canvas/overview` from `design/canvas/stage/zoomed` |
-| Component tree, highlight label                                                     | The artboard that selects that instance, such as `design/canvas/inspect/selection`                                                                                    |
-| Dock's current tab, selection pill                                                  | The artboard with the panel sheet open, such as `design/canvas/inspect/sections` from `design/canvas/inspect/selection`                                               |
-| Selection head, Used by row                                                         | The artboard of that component or consumer, such as `design/canvas/stage/component-set`                                                                               |
-| MiniWelcome / MiniDetails                                                           | Open the details screen: `design/canvas/outcomes/added`; Return to welcome: `design/canvas/overview`                                                                  |
-| Depicted use-case step reference                                                    | Welcome: `design/canvas/overview`; Details: `design/canvas/outcomes/added`                                                                                            |
-| Example tour, outside the Canvas family                                             | `design/browse/views/use-case`                                                                                                                                        |
-| Removed screens outside the family: Farewell / Survey / Invite / Archive / Timeline | `design/changes/outcomes/removed` / `design/changes/outcomes/previous-version/long` / `…/loading` / `…/unavailable` / `…/no-view`                                     |
-| Removed documents: four Changes rows                                                | `design/browse/pages/removed` / `design/browse/pages/previous-version/long` / `…/loading` / `…/unavailable`, each returning to `design/canvas/stage/home` from All    |
-| Removed consumer return, component explorer                                         | `design/components/states/removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage                                                 |
+| Control/context                                                               | Destination or behavior                                                                                                                                               |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brand, catalogue home crumb, missing-route recovery                           | `design/canvas/stage/home`                                                                                                                                            |
+| Home: Open the first screen                                                   | `design/canvas/overview`                                                                                                                                              |
+| All catalogue: Welcome / Details / Profile                                    | `design/canvas/overview` / `design/canvas/outcomes/added` / `design/canvas/inspect/unchanged`                                                                         |
+| All catalogue: Action / Toolbar / Payment terms / Example tour                | `design/canvas/stage/component-set` / `design/canvas/stage/component-set/toolbar` / `design/canvas/stage/document` / `design/canvas/flows/tour`                       |
+| Changed catalogue on Inspect: Welcome / Details / Invoice / Payment terms     | `design/canvas/stage/catalogue` / `design/canvas/outcomes/added` / `design/canvas/outcomes/moved/inspect` / `design/canvas/stage/document`                            |
+| Changed catalogue on Changes: Welcome / Details / Invoice                     | `design/canvas/changes/current` / `design/canvas/outcomes/added/changes` / `design/canvas/outcomes/moved`                                                             |
+| Changed catalogue: Farewell, on Changes / on Inspect                          | `design/canvas/outcomes/removed` / `design/canvas/outcomes/removed/inspect`                                                                                           |
+| Changed catalogue: Survey / Invite / Archive / Timeline                       | `design/canvas/outcomes/removed/long` / `…/loading` / `…/unavailable` / `…/no-view`                                                                                   |
+| Welcome Changes filter / catalogue All filter                                 | `design/canvas/stage/catalogue` / `design/canvas/overview`                                                                                                            |
+| Menu or dock Catalogue / catalogue sheet close                                | `design/canvas/stage/catalogue` / `design/canvas/overview`                                                                                                            |
+| Right panel: Inspect / Changes tab                                            | The artboard of the same entry on that tab, such as `design/canvas/overview` / `design/canvas/changes/current` for Welcome                                            |
+| Zoom pill: Zoom in / Fit                                                      | `design/canvas/stage/zoomed` from Welcome / the fitted artboard of the same state: the artboard itself, or `design/canvas/overview` from `design/canvas/stage/zoomed` |
+| Component tree, highlight label                                               | The artboard that selects that instance, such as `design/canvas/inspect/selection`                                                                                    |
+| Dock's current tab, selection pill                                            | The artboard with the panel sheet open, such as `design/canvas/inspect/sections` from `design/canvas/inspect/selection`                                               |
+| Selection head, Used by row                                                   | The artboard of that component or consumer, such as `design/canvas/stage/component-set`                                                                               |
+| A screen's Used by chip of the Example tour                                   | `design/canvas/flows/tour`                                                                                                                                            |
+| MiniWelcome / MiniDetails                                                     | Open the details screen: `design/canvas/outcomes/added`; Return to welcome: `design/canvas/overview`                                                                  |
+| Use-case step title                                                           | Welcome: `design/canvas/overview`; Details: `design/canvas/outcomes/added`                                                                                            |
+| Handbook removal: Getting started / Field guide / Printing tips / Style notes | `design/canvas/outcomes/removed-document` / `…/long` / `…/loading` / `…/unavailable`                                                                                  |
+| Removal branch: Farewell in Compact's affected list, or its row on Inspect    | `design/canvas/components/removed/consumer`                                                                                                                           |
+| Removal branch: Farewell's row on Changes, or Compact's Previous change       | `design/canvas/components/removed/consumer-changes`                                                                                                                   |
 
 A catalogue row keeps the right panel's tab where its entry has an artboard on
-that tab, and the selected row opens the artboard that draws it. In the Canvas
-catalogue, the Example tour row and the removed rows are depictions, because
-no Canvas artboard shows them. The Changes list of a removed entry outside the
-family opens Welcome and Details on their Changes tabs. The All filter of the
-`design/changes/outcomes` and `design/browse/pages` screens opens
-`design/canvas/stage/home`, because their removed entry is not in All. The All
-filter of the removed variant, the appearance screens and the tag picker opens
-`design/canvas/overview`.
+that tab, and the selected row opens the artboard that draws it. The All
+filter of a removed screen of the canonical branch opens
+`design/canvas/stage/home`, because the removed entry is not in All. The
+handbook removal, the light-only removal and the variant removal are branches
+of their own, so their All filter is a depiction.
 
 Folder rows and folder-only crumbs are not link targets: a folder row only
 expands or collapses, and a folder crumb opens the folder's own page only when
@@ -72,8 +69,8 @@ A screen's variants are ordinary catalogue entries grouped under their parent.
 The disclosure beside a parent row is a depiction with no destination, because
 the served shell toggles the list in place; the parent row itself keeps its
 own destination. A variant row without an authored destination stays a
-depiction: no artboard shows a Welcome variant, so Welcome's variant rows are
-depictions.
+depiction: no artboard of the canonical branch shows a Welcome variant, so
+Welcome's variant rows are depictions there.
 
 The Variants section of a component's Inspect opens the artboard that chooses
 each variant on the same branch: from `design/canvas/stage/component-set`,
@@ -81,13 +78,15 @@ Default opens `design/canvas/props/editing` and Disabled opens
 `design/canvas/stage/component-set/disabled`. A variant without such an
 artboard is a depiction.
 
-`design/browse/variants/variant-removed` depicts a removed variant under its
-surviving parent. Its All filter opens `design/canvas/overview`, because the
-parent screen still exists. Its Welcome breadcrumb stays text, and its parent
+`design/canvas/outcomes/removed-variant` depicts a removed variant, Welcome's
+`Save failed`, under its surviving parent, on a branch of its own. Its parent
 row is a depiction: the deletion is a later state of the same group, so it
-must not open another scenario. The removed variant has no live product
-destination and no comparison modes; its stage shows the variant's inert
-previous version.
+must not open another scenario. Its All filter is a depiction too, because no
+artboard shows that branch in All. Its Inspect lists
+`Save failed · Removed` after Welcome's current variants, whose rows are
+depictions. The removed variant has no live product destination and no
+compare mode; its canvas shows the variant's inert previous version, and its
+two tabs open each other.
 
 ## Related Docs
 

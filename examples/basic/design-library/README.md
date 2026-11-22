@@ -37,10 +37,10 @@ the artboard scaffolds render. `design.css`, which every design route links,
 imports the theme and the reset class first and then Geist from
 `design-fonts/`. `design-preview.css` holds the preview tokens that a depicted
 document reads and imports the highlight's labels and mask: the Canvas route
-links it, and `design-stage.css` imports it for the older routes. On the older
-routes, `design-component-workspace.css` imports the shell and workspace
-layouts after the component sheets, as the package's `styles.css` orders
-them.
+links it, and `design-stage.css` imports it for the library route and for the
+`design/**` route of the kept tag picker screen. On those two routes,
+`design-component-workspace.css` imports the shell and workspace layouts
+after the component sheets, as the package's `styles.css` orders them.
 
 The `design/canvas/**` route links the Canvas viewer's shared sheets in this
 order: `design.css`, `design-preview.css`, `design-shots.css` with the mini
@@ -52,14 +52,15 @@ package stylesheets of the instance tree, the supplied props, the usage list,
 and the props form; and `design-canvas-changes.css`, the Changes tab's
 Compared rail and comparison details and Side by side on the stage. One sheet
 for the states of each Canvas folder follows: `design-canvas-outcomes.css`,
-`design-canvas-loading.css`, `design-canvas-search.css`,
-`design-canvas-components.css`, `design-canvas-props.css` and
-`design-canvas-evidence.css`. `design-documents.css` sets the Markdown of a
+`design-canvas-flows.css`, `design-canvas-loading.css`,
+`design-canvas-search.css`, `design-canvas-components.css`,
+`design-canvas-props.css` and `design-canvas-evidence.css`.
+`design-documents.css` sets the Markdown of a
 reading frame. After the `$componentStylesheets` marker,
 `design-canvas-shell.css` imports the shipped shell layout and holds the
 shell's layout and the package parts that it restyles, and
 `design-canvas-compact.css` holds its compact form. The Canvas route links no
-sheet that only the older screens need.
+sheet that only the kept older screen needs.
 
 The Canvas part sheets under `canvas/`, `panels/`, `inspector/frames-filter.css`,
 and `inspector/box-model.css` read the `--cv-*` roles, and a frame's document
@@ -71,9 +72,8 @@ Canvas sheet names a colour: a role that the Canvas palette lacks mixes
 Canvas roles with `color-mix()`.
 
 `design-canvas-changes.css` sets the shipped comparison evidence in Inspect's
-type without the evidence's package stylesheet. Among the design sheets, only
-`design-review.css` imports that stylesheet, and only the library route and
-the older component, appearance and Changes routes link it.
+type without the evidence's package stylesheet. No design sheet imports that
+stylesheet.
 
 Keep shared host resets at zero specificity so component styles render
 identically in standalone samples and in-screen compositions.

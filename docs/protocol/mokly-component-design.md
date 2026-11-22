@@ -24,11 +24,16 @@ entry's path, such as `example/components/action/default`, with Details
 listing it above the source.
 
 The variant set follows the
-[canvas stage](./mokly-shell-canvas-stage.md#section): one row for each saved
-variant, Light beside Dark, inside a dashed outline. Inspect's Variants section
-lists the saved variants in authored order: Default, Disabled, and Secondary
-for the Action. Choosing a variant selects its Light frame, and Props edits
-that variant. The chosen variant reads in the ink colour, its mark takes the
+[canvas stage](./mokly-shell-canvas-stage.md#section), inside a dashed
+outline. A row for the component's own example comes first, and the
+component's title names its frames, such as `Action · Light`. One row for each
+saved variant follows, and each row holds its Light frame beside its Dark
+frame. Inspect's Variants section names the component itself first, then its
+saved variants in authored order: the Action, then Default, Disabled, and
+Secondary. Choosing a variant selects its Light frame, and Props edits that
+variant.
+
+The chosen variant reads in the ink colour, its mark takes the
 deep signal colour, and it carries an explicit current-link state. Default and
 Disabled are Action's variant entries, each its own catalogue entry and
 Changes row under the [variant contract](./mokly-variants.md). Known unchanged
@@ -50,9 +55,9 @@ own view in the chosen mode of the
 frame's two versions next to each other, each in its own frame with a Before
 or Current tag. A chip names each frame of the set by its variant and scheme.
 Overlay and Difference hold both versions in each frame: Current sits on top
-at half opacity, or blends by difference over the opaque Before layer. The
-designs draw both versions of a frame at one size. Decision 23, on the frame
-size of a component comparison, is open.
+at half opacity, or blends by difference over the opaque Before layer. Both
+versions of a frame share one size: the larger width and the larger height of
+the two. On the depicted branches, both versions have the same size.
 
 Inspect holds the sections of the
 [inspector design](./mokly-component-inspector-design.md#inspect). Selection
@@ -73,26 +78,28 @@ adds Welcome's own row, five in all, as
 `design/canvas/components/affected/direct` depicts.
 
 On the removal branch, the Action's Compact variant is its own Removed entry,
-and the parent stays unmarked. `design/canvas/components/removed` keeps Compact
-on the variant set after the current variants. Each of its frames says that it
+and the parent stays unmarked. The branch also removed Farewell, a screen
+that rendered the Action with Compact's props, so Changes lists two entries:
+Farewell, then Compact. `design/canvas/components/removed` keeps Compact on
+the variant set after the current variants. Each of its frames says that it
 has no current version, and Props keeps its saved props read-only. Its
 comparison, `design/canvas/components/removed/changes`, keeps the explicit
 missing current side and falls back to Side by side. Removing a saved variant
-changes no consumer's render, so Usage lists the Action's consumers and
-affects none.
+changes no current consumer's render, so Usage lists the Action's consumers,
+and its affected list keeps only Farewell, a removed former consumer.
 
-The removed-state scenario of `design/components/states/removed` also removes
-Farewell, a former consumer, and links it to its Removed state,
-`design/components/states/removed-consumer`, which
-[removed previews](./mokly-removed-previews.md) fill with its previous version:
-the “Showing previous version” label, the historical frame for the selected
-viewport, and no comparison band. The catalogue-wide Appearance selector is
-the only theme control, while the historical frame stays Light because that is
-the only scheme captured for the view. Its stage carries no escape link,
-because the catalogue navigation keeps Action's affected list one step away.
-That scenario's Changes rows include the removed Compact entry and Farewell.
-The Removed Compact variant entry keeps its before/current comparison and
-explicit missing current side; Farewell has no comparison band.
+Farewell's row in the affected list reads `Farewell · Removed` and opens its
+Removed state, `design/canvas/components/removed/consumer`, which
+[removed previews](./mokly-removed-previews.md#behavior) fill with its
+previous version: its Light frames under “Showing previous version”, with no
+compare mode. The catalogue-wide Appearance selector is the only theme
+control, while the historical frames stay Light because that is the only
+scheme captured for the views. Inspect keeps Farewell's record, and
+Highlight components is unavailable. The catalogue's Compact row returns to
+Compact. Farewell's Changes tab,
+`design/canvas/components/removed/consumer-changes`, is the first of the
+branch's two changes and offers no compare mode, and its Next change opens
+Compact's comparison.
 
 Because every variant is its own entry, the depicted Changes counts include
 one row per changed or removed variant, the parent row carries the aggregate

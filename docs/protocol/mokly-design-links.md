@@ -28,11 +28,11 @@ subject or comparison mode. The actual Appearance setting stays with the outer
 viewer.
 
 Every design screen has mobile and desktop views. The Canvas screens
-(`design/canvas/**`) and the appearance screens (`design/browse/appearance/**`)
-render in both schemes. Every other design screen renders light-only
-documents, also where it depicts a dark product screen. The outer viewer's
-canvas shows the Light and Dark frames of each dual-scheme screen at once. It
-shows every other design screen as its Light frames alone, under the
+(`design/canvas/**`) render in both schemes. Every other design screen
+renders light-only documents, also where it depicts a dark product screen.
+The outer viewer's canvas shows the Light and Dark frames of each dual-scheme
+screen at once. It shows every other design screen as its Light frames alone,
+under the
 [preview scheme rules](./mokly-shell-device-chrome.md#color-scheme). The outer
 Appearance control colours the outer viewer's chrome, not the frames of a
 screen. The shell's one Appearance preference, not a dark render of each

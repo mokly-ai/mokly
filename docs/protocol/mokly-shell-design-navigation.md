@@ -112,7 +112,7 @@ while the base side renders from the base commit's sources; the
   catalogue-navigation component's `variants`, `changed-variants`,
   `folder-screen` and `changed-member` variants are its owning mockups, the
   last two for a folder screen listing its members, and
-  `design/browse/variants/variant-removed` depicts a removed variant under its
+  `design/canvas/outcomes/removed-variant` depicts a removed variant under its
   surviving parent.
 - Catalogue-link navigation opens the active section and every folder on the active
   row's path and scrolls that row into view. Search and Changes filtering may

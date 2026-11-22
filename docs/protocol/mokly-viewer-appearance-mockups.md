@@ -5,12 +5,11 @@ This continues the [viewer appearance contract](./mokly-viewer-appearance.md).
 ## Mockup Contract
 
 The owning catalogue is `examples/basic/specs/design`; use its registered
-shared components and existing screen compositions. Every Canvas screen, the
-two kept appearance screens, and the appearance selector and top bar samples
-of the design library render Light and Dark views for both viewports through
-Mokly's authoring: the entries inherit the configured `colorSchemes`, and
-every view renders once per scheme. Browse shows both renders of an entry
-under the [frame scheme
+shared components and existing screen compositions. Every Canvas screen, and
+the appearance selector and top bar samples of the design library, render
+Light and Dark views for both viewports through Mokly's authoring: the
+entries inherit the configured `colorSchemes`, and every view renders once
+per scheme. Browse shows both renders of an entry under the [frame scheme
 rules](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes). A
 shared render context carries the renderer's `input.colorScheme` to the
 artboard roots as a pass-through, not a second theme setting, and each
@@ -25,31 +24,8 @@ the standalone control and has no authored transitions. The depicted top bar
 component owns it, so every artboard drawing a top bar shows it rather than
 opting in. Every artboard's selector reads the name of the scheme it was
 rendered for. Only the top bar's `auto-appearance` sample reads Auto in both
-renders. The depicted screen header of a kept older screen carries the
-viewport control only, with no preview theme icon, and depicted component
-toolbars carry no scheme switch.
-
-## Kept Appearance Screens
-
-The `Appearance` folder under `Design › Browse shell` keeps two older screens,
-with matching source directories under
-`examples/basic/specs/design/browse/appearance/`. The folder itself has no
-page of its own. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists their
-entries.
-
-| Folder                           | Owning screen                                                                                                        |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Appearance › Appearance states   | `design/browse/appearance/states/light-only-document`: a removed document with no dark render keeping its light page |
-| Appearance › Status and recovery | `design/browse/appearance/status/flow`: a use case's ordered steps around light screens                              |
-
-Their previews follow the artboard. Welcome, the flow's first step, has a dark
-render, so it uses the dark device-screen treatment in the Dark render and the
-light one in the Light render. The light-only Details step keeps its light
-frame in both renders. The removed document's previous version has only a
-light render, so its pane keeps the Light palette in the Dark render, and its
-label reads `Showing previous version — Light only`. Device-screen tokens stay
-independent of the interface palette.
+renders. The depicted screen header of the kept tag picker screen carries the
+viewport control only, with no preview theme icon.
 
 Each screen has its own mobile and desktop component and reuses the
 registered shared components, without duplicate screen markup. Apart from the
@@ -67,10 +43,23 @@ selector. The startup states of `design/canvas/loading/catalogue` draw no top
 bar, so their one status line takes the reader's appearance alone. The frames
 do not follow the artboard. Each frame draws its own scheme, so a screen's
 Light and Dark frames and a variant set's Light and Dark variants show in both
-renders. Only a Markdown document's reading frame takes the rendered scheme.
-Inspect's Frames filter draws the Light and Dark toggles, which choose frames
-and are not an appearance control. A light-only screen, such as Profile, holds
-its Light frames and draws the filter's Dark toggle disabled with Light only.
+renders. Only a Markdown document's reading frame takes the rendered scheme,
+except a light-only document below. Inspect's Frames filter draws the Light
+and Dark toggles, which choose frames and are not an appearance control. A
+light-only screen, such as Profile, holds its Light frames and draws the
+filter's Dark toggle disabled with Light only.
+
+A use case's step frames show the scheme that its Frames filter chooses, not
+the rendered scheme. Both steps of the Example tour have a dark view, so
+`design/canvas/flows/tour/dark` shows each step's Dark frame. A current
+document without a dark render keeps its light reading frame in the Dark
+render, and the frame's label adds `Light only` after the file name, as
+`design/canvas/stage/document/light-only` shows. A removed document's
+previous version without a dark render keeps its light reading frame in the
+Dark render, and its section head reads
+`Showing previous version — Light only`, as
+`design/canvas/outcomes/removed-document/light-only` shows under the
+[removed previews](./mokly-removed-previews.md#behavior) rules.
 
 ## Related Docs
 
