@@ -67,6 +67,10 @@ Depends on: 10, 11
       variant set: the Toolbar's `component-set/toolbar*` variants and the
       Action's sets on `canvas/props/**`, `canvas/components/**` and
       `canvas/evidence/unchanged`.
+- [ ] Draw each component frame of the Canvas variant sets at its measured
+      document size, as the canvas frames contract says (Milestone 18,
+      item 9): for example the Action's own example at 148 × 86 and the
+      Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
