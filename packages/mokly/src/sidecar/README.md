@@ -139,8 +139,9 @@ its requests and results. The paths below are relative to the package root.
   target. Examples are a relative `require.resolve` and a failed relative
   `require` inside `try`. An external relative `require.resolve` or
   `require` edge that the callback did not answer discards it too. `verify`
-  records the observations and the dependency usage of the unanswered internal
-  edges only after every edge passes.
+  records the observations of the unanswered internal edges only after every
+  edge passes. Their names are relative, and dependency usage records only bare
+  names, so they add none.
   After a discarded result or a failed guarded compile, `bundle` runs the
   complete planned compile, in which the callback takes every import. That
   compile gives the result or the error. A guarded result that stands has the
@@ -149,8 +150,10 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. An incomplete recipe gets a fresh identity, also
-  when `checkRecipeSize` in
+  the compilation identity. A compile without a full capture owner, such as a
+  `serveEdit` compile, hashes no module source into its identity, because its
+  incomplete evidence adds the random runtime key. An incomplete recipe gets a
+  fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
   result before it drops the evidence. For a new compile, `bundleRecipe`
@@ -260,7 +263,10 @@ its requests and results. The paths below are relative to the package root.
   captured compilations first, and also checks their reuse evidence. Then a
   `serveEdit` request tries the marked compilations with these live checks
   and their private folder files. A `full` request never takes a marked
-  compilation. `reuse` gives the generation whose compilation passed these
+  compilation. `reuse` reads first the input that failed the last check of the
+  process, then the inputs whose digests differ from another held generation of
+  equal settings. The checks stop at the first difference, so this order changes
+  no result. `reuse` gives the generation whose compilation passed these
   checks to its optional `selected` callback. `restore` installs a recipe
   without a compile. `bundleResult` builds the full result of a generation and
   runs the size check on it.

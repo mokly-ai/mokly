@@ -112,6 +112,9 @@ export function bundleResult(
   return result;
 }
 
+/** The input that differed in the last reuse check of this process. */
+let lastFailedInput: string | undefined;
+
 /** A live compilation can serve another evaluation only while its consumed inputs agree. */
 export async function reuse(
   generations: Iterable<Generation>,
@@ -141,6 +144,9 @@ export async function reuse(
             ),
         )
       : [];
+  const peers = candidates.filter(
+    (generation) => settings(generation.params) === settings(params),
+  );
   for (const generation of [...captured, ...uncaptured]) {
     if (
       !toolchain ||
@@ -151,7 +157,11 @@ export async function reuse(
     )
       continue;
     const current =
-      (await currentFileInputs(generation.compiled.inputs)) &&
+      (await currentFileInputs(
+        generation.compiled.inputs,
+        likelyChanged(generation, peers),
+        (file) => (lastFailedInput = file),
+      )) &&
       (await everyInput(
         Object.entries(generation.compiled.inputDirectories),
         async ([directory, names]) =>
@@ -169,4 +179,25 @@ export async function reuse(
       return restore(params, generation.compiled, generation.modules);
     }
   }
+}
+
+/**
+ * Inputs that an edit most likely changed: the input that failed the last check,
+ * then each input whose digest differs from another held generation of equal settings.
+ */
+function likelyChanged(
+  generation: Generation,
+  peers: readonly Generation[],
+): string[] {
+  const inputs = generation.compiled.inputs;
+  const differing = Object.keys(inputs).filter((file) =>
+    peers.some(
+      (peer) =>
+        peer !== generation &&
+        (peer.compiled.inputs[file] ?? null) !== inputs[file],
+    ),
+  );
+  return lastFailedInput === undefined
+    ? differing
+    : [lastFailedInput, ...differing];
 }

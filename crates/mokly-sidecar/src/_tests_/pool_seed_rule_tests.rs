@@ -1,0 +1,157 @@
+//! A released recipe that a changed current source rules out is not sent before a bundle.
+
+use std::io::{Error, ErrorKind};
+use std::path::Path;
+use std::sync::{Arc, Mutex};
+
+use unimock::{MockFn, Unimock, matching};
+
+use crate::bundle_outcomes::CacheOutcome;
+use crate::methods::BundleCapture;
+use crate::pool::SidecarPool;
+use crate::source_digests::SourceDigestsMock;
+
+use super::recipe_support::Fixture;
+
+const EDIT: BundleCapture = BundleCapture::ServeEdit;
+const SCREEN: &str = "/repo/screen.ts";
+const SHARED: &str = "/repo/shared.ts";
+
+#[derive(Clone, Copy)]
+enum Current {
+    Digest(&'static str),
+    Missing,
+    Unreadable,
+}
+
+struct Sources {
+    fixture: Fixture,
+    reads: Arc<Mutex<Vec<String>>>,
+}
+
+impl Sources {
+    fn new(current: Current) -> Self {
+        let reads = Arc::new(Mutex::new(Vec::new()));
+        let log = reads.clone();
+        let digests = Unimock::new(
+            SourceDigestsMock::digest
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, path| {
+                    log.lock().unwrap().push(path.display().to_string());
+                    match current {
+                        _ if path != Path::new(SCREEN) => Ok(Some("shared".into())),
+                        Current::Digest(digest) => Ok(Some(digest.into())),
+                        Current::Missing => Ok(None),
+                        Current::Unreadable => Err(Error::from(ErrorKind::PermissionDenied)),
+                    }
+                })),
+        )
+        .no_verify_in_drop();
+        Self {
+            fixture: Fixture::with_digests(usize::MAX, Arc::new(digests)),
+            reads,
+        }
+    }
+
+    /// Release `released` and keep `live` live, both with the settings of `entry`.
+    fn edits(self, entry: &str, released: &str, live: Option<&str>) -> Self {
+        self.fixture.record_inputs(
+            released,
+            &[(SCREEN, Some("released")), (SHARED, Some("shared"))],
+        );
+        self.fixture.record_inputs(
+            &format!("{released}-live"),
+            &[(SCREEN, live), (SHARED, Some("shared"))],
+        );
+        let first = self.fixture.bundle_with_capture(entry, released, EDIT);
+        self.fixture
+            .pool
+            .release_generation(&first.generation, first.epoch);
+        self.fixture.pool.synchronize_releases();
+        self.fixture
+            .bundle_with_capture(entry, &format!("{released}-live"), EDIT);
+        self.reads.lock().unwrap().clear();
+        self
+    }
+
+    fn reads(&self) -> Vec<String> {
+        std::mem::take(&mut *self.reads.lock().unwrap())
+    }
+}
+
+#[test]
+fn a_forward_edit_sends_no_released_recipe_that_a_changed_source_rules_out() {
+    let sources =
+        Sources::new(Current::Digest("edited")).edits("screen.ts", "released", Some("live"));
+    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    assert_eq!(restored, ["released-live"]);
+    assert_eq!(
+        sources.reads(),
+        [SCREEN],
+        "only the path whose digests differ is read, once"
+    );
+    assert_eq!(result.generation, "probe");
+    assert_eq!(result.compile_count, 1);
+    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+}
+
+#[test]
+fn a_revert_to_the_released_content_still_sends_the_released_recipe() {
+    let sources =
+        Sources::new(Current::Digest("released")).edits("screen.ts", "released", Some("live"));
+    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    assert_eq!(restored, ["released", "released-live"]);
+    assert_eq!(sources.reads(), [SCREEN]);
+    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+}
+
+#[test]
+fn equal_digests_in_both_recipes_keep_the_released_recipe_without_a_read() {
+    let sources =
+        Sources::new(Current::Digest("edited")).edits("screen.ts", "released", Some("released"));
+    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    assert_eq!(restored, ["released", "released-live"]);
+    assert_eq!(sources.reads(), Vec::<String>::new());
+    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+}
+
+#[test]
+fn a_missing_or_unreadable_source_keeps_the_released_recipe() {
+    for current in [Current::Missing, Current::Unreadable] {
+        let sources = Sources::new(current).edits("screen.ts", "released", Some("live"));
+        let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+        assert_eq!(restored, ["released", "released-live"]);
+        assert_eq!(sources.reads(), [SCREEN]);
+        assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+    }
+}
+
+#[test]
+fn a_ruled_out_recipe_keeps_its_place_in_the_least_recently_used_order() {
+    let sources = Sources::new(Current::Digest("edited")).edits("a.ts", "a", Some("live"));
+    let sources = sources.edits("b.ts", "b", Some("live"));
+    assert_eq!(
+        sources.fixture.probe_outcome("a.ts", "probe-a", 2, EDIT).0,
+        ["a-live"]
+    );
+    {
+        let mut state = sources.fixture.pool.lock();
+        let bytes = state.recipes.bytes;
+        state.recipes.bound = bytes;
+    }
+    let sources = sources.edits("c.ts", "c", Some("live"));
+    let retained: Vec<String> = sources
+        .fixture
+        .pool
+        .lock()
+        .recipes
+        .entries
+        .iter()
+        .map(|recipe| recipe.reusable.compiled().identity.clone())
+        .collect();
+    assert_eq!(
+        retained,
+        ["a", "c"],
+        "the probe of a touched it, so b was the least recently used"
+    );
+}

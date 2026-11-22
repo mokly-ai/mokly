@@ -397,7 +397,9 @@ view after the edit and counts real process starts and hello calls.
   candidate comparisons for the recorded directories that have candidate
   names, under the
   [candidate name rules](../../docs/protocol/mokly-sidecar-plans.md#candidate-names).
-  Other observations keep the whole comparison.
+  Other observations keep the whole comparison. It checks the record on up to
+  four scoped threads, and every thread stops after the first mismatch or read
+  error.
 - [`src/plan_directory.rs`](./src/plan_directory.rs) holds `matches`, the
   streaming candidate comparison that `SystemPhysicalInputs` uses. It checks
   each current entry and link before filtering unrelated ASCII names. It

@@ -183,3 +183,7 @@ mod pool_recipe_tests;
 #[cfg(test)]
 #[path = "_tests_/recipe_support.rs"]
 mod recipe_support;
+
+#[cfg(test)]
+#[path = "_tests_/pool_seed_rule_tests.rs"]
+mod pool_seed_rule_tests;

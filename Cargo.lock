@@ -3351,6 +3351,7 @@ dependencies = [
  "mokly-test-support",
  "serde",
  "serde_json",
+ "sha2",
  "sysinfo",
  "tempfile",
  "thiserror",

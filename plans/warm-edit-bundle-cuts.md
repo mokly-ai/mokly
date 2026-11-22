@@ -98,12 +98,12 @@ Contract owners:
 Depends on: none. It starts after PR #465 merges, because #465 moves the rules
 of released recipes to a new page.
 
-- [ ] Add the approved paragraph and decision of F to the rules of released
+- [x] Add the approved paragraph and decision of F to the rules of released
       recipes, with the limit for equal digests and the rule for a missing or
       unreadable file.
-- [ ] Change the `stamp-mismatch` row of `docs/protocol/mokly-timings.md` as
+- [x] Change the `stamp-mismatch` row of `docs/protocol/mokly-timings.md` as
       approved.
-- [ ] Update the three README files of the contract owners where an entry point
+- [x] Update the three README files of the contract owners where an entry point
       or a described behavior changes.
 
 ## Milestone 2: Red tests and measurement harness
@@ -112,62 +112,69 @@ Depends on: none.
 
 The tests are written against the tree of PR #465 and land after it merges.
 
-- [ ] Pool tests for F: a forward edit sends no seed and gives the same result;
+- [x] Pool tests for F: a forward edit sends no seed and gives the same result;
       a revert to the released content still seeds and reuses; equal digests in
       both recipes keep today's seed; a missing or unreadable file keeps
       today's behavior. See the forward edit test fail on today's code.
-- [ ] The differential test for B and G: one process runs an edit inside a
+- [x] The differential test for B and G: one process runs an edit inside a
       module, a new import, a removed import, a renamed file, a failed compile
       and its recovery, and an edit of a configuration file. Each guarded
       compile with a plan gives the result, the evidence, and the diagnostics
       of the same request without a plan. Break B on purpose and see it fail.
-- [ ] The test for C: verdicts of the threaded plan check for a mismatch in the
+- [x] The test for C: verdicts of the threaded plan check for a mismatch in the
       first, a middle, and the last chunk, and for a read error. Break the
       early stop on purpose and see it fail.
 - [ ] Prepare the harness: ABBA sessions on one fixture, cold sessions for the
       memory peak, and the byte proof with ready Changes on mokly-cloud,
       `examples/basic`, and the large HTML and React fixtures.
 
+Evidence: `.context/edit-bundle-path/ledger.md` lists each red run and each
+mutation proof.
+
 ## Milestone 3: Released recipes that cannot pass
 
 Depends on: 1, 2.
 
-- [ ] Add the digest boundary of the pool and its system implementation.
-- [ ] Rule out a released recipe in `seed_compilation`, outside the lock, with
+- [x] Add the digest boundary of the pool and its system implementation.
+- [x] Rule out a released recipe in `seed_compilation`, outside the lock, with
       `complete`, the least recently used touch, and the `cache` value kept.
-- [ ] Pass the F tests and the existing pool tests.
+- [x] Pass the F tests and the existing pool tests.
+
+Evidence: `.context/edit-bundle-path/cargo-tests-1.log`.
 
 ## Milestone 4: Likely changed inputs first
 
 Depends on: none. It starts after PR #465 merges.
 
-- [ ] Order the inputs of the reuse check in `compiled.ts` and
+- [x] Order the inputs of the reuse check in `compiled.ts` and
       `file-digests.ts` as the design call says.
-- [ ] Pass the existing reuse tests.
+- [x] Pass the existing reuse tests.
+
+Evidence: `.context/edit-bundle-path/ts-sidecar-tests-1.log`.
 
 ## Milestone 5: Cheaper guarded import proof
 
 Depends on: 2.
 
-- [ ] Observe each module path once in `ModulePaths.observe`.
-- [ ] Drop the dependency usage call for relative names in
+- [x] Observe each module path once in `ModulePaths.observe`.
+- [x] Drop the dependency usage call for relative names in
       `PlannedRelative.verify`.
-- [ ] Pass the differential test and the planned tests.
+- [x] Pass the differential test and the planned tests.
 
 ## Milestone 6: Threaded plan check
 
 Depends on: 2.
 
-- [ ] Check the plan record on scoped threads in `plan_inputs::current`.
-- [ ] Pass the C test and the plan tests of `crates/mokly-render`.
+- [x] Check the plan record on scoped threads in `plan_inputs::current`.
+- [x] Pass the C test and the plan tests of `crates/mokly-render`.
 
 ## Milestone 7: Edit identity without sources
 
 Depends on: 2.
 
-- [ ] Leave the module sources out of the identity hash of a compile without a
+- [x] Leave the module sources out of the identity hash of a compile without a
       full capture owner.
-- [ ] Pass the differential test and the identity tests.
+- [x] Pass the differential test and the identity tests.
 
 ## Milestone 8: Measurement and proofs
 
