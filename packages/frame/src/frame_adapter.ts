@@ -1,6 +1,6 @@
 import type { CatalogueUsage } from "@mokly/model";
 
-/** Finite CSS pixels in the immediate frame's visible content viewport. */
+/** Finite CSS pixels in the coordinate system of the measurement. */
 
 export interface Box {
   x: number;
@@ -67,6 +67,8 @@ export interface MountedFrame {
   scrollTo(key: string): Promise<void>;
   /** Measure the unclipped border box and sides of a single element root. */
   boxModel?(key: string): Promise<InstanceBoxModel | null>;
+  /** Measure the document's content in CSS pixels from its origin. */
+  contentBox?(): Promise<Box | null>;
   /**
    * Add a listener until the returned cleanup runs. Passing the mount's own
    * `onEvent` adopts that receiver, matched by function identity, instead of

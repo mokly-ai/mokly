@@ -1,7 +1,7 @@
 import type { InstanceBoundary, InstanceBoxModel } from "../frame_adapter.js";
 
-import { boundedPixel, edges, viewport } from "./clipping.js";
-import { geometry } from "./geometry.js";
+import { boundedBox, boundedPixel, edges, viewport } from "./clipping.js";
+import { geometry, hasText } from "./geometry.js";
 import { metadataKeys, type ProbeMetadata } from "./metadata.js";
 import { documentRanges } from "./ranges.js";
 
@@ -46,7 +46,7 @@ export const inspection = (doc: Document, metadata: ProbeMetadata) => {
         .filter(
           (node) =>
             node.nodeType !== 8 &&
-            (node.nodeType !== 3 || /[^\t\n\f\r ]/.test((node as Text).data)),
+            (node.nodeType !== 3 || hasText(node as Text)),
         );
       const element = nodes[0] as Element | undefined;
       if (
@@ -79,12 +79,7 @@ export const inspection = (doc: Document, metadata: ProbeMetadata) => {
         };
       };
       return {
-        box: {
-          x: boundedPixel(rect.left, -1000000),
-          y: boundedPixel(rect.top, -1000000),
-          width: boundedPixel(rect.width),
-          height: boundedPixel(rect.height),
-        },
+        box: boundedBox(rect.left, rect.top, rect.width, rect.height),
         border: sides(true),
         padding: sides(false),
       };

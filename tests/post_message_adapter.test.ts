@@ -5,19 +5,9 @@ import { frameUsage } from "../packages/frame/dist/adapters/frame_usage.js";
 import { postMessageAdapter } from "../packages/frame/dist/adapters/post_message_adapter.js";
 import type { FrameEvent } from "../packages/frame/dist/frame_adapter.js";
 import { encodeMessage } from "../packages/frame/dist/probe/schema.js";
+import { mounted } from "../packages/frame/tests/post_message_fixture.js";
 
 import { fakeFrame, frameView, instanceKey } from "./helpers/fake_frame.js";
-
-async function mounted() {
-  const fake = fakeFrame();
-  const promise = postMessageAdapter({
-    frameOrigin: "https://frames.test",
-  }).mount(fake.frame, frameView);
-  fake.load();
-  const nonce = fake.nonce();
-  fake.send({ type: "ready" }, nonce);
-  return { ...fake, mounted: await promise, sessionNonce: nonce };
-}
 
 test("mount usage rejects broken parent identities before compacting the map", () => {
   const usage = frameView.usage;
@@ -211,54 +201,52 @@ test("a response resolved just before disposal cannot escape its old mount", asy
   await assert.rejects(pending, { code: "disposed" });
 });
 
-test("boxModel authenticates measure replies and rejects errors and unknown keys", async () => {
-  const fake = await mounted();
-  const model = {
-    box: { x: 10, y: 20, width: 160, height: 40 },
-    border: { top: 2, right: 2, bottom: 2, left: 2 },
-    padding: { top: 6, right: 12, bottom: 6, left: 12 },
-  };
-  const result = fake.mounted.boxModel!(instanceKey);
-  assert.deepEqual(JSON.parse(fake.posts.at(-1)!.data), {
-    channel: "mokly-frame-probe",
-    version: 4,
-    nonce: fake.sessionNonce,
-    type: "measure",
-    requestId: 1,
-    key: instanceKey,
-  });
-  fake.send(
-    { type: "box-model", requestId: 1, boxModel: model },
-    fake.sessionNonce,
-  );
-  assert.deepEqual(await result, model);
-  const empty = fake.mounted.boxModel!(instanceKey);
-  fake.send(
-    { type: "box-model", requestId: 2, boxModel: null },
-    fake.sessionNonce,
-  );
-  assert.equal(await empty, null);
-  const wrong = fake.mounted.boxModel!(instanceKey);
-  fake.send({ type: "ack", requestId: 3 }, fake.sessionNonce);
+test("contentBox sends exact requests without ready usage and returns a box or null", async (t) => {
+  const fake = await mounted({ status: "pending" });
+  t.after(fake.mounted.dispose);
+  const box = { x: 10, y: 20, width: 160, height: 40 };
+  for (const [requestId, contentBox] of [
+    [1, box],
+    [2, null],
+  ] as const) {
+    const result = fake.mounted.contentBox!();
+    assert.deepEqual(JSON.parse(fake.posts.at(-1)!.data), {
+      channel: "mokly-frame-probe",
+      version: 4,
+      nonce: fake.sessionNonce,
+      type: "measure-content",
+      requestId,
+    });
+    fake.send(
+      { type: "content-box", requestId, contentBox },
+      fake.sessionNonce,
+    );
+    assert.deepEqual(await result, contentBox);
+  }
+});
+
+test("contentBox rejects a wrong reply and preserves a wire error code", async (t) => {
+  const fake = await mounted({ status: "unavailable" });
+  t.after(fake.mounted.dispose);
+  const wrong = fake.mounted.contentBox!();
+  fake.send({ type: "ack", requestId: 1 }, fake.sessionNonce);
   await assert.rejects(wrong, { code: "invalid-message" });
-  const error = fake.mounted.boxModel!(instanceKey);
+  const error = fake.mounted.contentBox!();
+  fake.send({ type: "error", requestId: 2, code: "limit" }, fake.sessionNonce);
+  await assert.rejects(error, { code: "limit" });
+});
+
+test("contentBox rejects a reply settled just before disposal and any later request", async (t) => {
+  const fake = await mounted();
+  t.after(fake.mounted.dispose);
+  const pending = fake.mounted.contentBox!();
   fake.send(
-    { type: "error", requestId: 4, code: "invalid-boundary" },
-    fake.sessionNonce,
-  );
-  await assert.rejects(error, { code: "invalid-boundary" });
-  const sent = fake.posts.length;
-  await assert.rejects(fake.mounted.boxModel!("f".repeat(64)), {
-    code: "missing-instance",
-  });
-  assert.equal(fake.posts.length, sent);
-  const obsolete = fake.mounted.boxModel!(instanceKey);
-  fake.send(
-    { type: "box-model", requestId: 5, boxModel: model },
+    { type: "content-box", requestId: 1, contentBox: null },
     fake.sessionNonce,
   );
   fake.mounted.dispose();
-  await assert.rejects(obsolete, { code: "disposed" });
+  await assert.rejects(pending, { code: "disposed" });
+  await assert.rejects(fake.mounted.contentBox!(), { code: "disposed" });
 });
 
 test("the load has no time limit; handshake timeout, view replacement and disposal invalidate old sessions", async () => {
