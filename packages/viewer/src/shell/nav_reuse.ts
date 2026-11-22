@@ -5,7 +5,14 @@ import type { Catalogue } from "./catalogue.js";
 import { reuseByKey } from "./data_reuse.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 
-/** Compare the tree and entry fields used to place and name navigation rows. */
+/**
+ * Compare the tree and entry fields used to place and name navigation rows.
+ * Equal fields keep the installed sections without a rebuild, so this list
+ * must hold every entry field that the section builders read: `nav_tree.ts`,
+ * `nav_moves.ts`, `../registry/catalogue_hierarchy.ts`,
+ * `../registry/folder_titles.ts`, and the parents of
+ * `catalogue_branch_point.ts`. Add a field here when a builder reads it.
+ */
 export function sameNavigation(held: Catalogue, next: Catalogue): boolean {
   return (
     held.publicModel.tree === next.publicModel.tree &&

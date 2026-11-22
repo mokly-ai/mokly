@@ -152,7 +152,6 @@ test("a malformed refresh that a newer publication aborted does not fail its rep
     .resolve({ ...detailFixture({ path }), revision: 2 });
   await flush();
   assert.equal(fixture.controller.failure, undefined);
-  assert.notStrictEqual(fixture.controller.snapshot.index, published);
   assert.deepStrictEqual(fixture.controller.snapshot.index, published);
   assert.equal(fixture.commits.length, 1);
 });

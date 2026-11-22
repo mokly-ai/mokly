@@ -32,17 +32,38 @@ export type NavigationSelection = Pick<
  */
 export function catalogueNavSections(
   catalogue: Catalogue,
-  previous?: Catalogue,
 ): readonly NavSectionNode[] {
-  const cached = sectionsByHierarchy.get(catalogue.hierarchy);
-  if (cached) return cached;
-  const held = previous && catalogueNavSections(previous);
-  let sections: readonly NavSectionNode[];
-  if (held && previous && sameNavigation(previous, catalogue)) sections = held;
-  else {
-    const built = buildCatalogueNavSections(catalogue);
-    sections = held ? reuseSections(held, built) : built;
-  }
+  return (
+    sectionsByHierarchy.get(catalogue.hierarchy) ??
+    installSections(catalogue, buildCatalogueNavSections(catalogue))
+  );
+}
+
+/**
+ * Install the sections of a newly adopted catalogue from the installed one:
+ * the same sections while every field that places and names a row stays
+ * equal, or else a rebuild that keeps each equal subtree. Every later
+ * `catalogueNavSections` call for the catalogue returns the result.
+ */
+export function shareNavSections(
+  catalogue: Catalogue,
+  installed: Catalogue,
+): readonly NavSectionNode[] {
+  const known = sectionsByHierarchy.get(catalogue.hierarchy);
+  if (known) return known;
+  const held = catalogueNavSections(installed);
+  return installSections(
+    catalogue,
+    sameNavigation(installed, catalogue)
+      ? held
+      : reuseSections(held, buildCatalogueNavSections(catalogue)),
+  );
+}
+
+function installSections(
+  catalogue: Catalogue,
+  sections: readonly NavSectionNode[],
+): readonly NavSectionNode[] {
   sectionsByHierarchy.set(catalogue.hierarchy, sections);
   return sections;
 }

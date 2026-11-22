@@ -20,6 +20,7 @@ import {
   catalogueNavSections,
   defaultDisclosures,
   navigationFiltering,
+  shareNavSections,
 } from "./nav_model.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
 import type { ShellState } from "./store_state.js";
@@ -124,7 +125,7 @@ export function withIndex(
     shellCatalogueModel(index, details),
     snapshot.catalogue,
   );
-  catalogueNavSections(catalogue, snapshot.catalogue);
+  shareNavSections(catalogue, snapshot.catalogue);
   return { index, details, catalogue };
 }
 

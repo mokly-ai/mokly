@@ -274,16 +274,20 @@ Evidence: `.context/viewer-refresh-identity/main-red.log` and
 
 Depends on: 2, 3
 
-- [ ] Run the targeted viewer tests. Run each new asynchronous test 10
+- [x] Run the targeted viewer tests. Run each new asynchronous test 10
       times. Run `cargo xtask check --suite repository`.
 - [x] Smoke-test `npm run dev` with a live edit of an `examples/basic`
       entry: the view updates, the Changes list updates, and no view is
       stale.
 
-Evidence: `.context/viewer-refresh-identity/smoke/run.log` and
+Evidence: `.context/viewer-refresh-identity/ten-runs.txt`,
+`.context/viewer-refresh-identity/repository-suite-1.log`,
+`.context/viewer-refresh-identity/rust-tests-1.log`,
+`.context/viewer-refresh-identity/rust-tests-lfs.log`,
+`.context/viewer-refresh-identity/smoke/run.log`, and
 `.context/viewer-refresh-identity/smoke/settled.json`.
 
-- [ ] Commit with Conventional Commits and push the branch. Send the SHA to
+- [x] Commit with Conventional Commits and push the branch. Send the SHA to
       the parent orchestrator.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

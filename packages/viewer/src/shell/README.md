@@ -454,7 +454,9 @@ and detail routes,
 and `live_source.ts` the live descriptor, the event stream, and the render
 route of Serve. The publication commit and the store share the navigation
 sections. A publication keeps the sections when their inputs stay equal.
-A changed tree keeps each equal subtree. The commit reconciles the current
+A changed tree keeps each equal subtree. `sameNavigation` in `nav_reuse.ts`
+lists the entry fields that place and name rows: a section builder that
+reads another entry field adds that field to the list. The commit reconciles the current
 disclosures and pre-filter baseline to the installed keys, and keeps each
 equal map. Initial restore uses the same `disclosure_storage.ts` reconciliation
 with an explicit fallback. A publication keeps surviving collapsed choices.

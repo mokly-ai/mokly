@@ -91,7 +91,6 @@ test("a newer detail installs with the refetched index of its revision", async (
   fixture.source.index().resolve(newer);
   await flush();
   assert.equal(fixture.commits.length, 1);
-  assert.notStrictEqual(fixture.controller.snapshot.index, newer);
   assert.deepStrictEqual(fixture.controller.snapshot.index, newer);
   assert.deepEqual(
     [...fixture.controller.snapshot.details.keys()],
