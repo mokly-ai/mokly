@@ -74,9 +74,3 @@
   min-width: 0;
   min-height: 0;
 }
-
-/* A workspace's view controls hold the scheme toggle, so the top bar hides
-   its scheme switch while a workspace shows. */
-.mbk:has(.mbk-workspace) .mbk-topbar [data-mokly-schemeswitch] {
-  display: none;
-}

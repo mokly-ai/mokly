@@ -22,8 +22,9 @@
   margin-left: auto;
 }
 
+/* The preview scheme switch of an embedded root shows at every width, and
+   sits beside a viewport switch before it. */
 .mbk-screen-head > [data-mokly-schemeswitch] {
-  display: none;
   margin-left: 0;
 }
 
@@ -108,13 +109,6 @@ button.mbk-crumb-link {
 span.mbk-pathchip {
   line-height: normal;
   cursor: default;
-}
-
-/* Below the breakpoint the scheme switch leaves the top bar for the header. */
-@media (width < 56.25rem) {
-  .mbk-screen-head > [data-mokly-schemeswitch] {
-    display: inline-flex;
-  }
 }
 
 @media (max-width: 760px) {

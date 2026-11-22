@@ -185,6 +185,35 @@ test("the embedded viewer resolves light fallback evidence across status, marks 
   assert.doesNotMatch(html, /data-view-changed="viewport" hidden=""/);
 });
 
+test("an embedded root with dark previews draws its preview scheme switch in the head band, not in the top bar", () => {
+  const index = rawIndexFixture();
+  // Action and its variants offer Dark, so the catalogue has dark previews.
+  for (const component of index.components) {
+    component.colorSchemes = ["light", "dark"];
+    component.views = withDarkViews(component.views);
+  }
+  // A use case and a document each show one preview scheme.
+  for (const screenPath of ["tour", "product"]) {
+    const html = heldEmbeddedMarkup({ index, selection: { screenPath } });
+    const bar =
+      /<header[^>]*class="mbk-topbar[^"]*"[^>]*>([^]*?)<\/header>/u.exec(
+        html,
+      )?.[1];
+    assert.ok(bar, `${screenPath}: the top bar renders`);
+    assert.doesNotMatch(bar, /data-mokly-schemeswitch/u, screenPath);
+    assert.equal(
+      html.match(/data-mokly-schemeswitch/gu)?.length,
+      1,
+      `${screenPath}: one preview scheme switch`,
+    );
+    assert.match(
+      html,
+      /class="mbk-screen-head mbk-reset"[^]*aria-label="Preview color scheme"[^>]*data-mokly-schemeswitch=""/u,
+      screenPath,
+    );
+  }
+});
+
 test("the embedded viewer preserves comparison ineligibility while view evidence is unknown", () => {
   const index = rawIndexFixture();
   const component = index.components.find(
