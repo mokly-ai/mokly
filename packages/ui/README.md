@@ -53,9 +53,10 @@ system. Each component puts the reset class `mbk-reset`
 on every element that it renders, apart from the host slots, whose content
 stays the host's. The class gives the element border-box sizing and the
 reader's reduced motion, resets links and text blocks, and gives a focusable
-element the focus glow. No rule reaches the host page or host slot content. A host that renders a component outside a
-viewer root puts it inside an element with the viewer root class, or declares
-the tokens itself, as the design catalogue's `examples/basic/design.css` does.
+element the focus glow. No rule reaches the host page or host slot content. A
+host that renders a component outside a viewer root puts it inside an element
+with the viewer root class, or declares the tokens itself, as the design
+catalogue's `examples/basic/design.css` does.
 
 `@mokly/ui/palette` exports `palettes`, each named palette by its name, with
 its types. A palette gives the `PaletteColors` of its `light` and `dark`
