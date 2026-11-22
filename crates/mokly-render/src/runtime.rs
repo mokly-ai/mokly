@@ -70,6 +70,8 @@ pub struct Runtime {
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     /// None marks an original head. Some marks a base, including an empty or expired source.
     pub(crate) head_styles: Option<Weak<Mutex<StylesheetCache>>>,
+    /// `for_base` made this base runtime from a Serve head.
+    pub(crate) from_serve_head: bool,
     pub(crate) watch_stylesheets: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
@@ -155,6 +157,7 @@ impl Runtime {
     /// The runtime of one base preparation over `tree`. It shares the dependency reader, physical
     /// inputs, sidecar pool, render cache, workers, and style memo of this runtime. It starts its
     /// own stores and reads the original head's stylesheet store only through a weak reference.
+    /// It records whether this runtime is a Serve head.
     pub fn for_base(
         &self,
         tree: Arc<dyn SourceTree>,
@@ -173,6 +176,7 @@ impl Runtime {
             self.style_references.clone(),
         );
         runtime.document_store = self.document_store.clone();
+        runtime.from_serve_head = self.serve_head();
         runtime.watch_stylesheets = false;
         runtime.head_styles = Some(match &self.head_styles {
             Some(head) => head.clone(),
@@ -210,6 +214,7 @@ impl Runtime {
             version,
             watch_stylesheets: false,
             head_styles: base.as_ref().map(|_| Weak::new()),
+            from_serve_head: false,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             style_references,

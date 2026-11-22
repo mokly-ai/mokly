@@ -5,10 +5,14 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
+use mokly_compare::cache_types::Lease;
+use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_model::material::digest;
 use mokly_sidecar::definitions::Definitions;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
+
+use crate::side::BaseSide;
 
 pub(super) fn definitions() -> Definitions {
     Definitions {
@@ -84,4 +88,25 @@ pub(super) fn config(postcss: bool) -> ResolvedConfig {
         authored_inputs: vec![],
         roots: vec![],
     }
+}
+
+/// A leased base side whose extraction lives outside the working repository.
+pub(super) fn base_side() -> Arc<BaseSide> {
+    Arc::new(BaseSide {
+        working_root: "/repo".into(),
+        sources: Arc::new(Lease {
+            directory: "/cache/base".into(),
+            guard: Box::new(Unimock::new(())),
+        }),
+        dependencies: Resolved {
+            tier: Tier::Working,
+            node_modules: "/repo/node_modules".into(),
+            module_resolution: Default::default(),
+            warning: None,
+            lease: None,
+            repository_roots: vec!["/repo".into()],
+        },
+        cache_namespace: None,
+        identity: "base".into(),
+    })
 }

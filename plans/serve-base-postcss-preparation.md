@@ -86,31 +86,35 @@ Depends on: none
 
 The approved text defines base attempts and their rule.
 
-- [ ] Apply the approved text of "Prepared Contexts" in
+- [x] Apply the approved text of "Prepared Contexts" in
       `docs/protocol/mokly-sidecar-postcss.md`, with the two removed
       sentences. The page stays at 250 lines.
-- [ ] Update the sentence of `crates/mokly-render/README.md` that names only
+- [x] Update the sentence of `crates/mokly-render/README.md` that names only
       the Serve head.
 
 ## Milestone 2: Red tests
 
 Depends on: 1
 
-- [ ] A base graph preparation that a Serve head makes sends a `bundle`
+- [x] A base graph preparation that a Serve head makes sends a `bundle`
       request with a preparation for its base context.
-- [ ] A base graph preparation that a static runtime makes sends none.
-- [ ] A head runtime that also holds base leases and the Serve document store
+- [x] A base graph preparation that a static runtime makes sends none.
+- [x] A head runtime that also holds base leases and the Serve document store
       keeps today's preparation result.
-- [ ] Record that the first test fails on `main` and the third test fails on
-      the prototype.
+- [x] Record that the first test fails on `main` and the third test fails on
+      the prototype. Evidence:
+      `.context/serve-base-postcss-preparation/red-main.txt` and
+      `.context/serve-base-postcss-preparation/red-prototype.txt`.
 
 ## Milestone 3: Base attempts
 
 Depends on: 2
 
-- [ ] Add the Serve base mark to the runtime and the base rule to
+- [x] Add the Serve base mark to the runtime and the base rule to
       `describe`.
-- [ ] Run the red tests and the render crate tests green.
+- [x] Run the red tests and the render crate tests green. Evidence:
+      `.context/serve-base-postcss-preparation/green-final.txt` and
+      `.context/serve-base-postcss-preparation/render-tests.txt`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

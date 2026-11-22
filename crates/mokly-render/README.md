@@ -39,8 +39,8 @@ resolves their physical input on the chosen side. Each PostCSS request names
 the PostCSS module by `ResolvedConfig::postcss`, in the same form as the
 renderer. Each PostCSS context uses an owned child process in that side's
 source root. Runtime allocates context ids from one process-wide sequence.
-A Serve head can start that child during its `bundle` request, at startup or
-after an edit, under the
+A Serve head, at startup or after an edit, and a Serve base graph preparation
+can start that child during their `bundle` request, under the
 [prepared context rules](../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
 A successful Serve head graph preparation ends its used context when its
 attempt-local stylesheet store kept every record, under the
@@ -360,7 +360,8 @@ view after the edit and counts real process starts and hello calls.
   mapping for a runtime without a `BaseSide`. Serve calls it for its working
   side. `Runtime::for_base` builds the runtime of one base preparation, which
   shares the services and the style memo of the head runtime. It starts its
-  own stores and keeps watch mapping off. The `head_styles` field marks the
+  own stores and keeps watch mapping off. Its `from_serve_head` field records
+  whether a Serve head made it. The `head_styles` field marks the
   origin. It is `None` in an original head. In a base, it holds a weak
   read-only reference to the stylesheet store of the original head, also
   when that reference is empty or expired.
@@ -369,6 +370,9 @@ view after the edit and counts real process starts and hello calls.
 - [`src/context_retention.rs`](./src/context_retention.rs) keeps the weak
   registry of Serve head PostCSS contexts in `Runtime`. `Runtime::serve_head`
   identifies a Serve head runtime, at startup and after edits.
+  `Runtime::serve_base` identifies a base runtime with base leases that a
+  Serve head made. A head runtime never passes it, because it has no
+  `head_styles` reference.
   `Runtime::track_head_context` registers a context without holding it.
   `Runtime::older_used_head_context` finds another used, live context with the
   same stylesheet settings.
