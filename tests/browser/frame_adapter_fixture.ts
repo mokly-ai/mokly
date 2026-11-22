@@ -1,11 +1,12 @@
 import type { Page } from "@playwright/test";
 
+import type { CatalogueUsage } from "@mokly/model";
+
 import type * as PostAdapter from "../../packages/frame/src/adapters/post_message_adapter.js";
 import type {
   FrameEvent,
   MountedFrame,
 } from "../../packages/frame/src/frame_adapter.js";
-import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 import { crossOriginFixture } from "../../packages/viewer/tests/standalone_fixture.js";
 export { crossOriginFixture };
 export interface FrameTestWindow extends Window {
@@ -51,11 +52,12 @@ export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
   path = "/static/mokly-generated/home/index.mobile.html",
+  usage: CatalogueUsage = fixture.usage,
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(
     async ({ origin, usageJson, path }) => {
-      const usage = JSON.parse(usageJson) as BrowserUsage;
+      const usage = JSON.parse(usageJson) as CatalogueUsage;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
         `${location.origin}/test-adapters.js`
@@ -73,17 +75,18 @@ export async function mountCrossFrame(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(path, origin),
-          usage: usage,
+          usage,
         },
       );
       state.unsubscribe = state.mounted.subscribe((event) =>
         state.frameEvents.push(event),
       );
-      await state.mounted.listInstanceBoundaries();
+      if (usage.status === "ready")
+        await state.mounted.listInstanceBoundaries();
     },
     {
       origin: fixture.frames.url,
-      usageJson: JSON.stringify(fixture.usage),
+      usageJson: JSON.stringify(usage),
       path,
     },
   );

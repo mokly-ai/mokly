@@ -286,9 +286,12 @@ A leaf component registers no instance, so the viewer cannot size its frame
 to its content, as the canvas frames contract requires. Decision 23 = A also
 needs the measured size of both versions in a compare.
 
-- [ ] Add an optional content-box measurement to the frame probe and the
+- [x] Add an optional content-box measurement to the frame probe and the
       mounted frame, in frame wire version 4, which `main` has not released.
-- [ ] Give same-origin and cross-origin adapters the method, with unit tests,
-      and keep the probe inside its size budget.
-- [ ] Bring the frame probe, wire and adapter pages in line, and run
-      `cargo xtask mokly-fixtures`.
+      Branch: `calummoore/canvas-redesign-m23-frame-content-size-nsqf`.
+- [x] Give same-origin and cross-origin adapters the method, with unit tests,
+      and keep the probe inside its size budget. Branch:
+      `calummoore/canvas-redesign-m23-frame-content-size-nsqf`.
+- [x] Bring the frame probe, wire and adapter pages in line, and run
+      `cargo xtask mokly-fixtures`. Branch:
+      `calummoore/canvas-redesign-m23-frame-content-size-nsqf`.

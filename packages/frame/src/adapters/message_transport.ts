@@ -11,13 +11,13 @@ import { boundedJson, BYTE_LIMIT } from "../probe/values.js";
 import { FrameError } from "./frame_error.js";
 
 interface Pending {
-  expected: "ack" | "boundaries" | "box-model";
+  expected: "ack" | "boundaries" | "box-model" | "content-box";
   resolve(message: Message): void;
   reject(error: FrameError): void;
   timer: number;
 }
 type Request =
-  | { type: "list" }
+  | { type: "list" | "measure-content" }
   | {
       type: "highlight";
       keys: readonly string[];
@@ -74,7 +74,9 @@ export function messageTransport(
               ? "boundaries"
               : body.type === "measure"
                 ? "box-model"
-                : "ack",
+                : body.type === "measure-content"
+                  ? "content-box"
+                  : "ack",
           timer: win.setTimeout(() => {
             settle(requestId, undefined, "timeout");
             timeout();
