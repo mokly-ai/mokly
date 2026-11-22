@@ -53,6 +53,31 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   await expect(handle).toHaveAttribute("aria-valuenow", "480");
 });
 
+test("the catalogue filter spans the column in two equal segments", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1_280 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Catalogue" });
+  const filter = nav.getByRole("group", { name: "Catalogue filter" });
+  const column = await nav.boundingBox();
+  const group = await filter.boundingBox();
+  const all = await filter
+    .getByRole("button", { name: "All", exact: true })
+    .boundingBox();
+  const changes = await filter
+    .getByRole("button", { name: /^Changes/ })
+    .boundingBox();
+  if (!column || !group || !all || !changes)
+    throw new Error("the catalogue filter must be laid out");
+  // The same inset on both sides, apart from the column's 1px end border.
+  const start = group.x - column.x;
+  const end = column.x + column.width - (group.x + group.width);
+  expect(Math.abs(start - end)).toBeLessThanOrEqual(1);
+  expect(group.width).toBeGreaterThan(column.width * 0.85);
+  expect(Math.abs(all.width - changes.width)).toBeLessThanOrEqual(1);
+});
+
 test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
   await page.setViewportSize({ height: 900, width: 420 });
   await page.goto("/");

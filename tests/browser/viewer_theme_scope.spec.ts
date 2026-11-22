@@ -52,13 +52,19 @@ test("host accent overrides and interactive overlay stay within the viewer", asy
     "rgb(255, 255, 254)",
     "rgb(232, 240, 244)",
   ]);
+  // The current row reads in the shell's ink on the host's soft accent, with
+  // its glyph in the host's accent.
   const current = page.locator('#one .mbk-nav-row[aria-current="page"]');
-  await expect(current).toHaveCSS("color", "rgb(255, 255, 254)");
+  await expect(current).toHaveCSS("color", "rgb(13, 20, 16)");
+  await expect(current.locator(".mbk-nav-ico")).toHaveCSS(
+    "color",
+    "rgb(12, 34, 56)",
+  );
   expect(
     await current.evaluate(
       (row) => getComputedStyle(row, "::before").backgroundColor,
     ),
-  ).toBe("rgb(12, 34, 56)");
+  ).toBe("rgb(232, 240, 244)");
   await expect(page.locator("#one .mbk-mark")).toHaveCSS(
     "color",
     "rgb(18, 183, 106)",

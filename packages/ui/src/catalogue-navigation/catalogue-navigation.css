@@ -1,7 +1,7 @@
-/* The catalogue navigation column: its head, the All and Changes filter, the
-   scrolling pane, the status line, and the resize separator. The narrow query
-   is the shell's one layout breakpoint, narrower than 900px, below which the
-   column is a drawer. */
+/* The catalogue navigation column, drawn as the Layers panel of a design file:
+   its head, the All and Changes filter, the scrolling pane, the status line,
+   and the resize separator. The narrow query is the shell's one layout
+   breakpoint, narrower than 900px, below which the column is a drawer. */
 .mbk-nav {
   position: relative;
   display: flex;
@@ -13,16 +13,20 @@
   overflow: visible;
 }
 
+/* The panel head: the title in the interface type, sentence case, and
+   Collapse all, above a hairline. */
 .mbk-nav-head {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 14px 9px;
-  color: var(--chrome-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--chrome-border);
+  color: var(--chrome-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 
 .mbk-nav-collapse {
@@ -31,17 +35,16 @@
   background: none;
   color: var(--chrome-muted);
   font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 500;
   letter-spacing: 0;
-  text-transform: none;
   cursor: pointer;
 }
 
+/* The filter spans the column, and its two segments share it equally. */
 .mbk-nav-filter {
-  display: inline-flex;
-  align-self: flex-start;
-  margin: 0 8px 8px;
+  display: flex;
+  margin: 10px 10px 4px;
   padding: 3px;
   border-radius: 8px;
   background: var(--chrome-bg);
@@ -50,8 +53,10 @@
 
 .mbk-nav-filter-opt {
   display: flex;
+  flex: 1;
   align-items: center;
-  padding: 4px 11px;
+  justify-content: center;
+  padding: 6px 11px;
   border: none;
   border-radius: 6px;
   background: none;

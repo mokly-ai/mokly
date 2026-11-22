@@ -1,6 +1,7 @@
 /* The catalogue tree: sections and folders as disclosures, entry rows with
    their glyph, indent, and changed mark, and the lists that entries
-   disclose. */
+   disclose. The section labels take the mono face, and the current row reads
+   in ink on the soft accent with its glyph in the accent. */
 .mbk-nav-section + .mbk-nav-section {
   margin-top: 10px;
 }
@@ -19,9 +20,10 @@
   gap: 5px;
   padding: 6px 8px 4px;
   color: var(--chrome-muted);
+  font-family: var(--mono);
   font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -46,7 +48,7 @@
   padding: 5px 8px;
   color: var(--chrome-ink-2);
   text-decoration: none;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.3;
   cursor: pointer;
 }
@@ -71,16 +73,16 @@
 
 .mbk-nav-row.active,
 .mbk-nav-row[aria-current="page"] {
-  color: var(
-    --mokly-accent-contrast,
-    var(--_mokly-private-accent-contrast-default)
-  );
+  color: var(--chrome-ink);
   font-weight: 600;
 }
 
 .mbk-nav-row.active::before,
 .mbk-nav-row[aria-current="page"]::before {
-  background: var(--mokly-accent, var(--_mokly-private-accent-default));
+  background: var(
+    --mokly-accent-soft,
+    var(--_mokly-private-accent-soft-default)
+  );
 }
 
 .mbk-nav-label {
@@ -123,20 +125,7 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-ico,
 .mbk-nav-row[aria-current="page"] .mbk-nav-ico {
-  color: color-mix(
-    in srgb,
-    var(--mokly-accent-contrast, var(--_mokly-private-accent-contrast-default))
-      90%,
-    transparent
-  );
-}
-
-.mbk-nav-row.active .mbk-nav-label,
-.mbk-nav-row[aria-current="page"] .mbk-nav-label {
-  color: var(
-    --mokly-accent-contrast,
-    var(--_mokly-private-accent-contrast-default)
-  );
+  color: var(--mokly-accent, var(--_mokly-private-accent-default));
 }
 
 .mbk-nav-count {
@@ -144,16 +133,6 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
   color: var(--chrome-muted);
   font-family: var(--mono);
   font-size: 10.5px;
-}
-
-.mbk-nav-row.active .mbk-nav-count,
-.mbk-nav-row[aria-current="page"] .mbk-nav-count {
-  color: color-mix(
-    in srgb,
-    var(--mokly-accent-contrast, var(--_mokly-private-accent-contrast-default))
-      75%,
-    transparent
-  );
 }
 
 .mbk-nav-row[hidden],
@@ -228,14 +207,6 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   outline-offset: 2px;
 }
 
-.mbk-nav-leaf:has(> .mbk-nav-row[aria-current="page"])
-  .mbk-nav-variants-toggle {
-  color: var(
-    --mokly-accent-contrast,
-    var(--_mokly-private-accent-contrast-default)
-  );
-}
-
 .mbk-nav-variants-toggle svg {
   transition: transform 120ms ease;
 }
@@ -254,11 +225,12 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   }
 }
 
-/* The changed mark: a 6px accent dot at the row's trailing edge and the
-   wording a screen reader hears beside it. Both are driven by the row's own
-   attributes, so a client evidence refresh moves the mark by toggling them.
-   A Removed row is never marked; its label already names its state. A row
-   link and the picture of a row without an address carry the same mark. */
+/* The changed mark: a 6px accent dot at the row's trailing edge, the current
+   row's too, and the wording a screen reader hears beside it. Both are driven
+   by the row's own attributes, so a client evidence refresh moves the mark by
+   toggling them. A Removed row is never marked; its label already names its
+   state. A row link and the picture of a row without an address carry the
+   same mark. */
 .mbk-nav-changed-text {
   display: none;
 }
@@ -278,24 +250,6 @@ span[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after {
   margin-left: auto;
   border-radius: 50%;
   background: var(--mokly-accent, var(--_mokly-private-accent-default));
-}
-
-a[data-nav-row][aria-current="page"][data-changed="true"]:where(
-    .mbk-reset
-  )::after,
-a[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
-    .mbk-reset
-  )::after,
-span[data-nav-row][aria-current="page"][data-changed="true"]:where(
-    .mbk-reset
-  )::after,
-span[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
-    .mbk-reset
-  )::after {
-  background: var(
-    --mokly-accent-contrast,
-    var(--_mokly-private-accent-contrast-default)
-  );
 }
 
 a[data-nav-row][data-changed="true"]:not([data-nav-removed])

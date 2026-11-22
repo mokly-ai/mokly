@@ -98,7 +98,8 @@ export function registerDesignPortable(
       if (viewport === "desktop") {
         const row = page.locator('.mbk-nav-row[aria-current="page"]');
         await expect(row).toHaveCSS("display", "flex");
-        await expect(row).toHaveCSS("color", "rgb(255, 255, 255)");
+        // The current row reads in the Canvas ink on the soft accent.
+        await expect(row).toHaveCSS("color", "rgb(13, 20, 16)");
         const bounds = await row.boundingBox();
         expect(bounds?.width).toBeGreaterThan(180);
         await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
