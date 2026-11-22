@@ -203,10 +203,10 @@ Cal's official gate of `0ddfe044b`, which measured the memory peaks.
 
 Depends on: every other milestone.
 
-- [ ] Run the targeted tests, the repository suite, and the complete gate named
+- [x] Run the targeted tests, the repository suite, and the complete gate named
       in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
@@ -217,3 +217,8 @@ Depends on: every other milestone.
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/edit-bundle-path/gate-complete-4.log` and
+`.context/edit-bundle-path/gate-suites-5.log` hold the gate on `5019004e3`.
+`.context/reviews/calummoore/mokly-edit-bundle-path-kv2o/` holds the two
+review rounds and their finding checks.
