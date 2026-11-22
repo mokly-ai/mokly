@@ -6,6 +6,7 @@ pub mod event;
 pub mod native;
 mod native_attachment;
 mod native_events;
+mod native_resource;
 mod native_scan;
 pub mod observer;
 mod pattern;

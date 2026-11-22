@@ -159,6 +159,11 @@ Asset opens report `InputsChanged` for vanished paths, stopped symbolic-link
 resolution, and non-regular replacements. Other open errors keep their IO
 diagnostic. Explicit cancellation retains the cancelled runtime diagnostic.
 
+Watched Serve supplies a weak `ResourceObserver` subscriber before a generation
+is published. Closure reads wait for its synchronous attachment, including
+before resource prefetch. An attachment failure stops that read and leaves the
+path available for a later attempt. Build and publish supply no subscriber.
+
 ## Quick Start
 
 ```rust

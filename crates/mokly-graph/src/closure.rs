@@ -112,7 +112,7 @@ impl ClosureBuilder for Walker {
                 && let Some(path) = target.strip_prefix("static/")
                 && let Some(observer) = &self.observer
             {
-                observer.observe(route, path);
+                observer.observe(route, path)?;
             }
             if let Some(generated) = target.strip_prefix(&namespace::generated(""))
                 && self.generated.is_document(generated)
@@ -277,6 +277,8 @@ fn missing(route: &str, reference: &str) -> error::GraphError {
 
 /// A document-scoped record of lexical resources reached during closure validation.
 pub trait ClosureObserver: Send + Sync {
+    /// Complete lexical attachment before a prefetch can read resource bytes.
+    fn before_read(&self, path: &str) -> Result<()>;
     /// Record before validation so missing and dangling targets can be repaired.
-    fn observe(&self, route: &str, path: &str);
+    fn observe(&self, route: &str, path: &str) -> Result<()>;
 }

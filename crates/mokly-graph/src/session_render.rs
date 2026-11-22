@@ -160,7 +160,31 @@ pub(crate) fn with_closure_warnings(artifact: Arc<Artifact>, closure: &Closure) 
 }
 
 impl ClosureObserver for Session {
-    fn observe(&self, route: &str, path: &str) {
+    fn before_read(&self, path: &str) -> Result<()> {
+        {
+            let mut observed = self
+                .state
+                .observed
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            if !observed.contains(path) {
+                let observer = self
+                    .state
+                    .observer
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .as_ref()
+                    .and_then(Weak::upgrade);
+                if let Some(observer) = observer {
+                    observer.observe(&self.state.generation_key, path)?;
+                }
+                observed.insert(path.into());
+            }
+        }
+        Ok(())
+    }
+    fn observe(&self, route: &str, path: &str) -> Result<()> {
+        self.before_read(path)?;
         if let Some(plan) = self.state.plans.get(route) {
             let digest = resource_digests::confined(
                 self.state.tree.as_ref(),
@@ -172,23 +196,6 @@ impl ClosureObserver for Session {
                 .resources
                 .record(&plan.resource_key, path, digest);
         }
-        let added = self
-            .state
-            .observed
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(path.into());
-        if added {
-            let observer = self
-                .state
-                .observer
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .as_ref()
-                .and_then(Weak::upgrade);
-            if let Some(observer) = observer {
-                observer.observe(&self.state.generation_key, path);
-            }
-        }
+        Ok(())
     }
 }

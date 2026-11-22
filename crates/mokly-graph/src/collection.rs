@@ -42,5 +42,9 @@ mod persistent_session_tests;
 mod persistent_resource_tests;
 
 #[cfg(test)]
+#[path = "_tests_/resource_attachment_tests.rs"]
+mod resource_attachment_tests;
+
+#[cfg(test)]
 #[path = "_tests_/persistent_identity_tests.rs"]
 mod persistent_identity_tests;

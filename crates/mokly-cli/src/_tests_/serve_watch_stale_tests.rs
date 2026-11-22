@@ -21,6 +21,9 @@ fn at(seconds: u64) -> SystemTime {
 
 fn generation() -> Unimock {
     Unimock::new((
+        RenderGenerationMock::observe_resources
+            .some_call(matching!(_))
+            .returns(()),
         RenderGenerationMock::catalogue
             .next_call(matching!())
             .returns(catalogue()),

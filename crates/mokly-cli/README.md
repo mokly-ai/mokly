@@ -312,6 +312,11 @@ changed.
   helpers of Serve, such as the Tokio runtime and the progress animation, and
   `ServeLifecycle`, which orders observer shutdown, busy-worker cancellation,
   and idle-worker shutdown.
+- [`src/serve_watch_resources.rs`](./src/serve_watch_resources.rs) binds each
+  candidate generation to its own resource subscriber before publication.
+  The subscriber attaches resource directories synchronously before graph
+  reads. [`src/serve_watch.rs`](./src/serve_watch.rs) adopts that subscriber
+  with its candidate and keeps graph calls outside watch locks.
 - [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
   `--debug-timings` layer of every command and writes its records.
   [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the

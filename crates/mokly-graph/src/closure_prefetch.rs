@@ -34,10 +34,13 @@ pub(crate) fn urls(walker: &Walker, source: &str, urls: &[String]) -> Result<()>
         {
             continue;
         }
-        if let Some(path) = route.strip_prefix("static/")
-            && let Ok(file) = walker.policy.check(path)
-        {
-            paths.insert(file.absolute);
+        if let Some(path) = route.strip_prefix("static/") {
+            if let Some(observer) = &walker.observer {
+                observer.before_read(path)?;
+            }
+            if let Ok(file) = walker.policy.check(path) {
+                paths.insert(file.absolute);
+            }
         }
     }
     if paths.is_empty() {

@@ -164,8 +164,13 @@ impl Plan {
     /// Newly rendered closures become observable before the background pass completes.
     pub fn resources(&mut self, paths: &BTreeSet<String>) {
         for path in paths {
-            self.required(self.repository.join(path), Action::Reload);
+            self.resource(path);
         }
+    }
+
+    /// Extend exact classification for one synchronously attached resource.
+    pub fn resource(&mut self, path: &str) {
+        self.required(self.repository.join(path), Action::Reload);
     }
 
     /// Keep the active generation's required paths attached until candidate adoption.

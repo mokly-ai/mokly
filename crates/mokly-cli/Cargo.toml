@@ -38,6 +38,8 @@ mimalloc = "0.1.52"
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }
+mokly-css = { workspace = true, features = ["mock"] }
+mokly-html = { workspace = true, features = ["mock"] }
 mokly-render = { workspace = true, features = ["mock"] }
 mokly-git = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }

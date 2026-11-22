@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::sync::Mutex;
 
+use crate::error::Result;
+
 /// Cross-generation dependencies keyed by a document's source recipe.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ResourceInputsMock))]
 pub trait ResourceInputs: Debug + Send + Sync {
@@ -67,7 +69,8 @@ impl ResourceInputs for MemoryResourceInputs {
 }
 
 /// A weak subscriber observes new resource inputs as soon as a render reaches them.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ResourceObserverMock))]
 pub trait ResourceObserver: Send + Sync {
-    /// Attach the lexical path without making a denied target public.
-    fn observe(&self, generation: &str, path: &str);
+    /// Attach the lexical path before a read, without making a denied target public.
+    fn observe(&self, generation: &str, path: &str) -> Result<()>;
 }

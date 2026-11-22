@@ -1,4 +1,4 @@
-//! Watch candidates own root changes; resource attachment runs outside render tasks.
+//! Watch candidates bind resource observation before their generation is published.
 
 use std::collections::BTreeSet;
 use std::future::Future;
@@ -7,14 +7,9 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
-use crate::serve_watch_events;
-use crate::serve_watch_files::{self, NativeObservers, Observers};
-use crate::serve_watch_plan::{PlanInputs, PlanRecord};
 use async_trait::async_trait;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
-use mokly_graph::resource_inputs::ResourceObserver;
-use mokly_graph::types::RenderGeneration;
 use mokly_server::error::{InternalError, Result, ServerError};
 use mokly_source_interface::tree::SourceTree;
 use mokly_watch::event::Batch;
@@ -23,6 +18,10 @@ use mokly_watch::plan::Plan;
 use tokio::sync::Notify;
 
 use crate::serve_rebuild::RebuildReporter;
+use crate::serve_watch_events;
+use crate::serve_watch_files::{self, NativeObservers, Observers};
+use crate::serve_watch_plan::{PlanInputs, PlanRecord};
+use crate::serve_watch_resources::Resources;
 
 /// Owned notification future allows tests to control readiness without clocks.
 pub type WatchWait = Pin<Box<dyn Future<Output = ()> + Send>>;
@@ -46,12 +45,12 @@ pub(super) trait WatchInputs: Send + Sync {
 
 pub(super) struct WatchedInputs {
     factory: Arc<dyn Observers>,
-    state: Arc<Mutex<State>>,
-    ready: Arc<Notify>,
+    pub(super) state: Arc<Mutex<State>>,
+    pub(super) ready: Arc<Notify>,
 }
 pub(super) struct State {
     pub(super) plan: Plan,
-    pub(super) generation: Option<Arc<dyn RenderGeneration>>,
+    pub(super) resources: Option<Arc<Resources>>,
     pub(super) observer: Arc<dyn Observer>,
     pub(super) pending: BTreeSet<String>,
     pub(super) refresh: bool,
@@ -71,6 +70,8 @@ pub struct CandidateWatch {
     /// The plan of the candidate, with the inputs and the targets that a later candidate
     /// with equal inputs reuses.
     pub(super) record: Arc<PlanRecord>,
+    /// The bound subscriber remains alive from preparation through adoption.
+    pub(super) resources: Arc<Resources>,
 }
 
 impl WatchedInputs {
@@ -84,7 +85,7 @@ impl WatchedInputs {
             state: Arc::new(Mutex::new(State {
                 plan,
                 observer,
-                generation: None,
+                resources: None,
                 pending: BTreeSet::new(),
                 refresh: false,
                 failed: false,
@@ -128,15 +129,14 @@ impl WatchInputs for WatchedInputs {
         let inputs = PlanInputs::of(prepared);
         if let Some(record) = recorded.filter(|record| record.matches(&inputs)) {
             self.replay(&active, &record.unobserved(active.as_ref()));
-            return Ok(record.candidate(active, false));
+            return Ok(self.subscribe(record, active, false, prepared));
         }
         let record = Arc::new(PlanRecord::new(inputs)?);
-        let (changed, old, previous) = {
+        let (changed, old) = {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
             (
                 current.plan.roots != record.plan.roots,
                 current.observer.clone(),
-                current.plan.clone(),
             )
         };
         let unobserved = record.unobserved(old.as_ref());
@@ -146,23 +146,35 @@ impl WatchInputs for WatchedInputs {
             if !recheck {
                 self.replay(&observer, &unobserved);
             }
-            return Ok(record.candidate(observer, recheck));
+            return Ok(self.subscribe(record, observer, recheck, prepared));
         }
         let mut attachment = record.plan.clone();
-        attachment.extend_required(&previous);
-        watch_result(old.replace(&attachment))?;
+        {
+            let state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            attachment.extend_required(&state.plan);
+            watch_result(old.replace(&attachment))?;
+        }
         self.replay(&old, &unobserved);
-        Ok(record.candidate(old, false))
+        Ok(self.subscribe(record, old, false, prepared))
     }
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()> {
         let record = Arc::new(PlanRecord::new(PlanInputs::of(prepared))?);
         let unobserved = record.unobserved(candidate.observer.as_ref());
-        watch_result(candidate.observer.replace(&record.plan))?;
+        {
+            let state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            let mut plan = record.plan.clone();
+            if Arc::ptr_eq(&state.observer, &candidate.observer) {
+                plan.extend_required(&state.plan);
+            }
+            watch_result(candidate.observer.replace(&plan))?;
+        }
         self.replay(&candidate.observer, &unobserved);
         candidate.record = record;
+        candidate.resources = self.bind(candidate.observer.clone(), &candidate.record, prepared);
         Ok(())
     }
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe) {
+        let files = prepared.generation.watch_files();
         let old = {
             let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
             if state.closed {
@@ -174,17 +186,14 @@ impl WatchInputs for WatchedInputs {
                 candidate.observer.replay(old.take());
             }
             state.plan = candidate.record.plan.clone();
+            state.plan.resources(&candidate.resources.take());
             state.observer = candidate.observer;
             state.record = Some(candidate.record);
-            state.generation = Some(prepared.generation.clone());
+            state.resources = Some(candidate.resources);
             state.failed = false;
             state.attach_reported = false;
             state.refresh = true;
-            let observer: Arc<dyn ResourceObserver> = self.clone();
-            prepared
-                .generation
-                .observe_resources(Arc::downgrade(&observer));
-            state.pending.extend(prepared.generation.watch_files());
+            state.pending.extend(files);
             old
         };
         if let Some(old) = old {
@@ -234,7 +243,7 @@ impl WatchInputs for WatchedInputs {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         state.closed = true;
         state.observer.close();
-        state.generation = None;
+        state.resources = None;
         state.pending.clear();
         Ok(())
     }
@@ -262,21 +271,6 @@ pub(super) fn watch_result<T>(result: mokly_watch::error::Result<T>) -> Result<T
     }
 }
 
-impl ResourceObserver for WatchedInputs {
-    fn observe(&self, generation: &str, path: &str) {
-        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
-        if !state.closed
-            && state
-                .generation
-                .as_ref()
-                .is_some_and(|active| active.generation_key() == generation)
-            && state.pending.insert(path.into())
-        {
-            self.ready.notify_one();
-        }
-    }
-}
-
 #[cfg(test)]
 #[path = "_tests_/serve_watch_tests.rs"]
 mod serve_watch_tests;
@@ -288,3 +282,11 @@ mod serve_watch_coverage_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_watch_stale_tests.rs"]
 mod serve_watch_stale_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_resource_tests.rs"]
+mod serve_resource_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_watch_adoption_tests.rs"]
+mod serve_watch_adoption_tests;

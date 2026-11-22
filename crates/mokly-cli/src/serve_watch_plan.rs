@@ -4,7 +4,6 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
@@ -14,7 +13,7 @@ use mokly_server::error::Result;
 use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
 
-use crate::serve_watch::{CandidateWatch, watch_result};
+use crate::serve_watch::watch_result;
 
 /// Module resolution files, and resolution directories with the file names they hold.
 type Resolution<'a> = (
@@ -128,19 +127,6 @@ impl PlanRecord {
     /// Whether `inputs` equal the inputs of this record, so their plan equals this plan.
     pub(super) fn matches(&self, inputs: &PlanInputs<'_>) -> bool {
         self.inputs == *inputs
-    }
-
-    /// The watch candidate of this plan with `observer`.
-    pub(super) fn candidate(
-        self: Arc<Self>,
-        observer: Arc<dyn Observer>,
-        recheck: bool,
-    ) -> CandidateWatch {
-        CandidateWatch {
-            observer,
-            recheck,
-            record: self,
-        }
     }
 
     /// Targets of the plan other than roots whose directory `active` does not watch.

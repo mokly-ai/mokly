@@ -15,6 +15,8 @@ use crate::plan::Plan;
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ObserverMock))]
 #[async_trait]
 pub trait Observer: Send + Sync {
+    /// Attach a confined lexical resource before its first read, without scanning roots.
+    fn resource(&self, path: &Path) -> Result<()>;
     /// Attach a replacement plan before the caller adopts its catalogue.
     fn replace(&self, plan: &Plan) -> Result<()>;
     /// Attach non-denied directories created under the active roots.
