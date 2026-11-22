@@ -1,15 +1,16 @@
 # Sidecar method round trip misses methods
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-22, from the branch
   `calummoore/mokly-earlier-postcss-start-bdhv`, round 1 of its
   implementation review. The branch added the `prepareContext` sidecar method
   and gave it a row in this test.
 - **Location:** `crates/mokly-sidecar/src/_tests_/wire_tests.rs:11`
   (`every_method_and_result_round_trips`).
-- **Reason:** The recommended guard adds a test for a whole class of defects,
-  and the outcome rules leave that choice to the user.
+- **Reason:** On 2026-11-22 the performance orchestrator, under the delegation
+  of the user, chose option B for a later branch after the branch that found
+  this item merges, with the `restoreGeneration` row in that later branch too.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -66,5 +67,7 @@
   that the encode skips without a default is optional in TypeScript only when it
   has both serde attributes, and the result half of the seven methods with an
   empty result accepts any success payload in `decode_result`.
-- **Action:** ask the user, because the recommended option adds a test for a
-  class of defects, which the outcome rules leave to the user.
+- **Decision:** B, chosen on 2026-11-22 by the performance orchestrator under
+  the delegation of the user, for a later branch.
+- **Action:** fix after merge, apply B, because the user chose it for a later
+  branch.

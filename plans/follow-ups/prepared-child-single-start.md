@@ -1,16 +1,16 @@
 # Prepared PostCSS child has two start paths
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-22, from the branch
   `calummoore/mokly-earlier-postcss-start-bdhv`, round 2 of its
   implementation review. That branch added the `prepareContext` request.
 - **Location:** `packages/mokly/src/sidecar/session.ts` (the `bundle` case,
   which calls `this.workers.prepare` for a `preparation`), and
   `docs/protocol/mokly-sidecar-postcss.md` ("Prepared Contexts").
-- **Reason:** The recommended option changes protocol text that the performance
-  orchestrator approved on 2026-11-22, and the next change to the child start
-  can take it with its own protocol check.
+- **Reason:** On 2026-11-22 the performance orchestrator, under the delegation
+  of the user, chose option B inside the next change to the child start (a
+  light sidecar entry), after its own protocol check.
 
 - **Source:** Review.
 - **Category:** Code structure.
@@ -80,5 +80,11 @@
 - **Previous examples:** #464 put the start in the `bundle` request.
 - **Recommendation:** B. It leaves the one start path that the product uses,
   keeps the release, and changes no output.
-- **Action:** ask the user, because B changes approved protocol text, and no
-  recorded decision covers that change.
+- **Decision:** B, chosen on 2026-11-22 by the performance orchestrator under
+  the delegation of the user, inside the light-sidecar-entry change. Before
+  that code, the changed protocol sentence, the memory-page sentence, and the
+  README entries go to the orchestrator with that change's protocol check. The
+  reuse assertions of "Bundle starts preparation before compilation and does
+  not await it" stay; only the start assertions that the removal rule of the
+  `testing` skill allows go.
+- **Action:** fix after merge, apply B, inside the light-sidecar-entry change.
