@@ -6,8 +6,10 @@
   branch `calummoore/mokly-edit-bundle-path-kv2o`, on `main` at `377111494`,
   PR #463.
 - **Location:**
-  - `packages/mokly/src/sidecar/bundle.ts:173`: `bundleAttempt`, which runs
-    the guarded compile at line 249.
+  - `packages/mokly/src/sidecar/bundle.ts:177`: `bundleAttempt`, which runs
+    the guarded compile at line 252.
+  - `packages/mokly/src/sidecar/kept-context.ts`: `KeptContext`, the esbuild
+    build context that each sidecar process keeps for its guarded compiles.
   - `packages/mokly/src/sidecar/plugins.ts:46` and `:181`: the file load
     callback and the resolve callback of each compile.
   - `packages/mokly/src/sidecar/native-plan.ts:128`: `plannedResult`, which
@@ -17,10 +19,11 @@
   - `packages/mokly/src/sidecar/bundle-recipe.ts:43`: `bundleRecipe`, the
     phases after the compile.
   - `crates/mokly-render/src/plan_inputs.rs:16`: the plan check, `current`.
-- **Reason:** The change of 2026-11-22 took three options of this record and
-  met the goal of 100 ms. Each option that stays projects 10 ms or less
-  without a protocol change, or it needs a protocol decision or more memory
-  than the budget, so no work follows here.
+- **Reason:** Two changes of 2026-11-22 took four options of this record. The
+  first took B, C, and G and met its goal of 100 ms. The second took E, a kept
+  esbuild context, and gained 98 ms in the user's official check. Each option
+  that stays projects 10 ms or less without a protocol change, or it needs a
+  protocol decision or more memory than the budget, so no work follows here.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -52,21 +55,30 @@
     already rule out, and the sidecar's reuse check reads the likely changed
     inputs first. It changed the pool and `compiled.ts` with the user's
     approval.
+  - On 2026-11-22, a second change took option E on branch
+    `calummoore/mokly-edit-esbuild-context-3amj`: each sidecar process keeps
+    one esbuild build context for its guarded compiles, under
+    `docs/protocol/mokly-sidecar-kept-context.md`. The user chose it on
+    2026-11-22, after an official check of a prototype whose pass rules were
+    written before the data. Option I and a warm-up compile were measured and
+    not taken. The section "Kept esbuild context" below gives their numbers.
   - The section "Measurements" below gives the fixture, the method, and every
     number of the split. Its section "After the change of 2026-11-22" gives
     the user's official measurement of that change: a warm edit of mokly-cloud
     reached published Changes 103 ms sooner, within the memory budget.
-- **Problem:** After the change of 2026-11-22, a warm edit of mokly-cloud
-  still spends about 930 ms in the core's `catalogue.bundle` span, and about
-  890 ms of it in the sidecar's `sidecar.bundle` span. The compile takes
-  about 600 ms of it.
+- **Problem:** After the changes of 2026-11-22, a warm edit of mokly-cloud
+  reaches published Changes in about 1.72 s. Each edit after the first
+  compiles in about 450 ms, and the first edit of a process in about 700 ms,
+  because that compile creates the kept context and warms a new esbuild
+  service.
 - **Impact if no action:** Each warm edit keeps its current bundle time.
 - **Root question:** How can a warm one-line edit of mokly-cloud reach
   published Changes sooner than after the change of 2026-11-22, through a
   shorter edit bundle, with the same bytes, warnings, and diagnostics, and a
   memory peak within 2% of `main`?
-- **Options:** The change of 2026-11-22 took options B, C, and G, so their
-  entries are gone. B: the guarded import proof observes each module path
+- **Options:** The changes of 2026-11-22 took options B, C, G, and E, so
+  their entries are gone. E: each sidecar process keeps one esbuild build
+  context for its guarded compiles. B: the guarded import proof observes each module path
   once and makes no `DependencyUsage.resolved` call for a relative name,
   where the call did nothing. C: the core checks the plan record on up to
   four threads. G: a compile without a full capture owner leaves the module
@@ -95,24 +107,15 @@
     that a request carries a plan only after the check. It adds a second
     compile after a recorded input changes, and a discard of the first
     attempt's errors and warnings. Effort: Medium.
-  - **E.** Keep one esbuild build context in each sidecar process for the
-    guarded attempt. Each rebuild delegates every hook to the plugins of the
-    current request, and any change of the options or of the hook list
-    starts a fresh context. Offline, the compile fell from 564 ms to 437 ms
-    (medians) with equal results. In Serve, the pool sent the edits to
-    several processes, each process kept its own context, and the peak
-    memory rose by 26%. It needs a change in `session.ts`, because the
-    operation event of each esbuild call comes from its compile wrapper. It
-    also needs a new decision beside the one in the section "Edit Requests",
-    which rejected a kept build context in place of plans. Effort: Large.
-  - **I.** Pin one esbuild context. Keep the context of E in one head process,
-    send every `serveEdit` bundle to that process, and keep that process out
-    of the return pass. Stop the esbuild service of every other process after
-    its bundle, as option B of
-    [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md)
-    proposes. Nobody has measured whether the stopped services free more
-    memory than one context keeps. It needs the pool, `session.ts`, and a new
-    decision. Effort: Large.
+  - **I.** Pin the kept context of E to one head process: send every
+    `serveEdit` bundle to it, and stop the esbuild service of every other
+    process after its bundle. Measured on 2026-11-22: in every traced session
+    the head bundle rank already sent each edit to one idle process, so a pin
+    gained nothing. Stopping the other services lowered only startup peaks:
+    cold mokly-cloud without edits went from 2,716 to 2,132 MiB. A first edit
+    on the startup head process then paid a cold service, 91 to 134 ms more
+    compile, as on examples/basic with 2 sidecars. It needs the pool, a
+    request field, and a new decision. Effort: Large.
   - **J.** Install the plan once in each sidecar and send only a reference
     after that. It removes the transfer and the parse of the 2.3 MB plan, 11
     to 14 ms for each edit. It reverses the decision of the section "Kept
@@ -135,7 +138,17 @@
     consumed, and a read after the compile can see newer bytes.
   - Garbage collector settings for Node or for esbuild. Each setting that
     helps adds more memory than the 2% budget, about 60 MiB over four
-    processes.
+    processes. A lower target for the service of the kept context,
+    `GOGC=50`, cut its memory at the peak by 78 MiB, but its first build took
+    120 ms longer and the mean of 3 warm edits gained only 3 ms.
+  - A warm-up compile at idle after the first ready Changes, in the process
+    that the head bundle rank picks next. It would remove the first-edit
+    compile penalty, about 175 to 200 ms of `sidecar.bundle`: about 60 ms on
+    the mean of 3 warm edits alone, about 94 ms with a kept context. But a
+    warm restart without edits stays at 1,447 to 1,462 MiB and never starts
+    esbuild, and one compile adds a service of 300 to 440 MiB, up to 725 MiB
+    during the build. A session without edits must stay within the memory
+    budget, so it fails.
   - Fewer callbacks through esbuild options such as `alias` and `external`.
     They change error texts or need importer data that the options cannot
     express.
@@ -157,17 +170,18 @@
     holds the guarded import proof. The change of 2026-11-22 applied two of
     its three estimated cuts, as option B of this record.
   - [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md) holds
-    the memory that each esbuild service keeps after a bundle. E adds live
-    memory to it, and I depends on its option B.
+    the memory that each esbuild service keeps after a bundle. The kept
+    context of E lives in a service that the edit process keeps anyway, and it
+    held no more memory than an idle service. I depends on its option B.
   - [release-recipe-encode-under-pool-lock.md](./release-recipe-encode-under-pool-lock.md)
     holds the encode of each released recipe under the pool lock, which the
     change of 2026-11-22 did not cover.
-- **Recommendation:** A. The change of 2026-11-22 met the goal of 100 ms.
+- **Recommendation:** A. The changes of 2026-11-22 took B, C, G, and E.
   Without a protocol change, H and the digests of D project at most about
-  10 ms and 4 ms. E fails the memory bar, and each other option needs a
-  protocol decision.
+  10 ms and 4 ms. Each other option needs a protocol decision, and I gained
+  nothing in the measured sessions.
 - **Action:** No action. A later proposal that takes one of these options
-  needs its own scope decision and new measurements after the change of
+  needs its own scope decision and new measurements after the changes of
   2026-11-22.
 
 ## Measurements
@@ -265,6 +279,40 @@ Probed sessions, edits 2 to 6, with some probe overhead:
   contexts and reused one twice. The pool ranks bundle requests by the last
   compilation of each slot, and the return pass replaces processes, so one
   process cannot keep the context.
+- On 2026-11-22, on `main` at `1a2534d03`, with a release core on 4 vCPU,
+  traced sessions sent every edit to one process: 9 of 9 cold mokly-cloud
+  edits, 2 of 2 warm ones, and 9 of 9 on examples/basic with 2 and with 4
+  sidecars. The head bundle rank chose the idle process that compiled last
+  each time. So the 3 contexts of the run above came from a prototype that
+  changed the timing, not from the rank.
+- A rebuild still runs every plugin callback: 4,443 file loads and 3,548
+  planned resolves. So it saves about 100 ms of the compile of about 600 ms,
+  not more. The guarded attempt registers 428 KB of filter regular
+  expression source, which each fresh build compiles again and a context
+  compiles once.
+- A first prototype kept the plugin state of the request that created the
+  context, through the hook closures of the context: the file contents, the
+  plan, and its maps. It raised the cold 10-edit peak by 63 and 68 MiB in two
+  runs of 4 pairs, all in the Node heap. With hook shapes only in the
+  context, 6 cold 10-edit pairs gave a peak 90 MiB lower than `main` (−2.8%).
+- The esbuild service of the edit process held 311 to 442 MiB after each
+  bundle on `main`, and 306 to 397 MiB with a kept context.
+
+### After the kept context (2026-11-22)
+
+The user's official check compared the prototype at `7d3aa2731` with `main`
+at `67e726c64`. Both arms used the release core of `main`, so only the dist
+differed, and each arm had its own warm cache.
+
+| Measure                                                                | `main`                 | Kept context                          |
+| ---------------------------------------------------------------------- | ---------------------- | ------------------------------------- |
+| mokly-cloud, 6 warm rounds of 3 edits: edit to published Changes       | 1.81 s                 | 1.72 s (−98 ms; 5 of 6 rounds faster) |
+| Same: compile of edits 2 and 3                                         | 559 and 579 ms         | 448 and 454 ms                        |
+| Same: compile of edit 1                                                | 721 ms                 | 694 ms                                |
+| mokly-cloud, 8 pairs of warm restarts: `serve.ready`                   | 1,060 ms               | 1,044 ms                              |
+| mokly-cloud, 4 pairs of cold 10-edit sessions: whole-tree peak         | 3,092 MiB              | 3,096 MiB (+0.2%)                     |
+| examples/basic, 2 sidecars, 4 warm pairs: edit; restore; first Changes | 1,771; 1,084; 4,584 ms | 1,754; 1,090; 4,413 ms                |
+| examples/basic, 2 sidecars, 4 cold pairs: whole-tree peak              | 2,067 MiB              | 2,084 MiB (+0.81%)                    |
 
 ### Sidecar cuts
 
