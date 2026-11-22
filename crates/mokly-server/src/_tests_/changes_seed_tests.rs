@@ -42,7 +42,7 @@ async fn post_completion_releases_write_activity_and_drains_seed_before_owner_re
                 .next_call(matching!(_))
                 .returns(Ok("refs".into())),
             ChangeSourceMock::classify
-                .next_call(matching!(_, _))
+                .next_call(matching!(_, _, _))
                 .returns(Err(ServerError::ChangesUnavailable)),
             ChangeSourceMock::finished
                 .next_call(matching!(_, _))

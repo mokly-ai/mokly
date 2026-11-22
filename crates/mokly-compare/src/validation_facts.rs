@@ -1,12 +1,15 @@
 //! Optional facts share complete walk-read identities and keep no runtime inputs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::{Arc, Mutex};
 
+use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::comparison_proof::ContentIdentity;
-use mokly_graph::head_validation::{ClosureFacts, ValidationRead};
+use mokly_graph::head_validation::{ClosureFacts, DocumentChecks, ValidationRead};
+use mokly_html::links::Reference;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::reuse_budget::Charge;
 
@@ -22,6 +25,18 @@ pub(crate) struct Fact {
     pub(crate) closure: ClosureFacts,
     pub(crate) reads: Vec<Arc<Read>>,
     pub(crate) steps: Vec<Step>,
+    pub(crate) checks: Option<DocumentChecks>,
+    pub(crate) _charge: Charge,
+}
+
+/// The validated outputs of one view's document and its link reads, kept beside its fact.
+pub(crate) struct Outputs {
+    pub(crate) key: ContentIdentity,
+    pub(crate) anchors: BTreeSet<String>,
+    pub(crate) links: Vec<Reference>,
+    pub(crate) warnings: Vec<Warning>,
+    pub(crate) usage: CatalogueUsage,
+    pub(crate) reads: Vec<Arc<Read>>,
     pub(crate) _charge: Charge,
 }
 
@@ -60,6 +75,7 @@ impl Pending {
 
 pub(crate) struct Data {
     pub(crate) facts: Mutex<BTreeMap<Arc<str>, Arc<Fact>>>,
+    pub(crate) outputs: Mutex<BTreeMap<Arc<str>, Arc<Outputs>>>,
     pub(crate) inputs: Mutex<Inputs>,
     pub(crate) input_bytes: AtomicUsize,
     pub(crate) consistent: AtomicBool,
@@ -72,6 +88,7 @@ impl Data {
         Self {
             charge: Mutex::new(charge),
             facts: Mutex::new(BTreeMap::new()),
+            outputs: Mutex::new(BTreeMap::new()),
             inputs: Mutex::new(BTreeMap::new()),
             input_bytes: AtomicUsize::new(0),
             consistent: AtomicBool::new(true),
@@ -86,10 +103,19 @@ pub(crate) fn closure_bytes(closure: &ClosureFacts) -> usize {
         .iter()
         .map(|path| mem::size_of::<String>() + 256 + path.len())
         .sum::<usize>()
-        + closure.warnings.len() * mem::size_of::<mokly_catalogue::diagnostic::Warning>()
-        + closure
-            .warnings
+        + warnings_bytes(&closure.warnings)
+}
+
+pub(crate) fn warnings_bytes(warnings: &[Warning]) -> usize {
+    mem::size_of_val(warnings)
+        + warnings
             .iter()
             .map(|warning| warning.message.len() + warning.printed_subject().len())
             .sum::<usize>()
+}
+
+pub(crate) fn checks_bytes(checks: Option<&DocumentChecks>) -> usize {
+    checks.map_or(0, |checks| {
+        mem::size_of::<DocumentChecks>() + checks.digest.as_ref().map_or(0, String::len)
+    })
 }

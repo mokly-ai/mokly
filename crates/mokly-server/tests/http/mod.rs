@@ -6,5 +6,6 @@ mod live_tests;
 mod publication_tests;
 mod routes_tests;
 mod safety_tests;
+mod shared_detail_tests;
 mod stream_tests;
 mod support;

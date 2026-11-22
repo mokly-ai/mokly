@@ -1,5 +1,6 @@
 ---
 source: crates/mokly-server/src/_tests_/publication_sequence/oracle_tests.rs
+description: "The served bytes and the detail ids equal those of the publication algorithm at main 794b30a91. Each typed revision follows the sharing rule of the mokly-server README: a shared detail keeps the typed revision of the publication that built it."
 expression: output
 ---
 === edit 0: rebuild, revision 1 ===
@@ -1274,8 +1275,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 0: Disabled, revision 7 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(7)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(7)
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
@@ -1491,8 +1492,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 0: Preparing, revision 8 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(8)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(8)
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
@@ -2504,8 +2505,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: ready Changes, revision 13 ===
-screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(13)
-screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(13)
+screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(5)
+screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(5)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "before": {
@@ -2979,8 +2980,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: Disabled, revision 15 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(15)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(15)
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
@@ -3196,8 +3197,8 @@ screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, type
 }
 
 === edit 1: Preparing, revision 16 ===
-screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(16)
-screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(16)
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
@@ -4624,8 +4625,8 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 }
 
 === edit 2: Disabled, revision 23 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(23)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(23)
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],
@@ -4821,8 +4822,8 @@ screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, type
 }
 
 === edit 2: Preparing, revision 24 ===
-screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(24)
-screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(24)
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
 --- mokly-viewer/entries/screen-0.json ---
 {
   "controlOrder": [],

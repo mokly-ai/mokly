@@ -39,8 +39,8 @@ async fn classify(case: &str) {
     };
     let result = Mutex::new(Some(result));
     let classify = ChangeSourceMock::classify
-        .next_call(matching!(_, _))
-        .answers_arc(Arc::new(move |_, _, _| {
+        .next_call(matching!(_, _, _))
+        .answers_arc(Arc::new(move |_, _, _, _| {
             let _span = tracing::info_span!("review.test").entered();
             result.lock().unwrap().take().unwrap()
         }));

@@ -20,15 +20,14 @@ its requests and results. The paths below are relative to the package root.
   `prepareContext` request to `PostcssWorkers.prepare` and answers without
   waiting for the child. It removes the request-only
   `capture`, `plan`, and `preparation` values of a `bundle` request before the
-  reuse check, the compile, the identity, and the restore see the settings. It
-  passes the `preparation` to `PostcssWorkers.prepare` before the reuse check
-  and does not wait for it. A `bundle` request starts its preparation only
-  when no earlier request started it. When the bundle fails, it disposes that
-  context before it returns the error. It gives a `CaptureDurability` only to
-  a `full` request. It ignores a `restoreGeneration` request for an id that it
-  already holds. It adds each generation that a `restoreGeneration` request
-  installs to a `WeakSet`. Both reply forms of `bundle` follow the same checks
-  of `reuse` and the same size check of `bundleResult`. The reply is a short
+  reuse check, the compile, the identity, and the restore see the settings. A
+  `bundle` request starts no child. When the bundle fails, the session disposes
+  the context of its `preparation` before it returns the error. It gives a
+  `CaptureDurability` only to a `full` request. It ignores a
+  `restoreGeneration` request for an id that it already holds. It adds each
+  generation that a `restoreGeneration` request installs to a `WeakSet`. Both
+  reply forms of `bundle` follow the same checks of `reuse` and the same size
+  check of `bundleResult`. The reply is a short
   `RestoredBundle` under the
   [restored reuse rules](../../../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse)
   only when `reuse` selected a generation of that set, the size check kept the
@@ -457,8 +456,8 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/postcss.ts`](./postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes. Its `prepare` starts the child of a
   [prepared context](../../../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts)
-  with the roots and resolution settings of the `prepareContext` or `bundle`
-  request. That child processes no stylesheet before the first `process` call
+  with the roots and resolution settings of the `prepareContext` request. That
+  child processes no stylesheet before the first `process` call
   of its context, and that call takes the child, also after the child failed.
   `dispose` also stops a start whose path lookup still runs, so that start
   forks no child.

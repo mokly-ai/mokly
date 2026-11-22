@@ -99,7 +99,11 @@ fn classification_reports_reading_with_its_own_token_before_the_first_git_comman
         },
     };
     assert!(matches!(
-        source.classify(cancel.clone(), Arc::new(Unimock::new(()))),
+        source.classify(
+            cancel.clone(),
+            Arc::new(Unimock::new(())),
+            "3333333333333333333333333333333333333333"
+        ),
         Err(ServerError::Comparison { source })
             if matches!(*source, Error::Git { source: error::Error::MalformedOutput })
     ));
