@@ -23,7 +23,7 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 15, 17, 18, 22
+Depends on: 15, 17. It starts before 18 and 22 merge, and takes them in as they land (Cal, 2026-11-22).
 
 - [ ] Restyle the catalogue, the compare toolbar and the search in Canvas.
       Milestone 22 does the top bar.
@@ -36,6 +36,7 @@ Depends on: 15, 17, 18, 22
       Catalogue, the current tab and Fit, and the panels as sheets.
 - [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
       search.
+- [ ] Give every viewer focus ring the `@firna/ui` focus glow (decision 38).
 
 ## Milestone 12: Right panel and compare
 
@@ -90,6 +91,8 @@ Depends on: 12
 - [ ] Restyle the panels, the switcher, Share, History and the settings
       dialog.
 - [ ] End the More menu with the same account rows on compact widths.
+- [ ] Give the registered Button an optional content node, so the pill draws
+      its branch in mono and is one control (decision 39).
 - [ ] Add Docs and Changelog rows to the account menu and to More on phones
       (decision 22, option B). Change the account menu mockup first, then
       `marketing-site.md` and the other docs that describe the menu.

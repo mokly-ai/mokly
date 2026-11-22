@@ -241,6 +241,9 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   so its mark clears the Mac window buttons that the cloud reports.
   The registered Button gains a muted lead text, so the project trigger
   mutes the workspace and stays one control. History gets a `history` icon.
+- 2026-11-22, Cal: to speed up, Milestone 11 starts before 18 and 22 merge,
+  new browser tests run 3 times instead of 10, and the orchestrator decides
+  design and scope questions and reports them.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 

@@ -193,3 +193,4 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
   is the smaller change if the pill's dead areas are acceptable.
 - **Action:** ask the user, because A leaves a part of the prototype out and
   B changes shared contracts.
+- **Answer:** Cal agreed on 2026-11-22 that the orchestrator decides the open design and scope questions, so **B** applies. Milestone 13 does the work.
