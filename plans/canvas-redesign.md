@@ -9,8 +9,8 @@ and its parts: the [design record](./canvas-redesign-design.md), the
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
 [decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
 [decisions 27 to 32](./canvas-redesign-decisions-site.md) and
-[decisions 33 to 35](./canvas-redesign-decisions-browse.md). Decisions 12
-and 20 to 35 wait for Cal.
+[decisions 33 to 36](./canvas-redesign-decisions-browse.md). Decisions 12
+and 20 to 36 wait for Cal.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a

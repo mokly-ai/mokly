@@ -22,9 +22,10 @@ for (const viewport of ["mobile", "desktop"] as const)
         });
         for (const { path: id, palette } of permanentScreens) {
           await page.goto(pathToFileURL(screenFile(id, viewport, scheme)).href);
-          // The renderer's wrapper carries the palette and paints the page.
+          // The renderer's wrapper paints the page. The default Canvas palette
+          // needs no scope class, so the wrapper carries none.
           const wrapper = page.locator("[data-color-scheme][data-viewport]");
-          await expect(wrapper).toHaveClass(palette + "-scope");
+          await expect(wrapper).not.toHaveClass(/-scope\b/);
           await expect(wrapper).toHaveCSS(
             "background-color",
             rgb(paletteColors(scheme, palette).background),

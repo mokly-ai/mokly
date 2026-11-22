@@ -206,6 +206,20 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   - The social card embeds the committed light lockup, and its title uses a
     system font.
 
+- Calls on Milestone 17, 2026-11-22:
+  - `npm run palette:generate` writes the `@mokly/ui` theme and the Markdown
+    palette part from the palette module, and `npm run palette:check` in the
+    repository suite guards them. The build does not generate them.
+  - The theme stays one file at its path with the same selectors. The
+    Markdown style is a generated palette part plus hand-kept typography.
+  - The generator mixes colours in sRGB and writes plain values, so tests can
+    measure contrast. The theme uses the Canvas role names.
+  - The mark reads the Canvas signal roles directly. `--chrome-brand` and
+    `--serif` had no reader, so they are gone.
+  - The embedded stylesheet names its faces "Mokly Geist" and "Mokly Geist
+    Mono", so the cloud app's own Geist keeps its file.
+  - Codex stopped on its usage limit, so a Claude subagent did the non-UI
+    work.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 
