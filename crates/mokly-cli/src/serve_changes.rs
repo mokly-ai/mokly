@@ -26,6 +26,7 @@ use mokly_server::comparison_graph::FrozenResources;
 use mokly_server::error::{Result, ServerError};
 use mokly_sidecar::workers::Diagnostics;
 
+use crate::allocator::PurgeDelay;
 use crate::serve_base::BaseSlot;
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
 use crate::serve_eager::{EagerStarts, PendingBase};
@@ -47,6 +48,8 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    /// Allocator policy shared by all Changes sources in this Serve command.
+    pub(super) purge_delay: Arc<dyn PurgeDelay + Send + Sync>,
     pub(super) eager: Option<Arc<dyn EagerStarts>>,
     pub(super) diagnostics: Arc<dyn Diagnostics>,
     pub(super) routing: Option<Arc<dyn DiagnosticRouting>>,
@@ -172,6 +175,9 @@ impl ChangeSource for Source {
         result: std::result::Result<&ComparisonResult, &ServerError>,
         elapsed: Duration,
     ) {
+        if result.is_ok() {
+            self.services.purge_delay.return_freed_memory_sooner();
+        }
         if let Some(staging) = self
             .staging
             .lock()
