@@ -1,6 +1,6 @@
 # Canvas redesign: viewer design calls
 
-These are the design calls of Milestones 17, 19 and 22 of the
+These are the design calls of Milestones 11, 17, 19, 22 and 23 of the
 [Canvas redesign plan](./canvas-redesign.md), as the
 [design record](./canvas-redesign-design.md) keeps them for the other
 milestones. This file is a part of the plan, and the pull request that deletes
@@ -48,3 +48,9 @@ the plan deletes it too.
   labels and the full bar fits at 1024px. The pill sits in `topBarCenter` on
   both bars. The start slot fills its column, so that space still moves the
   Mac window. Milestone 11 removes the preview scheme switch from the bar.
+
+- Calls on Milestone 11, 2026-11-22: a component frame keeps 1280 × 800 from
+  one function until Milestone 23's content-box measurement lands. A
+  component's variant set starts with its own example, then the saved
+  variants. The focus glow is `signalDeep` at 75%, 4px. The preview scheme
+  switch leaves the bar, and the Frames filter chooses the scheme.

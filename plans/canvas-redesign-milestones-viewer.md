@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 22 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 23 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -277,3 +277,18 @@ Search, History and Share with icons, and the account.
 - [ ] Bring the cloud viewer mockups, `viewer-chrome.md` and
       `mokly-shell-design.md` in line, and check the bar at 390, 1024, 1180
       and 1440px against the prototype.
+
+## Milestone 23: Frame content size
+
+Depends on: 10
+
+A leaf component registers no instance, so the viewer cannot size its frame
+to its content, as the canvas frames contract requires. Decision 23 = A also
+needs the measured size of both versions in a compare.
+
+- [ ] Add an optional content-box measurement to the frame probe and the
+      mounted frame, in frame wire version 4, which `main` has not released.
+- [ ] Give same-origin and cross-origin adapters the method, with unit tests,
+      and keep the probe inside its size budget.
+- [ ] Bring the frame probe, wire and adapter pages in line, and run
+      `cargo xtask mokly-fixtures`.

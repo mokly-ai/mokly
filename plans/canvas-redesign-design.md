@@ -209,7 +209,7 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
 - 2026-11-22, Cal: to speed up, Milestone 11 starts before 18 and 22 merge,
   new browser tests run 3 times instead of 10, and the orchestrator decides
   design and scope questions and reports them.
-- The calls on Milestones 17, 19 and 22 are in the
+- The calls on Milestones 11, 17, 19, 22 and 23 are in the
   [viewer design calls](./canvas-redesign-design-viewer.md).
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
