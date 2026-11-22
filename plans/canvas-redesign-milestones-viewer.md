@@ -31,6 +31,9 @@ Depends on: 15, 17. It starts before 18 and 22 merge, and takes them in as they 
       light and dark, with frame labels and size tags. A component opens as
       its variant set.
 - [ ] Add pan, zoom, pinch, the zoom pill, Fit and their keys.
+- [ ] Build the use case's section with its step frames, and the removed
+      entry's section of historical views with its missing-view note
+      (decisions 33 and 34).
 - [ ] Float the catalogue and the right panel over the canvas.
 - [ ] Build the compact layout: one frame with a frame picker, the dock with
       Catalogue, the current tab and Fit, and the panels as sheets.
