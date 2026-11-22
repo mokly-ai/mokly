@@ -6,8 +6,9 @@
   `calummoore/mokly-edit-bundle-path-kv2o`, which listed it outside the scope.
 - **Location:** `plans/follow-ups/serve-head-generation-preload.md:4`,
   `plans/follow-ups/serve-postcompile-import-proof-cost.md:4`,
-  `plans/follow-ups/serve-watch-candidate-plan-cost.md:4`, and
-  `plans/follow-ups/serve-edit-bundle-split.md:4`: the **Kind** line of each
+  `plans/follow-ups/serve-watch-candidate-plan-cost.md:4`,
+  `plans/follow-ups/serve-edit-bundle-split.md:4`, and
+  `plans/follow-ups/light-sidecar-entry.md:4`: the **Kind** line of each
   record.
 - **Reason:** The list of kinds is in the shared `plans` skill, outside this
   repository, and the choice has real trade-offs.
@@ -22,10 +23,14 @@
   - The follow-up template of the shared `plans` skill, in
     `templates/follow-up.md`, lists four kinds: Fix after merge, Needs
     decision, Outside the scope, and Post-merge task.
-  - The four items under **Location** use the kind "Closed experiment
+  - The five items under **Location** use the kind "Closed experiment
     record". Three came from the bounded Serve edit experiments of
     2026-11-21. The fourth, the split of the warm Serve edit bundle, follows
-    them.
+    them. The fifth, the light sidecar entry, came on 2026-11-22.
+  - The answer applies to each follow-up item whose **Kind** line says
+    "Closed experiment record", also to a record that a later branch adds.
+    `grep -l '^- \*\*Kind:\*\* Closed experiment record' plans/follow-ups/*.md`
+    lists them. On 2026-11-22 it listed the five records under **Location**.
   - `scripts/follow-ups.sh` of the `plans` skill lists these records as open
     items, with priority scores from 3 to 5 out of 10. On 2026-11-22 it
     counted 481 open items, these four included.
@@ -42,14 +47,14 @@
   - **A.** Add the kind "Closed experiment record" to the template and to the
     `follow-ups.sh` script of the shared `plans` skill, and make the script
     leave that kind out of the open count. Effort: Small.
-  - **B.** Move the four records to one page under `docs/`, such as a
+  - **B.** Move the records to one page under `docs/`, such as a
     performance experiments page, and delete the items. Effort: Small.
   - **C.** Give each record a listed kind, Outside the scope, and keep its
     text. The open count keeps them. Effort: Small.
 - **Left out:** Delete the records. Their measurements and rejected options
   would leave the repository, and a later change could repeat them.
 - **Wider fix:** A. One listed kind keeps every later record correct.
-- **Previous examples:** none outside these four records.
+- **Previous examples:** none outside these records.
 - **Recommendation:** A. It keeps the records where speed work looks first,
   and it stops them from counting as open work.
 - **Action:** ask the user, because option A changes the shared `plans`

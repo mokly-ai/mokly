@@ -49,6 +49,13 @@ Design calls, my own:
   child, and the first processCss starts it", covers both rules. Both tests
   failed on the old code, as `.context/light-sidecar-entry/red-tests.txt`
   shows.
+- 2026-11-22, review finding 10: after its move to the pool order, the
+  restored-reuse session test repeated "prepareContext starts the only child
+  before a restored Bundle". Its two extra checks, no `prepare` call during
+  the `bundle` request and the exact stylesheet text, moved into that test,
+  and it was removed under the removal rule. With the `bundle`-side start put
+  back, the covering test failed on the moved check, as
+  `.context/light-sidecar-entry/removal-proof-round4.txt` shows.
 - 2026-11-22: the byte proof covers Serve of `examples/basic` only. `build`,
   `publish`, and a catalogue without PostCSS prepare no context, so the
   change cannot reach their bytes.

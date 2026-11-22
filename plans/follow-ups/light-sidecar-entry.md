@@ -85,6 +85,9 @@
     largest remaining part of a warm basic start.
   - [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md)
     is parked.
+  - [closed-experiment-record-kind.md](./closed-experiment-record-kind.md)
+    waits for the user on the kind and the home of experiment records, this
+    record included.
 - **Recommendation:** A. No measured form gained beyond noise on both
   fixtures, and the official check of E found no gain.
 - **Action:** No action. The closure of 2026-11-22 is settled, and no current
