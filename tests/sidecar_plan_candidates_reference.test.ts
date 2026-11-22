@@ -7,14 +7,22 @@ import type { ReuseEvidence } from "../packages/mokly/src/generated/sidecar/Reus
 import { EVIDENCE_LIMIT } from "../packages/mokly/src/sidecar/physical-input-reader.js";
 import { PlanCandidates } from "../packages/mokly/src/sidecar/plan-candidates.js";
 
+import {
+  assertState,
+  charge,
+  mulberry32,
+  pick,
+  state,
+  type Collector,
+  type CollectorState,
+  type Operation,
+  type Random,
+} from "./helpers/plan_candidates_state.js";
 import { ReferencePlanCandidates } from "./helpers/reference_plan_candidates.js";
 
-type Collector = PlanCandidates | ReferencePlanCandidates;
-type Operation = (collector: Collector) => void;
-type Random = (limit: number) => number;
-
 const seeds = [0, 1, 42, 0x12345678, 0x9e3779b9, 0xdeadbeef];
-const casesPerSeed = 12;
+const regularCasesPerSeed = 12;
+const casesPerSeed = regularCasesPerSeed + 2;
 const roots = ["/r", "/r/", "/", "relative"];
 const ordinaryNames = ["a", "b", "pkg", "x.js"];
 const segments = [
@@ -44,84 +52,6 @@ const manifests = [
   '{"main":"./node_modules/pkg/z.cjs","exports":["./index.js",null]}',
 ];
 
-function mulberry32(seed: number): Random {
-  let state = seed;
-  return (limit) => {
-    state = (state + 0x6d2b79f5) | 0;
-    let value = Math.imul(state ^ (state >>> 15), state | 1);
-    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-    return Math.floor((((value ^ (value >>> 14)) >>> 0) / 2 ** 32) * limit);
-  };
-}
-
-function pick<T>(random: Random, values: readonly T[]): T {
-  const value = values[random(values.length)];
-  assert.ok(value !== undefined, "the generator needs a nonempty pool");
-  return value;
-}
-
-function state(collector: Collector, context: string) {
-  const names: unknown = Reflect.get(collector, "names");
-  const redirects: unknown = Reflect.get(collector, "redirects");
-  const blocked: unknown = Reflect.get(collector, "blocked");
-  const selectedTargets: unknown = Reflect.get(collector, "selectedTargets");
-  const bytes: unknown = Reflect.get(collector, "bytes");
-  const overflow: unknown = Reflect.get(collector, "overflow");
-  const proved: unknown = Reflect.get(collector, "proved");
-  assert.ok(names instanceof Map, `${context} names`);
-  assert.ok(redirects instanceof Map, `${context} redirects`);
-  assert.ok(blocked instanceof Set, `${context} blocked`);
-  assert.ok(selectedTargets instanceof Set, `${context} selectedTargets`);
-  assert.ok(typeof bytes === "number", `${context} bytes`);
-  assert.ok(typeof overflow === "boolean", `${context} overflow`);
-  assert.ok(typeof proved === "boolean", `${context} proved`);
-
-  const directories: ReadonlyMap<unknown, unknown> = names;
-  return {
-    names: Array.from(directories, ([directory, members]) => {
-      assert.ok(
-        typeof directory === "string" && members instanceof Set,
-        `${context} names`,
-      );
-      return { directory, members: Array.from<unknown>(members) };
-    }),
-    redirects: Array.from<[unknown, unknown]>(redirects),
-    blocked: Array.from<unknown>(blocked),
-    selectedTargets: Array.from<unknown>(selectedTargets),
-    bytes,
-    overflow,
-    proved,
-  };
-}
-
-type CollectorState = ReturnType<typeof state>;
-
-function assertState(
-  actual: CollectorState,
-  expected: CollectorState,
-  context: string,
-): void {
-  const fields: ReadonlyArray<keyof CollectorState> = [
-    "names",
-    "redirects",
-    "blocked",
-    "selectedTargets",
-    "bytes",
-    "overflow",
-    "proved",
-  ];
-  for (const field of fields)
-    assert.deepEqual(actual[field], expected[field], `${context} ${field}`);
-}
-
-function charge(apply: (operation: Operation) => void, bytes: number): void {
-  const content = bytes - 3;
-  // JSON escapes this control character as six bytes.
-  const file =
-    "\u0001".repeat(Math.floor(content / 6)) + "x".repeat(content % 6);
-  apply((collector) => collector.selected(file));
-}
-
 function repeatNearLimit(
   random: Random,
   apply: (operation: Operation) => void,
@@ -141,6 +71,32 @@ function repeatNearLimit(
   // Leave too little room for the repeated name, with no later call to mask overflow.
   charge(apply, EVIDENCE_LIMIT - state(reference, context).bytes - random(4));
   apply(repeat);
+}
+
+function stepDownRoom(
+  random: Random,
+  apply: (operation: Operation) => void,
+  actual: PlanCandidates,
+  reference: ReferencePlanCandidates,
+  repeat: Operation,
+  context: string,
+): void {
+  apply(repeat);
+  const room = 1_200 + random(849);
+  charge(apply, EVIDENCE_LIMIT - state(reference, context).bytes - room);
+  for (let step = 0; step < room; step++) {
+    apply(repeat);
+    const repeatContext = `${context} repeat ${step}`;
+    const expected = state(reference, repeatContext);
+    const remaining = EVIDENCE_LIMIT - expected.bytes;
+    assertState(
+      state(actual, repeatContext),
+      expected,
+      `${repeatContext} room ${remaining}`,
+    );
+    if (expected.overflow) return;
+    apply((collector) => collector.selected(`selected-${step}`));
+  }
 }
 
 function randomCall(
@@ -235,14 +191,18 @@ test(`plan candidate collection and attachment match the reference in ${seeds.le
       const random = mulberry32(seed ^ Math.imul(caseNumber, 0x9e3779b1));
       const root = pick(random, roots);
       const prefix = root.endsWith("/") ? root : `${root}/`;
+      const stepsThroughRoom = caseNumber >= regularCasesPerSeed;
       const settings: ModuleResolution = {
         aliases: {},
         conditions: [],
         loaders: {},
         mainFields: ["browser"],
         packageRoots: [],
-        resolveExtensions:
-          caseNumber % 2 === 0 ? [] : [".custom", ".js", "", ".mjs", ".é"],
+        resolveExtensions: stepsThroughRoom
+          ? [".ts", ".js", `.${"x".repeat(768 + random(32))}`]
+          : caseNumber % 2 === 0
+            ? []
+            : [".custom", ".js", "", ".mjs", ".é"],
       };
       const actual = new PlanCandidates(structuredClone(settings));
       const reference = new ReferencePlanCandidates(structuredClone(settings));
@@ -251,13 +211,30 @@ test(`plan candidate collection and attachment match the reference in ${seeds.le
         operation(reference);
       };
       const calls = 50 + random(251);
-      if (caseNumber < 2) {
-        const base = prefix + pick(random, ordinaryNames);
+      if (caseNumber < 2 || stepsThroughRoom) {
+        let directory = prefix;
+        if (stepsThroughRoom) {
+          const parent = "p".repeat(40 + random(12));
+          const child = "q".repeat(40 + random(12));
+          directory += `${parent}/${child}/`;
+        }
+        const base = directory + pick(random, ordinaryNames);
         const repeat: Operation =
-          caseNumber === 0
+          caseNumber % 2 === 0
             ? (collector) => collector.path(base)
             : (collector) => collector.candidate(base);
-        repeatNearLimit(random, apply, reference, repeat, base, calls, context);
+        if (stepsThroughRoom)
+          stepDownRoom(random, apply, actual, reference, repeat, context);
+        else
+          repeatNearLimit(
+            random,
+            apply,
+            reference,
+            repeat,
+            base,
+            calls,
+            context,
+          );
       } else {
         if (caseNumber === 2 || caseNumber === 8)
           charge(apply, EVIDENCE_LIMIT - random(caseNumber === 2 ? 128 : 4097));
