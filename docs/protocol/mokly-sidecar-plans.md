@@ -135,7 +135,8 @@ without a plan. Plan reuse adds no setting, gate, or process.
 Decision: a current plan replaces the native attempt and its classification.
 Import keys that each compile resolves again were rejected, because they keep
 the classification and add resolver round trips. A kept esbuild build context
-was rejected, because it keeps both attempts and the classification.
+in place of the plan was rejected, because it keeps both attempts and the
+classification.
 
 One changed input makes the whole record unusable. An added catalogue entry
 leaves the resolution settings unchanged, so the next edit takes the same
@@ -206,6 +207,8 @@ sidecar discards the guarded result, and a planned attempt compiles again with
 the same plan. A failed planned attempt fails the request, and no other
 attempt follows. A compile with a plan thus makes one esbuild call when its
 guarded result stands, and never more than two.
+A guarded attempt can rebuild the
+[kept build context](./mokly-sidecar-kept-context.md) of its process.
 Decision: the guarded attempt can fall back to a planned attempt. The common
 edit gets one faster compile, and a check that fails never publishes an
 unproved resolution. A planned attempt alone was rejected, because esbuild then

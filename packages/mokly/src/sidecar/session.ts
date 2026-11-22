@@ -13,6 +13,7 @@ import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
 import { HtmlInput } from "./html_input.js";
+import { KeptContext } from "./kept-context.js";
 import { finishMarkup } from "./markup.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
@@ -37,6 +38,7 @@ export class Session {
     phase: (line: string) => void = () => {},
     workers?: PostcssWorkers,
     private readonly checkSize = checkRecipeSize,
+    private readonly kept = new KeptContext(),
   ) {
     this.workers =
       workers ?? new PostcssWorkers(diagnostic, operation, undefined, phase);
@@ -112,6 +114,10 @@ export class Session {
                   : undefined,
                 capture,
                 plan,
+                (options) => {
+                  this.operation("esbuild");
+                  return this.kept.compile(options);
+                },
               );
           this.generations.set(generation.id, generation);
           const reply: BundleReply =
@@ -222,6 +228,7 @@ export class Session {
         await this.workers.dispose(request.params.context);
         return null;
       case "shutdown":
+        await this.kept.dispose();
         await this.workers.dispose();
         this.generations.clear();
         return null;
@@ -230,6 +237,7 @@ export class Session {
 
   async dispose(): Promise<void> {
     this.generations.clear();
+    await this.kept.dispose();
     await this.workers.dispose();
   }
 
