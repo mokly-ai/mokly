@@ -6,6 +6,7 @@ import {
   SITE_PATHS,
 } from "../../src/navigation.js";
 
+import { NARROW_WIDTH, openLargeText } from "./large-text.js";
 import { headerDestinations, narrow, openMenu } from "./menu.js";
 import { HEADINGS } from "./routes.js";
 
@@ -151,6 +152,44 @@ test("the header composition follows the viewport", async ({ page }) => {
     ).toBeVisible();
   }
 });
+
+test(
+  "at 200% text in a 320px window the bar keeps the mark alone and its three controls apart",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    // At the default text size the bar holds the whole brand.
+    await page.setViewportSize({ height: 900, width: NARROW_WIDTH });
+    await page.goto(SITE_PATHS.docs);
+    const header = page.getByRole("banner");
+    const brand = header.getByRole("link", { exact: true, name: "Mokly home" });
+    await expect(brand.getByText("mokly.")).toBeVisible();
+    await openLargeText(page, SITE_PATHS.docs);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(brand.getByText("mokly.")).toBeHidden();
+    await expect(brand).toBeVisible();
+    const boxes = [];
+    for (const control of [
+      brand,
+      header.getByRole("link", { name: "Get started" }),
+      header.getByRole("button", { exact: true, name: "Menu" }),
+    ]) {
+      const box = await control.boundingBox();
+      if (!box) throw new Error("a control of the bar has no box");
+      boxes.push(box);
+    }
+    const [mark] = boxes;
+    expect(mark?.width).toBeGreaterThanOrEqual(44);
+    expect(mark?.height).toBeGreaterThanOrEqual(44);
+    expect(boxes[0]?.x).toBeGreaterThanOrEqual(0);
+    for (const [index, box] of boxes.entries()) {
+      const next = boxes[index + 1];
+      const end = next === undefined ? NARROW_WIDTH : next.x;
+      expect(box.x + box.width, `control ${index + 1}`).toBeLessThanOrEqual(
+        end,
+      );
+    }
+  },
+);
 
 test("the header hides its depictions from assistive technology", async ({
   page,

@@ -152,9 +152,21 @@ loses the chosen green.
 - Interactive targets are at least `44px`. A control drawn smaller, such as a
   36px navigation link, reaches 44px through a transparent band above and
   below it.
-- Layouts remain usable at 320px width and 200% text zoom, and no page
-  scrolls sideways. A published path or URL wraps rather than widening its
-  column. Inspection viewports are 390px mobile and 1440px desktop.
+- Layouts remain usable at 320px width and 200% text zoom: no page scrolls
+  sideways, and no control overlaps another. A published path or URL wraps
+  rather than widening its column. Inspection viewports are 390px mobile and
+  1440px desktop.
+- At a large text size, content wraps rather than passing the window. A
+  button's label wraps, and the button grows taller. A heading, a link, a
+  chip or a label breaks a word that is wider than its column. Parts that sit
+  side by side, such as a seat's amount and its unit, stack where the space
+  cannot hold both. A one-line label may end in an ellipsis only where its
+  whole text stays available, such as a code tab's file name or the trail of
+  the docs Layers control. A depiction stays inside the window. A cursor
+  keeps the drawn size of its arrow and its tag. This is decision 31,
+  option C: one pass over every page and the chrome. Wrapping only the
+  changelog's parts was rejected, because one pass keeps every page the
+  same.
 
 ## Radius, Elevation, Focus And Motion
 
@@ -177,14 +189,16 @@ state.
 Keyboard focus shows the focus ring of the `@firna/ui` controls: a glow, a
 4px halo with no blur, in place of an outline. The glow is `signalDeep` at
 75% on every page surface and `signal` at 75% inside the code panel, so that
-each keeps 3:1 against the surface it draws on in both schemes; `signal` on
+each keeps 3:1 against the surface it draws on in both schemes. `signal` on
 a light surface stays below 3:1 at any share. A control draws the glow
 outside its box and keeps its own shadow under the glow. A row of a list and
 a part of the code panel draw it inside their box, so that a panel that
 scrolls or clips keeps it whole. The segment of a segmented control draws
-the glow of its hidden radio. Every focusable control shows the glow, and
-nothing removes it. Forced-colors mode drops shadows, so there focus takes a
-2px system outline. This is decision 32: the site takes the focus design of
+the glow of its hidden radio, and the box around a focused frame draws the
+frame's glow. A focusable box with square corners and no fill, such as a
+link, takes a 6px radius, so that its glow is rounded. Every focusable
+control shows the glow, and nothing removes it. Forced-colors mode drops
+shadows, so there focus takes a 2px system outline. This is decision 32: the site takes the focus design of
 the `@firna/ui` controls, so that focus looks the same on the site and in the
 cloud app, and the 2px `focus` outline with a 3px offset was rejected.
 
@@ -196,7 +210,12 @@ short rules: the selected layer of a design file. The outline frame is
 are `onSignal` with round caps. The wordmark is lowercase `mokly` in `sans`
 at 22px, weight 640 and `-0.055em` tracking, with its period in `signal`. The
 mark and the wordmark together link Home with a 44px target, and the brand is
-the same on every page.
+the same on every page. Where the mobile header cannot hold the brand, Get
+started and the menu control in one row at the reader's text size, the brand
+shows the mark alone, still a 44px target. This is decision 24, option A:
+the bar keeps one row. A second row for Get started and a smaller Get started
+were rejected, because one row keeps every control usable, and a smaller Get
+started may still not fit.
 
 Decision 5, option B, puts this mark and wordmark on every Mokly surface: the
 brand files, the favicon, the social cards, the Browse shell, the app, the

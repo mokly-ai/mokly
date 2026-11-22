@@ -81,6 +81,16 @@
   flex: none;
 }
 
+/* A file tab's name shrinks and ends in an ellipsis where the bar cannot
+   hold it, so the language and Copy after it stay whole. Its text keeps the
+   whole name. */
+
+.site-code-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .site-code-language {
   font-family: var(--mk-font-mono);
   white-space: nowrap;
@@ -193,9 +203,13 @@
   padding-right: 12px;
 }
 
+/* The line numbers' column holds two digits at any text size: it is 34px,
+   46px from the breakpoint, or two digits and the gap where the text is
+   larger */
+
 .site-code--numbered .site-code-line {
-  padding-left: 34px;
-  text-indent: -34px;
+  padding-left: max(34px, 2ch + 14px);
+  text-indent: min(-34px, -2ch - 14px);
 }
 
 .site-code--numbered .site-code-line::before {
@@ -206,7 +220,7 @@
   padding-right: 14px;
   text-align: right;
   text-indent: 0;
-  width: 34px;
+  width: max(34px, 2ch + 14px);
 }
 
 .site-code-line--lit {
@@ -223,12 +237,12 @@
   }
 
   .site-code--numbered .site-code-line {
-    padding-left: 46px;
-    text-indent: -46px;
+    padding-left: max(46px, 2ch + 18px);
+    text-indent: min(-46px, -2ch - 18px);
   }
 
   .site-code--numbered .site-code-line::before {
     padding-right: 18px;
-    width: 46px;
+    width: max(46px, 2ch + 18px);
   }
 }

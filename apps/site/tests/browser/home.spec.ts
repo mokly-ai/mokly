@@ -6,6 +6,8 @@ import {
   SITE_PATHS,
 } from "../../src/navigation.js";
 
+import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
+
 /** The approved hero lead, which the page description repeats. */
 const LEAD =
   "Generate an interactive mockup of your entire app using your existing React, HTML and CSS components.";
@@ -140,3 +142,14 @@ test("a Specs link moves the page to its section @desktop", async ({
     specs.getByRole("link", { exact: true, name: "03 Edit" }),
   ).toHaveAttribute("aria-current", "location");
 });
+
+test(
+  "at 200% text in a 320px window the home does not scroll sideways",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, SITE_PATHS.home);
+    await expect
+      .poll(() => scrollWidth(page))
+      .toBeLessThanOrEqual(NARROW_WIDTH);
+  },
+);

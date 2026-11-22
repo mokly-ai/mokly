@@ -128,6 +128,11 @@ for (const viewport of ["mobile", "desktop"] as const)
       assert.deepEqual(byClass(code, "site-code-tab").map(label), [
         "welcome.screen.html",
       ]);
+      // The file's name sits in a part of its own, which shrinks and ends in
+      // an ellipsis where the bar cannot hold it, and keeps the whole name.
+      assert.deepEqual(byClass(code, "site-code-tab-name").map(label), [
+        "welcome.screen.html",
+      ]);
       assert.equal(label(one(code, "site-code-language")), "html");
       const lines = byClass(code, "site-code-line");
       const marked = (kind: string) =>

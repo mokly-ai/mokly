@@ -79,8 +79,11 @@ owns the islands that make the parts below move.
 - Filter: a sticky bar of radio options, All, Breaking, Features, Fixes and
   Performance, each with its icon and its note count, and a polite live line
   that counts the shown notes and releases. The checked option is
-  `signalFill` with `onSignalFill`. Below 1200px the bar stops sticking. On
-  mobile its options form a two-row grid of 44px targets without icons.
+  `signalFill` with `onSignalFill`, and in forced colours it takes the system
+  highlight. Below 1200px the bar stops sticking. On mobile its options form
+  rows of two and three 44px targets without icons. An option is at least as
+  wide as its label and count, so an option that its row cannot hold moves to
+  a row of its own at any text size.
 - Release frames: the six newest releases are frames 120px apart, 96px on
   mobile, each labelled with its version and date in `mono`. The head shows
   the `Mokly CLI` label, the version at 64px (40px on mobile), the date, a

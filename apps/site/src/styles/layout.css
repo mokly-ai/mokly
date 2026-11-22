@@ -143,7 +143,11 @@
   min-width: 0;
 }
 
+/* A body link takes a 6px radius, which draws nothing at rest, so its
+   focus glow is rounded */
+
 .site-document-body a {
+  border-radius: 6px;
   color: var(--mk-color-signal-deep);
   font-weight: var(--mk-font-medium);
   text-decoration: underline;

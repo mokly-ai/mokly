@@ -189,8 +189,12 @@
   margin-left: auto;
 }
 
+/* The pages' one column keeps the tree's width, so a long page name at a
+   large text size does not widen the rows past it */
+
 .site-doc-section ul {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   list-style: none;
   margin: 0;
   padding: 0;

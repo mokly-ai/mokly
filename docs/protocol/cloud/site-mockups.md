@@ -55,7 +55,8 @@ mockup sheets are compared rule by rule at both compositions: every selector
 both sides declare must declare the same values. Each difference that the
 comparison allows is recorded with its reason beside
 `docs/mockups/src/_tests_/design-site-parity.test.ts`, and a recorded
-difference that disappears fails the comparison.
+difference that disappears fails the comparison. The site declares each
+container query exactly as the mockups do.
 
 A fragment selects its composition from `data-site-viewport` on the root
 element rather than a viewport width, so a mobile fragment depicts the mobile

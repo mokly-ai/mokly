@@ -30,7 +30,9 @@ export async function focusGlows(page: Page): Promise<string[]> {
  * it, a hidden radio on its segment, and keeps a 2px system outline in
  * forced colours. One press of Tab gives the page keyboard focus first, so
  * each control that the walk focuses next matches :focus-visible, as it does
- * from the keyboard.
+ * from the keyboard. A frame, such as the view of an HTML sample, holds the
+ * focus in its own document, so it matches neither :focus nor :focus-visible,
+ * and the box around it draws its focus.
  */
 async function assertFocusGlow(page: Page): Promise<void> {
   const glows = await focusGlows(page);
@@ -52,25 +54,40 @@ async function assertFocusGlow(page: Page): Promise<void> {
         const misses: string[] = [];
         let checked = 0;
         const controls = document.querySelectorAll<HTMLElement>(
-          "a[href], button, input, select, textarea, summary, [tabindex]",
+          "a[href], button, input, select, textarea, summary, iframe, [tabindex]",
         );
+        /** Whether a box's own style draws the focus of this mode. */
+        const draws = (node: Element): boolean => {
+          const style = getComputedStyle(node);
+          if (forced)
+            return (
+              `${style.outlineStyle} ${style.outlineWidth}` === "solid 2px"
+            );
+          return glows.some(
+            (layer) =>
+              style.boxShadow === layer ||
+              style.boxShadow.startsWith(`${layer}, `),
+          );
+        };
         for (const control of controls) {
           if (control.tabIndex < 0 || !control.checkVisibility()) continue;
           control.focus({ preventScroll: true });
           if (document.activeElement !== control) continue;
           checked++;
           const name = control.outerHTML.slice(0, 120);
+          const frame = control instanceof HTMLIFrameElement;
           const hidden = control.getBoundingClientRect().width <= 1;
-          const host = (hidden && control.closest("label")) || control;
+          let host: Element = (hidden && control.closest("label")) || control;
+          if (frame) {
+            let node = control.parentElement;
+            while (node && !draws(node)) node = node.parentElement;
+            host = node ?? control;
+          }
           for (const animation of host.getAnimations()) animation.finish();
           const style = getComputedStyle(host);
           const outline = `${style.outlineStyle} ${style.outlineWidth}`;
-          const glow = glows.some(
-            (layer) =>
-              style.boxShadow === layer ||
-              style.boxShadow.startsWith(`${layer}, `),
-          );
-          if (!control.matches(":focus-visible"))
+          const glow = !forced && draws(host);
+          if (!frame && !control.matches(":focus-visible"))
             misses.push(`${name}: no visible focus`);
           else if (forced && outline !== "solid 2px")
             misses.push(`${name}: outline ${outline}`);

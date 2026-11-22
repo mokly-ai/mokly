@@ -21,7 +21,6 @@ const RESET =
 export const CHANGELOG_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-release-index":
     "the mobile mockup does not draw Version history, so the rule that places it applies to its mobile composition unseen; the site draws the panel on every page and hides it below 1200px. The panel sticks 72px below the window top, under the 56px tool bar, as the docs panels do, where the mockup writes 60px + 24px from the mobile bar's height",
-  ".site-changelog-filter": MOBILE,
   ".site-changelog-filter-option": MOBILE,
   ".site-changelog-filter-option svg": MOBILE,
   ".site-release": LANDING,

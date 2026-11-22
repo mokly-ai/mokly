@@ -14,9 +14,11 @@
 
 /* Shiki's inline style makes each block a scroll box, which the panel never
    needs: its lines wrap with a hanging indent. Only an important declaration
-   overrides an inline one. */
+   overrides an inline one. The block's 6px radius draws nothing at rest and
+   rounds its focus glow. */
 
 .site-code .site-code-body {
+  border-radius: 6px;
   overflow: visible !important;
 }
 

@@ -6,6 +6,8 @@ import {
   SITE_PATHS,
 } from "../../src/navigation.js";
 
+import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
+
 /**
  * The pricing page: where its actions lead, the compare table's semantics,
  * the depictions that assistive technology does not read, the targets and
@@ -153,3 +155,14 @@ test("the plan heads stay under the tool bar while the compare table scrolls", a
     })
     .toBe(0);
 });
+
+test(
+  "at 200% text in a 320px window the pricing page does not scroll sideways",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, SITE_PATHS.pricing);
+    await expect
+      .poll(() => scrollWidth(page))
+      .toBeLessThanOrEqual(NARROW_WIDTH);
+  },
+);

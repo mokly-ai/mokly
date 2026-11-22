@@ -45,10 +45,13 @@
 }
 
 /* The intro: the page title as a selected text layer, then the lead. The
-   title takes two lines on mobile. */
+   title takes two lines on mobile. Its one column keeps the column's width,
+   so a title word that is wider at a large text size does not widen the
+   intro and its selection. */
 
 .site-changelog-intro {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   padding-top: 56px;
 }

@@ -215,3 +215,47 @@ test(
     ).toBeVisible();
   },
 );
+
+test("in forced colours the checked filter option takes the system highlight", async ({
+  page,
+}) => {
+  await page.goto(SITE_PATHS.changelog);
+  await page.emulateMedia({ forcedColors: "active" });
+  // The system colours as this browser resolves them. The probe keeps its
+  // own colours, as the checked option does.
+  const system = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.cssText =
+      "background-color: Highlight; color: HighlightText; outline-color: CanvasText; forced-color-adjust: none";
+    document.body.append(probe);
+    const style = getComputedStyle(probe);
+    const colours = {
+      canvasText: style.outlineColor,
+      highlight: style.backgroundColor,
+      highlightText: style.color,
+    };
+    probe.remove();
+    return colours;
+  });
+  const segment = (name: RegExp) =>
+    filter(page).locator("label", { has: page.getByRole("radio", { name }) });
+  const checked = segment(/^All \d+$/);
+  await expect(checked).toHaveCSS("background-color", system.highlight);
+  await expect(checked).toHaveCSS("color", system.highlightText);
+  await expect(checked.getByText(/^\d+$/)).toHaveCSS(
+    "color",
+    system.highlightText,
+  );
+  await expect(segment(/^Breaking \d+$/)).not.toHaveCSS(
+    "background-color",
+    system.highlight,
+  );
+  // Focus draws an outline in the system text colour, apart from the
+  // highlight. A press of Tab gives the page keyboard focus first.
+  await page.keyboard.press("Tab");
+  await filter(page)
+    .getByRole("radio", { name: /^All \d+$/ })
+    .focus();
+  await expect(checked).toHaveCSS("outline-style", "solid");
+  await expect(checked).toHaveCSS("outline-color", system.canvasText);
+});

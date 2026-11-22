@@ -3,7 +3,10 @@
    schemes (3:1, Site design); the outlined kinds keep the strong border, the
    3:1 boundary of a control. Hover lifts each kind and deepens its shadow,
    and moves the arrow after a label, and focus adds the glow to the
-   resting shadow. The rules match docs/mockups/styles/site/buttons.css. */
+   resting shadow. A label that its column cannot hold wraps, centred, and
+   the button grows taller than its 48px; the header's Get started keeps
+   one line in chrome.css. The rules match
+   docs/mockups/styles/site/buttons.css. */
 
 .site-button {
   align-items: center;
@@ -18,12 +21,13 @@
   min-height: 48px;
   padding: 0 20px;
   position: relative;
+  text-align: center;
   text-decoration: none;
   transition:
     transform var(--mk-motion-standard) var(--mk-motion-easing),
     box-shadow var(--mk-motion-standard) var(--mk-motion-easing),
     background var(--mk-motion-fast) var(--mk-motion-easing);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .site-button svg {

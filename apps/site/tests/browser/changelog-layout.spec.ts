@@ -11,6 +11,7 @@ import {
   frame,
   history,
 } from "./changelog.js";
+import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 
 /**
  * The changelog's layout in a real browser: Version history under the tool
@@ -87,6 +88,68 @@ for (const disclosures of ["closed", "open"] as const) {
       },
     );
   }
+}
+
+test(
+  "at 200% text in a 320px window the changelog never scrolls sideways, with its disclosures closed or open",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, SITE_PATHS.changelog);
+    await expect
+      .poll(() => scrollWidth(page))
+      .toBeLessThanOrEqual(NARROW_WIDTH);
+    // Every disclosure opens at once, so every note and upgrade note is laid
+    // out; a reader opens them one by one.
+    await page.evaluate(() => {
+      for (const details of document.querySelectorAll("details"))
+        details.open = true;
+    });
+    await expect
+      .poll(() => scrollWidth(page))
+      .toBeLessThanOrEqual(NARROW_WIDTH);
+  },
+);
+
+for (const percent of [100, 200]) {
+  test(
+    `at ${percent}% text in a 320px window each filter option keeps its label and count inside itself and the bar`,
+    { tag: "@mobile" },
+    async ({ page }) => {
+      await openLargeText(page, SITE_PATHS.changelog, percent);
+      await expect(filter(page)).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      // The words of each option as laid out, against its box and the bar's.
+      const { checked, misses } = await filter(page).evaluate((bar) => {
+        const edge = bar.getBoundingClientRect();
+        const options = [...bar.querySelectorAll("label")];
+        const found = options.flatMap((option) => {
+          const box = option.getBoundingClientRect();
+          let left = Infinity;
+          let right = -Infinity;
+          const words = document.createTreeWalker(option, NodeFilter.SHOW_TEXT);
+          for (let node = words.nextNode(); node; node = words.nextNode()) {
+            if (!node.textContent?.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            for (const rect of range.getClientRects()) {
+              left = Math.min(left, rect.left);
+              right = Math.max(right, rect.right);
+            }
+          }
+          const inside = (outer: DOMRect) =>
+            left >= outer.left - 0.5 && right <= outer.right + 0.5;
+          if (inside(box) && inside(edge)) return [];
+          const name = option.textContent?.trim().replace(/\s+/g, " ");
+          return [
+            `${name}: words ${left}..${right}, option ${box.left}..${box.right}, bar ${edge.left}..${edge.right}`,
+          ];
+        });
+        return { checked: options.length, misses: found };
+      });
+      expect(checked).toBe(5);
+      expect(misses).toEqual([]);
+    },
+  );
 }
 
 test.describe("without script", () => {

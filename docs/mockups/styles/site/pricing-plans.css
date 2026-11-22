@@ -88,9 +88,12 @@
 }
 
 /* The price: one amount with a note, or Team's two seat rows, whose
-   amounts share a right-aligned column */
+   amounts share a right-aligned column. The price is a query container, so
+   a seat's unit can move under its amount. */
 
 .site-pricing-plan-price {
+  container-name: site-pricing-price;
+  container-type: inline-size;
   margin-top: 28px;
 }
 
@@ -138,6 +141,21 @@
   display: block;
   font-size: 0.8125rem;
   margin-top: 2px;
+}
+
+/* Where the price cannot hold the widest amount beside the unit's longest
+   word at the reader's text size, 10.25rem and the 14px gap, each unit
+   moves under its amount. The site declares the same rule, and
+   design-site-containers.test.ts compares the two. */
+
+@container site-pricing-price (width < calc(10.25rem + 14px)) {
+  .site-pricing-seats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-pricing-seats .site-pricing-amount {
+    justify-self: start;
+  }
 }
 
 /* The action spans the frame; Team's currency line sits under it */

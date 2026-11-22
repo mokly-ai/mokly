@@ -97,7 +97,8 @@ package's generated copy of a guide, which Git ignores.
   The Layers control names the section and the page.
 - The Layers control opens the tree sheet: a modal dialog named Layers that
   drops in under the sub-bar over a scrim. It holds the version row, every
-  section with its 44px rows, and the Changelog row in its foot. The control,
+  section with its 44px rows, and the Changelog row in its foot. A page name
+  that its row cannot hold wraps, and the row grows taller. The control,
   Escape, the scrim and a link close it.
 
 ## Tree Scroll
@@ -164,6 +165,8 @@ hairlines.
   full size: 390 × 844 for Mobile and 1280 × 800 for Desktop. The view keeps
   the browser's default style, light in both site schemes, because the
   sample has no stylesheet. The band opens on Mobile in the default state.
+  The view is a Tab stop, and while it has focus its screen shows the focus
+  glow.
 - Lines: a line that renders nothing in the chosen view is dimmed. Pointing
   at a line or an element, or tapping it, lights the line and the element.
   Where the band sets the frame beside the code, a `signal` wire joins the

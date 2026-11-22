@@ -148,6 +148,15 @@
   font-size: 0.9375rem;
 }
 
+/* In the sheet a page name that its row cannot hold wraps, and the row
+   grows taller, rather than ending in an ellipsis */
+
+.site-docs-sheet .site-panel-row-label {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .site-docs-sheet .site-doc-tree-foot {
   border-top: 1px solid var(--mk-color-border);
   padding: var(--mk-space-2) 12px;

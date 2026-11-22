@@ -63,13 +63,19 @@
   text-transform: uppercase;
 }
 
+/* A link breaks a word that is wider than its column, such as Complaints
+   at 200% text on a 320px window. Its 6px radius draws nothing at rest, so
+   its focus glow is rounded. */
+
 .site-footer-link {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-text);
   display: inline-flex;
   font-size: 0.9375rem;
   min-height: var(--mk-layout-control-min);
   min-width: var(--mk-layout-control-min);
+  overflow-wrap: anywhere;
   text-decoration: none;
   text-underline-offset: 4px;
   transition: color var(--mk-motion-fast) var(--mk-motion-easing);

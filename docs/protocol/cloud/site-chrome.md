@@ -10,7 +10,9 @@ tool bar of the depicted design file, and the footer is its last frame.
 Every page renders the same header and footer around one `main` landmark.
 
 - Brand: the Mokly mark beside the wordmark. The brand links Home with the
-  accessible name "Mokly home".
+  accessible name "Mokly home". In the mobile header the brand shows the mark
+  alone where the bar cannot hold the wordmark beside Get started and the
+  menu control, and keeps its name.
 - Desktop header, in reading order: the brand; the file title
   `mokly.ai — <page>` with a `main` branch chip; the avatars of the people in
   the file; **Docs**, **Changelog**, **Pricing** and **GitHub**; and the

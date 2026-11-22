@@ -33,6 +33,7 @@
 
 .site-link {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-accent);
   display: inline-flex;
   gap: var(--mk-space-2);

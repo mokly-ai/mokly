@@ -78,11 +78,16 @@
   padding: 0 8px 0 7px;
 }
 
+/* The link and Show notes span the frame's grid, and take a whole row of
+   the mobile frame's wrapping row */
+
 .site-release--compact .site-release-links {
+  flex-basis: 100%;
   margin-right: 160px;
 }
 
 .site-release-more {
+  flex-basis: 100%;
   grid-column: 1 / -1;
   min-width: 0;
 }
