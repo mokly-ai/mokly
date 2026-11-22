@@ -42,8 +42,7 @@ the child. The diagnostic does not include authored CSS text.
 
 A `bundle` request can carry an optional PostCSS `preparation`. It names one
 `context` and its `postcss` module. The prepared child takes the source root,
-repository roots, and resolution settings of the `bundle` request. They equal
-those of the later `processCss` requests of that context. Like
+repository roots, and resolution settings of the `bundle` request. Like
 [`capture`](./mokly-sidecar-recipes.md#capture-modes), the preparation is a
 request-only value and not a bundle setting. No settings comparison,
 compilation identity, generation id, recipe, `restoreGeneration` request, or
@@ -53,39 +52,40 @@ Decision: the preparation stays outside the bundle settings. A preparation
 inside them was rejected, because each preparation names a new context, so no
 recipe, cache entry, or generation id would match an earlier one.
 
-An attempt is one head graph preparation of Serve, in either
-[capture mode](./mokly-sidecar-recipes.md#capture-modes). A startup attempt is
-an attempt that starts before Serve publishes its first state. Every other
-attempt is a later attempt. The core adds a preparation only for the context
-of an attempt. The configuration must name a PostCSS module. The head of a
-later attempt must also keep a PostCSS stylesheet bundle that the attempt
-cannot reuse under the
+An attempt is one graph preparation of Serve. A head attempt prepares the head
+graph in either [capture mode](./mokly-sidecar-recipes.md#capture-modes). A base
+attempt prepares the base graph of a Changes classification. A startup attempt
+is a head attempt that starts before Serve publishes its first state. Every
+other head attempt is a later attempt. The core adds a preparation only for the
+context of an attempt whose configuration names a PostCSS module. The head of a
+later attempt must also keep a PostCSS stylesheet bundle that the attempt cannot
+reuse under the
 [dependency retention rules](./mokly-imported-styles-postcss.md#dependency-retention).
-A startup attempt needs no such bundle. Only one `bundle` request of the
+Startup and base attempts need no such bundle. Only one `bundle` request of the
 attempt carries the preparation, and only when no `processCss` request of the
-context came before it. No older used head context of the same configuration
-may still be live under the [used context rules](#used-contexts). A catalogue
-without PostCSS, the base side, `build`, `publish`, and a return warm-up
-prepare no context. A context without a preparation starts its child at its
-first `processCss` request.
+context came before it. For a head attempt, no older used head context of the
+same configuration may still be live under the [used context rules](#used-contexts).
+`build`, `publish`, and a return warm-up prepare no context. A context without a
+preparation starts its child at its first `processCss` request.
 Decision: a later attempt prepares a context only when its head keeps a stale
 PostCSS stylesheet bundle. A preparation in every later attempt was rejected,
 because an attempt whose stylesheets all stay reusable would start a child
-that no request uses. A startup attempt needs no stale bundle, because a new
-process starts with no kept stylesheet bundle. A startup check for a
-PostCSS stylesheet root was rejected, because the module graph that names the
-roots comes with the `bundle` result. So a startup attempt whose stylesheets
-need no `processCss` request starts a child that ends unused with its attempt.
-Decision: an attempt prepares no context while an older used head context of
+that no request uses. Startup and base attempts need no stale bundle, because
+neither starts with a stylesheet bundle that it can reuse. A check for a PostCSS
+stylesheet root before the bundle was rejected, because the module graph that
+names the roots comes with the `bundle` result. So a prepared child ends unused
+when no stylesheet of its startup or base attempt needs a `processCss` request.
+Decision: a base attempt with a `bundle` request prepares its context. A start at
+its first `processCss` request was rejected, because that request waits for the child.
+Decision: a head attempt prepares no context while an older used head context of
 its configuration stays live. A preparation beside that context was rejected,
 because the attempt would then hold two children during its bundle.
 
 For a `bundle` request with a preparation, the pool first sends a
-`prepareContext` request to the sidecar of the `bundle` request. It carries the
-preparation, source root, repository roots, and resolution settings. It comes
-before the bundle cache read and any seed, so a new sidecar receives it directly
-after `hello`. The sidecar starts the preparation then and answers at once. No
-other request starts it. After a failed `prepareContext`, the first `processCss`
+`prepareContext` request to the sidecar of the `bundle` request. It comes before
+the bundle cache read and any seed, so a new sidecar receives it directly after
+`hello`. The sidecar starts the preparation then and answers at once. No other
+request starts it. After a failed `prepareContext`, the first `processCss`
 request starts the child. The prepared child loads the PostCSS module and
 constructs its plugins. It processes no stylesheet before the first `processCss`
 request of its context. Neither request waits for that load. A preparation

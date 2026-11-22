@@ -1,11 +1,14 @@
 //! Eager admission reserves its exact empty or base-root slot with its capacity claim.
 
+use std::path::Path;
+
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
+use crate::pool_affinity;
 use crate::pool_claim::{self, CallClaim};
 use crate::pool_start::StartLease;
-use crate::pool_state::{Affinity, EagerSlot, Slot};
+use crate::pool_state::{EagerSlot, Slot};
 
 impl Pool {
     pub(super) fn eager_claim(&self, call: &Call) -> Result<Option<CallClaim>> {
@@ -24,10 +27,10 @@ impl Pool {
         {
             return Ok(None);
         }
-        let affinity = match call {
-            Call::ProcessCss(params) => state.affinity.get(&params.context).map(|item| item.index),
-            _ => None,
-        };
+        let affinity = call
+            .postcss_context()
+            .and_then(|context| state.affinity.get(context))
+            .map(|item| item.index);
         let eligible = state.available.iter().position(|index| {
             affinity.is_none_or(|affinity| affinity == *index)
                 && state.slots[*index]
@@ -65,6 +68,7 @@ impl Pool {
     pub(super) fn take_eager(
         &self,
         call: &Call,
+        root: &Path,
         claim: u64,
     ) -> Option<(usize, Option<Slot>, Option<StartLease>)> {
         let mut state = self.lock();
@@ -77,15 +81,7 @@ impl Pool {
         let start = reservation
             .fresh
             .then(|| StartLease::new(self, index, reservation.source_claim));
-        if let Call::ProcessCss(params) = call {
-            state.affinity.insert(
-                params.context.clone(),
-                Affinity {
-                    index,
-                    source_root: params.source_root.clone().into(),
-                },
-            );
-        }
+        pool_affinity::bind_context(&mut state, call, index, root);
         state.head.candidates.remove(&index);
         let slot = state.slots[index].take();
         state.head.notify();
@@ -93,3 +89,7 @@ impl Pool {
         Some((index, slot, start))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/pool_eager_context_tests.rs"]
+mod pool_eager_context_tests;

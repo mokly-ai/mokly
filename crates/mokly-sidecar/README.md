@@ -115,7 +115,10 @@ available. That worker bundled the newest head generation, or rendered it last
 after a successful render request. A warm-up replay does not move it. The pool
 bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
-event. PostCSS context affinity prevents duplicate workers. A busy affine
+event. PostCSS context affinity prevents duplicate workers. Each admission
+path, the ordinary one and the eager one, binds the context of a call to its
+slot when it selects the slot, so a later request of that context waits for
+that slot, also while the slot still starts. A busy affine
 request does not block independent work on another available slot. Returning
 slots recheck pending releases before becoming idle. `cancel_requests` kills
 and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling,
@@ -459,7 +462,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   reserved slot first. [`src/pool_eager.rs`](./src/pool_eager.rs) reserves
   that slot in `Pool::eager_claim` and hands it over in `Pool::take_eager`.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
-  request takes. Its pure rank orders the idle slots of one root by the
+  request takes, and its `bind_context` binds the context of a call to the
+  selected slot for both `acquire` and `Pool::take_eager`. Its pure rank orders the idle slots of one root by the
   generation state that a call needs. For a `bundle` call, it then prefers the
   newest `Slot::last_compilation`, the epoch that `Pool::execute` records
   after a head compile. Growth reuses a free slot before it adds a new one.
