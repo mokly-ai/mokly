@@ -117,9 +117,8 @@ preview scheme and the compact layout.
   open sheet. The search field is compact: about 180px on the muted field
   surface, led by a 15px stroked magnifier icon and ended by the tag picker
   control. It gives way when its column runs short. In the standalone bar it
-  keeps at least 150px down to a 320px window, and an embedded root switches
-  to its
-  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
+  keeps at least 150px down to a 320px window, and an embedded root switches to
+  its [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
   Search uses `Search catalogue` as its accessible name and `Search` as its
   placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
   and Ctrl+K move focus to the search field from anywhere in the shell. `/`
@@ -129,29 +128,9 @@ preview scheme and the compact layout.
   account menu, because it has no account menu. Matching uses the single
   [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
   opens retained groups, and composes with the All/Changes filter.
-- **Tag picker** — a tag-icon control at the trailing edge of the search
-  field, muted like the leading search icon and filling to a soft rounded square
-  on hover. It opens a panel anchored under the field and aligned to its
-  width: a `--chrome-surface` card with a hairline border, 10px radius, and
-  `--chrome-shadow` elevation, holding an uppercase 11px muted
-  `Tags` head above a wrapping row of the Details Tags row's chips. The
-  panel lists every tag the catalogue declares, in alphabetical order, and
-  scrolls internally once that set outgrows it. Selecting a chip enters
-  `tag:<tag>` in the search field, replacing any tag term already entered, and
-  closes the panel; selecting the chip whose tag is the entered term clears that
-  term. The chip matching the entered query carries the accent active state with
-  contrast text and glyph. A tag chip is a button on both surfaces: it reports
-  whether its tag is entered through `aria-pressed`, fills with the soft accent
-  on hover, and moves down 1px with an inset shadow while pressed. Opening the
-  panel moves focus to the chip for the entered tag, or to the first chip when
-  no tag is entered; the chip row then keeps a single tab stop that ArrowLeft
-  and ArrowRight rove and wrap at both ends, Home and End send to its ends, and
-  Enter or Space activates. The row is a labelled toolbar with one tab stop.
-  Details chips keep independent tab stops. Escape closes the panel and
-  returns focus to the control without changing the query. An outside click
-  closes it and returns focus only if the panel held focus. Selecting a Details
-  tag closes an open picker and focuses its toggle. A catalogue that declares
-  no tags renders neither the control nor the panel.
+- **Tag picker** — the tag-icon control at the trailing edge of the search
+  field and the panel of tag chips that it opens, under the
+  [tag picker design](./mokly-shell-design-tag-picker.md).
 - **Catalogue** — the floating catalogue panel with its All/Changes filter and
   its tree, under the
   [navigation design](./mokly-shell-design-navigation.md).
@@ -258,4 +237,5 @@ mode. See [Changes](./mokly-changes.md),
 - [Package and authoring contract](./mokly-package.md)
 - [Shell canvas stage](./mokly-shell-canvas-stage.md)
 - [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
+- [Shell tag picker design](./mokly-shell-design-tag-picker.md)
 - [Canvas design inventory](./mokly-shell-canvas-inventory.md)
