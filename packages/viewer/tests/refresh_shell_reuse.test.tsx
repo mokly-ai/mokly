@@ -3,6 +3,9 @@ import { test } from "node:test";
 
 import { act, fireEvent } from "@testing-library/react";
 
+import type { EntryDetailV4 } from "@mokly/model";
+
+import { detailFixture } from "./catalogue_v9_fixture.js";
 import { flush } from "./data_fakes.js";
 import { richDetails } from "./reader_unknown_fixtures.js";
 import {
@@ -13,6 +16,7 @@ import {
   homeScreen,
   publication,
   USAGE_DETAIL_ID,
+  type DetailPair,
 } from "./refresh_publication_fixtures.js";
 import {
   registerShellDocument,
@@ -182,4 +186,68 @@ test("equal usage keeps an active highlight and selected instance during a publi
     [],
     "the probe cleared the active highlight during the publication",
   );
+});
+
+const VARIANT = "components/action/default";
+const PARENT = "components/action";
+
+function componentPair(
+  path: string,
+  revision: number,
+  edit?: (detail: EntryDetailV4) => void,
+): DetailPair {
+  const request = { path };
+  const detail = detailFixture(request);
+  detail.revision = revision;
+  edit?.(detail);
+  return [request, detail];
+}
+
+// A component route builds a new usage object for each frame on every
+// publication, so only the frame hook's value check keeps an equal usage
+// from restarting the frame probe.
+test("a component route updates a frame only when its usage value changes", async (t) => {
+  registerShellDocument(t, `/view/${VARIANT}/`);
+  const shell = await renderPublicationShell(publication(0), [
+    componentPair(VARIANT, 0),
+    componentPair(PARENT, 0),
+  ]);
+  const effects = () =>
+    Object.fromEntries(
+      shell.mounts.map(({ frame, updates }) => [
+        frame.dataset.workspaceFrame,
+        {
+          connected: frame.isConnected,
+          updates: updates.map(({ status }) => status),
+        },
+      ]),
+    );
+  const unchanged = { connected: true, updates: [] };
+  assert.equal(shell.mounts.length, 2);
+  assert.deepStrictEqual(effects(), { mobile: unchanged, desktop: unchanged });
+
+  await shell.publish(
+    publication(1),
+    componentPair(VARIANT, 1),
+    componentPair(PARENT, 1),
+  );
+  assert.equal(shell.mounts.length, 2);
+  assert.deepStrictEqual(effects(), { mobile: unchanged, desktop: unchanged });
+
+  await shell.publish(
+    publication(2, (index) => {
+      index.components.find(({ path }) => path === VARIANT)!.detailId =
+        USAGE_DETAIL_ID;
+    }),
+    componentPair(VARIANT, 2, (detail) => {
+      detail.detailId = USAGE_DETAIL_ID;
+      detail.views[0]!.usage = { status: "pending" };
+    }),
+    componentPair(PARENT, 2),
+  );
+  assert.equal(shell.mounts.length, 2);
+  assert.deepStrictEqual(effects(), {
+    mobile: { connected: true, updates: ["unavailable"] },
+    desktop: unchanged,
+  });
 });

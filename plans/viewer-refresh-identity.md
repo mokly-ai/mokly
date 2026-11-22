@@ -180,9 +180,13 @@ highlight or the instance selection? The live evidence page requires that
 both stay. When `main` resets either one, decision 2 also fixes that
 defect, and the change adds its regression test. Answer of 2026-11-22: on
 `main` the probe restart clears the active highlight in the frame until the
-viewer draws it again. The selected instance stays. The value guard removes
-that update, and a React test now holds the highlight through the
-publication.
+viewer draws it again. The selected instance stays. Detail reuse keeps the
+usage object of an unchanged screen view, and the value guard removes each
+other equal update. A React test holds the highlight through a publication
+of a screen. On a component route, each publication makes new usage objects
+of equal value, so there the value guard alone prevents the update. A
+second React test publishes unchanged data on a component route, and it
+fails without the value guard (review finding 41, 2026-11-22).
 
 Decision 3, answered by Cal on 2026-11-22 through the parent orchestrator:
 **the order of the index and detail requests.** Chosen: **A**, keep the
@@ -289,11 +293,15 @@ Evidence: `.context/viewer-refresh-identity/ten-runs.txt`,
 
 - [x] Commit with Conventional Commits and push the branch. Send the SHA to
       the parent orchestrator.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
       report.
+
+Evidence: `.context/reviews/calummoore/mokly-viewer-refresh-identity-q13s/findings.md`
+and `.context/viewer-refresh-identity/browser-evidence-2.log`.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request into `main`. Its description gives the decisions

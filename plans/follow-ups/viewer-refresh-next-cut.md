@@ -1,0 +1,40 @@
+# Next cut of the viewer refresh cost
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from the branch `calummoore/mokly-viewer-refresh-identity-q13s`, the open options of its second user decision.
+- **Location:** `packages/viewer/src/shell/data_controller.ts`, `packages/viewer/src/shell/data_refresh.ts`, `packages/viewer/src/shell/data_requests.ts` (`loadRefresh`), `packages/viewer/src/shell/data_commit.ts` (`withIndex`), `packages/viewer/src/shell/store.tsx`, `packages/viewer/src/shell/frame_mount_hook.ts`.
+- **Reason:** A decision of 2026-11-22 makes the hold of refreshes wait for a traced session of the identity reuse, and the other options wait for the same result.
+
+- **Terms:**
+  - **Publication:** one revision that `mokly serve` publishes after a source edit. The viewer gets one server-sent event for it and fetches the index and the route details again.
+  - **Index:** the catalogue index JSON that lists every entry record. It is 1.2 MB on the mokly-cloud catalogue.
+  - **Identity reuse:** the change of 2026-11-22 that keeps each unchanged index record, detail, lookup, navigation section, and frame usage object across a publication.
+  - **Frame probe:** the script in each mounted frame that reports the frame's state and draws highlights. A usage update restarts it.
+- **Background:**
+  - In Serve, one source edit gives about five publications. On each publication, the viewer fetches the whole index and the route details. It adopts them in one store commit.
+  - The measurements of `main` on 2026-11-22 used the mokly-cloud catalogue, with 167 entries and 1,508 views, on 4 vCPU with warm edits. Each warm edit cost about 320 ms of renderer main-thread work.
+  - A traced profile of the same day put about 7 ms of each refresh in `structuredClone`, 11 ms in React, and 6 ms in the navigation builders.
+  - On 2026-11-22, the user, Cal, decided that the viewer adopts the index and the details that it fetched itself without a copy. The public readers `readCatalogueIndex` and `readEntryDetail` keep their copy.
+  - On the same day, Cal decided that a refresh reuses each unchanged part. This is the identity reuse. React and the builders then skip the unchanged parts, and an unchanged frame keeps its probe.
+  - On the same day, Cal decided to keep the serial order of the index and detail requests. A parallel detail request saves at most about 4 ms. It costs one more index fetch when a newer publication lands between the two requests.
+  - An untimed bench of 2026-11-22 compared the identity reuse with the viewer of `main`. Both arms ran the Serve delivery change of the same work. It used 4 sessions with 12 warm edits on a view, and 3 sessions with 9 warm edits on Changes.
+  - In that bench, renderer script time fell by 34.7 ms, or 24%, on a view, and by 46.9 ms, or 22%, on Changes. Task time fell by 11% and 7%, within the noise. The heap during an edit fell by 8.3 MiB on a view.
+  - The first and last frame paints and the Changes pane paint did not move beyond the noise. The first paint waits for the frame document and a cold sidecar process, not for viewer script. Bytes and requests stayed equal.
+  - On 2026-11-22, the performance orchestrator of this work decided how to judge the hold of refreshes. One traced session on the identity reuse sums the main-thread time of the refreshes between the first event and the last frame paint. The hold gets built only when that sum is at least 20 ms.
+- **Problem:** The identity reuse removes the copy and most React and builder work for unchanged parts. Each publication still fetches and parses the whole index, compares each record, and commits, also while frames load. No measurement says yet how much of this work falls before the last frame paint.
+- **Impact if no action:** When the remaining cost is too high, each warm edit in Serve keeps a visible delay in the viewer on large catalogues.
+- **Root question:** After the identity reuse, how does a warm edit in Serve reach its final view with the least renderer work?
+- **Options:**
+  - **A.** Change nothing. Keep the identity reuse alone when the bench shows that it is enough. Effort: Small.
+  - **B.** Hold refreshes while frames load. The viewer adopts no publication while a mounted frame loads its document. The hold has no timer. It ends at the frame's `load`, its `error`, its unmount, or a new `documentKey`, as the decision of 2026-11-22 says. Then the viewer adopts the newest publication. It must keep the final state of each edit and the browser adoption rules of `docs/protocol/mokly-live-evidence.md`. Effort: Medium (estimate).
+  - **C.** A store that each container reads through a selector, so that a container renders only when its slice changes. It changes the 23 files that read the store, a count of 2026-11-22. Effort: Large.
+  - **D.** The React Compiler in place of the hand-written memos. It adds a dependency and a build step to the published `@mokly/viewer` package. Effort: Large.
+  - **E.** A worker that parses and compares the index and posts only the changed records to the main thread. It adds a worker and its fallback. Effort: Large.
+  - **F.** A delta publication. Serve sends the changed records with each event, and the viewer patches the installed index. It removes the fetch and the parse of the whole index. It changes the Serve update contract in `docs/protocol/mokly-shell-delivery.md`. Effort: Large.
+- **Left out:** A rebuild of everything on each publication, as `main` did before the identity reuse, because Cal rejected it on 2026-11-22. A parallel detail request, because Cal rejected it on 2026-11-22.
+- **Wider fix:** C. A selector store stops each container from rendering again for a change outside its slice, without hand-kept memo inputs.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/nav-section-reuse-field-contract.md`, the same code. Its structural fix changes the inputs of the rail's section reuse, and options C and D also change them.
+- **Recommendation:** B, when the traced session finds at least 20 ms of refresh work between the first event and the last frame paint. It cuts the adoptions of one edit at Medium effort and changes no contract. F cuts the most work, but it changes the Serve contract.
+- **Action:** ask the user, because the decision of 2026-11-22 makes the hold wait for the traced session, and no other option is clearly best before that result.
