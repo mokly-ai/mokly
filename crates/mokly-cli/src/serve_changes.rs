@@ -163,8 +163,9 @@ impl ChangeSource for Source {
         &self,
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
+        merge_base: &str,
     ) -> Result<ComparisonResult> {
-        self.classify_native(cancel, progress)
+        self.classify_native(cancel, progress, merge_base)
     }
     fn finished(
         &self,

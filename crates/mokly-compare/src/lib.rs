@@ -278,4 +278,7 @@ mod validation_arena;
 mod validation_facts;
 mod validation_head;
 mod validation_inputs;
+mod validation_kept;
+mod validation_outputs;
+mod validation_pass;
 mod validation_recording;

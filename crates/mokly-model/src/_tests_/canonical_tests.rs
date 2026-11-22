@@ -25,6 +25,68 @@ fn canonical_bytes_use_utf16_and_preserve_authored_arrays() {
 }
 
 #[test]
+fn every_object_sorts_by_utf16_at_every_depth_with_empties_and_number_spellings() {
+    let value = json!({
+        "z": {"b": [], "a": {}},
+        "a\u{e000}": 1,
+        "a😀": -1,
+        "a": [{"y": true, "x": null}, [], [{}], [[{"d": 0, "c": 1}]]],
+        "\u{ffff}": "max",
+        "𝄞": "clef",
+        "é": u64::MAX,
+        "Z": i64::MIN,
+        "ab": [0.1, -0.0, 1e-7, 2.5e300, 1.0],
+        "\"quoted\\key\n": {},
+        "": []
+    });
+    let expected = concat!(
+        "{\n",
+        "  \"\": [],\n",
+        "  \"\\\"quoted\\\\key\\n\": {},\n",
+        "  \"Z\": -9223372036854775808,\n",
+        "  \"a\": [\n",
+        "    {\n",
+        "      \"x\": null,\n",
+        "      \"y\": true\n",
+        "    },\n",
+        "    [],\n",
+        "    [\n",
+        "      {}\n",
+        "    ],\n",
+        "    [\n",
+        "      [\n",
+        "        {\n",
+        "          \"c\": 1,\n",
+        "          \"d\": 0\n",
+        "        }\n",
+        "      ]\n",
+        "    ]\n",
+        "  ],\n",
+        "  \"ab\": [\n",
+        "    0.1,\n",
+        "    -0.0,\n",
+        "    1e-7,\n",
+        "    2.5e+300,\n",
+        "    1.0\n",
+        "  ],\n",
+        "  \"a😀\": -1,\n",
+        "  \"a\u{e000}\": 1,\n",
+        "  \"z\": {\n",
+        "    \"a\": {},\n",
+        "    \"b\": []\n",
+        "  },\n",
+        "  \"é\": 18446744073709551615,\n",
+        "  \"𝄞\": \"clef\",\n",
+        "  \"\u{ffff}\": \"max\"\n",
+        "}\n"
+    );
+    assert_eq!(to_string(&value).unwrap(), expected);
+    assert_eq!(to_string(&json!({})).unwrap(), "{}\n");
+    assert_eq!(to_string(&json!([])).unwrap(), "[]\n");
+    assert_eq!(to_string(&json!([[], {}])).unwrap(), "[\n  [],\n  {}\n]\n");
+}
+
+#[test]
 fn absent_optionals_stay_absent_and_null_constants_stay_present() {
     #[derive(Serialize)]
     struct Record {

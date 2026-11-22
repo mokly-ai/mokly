@@ -484,8 +484,9 @@ changed.
   cancels and joins it after the classification.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
   base references and builds the runtime of each classification with its
-  capture workers. Its `Source::comparison_attempt` begins one fenced reuse
-  attempt.
+  capture workers. Its `AttemptLookup` pins the merge base of the reference
+  read of the same attempt, so a classification resolves no base reference
+  again. Its `Source::comparison_attempt` begins one fenced reuse attempt.
   [`src/serve_changes_classification.rs`](./src/serve_changes_classification.rs)
   defines `Source::classify_native`, which composes each classification with
   its `ServeBase` provider, its cancellations, and `AdoptingBase`.
