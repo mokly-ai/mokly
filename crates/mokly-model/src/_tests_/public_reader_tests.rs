@@ -84,9 +84,22 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
     }
 }
 
+fn current_detail() -> Value {
+    json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]})
+}
+
+/// The revision that the reader decodes, or the contract rule that it reports.
+fn outcome(value: &Value) -> Result<Option<u64>, Option<ContractViolation>> {
+    match detail(&value.to_string()) {
+        Ok(detail) => Ok(detail.revision),
+        Err(ReadError::Contract { message, .. }) => Err(Some(message)),
+        Err(_) => Err(None),
+    }
+}
+
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let current = json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    let current = current_detail();
     assert!(detail(&current.to_string()).is_ok());
     let mut current_with_generation = current.clone();
     current_with_generation["generation"] = json!("c".repeat(64));
@@ -133,4 +146,43 @@ fn current_and_removed_detail_fences_are_exclusive() {
             ..
         })
     ));
+}
+
+#[test]
+fn an_older_stored_revision_is_valid_and_range_and_presence_violations_are_not() {
+    let mut stored = current_detail();
+    stored["revision"] = json!(2);
+    let mut highest = stored.clone();
+    highest["revision"] = json!(9_007_199_254_740_991_u64);
+    let mut above = stored.clone();
+    above["revision"] = json!(9_007_199_254_740_992_u64);
+    let mut removed = stored.clone();
+    removed["entry"]["snapshotId"] = json!("d".repeat(64));
+    let mut unstamped = stored.clone();
+    unstamped.as_object_mut().unwrap().remove("revision");
+    for (case, value, expected) in [
+        ("an older stored revision", stored, Ok(Some(2))),
+        (
+            "the highest revision",
+            highest,
+            Ok(Some(9_007_199_254_740_991)),
+        ),
+        (
+            "a revision above the range",
+            above,
+            Err(Some(ContractViolation::DetailIdentity)),
+        ),
+        (
+            "a removed detail with a revision",
+            removed,
+            Err(Some(ContractViolation::DetailFence)),
+        ),
+        (
+            "a current detail without a revision",
+            unstamped,
+            Err(Some(ContractViolation::DetailFence)),
+        ),
+    ] {
+        assert_eq!(outcome(&value), expected, "{case}");
+    }
 }

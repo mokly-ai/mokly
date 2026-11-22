@@ -60,7 +60,7 @@ async fn ready_metadata_starts_retention_after_projection_finishes() {
             .next_call(matching!(_))
             .returns(Ok("refs".into())),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
+            .next_call(matching!(_, _, _))
             .returns(Ok(result)),
         ChangeSourceMock::finished
             .next_call(matching!(_, _))
