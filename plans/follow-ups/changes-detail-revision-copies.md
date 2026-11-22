@@ -29,10 +29,6 @@
 - **Source:** Implementation.
 - **Category:** Performance.
 - **Terms:**
-  - **Second speed change:** H, W1, and C1 of 2026-11-22, built on branch
-    `calummoore/mokly-edit-background-render-olos` (H in commit `ea6724a03`)
-    and reverted in `11f8e4ac4`. It never opened a pull request. Its code
-    stays at https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
   - **Detail:** one `EntryDetailV4` record of a catalogue entry, held behind
     an `Arc` in `Snapshot::details`.
   - **Classification:** one Changes pass of Serve after a source edit, which
@@ -63,7 +59,11 @@
       then took in the cost of the first edit after a warm start, and its
       problem, recommendation, and action changed.
     - On 2026-11-22 the second speed change of that branch split the first
-      edit (option A) and built option H. H did not merge. Option H below
+      edit (option A) and built option H. That change, H, W1, and C1, was
+      built with H in commit `ea6724a03` and reverted in `11f8e4ac4`, and it
+      never opened a pull request. Its code stays at
+      https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
+      H did not merge. Option H below
       gives its measurements, and option I, new on that date, gives the cut of
       its memory.
   - Mokly Serve serves a mockup catalogue for development and watches its

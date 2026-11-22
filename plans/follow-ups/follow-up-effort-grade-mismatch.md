@@ -5,7 +5,7 @@
 - **Added:** 2026-11-21, from `calummoore/mokly-cheaper-sidecar-describe-dlz0`,
   review round 1: the wider fix of finding 1 and a problem outside the review
   scope.
-- **Location:** `plans/follow-ups/`, the 16 items listed below, and
+- **Location:** `plans/follow-ups/`, the 15 open items listed below, and
   `skills/plans/templates/follow-up.md` line 3 in the `Firna-AI/skills`
   repository.
 - **Reason:** The rule that would prevent the mismatch lives in the shared
@@ -34,6 +34,8 @@
     - `embedded-document-closures.md`: Medium, option C Large.
     - `mac-buttons-follow-measured-bar.md`: Large, option A Small.
     - `macos-serve-signal-test-cache-warning.md`: Small, option B Medium.
+      Resolved on 2026-11-22: that item now recommends option A, which is
+      Small.
     - `marked-metadata-owner-timing.md`: Medium, option A Small.
     - `marked-sibling-file-candidates.md`: Medium, option C Large.
     - `node-24-crash-workaround.md`: Medium, option A Small.
@@ -55,14 +57,18 @@
 - **Root question:** How does the priority score of each item use the effort
   of the option that the item recommends?
 - **Options:**
-  - **A.** Correct the first-line grade of the 16 items in this repository.
-    It does not prevent new cases. Effort: Small.
+  - **A.** Correct the first-line grade of the 15 open items in this
+    repository. It does not prevent new cases. Effort: Small.
   - **B.** Do A, and state the rule in the template placeholder of the shared
     `plans` skill: the first-line effort is the grade of the recommended
     option. Effort: Small.
   - **C.** Do A, and let `follow-ups.sh` read the effort of the option that
     **Recommendation** names when the item has options, so that the score
-    cannot drift from it. Effort: Medium.
+    cannot drift from it. When the **Recommendation** names no lettered option
+    with an effort grade, the script uses the default grade and marks the
+    score with "?". On 2026-11-22,
+    `plans/follow-ups/serve-edit-background-pass-split.md` recommended two
+    cuts with no grade outside its options. Effort: Medium.
 - **Left out:** A lint in this repository that compares the two grades,
   because C removes the case and a structural fix ranks above a detection fix.
 - **Wider fix:** C. It removes the duplicate grade from the score.
@@ -72,7 +78,8 @@
 - **Related:** `plans/follow-ups/follow-up-code-lists-go-stale.md`: another
   rule for the shared `plans` skill from the same review. The two can change
   the skill in one pull request.
-- **Recommendation:** B. It fixes the 16 items and prevents new cases with one
-  sentence. C best protects the scores, but it changes a shared script.
+- **Recommendation:** B. It fixes the 15 open items and prevents new cases
+  with one sentence. C best protects the scores, but it changes a shared
+  script.
 - **Action:** ask the user, because B and C change the shared skills of every
   repository that uses them.

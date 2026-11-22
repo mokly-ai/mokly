@@ -21,7 +21,7 @@
   - **Same-version output:** data that Mokly's own code of the same version
     produced, such as a Serve index or an entry detail that the core encodes.
   - **Workspace lints:** the `[workspace.lints]` tables of the root
-    `Cargo.toml`. A crate uses them only when its manifest sets
+    `Cargo.toml`, which a crate uses only when its manifest sets
     `[lints] workspace = true`.
 - **Background:**
   - The shared `rust` skill forbids `panic!`, `unwrap`, and `expect` in
@@ -80,7 +80,8 @@
   calls in `crates/mokly-sidecar/src/pool_releases.rs`, which #284 also
   added.
 - **Related:** [record-release-expect.md](./record-release-expect.md), the
-  same rule and the same commit.
+  same rule and the same commit. Its release work waits for the answer of
+  this item.
 - **Recommendation:** A. It follows the decision of 2026-11-03 and needs no
   code change. B best protects the codebase.
 - **Action:** ask the user, because the user said on 2026-11-03 that the user

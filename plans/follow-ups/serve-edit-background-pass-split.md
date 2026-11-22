@@ -1,6 +1,6 @@
 # Shorten the work after each warm Serve edit
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-22, from the split of the background pass of warm Serve
   edits on branch `calummoore/mokly-edit-background-render-olos`, which the
@@ -64,12 +64,6 @@
     `bindings` for a new generation on one cold sidecar.
   - **mokly-cloud:** the measurement catalogue of the performance
     orchestrator: 167 entries, 1,508 views, 4 vCPU, and 4 sidecars.
-  - **Second speed change:** H, W1, and C1 of 2026-11-22, built on branch
-    `calummoore/mokly-edit-background-render-olos` in commits `ea6724a03`
-    (H), `f453c0440` (W1), `a9a09edf2` (C1), and `0910565bf` (the C1 index
-    under a weak key), and reverted in `11f8e4ac4`. It never opened a pull
-    request. Its code stays at
-    https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
 - **Background:**
   - The request of 2026-11-22: make a warm one-line edit on mokly-cloud reach
     published Changes at least 100 ms sooner, with the same published bytes,
@@ -80,8 +74,14 @@
   - The section "Measurements of 2026-11-22" below gives the method and the
     numbers. The baseline is `main` at
     `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467. Each number and each
-    code fact of this Background and of that section is of that commit:
-    before PR #468, PR #469, and the cuts B1, B2, and B4.
+    code fact of this Background and of that section is of that commit,
+    before PR #468, PR #469, and the cuts B1, B2, and B4, except in a bullet
+    that names another commit, pull request, or cut.
+  - The second speed change of the branch, H, W1, and C1 of 2026-11-22, was
+    built in commits `ea6724a03` (H), `f453c0440` (W1), `a9a09edf2` (C1), and
+    `0910565bf` (the C1 index under a weak key), and reverted in `11f8e4ac4`.
+    It never opened a pull request. Its code stays at
+    https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
   - Each warm edit re-renders 44 views: 11 view paths in light and dark at
     two viewports. Each view makes one sidecar render.
   - The pass is CPU-bound. The core and the sidecars together use a median of
@@ -89,10 +89,13 @@
     of the 4 cores are busy on average, in a range of 3.2 to 3.6. Over 20 warm
     passes, the time to the last view is 23.6 ms plus 0.273 times the CPU of
     the pass. So each millisecond of CPU that leaves the pass saves about
-    0.27 ms. C1 did not confirm this fit: its filter calls took about 100 to
-    120 ms of wall time for each warm edit inside the busy sidecars, but
-    `serve.background` did not get shorter in either timed run of
-    2026-11-22. That figure is wall time, not a measured CPU saving.
+    0.27 ms.
+  - C1 did not confirm this fit. A probe in the sidecars timed the 44 filter
+    calls of each warm edit at a mean of 2.8 ms each, about 100 to 120 ms of
+    wall time inside the busy sidecars. But `serve.background` did not get
+    shorter in the timed gate of `a9a09edf2` against `main` `a2ae56360`
+    (+8 ms) or in the timed split of `0910565bf` against `main` `c699b35d3`
+    (+4 ms). That figure is wall time, not a measured CPU saving.
   - All four sidecars render in each pass. The holder starts its first render
     at a median of 17 ms. Each of the three cold sidecars first spends a
     median of 200 ms on its preparation, so it starts its first render at a
@@ -230,6 +233,20 @@
     needs proof that module order cannot change any output. Effort: Large.
   - **F.** B without B3, and C. About 55 to 95 ms, central about 75. With B3,
     about 70 to 110 ms. Effort: Large.
+  - **G.** The cuts that stay open after 2026-11-22, each when the
+    orchestrator chooses it and after a measurement that shows a shorter
+    pass or a shorter first edit. Effort: Large.
+    - C2, one encode of each restore request for all cold sidecars, from
+      option C. It holds one encoded request for each generation while its
+      restores wait. Effort: Medium.
+    - C3, the native frame scan, from option C. Effort: Small.
+    - W2 of the watch block below. It needs a new equality test over an edit
+      sequence, `crates/mokly-watch/src/plan.rs` must be split first because
+      it has 299 lines, and the cause of the one extra resolver probe is
+      unknown. Effort: Medium.
+    - W4 of the watch block below, with W2. It is a form of option C of
+      [serve-watch-candidate-plan-cost.md](./serve-watch-candidate-plan-cost.md),
+      which grades that work Large. Effort: Large.
 - **Left out:**
   - A second process that holds the new generation before the pass. This is
     the preload family of
@@ -277,6 +294,10 @@
     holds the open decision on records that ask for no action. When the next
     pull request closes this item and keeps its measurements, it applies that
     answer.
+  - [serve-pass-rereads-unchanged-pages.md](./serve-pass-rereads-unchanged-pages.md)
+    holds the reads of unchanged pages and Markdown documents. The split of
+    2026-11-22 measured this cost, and the ranking of 2026-11-22 did not name
+    it.
   - [serve-watch-candidate-plan-cost.md](./serve-watch-candidate-plan-cost.md),
     the record of experiment C of 2026-11-21, measured the same watch
     candidate step and found the same two causes of the record miss. W2 and
@@ -399,11 +420,9 @@
       resolver probe.
     - W3, equal resolver probes in both bundles, stays out, because it changes
       the resolution records of the bundler.
-- **Recommendation:** C2 and C3 of option C, and W2 or W4 of the watch block,
-  each when the orchestrator chooses it and after a measurement that shows a
-  shorter pass or a shorter first edit. B1, B2, and B4 of option F merged in
-  #472, and C1 and W1 were measured and reverted on 2026-11-22. Until
-  2026-11-22 the recommendation was F without B3.
+- **Recommendation:** G. Its parts are the cuts that stay open: B1, B2, and
+  B4 of option F merged in #472, and C1 and W1 were measured and reverted on
+  2026-11-22. Until 2026-11-22 the recommendation was F without B3.
 - **Action:** ask the user, because the performance orchestrator chose on
   2026-11-22 to wait with C2, C3, W2, and W4 until it chooses them. H comes
   back only through option I of
@@ -416,7 +435,8 @@
 All times are in milliseconds. They are local measurements with a probe, not
 official Changes timings, and the performance orchestrator owns the official
 measurements. Each number and each code fact of this section is of `main` at
-`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, and B4.
+`9bdb0569d`, before PR #468, PR #469, and the cuts B1, B2, and B4, except in a
+bullet that names another commit, pull request, or cut.
 
 ### Method
 
@@ -643,7 +663,13 @@ https://github.com/mokly-ai/mokly/blob/0910565bf3a7abac064b2bc7b04845e913ee1260/
 
 ### Measurements of the performance orchestrator
 
-Release cores, 4 vCPU, 7.9 GB, no memory cap; mokly-cloud unless named.
+Release cores, 4 vCPU, 7.9 GB, no memory cap; mokly-cloud unless named. The
+rules of the gate, written before its data: all edits at least 30 ms sooner
+with at least 4 of 6 rounds faster; on edit 1, the timed window at least
+20 ms shorter with no `detail.build` span, and `serve.background` not more
+than 10 ms longer; restarts within +30 ms; memory within +2%; and
+`examples/basic` edits and restores within +30 ms. The rule of the decisive
+check: all edits at least 15 ms sooner, and edit 1 not slower than `main`.
 
 - The gate, `a9a09edf2` against `main` `a2ae56360`, with no kept esbuild
   context in either arm:
@@ -658,8 +684,9 @@ Release cores, 4 vCPU, 7.9 GB, no memory cap; mokly-cloud unless named.
   - Cold 10-edit sessions, 4 pairs: whole-tree peak 3,097 to 3,158 MiB
     (+61.5 MiB, +1.99%; pairs +135, +4, +25, +82).
   - `examples/basic`, 2 sidecars, 4 warm pairs: edits 1,792 to 1,572 ms
-    (-219); restores 993 to 1,033 ms (+40; pairs -13, +19, +73, +80); cold
-    5+5 peak 2,147 to 2,192 MiB (+2.13%; median +12.5 MiB).
+    (-219); restores 993 to 1,033 ms (+40; pairs -13, +19, +73, +80), over
+    the rule of +30 ms; cold 5+5 peak 2,147 to 2,192 MiB (+2.13%; median
+    +12.5 MiB), over the rule of 2%. The pooled repeat below passed both.
 - The confirm after the merge of #478, `0910565bf` against `main`
   `c699b35d3`, with the kept esbuild context in both arms, untimed, 4 warm
   rounds: edit 1 2,012 to 2,130 ms (+118; rounds +40, +180, +120, +130);
@@ -681,7 +708,8 @@ Release cores, 4 vCPU, 7.9 GB, no memory cap; mokly-cloud unless named.
   new run of 8 rounds gave all edits -42 ms (7 of 8 rounds faster), edit 1
   -65 ms (median -50), and edits 2 and 3 -45 and -15 ms. Pooled with the
   confirm, 12 rounds: all edits -12 ms (8 of 12 rounds faster), which misses
-  the bar of -15 ms; edit 1 -4 ms (median +10), which passes.
+  the bar of -15 ms; edit 1 -4 ms (median +10), which meets the bar of no
+  slower than `main`.
 
 ### Measurements of the branch
 
