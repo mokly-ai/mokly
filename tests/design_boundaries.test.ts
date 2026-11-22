@@ -85,7 +85,6 @@ const EXEMPT_CONTROL_SURFACES = new Map([
 const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
-  "design-canvas.css .cv :is(a, select, summary):focus-visible",
   "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:focus-visible)",

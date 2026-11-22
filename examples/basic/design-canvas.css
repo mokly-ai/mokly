@@ -86,10 +86,23 @@
   line-height: 1.4;
 }
 
-/* A focused Canvas control draws the signal ring. */
-.cv :is(a, select, summary):focus-visible {
-  outline: 2px solid var(--cv-signal-deep);
-  outline-offset: 2px;
+/* A focused Canvas control draws the shell's focus glow: a 4px halo of the
+   signal at 75%, from the package's --mbk-focus-glow, or from the same mix
+   where no package element passes that property down. The rule weighs one
+   pseudo-class, so a part's own focus rule, such as a row's inset glow, wins.
+   Forced colours drop the glow, so there focus takes a 2px system outline. */
+:where(.cv :is(a, select, summary)):focus-visible {
+  outline: none;
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+
+@media (forced-colors: active) {
+  :where(.cv :is(a, select, summary)):focus-visible {
+    outline: 2px solid Highlight;
+  }
 }
 
 /* ---- Stage --------------------------------------------------------- */

@@ -106,7 +106,7 @@ export function registerDesignPortable(
       await context.close();
     });
 
-    test(`${viewport}: a focused portable link draws the dark focus ring`, async ({
+    test(`${viewport}: a focused portable link draws the dark focus glow`, async ({
       page,
     }) => {
       await page.setViewportSize(
@@ -115,13 +115,24 @@ export function registerDesignPortable(
           : { width: 1440, height: 1000 },
       );
       await page.goto(design("design/canvas/overview", `${viewport}.dark`));
+      // The glow of decision 38: a 4px halo of the dark signal at 75%, as a
+      // probe on the artboard's root computes it.
+      const glow = await page
+        .locator(".cv")
+        .first()
+        .evaluate((root) => {
+          const probe = document.createElement("span");
+          probe.style.boxShadow =
+            "0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)";
+          root.append(probe);
+          const shadow = getComputedStyle(probe).boxShadow;
+          probe.remove();
+          return shadow;
+        });
       const link = page.getByRole("link", { name: "Mokly", exact: true });
       await link.focus();
-      await expect(link).toHaveCSS("outline-style", "solid");
-      await expect(link).toHaveCSS(
-        "outline-color",
-        await canvasColor("dark", "--cv-signal-deep"),
-      );
+      await expect(link).toHaveCSS("outline-style", "none");
+      await expect(link).toHaveCSS("box-shadow", glow);
       await expect(link).toHaveCSS(
         "color",
         await canvasColor("dark", "--cv-text"),
