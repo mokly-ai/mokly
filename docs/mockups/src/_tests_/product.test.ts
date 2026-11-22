@@ -75,7 +75,7 @@ test("every standard product screen owns canonical, empty, loading and error sta
   );
 });
 
-test("all 290 inventory pages render both widths and schemes with their stable identity", () => {
+test("all 294 inventory pages render both widths and schemes with their stable identity", () => {
   let rendered = 0;
   for (const { path: id, state } of inventoryPages())
     for (const view of ["mobile", "desktop"] as const)
@@ -98,7 +98,7 @@ test("all 290 inventory pages render both widths and schemes with their stable i
         );
         rendered += 1;
       }
-  assert.equal(rendered / 4, 290);
+  assert.equal(rendered / 4, 294);
 });
 
 test("a state child that repeats its canonical drawing says why", () => {

@@ -224,11 +224,21 @@ The drawings of desktop sign-in and of the desktop app's web setup are in
 ## Recovery
 
 The Recovery folder sits at Product's top level. Its screen modules live under
-`src/screens/product/recovery/`, and its entry is
-`src/entries/product/recovery/not-found.mockup.tsx`.
+`src/screens/product/recovery/`, and its entries are
+`src/entries/product/recovery/not-found.mockup.tsx` and
+`src/entries/product/recovery/session-error.mockup.tsx`.
 `product/recovery/not-found` is the app-owned screen for an unmatched product path. Its
 mobile and desktop views say the page could not be found and offer exactly
 one action, **Open dashboard**, to `/dashboard`. They show no raw URL, framework
 copy, sitemap link, viewer chrome, product data or invented fixture value. The
 route performs no data read, so its Empty, Loading and Error variants repeat the
 canonical screen with that reason recorded in the situations declaration.
+
+`product/recovery/session-error` is the screen of any product route whose
+session read failed. It draws the account panel, and its header names no one.
+Its one heading says **Mokly couldn’t load**. Its alert announces those words
+for screen readers only, offers **Try again**, and keeps the request reference
+in a closed **Details** disclosure. The read has no empty answer, and Try again
+keeps this screen until the read answers, so its Empty, Loading and Error
+variants repeat the canonical screen with that reason recorded in the
+situations declaration.

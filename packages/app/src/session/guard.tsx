@@ -6,25 +6,15 @@ import type { Session } from "../api/types";
 import { Action } from "../components/action";
 import { ErrorDetails } from "../components/error-details";
 import { StateMessage } from "../components/page-parts";
-import { WindowBand } from "../components/window-band";
 import { replaceAddress } from "../navigation/address";
 import { signInHref } from "../navigation/destinations";
+import { AccountShell } from "../screens/account/account-shell";
 import { SignInWait } from "../screens/account/entry-screen";
 
 import { useSession } from "./context";
 
-function Frame({ children }: { children: ReactNode }) {
-  return (
-    <div className="folio-root fo-account" data-mkc-screen="app-session">
-      <WindowBand />
-      <main id="main" className="fo-account-main">
-        <div className="fo-account-panel">
-          <div className="fo-account-content">{children}</div>
-        </div>
-      </main>
-    </div>
-  );
-}
+/** The failure, which the heading shows and the alert announces. */
+const failedTitle = "Mokly couldn’t load";
 
 /**
  * Every product route needs the reader signed in. Signing out sends them to the
@@ -36,6 +26,11 @@ function Frame({ children }: { children: ReactNode }) {
  * reader is signed out, it draws the sign-in screen's wait until sign in
  * replaces it: that is the screen the reader goes to, and the destination is
  * not theirs to open yet.
+ *
+ * A read that fails draws the account panel, whose one heading names the
+ * failure. The alert announces it for screen readers only rather than repeat
+ * it as a second, visible title. Nobody is known while the session is unread,
+ * so the header names no one.
  */
 export function RequireSession({
   children,
@@ -63,9 +58,15 @@ export function RequireSession({
   if (state.status === "signed-out") return <SignInWait />;
   if (state.status === "error") {
     return (
-      <Frame>
+      <AccountShell
+        screen="app-session"
+        title={failedTitle}
+        // The tab's suffix names the product, so the tab's title leaves it out.
+        documentTitle="Couldn’t load"
+        identity={{ kind: "none" }}
+      >
         <StateMessage
-          title="Mokly couldn’t load"
+          announcement={failedTitle}
           error
           details={<ErrorDetails reference={state.error.requestId} />}
           action={
@@ -78,7 +79,7 @@ export function RequireSession({
             />
           }
         />
-      </Frame>
+      </AccountShell>
     );
   }
   return <>{children(state.session)}</>;

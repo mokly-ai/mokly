@@ -16,13 +16,17 @@ import {
   windowInsets,
 } from "./regions";
 
-/** The full-page screens without a top bar, each opened as a reader meets it. */
-const bandScreens: readonly {
+/** Full-page states with a top area that moves the Mac window. */
+const windowScreens: readonly {
   name: string;
+  area: ".fo-window-band" | ".fo-account-header";
+  browserHeight: "0px" | "48px";
   open: (page: Page) => Promise<void>;
 }[] = [
   {
     name: "Not found",
+    area: ".fo-window-band",
+    browserHeight: "0px",
     open: async (page) => {
       await open(page, notFoundPaths[0]);
       await expect(
@@ -33,44 +37,52 @@ const bandScreens: readonly {
   {
     // The desktop app shows this frame at start, and when it is offline.
     name: "the session error",
+    area: ".fo-account-header",
+    browserHeight: "48px",
     open: async (page) => {
       await failWith(page, "**/v1/session", "GET", "unavailable");
       await open(page, "/dashboard");
-      await expect(page.getByText("Mokly couldn’t load")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Mokly couldn’t load" }),
+      ).toBeVisible();
     },
   },
 ];
 
-test("a browser reports no window buttons, so no inset or band takes room", async ({
+test("a browser reports no window buttons and keeps each screen's usual top area height", async ({
   page,
 }) => {
-  for (const screen of bandScreens) {
+  for (const screen of windowScreens) {
     await screen.open(page);
     await expect
       .poll(() => windowInsets(page), `${screen.name}: the window insets`)
       .toEqual({ start: "0px", end: "0px" });
-    const band = page.locator(".fo-window-band");
-    await expectMovesWindow(band, `${screen.name}'s band`);
-    await expect(band, `${screen.name}'s band has no height`).toHaveCSS(
+    const area = page.locator(screen.area);
+    await expectMovesWindow(area, `${screen.name}'s top area`);
+    await expect(area, `${screen.name}'s usual height in a browser`).toHaveCSS(
       "height",
-      "0px",
+      screen.browserHeight,
     );
   }
 });
 
-test("a screen without a top bar moves the Mac window from a 48px band", async ({
+test("the full-page states move the Mac window from a 48px top area", async ({
   page,
 }) => {
-  for (const screen of bandScreens) {
+  for (const screen of windowScreens) {
     await screen.open(page);
-    const band = page.locator(".fo-window-band");
+    const area = page.locator(screen.area);
     for (const edge of ["start", "end"] as const) {
       await emulateMacWindow(page, edge);
+      await expectMovesWindow(
+        area,
+        `${screen.name}'s top area, buttons at the ${edge}`,
+      );
       await expect(
-        band,
-        `${screen.name}'s band, buttons at the ${edge}`,
+        area,
+        `${screen.name}'s top area, buttons at the ${edge}`,
       ).toHaveCSS("height", "48px");
-      // The band takes its height from the page's canvas, so the page does
+      // The top area takes its height from the page's canvas, so the page does
       // not scroll.
       await expect
         .poll(

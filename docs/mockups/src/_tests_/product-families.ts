@@ -25,7 +25,7 @@ export const productFamilies = {
     "project-created",
     "invitation-accept",
   ],
-  recovery: ["not-found"],
+  recovery: ["not-found", "session-error"],
   settings: [
     "sections",
     "account",
