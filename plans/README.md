@@ -11,6 +11,8 @@ under [follow-ups](./follow-ups/).
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
+- [Prepared PostCSS child starts only from prepareContext](./prepared-child-start-path.md) —
+  remove the second start path of a prepared child from the `bundle` request.
 
 ## Completed Plans
 
