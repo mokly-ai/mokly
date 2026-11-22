@@ -138,6 +138,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
     generation: full.generation,
     restoredGeneration: "restore:startup",
   });
+  assert.equal(preparations.length, 1);
   const css = (name: string) =>
     cssParams({
       context: name,
@@ -152,6 +153,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
     params: css("startup"),
   });
   assert.equal(starts, 1);
+  assert.equal((prepared as CssResult).text, ".theme{color:red}");
   const plain = await session.call({
     id: 5,
     method: "processCss",
