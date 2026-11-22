@@ -99,7 +99,6 @@ mod comparison_capture;
 mod comparison_consumer;
 mod comparison_documents;
 mod comparison_error;
-mod comparison_head;
 mod comparison_pipeline;
 mod comparison_preparation;
 mod comparison_routes;

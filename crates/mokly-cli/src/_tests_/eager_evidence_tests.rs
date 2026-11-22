@@ -69,12 +69,34 @@ fn eager_adoption_rejects_same_key_stale_working_or_head_dependency_inputs() {
 }
 
 #[test]
+fn adoption_rejects_a_checkout_change_during_the_working_input_scan() {
+    let fixture = Fixture::with_checkout_change(true);
+    let freshness = Arc::new(FreshnessChecks {
+        working: fixture.working.clone(),
+        installs: Arc::new(Unimock::new(())),
+    });
+    let work = fixture.work(
+        DependencySelection {
+            inputs: dependency_inputs(),
+            ..DependencySelection::default()
+        },
+        freshness,
+    );
+
+    let adopted = work.take_prepared(&fixture.request()).unwrap();
+    assert!(
+        adopted.is_none(),
+        "adopted a preparation with obsolete checkout settings"
+    );
+}
+
+#[test]
 fn ended_eager_adoption_checks_evidence_once() {
     for (ended, expected) in [
-        (true, vec![Read::Checkout, Read::Working]),
+        (true, vec![Read::Working, Read::Checkout]),
         (
             false,
-            vec![Read::Checkout, Read::Working, Read::Checkout, Read::Working],
+            vec![Read::Working, Read::Checkout, Read::Working, Read::Checkout],
         ),
     ] {
         let fixture = Fixture::new();
@@ -126,7 +148,7 @@ fn take_prepared_shares_current_inputs_and_reads_selected_html_paths() {
                 inputs: inputs.clone(),
                 ..DependencySelection::default()
             },
-            vec![Read::Checkout, Read::Working],
+            vec![Read::Working, Read::Checkout],
         ),
         (
             DependencySelection {
@@ -134,11 +156,11 @@ fn take_prepared_shares_current_inputs_and_reads_selected_html_paths() {
                 paths: Some(paths.clone()),
                 ..DependencySelection::default()
             },
-            vec![Read::Checkout, Read::Working, Read::Paths(paths)],
+            vec![Read::Working, Read::Checkout, Read::Paths(paths)],
         ),
         (
             DependencySelection::default(),
-            vec![Read::Checkout, Read::Working, Read::Working],
+            vec![Read::Working, Read::Checkout, Read::Working],
         ),
     ] {
         let fixture = Fixture::new();

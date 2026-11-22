@@ -64,6 +64,23 @@ impl AdoptionEvidence for NativeEvidence {
         let Some(checkout) = &self.checkout else {
             return Ok(None);
         };
+        let Some(inputs) = &self.inputs else {
+            return Ok(None);
+        };
+        let working_inputs = match self.working.read(
+            request.selected.repository.as_ref(),
+            inputs,
+            Limits::default(),
+        ) {
+            Ok(current) if &current == inputs => current,
+            Ok(_) => return Ok(None),
+            Err(Error::Cancelled) => return Err(Error::Cancelled),
+            Err(error) => {
+                tracing::debug!(%error, "eager working evidence is unavailable");
+                return Ok(None);
+            }
+        };
+        // A checkout change during the working input scan invalidates this preparation.
         let current_checkout = match request
             .selected
             .repository
@@ -73,25 +90,10 @@ impl AdoptionEvidence for NativeEvidence {
             Err(mokly_git::error::Error::Cancelled) => return Err(Error::Cancelled),
             _ => return Ok(None),
         };
-        let Some(inputs) = &self.inputs else {
-            return Ok(None);
-        };
-        match self.working.read(
-            request.selected.repository.as_ref(),
-            inputs,
-            Limits::default(),
-        ) {
-            Ok(current) if &current == inputs => Ok(Some(FreshnessReadings {
-                checkout: current_checkout,
-                requested_inputs: inputs,
-                working_inputs: current,
-            })),
-            Ok(_) => Ok(None),
-            Err(Error::Cancelled) => Err(Error::Cancelled),
-            Err(error) => {
-                tracing::debug!(%error, "eager working evidence is unavailable");
-                Ok(None)
-            }
-        }
+        Ok(Some(FreshnessReadings {
+            checkout: current_checkout,
+            requested_inputs: inputs,
+            working_inputs,
+        }))
     }
 }

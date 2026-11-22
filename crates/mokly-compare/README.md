@@ -451,8 +451,7 @@ development dependencies, and no test uses the internet.
 
 - [`src/comparison_types.rs`](./src/comparison_types.rs) defines
   `Comparison`, `ComparisonRequest`, and `ComparisonResult`, the comparison
-  boundary and its retained output. `Comparison::prepare_head` lets Serve
-  validate the head while it prepares the base.
+  boundary and its retained output.
 - [`src/comparison.rs`](./src/comparison.rs) defines `Engine`, the one
   catalogue-wide comparison for build, Serve, and static projection.
 - [`src/comparison_preparation.rs`](./src/comparison_preparation.rs) defines
@@ -464,14 +463,13 @@ development dependencies, and no test uses the internet.
   `ComparisonReuse`, `ReuseAttempt`, `MemoryComparisons`, `ReuseFence`, and
   `ReuseWork`, the bounded view comparison reuse of Serve. The private
   `reuse_*.rs` modules record proof reads, charge the bound, and collect the
-  candidate. [`src/comparison_head.rs`](./src/comparison_head.rs) validates the
-  head and lets the next comparison take that result when its inputs match.
+  candidate.
 - [`src/validation_head.rs`](./src/validation_head.rs) defines the private
-  `Head`, the `HeadValidation` of one Serve reuse attempt. Serve passes it to
-  `RenderGeneration::validate_head` before pairing. The build and publish
-  engine uses `render_all`. `Head` checks each head document once. It validates
-  a view without a document read only when the document key and the policy
-  identity are equal, every link-target read of
+  `Head`, the `HeadValidation` of one Serve reuse attempt. `Engine` passes it
+  to `RenderGeneration::validate_head` before pairing, and it calls
+  `render_all` when it has no reuse collection. `Head` checks each head
+  document once. It validates a view without a document read only when the
+  document key and the policy identity are equal, every link-target read of
   its fragment links and then every recorded walk read are equal in order,
   and the generation adopts the kept document checks. That view takes its
   anchors, links, warnings, and usage from its kept outputs. Any other view
@@ -515,11 +513,9 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse. When the first lookup finds no kept base, head validation can run
-  during fresh base preparation. Each fresh preparation takes the provider's
-  historical sources when it has them. It holds the `PrefetchGuard` of a fresh
-  base until the capture returns, so each exit stops its early renders and
-  waits for them.
+  reuse. Each fresh preparation takes the provider's historical sources when
+  it has them. It holds the `PrefetchGuard` of a fresh base until the capture
+  of that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,

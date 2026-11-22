@@ -7,11 +7,10 @@ use mokly_graph::types::RenderGeneration;
 use serde::Serialize;
 
 use crate::comparison::Engine;
-use crate::comparison_head::{HeadInputs, PreparedHead};
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::Result;
 use crate::reuse_budget::Resident;
-use crate::reuse_collection::Classification;
+use crate::reuse_collection::{Classification, Collection};
 use crate::reuse_digest;
 
 /// Content identity of adopted Serve configuration and settings.
@@ -102,7 +101,6 @@ struct Attempt {
     engine: Engine,
     shared: Arc<Shared>,
     fence: Option<ReuseFence>,
-    prepared: Mutex<Option<PreparedHead>>,
     staged: Mutex<Option<Option<Classification>>>,
     work: Mutex<ReuseWork>,
 }
@@ -113,14 +111,20 @@ impl ComparisonReuse for MemoryComparisons {
             engine,
             shared: self.shared.clone(),
             fence,
-            prepared: Mutex::new(None),
             staged: Mutex::new(None),
             work: Mutex::new(ReuseWork::default()),
         })
     }
 }
-impl Attempt {
-    fn head_inputs(&self, request: &ComparisonRequest) -> HeadInputs {
+impl Comparison for Attempt {
+    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, admitted_views = 0u64, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty, reused = tracing::field::Empty, compared = tracing::field::Empty, recorded_reads = tracing::field::Empty, retained_bytes = tracing::field::Empty, revalidation_ms = tracing::field::Empty, recording_ms = tracing::field::Empty, recording_identity_reads = tracing::field::Empty, current_usage_ms = tracing::field::Empty, identities_checked = tracing::field::Empty, identity_reads = tracing::field::Empty, peak_bytes = tracing::field::Empty, candidate_views = tracing::field::Empty, candidate_bytes = tracing::field::Empty, accepted_bytes = tracing::field::Empty, overflowed = tracing::field::Empty, validation_fact_bytes = tracing::field::Empty, validation_fact_peak_bytes = tracing::field::Empty, comparison_kept_bytes = tracing::field::Empty, validation_reused = tracing::field::Empty, validation_walks = tracing::field::Empty, validation_documents = tracing::field::Empty))]
+    fn compare_prepared(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult> {
+        self.discard();
         let fence = self.fence.and_then(|settings| {
             reuse_digest::digest(&(
                 settings.0,
@@ -129,57 +133,25 @@ impl Attempt {
                 &request.catalogue_identity,
             ))
         });
-        let accepted = self
-            .shared
-            .accepted
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone();
-        HeadInputs { fence, accepted }
-    }
-
-    fn take_head(&self) -> Option<PreparedHead> {
-        self.prepared
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .take()
-    }
-}
-
-impl Comparison for Attempt {
-    fn prepare_head(&self, request: &ComparisonRequest, after: &Arc<dyn RenderGeneration>) {
-        let prepared = PreparedHead::new(
-            request,
-            after,
-            self.head_inputs(request),
-            self.shared.resident.clone(),
-        );
-        *self
-            .prepared
-            .lock()
-            .unwrap_or_else(|error| error.into_inner()) = Some(prepared);
-    }
-
-    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, admitted_views = 0u64, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty, reused = tracing::field::Empty, compared = tracing::field::Empty, recorded_reads = tracing::field::Empty, retained_bytes = tracing::field::Empty, revalidation_ms = tracing::field::Empty, recording_ms = tracing::field::Empty, recording_identity_reads = tracing::field::Empty, current_usage_ms = tracing::field::Empty, identities_checked = tracing::field::Empty, identity_reads = tracing::field::Empty, peak_bytes = tracing::field::Empty, candidate_views = tracing::field::Empty, candidate_bytes = tracing::field::Empty, accepted_bytes = tracing::field::Empty, overflowed = tracing::field::Empty, validation_fact_bytes = tracing::field::Empty, validation_fact_peak_bytes = tracing::field::Empty, comparison_kept_bytes = tracing::field::Empty, validation_reused = tracing::field::Empty, validation_walks = tracing::field::Empty, validation_documents = tracing::field::Empty))]
-    fn compare_prepared(
-        &self,
-        request: &ComparisonRequest,
-        before: Arc<dyn RenderGeneration>,
-        after: Arc<dyn RenderGeneration>,
-    ) -> Result<ComparisonResult> {
-        let prepared = self.take_head();
-        self.discard();
-        let inputs = self.head_inputs(request);
-        let (mut collection, validation) = prepared
-            .filter(|prepared| prepared.matches(request, &after, &inputs))
-            .map_or_else(
-                || inputs.validate(self.shared.resident.clone(), &after),
-                PreparedHead::into_parts,
-            );
-        let result = validation.and_then(|()| {
-            self.engine
-                .compare_validated(request, before, after, Some(&mut collection))
-        });
+        let (previous, accepted_bytes) = {
+            let accepted = self
+                .shared
+                .accepted
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            (
+                accepted
+                    .as_ref()
+                    .filter(|previous| Some(previous.fence) == fence)
+                    .cloned(),
+                accepted.as_ref().map_or(0, |accepted| accepted.bytes),
+            )
+        };
+        let mut collection = Collection::new(self.shared.resident.clone(), previous, fence);
+        collection.work.accepted_bytes = accepted_bytes;
+        let result = self
+            .engine
+            .compare_reusing(request, before, after, Some(&mut collection));
         collection.work.retained_bytes = self.shared.resident.bytes();
         collection.work.peak_bytes = self.shared.resident.peak();
         collection.work.validation_fact_bytes = self.shared.resident.fact_bytes();
@@ -269,7 +241,6 @@ impl ReuseAttempt for Attempt {
         }
     }
     fn discard(&self) {
-        let _prepared = self.take_head();
         *self
             .staged
             .lock()

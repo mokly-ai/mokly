@@ -120,10 +120,6 @@ pub trait Comparison: Send + Sync {
         comparison_capture::capture(after, CaptureSide::Head).compare()
     }
 
-    /// May validate the head of the next comparison while the base prepares.
-    /// The next `compare_prepared` with the same request and head takes the result.
-    fn prepare_head(&self, _request: &ComparisonRequest, _after: &Arc<dyn RenderGeneration>) {}
-
     /// Classify a base whose complete validation and bounded capture already finished.
     /// The base can be the original source when its validation summary did not fit.
     fn compare_prepared(
@@ -135,7 +131,7 @@ pub trait Comparison: Send + Sync {
 }
 
 /// Immutable identity fence for one catalogue-wide comparison.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct ComparisonRequest {
     /// Effective configured or command-line base ref.
     pub base_ref: String,

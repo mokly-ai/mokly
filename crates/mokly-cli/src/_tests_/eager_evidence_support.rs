@@ -57,15 +57,22 @@ pub(super) struct Fixture {
 impl Fixture {
     /// Prepare the head, checkout, and working input mocks.
     pub(super) fn new() -> Self {
+        Self::with_checkout_change(false)
+    }
+
+    /// Change the checkout identity during the working input scan when requested.
+    pub(super) fn with_checkout_change(change_during_scan: bool) -> Self {
         let reads = Arc::new(Mutex::new(Vec::new()));
+        let current_checkout = Arc::new(Mutex::new(checkout()));
         let repository = Unimock::new(
             RepositoryMock::checkout_identity
                 .each_call(matching!(_))
                 .answers_arc({
                     let reads = reads.clone();
+                    let current_checkout = current_checkout.clone();
                     Arc::new(move |_, _| {
                         reads.lock().unwrap().push(Read::Checkout);
-                        Ok(checkout())
+                        Ok(current_checkout.lock().unwrap().clone())
                     })
                 }),
         );
@@ -76,6 +83,9 @@ impl Fixture {
                     let reads = reads.clone();
                     Arc::new(move |_, _, inputs, _| {
                         reads.lock().unwrap().push(Read::Working);
+                        if change_during_scan {
+                            current_checkout.lock().unwrap().digest = "changed checkout".into();
+                        }
                         Ok(inputs.clone())
                     })
                 }),

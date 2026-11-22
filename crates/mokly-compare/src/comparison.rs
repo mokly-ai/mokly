@@ -2,6 +2,7 @@
 
 use std::mem;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 use mokly_css::attribution;
 use mokly_css::parsed_cache::ParsedCssCache;
@@ -23,6 +24,7 @@ use crate::resource_memo::{Memo, ResourceMemo};
 use crate::reuse_collection::Collection;
 use crate::reuse_digest;
 use crate::use_case_impact;
+use crate::validation_head::Head;
 use crate::{affected, entry_classification, review_projection, root_impact, snapshots};
 
 /// Injected move policy and byte-bounded parse cache. It retains no parsed view set.
@@ -54,18 +56,53 @@ impl Engine {
         before: Arc<dyn RenderGeneration>,
         after: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
-        after.render_all().compare()?;
-        self.compare_validated(request, before, after, None)
+        self.compare_reusing(request, before, after, None)
     }
 
-    /// Compare two validated sides, with optional Serve comparison reuse.
-    pub(crate) fn compare_validated(
+    pub(crate) fn compare_reusing(
         &self,
         request: &ComparisonRequest,
         before: Arc<dyn RenderGeneration>,
         after: Arc<dyn RenderGeneration>,
         mut reuse: Option<&mut Collection>,
     ) -> Result<ComparisonResult> {
+        if let Some(reuse) = &mut reuse {
+            let previous = reuse
+                .previous
+                .as_ref()
+                .and_then(|classification| classification.fact_id());
+            let current = reuse
+                .candidate
+                .as_ref()
+                .and_then(|classification| classification.fact_id());
+            let head = Head::new(
+                after.clone(),
+                reuse.resident.clone(),
+                previous,
+                current,
+                reuse.previous.is_some(),
+            );
+            let validated = after.validate_head(&head).compare();
+            reuse.work.validation_documents = head.documents.load(Ordering::Relaxed);
+            reuse.work.validation_reused = head.reused.load(Ordering::Relaxed);
+            reuse.work.validation_walks = head.walks.load(Ordering::Relaxed);
+            validated?;
+            reuse.resident.with_optional([current, None], |arenas| {
+                if let Some(arena) = arenas[0] {
+                    arena.finish_inputs();
+                }
+            });
+            *reuse
+                .probes
+                .documents
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()) = head
+                .proofs
+                .into_inner()
+                .unwrap_or_else(|error| error.into_inner());
+        } else {
+            after.render_all().compare()?;
+        }
         let before_model = &before.catalogue().model;
         let after_model = &after.catalogue().model;
         let memo: Arc<dyn ResourceMemo> = Arc::new(Memo::new(

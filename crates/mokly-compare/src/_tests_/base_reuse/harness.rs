@@ -18,11 +18,11 @@ use crate::base_retention::{
 use crate::base_selection::PinnedBase;
 use crate::comparison_error::CompareResult;
 use crate::comparison_steps::{Step, StepsMock};
-use crate::comparison_types::{ComparisonMock, ComparisonRequest, ComparisonResult};
+use crate::comparison_types::{ComparisonMock, ComparisonResult};
 use crate::error::Result;
 use crate::source_failures::SourceFailures;
 
-use super::support::{RecordedComparison, config, provider_error, result};
+use super::support::{config, provider_error, result};
 
 #[derive(Default)]
 pub(super) struct State {
@@ -33,7 +33,6 @@ pub(super) struct State {
     pub(super) keeps: usize,
     pub(super) releases: usize,
     pub(super) comparisons: usize,
-    pub(super) head_preparations: Vec<(ComparisonRequest, Weak<dyn RenderGeneration>)>,
     pub(super) retired: Option<Weak<dyn RenderGeneration>>,
     pub(super) alive_at_prepare: usize,
     pub(super) steps: Vec<Step>,
@@ -223,14 +222,11 @@ impl Harness {
                     Ok(result(request, before, after))
                 })
             });
-        let comparison = Arc::new(RecordedComparison {
-            inner: match (fresh.is_some(), compares) {
-                (true, true) => Unimock::new((capture, compare)),
-                (true, false) => Unimock::new(capture),
-                (false, true) => Unimock::new(compare),
-                (false, false) => Unimock::new(()),
-            },
-            state: state.clone(),
+        let comparison = Arc::new(match (fresh.is_some(), compares) {
+            (true, true) => Unimock::new((capture, compare)),
+            (true, false) => Unimock::new(capture),
+            (false, true) => Unimock::new(compare),
+            (false, false) => Unimock::new(()),
         });
         let steps = Arc::new(Unimock::new(
             StepsMock::step.each_call(matching!(_)).answers_arc({

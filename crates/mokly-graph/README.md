@@ -379,9 +379,7 @@ retention disabled.
   validation or with its generation.
 - [`src/reference_index.rs`](./src/reference_index.rs) defines
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
-  referenced file of one generation and its reads of the style memo. The
-  index parses outside its lock and keeps the first stored edges and their
-  source identity.
+  referenced file of one generation and its reads of the style memo.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes encoded comparison inputs in route order. Its `encoder`
   method gives the encoder that the workers use, and its `remaining` method

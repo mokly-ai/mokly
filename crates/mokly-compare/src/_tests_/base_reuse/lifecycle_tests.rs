@@ -1,11 +1,10 @@
 //! Reuse avoids preparation and drops invalid state before one fresh attempt.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::types::RenderGenerationMock;
-use mokly_model::material::catalogue_key;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_steps::Step;
@@ -14,38 +13,6 @@ use crate::source_failures::SourceFailuresMock;
 
 use super::harness::Harness;
 use super::support::{failures, generation, kept, provider_error, warning};
-
-#[test]
-fn fresh_classification_prepares_the_pinned_head_once_across_base_reuse() {
-    let failure = Arc::new(Mutex::new(None));
-    let harness = Harness::new(
-        None,
-        Some((
-            generation(false, Arc::new(AtomicUsize::new(0))),
-            failures(failure.clone()),
-        )),
-        true,
-    );
-    let first = harness.classify().unwrap();
-    harness.classify().unwrap();
-    *failure.lock().unwrap() = Some(Arc::new(Error::UnsupportedManager));
-    assert!(matches!(harness.classify(), Err(Error::Base { .. })));
-
-    let state = harness.state.lock().unwrap();
-    assert_eq!(
-        state.head_preparations.len(),
-        1,
-        "only the first comparison prepares its head"
-    );
-    let (request, head) = &state.head_preparations[0];
-    assert_eq!(request.base_ref, "selected");
-    assert_eq!(request.base_commit, "a".repeat(40));
-    assert_eq!(
-        request.catalogue_identity,
-        catalogue_key("mokly.config.json")
-    );
-    assert!(Weak::ptr_eq(head, &Arc::downgrade(&first.after)));
-}
 
 #[test]
 fn two_classifications_prepare_and_capture_once_and_preserve_warnings_and_steps() {
@@ -180,7 +147,6 @@ fn failed_base_read_releases_before_one_fresh_attempt_and_stops_after_its_failur
             (2, 2, 0),
             "records_source_failure={records_source_failure}"
         );
-        assert!(state.head_preparations.is_empty());
         assert!(state.slot.is_none());
     }
 }
