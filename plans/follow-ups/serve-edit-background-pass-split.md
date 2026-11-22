@@ -25,9 +25,9 @@
   - `packages/mokly/src/sidecar/transport.ts:8`: the frame decoder.
   - `packages/mokly/src/sidecar/evaluate.ts:47`: the `new Function`
     evaluation of the bundle.
-  - `packages/mokly/src/sidecar/styles.ts:150` and
-    `packages/mokly/src/sidecar/registry-styles.ts:32`: the per-render parse of
-    the whole style registry.
+  - `packages/mokly/src/sidecar/registry-index.ts`: the style registry index
+    of C1, which since 2026-11-22 replaces the parse of the whole style
+    registry on each render.
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
@@ -45,7 +45,9 @@
   for the pull request of branch
   `calummoore/mokly-edit-background-render-olos`, and the safe parts of C for
   the next speed pull request, after that one merges. B3, D, E, and the V8
-  code cache stay open options with their reasons below.
+  code cache stay open options with their reasons below. The second pull
+  request of that branch applied H, W1, and C1 on 2026-11-22. C2, C3, W2, and
+  W4 wait for a choice of the orchestrator.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -71,7 +73,7 @@
     numbers. The baseline is `main` at
     `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467. Each number and each
     code fact of this Background and of that section is of that commit:
-    before PR #468, PR #469, and the cuts B1, B2, and B4.
+    before PR #468, PR #469, and the cuts B1, B2, B4, H, W1, and C1.
   - Each warm edit re-renders 44 views: 11 view paths in light and dark at
     two viewports. Each view makes one sidecar render.
   - The pass is CPU-bound. The core and the sidecars together use a median of
@@ -119,12 +121,14 @@
     10-edit sessions stayed equal, 3,110 to 3,109 MiB. A confirm check of the
     final code on 4 rounds measured `changes.classify` 190 to 152 ms.
 - **Problem:** After B1, B2, and B4, each warm mokly-cloud edit still spends
-  about 410 ms in the CPU-bound background pass, and the safe CPU cuts of the
-  pass are not built. The goal of 100 ms is not reached: the gate measured
-  -87 ms. Until 2026-11-22 the problem was: each warm edit spends about
-  400 ms in the CPU-bound background pass and about 160 ms in serial work
-  after its last view; no single cut saves 60 ms, and the cuts without a
-  protocol change reach about 75 ms only together.
+  about 410 ms in the CPU-bound background pass. The goal of 100 ms is not
+  reached: the gate measured -87 ms. H, W1, and C1, applied on 2026-11-22,
+  cut the first edit after a warm start and the style filter of each render.
+  The safe CPU cuts C2 and C3 of the pass are not built. Until 2026-11-22
+  the problem was: each warm edit spends about 400 ms in the CPU-bound
+  background pass and about 160 ms in serial work after its last view; no
+  single cut saves 60 ms, and the cuts without a protocol change reach about
+  75 ms only together.
 - **Impact if no action:** Each warm edit on mokly-cloud keeps the CPU of the
   pass that the safe parts of C would remove, about 15 to 29 ms. Until
   2026-11-22 the impact was: a background pass of about 320 to 540 ms,
@@ -181,7 +185,11 @@
     5.9 MB request for each generation while its restores wait. Index the style
     registry by rule, for each generation, with a fixed cap and a release at
     `dispose`, about 8 to 13 ms. Scan frames with the native `indexOf`, about
-    3 to 8 ms. Together about 15 to 29 ms. Effort: Medium.
+    3 to 8 ms. Together about 15 to 29 ms. Effort: Medium. The style registry
+    index was applied on 2026-11-22 as C1: each generation owns an index with
+    fixed caps of one text and 64 outputs, and the index ends with its
+    generation. The one encode of each restore request is C2, and the native
+    frame scan is C3.
     - Two more parts touch the seed path and the released-recipe release: a
       release without the lock-held encode and without the one-at-a-time
       disposes, about 3 to 8 ms, and a render-only restore, about 15 to
@@ -284,7 +292,7 @@
       fixes: encode or keep the details of the startup generation at idle
       after the first ready Changes, or reuse the stored bytes of the
       unchanged details. The item
-      [changes-detail-revision-copies.md](./changes-detail-revision-copies.md)
+      [changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md)
       holds this cost.
     - The background pass reads every unchanged page and Markdown document
       again after each edit. The item
@@ -293,7 +301,7 @@
       or Markdown documents.
   - 2026-11-22, the performance orchestrator, after the splits above and the
     watch split below: the next speed pull request is H of
-    [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
+    [changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md),
     W1 below, and C1, the style registry index of option C, in that order.
     C2, one encode of each restore request, and C3, the native frame scan,
     wait: about 7 to 16 ms together. W2 and W4 below stay open. W3 stays out.
@@ -317,7 +325,9 @@
       the two email logos, and the drain adds them to the live plan, so a
       write to them after a warm start is caught: in a real session a rebuild
       started 79 ms after the write. The drain does not add them to the
-      record. W1 fixes this cause.
+      record. W1 fixes this cause. Applied on 2026-11-22: the drain keeps a
+      copy of the record with the observed resources beside the adopted
+      record.
     - Resolution. On the edit of
       `docs/mockups/src/screens/product/settings/slug-editor.tsx`, the bundle
       reads one more resolver probe than the startup bundle of the same
@@ -350,16 +360,17 @@
 - **Recommendation:** F without B3, as chosen on 2026-11-22.
 - **Action:** fix after merge, apply C2 and C3 of option C, W2, or W4 when the
   orchestrator chooses them, because the orchestrator chose on 2026-11-22 to
-  wait with them. The next speed pull request applies H, W1, and C1. A later
-  proposal of B3 needs a protocol decision first. D, E, and the V8 code cache
-  need their own scope approval.
+  wait with them. The second pull request of the branch applied H, W1, and
+  C1 on 2026-11-22. A later proposal of B3 needs a protocol decision first.
+  D, E, and the V8 code cache need their own scope approval.
 
 ## Measurements of 2026-11-22
 
 All times are in milliseconds. They are local measurements with a probe, not
 official Changes timings, and the performance orchestrator owns the official
 measurements. Each number and each code fact of this section is of `main` at
-`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, and B4.
+`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, B4, H, W1, and
+C1.
 
 ### Method
 

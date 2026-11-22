@@ -19,9 +19,10 @@ with no change of a published byte, a warning, a diagnostic, or a requirement:
 
 The follow-up item
 [serve-edit-background-pass-split.md](./follow-ups/serve-edit-background-pass-split.md)
-holds the split of the background pass and the safe CPU cuts. The item
-[changes-detail-revision-copies.md](./follow-ups/changes-detail-revision-copies.md)
-holds the cost of the first edit.
+holds the split of the background pass and the safe CPU cuts. H fixes the
+item
+[changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md),
+which held the cost of the first edit, so this change deletes it.
 
 Contract owners:
 
