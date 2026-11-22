@@ -1,6 +1,6 @@
 # Site docs page hydration check flakes
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-22, from a local run of the `cloud-site` suite on the
   branch `calummoore/mokly-earlier-postcss-start-bdhv`, which does not change
@@ -28,6 +28,18 @@
   `locator('astro-island[ssr]')`. Expected: 0. Received: 2. Timeout: 5000ms."
   The failing project was `1440-light`. A rerun of the same test in all five
   viewports passed 5 of 5 at once.
+  - On 2026-11-22 the check failed again, in a complete local gate run of
+    commit `7db27be57` on the branch
+    `calummoore/fu-marked-folder-listing-fixes-8vkl`, which does not change
+    `apps/site`. Of 509 browser cases, only "`/docs/authoring/config/` meets
+    the deterministic accessibility contract" failed, in the project
+    `1440-dark`. The failure text was the same: "Error:
+    expect(locator).toHaveCount(expected) failed. Locator:
+    `locator('astro-island[ssr]')`. Expected: 0. Received: 2. Timeout:
+    5000ms." A rerun of that case alone passed 1 of 1 at once, in 655 ms. As
+    in the first failure, the suite ran directly after the `cloud-mockups` and
+    `cloud-app` suites on a 4-CPU machine. So the suspected source below fits
+    this failure too, but it stays unconfirmed.
 - **Impact if no action:** The cloud-site suite of the gate fails now and then
   without a site defect.
 - **Root question:** How does the check wait for the islands of a docs page to
