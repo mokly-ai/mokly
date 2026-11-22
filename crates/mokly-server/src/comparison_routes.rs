@@ -2,12 +2,13 @@
 
 use axum::http::{HeaderValue, StatusCode, Uri};
 use axum::response::Response;
-use mokly_model::namespace::viewer;
+use mokly_model::namespace::{FONT_FACES, snapshot_viewer, viewer};
 use mokly_model::paths::is_entry_path;
 use mokly_model::routes;
 use percent_encoding::percent_decode_str;
 
 use crate::application::Application;
+use crate::comparison_store::Comparisons;
 use crate::{response, security};
 
 pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Response> {
@@ -55,11 +56,36 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
             response::missing()
         });
     }
+    if let Some(face) = FONT_FACES
+        .into_iter()
+        .find(|face| snapshot_viewer(face) == file)
+    {
+        return Some(face_response(app, store.as_ref(), generation, face));
+    }
     Some(match store.file(generation, file).await {
         Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
         Ok(None) => response::missing(),
         Err(_) => unavailable(),
     })
+}
+
+/// A live generation's copy of a viewer face, answered from the viewer asset table.
+///
+/// The bundle neither stores nor charges the face. The read renews the generation
+/// like any other file of it, and an unknown or collected generation answers 404.
+fn face_response(
+    app: &Application,
+    store: &dyn Comparisons,
+    generation: &str,
+    face: &str,
+) -> Response {
+    let snapshot = app.publications.current();
+    match snapshot.assets.get(&viewer(face)) {
+        Some(file) if store.renew(generation) => {
+            response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone())
+        }
+        _ => response::missing(),
+    }
 }
 
 fn unavailable() -> Response {

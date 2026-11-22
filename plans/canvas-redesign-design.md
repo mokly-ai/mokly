@@ -220,6 +220,16 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
     Mono", so the cloud app's own Geist keeps its file.
   - Codex stopped on its usage limit, so a Claude subagent did the non-UI
     work.
+- Calls on Milestone 19, 2026-11-22:
+  - The renderer writes each document's two `@font-face` rules, with an
+    address relative to the document's route, so a build under a sub-path
+    works. The generated palette keeps only the font stacks.
+  - The closure check skips only those two font files, only in a Markdown
+    document's own stylesheet, with no query string.
+  - Each comparison generation holds copies of both fonts, 140,700 bytes,
+    which the cloud stores once per project. Serve answers the copies from
+    its own viewer files. The comparison treats both font addresses as the
+    same file.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 

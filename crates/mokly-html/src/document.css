@@ -1,6 +1,7 @@
 /* Package-owned Markdown typography matches the Browse document design. The
-   colours and the fonts come from the generated document_palette.css, which
-   precedes this file in the inlined stylesheet. */
+   colours and the font stacks come from the generated document_palette.css,
+   which precedes this file in the inlined stylesheet. The face rules at the
+   start of the stylesheet load the Geist and Geist Mono faces of the viewer. */
 html {
   background: var(--document-surface);
   color: var(--document-ink);

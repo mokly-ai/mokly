@@ -180,12 +180,14 @@ fn pure_moves_documents_pages_and_removed_titles_share_one_snapshot() {
             "---\ntitle: Screen\n---\n<h1>Same</h1>",
         ),
         ("specs/group/guide.md", "# Guide\n\nOld body\n"),
+        ("specs/notes.md", "# Notes\n\nSame body\n"),
         (
             "specs/removed.page.html",
             "---\ntitle: Page\n---\n<!doctype html><html><head><title>Page</title></head><body>Old</body></html>",
         ),
     ]);
     fixture.relocate("specs/group/old.screen.html", "specs/new.screen.html");
+    fixture.relocate("specs/notes.md", "specs/group/notes.md");
     fixture.remove("specs/group/guide.md");
     fixture.remove("specs/removed.page.html");
     fixture.edit("specs/group/_folder.json", "{\"title\":\"Current group\"}");
@@ -199,7 +201,23 @@ fn pure_moves_documents_pages_and_removed_titles_share_one_snapshot() {
         Some("group/old")
     );
     assert!(entry(&result, "new").reasons.is_empty());
-    assert_eq!(result.counts.moved, 1);
+    let notes = result
+        .entries
+        .iter()
+        .find(|entry| entry.path == "group/notes")
+        .unwrap();
+    assert_eq!(notes.previous_path.as_deref(), Some("notes"));
+    assert_eq!(notes.state, ReviewState::Unchanged);
+    assert_eq!(notes.reasons, Vec::<EntryChangeReason>::new());
+    assert_eq!(
+        notes
+            .documents
+            .iter()
+            .map(|document| (document.state, document.evidence.rules.len()))
+            .collect::<Vec<_>>(),
+        [(ReviewState::Unchanged, 0)]
+    );
+    assert_eq!(result.counts.moved, 2);
     let removed = result
         .snapshot
         .removed_entries

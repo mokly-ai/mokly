@@ -5,10 +5,14 @@ use serde_json::Value;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node};
-use crate::{error, markdown, url_safety};
+use crate::{document_style, error, url_safety};
 
 /// Validate the whole parsed document, including wrappers and its owned stylesheet.
-pub fn validate(nodes: &[Node]) -> Result<()> {
+///
+/// The one stylesheet must equal the stylesheet of the document's own `route`,
+/// inside the generated namespace, including that route's face addresses.
+pub fn validate(nodes: &[Node], route: &str) -> Result<()> {
+    let stylesheet = document_style::stylesheet(route);
     let mut styles = 0;
     for node in nodes {
         match node {
@@ -26,7 +30,7 @@ pub fn validate(nodes: &[Node]) -> Result<()> {
                     };
                     if element.name == "head" {
                         attributes(element, |_, _| false)?;
-                        head(&element.children, &mut styles)?;
+                        head(&element.children, &stylesheet, &mut styles)?;
                     } else if element.name == "body" {
                         attributes(element, |_, _| false)?;
                         body(&element.children, true)?;
@@ -53,14 +57,14 @@ pub fn validate(nodes: &[Node]) -> Result<()> {
     Ok(())
 }
 
-fn head(nodes: &[Node], styles: &mut usize) -> Result<()> {
+fn head(nodes: &[Node], stylesheet: &str, styles: &mut usize) -> Result<()> {
     for node in nodes {
         if let Node::Element(element) = node {
             match element.name.as_str() {
                 "title" | "style" => {
                     attributes(element, |_, _| false)?;
                     if element.name == "style" {
-                        if !matches!(element.children.as_slice(), [Node::Text(css)] if css == markdown::STYLES)
+                        if !matches!(element.children.as_slice(), [Node::Text(css)] if css == stylesheet)
                         {
                             return Err(invalid(
                                 Code::BuildInvalid,

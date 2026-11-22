@@ -179,9 +179,12 @@ impl ArtifactWorker for Prepared<'_> {
             .document
             .as_ref()
             .ok_or(InternalError::PreparedRootConsumed)?;
-        self.session
-            .walker()
-            .collect(route, &document.tree, &document.resources)
+        self.session.walker().collect(
+            route,
+            &document.tree,
+            &document.resources,
+            self.session.viewer_fonts(route),
+        )
     }
 }
 

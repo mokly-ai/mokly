@@ -41,6 +41,19 @@ impl UrlError {
 
 /// Decode a portable local reference and resolve it in the static namespace.
 pub fn local_target(source: &str, reference: &str) -> result::Result<Option<String>, UrlError> {
+    match artifact_target(source, reference)? {
+        Some(target) if !target.starts_with("static/") => Err(UrlError::Escape),
+        target => Ok(target),
+    }
+}
+
+/// Decode a portable local reference and resolve it from the artifact root, in any
+/// namespace. External, data, fragment-only, and empty references have no target,
+/// and a root-absolute reference or one that leaves the artifact root escapes.
+pub(crate) fn artifact_target(
+    source: &str,
+    reference: &str,
+) -> result::Result<Option<String>, UrlError> {
     if reference.starts_with('#') || reference.is_empty() {
         return Ok(None);
     }
@@ -54,9 +67,7 @@ pub fn local_target(source: &str, reference: &str) -> result::Result<Option<Stri
     }
     let path = reference.split(['?', '#']).next().unwrap_or(reference);
     let decoded = decode_path(path)?;
-    let target = routes::resolve(source, &decoded)
-        .filter(|path| path.starts_with("static/"))
-        .ok_or(UrlError::Escape)?;
+    let target = routes::resolve(source, &decoded).ok_or(UrlError::Escape)?;
     Ok(Some(target))
 }
 

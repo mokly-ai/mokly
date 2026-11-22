@@ -4,6 +4,13 @@
 pub const VIEWER_DIRECTORY: &str = "mokly-viewer";
 /// Generated document, stylesheet, and asset route namespace.
 pub const GENERATED_DIRECTORY: &str = "mokly-generated";
+/// The viewer's Geist and Geist Mono faces beneath its namespace, in that order.
+/// The shell and every Markdown document load them, and every comparison
+/// generation holds a copy of each for its snapshot documents.
+pub const FONT_FACES: [&str; 2] = [
+    "fonts/Geist-Variable.woff2",
+    "fonts/GeistMono-Variable.woff2",
+];
 
 /// Generate the two fixed runtime constants for browser path builders.
 pub fn typescript() -> String {
@@ -20,4 +27,12 @@ pub fn viewer(path: &str) -> String {
 /// A generated document or resource path relative to the artifact root.
 pub fn generated(route: &str) -> String {
     format!("static/{GENERATED_DIRECTORY}/{route}")
+}
+
+/// The copy of a viewer file beneath a comparison generation's snapshot root,
+/// relative to the generation. A snapshot side stands for `static/`, so the
+/// snapshot root stands for the artifact root, and a snapshot document's
+/// relative address of a viewer file resolves to this copy.
+pub fn snapshot_viewer(path: &str) -> String {
+    format!("snapshots/{}", viewer(path))
 }

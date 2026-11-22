@@ -33,138 +33,148 @@
     },
     {
       "path": "mokly-viewer/deployment.json",
-      "sha256": "c1b3f9208e4a68111371e3d26c5999368dc6250c3eb4d78dabee582552563e25",
+      "sha256": "3ca333dc3a7429f09ccb0834dda25663ffc4fb4b3c333ef56f2826d00e0dad51",
       "size": 111
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/finish/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/finish/index.desktop.html",
       "sha256": "9cae4c098c7a70a79bf3cffed29ad3f042414ac830d0991120eb0d3e1d97a134",
       "size": 593
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/finish/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/finish/index.mobile.html",
       "sha256": "9cae4c098c7a70a79bf3cffed29ad3f042414ac830d0991120eb0d3e1d97a134",
       "size": 593
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/guide/index.html",
-      "sha256": "0da23c9ce9aa8280ac9aaae2a5e713265a9b79427ed377fa34907d306c5d7c8a",
-      "size": 3253
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/guide/index.html",
+      "sha256": "85a1aa5ff8d12905b73239f305e1d6a094588ef9bb7c8912ae01e0c572fc88c1",
+      "size": 3744
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/draft/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/draft/index.desktop.html",
       "sha256": "2c443bc7ade45ecc591ee9439fbf9ee3618377a43b31b1fcdd7625c715475a37",
       "size": 311
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/draft/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/draft/index.mobile.html",
       "sha256": "2c443bc7ade45ecc591ee9439fbf9ee3618377a43b31b1fcdd7625c715475a37",
       "size": 311
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/index.desktop.html",
       "sha256": "310a3280e6fd8d6bcead6a87034be6580a686d15b583ba682692d500f7861d62",
       "size": 310
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/index.mobile.html",
       "sha256": "310a3280e6fd8d6bcead6a87034be6580a686d15b583ba682692d500f7861d62",
       "size": 310
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/published/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/published/index.desktop.html",
       "sha256": "4d6b3e1301d581f95300f1fd5ec0ed19c3eae2c3f5f620ad03c974a4ccd654b2",
       "size": 319
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/notice/published/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/notice/published/index.mobile.html",
       "sha256": "4d6b3e1301d581f95300f1fd5ec0ed19c3eae2c3f5f620ad03c974a4ccd654b2",
       "size": 319
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/page/index.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/page/index.html",
       "sha256": "4987c537cb3b3d83ba93af2d8ae6e31b7e63b2b9bdd74b14c3c0f96fedd8f1bc",
       "size": 142
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/start/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/start/index.desktop.html",
       "sha256": "ccb23b5f5dae61e019c9dfbadaaa08729d425a03f3b471334cafa9b71c649ccc",
       "size": 589
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/start/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/start/index.mobile.html",
       "sha256": "ccb23b5f5dae61e019c9dfbadaaa08729d425a03f3b471334cafa9b71c649ccc",
       "size": 589
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/after/mokly-generated/styles/catalogue/styles.css",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/after/mokly-generated/styles/catalogue/styles.css",
       "sha256": "99cad845f9d4cb601846f350656dd5f8611654d9b4c898e50c2259e56319b61b",
       "size": 30
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/finish/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/finish/index.desktop.html",
       "sha256": "879839395048afa5daae2b8370c8fe88c90377e73ae6c0f0ff1c608258e93add",
       "size": 592
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/finish/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/finish/index.mobile.html",
       "sha256": "879839395048afa5daae2b8370c8fe88c90377e73ae6c0f0ff1c608258e93add",
       "size": 592
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/guide/index.html",
-      "sha256": "776efc80049cbc5ec62f4f091a40ff28df736e58cb73add4579a3258df7d9fb0",
-      "size": 3262
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/guide/index.html",
+      "sha256": "e2f86aad5f171f4cb63e1c5c245a1d8b0a0d59cb547f4ad7b31c8445b9abeb07",
+      "size": 3753
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/draft/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/draft/index.desktop.html",
       "sha256": "7d52ed4a04d29d4e457c9ae2f6c33ebbcaf5363127ccc0206637b21c0130a037",
       "size": 310
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/draft/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/draft/index.mobile.html",
       "sha256": "7d52ed4a04d29d4e457c9ae2f6c33ebbcaf5363127ccc0206637b21c0130a037",
       "size": 310
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/index.desktop.html",
       "sha256": "c27598865ce39769a689882ab127963d34a6cc1937a08518fa1afeaa349ca396",
       "size": 309
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/index.mobile.html",
       "sha256": "c27598865ce39769a689882ab127963d34a6cc1937a08518fa1afeaa349ca396",
       "size": 309
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/published/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/published/index.desktop.html",
       "sha256": "32d0db6fa16e033580e463628a07e561f14049ca2c3b6d8b61b6eda6c0d8bfea",
       "size": 318
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/notice/published/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/notice/published/index.mobile.html",
       "sha256": "32d0db6fa16e033580e463628a07e561f14049ca2c3b6d8b61b6eda6c0d8bfea",
       "size": 318
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/page/index.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/page/index.html",
       "sha256": "02da6d4de5fa0720e9726edc7300a5e5a777439ee9360b4b19f4c1d1a4c3faad",
       "size": 142
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/start/index.desktop.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/start/index.desktop.html",
       "sha256": "91755817a8c2f8b9a84d62673c556768101bbd619c100e6aecf3964a88ded3fe",
       "size": 587
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/start/index.mobile.html",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/start/index.mobile.html",
       "sha256": "91755817a8c2f8b9a84d62673c556768101bbd619c100e6aecf3964a88ded3fe",
       "size": 587
     },
     {
-      "path": "mokly-viewer/diffs/generations/25bc9d99b569579e5993f4c8d7077fd079a317ef86d8b4be8b1106941d17efc5/snapshots/before/mokly-generated/styles/catalogue/styles.css",
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/before/mokly-generated/styles/catalogue/styles.css",
       "sha256": "3c141997146f202c2a4dc79ee98525efc2bdbf63a25f198a62d7bf1f879b66df",
       "size": 30
+    },
+    {
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/mokly-viewer/fonts/Geist-Variable.woff2",
+      "sha256": "3626eba547294501c8a4d662c7d9ea3b49734409a4c5a1ccf12fa86429b1687e",
+      "size": 69488
+    },
+    {
+      "path": "mokly-viewer/diffs/generations/e9f92155ca3ee996ffe1f5e58fa83b15cc52e58c3917566f001285a1c7cd4d5f/snapshots/mokly-viewer/fonts/GeistMono-Variable.woff2",
+      "sha256": "5d93ee62680bbec1abc5405c2658311f9396f6f9a821ef8551ec463887e600d4",
+      "size": 71212
     },
     {
       "path": "mokly-viewer/entries/finish.json",
@@ -218,7 +228,7 @@
     },
     {
       "path": "mokly-viewer/index.json",
-      "sha256": "c06b2d5bbfc92ed0440b2fff378355d3954ebe69229fba72bbf7e52442205bcd",
+      "sha256": "ef489ec4035ba45c9208ec0126f665b387d62b4b8b539ea2a73bb42c4a02ae86",
       "size": 11189
     },
     {
@@ -238,8 +248,8 @@
     },
     {
       "path": "static/mokly-generated/guide/index.html",
-      "sha256": "af7f95c1c8f73bb64a75b4df0379176d72d85e7f26259c9e981a8ac4878dd0fa",
-      "size": 3403
+      "sha256": "605a274ae873231292de03f754f28b4819c48b6c655ce89274d33669308d4b68",
+      "size": 3894
     },
     {
       "path": "static/mokly-generated/notice/draft/index.desktop.html",

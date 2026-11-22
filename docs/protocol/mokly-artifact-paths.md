@@ -121,7 +121,11 @@ path.
 These functions define the snapshot and preview layout. Every producer and
 reader of a comparison generation derives its paths from this layout. The
 catalogue index and the entry details carry paths and axes, never these file
-names.
+names. A generation also holds the viewer's faces at
+`snapshots/mokly-viewer/fonts/Geist-Variable.woff2` and
+`snapshots/mokly-viewer/fonts/GeistMono-Variable.woff2`, where the relative face
+address of a snapshot document resolves, under the
+[closure contract](./mokly-public-closure.md#serve-reads-and-the-static-output).
 
 ## Shell Documents And Browser Paths
 
