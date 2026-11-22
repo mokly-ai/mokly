@@ -92,7 +92,10 @@ test("a bar that is not interactive draws its controls as pictures and keeps its
   assert.equal(field.value, "tag:forms");
   assert.equal(field.id, "root-mb-search");
   assert.ok(header.querySelector(".mbk-search > [data-picker]"));
-  assert.ok(header.lastElementChild?.hasAttribute("data-end"));
+  // The end control ends the bar's end column, which ends the bar.
+  assert.ok(
+    header.lastElementChild?.lastElementChild?.hasAttribute("data-end"),
+  );
 });
 
 test("a bar that is not interactive keeps the addresses it is given", () => {

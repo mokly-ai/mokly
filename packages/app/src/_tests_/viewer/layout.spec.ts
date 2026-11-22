@@ -101,7 +101,8 @@ test("the top bar keeps controls readable and follows its own width", async ({
     const more = viewer.getByRole("button", { name: "More", exact: true });
     const publication = viewer.getByTestId("viewer-publication");
 
-    for (const width of [1024, 768]) {
+    // Both widths are below the switch width, so the bar is compact.
+    for (const width of [960, 768]) {
       await page.setViewportSize({ width, height: 900 });
       await expectReadableBar(viewer);
       await expect

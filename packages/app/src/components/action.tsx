@@ -11,14 +11,15 @@ import { useCompact } from "../layout/viewport";
 import { follow } from "../navigation/follow";
 import type { Write } from "../settings/write";
 
+import { LeadLabel } from "./action-label";
 import { Icon, icons } from "./icons";
 import type { IconName } from "./icons";
 import { PendingName } from "./pending-name";
 
-/** The glyphs an action may carry before its label. */
+/** The glyphs an action may carry before its label, or instead of it. */
 export type ActionIcon = Extract<
   IconName,
-  "github" | "start" | "retry" | "external" | "signOut"
+  "github" | "start" | "retry" | "external" | "signOut" | "history" | "settings"
 >;
 
 /** One tone vocabulary covers every surface, as the control contract requires. */
@@ -63,6 +64,24 @@ type ActionWrite =
 export type ActionProps = ActionSemantics &
   ActionWrite & {
     label: string;
+    /**
+     * A muted lead before the label, with a slash between them, such as a
+     * workspace before its project. It takes the place of the leading icon
+     * and the arrow. While the control's write works, it draws its working
+     * word alone.
+     */
+    lead?: string;
+    icon?: ActionIcon;
+    /**
+     * Draw the icon alone in a square box, with the label as the accessible
+     * name, unless an `accessibilityLabel` gives one, and that name as the
+     * tooltip. It needs an `icon`; without one the control draws its label.
+     * It takes the place of the lead, the arrow and the chevron. A control
+     * that switches between the two drawings keeps the prop set, `false` for
+     * the labelled one, so it stays mounted and keeps its focus.
+     */
+    iconOnly?: boolean;
+    arrow?: boolean;
     tone?: ActionTone;
     size?: "sm" | "md" | "lg";
     block?: boolean;
@@ -73,9 +92,7 @@ export type ActionProps = ActionSemantics &
      * it keeps its focus, and refuses the press because it is busy.
      */
     disabled?: boolean;
-    icon?: ActionIcon;
     chevron?: boolean;
-    arrow?: boolean;
     /**
      * Where a press goes when the action has no `onPress`: an application
      * route, pushed through the router, or an address outside the application
@@ -114,15 +131,20 @@ function primaryHoverLift({
  * application is still this one control: pressing it opens the address in
  * this tab. A primary action sits in its scoped theme, whose boundary draws
  * no box, so its hover keeps the resting fill and the lift above stands in
- * for a darker one.
+ * for a darker one. A control with a lead draws it through the Button's own
+ * content, and without an `accessibilityLabel` it is named by the lead, the
+ * slash and the label. An icon-only control draws the package Button's own
+ * square icon box, and the element around it carries its tooltip.
  */
 export function Action({
   label,
+  lead,
   tone = "secondary",
   size = "lg",
   block,
   disabled,
   icon,
+  iconOnly,
   chevron,
   arrow,
   href,
@@ -149,6 +171,9 @@ export function Action({
   // At rest, the control refuses a press for its own reason or while its
   // write has nothing to send. While the write works, `busy` refuses it.
   const refused = disabled === true || write?.sendable === false;
+  // The icon alone, named by the label, or by the caller's whole name.
+  const glyph = iconOnly === true && icon !== undefined;
+  const name = semantics.accessibilityLabel ?? label;
   const button = (
     <Button
       tone={tone === "quiet" ? "plain" : tone}
@@ -157,6 +182,7 @@ export function Action({
       disabled={running === undefined && refused}
       busy={running !== undefined}
       icon={icon ? icons[icon] : undefined}
+      shape={glyph ? "square" : undefined}
       // A compact surface clears the 44px touch target; a pointer surface
       // keeps the control's own scale and widens the hit area instead.
       minTouchTarget={compact ? touchTarget : undefined}
@@ -166,8 +192,25 @@ export function Action({
       numberOfLines={singleLine ? 1 : undefined}
       style={tone === "primary" ? primaryHoverLift : undefined}
       {...semantics}
+      accessibilityLabel={
+        glyph
+          ? name
+          : (semantics.accessibilityLabel ??
+            (lead === undefined ? undefined : lead + " / " + label))
+      }
+      content={
+        glyph || lead === undefined || running !== undefined ? undefined : (
+          <LeadLabel
+            lead={lead}
+            label={label}
+            tone={tone}
+            size={size}
+            chevron={chevron === true}
+          />
+        )
+      }
       trailing={
-        arrow ? (
+        glyph ? undefined : arrow ? (
           <Label
             color={
               tone === "primary" || tone === "danger" ? "inverse" : "default"
@@ -180,17 +223,27 @@ export function Action({
         ) : undefined
       }
     >
-      {label}
+      {glyph ? undefined : label}
     </Button>
   );
+  const themed =
+    tone === "primary" ? (
+      <SharedUiThemeProvider theme={primaryTheme}>
+        {button}
+      </SharedUiThemeProvider>
+    ) : (
+      button
+    );
   return (
     <>
-      {tone === "primary" ? (
-        <SharedUiThemeProvider theme={primaryTheme}>
-          {button}
-        </SharedUiThemeProvider>
+      {/* The tooltip's holder takes no box. It stays while the prop is set,
+          so a change between the two drawings keeps the control mounted. */}
+      {iconOnly === undefined ? (
+        themed
       ) : (
-        button
+        <span style={{ display: "contents" }} title={glyph ? name : undefined}>
+          {themed}
+        </span>
       )}
       {/* The status is out of the layout, so the form around the control
           inserts nothing while the write works, and the control keeps its

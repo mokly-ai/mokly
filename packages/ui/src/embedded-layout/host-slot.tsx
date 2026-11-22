@@ -15,6 +15,7 @@ export type HostSlotName =
   | "railStart"
   | "sidePanel"
   | "stageOverlay"
+  | "topBarCenter"
   | "topBarEnd"
   | "topBarStart";
 

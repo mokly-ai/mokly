@@ -149,10 +149,12 @@ components, and input changes with Before and Current props.
 A current component variant shows Used by and Affected lists from its parent's
 detail. A removed variant shows those lists from its own detail.
 
-Slots are optional React-owned content containers. `topBarStart` and
-`topBarEnd` adjoin the top bar; `railStart` and `railEnd` adjoin the
-catalogue. `changesStart` adds host content to the Changes tab of the right
-panel, after the change stepper and before Compared, as the
+Slots are optional React-owned content containers. The top bar places
+`topBarStart` after the Mokly mark, `topBarCenter` in its middle column, and
+`topBarEnd` after the search and the end control, in the order of the
+[shell design](./mokly-shell-design.md#layout); `railStart` and `railEnd`
+adjoin the catalogue. `changesStart` adds host content to the Changes tab of
+the right panel, after the change stepper and before Compared, as the
 [Changes tab](./mokly-changes-controls.md#changes-tab) defines. `sidePanel`
 adds a host-owned panel beside the stage with host-specified width; the host
 owns its responsive content and accessible controls. `stageOverlay` covers
@@ -166,13 +168,30 @@ viewer state; the shell never reaches into their DOM or event handlers. The
 separate marker layer positions host React content on exact instances; it is
 not a general stage overlay and exposes no raw geometry.
 
-The embedded top-bar host is one 48px row even when both top-bar slots are
-present. At a container width of 560px or less, the package-owned search field
-becomes a 30px square search control. Activating it opens a full-width search
-surface over the same row, focuses an input at least 160px wide down to a
-320px viewer, and leaves both host slot subtrees mounted. Close or Escape
-restores the search control and its focus. This behaviour follows the viewer
-container, not the browser viewport.
+The embedded top bar is one 48px row even when every top-bar slot is present.
+`topBarStart` fills the free room of the start column, so its content can fill
+it, and that content starts right after the mark. Above a container width of
+560px, while `topBarStart` holds content, `topBarCenter` sits in the middle of
+the bar, measured between its start and end padding, whatever the start and
+end slots hold. Decision: an optional centre slot that the bar places, not
+host content that centres itself inside `topBarStart`, because only the bar's
+own middle column stays centred whatever its other parts hold. While
+`topBarStart` is empty and `topBarCenter` holds content, `topBarCenter` takes
+the free room of the bar instead, at every container width, from right after
+the mark. Its content can grow into that room and truncate when the room runs
+short, and the end column keeps the width of its content. Decision: the free
+room, not the middle of the bar, because beside an empty start slot the equal
+outer columns give the empty start column as much room as the end column and
+squeeze the search at mid widths. At a container width of 560px or less, the
+compact bar holds, in one row: the menu button below the layout breakpoint,
+the mark, `topBarStart`, which takes the free room and lets its content
+truncate, `topBarCenter` where a host fills it, the search control, the end
+control and `topBarEnd`. There the package-owned search field becomes a 30px
+square search control. Activating it opens a full-width search surface over
+the same row, focuses an input at least 160px wide down to a 320px viewer, and
+leaves every host slot subtree mounted. Close or Escape restores the search
+control and its focus. This behaviour follows the viewer container, not the
+browser viewport.
 
 ## Theming And Ownership
 
@@ -187,8 +206,9 @@ instead renders one Appearance selector, and the
 [standalone appearance control](./mokly-viewer-appearance-standalone.md#choosing-a-value)
 defines what a choice changes.
 
-Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
-ownership follow the [shell design](./mokly-shell-design.md) and
+Import `@mokly/viewer/styles.css` once. Its public custom properties, the
+accent and the top-bar insets, and its internal ownership follow the
+[shell design](./mokly-shell-design.md#consumer-tunable-custom-properties) and
 [brand contract](./mokly-shell-brand.md).
 
 Every rule of `styles.css` comes from the

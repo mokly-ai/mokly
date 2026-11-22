@@ -114,6 +114,27 @@ test("the narrow search bar drops the name and fits its controls", async ({
   expect(modes.x).toBeGreaterThanOrEqual(0);
   expect(modes.x + modes.width).toBeLessThanOrEqual(390);
 
+  // Down to a 320px window the search keeps its room before Appearance.
+  await page.setViewportSize({ height: 700, width: 320 });
+  const narrow = await page.locator(".mbk-topbar").evaluate((element) => {
+    const box = (selector: string) =>
+      element.querySelector(selector)!.getBoundingClientRect().toJSON() as {
+        left: number;
+        right: number;
+        width: number;
+      };
+    return {
+      client: element.clientWidth,
+      scroll: element.scrollWidth,
+      search: box(".mbk-search"),
+      appearance: box(".mbk-appearance"),
+    };
+  });
+  expect(narrow.scroll).toBeLessThanOrEqual(narrow.client);
+  expect(narrow.search.width).toBeGreaterThanOrEqual(150);
+  expect(narrow.search.right).toBeLessThanOrEqual(narrow.appearance.left);
+  expect(narrow.appearance.right).toBeLessThanOrEqual(320);
+
   await page.setViewportSize({ height: 800, width: 1_280 });
   await expect(page.locator(".mbk-brand .mbk-name")).toBeVisible();
 });

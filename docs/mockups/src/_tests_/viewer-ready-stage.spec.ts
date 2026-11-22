@@ -10,6 +10,10 @@ import { currentScreen } from "../fixtures/viewer-catalogue";
 import { screenFile } from "./catalogue-paths";
 import type { Scheme } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
+import {
+  controlDocumentViolations,
+  controlPolicyInput,
+} from "./controls-document-policy";
 
 /**
  * The ready stage of a branch's publication: the view of the current screen
@@ -150,3 +154,31 @@ for (const viewport of ["desktop", "mobile"] as const)
       },
     );
   }
+
+test("History's glyph form keeps its name and its tooltip, which the control policy checks", async ({
+  page,
+}) => {
+  const input = controlPolicyInput(false);
+  const url = pathToFileURL(
+    screenFile("product/viewer/standalone", "desktop"),
+  ).href;
+  for (const [part, problem] of [
+    ["aria-label", "action label required"],
+    ["title", "icon-only action needs its name as its tooltip"],
+  ] as const) {
+    await page.goto(url);
+    expect(await page.evaluate(controlDocumentViolations, input)).toEqual([]);
+    await page
+      .locator('[title="History"] [aria-label="History"]')
+      .evaluate(
+        (node, name) =>
+          (name === "title" ? node.closest("[title]") : node)?.removeAttribute(
+            name,
+          ),
+        part,
+      );
+    expect(await page.evaluate(controlDocumentViolations, input)).toContain(
+      problem,
+    );
+  }
+});

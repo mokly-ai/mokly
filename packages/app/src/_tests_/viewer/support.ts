@@ -23,7 +23,9 @@ export interface PublishedProject {
 }
 
 /**
- * Wait until the published package has loaded its stage and both cloud slots.
+ * Wait until the published package has loaded its stage and the cloud slots
+ * that both compositions fill: the centre slot with the publication and the
+ * end slot. The compact bar leaves the start slot empty.
  * A transient index read is recovered through the stage card's own Try again
  * once; a repeated failure remains visible and fails the readiness assertion.
  * Tests that start from a settled viewer wait here; tests of loading, access,
@@ -42,7 +44,7 @@ export async function publishedViewerReady(page: Page): Promise<void> {
   }
   await expect(viewer).toBeVisible();
   await expect(viewer.locator(".mokly-stage-host")).toBeVisible();
-  for (const slot of ["topBarStart", "topBarEnd"]) {
+  for (const slot of ["topBarCenter", "topBarEnd"]) {
     await expect(
       viewer
         .locator(`[data-mokly-slot="${slot}"] [data-mkc-viewer-slot]`)

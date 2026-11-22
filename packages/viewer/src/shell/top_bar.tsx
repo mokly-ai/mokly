@@ -3,10 +3,11 @@
  * scope, and `@mokly/ui/top-bar` renders the bar, its compact search, and its
  * focus return. The tag picker sits in the search field, and the end control
  * is the standalone Appearance control or, in an embedded root of a catalogue
- * with dark previews, the preview scheme switch.
+ * with dark previews, the preview scheme switch. An embedded root passes the
+ * containers of its host's top-bar slots, which the bar places in its columns.
  */
 
-import { TopBar as TopBarView } from "@mokly/ui/top-bar";
+import { TopBar as TopBarView, type TopBarHost } from "@mokly/ui/top-bar";
 
 import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
@@ -19,6 +20,7 @@ import { SearchTagPicker } from "./tags.js";
 export function TopBar(props: {
   appearance?: AppearanceState;
   catalogue: Catalogue;
+  host?: TopBarHost;
 }) {
   const store = useShellStore();
   const navigationId = useShellIdentifier("mb-nav");
@@ -39,6 +41,7 @@ export function TopBar(props: {
           />
         )
       }
+      host={props.host}
       navigationId={navigationId}
       onDrawer={(open) => store.setDrawer(open)}
       onSearch={(query) => store.setSearch(query)}

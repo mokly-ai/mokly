@@ -1,9 +1,10 @@
 /**
  * The layout of an embedded viewer root: the shell's parts with the slots of
- * its host. The top host holds the top bar between two slots, the rail host
- * the navigation between two slots, and the stage host the main region with
- * the empty state and the stage overlay. The side panel follows the stage
- * host, and the marker and label layers lie over the root.
+ * its host. The top host holds the top bar, which places the host's three
+ * top-bar slots in its columns. The rail host holds the navigation between two
+ * slots, and the stage host the main region with the empty state and the
+ * stage overlay. The side panel follows the stage host, and the marker and
+ * label layers lie over the root.
  */
 
 import type {
@@ -23,6 +24,7 @@ import {
   SkipLink,
   type ShellResizing,
 } from "../shell-layout/shell-layout.js";
+import type { TopBarHost } from "../top-bar/top-bar.js";
 
 import {
   HostSlot,
@@ -36,6 +38,8 @@ export type { HostSlotName } from "./host-slot.js";
 /** The content that a host places in the slots of its root. */
 export interface EmbeddedSlots {
   topBarStart?: ReactNode;
+  /** The content in the centre of the top bar. */
+  topBarCenter?: ReactNode;
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;
@@ -112,7 +116,11 @@ export function EmbeddedLayout({
   statusId: string;
   /** The appearance that the root states, as `data-mokly-theme`. */
   theme: Appearance;
-  topBar: ReactNode;
+  /**
+   * Draws the top bar with the containers of the host's three top-bar slots,
+   * which the bar places in its columns.
+   */
+  topBar: (host: TopBarHost) => ReactNode;
 }) {
   return (
     <div
@@ -128,13 +136,23 @@ export function EmbeddedLayout({
     >
       <SkipLink href={mainHref} />
       <div className="mokly-top-host mbk-reset">
-        <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
-          {slots?.topBarStart}
-        </HostSlot>
-        {topBar}
-        <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
-          {slots?.topBarEnd}
-        </HostSlot>
+        {topBar({
+          start: (
+            <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
+              {slots?.topBarStart}
+            </HostSlot>
+          ),
+          center: (
+            <HostSlot name="topBarCenter" ref={slotRef?.("topBarCenter")}>
+              {slots?.topBarCenter}
+            </HostSlot>
+          ),
+          end: (
+            <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
+              {slots?.topBarEnd}
+            </HostSlot>
+          ),
+        })}
       </div>
       <ShellBody>
         <div className="mokly-rail-host mbk-reset">

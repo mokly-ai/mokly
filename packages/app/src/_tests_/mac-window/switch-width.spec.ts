@@ -11,9 +11,9 @@ import { clearMacWindow, emulateMacWindow, partsUnderButtons } from "./regions";
 
 /**
  * The narrowest bar that draws the full composition: the one switch width in
- * the shared `viewer.css`, 87rem, at the default text size.
+ * the shared `viewer-bar.css`, 63.875rem, at the default text size.
  */
-const switchWidth = 87 * 16;
+const switchWidth = 63.875 * 16;
 
 /**
  * How a variable label sits in its control: on one line, and cut with an

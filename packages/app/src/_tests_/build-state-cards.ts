@@ -136,7 +136,7 @@ export const published: BuildStateRow = {
     await expectSteps(page, ["Done", "Done", "Done"]);
     await expect(buildCard(page).locator(".fo-build-line")).toHaveCount(0);
     await expect(buildCard(page).getByRole("alert")).toHaveCount(0);
-    await expect(slotState(page)).toContainText("Published");
+    await expect(slotState(page)).toContainText("Ready · ");
     await page.getByTestId("build-open-catalogue").click();
     await page.waitForURL(
       (url) =>

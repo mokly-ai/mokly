@@ -10,53 +10,51 @@ viewer family draws its cloud parts in Canvas, around the `@mokly/ui` parts,
 which keep the package's own look.
 [`src/screens/product/viewer/published-viewer.tsx`](./src/screens/product/viewer/published-viewer.tsx)
 and its `published-*` modules own the published package stage with cloud slots
-filled. Their doc comments describe how the stage is drawn. Its rows and
-sample screen come from `src/fixtures/viewer-catalogue.ts`.
-`src/screens/product/shell.tsx` owns the cloud fallback
-and the blank stage behind settings. The rest of
-`src/screens/product/viewer/` owns the chrome, panel host, stage cards and six
-viewer screens,
+filled. Their doc comments describe how the stage is drawn. Its rows and sample
+screen come from `src/fixtures/viewer-catalogue.ts`.
+`src/screens/product/shell.tsx` owns the cloud fallback and the blank stage
+behind settings. The rest of `src/screens/product/viewer/` owns the chrome,
+panel host, stage cards and six viewer screens,
 `src/screens/product/page-parts.tsx` the section, state, pending, facts and
 action parts, `placeholders.tsx` and `placeholder-rows.tsx` the placeholder
 forms a wait draws, `src/screens/product/icons.tsx` the whole icon vocabulary,
 `src/screens/product/account/account-shell.tsx` the one account panel,
-`account/setup-progress.tsx` its progress strip,
-`account/entry-layout.tsx` the logged-out account boundary,
-`src/screens/product/host.ts` where a screen runs, a browser tab or the
-desktop app's window, and the glyph a GitHub action carries there,
-and `src/screens/product/settings/surface.tsx` the settings dialog and layer.
-Stylesheets follow the same split: `styles/product/folio.css` is the settings
-rail and the stage, `viewer.css` the top bar, its one switch width between
-the full and the compact composition, the stage cards and what a panel
+`account/setup-progress.tsx` its progress strip, `account/entry-layout.tsx` the
+logged-out account boundary, `src/screens/product/host.ts` where a screen runs,
+a browser tab or the desktop app's window, and the glyph a GitHub action carries
+there, and `src/screens/product/settings/surface.tsx` the settings dialog and
+layer. Stylesheets follow the same split: `styles/product/folio.css` is the
+settings rail and the stage, `viewer.css` the stage cards and what a panel
 holds, `viewer-bar.css`, which `viewer.css` imports, the viewer root as the
-bar's container, the compact composition and the application's probe of the
-switch, `viewer-depiction.css`, which only the drawing's module
-imports, its sample screen and its comparison message, `overlays.css` the
-registered panel frame and a row's three-dot menu,
-`records.css` the panels, rows, facts and people,
-`inventory.css` the sections,
-forms, notes and states, `builds.css` the build card a cloud build draws in the
-stage, `settings.css` the overlay, `account.css` the account
-panel with its canvas, progress strip and mobile edge-to-edge rules,
-`entry.css` the shared sign-in/sign-up field stack, `recovery.css` the
-app-owned unmatched-path state, and `chrome.css` the wordmark, identity and
-heading primitives. The viewer drawings add the Canvas sheets, which their own
-modules import and the application never loads: `viewer-canvas.css` the bar,
-the publication pill, the avatar and the search hint,
-`viewer-canvas-stage.css` the dot-grid stage and its floating cards,
-`viewer-canvas-depth.css` the shade, the radius and the shadows of a floating
-surface, `viewer-canvas-panels.css` the panels that the slots open,
-`viewer-canvas-menu.css` the open account and More menus,
-`viewer-canvas-check.css` the Mokly check beside the stage, and
+bar's container with the window insets that it gives the package bar, both
+compositions of the top bar with the centre's caps and the pill's label widths,
+its one switch width, the label rule of History and Settings and the
+application's probes, `viewer-controls.css`, which `viewer.css` imports too, the
+bar's publication pill, the reader's avatar and the account control,
+`viewer-depiction.css`, which only the drawing's module imports, its sample
+screen and its comparison message, `overlays.css` the registered panel frame and
+a row's three-dot menu, `records.css` the panels, rows, facts and people,
+`inventory.css` the sections, forms, notes and states, `builds.css` the build
+card a cloud build draws in the stage, `settings.css` the overlay, `account.css`
+the account panel with its canvas, progress strip and mobile edge-to-edge rules,
+`entry.css` the shared sign-in/sign-up field stack, `recovery.css` the app-owned
+unmatched-path state, and `chrome.css` the wordmark, identity and heading
+primitives. The viewer drawings add the Canvas sheets, which their own modules
+import and the application never loads: `viewer-canvas.css` the inline end of
+the bar's two compositions and the search hint, `viewer-canvas-stage.css` the
+dot-grid stage and its floating cards, `viewer-canvas-depth.css` the shade, the
+radius and the shadows of a floating surface, `viewer-canvas-panels.css` the
+panels that the slots open, `viewer-canvas-menu.css` the open account and More
+menus, `viewer-canvas-check.css` the Mokly check beside the stage, and
 `viewer-canvas-settings.css` the settings dialog over the viewer.
-`styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of
-the Canvas palette, copied from the `geist` npm package, with their SIL Open
-Font License. `styles/site/fonts/` holds the Instrument Serif face of the
-site's drawn demo app with its license. `styles/email/` holds the
-inbox frame and byte-identical copies of the published logo lockups in
+`styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of the
+Canvas palette, copied from the `geist` npm package, with their SIL Open Font
+License. `styles/site/fonts/` holds the Instrument Serif face of the site's
+drawn demo app with its license. `styles/email/` holds the inbox frame and
+byte-identical copies of the published logo lockups in
 `apps/site/public/brand/`. The message table uses separate borders with zero
-spacing so the card border follows its corners.
-Its fixtures use the app callback, sign-in and member settings routes.
+spacing so the card border follows its corners. Its fixtures use the app
+callback, sign-in and member settings routes.
 
 Every standard owning screen in the account, recovery, settings and viewer
 families draws its canonical state, with Empty, Loading and Error as its

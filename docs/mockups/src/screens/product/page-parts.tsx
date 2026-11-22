@@ -2,98 +2,16 @@ import type { ReactNode } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
-import type { ButtonIcon } from "../../components/button";
 import { ErrorDetails } from "../../components/error-details";
-import { Button } from "../../entries/design/button.mockup";
 
 import { Icon, iconSize } from "./icons";
 import type { IconName } from "./icons";
 import { SectionHeading } from "./navigation";
 import type { SectionTitle } from "./navigation";
-import { PendingName, WaitRegion } from "./placeholders";
+import { WaitRegion } from "./placeholders";
 import type { WaitProps } from "./placeholders";
 
-/** Navigation keeps the registered Button's geometry and source attribution. */
-export function Action({
-  label,
-  instance,
-  to,
-  tone = "secondary",
-  disabled = false,
-  busy,
-  icon,
-  chevron,
-  size,
-  block,
-  singleLine,
-  whole,
-}: {
-  label: string;
-  /**
-   * The whole value, when the label is a shortened form of it. It becomes the
-   * control's accessible name, so a reader who cannot hover — which is every
-   * reader on the surface where a label is shortened — still reaches it.
-   */
-  whole?: string;
-  instance?: string;
-  to?: string;
-  tone?: "primary" | "secondary" | "quiet" | "danger";
-  disabled?: boolean;
-  /**
-   * The operation this control's write runs, while it runs. The control keeps
-   * its place with the busy spinner, `label` is its working word, and a screen
-   * reader hears the operation; the form around it inserts nothing.
-   */
-  busy?: string;
-  icon?: ButtonIcon;
-  chevron?: boolean;
-  size?: "sm" | "md" | "lg";
-  block?: boolean;
-  /** Keep a constrained chrome label on one ellipsized line. */
-  singleLine?: boolean;
-}) {
-  // The registered Button refuses an `undefined` prop value, so each optional
-  // prop reaches it only when the caller gave it one.
-  const optional = {
-    ...(whole === undefined ? {} : { accessibilityLabel: whole }),
-    ...(busy === undefined ? {} : { busy: true }),
-    ...(icon === undefined ? {} : { icon }),
-    ...(chevron === undefined ? {} : { chevron }),
-    ...(size === undefined ? {} : { size }),
-    ...(block === undefined ? {} : { block }),
-    ...(singleLine === undefined ? {} : { singleLine }),
-  };
-  const control = (
-    <Button
-      moklyInstance={
-        instance ??
-        label
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")
-      }
-      label={label}
-      tone={tone}
-      disabled={disabled}
-      {...optional}
-    />
-  );
-  // A busy control refuses the press, so it leads nowhere while it works.
-  if (busy !== undefined)
-    return (
-      <>
-        {control}
-        <PendingName label={busy} hidden />
-      </>
-    );
-  return to && !disabled ? (
-    <MockLink asChild to={to}>
-      {control}
-    </MockLink>
-  ) : (
-    control
-  );
-}
+export { Action } from "./action";
 
 /**
  * The way back to the previous step: an ink link with the back glyph, never a

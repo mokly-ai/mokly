@@ -10,7 +10,7 @@
   - **More:** The compact viewer menu that groups cloud actions.
   - **Metadata:** The publication detail text, author, commit identifier, and GitHub link beside the publication trigger.
 - **Background:** `docs/protocol/cloud/viewer-chrome.md` requires a pull request to show its number, title, author, and GitHub link. Its compact composition instead keeps the publication trigger and the five existing More actions. The author and GitHub link live in metadata that the compact CSS hides. On 2026-11-03 the user selected that existing phone bar whenever the bar is too narrow for full controls.
-- **Problem:** The own-width switch extends the hidden author and GitHub link to normal desktop bars below `87rem`. More carries neither the author nor a GitHub action. Phones already had the same mismatch. A shortened publication trigger retains its complete accessible name, but that name contains no author or GitHub destination.
+- **Problem:** The own-width switch extends the hidden author and GitHub link to desktop bars below the one switch width in `docs/mockups/styles/product/viewer-bar.css`, `63.875rem` at the default text size. More carries neither the author nor a GitHub action. Phones already had the same mismatch. A shortened publication trigger retains its complete accessible name, but that name contains no author or GitHub destination.
 - **Impact if no action:** Readers lose direct pull-request attribution and navigation at narrow desktop widths. The current compact and publication identity requirements disagree.
 - **Root question:** How should a compact viewer expose pull request context?
 - **Options:**

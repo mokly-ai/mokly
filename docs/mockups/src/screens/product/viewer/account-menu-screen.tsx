@@ -33,7 +33,7 @@ function MenuDestinations() {
 
 /**
  * The account menu open over the ready viewer. A desktop drawing draws both
- * bars for the switch in `viewer.css` to show one, so it opens the account
+ * bars for the switch in `viewer-bar.css` to show one, so it opens the account
  * menu under the full bar's avatar and More under the compact bar's More,
  * each in a layer that only its composition shows. Both are non-modal
  * popovers, so the viewer beneath stays the page, with its own heading and

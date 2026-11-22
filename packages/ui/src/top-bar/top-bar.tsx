@@ -1,9 +1,11 @@
 /**
- * The shell's 48px top bar: the menu that opens the catalogue drawer, the
- * brand, the catalogue search, and an end control. Search stays available at
+ * The shell's 48px top bar, in three columns. The start column holds the menu
+ * that opens the catalogue drawer, the brand, and a host's start slot; the
+ * centre column holds a host's centre slot; the end column holds the catalogue
+ * search, the end control, and a host's end slot. Search stays available at
  * every width. Where the bar is too narrow for the field, the search toggle
- * opens a compact search over the bar; the field then takes focus, and
- * Escape or Close search returns focus to the toggle.
+ * opens a compact search over the bar; the field then takes focus, and Escape
+ * or Close search returns focus to the toggle.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -12,10 +14,22 @@ import { IconSvg, SearchIcon } from "../icons/icons.js";
 
 import { Brand, Menu } from "./top-bar-links.js";
 
+/**
+ * The containers of an embedded root's top-bar host slots. The bar places
+ * `start` after the brand, `center` in its centre column, and `end` after the
+ * end control.
+ */
+export interface TopBarHost {
+  start: ReactNode;
+  center: ReactNode;
+  end: ReactNode;
+}
+
 export function TopBar({
   brandHref,
   drawerOpen,
   end,
+  host,
   interactive = true,
   menuHref,
   navigationId,
@@ -34,6 +48,11 @@ export function TopBar({
   drawerOpen: boolean;
   /** The control at the end of the bar, such as the appearance selector. */
   end?: ReactNode;
+  /**
+   * The containers of an embedded root's host slots. A bar with host slots
+   * draws the mark alone, because the host's start slot follows it.
+   */
+  host?: TopBarHost | undefined;
   /**
    * Whether a menu without an address is a button and the compact search
    * draws its toggle and Close search, as they do by default. A static
@@ -75,58 +94,73 @@ export function TopBar({
       data-compact-search={compactSearchOpen ? "open" : "closed"}
       data-search=""
     >
-      <Menu
-        drawerOpen={drawerOpen}
-        href={menuHref}
-        interactive={interactive}
-        navigationId={navigationId}
-        onDrawer={onDrawer}
-      />
-      <Brand href={brandHref ?? (interactive ? "/" : undefined)} />
-      {interactive ? (
-        <button
-          aria-controls={searchId}
-          aria-expanded={compactSearchOpen}
-          aria-label="Search catalogue"
-          className="mbk-search-toggle mbk-reset"
-          onClick={() => setCompactSearchOpen(true)}
-          ref={searchToggle}
-          type="button"
-        >
-          <SearchIcon />
-        </button>
-      ) : null}
-      <div className="mbk-search mbk-reset">
-        <SearchIcon />
-        <input
-          aria-label="Search catalogue"
-          className="mbk-reset"
-          data-mokly-search=""
-          id={searchId}
-          onChange={(event) => onSearch?.(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setCompactSearchOpen(false);
-          }}
-          placeholder="Search catalogue…"
-          ref={searchInput}
-          type="search"
-          value={query}
+      <div className="mbk-topbar-start mbk-reset">
+        <Menu
+          drawerOpen={drawerOpen}
+          href={menuHref}
+          interactive={interactive}
+          navigationId={navigationId}
+          onDrawer={onDrawer}
         />
-        {tagPicker}
+        <Brand
+          href={brandHref ?? (interactive ? "/" : undefined)}
+          wordmark={host === undefined}
+        />
+        {host?.start}
       </div>
-      {interactive ? (
-        <button
-          aria-label="Close search"
-          className="mbk-search-close mbk-reset"
-          onClick={() => setCompactSearchOpen(false)}
-          type="button"
-        >
-          <IconSvg size={16}>
-            <path d="m6 6 12 12M18 6 6 18" />
-          </IconSvg>
-        </button>
+      {host ? (
+        <div className="mbk-topbar-center mbk-reset">{host.center}</div>
       ) : null}
-      {end}
+      <div className="mbk-topbar-end mbk-reset">
+        {/* The compact search opens this group over the whole bar. */}
+        <div className="mbk-search-group mbk-reset">
+          {interactive ? (
+            <button
+              aria-controls={searchId}
+              aria-expanded={compactSearchOpen}
+              aria-label="Search catalogue"
+              className="mbk-search-toggle mbk-reset"
+              onClick={() => setCompactSearchOpen(true)}
+              ref={searchToggle}
+              type="button"
+            >
+              <SearchIcon />
+            </button>
+          ) : null}
+          <div className="mbk-search mbk-reset">
+            <SearchIcon />
+            <input
+              aria-label="Search catalogue"
+              className="mbk-reset"
+              data-mokly-search=""
+              id={searchId}
+              onChange={(event) => onSearch?.(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setCompactSearchOpen(false);
+              }}
+              placeholder="Search"
+              ref={searchInput}
+              type="search"
+              value={query}
+            />
+            {tagPicker}
+          </div>
+          {interactive ? (
+            <button
+              aria-label="Close search"
+              className="mbk-search-close mbk-reset"
+              onClick={() => setCompactSearchOpen(false)}
+              type="button"
+            >
+              <IconSvg size={16}>
+                <path d="m6 6 12 12M18 6 6 18" />
+              </IconSvg>
+            </button>
+          ) : null}
+        </div>
+        {end}
+        {host?.end}
+      </div>
     </header>
   );
 }
