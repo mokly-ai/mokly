@@ -2,15 +2,14 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-22, from milestone 4 (B2) of the plan
-  `plans/serve-edit-serial-work-cuts.md` on branch
+- **Added:** 2026-11-22, from the head validation cut (B2) of branch
   `calummoore/mokly-edit-background-render-olos`.
 - **Location:** `crates/mokly-compare/src/comparison_reuse.rs:120` (the fields
   of the `review.compare-views` span), `crates/mokly-compare/src/comparison_reuse.rs:41`
   (`validation_documents` in the collection work), and
   `crates/mokly-cli/src/serve_trace_fields.rs:116` (the mapping of the span
   fields to camel-case timing record fields).
-- **Reason:** A design call of 2026-11-22 in that plan kept the existing
+- **Reason:** A design call of 2026-11-22 on that branch kept the existing
   `validationDocuments` count for its pull request, because an existing test
   requires it, and left a separate counter for later.
 
