@@ -1,20 +1,37 @@
-//! Live authored reads compare exact bytes before reusing an immutable capture.
+//! Live authored reads retain validators while responses own their captures.
 
 use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader, Read, Take};
+use std::io::{self, Read, Write};
 use std::sync::{Arc, Mutex};
 
-use crate::asset_streams::{AssetVersion, AtOffset, SharedAsset};
+use axum::http::{HeaderMap, HeaderValue};
+use xxhash_rust::xxh3::Xxh3Default;
+
+use crate::asset_file::{AtOffset, CaptureWriter, GzipMetadata, gzip_copy};
+use crate::asset_streams::{AssetOwner, AssetVersion, GzipDelivery, SharedAsset};
 use crate::error::{InternalError, Result};
+use crate::json_delivery::Gzip;
 use crate::public_read::{OpenedFile, PublicReader};
+use crate::validator;
 
-const CHUNK: usize = 64 * 1024;
-type VersionSlot = Arc<Mutex<Option<Arc<AssetVersion>>>>;
+type RecordSlot = Arc<Mutex<Option<Arc<AuthoredRecord>>>>;
 
-/// Retain the last served version of each reached authored route in this generation.
+/// Retain one validator record per reached authored route in this generation.
 #[derive(Default)]
-pub(crate) struct AuthoredAssets(Mutex<BTreeMap<String, VersionSlot>>);
+pub(crate) struct AuthoredAssets(Mutex<BTreeMap<String, RecordSlot>>);
+
+#[derive(Eq, PartialEq)]
+struct Fingerprint {
+    length: u64,
+    xxh3: u128,
+}
+
+/// The identity and gzip validators of one version. No file lives in this record.
+pub(crate) struct AuthoredRecord {
+    fingerprint: Fingerprint,
+    etag: HeaderValue,
+    gzip: Mutex<Option<GzipMetadata>>,
+}
 
 impl AuthoredAssets {
     /// Open through the live policy while serialized with other reads of this route.
@@ -32,60 +49,101 @@ impl AuthoredAssets {
             *current = None;
             return Ok(None);
         };
-        let captured = match capture(source, current.as_deref()) {
-            Ok(captured) => captured,
-            Err(source) => return Err(InternalError::Io { source }.into()),
+        let hash_while_copying = current
+            .as_ref()
+            .is_none_or(|record| record.fingerprint.length != source.length);
+        let (opened, fingerprint, tag) = capture(source, hash_while_copying)?;
+        let record = match current.as_ref() {
+            Some(record) if record.fingerprint == fingerprint => record.clone(),
+            _ => {
+                let etag = match tag {
+                    Some(tag) => tag,
+                    None => validator::reader(&mut AtOffset::new(&opened, 0))?,
+                };
+                let record = Arc::new(AuthoredRecord {
+                    fingerprint,
+                    etag,
+                    gzip: Mutex::default(),
+                });
+                *current = Some(record.clone());
+                record
+            }
         };
-        if let Some(captured) = captured {
-            *current = Some(Arc::new(AssetVersion::new(captured)?));
-        }
-        Ok(current.as_ref().map(|version| SharedAsset {
-            version: version.clone(),
-            _capture: None,
+        Ok(Some(SharedAsset {
+            version: Arc::new(AssetVersion::with_tag(opened, record.etag.clone())),
+            owner: AssetOwner::Authored(record),
         }))
     }
 }
 
-/// Return a fresh capture only when a byte or the length differs. The previous
-/// capture supplies any prefix already confirmed equal, so Serve reads the source once.
-fn capture(source: OpenedFile, current: Option<&AssetVersion>) -> io::Result<Option<OpenedFile>> {
-    let mut reader = BufReader::with_capacity(CHUNK, source.file.take(source.length));
-    let old = current.filter(|version| version.opened.length == source.length);
-    let prefix = match old {
-        Some(old) => equal_prefix(&mut reader, &old.opened)?,
-        None => 0,
-    };
-    if old.is_some() && prefix == source.length {
-        return Ok(None);
+impl AuthoredRecord {
+    /// Revalidate or encode one request's own gzip copy on a blocking thread.
+    pub(crate) async fn gzip(
+        self: &Arc<Self>,
+        source: Arc<AssetVersion>,
+        headers: &HeaderMap,
+    ) -> Option<GzipDelivery> {
+        let record = self.clone();
+        let headers = headers.clone();
+        Gzip::default()
+            .get(move || record.encode(&source.opened, &headers))
+            .await
     }
 
-    let mut file = tempfile::tempfile()?;
-    if let Some(old) = old {
-        io::copy(&mut AtOffset::new(&old.opened, 0).take(prefix), &mut file)?;
+    fn encode(&self, source: &OpenedFile, headers: &HeaderMap) -> Result<GzipDelivery> {
+        let known = {
+            let mut metadata = self.gzip.lock().unwrap_or_else(|error| error.into_inner());
+            match metadata.as_ref() {
+                Some(known) => known.clone(),
+                None => {
+                    let (file, record) = gzip_copy(source, None)?;
+                    *metadata = Some(record.clone());
+                    return Ok(GzipDelivery::File(Arc::new(AssetVersion::with_tag(
+                        file,
+                        record.etag,
+                    ))));
+                }
+            }
+        };
+        if validator::matches_tag(headers, &known.etag) {
+            return Ok(GzipDelivery::Unchanged(known.etag));
+        }
+        let (file, record) = gzip_copy(source, Some(known))?;
+        Ok(GzipDelivery::File(Arc::new(AssetVersion::with_tag(
+            file,
+            record.etag,
+        ))))
     }
-    let count = io::copy(&mut reader, &mut file)?;
-    Ok(Some(OpenedFile {
-        file,
-        length: prefix + count,
-        content_type: source.content_type,
-    }))
 }
 
-fn equal_prefix(reader: &mut BufReader<Take<File>>, old: &OpenedFile) -> io::Result<u64> {
-    let mut previous = AtOffset::new(old, 0);
-    let mut buffer = vec![0; CHUNK];
-    let mut offset = 0;
+fn capture(
+    source: OpenedFile,
+    hash: bool,
+) -> Result<(OpenedFile, Fingerprint, Option<HeaderValue>)> {
+    let mut input = source.file.take(source.length);
+    let (output, xxh3) = match copy_and_fingerprint(&mut input, hash) {
+        Ok(captured) => captured,
+        Err(source) => return Err(InternalError::Io { source }.into()),
+    };
+    let (file, tag) = output.finish(source.content_type)?;
+    let fingerprint = Fingerprint {
+        length: file.length,
+        xxh3,
+    };
+    Ok((file, fingerprint, tag))
+}
+
+fn copy_and_fingerprint(input: &mut dyn Read, hash: bool) -> io::Result<(CaptureWriter, u128)> {
+    let mut output = CaptureWriter::new(hash)?;
+    let mut xxh3 = Xxh3Default::new();
+    let mut buffer = vec![0; 64 * 1024];
     loop {
-        let bytes = reader.fill_buf()?;
-        let length = bytes.len();
-        if length == 0 {
-            return Ok(offset);
+        let count = input.read(&mut buffer)?;
+        if count == 0 {
+            return Ok((output, xxh3.digest128()));
         }
-        previous.read_exact(&mut buffer[..length])?;
-        if bytes != &buffer[..length] {
-            return Ok(offset);
-        }
-        offset += length as u64;
-        reader.consume(length);
+        let bytes = &buffer[..count];
+        output.write_all(bytes)?;
+        xxh3.update(bytes);
     }
 }

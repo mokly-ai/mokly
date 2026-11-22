@@ -191,7 +191,7 @@ impl PublicationWriter for SharedPublication {
         {
             return false;
         }
-        state.requests = state.requests.rebuild(&current.routes, &snapshot.routes);
+        state.requests = state.requests.rebuild(&snapshot.routes);
         state.publish(snapshot);
         true
     }

@@ -164,22 +164,12 @@ impl GzipFiles {
     }
 
     /// Encode one file in a detached blocking job that survives a cancelled request.
-    pub(crate) async fn get(&self, path: &str, body: JsonBody) -> Option<Bytes> {
-        self.slot(path).get(move || body.compress()).await
-    }
-
-    /// Reserve a slot while the file is still retained by its owner.
-    pub(crate) fn slot(&self, path: &str) -> Arc<Gzip<Bytes>> {
-        let mut files = self.0.lock().unwrap_or_else(|error| error.into_inner());
-        files.entry(path.to_owned()).or_default().clone()
-    }
-
-    /// Drop cached representations of comparison snapshots when their files expire.
-    pub(crate) fn remove_snapshots(&self) {
-        self.0
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .retain(|path, _| !path.starts_with("snapshots/"));
+    async fn get(&self, path: &str, body: JsonBody) -> Option<Bytes> {
+        let slot = {
+            let mut files = self.0.lock().unwrap_or_else(|error| error.into_inner());
+            files.entry(path.to_owned()).or_default().clone()
+        };
+        slot.get(move || body.compress()).await
     }
 }
 

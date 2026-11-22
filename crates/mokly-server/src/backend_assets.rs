@@ -1,23 +1,22 @@
 //! Weak route entries share one capture only while requests or responses own it.
 
-use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
 
-use axum::http::HeaderValue;
 use mokly_graph::types::RenderGeneration;
+use mokly_model::namespace::generated;
 
 use crate::asset_streams::{
-    AssetRequest, AssetResult, AssetStreams, AssetVersion, Capture, SharedAsset,
+    AssetOwner, AssetRequest, AssetResult, AssetStreams, AssetVersion, Capture, SharedAsset,
 };
 use crate::assets::content_type;
 use crate::backend::GraphDocuments;
 use crate::error::{Result, ServerError};
+use crate::validator;
 
 struct Request {
     capture: Arc<Capture>,
     generation: Arc<dyn RenderGeneration>,
     streams: Arc<dyn AssetStreams>,
-    tags: Arc<Mutex<BTreeMap<String, HeaderValue>>>,
     route: String,
 }
 
@@ -42,7 +41,6 @@ impl GraphDocuments {
             capture,
             generation: self.generation.clone(),
             streams: self.streams.clone(),
-            tags: self.asset_tags.clone(),
             route: route.into(),
         })
     }
@@ -64,7 +62,9 @@ impl AssetRequest for Request {
                 }
                 Ok(Some(SharedAsset {
                     version: version.clone(),
-                    _capture: Some(self.capture.clone()),
+                    owner: AssetOwner::Generated {
+                        _capture: self.capture.clone(),
+                    },
                 }))
             }
             Ok(None) => Ok(None),
@@ -83,20 +83,12 @@ impl Request {
         let opened = self
             .streams
             .capture(asset.as_mut(), &content_type(&self.route))?;
-        let tag = self
-            .tags
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(&self.route)
-            .cloned();
-        if let Some(etag) = tag {
-            return Ok(Some(AssetVersion::with_tag(opened, etag)));
-        }
-        let version = AssetVersion::new(opened)?;
-        self.tags
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .insert(self.route.clone(), version.etag.clone());
-        Ok(Some(version))
+        let digest = match self.generation.resource_digest(&generated(&self.route)) {
+            Ok(Some(digest)) => digest,
+            Ok(None) => return Err(ServerError::InvalidAssets),
+            Err(source) => return Err(ServerError::Render { source }),
+        };
+        let etag = validator::recorded_digest(&digest)?;
+        Ok(Some(AssetVersion::with_tag(opened, etag)))
     }
 }

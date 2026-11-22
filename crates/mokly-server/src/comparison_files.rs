@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Weak};
 
 use async_trait::async_trait;
-use axum::body::Bytes;
 use mokly_model::namespace::GENERATED_DIRECTORY;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::routes;
@@ -14,8 +13,6 @@ use crate::changes::Accepted;
 use crate::comparison_requests::receive;
 use crate::comparison_store::{self, Bundle, Comparisons, MemoryComparisons, Outcome};
 use crate::error::{Result, ServerError};
-use crate::json_delivery::{Gzip, JsonBody};
-use crate::response;
 
 #[async_trait]
 impl Comparisons for MemoryComparisons {
@@ -41,7 +38,6 @@ impl Comparisons for MemoryComparisons {
             .and_modify(|bundle| bundle.accepted = Some(Arc::downgrade(&accepted)))
             .or_insert_with(|| Bundle {
                 files,
-                gzip: Arc::default(),
                 accepted: Some(Arc::downgrade(&accepted)),
                 touched: self.clock.milliseconds(),
             });
@@ -53,27 +49,65 @@ impl Comparisons for MemoryComparisons {
     }
 
     async fn file(&self, generation: &str, path: &str) -> Result<Option<File>> {
-        Ok(self
-            .lookup(generation, path, false)
-            .await?
-            .map(|(file, _)| file))
-    }
-
-    async fn gzip_file(
-        &self,
-        generation: &str,
-        path: &str,
-    ) -> Result<Option<(File, Option<Bytes>)>> {
-        let Some((file, slot)) = self.lookup(generation, path, true).await? else {
-            return Ok(None);
+        let capture = {
+            self.collect();
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            let Some(bundle) = state.bundles.get_mut(generation) else {
+                return Ok(None);
+            };
+            if let Some(file) = bundle.files.get(path) {
+                bundle.touched = self.clock.milliseconds();
+                return Ok(Some(file.clone()));
+            }
+            let Some(accepted) = bundle.accepted.as_ref().and_then(Weak::upgrade) else {
+                return Ok(None);
+            };
+            let Some(route) = path.strip_prefix(&routes::comparison_snapshot(
+                ReviewSide::Before,
+                &format!("{GENERATED_DIRECTORY}/"),
+            )) else {
+                return Ok(None);
+            };
+            let Some(plan) = accepted.result.before.plans().get(route) else {
+                return Ok(None);
+            };
+            let Some(entry) = accepted
+                .result
+                .before
+                .catalogue()
+                .model
+                .entries
+                .get(plan.entry)
+            else {
+                return Ok(None);
+            };
+            if !accepted
+                .result
+                .snapshot
+                .removed_entries
+                .iter()
+                .any(|removed| removed.entry.metadata().path == entry.metadata.path)
+            {
+                return Ok(None);
+            }
+            bundle.touched = self.clock.milliseconds();
+            (accepted.clone(), entry.metadata.path.clone())
         };
-        let gzip = if let Some(slot) = slot {
-            let body = JsonBody::Whole(file.bytes.clone());
-            slot.get(move || body.compress()).await
-        } else {
-            None
+        let pending = match self.begin(capture.0, capture.1, true, false) {
+            Ok(pending) => pending,
+            Err(_) => return Err(ServerError::ComparisonCapacity),
         };
-        Ok(Some((file, gzip)))
+        match receive(pending).await {
+            Ok(_) => {
+                let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                Ok(state
+                    .bundles
+                    .get(generation)
+                    .and_then(|bundle| bundle.files.get(path))
+                    .cloned())
+            }
+            Err(_) => Err(ServerError::ChangesUnavailable),
+        }
     }
 
     fn renew(&self, generation: &str) -> bool {
@@ -124,77 +158,5 @@ impl Comparisons for MemoryComparisons {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         state.bundles.clear();
         state.selections.clear();
-    }
-}
-
-type Stored = (File, Option<Arc<Gzip<Bytes>>>);
-
-impl Bundle {
-    fn delivery(&self, path: &str, file: &File, gzip: bool) -> Stored {
-        let slot = (gzip && response::is_json(&file.content_type)).then(|| self.gzip.slot(path));
-        (file.clone(), slot)
-    }
-}
-
-impl MemoryComparisons {
-    async fn lookup(&self, generation: &str, path: &str, gzip: bool) -> Result<Option<Stored>> {
-        let capture = {
-            self.collect();
-            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-            let Some(bundle) = state.bundles.get_mut(generation) else {
-                return Ok(None);
-            };
-            if let Some(file) = bundle.files.get(path) {
-                bundle.touched = self.clock.milliseconds();
-                return Ok(Some(bundle.delivery(path, file, gzip)));
-            }
-            let Some(accepted) = bundle.accepted.as_ref().and_then(Weak::upgrade) else {
-                return Ok(None);
-            };
-            let Some(route) = path.strip_prefix(&routes::comparison_snapshot(
-                ReviewSide::Before,
-                &format!("{GENERATED_DIRECTORY}/"),
-            )) else {
-                return Ok(None);
-            };
-            let Some(plan) = accepted.result.before.plans().get(route) else {
-                return Ok(None);
-            };
-            let Some(entry) = accepted
-                .result
-                .before
-                .catalogue()
-                .model
-                .entries
-                .get(plan.entry)
-            else {
-                return Ok(None);
-            };
-            if !accepted
-                .result
-                .snapshot
-                .removed_entries
-                .iter()
-                .any(|removed| removed.entry.metadata().path == entry.metadata.path)
-            {
-                return Ok(None);
-            }
-            bundle.touched = self.clock.milliseconds();
-            (accepted.clone(), entry.metadata.path.clone())
-        };
-        let pending = match self.begin(capture.0, capture.1, true, false) {
-            Ok(pending) => pending,
-            Err(_) => return Err(ServerError::ComparisonCapacity),
-        };
-        match receive(pending).await {
-            Ok(_) => {
-                let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-                Ok(state.bundles.get(generation).and_then(|bundle| {
-                    let file = bundle.files.get(path)?;
-                    Some(bundle.delivery(path, file, gzip))
-                }))
-            }
-            Err(_) => Err(ServerError::ChangesUnavailable),
-        }
     }
 }

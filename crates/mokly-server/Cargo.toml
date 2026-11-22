@@ -37,6 +37,7 @@ unimock = "0.6.8"
 cap-fs-ext = "4.0.3"
 tempfile = "3.27.0"
 flate2 = "1.1.11"
+xxhash-rust = { version = "0.8.19", default-features = false, features = ["xxh3"] }
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }

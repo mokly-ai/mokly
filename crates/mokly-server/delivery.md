@@ -26,8 +26,8 @@ for each route, so concurrent requests of its generation join one capture.
 A request that waits for a worker already holds its capture. The first
 admitted request verifies the asset through `dyn AssetStreams` into an
 unnamed temporary file. The other requests wait for that result and share it.
-The first capture of a route in a generation computes the `ETag` of the
-verified file, and later captures of that route reuse it.
+After verification succeeds, Serve uses the generation's recorded SHA-256
+digest to format the `ETag`. The lookup reads only generation metadata.
 A failure keeps its original type, so the CLI still requests a new generation
 after an input change. Each response reads the shared file at its
 own byte offset, with `read_at` on Unix and `seek_read` on Windows. The last
@@ -39,15 +39,20 @@ measurements.
 
 ## Authored files
 
-An authored GET or HEAD opens the confined handle and compares its length and
-bytes with the last capture of that route in the same generation. Equal bytes
-reuse that capture and its `ETag`. Other bytes become a new capture in an
-unnamed temporary file, with a new `ETag`. Each `GraphDocuments` keeps the
-last capture of every authored route that it serves. A read that finds no
-readable file drops the capture of its route. These captures have no
-aggregate byte bound. The response streams from the capture without a
-file-size limit, and HEAD sends no bytes. Serve delivers document and preview
-HTML without frame probe injection.
+An authored GET or HEAD reads the confined handle once into an unnamed
+temporary file and computes the XXH3-128 digest of those bytes. Each
+`GraphDocuments` retains one record per served route of its public closure.
+The record holds the length, digest, and SHA-256 `ETag` of the identity form.
+It also holds the gzip length and SHA-256 `ETag` once Serve encodes that form.
+The records drop with their render generation.
+
+Equal lengths and XXH3-128 digests reuse the record. A changed version gets
+a new SHA-256 tag. Serve hashes during the capture when it already knows
+the version changed. Otherwise it hashes the private copy after the digest
+shows a change. A 200 streams the request's copy, with no new read of the
+source and no file-size limit. A 304 discards staging before it replies.
+HEAD sends no bytes. The last owner of a response copy closes it. Serve
+delivers document and preview HTML without frame probe injection.
 
 ## Cache headers
 
@@ -72,12 +77,13 @@ When the request accepts gzip, a JSON body goes out with
 publication compresses each of its JSON files at most once, at a fast level,
 on the first request that accepts gzip. Concurrent requests wait for that one
 encoding and share its bytes. The bytes drop with their publication, after its
-last response ends. A comparison generation also compresses each JSON file at
-most once. It drops the gzip bytes with that file. These bytes do not count
-against the comparison store bound. A temporary preview compresses its
-JSON file on each request and keeps no compressed copy. An authored or
-generated JSON asset keeps its gzip copy in a second temporary file, with its
-own `ETag`. Compression runs on a blocking thread and takes no render worker.
+last response ends. Each comparison and temporary preview JSON response
+uses its own encoding. The stores retain only the identity bytes. An authored
+JSON response uses a request-owned gzip file and takes its tag and length
+from the matching record when available. A matching gzip validator returns
+304 without encoding again. A generated JSON asset computes the gzip tag
+while writing the encoded copy. Compression runs on a blocking thread and
+takes no render worker.
 A failed encoding sends the identity body. Error bodies always use the
 identity encoding.
 

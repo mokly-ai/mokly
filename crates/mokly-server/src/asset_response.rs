@@ -7,7 +7,8 @@ use axum::body::{Body, Bytes};
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::Response;
 
-use crate::asset_streams::{AtOffset, SharedAsset};
+use crate::asset_file::AtOffset;
+use crate::asset_streams::{AssetOwner, GzipDelivery, SharedAsset};
 use crate::{json_delivery, response, validator};
 
 trait AssetChunks: Send + Sync {
@@ -17,14 +18,27 @@ trait AssetChunks: Send + Sync {
 /// Revalidate a captured asset or stream its bytes from independent offsets.
 pub(crate) async fn deliver(mut asset: SharedAsset, headers: &HeaderMap) -> Response {
     let json = response::is_json(&asset.version.opened.content_type);
-    let mut encoded = false;
-    if json
-        && json_delivery::accepts_gzip(headers)
-        && let Some(gzip) = asset.version.gzip().await
-    {
-        asset.version = gzip;
-        encoded = true;
-    }
+    let encoding = if json && json_delivery::accepts_gzip(headers) {
+        match &asset.owner {
+            AssetOwner::Generated { .. } => asset.version.gzip().await.map(GzipDelivery::File),
+            AssetOwner::Authored(record) => record.gzip(asset.version.clone(), headers).await,
+        }
+    } else {
+        None
+    };
+    let encoded = match encoding {
+        Some(GzipDelivery::Unchanged(etag)) => {
+            let mut response = response::empty(StatusCode::NOT_MODIFIED);
+            validator::set_cache_headers(&mut response, etag);
+            json_delivery::vary(&mut response);
+            return response;
+        }
+        Some(GzipDelivery::File(gzip)) => {
+            asset.version = gzip;
+            true
+        }
+        None => false,
+    };
     let mut response = validator::deliver(headers, asset.version.etag.clone(), || {
         let mut response = stream(asset);
         if encoded {

@@ -9,7 +9,7 @@ use mokly_model::routes;
 use percent_encoding::percent_decode_str;
 
 use crate::application::Application;
-use crate::json_delivery::{self, JsonBody};
+use crate::json_delivery::JsonBody;
 use crate::{response, security};
 
 pub(crate) async fn route(
@@ -62,18 +62,12 @@ pub(crate) async fn route(
             response::missing()
         });
     }
-    let file = if json_delivery::accepts_gzip(headers) {
-        store.gzip_file(generation, file).await
-    } else {
-        store
-            .file(generation, file)
-            .await
-            .map(|file| file.map(|file| (file, None)))
-    };
-    Some(match file {
-        Ok(Some((file, gzip))) => {
+    Some(match store.file(generation, file).await {
+        Ok(Some(file)) => {
             let mut response = if response::is_json(&file.content_type) {
-                JsonBody::Whole(file.bytes).response(gzip)
+                JsonBody::Whole(file.bytes)
+                    .temporary_response(headers)
+                    .await
             } else {
                 response::bytes(StatusCode::OK, &file.content_type, file.bytes)
             };

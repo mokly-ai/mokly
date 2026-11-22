@@ -5,6 +5,7 @@
 mod accept;
 pub mod application;
 mod application_evidence;
+mod asset_file;
 mod asset_response;
 pub mod assets;
 mod authored_assets;

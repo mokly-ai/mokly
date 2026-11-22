@@ -12,7 +12,7 @@ use crate::response;
 
 /// Hash a buffered resource once for its immutable version.
 pub(crate) fn bytes(bytes: &[u8]) -> Result<HeaderValue> {
-    tag(&Sha256::digest(bytes))
+    hash(&Sha256::digest(bytes))
 }
 
 /// Hash a captured file with a bounded buffer.
@@ -21,16 +21,22 @@ pub(crate) fn reader(reader: &mut dyn Read) -> Result<HeaderValue> {
     let mut hash = Sha256::new();
     loop {
         match reader.read(&mut buffer) {
-            Ok(0) => return tag(&hash.finalize()),
+            Ok(0) => return self::hash(&hash.finalize()),
             Ok(length) => hash.update(&buffer[..length]),
             Err(source) => return Err(InternalError::Io { source }.into()),
         }
     }
 }
 
-fn tag(hash: &[u8]) -> Result<HeaderValue> {
+/// Format the binary SHA-256 result as a strong entity tag.
+pub(crate) fn hash(hash: &[u8]) -> Result<HeaderValue> {
     let hash: String = hash.iter().map(|byte| format!("{byte:02x}")).collect();
-    match HeaderValue::try_from(format!("\"{hash}\"")) {
+    recorded_digest(&hash)
+}
+
+/// Format the graph's recorded lowercase SHA-256 digest without hashing the file again.
+pub(crate) fn recorded_digest(digest: &str) -> Result<HeaderValue> {
+    match HeaderValue::try_from(format!("\"{digest}\"")) {
         Ok(value) => Ok(value),
         Err(source) => Err(InternalError::EntityTag { source }.into()),
     }
@@ -47,14 +53,20 @@ pub(crate) fn deliver(
     } else {
         body()
     };
+    set_cache_headers(&mut response, tag);
+    response
+}
+
+/// Add the strong validator and revalidation policy to either status.
+pub(crate) fn set_cache_headers(response: &mut Response, tag: HeaderValue) {
     response.headers_mut().insert(ETAG, tag);
     response
         .headers_mut()
         .insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-    response
 }
 
-fn matches_tag(headers: &HeaderMap, tag: &HeaderValue) -> bool {
+/// Check the client's validators using weak comparison for GET and HEAD.
+pub(crate) fn matches_tag(headers: &HeaderMap, tag: &HeaderValue) -> bool {
     headers.get_all(IF_NONE_MATCH).iter().any(|value| {
         let field = value.as_bytes().trim_ascii();
         let mut quoted = false;

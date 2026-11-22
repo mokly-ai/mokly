@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, Weak};
 
 use axum::body::Bytes;
-use axum::http::HeaderValue;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
@@ -37,7 +36,7 @@ pub trait Documents: Send + Sync {
     fn background_read(&self, _route: &str) -> Result<Option<BackgroundRead>> {
         Ok(None)
     }
-    /// Read a declared generated document or resource.
+    /// Read a declared generated document.
     fn generated(&self, route: &str) -> Result<Option<File>>;
     /// Read or reuse a rendered stylesheet and its validator.
     fn stylesheet(&self, route: &str) -> Result<Option<Stylesheet>>;
@@ -69,7 +68,6 @@ pub struct GraphDocuments {
     pub(crate) locks: BTreeMap<String, Arc<Mutex<Option<CatalogueUsage>>>>,
     /// Only live requests and responses own the capture and its temporary file.
     pub(crate) asset_copies: Mutex<BTreeMap<String, Weak<Capture>>>,
-    pub(crate) asset_tags: Arc<Mutex<BTreeMap<String, HeaderValue>>>,
     pub(crate) stylesheets: Mutex<BTreeMap<String, StylesheetSlot>>,
     authored_assets: AuthoredAssets,
 }
@@ -96,7 +94,6 @@ impl GraphDocuments {
             warnings,
             locks,
             asset_copies: Mutex::new(BTreeMap::new()),
-            asset_tags: Arc::default(),
             stylesheets: Mutex::default(),
             authored_assets: AuthoredAssets::default(),
         }
@@ -149,13 +146,10 @@ impl Documents for GraphDocuments {
     }
 
     fn generated(&self, route: &str) -> Result<Option<File>> {
-        if self.locks.contains_key(route) {
-            return Ok(self.render(route, true)?.map(|artifact| File {
-                bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
-                content_type: artifact.content_type.clone(),
-            }));
-        }
-        self.generated_resource(route)
+        Ok(self.render(route, true)?.map(|artifact| File {
+            bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
+            content_type: artifact.content_type.clone(),
+        }))
     }
     fn stylesheet(&self, route: &str) -> Result<Option<Stylesheet>> {
         self.read_stylesheet(route)
@@ -199,13 +193,6 @@ impl Documents for GraphDocuments {
 }
 
 impl GraphDocuments {
-    fn generated_resource(&self, route: &str) -> Result<Option<File>> {
-        if !self.has_resource(route) {
-            return Ok(None);
-        }
-        self.read_resource(route)
-    }
-
     fn read_stylesheet(&self, route: &str) -> Result<Option<Stylesheet>> {
         let slot = {
             let mut files = self

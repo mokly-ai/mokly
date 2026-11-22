@@ -16,7 +16,7 @@ use crate::background_capacity::FixedCapacity;
 use crate::background_read::BackgroundRead;
 use crate::delivery_support::{application, request, router};
 use crate::publication::{PublicationWriter, Publications, SharedPublication};
-use crate::publication_support::{ready, snapshot};
+use crate::publication_support::{ready, snapshot_with_screens};
 use crate::work::{Work, WorkMock, Workers};
 
 use super::support::{route, warning};
@@ -28,7 +28,10 @@ struct Trace {
     published: Vec<String>,
 }
 
-async fn rebuild_and_run(count: usize, publications: Arc<SharedPublication>) -> Arc<Mutex<Trace>> {
+async fn rebuild_and_run(
+    numbers: &[usize],
+    publications: Arc<SharedPublication>,
+) -> Arc<Mutex<Trace>> {
     let trace = Arc::new(Mutex::new(Trace::default()));
     let documents = Unimock::new((
         DocumentsMock::background_read
@@ -63,7 +66,8 @@ async fn rebuild_and_run(count: usize, publications: Arc<SharedPublication>) -> 
             })),
     ));
     let revision = publications.current().index.revision + 1;
-    let origin = snapshot(count, Arc::new(documents)).at_revision(revision);
+    let origin =
+        snapshot_with_screens(numbers.iter().copied(), Arc::new(documents)).at_revision(revision);
     assert!(publications.replace(origin.clone()));
     let mut updates = publications.subscribe().updates;
     let (_stop, mut stopping) = watch::channel(false);
@@ -79,14 +83,14 @@ async fn rebuild_and_run(count: usize, publications: Arc<SharedPublication>) -> 
     work.stop().await;
     let current = publications.current();
     assert_eq!(current.index.revision, revision + 1);
-    assert_eq!(current.completed.len(), count);
+    assert_eq!(current.completed.len(), numbers.len());
     trace
 }
 
 #[tokio::test]
 async fn recent_document_requests_start_first_and_publish_in_catalogue_order() {
-    let old = snapshot(
-        5,
+    let old = snapshot_with_screens(
+        [0, 2, 3, 4, 6],
         Arc::new(
             Unimock::new(DocumentsMock::usage.each_call(matching!(_)).returns(None))
                 .no_verify_in_drop(),
@@ -96,32 +100,36 @@ async fn recent_document_requests_start_first_and_publish_in_catalogue_order() {
     let mut app = application(publications.clone());
     app.work = Arc::new(Unimock::new((
         WorkMock::generated
-            .each_call(matching!((_, path) if path == &route(2) || path == &route(3)))
+            .each_call(
+                matching!((_, path) if [2, 3, 4].into_iter().any(|number| path == &route(number))),
+            )
             .answers(&|_, _, _| {
                 Ok(Some(File {
                     bytes: "<p>requested</p>".into(),
                     content_type: "text/html; charset=utf-8".into(),
                 }))
             })
-            .n_times(3),
+            .n_times(4),
         WorkMock::generated
-            .some_call(matching!((_, path) if path == &route(5)))
+            .some_call(matching!((_, path) if path == &route(1)))
             .returns(Ok(None)),
     )));
     let router = router(app);
     for (method, number, status) in [
         (Method::GET, 3, StatusCode::OK),
         (Method::HEAD, 2, StatusCode::OK),
+        (Method::GET, 4, StatusCode::OK),
         (Method::GET, 3, StatusCode::OK),
-        (Method::GET, 5, StatusCode::NOT_FOUND),
+        (Method::GET, 1, StatusCode::NOT_FOUND),
     ] {
         let path = format!("/{}", generated(&route(number)));
         assert_eq!(request(&router, method, &path, &[]).await.status(), status);
     }
 
-    let trace = rebuild_and_run(6, publications.clone()).await;
-    let catalogue: Vec<_> = (0..6).map(route).collect();
-    let requested: Vec<_> = [3, 2, 0, 1, 4, 5].into_iter().map(route).collect();
+    let rebuilt = [0, 1, 2, 3, 6, 7];
+    let trace = rebuild_and_run(&rebuilt, publications.clone()).await;
+    let catalogue: Vec<_> = rebuilt.into_iter().map(route).collect();
+    let requested: Vec<_> = [3, 2, 0, 1, 6, 7].into_iter().map(route).collect();
     {
         let trace = trace.lock().unwrap();
         assert_eq!(trace.lookups, requested);
@@ -135,7 +143,7 @@ async fn recent_document_requests_start_first_and_publish_in_catalogue_order() {
         );
     }
 
-    let next = rebuild_and_run(6, publications).await;
+    let next = rebuild_and_run(&rebuilt, publications).await;
     assert_eq!(next.lock().unwrap().lookups, catalogue);
 }
 

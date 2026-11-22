@@ -16,6 +16,34 @@ use crate::public_read::PublicReaderMock;
 use crate::warnings::{RenderWarningsMock, TracingWarnings};
 
 #[test]
+fn generated_document_reads_do_not_return_stylesheet_resources() {
+    let route = "styles/css/base.css";
+    let graph = Unimock::new((
+        RenderGenerationMock::plans
+            .each_call(matching!())
+            .returns(BTreeMap::new()),
+        RenderGenerationMock::resource_routes
+            .each_call(matching!())
+            .returns(vec![route.into()]),
+        GeneratedResourcesMock::resource
+            .some_call(matching!("styles/css/base.css"))
+            .returns(Ok(Some(b"main{color:red}".to_vec()))),
+    ))
+    .no_verify_in_drop();
+    let documents = GraphDocuments::new(
+        Arc::new(graph),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+    );
+    let file = documents.generated(route).unwrap();
+    assert!(
+        file.is_none(),
+        "document read returned a resource: {file:?}"
+    );
+}
+
+#[test]
 fn authored_reads_check_one_membership_and_open_one_handle_per_request() {
     for count in [8, 32] {
         let generation = Unimock::new((

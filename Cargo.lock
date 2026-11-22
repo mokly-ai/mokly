@@ -3338,6 +3338,7 @@ dependencies = [
  "tower",
  "tracing",
  "unimock",
+ "xxhash-rust",
 ]
 
 [[package]]

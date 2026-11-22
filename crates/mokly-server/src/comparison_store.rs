@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, Weak};
 
 use async_trait::async_trait;
-use axum::body::Bytes;
 use mokly_graph::write_activity::WriteActivity;
 use tokio::sync::{Semaphore, watch};
 use tokio::task::JoinHandle;
@@ -16,7 +15,6 @@ use crate::comparison_capture::{Capturer, MAX_BYTES};
 use crate::diagnostics::Diagnostics;
 use crate::entropy::Entropy;
 use crate::error::{Result, ServerError};
-use crate::json_delivery::GzipFiles;
 use crate::publication::Publications;
 
 /// Idle milliseconds before `collect` releases a generation or trims its snapshots.
@@ -38,14 +36,6 @@ pub trait Comparisons: Send + Sync {
     async fn selected(&self, accepted: Arc<Accepted>, path: String, refresh: bool) -> Outcome;
     /// Read an immutable generation, capturing a removed document only on demand.
     async fn file(&self, generation: &str, path: &str) -> Result<Option<File>>;
-    /// Read a file and its gzip representation when it is JSON.
-    async fn gzip_file(
-        &self,
-        generation: &str,
-        path: &str,
-    ) -> Result<Option<(File, Option<Bytes>)>> {
-        Ok(self.file(generation, path).await?.map(|file| (file, None)))
-    }
     /// Renew a retained generation's idle window; false when it is gone.
     fn renew(&self, generation: &str) -> bool;
     /// Collect idle generations and cancel captures from replaced classifications.
@@ -59,7 +49,6 @@ pub trait Comparisons: Send + Sync {
 /// while another owner still holds the classification.
 pub(crate) struct Bundle {
     pub(crate) files: BTreeMap<String, File>,
-    pub(crate) gzip: Arc<GzipFiles>,
     pub(crate) accepted: Option<Weak<Accepted>>,
     pub(crate) touched: u64,
 }
@@ -139,7 +128,6 @@ pub(crate) fn collect(state: &mut State, now: u64, current: Option<&Arc<Accepted
             bundle
                 .files
                 .retain(|path, _| !path.starts_with("snapshots/"));
-            bundle.gzip.remove_snapshots();
             return true;
         }
         false

@@ -146,8 +146,12 @@ to the router in process and keep response bodies open. They cover one copy
 for concurrent `GET` and `HEAD` requests, its release, and separate routes and
 generations.
 [JSON delivery tests](./src/_tests_/json_delivery_tests.rs) cover gzip
-negotiation, HEAD parity, and one shared encoding for each publication file and
-each comparison generation file.
+negotiation, HEAD parity, one encode for concurrent and later publication
+requests, and a separate encoding for each comparison request.
+[Authored capture lifetime tests](./tests/authored_capture_lifetime_tests.rs)
+check that sequential requests leave no open temporary copies.
+[Generated asset digest tests](./tests/generated_asset_digest_tests.rs)
+check that Serve reads the recorded digest after verifying the copy.
 [Cache tests](./tests/shared_assets/cache_tests.rs) cover the `ETag` and 304
 answers of stylesheets and assets, also after a stylesheet or an authored file
 changes at the same URL.
@@ -201,7 +205,8 @@ publication.
   `*` accepts it.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
-  `Documents::stylesheet` reads a generated stylesheet with its `ETag`, and
+  `Documents::generated` reads a declared document, `Documents::stylesheet`
+  reads a generated stylesheet with its `ETag`, and
   `Documents::authored` returns the capture of an authored file.
   `Documents::background_read` looks up one background view, and its default
   `Ok(None)` declines the lookup. `GraphDocuments::background` renders one view
@@ -214,18 +219,21 @@ publication.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
 - [`src/authored_assets.rs`](./src/authored_assets.rs) defines
-  `AuthoredAssets`, the [authored file](./delivery.md#authored-files) captures
-  of one generation, which `AuthoredAssets::open` reuses or replaces.
+  `AuthoredAssets`, the [authored file](./delivery.md#authored-files) validator
+  records of one generation. `AuthoredAssets::open` prepares a request's copy.
+- [`src/asset_file.rs`](./src/asset_file.rs) defines `CaptureWriter`, which
+  can hash bytes while it writes a temporary copy.
 - [`src/validator.rs`](./src/validator.rs) computes the strong SHA-256 `ETag`
   of a resource, and `validator::deliver` answers a matching `If-None-Match`
   with 304. A `*` or the weak form of the tag also matches.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
   `TemporaryAssets`, `AssetRequest`, `AssetResult`, and `SharedAsset`, the
-  captured asset that concurrent responses share. Its `AssetVersion` holds one
-  captured file, its `ETag`, and the gzip copy of a JSON file.
+  captured asset. Generated responses can share its `AssetVersion` and gzip
+  copy while the capture is active.
 - [`src/backend_assets.rs`](./src/backend_assets.rs) keeps the weak route
   entries and the shared capture result that `GraphDocuments::asset_request`
-  reserves before worker admission, and the `ETag` of each route.
+  reserves before worker admission. The generation's digest supplies its
+  `ETag` after verification.
 - [`src/asset_response.rs`](./src/asset_response.rs) defines
   `asset_response::deliver`, which answers with the gzip copy, a 304, or the
   stream of a generated or authored asset capture.
@@ -288,11 +296,11 @@ publication.
   order.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
-  `Comparisons::gzip_file` reads a generation file with its gzip bytes.
   `MemoryComparisons::with_activity` takes the same activity, and each queued
   capture and its detached native work hold a lease.
 - [`src/comparison_routes.rs`](./src/comparison_routes.rs) answers the
-  selection, the root, and the files of comparison generations.
+  selection, the root, and the files of comparison generations. It negotiates
+  gzip for each JSON response.
 - [`src/render_request.rs`](./src/render_request.rs) and
   [`src/preview.rs`](./src/preview.rs) validate live prop requests and define
   `PreviewStore` and `MemoryPreviews`.

@@ -12,6 +12,8 @@ User decisions of 2026-11-22, by the performance orchestrator (Cal), after the m
 - Unchanged resources: strong validators with `no-cache` and 304 for generated stylesheets and assets and authored assets (option A, P3), and an immutable cache policy for the files of a comparison generation (option E, P3b). Rejected: content-addressed URLs (Large, touches core crates and the static output), an in-place document swap (needs per-stylesheet versions), a short `max-age` (stale bytes). Conditions: each ETag is computed once for each resource version; a test shows that a changed stylesheet at the same URL never gets a 304 for its old ETag.
 - Pass order: the routes requested since the previous rebuild start first, most recent first, then catalogue order (option A, P4). Rejected: a viewer request that names its routes (new boundary), a worker kept for requests (slows Changes). Conditions: warnings stay in catalogue order, the set of rendered views and every published byte stay the same, the requested-route list is bounded by the catalogue; a test shows that a requested view renders first and that the final publication equals catalogue order.
 - The official check of this pull request: bytes per edit at least 50% lower; the last frame paint (viewer part, Chrome clock) at least 20 ms sooner and the first frame paint not later than +5 ms (12 interleaved warm rounds, edits 2 to 4); the Changes pane paint not later; published Changes not later than +20 ms (untimed, 12 rounds); the core CPU per session not more than +2%; Serve's whole-tree peak within 2% over paired cold sessions; the same final state and the same static output.
+- After the branch series showed that P4 cannot make the slug page sooner (its entry is the first changed entry in catalogue order, so the pass already starts its documents first, and the frame waits come from the second sidecar process, which loads the new generation at its first render), the orchestrator decided: keep P4 (option A), and measure it on a page whose entry comes late among the changed entries. The rewritten official check: bytes per edit at least 50% lower (view and Changes); on `/view/product/settings/workspace/slug-recovery/` with the workspace title edit, 6 sessions per arm, the last frame paint at least 20 ms sooner on the mean; on the slug page, 6 sessions per arm, the first and the last frame paint not later than +20 ms; on the Changes page, 4 sessions per arm, the ready event to the pane paint not later than +20 ms; over all view sessions, published ready Changes not later than +20 ms and the core CPU per session not more than +2%; 4 cold pairs, Serve's whole-tree peak within 2%; the same final state and the same static output. Rejected: removing P4 (late entries lose the gain), and adding the sidecar fix to this change.
+- The orchestrator did not take the proposal to load each new head generation into the idle head processes after each bundle, because the head preload was measured three times and the user rejected it on 2026-11-21. The frame measurement goes into `plans/follow-ups/serve-head-generation-preload.md` as new evidence, with option A as its outcome for now.
 
 Design calls (mine, 2026-11-22):
 
@@ -67,11 +69,11 @@ Depends on: 1
 Depends on: 2, 3, 4
 
 - [x] Update the [mokly-server README](../crates/mokly-server/README.md) Key Code for the new entry points.
-- [ ] Run a Serve smoke test.
+- [x] Run a Serve smoke test.
 - [x] Run the targeted tests and the early repository check.
 - [x] Prove the same static output of `examples/basic` against `main`, and save the diff under `.context/viewer-live-update/`.
-- [ ] Measure the branch against `main` on mokly-cloud with probe v3: bytes, first and last frame paint, Changes pane paint, published Changes, core CPU, memory peak.
-- [ ] Commit with Conventional Commits and push the branch. Send the SHA to the performance orchestrator.
+- [x] Measure the branch against `main` on mokly-cloud with probe v3: bytes, first and last frame paint, Changes pane paint, published Changes, core CPU, memory peak.
+- [x] Commit with Conventional Commits and push the branch. Send the SHA to the performance orchestrator.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds. Let CI run the complete gate.

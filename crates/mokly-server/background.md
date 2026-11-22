@@ -25,9 +25,9 @@ order, under the
 the current catalogue. A repeated request moves its route to the front, so the
 record holds each route at most once. A rebuild hands this record to its own
 pass. It then starts an empty record for the next rebuild. The handed record
-keeps only the routes that the new catalogue declares.
-`Publications::background_priority` gives their catalogue positions to the
-pass. The pass reports each view's warnings and failure once, in catalogue
+keeps only the route names that the new catalogue declares.
+`Publications::background_priority` maps those names to positions in the
+current catalogue. The pass reports each view's warnings and failure once, in catalogue
 order, after every view before it in catalogue order ends. A view whose usage
 the snapshot already records ends at once, without a render.
 

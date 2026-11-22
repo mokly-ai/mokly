@@ -6,8 +6,8 @@ use crate::evidence::RenderRoute;
 
 pub(crate) struct RequestedRoutes {
     positions: BTreeMap<String, usize>,
-    recent: VecDeque<usize>,
-    priority: Vec<usize>,
+    recent: VecDeque<String>,
+    priority: Vec<String>,
 }
 
 impl RequestedRoutes {
@@ -26,28 +26,33 @@ impl RequestedRoutes {
 
     /// Move one known route to the front, keeping at most one request per route.
     pub(crate) fn record(&mut self, route: &str) {
-        let Some(&position) = self.positions.get(route) else {
+        if !self.positions.contains_key(route) {
             return;
-        };
-        if let Some(previous) = self.recent.iter().position(|&value| value == position) {
-            self.recent.remove(previous);
         }
-        self.recent.push_front(position);
+        let recorded = self.recent.iter().position(|name| name == route);
+        let name = recorded
+            .and_then(|position| self.recent.remove(position))
+            .unwrap_or_else(|| route.to_owned());
+        self.recent.push_front(name);
     }
 
     /// Transfer requested routes that still exist, in the order they were requested.
-    pub(crate) fn rebuild(&self, previous: &[RenderRoute], next: &[RenderRoute]) -> Self {
+    pub(crate) fn rebuild(&self, next: &[RenderRoute]) -> Self {
         let mut next = Self::new(next);
         next.priority = self
             .recent
             .iter()
-            .filter_map(|&position| next.positions.get(&previous[position].route).copied())
+            .filter(|route| next.positions.contains_key(route.as_str()))
+            .cloned()
             .collect();
         next
     }
 
     /// Catalogue positions of requests collected before this rebuild.
     pub(crate) fn priority(&self) -> Vec<usize> {
-        self.priority.clone()
+        self.priority
+            .iter()
+            .filter_map(|route| self.positions.get(route).copied())
+            .collect()
     }
 }

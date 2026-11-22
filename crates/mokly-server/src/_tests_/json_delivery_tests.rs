@@ -2,6 +2,8 @@
 
 use std::io::Read;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::task::{Context, Poll, Waker};
 
 use axum::body::Bytes;
 use axum::http::header::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, VARY};
@@ -9,6 +11,7 @@ use axum::http::{HeaderMap, Method, StatusCode};
 use flate2::read::GzDecoder;
 use mokly_model::namespace::viewer;
 use mokly_model::{readers, routes};
+use tokio::sync::oneshot;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::PreviewDocument;
@@ -16,6 +19,7 @@ use crate::clock::ClockMock;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
 use crate::comparison_support::{accepted, files};
 use crate::delivery_support::{application, body, request, router};
+use crate::json_delivery::{Gzip, JsonBody};
 use crate::preview::{MemoryPreviews, PreviewStore};
 use crate::publication::{PublicationWriter, Publications, SharedPublication};
 use crate::publication_support::snapshot;
@@ -136,7 +140,54 @@ async fn concurrent_gzip_requests_share_one_body_per_publication() {
 }
 
 #[tokio::test]
-async fn historical_json_reuses_gzip_bytes_in_its_comparison_generation() {
+async fn overlapping_and_later_gzip_callers_start_one_encode() {
+    let starts = Arc::new(AtomicUsize::new(0));
+    let counted = {
+        let starts = starts.clone();
+        move || {
+            starts.fetch_add(1, Ordering::SeqCst);
+            JsonBody::Whole(Bytes::from_static(b"{}")).compress()
+        }
+    };
+    let slot = Gzip::default();
+    assert_eq!(starts.load(Ordering::SeqCst), 0);
+    let (started, entered) = oneshot::channel();
+    let (release, blocked) = oneshot::channel();
+    let first = slot.get({
+        let starts = starts.clone();
+        move || {
+            starts.fetch_add(1, Ordering::SeqCst);
+            started.send(()).unwrap();
+            blocked.blocking_recv().unwrap();
+            JsonBody::Whole(Bytes::from_static(b"{}")).compress()
+        }
+    });
+    let second = async {
+        entered.await.unwrap();
+        let mut caller = std::pin::pin!(slot.get(counted.clone()));
+        let state = caller
+            .as_mut()
+            .poll(&mut Context::from_waker(Waker::noop()));
+        release.send(()).unwrap();
+        match state {
+            Poll::Pending => caller.await,
+            Poll::Ready(result) => result,
+        }
+    };
+    let (first, second) = tokio::join!(first, second);
+    let first = first.unwrap();
+    let second = second.unwrap();
+    assert!(std::ptr::eq(first.as_ptr(), second.as_ptr()));
+    assert_eq!(decode(&first), b"{}");
+    assert_eq!(starts.load(Ordering::SeqCst), 1, "overlapping callers");
+    let later = slot.get(counted).await.unwrap();
+    assert!(std::ptr::eq(first.as_ptr(), later.as_ptr()));
+    assert_eq!(decode(&later), b"{}");
+    assert_eq!(starts.load(Ordering::SeqCst), 1, "later caller");
+}
+
+#[tokio::test]
+async fn historical_json_encodes_separately_for_each_request() {
     let publications = publications();
     let comparisons = Arc::new(MemoryComparisons::new(
         Arc::new(Unimock::new(
@@ -163,9 +214,17 @@ async fn historical_json_reuses_gzip_bytes_in_its_comparison_generation() {
     assert_eq!(encoding(response.headers()), Some("gzip"));
     assert_eq!(response.headers()[VARY], "Accept-Encoding");
     let first = body(response).await;
-    let second = body(fetch().await).await;
+    let second = fetch().await;
+    assert_eq!(second.status(), StatusCode::OK);
+    assert_eq!(encoding(second.headers()), Some("gzip"));
+    assert_eq!(second.headers()[VARY], "Accept-Encoding");
+    let second = body(second).await;
     assert_eq!(decode(&first), b"{}");
-    assert!(std::ptr::eq(first.as_ptr(), second.as_ptr()));
+    assert_eq!(decode(&second), b"{}");
+    assert!(
+        !std::ptr::eq(first.as_ptr(), second.as_ptr()),
+        "the comparison store reused a compressed allocation across requests"
+    );
 }
 
 #[tokio::test]
