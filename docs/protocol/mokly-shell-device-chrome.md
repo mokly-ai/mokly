@@ -14,12 +14,15 @@ side by side, at one zoom.
   hairline ring and a soft shadow, and no bezel, notch or browser bar. A
   desktop frame is 1280 × 800 CSS pixels and a mobile frame 390 × 844. The
   frame holds its document at its nominal size and scales it with the zoom.
-  The document scrolls inside the frame. A component's frame holds a saved
-  variant's document at the document's own size.
+  The document scrolls inside the frame. A component's frame holds the
+  document of its own example or of a saved variant at the document's own
+  size.
 - **Label** — above the frame's left edge, in the mono face: the glyph of the
   frame's kind and the frame's name. A screen's frame is named by its viewport
   and its scheme, such as `Desktop · Light`. A component's frame is named by
-  its saved variant and its scheme, such as `Default · Light`. A reading frame
+  its saved variant and its scheme, such as `Default · Light`. The frame of a
+  component's own example is named by the component's title and its scheme,
+  such as `Action · Light`. A reading frame
   is named by its source file, such as `payment-terms.md`. A step frame is
   named by its step, not by its viewport and scheme: the step's number in a
   dark tag, which reads as `Step 1`, and the step's title. Where one frame

@@ -56,9 +56,11 @@ The selected entry stands on the canvas as one section.
   Light row above the Dark row. A screen without a dark view has the Light row
   alone. The [canvas frames](./mokly-shell-device-chrome.md#canvas-frames) give
   each frame's size and label.
-- A component opens as its variant set: one row for each saved variant, in the
-  variants' order, with its Light frame beside its Dark frame. A component
-  without saved variants has one row for its own example.
+- A component opens as its variant set. The set starts with a row for the
+  component's own example, which shows the component with its own props. One
+  row for each saved variant follows, in the variants' order. Each row has its
+  Light frame beside its Dark frame. A component without saved variants has
+  its own example's row alone.
 - A page or a Markdown document opens as one reading frame.
 - A use case opens as one row of step frames, as [Use Case](#use-case) gives.
 - A removed screen, page or document opens as the section of its previous
