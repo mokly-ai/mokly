@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_model::public_detail::EntryDetailV4;
+use mokly_model::public_detail::{EntryDetailV4, Workspace};
 
 use crate::detail_encoding::DetailEncoder;
 use crate::error::Result;
@@ -66,17 +66,58 @@ impl RecentDetails {
         {
             *detail = old.clone();
         }
+        self.keep(kind, detail, &file);
+        Ok(file)
+    }
+
+    /// The record of one publication kind for a path.
+    pub(crate) fn record(
+        &self,
+        path: &str,
+        kind: PublicationKind,
+    ) -> Option<(&Arc<EntryDetailV4>, &RevisionFile)> {
+        let record = self.records.get(path)?[kind as usize].as_ref()?;
+        Some((&record.detail, &record.file))
+    }
+
+    /// Publish a record of `kind` that the caller proved equal to the detail that it would
+    /// build, apart from `detailId` and `revision`. The detail takes the record's id and payload
+    /// and this publication's typed revision, and it becomes the record of its kind.
+    pub(crate) fn reuse(
+        &mut self,
+        kind: PublicationKind,
+        record: &EntryDetailV4,
+        file: &RevisionFile,
+        revision: u64,
+    ) -> (Arc<EntryDetailV4>, RevisionFile) {
+        let detail = Arc::new(EntryDetailV4 {
+            revision: Some(revision),
+            ..record.clone()
+        });
+        self.keep(kind, &detail, file);
+        (detail, file.clone())
+    }
+
+    fn keep(&mut self, kind: PublicationKind, detail: &Arc<EntryDetailV4>, file: &RevisionFile) {
         let path = detail.entry.path.clone();
         self.records.entry(path).or_default()[kind as usize] = Some(PublishedDetail {
             detail: detail.clone(),
             file: file.clone(),
         });
-        Ok(file)
     }
 }
 
 /// Compare every field except identity values, while retaining revision presence.
 pub(crate) fn equivalent(detail: &EntryDetailV4, other: &EntryDetailV4) -> bool {
+    equivalent_with(detail, detail.workspace.as_ref(), other)
+}
+
+/// Compare `detail` with `workspace` in place of its own, as `equivalent` compares.
+pub(crate) fn equivalent_with(
+    detail: &EntryDetailV4,
+    workspace: Option<&Workspace>,
+    other: &EntryDetailV4,
+) -> bool {
     let EntryDetailV4 {
         schema_version,
         identity,
@@ -88,7 +129,7 @@ pub(crate) fn equivalent(detail: &EntryDetailV4, other: &EntryDetailV4) -> bool 
         views,
         control_order,
         resource_evidence,
-        workspace,
+        workspace: _,
     } = detail;
     *schema_version == other.schema_version
         && identity == &other.identity
@@ -99,5 +140,5 @@ pub(crate) fn equivalent(detail: &EntryDetailV4, other: &EntryDetailV4) -> bool 
         && views == &other.views
         && control_order == &other.control_order
         && resource_evidence == &other.resource_evidence
-        && workspace == &other.workspace
+        && workspace == other.workspace.as_ref()
 }

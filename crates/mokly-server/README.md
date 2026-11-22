@@ -58,6 +58,16 @@ record apart from `detailId` and `revision`, and both details have or both
 lack `revision`. A supplied id alone never proves equality. Reuse never
 changes the typed `revision` that a phase stamps on its details.
 
+Usage completion and Changes first compare the inputs of each detail with
+the record of their own kind, by value. The inputs are the fields that the
+publication keeps from the current detail and the values that it writes: the
+usage of the completed views, the settled workspace, and for Changes the
+comparison evidence and the projected workspace of the entry. When the record
+equals the detail that these inputs build, the publication takes the record
+with its own typed `revision`, and it does not build the detail or search the
+other records. Otherwise it builds the detail and publishes it as above. A
+usage completion copies a detail only when a value that it writes changes.
+
 A detail that matches no record serializes its
 [detail identity](../../docs/protocol/mokly-catalogue-serialization.md#detail-identity)
 preimage once. The hash fills only the top-level `detailId` slot, and the
@@ -207,6 +217,8 @@ generations.
 - [`src/evidence.rs`](./src/evidence.rs) and
   [`src/changes.rs`](./src/changes.rs) provide `complete` and `project`, which
   publish usage completion and Changes from the current snapshot.
+  [`src/changes_detail.rs`](./src/changes_detail.rs) projects and publishes
+  the entry details of one Changes publication.
 - [`src/detail_encoding.rs`](./src/detail_encoding.rs) defines
   `DetailEncoder` and `EncodedDetails`, which hash and encode each detail that
   matches no recent record.

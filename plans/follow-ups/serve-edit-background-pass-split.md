@@ -142,7 +142,10 @@
       by file metadata alone adds a change that the checks do not see, so it
       changes the Freshness Checks section of
       `docs/protocol/mokly-base-preparation.md`. So B3 needs a protocol
-      decision. Risk: medium to high.
+      decision. Risk: medium to high. The item
+      [kept-base-freshness-edit-cost.md](./kept-base-freshness-edit-cost.md)
+      already records the cost of this check as work outside an earlier
+      scope.
     - **B4.** One Git read of the references for both the reference
       resolution and the base pin. About 3 ms. Risk: low.
   - **C.** Cut the CPU of the pass with no protocol change. These parts touch

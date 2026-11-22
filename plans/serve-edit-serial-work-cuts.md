@@ -192,15 +192,20 @@ Depends on: 1
 
 Depends on: 1
 
-- [ ] Red differential test: the raw bytes of the usage index, the Changes
+- [x] Red differential test: the raw bytes of the usage index, the Changes
       index, and every entry detail file equal those of today's code after a
       sequence of edits: an edit inside one screen, a shared component edit,
       an added and a removed entry, and a revert. The test fails when a changed
       detail is shared instead of rebuilt.
-- [ ] Red test: the canonical encoder writes the same bytes as today for keys
+- [x] Red test: the canonical encoder writes the same bytes as today for keys
       outside the Basic Multilingual Plane.
-- [ ] Implement B1.
-- [ ] Run the targeted tests of the changed crates.
+- [x] Implement B1. The delivered code keeps the README rule that reuse
+      never changes the typed `revision` of a phase, so each shared detail is
+      copied once. Item 1 of 2026-11-22 to the orchestrator asks whether a
+      shared detail may keep its record's typed revision instead; the tested
+      patch is `.context/edit-background-render/m3-b1/variant-A-shared-arc.patch`.
+- [x] Run the targeted tests of the changed crates. Evidence:
+      `.context/edit-background-render/m3-b1/`.
 
 ## Milestone 4: Head validation without a fetch for proven views
 
