@@ -120,10 +120,16 @@ Depends on: 2
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Prove equal served bytes of `examples/basic` with Changes against
-      `main`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The Repository, viewer, browser, and `cloud-fixtures` suites ran
+      here. The other cloud suites and the native suite run in the CI of
+      the pull request, because the change touches no cloud or native code.
+      Evidence: the `gate-*.txt` files in
+      `.context/serve-base-postcss-preparation/`.
+- [x] Prove equal served bytes of `examples/basic` with Changes against
+      `main`. Evidence:
+      `.context/serve-base-postcss-preparation/serveproof-summary.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
