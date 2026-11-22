@@ -10,15 +10,17 @@
     the guarded compile at line 249.
   - `packages/mokly/src/sidecar/plugins.ts:46` and `:181`: the file load
     callback and the resolve callback of each compile.
-  - `packages/mokly/src/sidecar/planned-relative.ts:27` and `:75`:
-    `PlannedRelative.create` and the guarded import proof `verify`.
+  - `packages/mokly/src/sidecar/native-plan.ts:128`: `plannedResult`, which
+    answers a planned resolve during the compile.
+  - `packages/mokly/src/sidecar/planned-relative.ts:27`:
+    `PlannedRelative.create`, the setup of the guarded attempt.
   - `packages/mokly/src/sidecar/bundle-recipe.ts:43`: `bundleRecipe`, the
     phases after the compile.
-  - `crates/mokly-render/src/plan_inputs.rs:11`: the plan check of the core.
-- **Reason:** The split found no set of safe changes inside the scope of the
-  branch that projects 60 ms or more for each warm edit, so no work follows
-  here. The largest safe lever is in another owner's files and has its own
-  item, [serve-edit-released-recipe-seed.md](./serve-edit-released-recipe-seed.md).
+  - `crates/mokly-render/src/plan_inputs.rs:16`: the plan check, `current`.
+- **Reason:** The change of 2026-11-22 took three options of this record and
+  met the goal of 100 ms. Each option that stays projects 10 ms or less
+  without a protocol change, or it needs a protocol decision or more memory
+  than the budget, so no work follows here.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -44,37 +46,38 @@
     sidecar pool, `session.ts`, and `compiled.ts`. A third one owned
     `describe.ts` and `export-order.ts`. This split measured their parts and
     changed none of these files.
+  - On 2026-11-22, a change on the same branch took options B, C, and G of
+    this record, as the user decided on 2026-11-21. It also cut the released
+    recipe seed: the pool sends no released recipe that the current files
+    already rule out, and the sidecar's reuse check reads the likely changed
+    inputs first. It changed the pool and `compiled.ts` with the user's
+    approval.
   - The section "Measurements" below gives the fixture, the method, and every
-    number.
-- **Problem:** A warm edit of mokly-cloud spends about 940 to 980 ms in the
-  core's `catalogue.bundle` span. The compile takes about 600 ms of it. The
-  safe cuts inside the scope of the branch, without a protocol change,
-  project about 32 to 54 ms together, and 17 ms of that is measured.
-- **Impact if no action:** Each warm edit keeps its current bundle time. The
-  seed lever of the related item can still take about 50 to 75 ms.
+    number of the split. Its section "After the change of 2026-11-22" gives
+    the user's official measurement of that change: a warm edit of mokly-cloud
+    reached published Changes 103 ms sooner, within the memory budget.
+- **Problem:** After the change of 2026-11-22, a warm edit of mokly-cloud
+  still spends about 930 ms in the core's `catalogue.bundle` span, and about
+  890 ms of it in the sidecar's `sidecar.bundle` span. The compile takes
+  about 600 ms of it.
+- **Impact if no action:** Each warm edit keeps its current bundle time.
 - **Root question:** How can a warm one-line edit of mokly-cloud reach
-  published Changes at least 100 ms sooner through a shorter edit bundle,
-  with the same bytes, warnings, and diagnostics, and a memory peak within
-  2% of `main`?
-- **Options:**
-  - **A.** Change nothing in the scope of this branch. This is the outcome of
-    the stop rule of the task on 2026-11-21. Effort: Small.
-  - **B.** Cheaper guarded import proof. Observe each module path once in
-    `ModulePaths.observe`, and skip the `DependencyUsage.resolved` call,
-    which does nothing for a relative name. Measured: the proof went from
-    39 ms to 26 ms (means of 20 warm edits each, ABBA order). Effort: Small.
-  - **C.** Check the plan record in the core on several threads. The check
-    took about 20 ms of CPU for each edit, one filesystem comparison after
-    another. Projected: 10 to 15 ms less. Effort: Small.
-  - **G.** Leave the sources out of a salted identity. A `serveEdit` compile
-    mixes its random runtime key into its identity, so the identity is unique
-    anyway. Its hash of every module path, import list, and source byte has
-    no purpose there. The per-module digests stay. No protocol change.
-    Projected: 5 to 12 ms of the inputs phase. Effort: Small.
+  published Changes sooner than after the change of 2026-11-22, through a
+  shorter edit bundle, with the same bytes, warnings, and diagnostics, and a
+  memory peak within 2% of `main`?
+- **Options:** The change of 2026-11-22 took options B, C, and G, so their
+  entries are gone. B: the guarded import proof observes each module path
+  once and makes no `DependencyUsage.resolved` call for a relative name,
+  where the call did nothing. C: the core checks the plan record on up to
+  four threads. G: a compile without a full capture owner leaves the module
+  sources out of its identity, and its random runtime key keeps the identity
+  fresh. The other options keep their letters.
+  - **A.** Change nothing more. Effort: Small.
   - **H.** Skip the `DependencyUsage.resolved` call for relative names also
-    during the compile: in `plannedResult`, for about 3,238 planned relative
-    resolves, and in the full-path resolve callback. No protocol change.
-    Projected: at most about 10 ms of main-thread time. Effort: Small.
+    during the compile, as B did in the proof: in `plannedResult`, for about
+    3,238 planned relative resolves, and in the full-path resolve callback.
+    No protocol change. Projected: at most about 10 ms of main-thread time.
+    Effort: Small.
   - **D.** Do the reads of the phases after the compile while the compile
     runs. The main thread is idle about half of the compile. Candidates are
     the per-file digests (the inputs phase, 20 ms) and the directory and
@@ -150,22 +153,22 @@
   the guarded attempt. PR #449 and PR #463 shortened the reuse reads and the
   response work of the bundle.
 - **Related:**
-  - [serve-edit-released-recipe-seed.md](./serve-edit-released-recipe-seed.md)
-    holds the seed lever, the largest safe lever of this split.
   - [serve-postcompile-import-proof-cost.md](./serve-postcompile-import-proof-cost.md)
-    estimated the cuts of option B at 5 to 12 ms on another corpus.
+    holds the guarded import proof. The change of 2026-11-22 applied two of
+    its three estimated cuts, as option B of this record.
   - [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md) holds
     the memory that each esbuild service keeps after a bundle. E adds live
     memory to it, and I depends on its option B.
-- **Recommendation:** A for the scope of this branch. Without a protocol
-  change, B, C, G, H, and the digests of D project about 32 to 54 ms, below
-  the 60 ms bar. With approved protocol sentences for D and F, a measured
-  prototype of B, D, F, G, and H projects about 57 to 79 ms, with 17 ms
-  measured. E fails the memory bar. The 100 ms goal needs other owners:
-  options F and H of the seed item, with B, C, D, and G, project about 105 to
-  150 ms.
-- **Action:** No action in this branch. A later proposal that combines these
-  cuts with the seed lever needs its own scope decision.
+  - [release-recipe-encode-under-pool-lock.md](./release-recipe-encode-under-pool-lock.md)
+    holds the encode of each released recipe under the pool lock, which the
+    change of 2026-11-22 did not cover.
+- **Recommendation:** A. The change of 2026-11-22 met the goal of 100 ms.
+  Without a protocol change, H and the digests of D project at most about
+  10 ms and 4 ms. E fails the memory bar, and each other option needs a
+  protocol decision.
+- **Action:** No action. A later proposal that takes one of these options
+  needs its own scope decision and new measurements after the change of
+  2026-11-22.
 
 ## Measurements
 
@@ -277,6 +280,17 @@ in the proof.
   within the noise of about 50 ms between sessions.
 - Peak PSS: 3,054 MiB against 3,056 MiB.
 - Six offline edits gave equal results to `main`.
+
+### After the change of 2026-11-22
+
+The user's official gate compared the change at `0ddfe044b` with `main` at
+`249fa1aa5` on mokly-cloud, in 6 warm rounds of 3 edits each. A warm edit
+reached published Changes in 1,882 ms against 1,984 ms, and `watch.action`
+took 1,210 ms against 1,322 ms. For each edit, `catalogue.bundle` took 930 ms
+against 1,011 ms, and the `sidecar.bundle` span of the bundling process 887 ms
+against 917 ms. So the seed, the transfer, and the decode took 43 ms against
+94 ms. In 4 cold sessions of 10 edits for each arm, the whole-tree memory
+peak was 3,149 MiB against 3,155 MiB on `main`.
 
 ### Method note
 

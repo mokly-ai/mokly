@@ -17,7 +17,7 @@ const EDIT: BundleCapture = BundleCapture::ServeEdit;
 const SCREEN: &str = "/repo/screen.ts";
 const SHARED: &str = "/repo/shared.ts";
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Current {
     Digest(&'static str),
     Missing,
@@ -55,6 +55,17 @@ impl Sources {
 
     /// Release `released` and keep `live` live, both with the settings of `entry`.
     fn edits(self, entry: &str, released: &str, live: Option<&str>) -> Self {
+        self.edits_with(entry, released, live, EDIT)
+    }
+
+    /// As `edits`, with the released compilation bundled with `capture`.
+    fn edits_with(
+        self,
+        entry: &str,
+        released: &str,
+        live: Option<&str>,
+        capture: BundleCapture,
+    ) -> Self {
         self.fixture.record_inputs(
             released,
             &[(SCREEN, Some("released")), (SHARED, Some("shared"))],
@@ -63,7 +74,7 @@ impl Sources {
             &format!("{released}-live"),
             &[(SCREEN, live), (SHARED, Some("shared"))],
         );
-        let first = self.fixture.bundle_with_capture(entry, released, EDIT);
+        let first = self.fixture.bundle_with_capture(entry, released, capture);
         self.fixture
             .pool
             .release_generation(&first.generation, first.epoch);
@@ -96,6 +107,31 @@ fn a_forward_edit_sends_no_released_recipe_that_a_changed_source_rules_out() {
 }
 
 #[test]
+fn a_ruled_out_recipe_keeps_stamp_mismatch_when_no_live_compilation_can_serve() {
+    let sources = Sources::new(Current::Digest("edited")).edits_with(
+        "screen.ts",
+        "released",
+        Some("live"),
+        BundleCapture::Full,
+    );
+    let (restored, result) =
+        sources
+            .fixture
+            .probe_outcome("screen.ts", "probe", 2, BundleCapture::Full);
+    assert_eq!(
+        restored,
+        Vec::<String>::new(),
+        "a full request cannot reuse the live serveEdit compilation"
+    );
+    assert_eq!(sources.reads(), [SCREEN]);
+    assert_eq!(
+        result.cache,
+        Some(CacheOutcome::StampMismatch),
+        "the ruled-out recipe still counts as a reusable compilation"
+    );
+}
+
+#[test]
 fn a_revert_to_the_released_content_still_sends_the_released_recipe() {
     let sources =
         Sources::new(Current::Digest("released")).edits("screen.ts", "released", Some("live"));
@@ -120,9 +156,13 @@ fn a_missing_or_unreadable_source_keeps_the_released_recipe() {
     for current in [Current::Missing, Current::Unreadable] {
         let sources = Sources::new(current).edits("screen.ts", "released", Some("live"));
         let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
-        assert_eq!(restored, ["released", "released-live"]);
-        assert_eq!(sources.reads(), [SCREEN]);
-        assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+        assert_eq!(restored, ["released", "released-live"], "{current:?}");
+        assert_eq!(sources.reads(), [SCREEN], "{current:?}");
+        assert_eq!(
+            result.cache,
+            Some(CacheOutcome::StampMismatch),
+            "{current:?}"
+        );
     }
 }
 

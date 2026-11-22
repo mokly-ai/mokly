@@ -70,11 +70,16 @@ Design calls, mine, 2026-11-21:
 - F reads outside the pool lock, through a new digest boundary of the pool with
   a mock for tests. `mokly-sidecar` gets the `sha2` dependency for it. The
   digest equals the sidecar's: SHA-256 of all bytes of a regular file.
-- H orders the inputs: first the paths whose digests differ between the
-  generations of equal settings that the process holds, then the path that
-  failed the last check of the process, then the rest.
+- H, call of 2026-11-22: the reuse check reads first the input that failed the
+  last check of the process, then the inputs whose digests differ between the
+  generations of equal settings that the process holds, then the rest. Reason:
+  in a run of edits to one file, the input that failed the last check is that
+  file, so the first read rules out the old generation. The call of 2026-11-21
+  put the differing inputs first.
 - C splits the evidence into contiguous chunks on scoped threads, at most four,
-  and stops each thread after the first mismatch.
+  and stops each thread after the first mismatch. Reason: the check waits on
+  the file system, not on the CPU, so a few threads overlap most of the waits,
+  and an early stop keeps a failed check as short as before.
 - G leaves out the module sources only when the compile has no full capture
   owner, which is every `serveEdit` compile. The identities of complete
   compilations keep their bytes, so stored bundles and render store entries
@@ -124,7 +129,7 @@ The tests are written against the tree of PR #465 and land after it merges.
 - [x] The test for C: verdicts of the threaded plan check for a mismatch in the
       first, a middle, and the last chunk, and for a read error. Break the
       early stop on purpose and see it fail.
-- [ ] Prepare the harness: ABBA sessions on one fixture, cold sessions for the
+- [x] Prepare the harness: ABBA sessions on one fixture, cold sessions for the
       memory peak, and the byte proof with ready Changes on mokly-cloud,
       `examples/basic`, and the large HTML and React fixtures.
 
@@ -180,12 +185,16 @@ Depends on: 2.
 
 Depends on: 3, 4, 5, 6, 7.
 
-- [ ] Send the SHA of the final source to Cal.
-- [ ] Measure warm edits of mokly-cloud against `main` in ABBA order, with
+- [x] Send the SHA of the final source to Cal.
+- [x] Measure warm edits of mokly-cloud against `main` in ABBA order, with
       timing output.
-- [ ] Measure the whole-tree memory peak of cold ten-edit mokly-cloud sessions
+- [x] Measure the whole-tree memory peak of cold ten-edit mokly-cloud sessions
       and of cold `examples/basic` sessions against `main`.
-- [ ] Run the strict byte proof with ready Changes on the four fixtures.
+- [x] Run the strict byte proof with ready Changes on the four fixtures.
+
+Evidence: `.context/edit-bundle-path/ledger.md` gives the local ABBA runs and
+Cal's official gate of `0ddfe044b`, which measured the memory peaks.
+`.context/edit-bundle-path/byteproof/` holds the byte proof.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
@@ -193,7 +202,7 @@ Depends on: every other milestone.
 
 - [ ] Run the targeted tests, the repository suite, and the complete gate named
       in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up

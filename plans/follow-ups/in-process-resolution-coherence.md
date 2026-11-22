@@ -6,7 +6,7 @@
   bundle disk cache change on branch `calummoore/lisbon-h906`. The check put
   this in-process exposure outside the new functionality of that call and
   asked for a follow-up item.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:115`, function
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:118`, function
   `reuse`, `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line
   149, method `ResolutionEvidence.candidate`,
   `packages/mokly/src/sidecar/physical-inputs.ts:157` to line 179, method
@@ -46,7 +46,7 @@
     `packages/mokly/src/sidecar/physical-inputs.ts` owns every read. After
     the last attempt, `finish()` reads the whole evidence again. A
     difference makes the evidence incomplete.
-  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:115` accepts an
+  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:118` accepts an
     earlier compilation while its toolchain, settings, dependency roots,
     consumed file digests, consumed directory lists, and complete reuse
     evidence still match. The core's bundle fast path checks the same

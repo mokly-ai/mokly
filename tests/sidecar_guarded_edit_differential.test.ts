@@ -8,6 +8,7 @@ import { build } from "esbuild";
 import type { BundleParams } from "../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
+import type { Bundled } from "../packages/mokly/src/sidecar/bundle.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
 
 import { matureMetadata } from "./helpers/mature_metadata.js";
@@ -28,13 +29,26 @@ async function nativePlan(params: BundleParams): Promise<ResolutionPlan> {
   return native.plan;
 }
 
-async function outcome(run: () => Promise<{ result: unknown }>) {
+async function outcome(run: () => Promise<Bundled>) {
   try {
-    return { result: (await run()).result };
+    return { fingerprint: editFingerprint((await run()).result) };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
+
+/**
+ * The expected guarded attempt: whether it fails, its compile count, and the
+ * consumer callbacks for `./part.mjs`, a relative import that esbuild resolves
+ * itself in a guarded compile, so that the guarded import proof runs.
+ */
+interface Expected {
+  fails: boolean;
+  compilations: number;
+  partCallbacks: number;
+}
+
+const passes: Expected = { fails: false, compilations: 1, partCallbacks: 0 };
 
 const screen = (imports: Array<[string, string]>, label: string) =>
   [
@@ -77,7 +91,7 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
   await write(config, '{"compilerOptions":{"strict":true}}');
   const params = nativeParams(root);
   let plan = await nativePlan(params);
-  const steps: Array<[string, () => Promise<void>, boolean]> = [
+  const steps: Array<[string, () => Promise<void>, boolean, Expected]> = [
     [
       "an edit inside one module",
       () =>
@@ -92,6 +106,7 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
           ),
         ),
       false,
+      passes,
     ],
     [
       "a new import",
@@ -108,6 +123,7 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
           ),
         ),
       false,
+      passes,
     ],
     [
       "a removed import",
@@ -123,6 +139,7 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
           ),
         ),
       false,
+      passes,
     ],
     [
       "a renamed file",
@@ -143,8 +160,14 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
         );
       },
       true,
+      passes,
     ],
-    ["a failed compile", () => write(file, "export const label = ;"), false],
+    [
+      "a failed compile",
+      () => write(file, "export const label = ;"),
+      false,
+      { fails: true, compilations: 2, partCallbacks: 1 },
+    ],
     [
       "its recovery",
       () =>
@@ -159,14 +182,16 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
           ),
         ),
       false,
+      passes,
     ],
     [
       "an edit of a configuration file",
       () => write(config, '{"compilerOptions":{"strict":false}}'),
       true,
+      passes,
     ],
   ];
-  for (const [name, change, recapture] of steps) {
+  for (const [name, change, recapture, expected] of steps) {
     await change();
     if (recapture) plan = await nativePlan(params);
     const counted = countedCompile();
@@ -176,19 +201,15 @@ test("a guarded edit compile gives the outcome of the same edit without a plan",
     const plain = await outcome(() =>
       bundle(params, build, undefined, undefined, "serveEdit"),
     );
-    if ("error" in guarded || "error" in plain) {
-      assert.deepEqual(guarded, plain, name);
-      continue;
-    }
+    assert.deepEqual(guarded, plain, name);
     assert.deepEqual(
-      editFingerprint(guarded.result as never),
-      editFingerprint(plain.result as never),
+      {
+        fails: "error" in guarded,
+        compilations: counted.counts.compilations,
+        partCallbacks: counted.consumerCallbacks("./part.mjs"),
+      },
+      expected,
       name,
-    );
-    assert.equal(
-      counted.counts.compilations,
-      1,
-      `${name} keeps its guarded result`,
     );
   }
 });

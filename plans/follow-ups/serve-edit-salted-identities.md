@@ -6,7 +6,8 @@
   `calummoore/mokly-edit-comparison-cost-bo07`, at the request of the
   performance orchestrator, after a control run of unchanged `main` at
   `793d0c77d`.
-- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:137` to line 147,
+- **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:141` to line 151
+  (`bundleRecipe`, the salt and the identity inputs),
   `crates/mokly-render/src/graph.rs:149` to line 161,
   `crates/mokly-graph/src/graph.rs:269` to line 279,
   `crates/mokly-server/src/changes_execution.rs:133` to line 143,
@@ -140,13 +141,18 @@
     - These values do differ across processes: `live.generation`, the
       comparison root, and the document keys of whole-bundle views.
   - Cache effects within one process, by code reading. Nobody measured them:
-    - A JavaScript edit changes the compilation identity anyway, because the
-      identity hashes the source bytes. So the salt matters only when an
-      incomplete compile repeats an otherwise equal identity.
+    - A JavaScript edit changes the code. So the salt costs reuse only when
+      an incomplete compile repeats otherwise equal inputs.
+    - Since 2026-11-22, a compile without a full capture owner, which is
+      every Serve edit compile, leaves the module paths, the import lists,
+      and the source bytes out of its identity. Its salt alone keeps the
+      identity fresh. Before that change, the identity also hashed the
+      sources. Each compile gets a new salt anyway, so the effects below did
+      not change.
     - Marked reuse keeps the generation id. So a CSS-only or YAML-only rebuild
       and a manual `r` add no new salt. A revert can reuse a kept recipe and
       get its earlier id back.
-    - Two cases repeat an equal identity with a new salt. One is a revert that
+    - Two cases repeat equal inputs with a new salt. One is a revert that
       no kept recipe holds. The other is a new or removed file, such as an
       editor file, in a consumed-module directory.
     - Then the core describes the bundle again, as the fresh-identity rule
@@ -236,10 +242,15 @@
       also needs an identity rule for a promoted compile.
     - It changes the decision of 2026-11-18. It adds capture or promotion work
       beside each edit.
+    - Since 2026-11-22, a compile without a full capture owner leaves the
+      module sources out of its identity. A promoted compile that drops the
+      salt must hash them again.
 - **Left out:**
   - Remove the salt, or use a fixed value or a counter. It breaks the
     fresh-identity rule, so `describe` and whole-bundle views could reuse
-    results of other code. Alone, it would not make the roots equal.
+    results of other code. Since 2026-11-22, a Serve edit identity holds no
+    module sources, so without the salt two compiles of different code could
+    share one identity. Alone, it would not make the roots equal.
   - Derive the identity from the compiled output. It drops the fresh-identity
     rule, which the recipe rules and the orchestrator's request of 2026-11-21
     keep. Nobody has proved that equal output gives equal definitions.
