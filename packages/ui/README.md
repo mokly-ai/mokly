@@ -306,6 +306,14 @@ stylesheet to the list at its place in the cascade. A later rule of equal
 specificity overrides an earlier one, as the narrow-width layout rules
 override the desktop layout rules.
 
+The `build` script of `package.json` runs `scripts/build.mjs`, then the root
+[`write-runtime-inventory.mjs`](../../scripts/write-runtime-inventory.mjs).
+That last step writes `dist/.runtime-inventory.json`, which lists every other
+file in `dist` with its SHA-256 digest. This runtime inventory is
+dev-preparation metadata that stays local to the checkout. No runtime code
+reads it. [`npm run dev`](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+builds again when it is missing or does not match `dist`.
+
 ### Key Code
 
 - [`src/theme/theme.css`](./src/theme/theme.css) — the tokens and the Light

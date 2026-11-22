@@ -7,9 +7,11 @@ use std::sync::Arc;
 
 use mokly_model::typescript;
 use mokly_sidecar::typescript::generate;
+use sha2::{Digest, Sha256};
 
 use crate::command::{CommandRunner, CommandSpec};
 use crate::error::{Error, FilesystemResult, Result};
+use crate::runtime_inventory::{FILE_NAME, native_inventory};
 
 /// Artifact operations composed by the CLI.
 #[cfg_attr(test, unimock::unimock(api = [BuildNativeMock, GenerateTypesMock, CheckGeneratedTypesMock]))]
@@ -23,7 +25,7 @@ pub(crate) trait Artifacts: Send + Sync {
 }
 
 /// Filesystem boundary for artifact assembly.
-#[cfg_attr(test, unimock::unimock(api = [CopyMock, WriteMock, ReadMock, EntriesMock]))]
+#[cfg_attr(test, unimock::unimock(api = [CopyMock, WriteMock, ReadMock, EntriesMock, RemoveMock, DigestMock]))]
 pub(crate) trait ArtifactFiles: Send + Sync {
     /// Copy a built executable, creating the destination directory.
     fn copy(&self, source: &Path, destination: &Path) -> Result<()>;
@@ -33,6 +35,10 @@ pub(crate) trait ArtifactFiles: Send + Sync {
     fn read(&self, path: &Path) -> Result<Option<Vec<u8>>>;
     /// List the paths in a generated directory, or an empty missing directory.
     fn entries(&self, directory: &Path) -> Result<Vec<PathBuf>>;
+    /// Remove a previous inventory before changing its runtime files.
+    fn remove(&self, path: &Path) -> Result<()>;
+    /// Read a runtime file and compute its SHA-256 content digest.
+    fn digest(&self, path: &Path) -> Result<String>;
 }
 
 /// Host filesystem adapter.
@@ -48,8 +54,10 @@ impl ArtifactFiles for SystemArtifactFiles {
 
     fn write(&self, destination: &Path, text: &str) -> Result<()> {
         make_parent(destination)?;
-        fs::write(destination, text)
-            .with_filesystem_context("write generated types", &destination.display().to_string())
+        fs::write(destination, text).with_filesystem_context(
+            "write generated artifact",
+            &destination.display().to_string(),
+        )
     }
 
     fn read(&self, path: &Path) -> Result<Option<Vec<u8>>> {
@@ -84,6 +92,24 @@ impl ArtifactFiles for SystemArtifactFiles {
         }
         paths.sort();
         Ok(paths)
+    }
+
+    fn remove(&self, path: &Path) -> Result<()> {
+        match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(source) if source.kind() == ErrorKind::NotFound => Ok(()),
+            result => result
+                .with_filesystem_context("remove runtime inventory", &path.display().to_string()),
+        }
+    }
+
+    fn digest(&self, path: &Path) -> Result<String> {
+        let bytes = fs::read(path)
+            .with_filesystem_context("read runtime file", &path.display().to_string())?;
+        Ok(Sha256::digest(bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect())
     }
 }
 
@@ -168,12 +194,19 @@ impl Artifacts for DefaultArtifacts {
                 ])
                 .in_directory(&self.workspace),
         )?;
+        let directory = self
+            .workspace
+            .join(format!("packages/native-{}/bin", host.package));
+        let binary = directory.join(host.executable);
+        let inventory = directory.join(FILE_NAME);
+        self.files.remove(&inventory)?;
         self.files.copy(
             &target.join(host.triple).join("debug").join(host.executable),
-            &self.workspace.join(format!(
-                "packages/native-{}/bin/{}",
-                host.package, host.executable
-            )),
+            &binary,
+        )?;
+        self.files.write(
+            &inventory,
+            &native_inventory(host.executable, self.files.digest(&binary)?)?,
         )
     }
 

@@ -120,6 +120,14 @@ the frame probe into `dist/browser/frame-probe.js`. The viewer build copies
 that script into `packages/viewer/dist/browser` and lists it in the viewer's
 browser module inventory.
 
+The `build` script of `package.json` runs `scripts/build.mjs`, then the root
+[`write-runtime-inventory.mjs`](../../scripts/write-runtime-inventory.mjs).
+That last step writes `dist/.runtime-inventory.json`, which lists every other
+file in `dist` with its SHA-256 digest. This runtime inventory is
+dev-preparation metadata that stays local to the checkout. No runtime code
+reads it. [`npm run dev`](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+builds again when it is missing or does not match `dist`.
+
 `npm run typecheck` includes its source and tests. The root
 test runner discovers package tests under `tests/`. Run one with
 `npm test -- packages/frame/tests/{file}`. `npm test --workspace @mokly/frame`
