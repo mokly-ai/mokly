@@ -34,3 +34,18 @@
   color: var(--chrome-ink);
   box-shadow: var(--chrome-shadow-soft);
 }
+
+/* A focused segment draws the inset glow, which the track holds, and the
+   shown one keeps its shadow under the glow. */
+.mbk-seg :is(a, button):focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
+.mbk-seg
+  :is(a, button):is(
+    .active,
+    [aria-pressed="true"],
+    [aria-current="page"]
+  ):focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset), var(--chrome-shadow-soft);
+}

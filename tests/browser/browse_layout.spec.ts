@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import {
   computedStyle,
+  detailsRow,
   openScreensGroup,
   welcomeRow,
 } from "./browse_assertions.js";
@@ -181,4 +182,47 @@ test("the shell is keyboard navigable with a skip link", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator("#mb-main")).toBeFocused();
+});
+
+test("keyboard focus draws the glow on the skip link and a catalogue row", async ({
+  page,
+}) => {
+  await page.goto("/");
+  // Each glow as the shell declares it, read from a probe inside the shell.
+  const glow = (property: string) =>
+    page.locator(".mbk-body").evaluate((body, name) => {
+      const probe = document.createElement("span");
+      probe.className = "mbk-reset";
+      probe.style.boxShadow = `var(${name})`;
+      body.append(probe);
+      const shadow = getComputedStyle(probe).boxShadow;
+      probe.remove();
+      return shadow;
+    }, property);
+  const outset = await glow("--mbk-focus-glow");
+  const inset = await glow("--mbk-focus-glow-inset");
+  expect(inset).toBe(`${outset} inset`);
+
+  await page.keyboard.press("Tab");
+  const skip = page.locator(".mbk-skip-link");
+  await expect(skip).toBeFocused();
+  await expect(skip).toHaveCSS("box-shadow", outset);
+  await expect(skip).toHaveCSS("outline-style", "none");
+
+  // A row of the scrolling tree draws the inset glow on its pill.
+  await openScreensGroup(page);
+  await page.locator(detailsRow).focus();
+  await page.keyboard.press("Tab");
+  const row = page.locator(welcomeRow);
+  await expect(row).toBeFocused();
+  await expect(row).toHaveCSS("box-shadow", "none");
+  await expect(row).toHaveCSS("outline-style", "none");
+  expect(
+    await row.evaluate((link) => getComputedStyle(link, "::before").boxShadow),
+  ).toBe(inset);
+
+  // Forced colours drop every shadow, so focus takes the system outline.
+  await page.emulateMedia({ forcedColors: "active" });
+  await expect(row).toHaveCSS("outline-style", "solid");
+  await expect(row).toHaveCSS("outline-width", "2px");
 });

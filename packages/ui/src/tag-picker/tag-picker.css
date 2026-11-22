@@ -55,8 +55,14 @@
   text-transform: uppercase;
 }
 
+/* The chip row scrolls once it outgrows the picker. Its 4px of padding, which
+   its margin takes back, and its scroll padding keep the whole focus glow of
+   a chip at its edge in view. */
 .mbk-tag-picker .mbk-chips {
-  max-height: 210px;
+  max-height: 218px;
+  margin: -4px;
+  padding: 4px;
+  scroll-padding: 4px;
   overflow-y: auto;
 }
 

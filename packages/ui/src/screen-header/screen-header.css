@@ -104,6 +104,11 @@ button.mbk-crumb-link {
   transform: translateY(1px);
 }
 
+/* The chip pressed from the keyboard keeps its focus glow over the press. */
+.mbk-pathchip:active:focus-visible {
+  box-shadow: var(--mbk-focus-glow), var(--chrome-shadow-press);
+}
+
 /* The picture of the path chip in a static depiction takes the line box that
    the chip button has by default, and acts on nothing. */
 span.mbk-pathchip {

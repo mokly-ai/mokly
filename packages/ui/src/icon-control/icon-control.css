@@ -64,11 +64,20 @@
   background: var(--chrome-bg);
 }
 
+/* A control draws the glow, also for the transparent native select or switch
+   over it. Forced colours drop the glow, so there the control around such a
+   native control takes the system outline. */
 .mbk-icon-button:focus-visible,
-.mbk-icon-select:focus-within,
+.mbk-icon-select:has(> select:focus-visible),
 .mbk-icon-button:has(> input:focus-visible) {
-  outline: 2px solid var(--mokly-accent, var(--_mokly-private-accent-default));
-  outline-offset: 2px;
+  box-shadow: var(--mbk-focus-glow);
+}
+
+@media (forced-colors: active) {
+  .mbk-icon-select:has(> select:focus-visible),
+  .mbk-icon-button:has(> input:focus-visible) {
+    outline: 2px solid Highlight;
+  }
 }
 
 .mbk-icon-button[aria-selected="true"],

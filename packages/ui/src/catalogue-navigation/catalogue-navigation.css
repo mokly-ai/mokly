@@ -75,6 +75,16 @@
   box-shadow: var(--chrome-shadow-soft);
 }
 
+/* A segment draws the inset glow, which its track holds, and the shown one
+   keeps its shadow under the glow. */
+.mbk-nav-filter-opt:focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
+.mbk-nav-filter-opt:is(.active, [aria-pressed="true"]):focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset), var(--chrome-shadow-soft);
+}
+
 /* A static depiction draws Collapse all as text and a filter as a link or
    text. Each takes the line box that a button has by default, and text acts
    on nothing. */
@@ -248,6 +258,15 @@ span.mbk-nav-filter-opt {
 .mbk-nav-resize:focus-visible {
   box-shadow: inset -2px 0 0
     var(--mokly-accent, var(--_mokly-private-accent-default));
+}
+
+/* Forced colours drop the grip's colour and shadow, so the focused separator
+   takes the system outline inside its box. */
+@media (forced-colors: active) {
+  .mbk-nav-resize:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 
 @media (width < 56.25rem) {

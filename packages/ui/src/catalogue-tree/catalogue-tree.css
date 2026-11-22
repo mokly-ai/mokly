@@ -28,6 +28,12 @@
   cursor: pointer;
 }
 
+/* A section summary, a row of the scrolling tree, draws the inset glow. */
+.mbk-nav-section-head:focus-visible {
+  border-radius: 6px;
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
 .mbk-nav-section-chevron {
   display: inline-grid;
   place-items: center;
@@ -69,6 +75,17 @@
     --mokly-accent-soft,
     var(--_mokly-private-accent-soft-default)
   );
+}
+
+/* A focused row draws the inset glow on its pill, which starts at the row's
+   indent, so the scrolling tree never cuts the glow and the guides stay
+   clear of it. */
+.mbk-nav-row:focus-visible {
+  box-shadow: none;
+}
+
+.mbk-nav-row:focus-visible::before {
+  box-shadow: var(--mbk-focus-glow-inset);
 }
 
 .mbk-nav-row.active,
@@ -197,14 +214,11 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   cursor: pointer;
 }
 
+/* The toggle draws the glow of every control, which the tree's padding
+   holds. */
 .mbk-nav-variants-toggle:hover,
 .mbk-nav-variants-toggle:focus-visible {
   color: var(--mbk-accent-deep);
-}
-
-.mbk-nav-variants-toggle:focus-visible {
-  outline: 2px solid var(--mbk-accent-deep);
-  outline-offset: 2px;
 }
 
 .mbk-nav-variants-toggle svg {

@@ -85,9 +85,17 @@
   border-color: var(--_mokly-private-on-accent-deep);
 }
 
+/* The track draws the glow of the transparent switch over it. Forced colours
+   drop the glow, so there the track takes the system outline. */
 .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track {
-  outline: 2px solid var(--mbk-accent-deep);
-  outline-offset: 2px;
+  box-shadow: var(--mbk-focus-glow);
+}
+
+@media (forced-colors: active) {
+  .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 /* Refresh: the refresh glyph in a square icon button at the band's end. */
