@@ -52,7 +52,7 @@ test("a chip that is not interactive and has no address is a picture of itself",
     renderToStaticMarkup(
       <TagChip interactive={false} selected={false} tag="onboarding" />,
     ),
-    `<span class="mbk-chip tag mbk-reset" data-mokly-tag="onboarding">${GLYPH}onboarding</span>`,
+    `<span class="mbk-chip tag mbk-picture mbk-reset" data-mokly-tag="onboarding">${GLYPH}onboarding</span>`,
   );
   const presses: string[] = [];
   render(
@@ -68,7 +68,7 @@ test("a chip that is not interactive and has no address is a picture of itself",
   assert.deepEqual(screen.queryAllByRole("link"), []);
   const chip = screen.getByText("forms");
   assert.equal(chip.tagName, "SPAN");
-  assert.equal(chip.className, "mbk-chip tag active mbk-reset");
+  assert.equal(chip.className, "mbk-chip tag active mbk-picture mbk-reset");
   // A picture takes no tab stop.
   assert.equal(chip.hasAttribute("tabindex"), false);
   fireEvent.click(chip);

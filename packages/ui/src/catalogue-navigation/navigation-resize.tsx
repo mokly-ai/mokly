@@ -63,7 +63,7 @@ export function ResizeHandle({
     return (
       <div
         aria-hidden="true"
-        className="mbk-nav-resize mbk-reset"
+        className="mbk-nav-resize mbk-picture mbk-reset"
         data-mokly-nav-resize=""
       />
     );

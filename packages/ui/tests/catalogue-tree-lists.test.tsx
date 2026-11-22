@@ -159,4 +159,18 @@ test("the toggle reports its list's new state, also where summaries are native",
   assert.equal(choices.length, 2);
   const row = screen.getByRole("link", { name: /^Card/ });
   assert.equal(row.getAttribute("data-entry-id"), "components/card");
+  rerender(
+    <CatalogueTree
+      {...tree({
+        interactive: false,
+        sections: sections(leaf(CARD, { variants: [link("card/small")] })),
+      })}
+    />,
+  );
+  const picture = screen.getByRole("img", { name: "Show variants of Card" });
+  assert.equal(picture.tagName, "SPAN");
+  assert.equal(
+    screen.queryByRole("button", { name: "Show variants of Card" }),
+    null,
+  );
 });

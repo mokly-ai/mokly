@@ -108,7 +108,7 @@ test("a static depiction's label without an address is a picture of itself", () 
         top="calc(50% - 22px)"
       />,
     ),
-    '<span class="mbk-highlight-label mbk-reset" style="left:20px;top:calc(50% - 22px)">Toolbar · toolbar</span>',
+    '<span class="mbk-highlight-label mbk-picture mbk-reset" style="left:20px;top:calc(50% - 22px)">Toolbar · toolbar</span>',
   );
 });
 

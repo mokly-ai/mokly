@@ -44,6 +44,9 @@ test("a selected tag chip fills with the accent as a link, a button, and a pictu
     await expect(chip).toHaveCSS("background-color", ACCENT);
   }
   const restingPicture = page.getByText("drafts", { exact: true });
-  await restingPicture.hover();
+  await restingPicture.scrollIntoViewIfNeeded();
+  const box = await restingPicture.boundingBox();
+  if (!box) throw new Error("The tag chip picture has no visible bounds");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await expect(restingPicture).toHaveCSS("background-color", CHIP_FILL);
 });

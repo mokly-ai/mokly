@@ -113,7 +113,10 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
                 {path}
               </button>
             ) : (
-              <span className="mbk-pathchip mbk-reset" data-copy-path={path}>
+              <span
+                className="mbk-pathchip mbk-picture mbk-reset"
+                data-copy-path={path}
+              >
                 {path}
               </span>
             )

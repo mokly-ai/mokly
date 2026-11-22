@@ -15,7 +15,10 @@ const modes: readonly Segment<ComparisonMode>[] = [
   ["difference", "Difference"],
 ];
 
-/** Refresh, or its picture in a band that is not interactive. */
+/**
+ * Refresh, or its picture in a band that is not interactive. The picture
+ * marker keeps the pointer, and so the tooltip, off the picture.
+ */
 function Refresh({
   hidden,
   interactive,
@@ -29,7 +32,7 @@ function Refresh({
     return (
       <span
         aria-label="Refresh comparison"
-        className="mbk-diff-refresh mbk-reset"
+        className="mbk-diff-refresh mbk-picture mbk-reset"
         data-diff-refresh=""
         hidden={hidden}
         role="img"

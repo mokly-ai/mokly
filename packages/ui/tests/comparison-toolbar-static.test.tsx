@@ -110,7 +110,7 @@ test("a band that is not interactive draws its other modes and Refresh as inert 
   fireEvent.click(shown);
   const refresh = screen.getByRole("img", { name: "Refresh comparison" });
   assert.equal(refresh.tagName, "SPAN");
-  assert.equal(refresh.className, "mbk-diff-refresh mbk-reset");
+  assert.equal(refresh.className, "mbk-diff-refresh mbk-picture mbk-reset");
   fireEvent.click(refresh);
   assert.deepEqual(calls, []);
   assert.equal(container.querySelectorAll("[aria-current]").length, 1);

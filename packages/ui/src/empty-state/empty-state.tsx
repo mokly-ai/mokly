@@ -74,7 +74,10 @@ export function EmptyAction({
     );
   if (!interactive)
     return (
-      <span className="mbk-empty-link mbk-reset" {...dataMark(action.mark)}>
+      <span
+        className="mbk-empty-link mbk-picture mbk-reset"
+        {...dataMark(action.mark)}
+      >
         {action.label}
       </span>
     );

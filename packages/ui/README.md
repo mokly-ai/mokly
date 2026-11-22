@@ -13,9 +13,9 @@ on this package at the exact shared version.
 - Every element of the shell: the markup, the styles, and the local
   interaction of each component, with props in and callbacks out. The viewer
   renders no element of its own.
-- Every style rule of the shell: the theme, the reset class `mbk-reset`, one
-  CSS file beside each component, the shell layout, and the rules of the
-  embedded root.
+- Every style rule of the shell: the theme, the reset class `mbk-reset` and
+  the picture marker `mbk-picture`, one CSS file beside each component, the
+  shell layout, and the rules of the embedded root.
   Every rule stays outside every cascade layer, and `styles.css` holds them
   all.
 - The highlight mask that marks component instances over a preview, drawn from
@@ -48,6 +48,16 @@ reader's reduced motion, and resets links and text blocks. No rule reaches the
 host page or host slot content. A host that renders a component outside a
 viewer root puts it inside an element with the viewer root class, or declares
 the tokens itself, as the design catalogue's `examples/basic/design.css` does.
+
+A picture is the element that a static depiction draws for a control without
+an address. It looks like the control and does nothing. Each picture carries
+the picture marker `mbk-picture`. The marker's rule sets `pointer-events: none`
+and `cursor: default` as important declarations. They override the normal
+rules of a control and an ordinary inline style, so a picture shows no pointer
+cursor, no hover or press style, and no tooltip. A more specific important
+rule still wins, such as the shell's drag cursor. A picture keeps its selected
+or current look. A part of a native control acts, such as Close in the summary
+of an inspector tab, so it carries no marker.
 
 ## Quick Start
 
@@ -92,8 +102,10 @@ of itself and leaves out the compact search. It gives `CatalogueNavigation` a
 `operable={false}`, which draws Collapse all and the other filters as text and
 the separator as a picture of its grip. The link or the text of the shown
 filter is marked as the current page. A tree row without an address is a
-picture of the row. On `ScreenHeader`, `interactive={false}` draws the path
-chip as a picture of itself and a folder crumb as text.
+picture of the row. A column with `interactive={false}` and no `onDisclosure`
+draws each entry's list toggle as a picture, named by what it would do. On
+`ScreenHeader`, `interactive={false}` draws the path chip as a picture of
+itself and a folder crumb as text.
 
 A static mockup gives `TagChip` an `href`, which draws the chip as a link, and
 sets `interactive={false}`, which draws a chip without an address as a
@@ -287,7 +299,9 @@ elements. A rule whose selector names only generic class names, such as
 rule then weighs the same and still never matches a host element that carries
 the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
-viewer's styles test holds both stylesheets to that.
+viewer's styles test holds both stylesheets to that. Give each new picture the
+picture marker before the reset class, instead of a rule that takes the
+pointer or the hover style off that picture.
 
 Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
@@ -312,7 +326,8 @@ override the desktop layout rules.
   and Dark palette on the root class and the stub's document class, Auto
   through the system appearance, and the stub page's own rules
 - [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
-  sizing, the reader's reduced motion, and the link and text block resets
+  sizing, the reader's reduced motion, and the link and text block resets; and
+  the picture marker, which takes a picture out of hit testing
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
   workspace control icons, with `IconSvg` as their frame
 - [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —

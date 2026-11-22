@@ -4,8 +4,8 @@
  * again by itself, and opening a tab closes the others. The open tab's Close
  * is part of the tab, so pressing it closes the panel as the tab does. A tab
  * with an address is a link, which is its one keyboard stop. The resize
- * separator is a picture of its grip, and the sheet's grab is a native switch
- * whose check a stylesheet can read.
+ * separator is a picture of its grip, which carries the picture marker, and
+ * the sheet's grab is a native switch whose check a stylesheet can read.
  */
 
 import type { CSSProperties } from "react";
@@ -20,7 +20,11 @@ type TabCount = CSSProperties & { "--inspector-tabs": number };
 /** The column of one tab in the tab row, counted from one. */
 type TabColumn = CSSProperties & { "--inspector-tab": number };
 
-/** A tab's face: its glyph, or a link around it, then the picture of Close. */
+/**
+ * A tab's face: its glyph, or a link around it, then Close. Close acts
+ * through the tab's native summary, so it is no picture and keeps the
+ * pointer, the hover fill, and its tooltip.
+ */
 function TabFace({ tab }: { tab: InspectorTab }) {
   return (
     <>
@@ -74,7 +78,7 @@ export function InspectorDisclosures({
     >
       <div
         aria-hidden="true"
-        className="mbk-inspector-resize mbk-reset"
+        className="mbk-inspector-resize mbk-picture mbk-reset"
         data-inspector-resize=""
       />
       <label

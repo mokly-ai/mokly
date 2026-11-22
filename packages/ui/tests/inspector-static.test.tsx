@@ -42,7 +42,7 @@ test("a static inspector draws each tab as a native disclosure of one group", ()
       />,
     ),
     '<section aria-label="Inspector" class="mbk-inspector mbk-reset" data-inspector-disclosures="" data-workspace-inspector="" style="--inspector-tabs:1">' +
-      '<div aria-hidden="true" class="mbk-inspector-resize mbk-reset" data-inspector-resize=""></div>' +
+      '<div aria-hidden="true" class="mbk-inspector-resize mbk-picture mbk-reset" data-inspector-resize=""></div>' +
       '<label class="mbk-sheet-grab mbk-reset" data-inspector-size="" title="Expand or collapse inspector"><input aria-label="Expanded inspector" class="mbk-reset" role="switch" type="checkbox"/><span class="mbk-reset"></span></label>' +
       `<details class="mbk-reset" data-inspector-tab="details" name="${GROUP}" open="" style="--inspector-tab:1">` +
       `<summary class="mbk-icon-button mbk-reset" id="root-mb-tab-details" title="Details" aria-label="Details" role="button">${glyph("details")}` +
@@ -100,7 +100,7 @@ test("the open tab is the one disclosure that starts open, and a closed inspecto
   );
 });
 
-test("each tab is a button named by its title, and Close and the separator are pictures", () => {
+test("each tab is a named native disclosure with Close, and the separator is a picture", () => {
   const changes: unknown[] = [];
   render(
     <Inspector

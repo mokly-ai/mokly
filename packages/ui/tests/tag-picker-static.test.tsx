@@ -71,7 +71,7 @@ test("a closed picker of a static depiction draws its button and leaves out the 
   const { container } = depiction(false);
   const button = screen.getByRole("img", { name: "Filter by tag" });
   assert.equal(button.tagName, "SPAN");
-  assert.equal(button.className, "mbk-search-tag mbk-reset");
+  assert.equal(button.className, "mbk-search-tag mbk-picture mbk-reset");
   assert.equal(button.getAttribute("data-mokly-tag-toggle"), "");
   assert.equal(container.querySelector(".mbk-tag-picker"), null);
   assert.equal(container.querySelector("[data-mokly-tag]"), null);
@@ -113,9 +113,9 @@ test("without addresses, the chips of a static depiction are pictures", () => {
   assert.deepEqual(
     [...toolbar.children].map((chip) => [chip.tagName, chip.className]),
     [
-      ["SPAN", "mbk-chip tag mbk-reset"],
-      ["SPAN", "mbk-chip tag active mbk-reset"],
-      ["SPAN", "mbk-chip tag mbk-reset"],
+      ["SPAN", "mbk-chip tag mbk-picture mbk-reset"],
+      ["SPAN", "mbk-chip tag active mbk-picture mbk-reset"],
+      ["SPAN", "mbk-chip tag mbk-picture mbk-reset"],
     ],
   );
 });

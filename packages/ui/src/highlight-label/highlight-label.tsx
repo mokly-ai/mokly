@@ -103,7 +103,7 @@ export function HighlightLabel({
   /**
    * `auto` also states the label's pointer events in its own style, as the
    * labels of a host's inspection do, so that no rule of the layer turns them
-   * off.
+   * off. A picture of a label takes no pointer events, so it leaves it out.
    */
   pointerEvents?: "auto" | undefined;
   /** The instance's name, such as "Button · primary". */
@@ -125,7 +125,10 @@ export function HighlightLabel({
     );
   if (!interactive)
     return (
-      <span className="mbk-highlight-label mbk-reset" style={style}>
+      <span
+        className="mbk-highlight-label mbk-picture mbk-reset"
+        style={{ left, top }}
+      >
         {text}
       </span>
     );

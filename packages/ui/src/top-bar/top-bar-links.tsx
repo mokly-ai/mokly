@@ -1,7 +1,7 @@
 /**
  * The top bar's menu and brand. Each is a control of the shell, a link to an
  * address that a static depiction gives, or a picture of itself in a
- * depiction that runs no script.
+ * depiction that runs no script, which carries the picture marker.
  */
 
 import { BrandIcon, IconSvg } from "../icons/icons.js";
@@ -50,7 +50,7 @@ export function Menu({
     return (
       <span
         aria-label={name}
-        className="mbk-menu mbk-reset"
+        className="mbk-menu mbk-picture mbk-reset"
         data-mokly-menu=""
         role="img"
       >
@@ -84,7 +84,11 @@ export function Brand({ href }: { href: string | undefined }) {
   );
   if (href === undefined)
     return (
-      <span aria-label="Mokly" className="mbk-brand mbk-reset" role="img">
+      <span
+        aria-label="Mokly"
+        className="mbk-brand mbk-picture mbk-reset"
+        role="img"
+      >
         {content}
       </span>
     );

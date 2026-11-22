@@ -32,9 +32,14 @@ export function registerDesignIndexEntries(
     const filter = frame.getByRole("group", { name: "Catalogue filter" });
     await nav.getByRole("link", { name: "Profile", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`${family}/screen/$`));
-    await expect(
-      nav.getByRole("button", { name: "Hide contents of Profile" }),
-    ).toHaveAttribute("aria-expanded", "true");
+    const openChevron = nav.getByRole("img", {
+      name: "Hide contents of Profile",
+    });
+    await expect(openChevron).toBeVisible();
+    await expect(openChevron.locator("svg")).toHaveCSS(
+      "transform",
+      "matrix(0, 1, -1, 0, 0, 0)",
+    );
     await nav.getByRole("link", { name: "Security", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`${family}/member/$`));
     await frame
@@ -79,9 +84,11 @@ export function registerDesignIndexEntries(
     await expect(page).toHaveURL(
       /\/view\/design\/browse\/states\/navigation\/$/,
     );
-    await expect(
-      frame.getByRole("button", { name: "Show contents of Profile" }),
-    ).toHaveAttribute("aria-expanded", "false");
+    const closedChevron = frame.getByRole("img", {
+      name: "Show contents of Profile",
+    });
+    await expect(closedChevron).toBeVisible();
+    await expect(closedChevron.locator("svg")).toHaveCSS("transform", "none");
     await frame
       .locator("nav.mbk-nav")
       .getByRole("link", { name: "Profile", exact: true })
