@@ -54,3 +54,8 @@ the plan deletes it too.
   component's variant set starts with its own example, then the saved
   variants. The focus glow is `signalDeep` at 75%, 4px. The preview scheme
   switch leaves the bar, and the Frames filter chooses the scheme.
+
+- Call on Milestone 23, 2026-11-22: the frame probe budget rises from 9,216
+  to 10,240 bytes, because the content-box measurement needs about 360 bytes
+  and Milestone 10 had filled the old budget. Each published page grows by
+  about 360 bytes before compression.
