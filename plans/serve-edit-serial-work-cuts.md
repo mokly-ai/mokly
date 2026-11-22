@@ -232,9 +232,10 @@ Depends on: 1
       patch is `.context/edit-background-render/m3-b1/variant-A-shared-arc.patch`.
 - [x] Run the targeted tests of the changed crates. Evidence:
       `.context/edit-background-render/m3-b1/`.
-- [ ] Apply item 3 of 2026-11-22: share the record itself, rewrite the README
+- [x] Apply item 3 of 2026-11-22: share the record itself, rewrite the README
       rule, and add the HTTP revision test and the validation test, with the
-      eight sharing mutations still failing.
+      eight sharing mutations still failing. Evidence:
+      `.context/edit-background-render/m3c-item3/`.
 
 ## Milestone 4: Head validation without a fetch for proven views
 

@@ -49,7 +49,7 @@ pub(crate) fn apply(next: &mut Snapshot, encoder: &dyn DetailEncoder) -> Result<
             .filter(|(record, _)| builds(record, &source, workspace.as_ref(), &evidence))
             .map(|(record, file)| (record.clone(), file.clone()));
         let (detail, file) = match shared {
-            Some((record, file)) => next.recent_details.reuse(kind, &record, &file, revision),
+            Some(shared) => shared,
             None => {
                 let mut detail = Arc::new(rebuilt(&source, workspace, evidence, revision));
                 let adjacent = next.files.get(&route).map(|file| (&source, file));

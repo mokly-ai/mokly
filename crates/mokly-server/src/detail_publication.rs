@@ -80,24 +80,6 @@ impl RecentDetails {
         Some((&record.detail, &record.file))
     }
 
-    /// Publish a record of `kind` that the caller proved equal to the detail that it would
-    /// build, apart from `detailId` and `revision`. The detail takes the record's id and payload
-    /// and this publication's typed revision, and it becomes the record of its kind.
-    pub(crate) fn reuse(
-        &mut self,
-        kind: PublicationKind,
-        record: &EntryDetailV4,
-        file: &RevisionFile,
-        revision: u64,
-    ) -> (Arc<EntryDetailV4>, RevisionFile) {
-        let detail = Arc::new(EntryDetailV4 {
-            revision: Some(revision),
-            ..record.clone()
-        });
-        self.keep(kind, &detail, file);
-        (detail, file.clone())
-    }
-
     fn keep(&mut self, kind: PublicationKind, detail: &Arc<EntryDetailV4>, file: &RevisionFile) {
         let path = detail.entry.path.clone();
         self.records.entry(path).or_default()[kind as usize] = Some(PublishedDetail {

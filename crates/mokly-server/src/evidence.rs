@@ -99,10 +99,7 @@ pub(crate) fn complete(
     for path in &dirty {
         let route = viewer(&format!("entries/{path}.json"));
         let file = if let Some((record, file)) = shared.remove(path) {
-            let (detail, file) =
-                next.recent_details
-                    .reuse(PublicationKind::Usage, &record, &file, revision);
-            next.details.insert(path.clone(), detail);
+            next.details.insert(path.clone(), record);
             file
         } else if let Some(detail) = next.details.get_mut(path) {
             Arc::make_mut(detail).revision = Some(revision);
