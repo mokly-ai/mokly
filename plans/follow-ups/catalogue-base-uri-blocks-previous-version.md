@@ -50,3 +50,5 @@
 - **Action:** ask the user, because A relaxes a security header. First add a
   browser test with a relative image in a previous version, to confirm the
   break.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 21 of the Canvas redesign
+  plan does the work and deletes this item.

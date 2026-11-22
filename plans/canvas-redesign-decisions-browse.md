@@ -48,6 +48,7 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Recommendation:** B. A use case then reads like a prototype flow in a
   design file, and the viewer keeps one frame system.
 - **Action:** ask the user, because B and C change two requirements.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 18 does the work.
 
 ## 34. How a removed entry's previous version stands on the canvas
 
@@ -84,6 +85,7 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Previous examples:** None found.
 - **Recommendation:** B. It matches how every other screen opens.
 - **Action:** ask the user, because B and C change three requirements.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 18 does the work.
 
 ## 35. The zoom pill while an entry loads or failed
 
@@ -110,6 +112,7 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Previous examples:** The home state has no pill for the same reason.
 - **Recommendation:** B. The rule then follows its own reason.
 - **Action:** ask the user, because B changes a requirement.
+- **Answer:** Cal chose **B** on 2026-11-22. Milestone 18 does the work.
 
 ## 36. The fonts of a Markdown document
 
