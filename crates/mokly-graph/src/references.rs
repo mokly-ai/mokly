@@ -28,8 +28,8 @@ pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
     collect_with(nodes, &|source| syntax::references(source).into())
 }
 
-/// Collect like `collect`. `styles` gives the references of each inline style text and
-/// must equal a direct scan.
+/// Collect like `collect`. `styles` gives the references of each inline style text that
+/// the caller follows: a direct scan, or a scan without the references it skips.
 pub(crate) fn collect_with(
     nodes: &[Node],
     styles: &dyn Fn(&str) -> Arc<[Reference]>,

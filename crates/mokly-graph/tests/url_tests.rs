@@ -39,6 +39,34 @@ fn composed_resource_urls_reject_escapes_encoded_separators_and_invalid_encoding
 }
 
 #[test]
+fn viewer_face_addresses_still_escape_from_pages_and_screens() {
+    let face = "../../../mokly-viewer/fonts/Geist-Variable.woff2";
+    for (file, source, route) in [
+        (
+            "specs/terms.page.html",
+            format!(
+                "---\ntitle: Terms\n---\n<!doctype html><html><head><title>Terms</title><style>@font-face{{font-family:\"Geist\";src:url(\"{face}\")}}</style></head><body><p>Terms</p></body></html>"
+            ),
+            "terms/index.html",
+        ),
+        (
+            "specs/home.screen.html",
+            format!("---\ntitle: Home\n---\n<p style=\"background:url({face})\">Home</p>"),
+            "home/index.mobile.html",
+        ),
+    ] {
+        let root = TempDir::new().unwrap();
+        fs::create_dir(root.path().join("specs")).unwrap();
+        fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+        fs::write(root.path().join(file), source).unwrap();
+        let generation = support::prepare(root.path(), 1024 * 1024, 1).0.unwrap();
+        let error = generation.closure(route).unwrap_err().to_string();
+        let expected = format!("{route}: invalid resource URL \"{face}\": unsafe or escaping URL");
+        assert!(error.contains(&expected), "{error}");
+    }
+}
+
+#[test]
 fn query_and_fragment_colons_survive_rendering_and_the_public_closure() {
     let root = TempDir::new().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();

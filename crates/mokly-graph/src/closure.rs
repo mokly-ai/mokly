@@ -21,6 +21,7 @@ use crate::reference_index::ReferenceIndex;
 use crate::references::{ResourceReference, collect_with};
 use crate::resource_reach::ResourceReach;
 use crate::urls::local_target;
+use crate::viewer_fonts::ViewerFonts;
 
 /// Generation-owned resources are read from plans and cache, never by disk route.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = GeneratedResourcesMock))]
@@ -56,8 +57,15 @@ pub struct Closure {
 
 /// Injected closure traversal boundary.
 pub trait ClosureBuilder: Send + Sync {
-    /// Follow one composed document and its renderer-declared seeds.
-    fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure>;
+    /// Follow one composed document and its renderer-declared seeds. `fonts` says
+    /// whether the document's own CSS may load the faces that the viewer delivers.
+    fn collect(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+    ) -> Result<Closure>;
 }
 
 /// Reuses one generation's public policy for every target.
@@ -75,10 +83,18 @@ pub struct Walker {
 }
 
 impl ClosureBuilder for Walker {
-    fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure> {
+    fn collect(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+    ) -> Result<Closure> {
         let mut result = Closure::default();
         let source = namespace::generated(route);
-        let references = collect_with(tree, &|css| self.index.style_references(css));
+        let references = collect_with(tree, &|css| {
+            fonts.followed(&source, self.index.style_references(css))
+        });
         let mut queue: VecDeque<_> = references
             .iter()
             .cloned()

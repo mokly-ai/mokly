@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
-use mokly_model::namespace::viewer;
+use mokly_model::namespace::{FONT_FACES, viewer};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
 
@@ -89,20 +89,18 @@ impl ViewerAssets for PackageAssets {
                 },
             );
         }
+        let faces = FONT_FACES.map(|face| (format!("assets/{face}"), face, "font/woff2"));
         for (source, route, mime) in [
-            ("shell.css", "shell.css", "text/css; charset=utf-8"),
-            ("assets/brand.svg", "client/brand.svg", "image/svg+xml"),
+            ("shell.css".into(), "shell.css", "text/css; charset=utf-8"),
             (
-                "assets/fonts/Geist-Variable.woff2",
-                "fonts/Geist-Variable.woff2",
-                "font/woff2",
+                "assets/brand.svg".into(),
+                "client/brand.svg",
+                "image/svg+xml",
             ),
-            (
-                "assets/fonts/GeistMono-Variable.woff2",
-                "fonts/GeistMono-Variable.woff2",
-                "font/woff2",
-            ),
-        ] {
+        ]
+        .into_iter()
+        .chain(faces)
+        {
             let bytes = match self.tree.read(&dist.join(source)) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(ServerError::InvalidAssets),

@@ -17,6 +17,7 @@ use crate::graph::Graph;
 use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::session::{Session, SessionInput};
 use crate::styles::Matchers;
+use crate::viewer_fonts::ViewerFonts;
 
 fn config() -> ResolvedConfig {
     ResolvedConfig {
@@ -112,7 +113,7 @@ fn two_generations_share_the_scans_of_equal_inline_styles() {
         );
         let closure = session
             .preview_walker()
-            .collect("home.html", &document(), &[])
+            .collect("home.html", &document(), &[], ViewerFonts::Denied)
             .unwrap();
         assert_eq!(
             closure.files,

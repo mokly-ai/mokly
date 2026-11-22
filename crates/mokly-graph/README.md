@@ -170,6 +170,9 @@ calculation runs one module at a time.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+Each walk takes the `ViewerFonts` permission of its document's entry: only a
+Markdown document's own CSS may name the viewer's two faces, which the walk
+skips like external references.
 Each `MemoryReferenceIndex` reads the inline style scans of the walk through
 the style memo that `DeliveryInputs` passes in. The render runtime passes one
 memo to all its generations, so an equal inline style text reuses a scan that
@@ -333,6 +336,9 @@ retention disabled.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
+- [`src/viewer_fonts.rs`](./src/viewer_fonts.rs) defines `ViewerFonts` and
+  `face`, the one target outside `static/` that a walk accepts: a viewer face
+  named by a Markdown document's own stylesheet.
 - [`src/reference_index.rs`](./src/reference_index.rs) defines
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
   referenced file of one generation and its reads of the style memo.

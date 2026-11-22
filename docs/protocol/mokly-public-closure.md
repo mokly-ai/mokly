@@ -78,6 +78,20 @@ rejected, because it repeats work that the replacement keeps on purpose.
 Serving declared files without closure membership was rejected, because it
 weakens confinement.
 
+A Markdown document's own stylesheet loads the two faces that the viewer
+delivers, `mokly-viewer/fonts/Geist-Variable.woff2` and
+`mokly-viewer/fonts/GeistMono-Variable.woff2`, through a relative CSS `url()`
+from the document's route. The closure skips such a reference, read from the
+document itself and resolving to exactly one of these two paths, like an
+external reference: it is no closure member and no watch input, and `build`
+copies nothing for it under `static/`. Any other result outside `static/`
+fails confinement, including another viewer file, a root-absolute face path,
+and the same face address in a screen, a page, a component, or an authored
+stylesheet. Decision: Markdown documents load the viewer's own faces through
+this exception, not through a copy under `static/mokly-generated/` (decision
+36, option C), because the viewer already delivers them in every delivery and
+one Canvas look covers every surface.
+
 A renderer resource declaration is a closure starting point even without an
 HTML link. Every seed passes the same policy and existence checks as a
 document link before it enters the closure. A declaration cannot bypass
@@ -118,3 +132,14 @@ the base commit's closure from Git blobs with the same policy applied to the
 base's own inventory; the Git reader rejects a symbolic link rather than
 following it, and the base's closure is the only public authored set of that
 side.
+
+Every comparison generation holds a copy of each viewer face at
+`snapshots/mokly-viewer/fonts/Geist-Variable.woff2` and
+`snapshots/mokly-viewer/fonts/GeistMono-Variable.woff2`, with the exact bytes
+that the viewer delivers at `mokly-viewer/fonts/`, so that the unchanged face
+address of a snapshot document resolves inside its generation. `build` writes
+both copies into each generation that it writes, and they join the
+generation's identity. Serve answers both paths for every retained generation
+from the viewer's own files, with the headers of the other generation files
+and without a charge to the generation's capacity, and answers 404 for an
+unknown or collected generation.

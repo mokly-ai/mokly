@@ -45,8 +45,14 @@ fn injected_unsafe_markdown_output_keeps_its_file_and_exact_reason() {
         prop_validators: Default::default(),
         warnings: Vec::new(),
     };
-    let mut nodes =
-        markdown::render("Text", "Notes", ColorScheme::Light, &Unimock::new(())).unwrap();
+    let mut nodes = markdown::render(
+        "Text",
+        "Notes",
+        ColorScheme::Light,
+        "notes/index.html",
+        &Unimock::new(()),
+    )
+    .unwrap();
     let tree::Node::Element(html) = &mut nodes[1] else {
         panic!()
     };

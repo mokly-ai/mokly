@@ -6,6 +6,7 @@ use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::canonical;
 use mokly_model::material::digest;
+use mokly_model::namespace;
 use mokly_model::nullable::Nullable;
 use mokly_model::output::artifact::File;
 use mokly_model::output::inventory::Inventory;
@@ -46,6 +47,7 @@ pub(crate) fn append(
         &mut inventory,
         cancellation,
     )?;
+    faces(output, &mut inventory)?;
     for preview in projection_removed::previews(result) {
         inventory
             .insert(
@@ -76,6 +78,21 @@ pub(crate) fn append(
         output
             .insert(format!("{prefix}{}", file.path), file.bytes.clone())
             .admit()?;
+    }
+    Ok(())
+}
+
+/// Copy each viewer face that the output delivers into the generation, with its
+/// exact bytes, so that the unchanged relative face address of a snapshot document
+/// resolves inside the generation. The copies join the generation's digest.
+fn faces(output: &Inventory, inventory: &mut Inventory) -> Result<()> {
+    for face in namespace::FONT_FACES {
+        let delivered = namespace::viewer(face);
+        if let Some(file) = output.files().find(|file| file.path == delivered) {
+            inventory
+                .insert(namespace::snapshot_viewer(face), file.bytes.clone())
+                .admit()?;
+        }
     }
     Ok(())
 }
