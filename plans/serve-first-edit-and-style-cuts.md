@@ -130,8 +130,9 @@ Contract owners:
   sidecar had filtered before. The text stayed one 12,821-byte text with 8 or
   9 top-level nodes. The filter took a median of 1.88 ms and a mean of 2.8 ms,
   and its parse a median of 0.34 ms.
-- With C1, each generation object owns an index for each registry text that it
-  filters, so `dispose` and `shutdown` release it with the generation. The
+- With C1, each generation object has an index, under a weak key, for each
+  registry text that it filters, so `dispose` and `shutdown` release it with
+  the generation. The
   index holds the parsed tree and the analysis of its rules, so a call computes
   its needed rules without a parse. A memo keeps the output for each set of
   needed nodes; a miss prunes a clone of the parsed tree by today's algorithm.
@@ -198,10 +199,16 @@ Contract owners:
   index cannot read. Reason: a branch for a caller without an index would run
   only in tests, and the tests of `collectStyles` then run the indexed path.
 - 2026-11-22, implementor's call, accepted by me: no test reads the session to
-  show that `dispose` drops the index. Reason: the index is a field of the
-  generation that `restore` creates, nothing else refers to it, and the
-  session code that drops a generation does not change. A test would read the
-  private generation map or assert an incidental error.
+  show that `dispose` drops the index. Reason: only the weak key of the
+  generation object refers to the index, and the session code that drops a
+  generation does not change. A test would read the private generation map or
+  assert an incidental error.
+- 2026-11-22, my call after #478 merged: the index lives under a weak key of
+  the generation object, `registryIndexOf`, not in a field of `Generation`.
+  Reason: `bundle.ts`, which declares `Generation`, has 299 of its 300 lines
+  after #478, and the weak key keeps the same lifetime with no change of
+  `bundle.ts` or `compiled.ts`. Alternative: a field, which needs a split of
+  `bundle.ts` first.
 
 ## Milestone 1: Documentation and items
 

@@ -29,7 +29,6 @@ import { nativeResolveFilter } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { PlannedRelative } from "./planned-relative.js";
-import type { RegistryIndex } from "./registry-index.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
 import { PlanLookup } from "./resolution-plan.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
@@ -54,8 +53,6 @@ export interface Generation {
   sources: Map<string, string>;
   stories: Map<string, unknown>;
   require: NodeJS.Require;
-  /** The persistent style registry index; it lives and ends with the generation. */
-  registryIndex: RegistryIndex;
 }
 export interface BundleExports {
   entries: Record<string, Record<string, unknown>>;

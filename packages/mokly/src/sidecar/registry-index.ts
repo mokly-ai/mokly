@@ -45,6 +45,23 @@ interface IndexedText {
   readonly outputs: Map<string, string>;
 }
 
+/**
+ * The registry index of each generation object. A weak key keeps no
+ * generation alive, so an index ends with its generation: at `dispose`, at
+ * `shutdown`, or when a `bundle` result replaces the generation.
+ */
+const indexes = new WeakMap<object, RegistryIndex>();
+
+/** The registry index of a generation, created at its first filter. */
+export function registryIndexOf(generation: object): RegistryIndex {
+  let index = indexes.get(generation);
+  if (!index) {
+    index = new RegistryIndex();
+    indexes.set(generation, index);
+  }
+  return index;
+}
+
 /** The registry texts that one generation filtered, each parsed once. */
 export class RegistryIndex {
   private readonly held = new Map<string, IndexedText>();

@@ -9,7 +9,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as styled from "styled-components";
 
 import { AuthoringRuntime } from "../packages/mokly/src/authoring/runtime.js";
-import { RegistryIndex } from "../packages/mokly/src/sidecar/registry-index.js";
 import { collectStyles } from "../packages/mokly/src/sidecar/styles.js";
 
 const runtime = new AuthoringRuntime(React);
@@ -17,7 +16,6 @@ const generation = {
   runtime,
   exports: { entries: {}, stories: {}, styleAdapters: { emotion, styled } },
   require: createRequire(import.meta.url),
-  registryIndex: new RegistryIndex(),
 };
 function Owner({
   name,

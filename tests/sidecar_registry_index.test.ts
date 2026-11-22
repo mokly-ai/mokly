@@ -8,7 +8,10 @@ import * as native from "react-native-web";
 
 import { AuthoringRuntime } from "../packages/mokly/src/authoring/runtime.js";
 import { HtmlInput } from "../packages/mokly/src/sidecar/html_input.js";
-import { RegistryIndex } from "../packages/mokly/src/sidecar/registry-index.js";
+import {
+  RegistryIndex,
+  registryIndexOf,
+} from "../packages/mokly/src/sidecar/registry-index.js";
 import { registryStyles } from "../packages/mokly/src/sidecar/registry-styles.js";
 import { collectStyles } from "../packages/mokly/src/sidecar/styles.js";
 
@@ -53,8 +56,8 @@ function repeated<T>(items: readonly T[]): T[] {
 }
 
 test("the indexed filter writes the bytes of registryStyles for react-native-web registries", () => {
-  const index = new RegistryIndex();
-  const generation = { runtime, exports, require, registryIndex: index };
+  const generation = { runtime, exports, require };
+  const index = registryIndexOf(generation);
   const expected = new Set<string>();
   const compare = (round: string, fragments: [string, React.ReactNode][]) => {
     expected.clear();

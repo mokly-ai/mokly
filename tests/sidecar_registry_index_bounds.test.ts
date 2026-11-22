@@ -8,6 +8,7 @@ import {
   REGISTRY_OUTPUT_LIMIT,
   REGISTRY_TEXT_LIMIT,
   RegistryIndex,
+  registryIndexOf,
 } from "../packages/mokly/src/sidecar/registry-index.js";
 
 import { bundleParams } from "./helpers/sidecar.js";
@@ -55,7 +56,7 @@ test("an indexed text holds at most its output limit and drops the least recentl
   assert.deepEqual(held(), [...rules.slice(4), rules[2], rules[0]]);
 });
 
-test("each restored generation owns its own registry index", () => {
+test("each restored generation has its own registry index", () => {
   const compiled: CompiledGeneration = {
     toolchain: "toolchain",
     reuseEvidence: { complete: false, durable: false, inputs: {} },
@@ -74,7 +75,11 @@ test("each restored generation owns its own registry index", () => {
   const first = restore(bundleParams(), compiled, []);
   const second = restore(bundleParams(), compiled, []);
   const css = ".a{color:red}.b{color:blue}";
-  assert.equal(first.registryIndex.styles(css, fragment("a")), ".a{color:red}");
-  assert.deepEqual([...first.registryIndex.texts.keys()], [css]);
-  assert.equal(second.registryIndex.texts.size, 0);
+  assert.equal(
+    registryIndexOf(first).styles(css, fragment("a")),
+    ".a{color:red}",
+  );
+  assert.equal(registryIndexOf(first), registryIndexOf(first));
+  assert.deepEqual([...registryIndexOf(first).texts.keys()], [css]);
+  assert.equal(registryIndexOf(second).texts.size, 0);
 });

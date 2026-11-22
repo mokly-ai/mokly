@@ -470,9 +470,10 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/styles.ts`](./styles.ts) holds `collectStyles`, which
   collects the styles of one render. It filters the React Native Web registry
   text with the `RegistryIndex` of the generation, from
-  [`src/sidecar/registry-index.ts`](./registry-index.ts). `restore` gives each
-  generation its own index, so the index ends with its generation: at
-  `dispose`, at `shutdown`, or when a `bundle` result replaces the generation.
+  [`src/sidecar/registry-index.ts`](./registry-index.ts). `registryIndexOf`
+  keeps one index for each generation object, under a weak key, so the index
+  ends with its generation: at `dispose`, at `shutdown`, or when a `bundle`
+  result replaces the generation.
   The index parses each registry text once. It keeps the parsed tree, the
   class names of each selector, and the dependency rules that the declarations
   of each rule name. A call then finds its needed rules from the class tokens
