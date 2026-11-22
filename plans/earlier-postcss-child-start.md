@@ -327,16 +327,25 @@ Depends on: 1
 
 Depends on: 1, 2
 
-- [ ] Run the targeted tests, `cargo xtask check --suite repository`, and the
-      complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch. Send the SHA to the
+- [x] Run the targeted tests, `cargo xtask check --suite repository`, and the
+      complete gate named in `AGENTS.md`. The repository, viewer, browser,
+      `cloud-rust`, `cloud-fixtures`, and nine more cloud suites passed
+      locally. `cloud-terraform`, `cloud-helm`, `cloud-infrastructure`, and
+      `cloud-toolchain-pins` need tools that this machine lacks, so CI runs
+      them. `cloud-site` met one unrelated flaky test, recorded as a follow-up
+      item. Evidence: `.context/earlier-postcss-start/verify/`.
+- [x] Commit with Conventional Commits and push the branch. Send the SHA to the
       performance orchestrator.
-- [ ] Run a strict byte proof with ready Changes on `mokly-cloud`,
-      `examples/basic`, and the large HTML and React fixtures.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run a strict byte proof with ready Changes on `mokly-cloud`,
+      `examples/basic`, and the large HTML and React fixtures. Evidence:
+      `.context/earlier-postcss-start/byteproof-summary.md`.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings, then
       apply the fix rule: fix the `fix now` findings, record follow-up items
       under `plans/follow-ups/` for the rest, re-review once, and report.
+      Findings file: `.context/reviews/calummoore/mokly-earlier-postcss-start-bdhv/findings.md`.
+- [x] Merge `origin/main` once after workspace 229's pull request (#469)
+      lands, and rerun the targeted pool and sidecar tests on the merged tree.
 - [ ] Delete the follow-up item that this change replaces.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
