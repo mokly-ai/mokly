@@ -8,11 +8,15 @@ import { EVIDENCE_LIMIT } from "../packages/mokly/src/sidecar/physical-input-rea
 import { PlanCandidates } from "../packages/mokly/src/sidecar/plan-candidates.js";
 
 import {
+  assertRepeatBoundary,
   assertState,
   charge,
   mulberry32,
   pick,
+  repeatInputs,
+  repeatNearLimit,
   state,
+  stepDownRoom,
   type Collector,
   type CollectorState,
   type Operation,
@@ -51,53 +55,6 @@ const manifests = [
   '{"browser":"./w.jsx","exports":{".":"./index.js"}}',
   '{"main":"./node_modules/pkg/z.cjs","exports":["./index.js",null]}',
 ];
-
-function repeatNearLimit(
-  random: Random,
-  apply: (operation: Operation) => void,
-  reference: ReferencePlanCandidates,
-  repeat: Operation,
-  base: string,
-  calls: number,
-  context: string,
-): void {
-  apply(repeat);
-  for (let index = 1; index < calls - 2; index++) {
-    const selected = `${base}/${random(8)}.ts`;
-    apply(
-      random(3) === 0 ? (collector) => collector.selected(selected) : repeat,
-    );
-  }
-  // Leave too little room for the repeated name, with no later call to mask overflow.
-  charge(apply, EVIDENCE_LIMIT - state(reference, context).bytes - random(4));
-  apply(repeat);
-}
-
-function stepDownRoom(
-  random: Random,
-  apply: (operation: Operation) => void,
-  actual: PlanCandidates,
-  reference: ReferencePlanCandidates,
-  repeat: Operation,
-  context: string,
-): void {
-  apply(repeat);
-  const room = 1_200 + random(849);
-  charge(apply, EVIDENCE_LIMIT - state(reference, context).bytes - room);
-  for (let step = 0; step < room; step++) {
-    apply(repeat);
-    const repeatContext = `${context} repeat ${step}`;
-    const expected = state(reference, repeatContext);
-    const remaining = EVIDENCE_LIMIT - expected.bytes;
-    assertState(
-      state(actual, repeatContext),
-      expected,
-      `${repeatContext} room ${remaining}`,
-    );
-    if (expected.overflow) return;
-    apply((collector) => collector.selected(`selected-${step}`));
-  }
-}
 
 function randomCall(
   random: Random,
@@ -249,7 +206,12 @@ test(`plan candidate collection and attachment match the reference in ${seeds.le
       }
 
       const before = state(reference, context);
-      assertState(state(actual, context), before, `${context} before attach`);
+      const room = EVIDENCE_LIMIT - before.bytes;
+      assertState(
+        state(actual, context),
+        before,
+        `${context} before attach room ${room}`,
+      );
       const evidence = directoryEvidence(random, before.names);
       const plan: ResolutionPlan = {
         paths: [`${prefix}entry.ts`, `${prefix}x.js`],
@@ -272,6 +234,26 @@ test(`plan candidate collection and attachment match the reference in ${seeds.le
         state(reference, context),
         `${context} after attach`,
       );
+    }
+  }
+});
+
+test("plan candidate repeats match the reference on both sides of the overflow boundary", () => {
+  const methods: ReadonlyArray<"path" | "candidate"> = ["path", "candidate"];
+  for (const seed of seeds) {
+    const inputs = repeatInputs(mulberry32(seed));
+    for (const [
+      index,
+      { directory, basename, extensions },
+    ] of inputs.entries()) {
+      const base = `${directory}/${basename}`;
+      for (const method of methods) {
+        assertRepeatBoundary(
+          extensions,
+          (collector) => collector[method](base),
+          `seed ${seed} shape ${index} ${method}`,
+        );
+      }
     }
   }
 });
