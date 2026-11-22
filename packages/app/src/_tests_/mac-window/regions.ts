@@ -81,6 +81,35 @@ export async function expectBarRegions(bar: Locator, label: string) {
 }
 
 /**
+ * What the page draws in the free space after a part, inside the slot that
+ * holds it: the space's width, and the computed region of the element at its
+ * middle, which says whether that space moves the Mac window.
+ */
+export async function spaceAfter(
+  page: Page,
+  part: Locator,
+  slot: Locator,
+): Promise<{ width: number; region: string }> {
+  const [box, room] = await Promise.all([
+    part.boundingBox(),
+    slot.boundingBox(),
+  ]);
+  if (box === null || room === null) return { width: 0, region: "missing" };
+  const start = box.x + box.width;
+  const width = room.x + room.width - start;
+  const region = await page.evaluate(
+    ([x, y, property]) => {
+      const element = document.elementFromPoint(x, y);
+      return element === null
+        ? "nothing"
+        : getComputedStyle(element).getPropertyValue(property);
+    },
+    [start + width / 2, box.y + box.height / 2, appRegion] as const,
+  );
+  return { width, region };
+}
+
+/**
  * Report the window buttons at one edge, as the Mac app does through the
  * window controls overlay. A browser has no overlay, so the test sets the
  * width on the root element, where the shared stylesheet reads it.

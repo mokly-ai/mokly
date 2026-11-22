@@ -14,6 +14,7 @@ import {
   expectMovesWindow,
   expectTakesClicks,
   partsUnderButtons,
+  spaceAfter,
   windowInsets,
 } from "./regions";
 
@@ -111,9 +112,11 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
 
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
+  const start = page.locator(".fo-package-slot-start");
+  const centre = page.locator(".fo-package-slot-center");
   for (const [width, composition] of [
     [1440, "full"],
-    [1024, "compact"],
+    [960, "compact"],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await expect(
@@ -121,18 +124,27 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
         composition === "full" ? "viewer-history" : "viewer-more",
       ),
     ).toBeVisible();
-    // The compact bar leaves the centre slot empty.
+    // The compact bar leaves the start slot empty.
     const slots = {
-      "start slot": page.locator(".fo-package-slot-start"),
-      ...(composition === "full" && {
-        "centre slot": page.locator(".fo-package-slot-center"),
-      }),
+      ...(composition === "full" && { "start slot": start }),
+      "centre slot": centre,
       "end slot": page.locator(".fo-package-slot-end"),
     };
     for (const [label, slot] of Object.entries(slots)) {
       await expectBarRegions(slot, `the ${composition} bar's ${label}`);
     }
     await expectBarsClearOfButtons(page, slots);
+    // The space after the project, up to the pill, and on the compact bar the
+    // space after the pill, up to the search, belong to the cloud's slots, so
+    // they move the window too.
+    const [part, slot, label] =
+      composition === "full"
+        ? [page.getByTestId("viewer-project"), start, "after the project"]
+        : [page.getByTestId("viewer-publication"), centre, "after the pill"];
+    await expect
+      .poll(() => spaceAfter(page, part, slot), `the space ${label}`)
+      .toEqual({ width: expect.any(Number), region: "drag" });
+    expect((await spaceAfter(page, part, slot)).width).toBeGreaterThan(16);
   }
 
   // A dialog or a menu over the bar takes its clicks.
@@ -164,7 +176,7 @@ test("the viewer package's mark comes after the Mac window's buttons in both com
     .locator("..");
   for (const [width, composition] of [
     [1440, "full"],
-    [1024, "compact"],
+    [960, "compact"],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await expect(

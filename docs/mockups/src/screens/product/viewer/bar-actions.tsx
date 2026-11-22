@@ -13,11 +13,20 @@ interface BarActionProps {
   disabled?: boolean;
 }
 
-/** History: the quiet Button, with History's clock as its icon. */
-export function HistoryTrigger({ to, disabled = false }: BarActionProps) {
+/**
+ * History: the quiet Button, with History's clock as its icon. A bar without
+ * room for its label draws the clock alone, named and titled by the label.
+ * A drawing draws both forms for the label rule in `viewer-bar.css` to show
+ * one, so each form keeps its own instance key.
+ */
+export function HistoryTrigger({
+  to,
+  disabled = false,
+  iconOnly = false,
+}: BarActionProps & { iconOnly?: boolean }) {
   return (
     <Action
-      instance="viewer-history"
+      instance={iconOnly ? "viewer-history-glyph" : "viewer-history"}
       label="History"
       icon="history"
       tone="quiet"
@@ -25,6 +34,7 @@ export function HistoryTrigger({ to, disabled = false }: BarActionProps) {
       singleLine
       to={to}
       disabled={disabled}
+      {...(iconOnly ? { iconOnly } : {})}
     />
   );
 }

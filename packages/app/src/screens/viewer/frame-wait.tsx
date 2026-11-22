@@ -56,7 +56,9 @@ function waitingSlots(
       <BarAction label="History" icon="history" slot="history" waiting />
     ),
     share: <BarAction label="Share" tone="secondary" slot="share" waiting />,
-    settings: <BarAction label="Settings" slot="settings" waiting />,
+    settings: (
+      <BarAction label="Settings" icon="settings" slot="settings" waiting />
+    ),
     account:
       identity.kind === "signed-in" ? (
         <AccountTrigger {...accountLabel(identity.user, compact)} waiting />
@@ -95,7 +97,7 @@ export function ViewerFrameWait({
       data-mkc-screen="viewer"
     >
       {bar.probe}
-      <CompactBarProvider compact={bar.compact}>
+      <CompactBarProvider compact={bar.compact} labels={bar.labels}>
         <ViewerMain beneath={false}>
           <Pending label={wait} labelMode="screen-reader-only">
             {(name) => (

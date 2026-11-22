@@ -28,24 +28,24 @@ settings rail and the stage, `viewer.css` the stage cards and what a panel
 holds, `viewer-bar.css`, which `viewer.css` imports, the viewer root as the
 bar's container with the window insets that it gives the package bar, both
 compositions of the top bar with the centre's caps and the pill's label widths,
-its one switch width and the application's probe of the switch,
-`viewer-controls.css`, which `viewer.css` imports too, the bar's publication
-pill, the reader's avatar and the account control, `viewer-depiction.css`, which
-only the drawing's module imports, its sample screen and its comparison message,
-`overlays.css` the registered panel frame and a row's three-dot menu,
-`records.css` the panels, rows, facts and people, `inventory.css` the sections,
-forms, notes and states, `builds.css` the build card a cloud build draws in the
-stage, `settings.css` the overlay, `account.css` the account panel with its
-canvas, progress strip and mobile edge-to-edge rules, `entry.css` the shared
-sign-in/sign-up field stack, `recovery.css` the app-owned unmatched-path state,
-and `chrome.css` the wordmark, identity and heading primitives. The viewer
-drawings add the Canvas sheets, which their own modules import and the
-application never loads: `viewer-canvas.css` the inline end of the bar's two
-compositions and the search hint, `viewer-canvas-stage.css` the dot-grid stage
-and its floating cards, `viewer-canvas-depth.css` the shade, the radius and the
-shadows of a floating surface, `viewer-canvas-panels.css` the panels that the
-slots open, `viewer-canvas-menu.css` the open account and More menus,
-`viewer-canvas-check.css` the Mokly check beside the stage, and
+its one switch width, the label rule of History and Settings and the
+application's probes, `viewer-controls.css`, which `viewer.css` imports too, the
+bar's publication pill, the reader's avatar and the account control,
+`viewer-depiction.css`, which only the drawing's module imports, its sample
+screen and its comparison message, `overlays.css` the registered panel frame and
+a row's three-dot menu, `records.css` the panels, rows, facts and people,
+`inventory.css` the sections, forms, notes and states, `builds.css` the build
+card a cloud build draws in the stage, `settings.css` the overlay, `account.css`
+the account panel with its canvas, progress strip and mobile edge-to-edge rules,
+`entry.css` the shared sign-in/sign-up field stack, `recovery.css` the app-owned
+unmatched-path state, and `chrome.css` the wordmark, identity and heading
+primitives. The viewer drawings add the Canvas sheets, which their own modules
+import and the application never loads: `viewer-canvas.css` the inline end of
+the bar's two compositions and the search hint, `viewer-canvas-stage.css` the
+dot-grid stage and its floating cards, `viewer-canvas-depth.css` the shade, the
+radius and the shadows of a floating surface, `viewer-canvas-panels.css` the
+panels that the slots open, `viewer-canvas-menu.css` the open account and More
+menus, `viewer-canvas-check.css` the Mokly check beside the stage, and
 `viewer-canvas-settings.css` the settings dialog over the viewer.
 `styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of the
 Canvas palette, copied from the `geist` npm package, with their SIL Open Font

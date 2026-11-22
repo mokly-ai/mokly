@@ -5,7 +5,7 @@ import type { ActionIcon } from "../components/action";
 import { StateDot } from "../components/controls";
 import { SiteLink } from "../components/page-parts";
 
-import { useCompactBar } from "./bar-width";
+import { useBarLabels, useCompactBar } from "./bar-width";
 import type { ViewerSlotName } from "./host";
 import { PillChevron } from "./pill";
 import type { PublicationState } from "./resolution";
@@ -201,6 +201,9 @@ export type BarPress =
  * and it is the screen's one filled action where the package's slots hold it,
  * because the package draws only a ready publication. The cloud's own bar
  * stands over a stage card, which owns that action, so there it keeps `tone`.
+ * An action with a glyph draws its glyph alone where the bar has no room for
+ * its label, and keeps its name and tooltip; it stays one control, so it
+ * keeps its focus when the drawing changes.
  */
 export function BarAction({
   label,
@@ -219,7 +222,7 @@ export function BarAction({
 }: BarPress & {
   label: string;
   chevron?: boolean;
-  /** The glyph before the label, such as History's clock. */
+  /** The glyph before the label, or instead of it, such as History's clock. */
   icon?: ActionIcon;
   tone?: "secondary" | "quiet";
   filled?: boolean;
@@ -227,6 +230,7 @@ export function BarAction({
   slot: ViewerSlotName;
 }) {
   const ready = useViewerSlotSource() === "package";
+  const labels = useBarLabels();
   return (
     <Slot name={slot} slotRef={slotRef} title={label} className="fo-top-fixed">
       <span>
@@ -237,6 +241,7 @@ export function BarAction({
           size="sm"
           chevron={chevron}
           icon={icon}
+          iconOnly={icon === undefined ? undefined : !labels}
           singleLine
           expanded={open}
           hasPopup={popup}

@@ -98,7 +98,7 @@ headed Changes around the check card, which says the check succeeded, gives
 the changed, added and removed counts of the drawing's catalogue, and links the
 pull request's checks on GitHub. The panel shows only where the full bar
 shows, and the phone drawing and every branch drawing have none.
-[Viewer chrome](./viewer-chrome.md#check-slot) places the check in the
+[Viewer chrome: check slot](./viewer-chrome-check.md) places the check in the
 package's Changes tab, whose check slot the drawn package parts lack.
 
 A read that never produced the publication is not the same as one that is gone:

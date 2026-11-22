@@ -87,8 +87,15 @@ export function ViewerBar({
         {publication}
       </span>
       <span className="fo-top-slot fo-top-trail">
-        <span className="fo-top-fixed fo-full-bar-only">
+        <span className="fo-top-fixed fo-full-bar-only fo-bar-label-only">
           <HistoryTrigger to="product/viewer/history" disabled={waiting} />
+        </span>
+        <span className="fo-top-fixed fo-full-bar-only fo-bar-glyph-only">
+          <HistoryTrigger
+            to="product/viewer/history"
+            disabled={waiting}
+            iconOnly
+          />
         </span>
         <span className="fo-top-fixed fo-full-bar-only">
           <ShareTrigger

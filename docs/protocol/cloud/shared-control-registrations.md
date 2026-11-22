@@ -43,28 +43,34 @@ the roomy one:
 viewport, chooses it: `sm` for a section action beside a heading, `md` for a
 page, form or dialog action, `lg` (the default) for a primary call to action on
 account entry and onboarding. One tone vocabulary covers every surface:
-`primary` is the one action that moves the screen forward, `secondary` is a
-real alternative path beside it, `quiet` repeats or dismisses, and `danger`
-destroys; going back is the ink back link, not a button. A screen spends one
-`primary` and pairs it with at most one alternative; two filled buttons is two
-primaries. It takes an optional `block` for a full-width action, an optional
-`icon` naming one of `github`, `start`, `retry`, `external`, `signOut` or
-`history`, which the wrapper resolves to the shared lucide glyph and Firna
-tints to the label color, and an optional `chevron` that places the shared
-switcher glyph in the same decorative trailing slot the `arrow` uses, so a
-viewer switcher trigger reads as one. `arrow` and `chevron` are mutually
-exclusive; `arrow` wins if both are passed. It takes an optional `lead`, a
-muted text before the label with a slash between them, such as a workspace
-before its project: the wrapper draws it inside the Button through the
-package's own content, in the muted text role at the regular weight, so the
-whole row is one control. The label keeps its tone's ink and weight. The lead
-gives up its width before the label gives up any, and each is cut on one line.
-A lead takes the place of the `icon` and the `arrow`, and a busy Button draws
-its working word alone. It takes an optional `accessibilityLabel`, the whole
-value behind a label that is a shortened form of it: only a shortened label is
-given a longer name to answer to, so a reader who cannot hover still reaches
-the whole one. A Button with a lead and no `accessibilityLabel` is named by the
-lead, the slash and the label. Every one of these props is optional.
+`primary` is the one action that moves the screen forward, `secondary` is a real
+alternative path beside it, `quiet` repeats or dismisses, and `danger` destroys;
+going back is the ink back link, not a button. A screen spends one `primary` and
+pairs it with at most one alternative; two filled buttons is two primaries. It
+takes an optional `block` for a full-width action, an optional `icon` naming one
+of `github`, `start`, `retry`, `external`, `signOut`, `history` or `settings`,
+which the wrapper resolves to the shared lucide glyph and Firna tints to the
+label color, and an optional `chevron` that places the shared switcher glyph in
+the same decorative trailing slot the `arrow` uses, so a viewer switcher trigger
+reads as one. `arrow` and `chevron` are mutually exclusive; `arrow` wins if both
+are passed. It takes an optional `lead`, a muted text before the label with a
+slash between them, such as a workspace before its project: the wrapper draws it
+inside the Button through the package's own content, in the muted text role at
+the regular weight, so the whole row is one control. The label keeps its tone's
+ink and weight. The lead gives up its width before the label gives up any, and
+each is cut on one line. A lead takes the place of the `icon` and the `arrow`,
+and a busy Button draws its working word alone. It takes an optional
+`accessibilityLabel`, the whole value behind a label that is a shortened form of
+it: only a shortened label is given a longer name to answer to, so a reader who
+cannot hover still reaches the whole one. A Button with a lead and no
+`accessibilityLabel` is named by the lead, the slash and the label. It takes an
+optional `iconOnly`, which draws the icon alone in the package's own square box:
+the Button is named by its `accessibilityLabel`, or else by its label, and an
+element around it that takes no box gives that name as the tooltip. The form
+needs an `icon` and takes the place of the lead, the arrow and the chevron. A
+control that switches between its labelled and icon-only drawings keeps the prop
+set, `false` for the labelled one, so it stays mounted and keeps its focus.
+Every one of these props is optional.
 
 Target size follows the viewport too. Mobile keeps `minTouchTarget={44}`, so
 every action is at least 44px (WCAG 2.1 — 2.5.5, AAA). Desktop keeps the size

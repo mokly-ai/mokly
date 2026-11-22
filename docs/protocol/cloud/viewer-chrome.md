@@ -1,12 +1,13 @@
 # Viewer Chrome
 
-Status: The five-action bar, the account menu, History's label drop and the Mokly check in the Changes tab are not built yet: the live bar also holds Settings, its avatar opens the Account settings pane, and History and Settings keep their labels. [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the bar, the account menu and the check in that slot, and [Milestone 22](../../../plans/canvas-redesign-milestones-viewer.md#milestone-22-viewer-bar-to-the-prototype) builds the label drop.
+Status: The five-action bar, the account menu and the Mokly check in the Changes tab are not built yet: the live bar also holds Settings, and its avatar opens the Account settings pane. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the bar and the account menu, and [Viewer chrome: check slot](./viewer-chrome-check.md) says when the check comes.
 
 This is the slot and publication-chrome sub-contract of [Viewer](./viewer.md).
 The slots are those of the workspace `@mokly/viewer` of
 [Viewer host](./viewer-host.md). The account trigger, the account menu and its
 Theme choice are in
-[Viewer chrome: account menu](./viewer-chrome-account.md).
+[Viewer chrome: account menu](./viewer-chrome-account.md), and the check in the
+Changes tab in [Viewer chrome: check slot](./viewer-chrome-check.md).
 
 ## Slot Inventory
 
@@ -15,44 +16,47 @@ The package exposes `topBarStart`, `topBarCenter`, `topBarEnd`, `railStart`,
 `changesStart` is the one host slot of its Changes tab, which holds a check.
 Cloud composes its five actions into the three top-bar slots: the workspace and
 project switcher, the publication, History, Share and the account. The package
-bar draws its mark, then `topBarStart`; `topBarCenter` in the middle of the bar;
-then its search, its end control and `topBarEnd`. When the bar's own width fits
-all five beside the package's own controls, the project fills `topBarStart`, the
-publication pill fills `topBarCenter` with its Changes badge, its pull request
-on GitHub and View latest beside it when each applies, and history, share and
-account fill `topBarEnd`. The bar has no Settings action and no theme toggle:
-Settings and Theme are rows of the [account
-menu](./viewer-chrome-account.md#account-menu). Decision: Settings and Theme sit
-in the account menu rather than in the bar, so that the bar holds only the
-navigation, the publication and the actions on it. Cloud-owned wrappers
-constrain variable workspace, project and reference labels to one line with
-truncation when needed, while preserving their complete accessible names and
-tooltips. Fixed actions and the package's own controls remain readable and never
-overlap at supported widths. Workspace display names remain separate from route
-slugs; a reader without workspace metadata can use the project response's real
-workspace slug as its label. One switch width in rem chooses the layout: the
-narrowest bar that keeps every control of the full layout whole beside the
-package's own, also with the Mac window's buttons at one side. As the full bar
-narrows, it drops the pill's short SHA, then History's label, which keeps its
-glyph, accessible name and tooltip, then the pill's state phrase, whose dot
-stays. When the bar's own width is too narrow for all five, as on mobile, the
-publication stays in `topBarStart`, the centre stays empty, and a Firna **More**
-menu in `topBarEnd` carries the project, history and share, then the [account
-rows](./viewer-chrome-account.md#more). This keeps the package's 48px top bar
-intact instead of adding a second row. The choice between the two layouts
-follows the bar's own width rather than the window width or a higher compact
-breakpoint, because that breakpoint also moves settings and touch targets across
-the product. Choosing a menu item closes the menu and opens the same cloud
-overlay as its desktop control. Dismissing an overlay returns focus to the
-current trigger of the cloud action that opened it: **More** while the compact
-bar groups that action, or the action's own trigger while the bar shows it, in
-whichever slot holds it. That focus obligation belongs to the logical action
-across the cloud fallback, the package loader, the ready package shell and a
-change between the two layouts. Restoration is bounded: it ends when the reader
-focuses another control, interacts again, opens another overlay or leaves the
-route. The package keeps its own top bar and catalogue. Cloud also fills the
-Changes tab's [check slot](#check-slot) and, for a private comparison,
-`stageOverlay`, as the [private artifact
+bar draws its mark, then `topBarStart`; `topBarCenter` in the middle of the bar,
+or right after the mark while `topBarStart` is empty; then its search, its end
+control and `topBarEnd`. When the bar's own width fits all five beside the
+package's own controls, the project fills `topBarStart`, the publication pill
+fills `topBarCenter` with its Changes badge, its pull request on GitHub and View
+latest beside it when each applies, and history, share and account fill
+`topBarEnd`. The bar has no Settings action and no theme toggle: Settings and
+Theme are rows of the [account menu](./viewer-chrome-account.md#account-menu).
+Decision: Settings and Theme sit in the account menu rather than in the bar, so
+that the bar holds only the navigation, the publication and the actions on it.
+Cloud-owned wrappers constrain variable workspace, project and reference labels
+to one line with truncation when needed, while preserving their complete
+accessible names and tooltips. Fixed actions and the package's own controls
+remain readable and never overlap at supported widths. Workspace display names
+remain separate from route slugs; a reader without workspace metadata can use
+the project response's real workspace slug as its label. One switch width in rem
+chooses the layout: the narrowest bar that keeps every control of the full
+layout whole beside the package's own, also with the Mac window's buttons at one
+side. It does not count the preview scheme switch that the package draws for a
+catalogue with dark previews, so just above it that catalogue's search can cut
+its placeholder; the switch leaves the bar later. As the full bar narrows, it
+drops the pill's short SHA, then History's label, which keeps its glyph,
+accessible name and tooltip, then the pill's state phrase, whose dot stays. When
+the bar's own width is too narrow for all five, as on mobile, the publication
+stays in `topBarCenter`, right after the mark, `topBarStart` stays empty, and a
+Firna **More** menu in `topBarEnd` carries the project, history and share, then
+the [account rows](./viewer-chrome-account.md#more). This keeps the package's
+48px top bar intact instead of adding a second row. The choice between the two
+layouts follows the bar's own width rather than the window width or a higher
+compact breakpoint, because that breakpoint also moves settings and touch
+targets across the product. Choosing a menu item closes the menu and opens the
+same cloud overlay as its desktop control. Dismissing an overlay returns focus
+to the current trigger of the cloud action that opened it: **More** while the
+compact bar groups that action, or the action's own trigger while the bar shows
+it, in whichever slot holds it. That focus obligation belongs to the logical
+action across the cloud fallback, the package loader, the ready package shell
+and a change between the two layouts. Restoration is bounded: it ends when the
+reader focuses another control, interacts again, opens another overlay or leaves
+the route. The package keeps its own top bar and catalogue. Cloud also fills the
+Changes tab's [check slot](./viewer-chrome-check.md) and, for a private
+comparison, `stageOverlay`, as the [private artifact
 limit](./viewer.md#private-artifact-limit) defines. It leaves `railStart`,
 `railEnd`, `sidePanel` and `emptyState` empty. Each panel trigger opens one
 cloud overlay, the account trigger and **More** open a menu, and only one
@@ -63,7 +67,8 @@ the package's mark starts after the window buttons that [Desktop bundle and
 origin](./desktop-bundle.md#mac-window) places at the start of the bar, and the
 cloud's slots follow it. The cloud fallback bar keeps its own padding clear of
 the buttons. The cloud's slot content is the part of the bar that moves the
-window. The package's own part does not.
+window, and it reaches over the space between the project and the pill, and
+between the compact pill and the search. The package's own part does not.
 
 A press that begins on a cloud fallback control also finishes on that logical
 slot. If access becomes ready while the primary pointer or Space/Enter
@@ -153,25 +158,6 @@ The chrome stays mounted in every state, so the user is never outside the viewer
 
 The cloud read operations, ordering and share validation are defined in
 [Viewer read model](./viewer-read-model.md).
-
-## Check Slot
-
-The package's Changes tab holds one host slot, `changesStart`, between the
-change stepper and Compared, as
-[Changes screen controls](../mokly-changes-controls.md#changes-tab)
-defines, and shows it only on a changed entry. Cloud fills it with the check
-card of a pull request's publication: the Mokly check that
-[Changes check](./changes-check.md#result) posts for that publication. A
-branch's publication leaves the slot empty. The card shows the success glyph,
-the check's name, Mokly, and the count lines of the check's summary, without
-its View Changes link, because the reader is already in Changes. Its foot
-links the pull request's checks on GitHub with the number and title, and
-carries the external glyph, because it leaves the app; the bar already links
-the pull request itself. The card's composition is in
-[Viewer compositions](./folio-viewer.md#compositions). Decision: the check
-fills a host slot inside the package's Changes tab, not a cloud panel in
-`sidePanel`, because a cloud panel beside the package's Changes would copy it,
-and the cloud never reimplements Browse or Changes.
 
 ## Chrome And Publication Identity
 

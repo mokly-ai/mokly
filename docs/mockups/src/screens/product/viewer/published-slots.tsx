@@ -86,66 +86,39 @@ function PublishedPill({
 }
 
 /**
- * One composition's start, after the package's mark: the quiet workspace and
- * project switcher on the full bar, and the publication pill on the compact
- * bar, whose centre stays empty.
- */
-function StartSlot({
-  bar,
-  subject,
-  workspace,
-  project,
-}: {
-  bar: SlotBar;
-  subject: PublishedSubject;
-  workspace: string;
-  project: string;
-}) {
-  return (
-    <div className={slotClass("fo-package-slot-start", bar)}>
-      {bar.compact ? (
-        <span className="fo-package-publication">
-          <PublishedPill bar={bar} subject={subject} />
-        </span>
-      ) : (
-        <span className="fo-top-slot fo-top-project">
-          <ProjectTrigger workspace={workspace} project={project} />
-        </span>
-      )}
-    </div>
-  );
-}
-
-/**
- * The `topBarStart` slot: the workspace and project switcher on the full bar,
- * and the publication pill on the compact bar.
+ * The `topBarStart` slot: the quiet workspace and project switcher on the full
+ * bar. The compact bar carries the project in More and draws nothing here, so
+ * a phone leaves the slot empty and the package gives the centre column the
+ * room after the mark. A desktop drawing still holds the full bar's switcher
+ * there, hidden on its compact bar.
  */
 export function PublishedSlotStart({
   viewport,
-  subject,
   workspace,
   project,
 }: {
   viewport: "mobile" | "desktop";
-  subject: PublishedSubject;
   workspace: string;
   project: string;
 }) {
-  return slotBars(viewport).map((bar) => (
-    <StartSlot
-      key={bar.part ?? "compact"}
-      bar={bar}
-      subject={subject}
-      workspace={workspace}
-      project={project}
-    />
-  ));
+  return slotBars(viewport)
+    .filter((bar) => !bar.compact)
+    .map((bar) => (
+      <div
+        key={bar.part ?? "full"}
+        className={slotClass("fo-package-slot-start", bar)}
+      >
+        <span className="fo-top-slot fo-top-project">
+          <ProjectTrigger workspace={workspace} project={project} />
+        </span>
+      </div>
+    ));
 }
 
 /**
- * The `topBarCenter` slot of the full bar: the publication pill in the middle
- * of the bar, with the publication's Changes badge, GitHub and View latest
- * beside it. A phone draws the compact bar only, so its centre stays empty.
+ * The `topBarCenter` slot: the publication pill, in the middle of the full bar
+ * and right after the mark on the compact bar. The full bar draws the
+ * publication's Changes badge, GitHub and View latest beside it.
  */
 export function PublishedSlotCenter({
   viewport,
@@ -154,35 +127,33 @@ export function PublishedSlotCenter({
   viewport: "mobile" | "desktop";
   subject: PublishedSubject;
 }) {
-  return slotBars(viewport)
-    .filter((bar) => !bar.compact)
-    .map((bar) => (
-      <div
-        key={bar.part ?? "full"}
-        className={slotClass("fo-package-slot-center", bar)}
-      >
-        <span className="fo-package-publication">
-          <PublishedPill bar={bar} subject={subject} />
-          {subject.changes && (
-            <span className="fo-top-badge">
-              <Badge tone="neutral" size="sm">
-                Changes
-              </Badge>
-            </span>
-          )}
-          {subject.github && (
-            <SlotButton instance="viewer-github" label="GitHub" />
-          )}
-          {subject.latest && (
-            <SlotButton
-              instance="viewer-view-latest"
-              label="View latest"
-              tone="secondary"
-            />
-          )}
-        </span>
-      </div>
-    ));
+  return slotBars(viewport).map((bar) => (
+    <div
+      key={bar.part ?? "compact"}
+      className={slotClass("fo-package-slot-center", bar)}
+    >
+      <span className="fo-package-publication">
+        <PublishedPill bar={bar} subject={subject} />
+        {!bar.compact && subject.changes && (
+          <span className="fo-top-badge">
+            <Badge tone="neutral" size="sm">
+              Changes
+            </Badge>
+          </span>
+        )}
+        {!bar.compact && subject.github && (
+          <SlotButton instance="viewer-github" label="GitHub" />
+        )}
+        {!bar.compact && subject.latest && (
+          <SlotButton
+            instance="viewer-view-latest"
+            label="View latest"
+            tone="secondary"
+          />
+        )}
+      </span>
+    </div>
+  ));
 }
 
 /**
@@ -205,8 +176,11 @@ function EndSlot({
         <MoreTrigger />
       ) : (
         <>
-          <span className="fo-top-slot fo-top-fixed">
+          <span className="fo-top-slot fo-top-fixed fo-bar-label-only">
             <HistoryTrigger />
+          </span>
+          <span className="fo-top-slot fo-top-fixed fo-bar-glyph-only">
+            <HistoryTrigger iconOnly />
           </span>
           <span className="fo-top-slot fo-top-fixed">
             <ShareTrigger tone={layered ? "secondary" : "primary"} />
@@ -222,7 +196,8 @@ function EndSlot({
 
 /**
  * The `topBarEnd` slot: History, Share and the account's avatar on the full
- * bar, and one More menu on the compact bar.
+ * bar, with History's label or its clock alone as the bar's width holds, and
+ * one More menu on the compact bar.
  */
 export function PublishedSlotEnd({
   viewport,

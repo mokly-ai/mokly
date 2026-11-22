@@ -1,6 +1,6 @@
 # Viewer Compositions
 
-Status: The five-action bar, History's label drop, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 22](../../../plans/canvas-redesign-milestones-viewer.md#milestone-22-viewer-bar-to-the-prototype) builds the label drop, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the rest.
+Status: The five-action bar, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 The compositions of the viewer and of the surfaces layered over it, from
 [Folio chrome](./folio-chrome.md): the stage, the viewer top bar, the
@@ -51,10 +51,11 @@ account's avatar. The two outer columns are equal, so the pill stays in the
 middle. The project switcher gives up its width first; inside the centre's room
 the state's phrase gives way, then the reference, down to the room of a short
 name, and the controls keep their width. As the full bar narrows, the pill drops
-its short SHA, then History drops its label and keeps its glyph, accessible name
-and tooltip, then the pill drops its phrase and divider and keeps its dot. A
-narrower bar, as on mobile, cannot fit those five cloud targets, so
-`topBarStart` keeps only the pill, the centre stays empty and `topBarEnd`
+its short SHA, then History becomes a square quiet Button that draws its clock
+alone and keeps its accessible name and tooltip, then the pill drops its phrase
+and divider and keeps its dot. A narrower bar, as on mobile, cannot fit those
+five cloud targets, so `topBarStart` stays empty, `topBarCenter` keeps only the
+pill, which starts right after the mark and takes the free room, and `topBarEnd`
 carries one quiet **More** trigger with a chevron. Its rows are the current
 project, History and Share, then the account rows; they open the same overlays
 as the desktop controls, and dismissal returns focus to the action's current

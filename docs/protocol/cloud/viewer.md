@@ -64,10 +64,11 @@ the app's cookie has none for that tab either.
 ## Slot Inventory
 
 [Viewer chrome](./viewer-chrome.md) defines the package slots that the cloud
-fills, its five actions, the compact More menu, the check slot, overlay
-ownership, focus handoff and publication context, and
+fills, its five actions, the compact More menu, overlay ownership, focus
+handoff and publication context,
 [its account menu page](./viewer-chrome-account.md) defines the account
-menu and Theme.
+menu and Theme, and [its check slot page](./viewer-chrome-check.md) defines
+the check in the Changes tab.
 The empty stage and a build card's plan refusal share its
 [workspace-role read rule](./viewer-chrome.md#workspace-role) through
 one function, `workspaceRole()`, so the two cannot disagree about who is an

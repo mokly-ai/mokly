@@ -151,9 +151,16 @@ test("the project read draws the cloud frame with its bar's controls waiting", (
   // reader's name; Settings lives in the account menu, not in the bar. A
   // desktop drawing draws the full bar and the compact bar for the switch in
   // `viewer-bar.css` to show one, so the bar's last group also holds the
-  // compact bar's More.
+  // compact bar's More, and History's labelled and glyph forms for its label
+  // rule.
   const trail = controlStates(loaded).map(([shown]) => shown);
-  assert.deepEqual(trail, ["History", "Share", sample.viewer.name, "More"]);
+  assert.deepEqual(trail, [
+    "History",
+    "History",
+    "Share",
+    sample.viewer.name,
+    "More",
+  ]);
   for (const [viewport, known] of [
     ["desktop", trail],
     ["mobile", ["More"]],

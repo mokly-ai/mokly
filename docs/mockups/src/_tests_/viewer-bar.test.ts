@@ -85,20 +85,23 @@ const menuPath = "product/viewer/standalone/account-menu";
 
 test("the full pill keeps the reference as its trigger's label and the state beside it", () => {
   const drawn = page("product/viewer/standalone");
-  // The full bar draws its pill in the centre slot, and the compact bar in its
-  // start slot, after the package's mark.
-  const full = one(one(drawn, "fo-package-slot-center"), "fo-canvas-pill");
-  const [compactStart, ...otherStarts] = byClass(
-    drawn,
-    "fo-package-slot-start",
-  ).filter((slot) =>
+  // Both bars draw their pill in the centre slot, and the compact bar leaves
+  // its start slot empty, so its pill comes right after the package's mark.
+  const compactness = (slot: Element) =>
     (attribute(slot, "class") ?? "")
       .split(/\s+/)
-      .includes("fo-package-slot-compact"),
+      .includes("fo-package-slot-compact");
+  const centres = byClass(drawn, "fo-package-slot-center");
+  const [fullCentre] = centres.filter((slot) => !compactness(slot));
+  const [compactCentre] = centres.filter(compactness);
+  assert.equal(centres.length, 2);
+  assert.ok(fullCentre && compactCentre);
+  assert.equal(
+    byClass(drawn, "fo-package-slot-start").filter(compactness).length,
+    0,
   );
-  assert.ok(compactStart, "no compact start slot");
-  assert.equal(otherStarts.length, 0, "more than one compact start slot");
-  const compact = one(compactStart, "fo-canvas-pill");
+  const full = one(fullCentre, "fo-canvas-pill");
+  const compact = one(compactCentre, "fo-canvas-pill");
   assert.deepEqual(buttonsIn(full).map(label), [publication.branch]);
   const state = one(full, "fo-top-state");
   assert.equal(
@@ -188,12 +191,21 @@ test("the cloud's bar leads each control to its screen and draws no Settings", (
   const [project] = linksIn(bar);
   assert.ok(project);
   assert.equal(attribute(project, "aria-label"), named);
+  // History draws its label, or its glyph alone named by it, each a link,
+  // and the glyph's holder around the link gives the name as its tooltip.
+  const glyph = linksIn(bar).find((link) => label(link) === "");
+  assert.ok(glyph && glyph.parentNode && "tagName" in glyph.parentNode);
+  assert.equal(attribute(glyph.parentNode, "title"), "History");
   assert.deepEqual(
-    linksIn(bar).map((link) => [label(link), destination(link)]),
+    linksIn(bar).map((link) => [
+      label(link) || attribute(link, "aria-label"),
+      destination(link),
+    ]),
     [
       [named, "product/viewer/projects"],
       [publication.branch, "product/viewer/switcher"],
       ["sydney-v1", "product/viewer/switcher"],
+      ["History", "product/viewer/history"],
       ["History", "product/viewer/history"],
       ["Share", "product/viewer/share"],
       [sample.viewer.name, menuPath],

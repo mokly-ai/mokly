@@ -222,6 +222,7 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
       <BarAction
         label="Settings"
         testID="viewer-settings"
+        icon="settings"
         open={input.settingsOpen === "sections"}
         onPress={input.onSettings}
         slot="settings"

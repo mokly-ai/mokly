@@ -1,25 +1,25 @@
-import { Button, createButtonStyles } from "@firna/ui/button";
+import { Button } from "@firna/ui/button";
 import type { ButtonStateStyleArgs } from "@firna/ui/button";
 import { SharedUiThemeProvider, useSharedUiTheme } from "@firna/ui/theme";
-import { Label, resolveTypographyColor } from "@firna/ui/typography";
+import { Label } from "@firna/ui/typography";
 import { primaryActionUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import type { ComponentProps } from "react";
-import { Text, View } from "react-native";
 
 import { useCompact } from "../layout/viewport";
 import { follow } from "../navigation/follow";
 import type { Write } from "../settings/write";
 
+import { LeadLabel } from "./action-label";
 import { Icon, icons } from "./icons";
 import type { IconName } from "./icons";
 import { PendingName } from "./pending-name";
 
-/** The glyphs an action may carry before its label. */
+/** The glyphs an action may carry before its label, or instead of it. */
 export type ActionIcon = Extract<
   IconName,
-  "github" | "start" | "retry" | "external" | "signOut" | "history"
+  "github" | "start" | "retry" | "external" | "signOut" | "history" | "settings"
 >;
 
 /** One tone vocabulary covers every surface, as the control contract requires. */
@@ -72,6 +72,15 @@ export type ActionProps = ActionSemantics &
      */
     lead?: string;
     icon?: ActionIcon;
+    /**
+     * Draw the icon alone in a square box, with the label as the accessible
+     * name, unless an `accessibilityLabel` gives one, and that name as the
+     * tooltip. It needs an `icon`; without one the control draws its label.
+     * It takes the place of the lead, the arrow and the chevron. A control
+     * that switches between the two drawings keeps the prop set, `false` for
+     * the labelled one, so it stays mounted and keeps its focus.
+     */
+    iconOnly?: boolean;
     arrow?: boolean;
     tone?: ActionTone;
     size?: "sm" | "md" | "lg";
@@ -95,73 +104,6 @@ export type ActionProps = ActionSemantics &
     /** Keep a constrained chrome label on one ellipsized line. */
     singleLine?: boolean;
   };
-
-/** The text role of a label in each tone, as the package paints its own. */
-const labelRoles = {
-  primary: "inverse",
-  secondary: "default",
-  quiet: "default",
-  danger: "danger",
-} as const satisfies Record<ActionTone, string>;
-
-/** How each part of a led label gives up its width on a narrow surface. */
-const yields = {
-  lead: { flexShrink: 100, minWidth: 0 },
-  label: { flexShrink: 1, minWidth: 0 },
-  fixed: { flexShrink: 0 },
-} as const;
-
-/**
- * A label that a muted lead comes before, as the catalogue's registered Button
- * draws it: the lead, a slash and the label, each on one line in the Button's
- * own label type, then the switcher's chevron when the control carries one.
- * The lead and the slash take the muted text role at the regular weight, and
- * the label keeps its tone's ink and the Button's weight. The lead gives up
- * its width before the label gives up any, and each is cut with an ellipsis.
- * The Button draws them as its own content, so the whole row is one control.
- */
-function LeadLabel({
-  lead,
-  label,
-  tone,
-  size,
-  chevron,
-}: {
-  lead: string;
-  label: string;
-  tone: ActionTone;
-  size: "sm" | "md" | "lg";
-  chevron: boolean;
-}) {
-  const theme = useSharedUiTheme();
-  const type = useMemo(
-    () => createButtonStyles(theme, size).label,
-    [theme, size],
-  );
-  const muted = {
-    color: resolveTypographyColor(theme.colors, "muted"),
-    fontWeight: "400",
-  } as const;
-  const ink = { color: resolveTypographyColor(theme.colors, labelRoles[tone]) };
-  return (
-    <>
-      <Text numberOfLines={1} style={[type, muted, yields.lead]}>
-        {lead}
-      </Text>
-      <Text numberOfLines={1} style={[type, muted, yields.fixed]}>
-        {" / "}
-      </Text>
-      <Text numberOfLines={1} style={[type, ink, yields.label]}>
-        {label}
-      </Text>
-      {chevron && (
-        <View aria-hidden style={[yields.fixed, { pointerEvents: "none" }]}>
-          <Icon name="switcher" size={14} />
-        </View>
-      )}
-    </>
-  );
-}
 
 /**
  * A hovered primary action lifts by one pixel and keeps its fill, so its
@@ -191,7 +133,8 @@ function primaryHoverLift({
  * no box, so its hover keeps the resting fill and the lift above stands in
  * for a darker one. A control with a lead draws it through the Button's own
  * content, and without an `accessibilityLabel` it is named by the lead, the
- * slash and the label.
+ * slash and the label. An icon-only control draws the package Button's own
+ * square icon box, and the element around it carries its tooltip.
  */
 export function Action({
   label,
@@ -201,6 +144,7 @@ export function Action({
   block,
   disabled,
   icon,
+  iconOnly,
   chevron,
   arrow,
   href,
@@ -227,6 +171,9 @@ export function Action({
   // At rest, the control refuses a press for its own reason or while its
   // write has nothing to send. While the write works, `busy` refuses it.
   const refused = disabled === true || write?.sendable === false;
+  // The icon alone, named by the label, or by the caller's whole name.
+  const glyph = iconOnly === true && icon !== undefined;
+  const name = semantics.accessibilityLabel ?? label;
   const button = (
     <Button
       tone={tone === "quiet" ? "plain" : tone}
@@ -235,6 +182,7 @@ export function Action({
       disabled={running === undefined && refused}
       busy={running !== undefined}
       icon={icon ? icons[icon] : undefined}
+      shape={glyph ? "square" : undefined}
       // A compact surface clears the 44px touch target; a pointer surface
       // keeps the control's own scale and widens the hit area instead.
       minTouchTarget={compact ? touchTarget : undefined}
@@ -245,11 +193,13 @@ export function Action({
       style={tone === "primary" ? primaryHoverLift : undefined}
       {...semantics}
       accessibilityLabel={
-        semantics.accessibilityLabel ??
-        (lead === undefined ? undefined : lead + " / " + label)
+        glyph
+          ? name
+          : (semantics.accessibilityLabel ??
+            (lead === undefined ? undefined : lead + " / " + label))
       }
       content={
-        lead === undefined || running !== undefined ? undefined : (
+        glyph || lead === undefined || running !== undefined ? undefined : (
           <LeadLabel
             lead={lead}
             label={label}
@@ -260,7 +210,7 @@ export function Action({
         )
       }
       trailing={
-        arrow ? (
+        glyph ? undefined : arrow ? (
           <Label
             color={
               tone === "primary" || tone === "danger" ? "inverse" : "default"
@@ -273,17 +223,27 @@ export function Action({
         ) : undefined
       }
     >
-      {label}
+      {glyph ? undefined : label}
     </Button>
   );
+  const themed =
+    tone === "primary" ? (
+      <SharedUiThemeProvider theme={primaryTheme}>
+        {button}
+      </SharedUiThemeProvider>
+    ) : (
+      button
+    );
   return (
     <>
-      {tone === "primary" ? (
-        <SharedUiThemeProvider theme={primaryTheme}>
-          {button}
-        </SharedUiThemeProvider>
+      {/* The tooltip's holder takes no box. It stays while the prop is set,
+          so a change between the two drawings keeps the control mounted. */}
+      {iconOnly === undefined ? (
+        themed
       ) : (
-        button
+        <span style={{ display: "contents" }} title={glyph ? name : undefined}>
+          {themed}
+        </span>
       )}
       {/* The status is out of the layout, so the form around the control
           inserts nothing while the write works, and the control keeps its

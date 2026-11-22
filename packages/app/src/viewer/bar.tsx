@@ -87,37 +87,38 @@ function EndTriggers({
 
 /**
  * The start slot, after the package's mark: the project trigger on the full
- * bar, and the publication on the compact bar, whose centre stays empty.
+ * bar. The compact bar carries the project in More, so it draws nothing here,
+ * not even a wrapper, and the package's empty start slot gives the centre
+ * column the bar's free room after the mark.
  */
 function PackageSlotStart({ slots }: { slots: ViewerSlots }) {
   const placement = useBarPlacement();
+  if (carriedByMore(placement, "projects")) return null;
   return (
     <ViewerSlotSourceBoundary source="package">
-      <div
-        className={
-          "fo-package-slot fo-package-slot-start" +
-          (placement.compact ? " fo-package-slot-compact" : "")
-        }
-      >
-        {!carriedByMore(placement, "projects") && slots.project}
-        {placement.compact && (
-          <span className="fo-package-publication">{slots.publication}</span>
-        )}
+      <div className="fo-package-slot fo-package-slot-start">
+        {slots.project}
       </div>
     </ViewerSlotSourceBoundary>
   );
 }
 
 /**
- * The centre slot of the full bar: the publication, in the middle of the bar.
- * The compact bar draws nothing here, so the package gives the slot no room.
+ * The centre slot: the publication, in the middle of the full bar and right
+ * after the mark on the compact bar. Both compositions draw it in the same
+ * place, so a change of composition keeps its trigger mounted, with any focus
+ * it holds.
  */
 function PackageSlotCenter({ slots }: { slots: ViewerSlots }) {
   const placement = useBarPlacement();
-  if (placement.compact) return null;
   return (
     <ViewerSlotSourceBoundary source="package">
-      <div className="fo-package-slot fo-package-slot-center">
+      <div
+        className={
+          "fo-package-slot fo-package-slot-center" +
+          (placement.compact ? " fo-package-slot-compact" : "")
+        }
+      >
         <span className="fo-package-publication">{slots.publication}</span>
       </div>
     </ViewerSlotSourceBoundary>
@@ -140,12 +141,7 @@ function PackageSlotEnd({ slots }: { slots: ViewerSlots }) {
   );
 }
 
-/**
- * Compose the cloud actions into the package's three documented top-bar
- * slots. The publication moves between the start slot and the centre slot
- * when the composition changes, so its trigger mounts again there; a
- * dismissed overlay still finds it through its slot.
- */
+/** Compose the cloud actions into the package's three documented top-bar slots. */
 export function packageSlots(slots?: ViewerSlots): PackageSlots | undefined {
   if (!slots) return undefined;
   return {

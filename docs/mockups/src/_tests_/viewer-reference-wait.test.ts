@@ -31,11 +31,13 @@ const publicationRead = "product/viewer/standalone/publication-loading";
  * whose control keeps the reader's name, in the full bar, and More in the
  * compact bar. Settings lives in the account menu, not in the bar. A phone
  * draws the compact bar only, and a desktop drawing draws both for the switch
- * in `viewer-bar.css` to show one. None of them waits for the publication.
+ * in `viewer-bar.css` to show one, and History's labelled and glyph forms for
+ * its label rule. None of them waits for the publication.
  */
 const loadedBar = {
   desktop: [
     [sample.workspace + " / " + sample.project, false],
+    ["History", false],
     ["History", false],
     ["Share", false],
     [sample.viewer.name, false],

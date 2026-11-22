@@ -126,7 +126,6 @@ export function PublishedViewer({
           topBarStart: (
             <PublishedSlotStart
               viewport={viewport}
-              subject={subject}
               workspace={workspace}
               project={project}
             />
