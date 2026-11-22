@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import {
   ComparisonPanes,
-  ComparisonSection,
   ComparisonStage as ComparisonStageView,
 } from "../../../../../packages/ui/src/comparison-stage/comparison-stage.js";
 import { useDesignInstance } from "../library/composition.js";
@@ -11,8 +10,6 @@ import { comparisonPane } from "../library/preview/comparison-pane.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
 import type { ComparisonMode } from "./destinations.js";
-import type { ReviewState } from "./review.js";
-import { SCREEN_STYLE_COPY } from "./stylesheet_evidence.js";
 
 export function CompareToolbar({
   mode,
@@ -35,14 +32,6 @@ export function CompareToolbar({
     />
   );
 }
-
-const STATE_LABELS: Record<ReviewState, string> = {
-  added: "New screen",
-  changed: "Screen changed",
-  "components-changed": SCREEN_STYLE_COPY.componentsChanged,
-  removed: "Screen removed",
-  "styles-changed": SCREEN_STYLE_COPY.stylesChanged,
-};
 
 /**
  * The shipped stage of a loaded comparison, which scrolls the depicted views
@@ -67,23 +56,6 @@ export function ComparisonStage({
       entryId={path}
       stage={children}
     />
-  );
-}
-
-/** One viewport's shipped section of a comparison, headed by its outcome. */
-export function ComparisonView({
-  children,
-  state,
-  viewport,
-}: {
-  children: ReactNode;
-  state: ReviewState;
-  viewport: "mobile" | "desktop";
-}) {
-  return (
-    <ComparisonSection label={STATE_LABELS[state]} viewport={viewport}>
-      {children}
-    </ComparisonSection>
   );
 }
 

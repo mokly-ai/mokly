@@ -81,7 +81,8 @@ const byClass = (view: ServedView, name: string): HtmlElement[] =>
 /**
  * The Welcome tag states agree: the query, the picker, the active chips,
  * the search field's tag control, every chip's destination, and the rows a
- * filtered desktop view keeps.
+ * filtered desktop view keeps. A phone whose tag picker is closed shows no
+ * chip, because its panel sheet, which lists the entry's tags, is closed.
  */
 export function tagViolations(catalogue: ServedCatalogue): string[] {
   const violations: string[] = [];
@@ -122,12 +123,15 @@ export function tagViolations(catalogue: ServedCatalogue): string[] {
         const tag = textContent(chip).trim();
         const active = classes(chip).includes("active");
         facts(`chip ${tag} active`, active, state.active.includes(tag));
-        const target = active
-          ? "design/browse/views/screen"
-          : `design/browse/views/screen/tag-${tag}`;
-        facts(`chip ${tag} target`, attribute(chip, "data-mokly-link"), target);
+        // A chip whose tag the state does not list fails, linked or not.
+        facts(
+          `chip ${tag} target`,
+          attribute(chip, "data-mokly-link"),
+          state.chips[tag] ?? null,
+        );
       }
-      if (chips.length === 0) violations.push(`${view.route}: no tag chips`);
+      if (chips.length === 0 && (state.picker || view.viewport !== "mobile"))
+        violations.push(`${view.route}: no tag chips`);
       // A closed list holds its rows hidden, as the shell does.
       if (state.rows && view.viewport === "desktop")
         facts(

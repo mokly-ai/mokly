@@ -4,6 +4,7 @@ import {
   MainRegion,
   ShellLayout,
 } from "../../../../../packages/ui/src/shell-layout/shell-layout.js";
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
@@ -19,7 +20,7 @@ import {
 } from "./appearance.js";
 import { useDepictedView, type HighlightState } from "./depicted_view.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import type { DesignDestination } from "./destinations.js";
 import { TopBar } from "./top_bar.js";
 
 /** Rendering target for a design mockup artboard. */
@@ -74,7 +75,6 @@ export function Shell({
     <DesignNavigation design={design}>
       <DesignAppearanceScope>
         <ShellRoot
-          design={design}
           flag={collapsed ? "collapsed" : viewport}
           navigation={narrow ? aside : nav}
           topBar={
@@ -82,7 +82,6 @@ export function Shell({
               activeTag={activeTag}
               appearanceChoice={appearanceChoice}
               changedViews={changedViews}
-              design={design}
               searchValue={searchValue}
               tagPickerOpen={tagPickerOpen}
               viewport={narrow ? "mobile" : "desktop"}
@@ -98,14 +97,12 @@ export function Shell({
 
 function ShellTopBar({
   changedViews,
-  design,
   ...props
 }: Pick<
   ShellProps,
   | "activeTag"
   | "appearanceChoice"
   | "changedViews"
-  | "design"
   | "searchValue"
   | "tagPickerOpen"
   | "viewport"
@@ -113,7 +110,6 @@ function ShellTopBar({
   const scheme = useRenderedAppearance();
   return (
     <TopBar
-      drawerOpen={design === DESTINATIONS.navigation}
       appearanceChanged={changedViews?.some((view) => view.scheme !== scheme)}
       {...props}
     />
@@ -123,13 +119,11 @@ function ShellTopBar({
 /** The flag frame and the shipped root around one artboard's shell. */
 function ShellRoot({
   children,
-  design,
   flag,
   navigation,
   topBar,
 }: {
   children: ReactNode;
-  design: DesignDestination;
   flag: ArtboardViewport | "collapsed";
   navigation: ReactNode;
   topBar: ReactNode;
@@ -141,7 +135,7 @@ function ShellRoot({
       <ShellLayout
         announcement=""
         colorScheme={scheme}
-        drawerOpen={drawer?.open ?? design === DESTINATIONS.navigation}
+        drawerOpen={drawer?.open ?? false}
         main={<MainRegion id={MAIN_ID}>{children}</MainRegion>}
         mainHref={`#${MAIN_ID}`}
         navigation={navigation}
@@ -191,7 +185,7 @@ export function ScreenHead({
         {
           key: "home",
           label: "Catalogue home",
-          destination: DESTINATIONS.home,
+          destination: CANVAS_PAGES.home,
         },
         ...crumbs.map((item) =>
           typeof item === "string"
@@ -212,9 +206,7 @@ export function ScreenHead({
 }
 
 /** One viewport and color scheme pairing whose render changed on this branch. */
-export type ChangedView = NonNullable<
-  ViewControlsProps["changedViews"]
->[number];
+type ChangedView = NonNullable<ViewControlsProps["changedViews"]>[number];
 
 /** The view controls props that draw one highlight state. */
 export function highlightProps(

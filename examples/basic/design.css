@@ -5,15 +5,16 @@
    package components draw in the shipped palette, and each of their elements
    carries the reset class. The shell root, its body, and its main region are
    the shipped ones, from the shell layout stylesheet that
-   design-component-workspace.css imports after the component sheets. The
-   shell's own parts, such as the top bar, the catalogue navigation, and the
-   screen header, come from the @mokly/ui stylesheets that their component
-   sheets import. The design catalogue keeps its own palette below for the
-   artboards' own parts. Every interface role has a Light and a Dark value, so
-   an artboard changes appearance by selecting a palette rather than by adding
-   an override sheet. Device-screen colors are preview tokens and live in
-   design-stage.css, independent of the interface appearance. A light-only
-   document keeps the Light palette inside a Dark artboard. */
+   design-canvas-shell.css and design-component-workspace.css import after
+   the component sheets. The shell's own parts, such as the top bar, the
+   catalogue navigation, and the screen header, come from the @mokly/ui
+   stylesheets that their component sheets import. The design catalogue keeps
+   its own palette below for the artboards' own parts. Every interface role
+   has a Light and a Dark value, so an artboard changes appearance by
+   selecting a palette rather than by adding an override sheet. Device-screen
+   colors are preview tokens and live in design-preview.css, independent of
+   the interface appearance. A light-only document keeps the Light palette
+   inside a Dark artboard. */
 @import "../../packages/ui/src/theme/theme.css";
 @import "../../packages/ui/src/reset/reset.css";
 /* Geist and Geist Mono, the faces that the shipped theme and the sans and

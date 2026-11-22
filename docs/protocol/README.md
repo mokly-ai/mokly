@@ -189,6 +189,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 The design catalogue that depicts the shell, its inventories, and the shared design components.
 
 - [Canvas Design Inventory](./mokly-shell-canvas-inventory.md)
+- [Canvas Loading, Search And Evidence Inventory](./mokly-shell-canvas-inventory-states.md)
 - [Canvas Viewer Parts Of The Design Library](./mokly-design-component-library-canvas.md)
 - [Comparison Pane Design References](./mokly-comparison-pane-designs.md)
 - [Component Controls Design](./mokly-component-controls-design.md)

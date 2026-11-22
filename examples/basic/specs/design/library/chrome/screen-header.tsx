@@ -1,5 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   changeStatus,
@@ -51,20 +52,13 @@ export type ScreenHeaderProps = LibraryProps<typeof propSchema, typeof slots>;
 const home = {
   key: "home",
   label: "Catalogue home",
-  destination: "design/browse/views/home",
+  destination: CANVAS_PAGES.home,
 } as const;
-/** The Example folder has its own page, so its crumb opens that page. */
-const example = {
-  key: "example",
-  label: "Example",
-  destination: "design/browse/views/folder-overview",
-} as const;
-/** Changes and removed entries keep their folder crumbs as text. */
-const textCrumbs = [
-  home,
-  { key: "example", label: "Example" },
-  { key: "screens", label: "Screens" },
-] as const;
+/**
+ * The folder crumbs are text: no artboard shows the Example folder's own
+ * page, and Changes and removed entries keep their folder crumbs as text.
+ */
+const example = { key: "example", label: "Example" } as const;
 const sample = {
   title: "Welcome",
   crumbs: [home, example, { key: "screens", label: "Screens" }],
@@ -112,7 +106,6 @@ export const screenHeader = defineComponent({
       title: "Changed",
       props: {
         ...sample,
-        crumbs: textCrumbs,
         status: "changed",
         comparisons: true,
       },
@@ -122,7 +115,6 @@ export const screenHeader = defineComponent({
       title: "Removed",
       props: {
         ...sample,
-        crumbs: textCrumbs,
         title: "Farewell",
         path: "example/screens/farewell",
         status: "removed",

@@ -4,7 +4,6 @@ import { ComparisonStage } from "../../parts/compare.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { DepictedView, ViewRegions } from "../../parts/depicted_view.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
-import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
@@ -16,7 +15,6 @@ import {
   type ComponentId,
 } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
-import type { ChangeScenario } from "./navigation_tree.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
@@ -62,7 +60,6 @@ export function ComponentLayout({
   entry,
   inspector,
   navigationKey,
-  scenario = "all",
   variants,
   viewport,
 }: {
@@ -76,17 +73,14 @@ export function ComponentLayout({
   entry: ComponentEntryMetadata;
   inspector: ReactNode;
   navigationKey?: string | undefined;
-  scenario?: ChangeScenario;
   variants: ReactNode;
   viewport: ArtboardViewport;
 }) {
   const component = COMPONENTS[entry.component];
   return (
     <ExplorerShell
-      active={entry.component}
       activeKey={navigationKey ?? COMPONENT_NAVIGATION[entry.component].id}
       design={design}
-      scenario={scenario}
       viewport={viewport}
     >
       <PreviewWorkspace
@@ -94,10 +88,7 @@ export function ComponentLayout({
           <ScreenHead
             accessibleControls
             title={component.title}
-            crumbs={[
-              scenario === "all" ? EXAMPLE_CRUMB : "Example",
-              "Components",
-            ]}
+            crumbs={["Example", "Components"]}
             path={entry.path}
             action={<ViewControls viewport={viewport} />}
             comparisons={status === "changed" || status === "removed"}

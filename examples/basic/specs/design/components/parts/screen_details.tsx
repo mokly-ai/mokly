@@ -13,6 +13,8 @@ import {
   UsageList,
   UsageStatus,
 } from "../../../../../../packages/ui/src/usage-list/usage-list.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import type { DesignDestination } from "../../parts/destinations.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { CONTROLS_COPY } from "../controls/parts/copy.js";
@@ -20,7 +22,6 @@ import { ScreenControls } from "../controls/parts/screen_controls.js";
 
 import { ComparisonDetails } from "./comparison_details.js";
 import { screenComparison } from "./comparison_fixtures.js";
-import { INSPECTION_PAGES } from "./destinations.js";
 import { welcomeInstances } from "./fixtures.js";
 import { Inspector, type InspectorPanel } from "./inspector.js";
 import { InstanceDetails } from "./instance_details.js";
@@ -30,30 +31,39 @@ import type { ScreenPageState } from "./screen_preview.js";
 /** The shell's line while the view's component preview loads. */
 const WAITING = "Waiting for the component preview.";
 
-/** The artboard that shows each depicted Welcome instance selected. */
-const SELECTION_PAGES = {
-  main: INSPECTION_PAGES["toolbar-selection"],
-  "toolbar-action": INSPECTION_PAGES.nested,
-  "footer-action": INSPECTION_PAGES.details,
-  help: INSPECTION_PAGES["help-selection"],
-} as const satisfies Record<(typeof welcomeInstances)[number]["id"], string>;
+/**
+ * The Canvas artboard that shows each depicted Welcome instance selected. No
+ * artboard selects the Help hint, which renders nothing, so it opens nothing.
+ */
+const SELECTION_PAGES: Record<
+  (typeof welcomeInstances)[number]["id"],
+  DesignDestination | undefined
+> = {
+  main: CANVAS_PAGES.selectionToolbar,
+  "toolbar-action": CANVAS_PAGES.selectionPrimary,
+  "footer-action": CANVAS_PAGES.selection,
+  help: undefined,
+};
 
 /** The depicted Welcome instances under one owner, each linking to its selection. */
 function welcomeTree(owner: string | null = null): InstanceNode[] {
   return welcomeInstances
     .filter((instance) => instance.parent === owner)
-    .map((instance) => ({
-      href: mockLink(SELECTION_PAGES[instance.id]),
-      id: instance.label,
-      key: instance.id,
-      nested: welcomeTree(instance.id),
-      title: instance.component,
-    }));
+    .map((instance) => {
+      const page = SELECTION_PAGES[instance.id];
+      return {
+        ...(page ? { href: mockLink(page) } : {}),
+        id: instance.label,
+        key: instance.id,
+        nested: welcomeTree(instance.id),
+        title: instance.component,
+      };
+    });
 }
 
 /** The Details screen's one Action, which Used by selects. */
 const CONSUMER_INSTANCE: InstanceNode = {
-  href: mockLink(INSPECTION_PAGES.consumer),
+  href: mockLink(CANVAS_PAGES.addedWelcome),
   id: "Continue",
   key: "continue",
   nested: [],

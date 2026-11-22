@@ -4,85 +4,8 @@ import { ExampleDocument } from "../document.js";
 
 import { designMetadata } from "./metadata.js";
 import { artboards } from "./parts/artboards.js";
-import { DESTINATIONS } from "./parts/destinations.js";
-import {
-  HandbookStage,
-  PAGE_NODES,
-  PAGE_STYLE_COUNT,
-  PageDetails,
-} from "./parts/document_page.js";
-import { ENTRY_PATHS, EXAMPLE_CRUMB } from "./parts/entry_paths.js";
-import { NavDrawer, NavTree } from "./parts/nav.js";
 import { REMOVED_DOCUMENTS, RemovedPageScreen } from "./parts/removed_page.js";
-import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
-
-function PageView({
-  viewport,
-  details = false,
-  drawer = false,
-}: {
-  viewport: ArtboardViewport;
-  details?: boolean;
-  drawer?: boolean;
-}) {
-  const nav = (
-    <NavTree
-      activeLabel="Getting started"
-      changedCount={PAGE_STYLE_COUNT}
-      nodes={PAGE_NODES}
-    />
-  );
-  return (
-    <Shell
-      design={
-        drawer
-          ? DESTINATIONS.pageNavigation
-          : details
-            ? DESTINATIONS.pageDetails
-            : DESTINATIONS.page
-      }
-      viewport={viewport}
-      nav={nav}
-      aside={
-        viewport === "mobile" && drawer ? (
-          <NavDrawer
-            activeLabel="Getting started"
-            changedCount={PAGE_STYLE_COUNT}
-            nodes={PAGE_NODES}
-          />
-        ) : null
-      }
-    >
-      <ScreenHead
-        comparisons={false}
-        crumbs={[EXAMPLE_CRUMB]}
-        path={ENTRY_PATHS.gettingStarted}
-        title="Getting started"
-      />
-      <HandbookStage />
-      <PageDetails open={details} />
-    </Shell>
-  );
-}
-
-function PageDesktop() {
-  return <PageView viewport="desktop" />;
-}
-function PageMobile() {
-  return <PageView viewport="mobile" />;
-}
-function PageDetailsDesktop() {
-  return <PageView viewport="desktop" details />;
-}
-function PageDetailsMobile() {
-  return <PageView viewport="mobile" details />;
-}
-function PageNavigationDesktop() {
-  return <PageView viewport="desktop" drawer />;
-}
-function PageNavigationMobile() {
-  return <PageView viewport="mobile" drawer />;
-}
+import type { ArtboardViewport } from "./parts/shell.js";
 
 /** The previous version of the removed handbook, rendered read-only. */
 function RemovedPageView({ viewport }: { viewport: ArtboardViewport }) {
@@ -95,38 +18,10 @@ function RemovedPageView({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/** Owning responsive page designs, shared before runtime presentation. */
-export const viewScreen = defineScreen({
-  ...designMetadata,
-  slug: "view",
-  title: "Document page",
-  description: "A whole document beside screens and flows in one hierarchy.",
-  colorSchemes: ["light"],
-  ...artboards({ desktop: <PageDesktop />, mobile: <PageMobile /> }),
-});
-export const detailsScreen = defineScreen({
-  ...designMetadata,
-  slug: "details",
-  title: "Document details",
-  description: "Page metadata and the narrow catalogue drawer.",
-  colorSchemes: ["light"],
-  ...artboards({
-    desktop: <PageDetailsDesktop />,
-    mobile: <PageDetailsMobile />,
-  }),
-});
-export const navigationScreen = defineScreen({
-  ...designMetadata,
-  slug: "navigation",
-  title: "Document navigation",
-  description:
-    "A document in its declared folder, with the narrow catalogue drawer.",
-  colorSchemes: ["light"],
-  ...artboards({
-    desktop: <PageNavigationDesktop />,
-    mobile: <PageNavigationMobile />,
-  }),
-});
+/**
+ * A removed document's previous version. It stays until decision 34 settles
+ * how the Canvas family shows a removed entry's previous version.
+ */
 export const removedScreen = defineScreen({
   ...designMetadata,
   slug: "removed",

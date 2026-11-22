@@ -1,6 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, text, type LibraryProps } from "../schemas.js";
@@ -27,7 +27,7 @@ const first = {
   title: "Welcome",
   description: "The tour starts on the landing screen.",
   screenTitle: "Welcome",
-  screenPath: DESTINATIONS.welcome,
+  screenPath: CANVAS_PAGES.overview,
 } as const;
 export const flowStep = defineComponent({
   ...libraryMetadata(
@@ -74,7 +74,7 @@ export const flowStep = defineComponent({
         title: "Details",
         description: "The tour ends on the details screen.",
         screenTitle: "Details",
-        screenPath: DESTINATIONS.details,
+        screenPath: CANVAS_PAGES.added,
       },
       slots: {
         children: (

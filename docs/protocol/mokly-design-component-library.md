@@ -46,11 +46,18 @@ The [Canvas viewer parts](./mokly-design-component-library-canvas.md) page
 lists the other eleven components: the `canvas` and `panels` groups, and the
 Frames filter and the box model of the `inspector` group.
 
+The kept older screens of the
+[shell design inventory](./mokly-shell-design-inventory.md) are the only
+screens that render seven of the parts above: `chrome/screen-header`,
+`controls/comparison-toolbar`, `controls/view-controls`,
+`inspector/inspector`, `preview/comparison-pane`, `preview/device-frame` and
+`preview/flow-step`. No Canvas screen renders them.
+
 Each variant depicts the corresponding screen state with complete explicit
 props, apart from the render-context fallback a dual-scheme sample uses above.
-A sample never renders its complete owning artboard. All selected-screen
-footers of the Browse, Changes and component explorer screens use the icon
-panel and the viewport control uses the grouped icons. No disclosure variant
+A sample never renders its complete owning artboard. The kept Browse, Changes
+and component explorer screens use the icon panel for every selected-screen
+footer and the grouped icons for the viewport control. No disclosure variant
 or segmented viewport presentation is supported. Comparison modes keep their
 segments.
 
@@ -71,7 +78,8 @@ below use text, boolean, number and primitive enum selections only.
    catalogue's own and is the design catalogue's only appearance control. This
    component owns it, so every artboard with a top bar draws it; screens do not
    opt in. The value defaults to the scheme the file was rendered for and is
-   overridden only to depict a different setting, as the Auto artboard does.
+   overridden only to depict a different setting, as the `auto-appearance`
+   sample does.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Mobile keeps
    compact branding.
@@ -178,10 +186,9 @@ below use text, boolean, number and primitive enum selections only.
     missing pane; comparison-grid layout remains caller-owned.
 14. **Empty state:** no required prop: an optional title, body, code, action
     label, destination, and busy flag. The busy flag marks a loading state,
-    sets `aria-busy`, and makes the body a status. Where it stands decides
-    whether it takes the place of the viewer root, as in the shell: on a page
-    that the shell draws before it has a catalogue, it is the root, in the
-    root's appearance.
+    sets `aria-busy`, and makes the body a status. On a page that the shell
+    draws before it has a catalogue, it stands alone in the viewer root, in
+    the root's appearance, as the shell's startup states do.
     Controls: title, body, loading and action label. It keeps the canonical
     recovery links and non-interactive cases and adds no library-specific
     navigation.
@@ -224,12 +231,10 @@ semantic parents (such as a `dl` for prop rows), bounded panel dimensions, and
 enough overflow space for popovers and frames. The host supplies no hidden
 scenario data and no other full-screen component.
 
-| Design family                                        | Required components                                                                                                       |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                        |
-| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable  |
-| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; fixture previews remain content              |
-| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit          |
-| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                |
-| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the navigation, header, frame, inspector, comparison and empty components |
-| Canvas viewer                                        | Top bar, floating panel and phone dock; frame, zoom pill and panel tabs with an entry; the other parts a state shows      |
+| Design family                  | Required components                                                                                                                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kept Browse states             | Top bar, navigation, header, and the tag, frame, flow-step, inspector and empty components that a state shows                                      |
+| Kept Changes states            | Shared chrome, device frames and inspector; empty states where applicable                                                                          |
+| Kept component explorer states | Shared chrome/status/view controls, inspector/metadata and comparison parts; fixture previews remain content                                       |
+| Kept appearance states         | Shared chrome plus the appearance selector, and the navigation, header, frame, flow-step and inspector components that a state shows               |
+| Canvas viewer                  | Top bar, floating panel and phone dock, except on the startup states; frame, zoom pill and panel tabs with an entry; the other parts a state shows |

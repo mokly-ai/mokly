@@ -94,16 +94,17 @@ export function registerDesignPortable(
         design("design/canvas/search/tags/onboarding", viewport),
       );
       // The flow-step link keeps the older use-case design until the Canvas
-      // family draws a use case.
+      // family draws a use case. Its Details step opens the Canvas artboard
+      // of Details.
       await page.goto(design("design/browse/views/use-case", viewport));
       await page.locator(".flow-step-link").nth(1).click();
       await expect(page).toHaveURL(
-        design("design/browse/views/details-screen", viewport),
+        design("design/canvas/outcomes/added", viewport),
       );
       await context.close();
     });
 
-    test(`${viewport}: a focused portable link draws the dark focus ring, and disabled toolbars add no tab stops`, async ({
+    test(`${viewport}: a focused portable link draws the dark focus ring`, async ({
       page,
     }) => {
       await page.setViewportSize(
@@ -127,17 +128,6 @@ export function registerDesignPortable(
         path: `.context/design-dark-focus-${viewport}.png`,
         fullPage: true,
       });
-      for (const route of [
-        "design/changes/outcomes/removed",
-        "design/changes/impact/empty",
-      ]) {
-        await page.goto(design(route, viewport));
-        await expect(page.locator(".mbk-diff-toolbar a")).toHaveCount(0);
-        for (const control of await page
-          .locator(".mbk-pathchip, .mbk-search-tag")
-          .all())
-          await expect(control).not.toHaveAttribute("tabindex");
-      }
     });
   }
 }

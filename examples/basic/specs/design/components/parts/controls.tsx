@@ -1,123 +1,58 @@
-import type { ComponentPageState } from "./component_details.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import type { DesignDestination } from "../../parts/destinations.js";
+
 import { COMPONENT_PAGES } from "./destinations.js";
 import {
   COMPONENT_ENTRIES,
   COMPONENT_ENTRY_BY_STATE,
   COMPONENTS,
-  type ComponentId,
 } from "./metadata.js";
 import { VariantBar } from "./variant_bar.js";
-
-/**
- * Stories of their own: Component with changed styles and Additions. On their
- * pages every option except the shown entry is a depiction, so no option links
- * into another story.
- */
-const UNLINKED_SIBLINGS: ReadonlySet<ComponentPageState> = new Set([
-  "style-changed",
-  "added",
-]);
 
 interface SavedVariant {
   path: string;
   removed?: boolean;
   title: string;
-  to?: string;
+  to?: DesignDestination;
 }
 
-/** Each depicted parent's own entry and the artboard that shows it, if any. */
-const PARENTS: Record<ComponentId, SavedVariant> = {
-  action: {
+/**
+ * Action's own entry, then its saved variants in authored order, and the
+ * removed Compact variant, which keeps its place in the removed story. Each
+ * other entry opens the Canvas artboard that shows it, if one does.
+ */
+const ACTION_ENTRIES: readonly SavedVariant[] = [
+  {
     path: COMPONENT_ENTRIES.action.path,
     title: COMPONENTS.action.title,
-    to: COMPONENT_PAGES.default,
+    to: CANVAS_PAGES.componentSet,
   },
-  toolbar: {
-    path: COMPONENT_ENTRIES.toolbar.path,
-    title: COMPONENTS.toolbar.title,
-    to: COMPONENT_PAGES.toolbar,
+  {
+    path: COMPONENT_ENTRIES.actionDefault.path,
+    title: "Default",
+    to: CANVAS_PAGES.explorerUsage,
   },
-  "help-hint": {
-    path: COMPONENT_ENTRIES.helpHint.path,
-    title: COMPONENTS["help-hint"].title,
-    to: COMPONENT_PAGES.hidden,
+  {
+    path: COMPONENT_ENTRIES.actionDisabled.path,
+    title: "Disabled",
+    to: CANVAS_PAGES.componentSetDisabled,
   },
-  badge: {
-    path: COMPONENT_ENTRIES.badge.path,
-    title: COMPONENTS.badge.title,
-    to: COMPONENT_PAGES.unused,
+  { path: "example/components/action/secondary", title: "Secondary" },
+  {
+    path: COMPONENT_ENTRIES.actionCompact.path,
+    removed: true,
+    title: "Compact",
   },
-  checklist: {
-    path: COMPONENT_ENTRIES.checklist.path,
-    title: COMPONENTS.checklist.title,
-  },
-};
+];
 
-/** Each depicted parent's saved variants in authored order, with their artboards. */
-const SAVED_VARIANTS: Record<ComponentId, readonly SavedVariant[]> = {
-  action: [
-    {
-      path: COMPONENT_ENTRIES.actionDefault.path,
-      title: "Default",
-      to: COMPONENT_PAGES.affected,
-    },
-    {
-      path: COMPONENT_ENTRIES.actionDisabled.path,
-      title: "Disabled",
-      to: COMPONENT_PAGES.disabled,
-    },
-    { path: "example/components/action/secondary", title: "Secondary" },
-  ],
-  toolbar: [{ path: "example/components/toolbar/default", title: "Default" }],
-  "help-hint": [
-    { path: "example/components/help-hint/default", title: "Default" },
-  ],
-  badge: [{ path: COMPONENT_ENTRIES.badgeDefault.path, title: "Default" }],
-  checklist: [
-    {
-      path: COMPONENT_ENTRIES.checklistDefault.path,
-      title: "Default",
-      to: COMPONENT_PAGES["overlay-tall"],
-    },
-  ],
-};
-
-/**
- * The parent's own entry first, then its saved variants, with the shown entry
- * selected. The removed Compact variant keeps its place in the removed story.
- * A Props-tab limit page links only its own shown entry.
- */
-export function VariantPicker({
-  limit,
-  state,
-}: {
-  limit?: string | undefined;
-  state: ComponentPageState;
-}) {
-  const shown = COMPONENT_ENTRY_BY_STATE[state];
-  const unlinked = limit !== undefined || UNLINKED_SIBLINGS.has(state);
-  const entries: SavedVariant[] = [
-    PARENTS[shown.component],
-    ...SAVED_VARIANTS[shown.component],
-    ...(state === "removed"
-      ? [
-          {
-            path: COMPONENT_ENTRIES.actionCompact.path,
-            removed: true,
-            title: "Compact",
-          },
-        ]
-      : []),
-  ];
+/** The removed variant's bar, with the shown entry selected. */
+export function VariantPicker() {
+  const shown = COMPONENT_ENTRY_BY_STATE.removed;
   return (
     <VariantBar
-      options={entries.map((entry) => {
+      options={ACTION_ENTRIES.map((entry) => {
         const current = entry.path === shown.path;
-        const to = current
-          ? (limit ?? COMPONENT_PAGES[state])
-          : unlinked
-            ? undefined
-            : entry.to;
+        const to = current ? COMPONENT_PAGES.removed : entry.to;
         return {
           label: entry.title,
           path: entry.path,

@@ -14,8 +14,8 @@ const CASES: [(&str, &str, &str); 7] = [
     ("title", "TITLE_BEFORE", "TITLE_AFTER"),
     (
         "target",
-        "destination='design/browse/views/home'",
-        "destination='design/browse/views/screen'",
+        "destination='design/canvas/stage/home'",
+        "destination='design/canvas/overview'",
     ),
     ("status", "status='unmodified'", "status='changed'"),
     ("value", "VALUE_BEFORE", "VALUE_AFTER"),

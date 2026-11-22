@@ -19,13 +19,10 @@ Served pages remember the last chosen width, which replaces the starting width.
 The grip turns accent-colored with a soft accent halo while hovered,
 keyboard-focused, or being dragged, and its resting color follows the
 [palette contract](./mokly-viewer-palette.md#recorded-contrast). The
-inspector divider of the `design/components/**` artboards reuses the grip's
-shape and accent look, rotated, as the
-[workspace design](./mokly-component-workspace-design.md#fixed-shell-divider-and-panel-sheet)
-says. The separator is absent from the
-catalogue sheet and without JavaScript. Decision: the floating panel keeps the
-resize, its keys and the remembered width, which the mockups do not draw,
-because the resize is shipped behaviour and a deep tree needs the width.
+separator is absent from the catalogue sheet and without JavaScript. Decision:
+the floating panel keeps the resize, its keys and the remembered width, which
+the mockups do not draw, because the resize is shipped behaviour and a deep
+tree needs the width.
 
 The panel's 44px head holds the `Catalogue` title, at 13px in the interface
 type, and a text button labelled `Collapse all`. An All/Changes segmented
@@ -56,10 +53,14 @@ catalogue opens as a bottom sheet with the same head, filter, tree and foot. A
 static build without Changes keeps the filter-free layout.
 The catalogue-navigation component's `loading`, `preparing`, and
 `unavailable` variants are the mobile/desktop owning mockups for the three
-non-ready states.
-`design/changes/availability/preparing` and `design/changes/availability/unavailable` additionally own
-the preparing and failed states inside the complete shell, where Changes is
-selected and the chosen screen stays available. The preparing state exists only
+non-ready states. `design/canvas/loading/changes`,
+`design/canvas/loading/changes/preparing` and
+`design/canvas/loading/changes/unavailable` additionally own the checking,
+preparing and failed states inside the complete shell, where Changes is
+selected and the chosen screen stays on the canvas.
+`design/canvas/loading/changes/empty` owns the empty result, and
+`design/canvas/loading/changes/without-changes` the filter-free layout of a
+static build without Changes. The preparing state exists only
 while the base side renders from the base commit's sources; the
 [catalogue read model](./mokly-catalogue.md) carries it as `changesStatus`.
 
@@ -107,9 +108,12 @@ while the base side renders from the base commit's sources; the
   reads and the search box ignores. A Removed or Moved row takes neither,
   because its label already ends in `· Removed` or `· Moved`; a moved entry,
   edited or not, keeps that one row at its new place. The
-  [variant contract](./mokly-variants.md) owns the behavior; the
-  `design/browse/variants/**` and `design/browse/index-entries/**` states own
-  its mockups, the latter for a folder screen listing its members.
+  [variant contract](./mokly-variants.md) owns the behavior. The
+  catalogue-navigation component's `variants`, `changed-variants`,
+  `folder-screen` and `changed-member` variants are its owning mockups, the
+  last two for a folder screen listing its members, and
+  `design/browse/variants/variant-removed` depicts a removed variant under its
+  surviving parent.
 - Catalogue-link navigation opens the active section and every folder on the active
   row's path and scrolls that row into view. Search and Changes filtering may
   stay selected only while the active row stays visible. Reapplying an

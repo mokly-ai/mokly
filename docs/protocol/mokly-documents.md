@@ -72,7 +72,7 @@ The output is one complete HTML document per effective colour scheme with a
 Mokly-owned template: `<html lang="en">`, the title in `<head>`, a
 package-owned stylesheet inlined with shell-consistent typography, and no
 script. The stylesheet uses the shell's palette and the typography that the
-document design `design/browse/pages/document` depicts: 14.5px body text on
+document design `design/canvas/stage/document` depicts: 14.5px body text on
 a 720px measure, 26px and 17px headings, semibold underlined links, bordered
 inline code, and full-width tables; below 600px the body is 14px and the
 title 22px. Elements that the design does not show follow the same scale.
@@ -82,8 +82,7 @@ applies the dark palette. Serve answers both routes, and `build` writes them
 under `--out`. Nothing is written into the repository. A
 document without a dark document keeps its light one under Dark. When the
 catalogue has a dark axis, the shell names that fallback with the
-`Light only` note: in a quiet band above a current document's pane, as the
-`design/browse/appearance/states/light-only-current` design shows, and after
+`Light only` note: in a quiet band above a current document's pane, and after
 `Showing previous version` for a removed one, as the
 `design/browse/appearance/states/light-only-document` design shows. The
 shell opens the document in the preview colour scheme that the

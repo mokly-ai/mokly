@@ -1,10 +1,11 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { FlowStage } from "../../../../../../packages/ui/src/flow-step/flow-step.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { designMetadata } from "../../metadata.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
-import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
+import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
 import { NavTree } from "../../parts/nav.js";
 import { ScreenHead, Shell } from "../../parts/shell.js";
@@ -20,7 +21,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
         title="Welcome"
         screenTitle="Welcome"
         description="The tour starts on the landing screen."
-        screenPath={DESTINATIONS.welcome}
+        screenPath={CANVAS_PAGES.overview}
       >
         {viewport === "desktop" ? (
           <BrowserFrame address="example.test/welcome">
@@ -38,7 +39,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
         title="Details"
         screenTitle="Details"
         description="The tour ends on the details screen."
-        screenPath={DESTINATIONS.details}
+        screenPath={CANVAS_PAGES.added}
       >
         {viewport === "desktop" ? (
           <BrowserFrame address="example.test/details">
@@ -58,7 +59,7 @@ function UseCaseHead() {
   return (
     <ScreenHead
       comparisons={false}
-      crumbs={[EXAMPLE_CRUMB]}
+      crumbs={["Example"]}
       path={ENTRY_PATHS.tour}
       title="Example tour"
     />
@@ -87,6 +88,10 @@ function UseCaseMobile() {
   );
 }
 
+/**
+ * A selected use case. It stays until decision 33 settles how a use case
+ * stands on the canvas. Each step opens the Canvas artboard of its screen.
+ */
 export const useCaseScreen = defineScreen({
   ...designMetadata,
   colorSchemes: ["light"],

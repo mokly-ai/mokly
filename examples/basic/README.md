@@ -161,35 +161,36 @@ the render context's viewport. `artboardStates()` makes one screen whose
 variants show other states: a `state` prop names the state, and each variant
 sets it. The helper adapts design artboards, each a different tree; a product
 screen derives its states from real props instead.
-`specs/design/browse/loading/` shows the shell before the catalogue arrives,
-its failure and version states, and the stage while a preview loads.
-`specs/design/components/controls/parts/copy.ts` holds the settled copy of the
-Props tab's controls, and the Read-only and recovery gallery under
-`specs/design/components/controls/limits/` draws the states without editing
-and the recovery states that keep the edits.
+`specs/design/components/controls/parts/copy.ts` holds the settled copy of
+the controls in Inspect's Props section.
 
-`specs/design/canvas/` holds the Canvas viewer family: 29 screens and states.
-A screen opens as four frames on a dot-grid canvas, between the floating
-catalogue and the right panel. The family also draws zoom, a component's
-variant set, a document, the catalogue and its home, Inspect with a
-selection, its sections, Props and the Frames filter, the five compare modes
-of Changes, and an added entry. Each mobile view draws the compact layout: one
-frame and the dock. The family's scaffolds, instance records and destinations
-live in `specs/design/canvas/parts/`. Its eleven shared parts, the `canvas` and
-`panels` groups of `specs/design/library/` and the inspector's Frames filter
-and box model, implement their own markup, because `@mokly/ui` does not
-provide them yet. The
-[library README](./specs/design/library/README.md#canvas-viewer-parts)
+`specs/design/canvas/` holds the Canvas viewer family: 37 screens and 50
+saved variants in ten folders, which the
+[Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md)
+lists. A screen opens as four frames on a dot-grid canvas, between the
+floating catalogue and the right panel. Each mobile view draws the compact
+layout: one frame and the dock. Only the startup views of
+`specs/design/canvas/loading/` draw no chrome, because the shell draws none
+before the catalogue arrives. The family's shared scaffolds, instance records
+and destinations live in `specs/design/canvas/parts/`, and each folder keeps
+the parts of its own states in its own `parts/` directory. The family's
+eleven shared parts, the `canvas` and `panels` groups of
+`specs/design/library/` and the inspector's Frames filter and box model,
+implement their own markup, because `@mokly/ui` does not provide them yet.
+The [library README](./specs/design/library/README.md#canvas-viewer-parts)
 describes them. `specs/design/parts/canvas_palette.ts` maps the Canvas
 palette of `@mokly/ui`, imported by repository path, to the custom properties
-of a Canvas root. The Canvas sheets reach every design route through the
-shared design sheets. `design-stage.css` imports `design-canvas.css`,
-`design-canvas-inspect.css`, `design-canvas-sections.css` and
-`design-canvas-changes.css`, and `design-canvas.css` imports Geist from
-`design-fonts/`. `design-component-workspace.css` imports
-`design-canvas-shell.css` and `design-canvas-compact.css`. The
+of a Canvas root. The `design/canvas/**` route of the configuration links the
+Canvas sheets, and `design.css` imports Geist from `design-fonts/` on every
+design route. The
 [design library stylesheets README](./design-library/README.md) gives their
-order. The browse, changes and components families draw the shipped shell.
+order.
+
+The Canvas family draws no use case and no removed entry's previous version
+yet. Fifteen older screens under `specs/design/browse/`, `changes/` and
+`components/` draw those states in the shipped shell. The older
+`design/browse/views/screen/tag-picker` draws the shipped tag picker over
+Welcome, because the design library's runtime browser test opens it.
 
 `tests/design_catalogue.test.ts` serves this configuration once with
 `--no-watch` and the unresolved base `refs/mokly/browser-suite-no-base`, so

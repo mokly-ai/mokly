@@ -57,26 +57,50 @@ export function usageConsumer(
   };
 }
 
-/** The screens that render a component, each opening its Canvas artboard. */
+/**
+ * The artboards of Welcome and Details that show their first instance of a
+ * component selected: a Used by link opens the owning screen with its instance
+ * selected, as the component explorer contract says.
+ */
+const SELECTED_IN: Readonly<
+  Record<string, { welcome: CanvasDestination; details: CanvasDestination }>
+> = {
+  [COMPONENT_IDENTITIES.action.title]: {
+    welcome: CANVAS_PAGES.selection,
+    details: CANVAS_PAGES.addedWelcome,
+  },
+  [COMPONENT_IDENTITIES.toolbar.title]: {
+    welcome: CANVAS_PAGES.selectionToolbar,
+    details: CANVAS_PAGES.addedToolbar,
+  },
+};
+
+/**
+ * The screens that render a component, each opening the artboard that shows
+ * its instance selected.
+ */
 function screenConsumers(component: string): UsageRow[] {
+  const selected = SELECTED_IN[component];
+  if (selected === undefined)
+    throw new Error(`No selection artboard for ${component}`);
   return [
     usageConsumer(
       "Welcome",
-      CANVAS_PAGES.overview,
+      selected.welcome,
       instancesOf(WELCOME_INSTANCES, component),
     ),
     usageConsumer(
       "Details",
-      CANVAS_PAGES.added,
+      selected.details,
       instancesOf(DETAILS_INSTANCES, component),
     ),
   ];
 }
 
 /**
- * The entries that use the Action, each opening its Canvas artboard. Welcome
- * and Details render an Action and a Toolbar with two Actions, and the
- * Toolbar renders its two Actions.
+ * The entries that use the Action, each opening the artboard that shows its
+ * first Action selected. Welcome and Details render an Action and a Toolbar
+ * with two Actions, and the Toolbar renders its two Actions.
  */
 export function actionUsedBy(): UsageRow[] {
   const action = COMPONENT_IDENTITIES.action.title;
@@ -84,7 +108,7 @@ export function actionUsedBy(): UsageRow[] {
     ...screenConsumers(action),
     usageConsumer(
       COMPONENT_IDENTITIES.toolbar.title,
-      CANVAS_PAGES.componentSetToolbar,
+      CANVAS_PAGES.componentSetPrimary,
       instancesOf(TOOLBAR_INSTANCES, action),
     ),
   ];

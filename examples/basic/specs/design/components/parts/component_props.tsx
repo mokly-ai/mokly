@@ -2,6 +2,7 @@ import { mockLink } from "@mokly/mokly";
 
 import { SavedPropsPanel } from "../../../../../../packages/ui/src/controls-panel/controls-panel.js";
 import type { PropValue } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { CONTROLS_COPY } from "../controls/parts/copy.js";
 import type { ControlsState } from "../controls/parts/fixtures.js";
 import { ReadOnlyPanel, RemovedPanel } from "../controls/parts/limits.js";
@@ -14,7 +15,6 @@ import {
 } from "./action_props.js";
 import { checklistCompleted, checklistTitle } from "./checklist.js";
 import type { ComponentPageState } from "./component_details.js";
-import { COMPONENT_PAGES, CONTROLS_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import {
   COMPONENT_ENTRIES,
@@ -23,7 +23,7 @@ import {
 } from "./metadata.js";
 
 /** The Action entry a page shows: a saved variant or the parent's own entry. */
-export function actionEntryOf(entry: ComponentEntryMetadata): ActionEntry {
+function actionEntryOf(entry: ComponentEntryMetadata): ActionEntry {
   return entry.path === COMPONENT_ENTRIES.actionDisabled.path
     ? "disabled"
     : entry.path === COMPONENT_ENTRIES.actionDefault.path
@@ -52,11 +52,15 @@ const CONTROLS_STATES = {
   disabled: "variant",
 } as const satisfies Record<ActionEntry, ControlsState>;
 
-/** The page that shows each Action entry in Current, which Switch to Current opens. */
+/**
+ * The Canvas artboard that shows each Action entry in Current, which Switch
+ * to Current opens: the Action's variant set, with the Disabled variant
+ * chosen for that variant.
+ */
 const CURRENT_PAGES = {
-  parent: COMPONENT_PAGES.default,
-  default: CONTROLS_PAGES.default,
-  disabled: COMPONENT_PAGES.disabled,
+  parent: CANVAS_PAGES.componentSet,
+  default: CANVAS_PAGES.componentSet,
+  disabled: CANVAS_PAGES.componentSetDisabled,
 } as const satisfies Record<ActionEntry, string>;
 
 /** The pages that compare, whose Props tab shows the saved props read-only. */

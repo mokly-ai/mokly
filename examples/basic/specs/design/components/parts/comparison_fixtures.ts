@@ -1,9 +1,5 @@
 import type { ChangeReasonKind } from "../../parts/reason_sentences.js";
-import {
-  COMPONENT_STYLE_COPY,
-  SCREEN_STYLE_COPY,
-  type StylesheetEvidence,
-} from "../../parts/stylesheet_evidence.js";
+import type { StylesheetEvidence } from "../../parts/stylesheet_evidence.js";
 
 import type { ComponentPageState } from "./component_details.js";
 import type { ComponentDesignDestination } from "./destinations.js";
@@ -68,108 +64,20 @@ export const footerLabelChange = {
   after: "Get started",
 } as const;
 
-export const actionComparison = {
-  status: "changed",
-  reasons: ["material"],
-  variant: "Default",
-  savedPropsUnchanged: true,
-} as const satisfies ComparisonFixture;
-
-/** The Checklist's own output changed while its saved props stayed the same. */
-const checklistComparison = {
-  status: "changed",
-  reasons: ["material"],
-  variant: "Default",
-  savedPropsUnchanged: true,
-} as const satisfies ComparisonFixture;
-
-/** The one stylesheet all three stylesheet stories change. */
-const ACTION_STYLES = "styles/actions.css";
-
 /**
- * Its changed `.action` rule styles only Action's own output. A markup change
- * shows only where Welcome and Details use Action, so the parent also has the
- * `implementation` reason, which leaves the Default caption naming the styles.
+ * These are authored comparison records, not analysis of rendered pixels:
+ * the removed saved variant, and the removed screen that consumed it.
  */
-const actionStyleComparison = {
-  status: "changed",
-  reasons: ["dependency", "implementation"],
-  variant: "Default",
-  savedPropsUnchanged: true,
-  stylesheets: [
-    {
-      path: ACTION_STYLES,
-      outcomes: [
-        { lead: COMPONENT_STYLE_COPY.matched, selectors: [".action"] },
-      ],
-    },
-  ],
-} as const satisfies ComparisonFixture;
-
-/** These are authored comparison records, not analysis of rendered pixels. */
 const componentComparisons: Partial<
   Record<ComponentPageState, ComparisonFixture>
 > = {
-  comparison: actionComparison,
-  overlay: actionComparison,
-  difference: actionComparison,
-  "overlay-tall": checklistComparison,
-  affected: actionComparison,
-  added: { status: "added", reasons: ["added"], variant: "Default" },
   removed: { status: "changed", reasons: ["removed"], variant: "Compact" },
-  "shared-impact": {
-    status: "unmodified",
-    excludedStylesheets: [ACTION_STYLES],
-  },
-  "style-changed": actionStyleComparison,
 };
 
 const screenComparisons: Partial<
   Record<ScreenPageState, ChangedComparisonFixture | AffectedFixture>
 > = {
-  /** A caller-owned prop changes the instance's props digest, so it is material. */
-  "direct-change": {
-    status: "changed",
-    reasons: ["inputs", "material"],
-    propChange: footerLabelChange,
-    changedComponents: [
-      { title: "Action", to: "design/components/pages/affected" },
-    ],
-  },
   "removed-consumer": { status: "removed", reasons: ["removed"] },
-  /** Welcome under Action's styles story: Action owns every changed match. */
-  "affected-screen": {
-    status: "unmodified",
-    affected: true,
-    stylesheets: [
-      {
-        path: ACTION_STYLES,
-        outcomes: [{ lead: SCREEN_STYLE_COPY.matched, selectors: [".action"] }],
-      },
-    ],
-    changedComponents: [
-      {
-        title: "Action",
-        to: "design/components/states/shared-impact/style-changed",
-      },
-    ],
-  },
-  "style-outside": {
-    status: "changed",
-    reasons: ["dependency"],
-    stylesheets: [
-      {
-        path: ACTION_STYLES,
-        outcomes: [{ lead: SCREEN_STYLE_COPY.outside, selectors: [".action"] }],
-      },
-    ],
-    changedComponents: [
-      {
-        title: "Action",
-        to: "design/components/states/shared-impact/style-changed",
-      },
-    ],
-  },
 };
 
 export function componentComparison(state: ComponentPageState) {

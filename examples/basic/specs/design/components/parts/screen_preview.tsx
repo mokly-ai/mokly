@@ -1,5 +1,3 @@
-import { CompareGrid, ComparisonView, Pane } from "../../parts/compare.js";
-import { FramedShot } from "../../parts/compare_page.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
@@ -66,35 +64,6 @@ export function WelcomeExample({
       </div>
       <HighlightLayer viewport={viewport} />
     </div>
-  );
-}
-
-/**
- * One viewport of Welcome's loaded side-by-side comparison, which Action's
- * Affected screens open. Welcome's own content is unchanged, so its versions
- * differ only inside the Action it uses, and the heading names the changed
- * components.
- */
-export function AffectedComparison({
-  viewport,
-}: {
-  viewport: ArtboardViewport;
-}) {
-  return (
-    <ComparisonView state="components-changed" viewport={viewport}>
-      <CompareGrid>
-        <Pane side="before">
-          <FramedShot address="example.test/welcome" viewport={viewport}>
-            <WelcomeExample actionBefore viewport={viewport} />
-          </FramedShot>
-        </Pane>
-        <Pane side="after">
-          <FramedShot address="example.test/welcome" viewport={viewport}>
-            <WelcomeExample viewport={viewport} />
-          </FramedShot>
-        </Pane>
-      </CompareGrid>
-    </ComparisonView>
   );
 }
 

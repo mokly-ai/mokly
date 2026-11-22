@@ -57,6 +57,3 @@ function CatalogueNavigation({
 export function NavTree(props: NavTreeProps) {
   return <CatalogueNavigation {...props} drawer={false} />;
 }
-export function NavDrawer(props: NavTreeProps) {
-  return <CatalogueNavigation {...props} drawer />;
-}

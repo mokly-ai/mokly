@@ -164,16 +164,22 @@ export async function auditPalettes(): Promise<
 const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
 
 /**
- * The preview tokens of the stage stylesheet: the screen, device, and traffic
- * light colours, which stay independent of the interface appearance.
+ * The sheet of the preview tokens: the Canvas route links it, and the stage
+ * sheet of the other design routes imports it.
+ */
+export const PREVIEW_SHEET = "design-preview.css";
+
+/**
+ * The preview tokens of the preview stylesheet: the screen, device, and
+ * traffic light colours, which stay independent of the interface appearance.
  */
 export async function designPreviewTokens(): Promise<Map<string, string>> {
   const source = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+    path.join(repositoryRoot, "examples/basic", PREVIEW_SHEET),
     "utf8",
   );
   const block = PREVIEW_BLOCK.exec(source)?.[1];
-  if (!block) throw new Error("design-stage.css is missing its preview tokens");
+  if (!block) throw new Error(`${PREVIEW_SHEET} is missing its preview tokens`);
   return readTokens(block);
 }
 

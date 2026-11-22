@@ -5,73 +5,25 @@ import { artboards } from "../../parts/artboards.js";
 import { ComponentPage } from "../parts/component_page.js";
 import { ScreenPage } from "../parts/screen_page.js";
 
-export function EmptyUsageDesktop() {
-  return <ScreenPage state="empty" viewport="desktop" />;
+function RemovedVariantDesktop() {
+  return <ComponentPage viewport="desktop" />;
 }
-export function EmptyUsageMobile() {
-  return <ScreenPage state="empty" viewport="mobile" />;
+function RemovedVariantMobile() {
+  return <ComponentPage viewport="mobile" />;
 }
-export function UnavailableDesktop() {
-  return <ScreenPage state="unavailable" viewport="desktop" />;
+function RemovedConsumerDesktop() {
+  return <ScreenPage viewport="desktop" />;
 }
-export function UnavailableMobile() {
-  return <ScreenPage state="unavailable" viewport="mobile" />;
-}
-export function UnusedComponentDesktop() {
-  return <ComponentPage state="unused" viewport="desktop" />;
-}
-export function UnusedComponentMobile() {
-  return <ComponentPage state="unused" viewport="mobile" />;
-}
-export function RemovedVariantDesktop() {
-  return <ComponentPage state="removed" viewport="desktop" />;
-}
-export function RemovedVariantMobile() {
-  return <ComponentPage state="removed" viewport="mobile" />;
-}
-export function RemovedConsumerDesktop() {
-  return <ScreenPage state="removed-consumer" viewport="desktop" />;
-}
-export function RemovedConsumerMobile() {
-  return <ScreenPage state="removed-consumer" viewport="mobile" />;
+function RemovedConsumerMobile() {
+  return <ScreenPage viewport="mobile" />;
 }
 
-export const emptyScreen = defineScreen({
-  ...componentDesignMetadata,
-  slug: "empty",
-  title: "No components in this view",
-  colorSchemes: ["light"],
-  description:
-    "A validated empty usage list, with highlighting disabled and a clear zero count.",
-  ...artboards({
-    desktop: <EmptyUsageDesktop />,
-    mobile: <EmptyUsageMobile />,
-  }),
-});
-export const unavailableScreen = defineScreen({
-  ...componentDesignMetadata,
-  slug: "unavailable",
-  title: "Inspection unavailable",
-  colorSchemes: ["light"],
-  description:
-    "Missing inspection metadata is not presented as an empty component list.",
-  ...artboards({
-    desktop: <UnavailableDesktop />,
-    mobile: <UnavailableMobile />,
-  }),
-});
-export const unusedScreen = defineScreen({
-  ...componentDesignMetadata,
-  slug: "unused",
-  title: "Component with no consumers",
-  colorSchemes: ["light"],
-  description:
-    "A component with a saved preview and an explicit empty Used by list.",
-  ...artboards({
-    desktop: <UnusedComponentDesktop />,
-    mobile: <UnusedComponentMobile />,
-  }),
-});
+/*
+ * A removed saved variant and the removed screen that consumed it. They stay
+ * until decision 34 settles how the Canvas family shows a removed entry's
+ * previous version: the removed consumer opens its previous version from the
+ * removed variant's affected list.
+ */
 export const removedScreen = defineScreen({
   ...componentDesignMetadata,
   slug: "removed",

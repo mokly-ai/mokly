@@ -16,7 +16,6 @@ import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 import type { ActionProps } from "./action_props.js";
 import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
-import { HighlightLayer } from "./highlight.js";
 import type { ComponentId } from "./metadata.js";
 
 /** The same synthetic Action is composed by component and consuming-screen designs. */
@@ -55,34 +54,11 @@ export function ToolbarExample({ before = false }: { before?: boolean }) {
   );
 }
 
-/**
- * The shipped canvas of a component's Current view: `PreviewFrame` names the
- * viewport above the bordered box that depicts the component's document,
- * without device chrome. The explorer depicts its components in Light only.
- * The depicted view's highlight lies over the document.
- */
-export function ComponentCanvas({
-  children,
-  viewport,
-}: {
-  children: ReactNode;
-  viewport: ArtboardViewport;
-}) {
-  return (
-    <PreviewFrame placement={{ kind: "canvas", viewport }} scheme="light">
-      <div className="ce-canvas-content">
-        {children}
-        <HighlightLayer viewport={viewport} />
-      </div>
-    </PreviewFrame>
-  );
-}
-
 /** The saved variants a comparison depicts; only the Checklist outgrows its frame. */
 export type ComparedComponent = Extract<ComponentId, "action" | "checklist">;
 
 /** The recorded state of a compared variant, which its sections name. */
-export type ComparedState = "changed" | "removed" | "styles-changed";
+type ComparedState = "changed" | "removed" | "styles-changed";
 
 /** The shell's heading words for each state, which name a variant. */
 const STATE_LABELS: Record<ComparedState, string> = {

@@ -1,226 +1,47 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { formsFilterVariant } from "./browse/states/tags/forms.js";
-import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.js";
-import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
-import { tagPickerVariant } from "./browse/states/tags/picker.js";
-import { browseSchemeVariants } from "./browse/variants/appearance_screens.js";
 import { designMetadata } from "./metadata.js";
-import { artboardStates, artboards } from "./parts/artboards.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
-import {
-  ExampleWorkspace,
-  SchemeWorkspace,
-} from "./parts/example_workspace.js";
-import { NavDrawer, NavTree } from "./parts/nav.js";
+import { ExampleWorkspace } from "./parts/example_workspace.js";
+import { NavTree } from "./parts/nav.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
-import { Shell } from "./parts/shell.js";
-import { EmptyState } from "./parts/stage_content.js";
+import { Shell, type ArtboardViewport } from "./parts/shell.js";
 
-function HomeBody() {
-  return (
-    <EmptyState
-      to={DESTINATIONS.welcome}
-      title="Mokly"
-      body="Browse the mockup catalogue: expand folders and choose an item from the navigation."
-      linkLabel="Open the first screen"
-    />
-  );
-}
-
-function HomeDesktop() {
-  return (
-    <Shell design={DESTINATIONS.home} viewport="desktop" nav={<NavTree />}>
-      <HomeBody />
-    </Shell>
-  );
-}
-
-function HomeMobile() {
-  return (
-    <Shell design={DESTINATIONS.home} viewport="mobile" nav={null}>
-      <HomeBody />
-    </Shell>
-  );
-}
-
-function SelectedScreenDesktop() {
+/** Welcome with an empty query and the search field's tag picker open. */
+function TagPicker({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <Shell
-      design={DESTINATIONS.welcome}
-      viewport="desktop"
+      design={DESTINATIONS.tagPicker}
+      viewport={viewport}
       nav={<NavTree activeLabel="Welcome" />}
-    >
-      <SchemeWorkspace
-        header={<WelcomeHead active="both" />}
-        subject="welcome"
-        viewport="desktop"
-      />
-    </Shell>
-  );
-}
-
-function SelectedScreenMobile() {
-  return (
-    <Shell design={DESTINATIONS.welcome} viewport="mobile" nav={null}>
-      <SchemeWorkspace
-        header={<WelcomeHead active="mobile" />}
-        subject="welcome"
-        viewport="mobile"
-      />
-    </Shell>
-  );
-}
-
-function DetailsOpenDesktop() {
-  return (
-    <Shell
-      design={DESTINATIONS.inspector}
-      viewport="desktop"
-      nav={<NavTree activeLabel="Welcome" />}
+      tagPickerOpen
     >
       <ExampleWorkspace
-        header={<WelcomeHead active="desktop" />}
+        header={<WelcomeHead active={viewport} />}
         subject="welcome"
-        viewport="desktop"
-        open
+        viewport={viewport}
+        open={viewport === "desktop"}
       />
     </Shell>
   );
 }
 
-function DetailsOpenMobile() {
-  return (
-    <Shell design={DESTINATIONS.inspector} viewport="mobile" nav={null}>
-      <ExampleWorkspace
-        header={<WelcomeHead active="mobile" />}
-        subject="welcome"
-        viewport="mobile"
-        open
-      />
-    </Shell>
-  );
-}
-
-function MissingRouteBody() {
-  return (
-    <EmptyState
-      to={DESTINATIONS.home}
-      title="Item not found"
-      body="Nothing in the catalogue matches"
-      code="view/unknown/"
-      linkLabel="Go to the catalogue home"
-    />
-  );
-}
-
-function MissingRouteDesktop() {
-  return (
-    <Shell design={DESTINATIONS.missing} viewport="desktop" nav={<NavTree />}>
-      <MissingRouteBody />
-    </Shell>
-  );
-}
-
-function MissingRouteMobile() {
-  return (
-    <Shell design={DESTINATIONS.missing} viewport="mobile" nav={null}>
-      <MissingRouteBody />
-    </Shell>
-  );
-}
-
-function NarrowNavigationDesktop() {
-  return (
-    <Shell
-      aside={<NavDrawer activeLabel="Welcome" />}
-      collapsed
-      design={DESTINATIONS.navigation}
-      nav={null}
-      viewport="desktop"
-    >
-      <HomeBody />
-    </Shell>
-  );
-}
-
-function NarrowNavigationMobile() {
-  return (
-    <Shell
-      design={DESTINATIONS.navigation}
-      viewport="mobile"
-      nav={null}
-      aside={<NavDrawer activeLabel="Welcome" />}
-    >
-      <HomeBody />
-    </Shell>
-  );
-}
-
-/** Browse shell design screens grouped by catalogue views and shell states. */
-export const homeScreen = defineScreen({
+/**
+ * Welcome with the tag picker open, the subject of the library runtime test
+ * in `tests/browser/design_library_runtime_cases.ts`. It stays until a fix of
+ * the viewer race that opens Props on a nested disclosure lets that test move
+ * to `design/canvas/search/tags`. The screen whose variant it was is gone, so
+ * it declares the path that it had as that variant.
+ */
+export const tagPickerScreen = defineScreen({
   ...designMetadata,
   colorSchemes: ["light"],
-  description:
-    "The catalogue home with the navigation tree, search, and filter.",
-  ...artboards({ desktop: <HomeDesktop />, mobile: <HomeMobile /> }),
-  slug: "home",
-  title: "Home",
-});
-export const selectedScreen = defineScreen({
-  ...designMetadata,
-  description:
-    "A selected screen with viewport switching and framed fragments, in either catalogue scheme.",
-  slug: "screen",
-  title: "Selected screen",
-  ...artboardStates(
-    {
-      state: "selected",
-      title: "Selected screen",
-      desktop: <SelectedScreenDesktop />,
-      mobile: <SelectedScreenMobile />,
-    },
-    [
-      ...browseSchemeVariants,
-      tagPickerVariant,
-      formsFilterVariant,
-      onboardingFilterVariant,
-      onboardingPickerVariant,
-    ],
-  ),
-});
-
-/** Browse shell design screens for secondary shell states. */
-export const detailsScreen = defineScreen({
-  ...designMetadata,
-  colorSchemes: ["light"],
-  description: "The details panel expanded under a selected screen.",
+  description: "Welcome with an empty query and the tag picker open.",
   ...artboards({
-    desktop: <DetailsOpenDesktop />,
-    mobile: <DetailsOpenMobile />,
+    desktop: <TagPicker viewport="desktop" />,
+    mobile: <TagPicker viewport="mobile" />,
   }),
-  slug: "details",
-  title: "Details panel",
-});
-export const missingRouteScreen = defineScreen({
-  ...designMetadata,
-  colorSchemes: ["light"],
-  description: "The not-found view keeping catalogue navigation available.",
-  ...artboards({
-    desktop: <MissingRouteDesktop />,
-    mobile: <MissingRouteMobile />,
-  }),
-  slug: "missing-route",
-  title: "Missing route",
-});
-export const navigationScreen = defineScreen({
-  ...designMetadata,
-  colorSchemes: ["light"],
-  description: "Collapsed navigation opening as a drawer on narrow viewports.",
-  ...artboards({
-    desktop: <NarrowNavigationDesktop />,
-    mobile: <NarrowNavigationMobile />,
-  }),
-  slug: "navigation",
-  title: "Narrow navigation",
+  path: "design/browse/views/screen/tag-picker",
+  title: "Tag picker",
 });

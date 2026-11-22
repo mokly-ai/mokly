@@ -1,18 +1,9 @@
 import type { ReactNode } from "react";
 
-import {
-  useDarkPreview,
-  type AppearanceChoice,
-} from "../../../parts/appearance.js";
-import {
-  DESTINATIONS,
-  type DesignDestination,
-} from "../../../parts/destinations.js";
+import type { AppearanceChoice } from "../../../parts/appearance.js";
+import type { DesignDestination } from "../../../parts/destinations.js";
 import { SCREEN_CRUMBS } from "../../../parts/entry_paths.js";
-import { SchemeWorkspace } from "../../../parts/example_workspace.js";
-import { MiniWelcome } from "../../../parts/mini_screens.js";
-import { NavTree, type NavNode } from "../../../parts/nav.js";
-import { NAV_TREE } from "../../../parts/nav_data.js";
+import { NavTree } from "../../../parts/nav.js";
 import {
   ScreenHead,
   Shell,
@@ -20,18 +11,6 @@ import {
   type ArtboardViewport,
   type Crumb,
 } from "../../../parts/shell.js";
-import { BrowserFrame, PhoneFrame } from "../../../parts/stage.js";
-
-/**
- * The canonical tree as the appearance designs draw it. Its Payment terms row
- * opens the document in the depicted appearance, so a Dark artboard stays Dark
- * and shows the document's light fallback.
- */
-export const APPEARANCE_NAV_TREE: readonly NavNode[] = NAV_TREE.map((row) =>
-  row.key === "payment-terms"
-    ? { ...row, to: DESTINATIONS.appearanceLightOnlyCurrent }
-    : row,
-);
 
 interface AppearanceShellProps {
   activeLabel?: string | undefined;
@@ -69,9 +48,7 @@ export function AppearanceShell({
       viewport={viewport}
       nav={
         viewport === "desktop"
-          ? (nav ?? (
-              <NavTree activeLabel={activeLabel} nodes={APPEARANCE_NAV_TREE} />
-            ))
+          ? (nav ?? <NavTree activeLabel={activeLabel} />)
           : null
       }
       aside={aside}
@@ -80,23 +57,6 @@ export function AppearanceShell({
     </Shell>
   );
 }
-
-/** The Welcome preview the appearance screens place on their stage. */
-export function WelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
-  const dark = useDarkPreview();
-  return viewport === "desktop" ? (
-    <BrowserFrame address="example.test/welcome" dark={dark}>
-      <MiniWelcome />
-    </BrowserFrame>
-  ) : (
-    <PhoneFrame small dark={dark}>
-      <MiniWelcome compact />
-    </PhoneFrame>
-  );
-}
-
-/** The appearance artboards use the shared dual-scheme workspace. */
-export const AppearanceWorkspace = SchemeWorkspace;
 
 interface AppearanceHeadProps {
   /** Folder crumbs; a current screen's crumbs from All by default. */

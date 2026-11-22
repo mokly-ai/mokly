@@ -2,44 +2,28 @@
 
 ## Depicted States
 
-The design mockups depict the pane contract in both viewports, the
-screen comparisons in both schemes and component comparisons in Light.
-`design/changes/diff-controls/overlay` depicts a short Overlay and
-`design/changes/diff-controls/overlay-long` a long screen part-way down its shared chrome, with
-both layers at one offset, unchanged sections aligned, one reworded section
-showing both versions, and the viewport's scrollbar drawn part-way down.
-`design/changes/outcomes/difference` and `design/browse/appearance/workspaces/difference` depict Difference
-with the same single-chrome stack over an opaque Before layer, and
-`design/changes/outcomes/changed` and `design/browse/appearance/workspaces/side-by-side` depict Side by
-side with one chrome per version. For component comparisons,
-`design/components/pages/stacked/overlay` and `design/components/pages/stacked/difference` depict a saved
-variant's two versions in one bordered component frame, and
-`design/components/pages/stacked/overlay-tall` depicts a component taller than that frame
-scrolled part-way inside it, with both versions at one scroll position and the
-frame's scrollbar drawn to match; `design/components/pages/comparison` keeps one frame
-per version in Side by side. Links inside every depicted pane are inert.
+The `design/canvas/**` family depicts the pane contract with the
+[Changes tab](./mokly-changes-controls.md#changes-tab) of the right panel, in
+both viewports and both schemes. Each compare mode applies to every frame on
+the canvas, except Side by side, which compares the frame that the chips
+choose. Links inside every depicted frame are inert.
 
-`design/changes/diff-controls/overlay-panel` depicts an app-shell screen in Overlay whose top bar and navigation stay in
-place while both versions' main panels sit part-way down at one position, with
-the panel's own scrollbar drawn and no page scrollbar on the chrome's viewport.
-`design/changes/diff-controls/side-by-side-apart` depicts Side by side with
-Scroll together off, each version at its own place with its own scrollbar.
-Every diff-mode screen design draws the Scroll together switch after its mode
-group, on everywhere but that one, as the runtime does.
-See [the shell design](./mokly-shell-design.md) and
+| Entry                                           | State                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| `design/canvas/changes/current`                 | Current, with the stepper, Compared, the modes and the comparison details      |
+| `design/canvas/changes/side-by-side`            | Side by side on the frame that the chips choose, two phone frames on phones    |
+| `design/canvas/changes/overlay`                 | Overlay on every frame                                                         |
+| `design/canvas/changes/difference`              | Difference on every frame                                                      |
+| `design/canvas/changes/swipe`                   | Swipe, with one divider at the same place on every frame                       |
+| `design/canvas/outcomes/added/changes`          | An added screen, with Current alone on its rail and as its one mode            |
+| `design/canvas/outcomes/moved`                  | A moved screen in Overlay on its Light frames, against its previous path       |
+| `design/canvas/components/compare`              | A changed component in Overlay on every frame of its variant set               |
+| `design/canvas/components/compare/side-by-side` | Side by side on one frame of the variant set, with a chip for each frame       |
+| `design/canvas/components/compare/difference`   | Difference on every frame of the variant set                                   |
+| `design/canvas/components/removed/changes`      | A removed variant in Side by side, with a message for its missing current side |
+| `design/canvas/components/affected`             | An unmodified screen that a changed component affects, in Side by side         |
+
+Each compared frame shows its documents from their start. A frame scrolls its
+own document, so no design draws a scroll position. See
+[the shell design](./mokly-shell-design.md#in-place-comparisons) and
 [the component design](./mokly-component-design.md) for the complete tables.
-
-## Canvas Comparisons
-
-The `design/canvas/**` family depicts compare on every frame of the canvas,
-with the [Changes tab](./mokly-changes-controls.md#changes-tab) of the right
-panel, in both viewports. Links inside every depicted frame are inert.
-
-| Entry                                  | State                                                                       |
-| -------------------------------------- | --------------------------------------------------------------------------- |
-| `design/canvas/changes/current`        | Current, with the stepper, Compared, the modes and the comparison details   |
-| `design/canvas/changes/side-by-side`   | Side by side on the frame that the chips choose, two phone frames on phones |
-| `design/canvas/changes/overlay`        | Overlay on every frame                                                      |
-| `design/canvas/changes/difference`     | Difference on every frame                                                   |
-| `design/canvas/changes/swipe`          | Swipe, with one divider at the same place on every frame                    |
-| `design/canvas/outcomes/added/changes` | An added screen, with Current alone on its rail and as its one mode         |

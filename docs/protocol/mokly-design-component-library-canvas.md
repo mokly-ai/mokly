@@ -77,9 +77,15 @@ its switch are native controls that work in place.
    last change's Next change are disabled.
 9. **Compare modes:** mode `current/side-by-side/overlay/difference/swipe`, a
    comparable flag, the Scroll together state, a destination for each mode,
-   and, in Side by side, the compared frame and its destination. Controls:
-   mode, comparable and Scroll together. Each mode is a tile with its key. An
-   entry that is not comparable offers Current alone.
+   and, in Side by side, the compared frame, its destination, and an optional
+   list of the frames that its chips name. A frame record has an id, a label
+   and a kind `desktop/mobile/component`. Without a list, the chips name a
+   screen's four frames by viewport and scheme. A variant set gives its own
+   frames, named by saved variant and scheme, such as `Default · Light`.
+   Controls: mode, comparable and Scroll together. Each mode is a tile with
+   its key. An entry that is not comparable offers Current alone. The compared
+   frame's chip links to its destination, and every other chip is a picture of
+   itself.
 10. **Frames filter:** a viewports flag, the Mobile, Desktop, Light and Dark
     toggles, a light-only flag, the Highlight components state, and an
     optional unavailable reason

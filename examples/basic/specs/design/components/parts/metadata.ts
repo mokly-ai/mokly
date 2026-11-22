@@ -162,7 +162,6 @@ export const SCREENS = {
 } as const;
 
 export type ScreenId = keyof typeof SCREENS;
-export type CatalogueIdentity = ComponentId | ScreenId;
 
 export function screenIdentity(state: ScreenPageState): ScreenId {
   if (state === "empty" || state === "unavailable") return "reading-room";

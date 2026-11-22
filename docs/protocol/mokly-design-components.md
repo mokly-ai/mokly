@@ -3,9 +3,8 @@
 ## Scope
 
 Mokly's shared design UI has its own component pages, saved variants,
-editable local props and recorded consumers. The Browse, Changes, Canvas,
-component explorer, inspection and controls artboards render the same
-registered implementations as those pages. One component implementation or
+editable local props and recorded consumers. Every design artboard renders the
+same registered implementations as those pages. One component implementation or
 owned-style edit appears at its component entry; consuming artboards are
 affected unless they also have independent changes.
 
@@ -43,15 +42,14 @@ the pictured usage fixtures keep their separate roles. Usage in the outer
 inspector comes from the entry detail Mokly records, not from those pictured
 fixtures. Samples and artboards add no consumer scripts.
 
-Each Browse, Changes and component explorer screen uses the shared Details
-inspector and viewport toolbar. Each Canvas screen uses the floating panels
-and the phone dock, and the zoom pill while an entry is selected. Top-bar
-Appearance owns the scheme. The
-footer has one current form; no alternative disclosure, presentation or
-behavior fields are supported.
-Comparison-mode controls keep their segments. Component entry metadata stays
-outside the rendered sample. Samples contain no implementation notes,
-environment badges or extra footers.
+Each Canvas screen uses the floating panels and the phone dock, and the zoom
+pill while an entry is selected. The startup states of
+`design/canvas/loading/catalogue` draw their one status line alone, because
+the shell draws no chrome before the catalogue arrives. Top-bar Appearance
+owns the scheme. The footer has one current form; no alternative disclosure,
+presentation or behavior fields are supported. Comparison-mode controls keep
+their segments. Component entry metadata stays outside the rendered sample.
+Samples contain no implementation notes, environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
@@ -104,30 +102,18 @@ registered components. A whole-artboard component would make initial
 highlighting select nearly the entire screen and would obscure the screen's
 independent content boundary.
 
-Browse and Changes share the same bounded preview/inspector layout as component
-designs. Desktop keeps the divider resize grip; mobile uses the same icon strip
-and compact/expanded sheet. Only panel content and the preview scroll. Opening
-and closing Details acts locally through its icon; its canonical owning artboard
-stays in the catalogue. The Details slot holds the descriptions, metadata,
-tags and comparison evidence. The Canvas screens use the layout of the
-[canvas stage](./mokly-shell-canvas-stage.md) instead: the floating panels over
-the canvas, and in their compact form the sheets and the dock. Inspect holds
-the descriptions, metadata, tags and props, and Changes holds the comparison
+The Canvas screens use the layout of the
+[canvas stage](./mokly-shell-canvas-stage.md): the floating panels over the
+canvas, and in their compact form the sheets and the dock. Inspect holds the
+descriptions, metadata, tags and props, and Changes holds the comparison
 evidence.
 
-On a Browse, Changes or component explorer screen, selected-screen view
-options appear once in the header: a viewport dropdown
-and the Highlight components toggle, which every screen and component page
-draws in the state that the shell shows for its view. When a Canvas screen
-depicts a screen or a component, its Inspect holds the Frames filter. The
-filter holds the Highlight components switch, in the state that the shell
-shows for its view. The top-bar Appearance selector owns the catalogue-wide
-scheme; there is no second scheme icon in the header and no authored
-light/dark link pair. Unsupported transitions stay disabled. Viewport changes
-select the actual mobile/desktop previews without scrolling the whole page.
-Simultaneous previews reserve their intrinsic minimum width and wrap when
-needed; full-size phone frames must never overlap adjacent desktop content.
-Comparison mode segments stay comparison controls.
+When a Canvas screen depicts a screen or a component, its Inspect holds the
+Frames filter. The filter holds the Highlight components switch, in the state
+that the shell shows for its view. The top-bar Appearance selector owns the
+catalogue-wide scheme; there is no second scheme control and no authored
+light/dark link pair. Unsupported transitions stay disabled. Comparison mode
+segments stay comparison controls.
 
 Every owning screen has separate desktop and mobile React components. Flows
 compose their owning screen components, with links back to those screens. No
@@ -170,10 +156,9 @@ in their screen context. Mobile comparison buttons, links and static labels
 share the same compact sizing so the control remains usable with different
 system fonts.
 
-Design components use `colorSchemes: ["light"]`, like the Browse and Changes
-artboards that own most of them, except the appearance selector and the top bar
-that composes it: their own subject is the catalogue's appearance, so they
-render in both schemes alongside the appearance screens. The Canvas viewer
+Design components use `colorSchemes: ["light"]`, except the appearance
+selector and the top bar that composes it: their own subject is the
+catalogue's appearance, so they render in both schemes. The Canvas viewer
 parts' samples draw in the Canvas palette, as a Canvas artboard does. A
 depicted dark-preview state is an explicit prop, distinct from the outer
 catalogue's color scheme; the appearance artboards set that prop from the

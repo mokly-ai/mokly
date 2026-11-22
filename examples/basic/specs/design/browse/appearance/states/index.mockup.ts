@@ -1,6 +1,1 @@
-export {
-  autoScreen,
-  lightOnlyScreen,
-  lightOnlyCurrentScreen,
-  lightOnlyDocumentScreen,
-} from "./screens.js";
+export { lightOnlyDocumentScreen } from "./screens.js";

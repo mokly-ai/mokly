@@ -3,7 +3,7 @@
 ## Depicted Catalogue
 
 The artboards browse one fixture catalogue in the path model, so the
-navigation, breadcrumbs, path chips, and Details agree across screens:
+navigation, the entry paths and the details agree across screens:
 
 - Specs lists `Example`, `Account`, and `Design`; the catalogue's order record
   names Example first. Example's README is the folder's own page and its first
@@ -22,97 +22,88 @@ navigation, breadcrumbs, path chips, and Details agree across screens:
 - Components lists the same `Example` folder above its `Components` library,
   so a folder holding both kinds appears in each section with only that
   section's children.
-- Path chips show paths such as `example/screens/welcome`. Component Details
-  add the shown entry's path, a document's Details name its Markdown source,
-  and a moved entry's Details add a `Moved from` row with its previous path.
+- Inspect's Path row and the path chips of the kept screens show paths such
+  as `example/screens/welcome`. A component's details add the shown entry's
+  path, a document's details name its Markdown source, and a moved entry's
+  details add a `Moved from` row with its previous path.
 
 ## Depicted Branches
 
 - The canonical branch changed Welcome, added Details, moved `billing` under
   `account`, and removed five screens, so Changes counts ten entries. Invoice
   moved with edits; its Overdue variant and Payment terms moved unchanged.
-  Each keeps one row labelled `· Moved` at its new place.
-- The screen-variant Changes states each depict a branch on which one Welcome
-  entry or variant changed or was removed, so their filter counts one entry.
-- The `design/browse/index-entries/**` states depict a branch on which only
-  Security changed, so their filter counts one entry. In Changes, Profile is
-  unmodified and its only changed row is a folder member, so its row stays an
-  undotted container above Security's dotted row. Security changed in its
-  Light views on both viewports, so it opens on its first changed view,
-  Mobile · Light, and its viewport control marks the desktop view that also
-  changed.
+  Each keeps one row labelled `· Moved` at its new place. The
+  [Canvas states](#canvas-states) browse this branch, and so do the kept use
+  case and its flow, the kept tag picker and the kept removed screens.
+- `design/browse/variants/variant-removed` depicts a branch that removed
+  Welcome's `Save failed` variant, so its filter counts one entry.
 - `design/browse/appearance/states/light-only-document` depicts a branch that
   removed Payment terms after the catalogue enabled Dark. Its previous version
   has only a light render, and Changes counts one entry,
   `Payment terms · Removed`. Under Dark its pane keeps the Light palette and
   its label reads `Showing previous version — Light only`; its All filter
-  opens `design/browse/appearance/overview`.
+  opens `design/canvas/overview`.
 
-## Transitions
+The Canvas states that the canonical branch cannot show depict branches of
+their own:
 
-These transitions follow the [design links contract](./mokly-design-links.md):
+| Branch            | Change                                                                                                                                  | Changes count                                  | Canvas states                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Action            | The Action's render changed the corners and the padding of its button                                                                   | 4: the Action and its three saved variants     | `design/canvas/components/compare`, `usage`, `affected` and their variants, except `direct`        |
+| Direct change     | The Action branch's change, and Welcome changed the label of its own Action from `Continue` to `View details`                           | 5: Welcome, the Action and its saved variants  | `design/canvas/components/affected/direct`                                                         |
+| Removal           | The Action's saved variant Compact was removed                                                                                          | 1: Compact                                     | `design/canvas/components/removed` and its variant                                                 |
+| Stylesheets       | `generated/styles.css` changed styles of Welcome, and `generated/excluded.css` changed styles that apply to neither Welcome nor Details | 1: Welcome                                     | `design/canvas/evidence/styles` and its `excluded` variant, and `design/canvas/evidence/unchanged` |
+| Unresolved styles | `generated/styles.css` changed in a way that can apply anywhere on Welcome                                                              | 1: Welcome                                     | `design/canvas/evidence/styles/unresolved`                                                         |
+| Unnamed styles    | The same reach, from a changed rule that names no style                                                                                 | 1: Welcome                                     | `design/canvas/evidence/styles/unnamed`                                                            |
+| Action styles     | Only `styles/actions.css` changed, and none of its changed styles apply to the Action                                                   | 0                                              | `design/canvas/evidence/unchanged/action`                                                          |
+| Handbook          | One `.action` rule and the Getting started page's own stylesheet changed                                                                | 5: the page, the Action and its saved variants | `design/canvas/evidence/page` and its variant                                                      |
+| Excluded content  | Only the content of Welcome's navigation changed, which the example excludes from comparisons                                           | 0                                              | `design/canvas/evidence/ignored`                                                                   |
+| No changes        | Nothing changed                                                                                                                         | 0                                              | `design/canvas/loading/changes/empty`                                                              |
 
-- From All, `Overview` and the `Example` crumb open
-  `design/browse/views/folder-overview`, `Getting started` opens
-  `design/browse/pages/view`, and `Payment terms` opens
-  `design/browse/pages/document`.
-- The README links Welcome, Details, Example tour, and Getting started to
-  `design/browse/views/screen`, `design/browse/views/details-screen`,
-  `design/browse/views/use-case`, and `design/browse/pages/view`.
-- In Changes, `Invoice · Moved` opens `design/changes/outcomes/moved`, whose
-  Related docs row opens `design/browse/pages/document`.
-- In the Appearance designs, `Payment terms` opens
-  `design/browse/appearance/states/light-only-current` instead, so a Dark
-  artboard stays Dark. That state keeps the document's light page under a
-  quiet `Light only` band, and its All filter opens
-  `design/browse/appearance/overview`.
-
-The index entry states form one family:
-
-| Control/context                                 | Destination                                  |
-| ----------------------------------------------- | -------------------------------------------- |
-| All catalogue: Profile row                      | `design/browse/index-entries/screen`         |
-| Folder screen: Security row                     | `design/browse/index-entries/member`         |
-| Folder screen: Changes filter                   | `design/browse/index-entries/screen-changes` |
-| Folder member: Profile crumb and Profile row    | `design/browse/index-entries/screen`         |
-| Folder member: Changes filter                   | `design/browse/index-entries/member-changes` |
-| Folder screen in Changes: All filter            | `design/browse/index-entries/screen`         |
-| Folder screen in Changes: Profile, Security row | `design/browse/index-entries/member-changes` |
-| First changed member: All filter                | `design/browse/index-entries/member`         |
-| First changed member: Profile, Security row     | `design/browse/index-entries/member-changes` |
-
-Switching the filter keeps the selection, so the folder screen stays selected in
-Changes as an unmodified container. Activating its row opens its first changed
-member on that member's first changed view, which is why both Changes rows lead
-to the same state. The Profile row
-of the first changed member opens that same state again, as an unmodified
-variant parent's row does in `design/browse/variants/variant-changes`.
-
-Invoice in All, `Overdue · Moved`, `Payment terms · Moved`, the moved screen's
-All filter and comparison modes, the document's overdue-invoice link, the
-`Unverified email` and `Notifications` rows, and the first changed member's
-comparison modes have no depicted state, so they stay non-links. Folder crumbs
-and a parent entry's crumb stay text in Changes states and on removed entries.
+`design/canvas/loading/changes` and its `preparing` and `unavailable` variants
+depict Changes before a comparison result, so no entry carries a change
+status. `design/canvas/loading/changes/without-changes` depicts a catalogue
+built without comparison data, and the startup states depict the shell before
+any catalogue arrives.
 
 ## Canvas States
 
-The [Canvas screens](./mokly-shell-canvas-inventory.md) browse the same
-catalogue on the canonical branch, so their Changes filter counts ten entries:
+The Canvas states of the canonical branch depict these entries:
 
 - Welcome, which the branch changed, stands on the overview as four frames,
-  with its Changes tab and the five compare modes.
+  with its Changes tab and the five compare modes. It is also the subject of
+  the selection, the tag search and the entry loading states.
 - Details, which the branch added, depicts an added entry, whose Changes tab
-  offers Current alone.
+  offers Current alone. It is also the subject of screen inspection.
 - Profile, which the branch did not modify and which renders in Light only,
   depicts an entry with the Inspect tab alone and the Light frames alone.
 - Payment terms, which moved unchanged, opens as one reading frame, and its
   right panel also has Changes.
+- Invoice, which moved with edits, compares in Overlay on its Light frames
+  with the version at its previous path.
 - The Action and the Toolbar, two unmodified components, open as their variant
-  sets.
+  sets, and the Props states edit and show the Action's saved variants.
 
-Canvas links stay inside the Canvas family. A control opens the Canvas artboard
-that shows its outcome, and a control without one is a picture of itself:
+## Transitions
 
+These transitions follow the [design links contract](./mokly-design-links.md).
+Canvas links stay inside the Canvas family. A control opens the Canvas
+artboard that shows its outcome, and a control without one is a picture of
+itself:
+
+- From All, Welcome opens `design/canvas/overview`, Details
+  `design/canvas/outcomes/added`, Profile `design/canvas/inspect/unchanged`,
+  Payment terms `design/canvas/stage/document`, the Action
+  `design/canvas/stage/component-set` and the Toolbar
+  `design/canvas/stage/component-set/toolbar`. The other rows, such as the
+  README's `Overview`, `Example tour` and `Getting started`, are pictures.
+- In Changes, `Invoice · Moved` opens `design/canvas/outcomes/moved`, or
+  `design/canvas/outcomes/moved/inspect` from an artboard on the Inspect tab,
+  and `Payment terms · Moved` opens `design/canvas/stage/document`. The
+  `Overdue · Moved` row and the rows of the removed screens are pictures.
+- The moved Invoice's Related docs row opens `design/canvas/stage/document`.
+  The stepper's Previous change and Next change open the Changes artboards of
+  Welcome, Details and Invoice in the order of the Changes filter.
 - The brand opens `design/canvas/stage/home`. The top bar's menu and the dock's
   Catalogue open `design/canvas/stage/catalogue`, whose All filter returns to
   `design/canvas/overview`.
@@ -126,10 +117,19 @@ that shows its outcome, and a control without one is a picture of itself:
   open the artboard that shows that selection. A sheet's close opens the
   artboard that shows the sheet closed.
 - Payment terms has no Changes artboard, so its Changes tab is a picture.
+- On a branch of its own, a row or a control opens an artboard of that branch,
+  and every other row is a picture.
+
+The kept screens link into the Canvas family too. A control opens the Canvas
+artboard of the entry that it names, and a control that names an entry that
+no artboard shows is a picture. The links between the kept removed entries
+stay among them. Folder crumbs and a parent entry's crumb stay text on
+removed entries.
 
 ## Related Docs
 
 - [Shell design inventory](./mokly-shell-design-inventory.md)
+- [Canvas design inventory](./mokly-shell-canvas-inventory.md)
 - [Design mockup links](./mokly-design-links.md)
 - [Folders](./mokly-folders.md)
 - [Variant navigation and Changes](./mokly-variant-navigation.md)

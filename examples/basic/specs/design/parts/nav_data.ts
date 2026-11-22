@@ -1,4 +1,4 @@
-import { COMPONENT_PAGES } from "../components/parts/destinations.js";
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
 
 import {
@@ -69,8 +69,8 @@ export const CHANGED_COUNT = 2 + MOVED_COUNT + REMOVED_SCREEN_ROWS.length;
 type NavigationRows = CatalogueNavigationProps["rows"];
 
 /**
- * Welcome's depicted variants. `Empty workspace` owns a catalogue destination;
- * `Save failed` stays a depiction outside the Changes artboards that select it.
+ * Welcome's depicted variants. No artboard shows them from All, so their rows
+ * are depictions.
  */
 const WELCOME_VARIANTS: NavigationRows = [
   {
@@ -78,7 +78,6 @@ const WELCOME_VARIANTS: NavigationRows = [
     depth: 3,
     kind: "variant",
     label: "Empty workspace",
-    to: DESTINATIONS.variantSelected,
     variantParentKind: "screen",
   },
   {
@@ -95,7 +94,9 @@ const WELCOME_VARIANTS: NavigationRows = [
  * both kinds, so it appears in Specs and in Components with that section's
  * children. Its README is the folder's own page and its first row, labelled
  * Overview because its title is the folder's title. Top-level folders follow
- * the catalogue's order record, which names Example first.
+ * the catalogue's order record, which names Example first. A row opens the
+ * Canvas artboard of its entry, and a row whose entry no artboard shows, such
+ * as the README and the Getting started page, is a picture of itself.
  */
 function catalogueTree(
   variants: "closed" | "open",
@@ -114,7 +115,6 @@ function catalogueTree(
       depth: 1,
       kind: "document",
       label: "Overview",
-      to: DESTINATIONS.exampleOverview,
     },
     {
       key: "example-components",
@@ -128,7 +128,7 @@ function catalogueTree(
       depth: 2,
       kind: "component",
       label: COMPONENT_NAVIGATION.action.title,
-      to: COMPONENT_PAGES.default,
+      to: CANVAS_PAGES.componentSet,
       variants: "open",
     },
     ...componentVariantRows("action", 3),
@@ -137,7 +137,7 @@ function catalogueTree(
       depth: 2,
       kind: "component",
       label: COMPONENT_NAVIGATION.toolbar.title,
-      to: COMPONENT_PAGES.toolbar,
+      to: CANVAS_PAGES.componentSetToolbar,
       variants: "open",
     },
     ...componentVariantRows("toolbar", 3),
@@ -153,7 +153,7 @@ function catalogueTree(
       depth: 2,
       kind: "screen",
       label: "Welcome",
-      to: DESTINATIONS.welcome,
+      to: CANVAS_PAGES.overview,
       variants,
     },
     ...WELCOME_VARIANTS,
@@ -162,7 +162,7 @@ function catalogueTree(
       depth: 2,
       kind: "screen",
       label: "Details",
-      to: DESTINATIONS.details,
+      to: CANVAS_PAGES.added,
     },
     {
       key: "example/tour",
@@ -176,7 +176,6 @@ function catalogueTree(
       depth: 1,
       kind: "page",
       label: "Getting started",
-      to: DESTINATIONS.page,
     },
     ...accountBranch(profile),
     {
@@ -198,18 +197,6 @@ function catalogueTree(
 
 /** The canonical catalogue fixture, with Welcome's variant list collapsed. */
 export const NAV_TREE: NavigationRows = catalogueTree("closed");
-
-/**
- * The Excluded styles branch in All: Welcome changed and opens Excluded
- * styles; Details is unchanged and opens Excluded styles only.
- */
-export const EXCLUDED_STYLE_ROWS: NavigationRows = NAV_TREE.map((row) =>
-  row.key === "welcome"
-    ? { ...row, changed: true, to: DESTINATIONS.styleExcluded }
-    : row.key === "details"
-      ? { ...row, to: DESTINATIONS.styleExcludedOnly }
-      : row,
-);
 
 /** The same catalogue with Welcome's variant list disclosed. */
 export const NAV_TREE_VARIANTS_OPEN: NavigationRows = catalogueTree("open");

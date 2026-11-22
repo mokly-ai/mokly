@@ -20,29 +20,25 @@ Design links open catalogue entries that depict the requested destination. They
 do not operate the depicted shell as a second running application. The outer
 Browse shell preserves its viewport selection and handles history and active-row
 visibility normally. The destination artboard depicts its own canonical state;
-prior inspector, query, drawer, and depicted viewport state are not transported
-implicitly. Only the explicitly paired states that the [navigation
+prior panel tab, query, sheet, zoom, and depicted frame state are not
+transported implicitly. Only the explicitly paired states that the [navigation
 links](./mokly-design-links-navigation.md) and the [scheme, comparison, and tag
 links](./mokly-design-links-comparisons.md) define promise to retain their named
 subject or comparison mode. The actual Appearance setting stays with the outer
 viewer.
 
-Every design screen has mobile and desktop views. They are light-only rendered
-documents, including artboards depicting a dark product screen, except the
-appearance screens (the `design/browse/appearance/**` entries), the loading and
-recovery screens (`design/browse/loading/**`), the canonical
-`design/browse/views/screen` and `design/browse/views/details-screen`, their two
-Welcome appearance variants, the Welcome comparison family, and the Canvas
-screens (`design/canvas/**`). These render in both schemes. The outer viewer's
-canvas shows the Light and Dark frames of each of these screens at once. It
+Every design screen has mobile and desktop views. The Canvas screens
+(`design/canvas/**`) and the appearance screens (`design/browse/appearance/**`)
+render in both schemes. Every other design screen renders light-only
+documents, also where it depicts a dark product screen. The outer viewer's
+canvas shows the Light and Dark frames of each dual-scheme screen at once. It
 shows every other design screen as its Light frames alone, under the
 [preview scheme rules](./mokly-shell-device-chrome.md#color-scheme). The outer
 Appearance control colours the outer viewer's chrome, not the frames of a
-screen. This depicted dark set is representative. The shell's one Appearance
-preference, not a dark render of each screen, sets the appearance of its
-chrome for a whole session. Link targets name design entry paths, not the
-example paths printed in the depicted shell's metadata.
-`example/screens/farewell` is an intentionally absent product entry.
+screen. The shell's one Appearance preference, not a dark render of each
+screen, sets the appearance of its chrome for a whole session. Link targets
+name design entry paths, not the example paths printed in the depicted shell's
+metadata. `example/screens/farewell` is an intentionally absent product entry.
 
 ## Link Behavior
 
@@ -56,54 +52,39 @@ control without a destination has no `href`, no mock-link marker, and no
 misleading keyboard stop. An inactive control never becomes a link. The
 selected state stays visibly identified. Native inspector tabs and viewport
 selections operate in place without navigation. Each depicted state is
-reachable from its owning screen or flow, or from catalogue navigation when
-only a runtime transition reaches it. Design documents carry no consumer
+reachable from its owning screen or flow, or from catalogue navigation when no
+depicted control opens it, such as a state that only a runtime transition
+reaches or the one state of a branch of its own. Design documents carry no consumer
 scripts. The design mockups build without warnings.
 
 ## Canonical Destination Inventory
 
-The [canonical design inventory](./mokly-shell-design-inventory.md) lists
-every destination under its stable name, with the [depicted
-catalogue's](./mokly-shell-design-catalogue.md#transitions) folder-page,
-document, Moved, and index entry transitions. File names derive from paths
-([artifact paths](./mokly-artifact-paths.md)).
+The [Canvas design inventory](./mokly-shell-canvas-inventory.md), the
+[loading, search and evidence inventory](./mokly-shell-canvas-inventory-states.md),
+the [component design inventory](./mokly-component-design-inventory.md) and
+the [shell design inventory](./mokly-shell-design-inventory.md) list every
+destination under its stable name, with the [depicted
+catalogue's](./mokly-shell-design-catalogue.md#transitions) transitions. File
+names derive from paths ([artifact paths](./mokly-artifact-paths.md)). A saved
+variant, such as each tag filter of `design/canvas/search/tags`, is a
+destination at its own path below its parent's, not a folder member.
 
-The five entries below render in both viewports and belong to the canonical
-inventory.
-
-| Entry                                              | Depicted state                                                    |
-| -------------------------------------------------- | ----------------------------------------------------------------- |
-| `design/browse/views/details-screen`               | Normal Details screen, light selected, inspector closed           |
-| `design/browse/views/screen/tag-picker`            | Welcome, empty query, unfiltered catalogue, picker open           |
-| `design/browse/views/screen/tag-forms`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
-| `design/browse/views/screen/tag-onboarding`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
-| `design/browse/views/screen/tag-onboarding-picker` | The same onboarding filter with the picker open                   |
-
-`design/browse/states/details` means Welcome's expanded inspector and is
-reachable from its catalogue entry. Opening/closing the Details icon stays on
-the current screen and retains its query. It does not substitute for the normal
-Details view. `design/browse/states/tag-filter` depicts the forms filter with
-the picker open. The four listed tag states plus
-`design/browse/views/screen/dark-scheme` and
-`design/browse/views/screen/light-only` are variants of
-`design/browse/views/screen`, each at its own path below the parent's like any
-variant. Those six entries are not folder members, and navigation lists them
-under Welcome.
-
-Runtime transitions reach the loading and recovery screens, the editing
-preparation states, the Screen props state, and the Read-only and recovery
-gallery; catalogue navigation reaches each, and only a [failure state's
-retry](./mokly-shell-design-inventory.md#loading-state-retries) links into one.
+Only runtime transitions reach some design states. Catalogue navigation
+reaches each of them, and an artboard links into one only as a failure
+state's retry. The
+[loading state retries](./mokly-shell-design-inventory.md#loading-state-retries)
+list these states and their retries.
 
 ## Local Runtime Controls
 
-Viewport selection, browser expansion, ID copying, refresh/recompute, resize
-grips, and collapse-all are not catalogue destinations. Their depictions stay
-visual only, with no fake hrefs, clipboard-success copy, or scripts. Their
-non-interactive status is documented outside the rendered artboard. Native
-`details` disclosures may work locally. The Scroll together checkbox toggles
-in place and opens no destination. The real outer shell provides the runtime
-controls.
+Viewport selection, browser expansion, path and ID copying, refresh/recompute,
+resize grips, and collapse-all are not catalogue destinations. Their
+depictions stay visual only, with no fake hrefs, clipboard-success copy, or
+scripts. Their non-interactive status is documented outside the rendered
+artboard. Native `details` disclosures may work locally. The frame picker, the
+Frames filter toggles, the Highlight components switch, and the Scroll
+together switch work in place and open no destination. The real outer shell
+provides the runtime controls.
 
 ## Basic Example And Portability
 
@@ -126,5 +107,6 @@ navigation. Do not equate these two contexts.
 
 - [Design mockup navigation links](./mokly-design-links-navigation.md)
 - [Design mockup comparison and tag links](./mokly-design-links-comparisons.md)
+- [Canvas design inventory](./mokly-shell-canvas-inventory.md)
 - [Shell design inventory](./mokly-shell-design-inventory.md)
 - [Depicted design catalogue](./mokly-shell-design-catalogue.md)

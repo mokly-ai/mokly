@@ -6,6 +6,7 @@ import {
   auditPalettes,
   boundaryContrast,
   designPalette,
+  PREVIEW_SHEET,
 } from "./helpers/design_palette.js";
 import {
   boundaryOf,
@@ -87,7 +88,6 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * sheet imports.
  */
 const AUDITED_BOUNDARIES = [
-  "design-component-controls.css .ce-action--quiet",
   'design-component-inspection.css .ce-button[aria-pressed="true"]',
   "design-components.css .ce-action:disabled",
   "design-components.css .ce-badge",
@@ -235,7 +235,7 @@ test("every control boundary is a readable control edge", async () => {
  */
 const PALETTE_SOURCES = new Set([
   "design.css",
-  "design-stage.css",
+  PREVIEW_SHEET,
   "design-component-view.css",
   "packages/ui/src/theme/theme.css",
 ]);

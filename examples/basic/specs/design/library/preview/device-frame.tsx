@@ -1,6 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, text, type LibraryProps } from "../schemas.js";
@@ -79,7 +79,7 @@ export const deviceFrame = defineComponent({
     {
       slug: "failed",
       title: "Failed to load",
-      props: { ...sample, retryDestination: DESTINATIONS.welcome },
+      props: { ...sample, retryDestination: CANVAS_PAGES.overview },
       slots: { children: null },
     },
   ],

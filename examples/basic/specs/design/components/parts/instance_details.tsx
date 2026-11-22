@@ -4,6 +4,7 @@ import {
   PropsPanel,
   type PropValue,
 } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 
 import { footerLabelChange } from "./comparison_fixtures.js";
 import { toolbarPrompt } from "./fixtures.js";
@@ -11,8 +12,9 @@ import type { ScreenPageState } from "./screen_preview.js";
 
 /**
  * The selected instance in the shipped props panel: its component and label,
- * the link to its component's page, and the props that the screen supplies.
- * The hidden Help instance adds that it has no visible region.
+ * the link to its component's Canvas variant set, and the props that the
+ * screen supplies. No artboard shows the hidden Help hint, so its instance
+ * names no page, and it adds that it has no visible region.
  */
 export function InstanceDetails({ state }: { state: ScreenPageState }) {
   const toolbar = state === "toolbar-selection";
@@ -41,13 +43,15 @@ export function InstanceDetails({ state }: { state: ScreenPageState }) {
     <section className="ce-selected-instance" aria-label="Selected instance">
       <PropsPanel
         instance={{
-          href: mockLink(
-            toolbar
-              ? "design/components/pages/toolbar"
-              : help
-                ? "design/components/pages/help"
-                : "design/components/overview",
-          ),
+          ...(help
+            ? {}
+            : {
+                href: mockLink(
+                  toolbar
+                    ? CANVAS_PAGES.componentSetToolbar
+                    : CANVAS_PAGES.componentSet,
+                ),
+              }),
           id: label,
           title: toolbar ? "Toolbar" : help ? "Help hint" : "Action",
         }}

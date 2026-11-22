@@ -167,12 +167,30 @@ export function adoptionViolations(catalogue: ServedCatalogue): string[] {
   return violations;
 }
 
+/**
+ * The sheets that a design route links before the component sheets: the
+ * older routes' stage and review sheets, and the Canvas route's preview,
+ * mini-screen, and Canvas sheets. The Canvas shell and compact sheets, like
+ * the older component sheets, come after them.
+ */
 const BASE_SHEETS = new Set([
   "design.css",
   "design-stage.css",
   "design-documents.css",
   "design-review.css",
   "design-review-scroll.css",
+  "design-preview.css",
+  "design-shots.css",
+  "design-canvas.css",
+  "design-canvas-inspect.css",
+  "design-canvas-sections.css",
+  "design-canvas-changes.css",
+  "design-canvas-outcomes.css",
+  "design-canvas-loading.css",
+  "design-canvas-search.css",
+  "design-canvas-components.css",
+  "design-canvas-props.css",
+  "design-canvas-evidence.css",
 ]);
 
 /** A design view's stylesheet links, relative to the example directory. */

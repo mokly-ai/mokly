@@ -20,10 +20,12 @@ const DECLARED: &str = "examples/basic/design-library/chrome/top-bar.css";
 const MODULE: &str = "examples/basic/specs/design/library/chrome/top-bar.tsx";
 const IMPORTED: &str = "examples/basic/design-library/chrome/m9-imported.css";
 const JS_CSS: &str = "examples/basic/m9-imported.css";
+/// The configured sheet is the shared Canvas sheet, which the Canvas route
+/// and the library route link: the top bar's own pages and its consumers.
 const CASES: [(&str, &str, &str); 4] = [
     (
         "configured",
-        "examples/basic/design-components.css",
+        "examples/basic/design-canvas.css",
         ".mbk-topbar.mbk-topbar",
     ),
     ("declared", DECLARED, ".mbk-topbar.mbk-topbar.mbk-topbar"),

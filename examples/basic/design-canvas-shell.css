@@ -1,10 +1,18 @@
 /* The Canvas viewer's shell: the work area under the top bar, where the
    catalogue and the right panel float over the full-bleed canvas, the zoom
    pill sits between them, and the stage centres the selected entry. The
-   rules follow the component sheets, so they place the Canvas parts and
-   restyle the package parts that a Canvas root renders. Below the shell's
-   breakpoint, and in every mobile render, the Canvas root draws its compact
-   form, from design-canvas-compact.css, which follows this sheet. */
+   shell's root, its skip link, and its main region are the shipped ones,
+   from the shell layout stylesheet. The rules follow the component sheets,
+   so they place the Canvas parts and restyle the package parts that a Canvas
+   root renders. Below the shell's breakpoint, and in every mobile render,
+   the Canvas root draws its compact form, from design-canvas-compact.css,
+   which follows this sheet. */
+@import "../../packages/ui/src/shell-layout/shell-layout.css";
+
+/* The main region scrolls its view, as on every design artboard. */
+.cv-root .mbk-main {
+  overflow: auto;
+}
 
 /* An artboard's root fills its window; a mobile render is a phone-wide
    column. Its width decides the compact form, so a library sample, which no

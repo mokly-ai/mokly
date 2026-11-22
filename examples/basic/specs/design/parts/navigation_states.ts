@@ -1,7 +1,9 @@
+import { CANVAS_PAGES as C } from "../canvas/parts/destinations.js";
 import {
   CANVAS_NAVIGATION_STATES,
   type CanvasTransitions,
 } from "../canvas/parts/navigation_states.js";
+import { TAG_FILTERS } from "../canvas/search/parts/tags.js";
 import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_states.js";
 
 import {
@@ -22,18 +24,11 @@ export type TagArtboards = Readonly<
   >
 >;
 
-/** The Browse family's tag states, around Welcome's Browse screen. */
-const BROWSE_TAGS = {
-  none: { closed: D.welcome, open: D.tagPicker },
-  forms: { closed: D.forms, open: D.formsPicker },
-  onboarding: { closed: D.onboarding, open: D.onboardingPicker },
-} as const satisfies TagArtboards;
-
 interface TagState {
   active: CatalogueTag | null;
   picker: boolean;
-  /** The artboards of the family's tag states; the Browse family's by default. */
-  artboards?: TagArtboards;
+  /** The artboards of the family's tag states. */
+  artboards: TagArtboards;
 }
 
 /** Only authored transitions are present; absence always means a depiction. */
@@ -48,154 +43,39 @@ export interface NavigationState {
   canvas?: CanvasTransitions;
 }
 
-const welcomeFilters = { all: D.welcome, changes: D.current };
-const detailsFilters = { all: D.details, changes: D.added };
-/** Welcome routes that form one complete comparison family. */
-export const welcomeModes = {
-  current: D.current,
-  "side-by-side": D.changed,
-  overlay: D.overlay,
-  difference: D.difference,
-};
-const welcomeBrowse: NavigationState = {
-  ...welcomeFilters,
-  tags: { active: null, picker: false },
-};
-const appearanceFilters = {
-  all: D.appearance,
-  changes: D.appearanceSideBySide,
-};
-/** Appearance routes that form one complete comparison family. */
-export const appearanceModes = {
-  current: D.appearance,
-  "side-by-side": D.appearanceSideBySide,
-  difference: D.appearanceDifference,
-};
+/**
+ * The All filter of a removed entry returns to the catalogue home, because
+ * the entry is not in All.
+ */
+const removedEntry: NavigationState = { all: C.home };
 
-/** Canonical states for the entire design registry, never inferred from labels. */
+/**
+ * Canonical states for the entire design registry, never inferred from
+ * labels. The older artboards that stay open the Canvas artboards: All
+ * opens Welcome's overview, or the catalogue home for a removed entry, and
+ * the tag picker's button and chips open the Canvas search.
+ */
 export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   ...COMPONENT_NAVIGATION_STATES,
   ...CANVAS_NAVIGATION_STATES,
-  [D.home]: {},
-  [D.exampleOverview]: {},
-  [D.document]: {},
-  [D.page]: {
-    inspector: D.pageDetails,
-    drawer: { open: false, to: D.pageNavigation },
-    changes: D.stylePage,
-  },
-  [D.pageDetails]: {
-    inspector: D.page,
-    drawer: { open: false, to: D.pageNavigation },
-    changes: D.stylePage,
-  },
-  [D.pageNavigation]: {
-    inspector: D.pageDetails,
-    drawer: { open: true, to: D.page },
-    changes: D.stylePage,
-  },
-  [D.pageRemoved]: { all: D.home },
-  [D.pageRemovedLong]: { all: D.home },
-  [D.pageRemovedLoading]: { all: D.home },
-  [D.pageRemovedUnavailable]: { all: D.home },
-  [D.publication]: {},
-  [D.publicationChanges]: {
-    all: D.publicationChanges,
-    changes: D.current,
-    comparison: welcomeModes,
-  },
-  [D.missing]: {},
-  [D.navigation]: {},
-  [D.variantSelected]: { all: D.welcome, changes: D.variantChanges },
-  [D.variantChanges]: { all: D.variantSelected },
-  [D.variantRemoved]: { all: D.welcome },
-  [D.variantReparented]: { all: D.home },
-  [D.changedViews]: { all: D.welcome },
-  [D.indexEntry]: { changes: D.indexEntryChanges },
-  [D.indexMember]: { changes: D.indexMemberChanges },
-  [D.indexEntryChanges]: { all: D.indexEntry },
-  [D.indexMemberChanges]: { all: D.indexMember },
+  [D.pageRemoved]: removedEntry,
+  [D.pageRemovedLong]: removedEntry,
+  [D.pageRemovedLoading]: removedEntry,
+  [D.pageRemovedUnavailable]: removedEntry,
+  [D.variantRemoved]: { all: C.overview },
   [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse },
-  [D.welcomeAppearanceVariant]: { ...welcomeBrowse },
-  [D.detailsAppearanceVariant]: { ...detailsFilters },
-  [D.details]: { ...detailsFilters },
-  [D.inspector]: { ...welcomeBrowse },
-  [D.appearance]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceLightOnly]: { ...appearanceFilters },
-  [D.appearanceAuto]: { ...appearanceFilters },
-  [D.appearanceLightOnlyDocument]: { all: D.appearance },
-  [D.appearanceLightOnlyCurrent]: { ...appearanceFilters },
-  [D.appearanceProps]: { ...appearanceFilters },
-  [D.appearanceInstance]: { ...appearanceFilters },
-  [D.appearanceDrawer]: {
-    ...appearanceFilters,
-    drawer: { open: true, to: D.appearance },
-  },
-  [D.appearanceSideBySide]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceDifference]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceHome]: { all: D.appearance },
-  [D.appearanceLoading]: { all: D.appearance },
-  [D.appearanceError]: { all: D.appearance },
-  [D.appearanceUnavailable]: { all: D.appearance },
-  [D.appearanceFlow]: { all: D.appearance },
+  [D.appearanceLightOnlyDocument]: { all: C.overview },
+  [D.appearanceFlow]: { all: C.overview },
   [D.tagPicker]: {
-    ...welcomeBrowse,
-    tags: { active: null, picker: true },
+    all: C.overview,
+    changes: C.changesCurrent,
+    tags: { active: null, picker: true, artboards: TAG_FILTERS },
   },
-  [D.formsPicker]: {
-    ...welcomeBrowse,
-    tags: { active: "forms", picker: true },
-  },
-  [D.forms]: {
-    ...welcomeBrowse,
-    tags: { active: "forms", picker: false },
-  },
-  [D.onboarding]: {
-    ...welcomeBrowse,
-    tags: { active: "onboarding", picker: false },
-  },
-  [D.onboardingPicker]: {
-    ...welcomeBrowse,
-    tags: { active: "onboarding", picker: true },
-  },
-  [D.current]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlay]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlayLong]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlayPanel]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.sideBySideApart]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.moved]: {},
-  [D.added]: { ...detailsFilters },
-  [D.removed]: { all: D.home },
-  [D.removedLong]: { all: D.home },
-  [D.removedLoading]: { all: D.home },
-  [D.removedUnavailable]: { all: D.home },
-  [D.removedNoView]: { all: D.home },
-  [D.ignored]: { all: D.welcome, changes: D.empty },
-  [D.empty]: { all: D.ignored },
-  [D.styleMatched]: { all: D.styleExcluded, changes: D.styleMatched },
-  [D.styleUnresolved]: { all: D.welcome, changes: D.styleUnresolved },
-  [D.styleUnnamed]: { all: D.welcome, changes: D.styleUnnamed },
-  [D.styleExcluded]: { all: D.styleExcluded, changes: D.styleMatched },
-  [D.styleExcludedOnly]: {},
-  [D.stylePage]: { all: D.page },
-  [D.catalogueLoading]: {},
-  [D.catalogueFailed]: {},
-  [D.viewerVersion]: {},
-  [D.previewLoading]: {},
-  [D.preparing]: { all: D.welcome },
-  [D.unavailable]: { all: D.welcome },
+  [D.removed]: removedEntry,
+  [D.removedLong]: removedEntry,
+  [D.removedLoading]: removedEntry,
+  [D.removedUnavailable]: removedEntry,
+  [D.removedNoView]: removedEntry,
 };
 
 /** Open/close preserves the depicted query; a selection closes the picker. */
@@ -203,7 +83,7 @@ export function tagPickerTarget(
   tags: TagState | undefined,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  const state = (tags.artboards ?? BROWSE_TAGS)[tags.active ?? "none"];
+  const state = tags.artboards[tags.active ?? "none"];
   return tags.picker ? state.closed : state.open;
 }
 
@@ -216,6 +96,6 @@ export function tagTarget(
   tag: CatalogueTag,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  const artboards = tags.artboards ?? BROWSE_TAGS;
+  const artboards = tags.artboards;
   return (tags.active === tag ? artboards.none : artboards[tag]).closed;
 }

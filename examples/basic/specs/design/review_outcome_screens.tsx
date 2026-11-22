@@ -1,94 +1,13 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "./metadata.js";
-import { useDarkPreview } from "./parts/appearance.js";
 import { artboards } from "./parts/artboards.js";
-import { CompareGrid, Pane } from "./parts/compare.js";
-import {
-  ComparePage,
-  FramedShot,
-  type CompareViewport,
-} from "./parts/compare_page.js";
-import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
-import { DESTINATIONS } from "./parts/destinations.js";
-import { ENTRY_PATHS } from "./parts/entry_paths.js";
-import { ExampleWorkspace } from "./parts/example_workspace.js";
-import { MiniWelcome } from "./parts/mini_screens.js";
 import { REMOVED_SCREENS } from "./parts/nav_data.js";
-import { reasonEvidence } from "./parts/reason_sentences.js";
 import { RemovedScreen, RemovedView } from "./parts/removed_screen.js";
 import { MiniFarewell } from "./parts/removed_shots.js";
-import { ReviewNav } from "./parts/review.js";
-import { ScreenHead, Shell, ViewSwitch } from "./parts/shell.js";
+import type { ArtboardViewport } from "./parts/shell.js";
 
-function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
-  const dark = useDarkPreview();
-  return (
-    <ComparePage
-      design={DESTINATIONS.changed}
-      activeTitle="Welcome"
-      subject="welcome"
-      path={ENTRY_PATHS.welcome}
-      reasons={["material"]}
-      state="changed"
-      title="Welcome"
-      viewport={viewport}
-      render={(previewViewport) => (
-        <CompareGrid>
-          <Pane side="before">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} inert />
-            </FramedShot>
-          </Pane>
-          <Pane side="after">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome
-                compact={previewViewport === "mobile"}
-                inert
-                revised
-              />
-            </FramedShot>
-          </Pane>
-        </CompareGrid>
-      )}
-    />
-  );
-}
-
-function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
-  return (
-    <Shell
-      design={DESTINATIONS.added}
-      viewport={viewport}
-      nav={viewport === "desktop" ? <ReviewNav activeTitle="Details" /> : null}
-    >
-      <ExampleWorkspace
-        header={
-          <ScreenHead
-            action={<ViewSwitch active={viewport} />}
-            crumbs={["Example", "Screens"]}
-            path={ENTRY_PATHS.details}
-            status="added"
-            title="Details"
-          />
-        }
-        subject="details"
-        viewport={viewport}
-        comparisonEvidence={{ reasons: reasonEvidence(["added"]) }}
-      />
-    </Shell>
-  );
-}
-
-function RemovedPrevious({ viewport }: { viewport: CompareViewport }) {
+function RemovedPrevious({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <RemovedScreen
       entry={REMOVED_SCREENS.farewell}
@@ -107,60 +26,10 @@ function RemovedPrevious({ viewport }: { viewport: CompareViewport }) {
   );
 }
 
-function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
-  const dark = useDarkPreview();
-  return (
-    <ComparePage
-      design={DESTINATIONS.difference}
-      activeTitle="Welcome"
-      subject="welcome"
-      path={ENTRY_PATHS.welcome}
-      mode="difference"
-      reasons={["material"]}
-      state="changed"
-      title="Welcome"
-      viewport={viewport}
-      render={(previewViewport) => (
-        <ComparisonStack
-          after={
-            <MiniWelcome compact={previewViewport === "mobile"} inert revised />
-          }
-          before={<MiniWelcome compact={previewViewport === "mobile"} inert />}
-          chrome={deviceChrome({
-            address: "example.test/welcome",
-            dark,
-            viewport: previewViewport,
-          })}
-          mode="difference"
-        />
-      )}
-    />
-  );
-}
-
-/** Review design screens for per-screen comparison outcomes. */
-export const changedScreen = defineScreen({
-  ...changesDesignMetadata,
-  description:
-    "A changed screen compared side by side with its base render, in either catalogue scheme.",
-  ...artboards({
-    desktop: <ChangedCompare viewport="desktop" />,
-    mobile: <ChangedCompare viewport="mobile" />,
-  }),
-  slug: "changed",
-  title: "Changed screen",
-});
-export const addedScreen = defineScreen({
-  ...changesDesignMetadata,
-  colorSchemes: ["light"],
-  description: "An added screen shown directly in its current state.",
-  ...artboards({
-    desktop: <AddedCurrent viewport="desktop" />,
-    mobile: <AddedCurrent viewport="mobile" />,
-  }),
-  slug: "added",
-  title: "Added screen",
-});
+/**
+ * A removed screen's previous version. It stays until decision 34 settles
+ * how the Canvas family shows a removed entry's previous version.
+ */
 export const removedScreen = defineScreen({
   ...changesDesignMetadata,
   colorSchemes: ["light"],
@@ -174,15 +43,4 @@ export const removedScreen = defineScreen({
   rationale:
     "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. The catalogue-wide Appearance selector remains the only theme control, while the historical frame stays Light because that is the only scheme captured for those views.",
   title: "Removed screen",
-});
-export const differenceScreen = defineScreen({
-  ...changesDesignMetadata,
-  description:
-    "Difference mode blends the two screen versions in place, in either catalogue scheme.",
-  ...artboards({
-    desktop: <DifferenceCompare viewport="desktop" />,
-    mobile: <DifferenceCompare viewport="mobile" />,
-  }),
-  slug: "difference",
-  title: "Difference mode",
 });

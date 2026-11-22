@@ -1,3 +1,5 @@
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+
 /** Synthetic component usage shared by the design screens, never product data. */
 export const toolbarPrompt = "Ready for your next step?";
 
@@ -7,27 +9,31 @@ export const toolbarPrompt = "Ready for your next step?";
  */
 export const toolbarAction = "Action · Main action";
 
+/**
+ * The consumers of the depicted Action. Each opens its Canvas artboard: a
+ * screen with its instance of the Action selected, and the Toolbar's set.
+ */
 export const componentUses = [
   {
     title: "Welcome",
     kind: "screen",
     count: 2,
     via: "Direct and via Toolbar",
-    to: "design/components/inspection/inspection-details",
+    to: CANVAS_PAGES.selection,
   },
   {
     title: "Details",
     kind: "screen",
     count: 1,
     via: "Direct",
-    to: "design/components/inspection/inspection-consumer",
+    to: CANVAS_PAGES.addedWelcome,
   },
   {
     title: "Toolbar",
     kind: "component",
     count: 1,
     via: "Default variant",
-    to: "design/components/pages/toolbar",
+    to: CANVAS_PAGES.componentSetToolbar,
   },
 ] as const;
 

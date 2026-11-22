@@ -52,24 +52,10 @@ function expectedSwitches(
 const SHELL_STATES: Readonly<
   Record<string, HighlightSwitch | ViewportSwitches>
 > = {
-  // A selected screen whose preview is ready: in Browse, in Changes' Current
-  // mode, and in the appearance scaffold.
-  "design/browse/views/screen": AVAILABLE,
-  "design/changes/diff-controls/current": AVAILABLE,
-  "design/browse/appearance/overview": AVAILABLE,
-  // A diff mode, a removed screen, and a preview that loads or failed.
-  "design/changes/diff-controls/overlay": COMPARISON,
+  // A removed screen, on its older design until decision 34.
   "design/changes/outcomes/removed": unavailable(
     "This preview is unavailable.",
   ),
-  "design/browse/loading/preview-loading": LOADING,
-  "design/browse/appearance/status/error": unavailable(
-    "This preview could not be loaded.",
-  ),
-  // Profile and Security render no registered component, in Browse and in
-  // Changes.
-  "design/browse/index-entries/screen": EMPTY,
-  "design/browse/index-entries/member-changes": EMPTY,
   // The Canvas viewer's Frames filter holds the switch. Profile renders no
   // registered component, on a desktop and in a phone's panel sheet.
   "design/canvas/inspect/unchanged": EMPTY,
@@ -91,11 +77,17 @@ const SHELL_STATES: Readonly<
   "design/canvas/components/inspection/unavailable": unavailable(
     "Component inspection is unavailable for this view.",
   ),
-  // Component pages. Only Toolbar's example renders a registered component.
-  "design/components/pages/toolbar": AVAILABLE,
-  "design/components/overview": EMPTY,
-  "design/components/pages/comparison": COMPARISON,
-  "design/components/states/loading/usage-loading": LOADING,
+  // A comparison of the Action, whose read-only props a desktop and a
+  // phone's open panel sheet show.
+  "design/canvas/components/compare/props": COMPARISON,
+  // An entry whose detail loads, and one whose detail failed, which mounts
+  // no frame, so the shell keeps waiting for the preview. A phone whose
+  // panel sheet is closed draws no switch.
+  "design/canvas/loading/entry": { desktop: LOADING, mobile: undefined },
+  "design/canvas/loading/entry/failed": { desktop: LOADING, mobile: undefined },
+  // The Action's Usage while its detail loads, on a desktop and in a phone's
+  // open panel sheet.
+  "design/canvas/components/usage/loading": LOADING,
 };
 
 /**

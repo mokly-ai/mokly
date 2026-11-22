@@ -6,6 +6,7 @@ import {
   type ControlsAlert,
   type ControlsStart,
 } from "../../../../../../../packages/ui/src/controls-panel/controls-panel.js";
+import { CANVAS_PAGES } from "../../../canvas/parts/destinations.js";
 import { ActionPropValues, actionEntries } from "../../parts/action_props.js";
 
 import { CONTROLS_COPY } from "./copy.js";
@@ -45,8 +46,8 @@ const STARTS: Partial<Record<ControlsState, ControlsStart>> = {
 /**
  * The shipped Props tab of a controls state: the saved props of a comparison
  * or a published catalogue, or else the edit form. A static artboard runs no
- * script, so Reset and each recovery action link to the artboard that shows
- * what it does.
+ * script, so Switch to Current, Reset and each recovery action link to the
+ * Canvas artboard that shows what it does.
  */
 export function ControlsPanel({ state }: { state: ControlsState }) {
   const fixture = controlsFixtures[state];
@@ -57,9 +58,7 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
         {...(state === "comparison"
           ? {
               current: CONTROLS_COPY.switchToCurrent,
-              currentHref: mockLink(
-                "design/components/controls/controls/default",
-              ),
+              currentHref: mockLink(CANVAS_PAGES.componentSet),
             }
           : {})}
         heading={CONTROLS_COPY.readonlyHeading}
@@ -77,11 +76,11 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
     <ControlsPanelView
       alert={ALERTS[state]}
       dirty={fixture.edited}
-      resetHref={mockLink("design/components/controls/editing/reset")}
+      resetHref={mockLink(CANVAS_PAGES.propsReset)}
       restored={state === "reset" ? CONTROLS_COPY.restored : undefined}
-      retryHref={mockLink("design/components/controls/states/pending")}
+      retryHref={mockLink(CANVAS_PAGES.propsPending)}
       start={STARTS[state]}
-      startHref={mockLink("design/components/controls/states/preparing")}
+      startHref={mockLink(CANVAS_PAGES.propsPreparing)}
       title={variant.title}
       wording={{
         edited: CONTROLS_COPY.edited,

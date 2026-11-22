@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
-import { useDarkPreview } from "./appearance.js";
 import { DetailsPanel, type CardEvidence } from "./details.js";
 import { MiniDetails, MiniWelcome } from "./mini_screens.js";
 import { miniView } from "./mini_views.js";
@@ -93,34 +92,6 @@ export function ExampleWorkspace({
           </BrowserFrame>
         );
       }}
-    />
-  );
-}
-
-/**
- * The selected screen's workspace on a dual-scheme artboard. Welcome renders in
- * both schemes and follows the catalogue; Details renders in light only, so it
- * keeps its light frames and names that fallback once the catalogue is dark.
- */
-export function SchemeWorkspace({
-  subject,
-  viewport,
-  ...rest
-}: {
-  header: ReactNode;
-  subject: "welcome" | "details";
-  viewport: ArtboardViewport;
-  open?: boolean;
-  comparisonEvidence?: CardEvidence | undefined;
-}) {
-  const dark = useDarkPreview();
-  return (
-    <ExampleWorkspace
-      subject={subject}
-      viewport={viewport}
-      dark={subject === "welcome" && dark}
-      lightOnly={subject === "details" && dark}
-      {...rest}
     />
   );
 }

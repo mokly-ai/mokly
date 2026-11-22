@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { mockLink } from "@mokly/mokly";
 
 import { InstanceTree } from "../../../../../../packages/ui/src/instance-tree/instance-tree.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 
 import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
@@ -10,7 +11,6 @@ import { ComponentInfo } from "./component_info.js";
 import { ComponentProps } from "./component_props.js";
 import { PropsDeliveryState } from "./component_props_delivery.js";
 import { ComponentUsage, UsageDeliveryState } from "./component_usage.js";
-import { COMPONENT_PAGES, INSPECTION_PAGES } from "./destinations.js";
 import { toolbarAction } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
@@ -39,7 +39,7 @@ export type ComponentPageState =
 /**
  * The Toolbar's nested components in the shipped tree: the one Action that its
  * example renders, labelled as its highlight region names it, which links to
- * the Action page.
+ * the Action's Canvas variant set.
  */
 function ComponentChildren() {
   const [title, id] = toolbarAction.split(" · ");
@@ -49,7 +49,7 @@ function ComponentChildren() {
         components: 1,
         instances: [
           {
-            href: mockLink(COMPONENT_PAGES.default),
+            href: mockLink(CANVAS_PAGES.componentSet),
             id: id!,
             key: "main-action",
             nested: [],
@@ -150,7 +150,7 @@ export function ComponentDetails({
               state={state}
               welcome={
                 state === "style-changed"
-                  ? INSPECTION_PAGES["affected-screen"]
+                  ? CANVAS_PAGES.explorerAffected
                   : undefined
               }
             />

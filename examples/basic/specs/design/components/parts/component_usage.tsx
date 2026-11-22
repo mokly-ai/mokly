@@ -5,9 +5,10 @@ import {
   UsageStatus,
   type UsageRow,
 } from "../../../../../../packages/ui/src/usage-list/usage-list.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import type { DesignDestination } from "../../parts/destinations.js";
 
 import type { ComponentPageState } from "./component_details.js";
-import type { ComponentDesignDestination } from "./destinations.js";
 import { componentUses, usageViews } from "./fixtures.js";
 
 /** The Usage tab while the entry's detail loads, or after its load failed. */
@@ -18,7 +19,7 @@ export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
 /** One consumer's row, which opens the artboard that shows the consumer. */
 function usageRow(
   use: (typeof componentUses)[number],
-  to: ComponentDesignDestination,
+  to: DesignDestination,
   instances: number,
 ): UsageRow {
   return {
@@ -42,8 +43,8 @@ function usedByRows(state: ComponentPageState): UsageRow[] {
       usageRow(
         componentUses[0],
         state === "toolbar"
-          ? "design/components/inspection/selection/inspection-toolbar"
-          : "design/components/inspection/selection/inspection-help",
+          ? CANVAS_PAGES.selectionToolbar
+          : CANVAS_PAGES.overview,
         1,
       ),
     ];
@@ -56,7 +57,7 @@ function usedByRows(state: ComponentPageState): UsageRow[] {
  */
 function affectedRows(
   removed: boolean,
-  welcome: ComponentDesignDestination | undefined,
+  welcome: DesignDestination | undefined,
 ): UsageRow[] {
   const screens = componentUses
     .filter((use) => use.kind === "screen")
@@ -99,7 +100,7 @@ export function ComponentUsage({
   removed?: boolean;
   state: ComponentPageState;
   /** Where Welcome's affected row opens when its story has an artboard for it. */
-  welcome?: ComponentDesignDestination | undefined;
+  welcome?: DesignDestination | undefined;
 }) {
   return (
     <UsageList

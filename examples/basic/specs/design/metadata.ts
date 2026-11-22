@@ -17,9 +17,3 @@ export const appearanceDesignMetadata = {
 export const componentDesignMetadata = {
   relatedDocs: componentDesignDocs,
 };
-export const controlsDesignMetadata = {
-  relatedDocs: [
-    "docs/protocol/mokly-component-controls-design.md",
-    "docs/protocol/mokly-component-controls.md",
-  ],
-};

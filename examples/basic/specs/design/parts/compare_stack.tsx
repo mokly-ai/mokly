@@ -9,8 +9,6 @@ import {
 import { ComparisonPanes } from "../../../../../packages/ui/src/comparison-stage/comparison-stage.js";
 import { FrameSettingScope } from "../library/preview/frame_placement.js";
 
-import { FramedShot, type CompareViewport } from "./compare_page.js";
-
 /** The comparison modes that stack both versions in one chrome. */
 export type StackedMode = "difference" | "overlay";
 
@@ -89,22 +87,5 @@ export function ComparisonStack({
         )}
       </FrameSettingScope>
     </ComparisonPanes>
-  );
-}
-
-/** A screen's browser window or phone, which follows the preview scheme. */
-export function deviceChrome({
-  address,
-  dark,
-  viewport,
-}: {
-  address: string;
-  dark: boolean;
-  viewport: CompareViewport;
-}): StackChrome {
-  return (scroller) => (
-    <FramedShot address={address} dark={dark} viewport={viewport}>
-      {scroller}
-    </FramedShot>
   );
 }
