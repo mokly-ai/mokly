@@ -13,8 +13,7 @@
    has a Light and a Dark value, so an artboard changes appearance by
    selecting a palette rather than by adding an override sheet. Device-screen
    colors are preview tokens and live in design-preview.css, independent of
-   the interface appearance. A light-only document keeps the Light palette
-   inside a Dark artboard. */
+   the interface appearance. */
 @import "../../packages/ui/src/theme/theme.css";
 @import "../../packages/ui/src/reset/reset.css";
 /* Geist and Geist Mono, the faces that the shipped theme and the sans and
@@ -23,7 +22,6 @@
 @import "./design-fonts/geist.css";
 
 :root,
-[data-mbk-light-only],
 [data-mbk-appearance="light"] {
   --chrome-bg: #f4f4f1;
   --chrome-surface: #ffffff;
@@ -167,16 +165,10 @@ body {
   overflow: hidden;
 }
 
-/* A mobile render draws the shell in a phone-wide column at every width, and
-   a collapsed render a desktop window narrower than the layout breakpoint. */
-.mbk-shell--mobile > .mbk,
-.mbk-shell--collapsed > .mbk {
+/* A mobile render draws the shell in a phone-wide column at every width. */
+.mbk-shell--mobile > .mbk {
   border-left: 1px solid var(--chrome-border);
   border-right: 1px solid var(--chrome-border);
   margin: 0 auto;
   max-width: 392px;
-}
-
-.mbk-shell--collapsed > .mbk {
-  max-width: 832px;
 }

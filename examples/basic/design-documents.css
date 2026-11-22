@@ -89,15 +89,6 @@
   font-weight: 650;
 }
 
-.mbk-shell--mobile .mbk-markdown {
-  font-size: 14px;
-  padding: 22px 18px 28px;
-}
-
-.mbk-shell--mobile .mbk-markdown h1 {
-  font-size: 22px;
-}
-
 /* ---- Invoice --------------------------------------------------------- */
 
 /* An invoice's lines keep one row each, so both versions align in Overlay. */

@@ -259,6 +259,7 @@ function StageFrame({
         {...optional("side", frame.side)}
         {...optional("before", frame.before)}
         {...optional("variant", frame.variant)}
+        {...(frame.lightOnly ? { lightOnly: true } : {})}
         {...(selected ? { selected } : {})}
         {...optional("overlay", overlay ?? undefined)}
       >

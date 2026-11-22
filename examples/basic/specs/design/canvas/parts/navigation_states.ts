@@ -94,6 +94,8 @@ export const CANVAS_NAVIGATION_STATES = {
   [C.componentSetPrimary]: fitted(C.componentSetPrimary),
   [C.componentSetSecondary]: fitted(C.componentSetSecondary),
   [C.document]: { canvas: { fit: C.document } },
+  // A branch of its own: only Fit opens an artboard of its story.
+  [C.documentLightOnly]: { canvas: { fit: C.documentLightOnly } },
   [C.catalogue]: {
     all: C.overview,
     canvas: { fit: C.catalogue, close: C.overview, ...changes },

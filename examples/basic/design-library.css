@@ -62,12 +62,6 @@
 .mbk-library .browser-frame {
   max-width: 100%;
 }
-.mbk-library[data-library-component="comparison-pane"] .mbk-library-host {
-  padding: 16px;
-}
-.mbk-library[data-library-component="flow-step"] .mbk-library-host {
-  padding: 16px;
-}
 /* A Canvas part's sample stands on the canvas, as it does in a Canvas
    artboard. A frame leaves room for the label above it, and a floating panel
    takes the height of a short panel. */

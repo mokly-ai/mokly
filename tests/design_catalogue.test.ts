@@ -157,13 +157,9 @@ test(
   },
 );
 
-test(
-  "outside the component explorer, no keyboard stop opens nothing",
-  setup,
-  async () => {
-    assert.deepEqual(keyboardStopViolations(await served()), []);
-  },
-);
+test("no design keyboard stop opens nothing", setup, async () => {
+  assert.deepEqual(keyboardStopViolations(await served()), []);
+});
 
 test(
   "each artboard draws Highlight components in the shell's state",

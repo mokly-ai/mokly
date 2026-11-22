@@ -1,14 +1,6 @@
 {
   "screens": [
-    "design/browse/appearance/states/light-only-document",
-    "design/browse/appearance/status/flow",
-    "design/browse/pages/previous-version/loading",
-    "design/browse/pages/previous-version/long",
-    "design/browse/pages/previous-version/unavailable",
-    "design/browse/pages/removed",
-    "design/browse/variants/variant-removed",
     "design/browse/views/screen/tag-picker",
-    "design/browse/views/use-case",
     "design/canvas/changes/current",
     "design/canvas/changes/difference",
     "design/canvas/changes/overlay",
@@ -113,15 +105,9 @@
     "design/canvas/stage/component-set/toolbar-primary",
     "design/canvas/stage/component-set/toolbar-secondary",
     "design/canvas/stage/document",
+    "design/canvas/stage/document/light-only",
     "design/canvas/stage/home",
-    "design/canvas/stage/zoomed",
-    "design/changes/outcomes/previous-version/loading",
-    "design/changes/outcomes/previous-version/long",
-    "design/changes/outcomes/previous-version/no-view",
-    "design/changes/outcomes/previous-version/unavailable",
-    "design/changes/outcomes/removed",
-    "design/components/states/removed",
-    "design/components/states/removed-consumer"
+    "design/canvas/stage/zoomed"
   ],
   "runtimeOnly": [
     "design/canvas/components/inspection",
@@ -141,9 +127,6 @@
     "design/canvas/props/states/invalid-together"
   ],
   "treeReached": [
-    "design/browse/appearance/states/light-only-document",
-    "design/browse/appearance/status/flow",
-    "design/browse/variants/variant-removed",
     "design/browse/views/screen/tag-picker",
     "design/canvas/components/affected/direct",
     "design/canvas/components/inspection/unavailable",
@@ -165,7 +148,8 @@
     "design/canvas/props/editing/edited",
     "design/canvas/props/editing/unset",
     "design/canvas/props/states/error",
-    "design/canvas/props/states/invalid"
+    "design/canvas/props/states/invalid",
+    "design/canvas/stage/document/light-only"
   ],
   "retries": {
     "design/canvas/components/usage/loading": [

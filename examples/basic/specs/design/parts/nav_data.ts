@@ -10,11 +10,8 @@ import {
   COMPONENT_NAVIGATION,
   componentVariantRows,
 } from "./component_nav_data.js";
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
-
-/** One screen this branch removed, with the preview state it opens in. */
+/** One screen this branch removed. */
 interface RemovedScreen {
-  design: DesignDestination;
   key: string;
   /** The path the screen had at the branch point. */
   path: string;
@@ -27,31 +24,26 @@ interface RemovedScreen {
  */
 export const REMOVED_SCREENS = {
   farewell: {
-    design: DESTINATIONS.removed,
     key: "farewell-removed",
     path: "example/screens/farewell",
     title: "Farewell",
   },
   survey: {
-    design: DESTINATIONS.removedLong,
     key: "survey-removed",
     path: "example/screens/survey",
     title: "Survey",
   },
   invite: {
-    design: DESTINATIONS.removedLoading,
     key: "invite-removed",
     path: "example/screens/invite",
     title: "Invite",
   },
   archive: {
-    design: DESTINATIONS.removedUnavailable,
     key: "archive-removed",
     path: "example/screens/archive",
     title: "Archive",
   },
   timeline: {
-    design: DESTINATIONS.removedNoView,
     key: "timeline-removed",
     path: "example/screens/timeline",
     title: "Timeline",
@@ -169,7 +161,7 @@ function catalogueTree(
       depth: 1,
       kind: "flow",
       label: "Example tour",
-      to: DESTINATIONS.tour,
+      to: CANVAS_PAGES.useCase,
     },
     {
       key: "getting-started",

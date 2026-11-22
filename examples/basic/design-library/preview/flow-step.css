@@ -1,9 +1,0 @@
-/* The shipped step of a user flow: the @mokly/ui stylesheet of the flow and
-   its steps, then the mockup's mobile form. */
-@import "../../../../packages/ui/src/flow-step/flow-step.css";
-
-/* A mobile render draws the narrow step at every width. Below the device
-   breakpoint the package stylesheet draws it on its own, as the shell does. */
-.mbk-shell--mobile .flow-step::before {
-  display: none;
-}

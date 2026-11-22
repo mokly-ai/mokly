@@ -1,47 +1,7 @@
 [
   {
     "kind": "screen",
-    "path": "design/browse/appearance/states/light-only-document",
-    "colorSchemes": ["light", "dark"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/appearance/status/flow",
-    "colorSchemes": ["light", "dark"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/pages/previous-version/loading",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/pages/previous-version/long",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/pages/previous-version/unavailable",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/pages/removed",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/variants/variant-removed",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
     "path": "design/browse/views/screen/tag-picker",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/browse/views/use-case",
     "colorSchemes": ["light"]
   },
   {
@@ -631,6 +591,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/stage/document/light-only",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stage/document"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/stage/home",
     "colorSchemes": ["light", "dark"]
   },
@@ -638,41 +604,6 @@
     "kind": "screen",
     "path": "design/canvas/stage/zoomed",
     "colorSchemes": ["light", "dark"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/changes/outcomes/previous-version/loading",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/changes/outcomes/previous-version/long",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/changes/outcomes/previous-version/no-view",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/changes/outcomes/previous-version/unavailable",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/changes/outcomes/removed",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/components/states/removed",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
-    "path": "design/components/states/removed-consumer",
-    "colorSchemes": ["light"]
   },
   {
     "kind": "component",
@@ -976,41 +907,6 @@
     "path": "design/library/controls/change-status/unmodified",
     "colorSchemes": ["light"],
     "variantOf": "design/library/controls/change-status"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar/current",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/comparison-toolbar"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar/difference",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/comparison-toolbar"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar/overlay",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/comparison-toolbar"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar/side-by-side",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/comparison-toolbar"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/comparison-toolbar/side-by-side-apart",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/comparison-toolbar"
   },
   {
     "kind": "component",
@@ -1331,35 +1227,6 @@
   },
   {
     "kind": "component",
-    "path": "design/library/preview/comparison-pane",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/comparison-pane/before",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/comparison-pane"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/comparison-pane/current",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/comparison-pane"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/comparison-pane/missing-before",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/comparison-pane"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/comparison-pane/missing-current",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/comparison-pane"
-  },
-  {
-    "kind": "component",
     "path": "design/library/preview/device-frame",
     "colorSchemes": ["light"]
   },
@@ -1415,22 +1282,5 @@
     "path": "design/library/preview/empty-state/no-changes",
     "colorSchemes": ["light"],
     "variantOf": "design/library/preview/empty-state"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/flow-step",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/flow-step/first",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/flow-step"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/flow-step/second",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/flow-step"
   }
 ]

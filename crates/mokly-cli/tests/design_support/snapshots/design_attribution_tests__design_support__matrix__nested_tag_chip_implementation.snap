@@ -10,7 +10,6 @@ design/library/controls/tag-chip -> attribution-status
 design/library/controls/tag-chip -> attribution-target
 design/library/controls/tag-chip -> attribution-title
 design/library/controls/tag-chip -> attribution-value
-design/library/controls/tag-chip -> design/browse/variants/variant-removed
 design/library/controls/tag-chip -> design/browse/views/screen/tag-picker
 design/library/controls/tag-chip -> design/canvas/components/compare/props
 design/library/controls/tag-chip -> design/canvas/components/inspection
@@ -41,6 +40,7 @@ design/library/controls/tag-chip -> design/canvas/outcomes/added/primary
 design/library/controls/tag-chip -> design/canvas/outcomes/added/secondary
 design/library/controls/tag-chip -> design/canvas/outcomes/added/toolbar
 design/library/controls/tag-chip -> design/canvas/outcomes/added/welcome
+design/library/controls/tag-chip -> design/canvas/outcomes/removed-variant/inspect
 design/library/controls/tag-chip -> design/canvas/overview
 design/library/controls/tag-chip -> design/canvas/props/editing
 design/library/controls/tag-chip -> design/canvas/props/editing/edited

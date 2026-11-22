@@ -1,109 +1,38 @@
 {
   "families": {
-    "browse": "^design/browse/(views|variants|pages)/",
-    "changes": "^design/changes/",
-    "components": "^design/components/",
-    "appearance": "^design/browse/appearance/",
+    "browse": "^design/browse/views/",
     "canvas": "^design/canvas/"
   },
   "parts": [
     {
       "family": "browse",
       "component": "inspector/inspector",
-      "reason": "The use case shows its steps instead.",
-      "except": ["design/browse/views/use-case"]
+      "reason": "The tag picker's Welcome keeps its Details inspector.",
+      "except": []
     },
     {
       "family": "browse",
       "component": "preview/device-frame",
-      "reason": "Document pages frame no preview.",
-      "except": [
-        "design/browse/pages/previous-version/loading",
-        "design/browse/pages/previous-version/long",
-        "design/browse/pages/previous-version/unavailable",
-        "design/browse/pages/removed"
-      ]
+      "reason": "The tag picker frames Welcome's previews.",
+      "except": []
     },
     {
       "family": "browse",
       "component": "controls/view-controls",
-      "reason": "Screens without a framed preview, and the use case, whose steps choose no viewport.",
-      "except": [
-        "design/browse/pages/previous-version/loading",
-        "design/browse/pages/previous-version/long",
-        "design/browse/pages/previous-version/unavailable",
-        "design/browse/pages/removed",
-        "design/browse/views/use-case"
-      ]
+      "reason": "The tag picker's header holds the view controls.",
+      "except": []
     },
     {
       "family": "browse",
       "component": "controls/tag-chip",
-      "reason": "Subjects without tags: documents and the use case.",
-      "except": [
-        "design/browse/pages/previous-version/loading",
-        "design/browse/pages/previous-version/long",
-        "design/browse/pages/previous-version/unavailable",
-        "design/browse/pages/removed",
-        "design/browse/views/use-case"
-      ]
-    },
-    {
-      "family": "browse",
-      "component": "preview/empty-state",
-      "reason": "The screens that show an empty or recovery message.",
-      "only": ["design/browse/pages/previous-version/unavailable"]
+      "reason": "The tag picker's chips and Welcome's tags draw tag chips.",
+      "except": []
     },
     {
       "family": "browse",
       "component": "controls/tag-picker",
       "reason": "The states with the tag picker open.",
       "only": ["design/browse/views/screen/tag-picker"]
-    },
-    {
-      "family": "changes",
-      "component": "preview/device-frame",
-      "reason": "The previous version that is loading or unavailable frames no preview.",
-      "except": [
-        "design/changes/outcomes/previous-version/loading",
-        "design/changes/outcomes/previous-version/unavailable"
-      ]
-    },
-    {
-      "family": "changes",
-      "component": "preview/empty-state",
-      "reason": "The unavailable previous version.",
-      "only": ["design/changes/outcomes/previous-version/unavailable"]
-    },
-    {
-      "family": "components",
-      "component": "inspector/metadata-row",
-      "reason": "The removed consumer keeps only its Details panel, whose comparison details show a reason sentence and no metadata row.",
-      "except": ["design/components/states/removed-consumer"]
-    },
-    {
-      "family": "components",
-      "component": "controls/comparison-toolbar",
-      "reason": "The states that offer comparison modes.",
-      "only": ["design/components/states/removed"]
-    },
-    {
-      "family": "components",
-      "component": "preview/comparison-pane",
-      "reason": "The states that show two comparison panes.",
-      "only": ["design/components/states/removed"]
-    },
-    {
-      "family": "appearance",
-      "component": "preview/device-frame",
-      "reason": "The light-only document frames no preview.",
-      "except": ["design/browse/appearance/states/light-only-document"]
-    },
-    {
-      "family": "appearance",
-      "component": "inspector/inspector",
-      "reason": "The flow shows its steps.",
-      "except": ["design/browse/appearance/status/flow"]
     },
     {
       "family": "canvas",
@@ -409,6 +338,7 @@
         "design/canvas/outcomes/removed/long",
         "design/canvas/outcomes/removed/unavailable",
         "design/canvas/stage/document",
+        "design/canvas/stage/document/light-only",
         "design/canvas/stage/home"
       ]
     },

@@ -51,6 +51,13 @@
   margin-left: auto;
 }
 
+/* A frame that keeps its light view under Dark names that fallback after its
+   name, in a lighter weight of the same label. */
+.cv-frame-fallback {
+  flex: none;
+  font-weight: 400;
+}
+
 /* The frame that holds the selection lights its name and glyph; its size
    stays quiet. */
 .cv-frame[data-cv-selected] > .cv-frame-label {

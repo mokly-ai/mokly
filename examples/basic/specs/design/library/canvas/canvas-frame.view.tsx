@@ -63,7 +63,9 @@ function ScreenLink({
  * that holds the selection, an instance on it or the frame itself, takes the
  * signal. A use case's step frame is named by its step: the step's number
  * in a tag leads the label, the step's title is the link that opens the
- * step's screen, and the step's description reads muted below the label.
+ * step's screen, and the step's description reads muted below the label. A
+ * frame that keeps its light view under Dark, because its entry has no dark
+ * view, adds `Light only` after its name, in a lighter weight.
  */
 export function CanvasFrameView({
   before,
@@ -74,6 +76,7 @@ export function CanvasFrameView({
   height,
   kind,
   label,
+  lightOnly,
   overlay,
   scheme,
   screenDestination,
@@ -138,6 +141,12 @@ export function CanvasFrameView({
         ) : (
           <ScreenLink to={screenDestination}>{title}</ScreenLink>
         )}
+        {lightOnly ? (
+          <>
+            {" "}
+            <span className="cv-frame-fallback">· Light only</span>
+          </>
+        ) : null}
         {kind === "document" ? null : (
           <span className="cv-frame-size">
             {width} × {height}

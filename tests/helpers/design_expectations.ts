@@ -97,7 +97,7 @@ export const {
 
 /** Design entries that render in both schemes; every other one is light-only. */
 export const DUAL_SCHEME =
-  /^design\/(browse\/appearance\/.+|canvas\/.+|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
+  /^design\/(canvas\/.+|library\/chrome\/(appearance-selector|top-bar)(\/.+)?)$/u;
 
 /** The startup pages draw no catalogue chrome before the index arrives. */
 const STARTUP = /^design\/canvas\/loading\/catalogue(\/failed|\/version)?$/u;
@@ -105,8 +105,8 @@ const STARTUP = /^design\/canvas\/loading\/catalogue(\/failed|\/version)?$/u;
 /**
  * The shared component ids that one design screen view must record, by the
  * adoption table of the design component library: shared chrome everywhere,
- * the status, view, inspector, and flow parts of each family, and the family
- * parts of `adoption.json`.
+ * the screen header outside the Canvas family, and the family parts of
+ * `adoption.json`.
  */
 export function requiredComponents(
   path: string,
@@ -116,23 +116,10 @@ export function requiredComponents(
   const ids = ["chrome/top-bar", "chrome/appearance-selector"];
   if (viewport === "desktop") ids.push("chrome/catalogue-navigation");
   // The Canvas viewer names the selected entry on the canvas, in the section
-  // head and the compact entry bar, so it draws no screen header band. Every
-  // older screen selects an entry.
+  // head and the compact entry bar, so it draws no screen header band. The
+  // older tag picker selects an entry.
   const canvas = new RegExp(ADOPTION.families.canvas!, "u").test(path);
   if (!canvas) ids.push("chrome/screen-header");
-  if (path.startsWith("design/changes/"))
-    ids.push("inspector/inspector", "inspector/metadata-row");
-  if (path.startsWith("design/components/"))
-    ids.push(
-      "controls/view-controls",
-      "controls/change-status",
-      "inspector/inspector",
-    );
-  if (
-    path === "design/browse/views/use-case" ||
-    path === "design/browse/appearance/status/flow"
-  )
-    ids.push("preview/flow-step", "preview/device-frame");
   for (const part of ADOPTION.parts)
     if (
       (part.viewports ?? [viewport]).includes(viewport) &&

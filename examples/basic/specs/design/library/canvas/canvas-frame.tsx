@@ -33,6 +33,7 @@ const propSchema = {
     step: { type: "integer", minimum: 1, maximum: 99 },
     screenDestination: destination,
     description: text,
+    lightOnly: flag,
   },
 } as const;
 const slots = ["children", "before", "overlay"] as const;

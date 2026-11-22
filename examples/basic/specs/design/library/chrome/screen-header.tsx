@@ -4,11 +4,8 @@ import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   changeStatus,
-  comparisonDestinations,
-  comparisonMode,
   destination,
   enumOptions,
-  flag,
   text,
   type LibraryProps,
 } from "../schemas.js";
@@ -18,15 +15,7 @@ import { ScreenHeaderView } from "./screen-header.view.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: [
-    "title",
-    "crumbs",
-    "comparisons",
-    "mode",
-    "scrollTogether",
-    "accessible",
-    "destinations",
-  ],
+  required: ["title", "crumbs"],
   properties: {
     title: text,
     crumbs: {
@@ -40,11 +29,6 @@ const propSchema = {
     },
     path: text,
     status: changeStatus,
-    comparisons: flag,
-    mode: comparisonMode,
-    scrollTogether: flag,
-    accessible: flag,
-    destinations: comparisonDestinations,
   },
 } as const;
 const slots = ["actions"] as const;
@@ -63,11 +47,6 @@ const sample = {
   title: "Welcome",
   crumbs: [home, example, { key: "screens", label: "Screens" }],
   path: "example/screens/welcome",
-  comparisons: false,
-  mode: "current",
-  scrollTogether: true,
-  accessible: true,
-  destinations: {},
 } as const;
 export const screenHeader = defineComponent({
   ...libraryMetadata(
@@ -107,7 +86,6 @@ export const screenHeader = defineComponent({
       props: {
         ...sample,
         status: "changed",
-        comparisons: true,
       },
     },
     {
@@ -118,7 +96,6 @@ export const screenHeader = defineComponent({
         title: "Farewell",
         path: "example/screens/farewell",
         status: "removed",
-        comparisons: true,
       },
     },
   ],

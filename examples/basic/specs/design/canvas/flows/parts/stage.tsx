@@ -113,9 +113,9 @@ export function UseCaseStage({
               <div
                 className="cv-step"
                 data-cv-step={step.number}
-                key={step.number}
+                key={step.name}
               >
-                <DesignInstances name={`step-${step.number}`}>
+                <DesignInstances name={step.name}>
                   <DepictedViewScope view={step.view}>
                     {step
                       .frames()

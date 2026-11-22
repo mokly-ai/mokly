@@ -22,13 +22,6 @@
     ],
     "chrome/screen-header": ["screen", "component", "changed", "removed"],
     "chrome/appearance-selector": ["auto", "light", "dark", "compact"],
-    "controls/comparison-toolbar": [
-      "current",
-      "side-by-side",
-      "overlay",
-      "difference",
-      "side-by-side-apart"
-    ],
     "controls/view-controls": [
       "default",
       "both",
@@ -55,14 +48,7 @@
       "light-only",
       "failed"
     ],
-    "preview/comparison-pane": [
-      "before",
-      "current",
-      "missing-before",
-      "missing-current"
-    ],
     "preview/empty-state": ["home", "missing-route", "no-changes"],
-    "preview/flow-step": ["first", "second"],
     "canvas/canvas-frame": [
       "desktop-light",
       "mobile-dark",
@@ -156,32 +142,6 @@
       "target": null
     },
     {
-      "source": "design/browse/views/use-case",
-      "name": "This screen in the catalogue: Welcome →",
-      "target": "design/canvas/overview"
-    },
-    {
-      "source": "design/browse/views/use-case",
-      "name": "This screen in the catalogue: Details →",
-      "target": "design/canvas/outcomes/added"
-    },
-    {
-      "source": "design/browse/views/use-case",
-      "name": "Open the details screen",
-      "target": "design/canvas/outcomes/added"
-    },
-    {
-      "source": "design/browse/views/use-case",
-      "name": "Return to welcome",
-      "target": "design/canvas/overview"
-    },
-    {
-      "source": "design/browse/appearance/status/flow",
-      "viewports": ["desktop"],
-      "name": "Example tour",
-      "target": "design/browse/views/use-case"
-    },
-    {
       "source": "design/canvas/flows/tour",
       "within": "cv-frames",
       "name": "Welcome",
@@ -236,30 +196,6 @@
       "within": "cv-ins",
       "name": "Example tour",
       "target": "design/canvas/flows/tour"
-    },
-    {
-      "source": "design/changes/outcomes/previous-version/long",
-      "viewports": ["desktop"],
-      "name": "Farewell · Removed",
-      "target": "design/changes/outcomes/removed"
-    },
-    {
-      "source": "design/components/states/removed-consumer",
-      "viewports": ["desktop"],
-      "name": "ActionChanged",
-      "target": "design/components/states/removed"
-    },
-    {
-      "source": "design/components/states/removed-consumer",
-      "viewports": ["mobile"],
-      "name": "Changes 2",
-      "target": "design/components/states/removed"
-    },
-    {
-      "source": "design/components/states/removed-consumer",
-      "within": "ce-preview-pane",
-      "namePattern": "",
-      "target": null
     },
     {
       "source": "example/screens/welcome",
@@ -624,6 +560,25 @@
       "within": "cv-ptabs",
       "name": "Changes",
       "target": null
+    },
+    {
+      "source": "design/canvas/stage/document/light-only",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Payment terms",
+      "target": "design/canvas/stage/document/light-only"
+    },
+    {
+      "source": "design/canvas/stage/document/light-only",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stage/document/light-only",
+      "name": "Fit",
+      "target": "design/canvas/stage/document/light-only"
     },
     {
       "source": "design/canvas/outcomes/added",

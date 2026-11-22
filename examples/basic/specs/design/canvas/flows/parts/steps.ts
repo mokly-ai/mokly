@@ -19,6 +19,12 @@ export interface StepFrames {
 
 /** One step of a use case, as its step frame shows it. */
 export interface UseCaseStep {
+  /**
+   * The step's semantic name, which prefixes the instances of its frames, so
+   * two steps that show one screen stay apart, and a reorder keeps each
+   * step's identity.
+   */
+  name: string;
   /** The step's number, from one, in step order. */
   number: number;
   title: string;
@@ -40,6 +46,7 @@ export interface UseCaseStep {
  */
 export const TOUR_STEPS: readonly UseCaseStep[] = [
   {
+    name: "arrival",
     number: 1,
     title: "Welcome",
     description: "The tour starts on the landing screen.",
@@ -48,6 +55,7 @@ export const TOUR_STEPS: readonly UseCaseStep[] = [
     view: WELCOME_VIEW,
   },
   {
+    name: "detail",
     number: 2,
     title: "Details",
     description: "The tour ends on the details screen.",

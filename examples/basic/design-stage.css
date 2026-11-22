@@ -1,17 +1,13 @@
 /* The older Mokly design stage: the details inspector, the device frames and
    their screens, and the mini screen sketches that the shipped frames hold on
-   the dotted stage, from design-shots.css. The details body, the stage, the
-   document stage, the use-case flow, and a removed entry's previous version
-   and its states are the shipped ones, from their @mokly/ui stylesheets, in
-   the package's order. The preview tokens and the highlight of a depicted
-   view come from design-preview.css, which the Canvas route links too. */
+   the dotted stage, from design-shots.css. The details body, the stage and
+   the frames are the shipped ones, from their @mokly/ui stylesheets, in the
+   package's order. The preview tokens and the highlight of a depicted view
+   come from design-preview.css, which the Canvas route links too. */
 @import "../../packages/ui/src/details-panel/details-panel.css";
 @import "../../packages/ui/src/scheme-fallback/scheme-fallback.css";
 @import "../../packages/ui/src/stage/stage.css";
 @import "../../packages/ui/src/preview-frame/preview-frame.css";
-@import "../../packages/ui/src/flow-step/flow-step.css";
-@import "../../packages/ui/src/preview-state/preview-state.css";
-@import "../../packages/ui/src/previous-version/previous-version.css";
 @import "./design-preview.css";
 @import "./design-shots.css";
 
@@ -46,15 +42,4 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: safe center;
-}
-
-/* The bordered pane on the document stage stands in for the document's
-   frame, which the shell draws around a real document. */
-.mbk-stage-embed > .mbk-doc-pane {
-  border: 1px solid var(--chrome-border);
-  border-radius: 12px;
-  flex: 1;
-  min-height: 520px;
-  overflow: auto;
-  width: 100%;
 }

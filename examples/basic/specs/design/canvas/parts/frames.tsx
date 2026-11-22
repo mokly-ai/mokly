@@ -29,6 +29,11 @@ export interface CanvasFrameSpec {
   side?: FrameVersion;
   /** The saved variant that a frame of a variant set shows, by its slug. */
   variant?: string;
+  /**
+   * The frame keeps its light view under Dark, because its entry has no dark
+   * view, and its label names that fallback.
+   */
+  lightOnly?: boolean;
 }
 
 /** The name of each scheme, as a frame's label and Inspect show it. */

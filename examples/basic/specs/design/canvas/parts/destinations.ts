@@ -20,6 +20,7 @@ const STAGE_PAGES = {
   componentSetPrimary: "design/canvas/stage/component-set/toolbar-primary",
   componentSetSecondary: "design/canvas/stage/component-set/toolbar-secondary",
   document: "design/canvas/stage/document",
+  documentLightOnly: "design/canvas/stage/document/light-only",
   catalogue: "design/canvas/stage/catalogue",
   home: "design/canvas/stage/home",
   unchanged: "design/canvas/inspect/unchanged",

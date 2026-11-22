@@ -5,7 +5,6 @@ import {
   ShellLayout,
 } from "../../../../../packages/ui/src/shell-layout/shell-layout.js";
 import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
-import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import {
@@ -13,11 +12,7 @@ import {
   type ViewControlsProps,
 } from "../library/controls/view-controls.js";
 
-import {
-  DesignAppearanceScope,
-  useRenderedAppearance,
-  type AppearanceChoice,
-} from "./appearance.js";
+import { DesignAppearanceScope, useRenderedAppearance } from "./appearance.js";
 import { useDepictedView, type HighlightState } from "./depicted_view.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import type { DesignDestination } from "./destinations.js";
@@ -28,18 +23,10 @@ export type ArtboardViewport = "desktop" | "mobile";
 
 interface ShellProps {
   design: DesignDestination;
-  /** Draws the depicted Appearance selector holding this setting. */
-  appearanceChoice?: AppearanceChoice | undefined;
   changedViews?: readonly ChangedView[] | undefined;
   activeTag?: string | undefined;
-  /** The navigation drawer of a narrow render. */
-  aside?: ReactNode;
   children: ReactNode;
-  /**
-   * Depicts a desktop window narrower than the layout breakpoint, in a
-   * column with the narrow top bar, whose drawer is the `aside`.
-   */
-  collapsed?: boolean | undefined;
+  /** The catalogue navigation of a desktop render. */
   nav: ReactNode;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
@@ -53,38 +40,33 @@ const STATUS_ID = "mb-route-status";
 /**
  * The shipped shell root of one design mockup, in the frame that carries the
  * artboard's render flag: `mbk-shell--mobile` draws the narrow shell of a
- * mobile render at every width, and `mbk-shell--collapsed` a narrow desktop
- * window. The root states the rendered appearance as its theme and its
- * previews' scheme, so the package components draw in the shipped palette.
+ * mobile render at every width, without the catalogue navigation. The root
+ * states the rendered appearance as its theme and its previews' scheme, so
+ * the package components draw in the shipped palette.
  */
 export function Shell({
   activeTag,
-  appearanceChoice,
   changedViews,
-  aside,
   children,
-  collapsed = false,
   design,
   nav,
   searchValue,
   tagPickerOpen,
   viewport,
 }: ShellProps) {
-  const narrow = viewport === "mobile" || collapsed;
   return (
     <DesignNavigation design={design}>
       <DesignAppearanceScope>
         <ShellRoot
-          flag={collapsed ? "collapsed" : viewport}
-          navigation={narrow ? aside : nav}
+          flag={viewport}
+          navigation={viewport === "mobile" ? undefined : nav}
           topBar={
             <ShellTopBar
               activeTag={activeTag}
-              appearanceChoice={appearanceChoice}
               changedViews={changedViews}
               searchValue={searchValue}
               tagPickerOpen={tagPickerOpen}
-              viewport={narrow ? "mobile" : "desktop"}
+              viewport={viewport}
             />
           }
         >
@@ -100,12 +82,7 @@ function ShellTopBar({
   ...props
 }: Pick<
   ShellProps,
-  | "activeTag"
-  | "appearanceChoice"
-  | "changedViews"
-  | "searchValue"
-  | "tagPickerOpen"
-  | "viewport"
+  "activeTag" | "changedViews" | "searchValue" | "tagPickerOpen" | "viewport"
 >) {
   const scheme = useRenderedAppearance();
   return (
@@ -124,7 +101,7 @@ function ShellRoot({
   topBar,
 }: {
   children: ReactNode;
-  flag: ArtboardViewport | "collapsed";
+  flag: ArtboardViewport;
   navigation: ReactNode;
   topBar: ReactNode;
 }) {
@@ -151,32 +128,15 @@ function ShellRoot({
 export type Crumb = string | { label: string; to: DesignDestination };
 
 interface ScreenHeadProps {
-  accessibleControls?: boolean;
   action?: ReactNode;
   crumbs: readonly Crumb[];
   /** The depicted entry's path, shown in the path chip. */
   path?: string;
-  comparisonMode?: "current" | "difference" | "overlay" | "side-by-side";
-  comparisons?: boolean;
-  /** The Scroll together switch a diff mode draws; on unless set otherwise. */
-  scrollTogether?: boolean | undefined;
-  status?: ChangeStatus;
   title: string;
 }
 
-/** The white head band: breadcrumbs, title, path chip, and status. */
-export function ScreenHead({
-  accessibleControls,
-  action,
-  crumbs,
-  path,
-  comparisonMode,
-  comparisons = false,
-  scrollTogether = true,
-  status,
-  title,
-}: ScreenHeadProps) {
-  const navigation = useDesignNavigation();
+/** The white head band: breadcrumbs, title, and path chip. */
+export function ScreenHead({ action, crumbs, path, title }: ScreenHeadProps) {
   return (
     <screenHeader.Component
       moklyInstance={useDesignInstance("header")}
@@ -193,13 +153,7 @@ export function ScreenHead({
             : { key: item.label, label: item.label, destination: item.to },
         ),
       ]}
-      comparisons={comparisons}
-      mode={comparisonMode ?? "current"}
-      scrollTogether={scrollTogether}
-      accessible={accessibleControls ?? false}
-      destinations={navigation.comparison ?? {}}
       {...optional("path", path)}
-      {...optional("status", status)}
       actions={action}
     />
   );

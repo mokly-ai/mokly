@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
-import { DetailsPanel, type CardEvidence } from "./details.js";
+import { DetailsPanel } from "./details.js";
 import { MiniDetails, MiniWelcome } from "./mini_screens.js";
 import { miniView } from "./mini_views.js";
 import type { ArtboardViewport } from "./shell.js";
@@ -20,7 +20,6 @@ export function ExampleWorkspace({
   open = false,
   activeTag,
   changedViews,
-  comparisonEvidence,
   dark = false,
   empty = false,
   error = false,
@@ -33,7 +32,6 @@ export function ExampleWorkspace({
   open?: boolean;
   activeTag?: string | undefined;
   changedViews?: ReactNode;
-  comparisonEvidence?: CardEvidence | undefined;
   dark?: boolean;
   /** Depict Welcome before anything has been entered. */
   empty?: boolean;
@@ -60,7 +58,6 @@ export function ExampleWorkspace({
           open={open}
           activeTag={activeTag}
           changedViews={changedViews}
-          comparisonEvidence={comparisonEvidence}
         />
       }
       render={(previewViewport) => {

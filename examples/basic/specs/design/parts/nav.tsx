@@ -5,7 +5,6 @@ import {
 import { optional, useDesignInstance } from "../library/composition.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
-import type { DesignDestination } from "./destinations.js";
 import { CHANGED_COUNT, NAV_TREE } from "./nav_data.js";
 
 export type NavNode = CatalogueNavigationProps["rows"][number];
@@ -15,7 +14,6 @@ export type ChangesStatus = NonNullable<
 
 interface NavTreeProps {
   changes?: boolean | undefined;
-  activeDestination?: DesignDestination | undefined;
   activeKey?: string | undefined;
   activeLabel?: string | undefined;
   changedCount?: number | undefined;
@@ -25,7 +23,6 @@ interface NavTreeProps {
 }
 
 function CatalogueNavigation({
-  activeDestination,
   activeKey,
   changes = true,
   activeLabel,
@@ -45,7 +42,6 @@ function CatalogueNavigation({
       changedOnly={changedOnly ?? false}
       presentation={drawer ? "drawer" : "responsive"}
       {...optional("changesStatus", changesStatus)}
-      {...optional("activeDestination", activeDestination)}
       {...optional("activeKey", activeKey)}
       {...optional("activeLabel", activeLabel)}
       {...optional("allDestination", navigation.all)}
