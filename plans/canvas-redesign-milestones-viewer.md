@@ -69,7 +69,8 @@ Depends on: 10, 11
       controls and the inspector parts.
 - [ ] When the device frame leaves `@mokly/ui`, remove the device artwork
       sentences and tokens from `mokly-viewer-appearance.md`,
-      `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`.
+      `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`, and
+      rewrite the use-case stage paragraph of `packages/viewer/src/shell/README.md`.
 - [ ] List an ignored-only entry's ignored ids in Current too, as
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
