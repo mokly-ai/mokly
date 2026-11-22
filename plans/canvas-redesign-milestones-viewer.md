@@ -231,7 +231,9 @@ Depends on: 19
 
 Follow-up item 37, option B, which Cal chose on 2026-11-22.
 
-- [ ] Rewrite the relative addresses of a previous version when the viewer
+- [x] Rewrite the relative addresses of a previous version when the viewer
       prepares it, so that it needs no `base` element, with a browser test
-      that uses a relative image on the catalogue origin.
-- [ ] Delete `plans/follow-ups/catalogue-base-uri-blocks-previous-version.md`.
+      that uses a relative image on the catalogue origin. Branch:
+      `calummoore/canvas-redesign-m21-previous-version-9sa7`.
+- [x] Delete `plans/follow-ups/catalogue-base-uri-blocks-previous-version.md`.
+      Branch: `calummoore/canvas-redesign-m21-previous-version-9sa7`.

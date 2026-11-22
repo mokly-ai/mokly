@@ -1,41 +1,47 @@
 /** Inert HTML transformation for one snapshot document presentation. */
 
 import type { SnapshotPresentation } from "./presentation.js";
+import { rewriteDocumentAddresses } from "./presentation_addresses.js";
+import { resolvedAddress } from "./presentation_url.js";
 
 const ELEMENT_NODE = 1;
 const COMMENT_NODE = 8;
 const DOCUMENT_TYPE_NODE = 10;
 
-/** Apply the contracted base and refresh edits, then serialize the document. */
+/** Resolve historical addresses and serialize the document for presentation. */
 export function presentSnapshotDocument(
   doc: Document,
   snapshotAddress: string,
+  parse: (source: string) => Document,
 ): SnapshotPresentation {
-  const consumerBase = doc.querySelector("base[href]")?.getAttribute("href");
-  let effectiveBase = snapshotAddress;
-  if (consumerBase !== null && consumerBase !== undefined) {
-    try {
-      effectiveBase = new URL(consumerBase, snapshotAddress).href;
-    } catch {
-      effectiveBase = snapshotAddress;
-    }
-  }
-  for (const base of doc.querySelectorAll("base")) base.remove();
-  for (const meta of doc.querySelectorAll("meta")) {
-    const directive = meta.getAttribute("http-equiv");
-    if (directive && asciiTrim(directive).toLowerCase() === "refresh")
-      meta.remove();
-  }
-  const head = documentHead(doc);
-  const base = doc.createElement("base");
-  base.setAttribute("href", effectiveBase);
-  head.insertBefore(base, head.firstChild);
-  const element = doc.documentElement;
-  if (!element) return unavailable();
+  if (!doc.documentElement)
+    throw new Error("The snapshot document is unavailable.");
+  prepareDocument(doc, snapshotAddress, parse);
   return {
     snapshotAddress,
     srcdoc: serializeDocument(doc),
   };
+}
+
+function prepareDocument(
+  doc: Document,
+  fallback: string,
+  parse: (source: string) => Document,
+  embedded = false,
+): boolean {
+  const href = doc.querySelector("base[href]")?.getAttribute("href");
+  const base =
+    href == null ? fallback : (resolvedAddress(href, fallback) ?? fallback);
+  return rewriteDocumentAddresses(doc, {
+    base,
+    embedded,
+    transformSrcdoc(source) {
+      const child = parse(source);
+      return prepareDocument(child, base, parse, true)
+        ? serializeDocument(child)
+        : source;
+    },
+  });
 }
 
 function serializeDocument(doc: Document): string {
@@ -47,19 +53,6 @@ function serializeDocument(doc: Document): string {
     if (node.nodeType === ELEMENT_NODE) return (node as Element).outerHTML;
     return "";
   }).join("");
-}
-
-function documentHead(doc: Document): HTMLHeadElement {
-  if (doc.head) return doc.head;
-  const root = doc.documentElement;
-  if (!root) return unavailable();
-  const head = doc.createElement("head");
-  root.insertBefore(head, doc.body ?? root.firstChild);
-  return head;
-}
-
-function asciiTrim(value: string): string {
-  return value.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, "");
 }
 
 function serializeDoctype(doctype: DocumentType | null): string {
@@ -75,8 +68,4 @@ function serializeDoctype(doctype: DocumentType | null): string {
 
 function quoted(value: string): string {
   return value.includes('"') ? `'${value}'` : `"${value}"`;
-}
-
-function unavailable(): never {
-  throw new Error("The snapshot document is unavailable.");
 }

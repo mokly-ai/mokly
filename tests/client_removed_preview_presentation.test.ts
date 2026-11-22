@@ -18,33 +18,19 @@ interface FetchCall {
 }
 
 function documentFixture(): Document {
-  let baseHref = "";
-  const base = {
-    setAttribute(_name: string, value: string) {
-      baseHref = value;
-    },
-  };
-  const head = {
-    firstChild: null,
-    insertBefore() {
-      return base;
-    },
-  };
+  const src = { localName: "src", namespaceURI: null, value: "figure.svg" };
+  const image = { localName: "img", attributes: [src] };
   const root = {
     nodeType: 1,
     get outerHTML() {
-      return `<html><head><base href="${baseHref}"></head><body>Archived</body></html>`;
+      return `<html><head></head><body><img src="${src.value}">Archived</body></html>`;
     },
   };
   return {
-    body: {},
     childNodes: [root],
-    createElement: () => base,
-    doctype: null,
     documentElement: root,
-    head,
     querySelector: () => null,
-    querySelectorAll: () => [],
+    querySelectorAll: () => [image],
   } as unknown as Document;
 }
 
@@ -120,7 +106,11 @@ test("pinned presentations accept extensionless delivery and cache by address", 
   assert.equal(first, second);
   assert.equal(first, third);
   assert.equal(first.snapshotAddress, SNAPSHOT);
-  assert.match(first.srcdoc, new RegExp(`<base href="${SNAPSHOT}">`));
+  assert.ok(
+    first.srcdoc.includes(
+      'src="https://catalogue.test/mokly-viewer/diffs/generations/presentation/snapshots/before/archive/figure.svg"',
+    ),
+  );
   assert.deepEqual(fetch.calls, [
     {
       accept: "text/html",
@@ -144,7 +134,11 @@ for (const suffix of ["/index.html", "/index", "/", ""]) {
     );
     const result = await loader.load(requested, AbortSignal.timeout(15_000));
     assert.equal(result.snapshotAddress, requested);
-    assert.ok(result.srcdoc.includes(`<base href="${requested}">`));
+    assert.ok(
+      result.srcdoc.includes(
+        'src="https://catalogue.test/mokly-viewer/diffs/generations/presentation/snapshots/before/documents/removed/figure.svg"',
+      ),
+    );
   });
 }
 
