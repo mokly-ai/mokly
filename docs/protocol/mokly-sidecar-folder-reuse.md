@@ -27,6 +27,39 @@ their compilations would lose edit reuse. An accepted gap, as for the
 unreadable configuration chains of the recipe rules, was rejected, because
 Serve could show a stale module until a restart.
 
+For each such import, the recorded directory lists of a marked compilation,
+which a later reuse compares with the disk, must certify the selected
+module. The candidates of each target follow the order in which esbuild tries
+them. An import whose kind must resolve to CSS uses the CSS extension order.
+For any other import, a target whose written path has a `node_modules`
+component uses the `node_modules` extension order. The main fields are the
+effective ones, and a repeated key counts by its first property. A target
+reaches the selected module only when one of its candidates equals the
+module path as text or through its canonical path.
+
+Each target that reaches the module must pass, also in each reachable PnP
+root. A target passes when no candidate before the selected module matches a
+name in the recorded directory list of the folder of that candidate. A
+candidate matches a name when its last path component and the name are equal
+after the lowercase fold of esbuild. That fold maps each code point alone to
+its simple lowercase. A matching name is exempt only when the recorded checks
+prove that esbuild cannot treat it as a file.
+
+A dangling candidate link has
+this proof through its link entry and the absent entry of its target in the
+[private folder files](#private-folder-files). Neither the canonical target of
+a resolving link nor an empty directory list proves alone that a path is a
+folder. The compilation carries no marker when no target reaches the module,
+when a needed directory list is missing, or when a reaching target fails.
+
+Decision of the user on 2026-11-20: the recorded directory lists certify each
+marked folder selection. A candidate that appears during or after the
+compile cannot keep a stale module. A check that passes when any one reaching
+target passes was rejected, because another reaching target can still select
+an earlier candidate. Directory lists taken right after the compile and
+invalidation by watch events were rejected, because each keeps a window for a
+stale module.
+
 ## Private Folder Files
 
 For each such import, the reuse evidence of a marked compilation records each
@@ -53,6 +86,22 @@ identities, and Changes stay equal. Adding them to the metadata digests of
 both modes was rejected, because a change of an inactive manifest or PnP state
 would then change shared render keys. A new result field was rejected,
 because it changes the wire format.
+
+The table also records each link at a candidate path that esbuild tries
+before the selection. The entry of a link that resolves records its canonical
+target. The entry of a dangling link, whose real path fails, records its
+lexical final target. That target is the first path in its chain of links
+that is not a link, with each link target resolved as text against the folder
+of its link. The table then also records that target as absent. A link entry
+matches only a link at its path. When that link resolves, its canonical target
+must equal the recorded target. When its real path fails, its lexical final
+target must equal the recorded target, and the table must record that target
+as absent. The sidecar and the binary apply this rule alike.
+Decision of the performance orchestrator on 2026-11-20: the table pins a
+dangling candidate link by its lexical final target, so the compilation keeps
+the marker and edit reuse, and a change that lets esbuild select the candidate
+ends the reuse. Withholding the marker for such a link was rejected, because
+it removes working edit reuse.
 
 ## Metadata Bounds
 

@@ -20,17 +20,17 @@ fn edit_plan_directories_use_candidates_while_missing_selectors_keep_whole_check
     let reads = current.clone();
     let physical = Unimock::new((
         PhysicalInputsMock::matches
-            .each_call(matching!((path, _) if *path == Path::new("/physical/config.json")))
-            .answers(&|_, _, _| Ok(true)),
+            .each_call(matching!((path, _, _) if *path == Path::new("/physical/config.json")))
+            .answers(&|_, _, _, _| Ok(true)),
         PhysicalInputsMock::matches_candidates
             .each_call(
-                matching!((path, expected, names) if *path == Path::new("/physical")
+                matching!((path, expected, names, _) if *path == Path::new("/physical")
                 && matches!(expected, PhysicalInput::Directory { entries } if entries.is_empty())
                 && *names == ["value.ts"]),
             )
-            .answers_arc(Arc::new(
-                move |_, _, _, _| Ok(reads.load(Ordering::Acquire)),
-            )),
+            .answers_arc(Arc::new(move |_, _, _, _, _| {
+                Ok(reads.load(Ordering::Acquire))
+            })),
     ));
     let mut evidence = evidence();
     Arc::make_mut(&mut evidence).inputs.insert(

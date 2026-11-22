@@ -106,7 +106,7 @@
     new folder, so the recorded `mapped` folder gains an entry, and captured
     evidence would likely see it. `directoryFiles`, at
     `packages/mokly/src/sidecar/resolution-inputs.ts:19`, keeps only the
-    names of files and links, so the live lists miss that new folder. No
+    names of non-directory entries, so the live lists miss that new folder. No
     probe has checked the captured owners.
   - The performance orchestrator owns each change to the marked live-check
     rule, under the user's delegation of 2026-11-16. This limit stays outside

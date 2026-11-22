@@ -32,10 +32,10 @@
     package manifest after the compile.
   - The `full` capture pins both before esbuild resolves the import, so this
     timing does not reach it.
-  - The order-aware rule of option A of
-    [marked-post-build-coherence.md](./marked-post-build-coherence.md) is
-    exact for one folder target. It cannot see which condition or array
-    target becomes active after a manifest edit during the compile. It cannot
+  - The [marked folder checks](../../docs/protocol/mokly-sidecar-folder-reuse.md#marked-live-checks)
+    compare candidate order against the final recorded listings for each
+    target that reaches the selected module. They cannot see which condition or array
+    target becomes active after a manifest edit during the compile. They cannot
     see the native owner after a state edit, or after a new nearer state,
     when the old location stays reachable.
   - The exact proof wraps unmodified `esbuild.build` for one compile:
@@ -100,10 +100,9 @@
   - **C.** Give the check exact active-target and native-owner parity. The
     call of 2026-11-20 on overlapping PnP roots rejected exact ownership,
     because one wrong parity rule keeps a stale module. Effort: Large.
-  - **D.** Apply the timestamp rule of option C of
-    [marked-post-build-coherence.md](./marked-post-build-coherence.md):
-    withhold the marker when a recorded metadata path changed after the
-    attempt start less a guard. Effort: Medium.
+  - **D.** Record the attempt start, and withhold the marker when a recorded
+    metadata path changed after the start less a guard. This timestamp proof
+    needs volume classes. Reuse ends after each recent install. Effort: Medium.
   - **E.** After the folder pass, derive the owner and the active target from
     the recorded registry and manifests where the rule is exact, such as an
     explicit dependency of the package of the importer, or a target with a
@@ -128,8 +127,8 @@
   2026-11-19 a native PnP probe was withdrawn, because it shared resolver
   caches.
 - **Related:**
-  - [marked-post-build-coherence.md](./marked-post-build-coherence.md): its
-    option A leaves this residual.
+  - [Marked folder checks](../../docs/protocol/mokly-sidecar-folder-reuse.md#marked-live-checks):
+    candidate-order checks leave this owner and target residual.
   - [overlapping-reachable-pnp-roots.md](./overlapping-reachable-pnp-roots.md):
     its reachable superset decides which PnP roots the checks keep.
 - **Recommendation:** A, for the current branch only, as answered on

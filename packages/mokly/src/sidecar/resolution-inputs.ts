@@ -8,7 +8,7 @@ import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 import { FRAME_LIMIT } from "./transport.js";
 
-/** Capture file membership without retaining source contents. */
+/** Capture non-directory membership without retaining source contents. */
 export async function directoryFiles(
   directory: string,
   limit = FRAME_LIMIT / 2,
@@ -21,7 +21,7 @@ export async function directoryFiles(
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const pause = cooperativeYield();
       if (pause) await pause;
-      if (!entry.isFile() && !entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) continue;
       bytes += Buffer.byteLength(JSON.stringify(entry.name)) + 1;
       if (bytes > limit)
         throw new SidecarError(

@@ -8,12 +8,17 @@ import type { ModulePaths } from "./module-paths.js";
 import { PackageFolderLookups } from "./package-folder-lookups.js";
 import { ServeEditPaths } from "./serve-edit-paths.js";
 
+export interface ServeEditChecks {
+  evidence: ReuseEvidence;
+  folders: PackageFolderLookups | undefined;
+}
+
 /** Share request work while each recorder owns its observations and final commit. */
 export function serveEditLookups(
   metafile: Metafile,
   paths: ModulePaths,
   configuration: string,
-): ReuseEvidence | undefined {
+): ServeEditChecks | undefined {
   const edges = new MetafileEdges(metafile, paths.sourceRoot);
   const aliases = Object.entries(paths.settings.aliases).sort(
     ([a], [b]) => b.length - a.length,
@@ -40,7 +45,7 @@ export function serveEditLookups(
         deferred = { input: event.input, edge: event.edge };
         continue;
       }
-      folderValid = folder().accept(event.request, selection);
+      folderValid = folder().accept(event.request, selection, event.kind);
     }
     if (!mapped.finish()) return undefined;
     if (!folderValid) return undefined;
@@ -49,9 +54,10 @@ export function serveEditLookups(
         if (!event.folder) continue;
         const selection = edges.selection(event.selected);
         if (selection.kind === "own") continue;
-        if (!folder().accept(event.request, selection)) return undefined;
+        if (!folder().accept(event.request, selection, event.kind))
+          return undefined;
       }
-    return folders
+    const evidence: ReuseEvidence | undefined = folders
       ? folders.finish()
       : {
           complete: false,
@@ -59,6 +65,7 @@ export function serveEditLookups(
           uncaptured: "serveEdit",
           inputs: {},
         };
+    return evidence ? { evidence, folders } : undefined;
   } catch {
     return undefined;
   }

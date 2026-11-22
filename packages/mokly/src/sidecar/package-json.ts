@@ -80,7 +80,10 @@ export function parsePackageJson(
           fields.includes(key)
         )
           entries.push([key, read(depth + 1)]);
-        else skip();
+        else {
+          entries.push([key, undefined]);
+          skip();
+        }
         if (token === ",") next();
       }
       next();

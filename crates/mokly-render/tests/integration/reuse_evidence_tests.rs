@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
+use std::path::Path;
 
 use mokly_model::material::digest;
 use mokly_render::physical_inputs::{PhysicalInputs, SystemPhysicalInputs};
@@ -9,6 +10,70 @@ use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput};
 use mokly_sidecar::methods::Call;
 
 use super::support::{Consumer, link_directory, workspace};
+
+#[test]
+fn dangling_links_match_their_absent_lexical_target_and_reject_replacement_or_retargeting() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = dunce::canonicalize(directory.path()).unwrap();
+    let candidate = root.join("candidate.ts");
+    let intermediate = root.join("intermediate.ts");
+    let target = root.join("missing.ts");
+    fs::create_dir(root.join("nested")).unwrap();
+    link_file(&Path::new(".").join("intermediate.ts"), &candidate);
+    link_file(
+        &Path::new(".").join("nested").join("..").join("missing.ts"),
+        &intermediate,
+    );
+    let expected = PhysicalInput::Link {
+        target: target.to_str().unwrap().into(),
+    };
+    let inputs = BTreeMap::from([
+        (candidate.to_str().unwrap().into(), expected.clone()),
+        (target.to_str().unwrap().into(), PhysicalInput::Absent),
+    ]);
+    let current = || {
+        inputs.iter().all(|(path, input)| {
+            SystemPhysicalInputs
+                .matches(Path::new(path), input, &inputs)
+                .unwrap()
+        })
+    };
+    assert!(
+        current(),
+        "a dangling link with its absent lexical final target must match"
+    );
+    assert!(
+        !SystemPhysicalInputs
+            .matches(&candidate, &expected, &BTreeMap::new())
+            .unwrap(),
+        "a failed canonical path must not match without an adjacent absent entry"
+    );
+    assert!(
+        !SystemPhysicalInputs
+            .matches(&candidate, &PhysicalInput::Absent, &inputs)
+            .unwrap(),
+        "recorded absence must still use lstat and reject a dangling link"
+    );
+    fs::remove_file(&intermediate).unwrap();
+    link_file(&Path::new(".").join("other.ts"), &intermediate);
+    assert!(!current());
+    fs::remove_file(&intermediate).unwrap();
+    link_file(&Path::new(".").join("missing.ts"), &intermediate);
+    assert!(current());
+    fs::write(&target, "export {};").unwrap();
+    assert!(!current());
+    fs::remove_file(&target).unwrap();
+    fs::remove_file(&candidate).unwrap();
+    fs::write(&candidate, "export {};").unwrap();
+    assert!(!current());
+}
+
+fn link_file(target: &Path, link: &Path) {
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(target, link).unwrap();
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_file(target, link).unwrap();
+}
 
 #[test]
 fn canonical_file_records_reject_an_introduced_source_directory_link() {
@@ -42,9 +107,11 @@ fn canonical_file_records_reject_an_introduced_source_directory_link() {
         ),
     ];
     let matches = || {
-        records
-            .each_ref()
-            .map(|(path, record)| SystemPhysicalInputs.matches(path, record).unwrap())
+        records.each_ref().map(|(path, record)| {
+            SystemPhysicalInputs
+                .matches(path, record, &BTreeMap::new())
+                .unwrap()
+        })
     };
     assert_eq!(matches(), [true, true, true]);
     fs::rename(root.join("chosen"), root.join("retained")).unwrap();

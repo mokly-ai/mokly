@@ -1,11 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { ImportKind } from "esbuild";
+
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import type { PathSettings } from "./config-inputs.js";
 import { missingFile } from "./file-digests.js";
 import { folderRowBytes } from "./folder-candidates.js";
+import { FolderSelectionProof } from "./folder-selection-proof.js";
 import { markedFileEvidence } from "./marked-file-evidence.js";
 import type { SelectedImport } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -13,6 +16,7 @@ import { PackageFolders } from "./package-folders.js";
 import { packageFolderFiles } from "./package-map.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
+import { lexicalLinkTarget } from "./physical-link-target.js";
 import { pnpFiles } from "./pnp-files.js";
 import { PnpLocations } from "./pnp-locations.js";
 import type { LookupRequest } from "./resolution-request.js";
@@ -45,6 +49,8 @@ export class PackageFolderLookups {
   private readonly folders: PackageFolders;
   private readonly directories = new Set<string>();
   private readonly files = new Set<string>();
+  private readonly links = new Set<string>();
+  private readonly proofs = new Map<string, FolderSelectionProof>();
   private bytes = 0;
   private folder = false;
 
@@ -66,7 +72,11 @@ export class PackageFolderLookups {
 
   private stage(set: Set<string>, file: string): void {
     if (set.has(file)) return;
-    if (!this.directories.has(file) && !this.files.has(file)) {
+    if (
+      !this.directories.has(file) &&
+      !this.files.has(file) &&
+      !this.links.has(file)
+    ) {
       this.bytes += folderRowBytes(file);
       if (this.bytes > EVIDENCE_LIMIT)
         throw new Error("package folder lookup limit");
@@ -75,7 +85,11 @@ export class PackageFolderLookups {
     set.add(file);
   }
 
-  accept(request: LookupRequest, selection: SelectedImport): boolean {
+  accept(
+    request: LookupRequest,
+    selection: SelectedImport,
+    kind: ImportKind,
+  ): boolean {
     try {
       const found = this.folders.lookup(
         request.name,
@@ -84,6 +98,23 @@ export class PackageFolderLookups {
       );
       if (found && (!found.placed || found.candidates?.overflow)) return false;
       if (!found?.candidates?.present) return true;
+      if (selection.kind !== "physical") return false;
+      const key = JSON.stringify([request, selection.file, kind]);
+      if (!this.proofs.has(key)) {
+        const bases = [...found.candidates.targets()];
+        this.bytes += Buffer.byteLength(JSON.stringify([key, bases]));
+        if (this.bytes > EVIDENCE_LIMIT) return false;
+        this.proofs.set(
+          key,
+          new FolderSelectionProof(
+            bases,
+            selection.file,
+            kind,
+            this.inputs,
+            this.paths,
+          ),
+        );
+      }
       this.folder = true;
       for (const base of found.candidates.values) {
         this.stage(this.directories, path.dirname(base));
@@ -93,18 +124,11 @@ export class PackageFolderLookups {
           base,
           this.paths.settings.resolveExtensions,
         ))
-          if (brokenLink(file)) {
-            const seen = new Set([file]);
-            let target = file;
-            do {
-              target = path.resolve(
-                path.dirname(target),
-                fs.readlinkSync(target),
-              );
-              if (seen.has(target)) throw new Error("candidate link cycle");
-              seen.add(target);
-              if (!link(target)) this.stage(this.files, target);
-            } while (link(target));
+          if (link(file)) {
+            const target = lexicalLinkTarget(file, (candidate) =>
+              this.stage(this.links, candidate),
+            );
+            if (brokenLink(file)) this.stage(this.files, target);
           }
       }
       for (const manifest of found.manifests) this.stage(this.files, manifest);
@@ -125,10 +149,19 @@ export class PackageFolderLookups {
     } catch {
       return undefined;
     }
-    const evidence = markedFileEvidence(this.inputs, this.files);
+    const evidence = markedFileEvidence(this.inputs, this.files, this.links);
     if (!evidence) return undefined;
     for (const directory of this.directories)
       this.paths.lookupDirectories.add(directory);
     return evidence;
+  }
+
+  async certify(
+    listings: Record<string, string[]>,
+    evidence: ReuseEvidence,
+  ): Promise<boolean> {
+    for (const proof of this.proofs.values())
+      if (!(await proof.matches(listings, evidence))) return false;
+    return true;
   }
 }

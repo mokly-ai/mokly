@@ -377,7 +377,13 @@ its requests and results. The paths below are relative to the package root.
   absent, and link entries beside the `uncaptured: "serveEdit"` marker.
   `finish` returns no evidence when the table passes `EVIDENCE_LIMIT`, holds
   another kind, or fails a fresh read. Otherwise it adds the candidate
-  folders to the live lookup directories.
+  folders to the live lookup directories. After `resolutionInputs` returns,
+  its `certify` checks each folder target against those recorded listings.
+  [`src/sidecar/folder-candidate-order.ts`](./folder-candidate-order.ts) gives
+  the native file, main-field, and index order for the import kind and written
+  target. [`src/sidecar/folder-selection-proof.ts`](./folder-selection-proof.ts)
+  requires each target that reaches the selected module to have no earlier
+  recorded file candidate. A failed proof removes the Serve edit marker.
 - [`src/sidecar/pnp-locations.ts`](./pnp-locations.ts) holds `PnpLocations`,
   the shared catalogue of PnP package roots. On first use, it reads the
   present PnP state file through `PhysicalInputs` and parses it with `pnpJson`

@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use mokly_source_interface::error::{Result, SourceError};
-use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
+use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree, SourceTreeMock};
+use unimock::{MockFn, Unimock, matching};
 
 use crate::input_stamp::InputStamp;
 
@@ -237,4 +238,30 @@ fn a_changed_repository_file_ends_the_check_before_any_dependency_file_is_read()
             PathBuf::from("/repo/src/view.ts")
         ]
     );
+}
+
+#[test]
+fn membership_rejects_special_file_appearance_and_keeps_unchanged_special_files() {
+    for (names, expected) in [
+        (vec!["app.ts"], false),
+        (vec!["app.ts", "preferred.ts"], true),
+    ] {
+        let stamp = InputStamp {
+            memberships: BTreeMap::from([(
+                "/repo/src".into(),
+                Some(names.into_iter().map(PathBuf::from).collect()),
+            )]),
+            ..InputStamp::default()
+        };
+        let tree = Unimock::new(
+            SourceTreeMock::children
+                .some_call(matching!((path) if *path == Path::new("/repo/src")))
+                .returns(Ok(vec![
+                    child("app.ts", FileKind::File),
+                    child("nested", FileKind::Directory),
+                    child("preferred.ts", FileKind::Other),
+                ])),
+        );
+        assert_eq!(stamp.matches(&tree), expected);
+    }
 }

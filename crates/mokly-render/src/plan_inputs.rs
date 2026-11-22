@@ -45,8 +45,13 @@ pub(crate) fn current(
                         return;
                     }
                     let matched = match directories.get(path.as_str()) {
-                        Some(names) => reader.matches_candidates(Path::new(path), expected, names),
-                        None => reader.matches(Path::new(path), expected),
+                        Some(names) => reader.matches_candidates(
+                            Path::new(path),
+                            expected,
+                            names,
+                            &evidence.inputs,
+                        ),
+                        None => reader.matches(Path::new(path), expected, &evidence.inputs),
                     };
                     if !matched.unwrap_or(false) {
                         failed.store(true, Ordering::Relaxed);

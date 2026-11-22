@@ -19,13 +19,14 @@
 - **Category:** Product bug.
 - **Terms:**
   - **Marked Serve edit compile:** a head compile that Serve requests with
-    `capture: "serveEdit"` after it publishes its first state. It records no
-    reuse evidence, and a later `serveEdit` request of the same process can
-    reuse it under the live checks alone.
+    `capture: "serveEdit"` after it publishes its first state. It records
+    private package-folder file evidence. A later `serveEdit` request can
+    reuse it under that evidence and the live checks.
   - **Live checks:** the checks of a marked reuse: equal settings, roots, and
     toolchain identity, unchanged consumed file digests and metadata inputs,
     and unchanged directory lists.
-  - **Directory list:** the sorted names of the files and links in one folder.
+  - **Directory list:** the sorted names of the non-directory entries in one
+    folder.
     It holds no entry kind and no link target.
   - **Link retarget:** a symbolic link that is replaced by a link of the same
     name with another target.
@@ -41,7 +42,7 @@
     to line 51, turns each lookup folder into its real path through
     `ModulePaths.metadata`, at `packages/mokly/src/sidecar/module-paths.ts:123`.
     `directoryFiles`, at lines 11 to 39 of the first file, records only the
-    names of the files and links in a folder. So the live checks hold the
+    names of the non-directory entries in a folder. So the live checks hold the
     real folder behind a link, not the link and its target.
   - Consumed-module folders follow the same rule on `main`. Their live checks
     never recorded a link target, so the limit predates the absolute paths
@@ -60,6 +61,8 @@
     `PhysicalInputs` saves `{ kind: "link", target }` for each link. So
     captured reuse, released recipes, the bundle cache, and Serve plans see a
     retarget.
+  - Package-folder candidate links now keep private link pins. This item
+    still covers the remaining lookup paths and consumed paths.
   - A Mokly probe of 2026-11-18 showed the limit:
     - The fixture had `one/empty/.keep`, `one/ready/value.js` with the value
       `one`, `two/value.js` with the value `two`, and a folder link

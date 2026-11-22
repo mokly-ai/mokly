@@ -56,7 +56,7 @@ export async function bundleRecipe(
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
-  const folderEvidence = editImports
+  const folderChecks = editImports
     ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
         editImports.record(compiled.metafile!, paths),
       )
@@ -124,6 +124,15 @@ export async function bundleRecipe(
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
+  const folderEvidence = folderChecks?.evidence;
+  if (
+    folderChecks?.folders &&
+    !(await folderChecks.folders.certify(
+      directories.inputDirectories,
+      folderChecks.evidence,
+    ))
+  )
+    delete folderChecks.evidence.uncaptured;
   const peers = require.snapshot();
   evidence?.peers(peers);
   const reuseEvidence: ReuseEvidence = evidence

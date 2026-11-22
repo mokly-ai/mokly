@@ -111,8 +111,8 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
             Arc::new(if css_before_bundle {
                 Unimock::new(
                     PhysicalInputsMock::matches
-                        .each_call(matching!(_, _))
-                        .answers(&|_, _, _| Ok(true))
+                        .each_call(matching!(_, _, _))
+                        .answers(&|_, _, _, _| Ok(true))
                         .at_least_times(0),
                 )
             } else {

@@ -39,8 +39,8 @@ fn edit_keeps_plan(change: Change) -> bool {
     });
     let physical = Unimock::new(
         PhysicalInputsMock::matches
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, path, _| match change {
+            .each_call(matching!(_, _, _))
+            .answers_arc(Arc::new(move |_, path, _, _| match change {
                 Change::Mismatch(index) if path == Path::new(&input(index)) => Ok(false),
                 Change::ReadError(index) if path == Path::new(&input(index)) => {
                     Err(SourceError::Io {

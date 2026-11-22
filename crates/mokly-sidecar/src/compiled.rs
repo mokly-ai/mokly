@@ -27,9 +27,9 @@ pub enum PhysicalInput {
         /// Complete entries ordered by their UTF-8 names.
         entries: Vec<PhysicalEntry>,
     },
-    /// The canonical target of a lexical link in a candidate path.
+    /// The canonical target, or absent lexical final target, of a lexical link in a candidate path.
     Link {
-        /// The canonical filesystem target of the lexical link.
+        /// The canonical target, or lexical final target beside its recorded absence.
         target: String,
     },
 }

@@ -35,6 +35,15 @@ export abstract class PhysicalPathInputs extends PhysicalInputReader {
     return this.inspectedPaths.get(directory) === true;
   }
 
+  /** Retain written links without reading the target as metadata. */
+  retainLinks(file: string): void {
+    try {
+      this.pathLinks(file);
+    } catch {
+      this.complete = false;
+    }
+  }
+
   /** Exact resolution needs the canonical file path; source owners check its content. */
   exactFile(file: string): boolean {
     return this.canonicalFile(file) !== undefined && this.complete;

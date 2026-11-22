@@ -23,10 +23,19 @@ export function mappedFiles(
   base: string,
   configured: readonly string[],
 ): string[] {
-  const extension = path.extname(base);
+  return fileVariants(base, resolutionExtensions(configured));
+}
+
+export function fileVariants(
+  base: string,
+  extensions: readonly string[],
+): string[] {
+  const extension =
+    Object.keys(rewrittenExtensions).find((suffix) => base.endsWith(suffix)) ??
+    "";
   return [
     base,
-    ...resolutionExtensions(configured).map((extension) => base + extension),
+    ...extensions.map((extension) => base + extension),
     ...(rewrittenExtensions[extension] ?? []).map(
       (replacement) => base.slice(0, -extension.length) + replacement,
     ),

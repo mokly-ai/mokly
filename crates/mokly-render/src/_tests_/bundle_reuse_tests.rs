@@ -187,7 +187,7 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
         let reader = if hash == "source" && member == "entry.ts" {
             Unimock::new(
                 PhysicalInputsMock::matches
-                    .some_call(matching!(_, _))
+                    .some_call(matching!(_, _, _))
                     .returns(Ok(physical)),
             )
         } else {

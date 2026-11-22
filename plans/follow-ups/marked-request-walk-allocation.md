@@ -245,9 +245,9 @@
     mapped span. That item covers the configuration reads of the `paths`
     recorder, 0.47 ms and 0.32 ms of the profiled span. Its cache across
     edits conflicts with the no-new-cache rule of this item.
-  - [marked-post-build-coherence.md](./marked-post-build-coherence.md): its
-    options A, F, and G add checks to the same pass, so their cost adds to
-    this span.
+  - [Marked folder checks](../../docs/protocol/mokly-sidecar-folder-reuse.md#marked-live-checks):
+    candidate-order and name checks run after the final listings. Their cost
+    adds to marked edits outside the mapped span and belongs in a new profile.
 - **Recommendation:** B, when this work starts. It is the only option that
   can lower the cost while it keeps every rule above, and its new profile
   first shows which pure owner is left. D best protects the edit time, but it

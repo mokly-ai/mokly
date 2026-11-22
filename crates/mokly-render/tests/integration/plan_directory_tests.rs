@@ -1,5 +1,6 @@
 //! Plan directory checks stream discarded names while preserving physical failures.
 
+use std::collections::BTreeMap;
 #[cfg(target_os = "linux")]
 use std::ffi::OsStr;
 use std::fs;
@@ -36,14 +37,18 @@ fn plan_directory_names_ignore_only_unrelated_ascii_members() {
     let names = ["value.ts".into(), "value.tsx".into()];
     let matches = || {
         SystemPhysicalInputs
-            .matches_candidates(&root, &expected, &names)
+            .matches_candidates(&root, &expected, &names, &BTreeMap::new())
             .unwrap()
     };
     assert!(matches());
     fs::remove_file(root.join("value.ts~")).unwrap();
     fs::write(root.join(".value.ts.swp"), "swap").unwrap();
     assert!(matches());
-    assert!(!SystemPhysicalInputs.matches(&root, &expected).unwrap());
+    assert!(
+        !SystemPhysicalInputs
+            .matches(&root, &expected, &BTreeMap::new())
+            .unwrap()
+    );
     fs::remove_file(root.join("value.ts")).unwrap();
     fs::write(root.join("VALUE.TS"), "renamed").unwrap();
     assert!(!matches());
@@ -75,7 +80,7 @@ fn plan_directory_checks_follow_actual_case_collision_entries() {
     entries.sort();
     assert_eq!(
         SystemPhysicalInputs
-            .matches_candidates(&root, &expected, &["value.ts".into()])
+            .matches_candidates(&root, &expected, &["value.ts".into()], &BTreeMap::new())
             .unwrap(),
         entries == ["value.ts"],
         "actual entries: {entries:?}"
@@ -101,13 +106,13 @@ fn plan_directory_checks_preserve_link_errors_and_canonical_identity() {
     let names = ["value.ts".into()];
     assert!(
         SystemPhysicalInputs
-            .matches_candidates(&root, &expected, &names)
+            .matches_candidates(&root, &expected, &names, &BTreeMap::new())
             .unwrap()
     );
     let candidate = ["ignored".into()];
     assert!(
         SystemPhysicalInputs
-            .matches_candidates(&root, &expected, &candidate)
+            .matches_candidates(&root, &expected, &candidate, &BTreeMap::new())
             .unwrap()
     );
     fs::create_dir(root.join("other")).unwrap();
@@ -115,14 +120,14 @@ fn plan_directory_checks_preserve_link_errors_and_canonical_identity() {
     link_directory(&root.join("other"), &root.join("ignored"));
     assert!(
         !SystemPhysicalInputs
-            .matches_candidates(&root, &expected, &candidate)
+            .matches_candidates(&root, &expected, &candidate, &BTreeMap::new())
             .unwrap()
     );
     unlink_directory(&root.join("ignored"));
     link_directory(&root.join("target"), &root.join("ignored"));
     fs::remove_dir(root.join("target")).unwrap();
     assert!(
-        matches!(SystemPhysicalInputs.matches_candidates(&root, &expected, &names),
+        matches!(SystemPhysicalInputs.matches_candidates(&root, &expected, &names, &BTreeMap::new()),
         Err(SourceError::Io { operation: "check physical compilation input", path, source })
             if path == root && source.kind() == ErrorKind::NotFound)
     );
@@ -132,7 +137,7 @@ fn plan_directory_checks_preserve_link_errors_and_canonical_identity() {
     let empty = PhysicalInput::Directory { entries: vec![] };
     assert!(
         !SystemPhysicalInputs
-            .matches_candidates(&root.join("alias"), &empty, &names)
+            .matches_candidates(&root.join("alias"), &empty, &names, &BTreeMap::new())
             .unwrap()
     );
 }
@@ -147,7 +152,7 @@ fn current_non_ascii_names_reject_a_narrowed_directory() {
         fs::write(root.join(name), "unicode").unwrap();
         assert!(
             !SystemPhysicalInputs
-                .matches_candidates(&root, &expected, &names)
+                .matches_candidates(&root, &expected, &names, &BTreeMap::new())
                 .unwrap()
         );
         fs::remove_file(root.join(name)).unwrap();
@@ -162,7 +167,7 @@ fn invalid_unicode_names_reject_a_narrowed_directory() {
     fs::write(root.join(OsStr::from_bytes(b"bad-\xff")), "invalid").unwrap();
     let expected = PhysicalInput::Directory { entries: vec![] };
     assert!(
-        matches!(SystemPhysicalInputs.matches_candidates(&root, &expected, &["value.ts".into()]),
+        matches!(SystemPhysicalInputs.matches_candidates(&root, &expected, &["value.ts".into()], &BTreeMap::new()),
         Err(SourceError::Io { operation: "check physical compilation input", path, source })
             if path == root && source.kind() == ErrorKind::InvalidData)
     );

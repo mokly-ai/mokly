@@ -25,8 +25,8 @@ fn folder_file_changes_reject_a_retained_marked_generation() {
     for current in [true, false] {
         let reader = Unimock::new(
             PhysicalInputsMock::matches
-                .each_call(matching!(_, _))
-                .answers_arc(Arc::new(move |_, _, _| Ok(current))),
+                .each_call(matching!(_, _, _))
+                .answers_arc(Arc::new(move |_, _, _, _| Ok(current))),
         );
         let mut runtime = Runtime::new(
             Arc::new(Unimock::new(

@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { Metafile } from "esbuild";
+import type { ImportKind, Metafile } from "esbuild";
 
 import { resolutionRequest } from "./resolution-request.js";
 import type { LookupRequest } from "./resolution-request.js";
@@ -18,6 +18,7 @@ export interface MetafileCursor {
 interface MetafileRequest extends MetafileCursor {
   request: LookupRequest;
   selected: string;
+  kind: ImportKind;
   paths: boolean;
   folder: boolean;
   deferred: boolean;
@@ -139,6 +140,7 @@ export class MetafileEdges {
           edge: edgeIndex,
           request,
           selected: edge.path,
+          kind: edge.kind,
           paths,
           folder,
           deferred:

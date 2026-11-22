@@ -84,6 +84,10 @@ export class FolderCandidates {
     other.release();
   }
 
+  *targets(): Generator<string> {
+    for (const [base, flags] of this.bases) if (flags & 2) yield base;
+  }
+
   release(): void {
     this.values.length = 0;
     this.bases.clear();
