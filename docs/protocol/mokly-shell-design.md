@@ -32,21 +32,32 @@ loading and recovery, the tag picker and most component explorer pages.
 
 ## Consumer-Tunable Custom Properties
 
-Consumers may set exactly these CSS custom properties to tune the shell accent.
-Every other shell style is package-owned and not a compatibility surface.
+Consumers may set exactly these CSS custom properties: three tune the shell
+accent, and two keep the top bar clear of a host's own window controls. Every
+other shell style is package-owned and not a compatibility surface.
 
-| Property                  | Used for                                       |
-| ------------------------- | ---------------------------------------------- |
-| `--mokly-accent`          | Selected marks, pressed pills, links and focus |
-| `--mokly-accent-contrast` | Text and glyphs on the accent                  |
-| `--mokly-accent-soft`     | Selected rows, hover and highlight surfaces    |
+| Property                      | Used for                                       |
+| ----------------------------- | ---------------------------------------------- |
+| `--mokly-accent`              | Selected marks, pressed pills, links and focus |
+| `--mokly-accent-contrast`     | Text and glyphs on the accent                  |
+| `--mokly-accent-soft`         | Selected rows, hover and highlight surfaces    |
+| `--mokly-top-bar-inset-start` | The room before the top bar's content          |
+| `--mokly-top-bar-inset-end`   | The room after the top bar's content           |
 
-An unset property takes its default from the Canvas palette in the current
-appearance. The [viewer palette](./mokly-viewer-palette.md) gives each
+An unset accent property takes its default from the Canvas palette in the
+current appearance. The [viewer palette](./mokly-viewer-palette.md) gives each
 default. A consumer accent pair must keep at least WCAG AA contrast between
 `--mokly-accent` and `--mokly-accent-contrast`; the shell does not
 recompute contrast at runtime. The [Mokly shell brand](./mokly-shell-brand.md)
 is package-owned identity and ignores these consumer accent overrides.
+
+Each top-bar inset is a length, `0` by default. The bar's start padding is the
+larger of its own padding and the start inset, and its end padding the larger
+of its own padding and the end inset, so a host that sets neither sees no
+change. A host sets them only to clear its own window controls, such as the
+buttons of a desktop window at the start of the bar. Decision: the insets, not
+padding on the host's start slot, because the Mokly mark starts the bar,
+before every host slot.
 
 ## Package-Owned Tokens
 
@@ -80,26 +91,40 @@ panels, the selected entry's section, pan, zoom and Fit.
 [Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
 scheme and the compact layout.
 
-- **Top bar** — 48px, surface background, hairline bottom border: the
-  [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search
-  field (max-width 440px, led by a 15px stroked magnifier icon that holds its
-  size while the field flexes) that flexes down to whatever room the bar
-  leaves it. Below the breakpoint a menu button opens the catalogue sheet, and
-  closes an open sheet. Search uses `Search catalogue` as its accessible name
-  and `Search catalogue…` as its placeholder in both viewport sizes, covering
-  screens, pages, and flows. `⌘K` and Ctrl+K move focus to the search field
-  from anywhere in the shell. `/` does the same while focus is not in a text
-  field. The bar carries no preview mode switch; the Auto/Light/Dark
-  Appearance control is the one setting that belongs here. Decision: the
-  standalone shell keeps Appearance in its top bar, not in an account menu,
-  because it has no account menu. Matching uses the single
+- **Top bar** — one 48px row, surface background, hairline bottom border, in
+  three columns. The outer two share the room that the middle one leaves, so
+  the middle column sits in the centre of the bar. The start column holds the
+  menu button, below the breakpoint, then the
+  [Mokly mark](./mokly-shell-brand.md), then an embedded host's start slot.
+  The middle column holds an embedded host's centre slot. The end column holds
+  the search field, then the end control, then an embedded host's end slot.
+  The end control is the Auto/Light/Dark Appearance control in the standalone
+  shell, or the preview scheme switch of an embedded root whose catalogue has
+  dark previews. An empty slot takes no room. Decision: the Canvas order, the
+  mark first and a compact search at the end, not a wide search field after
+  the brand, so that a host's centre slot can hold the middle of the bar. The
+  standalone bar draws the mark with the wordmark, and an embedded bar draws
+  the mark alone, because the host's start slot follows it. The menu button
+  opens the catalogue sheet, and closes an open sheet. The search field is
+  compact: about 180px on the muted field surface, led by a 15px stroked
+  magnifier icon and ended by the tag picker control. It gives way when its
+  column runs short. In the standalone bar it keeps at least 150px down to a
+  320px window, and an embedded root switches to its
+  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
+  Search uses `Search catalogue` as its accessible name and `Search` as its
+  placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
+  and Ctrl+K move focus to the search field from anywhere in the shell. `/`
+  does the same while focus is not in a text field. The standalone bar carries
+  no preview mode switch; Appearance is the one setting that belongs there.
+  Decision: the standalone shell keeps Appearance in its top bar, not in an
+  account menu, because it has no account menu. Matching uses the single
   [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
   opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
-  on hover. It opens a panel anchored under the field and aligned to its width
-  (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
-  radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
+  on hover. It opens a panel anchored under the field and aligned to its
+  width: a `--chrome-surface` card with a hairline border, 10px radius, and
+  `--chrome-shadow` elevation, holding an uppercase 11px muted
   `Tags` head above a wrapping row of the Details Tags row's chips. The
   panel lists every tag the catalogue declares, in alphabetical order, and
   scrolls internally once that set outgrows it. Selecting a chip enters

@@ -31,6 +31,8 @@ interface HostOptions {
   defaultSelection?: Partial<ViewerSelection>;
   responsive?: boolean;
   topBarSlots?: boolean;
+  /** With `topBarSlots`, also fill the top bar's centre slot. */
+  topBarCenter?: boolean;
 }
 interface Host {
   root: Root;
@@ -167,6 +169,9 @@ const start = (id: string, options: HostOptions = {}) => {
           Host start
         </button>
       ),
+      ...(options.topBarCenter
+        ? { topBarCenter: <button style={{ width: 60 }}>Centre</button> }
+        : {}),
       topBarEnd: options.responsive ? (
         <button style={{ width: 76 }}>Host end</button>
       ) : (

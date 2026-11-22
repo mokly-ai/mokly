@@ -144,8 +144,11 @@ variants and members of an entry's list, each with its keys, label, depth,
 address, and open, hidden, and changed states. Each disclosure choice reaches
 `onDisclosure` with its key and its new open state, and the resize separator
 reports widths through `onWidth` and `onWidthCommit`. `TopBar` takes the tag
-picker and the end control as slots, and `ScreenHeader` takes the view's
-status and controls as slots.
+picker and the end control as slots. An embedded root also gives it `host`,
+the `TopBarHost` containers of its three top-bar slots: the bar places the
+start slot after the brand, the centre slot in its middle column, and the end
+slot after the end control, and a bar with host slots draws the mark alone.
+`ScreenHeader` takes the view's status and controls as slots.
 
 `TagPicker` draws the tag button of the search field and the picker that it
 opens. The host holds the open state and the focused chip. It receives the
@@ -221,7 +224,9 @@ A state that a host focuses after Try again takes a ref: `focusRef` on
 and its preview scheme: the skip link, the top bar, and the body with the
 navigation and the `MainRegion`, and the `RouteStatus` that announces each
 navigation. `EmbeddedLayout` draws an embedded root with
-the same parts between its host's slots. It places each slot's content
+the same parts and its host's slots. Its `topBar` function receives the
+containers of the three top-bar slots, which the bar places in its columns.
+It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
 a workspace's header, variant bar, preview, and inspector. `RootState` takes
@@ -396,9 +401,10 @@ override the desktop layout rules.
   — `SegmentedControl`, the named group of segments that the viewport and
   scheme switches and the comparison modes render, as buttons or as the links
   and inert text of a static depiction
-- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`: the
-  drawer menu, the brand, and the catalogue search with its compact form and
-  its focus return
+- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar` and
+  `TopBarHost`: the three columns with the drawer menu, the brand, the
+  catalogue search with its compact form and its focus return, and an
+  embedded root's top-bar slots
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
   menu and the brand, as controls, links, or pictures of a static depiction
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
@@ -513,8 +519,9 @@ override the desktop layout rules.
   `useMergedRef`, the internal ref of an element that a component and its
   host both need
 - [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
-  — `EmbeddedLayout`, an embedded root with the host slots and the stage
-  overlay of `host-slot.tsx`, and `MarkerLayer`, the host's markers
+  — `EmbeddedLayout`, an embedded root with the host slots, whose top-bar
+  containers it hands to the top bar, and the stage overlay of
+  `host-slot.tsx`, and `MarkerLayer`, the host's markers
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
   — `WorkspaceLayout`: the header, the variant bar, and the preview beside the
   inspector

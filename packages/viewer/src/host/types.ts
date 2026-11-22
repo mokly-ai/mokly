@@ -71,6 +71,8 @@ export interface ViewerError {
 }
 export interface ViewerSlots {
   topBarStart?: ReactNode;
+  /** Host content in the centre of the top bar. */
+  topBarCenter?: ReactNode;
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;

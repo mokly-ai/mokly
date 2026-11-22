@@ -4,28 +4,30 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It lists the
 
 ## `<MoklyViewer>`
 
-| Prop                                 | Purpose                                                                                                            |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `index`                              | The catalogue index v9 as an object, or its absolute HTTP(S) URL                                                   |
-| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v4, its URL, or a promise of either    |
-| `baseUrl`                            | Required origin root for an object `index`; invalid for a URL `index`                                              |
-| `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                               |
-| `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                       |
-| `defaultSelection`                   | Partial initial selection for uncontrolled mode                                                                    |
-| `selection`                          | Complete host-owned `ViewerSelection`                                                                              |
-| `onSelectionChange`                  | Receives viewer selection proposals                                                                                |
-| `slots`                              | Host content for `topBarStart`, `topBarEnd`, `railStart`, `railEnd`, `sidePanel`, `stageOverlay`, and `emptyState` |
-| `markers`                            | Host-owned content anchored to component instances                                                                 |
-| `onMarkerChange`                     | Reports each marker as visible, hidden, or unavailable                                                             |
-| `onScreenNavigate`                   | Reports committed navigation for host routing                                                                      |
-| `onInstanceHover`, `onInstanceClick` | Reports interaction with inspectable component instances                                                           |
-| `onPickStart`, `onPickEnd`           | Reports the instance-picking lifecycle                                                                             |
-| `onError`                            | Reports safe errors with code `catalogue`, `version`, `selection`, `frame`, `comparison`, or `markers`             |
-| `ref`                                | Exposes the `MoklyViewerHandle` methods below                                                                      |
+| Prop                                 | Purpose                                                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `index`                              | The catalogue index v9 as an object, or its absolute HTTP(S) URL                                                                   |
+| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v4, its URL, or a promise of either                    |
+| `baseUrl`                            | Required origin root for an object `index`; invalid for a URL `index`                                                              |
+| `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                                               |
+| `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                                       |
+| `defaultSelection`                   | Partial initial selection for uncontrolled mode                                                                                    |
+| `selection`                          | Complete host-owned `ViewerSelection`                                                                                              |
+| `onSelectionChange`                  | Receives viewer selection proposals                                                                                                |
+| `slots`                              | Host content for `topBarStart`, `topBarCenter`, `topBarEnd`, `railStart`, `railEnd`, `sidePanel`, `stageOverlay`, and `emptyState` |
+| `markers`                            | Host-owned content anchored to component instances                                                                                 |
+| `onMarkerChange`                     | Reports each marker as visible, hidden, or unavailable                                                                             |
+| `onScreenNavigate`                   | Reports committed navigation for host routing                                                                                      |
+| `onInstanceHover`, `onInstanceClick` | Reports interaction with inspectable component instances                                                                           |
+| `onPickStart`, `onPickEnd`           | Reports the instance-picking lifecycle                                                                                             |
+| `onError`                            | Reports safe errors with code `catalogue`, `version`, `selection`, `frame`, `comparison`, or `markers`                             |
+| `ref`                                | Exposes the `MoklyViewerHandle` methods below                                                                                      |
 
-`sidePanel` takes `{ content, width }`, and `stageOverlay` takes
-`{ content, pointerEvents }`, where the host chooses `"none"` or `"auto"`.
-`emptyState` replaces only the home body when no entry is selected.
+The top bar places `topBarStart` after the Mokly mark, `topBarCenter` in the
+middle of the bar, and `topBarEnd` after the search. `sidePanel` takes
+`{ content, width }`, and `stageOverlay` takes `{ content, pointerEvents }`,
+where the host chooses `"none"` or `"auto"`. `emptyState` replaces only the
+home body when no entry is selected.
 
 ## `MoklyViewerHandle`
 

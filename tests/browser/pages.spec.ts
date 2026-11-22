@@ -20,7 +20,7 @@ for (const width of [390, 1280]) {
     );
     await expect(
       page.getByRole("searchbox", { name: "Search catalogue" }),
-    ).toHaveAttribute("placeholder", "Search catalogue…");
+    ).toHaveAttribute("placeholder", "Search");
     await page.goto("/view/missing-document/");
     await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
     await expect(page.locator("#mb-main")).toContainText(

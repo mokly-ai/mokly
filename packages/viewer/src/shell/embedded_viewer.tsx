@@ -95,7 +95,7 @@ export function EmbeddedViewerShell({
       slots={slots}
       statusId={statusId}
       theme={normalizeTheme(theme)}
-      topBar={<TopBar catalogue={store.catalogue} />}
+      topBar={(host) => <TopBar catalogue={store.catalogue} host={host} />}
     />
   );
 }

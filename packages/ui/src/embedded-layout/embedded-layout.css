@@ -34,9 +34,13 @@
   background: var(--chrome-surface);
 }
 
-.mokly-viewer .mokly-top-host .mbk-topbar {
+/* The embedded bar keeps its two equal outer columns at every window width,
+   so a host's centre slot stays in the middle of the bar. Only the top host's
+   own width switches it to the compact bar below. */
+.mokly-top-host > .mbk-topbar {
   flex: 1;
   min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
 .mokly-viewer .mokly-rail-host {
@@ -108,11 +112,21 @@
   display: none;
 }
 
+/* The host's top-bar slots, which the top bar places in its columns. The
+   start and centre slots give way when their column runs short, so their
+   content can truncate. The end slot keeps the width of its content. */
 .mokly-viewer [data-mokly-slot="topBarStart"],
+.mokly-viewer [data-mokly-slot="topBarCenter"],
 .mokly-viewer [data-mokly-slot="topBarEnd"] {
   display: flex;
   flex: none;
   align-items: center;
+}
+
+.mokly-viewer [data-mokly-slot="topBarStart"],
+.mokly-viewer [data-mokly-slot="topBarCenter"] {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 @media (width < 56.25rem) {
@@ -123,14 +137,20 @@
 
 /* The compact top bar switches at the viewer contract's container width of
    560px. The query uses pixels, so the host page's root font size cannot
-   move it. */
+   move it. It holds one row: the start column with its growing start slot,
+   then the centre slot and the end column at the width of their content. */
 @container mokly-top-host (max-width: 560px) {
   .mokly-top-host > .mbk-topbar {
-    gap: 8px;
-    padding: 0 8px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+    padding-inline: max(8px, var(--mokly-top-bar-inset-start, 0px))
+      max(8px, var(--mokly-top-bar-inset-end, 0px));
   }
 
-  .mokly-top-host > .mbk-topbar .mbk-brand,
+  .mokly-top-host [data-mokly-slot="topBarStart"] {
+    flex-grow: 1;
+  }
+
   .mokly-top-host > .mbk-topbar .mbk-search,
   .mokly-top-host > .mbk-topbar .mbk-search-close {
     display: none;
@@ -140,23 +160,27 @@
     display: inline-flex;
   }
 
-  .mokly-top-host > .mbk-topbar[data-compact-search="open"] {
+  /* The open search covers the whole bar. Every other part of the bar, each
+     host slot included, stays mounted and laid out under it. */
+  .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-group {
     position: absolute;
     inset: 0;
-    z-index: 12;
-    width: auto;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline: max(8px, var(--mokly-top-bar-inset-start, 0px))
+      max(8px, var(--mokly-top-bar-inset-end, 0px));
     background: var(--chrome-surface);
   }
 
-  .mokly-top-host
-    > .mbk-topbar[data-compact-search="open"]
-    > :not(.mbk-search, .mbk-search-close) {
+  .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-toggle {
     display: none;
   }
 
   .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search {
     display: flex;
-    max-width: none;
+    flex: 1 1 auto;
   }
 
   .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-close {

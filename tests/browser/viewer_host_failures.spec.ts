@@ -53,6 +53,10 @@ for (const [source, journey] of [
   ["callback", "a host callback that throws inside a viewer effect"],
   ["primitive", "a host callback that throws a primitive inside an effect"],
   ["slot", "host slot content that throws while it renders"],
+  [
+    "centre",
+    "host content in the top bar's centre that throws while it renders",
+  ],
 ] as const)
   test(`${journey} reaches the host unchanged`, async ({
     page,
@@ -73,10 +77,12 @@ for (const [source, journey] of [
         window.addEventListener("error", (event) => {
           if (event.error === error) probe.same = true;
         });
-        if (source === "slot") {
-          host.props.slots = {
-            topBarStart: window.viewerHarness.thrower(error),
-          };
+        if (source === "slot" || source === "centre") {
+          const content = window.viewerHarness.thrower(error);
+          host.props.slots =
+            source === "slot"
+              ? { topBarStart: content }
+              : { topBarCenter: content };
           host.render();
           return;
         }

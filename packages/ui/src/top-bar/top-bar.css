@@ -1,17 +1,56 @@
-/* The 48px top bar: the drawer menu, the brand, the catalogue search, and the
-   end control. The narrow query is the shell's one layout breakpoint,
-   narrower than 900px. */
+/* The 48px top bar, in three columns: the start column holds the drawer menu,
+   the brand and a host's start slot, the centre column a host's centre slot,
+   and the end column the catalogue search, the end control and a host's end
+   slot. The two outer columns share the room that the centre column leaves,
+   so the centre column sits in the middle. A host clears its own window
+   controls with the two inset properties: each side's padding is the larger
+   of the bar's padding and that side's inset. The narrow query is the shell's
+   one layout breakpoint, narrower than 900px. */
 .mbk-topbar {
   position: relative;
   z-index: 11;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
+  column-gap: 12px;
   height: 48px;
   flex-shrink: 0;
-  padding: 0 16px;
+  padding-block: 0;
+  padding-inline: max(12px, var(--mokly-top-bar-inset-start, 0px))
+    max(12px, var(--mokly-top-bar-inset-end, 0px));
   background: var(--chrome-surface);
   border-bottom: 1px solid var(--chrome-border);
+}
+
+.mbk-topbar-start,
+.mbk-topbar-center,
+.mbk-topbar-end {
+  display: flex;
+  grid-row: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.mbk-topbar-start {
+  grid-column: 1;
+  gap: 8px;
+}
+
+.mbk-topbar-center {
+  grid-column: 2;
+  justify-content: center;
+}
+
+.mbk-topbar-end {
+  grid-column: 3;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* The search's parts sit in the end column. The compact search of an
+   embedded root opens the group over the whole bar. */
+.mbk-search-group {
+  display: contents;
 }
 
 .mbk-menu {
@@ -20,6 +59,7 @@
   justify-content: center;
   width: 30px;
   height: 30px;
+  flex: none;
   padding: 0;
   border: 1px solid var(--chrome-border);
   border-radius: 8px;
@@ -54,6 +94,7 @@ span.mbk-menu {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: none;
   color: inherit;
   text-decoration: none;
 }
@@ -99,19 +140,20 @@ span.mbk-menu {
   color: var(--cv-signal);
 }
 
+/* The compact search field: about 180px on the muted field surface, which
+   gives way when its column runs short. */
 .mbk-search {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  gap: 7px;
+  flex: 0 1 180px;
   min-width: 0;
-  max-width: 440px;
-  height: 30px;
-  padding: 0 12px;
+  height: 32px;
+  padding: 0 9px;
   border: 1px solid var(--chrome-border);
   border-radius: 8px;
-  background: var(--chrome-bg);
+  background: var(--cv-surface-muted);
   color: var(--chrome-muted);
 }
 
@@ -134,8 +176,14 @@ span.mbk-menu {
 }
 
 /* Below the breakpoint the menu opens the drawer, the brand keeps only its
-   mark, and the scheme switch moves to the screen header. */
+   mark, and the scheme switch moves to the screen header. The start column
+   keeps the width of its content and the end column takes the rest, so the
+   search keeps its room down to a 320px window. */
 @media (width < 56.25rem) {
+  .mbk-topbar {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
   .mbk-menu {
     display: inline-flex;
   }
@@ -148,7 +196,7 @@ span.mbk-menu {
     position: static;
   }
 
-  .mbk-topbar > [data-mokly-schemeswitch] {
+  .mbk-topbar-end > [data-mokly-schemeswitch] {
     display: none;
   }
 }

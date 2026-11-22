@@ -158,6 +158,7 @@ function hostSlots(slots: ViewerSlots, errors: HostErrors): ViewerSlots {
     "emptyState",
     "railEnd",
     "railStart",
+    "topBarCenter",
     "topBarEnd",
     "topBarStart",
   ] as const)

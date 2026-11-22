@@ -57,6 +57,7 @@ type ViewerError = import("@mokly/viewer").ViewerError;
 type ViewerTheme = "auto" | "light" | "dark";
 interface ViewerSlots {
   topBarStart?: ReactNode;
+  topBarCenter?: ReactNode;
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;
