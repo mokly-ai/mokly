@@ -184,14 +184,16 @@ screens, which Milestones 11 and 12 build.
 - [x] Map each older design screen under `examples/basic/specs/design/` to its
       Canvas successor, or name it obsolete. Branch:
       `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
-- [ ] Draw one Canvas screen for each state kind that has none: the removed
+- [x] Draw one Canvas screen for each state kind that has none: the removed
       and moved outcomes, use-case flows, loading and recovery, tag search,
       and the component explorer pages. Branch:
-      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
-- [ ] Remove the older screens, their scaffolds and sheets, the seven
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`, then
+      `calummoore/canvas-redesign-m18-finish-one-canvas-jd5q`.
+- [x] Remove the older screens, their scaffolds and sheets, the seven
       library parts that only they use, and their fixtures. Move the specs and
       tests that name them to Canvas or example entries. Branch:
-      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
+      `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`, then
+      `calummoore/canvas-redesign-m18-finish-one-canvas-jd5q`.
 - [x] Link the Canvas sheets through a `design/canvas/**` route. Branch:
       `calummoore/canvas-redesign-m18-one-canvas-family-of-379b`.
 - [x] Update the design inventory pages and the mockups README. Branch:
