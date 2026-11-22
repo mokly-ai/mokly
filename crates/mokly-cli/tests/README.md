@@ -60,6 +60,14 @@ writes no stdout, and the listening line is the first line that they parse.
 [`process_support/html.rs`](./process_support/html.rs) holds the shared HTML
 fixture writes and the complete native-process shutdown.
 
+Two process tests that do not start Serve also give their child a home from
+`Cache`. In [`changes_parent_death_tests.rs`](./changes_parent_death_tests.rs),
+that child is the `mokly build` command. In
+[`design_attribution_tests.rs`](./design_attribution_tests.rs), it is the child
+test process that runs the attribution matrix. Each test keeps its `Cache`
+alive until teardown, after the child stops. The attribution child gets
+`TMPDIR`, `TMP`, and `TEMP` from a separate temporary directory.
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
