@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import syncFs from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -9,13 +10,16 @@ import type { TestContext } from "node:test";
 import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
-import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
+import { generationId, reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { ModulePaths } from "../packages/mokly/src/sidecar/module-paths.js";
 import { currentEvidence } from "../packages/mokly/src/sidecar/physical-input-reader.js";
 import { PhysicalInputs } from "../packages/mokly/src/sidecar/physical-inputs.js";
 import { ResolutionEvidence } from "../packages/mokly/src/sidecar/resolution-evidence.js";
+import { encodeResponse } from "../packages/mokly/src/sidecar/transport.js";
 
 import { bundleParams } from "./helpers/sidecar.js";
+import { legacyJsonText } from "./helpers/sidecar_legacy_json.js";
+import { oversizeCompleteRecipes } from "./helpers/sidecar_recipe_encoding.js";
 
 async function source(context: TestContext) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-input-capture-"));
@@ -112,20 +116,7 @@ test("unsupported config evidence disables reuse without failing a valid compila
 test("evidence dropped for the frame bound gives each compilation a fresh generation", async (context) => {
   const { write, params } = await source(context);
   await write("entry.ts", "export const value=1;");
-  const original = Buffer.byteLength;
-  context.mock.method(
-    Buffer,
-    "byteLength",
-    (...args: Parameters<typeof Buffer.byteLength>) => {
-      const [value] = args;
-      if (
-        typeof value === "string" &&
-        value.includes('"reuseEvidence":{"complete":true,')
-      )
-        return 64 * 1024 * 1024 + 1;
-      return original(...args);
-    },
-  );
+  const identities = oversizeCompleteRecipes(context);
   const first = await bundle(params, build);
   const next = await bundle(params, build);
   assert.deepEqual(first.result.compiled.reuseEvidence, {
@@ -139,6 +130,26 @@ test("evidence dropped for the frame bound gives each compilation a fresh genera
     inputs: {},
   });
   assert.notEqual(first.result.generation, next.result.generation);
+  for (const { result } of [first, next]) {
+    const counted = identities.get(result.compiled.runtimeKey);
+    assert.ok(counted);
+    assert.equal(
+      result.compiled.identity,
+      createHash("sha256")
+        .update(counted)
+        .update(result.compiled.runtimeKey)
+        .digest("hex"),
+    );
+    assert.equal(Object.hasOwn(result.compiled, "metadataIdentity"), false);
+    assert.equal(
+      result.generation,
+      generationId(result.compiled.identity, params.evaluation),
+    );
+    assert.equal(
+      encodeResponse(1, { result }),
+      legacyJsonText({ id: 1, result }) + "\n",
+    );
+  }
   assert.equal(await reuse([first.generation], params), undefined);
   assert.equal(await reuse([first.generation], params, "serveEdit"), undefined);
 });

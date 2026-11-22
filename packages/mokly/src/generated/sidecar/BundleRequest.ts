@@ -2,6 +2,7 @@
 
 import type { BundleCapture } from "./BundleCapture.js";
 import type { ModuleResolution } from "./ModuleResolution.js";
+import type { PostcssPreparation } from "./PostcssPreparation.js";
 import type { ResolutionPlan } from "./ResolutionPlan.js";
 
 // prettier-ignore
@@ -14,6 +15,10 @@ capture?: BundleCapture,
  * Current captured targets for this Serve edit only, never persisted settings.
  */
 plan?: ResolutionPlan,
+/**
+ * Fresh PostCSS context for this request's attempt, absent from bundle settings.
+ */
+preparation?: PostcssPreparation,
 /**
  * Core input digest that isolates resolved bindings and CSS Modules lifetimes.
  */

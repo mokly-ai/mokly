@@ -15,10 +15,10 @@
   advisory rule and the Serve-only rule.
 - **Location:** `crates/mokly-render/src/bundle.rs:199` and line 209,
   `crates/mokly-cli/src/serve_watch_plan.rs:53` and line 112,
-  `crates/mokly-render/src/bundle_attempt.rs:108` and line 128,
+  `crates/mokly-render/src/bundle_attempt.rs:112` and line 132,
   `crates/mokly-watch/src/plan.rs:132` and line 147,
   `crates/mokly-watch/src/native_scan.rs:11` and line 17,
-  `packages/mokly/src/sidecar/module-paths.ts:150`,
+  `packages/mokly/src/sidecar/module-paths.ts:151` (`ModulePaths.name`),
   `crates/mokly-render/src/runtime.rs:215`,
   `crates/mokly-render/src/side.rs:160`,
   `crates/mokly-render/src/stylesheet_watch.rs:14`,
@@ -53,14 +53,14 @@
     bundles the JavaScript modules of a catalogue with esbuild. A canonical
     path, or real path, has every symbolic link resolved.
     `ModulePaths.create` resolves each dependency root to its canonical
-    path, at `packages/mokly/src/sidecar/module-paths.ts:47`.
+    path, at `packages/mokly/src/sidecar/module-paths.ts:48`.
   - The sidecar reports each bundled module by its logical path, in
-    `packages/mokly/src/sidecar/module-paths.ts:150`. Its resolution metadata
+    `packages/mokly/src/sidecar/module-paths.ts:151`. Its resolution metadata
     and its consumed-module directories use the same logical names. The
     metadata holds the `package.json` and `tsconfig.json` candidates, also
     the missing ones.
-  - `stamp` in `crates/mokly-render/src/bundle_attempt.rs:108` joins each
-    logical path to the repository root. Line 128 leaves out `.css` modules.
+  - `stamp` in `crates/mokly-render/src/bundle_attempt.rs:112` joins each
+    logical path to the repository root. Line 132 leaves out `.css` modules.
   - `finish` in `crates/mokly-render/src/bundle.rs:173` strips the
     repository root again. It builds the resolution files at line 199 and
     the resolution directories at line 209. So both keep logical names, such

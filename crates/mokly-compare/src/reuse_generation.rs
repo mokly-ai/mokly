@@ -43,6 +43,10 @@ impl GeneratedResources for RecordingGeneration<'_> {
     }
 }
 impl RenderGeneration for RecordingGeneration<'_> {
+    fn prepare_render_reuse(&self) {
+        self.inner.prepare_render_reuse();
+    }
+
     fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
         let evidence = self.inner.retained_document_evidence(route)?;
         self.recorder

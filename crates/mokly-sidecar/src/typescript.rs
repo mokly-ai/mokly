@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use mokly_model::type_modules::TypeModules;
 
+use crate::bundle_reply::BundleReply;
 use crate::methods::Call;
 use crate::wire::{Frame, MethodResult, Request};
 
@@ -14,5 +15,6 @@ pub fn generate() -> BTreeMap<String, String> {
     modules.add::<Call>();
     modules.add::<Frame>();
     modules.add::<MethodResult>();
+    modules.add::<BundleReply>();
     modules.finish()
 }

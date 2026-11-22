@@ -18,13 +18,10 @@ use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
-use crate::fragment::RenderKind;
+use crate::fragment::{Fragment, FragmentRequest, RenderKind};
 use crate::javascript_request::{self, Invocation};
 use crate::tree::Node;
-use crate::{
-    fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links,
-    source_checks,
-};
+use crate::{fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links};
 
 impl Engine<'_> {
     pub(crate) fn javascript_expansion(
@@ -32,6 +29,7 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: Arc<Context>,
+        prepared: Option<(FragmentRequest, Result<Fragment>)>,
     ) -> Result<Expansion> {
         let entry = self
             .request
@@ -46,19 +44,24 @@ impl Engine<'_> {
                     format!("unknown JavaScript definition {path}"),
                 )
             })?;
-        let request = javascript_request::request(
-            self.request,
-            Invocation {
-                path,
-                kind,
-                props: &context.props,
-                ignore_enabled: context.ignore,
-                slots: context.slots.keys().map(String::as_str).collect(),
-            },
-        )?;
-        let tokens = request.slots.clone();
-        let effective_path = request.entry_path.clone();
-        let mut result = self.fragments.render(&request)?;
+        let (request, mut result) = match prepared {
+            Some((request, result)) => (request, result?),
+            None => {
+                let request = javascript_request::request(
+                    self.request,
+                    Invocation {
+                        path,
+                        kind,
+                        props: &context.props,
+                        ignore_enabled: context.ignore,
+                        slots: context.slots.keys().map(String::as_str).collect(),
+                    },
+                )?;
+                let result = self.fragments.render(&request)?;
+                (request, result)
+            }
+        };
+        let tokens = request.slots;
         self.styles.extend(result.styles.clone());
         self.resources.extend(result.resources.clone());
         self.warnings.extend(result.warnings.clone());
@@ -68,7 +71,7 @@ impl Engine<'_> {
         } else {
             DeliveredHtml::fragment(&result.html)
         };
-        let mut nodes = parse::html(html);
+        let (mut nodes, checks) = parse::consumer(html);
         let removed = ignore_checks::filter_tree(&mut nodes);
         if page {
             let mut seen = BTreeSet::new();
@@ -81,11 +84,10 @@ impl Engine<'_> {
                     });
                 }
             }
-            source_checks::page(html)?;
         }
-        source_checks::validate(html, true)?;
+        checks.validate(page)?;
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
-            && effective_path == self.request.entry.metadata.path;
+            && request.entry_path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(
             nodes,
             &result,
@@ -153,8 +155,10 @@ impl Engine<'_> {
         path: &str,
         kind: RenderKind,
         context: &Context,
+        prepared: Option<(FragmentRequest, Result<Fragment>)>,
     ) -> Result<Vec<Node>> {
-        let expansion = self.javascript_expansion(path, kind, Arc::new(context.clone()))?;
+        let expansion =
+            self.javascript_expansion(path, kind, Arc::new(context.clone()), prepared)?;
         self.expand(expansion)
     }
 }

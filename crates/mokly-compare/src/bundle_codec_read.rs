@@ -1,6 +1,6 @@
 //! Reject foreign headers before payload reads, then hash and decode bounded data.
 
-use std::io::{BufReader, Read, SeekFrom};
+use std::io::{self, BufRead, BufReader, Read, SeekFrom};
 
 use mokly_sidecar::bundle_outcomes::EntryFault;
 use mokly_sidecar::durable_recipe::DurableRecipe;
@@ -79,9 +79,7 @@ impl Codec {
         if input.seek(SeekFrom::Start(start)).is_err() {
             return Err(EntryFault::Unreadable);
         }
-        let stored = match serde_json::from_reader::<_, Payload>(BufReader::new(
-            input.take(payload_bytes),
-        )) {
+        let stored = match read_payload(input, payload_bytes) {
             Ok(stored) => stored,
             Err(source) if source.is_io() => return Err(EntryFault::Unreadable),
             Err(_) => return Err(EntryFault::Damaged),
@@ -99,5 +97,42 @@ impl Codec {
         .and_then(DurableRecipe::new)
         .map(|recipe| recipe.with_plan(stored.recipe.plan))
         .ok_or(EntryFault::Damaged)
+    }
+}
+
+fn read_payload(input: &mut dyn BundleInput, payload_bytes: u64) -> serde_json::Result<Payload> {
+    let mut input = BufReader::new(input.take(payload_bytes));
+    let mut payload = Vec::with_capacity(payload_bytes as usize);
+    while payload.len() as u64 != payload_bytes {
+        let result = match input.fill_buf() {
+            Ok([]) => Ok(0),
+            Ok(bytes) => {
+                let length = bytes.len();
+                payload.extend_from_slice(bytes);
+                input.consume(length);
+                continue;
+            }
+            Err(source) => Err(source),
+        };
+        return serde_json::from_reader(payload.as_slice().chain(ReplayEvent {
+            result: Some(result),
+            input: &mut input,
+        }));
+    }
+    serde_json::from_slice(&payload)
+}
+
+/// Replay one incomplete read before the original buffered input resumes.
+struct ReplayEvent<'a> {
+    result: Option<io::Result<usize>>,
+    input: &'a mut dyn Read,
+}
+
+impl Read for ReplayEvent<'_> {
+    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+        match self.result.take() {
+            Some(result) => result,
+            None => self.input.read(bytes),
+        }
     }
 }

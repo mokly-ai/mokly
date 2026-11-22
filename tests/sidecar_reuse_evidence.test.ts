@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type { TestContext } from "node:test";
 
+import type { BundleReply } from "../packages/mokly/src/generated/sidecar/BundleReply.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 
 import { bundleParams, startSidecar } from "./helpers/sidecar.js";
@@ -230,6 +231,10 @@ test("a fresh sidecar reuses an unchanged recipe and rejects foreign or incomple
       modules: original.modules,
     });
   await restore(original.compiled);
+  assert.deepEqual(await fresh.call<BundleReply>("bundle", params), {
+    generation: original.generation,
+    restoredGeneration: original.generation,
+  });
   const reused = await fresh.call<BundleResult>("bundle", params);
   assert.equal(reused.compiled.runtimeKey, original.compiled.runtimeKey);
   assert.equal(fresh.operations.length, 0);

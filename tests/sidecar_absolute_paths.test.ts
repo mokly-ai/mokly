@@ -8,7 +8,7 @@ import { build } from "esbuild";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
+import { PlanBuilder } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import { absolutePaths } from "./helpers/absolute_paths.js";
 import { countedCompile, write } from "./helpers/native_resolution.js";
@@ -59,21 +59,21 @@ test("marked edits reject an added earlier absolute paths target", async (contex
   const first = await bundle(params, build, undefined, undefined, "serveEdit");
   assert.equal(evaluate(first.generation).entries["entry.mjs"]!.value, "two");
   const counted = countedCompile();
+  const plan = new PlanBuilder();
+  plan.addImport(
+    path.join(root, "entry.mjs"),
+    path.join(root, "value.js"),
+    "import-statement",
+    path.join(root, "two/value.js"),
+    true,
+  );
   const planned = await bundle(
     params,
     counted.compile,
     undefined,
     undefined,
     "serveEdit",
-    {
-      imports: {
-        [planKey(
-          path.join(root, "entry.mjs"),
-          path.join(root, "value.js"),
-          "import-statement",
-        )]: { path: path.join(root, "two/value.js"), sideEffects: true },
-      },
-    },
+    plan.plan,
   );
   assert.equal(evaluate(planned.generation).entries["entry.mjs"]!.value, "two");
   assert.equal(counted.counts.compilations, 1);

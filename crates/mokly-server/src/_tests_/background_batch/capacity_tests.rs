@@ -1,13 +1,14 @@
 //! A normal completion lets the same usage pass grow its background window.
 
-use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::backend::DocumentsMock;
 use crate::background::Background;
 use crate::background_capacity::BackgroundCapacityMock;
+use crate::background_read::BackgroundRead;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 
@@ -15,9 +16,42 @@ use super::script::pass;
 use super::support::{Renders, route};
 
 #[tokio::test]
+async fn completed_worker_reads_do_not_sample_sidecar_capacity() {
+    let reads = Arc::new(AtomicUsize::new(0));
+    let capacity = Unimock::new(
+        BackgroundCapacityMock::capacity
+            .each_call(matching!())
+            .answers_arc(Arc::new({
+                let reads = reads.clone();
+                move |_| {
+                    reads.fetch_add(1, Ordering::SeqCst);
+                    2
+                }
+            })),
+    )
+    .no_verify_in_drop();
+    let documents = Arc::new(Unimock::new(
+        DocumentsMock::background_read
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(Some(BackgroundRead::Complete(Vec::new())))),
+    ));
+    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
+    let (_script, mut pass, stopping) = pass(
+        publication_support::snapshot(3, documents),
+        2,
+        work.clone(),
+        Arc::new(Unimock::new(())),
+        true,
+    );
+    pass.capacity = Arc::new(capacity);
+    pass.run(stopping).await;
+    work.stop().await;
+    assert_eq!(reads.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test]
 async fn a_background_window_grows_after_memory_recovers_and_a_render_ends() {
-    let (mut renders, documents) =
-        Renders::ordered(&[&route(0), &route(1), &route(2)], &[&route(1), &route(2)]);
+    let (mut renders, documents) = Renders::new(&[&route(0), &route(1), &route(2), &route(3)], &[]);
     let origin = publication_support::snapshot(4, documents);
     let work = Arc::new(Workers::new(3, Arc::new(Unimock::new(()))));
     let (_script, mut pass, stopping) =
@@ -33,19 +67,24 @@ async fn a_background_window_grows_after_memory_recovers_and_a_render_ends() {
     );
     pass.capacity = Arc::new(capacity);
     let task = tokio::spawn(async move { pass.run(stopping).await });
-    assert_eq!(renders.next_start().await, route(0));
+    let first = renders.next_start().await;
+    assert_eq!(renders.active(), 1);
+    assert_eq!(renders.peak(), 1);
     count.store(2, Ordering::SeqCst);
-    renders.release(&route(0));
-    assert_eq!(renders.next_start().await, route(1));
-    assert_eq!(renders.next_start().await, route(2));
+    renders.release(&first);
+    let second = renders.next_start().await;
+    let third = renders.next_start().await;
+    assert_eq!(renders.active(), 2);
     assert_eq!(renders.peak(), 2);
-    renders.release(&route(1));
-    renders.release(&route(2));
+    renders.release(&second);
+    renders.release(&third);
+    let fourth = renders.next_start().await;
+    renders.release(&fourth);
     task.await.unwrap();
     work.stop().await;
+    assert_eq!(renders.active(), 0);
     assert_eq!(renders.peak(), 2);
-    assert_eq!(
-        renders.started().into_iter().collect::<BTreeSet<_>>(),
-        BTreeSet::from([route(0), route(1), route(2), route(3)])
-    );
+    let mut started = renders.started();
+    started.sort();
+    assert_eq!(started, [route(0), route(1), route(2), route(3)]);
 }

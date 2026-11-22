@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, two follow-ups of its acceptance decision. The records were consolidated on 2026-11-01.
-- **Location:** `crates/mokly-graph/src/session_render.rs:42`, `crates/mokly-render/src/stylesheet_cache.rs:54`, `:141`, and `:168`, and `crates/mokly-render/src/postcss_read_inventory.rs:19`.
+- **Location:** `crates/mokly-graph/src/session_lookup.rs:27`, `crates/mokly-render/src/stylesheet_cache.rs:54`, `:141`, and `:168`, and `crates/mokly-render/src/postcss_read_inventory.rs:19`.
 - **Reason:** On 2026-10-28 the coordinating agent deferred both cache changes outside the pass scheduler of PR #225. One later branch owns their shared fix.
 
 - **Source:** Review.

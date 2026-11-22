@@ -9,7 +9,7 @@
 - **Location:** `crates/mokly-cli/src/serve_git.rs:111`,
   `crates/mokly-sidecar/src/pool_releases.rs:109`,
   `crates/mokly-server/src/work_delivery.rs:50`,
-  `crates/mokly-server/src/work.rs:133`,
+  `crates/mokly-server/src/work.rs:146`,
   `crates/mokly-server/src/asset_response.rs:21`, and
   `crates/mokly-server/src/response.rs:66`.
 - **Reason:** The fix needs two lower-level ownership boundaries and a shared
@@ -67,7 +67,7 @@
      `pool_cleanup::cleanup`.
   2. Finite file response bodies. `asset_delivery` in
      `crates/mokly-server/src/work_delivery.rs:50` and `authored` in
-     `crates/mokly-server/src/work.rs:133` hold a lease only until the file
+     `crates/mokly-server/src/work.rs:146` hold a lease only until the file
      opens. The body then streams through
      `crates/mokly-server/src/asset_response.rs:21` and
      `crates/mokly-server/src/response.rs:66` after the lease drops.

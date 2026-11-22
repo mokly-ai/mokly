@@ -109,6 +109,13 @@ impl ComparisonTask for Slots<'_> {
                     slot.reused = slot.candidate.take();
                     return Ok(ViewInput::Deferred(None));
                 }
+                if let (Some(probes), Some(route)) = (self.probes, slot.routes.after.as_deref()) {
+                    probes
+                        .documents
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner())
+                        .remove(route);
+                }
                 self.preparation.retained(
                     slot.routes.before.as_deref(),
                     slot.routes.after.as_deref(),

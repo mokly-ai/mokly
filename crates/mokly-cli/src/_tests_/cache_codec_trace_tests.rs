@@ -7,6 +7,7 @@ use mokly_compare::comparison_types::Comparison;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::closure::Closure;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::key::NodeKey;
 use mokly_graph::types::{ComparisonDocument, RenderGenerationMock, RenderSummary};
 use mokly_html::composition::Composed;
@@ -56,10 +57,14 @@ fn cache_compaction_has_no_review_span_but_capture_encoding_keeps_its_span() {
                 .answers_arc(Arc::new(move |_, collector| {
                     collector.collect(
                         "a/index.html",
-                        ComparisonDocument {
-                            artifact: value.clone(),
-                            closure: Closure::default(),
-                        },
+                        EncodedComparisonDocument::encode(
+                            "a/index.html",
+                            ComparisonDocument {
+                                artifact: value.clone(),
+                                closure: Closure::default(),
+                            },
+                            collector.encoder().as_ref(),
+                        )?,
                     )?;
                     Ok(RenderSummary {
                         documents: 1,
