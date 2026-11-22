@@ -164,14 +164,17 @@ its requests and results. The paths below are relative to the package root.
   one esbuild build context of a process under the
   [kept build context rules](../../../../docs/protocol/mokly-sidecar-kept-context.md).
   `bundle` uses it only as the compile function of a guarded attempt. Each
-  request plugin sets up against a recorder, which lists its hooks. The key of
-  the context holds the build options without plugins, the plugin names, and
-  the kind, filter, and namespace of each hook. An equal key rebuilds the
-  context. Another key disposes of it and creates a new one, and a failed
-  rebuild disposes of it. The plugins of the context hold only those hook
-  shapes and forward each call to the hooks of the current request, which the
-  compile clears after its rebuild. A request's `onDispose` hooks run after its
-  rebuild, as after a fresh build.
+  request plugin sets up against a recorder, which lists its hooks. The setups
+  follow the order of a fresh build: they run over a copy of the plugin list,
+  `resolve` fails until every setup has ended, and the compile reads the build
+  options after the setups, so an option that a setup assigns through
+  `initialOptions` counts. The key of the context holds those build options
+  without plugins, the plugin names, and the kind, filter, and namespace of
+  each hook. An equal key rebuilds the context. Another key disposes of it and
+  creates a new one, and a failed setup or rebuild disposes of it. The plugins
+  of the context hold only those hook shapes and forward each call to the
+  hooks of the current request, which the compile clears after its rebuild. A
+  request's `onDispose` hooks run after its rebuild, as after a fresh build.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and

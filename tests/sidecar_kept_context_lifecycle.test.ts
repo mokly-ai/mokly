@@ -15,7 +15,11 @@ import { KeptContext } from "../packages/mokly/src/sidecar/kept-context.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
 import { Session } from "../packages/mokly/src/sidecar/session.js";
 
-import { countedKept, differingFields } from "./helpers/kept_context.js";
+import {
+  carries,
+  countedKept,
+  differingFields,
+} from "./helpers/kept_context.js";
 import { matureMetadata } from "./helpers/mature_metadata.js";
 import {
   countedCompile,
@@ -230,28 +234,11 @@ test("a changed hook list replaces the kept context", async (context) => {
       }));
     },
   });
-  // Each compile gives whether its output carries its own label, or "failed".
-  const carries = (label: string, extra: boolean) =>
-    kept
-      .compile({
-        entryPoints: [entry],
-        bundle: true,
-        write: false,
-        format: "esm",
-        logLevel: "silent",
-        plugins: [plugin(label, extra)],
-      })
-      .then(
-        (result) =>
-          result.outputFiles.some((file) =>
-            file.text.includes(JSON.stringify(label)),
-          ),
-        () => "failed",
-      );
+  const viaKept: typeof build = (options) => kept.compile(options);
   const outputs = [
-    await carries("first", false),
-    await carries("second", false),
-    await carries("third", true),
+    await carries(viaKept, entry, plugin("first", false), "first"),
+    await carries(viaKept, entry, plugin("second", false), "second"),
+    await carries(viaKept, entry, plugin("third", true), "third"),
   ];
   assert.deepEqual(
     { outputs, ...counts },

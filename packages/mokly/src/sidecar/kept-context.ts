@@ -62,32 +62,26 @@ export class KeptContext {
 
   /** Rebuild or replace the context for `options`; the result has the shape of `options`. */
   async compile<T extends BuildOptions>(options: T): Promise<BuildResult<T>> {
-    const { plugins = [], ...settings }: BuildOptions = options;
-    const hooks: Hook[] = [];
-    for (const [index, plugin] of plugins.entries())
-      await plugin.setup(
-        recorder(index, hooks, () => this.builds[index], options),
-      );
-    const names = plugins.map((plugin) => plugin.name);
-    const shapes = hooks.map(shape);
-    const key = JSON.stringify([settings, names, shapes]);
-    if (key !== this.key || !this.context) {
-      await this.dispose();
-      this.context = await this.create({
-        ...settings,
-        plugins: delegates(
-          names,
-          shapes,
-          (position) => this.hooks[position],
-          (index, build) => {
-            this.builds[index] = build;
-          },
-        ),
-      });
-      this.key = key;
-    }
-    this.hooks = hooks;
+    let hooks: readonly Hook[] = [];
     try {
+      const request = await prepare(options, (index) => this.builds[index]);
+      hooks = request.hooks;
+      if (request.key !== this.key || !this.context) {
+        await this.dispose();
+        this.context = await this.create({
+          ...request.settings,
+          plugins: delegates(
+            request.names,
+            request.shapes,
+            (position) => this.hooks[position],
+            (index, build) => {
+              this.builds[index] = build;
+            },
+          ),
+        });
+        this.key = request.key;
+      }
+      this.hooks = hooks;
       // The context was created from settings equal to these options, so the shapes agree.
       return (await this.context.rebuild()) as BuildResult<T>;
     } catch (error) {
@@ -108,6 +102,37 @@ export class KeptContext {
     // A failed dispose leaves nothing to release: its service has ended.
     await context?.dispose().catch(() => undefined);
   }
+}
+
+/**
+ * One request after the setup of its plugins: the settings, the plugin names,
+ * the hooks, and the key of the context that the request needs. It follows the
+ * order of a fresh build: it copies the plugin list before the setups, `resolve`
+ * fails until every setup has ended, and it reads the settings after the
+ * setups, because a setup can assign build options through `initialOptions`.
+ */
+async function prepare(
+  options: BuildOptions,
+  contextBuild: (index: number) => PluginBuild | undefined,
+) {
+  const plugins = [...(options.plugins ?? [])];
+  const hooks: Hook[] = [];
+  let setUp = false;
+  for (const [index, plugin] of plugins.entries())
+    await plugin.setup(
+      recorder(
+        index,
+        hooks,
+        () => (setUp ? contextBuild(index) : undefined),
+        options,
+      ),
+    );
+  setUp = true;
+  const { plugins: _plugins, ...settings }: BuildOptions = options;
+  const names = plugins.map((plugin) => plugin.name);
+  const shapes = hooks.map(shape);
+  const key = JSON.stringify([settings, names, shapes]);
+  return { settings, names, hooks, shapes, key };
 }
 
 /** The part of a hook that the context compiles: everything but its callback. */

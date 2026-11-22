@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 
 import * as esbuildApi from "esbuild";
+import type { Plugin, build } from "esbuild";
 
 import { KeptContext } from "../../packages/mokly/src/sidecar/kept-context.js";
 
@@ -54,4 +55,31 @@ export function differingFields(
         prefix ? `${prefix}.${key}` : key,
       ),
     );
+}
+
+/**
+ * Compile `entry` with one plugin. Give whether the output carries `label` as
+ * a string, or "failed" when the compile fails, so that a failed assertion
+ * prints a short value.
+ */
+export function carries(
+  compile: typeof build,
+  entry: string,
+  plugin: Plugin,
+  label: string,
+): Promise<boolean | "failed"> {
+  return compile({
+    entryPoints: [entry],
+    bundle: true,
+    write: false,
+    format: "esm",
+    logLevel: "silent",
+    plugins: [plugin],
+  }).then(
+    (result) =>
+      result.outputFiles.some((file) =>
+        file.text.includes(JSON.stringify(label)),
+      ),
+    () => "failed" as const,
+  );
 }
