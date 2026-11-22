@@ -42,6 +42,13 @@ Design calls, my own:
 - 2026-11-22: the two red tests run the real sidecar process, because the rule
   concerns which request forks the child. Each test watches the
   `postcss-start` operation events between the replies.
+- 2026-11-22, review finding 8: the first of the two red tests repeated the
+  second, because the failed `prepareContext` of the second changes no state.
+  It was removed under the removal rule of the `testing` skill. The second
+  test, "After a failed prepareContext, a prepared bundle starts no PostCSS
+  child, and the first processCss starts it", covers both rules. Both tests
+  failed on the old code, as `.context/light-sidecar-entry/red-tests.txt`
+  shows.
 - 2026-11-22: the byte proof covers Serve of `examples/basic` only. `build`,
   `publish`, and a catalogue without PostCSS prepare no context, so the
   change cannot reach their bytes.
