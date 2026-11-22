@@ -28,7 +28,7 @@ export const PAIR_PHONE_FIT = 54;
  * The version before the Action branch: the Action's button with its
  * earlier, smaller corner radius and narrower padding, wherever it renders.
  */
-function Before({ children }: { children: ReactNode }) {
+export function Before({ children }: { children: ReactNode }) {
   return <div className="cv-cx-before">{children}</div>;
 }
 

@@ -33,6 +33,15 @@ const UNMODIFIED = [
   "design/canvas/props/editing/edited",
 ] as const;
 
+/**
+ * The paired props of Welcome's own Action in each of its four views, where
+ * Welcome changed the label that it supplies: the label before, then now.
+ */
+const LABEL_PAIRS = Array.from({ length: 4 }, () => [
+  /"label": "Continue"/u,
+  /"label": "View details"/u,
+]).flat();
+
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentEvidence(
   test = baseTest,
@@ -89,28 +98,30 @@ export function registerComponentEvidence(
         );
       });
 
-      // No Canvas screen draws a screen's own prop change beside a component
-      // change, so the paired props keep their older subject (question Q5).
+      // Welcome changed the label that it gives its own Action beside the
+      // changed Action. The Changes tab, which a phone opens as its sheet,
+      // holds the facts; the canvas holds no explanation of its own.
       test("screen comparison names the instance and its before/current props", async ({
         page,
       }) => {
         await page.goto(
           designDocumentUrl(
-            "design/components/inspection/inspection-direct-change",
+            "design/canvas/components/affected/direct",
             viewport,
           ),
         );
-        await expect(page.locator(".ce-change-context")).toHaveCount(0);
-        await page
-          .getByRole("button", { name: "Details", exact: true })
-          .click();
-        const evidence = page.locator("[data-workspace-evidence]");
-        await expect(evidence).toContainText("Action · Footer action");
+        await expect(
+          page.locator(".cv-canvas [data-workspace-evidence]"),
+        ).toHaveCount(0);
+        await expect(
+          page
+            .getByRole("region", { name: "Panel", exact: true })
+            .getByRole("link", { name: "Changes", exact: true }),
+        ).toHaveAttribute("aria-current", "page");
+        const evidence = page.locator(".cv-evidence [data-workspace-evidence]");
+        await expect(evidence).toContainText("Action · details");
         // Each view pairs the instance's props before and after the change.
-        await expect(evidence.locator("pre")).toContainText([
-          "Continue",
-          "Get started",
-        ]);
+        await expect(evidence.locator("pre")).toHaveText(LABEL_PAIRS);
         await expect(
           evidence.getByText("Changed component: Action", { exact: true }),
         ).toHaveCount(1);
@@ -118,13 +129,19 @@ export function registerComponentEvidence(
           evidence.getByRole("link", { name: "Action" }),
         ).toHaveAttribute(
           "data-mokly-link",
-          "design/components/pages/affected",
+          "design/canvas/components/compare/current",
         );
-        await page.getByRole("button", { name: "Props", exact: true }).click();
-        await expect(page.getByLabel("Supplied props")).toContainText(
-          "Get started",
-        );
-        await expect(page.locator(".ce-prop-change")).toHaveCount(0);
+        // The compared frames show the same values, and nothing marks the
+        // saved change as a temporary edit.
+        const own = (side: string) =>
+          page.locator(
+            `.cv-frame[data-cv-side="${side}"]:visible .mbk-shot-own-action`,
+          );
+        await expect(own("before")).toHaveText("Continue");
+        await expect(own("after")).toHaveText("View details");
+        await expect(
+          page.locator(".mbk-controls-edited, .mbk-edit-status"),
+        ).toHaveCount(0);
       });
 
       test("highlight chips have clear separation from intact outlines", async ({

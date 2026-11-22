@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Browser, type Page } from "@playwright/test";
 
-import { viewRoute } from "../../packages/viewer/dist/data.js";
+import { viewHref, viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
@@ -34,15 +34,38 @@ export function registerDesignLibrary(
   const manifest = { entries: designCatalogue(test) };
   const fileUrl = (route: string) =>
     designFileUrl(path.join(generated, route)).href;
+  const size =
+    viewport === "mobile"
+      ? { width: 390, height: 844 }
+      : { width: 1440, height: 1000 };
+
+  /**
+   * Reads the shipped viewer on the example's Welcome screen, where the shell
+   * draws the same `@mokly/ui` parts as the samples, in the samples'
+   * viewport. The shell's script draws it, so it opens in its own context
+   * with JavaScript on, while each sample stays static.
+   */
+  async function inShell<T>(
+    browser: Browser,
+    origin: string,
+    read: (shell: Page) => Promise<T>,
+  ): Promise<T> {
+    const context = await browser.newContext({
+      baseURL: origin,
+      javaScriptEnabled: true,
+      viewport: size,
+    });
+    try {
+      const shell = await context.newPage();
+      await shell.goto(viewHref("example/screens/welcome"));
+      return await read(shell);
+    } finally {
+      await context.close();
+    }
+  }
 
   test.describe(`${viewport} shared design library`, () => {
-    test.use({
-      javaScriptEnabled: false,
-      viewport:
-        viewport === "mobile"
-          ? { width: 390, height: 844 }
-          : { width: 1440, height: 1000 },
-    });
+    test.use({ javaScriptEnabled: false, viewport: size });
 
     for (const entry of designCases.filter(
       (entry) =>
@@ -80,10 +103,12 @@ export function registerDesignLibrary(
       });
 
     test("catalogue section headings keep the in-screen typography in isolation", async ({
+      baseURL,
+      browser,
       page,
     }) => {
-      const typography = () =>
-        page
+      const typography = (on: Page) =>
+        on
           .locator(".mbk-nav-section-head")
           .first()
           .evaluate((node) => {
@@ -101,15 +126,18 @@ export function registerDesignLibrary(
           `design/library/chrome/catalogue-navigation/all/index.${viewport}.html`,
         ),
       );
-      const isolated = await typography();
-      await page.goto(
-        fileUrl(
-          viewport === "mobile"
-            ? "design/browse/states/navigation/index.mobile.html"
-            : "design/browse/views/details-screen/index.desktop.html",
-        ),
-      );
-      const inScreen = await typography();
+      const isolated = await typography(page);
+      const inScreen = await inShell(browser, baseURL!, async (shell) => {
+        // A phone draws the catalogue in the drawer that its top bar opens.
+        if (viewport === "mobile")
+          await shell
+            .getByRole("button", { name: "Open catalogue navigation" })
+            .click();
+        await expect(
+          shell.locator(".mbk-nav-section-head").first(),
+        ).toBeVisible();
+        return typography(shell);
+      });
       expect(inScreen).toMatchObject({
         fontSize: "10.5px",
         fontWeight: "700",
@@ -118,10 +146,12 @@ export function registerDesignLibrary(
     });
 
     test("the top-bar logo keeps the in-screen colors in isolation", async ({
+      baseURL,
+      browser,
       page,
     }) => {
-      const logo = () =>
-        page.locator(".mbk-brand").evaluate((brand) => {
+      const logo = (on: Page) =>
+        on.locator(".mbk-brand").evaluate((brand) => {
           // A wordmark that the narrow bar hides reads as absent.
           const color = (selector: string) => {
             const node = brand.querySelector(selector);
@@ -140,11 +170,8 @@ export function registerDesignLibrary(
       await page.goto(
         fileUrl(`design/library/chrome/top-bar/default/index.${viewport}.html`),
       );
-      const isolated = await logo();
-      await page.goto(
-        fileUrl(`design/browse/views/home/index.${viewport}.html`),
-      );
-      const inScreen = await logo();
+      const isolated = await logo(page);
+      const inScreen = await inShell(browser, baseURL!, logo);
       expect(inScreen).toEqual({
         brand: "rgb(13, 20, 16)",
         mark: "rgb(18, 183, 106)",

@@ -1348,6 +1348,32 @@
       "target": "design/canvas/components/affected"
     },
     {
+      "source": "design/canvas/components/affected/direct",
+      "within": "cv-cx-evidence",
+      "name": "Action",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Desktop · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["mobile"],
+      "within": "cv-mode-frames",
+      "name": "Mobile · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": null
+    },
+    {
       "source": "design/canvas/components/removed",
       "viewports": ["desktop"],
       "within": "cv-ptabs",

@@ -28,6 +28,15 @@ const CHANGED_ROWS = {
   mobile: [],
 } as const;
 
+/**
+ * The rows that a desktop catalogue marks changed where Welcome also changed
+ * its own props: Welcome's own row, then the changed Action's rows.
+ */
+const DIRECT_ROWS = {
+  desktop: ["Welcome", ...CHANGED_ROWS.desktop],
+  mobile: [],
+} as const;
+
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentDesign(
   test = baseTest,
@@ -83,29 +92,33 @@ export function registerComponentDesign(
         await expect(changed).toContainText([...CHANGED_ROWS[viewport]]);
       });
 
-      // No Canvas screen draws a screen's own prop change beside a component
-      // change, so this requirement keeps its older subject (question Q5).
+      // Welcome also changed the label that it gives its own Action, so it
+      // keeps its own Changes row beside the component change: a desktop
+      // catalogue counts and lists it, the stepper counts it in both
+      // viewports, and the current version shows the new label.
       test("an independent screen change keeps its own Changes row", async ({
         page,
       }) => {
         await page.goto(
           designDocumentUrl(
-            "design/components/inspection/inspection-direct-change",
+            "design/canvas/components/affected/direct",
             viewport,
           ),
         );
-        const count =
-          viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
-        await expect(page.locator(count)).toHaveText("2");
+        await expect(page.locator(".mbk-nav-filter-count")).toHaveText(
+          viewport === "desktop" ? ["5"] : [],
+        );
+        await expect(page.locator(".cv-stepper-count")).toHaveText(
+          "Change 1 of 5",
+        );
         await expect(
-          page.locator(".ce-selected-instance .mbk-props"),
-        ).toContainText("Get started");
-        if (viewport === "desktop")
-          await expect(page.locator(".mbk-nav-scroll a")).toContainText([
-            "Welcome",
-            "Action",
-            "Default",
-          ]);
+          page.locator('.cv-frame[data-cv-side="after"]:visible'),
+        ).toContainText("View details");
+        const changed = page.locator(
+          '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+        );
+        await expect(changed).toHaveCount(DIRECT_ROWS[viewport].length);
+        await expect(changed).toContainText([...DIRECT_ROWS[viewport]]);
       });
     });
   }

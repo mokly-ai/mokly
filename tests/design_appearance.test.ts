@@ -26,7 +26,6 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["muted on raised (navigation)", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover surface", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
   ["sage on surface", "--mbk-sage", "--chrome-surface", 4.5],
   ["deep sage on surface", "--mbk-sage-deep", "--chrome-surface", 4.5],
   [

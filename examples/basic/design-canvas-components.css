@@ -1,9 +1,10 @@
 /* The Canvas viewer's component explorer: a changed component compared on
-   its variant set, its Usage with the affected screens, screen inspection
-   that waits or is unavailable, and a removed saved variant. Each Canvas
-   part keeps its own sheet; this sheet holds only the states of these
-   artboards. Saved props that a comparison shows end with the shipped text
-   button, from its @mokly/ui stylesheet. */
+   its variant set, its Usage with the affected screens, a screen that also
+   changed its own props, screen inspection that waits or is unavailable,
+   and a removed saved variant. Each Canvas part keeps its own sheet; this
+   sheet holds only the states of these artboards. Saved props that a
+   comparison shows end with the shipped text button, from its @mokly/ui
+   stylesheet. */
 @import "../../packages/ui/src/text-button/text-button.css";
 
 /* ---- The version before --------------------------------------------- */
@@ -105,6 +106,37 @@
   color: var(--cv-signal-deep);
   font-weight: 560;
   text-decoration: none;
+}
+
+/* A screen's paired props: each view's heading names the instance, then
+   Before and Current in the quiet label type, each above its props in the
+   Canvas mono on the code fill, which wrap in the narrow panel. The changed
+   component after the last pair keeps the gap that follows a list. */
+.cv-cx-evidence .mbk-comparison-evidence > h3 ~ h3 {
+  font-weight: 560;
+  margin: 14px 0 0;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > p:has(+ pre) {
+  color: var(--cv-text-muted);
+  font-size: 11.5px;
+  margin-top: 6px;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > pre {
+  background: var(--cv-hover);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text);
+  font: 11.5px/1.5 var(--cv-mono);
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  padding: 5px 8px;
+  white-space: pre-wrap;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > pre + p:not(:has(+ pre)) {
+  margin-top: 14px;
 }
 
 /* ---- Props ----------------------------------------------------------- */

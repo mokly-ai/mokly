@@ -1,12 +1,9 @@
 import type { ReactNode } from "react";
 
-import { CanvasGlyph } from "../../../library/canvas/glyphs.js";
-import { useDesignInstance } from "../../../library/composition.js";
-import { changeStatusBadge } from "../../../library/controls/change-status.js";
 import { EmptyState, LoadingState } from "../../../parts/stage_content.js";
 import type { CanvasEntry, CanvasEntryKind } from "../../parts/entries.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
-import { FramePicker } from "../../parts/stage.js";
+import { EntryStatus, FramePicker, KindTag } from "../../parts/stage.js";
 
 import type { PendingDetails } from "./details.js";
 
@@ -24,36 +21,20 @@ interface StageEntry {
   picked?: string | undefined;
 }
 
-/** A component's kind tag beside its title, as the stage's entry bar draws it. */
-function ComponentTag() {
-  return (
-    <span className="cv-kind-tag">
-      <CanvasGlyph name="component" size={13} />
-      Component
-    </span>
-  );
-}
-
 /**
  * The compact entry bar of an entry whose stage holds no section: its title
- * tag, a component's kind tag, its change status, and the stage's frame
- * picker, which lists the entry's frames and opens on the picked frame. The
- * catalogue index names the entry's views, so the picker lists them before
- * the entry's detail arrives.
+ * tag, a component's kind tag and its change status, as the stage draws
+ * them, and the stage's frame picker, which lists the entry's frames and
+ * opens on the picked frame. The catalogue index names the entry's views, so
+ * the picker lists them before the entry's detail arrives.
  */
 function EntryBar({ entry, frames, picked = "mobile-light" }: StageEntry) {
-  const status = useDesignInstance("entry-status");
   return (
     <div className="cv-entry-bar">
       <span className="cv-entry-title">
         <span className="cv-title-tag">{entry.title}</span>
-        {entry.kind === "component" ? <ComponentTag /> : null}
-        {entry.status === undefined ? null : (
-          <changeStatusBadge.Component
-            moklyInstance={status}
-            status={entry.status}
-          />
-        )}
+        <KindTag entry={entry} />
+        <EntryStatus entry={entry} name="entry-status" />
       </span>
       <FramePicker frames={frames} kind={entry.kind} picked={picked} />
     </div>

@@ -6,14 +6,17 @@ import { CANVAS_ENTRIES, type CanvasEntry } from "../../parts/entries.js";
 import { CANVAS_ALL_ROWS, retarget } from "../../parts/nav_rows.js";
 
 /*
- * The two branches that the Component explorer artboards depict beside the
+ * The three branches that the Component explorer artboards depict beside the
  * canonical one. On the Action branch, the Action's render changed the
  * corner radius and the padding of its button, so the Action and its three
  * saved variants each changed: four Changes rows. Welcome and Details render
  * the Action, so the change affects them, but they stay outside Changes. On
- * the removal branch, the Action's saved variant Compact was removed: one
- * Changes row. Each branch is a story of its own, so a catalogue row opens
- * only an artboard of its story, and every other row is a picture.
+ * the direct-change branch, the Action changed in the same way, and Welcome
+ * also changed the label that it gives its own Action, so Welcome keeps a
+ * Changes row of its own: five Changes rows. On the removal branch, the
+ * Action's saved variant Compact was removed: one Changes row. Each branch is
+ * a story of its own, so a catalogue row opens only an artboard of its story,
+ * and every other row is a picture.
  */
 
 const { action: ACTION } = COMPONENT_IDENTITIES;
@@ -58,9 +61,17 @@ export const EXPLORER_KEYS = {
   compact: variantKey("compact"),
 } as const;
 
+/** Example's folder, which holds its screens and its Components library. */
+const EXAMPLE_ROW: NavNode = {
+  key: "example",
+  depth: 0,
+  kind: "folder",
+  label: "Example",
+  open: true,
+};
+
 /** Example's Components folder over the Action's row, in the Changes filter. */
 const ACTION_ROWS: readonly NavNode[] = [
-  { key: "example", depth: 0, kind: "folder", label: "Example", open: true },
   {
     key: "example-components",
     depth: 1,
@@ -90,15 +101,33 @@ function variantRow(slug: string, label: string, changed: boolean): NavNode {
   };
 }
 
+/** The Action's three saved variants under its row, each changed. */
+const CHANGED_VARIANT_ROWS: readonly NavNode[] = [
+  variantRow("default", "Default", true),
+  variantRow("disabled", "Disabled", true),
+  variantRow("secondary", "Secondary", true),
+];
+
 /**
  * The Action branch in the Changes filter: the Action and its three saved
  * variants, each changed.
  */
 const ACTION_BRANCH_ROWS: readonly NavNode[] = [
+  EXAMPLE_ROW,
   ...ACTION_ROWS,
-  variantRow("default", "Default", true),
-  variantRow("disabled", "Disabled", true),
-  variantRow("secondary", "Secondary", true),
+  ...CHANGED_VARIANT_ROWS,
+];
+
+/**
+ * The direct-change branch in the Changes filter: Welcome under Example's
+ * Screens, then the Action and its three saved variants, each changed.
+ */
+const DIRECT_BRANCH_ROWS: readonly NavNode[] = [
+  EXAMPLE_ROW,
+  { key: "screens", depth: 1, kind: "folder", label: "Screens", open: true },
+  { key: "welcome", changed: true, depth: 2, kind: "screen", label: "Welcome" },
+  ...ACTION_ROWS,
+  ...CHANGED_VARIANT_ROWS,
 ];
 
 /**
@@ -107,6 +136,7 @@ const ACTION_BRANCH_ROWS: readonly NavNode[] = [
  * and takes no changed mark.
  */
 const REMOVAL_BRANCH_ROWS: readonly NavNode[] = [
+  EXAMPLE_ROW,
   ...ACTION_ROWS,
   variantRow("compact", "Compact · Removed", false),
 ];
@@ -114,10 +144,12 @@ const REMOVAL_BRANCH_ROWS: readonly NavNode[] = [
 /**
  * Each branch's changes in the Changes filter's order, as the stepper counts
  * them: the Action, then Default, Disabled, and Secondary on the Action
- * branch, and the removed Compact alone on the removal branch.
+ * branch; Welcome, which Specs lists first, then the same four on the
+ * direct-change branch; and the removed Compact alone on the removal branch.
  */
 export const BRANCH_CHANGES = {
   action: { total: 4, defaultPosition: 2 },
+  direct: { total: 5, welcomePosition: 1 },
   removal: { total: 1, compactPosition: 1 },
 } as const;
 
@@ -140,6 +172,18 @@ export function actionBranchAll(activeKey: string): CatalogueView {
     changedCount: BRANCH_CHANGES.action.total,
   };
 }
+
+/**
+ * The catalogue of the direct-change branch in the Changes filter, with
+ * Welcome selected. No other artboard depicts this branch, so every other row
+ * is a picture.
+ */
+export const DIRECT_CHANGES: CatalogueView = {
+  filter: "changes",
+  activeKey: "welcome",
+  rows: DIRECT_BRANCH_ROWS,
+  changedCount: BRANCH_CHANGES.direct.total,
+};
 
 /** The catalogue of the removal branch in the Changes filter. */
 export const REMOVAL_CHANGES: CatalogueView = {

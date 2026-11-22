@@ -308,6 +308,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/components/affected/direct",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/affected"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/components/compare",
     "colorSchemes": ["light", "dark"]
   },

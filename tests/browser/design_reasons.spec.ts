@@ -51,6 +51,7 @@ const REASONS: readonly ReasonRow[] = [
   ["design/canvas/changes/swipe", ["material"], DESKTOP],
   ["design/canvas/components/affected", [], DESKTOP],
   ["design/canvas/components/affected/details", [], DESKTOP],
+  ["design/canvas/components/affected/direct", ["inputs", "material"], BOTH],
   ["design/canvas/components/compare", ["material"], DESKTOP],
   ["design/canvas/components/compare/current", ["material"], BOTH],
   ["design/canvas/components/compare/difference", ["material"], DESKTOP],

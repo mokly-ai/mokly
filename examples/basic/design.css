@@ -17,7 +17,8 @@
 @import "../../packages/ui/src/theme/theme.css";
 @import "../../packages/ui/src/reset/reset.css";
 /* Geist and Geist Mono, the faces that the shipped theme and the sans and
-   mono stacks below name. */
+   mono stacks below name. Every design route links this sheet, so it alone
+   imports them, and each design document declares each face once. */
 @import "./design-fonts/geist.css";
 
 :root,
@@ -34,7 +35,6 @@
   --chrome-border-strong: #c8ccc4;
   --chrome-control-edge: #868e88;
   --chrome-accent: #2a4733;
-  --chrome-brand: #2f5945;
   --chrome-shadow: 0 30px 90px rgba(20, 28, 22, 0.14);
   --chrome-shadow-soft: 0 1px 2px rgba(20, 28, 22, 0.1);
   --chrome-shadow-press: inset 0 1px 2px rgba(20, 28, 22, 0.14);
@@ -45,11 +45,13 @@
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
+  /* The public accent of the @mokly/ui parts, at the shipped theme's Canvas
+     defaults, so a sample and an older screen draw the shipped accent. */
+  --mokly-accent: #067a45;
+  --mokly-accent-contrast: #ffffff;
+  --mokly-accent-soft: #e3f6ec;
   /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
-  --mokly-accent: var(--mbk-sage);
-  --mokly-accent-contrast: var(--mbk-accent-contrast);
-  --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mb-added: var(--mbk-sage-deep);
   --mb-added-soft: var(--mbk-accent-surface);
@@ -57,7 +59,6 @@
   --mb-changed-soft: var(--mbk-status-changed-bg);
   --mb-removed: var(--mbk-status-removed-ink);
   --mb-removed-soft: var(--mbk-status-removed-bg);
-  --mbk-accent-soft: rgba(79, 120, 100, 0.1);
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
   --mbk-guide: #dbded8;
@@ -97,7 +98,6 @@
   --chrome-border-strong: #71717a;
   --chrome-control-edge: #71717a;
   --chrome-accent: #a5cdb6;
-  --chrome-brand: #a3cdb4;
   --chrome-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
   --chrome-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
   --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
@@ -108,11 +108,11 @@
   --mbk-sage: #86b79b;
   --mbk-sage-deep: #b6d8c4;
   --mbk-accent-contrast: #0e1a14;
+  --mokly-accent: #5be3a0;
+  --mokly-accent-contrast: #1b1b1e;
+  --mokly-accent-soft: #0f2a1d;
   /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
-  --mokly-accent: var(--mbk-sage);
-  --mokly-accent-contrast: var(--mbk-accent-contrast);
-  --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mb-added: var(--mbk-sage-deep);
   --mb-added-soft: var(--mbk-accent-surface);
@@ -120,7 +120,6 @@
   --mb-changed-soft: var(--mbk-status-changed-bg);
   --mb-removed: var(--mbk-status-removed-ink);
   --mb-removed-soft: var(--mbk-status-removed-bg);
-  --mbk-accent-soft: rgba(134, 183, 155, 0.16);
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
   --mbk-guide: #34343a;

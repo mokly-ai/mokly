@@ -94,11 +94,18 @@
   color: var(--cv-text-secondary);
   font-size: 12px;
   line-height: 1.5;
-  margin: 0;
 }
 
-.cv-evidence .mbk-comparison-evidence p + p {
-  margin-top: 6px;
+/* Every Canvas evidence, in the Changes tab and in Inspect, spaces its
+   sentences and lists as the evidence contract fixes, whatever other sheet the page links: 8px above each
+   paragraph and list, the sentences and lists in a file's item included,
+   and 14px between a list and the paragraph that follows it. */
+:is(.cv-evidence, .cv-ev-inspect) .mbk-comparison-evidence :is(p, ul, dl) {
+  margin: 8px 0 0;
+}
+
+:is(.cv-evidence, .cv-ev-inspect) .mbk-comparison-evidence :is(ul, dl) + p {
+  margin-top: 14px;
 }
 
 /* A moved entry's previous path reads in the Canvas mono, as the Compared

@@ -16,8 +16,17 @@ import type { CanvasFrameSpec } from "./frames.js";
 /** A compare mode of the Changes tab. */
 type CompareMode = CompareModesProps["mode"];
 
-/** The entry's change status, as the section head and the entry bar show it. */
-function EntryStatus({ entry, name }: { entry: CanvasEntry; name: string }) {
+/**
+ * The entry's change status, as the section head and the entry bar show it,
+ * also the entry bar of a stage that holds no section.
+ */
+export function EntryStatus({
+  entry,
+  name,
+}: {
+  entry: CanvasEntry;
+  name: string;
+}) {
   const instance = useDesignInstance(name);
   return entry.status === undefined ? null : (
     <changeStatusBadge.Component
@@ -27,8 +36,11 @@ function EntryStatus({ entry, name }: { entry: CanvasEntry; name: string }) {
   );
 }
 
-/** The component kind tag beside a component's title. */
-function KindTag({ entry }: { entry: CanvasEntry }) {
+/**
+ * The component kind tag beside a component's title, in the section head and
+ * the entry bar, also the entry bar of a stage that holds no section.
+ */
+export function KindTag({ entry }: { entry: CanvasEntry }) {
   return entry.kind === "component" ? (
     <span className="cv-kind-tag">
       <CanvasGlyph name="component" size={13} />

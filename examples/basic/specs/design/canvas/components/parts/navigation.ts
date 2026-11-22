@@ -19,8 +19,10 @@ const fitted = (
  * Changes tab, whose Inspect tab keeps Overlay on the frames. No artboard
  * shows Inspect with Side by side or Difference on, or a sheet of these
  * states closed again, so those controls are pictures. The affected screens
- * have no Inspect artboard on their branch, so their Inspect tab is a
- * picture. Details' inspection states open Details' Changes tab of the
+ * and Welcome on the direct-change branch have no Inspect artboard on their
+ * branch, so their Inspect tab is a picture. On that branch, Welcome's phone
+ * shows the Changes sheet open, so the dock's Changes opens the same
+ * artboard. Details' inspection states open Details' Changes tab of the
  * canonical branch. The removed Compact's tabs move between Inspect and its
  * comparison.
  */
@@ -47,6 +49,9 @@ export const EXPLORER_NAVIGATION_STATES = {
   }),
   [E.explorerAffected]: fitted(E.explorerAffected),
   [E.explorerAffectedDetails]: fitted(E.explorerAffectedDetails),
+  [E.explorerAffectedDirect]: fitted(E.explorerAffectedDirect, {
+    panelSheet: E.explorerAffectedDirect,
+  }),
   [E.explorerInspection]: fitted(E.explorerInspection, {
     changesTab: CANVAS_PAGES.addedChanges,
   }),

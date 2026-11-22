@@ -2,7 +2,10 @@ import type { ComponentProps } from "react";
 
 import { mockLink } from "@mokly/mokly";
 
-import { ComparisonEvidence } from "../../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
+import {
+  ComparisonEvidence,
+  type EvidenceLink,
+} from "../../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
 import { useDesignInstance } from "../../../library/composition.js";
 import { changeStepper } from "../../../library/panels/change-stepper.js";
 import { compareModes } from "../../../library/panels/compare-modes.js";
@@ -59,14 +62,34 @@ function setChips(frames: readonly CanvasFrameSpec[]) {
  * of Compared names the base, so the evidence leaves out its branch-point
  * sentence.
  */
-function ChangesDetails(
-  props: Omit<ComponentProps<typeof ComparisonEvidence>, "base" | "mark">,
-) {
+export function ChangesDetails({
+  initial,
+  ...props
+}: Omit<ComponentProps<typeof ComparisonEvidence>, "base" | "mark"> & {
+  /** The panel opens scrolled to the comparison details. */
+  initial?: boolean | undefined;
+}) {
   return (
-    <div className="cv-sec cv-evidence cv-cx-evidence">
+    <div
+      className={`cv-sec cv-evidence cv-cx-evidence${initial ? " cv-initial" : ""}`}
+    >
       <ComparisonEvidence base="" mark="data-workspace-evidence" {...props} />
     </div>
   );
+}
+
+/**
+ * The changed Action, as a screen's comparison details link it: the link
+ * opens the Action's changed Default variant on its Changes tab, in Current.
+ */
+export function changedAction(): EvidenceLink[] {
+  return [
+    {
+      href: mockLink(E.explorerCompareCurrent),
+      key: "action",
+      title: "Action",
+    },
+  ];
 }
 
 /**
@@ -143,13 +166,7 @@ export function AffectedChanges({
         />
       </InspectSection>
       <ChangesDetails
-        changedComponents={[
-          {
-            href: mockLink(E.explorerCompareCurrent),
-            key: "action",
-            title: "Action",
-          },
-        ]}
+        changedComponents={changedAction()}
         sharedImpact={SCREEN_STYLE_COPY.sharedImpact}
       />
     </>
