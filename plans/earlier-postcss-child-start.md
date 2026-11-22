@@ -1,6 +1,6 @@
 # Earlier PostCSS Child Start
 
-Status: Active. On branch `calummoore/mokly-earlier-postcss-start-bdhv`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. Item 1 waits for the user, and no implementation is approved.
+Status: Active. On branch `calummoore/mokly-earlier-postcss-start-bdhv`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. The performance orchestrator answered item 1 on 2026-11-22.
 
 A warm Serve start of a PostCSS project restores its head compilation from the
 bundle cache. The pool spawns the head sidecar, reads the bundle cache, sends
@@ -20,6 +20,24 @@ memory checks. Its stop condition: when no safe earlier start can save 60 ms,
 the work stops with a closed-experiment record. The change replaces the
 follow-up item
 [Warm start waits for the PostCSS child](./follow-ups/postcss-child-start-before-startup-bundle.md).
+
+On 2026-11-22 the performance orchestrator, under the delegation of the user,
+chose option B of item 1 for this pull request. It approved the proposed
+protocol text below and the three design calls. It set two conditions:
+
+- `prepareContext` reaches the process that runs its `bundle` request, inside
+  the same slot claim. A test shows that a replaced worker between the two
+  cannot leave the child on another process.
+- A failed `prepareContext` never changes the result or the error of the
+  `bundle` request. The child count, the contexts, the output, and the read
+  evidence stay the same in cold and warm starts, in a project without
+  PostCSS, and after a configuration change between restarts.
+
+Option D follows as the next stacked pull request of this workspace, with its
+own plan, whatever the official result of B is. Its protocol check goes to the
+orchestrator before its code. The pool step stays in
+`crates/mokly-sidecar/src/pool_requests.rs`, away from `seed_compilation`,
+which workspace 229 changes.
 
 Contract owners:
 
@@ -102,6 +120,14 @@ My calls of 2026-11-22. They apply to option B.
   default 30-second deadline and returns nothing. It reports its context and
   its source root like `processCss`, so the pool also routes it correctly on
   the public request path.
+- Two more protocol sentences name the start of a prepared child. The memory
+  page said that recycling counts "a child that a `bundle` request starts".
+  The sampler finds each child at its start event, whatever request started
+  it, so the sentence now names the `prepareContext` or `bundle` request. The
+  scheduling page says that the context belongs to the slot of the bundle
+  "from the start of the bundle". That stays true, because the pool gives the
+  context to the slot when the `bundle` call takes the slot, before
+  `prepareContext`. My call of 2026-11-22, under the decision of item 1.
 
 ## Decisions
 
@@ -214,6 +240,8 @@ My calls of 2026-11-22. They apply to option B.
 - **Action:** ask the user, because the recommended option changes the start
   point that the PostCSS protocol states, and the options trade effort and risk
   against gain.
+- **Outcome:** B, chosen by the performance orchestrator on 2026-11-22, with D
+  as the next stacked pull request.
 
 ## Proposed Protocol Text
 
@@ -250,32 +278,50 @@ request." In `docs/protocol/mokly-sidecar.md`, the method table gets this row:
 
 Depends on: the answer to item 1.
 
-- [ ] Apply the protocol text of the chosen option to
+- [x] Apply the protocol text of the chosen option to
       `docs/protocol/mokly-sidecar-postcss.md` and
       `docs/protocol/mokly-sidecar.md`. Keep each page within 250 lines.
-- [ ] Update the preparation entries of `crates/mokly-sidecar/README.md` and
+- [x] Update the preparation entries of `crates/mokly-sidecar/README.md` and
       `packages/mokly/src/sidecar/README.md`.
 
 ## Milestone 2: Earlier start
 
 Depends on: 1
 
-- [ ] Red first: a pool test with a bundle cache hit shows that the slot
+- [x] Red first: a pool test with a bundle cache hit shows that the slot
       receives `prepareContext` before `restoreGeneration` and `bundle`. A
       second case shows that a `bundle` request without a preparation sends no
       `prepareContext`. The existing core test already shows that a
       configuration without PostCSS gets no preparation.
-- [ ] Red first: a sidecar session test shows that `prepareContext` starts the
+- [x] Red first: a pool test shows that a worker replaced after
+      `prepareContext` gets `prepareContext` again before its `bundle`
+      request, and that the context stays on the slot of the `bundle`
+      request. The existing ownership test expects `prepareContext` on the
+      slot of the `bundle` request.
+- [x] Red first: a pool test shows that an error reply to `prepareContext`
+      leaves the `bundle` result unchanged.
+- [x] Red first: a sidecar session test shows that `prepareContext` starts the
       child and answers without waiting, and that the later `bundle` request
       with the same preparation starts no second child.
-- [ ] A Serve restart test with the bundle cache: a change of the PostCSS module
+- [x] A Serve restart test with the bundle cache: a change of the PostCSS module
       and of an environment value between the starts gives the new CSS. It
       catches an earlier start that takes its preparation, module, or
       environment from an earlier process, such as a stored cache entry or a
       kept child. See it fail with such a deliberate break.
-- [ ] Add `prepareContext` to the Rust methods, regenerate the TypeScript
+- [x] Add `prepareContext` to the Rust methods, regenerate the TypeScript
       types, add the pool step, and add the session handler.
-- [ ] Run the existing startup preparation tests of #464.
+- [x] Run the existing startup preparation tests of #464.
+- Evidence: `.context/earlier-postcss-start/tests/` and
+  `.context/earlier-postcss-start/verify/`.
+- Implementation calls of 2026-11-22 (mine): `FailureKind::for_call` maps
+  `prepareContext` to a bundle failure, like `disposeContext`. A pool test also
+  shows that a release after `prepareContext` disposes the context after its
+  `bundle` request, because no listed test catches a second record point. The
+  restart test uses the durable fixture owner `ServePostcssRestart`, because
+  changes of `/tmp` during the cold compile made its capture not durable in
+  about 1 of 5 runs. Its root gets its own `package.json` and an empty
+  `tsconfig.json`, because the checkout settings otherwise add a second cold
+  compile. The `mokly-test-support` README states that rule.
 
 ## Milestone 3: Verification, commit, review, and pull request
 

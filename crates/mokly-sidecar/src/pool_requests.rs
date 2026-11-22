@@ -8,8 +8,10 @@ use crate::methods::Call;
 use crate::pool::Pool;
 use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_cleanup;
+use crate::pool_exchange::reusable;
 use crate::pool_preparation::Prerequisites;
 use crate::pool_state::Slot;
+use crate::postcss_preparation::PrepareContext;
 use crate::wire::{MethodResult, Request};
 
 impl Pool {
@@ -24,8 +26,15 @@ impl Pool {
             attempt.pin_loaded(&self.lock(), slot);
         }
         self.cleanup(slot)?;
-        if let Call::Bundle(params) = call {
-            self.seed_bundle(slot, params, attempt)?;
+        if let Some(context) = call.postcss_context() {
+            self.lock().contexts.insert(context.into());
+            slot.contexts.insert(context.into());
+        }
+        if let Call::Bundle(request) = call {
+            if let Some(preparation) = PrepareContext::for_bundle(request) {
+                self.prepare_context(slot, preparation)?;
+            }
+            self.seed_bundle(slot, request, attempt)?;
         }
         if let Some(generation) = generation(call) {
             let prerequisites = Prerequisites::for_call(call);
@@ -48,10 +57,6 @@ impl Pool {
         }
         if self.lock().stopped {
             return Err(Error::Cancelled);
-        }
-        if let Some(context) = call.postcss_context() {
-            self.lock().contexts.insert(context.into());
-            slot.contexts.insert(context.into());
         }
         let mut result = slot.worker.request(
             &Request {
@@ -154,6 +159,20 @@ impl Pool {
     pub(super) fn cleanup(&self, slot: &mut Slot) -> Result<()> {
         pool_cleanup::cleanup(&self.state, slot, self.options.timeout_ms)?;
         Ok(())
+    }
+
+    /// Start a bundle request's preparation in its own process before the bundle cache read.
+    ///
+    /// The `bundle` request still carries the preparation, so after an error reply that leaves
+    /// the process usable the sidecar starts it there. A crash or a timeout keeps the retry.
+    fn prepare_context(&self, slot: &mut Slot, preparation: PrepareContext) -> Result<()> {
+        match self.prerequisite(slot, Call::PrepareContext(preparation), false) {
+            Err(error) if reusable(&error) => {
+                tracing::warn!(%error, "sidecar context preparation failed before its bundle");
+                Ok(())
+            }
+            outcome => outcome,
+        }
     }
 }
 

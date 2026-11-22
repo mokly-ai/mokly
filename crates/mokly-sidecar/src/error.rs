@@ -121,6 +121,7 @@ impl FailureKind {
             | Call::CssModules(_)
             | Call::Bindings(_)
             | Call::Dispose(_)
+            | Call::PrepareContext(_)
             | Call::DisposeContext(_) => Self::Bundle,
             _ => Self::Render,
         }

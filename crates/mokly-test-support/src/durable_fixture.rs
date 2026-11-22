@@ -23,6 +23,8 @@ pub enum Owner {
     RenderAbsolutePaths,
     /// Serialized editor-file scenarios preserve checked plans and native output.
     RenderPlanCandidates,
+    /// A warm Serve restart takes the PostCSS module and environment of its process.
+    ServePostcssRestart,
 }
 
 const OWNERS: &[Owner] = &[
@@ -33,6 +35,7 @@ const OWNERS: &[Owner] = &[
     Owner::RenderPlanChanges,
     Owner::RenderAbsolutePaths,
     Owner::RenderPlanCandidates,
+    Owner::ServePostcssRestart,
 ];
 
 impl Owner {
@@ -45,6 +48,7 @@ impl Owner {
             Self::RenderPlanChanges => "render-plan-changes",
             Self::RenderAbsolutePaths => "render-absolute-paths",
             Self::RenderPlanCandidates => "render-plan-candidates",
+            Self::ServePostcssRestart => "serve-postcss-restart",
         }
     }
 }

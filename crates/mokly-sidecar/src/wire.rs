@@ -160,6 +160,7 @@ impl Response {
             Call::CssModules(_)
             | Call::RestoreGeneration(_)
             | Call::Bindings(_)
+            | Call::PrepareContext(_)
             | Call::DisposeContext(_)
             | Call::Dispose(_)
             | Call::Shutdown(_) => Ok(MethodResult::Empty),

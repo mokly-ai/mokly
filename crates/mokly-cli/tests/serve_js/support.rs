@@ -2,17 +2,16 @@
 
 use std::fs::{self, File};
 use std::io::Write;
-use std::os::fd::OwnedFd;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use mokly_test_support::durable_fixture::{self, Owner};
 use serde_json::Value;
 use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
-use tokio::process::{Child, Command};
+use tokio::process::Child;
 use tokio::sync::Notify;
 use tokio::task::JoinHandle;
 
@@ -22,9 +21,9 @@ mod cache;
 use cache::Cache;
 
 pub(super) struct Serve {
-    pub(super) root: TempDir,
+    pub(super) root: Arc<TempDir>,
     pub(super) child: Child,
-    _cache: Cache,
+    cache: Arc<Cache>,
     pub(super) host: String,
     input: File,
     pub(super) lines: Arc<Mutex<Vec<String>>>,
@@ -44,49 +43,54 @@ impl Serve {
         mode: &str,
         configure: &dyn Fn(&Path, &Path),
     ) -> Self {
-        let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../..")
-            .canonicalize()
-            .unwrap();
         let root = tempfile::tempdir().unwrap();
-        fs::create_dir(root.path().join("specs")).unwrap();
-        std::os::unix::fs::symlink(
-            workspace.join("node_modules"),
-            root.path().join("node_modules"),
-        )
-        .unwrap();
-        fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
-        fs::write(root.path().join("specs/home.mockup.tsx"), source).unwrap();
-        fs::write(
-            root.path().join("specs/view.module.css"),
-            ".card { color: red }",
-        )
-        .unwrap();
-        let (package, input, slave) = super::fixture::terminal(root.path(), &workspace);
+        configure(root.path(), &super::fixture::project(root.path(), source));
+        Self::spawn(Arc::new(root), Arc::new(Cache::new()), sidecars, mode, &[])
+    }
+    /// Start one sidecar with rich output in a durable root of `owner`, for a test that needs a
+    /// bundle cache record. The root is inside the checkout, so its own package manifest without
+    /// a type and its empty TypeScript configuration keep the checkout's settings out of the
+    /// compile, as in a temporary root.
+    pub(super) async fn durable(
+        owner: Owner,
+        source: &str,
+        configure: &dyn Fn(&Path, &Path),
+    ) -> Self {
+        let root = durable_fixture::create(owner).unwrap();
+        let package = super::fixture::project(root.path(), source);
+        write(&root.path().join("package.json"), r#"{"name":"fixture"}"#);
+        write(&root.path().join("tsconfig.json"), "{}");
         configure(root.path(), &package);
-        let (output, writer) = std::os::unix::net::UnixStream::pair().unwrap();
-        output.set_nonblocking(true).unwrap();
-        let cache = Cache::new();
-        let child = Command::new(env!("CARGO_BIN_EXE_mokly"))
-            .args(["serve", "--port", "0", "--sidecars", sidecars])
-            .current_dir(root.path())
-            .envs(cache.environment())
-            .env("MOKLY_PACKAGE_ROOT", package)
-            .env("MOKLY_VIEWER_DIST", workspace.join("packages/viewer/dist"))
-            .env("MOKLY_OUTPUT", mode)
-            .env("NO_COLOR", "1")
-            .env_remove("CI")
-            .env_remove("MOKLY_SIDECAR_TIMEOUT_MS")
-            .env_remove("MOKLY_SIDECARS")
-            .stdin(Stdio::from(slave))
-            .stdout(Stdio::from(OwnedFd::from(writer.try_clone().unwrap())))
-            .stderr(Stdio::from(OwnedFd::from(writer)))
-            .kill_on_drop(true)
-            .spawn()
-            .unwrap();
+        Self::spawn(Arc::new(root), Arc::new(Cache::new()), "1", "rich", &[])
+    }
+    /// Start the binary again after `stop`, in the same root, with the same cache owner, one
+    /// sidecar, rich output, and the extra environment.
+    pub(super) fn relaunch(&self, environment: &[(&str, &str)]) -> Self {
+        Self::spawn(
+            self.root.clone(),
+            self.cache.clone(),
+            "1",
+            "rich",
+            environment,
+        )
+    }
+    fn spawn(
+        root: Arc<TempDir>,
+        cache: Arc<Cache>,
+        sidecars: &str,
+        mode: &str,
+        environment: &[(&str, &str)],
+    ) -> Self {
+        let (child, input, output) = super::fixture::serve(
+            root.path(),
+            cache.environment(),
+            sidecars,
+            mode,
+            environment,
+        );
         let lines = Arc::new(Mutex::new(Vec::new()));
         let ready = Arc::new(Notify::new());
-        let readers = vec![read(
+        let readers = vec![super::fixture::read(
             tokio::net::UnixStream::from_std(output).unwrap(),
             lines.clone(),
             ready.clone(),
@@ -94,7 +98,7 @@ impl Serve {
         Self {
             root,
             child,
-            _cache: cache,
+            cache,
             host: String::new(),
             input,
             lines,
@@ -126,11 +130,17 @@ impl Serve {
         self.lines.lock().unwrap().len()
     }
     pub(super) fn compiles(&self) -> usize {
+        self.operations("fixture-esbuild")
+    }
+    pub(super) fn postcss_starts(&self) -> usize {
+        self.operations("fixture-postcss-start")
+    }
+    fn operations(&self, line: &str) -> usize {
         self.lines
             .lock()
             .unwrap()
             .iter()
-            .filter(|line| line.as_str() == "fixture-esbuild")
+            .filter(|current| current.as_str() == line)
             .count()
     }
     pub(super) fn evaluations(&self) -> usize {
@@ -257,19 +267,6 @@ impl Drop for Serve {
             }
         }
     }
-}
-fn read<R: tokio::io::AsyncRead + Unpin + Send + 'static>(
-    reader: R,
-    lines: Arc<Mutex<Vec<String>>>,
-    ready: Arc<Notify>,
-) -> JoinHandle<()> {
-    tokio::spawn(async move {
-        let mut reader = BufReader::new(reader).lines();
-        while let Some(line) = reader.next_line().await.unwrap() {
-            lines.lock().unwrap().push(line);
-            ready.notify_one();
-        }
-    })
 }
 pub(super) async fn get(host: &str, path: &str) -> String {
     let mut socket = TcpStream::connect(host).await.unwrap();
