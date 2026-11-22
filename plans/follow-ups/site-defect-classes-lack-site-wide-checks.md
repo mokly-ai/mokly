@@ -64,5 +64,6 @@
   - `plans/follow-ups/test-helper-unused-exports.md` and `plans/follow-ups/mokly-package-internal-export-audit.md` widen the same ratchet to other roots. The three changes edit the roots of one check.
   - `plans/follow-ups/flaky-site-lighthouse-performance.md` holds the report-only Lighthouse run, which audits contrast on seven routes.
   - `plans/follow-ups/canvas-mockup-contrast-and-overlap.md` names this work as its wider fix.
+  - `plans/follow-ups/site-desktop-layouts-at-200-percent-text.md` holds the desktop layouts at 200% text. A desktop walk at 200% text would extend the tool bar walk and the 200% text walk of this item.
 - **Recommendation:** C. It checks every class that produced a defect in the redesign, on the built site, at Medium effort. D best protects the codebase, but it changes two contracts.
 - **Action:** ask the user, because each check is a new gate, which needs Cal's approval, and on 2026-11-22 he chose to add none in the Canvas redesign.

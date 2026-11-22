@@ -1,0 +1,52 @@
+# Site desktop layouts have no 200% text pass
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from `calummoore/canvas-redesign-m20-site-decisions-of-fqcp`: the 200% text pass of decision 31 of the Canvas redesign plan, which covered 320px only.
+- **Location:** `apps/site/src/styles/chrome.css:242-322`, `docs/mockups/styles/site/chrome.css:210-292`, `apps/site/src/styles/panels.css:92-97`, `docs/mockups/styles/site/panels.css:88-93`, `apps/site/src/styles/docs-sheet.css:151-158`, `docs/mockups/styles/site/docs-responsive.css:165-172`, `apps/site/src/components/menu-dialog.ts:13`, `apps/site/src/components/docs/tree-sheet.ts:18`, `apps/site/src/components/docs/tree-scroll.ts:13`, `apps/site/tests/browser/large-text.ts`, `docs/mockups/src/_tests_/design-site-parity.test.ts:142-145`, `docs/protocol/cloud/site-design.md:144-169`, `docs/protocol/cloud/site-design-components.md:76-87`, `docs/protocol/cloud/site-docs-layout.md:12-17` and `:90-102`
+- **Reason:** Each fix changes a layout requirement of the site contract, and on 2026-11-22 the Canvas redesign kept its 200% text pass to 320px, as the contract asks.
+- **Source:** Implementation.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **200% text:** a root font size of twice the browser default, which doubles every `rem` size of the site but no `px` width, gap or padding.
+  - **Composition:** one of the two layouts of each site page: mobile below 768px, and desktop from 768px, which steps at fixed widths up to 1440px.
+  - **Tool bar:** the sticky header of every page, with the brand, the depicted file title and people, the navigation and Get started.
+  - **Layers panel:** the floating panel beside a docs page from 1024px, which lists the docs sections and their pages.
+  - **Container query:** a CSS rule that follows the width of one part instead of the window, so it can follow the reader's text size.
+- **Background:**
+  - `docs/protocol/cloud/site-design.md`, "Space And Layout", says: "Layouts remain usable at 320px width and 200% text zoom: no page scrolls sideways, and no control overlaps another."
+  - Its next paragraph starts "At a large text size, content wraps rather than passing the window." It says that parts side by side stack where the space cannot hold both. It names no window width.
+  - The same section puts the mobile composition below 768px. `docs/protocol/cloud/site-design-components.md`, "Header", sets the desktop steps of the tool bar at fixed widths. Below 1400px the file title centres between the brand and the end group. Below 960px the people leave, and below 830px the file title leaves.
+  - `apps/site/src/styles/chrome.css:298-322` and `docs/mockups/styles/site/chrome.css:219-243` declare these steps. A comment in the site sheet says: "Each step sits where every page name keeps a 12px clear gap between the items."
+  - On 2026-11-22, commit `9075d6e6f` made every page fit a 320px window at 200% text. The mobile bar hides its wordmark where its row cannot hold it. The container query `site-header-start` in `apps/site/src/styles/chrome.css:242` decides it by space: `width < calc(54px + 3.8rem)`.
+  - `docs/mockups/styles/site/chrome.css:284` declares the same rule. `docs/mockups/src/_tests_/design-site-containers.test.ts` fails when a container query of the site differs from the rule of the mockups.
+  - `apps/site/tests/browser/large-text.ts` opens a route in a 320px window and adds `html { font-size: 200%; }`. Its comment says that a width query in `em` does not follow that root size, and a container query in `rem` does. No test opens a desktop width at 200% text.
+  - On 2026-11-22, a measurement at 200% text on the branch `calummoore/canvas-redesign-m20-site-decisions-of-fqcp` found two defects:
+    - The tool bar draws its navigation over the brand in windows from 768px to 900px. At 768px the navigation starts at 40px, but the brand ends at 186px. At 900px the navigation starts at 172px.
+    - From 1024px, the Layers panel ends long page names in an ellipsis. `.site-panel-row-label` keeps a row's label on one line, in `apps/site/src/styles/panels.css:92-97` and `docs/mockups/styles/site/panels.css:88-93`.
+  - The end group of the bar ends at its 12px end padding, so the navigation and Get started take 716px at both widths. The row then holds the whole brand beside them only from about 930px, and the 44px mark alone only from about 798px. The measurement covers the brand and the navigation only.
+  - Below 1024px, the tree sheet lists the same rows. Since commit `9075d6e6f`, a page name that its row cannot hold wraps there. `apps/site/src/styles/docs-sheet.css:151-158` and `docs/mockups/styles/site/docs-responsive.css:165-172` hold that rule.
+  - Browser zoom enlarges `px` sizes as much as text, so a zoomed page keeps the proportions of 100% text and does not show the defects. The two defects need a larger default text size, or a zoom of the text alone.
+  - 104 media queries in 43 site sheets name the 768px switch. `apps/site/src/components/menu-dialog.ts:13` reads it with `matchMedia("(min-width: 768px)")`. `apps/site/src/components/docs/tree-sheet.ts:18` and `tree-scroll.ts:13` read the 1024px switch of the docs layout in the same way.
+  - The mockups pin a composition with `data-site-viewport`. `docs/mockups/src/_tests_/design-site-parity.test.ts:142-145` sorts the rules of the site into a composition by the strings `min-width: 768px` and `max-width: 767px`.
+  - On 2026-11-22, the Canvas redesign left this work out of its 200% text pass and recorded it here. Its reasons were that the contract asks for 320px only, and that Cal asked for speed.
+- **Problem:** At 200% text, the desktop tool bar draws its navigation over the brand from 768px to at least 900px, and the Layers panel cuts long page names from 1024px. No test opens a desktop width at 200% text.
+- **Impact if no action:** A reader with a large default text size in a window from 768px to about 930px sees the navigation over the brand, which links Home. From 1024px, the same reader cannot read the end of a long page name in the Layers panel.
+- **Root question:** How do the desktop layouts of the site stay usable when the reader's text is twice its default size?
+- **Options:**
+  - **A.** Change nothing. The contract keeps its 200% text rule at 320px, and the two defects stay. Effort: Small.
+  - **B.** Let the switch between the compositions follow the reader's text size. A window that cannot hold the desktop composition at that size keeps the mobile composition, whose bar, menu and tree sheet already fit at 200% text. Where the Layers panel shows, its page names wrap, as the names of the tree sheet do. The mockups change first. Effort: Medium.
+    - B changes the 768px rule of `site-design.md`, the 768px rules of `site-design-components.md` and the 768px and 1024px rules of `site-docs-layout.md`.
+    - A width query in `em` follows the browser's default text size, but not the root size that `large-text.ts` sets. So its tests need another way to enlarge the text. A container query in `rem` follows both, but it needs a container that wraps each page.
+    - B changes the switch in the site sheets, the mockup sheets, the three scripts and the parity test, and it adds desktop checks at 200% text.
+  - **C.** Make a second 200% text pass over every desktop layout, mockups first. The tool bar leaves out the file title, the people and then the wordmark by space, with container queries, and the Layers rows wrap. Below about 798px at 200% text, the mark, the navigation and Get started still do not fit, so the bar also needs the menu there. C changes the header steps of `site-design-components.md` and the 200% text rule of `site-design.md`. Effort: Large.
+- **Left out:**
+  - A second row for the desktop tool bar at large text. It breaks the fixed offsets under the 56px bar: `scroll-padding-top: 56px` in `chrome.css`, and the 72px sticky top of the docs panels in `site-docs-layout.md`.
+  - Smaller text in the tool bar at large text. It undoes the reader's text size, so it fails the goal.
+  - Shared by every option: layouts stay usable at 320px with 200% text, as `site-design.md` requires. Browser zoom keeps working as it does now.
+- **Wider fix:** B. A switch that follows the text size keeps each desktop layout, later ones included, out of a window that cannot hold it at that size.
+- **Previous examples:** Commit `9075d6e6f` of 2026-11-22 fixed the same class at 320px on every page. Before it, at 200% text in a 320px window, the footer reached 327px, the home 364px, the changelog 362px and pricing 598px.
+- **Related:** `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md` holds the tool bar width walk from 768px to 1440px and the 200% text walk at 320px. A desktop walk at 200% text would extend both. B or C changes the header steps that its tool bar check names.
+- **Recommendation:** B. It fixes both defects with the composition that already fits at 200% text, and it keeps later desktop parts out of windows too narrow for their text. C keeps the desktop look, but it costs more and still needs the menu below about 798px.
+- **Action:** ask the user, because B and C each change a requirement of `site-design.md`, `site-design-components.md` or `site-docs-layout.md`, and no recorded user decision covers that change.
