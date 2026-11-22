@@ -196,6 +196,14 @@ test("the tag picker drops from the field and sheets under the bar", () => {
     STANDALONE_CSS,
     /\.mbk-tag-picker \{[^}]*position: absolute;[^}]*top: calc\(100% \+ 7px\);[^}]*border-radius: 10px;[^}]*background: var\(--chrome-surface\);[^}]*box-shadow: var\(--chrome-shadow\);/,
   );
+  // The picker keeps the field's end edge and its width, between 280px and
+  // 440px, so a picker wider than the field grows toward the bar's start.
+  assert.ok(
+    css.includes(
+      "right: -1px; left: auto; width: calc(100% + 2px); " +
+        "min-width: 280px; max-width: 440px;",
+    ),
+  );
   assert.match(
     STANDALONE_CSS,
     /\.mbk-tag-picker-head \{[^}]*font-size: 11px;[^}]*text-transform: uppercase;/,
@@ -210,6 +218,7 @@ test("the tag picker drops from the field and sheets under the bar", () => {
   assert.ok(
     css.includes(
       ".mbk-tag-picker { top: calc(100% + 1px); right: 0; left: 0; " +
+        "width: auto; min-width: 0; max-width: none; " +
         "border-top: 0; border-radius: 0 0 12px 12px; }",
     ),
   );

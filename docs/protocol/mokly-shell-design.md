@@ -97,10 +97,12 @@ scheme and the compact layout.
   opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
-  on hover. It opens a panel anchored under the field and aligned to its width
-  (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
-  radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
-  `Tags` head above a wrapping row of the Details Tags row's chips. The
+  on hover. It opens a panel anchored under the field and aligned to its end
+  edge, as wide as the field and at least 280px (max-width 440px), so a panel
+  wider than the field grows toward the start of the bar: a `--chrome-surface`
+  card with a hairline border, 10px radius, and `--chrome-shadow` elevation,
+  holding an uppercase 11px muted `Tags` head above a wrapping row of the
+  Details Tags row's chips. The
   panel lists every tag the catalogue declares, in alphabetical order, and
   scrolls internally once that set outgrows it. Selecting a chip enters
   `tag:<tag>` in the search field, replacing any tag term already entered, and
