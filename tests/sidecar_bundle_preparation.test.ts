@@ -225,8 +225,14 @@ test("A restored reuse with a prepared startup context replies short and keeps o
     },
   );
   await restored.call({ id: 0, method: "hello", params: {} });
+  const preparation = { context: "startup", postcss: "postcss.mjs" };
   await restored.call({
     id: 1,
+    method: "prepareContext",
+    params: contextParams(params, preparation),
+  });
+  await restored.call({
+    id: 2,
     method: "restoreGeneration",
     params: JSON.parse(
       JSON.stringify({
@@ -236,12 +242,6 @@ test("A restored reuse with a prepared startup context replies short and keeps o
         modules: full.modules,
       }),
     ),
-  });
-  const preparation = { context: "startup", postcss: "postcss.mjs" };
-  await restored.call({
-    id: 2,
-    method: "prepareContext",
-    params: contextParams(params, preparation),
   });
   const reply = await restored.call({
     id: 3,

@@ -62,12 +62,7 @@ test("a configuration failure belongs to CSS and leaves Bundle usable, with or w
   const answered = await early.call({
     id: 1,
     method: "prepareContext",
-    params: {
-      ...preparation,
-      sourceRoot: params.sourceRoot,
-      repositoryRoots: params.repositoryRoots,
-      moduleResolution: params.moduleResolution,
-    },
+    params: contextParams(params, preparation),
   });
   assert.equal(answered, null);
   const prepared = await early.call({
@@ -116,12 +111,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
   const reply = await session.call({
     id: 1,
     method: "prepareContext",
-    params: {
-      ...preparation,
-      sourceRoot: params.sourceRoot,
-      repositoryRoots: params.repositoryRoots,
-      moduleResolution: params.moduleResolution,
-    },
+    params: contextParams(params, preparation),
   });
   assert.equal(reply, null);
   assert.equal(preparations.length, 1);

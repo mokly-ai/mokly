@@ -46,13 +46,7 @@ async function bundleThenStylesheet(
   assert.equal(childStarts(sidecar), 1);
 }
 
-test("A bundle with a preparation starts no PostCSS child, and its first processCss starts it", async (context) => {
-  const { params, sidecar } = await preparedSource(context);
-  await bundleThenStylesheet(sidecar, params);
-  await sidecar.call("shutdown");
-});
-
-test("After a failed prepareContext, the first processCss of the context starts the child", async (context) => {
+test("After a failed prepareContext, a prepared bundle starts no PostCSS child, and the first processCss starts it", async (context) => {
   const { params, sidecar } = await preparedSource(context);
   await assert.rejects(sidecar.call("prepareContext", null as never));
   await bundleThenStylesheet(sidecar, params);
