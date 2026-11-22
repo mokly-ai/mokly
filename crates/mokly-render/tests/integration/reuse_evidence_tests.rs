@@ -19,8 +19,11 @@ fn dangling_links_match_their_absent_lexical_target_and_reject_replacement_or_re
     let intermediate = root.join("intermediate.ts");
     let target = root.join("missing.ts");
     fs::create_dir(root.join("nested")).unwrap();
-    link_file(Path::new("./intermediate.ts"), &candidate);
-    link_file(Path::new("./nested/../missing.ts"), &intermediate);
+    link_file(&Path::new(".").join("intermediate.ts"), &candidate);
+    link_file(
+        &Path::new(".").join("nested").join("..").join("missing.ts"),
+        &intermediate,
+    );
     let expected = PhysicalInput::Link {
         target: target.to_str().unwrap().into(),
     };
@@ -52,10 +55,10 @@ fn dangling_links_match_their_absent_lexical_target_and_reject_replacement_or_re
         "recorded absence must still use lstat and reject a dangling link"
     );
     fs::remove_file(&intermediate).unwrap();
-    link_file(Path::new("./other.ts"), &intermediate);
+    link_file(&Path::new(".").join("other.ts"), &intermediate);
     assert!(!current());
     fs::remove_file(&intermediate).unwrap();
-    link_file(Path::new("./missing.ts"), &intermediate);
+    link_file(&Path::new(".").join("missing.ts"), &intermediate);
     assert!(current());
     fs::write(&target, "export {};").unwrap();
     assert!(!current());
