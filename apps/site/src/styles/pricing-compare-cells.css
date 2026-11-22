@@ -109,13 +109,19 @@
   padding: 6px 8px 15px 14px;
 }
 
-/* Every cell is 14px on mobile, the heads and the groups too: the mockup's
-   mobile rule outweighs their own sizes through its viewport attribute, and
-   the canvas root, .site-root on body, gives this rule the same weight. */
+/* Every cell is 14px on mobile, the column heads too: the mockup's mobile
+   rule outweighs their own sizes through its viewport attribute, and the
+   canvas root, .site-root on body, gives this rule the same weight. The
+   group heads keep their 11px mono label size, which the mockup's mobile
+   group rule sets again after the cells. */
 
 .site-root .site-pricing-props th,
 .site-root .site-pricing-props td {
   font-size: 0.875rem;
+}
+
+.site-root .site-pricing-props-group th {
+  font-size: 0.6875rem;
 }
 
 .site-pricing-props .site-pricing-props-team {

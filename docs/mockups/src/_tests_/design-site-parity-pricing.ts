@@ -13,8 +13,6 @@ const MOBILE =
 
 export const PRICING_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-pricing-plans .site-section-box": MOBILE,
-  ".site-pricing-box--cli":
-    "the mockup's mobile bottom padding of the Mokly CLI box loses to the padding of the section box rule, which has more weight, so it draws nothing; the site leaves out the declaration and draws the same 52px",
   ".site-pricing-plan": MOBILE,
   ".site-pricing-plan-action .site-button": MOBILE,
   ".site-pricing-props-frame": MOBILE,

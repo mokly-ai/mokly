@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { PRICING_GROUPS } from "../../src/components/pricing/compare-rows.js";
 import {
   APP_PATHS,
   GET_STARTED_PATH,
@@ -10,9 +11,10 @@ import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 
 /**
  * The pricing page: where its actions lead, the compare table's semantics,
- * the depictions that assistive technology does not read, the targets and
- * the sticky plan heads. The page walk of pages.spec.ts checks its title,
- * its heading and the shared accessibility rules.
+ * the depictions that assistive technology does not read, the targets, the
+ * sticky plan heads and the phone sizes of the group heads and the Mokly CLI
+ * box. The page walk of pages.spec.ts checks its title, its heading and the
+ * shared accessibility rules.
  */
 
 /** The compare table, named by its caption. */
@@ -155,6 +157,26 @@ test("the plan heads stay under the tool bar while the compare table scrolls", a
     })
     .toBe(0);
 });
+
+test(
+  "on a phone the group heads take the label size and the Mokly CLI box closes 24px under its frame",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.pricing);
+    // The group heads are mono labels, not cells. No size tag or cursor sits
+    // under the Open source frame, so its box needs no room for one.
+    const table = page.getByRole("table", { name: TABLE });
+    for (const { title } of PRICING_GROUPS)
+      await expect(
+        table.getByRole("rowheader", { exact: true, name: title }),
+        title,
+      ).toHaveCSS("font-size", "11px");
+    await expect(page.getByRole("group", { name: "Mokly CLI" })).toHaveCSS(
+      "padding-bottom",
+      "24px",
+    );
+  },
+);
 
 test(
   "at 200% text in a 320px window the pricing page does not scroll sideways",
